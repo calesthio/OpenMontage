@@ -1,0 +1,151 @@
+{
+  "cuts": [
+    {
+      "id": "scene-1-candy-gate",
+      "source": "",
+      "in_seconds": 0,
+      "out_seconds": 5,
+      "type": "anime_scene",
+      "images": [
+        "candyland/scene1-candy-gate-a.png",
+        "candyland/scene1-candy-gate-b.png"
+      ],
+      "animation": "zoom-in",
+      "particles": "sparkles",
+      "particleColor": "#FFE082",
+      "particleCount": 22,
+      "particleIntensity": 0.6,
+      "backgroundColor": "#0A0A1A",
+      "vignette": true,
+      "lightingFrom": "rgba(255,200,100,0.15)",
+      "lightingTo": "transparent"
+    },
+    {
+      "id": "scene-2-candy-forest",
+      "source": "",
+      "in_seconds": 5,
+      "out_seconds": 10,
+      "type": "anime_scene",
+      "images": [
+        "candyland/scene2-candy-forest-a.png",
+        "candyland/scene2-candy-forest-b.png"
+      ],
+      "animation": "pan-right",
+      "particles": "petals",
+      "particleColor": "#FF6B9D",
+      "particleCount": 18,
+      "particleIntensity": 0.5,
+      "backgroundColor": "#0A0A1A",
+      "vignette": true,
+      "lightingFrom": "transparent",
+      "lightingTo": "rgba(255,107,157,0.1)"
+    },
+    {
+      "id": "scene-3-gumdrop-river",
+      "source": "",
+      "in_seconds": 10,
+      "out_seconds": 15,
+      "type": "anime_scene",
+      "images": [
+        "candyland/scene3-gumdrop-river-a.png",
+        "candyland/scene3-gumdrop-river-b.png"
+      ],
+      "animation": "pan-left",
+      "particles": "sparkles",
+      "particleColor": "#87CEEB",
+      "particleCount": 15,
+      "particleIntensity": 0.4,
+      "backgroundColor": "#0A0A1A",
+      "vignette": true,
+      "lightingFrom": "rgba(100,200,255,0.1)",
+      "lightingTo": "transparent"
+    },
+    {
+      "id": "scene-4-lollipop-garden",
+      "source": "",
+      "in_seconds": 15,
+      "out_seconds": 20,
+      "type": "anime_scene",
+      "images": [
+        "candyland/scene4-lollipop-garden-a.png",
+        "candyland/scene4-lollipop-garden-b.png"
+      ],
+      "animation": "drift-up",
+      "particles": "fireflies",
+      "particleColor": "#A8E6CF",
+      "particleCount": 20,
+      "particleIntensity": 0.55,
+      "backgroundColor": "#0A0A1A",
+      "vignette": true,
+      "lightingFrom": "transparent",
+      "lightingTo": "rgba(168,230,207,0.12)"
+    },
+    {
+      "id": "scene-5-chocolate-mountain",
+      "source": "",
+      "in_seconds": 20,
+      "out_seconds": 25,
+      "type": "anime_scene",
+      "images": [
+        "candyland/scene5-chocolate-mountain-a.png",
+        "candyland/scene5-chocolate-mountain-b.png"
+      ],
+      "animation": "zoom-out",
+      "particles": "mist",
+      "particleColor": "#DDA0DD",
+      "particleCount": 5,
+      "particleIntensity": 0.35,
+      "backgroundColor": "#0A0A1A",
+      "vignette": true,
+      "lightingFrom": "rgba(160,100,200,0.08)",
+      "lightingTo": "transparent"
+    },
+    {
+      "id": "scene-6-sunset-farewell",
+      "source": "",
+      "in_seconds": 25,
+      "out_seconds": 30,
+      "type": "anime_scene",
+      "images": [
+        "candyland/scene6-sunset-farewell-a.png",
+        "candyland/scene6-sunset-farewell-b.png"
+      ],
+      "animation": "ken-burns",
+      "particles": "sparkles",
+      "particleColor": "#FFB347",
+      "particleCount": 28,
+      "particleIntensity": 0.7,
+      "backgroundColor": "#0A0A1A",
+      "vignette": true,
+      "lightingFrom": "rgba(255,180,71,0.12)",
+      "lightingTo": "rgba(255,107,157,0.1)"
+    }
+  ],
+  "overlays": [
+    {
+      "type": "hero_title",
+      "in_seconds": 0.5,
+      "out_seconds": 4.5,
+      "text": "Afternoon in Candyland",
+      "subtitle": "A whimsical journey"
+    },
+    {
+      "type": "section_title",
+      "in_seconds": 25.5,
+      "out_seconds": 29.5,
+      "text": "Every sweet dream begins here...",
+      "accentColor": "#FFB347",
+      "position": "bottom-center"
+    }
+  ],
+  "audio": {
+    "music": {
+      "src": "candyland/ambient-music.mp3",
+      "volume": 0.15,
+      "fadeInSeconds": 2,
+      "fadeOutSeconds": 3,
+      "offsetSeconds": 43,
+      "loop": false
+    }
+  }
+}

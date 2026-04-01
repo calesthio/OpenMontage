@@ -35,6 +35,7 @@ compatible_playbooks:
   - clean-professional
   - flat-motion-graphics
   - minimalist-diagram
+  - anime-ghibli
 
 stages:
   # ── Pre-Production ──────────────────────────────────────────────

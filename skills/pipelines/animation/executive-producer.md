@@ -43,7 +43,14 @@ EP_STATE:
   budget_remaining_usd: <budget_total>
 
   # Animation-specific state
-  animation_mode: <manim | remotion | ai_video | diagram_stills | mixed>
+  # Approaches:
+  #   image_animation  — Multi-image crossfade via Remotion (anime/Ghibli/illustration style)
+  #   clip_video       — AI-generated video clips composited as a story
+  #   manim            — Programmatic math/physics animation via ManimCE
+  #   remotion_dataviz — Data visualization with Remotion components (zero-key capable)
+  #   diagram_stills   — Diagram + image stills with Ken Burns
+  #   mixed            — Combination of multiple approaches per-scene
+  animation_mode: <image_animation | clip_video | manim | remotion_dataviz | diagram_stills | mixed>
   reuse_strategy:
     recurring_motifs: []
     layout_system: null
@@ -218,12 +225,15 @@ CHECK: Approval gate (CRITICAL)
   - If "approved_with_changes": apply modifications before proceeding
   - Extract: animation_mode, reuse_strategy, target_duration, playbook, budget, tool selections
 
-CHECK: Animation mode feasibility
-  - Does the selected animation mode's required tools exist in the registry?
-  - If Manim mode selected: is math_animate available?
-  - If Remotion mode selected: is video_compose (Remotion) available?
-  - If AI video mode selected: are video generation providers available?
-  - If any required tool is unavailable: alert user, offer alternatives
+CHECK: Animation approach feasibility
+  - Does the selected animation approach's required tools exist in the registry?
+  - If image_animation selected: is image_selector available? Which providers? Is Remotion available?
+  - If clip_video selected: is video_selector available? Which providers?
+  - If manim selected: is math_animate (ManimCE) available?
+  - If remotion_dataviz selected: is video_compose (Remotion) available?
+  - If diagram_stills selected: is diagram_gen + image_selector available?
+  - If any required tool is unavailable: alert user, offer alternatives with specific setup instructions
+  - NEVER silently downgrade — if an approach needs a key the user doesn't have, STOP and tell them
 
 CHECK: Reuse strategy validity
   - Does the reuse strategy define recurring motifs?

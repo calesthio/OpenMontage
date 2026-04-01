@@ -46,8 +46,25 @@ The Explainer composition supports the following cut types:
 | `pie_chart` | `chartData` [{label, value}], optional `donut`, `centerLabel` | Proportions, breakdowns |
 | `kpi_grid` | `chartData` [{label, value, prefix, suffix, change, icon}] | Dashboards, traction metrics |
 | `progress_bar` | `progress` (0-100), optional `progressSegments` | Journey viz, completion, stacked metrics |
+| `anime_scene` | `images` (1-4 paths), optional `animation`, `particles`, `particleColor`, `particleCount`, `particleIntensity`, `vignette`, `lightingFrom`, `lightingTo` | Anime/Ghibli-style scenes with multi-image crossfade, camera motion, particle overlays |
 
 **Chart animations:** `grow-up`, `slide-in`, `pop` (bar), `draw`, `fade-in` (line), `spin`, `expand`, `sequential` (pie), `count-up`, `pop`, `cascade` (kpi)
+
+### Anime Scene — Multi-Image Crossfade + Particles
+
+The `anime_scene` type renders 1-4 images with smooth crossfade transitions, cinematic camera motion, and animated particle overlays. This creates the illusion of animation from still images.
+
+**Camera motion types:** `zoom-in`, `zoom-out`, `pan-left`, `pan-right`, `ken-burns`, `drift-up`, `drift-down`, `parallax`, `static`
+
+**Particle types:** `fireflies` (floating golden orbs), `petals` (falling cherry blossoms), `sparkles` (twinkling stars), `mist` (drifting fog layers), `light-rays` (crepuscular rays)
+
+**Key prop:** `sceneDurationSeconds` is automatically passed by `SceneRenderer` — this fixes a critical Remotion pitfall where `useVideoConfig().durationInFrames` returns the full composition duration, not the scene's Sequence duration.
+
+**Multi-image crossfade math:** Each image owns an equal time segment. Fade-out of image N and fade-in of image N+1 OVERLAP by `crossfadeDur` (~1.2s) so there's never a dead frame. Generate 2-3 images per scene with same style prefix + different seeds for subtle motion effect.
+
+**Reference composition:** `remotion-composer/public/demo-props/mori-no-seishin.json` — 6 anime scenes, 30 seconds, with particles, lighting, overlays, and ambient music.
+
+**Style playbook:** `styles/anime-ghibli.yaml` — Ghibli-inspired aesthetic with color palette, typography, motion parameters, and FLUX prompt prefix.
 
 **Zero-key video strategy:** When no image or video generation is available, build
 entire videos from these component types. A well-composed sequence of hero_title →
@@ -153,18 +170,20 @@ remotion-composer/
 The orchestrator calls Remotion renders via CLI:
 
 ```bash
-# Standard render
-npx remotion render src/index.ts ExplainerVideo \
-  --props='{"scenes": [...], "theme": "clean_professional"}' \
-  --output=pipeline/<project>/output/final_output.mp4 \
-  --codec=h264
+# Standard render (composition name is "Explainer", no entry point needed)
+npx remotion render Explainer \
+  --props="public/demo-props/my-video.json" \
+  --output=output/final.mp4 \
+  --codec=h264 --crf=18
 
 # With specific media profile
-npx remotion render src/index.ts ExplainerVideo \
+npx remotion render Explainer \
   --width=1080 --height=1920 --fps=30 \
-  --props=props.json \
+  --props="public/demo-props/my-video.json" \
   --output=output.mp4
 ```
+
+**Note:** Do NOT specify `src/index.ts` as entry point — Remotion auto-discovers compositions. The composition name is `Explainer` (not `ExplainerVideo`).
 
 In Python, invoke via `subprocess` from `video_compose.py` when `backend="remotion"`.
 
@@ -249,12 +268,30 @@ const cleanProfessional = {
 
 ### Audio Layering
 
-Narration + background music + SFX as parallel `<Audio>` components:
+Narration + background music + SFX as parallel `<Audio>` components.
+
+**Music offset and looping:** The `audio.music` config supports:
+- `offsetSeconds` — skip quiet intros, start from the energetic part of the track. Use `tools/analysis/audio_energy.py` to find the optimal offset automatically.
+- `loop` — loop the music if it's shorter than the video. Remotion handles this natively.
+- `fadeInSeconds` / `fadeOutSeconds` — smooth volume ramps at start/end.
+
+```json
+"audio": {
+  "music": {
+    "src": "project/music.mp3",
+    "volume": 0.15,
+    "offsetSeconds": 55,
+    "loop": false,
+    "fadeInSeconds": 2,
+    "fadeOutSeconds": 3
+  }
+}
+```
 
 ```tsx
 <AbsoluteFill>
   <Audio src={narrationUrl} />
-  <Audio src={musicUrl} volume={0.06} />
+  <Audio src={musicUrl} volume={0.06} startFrom={offsetFrames} loop />
   {sfxCues.map(cue => (
     <Sequence key={cue.id} from={secondsToFrames(cue.time)}>
       <Audio src={cue.url} volume={cue.volume} />
@@ -276,6 +313,7 @@ Remotion renders are CPU-intensive but $0 API cost. Track via cost_tracker:
 - **No CSS animations or transitions** — they don't render correctly. Use `useCurrentFrame()` + `interpolate()` for all motion.
 - **No Tailwind animation classes** — `animate-*` classes break frame-based rendering. Static Tailwind utilities are fine.
 - **Always clamp interpolate()** — use `extrapolateLeft: 'clamp', extrapolateRight: 'clamp'` to prevent values shooting past endpoints.
+- **`useVideoConfig().durationInFrames` returns COMPOSITION duration, not Sequence duration** — This is the #1 Remotion footgun. If your composition is 31s (930 frames) and a scene's `<Sequence>` is 5s (150 frames), `durationInFrames` still returns 930 inside that scene. Any crossfade, camera motion, or timing logic that uses `durationInFrames` directly will be wildly wrong. **Fix:** Pass `sceneDurationSeconds` as a prop from the parent and compute `effectiveDuration = Math.round(sceneDurationSeconds * fps)` inside the component. The `AnimeScene` component implements this pattern.
 - **Node.js 18+ required** — listed as optional in minimum system, required in recommended.
 - **Render in series, not parallel** — unless the machine has enough RAM. Each render spawns a Chromium instance.
 

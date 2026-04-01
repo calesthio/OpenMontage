@@ -41,6 +41,40 @@ Use:
 - `text_card` for clean high-impact copy moments,
 - `generated` only where needed.
 
+**For `image_animation` approach (anime/illustration style):**
+
+Use `anime_scene` type for each scene. Plan:
+
+- **Images per scene**: 2-3 images with consistent style prefix and nearby seeds for crossfade effect
+- **Camera motion**: choose from `zoom-in`, `zoom-out`, `pan-left`, `pan-right`, `ken-burns`, `drift-up`, `drift-down`, `parallax`, `static` — vary per scene to prevent monotony
+- **Particle type**: choose from `fireflies`, `petals`, `sparkles`, `mist`, `light-rays` — match to scene mood
+- **Lighting**: optional `lightingFrom`/`lightingTo` gradient for atmospheric shifts within the scene
+- **Vignette**: `true` for cinematic framing (default), `false` for bright/open scenes
+- **Scene duration**: 4-7 seconds per scene. Longer scenes need more images for crossfade variety.
+
+**Scene variety rules for image_animation:**
+- Don't use the same camera motion for consecutive scenes
+- Alternate between warm and cool particle types
+- Mix close-up and wide establishing shots
+- Use overlays (`hero_title`, `section_title`) to add narrative structure
+
+**JSON prop name mapping** (use these exact field names in the composition JSON):
+
+| Concept | JSON Field | Example Values |
+|---------|-----------|----------------|
+| Camera motion | `animation` | `"zoom-in"`, `"pan-right"`, `"ken-burns"` |
+| Particle effect | `particles` | `"fireflies"`, `"sparkles"`, `"mist"` |
+| Particle color | `particleColor` | `"#FFE082"` |
+| Particle density | `particleCount` | `20` (range: 1-50) |
+| Particle brightness | `particleIntensity` | `0.5` (range: 0-1) |
+| Lighting start | `lightingFrom` | `"rgba(255,200,100,0.15)"` or `"transparent"` |
+| Lighting end | `lightingTo` | `"rgba(255,107,157,0.08)"` or `"transparent"` |
+| Cinematic edge darken | `vignette` | `true` / `false` |
+| Scene background | `backgroundColor` | `"#0A0A1A"` |
+
+Reference: `remotion-composer/public/demo-props/mori-no-seishin.json` — 6 scenes using this pattern.
+Reference: `remotion-composer/public/demo-props/deep-ocean.json` — 6 underwater scenes with different palette.
+
 ### 4. Use Metadata For Timing Rules
 
 Recommended metadata keys:

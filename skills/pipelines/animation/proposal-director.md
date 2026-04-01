@@ -22,9 +22,13 @@ Animation proposals have a unique dimension: **animation mode selection**. Unlik
 
 ## Process
 
-### Step 1: Absorb the Research
+### Step 1: Absorb the Research (or Direct Brief)
 
-Read the `research_brief` thoroughly. Extract:
+**If a `research_brief` artifact exists:** Read it thoroughly. Extract:
+
+**If no research_brief exists (direct user brief):** The user has given you a creative brief directly. This is common for short videos (30-60s) where formal research is overkill. Use the user's brief as your input and proceed to Step 2. Note the missing research as a limitation — you won't have data_points, technique references, or audience_insights to draw from, so concept design relies on your knowledge and the user's direction.
+
+**When a research_brief IS available,** extract:
 
 - **`research_summary`** — read first. Contains both the key insight and the most promising animation approach.
 - **`angles_discovered`** — raw concept candidates, each with an `animation_fit` field.
@@ -60,25 +64,105 @@ python -c "from tools.tool_registry import registry; import json; registry.disco
 
 Record all findings. **Do not propose an animation mode that requires tools you don't have.**
 
-### Step 3: Animation Mode Decision Matrix
+### Step 3: Animation Approach Selection
 
-This is the key differentiator from the explainer proposal. For each viable animation mode, evaluate:
+This is the key differentiator from the explainer proposal. **Present the user with concrete animation approaches, explain what each looks like, what tools/keys they need, and what's already available.**
 
-| Mode | Best For | Tool Required | Visual Quality | Cost | Iteration Speed |
-|------|----------|---------------|----------------|------|-----------------|
-| **Manim (ManimCE)** | Math, physics, geometry, algorithms | `math_animate` | Precise, programmatic | Free (local) | Fast (code-driven) |
-| **Remotion** | Data viz, charts, React components, kinetic type | `video_compose` (Remotion mode) | Smooth, web-native | Free (local) | Fast (code-driven) |
-| **AI Video Generation** | Abstract concepts, metaphors, transitions | `video_selector` providers | Variable, cinematic | $0.05-0.50/clip | Slow (generation time) |
-| **Diagram + Image Stills** | Process flows, architecture, comparisons | `diagram_gen` + `image_selector` | Clean, reliable | $0-0.05/image | Fast |
-| **Mixed Mode** | Complex topics needing multiple techniques | Multiple tools | Varied | Varies | Moderate |
+#### Step 3a: Tool Availability Scan
 
-**Mode selection rules:**
-- If the topic involves math/formulas/geometry → prefer Manim
-- If the topic involves data/statistics/charts → prefer Remotion or diagram_gen
-- If the topic is abstract/conceptual → consider AI video for key moments
-- If the topic is process/workflow → prefer diagram builds
-- Always check tool availability before committing to a mode
-- Mixed mode is valid when different sections need different approaches
+Before designing concepts, scan what's available and present it honestly:
+
+```
+TOOL AVAILABILITY SCAN
+──────────────────────
+Image generation:
+  ✅ FLUX (fal.ai)    — FAL_KEY detected       — $0.03-0.05/image
+  ❌ gpt-image-1      — OPENAI_API_KEY missing  — $0.13/image
+  ❌ Stable Diffusion  — Not installed locally   — Free
+  ❌ FLUX (local)      — Not installed locally   — Free
+
+Video generation:
+  ❌ Runway Gen-3      — No API key             — $0.50/clip
+  ❌ Kling             — No API key             — $0.10-0.30/clip
+  ❌ CogVideoX (local) — Not installed          — Free
+
+Composition:
+  ✅ Remotion           — Installed              — Free (local CPU)
+  ✅ FFmpeg             — Installed              — Free
+
+Audio:
+  ✅ Pixabay Music      — No key needed          — Free
+  ❌ OpenAI TTS         — OPENAI_API_KEY missing — $0.015/min
+  ✅ Local TTS (piper)  — Not checked            — Free
+
+Math/Diagram:
+  ❌ ManimCE            — Not installed          — Free
+  ✅ diagram_gen        — Available              — Free
+```
+
+**Present this scan to the user.** Say: "Here's what I can see right now. Based on this, here are your animation approach options."
+
+#### Step 3b: Animation Approach Decision Matrix
+
+Present the approaches as clear options:
+
+| Approach | What It Looks Like | Tools Required | Cost Range | Proven? |
+|----------|-------------------|----------------|------------|---------|
+| **A: Image-Based Animation (Remotion)** | AI-generated keyframes with crossfade, camera motion, particles. Looks like moving anime/illustration. | `image_selector` (any provider) + Remotion | $0.03-0.13/image × 2-3/scene | ✅ Proven (mori-no-seishin) |
+| **B: Clip-Based Video** | AI-generated video clips assembled as a story. Most cinematic but least consistent. | `video_selector` (Runway/Kling/etc.) | $0.10-0.50/clip × scenes | ❌ Not yet proven |
+| **C: Programmatic Animation (Manim)** | Code-driven math/geometry animation. Precise, clean, 3Blue1Brown style. | `math_animate` (ManimCE) | Free (local) | ❌ Not yet proven |
+| **D: Data Visualization (Remotion)** | Animated charts, KPIs, kinetic typography. Data-driven storytelling. | Remotion (built-in components) | Free (local) | ✅ Proven (zero-key formula) |
+| **E: Diagram + Image Stills** | Process flows and architecture diagrams with Ken Burns. | `diagram_gen` + `image_selector` | $0-0.05/image | ✅ Proven |
+| **F: Mixed Mode** | Combine any of the above per-scene. Most flexible. | Multiple tools | Varies | Partial |
+
+**For each viable approach, present to the user:**
+
+```
+APPROACH A: Image-Based Animation (Remotion)
+─────────────────────────────────────────────
+What it looks like: Multiple AI-generated images per scene, crossfaded with
+camera motion (zoom, pan, ken-burns) and particle overlays (fireflies, mist,
+sparkles). Creates the illusion of movement from still frames.
+
+You need: An image generation API key.
+  → You already have: FAL_KEY (FLUX at $0.05/image)
+  → Alternative: Install Stable Diffusion locally (free, slower)
+  → Alternative: Add OPENAI_API_KEY for gpt-image-1 ($0.13/image)
+
+Estimated cost for 30s video: ~$0.65 (13 images)
+Estimated cost for 5min video: ~$6.00 (120 images)
+
+Style options: anime-ghibli, painterly, photorealistic, watercolor
+Reference: remotion-composer/public/demo-props/mori-no-seishin.json
+
+APPROACH B: Clip-Based Video
+─────────────────────────────
+What it looks like: AI-generated 3-5 second video clips assembled as a story.
+Most cinematic output but hardest to maintain visual consistency across clips.
+
+You need: A video generation API key.
+  → Currently available: None detected
+  → To enable: Add RUNWAY_API_KEY, KLING_API_KEY, or install CogVideoX locally
+
+Estimated cost for 30s video: $3-15 depending on provider
+Estimated cost for 5min video: $30-150
+
+Note: This approach is not yet proven in the OpenMontage pipeline.
+      Consistency across clips is the #1 challenge.
+```
+
+**Critical principle: Surface capabilities, don't hide limitations.** The user should know exactly what's possible right now vs. what needs setup.
+
+#### Step 3c: Mode Selection Rules
+
+- If the topic is visual/artistic (anime, illustration, fantasy) → **Approach A** (image-based)
+- If the topic involves data/statistics/business → **Approach D** (data viz) or **Approach A** with data overlays
+- If the topic involves math/physics → **Approach C** (Manim) if available, else **Approach E**
+- If the topic is abstract/conceptual and budget allows → **Approach B** (clip-based) for key moments
+- If no paid APIs available → **Approach D** (zero-key Remotion) or **Approach E** (diagrams)
+- If the user wants maximum quality and has video gen keys → **Approach F** (mixed: video clips for hero shots + Remotion for data)
+- **Always offer at least one free/local option** alongside paid approaches
+- **Never silently downgrade** — if the best approach needs a key the user doesn't have, say so explicitly
 
 ### Step 4: Design Concept Options
 
@@ -103,13 +187,15 @@ For each concept, specify:
 - Hook must promise a VISUAL experience, not just information
 - Hook must be grounded in a specific research finding
 
-#### 4b: Animation Mode and Approach
+#### 4b: Animation Approach and Approach
 
 For each concept, specify:
-- **Primary animation mode**: manim / remotion / ai_video / diagram_stills / mixed
-- **Why this mode**: grounded in technique research from the brief
+- **Animation approach**: `image_animation` / `clip_video` / `manim` / `remotion_dataviz` / `diagram_stills` / `mixed`
+- **Why this approach**: grounded in technique research AND tool availability from Step 3
+- **Image/video generation provider**: which specific provider from the preflight scan (e.g., "FLUX via fal.ai", "gpt-image-1 via OpenAI", "Stable Diffusion local")
 - **Reuse strategy**: What's the visual system? (recurring motifs, layout grid, color scheme, transition family)
 - **Complexity estimate**: How many unique scene types vs. reusable templates?
+- **Style playbook**: which playbook from `styles/*.yaml` (e.g., `anime-ghibli`, `clean-professional`)
 
 #### 4c: Narrative Structure
 
@@ -130,11 +216,12 @@ Choose from: `myth_busting`, `problem_solution`, `data_narrative`, `comparison`,
 
 #### 4e: Concept Diversity Check
 
-- [ ] No two concepts use the same animation mode
+- [ ] No two concepts use the same animation approach
 - [ ] No two concepts use the same narrative structure
-- [ ] At least one concept is achievable with free/local tools only
+- [ ] At least one concept is achievable with free/local tools only (zero-key or local image gen)
 - [ ] At least one concept leverages the most surprising data point
-- [ ] Each concept's animation mode is grounded in technique research
+- [ ] Each concept's approach is grounded in tool availability AND technique research
+- [ ] Each concept states which API keys/tools it requires (and flags any the user doesn't have)
 
 ### Step 5: Present Concepts and Get Selection
 
@@ -255,9 +342,12 @@ Validate the `proposal_packet` artifact against `schemas/artifacts/proposal_pack
 
 ## Common Pitfalls
 
-- **Ignoring animation mode feasibility**: If Manim isn't installed, don't propose a Manim-based concept. Design around constraints.
-- **Three versions of the same concept with different titles**: Structural diversity means different animation modes, different narrative structures, different hooks.
-- **Not leveraging free tools**: Animation has a huge cost advantage — Manim, Remotion, and diagram_gen are free. If proposing expensive AI video, justify why free alternatives won't work.
+- **Not showing the Tool Availability Scan**: The user must know what's available BEFORE seeing concepts. Don't hide missing keys or tools.
+- **Ignoring animation approach feasibility**: If FLUX isn't available, don't propose image_animation without saying "you need to add FAL_KEY first." Design around constraints OR explicitly state what's needed.
+- **Three versions of the same concept with different titles**: Structural diversity means different animation approaches, different narrative structures, different hooks.
+- **Not leveraging free tools**: Animation has a huge cost advantage — Manim, Remotion data-viz, and diagram_gen are free. If proposing expensive AI video, justify why free alternatives won't work.
 - **Over-promising visual complexity**: 20 unique hand-crafted scenes is not realistic. Design reuse strategies that look varied but share underlying templates.
 - **Skipping the approval gate**: This is the whole point of pre-production. No shortcuts.
 - **Ignoring mathematical accuracy**: If the research brief flagged technical accuracy constraints, the concept MUST respect them. A beautiful but wrong animation is a failure.
+- **Not distinguishing image_animation from clip_video**: These are fundamentally different. Image-based animation (Approach A) generates still images and uses Remotion for motion/crossfade. Clip-based video (Approach B) generates actual video clips with an AI video model. The user should understand this distinction clearly.
+- **Silent downgrades**: If the user picked image_animation but image generation fails, STOP and tell them. Never silently fall back to text cards or diagram stills.

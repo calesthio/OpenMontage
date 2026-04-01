@@ -36,10 +36,22 @@ Turn your AI coding assistant into a full video production studio. Describe what
 > **"VOID — Neural Interface"** — a product ad produced with just one API key (OpenAI). 4 AI-generated images (gpt-image-1), TTS narration, auto-sourced royalty-free music, word-level subtitles via WhisperX, and Remotion data visualizations. Total cost: **$0.69**. Zero manual asset work.
 
 <div align="center">
-  <video src="https://github.com/user-attachments/assets/08b108e6-c120-4fed-ab21-8549a71f4bd1" width="100%" controls></video>
+  <video src="https://github.com/user-attachments/assets/3c5d7122-7198-43e2-a97d-ed27558dd324" width="100%" controls></video>
 </div>
 
-> **"LUMINA — Bioluminescent Terrarium"** — a product ad with zero narration, driven entirely by music, typography, and AI-generated imagery. 5 FLUX-generated images, cinematic ambient soundtrack from Pixabay, animated data visualizations (KPI grids, bar charts, comparison cards), and layered stat reveal overlays. Total cost: **$0.15**. No voiceover, no manual editing.
+> **"Afternoon in Candyland"** — a Ghibli-style anime animation. A little girl's whimsical afternoon adventure through candy gates, gumdrop rivers, and lollipop gardens. 12 FLUX-generated images with multi-image crossfade, cinematic camera motion (zoom, pan, Ken Burns), sparkle/petal/firefly particle overlays, and ambient music with auto-detected energy offset. Total cost: **$0.15**. No video generation, no manual editing.
+
+<div align="center">
+  <video src="https://github.com/user-attachments/assets/e8dc5e32-5c70-46de-bd52-eef887719d13" width="100%" controls></video>
+</div>
+
+> **"Mori no Seishin"** — a Ghibli-style anime animation of a forest spirit's journey through ancient woods. 12 FLUX-generated images with parallax crossfade, drift and pan camera motion, firefly and petal particles, cinematic vignette lighting, and ambient forest soundtrack. Total cost: **$0.15**. Still images brought to life through Remotion's animation engine.
+
+<div align="center">
+  <video src="https://github.com/user-attachments/assets/9cf633d9-c264-4961-bfd0-b1db188654aa" width="100%" controls></video>
+</div>
+
+> **"Into the Abyss"** — a deep ocean exploration rendered in anime style. Bioluminescent gardens, coral cathedrals, and creatures of light — 12 FLUX-generated images with sparkle and mist particle overlays, light-ray effects, smooth camera motion, and ambient oceanic soundtrack. Total cost: **$0.15**. Zero video generation APIs needed.
 
 Works with **Claude Code, Cursor, Copilot, Windsurf, Codex** — any AI coding assistant that can read files and run code.
 
@@ -142,7 +154,11 @@ Copy any of these into your AI coding assistant after setup. Each one runs a ful
 
 > "Make a data-driven explainer about coffee consumption around the world"
 
-### With FAL_KEY (~$0.50–$1.50)
+### With FAL_KEY (~$0.15–$1.50)
+
+> "Create a 30-second Ghibli-style animated video of a magical floating library in the clouds at golden hour"
+
+> "Make a 30-second anime-style animation of an underwater temple with bioluminescent coral and ancient ruins"
 
 > "Create an animated explainer about how CRISPR gene editing works, using AI-generated visuals"
 

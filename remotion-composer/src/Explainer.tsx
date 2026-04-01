@@ -34,6 +34,9 @@ import { CaptionOverlay, WordCaption } from "./components/CaptionOverlay";
 import { SectionTitle } from "./components/SectionTitle";
 import { StatReveal } from "./components/StatReveal";
 import { HeroTitle } from "./components/HeroTitle";
+import { AnimeScene } from "./components/AnimeScene";
+import type { CameraMotion } from "./components/AnimeScene";
+import type { ParticleType } from "./components/ParticleOverlay";
 
 // Load Space Grotesk font for cinematic typography
 const { fontFamily } = loadFont("normal", {
@@ -102,6 +105,15 @@ interface Cut {
     scale?: number;
     position?: string | { x: number; y: number };
   };
+  // Anime scene props (type: "anime_scene")
+  images?: string[];
+  particles?: ParticleType;
+  particleColor?: string;
+  particleCount?: number;
+  particleIntensity?: number;
+  vignette?: boolean;
+  lightingFrom?: string;
+  lightingTo?: string;
 }
 
 interface Overlay {
@@ -124,6 +136,11 @@ interface AudioConfig {
   music?: AudioLayer & {
     fadeInSeconds?: number;
     fadeOutSeconds?: number;
+    /** Start playback from this offset in seconds (skip quiet intros).
+     *  Use the audio_energy tool to find the optimal offset. */
+    offsetSeconds?: number;
+    /** Loop the music if it's shorter than the video duration. */
+    loop?: boolean;
   };
 }
 
@@ -439,6 +456,25 @@ const SceneRenderer: React.FC<{ cut: Cut }> = ({ cut }) => {
     );
   }
 
+  // --- Anime scene (multi-image crossfade + particles) ---
+  if (cut.type === "anime_scene" && cut.images && cut.images.length > 0) {
+    return (
+      <AnimeScene
+        images={cut.images}
+        animation={(cut.animation as CameraMotion) || "ken-burns"}
+        particles={cut.particles}
+        particleColor={cut.particleColor}
+        particleCount={cut.particleCount}
+        particleIntensity={cut.particleIntensity}
+        backgroundColor={cut.backgroundColor}
+        vignette={cut.vignette ?? true}
+        lightingFrom={cut.lightingFrom}
+        lightingTo={cut.lightingTo}
+        sceneDurationSeconds={cut.out_seconds - cut.in_seconds}
+      />
+    );
+  }
+
   // --- Media types (image / video fallback) ---
   const animation = cut.animation || cut.transform?.animation;
 
@@ -546,10 +582,13 @@ export const Explainer: React.FC<ExplainerProps> = ({
         <Audio src={resolveAsset(audio.narration.src)} volume={audio.narration.volume ?? 1} />
       )}
 
-      {/* Layer 4: Audio — music with fade in/out */}
+      {/* Layer 4: Audio — music with offset, fade in/out, and optional loop */}
       {audio?.music?.src && (
         <Audio
           src={resolveAsset(audio.music.src)}
+          startFrom={Math.round((audio.music.offsetSeconds ?? 0) * fps)}
+          loop={audio.music.loop ?? false}
+          loopVolumeCurveBehavior="repeat"
           volume={(f) => {
             const baseVol = audio.music!.volume ?? 0.1;
             const fadeInDur = (audio.music!.fadeInSeconds ?? 2) * fps;

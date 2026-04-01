@@ -1,0 +1,146 @@
+{
+  "cuts": [
+    {
+      "id": "scene-1-awakening",
+      "source": "",
+      "in_seconds": 0,
+      "out_seconds": 5,
+      "type": "anime_scene",
+      "images": [
+        "mori-no-seishin/test-scene1-awakening.png",
+        "mori-no-seishin/scene1-awakening-b.png"
+      ],
+      "animation": "zoom-in",
+      "particles": "fireflies",
+      "particleColor": "#FFE082",
+      "particleCount": 18,
+      "particleIntensity": 0.5,
+      "backgroundColor": "#0A0A1A",
+      "vignette": true
+    },
+    {
+      "id": "scene-2-gate",
+      "source": "",
+      "in_seconds": 5,
+      "out_seconds": 10,
+      "type": "anime_scene",
+      "images": [
+        "mori-no-seishin/scene2-gate-a.png",
+        "mori-no-seishin/scene2-gate-b.png"
+      ],
+      "animation": "pan-right",
+      "particles": "mist",
+      "particleColor": "#FFFFFF",
+      "particleCount": 4,
+      "particleIntensity": 0.5,
+      "backgroundColor": "#0A0A1A",
+      "vignette": true,
+      "lightingFrom": "rgba(255,200,100,0.15)",
+      "lightingTo": "transparent"
+    },
+    {
+      "id": "scene-3-stream",
+      "source": "",
+      "in_seconds": 10,
+      "out_seconds": 15,
+      "type": "anime_scene",
+      "images": [
+        "mori-no-seishin/scene3-stream-a.png",
+        "mori-no-seishin/scene3-stream-b.png"
+      ],
+      "animation": "pan-left",
+      "particles": "sparkles",
+      "particleColor": "#87CEEB",
+      "particleCount": 15,
+      "particleIntensity": 0.4,
+      "backgroundColor": "#0A0A1A",
+      "vignette": true
+    },
+    {
+      "id": "scene-4-canopy",
+      "source": "",
+      "in_seconds": 15,
+      "out_seconds": 20,
+      "type": "anime_scene",
+      "images": [
+        "mori-no-seishin/scene4-canopy-a.png",
+        "mori-no-seishin/scene4-canopy-b.png"
+      ],
+      "animation": "drift-up",
+      "particles": "fireflies",
+      "particleColor": "#FFF3B0",
+      "particleCount": 25,
+      "particleIntensity": 0.6,
+      "backgroundColor": "#0A0A1A",
+      "vignette": true,
+      "lightingFrom": "transparent",
+      "lightingTo": "rgba(255,243,176,0.12)"
+    },
+    {
+      "id": "scene-5-overlook",
+      "source": "",
+      "in_seconds": 20,
+      "out_seconds": 25,
+      "type": "anime_scene",
+      "images": [
+        "mori-no-seishin/scene5-overlook-a.png",
+        "mori-no-seishin/scene5-overlook-b.png"
+      ],
+      "animation": "zoom-out",
+      "particles": "light-rays",
+      "particleColor": "#FFE082",
+      "particleCount": 3,
+      "particleIntensity": 0.35,
+      "backgroundColor": "#0A0A1A",
+      "vignette": true,
+      "lightingFrom": "rgba(255,180,71,0.1)",
+      "lightingTo": "rgba(255,107,157,0.08)"
+    },
+    {
+      "id": "scene-6-dance",
+      "source": "",
+      "in_seconds": 25,
+      "out_seconds": 30,
+      "type": "anime_scene",
+      "images": [
+        "mori-no-seishin/scene6-dance-a.png",
+        "mori-no-seishin/scene6-dance-b.png"
+      ],
+      "animation": "ken-burns",
+      "particles": "sparkles",
+      "particleColor": "#FFB347",
+      "particleCount": 30,
+      "particleIntensity": 0.7,
+      "backgroundColor": "#0A0A1A",
+      "vignette": true,
+      "lightingFrom": "rgba(255,180,71,0.08)",
+      "lightingTo": "rgba(100,80,200,0.1)"
+    }
+  ],
+  "overlays": [
+    {
+      "type": "hero_title",
+      "in_seconds": 0.5,
+      "out_seconds": 4.5,
+      "text": "Mori no Seishin",
+      "subtitle": "Spirit of the Forest"
+    },
+    {
+      "type": "section_title",
+      "in_seconds": 25.5,
+      "out_seconds": 29.5,
+      "text": "They were never alone.",
+      "accentColor": "#FFB347",
+      "position": "bottom-center"
+    }
+  ],
+  "audio": {
+    "music": {
+      "src": "mori-no-seishin/ambient-piano.mp3",
+      "volume": 0.18,
+      "fadeInSeconds": 2,
+      "fadeOutSeconds": 3,
+      "offsetSeconds": 56
+    }
+  }
+}

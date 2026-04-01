@@ -1,0 +1,122 @@
+identity:
+  name: "Anime Ghibli"
+  category: anime-illustration
+  mood: warm, whimsical, contemplative, magical
+  pace: gentle
+  best_for: "Narrative animations, nature-themed stories, emotional storytelling, fantasy visuals, educational content with wonder"
+
+visual_language:
+  color_palette:
+    primary: ["#2D5016", "#1B4332"]       # Deep forest greens
+    accent: ["#FFB347", "#FF6B9D"]        # Warm golden, soft cherry blossom pink
+    background: "#0A0A1A"                  # Deep night sky
+    text: "#F5F0E8"                        # Warm parchment white
+    muted: "#8B9A7E"                       # Mossy sage
+    spirit_glow: "#A8E6CF"                 # Soft teal glow for magical elements
+    golden_hour: "#FFF3B0"                 # Warm golden hour light
+  composition: centered subjects, rule of thirds for landscapes, generous negative space, layered depth
+  texture: soft watercolor edges, painterly brushstrokes, organic shapes, no hard geometric lines
+
+typography:
+  headings:
+    font: "Noto Serif JP"
+    weight: 500
+    tracking: "0.02em"
+  body:
+    font: "Noto Sans"
+    weight: 300
+    line_height: 1.7
+  code:
+    font: "Fira Code"
+    weight: 400
+  stat_card:
+    font: "Noto Serif JP"
+    weight: 600
+    size_multiplier: 3.0
+  scale_system: "major_third"
+  weight_matrix:
+    title: 600
+    heading: 500
+    body: 300
+    caption: 300
+
+motion:
+  transitions: [crossfade, drift, dissolve]
+  animation_style: "spring(1, 60, 20), gentle, no overshoot, organic easing"
+  pacing_rules:
+    min_scene_hold_seconds: 3.5
+    max_scene_hold_seconds: 7
+    text_card_hold_seconds: 4
+    stat_card_hold_seconds: 3.5
+    transition_duration_seconds: 1.0
+  entrance: "gentle fade + slow drift-up (opacity 0->1, translateY 8->0 over 1s)"
+  exit: "fade-dissolve (opacity 1->0 over 0.8s)"
+
+audio:
+  voice_style: "warm, gentle, storytelling cadence, unhurried, soft-spoken narrator"
+  music_mood: "ambient piano, soft strings, nature sounds, gentle orchestral, Joe Hisaishi-inspired"
+  music_volume: 0.15
+  sfx_style: "nature sounds (wind, water, birds), subtle magical chimes, no harsh effects"
+  ducking_threshold_db: -3
+
+asset_generation:
+  image_prompt_prefix: >
+    Studio Ghibli anime style, hand-painted watercolor aesthetic, soft diffused lighting,
+    lush natural environment, warm color palette, painterly brushstrokes visible,
+    high detail in foliage and atmospheric effects,
+  image_negative_prompt: "photorealistic, 3D render, CGI, harsh shadows, dark gritty, cyberpunk, neon"
+  scene_type: "anime_scene"
+  default_particles: "fireflies"
+  default_particle_color: "#FFE082"
+  default_vignette: true
+  consistency_anchors:
+    - "Deep forest greens (#2D5016) and warm golds (#FFB347) in every scene"
+    - "Soft watercolor edges — no sharp digital lines"
+    - "Layered depth: clear foreground, midground, background separation"
+    - "Warm diffused lighting, never harsh or clinical"
+    - "Magical elements glow with teal (#A8E6CF) or warm gold (#FFF3B0)"
+    - "Nature always present: trees, flowers, water, sky"
+  multi_image_per_scene: true
+  images_per_scene: 2
+  image_variation_guidance: >
+    Generate 2-3 images per scene with subtle variations: slightly different lighting
+    angle, leaves/particles in different positions, or gentle pose changes for characters.
+    Keep composition and color palette identical. These crossfade to simulate motion.
+
+overlays:
+  stat_card:
+    bg: "rgba(10, 10, 26, 0.7)"
+    border: "#A8E6CF"
+    radius: 16
+    shadow: "0 4px 30px rgba(168, 230, 207, 0.15)"
+  key_term:
+    bg: "rgba(45, 80, 22, 0.5)"
+    text: "#A8E6CF"
+    radius: 8
+  section_title:
+    bg: "rgba(10, 10, 26, 0.6)"
+    text: "#FFF3B0"
+    accent: "#FFB347"
+
+quality_rules:
+  - "Minimum contrast ratio 4.5:1 for all text against backgrounds"
+  - "Maximum 3 images per scene for crossfade (more creates jumpiness)"
+  - "Every scene must have at least one animated element (particles or camera motion)"
+  - "Scene pacing: hold each scene 4-6 seconds — never rush"
+  - "Crossfade between images within a scene must be 1-1.5 seconds"
+  - "Vignette on every image scene — creates cinematic depth"
+  - "Color consistency: same palette across all generated images (use seed management)"
+  - "No text burned into generated images — use Remotion overlays instead"
+
+chart_palette:
+  - "#A8E6CF"
+  - "#FFB347"
+  - "#FF6B9D"
+  - "#87CEEB"
+  - "#DDA0DD"
+  - "#F5F0E8"
+
+color_rules:
+  harmony_type: "analogous"
+  contrast_validation: true
+  colorblind_safe: true

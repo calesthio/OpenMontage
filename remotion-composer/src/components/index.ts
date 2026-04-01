@@ -8,3 +8,7 @@ export { CaptionOverlay } from "./CaptionOverlay";
 export { SectionTitle } from "./SectionTitle";
 export { StatReveal } from "./StatReveal";
 export { HeroTitle } from "./HeroTitle";
+export { ParticleOverlay } from "./ParticleOverlay";
+export { AnimeScene } from "./AnimeScene";
+export type { ParticleType } from "./ParticleOverlay";
+export type { CameraMotion, AnimeSceneProps } from "./AnimeScene";

@@ -33,6 +33,38 @@ Before batch-generating assets, produce one sample of each expensive type and sh
 
 If rejected, adjust parameters and retry (max 3 iterations). Do not batch until approved.
 
+### 1c. Multi-Image Generation for Image-Based Animation (Approach A)
+
+When `animation_mode == "image_animation"`, each scene needs **2-3 images** for crossfade animation. This is what makes stills look like movement.
+
+**Image generation workflow:**
+
+1. **Define a STYLE_PREFIX** — a consistent prompt prefix used across ALL images in the project. This ensures visual coherence. Store it as a reusable asset.
+   ```
+   Example: "Studio Ghibli anime style, hand-painted watercolor aesthetic,
+   soft diffused lighting, lush natural environment, warm color palette,
+   painterly brushstrokes visible, high detail..."
+   ```
+
+2. **Use seed management** — for each scene, use nearby seed values (e.g., seed 100 and 101) for the A/B variants. Same prompt + different seed = same composition with subtle differences = natural crossfade motion.
+
+3. **Generate one test image first** — render a single scene to verify the style prefix produces good results at 1920×1080 before batch generating all images.
+
+4. **Batch generation** — generate all scene images. Skip any that already exist on disk (idempotent).
+
+5. **Composition JSON** — each scene gets `type: "anime_scene"` with `images: ["path/a.png", "path/b.png"]` plus camera motion, particle type, and lighting config.
+
+**Cost estimation:** 2-3 images per scene × $0.03-0.13/image depending on provider.
+
+**Reference:** See `projects/mori-no-seishin/generate_images.py` for the proven batch generation pattern.
+
+6. **Copy to Remotion public directory** — After generating all images, copy them to `remotion-composer/public/<project-name>/` so Remotion can access them via `staticFile()`. Image paths in the composition JSON are relative to this directory:
+   ```
+   remotion-composer/public/<project-name>/scene1-a.png   ← Remotion reads from here
+   remotion-composer/public/<project-name>/ambient-music.mp3  ← Music too
+   ```
+   **If you skip this step, the render will fail with missing file errors.** This is the #1 cause of render failures for new projects.
+
 ### 2. Build Reusable Systems
 
 Create once:

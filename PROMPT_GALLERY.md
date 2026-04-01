@@ -88,6 +88,44 @@ Adding `FAL_KEY` to your `.env` unlocks FLUX image generation. These prompts com
 
 ---
 
+## Animation Pipeline — Anime/Ghibli Style (FAL_KEY, ~$0.15)
+
+These use the **Animation pipeline** with `image_animation` approach — FLUX-generated still images brought to life through multi-image crossfade, cinematic camera motion, particle overlays, and ambient music. No video generation APIs needed. Each 30-second video costs ~$0.15.
+
+### Ghibli Fantasy World
+
+> "Create a 30-second Ghibli-style animated video of a magical floating library in the clouds at golden hour. Books drift between shelves, warm light streams through stained glass windows, and a small cat naps on a reading desk."
+
+**What you get:** 6 anime scenes with 12 FLUX-generated images, camera motion (zoom, pan, Ken Burns, drift), sparkle and light-ray particles, cinematic vignette, hero title overlay, and auto-sourced ambient music with energy-optimized offset.
+
+**Estimated time:** 10-15 minutes | **Cost:** ~$0.15
+
+### Underwater Exploration
+
+> "Make a 30-second anime-style animation of an underwater temple with bioluminescent coral, ancient ruins covered in sea moss, luminous jellyfish drifting past stone pillars, and shafts of sunlight piercing the deep blue."
+
+**What you get:** Deep ocean atmosphere with mist and sparkle particles, pan and drift camera motion, blue-green lighting overlays, section title overlays, and oceanic ambient soundtrack.
+
+**Estimated time:** 10-15 minutes | **Cost:** ~$0.15
+
+### Seasonal Journey
+
+> "Create a 30-second Ghibli-style animated video showing the four seasons in a Japanese countryside village — cherry blossoms in spring, fireflies in summer, red maple leaves in autumn, and snow-covered thatched roofs in winter."
+
+**What you get:** 6 scenes transitioning through seasons with petal, firefly, sparkle, and mist particles matching each season. Warm-to-cool lighting transitions and ambient seasonal soundtrack.
+
+**Estimated time:** 10-15 minutes | **Cost:** ~$0.15
+
+### Steampunk Cityscape
+
+> "Make a 30-second anime-style animation of a steampunk city at dusk — airships floating between brass towers, steam rising from street vents, clockwork birds perching on copper lampposts, and a lone inventor walking home through cobblestone streets."
+
+**What you get:** Industrial-fantasy atmosphere with mist and sparkle particles, parallax and zoom camera motion, warm amber lighting overlays, and steampunk-ambient soundtrack.
+
+**Estimated time:** 10-15 minutes | **Cost:** ~$0.15
+
+---
+
 ## Full Setup Prompts (~$1-$3)
 
 With video generation (Veo, Kling, Runway) + premium TTS (ElevenLabs) + music (Suno). These produce broadcast-quality content.
@@ -149,6 +187,8 @@ With video generation (Veo, Kling, Runway) + premium TTS (ElevenLabs) + music (S
 **Request specific chart types.** The system has bar charts, line charts, pie/donut charts, KPI grids, progress bars, comparison cards, and callout boxes. Name the ones you want.
 
 **Ask for the zero-key path.** If you want free results, say "use only free tools" or "no paid APIs." The agent will route to Piper TTS, stock media, and Remotion-only compositions.
+
+**For anime/Ghibli-style videos,** mention the style explicitly: "Ghibli-style" or "anime-style." Describe the atmosphere, lighting, and mood. The agent uses the Animation pipeline with FLUX image generation and Remotion's anime scene engine — multi-image crossfade, camera motion, and particle overlays create the illusion of animation from still images. Cost is minimal (~$0.15 for 30 seconds).
 
 ---
 

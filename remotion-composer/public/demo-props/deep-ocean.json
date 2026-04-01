@@ -1,0 +1,154 @@
+{
+  "cuts": [
+    {
+      "id": "scene-1-abyss-awakens",
+      "source": "",
+      "in_seconds": 0,
+      "out_seconds": 5,
+      "type": "anime_scene",
+      "images": [
+        "deep-ocean/test-scene1-abyss.png",
+        "deep-ocean/scene1-abyss-b.png"
+      ],
+      "animation": "zoom-in",
+      "particles": "sparkles",
+      "particleColor": "#00E5FF",
+      "particleCount": 20,
+      "particleIntensity": 0.5,
+      "backgroundColor": "#020810",
+      "vignette": true,
+      "lightingFrom": "rgba(0,229,255,0.08)",
+      "lightingTo": "transparent"
+    },
+    {
+      "id": "scene-2-bioluminescent-garden",
+      "source": "",
+      "in_seconds": 5,
+      "out_seconds": 10,
+      "type": "anime_scene",
+      "images": [
+        "deep-ocean/scene2-garden-a.png",
+        "deep-ocean/scene2-garden-b.png"
+      ],
+      "animation": "pan-right",
+      "particles": "fireflies",
+      "particleColor": "#A8E6CF",
+      "particleCount": 25,
+      "particleIntensity": 0.6,
+      "backgroundColor": "#020810",
+      "vignette": true
+    },
+    {
+      "id": "scene-3-coral-cathedral",
+      "source": "",
+      "in_seconds": 10,
+      "out_seconds": 15,
+      "type": "anime_scene",
+      "images": [
+        "deep-ocean/scene3-coral-a.png",
+        "deep-ocean/scene3-coral-b.png"
+      ],
+      "animation": "drift-up",
+      "particles": "mist",
+      "particleColor": "#FFFFFF",
+      "particleCount": 5,
+      "particleIntensity": 0.4,
+      "backgroundColor": "#020810",
+      "vignette": true,
+      "lightingFrom": "transparent",
+      "lightingTo": "rgba(168,230,207,0.10)"
+    },
+    {
+      "id": "scene-4-creatures-of-light",
+      "source": "",
+      "in_seconds": 15,
+      "out_seconds": 20,
+      "type": "anime_scene",
+      "images": [
+        "deep-ocean/scene4-creatures-a.png",
+        "deep-ocean/scene4-creatures-b.png"
+      ],
+      "animation": "pan-left",
+      "particles": "sparkles",
+      "particleColor": "#FFB347",
+      "particleCount": 18,
+      "particleIntensity": 0.5,
+      "backgroundColor": "#020810",
+      "vignette": true
+    },
+    {
+      "id": "scene-5-the-deep-trench",
+      "source": "",
+      "in_seconds": 20,
+      "out_seconds": 25,
+      "type": "anime_scene",
+      "images": [
+        "deep-ocean/scene5-trench-a.png",
+        "deep-ocean/scene5-trench-b.png"
+      ],
+      "animation": "zoom-out",
+      "particles": "light-rays",
+      "particleColor": "#4FC3F7",
+      "particleCount": 3,
+      "particleIntensity": 0.35,
+      "backgroundColor": "#020810",
+      "vignette": true,
+      "lightingFrom": "rgba(79,195,247,0.08)",
+      "lightingTo": "rgba(0,0,0,0.2)"
+    },
+    {
+      "id": "scene-6-return-to-light",
+      "source": "",
+      "in_seconds": 25,
+      "out_seconds": 30,
+      "type": "anime_scene",
+      "images": [
+        "deep-ocean/scene6-ascent-a.png",
+        "deep-ocean/scene6-ascent-b.png"
+      ],
+      "animation": "ken-burns",
+      "particles": "fireflies",
+      "particleColor": "#FFE082",
+      "particleCount": 22,
+      "particleIntensity": 0.65,
+      "backgroundColor": "#020810",
+      "vignette": true,
+      "lightingFrom": "rgba(0,100,200,0.08)",
+      "lightingTo": "rgba(255,224,130,0.12)"
+    }
+  ],
+  "overlays": [
+    {
+      "type": "hero_title",
+      "in_seconds": 0.5,
+      "out_seconds": 4.5,
+      "text": "Into the Abyss",
+      "subtitle": "Where Light Is Born from Darkness"
+    },
+    {
+      "type": "section_title",
+      "in_seconds": 10.5,
+      "out_seconds": 14.0,
+      "text": "Ancient Beyond Measure",
+      "accentColor": "#A8E6CF",
+      "position": "bottom-center"
+    },
+    {
+      "type": "section_title",
+      "in_seconds": 25.5,
+      "out_seconds": 29.5,
+      "text": "The deep remembers.",
+      "accentColor": "#FFE082",
+      "position": "bottom-center"
+    }
+  ],
+  "audio": {
+    "music": {
+      "src": "deep-ocean/ambient-ocean.mp3",
+      "volume": 0.15,
+      "fadeInSeconds": 2,
+      "fadeOutSeconds": 3,
+      "offsetSeconds": 55
+    }
+  }
+}

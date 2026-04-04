@@ -95,10 +95,14 @@ stages:
       - Production plan reflects actual tool availability from preflight
       - Cost estimate is itemized and honest
       - Free/local tool options are highlighted where applicable
+      - "Audio architecture decided: single narrator / character dialogue / narrator+characters"
+      - "Provider choice presented as comparison table with costs — agent recommends but user decides"
     success_criteria:
       - Schema-valid proposal_packet with at least 3 concept_options
       - selected_concept includes animation_mode and reuse_strategy
+      - selected_concept includes audio_architecture (single_narrator | character_dialogue | narrator_plus_characters)
       - cost_estimate has itemized line_items with per-tool costs
+      - cost_estimate includes provider_comparison table with at least 2 provider options
       - approval.status is "approved" or "approved_with_changes" before proceeding
     sub_stages:
       - name: sample
@@ -191,9 +195,12 @@ stages:
       - Reusable motifs and templates are prepared and referenced
       - Missing tool paths are surfaced honestly
       - Total cost within approved budget from proposal_packet
+      - "Layer 3 skills read for EVERY generation tool before writing prompts (check agent_skills field)"
+      - "Clip duration maximized (prefer 10s over 5s) to reduce API calls and cost"
     success_criteria:
       - Schema-valid asset_manifest artifact
       - All referenced asset files exist on disk
+      - layer3_skills_read list is present and includes all tools used for generation
 
   - name: edit
     skill: pipelines/animation/edit-director

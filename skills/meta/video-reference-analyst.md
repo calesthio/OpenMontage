@@ -327,13 +327,33 @@ adjust: voice, visual style, pacing, music, colors."
 Iterate on sample feedback until approved. Store samples at:
 `projects/<name>/assets/sample/sample_v{N}.mp4`
 
-### Step 6: Enter Pipeline
+### Step 6: Enter Pipeline (HARD REDIRECT)
 
-After sample approval, enter the appropriate pipeline with:
+After sample approval, the agent MUST enter the pipeline. This is not optional.
+
+**Mandatory steps:**
+1. Read the pipeline manifest: `pipeline_defs/animation.yaml` (or whichever
+   pipeline matches the production type)
+2. Execute **stage by stage** in order — research → proposal → script →
+   scene_plan → assets → edit → compose → publish
+3. Before EACH stage, read its director skill from
+   `skills/pipelines/<pipeline>/<stage>-director.md`
+4. Produce the required artifacts at each stage
+5. Hit every checkpoint where `checkpoint_required: true`
+6. Get user approval where `human_approval_default: true`
+
+**Do NOT collapse stages.** Do not jump from "user approved proposal" to
+"generate all assets." The pipeline stages exist to enforce quality gates,
+artifact dependencies, and review checkpoints. Skipping them is a governance
+violation.
+
+**Context to carry into the pipeline:**
 - VideoAnalysisBrief as grounding context in the research/proposal stage
 - User's chosen variant as the approved direction
 - Sample feedback incorporated into the brief
 - All creative differentiation decisions recorded in the decision_log
+- Audio architecture and voice casting decisions from Step 3
+- Layer 3 skills already read from Step 4b
 
 The pipeline takes over from here. The VideoAnalysisBrief travels alongside the
 standard artifacts, providing reference grounding at every stage.

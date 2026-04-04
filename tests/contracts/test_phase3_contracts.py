@@ -239,7 +239,10 @@ class TestStylePlaybooks:
     def test_compatible_with_manifest(self):
         manifest = load_pipeline("animated-explainer")
         available = list_playbooks()
-        for name in manifest.get("compatible_playbooks", []):
+        compat = manifest.get("compatible_playbooks", {})
+        # compatible_playbooks is a dict with recommended/also_works lists
+        playbook_names = compat.get("recommended", []) + compat.get("also_works", [])
+        for name in playbook_names:
             assert name in available, f"Manifest references unavailable playbook: {name}"
 
 

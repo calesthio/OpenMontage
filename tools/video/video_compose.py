@@ -325,12 +325,15 @@ class VideoCompose(BaseTool):
                         ),
                     )
                 else:
-                    # Video source: trim to segment
+                    # Video source: trim to segment.
+                    # -ss before -i for input-level seeking — more reliable
+                    # with -c copy when stream order is non-standard (e.g.
+                    # audio-first containers from Kling/fal.ai).
                     cmd = [
                         "ffmpeg", "-y",
-                        "-i", str(source),
                         "-ss", str(in_s),
-                        "-to", str(out_s),
+                        "-i", str(source),
+                        "-to", str(out_s - in_s),
                     ]
 
                     if speed != 1.0:
@@ -378,25 +381,35 @@ class VideoCompose(BaseTool):
             if audio_path and Path(audio_path).exists():
                 cmd.extend(["-i", audio_path])
 
-            if vfilters:
-                cmd.extend(["-vf", ",".join(vfilters)])
-                cmd.extend(["-c:v", codec, "-crf", str(crf), "-preset", preset])
-            else:
-                cmd.extend(["-c:v", "copy"])
-
-            if audio_path and Path(audio_path).exists():
-                cmd.extend(["-map", "0:v:0", "-map", "1:a:0", "-c:a", "aac", "-shortest"])
-            else:
-                cmd.extend(["-c:a", "copy"])
-
-            # Apply profile resolution/fps at final output
+            # Determine if profile requires re-encoding (resize/fps change)
+            # This must be checked BEFORE choosing copy vs encode, because
+            # -s and -r are incompatible with -c:v copy.
+            profile_flags: list[str] = []
             if profile_name:
                 try:
                     from lib.media_profiles import get_profile
                     p = get_profile(profile_name)
-                    cmd.extend(["-s", f"{p.width}x{p.height}", "-r", str(p.fps)])
+                    profile_flags = ["-s", f"{p.width}x{p.height}", "-r", str(p.fps)]
                 except (ImportError, ValueError):
                     pass
+
+            needs_reencode = bool(vfilters) or bool(profile_flags)
+
+            if needs_reencode:
+                if vfilters:
+                    cmd.extend(["-vf", ",".join(vfilters)])
+                cmd.extend(["-c:v", codec, "-crf", str(crf), "-preset", preset])
+                cmd.extend(profile_flags)
+            else:
+                cmd.extend(["-c:v", "copy"])
+
+            if audio_path and Path(audio_path).exists():
+                # Use type-based selectors (0:v, 1:a) instead of index-based
+                # (0:v:0) because source videos may have audio as stream 0
+                # and video as stream 1 (e.g. Kling-generated clips).
+                cmd.extend(["-map", "0:v", "-map", "1:a", "-c:a", "aac", "-shortest"])
+            else:
+                cmd.extend(["-c:a", "copy"])
 
             cmd.append(str(output_path))
             self.run_command(cmd)
@@ -570,12 +583,29 @@ class VideoCompose(BaseTool):
         return theme if theme else None
 
     def _needs_remotion(self, cuts: list[dict]) -> bool:
-        """Determine if the composition requires Remotion.
+        """Determine whether Remotion should handle this composition.
 
-        Returns True when any cut contains still images, animated scene types,
-        component types (text_card, stat_card, etc.), or transitions — all of
-        which benefit from Remotion's React-based rendering over FFmpeg.
+        Remotion is the DEFAULT composition engine when available.  It handles
+        video clips (via <OffthreadVideo>), still images, animated scene types,
+        component types, transitions, and mixed content — all in a single
+        React-based render pass.
+
+        Returns False (i.e. use FFmpeg) ONLY when ALL of these are true:
+          1. Every cut source is a video file (no images, no component types)
+          2. No cut requests animations or transitions
+          3. No cut uses a Remotion scene type
+          4. The edit_decisions explicitly set renderer_family to "ffmpeg-only"
+             OR Remotion is not available
+
+        This "Remotion-first" policy means mixed content (video clips +
+        animated stills + text cards) is always composed in Remotion, which
+        can embed <OffthreadVideo> alongside React components natively.
         """
+        # If Remotion isn't installed, fall back to FFmpeg
+        if not self._remotion_available():
+            return False
+
+        # Any rich content → Remotion (fast path, catches the obvious cases)
         for cut in cuts:
             source = cut.get("source", "")
             if source and Path(source).suffix.lower() in self._IMAGE_EXTENSIONS:
@@ -587,7 +617,11 @@ class VideoCompose(BaseTool):
             transform = cut.get("transform", {})
             if transform and transform.get("animation"):
                 return True
-        return False
+
+        # Even for pure-video cuts, default to Remotion — it handles video
+        # clips natively via <OffthreadVideo> and gives us transitions,
+        # overlays, and profile scaling for free.
+        return True
 
     def _pre_compose_validation(
         self,
@@ -692,8 +726,15 @@ class VideoCompose(BaseTool):
         """High-level render: assemble edit decisions + asset manifest into final video.
 
         This is the primary entry point for the compose-director skill.
-        It resolves asset IDs, then auto-routes to Remotion (for images,
-        animations, component scenes) or FFmpeg (for pure video cuts).
+        It resolves asset IDs and routes to the composition engine:
+
+        - **Remotion (default):** Used for all compositions when available —
+          video clips, images, animated scenes, component types, mixed content.
+          Remotion embeds video via <OffthreadVideo> and handles transitions,
+          overlays, and profile scaling natively.
+        - **FFmpeg (fallback):** Used only when Remotion is unavailable, or
+          when the agent explicitly calls operation='compose' for simple
+          trim/concat operations.
 
         The agent should pass edit_decisions, asset_manifest, and optionally
         profile, subtitle_path, audio_path, and options.
@@ -733,7 +774,7 @@ class VideoCompose(BaseTool):
         # Also accept profile as "output_profile" (skill convention) or "profile"
         profile = inputs.get("profile") or inputs.get("output_profile")
 
-        # --- Route: Remotion for rich content, FFmpeg for pure video ---
+        # --- Route: Remotion by default, FFmpeg only when Remotion unavailable ---
         if self._needs_remotion(resolved_cuts):
             remotion_inputs: dict[str, Any] = {
                 "edit_decisions": dict(edit_decisions, cuts=resolved_cuts),
@@ -761,7 +802,7 @@ class VideoCompose(BaseTool):
                     ),
                 )
         else:
-            # --- FFmpeg path: pure video cuts (talking-head, etc.) ---
+            # --- FFmpeg fallback: only when Remotion is unavailable ---
             options = inputs.get("options", {})
             subtitle_burn = options.get("subtitle_burn", True)
 

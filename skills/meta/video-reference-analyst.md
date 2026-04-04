@@ -103,12 +103,12 @@ Composition engine       Remotion: available        READY (preferred)
                          FFmpeg: available          READY (fallback only)
 ```
 
-**Composition engine priority:** Always check Remotion availability at this step.
-When Remotion is available, it is the **primary** composition engine — use it for
-transitions, animated text, still-image animation, and scene assembly. FFmpeg is
-the fallback for when Remotion is unavailable, or for simple operations that don't
-benefit from Remotion (pure concat, trim, audio mux). Never default to FFmpeg when
-Remotion is available.
+**Composition engine priority:** Remotion is the **default** composition engine for
+ALL final renders — video clips, images, animated scenes, mixed content. It embeds
+video natively via `<OffthreadVideo>` and handles transitions, overlays, and profile
+scaling in a single React render pass. FFmpeg is only used when Remotion is
+unavailable, or for standalone operations (trim, transcode, subtitle burn) outside
+the composition pipeline. **Never default to FFmpeg when Remotion is available.**
 
 Be honest about gaps. If video generation is needed but unavailable, say so clearly:
 

@@ -13,22 +13,33 @@ Remotion API usage — imports, timing, animation constraints, code patterns.
 **This file** teaches how OpenMontage uses Remotion — which compositions map to pipeline
 stages, how artifacts flow in, and how renders are triggered.
 
-## When to Use Remotion vs FFmpeg
+## Remotion-First Routing
+
+**Remotion is the DEFAULT composition engine for ALL final renders when available.**
+It handles video clips (via `<OffthreadVideo>`), still images, animated scenes,
+component types, transitions, and mixed content — all in a single React-based
+render pass.
+
+FFmpeg is the **fallback** — used only when Remotion is unavailable, or for
+simple standalone operations that don't benefit from React rendering.
 
 | Use Case | Backend | Why |
 |----------|---------|-----|
-| Simple cuts, trims, concat | FFmpeg | Instant, no Node dependency |
-| Subtitle burn-in | FFmpeg | Proven, fast |
+| Final video render (any content type) | **Remotion** | Default for all compositions |
+| Video clips + animated stills + text cards | **Remotion** | Mixed content in one pass |
+| Video-only cuts with transitions | **Remotion** | Native `<OffthreadVideo>` + transitions |
+| Animated diagrams/text cards | **Remotion** | Frame-by-frame control |
+| Data-driven batch videos | **Remotion** | Zod props + parametric renders |
+| Simple trim, concat (no composition) | FFmpeg | Instant, no Node dependency |
+| Subtitle burn-in (standalone) | FFmpeg | Proven, fast |
 | Face enhance, color grade | FFmpeg | Filter-based, deterministic |
-| Multi-layer overlays + transitions | Remotion | React composability |
-| Animated diagrams/text cards | Remotion | Frame-by-frame control |
-| Data-driven batch videos | Remotion | Zod props + parametric renders |
-| Generated explainer pipeline | Remotion | Full scene graph needed |
-| Talking-head (video-only cuts) | FFmpeg | No images/animations needed |
+| Remotion unavailable | FFmpeg | Automatic fallback |
 
-**Note:** The `render` operation auto-routes — if any cut contains images,
-animations, transitions, or component types, it delegates to Remotion
-automatically. No need to manually select backend.
+**Note:** The `render` operation auto-routes to Remotion by default. FFmpeg is
+only selected when Remotion is not installed or the agent explicitly calls
+`operation='compose'` for standalone operations. The agent can also write custom
+Remotion compositions on the fly via the capability-extension protocol when no
+existing composition covers the layout (e.g., custom PiP, split-screen).
 
 ## Supported Scene Types (Cut Types)
 

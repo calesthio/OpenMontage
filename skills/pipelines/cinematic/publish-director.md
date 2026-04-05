@@ -49,6 +49,10 @@ Store in `publish_log.metadata`:
 - metadata fits the tone,
 - the package is usable without manual cleanup.
 
+## Direct Publishing (Optional)
+
+If `UPLOADPOST_API_KEY` is set, use the `uploadpost_publisher` tool to publish the final video directly to social platforms (Instagram, TikTok, YouTube, LinkedIn, X, Threads, Pinterest, Bluesky, Reddit, Facebook, Google Business) instead of only exporting locally. See `skills/core/social-publishing.md` for integration details.
+
 ## Common Pitfalls
 
 - Mixing teaser and hero outputs without clear naming.

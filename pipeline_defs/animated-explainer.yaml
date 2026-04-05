@@ -250,7 +250,8 @@ stages:
       - proposal_packet
     produces:
       - publish_log
-    tools_available: []
+    tools_available:
+      - uploadpost_publisher
     checkpoint_required: true
     human_approval_default: true
     review_focus:

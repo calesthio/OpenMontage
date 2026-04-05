@@ -53,6 +53,10 @@ Store in `publish_log.metadata`:
 - export folders are usable without extra cleanup,
 - the batch catalog clearly links ranking, file paths, and publishing intent.
 
+## Direct Publishing (Optional)
+
+If `UPLOADPOST_API_KEY` is set, use the `uploadpost_publisher` tool to publish the final video directly to social platforms (Instagram, TikTok, YouTube, LinkedIn, X, Threads, Pinterest, Bluesky, Reddit, Facebook, Google Business) instead of only exporting locally. See `skills/core/social-publishing.md` for integration details.
+
 ## Common Pitfalls
 
 - Publishing the whole batch on the same day.

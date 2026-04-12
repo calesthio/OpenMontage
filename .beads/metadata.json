@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "server",
+  "dolt_database": "OpenMontage",
+  "project_id": "5d457f3f-e857-448f-9c56-6f22eb30cf9a"
+}

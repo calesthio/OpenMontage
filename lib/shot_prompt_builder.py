@@ -143,6 +143,38 @@ def build_shot_prompt(
     return ". ".join(filter(None, layers))
 
 
+def build_motion_prompt(
+    scene: dict[str, Any],
+    style_context: dict[str, Any] | None = None,
+) -> str:
+    """Build the motion/video prompt for a Clotho video.image_to_video node.
+
+    Distinct from build_shot_prompt (which describes the LOOK).
+    This describes the MOVEMENT — what changes, how the camera moves.
+    """
+    sl = scene.get("shot_language", {})
+    parts: list[str] = []
+
+    # Primary: explicit movement string from scene plan
+    movement = scene.get("movement", "")
+    if movement:
+        parts.append(movement)
+    elif sl.get("camera_movement") and sl["camera_movement"] != "static":
+        parts.append(_MOVEMENT_PHRASES.get(sl["camera_movement"], sl["camera_movement"]))
+
+    # Subject action: use description as the action basis
+    description = scene.get("description", "")
+    if description:
+        parts.append(description)
+
+    # Texture keywords
+    texture = scene.get("texture_keywords", [])
+    if texture:
+        parts.append(", ".join(texture))
+
+    return ". ".join(filter(None, parts))
+
+
 def build_batch_prompts(
     scenes: list[dict[str, Any]],
     style_context: dict[str, Any] | None = None,

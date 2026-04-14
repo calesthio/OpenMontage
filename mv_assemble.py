@@ -43,11 +43,12 @@ GRADE_2025 = (
 # Times in seconds within the generated clip
 
 TIMELINE = [
-    # ── INTRO 0–7s ──────────────────────────────────────────────────────────
-    # Fade in from black on Sofia 2025 holding the photo
-    ("ecus_2025_sofia_photo",     0, 4.0, "2025"),  # 0–4s
+    # ── INTRO 0–10s ─────────────────────────────────────────────────────────
+    # Wide establishing shot, then photo close-up plays once through to end
+    ("intro_2025_sofia_wide",     0, 5.0, "2025"),  # 0–5s
+    ("ecus_2025_sofia_photo",     0, 5.0, "2025"),  # 5–10s  single continuous play
 
-    # ── VERSE 1: CAFÉ 7–38s ──────────────────────────────────────────────────
+    # ── VERSE 1: CAFÉ 10–44s ─────────────────────────────────────────────────
     ("cafe_2000_wide",            0, 4.5, "2000"),  # 4–8.5s
     ("cafe_2000_marcus_talking",  0, 3.5, "2000"),  # 8.5–12s
     ("cafe_2000_sofia_laughing",  0, 3.5, "2000"),  # 12–15.5s

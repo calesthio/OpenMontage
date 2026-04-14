@@ -54,6 +54,23 @@ NEG = ("blurry, cartoon, anime, painting, extra limbs, distorted face, "
 # Each scene: id, duration (5 or 10), prompt, era (2000/2025/both), notes
 SCENES = [
 
+    # ── INTRO ────────────────────────────────────────────────────────────────
+    {
+        "id": "intro_2025_sofia_wide",
+        "dur": "5",
+        "era": "2025",
+        "label": "Intro 2025 – Sofia wide shot by rainy window",
+        "prompt": (
+            f"Wide medium shot of a 47-year-old woman with dark hair and subtle silver "
+            "streaks, wearing a dark wool coat, standing alone by a large apartment "
+            "window at night. Rain streaks down the glass. City lights glow softly "
+            "below. She stands still, looking out, her back slightly turned to the "
+            "camera. Slow, gentle camera drift forward. A quiet, establishing moment "
+            "of solitude. No objects in hands. "
+            f"{STYLE_2025}"
+        ),
+    },
+
     # ── CAFÉ ────────────────────────────────────────────────────────────────
     {
         "id": "cafe_2000_wide",
@@ -124,12 +141,13 @@ SCENES = [
         "id": "street_2000_jacket",
         "dur": "10",
         "era": "2000",
-        "label": "Street 2000 – Marcus gives jacket to Sofia",
+        "label": "Street 2000 – Couple huddled under umbrella in rain",
         "prompt": (
-            f"Medium shot on a city street corner at evening in light rain. "
-            f"{M2000} takes off his jacket and drapes it over {S2000}'s shoulders. "
-            "Their faces come close for a moment. She protests playfully but pulls "
-            "the jacket tighter. Warm streetlights, wet pavement. "
+            f"Medium shot of {S2000} and {M2000} standing together on a city street "
+            "in the rain, both huddled under one small umbrella — too small for two "
+            "people. They press close together, laughing at how wet they are anyway. "
+            "Rain splashes around them, warm streetlights glow on wet pavement. "
+            "A happy, intimate moment in the rain. "
             f"{STYLE_2000}"
         ),
     },
@@ -165,12 +183,13 @@ SCENES = [
         "id": "record_2000",
         "dur": "10",
         "era": "2000",
-        "label": "Record store 2000 – Marcus holds vinyl like earring",
+        "label": "Record store 2000 – browsing shelves together",
         "prompt": (
-            f"Inside a small cluttered record store, {M2000} picks up a vinyl record "
-            f"and holds it up near {S2000}'s ear like a giant earring, grinning. "
-            "She rolls her eyes but laughs. Shelves of records around them, "
-            "warm overhead lighting, posters on walls. "
+            f"Inside a small cluttered record store, {M2000} and {S2000} are browsing "
+            "through vinyl record sleeves on a shelf together. Marcus points at an album "
+            "cover with excitement, Sofia leans in to look and smiles. Their hands "
+            "flip through the sleeves naturally. Warm overhead lighting, "
+            "posters on walls, cozy indie record shop atmosphere. "
             f"{STYLE_2000}"
         ),
     },
@@ -180,9 +199,11 @@ SCENES = [
         "era": "2025",
         "label": "Record store 2025 – Sofia pauses at same shelf",
         "prompt": (
-            f"Medium close-up of {S2025} in a record store, she stops in front of "
-            "a vinyl shelf. Her fingers brush the edge of a record. She pulls it out "
-            "slightly, looks at the cover, then slides it back. A quiet, still moment. "
+            f"Medium close-up of a 47-year-old woman with dark brown hair and subtle "
+            "silver streaks, wearing a dark wool coat, standing in a record store. "
+            "She stops in front of a vinyl shelf. Her hand rests gently on the edge "
+            "of the records. She stares at the shelf with a distant, melancholic "
+            "expression as if remembering something. A quiet, still moment. "
             f"{STYLE_2025}"
         ),
     },
@@ -247,10 +268,14 @@ SCENES = [
         "era": "2025",
         "label": "Dance bar 2025 – Sofia watches couples from the edge",
         "prompt": (
-            f"Medium shot of {S2025} standing at the edge of a bar or small venue, "
-            "a glass in her hand she doesn't drink. She watches couples dancing in "
-            "the soft background light with a quiet, aching expression. "
-            "She is completely alone in a crowd. "
+            "Medium shot of one middle-aged woman standing alone at the edge of a "
+            "dimly lit bar. She is clearly in her late 40s, visibly 47 years old, "
+            "with dark hair that is heavily streaked with silver and grey throughout — "
+            "prominent grey at the temples and crown, not subtle. Her face shows "
+            "natural aging: fine lines around her eyes and mouth, life-worn features. "
+            "She wears a dark wool coat. She holds a glass she doesn't drink, watching "
+            "couples dancing with a quiet melancholic expression. Alone in a crowd. "
+            "photorealistic, cinematic, middle-aged woman, grey hair, NOT young. "
             f"{STYLE_2025}"
         ),
     },
@@ -384,9 +409,10 @@ SCENES = [
         "era": "2025",
         "label": "ECU 2025 – Marcus looks at old photos on phone",
         "prompt": (
-            f"Close-up of {M2025}'s face lit by his phone screen in a dark room. "
-            "He's scrolling through old photos slowly. His expression is quiet pain. "
-            "He stops on one and just looks. "
+            "Close-up of a 51-year-old man with salt-and-pepper hair, handsome but "
+            "weathered face, wearing a dark grey jacket, sitting in a dark room. "
+            "His face is lit only by his phone screen. He scrolls through old photos "
+            "slowly. His expression is quiet pain. He stops on one and just looks. "
             f"{STYLE_2025}"
         ),
     },

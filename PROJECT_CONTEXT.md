@@ -47,7 +47,9 @@ Each tool's `agent_skills[]` field bridges Layer 1 → Layer 3. See `skills/INDE
 - **Pipeline manifests:** Declarative YAML defining stages, skills, tools, review focus, approval gates
 - **Capability-first tool design:** Each major family should expose a selector tool plus explicit provider tools
   - Example: `tts_selector` + `elevenlabs_tts` / `google_tts` / `openai_tts` / `piper_tts`
-  - Example: `video_selector` + `heygen_video` / `wan_video` / `hunyuan_video` / `ltx_video_local` / `ltx_video_modal` / `cogvideo_video`
+  - Example: `video_selector` + `heygen_video` / `heygen_browser_video` / `google_flow_video` / `magic_hour_video` / `wan_video` / etc.
+- **Browser subscription tools:** `heygen_browser_video` and `google_flow_video` use Playwright to automate the provider web UI, consuming subscription plan credits instead of API credits. Session cookies are persisted at `~/.openmontage/`.
+- **Resilient execution via `execute_safe()`:** All `BaseTool` subclasses inherit `execute_safe(inputs)`. It enforces a wall-clock timeout of `max(30s, min(estimate_runtime × 2, 600s))` and auto-escalates to the first available fallback tool on timeout. Always prefer `execute_safe()` for cloud generation calls.
 - **Style playbooks:** YAML defining visual language, typography, motion, audio, asset generation constraints
 - **Artifacts are canonical:** `brief`, `script`, `scene_plan`, `asset_manifest`, `edit_decisions`, `render_report`, `publish_log`
 - **Every tool inherits from `tools/base_tool.py`** (ToolContract)
@@ -107,7 +109,17 @@ Each tool's `agent_skills[]` field bridges Layer 1 → Layer 3. See `skills/INDE
    - one concrete tool per real provider/runtime path
 4. Set all contract fields (name, version, tier, capability, provider, supports, fallback_tools, agent_skills, etc.)
 5. Implement `execute()` returning a `ToolResult`
-6. Let discovery happen through `tools/tool_registry.py`; do not depend on ad hoc imports
-7. Add a JSON schema in `schemas/tools/` if the tool has complex I/O
-8. Add tests only after the runtime path is correct
+6. Override `estimate_runtime(inputs)` for any cloud/long-running tool — this drives the `execute_safe()` timeout budget
+7. Let discovery happen through `tools/tool_registry.py`; do not depend on ad hoc imports
+8. Add a JSON schema in `schemas/tools/` if the tool has complex I/O
+9. Add tests only after the runtime path is correct
+
+### Browser tool pattern (Playwright)
+
+For tools that automate a web UI (subscription-based services):
+- Set `runtime = ToolRuntime.HYBRID`
+- Add `"cmd:playwright"` and `"env:SERVICE_EMAIL"` to `dependencies`
+- Persist session cookies to `~/.openmontage/<service>_session.json`
+- Handle first-run login vs. session-reuse separately
+- Declare an API-based fallback in `fallback_tools` for when browser automation fails
 

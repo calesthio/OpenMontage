@@ -6,9 +6,11 @@ interface for discovery, execution, cost estimation, and health reporting.
 
 from __future__ import annotations
 
+import concurrent.futures
 import hashlib
 import inspect
 import json
+import logging
 import os
 import platform
 import subprocess
@@ -18,6 +20,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Optional
+
+logger = logging.getLogger(__name__)
 
 
 def _load_dotenv() -> None:
@@ -291,6 +295,53 @@ class BaseTool(ABC):
             "status": self.get_status().value,
             "would_execute": True,
         }
+
+    def execute_safe(self, inputs: dict[str, Any]) -> ToolResult:
+        """Execute with automatic timeout and fallback escalation.
+
+        Timeout = max(30s, min(estimate_runtime * 2, 600s)).
+        On timeout the first available fallback tool is tried automatically.
+        This prevents the agent from waiting indefinitely on stalled API calls.
+        """
+        expected = self.estimate_runtime(inputs)
+        timeout = max(30.0, min(expected * 2, 600.0)) if expected > 0 else 120.0
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(self.execute, inputs)
+            try:
+                return future.result(timeout=timeout)
+            except concurrent.futures.TimeoutError:
+                future.cancel()
+                logger.warning(
+                    "Tool %r timed out after %.0fs — trying fallbacks: %s",
+                    self.name,
+                    timeout,
+                    self.fallback_tools,
+                )
+
+        # Try fallbacks in declared order
+        for fallback_name in self.fallback_tools:
+            try:
+                # Lazy import to avoid circular deps at module load time
+                from tools.tool_registry import registry  # noqa: PLC0415
+                registry.ensure_discovered()
+                fb_tool = registry.get(fallback_name)
+                if fb_tool is None:
+                    continue
+                if fb_tool.get_status() != ToolStatus.AVAILABLE:
+                    continue
+                logger.info("Falling back from %r to %r", self.name, fallback_name)
+                return fb_tool.execute_safe(inputs)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Fallback %r failed: %s", fallback_name, exc)
+
+        return ToolResult(
+            success=False,
+            error=(
+                f"{self.name} timed out after {timeout:.0f}s "
+                f"and no fallback succeeded (tried: {self.fallback_tools})"
+            ),
+        )
 
     # ---- CLI helper ----
 

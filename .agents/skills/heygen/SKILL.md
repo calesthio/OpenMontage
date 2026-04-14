@@ -20,6 +20,8 @@ metadata:
 
 This skill remains for backward compatibility but will be removed in a future release.
 
+> **Browser alternative:** `heygen_browser_video` uses Playwright to automate the HeyGen web UI, consuming subscription credits instead of API credits. See `skills/tools/browser-tools.md`.
+
 ---
 
 AI avatar video creation API for generating talking-head videos, explainers, and presentations.

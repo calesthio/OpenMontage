@@ -403,9 +403,10 @@ python -c "from tools.tool_registry import registry; import json; registry.disco
 Key capability families to look for in the output:
 
 - **tts** — Text-to-speech providers. Route via `tts_selector`.
-- **video_generation** — Video generation providers (cloud, local GPU, stock). Route via `video_selector`.
+- **video_generation** — Video generation providers (cloud, local GPU, stock, browser). Route via `video_selector`.
 - **image_generation** — Image generation providers (cloud, local GPU, stock). Route via `image_selector`.
 - **music_generation** — Music and sound effect generation.
+- **gif_search** — Animated GIF search for overlays and engagement inserts (`giphy_search`).
 - **video_post** — Composition, stitching, trimming (FFmpeg-based, always local).
 - **audio_processing** — Mixing, enhancement (FFmpeg-based, always local).
 - **analysis** — Transcription, scene detection, frame sampling.
@@ -430,6 +431,7 @@ All tool classes use **PascalCase without a "Tool" suffix**. When importing tool
 When in doubt, check: `grep "^class " tools/<path>.py`
 
 All tools call via `.execute(params_dict)` (returns `ToolResult` with `.success`, `.data`, `.error`), NOT `.run()`.
+For cloud generation tools, prefer `execute_safe(inputs)` — it adds automatic timeout + fallback. See `skills/meta/browser-tools-setup.md` for browser tool setup.
 
 ### Selector Pattern
 

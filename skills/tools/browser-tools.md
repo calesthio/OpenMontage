@@ -41,7 +41,8 @@ Three tools currently follow this pattern:
 - **Cost:** $0 (Google Flow subscription)
 - **Fallback:** `kling_video` → `higgsfield_video` → `minimax_video`
 - **Required env:** `GOOGLE_FLOW_EMAIL` + first-run OAuth (see `skills/meta/browser-tools-setup.md`)
-- **Key inputs:** `prompt`, `model` (`veo_fast`/`veo_lite`), `aspect_ratio` (`16:9`/`9:16`), `first_frame`, `last_frame`, `ingredients`, `download_quality` (`720p` default), `output_path`
+- **Key inputs:** `prompt`, `model` (`veo_fast`*/`veo_lite`), `aspect_ratio` (`16:9`*/`9:16`), `quantity` (`x1`*–`x4`), `download_quality` (`720p`* — always use this), `first_frame`, `last_frame`, `ingredients[]` (max 5, mutually exclusive with frames), `camera_motion` (off by default), `continue_prompt` (director-requested only), `output_path`
+- **Rules:** always `720p`; never `4k`; camera motion only if director/user requests; `continue_prompt` only if director calls for extension; `first_frame`/`last_frame` for continuity only — if it fails, drop frames and go prompt-only; `ingredients` only when user provides a reference asset
 
 ### `google_flow_image`
 
@@ -49,8 +50,8 @@ Three tools currently follow this pattern:
 - **Cost:** $0 (Google Flow subscription)
 - **Fallback:** `flux_image` → `imagen_image` → `dalle_image`
 - **Required env:** `GOOGLE_FLOW_EMAIL` + first-run OAuth
-- **Key inputs:** `prompt`, `model` (`nano_banana_pro`/`nano_banana`/`imagen_4`), `aspect_ratio`, `ingredients`, `output_path`
-- `nano_banana_pro` is best for text-in-image, posters, CTAs, and typography
+- **Key inputs:** `prompt`, `model` (`nano_banana_pro`*/`nano_banana`/`imagen_4`), `aspect_ratio` (`1:1`*/`16:9`/`9:16`/`4:3`/`3:4`), `quantity` (`x1`*–`x4`), `ingredients[]` (max 5), `output_path`
+- `nano_banana_pro` best for text-in-image, posters, CTAs, typography; all `quantity` images downloaded at full-res PNG
 
 ---
 

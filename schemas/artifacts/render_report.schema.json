@@ -39,7 +39,7 @@
     "render_grammar": {
       "type": "string",
       "description": "Which renderer family was used for this render",
-      "enum": ["explainer-data", "explainer-teacher", "cinematic-trailer", "product-reveal", "screen-demo", "presenter", "animation-first"]
+      "enum": ["explainer-data", "explainer-teacher", "cinematic-trailer", "documentary-montage", "product-reveal", "screen-demo", "presenter", "animation-first"]
     },
     "slideshow_risk_score": {
       "type": "object",

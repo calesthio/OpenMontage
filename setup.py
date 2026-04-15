@@ -11,5 +11,7 @@ setup(
         "pydantic>=2.0",
         "jsonschema>=4.20",
         "python-dotenv>=1.0",
+        "Pillow>=10.0",
+        "requests>=2.31",
     ],
 )

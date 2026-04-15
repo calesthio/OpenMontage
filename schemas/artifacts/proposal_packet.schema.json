@@ -147,7 +147,7 @@
         },
         "renderer_family": {
           "type": "string",
-          "enum": ["explainer-data", "explainer-teacher", "cinematic-trailer", "product-reveal", "screen-demo", "presenter", "animation-first"],
+          "enum": ["explainer-data", "explainer-teacher", "cinematic-trailer", "documentary-montage", "product-reveal", "screen-demo", "presenter", "animation-first"],
           "description": "Locked at proposal stage — compose cannot change without logging a decision"
         },
         "music_source": {

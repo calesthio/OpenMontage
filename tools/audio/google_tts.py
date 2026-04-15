@@ -77,8 +77,8 @@ class GoogleTTS(BaseTool):
             "text": {"type": "string", "description": "Text to convert to speech"},
             "voice": {
                 "type": "string",
-                "default": "en-US-Neural2-D",
-                "description": "Voice name (e.g. en-US-Neural2-D, en-US-Studio-O, en-GB-WaveNet-A)",
+                "default": "en-US-Chirp3-HD-Orus",
+                "description": "Voice name. Default tier is Chirp 3 HD (2024, most natural). Examples: en-US-Chirp3-HD-Orus (male, rich/cinematic), en-US-Chirp3-HD-Aoede (female, warm). Legacy tiers: en-US-Studio-O, en-US-Neural2-D, en-US-Journey-D.",
             },
             "language_code": {
                 "type": "string",
@@ -144,7 +144,7 @@ class GoogleTTS(BaseTool):
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         text = inputs.get("text", "")
         char_count = len(text)
-        voice = inputs.get("voice", "en-US-Neural2-D")
+        voice = inputs.get("voice", "en-US-Chirp3-HD-Orus")
         # Pricing per million characters (approximate)
         if "Chirp3-HD" in voice:
             rate_per_char = 0.000030  # $30/1M chars
@@ -180,7 +180,7 @@ class GoogleTTS(BaseTool):
         import requests
 
         text = inputs["text"]
-        voice_name = inputs.get("voice", "en-US-Neural2-D")
+        voice_name = inputs.get("voice", "en-US-Chirp3-HD-Orus")
         language_code = inputs.get("language_code", "en-US")
         speaking_rate = inputs.get("speaking_rate", 1.0)
         pitch = inputs.get("pitch", 0.0)

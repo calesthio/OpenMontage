@@ -225,6 +225,7 @@ class ToolRegistry:
             if cap not in menu:
                 menu[cap] = {"available": [], "unavailable": [], "total": 0, "configured": 0}
 
+            info = tool.get_info()
             status = tool.get_status()
             entry = {
                 "name": tool.name,
@@ -234,6 +235,15 @@ class ToolRegistry:
                 "install_instructions": tool.install_instructions,
                 "status": status.value,
             }
+            for extra_key in (
+                "source_provider_menu",
+                "source_provider_summary",
+                "render_engines",
+                "remotion_note",
+                "provider_matrix",
+            ):
+                if extra_key in info:
+                    entry[extra_key] = info[extra_key]
 
             if status == ToolStatus.AVAILABLE:
                 menu[cap]["available"].append(entry)

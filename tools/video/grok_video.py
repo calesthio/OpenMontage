@@ -1,4 +1,8 @@
-"""xAI Grok video generation."""
+"""xAI Grok Imagine video generation with native synchronized audio.
+
+Generates 1-15 second videos with synchronized sound (dialogue with lip-sync,
+SFX, ambient, background music) in a single pass. No post-production audio needed.
+"""
 
 from __future__ import annotations
 
@@ -67,13 +71,17 @@ class GrokVideo(BaseTool):
         "reference_to_video": True,
         "reference_image": True,
         "multiple_reference_images": True,
+        "native_audio": True,
+        "lip_sync": True,
+        "cinematic_quality": True,
     }
     best_for = [
-        "reference-conditioned video generation",
-        "product placement or character-consistent motion clips",
-        "xAI-native image-guided and text-guided short videos",
+        "cinematic clips with native synchronized audio (dialogue, SFX, music)",
+        "reference-conditioned video with product/character consistency",
+        "lip-synced dialogue and foley in a single generation pass",
+        "cost-effective high-quality video ($0.07/s at 720p)",
     ]
-    not_good_for = ["offline generation", "very long clips"]
+    not_good_for = ["offline generation"]
     fallback_tools = ["veo_video", "runway_video", "kling_video", "minimax_video"]
 
     input_schema = {
@@ -93,13 +101,13 @@ class GrokVideo(BaseTool):
             },
             "duration": {
                 "type": "integer",
-                "minimum": 2,
-                "maximum": 10,
+                "minimum": 1,
+                "maximum": 15,
                 "default": 5,
             },
             "aspect_ratio": {
                 "type": "string",
-                "enum": ["16:9", "9:16", "1:1"],
+                "enum": ["16:9", "9:16", "1:1", "4:3", "3:4", "3:2", "2:3"],
                 "default": "16:9",
             },
             "resolution": {

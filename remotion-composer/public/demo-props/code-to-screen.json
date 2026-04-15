@@ -1,0 +1,93 @@
+{
+  "theme": "flat-motion-graphics",
+  "cuts": [
+    {
+      "id": "code-hook",
+      "source": "",
+      "type": "hero_title",
+      "in_seconds": 0,
+      "out_seconds": 3.5,
+      "text": "From Code to Screen",
+      "subtitle": "How a small system turns work into a polished release",
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "code-tip",
+      "source": "",
+      "type": "callout",
+      "in_seconds": 3.5,
+      "out_seconds": 7.5,
+      "title": "Shipping Rule",
+      "text": "Start with one visible win, then automate the repeatable path.",
+      "callout_type": "tip",
+      "accentColor": "#22D3EE",
+      "backgroundColor": "#0F172A",
+      "color": "#F8FAFC"
+    },
+    {
+      "id": "code-compare",
+      "source": "",
+      "type": "comparison",
+      "in_seconds": 7.5,
+      "out_seconds": 13,
+      "title": "Reusable systems beat one-off edits",
+      "leftLabel": "Manual Fixes",
+      "leftValue": "9 files",
+      "rightLabel": "Shared Pattern",
+      "rightValue": "1 flow",
+      "accentColor": "#A78BFA",
+      "backgroundColor": "#0F172A",
+      "color": "#F8FAFC"
+    },
+    {
+      "id": "code-progress",
+      "source": "",
+      "type": "progress_bar",
+      "in_seconds": 13,
+      "out_seconds": 17.5,
+      "title": "Automation coverage",
+      "progress": 0.82,
+      "progressLabel": "82% of the release path is scripted",
+      "progressColor": "#34D399",
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "code-kpis",
+      "source": "",
+      "type": "kpi_grid",
+      "in_seconds": 17.5,
+      "out_seconds": 24,
+      "title": "Release pulse",
+      "chartData": [
+        { "label": "PRs merged", "value": 14, "change": 18, "suffix": "" },
+        { "label": "Build minutes", "value": 11, "change": -22, "suffix": " min" },
+        { "label": "Bugs reopened", "value": 2, "change": -50, "suffix": "" }
+      ],
+      "columns": 3,
+      "chartColors": ["#22D3EE", "#34D399", "#F59E0B"],
+      "chartAnimation": "cascade",
+      "backgroundColor": "#0F172A"
+    }
+  ],
+  "overlays": [
+    {
+      "type": "section_title",
+      "in_seconds": 7.8,
+      "out_seconds": 10.6,
+      "text": "Systems",
+      "subtitle": "Design once, apply everywhere",
+      "accentColor": "#A78BFA"
+    },
+    {
+      "type": "stat_reveal",
+      "in_seconds": 13.4,
+      "out_seconds": 16.8,
+      "text": "82%",
+      "subtitle": "Automated delivery path",
+      "accentColor": "#34D399",
+      "position": "bottom-right"
+    }
+  ],
+  "captions": [],
+  "audio": {}
+}

@@ -1,0 +1,95 @@
+{
+  "theme": "flat-motion-graphics",
+  "cuts": [
+    {
+      "id": "world-hook",
+      "source": "",
+      "type": "hero_title",
+      "in_seconds": 0,
+      "out_seconds": 3.5,
+      "text": "The World in Numbers",
+      "subtitle": "A zero-key showcase built from Remotion components only",
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "world-population",
+      "source": "",
+      "type": "stat_card",
+      "in_seconds": 3.5,
+      "out_seconds": 7.5,
+      "stat": "8.1B",
+      "subtitle": "People sharing one connected planet",
+      "accentColor": "#22D3EE",
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "world-cities",
+      "source": "",
+      "type": "bar_chart",
+      "in_seconds": 7.5,
+      "out_seconds": 13,
+      "title": "Illustrative megacity population",
+      "chartData": [
+        { "label": "Tokyo", "value": 37 },
+        { "label": "Delhi", "value": 33 },
+        { "label": "Shanghai", "value": 29 },
+        { "label": "Sao Paulo", "value": 22 }
+      ],
+      "chartColors": ["#22D3EE", "#A78BFA", "#F59E0B", "#34D399"],
+      "showGrid": true,
+      "showValues": true,
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "world-energy",
+      "source": "",
+      "type": "pie_chart",
+      "in_seconds": 13,
+      "out_seconds": 18,
+      "title": "Illustrative energy mix",
+      "chartData": [
+        { "label": "Renewables", "value": 34 },
+        { "label": "Gas", "value": 27 },
+        { "label": "Coal", "value": 21 },
+        { "label": "Nuclear", "value": 18 }
+      ],
+      "chartColors": ["#34D399", "#22D3EE", "#F97316", "#A78BFA"],
+      "donut": true,
+      "centerLabel": "Renewables",
+      "centerValue": "34%",
+      "showLegend": true,
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "world-close",
+      "source": "",
+      "type": "text_card",
+      "in_seconds": 18,
+      "out_seconds": 22,
+      "text": "Big systems. Human-scale decisions.",
+      "color": "#F8FAFC",
+      "backgroundColor": "#0F172A"
+    }
+  ],
+  "overlays": [
+    {
+      "type": "section_title",
+      "in_seconds": 7.8,
+      "out_seconds": 10.8,
+      "text": "Cities",
+      "subtitle": "Dense hubs make scale visible",
+      "accentColor": "#22D3EE"
+    },
+    {
+      "type": "stat_reveal",
+      "in_seconds": 14.2,
+      "out_seconds": 17.6,
+      "text": "34%",
+      "subtitle": "Illustrative renewable share",
+      "accentColor": "#34D399",
+      "position": "bottom-right"
+    }
+  ],
+  "captions": [],
+  "audio": {}
+}

@@ -1,0 +1,177 @@
+name: documentary-montage
+version: "1.0"
+description: >
+  Retrieval-first thematic montage pipeline. Builds a semantic corpus of real-world
+  footage from Pexels, Archive.org (Prelinger et al.), NASA, Wikimedia Commons, and
+  Unsplash, then uses CLIP-based
+  retrieval to fill slot descriptions from a thematic brief. The edit arranges clips
+  by narrative beat with music sync and uniform color grade across mixed-era footage.
+  Inspired by Adam Curtis / Chris Marker / Errol Morris tone poems.
+category: documentary
+stability: beta
+default_checkpoint_policy: guided
+
+# Reference video input support
+reference_input:
+  supported: false
+
+orchestration:
+  mode: executive-producer
+  skill: pipelines/documentary-montage/executive-producer
+  budget_default_usd: 1.00
+  max_revisions_per_stage: 3
+  max_send_backs: 2
+  max_wall_time_minutes: 60
+
+extensions:
+  custom_scripts: true
+  custom_playbooks: true
+  custom_skills: true
+  custom_tools: false
+
+required_skills:
+  - pipelines/documentary-montage/executive-producer
+  - pipelines/documentary-montage/idea-director
+  - pipelines/documentary-montage/scene-director
+  - pipelines/documentary-montage/asset-director
+  - pipelines/documentary-montage/edit-director
+  - pipelines/documentary-montage/compose-director
+  - meta/reviewer
+  - meta/checkpoint-protocol
+
+compatible_playbooks:
+  custom_allowed: true
+
+stages:
+  - name: idea
+    skill: pipelines/documentary-montage/idea-director
+    produces:
+      - brief
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Thematic question is ONE sentence
+      - Tone register is ONE value from the fixed list
+      - Duration and shape are concrete
+      - Music plan is present (MANDATORY — silent only if user explicitly opted out)
+      - End-tag plan is present (MANDATORY — one philosophical closing line, rendered as Remotion end-card, default mode "overlay" on final scenes, unless user explicitly opted out)
+      - Narration plan is present (narration itself is OPTIONAL — absence is fine if music + visuals + end-tag carry the register)
+    success_criteria:
+      - Schema-valid brief artifact
+      - thematic_question present in metadata
+      - music_plan present in metadata (source may be `none` ONLY with explicit user opt-out note)
+      - end_tag_plan present in metadata (text, palette, duration, mode — may be `null` ONLY with explicit user opt-out note)
+
+  - name: scene_plan
+    skill: pipelines/documentary-montage/scene-director
+    required_artifacts_in:
+      - brief
+    produces:
+      - scene_plan
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Slot descriptions use concrete noun-and-adjective language
+      - Every slot has 2-3 short search queries
+      - At least 2 slots are marked hero
+      - Slot count and target holds match the tone/duration math
+      - era_mix is reflected in preferred_sources distribution
+    success_criteria:
+      - Schema-valid scene_plan artifact
+      - metadata.slots[] present with per-slot queries and preferred_sources
+      - Sum of target_hold_seconds within 10% of brief.duration_seconds
+
+  - name: assets
+    skill: pipelines/documentary-montage/asset-director
+    required_artifacts_in:
+      - scene_plan
+      - brief
+    produces:
+      - asset_manifest
+    required_tools: []  # fast path needs only direct_clip_search; standard path needs corpus_builder + clip_search
+    optional_tools:
+      - direct_clip_search
+      - corpus_builder
+      - clip_search
+      - music_gen
+    tools_available:
+      - direct_clip_search
+      - corpus_builder
+      - clip_search
+      - music_gen
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Every slot has exactly one picked clip
+      - No clip_id is picked for two slots
+      - Provenance (provider, original_url, license) present on every asset
+      - "Standard path: corpus size >= 8x slot count, scores >= 0.22, diversify ran clean"
+      - "Fast path: thumbnails inspected, cross-act reuse noted, gaps filled"
+      - rejected_picks log has reasons for passes (standard path)
+    success_criteria:
+      - Schema-valid asset_manifest artifact
+      - One video asset per scene slot
+      - metadata.corpus_stats present (standard path) OR metadata.search_stats present (fast path)
+
+  - name: edit
+    skill: pipelines/documentary-montage/edit-director
+    required_artifacts_in:
+      - scene_plan
+      - asset_manifest
+    produces:
+      - edit_decisions
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - renderer_family is locked to documentary-montage
+      - Hero slots hold longest; mid-sequence cutaways shortest
+      - No two adjacent cuts share subject AND scale
+      - Transition vocabulary is at most 4 distinct values
+      - Music config is present (MANDATORY — silent only if brief.metadata.music_plan.source=none with explicit opt-out note)
+      - "End-tag timing is present (MANDATORY — overlay mode: end_tag.offset_seconds in edit_decisions; concat mode: end-tag appended after body. Unless brief.metadata.end_tag_plan is null with explicit opt-out note)"
+      - total_duration_seconds matches sum of cut durations (body only — end-tag overlay does not extend duration; concat mode adds tag duration)
+      - Every cut has a reason
+    success_criteria:
+      - Schema-valid edit_decisions artifact
+      - Timeline duration within 10% of brief.duration_seconds
+
+  - name: compose
+    skill: pipelines/documentary-montage/compose-director
+    required_artifacts_in:
+      - edit_decisions
+      - asset_manifest
+      - brief
+    produces:
+      - render_report
+    required_tools:
+      - video_compose
+    optional_tools:
+      - audio_mixer
+      - color_grade
+      - video_trimmer
+      - video_stitch
+    tools_available:
+      - video_compose
+      - audio_mixer
+      - color_grade
+      - video_trimmer
+      - video_stitch
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Output duration matches planned within 1s (body duration for overlay mode; body + tag for concat mode)
+      - Resolution matches target_platform canvas
+      - Uniform LUT applied across the timeline
+      - Music is mixed in (MANDATORY — silent output only with explicit user opt-out recorded in brief)
+      - "End-tag rendered via Remotion (MANDATORY — absence only with explicit opt-out). Default mode: overlay (ProRes 4444 with alpha composited on final scenes). Fallback: concat (opaque card appended after body)."
+      - "Overlay mode: extract a frame from the overlay region and verify text is visible over footage, not over black. Concat mode: last frame must be the end-tag card."
+      - No silent fallback from a motion-led promise
+    success_criteria:
+      - Schema-valid render_report artifact
+      - Output file exists and passes ffprobe validation
+      - render_report.end_tag_rendered = true (or explicit opt-out)
+      - render_report.end_tag_mode = "overlay" or "concat"
+      - render_report.music_mixed = true (or explicit opt-out)

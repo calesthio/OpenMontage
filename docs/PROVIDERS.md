@@ -213,11 +213,14 @@ Google TTS offers 700+ voices across 50+ languages. Voice names follow the patte
 
 | Type | Example | Quality | Cost |
 |------|---------|---------|------|
+| **Chirp 3 HD** | `en-US-Chirp3-HD-Orus` | **Best (2024, most natural)** | **Mid — default** |
 | Standard | `en-US-Standard-A` | Good | Cheapest |
 | WaveNet | `en-US-WaveNet-D` | Very good | Mid |
 | Neural2 | `en-US-Neural2-D` | Excellent | Mid |
 | Studio | `en-US-Studio-O` | Professional | Highest |
-| Journey | `en-US-Journey-D` | Conversational | Mid |
+| Journey | `en-US-Journey-D` | Conversational (long-form) | Mid |
+
+**Recommended voices:** `en-US-Chirp3-HD-Orus` (male, rich/cinematic), `en-US-Chirp3-HD-Aoede` (female, warm). These are Google's newest tier — most natural-sounding, uses the v1beta1 endpoint automatically.
 
 **Languages include:** English (US, UK, AU, IN), Spanish, French, German, Italian, Portuguese, Japanese, Korean, Chinese (Mandarin, Cantonese), Arabic, Hindi, Russian, Dutch, Polish, Turkish, Vietnamese, Thai, Indonesian, and 30+ more.
 

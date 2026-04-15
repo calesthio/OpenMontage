@@ -1,0 +1,93 @@
+{
+  "theme": "flat-motion-graphics",
+  "cuts": [
+    {
+      "id": "focusflow-hook",
+      "source": "",
+      "type": "hero_title",
+      "in_seconds": 0,
+      "out_seconds": 3.5,
+      "text": "FocusFlow",
+      "subtitle": "A calm planning app that protects deep work",
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "focusflow-stat",
+      "source": "",
+      "type": "stat_card",
+      "in_seconds": 3.5,
+      "out_seconds": 7.5,
+      "stat": "3h 12m",
+      "subtitle": "Average weekly focus time recovered",
+      "accentColor": "#F59E0B",
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "focusflow-bars",
+      "source": "",
+      "type": "bar_chart",
+      "in_seconds": 7.5,
+      "out_seconds": 12.5,
+      "title": "Average context switches per day",
+      "chartData": [
+        { "label": "Before", "value": 42 },
+        { "label": "After", "value": 18 }
+      ],
+      "chartColors": ["#FB7185", "#34D399"],
+      "showGrid": true,
+      "showValues": true,
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "focusflow-breakdown",
+      "source": "",
+      "type": "pie_chart",
+      "in_seconds": 12.5,
+      "out_seconds": 17.5,
+      "title": "Where reclaimed time goes",
+      "chartData": [
+        { "label": "Priority work", "value": 74 },
+        { "label": "Planning", "value": 16 },
+        { "label": "Meetings", "value": 10 }
+      ],
+      "chartColors": ["#34D399", "#22D3EE", "#A78BFA"],
+      "donut": true,
+      "centerLabel": "Priority work",
+      "centerValue": "74%",
+      "showLegend": true,
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "focusflow-close",
+      "source": "",
+      "type": "text_card",
+      "in_seconds": 17.5,
+      "out_seconds": 21.5,
+      "text": "Fewer pings. Better mornings.",
+      "subtitle": "Small product, measurable calm.",
+      "color": "#F8FAFC",
+      "backgroundColor": "#0F172A"
+    }
+  ],
+  "overlays": [
+    {
+      "type": "section_title",
+      "in_seconds": 7.7,
+      "out_seconds": 10.4,
+      "text": "Traction",
+      "subtitle": "Illustrative pilot results",
+      "accentColor": "#F59E0B"
+    },
+    {
+      "type": "stat_reveal",
+      "in_seconds": 13.2,
+      "out_seconds": 16.8,
+      "text": "74%",
+      "subtitle": "Time redirected to priority work",
+      "accentColor": "#34D399",
+      "position": "bottom-right"
+    }
+  ],
+  "captions": [],
+  "audio": {}
+}

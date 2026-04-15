@@ -23,6 +23,7 @@
 <p align="center"><strong>Follow The Build</strong></p>
 
 <p align="center">
+  <a href="https://www.youtube.com/@OpenMontage"><img src="https://img.shields.io/badge/YouTube-%40OpenMontage-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube"></a>
   <a href="https://x.com/calesthioailabs"><img src="https://img.shields.io/badge/X-%40calesthioailabs-111111?style=for-the-badge&logo=x&logoColor=white" alt="X"></a>
   <a href="https://github.com/calesthio/OpenMontage/discussions"><img src="https://img.shields.io/badge/Community-GitHub%20Discussions-0b1220?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Discussions"></a>
 </p>
@@ -30,6 +31,8 @@
 ---
 
 Turn your AI coding assistant into a full video production studio. Describe what you want in plain language — your agent handles research, scripting, asset generation, editing, and final composition.
+
+**Important distinction:** OpenMontage can make image-based videos, but it can also make a real **video video** for free/open-source workflows: the agent builds a corpus from free stock footage and open archives, retrieves actual motion clips, edits them into a timeline, and renders a finished piece. That is not the usual "animate a handful of stills and call it video" trick.
 
 <div align="center">
   <video src="https://github.com/user-attachments/assets/f77ce7a4-68b8-4f94-a287-e94bf50a32e1" width="100%" controls></video>
@@ -66,6 +69,10 @@ Turn your AI coding assistant into a full video production studio. Describe what
 </div>
 
 > **"Into the Abyss"** — a deep ocean exploration rendered in anime style. Bioluminescent gardens, coral cathedrals, and creatures of light — 12 FLUX-generated images with sparkle and mist particle overlays, light-ray effects, smooth camera motion, and ambient oceanic soundtrack. Total cost: **$0.15**. Zero video generation APIs needed.
+
+<p align="center">
+  <a href="https://www.youtube.com/@OpenMontage?sub_confirmation=1"><strong>Subscribe to @OpenMontage on YouTube</strong></a> to see new videos as they ship — every video includes the full prompt, pipeline, tools used, and cost so you can reproduce it yourself.
+</p>
 
 ---
 
@@ -117,6 +124,12 @@ Open the project in your AI coding assistant and tell it what you want:
 "Make a 60-second animated explainer about how neural networks learn"
 ```
 
+Or if you want the real-footage path:
+
+```text
+"Make a 75-second documentary montage about city life in the rain. Use real footage only, no narration, elegiac tone, with music."
+```
+
 That's it. The agent researches your topic with live web search, generates AI images, writes and narrates the script with voice direction, finds royalty-free background music automatically, burns in word-level subtitles, and renders the final video. Before you see anything, the system runs a multi-point self-review — ffprobe validation, frame sampling, audio level analysis, delivery promise verification, and subtitle checks. Every provider selection is scored across 7 dimensions with an auditable decision log. Every creative decision gets your approval.
 
 > **No `make`?** Run manually: `pip install -r requirements.txt && cd remotion-composer && npm install && cd .. && pip install piper-tts && cp .env.example .env`
@@ -149,8 +162,9 @@ This repo is built for agentic operation. If you're an OpenClaw-style agent, her
 FAL_KEY=your-key               # FLUX images + Google Veo, Kling, MiniMax video + Recraft images
 
 # Free stock media:
-PEXELS_API_KEY=your-key        # Free — stock footage and images
-PIXABAY_API_KEY=your-key       # Free — stock footage and images
+PEXELS_API_KEY=your-key        # Free stock footage and images
+PIXABAY_API_KEY=your-key       # Free stock footage and images
+UNSPLASH_ACCESS_KEY=your-key   # Free stock images
 
 # Music:
 SUNO_API_KEY=your-key          # Full songs, instrumentals, any genre
@@ -183,17 +197,23 @@ VIDEO_GEN_LOCAL_MODEL=wan2.1-1.3b  # or wan2.1-14b, hunyuan-1.5, ltx2-local, cog
 
 ## What You Get With Zero API Keys
 
-You don't need any API keys to make real videos. Out of the box, `make setup` gives you:
+You don't need paid API keys to make real videos. Out of the box, `make setup` gives you:
 
 | Capability | Free Tool | What It Does |
 |-----------|-----------|-------------|
 | **Narration** | Piper TTS | Free offline text-to-speech — real human-sounding narration |
-| **Visuals** | Pexels + Pixabay | Free stock images and footage (API keys are free to get) |
+| **Open footage** | Archive.org + NASA + Wikimedia Commons | Free/open archival footage, educational media, and documentary texture |
+| **Extra stock** | Pexels + Unsplash + Pixabay | Free stock footage/images (developer keys are free to get) |
 | **Composition** | Remotion | Turns still images into animated video with spring physics, transitions, typography, and TikTok-style captions |
 | **Post-production** | FFmpeg | Encoding, subtitle burn-in, audio mixing, color grading |
 | **Subtitles** | Built-in | Auto-generated captions with word-level timing |
 
-**The zero-key path:** Piper narrates your script, stock images provide the visuals, and Remotion animates everything into a polished video with transitions, text overlays, and synced captions. Add API keys later to unlock AI-generated images, video clips, premium voices, and music.
+**Two free-ish paths:**
+
+- **Image-based video:** Piper narrates your script, images provide the visuals, and Remotion animates them into a polished edit.
+- **Real-footage video:** the documentary montage pipeline builds a CLIP-searchable corpus from Archive.org, NASA, Wikimedia Commons, and optional free-key sources like Pexels and Unsplash, then cuts together actual motion footage into a finished video.
+
+If you want the second one, prompt for a **documentary montage**, **tone poem**, or **stock-footage collage**, and explicitly say **use real footage only**.
 
 ---
 
@@ -216,6 +236,14 @@ Copy any of these into your AI coding assistant after setup. Each one runs a ful
 > "Create a 60-second video about the history of the internet, with narration and captions"
 
 > "Make a data-driven explainer about coffee consumption around the world"
+
+### Free real-footage documentary path
+
+> "Make a 90-second documentary montage about what a city feels like at 4am. Use real footage only, no narration, elegiac tone."
+
+> "Create a 60-second Adam-Curtis-style archival collage about 1950s consumer optimism. Prefer Archive.org and Wikimedia footage."
+
+> "Cut together a dreamlike montage about coming home in the rain using real stock footage only. Music yes, narration no."
 
 ### With an image/video provider configured (~$0.15–$1.50)
 
@@ -248,6 +276,7 @@ Each pipeline is a complete production workflow, from idea to finished video.
 | **Avatar Spokesperson** | Avatar-driven presenter videos | Corporate comms, training, announcements |
 | **Cinematic** | Trailer, teaser, and mood-driven edits | Brand films, teasers, promotional content |
 | **Clip Factory** | Batch of ranked short-form clips from one long source | Repurposing long content for social media |
+| **Documentary Montage** | Thematic montage cut from a CLIP-indexed corpus of free stock footage and open archives (Pexels, Archive.org, NASA, Wikimedia, Unsplash) | Video essays, mood pieces, retrieval-first B-roll edits, real-footage videos without paid generation APIs |
 | **Hybrid** | Source footage + AI-generated support visuals | Enhancing existing footage with graphics |
 | **Localization & Dub** | Subtitle, dub, and translate existing video | Multi-language distribution |
 | **Podcast Repurpose** | Podcast highlights to video | Podcast marketing, audiogram videos |
@@ -270,12 +299,15 @@ Each stage has a dedicated **director skill** — a markdown instruction file th
 
 Most AI video tools give you a single clip from a prompt. OpenMontage gives you an **end-to-end production pipeline** — the same structured process a real production team follows, automated by your AI agent.
 
+Most "free AI video" stacks quietly mean "animate still images." OpenMontage can do that too, but it can also build a finished video from **real footage** pulled from free/open sources, ranked semantically, edited intentionally, and rendered as a proper timeline.
+
 Edit your own talking-head footage. Generate a fully animated explainer from scratch. Cut a 2-hour podcast into a dozen social clips. Translate and dub your content into 10 languages. Build a cinematic brand teaser from stock footage and AI-generated scenes. **If a production team can make it, OpenMontage can orchestrate it.**
 
-- **11 production pipelines** — explainers, talking heads, screen demos, cinematic trailers, animations, podcasts, localization, and more
+- **12 production pipelines** — explainers, talking heads, screen demos, cinematic trailers, animations, podcasts, localization, documentary montages, and more
 - **52 production tools** — spanning video generation, image creation, text-to-speech, music, audio mixing, subtitles, enhancement, and analysis
 - **400+ agent skills** — production skills, pipeline directors, creative techniques, quality checklists, and deep technology knowledge packs that teach the agent how to use every tool like an expert
 - **Reference-driven creation** — paste a video you like and the agent turns it into a grounded, differentiated production plan instead of forcing you to invent the perfect prompt from scratch
+- **Real-footage documentary creation without paid video models** — build actual edited videos from free/open motion footage and archival sources, not just Ken Burns over images
 - **Live web research built in** — before writing a single word of script, the agent runs 15-25+ web searches across YouTube, Reddit, news sites, and academic sources to ground your video in real, current data
 - **Both free/local AND cloud providers** — every capability supports open-source local alternatives alongside premium APIs. Use what you have.
 - **No vendor lock-in** — swap providers freely. The scored selector ranks every provider across 7 dimensions (task fit, output quality, control, reliability, cost efficiency, latency, continuity) and picks the best match automatically.
@@ -370,7 +402,7 @@ Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to
 > **Full setup guide with pricing and free tiers:** [`docs/PROVIDERS.md`](docs/PROVIDERS.md)
 
 <details>
-<summary><strong>Video Generation — 13 providers</strong></summary>
+<summary><strong>Video Generation — 14 providers</strong></summary>
 
 | Provider | Type | Notes |
 |----------|------|-------|
@@ -387,11 +419,12 @@ Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to
 | **LTX-Video** | Local GPU / Modal | Free locally, or self-hosted cloud |
 | **Pexels** | Stock | Free stock footage |
 | **Pixabay** | Stock | Free stock footage |
+| **Wikimedia Commons** | Stock | Free/open stock footage and archival video |
 
 </details>
 
 <details>
-<summary><strong>Image Generation — 9 tools/providers</strong></summary>
+<summary><strong>Image Generation — 10 tools/providers</strong></summary>
 
 | Provider | Type | Notes |
 |----------|------|-------|
@@ -403,6 +436,7 @@ Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to
 | **Local Diffusion** | Local GPU | Stable Diffusion, free |
 | **Pexels** | Stock | Free stock images |
 | **Pixabay** | Stock | Free stock images |
+| **Unsplash** | Stock | Free stock images |
 | **ManimCE** | Local | Mathematical animations |
 
 </details>

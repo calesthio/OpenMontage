@@ -31,6 +31,20 @@ from tools.base_tool import (
     ToolTier,
 )
 
+_libass_available: bool | None = None
+
+
+def _check_libass() -> bool:
+    global _libass_available
+    if _libass_available is None:
+        import subprocess
+        result = subprocess.run(
+            ["ffmpeg", "-filters"],
+            capture_output=True, text=True
+        )
+        _libass_available = "subtitles" in result.stdout or "subtitles" in result.stderr
+    return _libass_available
+
 
 class VideoCompose(BaseTool):
     name = "video_compose"
@@ -475,7 +489,16 @@ class VideoCompose(BaseTool):
                 style = inputs.get("subtitle_style", {})
                 ass_style = self._build_subtitle_style(style)
                 sub_escaped = str(Path(subtitle_path).resolve()).replace("\\", "/").replace(":", "\\:")
-                vfilters.append(f"subtitles='{sub_escaped}':force_style='{ass_style}'")
+                if _check_libass():
+                    vfilters.append(f"subtitles='{sub_escaped}':force_style='{ass_style}'")
+                else:
+                    import warnings
+                    warnings.warn(
+                        "FFmpeg subtitle burning skipped: libass not compiled into this FFmpeg binary. "
+                        "Run 'brew install ffmpeg' to enable subtitle burning. "
+                        "Sidecar .srt file is still produced.",
+                        RuntimeWarning
+                    )
 
             cmd = ["ffmpeg", "-y", "-i", str(final_input)]
 
@@ -1435,6 +1458,22 @@ class VideoCompose(BaseTool):
         sub_escaped = str(subtitle_path.resolve()).replace("\\", "/").replace(":", "\\:")
         codec = inputs.get("codec", "libx264")
         crf = inputs.get("crf", 23)
+
+        if not _check_libass():
+            import warnings
+            warnings.warn(
+                "FFmpeg subtitle burning skipped: libass not compiled into this FFmpeg binary. "
+                "Run 'brew install ffmpeg' to enable subtitle burning. "
+                "Sidecar .srt file is still produced.",
+                RuntimeWarning
+            )
+            return ToolResult(
+                success=False,
+                error=(
+                    "FFmpeg subtitle burning requires libass. "
+                    "Run 'brew install ffmpeg' to enable subtitle burning."
+                ),
+            )
 
         cmd = [
             "ffmpeg", "-y",

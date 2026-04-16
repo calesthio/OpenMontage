@@ -237,8 +237,21 @@ class GoogleFlowImage(BaseTool):
                 page.add_init_script(
                     "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
                 )
-                page.goto(flow_url, wait_until="networkidle", timeout=30000)
+                page.goto(flow_url, wait_until="domcontentloaded", timeout=150000)
                 time.sleep(3)
+
+                # Detect stale/expired session (redirected to Google login)
+                current_url = page.url
+                page_title = page.title()
+                if (
+                    "accounts.google.com" in current_url
+                    or "login" in current_url
+                    or "Sign in" in page_title
+                ):
+                    context.close()
+                    raise RuntimeError(
+                        "Google Flow session expired. Re-run google_flow_setup.py to refresh your session."
+                    )
 
                 if not check_session_valid(page):
                     context.close()
@@ -261,7 +274,7 @@ class GoogleFlowImage(BaseTool):
                 prompt_input.wait_for(timeout=15000)
                 prompt_input.click()
                 page.keyboard.press("Control+a")
-                page.keyboard.type(final_prompt)
+                page.keyboard.type(prompt)
 
                 # Upload reference media via hidden file input
                 for ingredient_path in ingredients:

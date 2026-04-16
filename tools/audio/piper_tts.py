@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import time
@@ -95,6 +96,34 @@ class PiperTTS(BaseTool):
     side_effects = ["writes audio file to output_path"]
     user_visible_verification = ["Listen to generated audio for intelligibility"]
 
+    @staticmethod
+    def _resolve_model_path(voice: str) -> str:
+        """Return the absolute path to <voice>.onnx, searching known locations.
+
+        Search order:
+          1. ~/.local/share/piper-tts/voices/<voice>.onnx
+          2. ~/.piper/models/<voice>.onnx
+          3. $PIPER_MODELS_DIR/<voice>.onnx  (only when env var is set)
+
+        Raises ValueError if no match is found.
+        """
+        candidates: list[Path] = [
+            Path.home() / ".local" / "share" / "piper-tts" / "voices" / f"{voice}.onnx",
+            Path.home() / ".piper" / "models" / f"{voice}.onnx",
+        ]
+        env_dir = os.environ.get("PIPER_MODELS_DIR")
+        if env_dir:
+            candidates.append(Path(env_dir) / f"{voice}.onnx")
+
+        for candidate in candidates:
+            if candidate.exists():
+                return str(candidate)
+
+        searched = ", ".join(str(p) for p in candidates)
+        raise ValueError(
+            f"Voice model '{voice}' not found. Searched: {searched}"
+        )
+
     def get_status(self) -> ToolStatus:
         if shutil.which("piper"):
             return ToolStatus.AVAILABLE
@@ -124,10 +153,11 @@ class PiperTTS(BaseTool):
         output_path = Path(inputs.get("output_path", "tts_output.wav"))
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
+        model_path = self._resolve_model_path(inputs.get("model", "en_US-lessac-medium"))
         proc = subprocess.run(
             [
                 "piper",
-                "--model", inputs.get("model", "en_US-lessac-medium"),
+                "--model", model_path,
                 "--speaker", str(inputs.get("speaker_id", 0)),
                 "--length-scale", str(inputs.get("length_scale", 1.0)),
                 "--sentence-silence", str(inputs.get("sentence_silence", 0.3)),

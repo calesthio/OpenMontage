@@ -34,6 +34,20 @@ from tools.base_tool import (
     ToolTier,
 )
 
+_libass_available: bool | None = None
+
+
+def _check_libass() -> bool:
+    global _libass_available
+    if _libass_available is None:
+        import subprocess
+        result = subprocess.run(
+            ["ffmpeg", "-filters"],
+            capture_output=True, text=True
+        )
+        _libass_available = "subtitles" in result.stdout or "subtitles" in result.stderr
+    return _libass_available
+
 
 class RemotionCaptionBurn(BaseTool):
     name = "remotion_caption_burn"
@@ -377,6 +391,22 @@ class RemotionCaptionBurn(BaseTool):
 
         # Escape path for FFmpeg subtitles filter (Windows colon issue)
         srt_escaped = str(tmp_srt).replace("\\", "/").replace(":", "\\:")
+
+        if not _check_libass():
+            import warnings
+            warnings.warn(
+                "FFmpeg subtitle burning skipped: libass not compiled into this FFmpeg binary. "
+                "Run 'brew install ffmpeg' to enable subtitle burning. "
+                "Sidecar .srt file is still produced.",
+                RuntimeWarning
+            )
+            return ToolResult(
+                success=False,
+                error=(
+                    "FFmpeg subtitle burning requires libass. "
+                    "Run 'brew install ffmpeg' to enable subtitle burning."
+                ),
+            )
 
         cmd = [
             "ffmpeg", "-y",

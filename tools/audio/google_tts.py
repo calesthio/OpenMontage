@@ -1,7 +1,10 @@
-"""Google Cloud Text-to-Speech provider tool.
+"""Google Text-to-Speech provider tool.
 
-Google TTS offers 700+ voices across 50+ languages, including Standard,
-WaveNet, Neural2, Studio, and Journey voice types — strong for localization.
+Supports two modes:
+- AI Studio mode (GEMINI_API_KEY / GOOGLE_API_KEY): uses the Gemini TTS endpoint
+  at generativelanguage.googleapis.com — no Cloud TTS API needed.
+- Cloud TTS mode (GOOGLE_APPLICATION_CREDENTIALS): uses texttospeech.googleapis.com
+  with service-account auth — 700+ voices across 50+ languages.
 """
 
 from __future__ import annotations
@@ -39,9 +42,18 @@ class GoogleTTS(BaseTool):
 
     dependencies = []
     install_instructions = (
-        "Set GOOGLE_API_KEY to your Google Cloud API key with Text-to-Speech enabled.\n"
+        "AI Studio mode (recommended — no Cloud API setup needed):\n"
+        "  Set GEMINI_API_KEY (or GOOGLE_API_KEY) to your Google AI Studio key.\n"
+        "  Get one free at https://aistudio.google.com/app/apikey\n"
+        "  Available Gemini voices: Aoede, Charon, Fenrir, Kore, Orbit, Puck, Zephyr,\n"
+        "    Leda, Orus, Perseus, Autonoe, Callirrhoe, Despina, Enceladus, Iapetus,\n"
+        "    Rasalas, Schedar, Sulafat, Umbriel, Vindemiatrix, Wasat, Zubenelgenubi\n"
+        "  Default voice when using AI Studio mode: Kore\n\n"
+        "Cloud TTS mode (service account, 700+ voices):\n"
+        "  Set GOOGLE_APPLICATION_CREDENTIALS to a service-account JSON key path.\n"
         "  Enable the API at https://console.cloud.google.com/apis/library/texttospeech.googleapis.com\n"
-        "  Or use GOOGLE_APPLICATION_CREDENTIALS for service account auth."
+        "  Available voice tiers: Chirp 3 HD, Studio, Neural2, Journey, WaveNet, Standard\n\n"
+        "Priority: GEMINI_API_KEY > GOOGLE_API_KEY > GOOGLE_APPLICATION_CREDENTIALS"
     )
     fallback = "openai_tts"
     fallback_tools = ["openai_tts", "elevenlabs_tts", "piper_tts"]
@@ -129,8 +141,22 @@ class GoogleTTS(BaseTool):
     def _get_api_key(self) -> str | None:
         return os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
 
+    def _detect_mode(self) -> str:
+        """Return the auth mode to use, in priority order.
+
+        Priority: GEMINI_API_KEY > GOOGLE_API_KEY > GOOGLE_APPLICATION_CREDENTIALS
+        Returns "gemini_studio" or "cloud_tts".
+        """
+        if os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"):
+            return "gemini_studio"
+        return "cloud_tts"
+
     def get_status(self) -> ToolStatus:
-        if self._get_api_key() or os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"):
+        if (
+            os.environ.get("GEMINI_API_KEY")
+            or os.environ.get("GOOGLE_API_KEY")
+            or os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+        ):
             return ToolStatus.AVAILABLE
         return ToolStatus.UNAVAILABLE
 
@@ -159,22 +185,108 @@ class GoogleTTS(BaseTool):
         return round(char_count * rate_per_char, 4)
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
-        api_key = self._get_api_key()
-        if not api_key:
-            return ToolResult(
-                success=False,
-                error="No Google API key found. " + self.install_instructions,
-            )
+        mode = self._detect_mode()
 
         start = time.time()
         try:
-            result = self._generate(inputs, api_key)
+            if mode == "gemini_studio":
+                api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+                if not api_key:
+                    return ToolResult(
+                        success=False,
+                        error="No Gemini/Google API key found. " + self.install_instructions,
+                    )
+                result = self._synthesize_gemini_studio(
+                    text=inputs["text"],
+                    voice=inputs.get("voice", "Kore"),
+                    language_code=inputs.get("language_code", "en-US"),
+                    inputs=inputs,
+                )
+            else:
+                # cloud_tts — existing logic
+                api_key = self._get_api_key()
+                creds = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+                if not api_key and not creds:
+                    return ToolResult(
+                        success=False,
+                        error="No Google credentials found. " + self.install_instructions,
+                    )
+                result = self._generate(inputs, api_key or "")
         except Exception as exc:
             return ToolResult(success=False, error=f"Google TTS failed: {exc}")
 
         result.duration_seconds = round(time.time() - start, 2)
         result.cost_usd = self.estimate_cost(inputs)
+        if result.data is not None:
+            result.data["mode"] = mode
         return result
+
+    def _synthesize_gemini_studio(
+        self,
+        text: str,
+        voice: str,
+        language_code: str,
+        inputs: dict[str, Any],
+    ) -> ToolResult:
+        """Synthesize speech via the Gemini AI Studio TTS endpoint.
+
+        Uses generativelanguage.googleapis.com — does NOT require Cloud TTS API.
+        Returns a ToolResult with the audio written to output_path.
+        Audio is returned as WAV by the API (base64-encoded in inlineData).
+        """
+        import requests
+
+        api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+        url = (
+            "https://generativelanguage.googleapis.com/v1beta/models/"
+            "gemini-2.5-flash-preview-tts:generateContent"
+        )
+        payload = {
+            "contents": [{"parts": [{"text": text}]}],
+            "generationConfig": {
+                "response_modalities": ["AUDIO"],
+                "speech_config": {
+                    "voice_config": {
+                        "prebuilt_voice_config": {
+                            "voice_name": voice,
+                        }
+                    }
+                },
+            },
+        }
+
+        response = requests.post(
+            url,
+            headers={"Content-Type": "application/json"},
+            params={"key": api_key},
+            json=payload,
+            timeout=120,
+        )
+        response.raise_for_status()
+
+        inline_data = (
+            response.json()["candidates"][0]["content"]["parts"][0]["inlineData"]["data"]
+        )
+        audio_bytes = base64.b64decode(inline_data)
+
+        # AI Studio TTS returns WAV audio
+        output_path = Path(inputs.get("output_path", "tts_output.wav"))
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_bytes(audio_bytes)
+
+        return ToolResult(
+            success=True,
+            data={
+                "provider": self.provider,
+                "voice": voice,
+                "language_code": language_code,
+                "text_length": len(text),
+                "output": str(output_path),
+                "format": "WAV",
+            },
+            artifacts=[str(output_path)],
+            model=f"gemini-tts/{voice}",
+        )
 
     def _generate(self, inputs: dict[str, Any], api_key: str) -> ToolResult:
         import requests

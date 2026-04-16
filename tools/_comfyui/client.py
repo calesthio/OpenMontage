@@ -41,6 +41,11 @@ class ComfyUIClient:
     # Health
     # ------------------------------------------------------------------
 
+    @property
+    def is_default_url(self) -> bool:
+        """True if using the fallback URL (user didn't set COMFYUI_SERVER_URL)."""
+        return not os.environ.get("COMFYUI_SERVER_URL")
+
     def is_available(self) -> bool:
         """Return True if the ComfyUI server is reachable."""
         try:
@@ -50,6 +55,79 @@ class ComfyUIClient:
             return resp.status_code == 200
         except Exception:
             return False
+
+    def unavailable_reason(self) -> str:
+        """Human-readable explanation of why the server can't be reached."""
+        if self.is_default_url:
+            return (
+                f"No ComfyUI server found at {self.server_url} "
+                f"(default — no COMFYUI_SERVER_URL configured).\n"
+                f"Set COMFYUI_SERVER_URL in your .env file to the address of "
+                f"your ComfyUI server (e.g. http://localhost:8188)."
+            )
+        return (
+            f"ComfyUI server not reachable at {self.server_url}.\n"
+            f"Check that ComfyUI is running and the URL is correct."
+        )
+
+    # ------------------------------------------------------------------
+    # Model discovery
+    # ------------------------------------------------------------------
+
+    def list_models(self) -> dict[str, list[str]]:
+        """Query ComfyUI for available models, grouped by type.
+
+        Returns a dict like::
+
+            {
+                "checkpoints": ["sd_xl_base.safetensors", ...],
+                "diffusion_models": ["flux2-dev-nvfp4.safetensors", ...],
+                "vae": ["ae.safetensors", ...],
+                "clip": ["clip_l.safetensors", ...],
+                "loras": ["my_lora.safetensors", ...],
+            }
+        """
+        node_to_key = {
+            "CheckpointLoaderSimple": ("ckpt_name", "checkpoints"),
+            "UNETLoader": ("unet_name", "diffusion_models"),
+            "VAELoader": ("vae_name", "vae"),
+            "CLIPLoader": ("clip_name", "clip"),
+            "LoraLoaderModelOnly": ("lora_name", "loras"),
+        }
+        result: dict[str, list[str]] = {}
+        for node_class, (field, group) in node_to_key.items():
+            try:
+                resp = requests.get(
+                    f"{self.server_url}/object_info/{node_class}", timeout=10
+                )
+                resp.raise_for_status()
+                data = resp.json()
+                options = (
+                    data.get(node_class, {})
+                    .get("input", {})
+                    .get("required", {})
+                    .get(field, [[]])[0]
+                )
+                if isinstance(options, list):
+                    result[group] = options
+            except Exception:
+                result[group] = []
+        return result
+
+    def check_models(
+        self, required: list[str]
+    ) -> tuple[list[str], list[str]]:
+        """Check which of *required* model filenames are available.
+
+        Returns ``(found, missing)`` — two lists of filenames.
+        """
+        all_models: set[str] = set()
+        for names in self.list_models().values():
+            all_models.update(names)
+
+        found = [m for m in required if m in all_models]
+        missing = [m for m in required if m not in all_models]
+        return found, missing
 
     # ------------------------------------------------------------------
     # Core cycle

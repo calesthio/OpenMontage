@@ -30,6 +30,10 @@ _WORKFLOWS = Path(__file__).resolve().parent.parent / "_comfyui" / "workflows"
 
 _OUTPUT_NODE = "3"
 
+_REQUIRED_MODELS = [
+    "ace_step_v1_3.5b.safetensors",
+]
+
 
 class ComfyUIMusic(BaseTool):
     name = "comfyui_music"
@@ -117,9 +121,12 @@ class ComfyUIMusic(BaseTool):
         self._client = ComfyUIClient()
 
     def get_status(self) -> ToolStatus:
-        if self._client.is_available():
-            return ToolStatus.AVAILABLE
-        return ToolStatus.UNAVAILABLE
+        if not self._client.is_available():
+            return ToolStatus.UNAVAILABLE
+        _, missing = self._client.check_models(_REQUIRED_MODELS)
+        if missing:
+            return ToolStatus.DEGRADED
+        return ToolStatus.AVAILABLE
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         return 0.0
@@ -132,8 +139,20 @@ class ComfyUIMusic(BaseTool):
         if not self._client.is_available():
             return ToolResult(
                 success=False,
-                error="ComfyUI server not reachable. " + self.install_instructions,
+                error=self._client.unavailable_reason(),
             )
+
+        if not inputs.get("workflow_json"):
+            _, missing = self._client.check_models(_REQUIRED_MODELS)
+            if missing:
+                return ToolResult(
+                    success=False,
+                    error=(
+                        f"ComfyUI server is running but missing required models: "
+                        f"{', '.join(missing)}.\n"
+                        f"Download them to your ComfyUI checkpoints directory."
+                    ),
+                )
 
         start = time.time()
         seed = inputs.get("seed") or ComfyUIClient.random_seed()

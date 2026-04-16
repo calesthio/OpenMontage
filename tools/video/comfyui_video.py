@@ -34,6 +34,27 @@ _WORKFLOWS = Path(__file__).resolve().parent.parent / "_comfyui" / "workflows"
 _T2V_OUTPUT_NODE = "16"
 _I2V_OUTPUT_NODE = "108"
 
+# Models required by the bundled WAN 2.2 workflows
+_REQUIRED_MODELS_COMMON = [
+    "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+]
+_REQUIRED_MODELS_I2V = [
+    *_REQUIRED_MODELS_COMMON,
+    "wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors",
+    "wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors",
+    "wan_2.1_vae.safetensors",
+    "wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors",
+    "wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors",
+]
+_REQUIRED_MODELS_T2V = [
+    *_REQUIRED_MODELS_COMMON,
+    "wan2.2_t2v_high_noise_14B_fp8_scaled.safetensors",
+    "wan2.2_t2v_low_noise_14B_fp8_scaled.safetensors",
+    "wan2.2_vae.safetensors",
+    "wan2.2_t2v_lightx2v_4steps_lora_v1.1_high_noise.safetensors",
+    "wan2.2_t2v_lightx2v_4steps_lora_v1.1_low_noise.safetensors",
+]
+
 
 class ComfyUIVideo(BaseTool):
     name = "comfyui_video"
@@ -116,9 +137,14 @@ class ComfyUIVideo(BaseTool):
         self._client = ComfyUIClient()
 
     def get_status(self) -> ToolStatus:
-        if self._client.is_available():
-            return ToolStatus.AVAILABLE
-        return ToolStatus.UNAVAILABLE
+        if not self._client.is_available():
+            return ToolStatus.UNAVAILABLE
+        # Check that at least one operation has its models
+        _, missing_i2v = self._client.check_models(_REQUIRED_MODELS_I2V)
+        _, missing_t2v = self._client.check_models(_REQUIRED_MODELS_T2V)
+        if missing_i2v and missing_t2v:
+            return ToolStatus.DEGRADED
+        return ToolStatus.AVAILABLE
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         return 0.0
@@ -133,10 +159,23 @@ class ComfyUIVideo(BaseTool):
         if not self._client.is_available():
             return ToolResult(
                 success=False,
-                error="ComfyUI server not reachable. " + self.install_instructions,
+                error=self._client.unavailable_reason(),
             )
 
         operation = inputs.get("operation", "text_to_video")
+
+        if not inputs.get("workflow_json"):
+            required = _REQUIRED_MODELS_I2V if operation == "image_to_video" else _REQUIRED_MODELS_T2V
+            _, missing = self._client.check_models(required)
+            if missing:
+                return ToolResult(
+                    success=False,
+                    error=(
+                        f"ComfyUI server is running but missing models for {operation}: "
+                        f"{', '.join(missing)}.\n"
+                        f"Download them to your ComfyUI models directory."
+                    ),
+                )
         start = time.time()
         seed = inputs.get("seed") or ComfyUIClient.random_seed()
         output_path = Path(

@@ -27,6 +27,13 @@ from tools._comfyui.client import ComfyUIClient, ComfyUIError
 
 _WORKFLOWS = Path(__file__).resolve().parent.parent / "_comfyui" / "workflows"
 
+# Models required by the bundled flux2-txt2img workflow
+_REQUIRED_MODELS = [
+    "flux2-dev-nvfp4.safetensors",
+    "mistral_3_small_flux2_fp4_mixed.safetensors",
+    "flux2-vae.safetensors",
+]
+
 
 class ComfyUIImage(BaseTool):
     name = "comfyui_image"
@@ -96,9 +103,12 @@ class ComfyUIImage(BaseTool):
         self._client = ComfyUIClient()
 
     def get_status(self) -> ToolStatus:
-        if self._client.is_available():
-            return ToolStatus.AVAILABLE
-        return ToolStatus.UNAVAILABLE
+        if not self._client.is_available():
+            return ToolStatus.UNAVAILABLE
+        _, missing = self._client.check_models(_REQUIRED_MODELS)
+        if missing:
+            return ToolStatus.DEGRADED
+        return ToolStatus.AVAILABLE
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         return 0.0
@@ -110,8 +120,20 @@ class ComfyUIImage(BaseTool):
         if not self._client.is_available():
             return ToolResult(
                 success=False,
-                error="ComfyUI server not reachable. " + self.install_instructions,
+                error=self._client.unavailable_reason(),
             )
+
+        if not inputs.get("workflow_json"):
+            _, missing = self._client.check_models(_REQUIRED_MODELS)
+            if missing:
+                return ToolResult(
+                    success=False,
+                    error=(
+                        f"ComfyUI server is running but missing required models: "
+                        f"{', '.join(missing)}.\n"
+                        f"Download them to your ComfyUI models directory."
+                    ),
+                )
 
         start = time.time()
         seed = inputs.get("seed") or ComfyUIClient.random_seed()

@@ -171,3 +171,58 @@ class TestClientHelpers:
         for _ in range(100):
             s = ComfyUIClient.random_seed()
             assert 0 <= s < 2**32
+
+    def test_is_default_url_when_env_not_set(self, monkeypatch):
+        from tools._comfyui.client import ComfyUIClient
+        monkeypatch.delenv("COMFYUI_SERVER_URL", raising=False)
+        client = ComfyUIClient()
+        assert client.is_default_url is True
+
+    def test_is_not_default_url_when_env_set(self, monkeypatch):
+        from tools._comfyui.client import ComfyUIClient
+        monkeypatch.setenv("COMFYUI_SERVER_URL", "http://myhost:9999")
+        client = ComfyUIClient()
+        assert client.is_default_url is False
+
+    def test_unavailable_reason_default_url(self, monkeypatch):
+        from tools._comfyui.client import ComfyUIClient
+        monkeypatch.delenv("COMFYUI_SERVER_URL", raising=False)
+        client = ComfyUIClient()
+        msg = client.unavailable_reason()
+        assert "COMFYUI_SERVER_URL" in msg
+        assert ".env" in msg
+
+    def test_unavailable_reason_custom_url(self, monkeypatch):
+        from tools._comfyui.client import ComfyUIClient
+        monkeypatch.setenv("COMFYUI_SERVER_URL", "http://myhost:9999")
+        client = ComfyUIClient()
+        msg = client.unavailable_reason()
+        assert "myhost:9999" in msg
+        assert "COMFYUI_SERVER_URL" not in msg
+
+
+# ------------------------------------------------------------------
+# Model discovery (offline, no server needed)
+# ------------------------------------------------------------------
+
+class TestModelRequirements:
+
+    def test_image_tool_has_required_models(self):
+        from tools.graphics.comfyui_image import _REQUIRED_MODELS
+        assert len(_REQUIRED_MODELS) > 0
+        assert any("flux" in m.lower() for m in _REQUIRED_MODELS)
+
+    def test_video_tool_has_required_models_i2v(self):
+        from tools.video.comfyui_video import _REQUIRED_MODELS_I2V
+        assert len(_REQUIRED_MODELS_I2V) > 0
+        assert any("i2v" in m.lower() for m in _REQUIRED_MODELS_I2V)
+
+    def test_video_tool_has_required_models_t2v(self):
+        from tools.video.comfyui_video import _REQUIRED_MODELS_T2V
+        assert len(_REQUIRED_MODELS_T2V) > 0
+        assert any("t2v" in m.lower() for m in _REQUIRED_MODELS_T2V)
+
+    def test_music_tool_has_required_models(self):
+        from tools.audio.comfyui_music import _REQUIRED_MODELS
+        assert len(_REQUIRED_MODELS) > 0
+        assert any("ace" in m.lower() for m in _REQUIRED_MODELS)

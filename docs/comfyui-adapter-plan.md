@@ -229,33 +229,20 @@ workflow_json:        string    # optional override
 
 ---
 
-### `comfyui_music` -- Music Generation
+### `comfyui_music` -- Music Generation (not shipped)
 
-| Field | Value |
-|-------|-------|
-| capability | `music_generation` |
-| provider | `comfyui` |
-| runtime | `LOCAL_GPU` |
-| tier | `GENERATE` |
-| stability | `EXPERIMENTAL` |
-| capabilities | `text_to_music` |
-| dependencies | (runtime: ComfyUI server reachable + ACE-Step model) |
-| fallback_tools | `suno_music`, `elevenlabs_music` |
-| cost | `$0.00` (local compute) |
+We explored adding a `comfyui_music` tool using the ACE-Step 3.5B model.
+The model runs well in ComfyUI, but the ComfyUI node interface for
+ACE-Step is not standardized -- there are multiple custom node packs with
+different class names (`AceStepModelLoader` vs native `TextEncodeAceStepAudio`,
+etc.).  Shipping a workflow that only works with one specific custom node
+pack would break for most users.
 
-**Bundled workflow:** `ace-step-music.json`
-
-Uses ACE-Step v1 3.5B for text-to-music generation. Workflow to be authored
-based on the ComfyUI ACE-Step custom node.
-
-**Input schema:**
-
-```yaml
-prompt:      string    # required (music description)
-duration:    number    # seconds (default 30)
-seed:        integer   # optional
-output_path: string    # where to save the audio
-```
+**Future path:** Once a stable, widely-adopted ACE-Step node interface
+emerges, or if ComfyUI adds native audio generation support, a
+`comfyui_music` tool can be added following the same pattern as the image
+and video tools.  Users who have ACE-Step working can already use the
+`workflow_json` override on any tool to run custom workflows.
 
 ---
 
@@ -303,7 +290,7 @@ using OpenMontage's 7-dimension scoring:
 
 | Dimension | ComfyUI score | Rationale |
 |-----------|---------------|-----------|
-| Task fit | High | Supports t2i, i2v, t2v, music |
+| Task fit | High | Supports t2i, i2v, t2v |
 | Quality | High | Latest models (FLUX 2, WAN 2.2 14B) |
 | Control | Highest | Full workflow customization |
 | Reliability | High | Proven in production |
@@ -323,8 +310,7 @@ HeyGen take over transparently.
 
 - **FLUX 2 Dev NVFP4** image generation -- Blackwell-optimized, ~60s per image
 - **WAN 2.2 14B** i2v with 4-step acceleration -- ~3.5 min per 5s clip
-- **WAN 2.2 14B** t2v (models downloaded, workflow needed)
-- **ACE-Step 3.5B** local music generation (model downloaded, workflow needed)
+- **WAN 2.2 14B** t2v (models downloaded, workflow included)
 
 ### Future (add models to ComfyUI, no code changes to OpenMontage)
 
@@ -350,17 +336,14 @@ compatibility matrices. ComfyUI is the abstraction layer.
 
 | Component | Files | Estimated size |
 |-----------|-------|----------------|
-| Shared client | `tools/_comfyui/client.py` | ~120 lines |
-| Image tool | `tools/graphics/comfyui_image.py` | ~130 lines |
-| Video tool | `tools/video/comfyui_video.py` | ~160 lines |
-| Music tool | `tools/audio/comfyui_music.py` | ~100 lines |
-| Workflow templates | `tools/_comfyui/workflows/*.json` | 4 files |
-| T2V workflow | `tools/_comfyui/workflows/wan22-t2v-4step.json` | 1 file (to author) |
-| Music workflow | `tools/_comfyui/workflows/ace-step-music.json` | 1 file (to author) |
-| Tests | `tests/contracts/test_comfyui_*.py` | ~80 lines |
-| Docs | `skills/creative/comfyui-workflows.md` | Agent skill file |
+| Shared client | `tools/_comfyui/client.py` | ~180 lines |
+| Image tool | `tools/graphics/comfyui_image.py` | ~140 lines |
+| Video tool | `tools/video/comfyui_video.py` | ~190 lines |
+| Workflow templates | `tools/_comfyui/workflows/*.json` | 3 files |
+| Tests | `tests/contracts/test_comfyui_tools.py` | ~200 lines |
+| Docs | `docs/comfyui-adapter-plan.md` | This file |
 
-**Total:** ~600 lines of Python + 4-6 workflow JSONs.
+**Total:** ~500 lines of Python + 3 workflow JSONs.
 
 No changes to: `base_tool.py`, `tool_registry.py`, any selector, any
 existing tool, any pipeline definition, or any schema.
@@ -373,13 +356,14 @@ existing tool, any pipeline definition, or any schema.
    user-provided via a config directory? Bundling gives reproducibility;
    external gives flexibility.
 
-2. **Model discovery:** ComfyUI has a `/object_info` endpoint that lists
-   available nodes and models. Should `get_status()` also report which
-   models are loaded, so the selector can make informed routing decisions?
-
-3. **Async generation:** ComfyUI supports websocket connections for real-time
+2. **Async generation:** ComfyUI supports websocket connections for real-time
    progress. Worth implementing for long video generations, or is polling
    sufficient?
 
-4. **Multi-server:** Should the adapter support multiple ComfyUI instances
+3. **Multi-server:** Should the adapter support multiple ComfyUI instances
    (e.g., one for images, one for video) via per-capability URLs?
+
+4. **Music generation:** ACE-Step works in ComfyUI but the node interface
+   isn't standardized across custom node packs. Need to either wait for
+   convergence or find a portable workflow pattern. See the `comfyui_music`
+   section above for details.

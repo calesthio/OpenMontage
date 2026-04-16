@@ -19,9 +19,8 @@ from tools.base_tool import (
 )
 from tools.graphics.comfyui_image import ComfyUIImage
 from tools.video.comfyui_video import ComfyUIVideo
-from tools.audio.comfyui_music import ComfyUIMusic
 
-TOOLS = [ComfyUIImage, ComfyUIVideo, ComfyUIMusic]
+TOOLS = [ComfyUIImage, ComfyUIVideo]
 WORKFLOW_DIR = Path(__file__).resolve().parent.parent.parent / "tools" / "_comfyui" / "workflows"
 
 
@@ -97,7 +96,6 @@ EXPECTED_WORKFLOWS = [
     "flux2-txt2img.json",
     "wan22-i2v-4step.json",
     "wan22-t2v-4step.json",
-    "ace-step-music.json",
 ]
 
 
@@ -222,7 +220,3 @@ class TestModelRequirements:
         assert len(_REQUIRED_MODELS_T2V) > 0
         assert any("t2v" in m.lower() for m in _REQUIRED_MODELS_T2V)
 
-    def test_music_tool_has_required_models(self):
-        from tools.audio.comfyui_music import _REQUIRED_MODELS
-        assert len(_REQUIRED_MODELS) > 0
-        assert any("ace" in m.lower() for m in _REQUIRED_MODELS)

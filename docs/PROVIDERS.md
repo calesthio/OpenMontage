@@ -39,6 +39,7 @@ GOOGLE_API_KEY=              # Google TTS + Google Imagen
 ELEVENLABS_API_KEY=          # TTS, music, sound effects (10K chars/month free)
 OPENAI_API_KEY=              # OpenAI TTS + DALL-E 3 images
 XAI_API_KEY=                 # xAI Grok image generation/editing + Grok video generation
+MINIMAX_API_KEY=             # MiniMax TTS (speech-2.8-hd / turbo)
 
 # MULTI-MODEL GATEWAY (one key, 6+ tools)
 FAL_KEY=                     # FLUX, Recraft, Kling, Veo, MiniMax video
@@ -259,6 +260,51 @@ Google TTS offers 700+ voices across 50+ languages. Voice names follow the patte
 | DALL-E 3 | 1024x1792 | hd | $0.120 |
 
 **Free tier:** None. Requires prepaid billing. Previously offered $5 in free credits for new accounts (discontinued for most signups).
+
+---
+
+### MiniMax — TTS
+
+> **Cost-effective TTS with a broad voice catalogue.** One API key covers both TTS and MiniMax video generation. No subscription required.
+
+**Tools unlocked:** `minimax_tts`
+**Env var:** `MINIMAX_API_KEY`
+
+#### Setup
+
+1. Go to [platform.minimax.io](https://platform.minimax.io/) and create an account
+2. Navigate to **API Keys** in your account settings
+3. Create a key and copy it
+4. Add to `.env`: `MINIMAX_API_KEY=your-key-here`
+
+#### TTS Pricing
+
+| Model | Price per 1M characters |
+|-------|------------------------|
+| `speech-2.8-hd` | ~$100.00 |
+| `speech-2.8-turbo` | ~$50.00 |
+
+**Free tier:** MiniMax offers a free trial quota for new accounts. Check [platform.minimax.io/docs/guides/pricing-paygo](https://platform.minimax.io/docs/guides/pricing-paygo) for current rates.
+
+#### Supported Voices (English)
+
+| Voice ID | Style |
+|----------|-------|
+| `English_expressive_narrator` | Expressive narration (default) |
+| `English_Graceful_Lady` | Elegant female |
+| `English_Insightful_Speaker` | Calm male |
+| `English_radiant_girl` | Upbeat female |
+| `English_Persuasive_Man` | Authoritative male |
+| `English_Lucky_Robot` | Sci-fi robot |
+
+Full voice list: [platform.minimax.io/faq/system-voice-id](https://platform.minimax.io/faq/system-voice-id)
+
+#### TTS Models
+
+| Model | Speed | Quality |
+|-------|-------|---------|
+| `speech-2.8-hd` | Standard | Highest similarity (recommended default) |
+| `speech-2.8-turbo` | Fast | High quality, lower latency |
 
 ---
 

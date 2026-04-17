@@ -39,7 +39,7 @@ GOOGLE_API_KEY=              # Google TTS + Google Imagen
 ELEVENLABS_API_KEY=          # TTS, music, sound effects (10K chars/month free)
 OPENAI_API_KEY=              # OpenAI TTS + DALL-E 3 images
 XAI_API_KEY=                 # xAI Grok image generation/editing + Grok video generation
-MINIMAX_API_KEY=             # MiniMax TTS (speech-2.8-hd / turbo)
+MINIMAX_API_KEY=             # MiniMax chat (MiniMax-M2.7) + TTS (speech-2.8-hd / turbo)
 
 # MULTI-MODEL GATEWAY (one key, 6+ tools)
 FAL_KEY=                     # FLUX, Recraft, Kling, Veo, MiniMax video
@@ -263,9 +263,54 @@ Google TTS offers 700+ voices across 50+ languages. Voice names follow the patte
 
 ---
 
+### MiniMax — Chat + TTS
+
+> **Cost-effective chat and TTS under one API key.** MiniMax-M2.7 is a frontier-class model accessible via an OpenAI-compatible API. The same key also unlocks the TTS provider. No subscription required.
+
+**Tools unlocked:** `minimax_tts`; LLM provider via `lib/providers` (set `llm.provider: minimax` in `config.yaml`)
+**Env var:** `MINIMAX_API_KEY`
+
+#### Chat Models
+
+| Model | Notes |
+|-------|-------|
+| `MiniMax-M2.7` | Peak performance. Ultimate value. (default) |
+| `MiniMax-M2.7-highspeed` | Same capability, faster and more agile |
+
+**API reference:** <https://platform.minimax.io/docs/api-reference/text-openai-api>
+
+#### Chat Usage
+
+Set `llm.provider: minimax` in `config.yaml` (or override per-run) to route
+OpenMontage's LLM calls through MiniMax:
+
+```yaml
+# config.yaml
+llm:
+  provider: minimax
+  model: MiniMax-M2.7      # optional — MiniMax-M2.7 is the default
+  temperature: 1.0         # MiniMax range: (0.0, 1.0] — 0 is not accepted
+  max_tokens: 4096
+```
+
+Then in Python:
+
+```python
+from lib.config_model import OpenMontageConfig
+from lib.providers import build_provider
+
+config = OpenMontageConfig.load()
+provider = build_provider(config.llm)
+response = provider.chat([{"role": "user", "content": "Hello!"}])
+```
+
+**Env var:** `MINIMAX_API_KEY` — get one at <https://platform.minimax.io/>
+
+---
+
 ### MiniMax — TTS
 
-> **Cost-effective TTS with a broad voice catalogue.** One API key covers both TTS and MiniMax video generation. No subscription required.
+> **Cost-effective TTS with a broad voice catalogue.** The same `MINIMAX_API_KEY` covers TTS. No subscription required.
 
 **Tools unlocked:** `minimax_tts`
 **Env var:** `MINIMAX_API_KEY`

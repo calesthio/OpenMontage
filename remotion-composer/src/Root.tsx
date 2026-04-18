@@ -4,7 +4,7 @@ import {
   CinematicRenderer,
   calculateCinematicMetadata,
 } from "./CinematicRenderer";
-import { signalFromTomorrowWithMusicFixture } from "./cinematic/fixtures";
+import { signalFromTomorrowDefaultFixture } from "./cinematic/fixtures";
 import { TalkingHead, TalkingHeadProps } from "./TalkingHead";
 import {
   TitledVideo,
@@ -170,7 +170,7 @@ export const Root: React.FC = () => {
         fps={30}
         width={1920}
         height={1080}
-        defaultProps={signalFromTomorrowWithMusicFixture}
+        defaultProps={signalFromTomorrowDefaultFixture}
         calculateMetadata={calculateCinematicMetadata}
       />
       <Composition

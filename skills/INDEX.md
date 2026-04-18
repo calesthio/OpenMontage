@@ -63,6 +63,7 @@ Key capability families to look for in the output:
 | `subtitle` | — | Pure Python |
 | `avatar` | — | Local GPU models |
 | `video_post` | — | FFmpeg-based local tools |
+| `social_publishing` | — | Upload-Post API (11 platforms) |
 
 ### Adding New Tools
 
@@ -82,6 +83,7 @@ Key capability families to look for in the output:
 | WhisperX | `core/whisperx.md` | Transcription with word-level timestamps | `speech-to-text` |
 | Subtitle Sync | `core/subtitle-sync.md` | Subtitle timing and alignment | `remotion-best-practices` |
 | Color Grading | `core/color-grading.md` | FFmpeg color profiles, LUT workflow, accessibility | `ffmpeg` |
+| Social Publishing | `core/social-publishing.md` | Publish to 11 social platforms via Upload-Post API | — |
 
 ## Creative Skills
 

@@ -37,6 +37,10 @@ If a language output has pronunciation caveats, timing warnings, or missing lip 
 - supporting text assets are present,
 - warnings and review notes are not lost.
 
+## Direct Publishing (Optional)
+
+If `UPLOADPOST_API_KEY` is set, use the `uploadpost_publisher` tool to publish the final video directly to social platforms (Instagram, TikTok, YouTube, LinkedIn, X, Threads, Pinterest, Bluesky, Reddit, Facebook, Google Business) instead of only exporting locally. See `skills/core/social-publishing.md` for integration details.
+
 ## Common Pitfalls
 
 - Shipping localized videos without the matching subtitle or transcript files.

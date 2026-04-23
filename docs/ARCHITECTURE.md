@@ -437,7 +437,7 @@ A standalone Node.js/React subproject in `remotion-composer/` using [Remotion](h
 
 ### HyperFrames (HTML/CSS/GSAP)
 
-Consumed via `npx @hyperframes/cli` (no monorepo checkout needed). Runtime floor: Node.js ≥ 22, FFmpeg, `npx`.
+Consumed via `npx hyperframes` (no monorepo checkout needed). Runtime floor: Node.js ≥ 22, FFmpeg, `npx`.
 
 - Handles kinetic typography, product promos, launch reels, website-to-video, registry blocks
 - Driver: `tools/video/hyperframes_compose.py` materializes a workspace under `projects/<name>/hyperframes/`, then runs `lint → validate → render`

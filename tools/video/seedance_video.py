@@ -216,7 +216,7 @@ class SeedanceVideo(BaseTool):
                 payload["image_url"] = inputs["image_url"]
             elif inputs.get("image_path"):
                 from tools.video._shared import upload_image_fal
-                payload["image_url"] = upload_image_to_fal(inputs["image_path"])
+                payload["image_url"] = upload_image_fal(inputs["image_path"])
             if inputs.get("end_image_url"):
                 payload["end_image_url"] = inputs["end_image_url"]
 
@@ -224,7 +224,7 @@ class SeedanceVideo(BaseTool):
             ref_image_urls = list(inputs.get("reference_image_urls") or [])
             for local_path in inputs.get("reference_image_paths") or []:
                 from tools.video._shared import upload_image_fal
-                ref_image_urls.append(upload_image_to_fal(local_path))
+                ref_image_urls.append(upload_image_fal(local_path))
             # Seedance 2.0 reference-to-video ceilings: 9 images + 3 video + 3 audio.
             if len(ref_image_urls) > 9:
                 return ToolResult(

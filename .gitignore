@@ -79,3 +79,8 @@ remotion-composer/public/*
 remotion-composer/public/demo-props/test-*
 remotion-composer/public/demo-props/talking-head-*
 remotion-composer/public/demo-props/caption-burn-*
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key

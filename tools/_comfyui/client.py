@@ -140,10 +140,15 @@ class ComfyUIClient:
             json={"prompt": workflow},
             timeout=30,
         )
-        resp.raise_for_status()
-        data = resp.json()
+        try:
+            data = resp.json()
+        except ValueError:
+            data = {}
         if data.get("node_errors"):
             raise ComfyUIError(f"Node errors: {json.dumps(data['node_errors'])}")
+        if data.get("error"):
+            raise ComfyUIError(f"Prompt error: {json.dumps(data['error'])}")
+        resp.raise_for_status()
         prompt_id = data.get("prompt_id")
         if not prompt_id:
             raise ComfyUIError(f"No prompt_id in response: {data}")
@@ -181,6 +186,7 @@ class ComfyUIClient:
         filename: str,
         subfolder: str,
         dest: Path,
+        folder_type: str = "output",
     ) -> Path:
         """Download an output artifact from the ComfyUI server."""
         resp = requests.get(
@@ -188,7 +194,7 @@ class ComfyUIClient:
             params={
                 "filename": filename,
                 "subfolder": subfolder,
-                "type": "output",
+                "type": folder_type,
             },
             timeout=120,
         )
@@ -246,7 +252,12 @@ class ComfyUIClient:
                 target = dest
             else:
                 target = dest.with_stem(f"{dest.stem}_{i:03d}").with_suffix(suffix)
-            self.download(item["filename"], item.get("subfolder", ""), target)
+            self.download(
+                item["filename"],
+                item.get("subfolder", ""),
+                target,
+                item.get("type", "output"),
+            )
             paths.append(target)
         return paths
 

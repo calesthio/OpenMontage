@@ -269,6 +269,7 @@ class ToolRegistry:
                 "provider": tool.provider,
                 "runtime": tool.runtime.value,
                 "best_for": tool.best_for,
+                "dependencies": info.get("dependencies", []),
                 "install_instructions": tool.install_instructions,
                 "status": status.value,
             }
@@ -278,6 +279,10 @@ class ToolRegistry:
                 "render_engines",
                 "remotion_note",
                 "provider_matrix",
+                "setup_offer",
+                "operation_statuses",
+                "resource_profiles",
+                "resource_profile_note",
             ):
                 if extra_key in info:
                     entry[extra_key] = info[extra_key]
@@ -385,6 +390,40 @@ class ToolRegistry:
         setup_offers: list[dict[str, Any]] = []
         for cap, bucket in menu.items():
             for entry in bucket.get("unavailable", []):
+                offer = entry.get("setup_offer")
+                if offer:
+                    setup_offers.append(
+                        {
+                            "capability": cap,
+                            "tool": entry.get("name"),
+                            "provider": entry.get("provider"),
+                            "runtime": entry.get("runtime"),
+                            "install_instructions": entry.get("install_instructions") or "",
+                            **offer,
+                        }
+                    )
+                    continue
+
+                env_vars = [
+                    dep[4:]
+                    for dep in entry.get("dependencies", [])
+                    if isinstance(dep, str) and dep.startswith("env:")
+                ]
+                if env_vars:
+                    setup_offers.append(
+                        {
+                            "capability": cap,
+                            "tool": entry.get("name"),
+                            "provider": entry.get("provider"),
+                            "runtime": entry.get("runtime"),
+                            "kind": "env_var",
+                            "fix_complexity": "1-minute env-var",
+                            "env_vars": env_vars,
+                            "install_instructions": entry.get("install_instructions") or "",
+                        }
+                    )
+                    continue
+
                 hint = entry.get("install_instructions") or ""
                 # Heuristic: 1-minute fixes mention an env var or API key.
                 if any(k in hint.lower() for k in ["api key", "env", "_key=", "_api"]):
@@ -393,8 +432,15 @@ class ToolRegistry:
                             "capability": cap,
                             "tool": entry.get("name"),
                             "provider": entry.get("provider"),
+                            "runtime": entry.get("runtime"),
                             "install_instructions": hint,
                         }
+                    )
+
+            for entry in bucket.get("available", []) + bucket.get("unavailable", []):
+                if entry.get("resource_profile_note"):
+                    runtime_warnings.append(
+                        f"{entry.get('name')}: {entry.get('resource_profile_note')}"
                     )
 
         result = {

@@ -24,6 +24,13 @@ from tools.base_tool import (
     ToolTier,
 )
 from tools._comfyui.client import ComfyUIClient, ComfyUIError
+from tools._comfyui.metadata import (
+    BUNDLED_MODEL_STACKS,
+    COMFYUI_SETUP_OFFER,
+    missing_models_payload,
+    model_stack,
+    workflow_hash,
+)
 
 _WORKFLOWS = Path(__file__).resolve().parent.parent / "_comfyui" / "workflows"
 
@@ -47,18 +54,20 @@ class ComfyUIImage(BaseTool):
     runtime = ToolRuntime.LOCAL_GPU
 
     dependencies = []  # checked at runtime via server health
+    setup_offer = COMFYUI_SETUP_OFFER
     install_instructions = (
         "Start a ComfyUI server and set COMFYUI_SERVER_URL "
         "(default http://localhost:8188).\n"
         "See https://github.com/comfyanonymous/ComfyUI for setup."
     )
-    agent_skills = []
+    agent_skills = ["comfyui", "flux-best-practices"]
 
     capabilities = ["text_to_image"]
     supports = {
         "seed": True,
         "custom_size": True,
         "custom_workflow": True,
+        "custom_output_node": True,
         "offline": True,
     }
     best_for = [
@@ -86,7 +95,31 @@ class ComfyUIImage(BaseTool):
             "output_path": {"type": "string", "description": "Where to save the image"},
             "workflow_json": {
                 "type": "string",
-                "description": "Optional full ComfyUI workflow JSON (overrides default)",
+                "description": "Optional full ComfyUI workflow JSON. Requires output_node.",
+            },
+            "workflow_path": {
+                "type": "string",
+                "description": "Optional path to a ComfyUI workflow JSON file. Requires output_node.",
+            },
+            "output_node": {
+                "type": "string",
+                "description": "ComfyUI output node ID for custom workflow_json/workflow_path.",
+            },
+            "workflow_name": {
+                "type": "string",
+                "description": "Optional human-readable provenance label for a custom workflow.",
+            },
+            "workflow_model": {
+                "type": "string",
+                "description": "Optional model/provenance label for a custom workflow.",
+            },
+            "workflow_model_stack": {
+                "type": "array",
+                "description": (
+                    "Optional provenance metadata for custom workflow dependencies. "
+                    "Items should include name, role, quantization, and LoRA strengths when known."
+                ),
+                "items": {"type": "object"},
             },
         },
     }
@@ -116,22 +149,43 @@ class ComfyUIImage(BaseTool):
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         return float(inputs.get("steps", 20)) * 1.5
 
+    def get_info(self) -> dict[str, Any]:
+        info = super().get_info()
+        info["setup_offer"] = self.setup_offer
+        info["bundled_model_stack"] = BUNDLED_MODEL_STACKS["flux2-txt2img"]
+        return info
+
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
+        custom_workflow = bool(inputs.get("workflow_json") or inputs.get("workflow_path"))
+        if custom_workflow and not inputs.get("output_node"):
+            return ToolResult(
+                success=False,
+                error=(
+                    "Custom ComfyUI workflows require output_node so OpenMontage "
+                    "knows which ComfyUI node to download artifacts from."
+                ),
+            )
+
         if not self._client.is_available():
             return ToolResult(
                 success=False,
                 error=self._client.unavailable_reason(),
             )
 
-        if not inputs.get("workflow_json"):
+        if not custom_workflow:
             _, missing = self._client.check_models(_REQUIRED_MODELS)
             if missing:
                 return ToolResult(
                     success=False,
+                    data=missing_models_payload(
+                        missing,
+                        workflow_key="flux2-txt2img",
+                        workflow_name="flux2-txt2img.json",
+                    ),
                     error=(
                         f"ComfyUI server is running but missing required models: "
                         f"{', '.join(missing)}.\n"
-                        f"Download them to your ComfyUI models directory."
+                        f"See data.missing_models for destination hints and download URLs."
                     ),
                 )
 
@@ -144,8 +198,9 @@ class ComfyUIImage(BaseTool):
         output_path = Path(inputs.get("output_path", f"comfyui_image_{seed}.png"))
 
         try:
-            if inputs.get("workflow_json"):
-                workflow = json.loads(inputs["workflow_json"])
+            if custom_workflow:
+                workflow = self._load_custom_workflow(inputs)
+                output_node = str(inputs["output_node"])
             else:
                 workflow = ComfyUIClient.load_workflow(_WORKFLOWS / "flux2-txt2img.json")
                 workflow = ComfyUIClient.patch_workflow(workflow, {
@@ -156,9 +211,13 @@ class ComfyUIImage(BaseTool):
                     "10": {"steps": steps, "width": width, "height": height},
                     "13": {"filename_prefix": output_path.stem},
                 })
+                output_node = "13"
 
+            provenance = self._workflow_provenance(
+                inputs, custom_workflow, output_node, workflow
+            )
             paths = self._client.generate(
-                workflow, output_node="13", dest=output_path, timeout=600,
+                workflow, output_node=output_node, dest=output_path, timeout=600,
             )
 
         except ComfyUIError as exc:
@@ -166,11 +225,12 @@ class ComfyUIImage(BaseTool):
         except Exception as exc:
             return ToolResult(success=False, error=f"ComfyUI image generation failed: {exc}")
 
+        model_name = self._model_name(inputs, custom_workflow)
         return ToolResult(
             success=True,
             data={
                 "provider": "comfyui",
-                "model": "flux2-dev-nvfp4",
+                "model": model_name,
                 "prompt": inputs["prompt"],
                 "width": width,
                 "height": height,
@@ -178,10 +238,58 @@ class ComfyUIImage(BaseTool):
                 "guidance": guidance,
                 "output": str(paths[0]),
                 "format": "png",
+                "workflow_provenance": provenance,
             },
             artifacts=[str(p) for p in paths],
             cost_usd=0.0,
             duration_seconds=round(time.time() - start, 2),
             seed=seed,
-            model="flux2-dev-nvfp4",
+            model=model_name,
         )
+
+    @staticmethod
+    def _load_custom_workflow(inputs: dict[str, Any]) -> dict:
+        if inputs.get("workflow_json"):
+            return json.loads(inputs["workflow_json"])
+        return ComfyUIClient.load_workflow(Path(inputs["workflow_path"]))
+
+    @staticmethod
+    def _model_name(inputs: dict[str, Any], custom_workflow: bool) -> str:
+        if not custom_workflow:
+            return "flux2-dev-nvfp4"
+        return (
+            inputs.get("workflow_model")
+            or inputs.get("model")
+            or inputs.get("workflow_name")
+            or "custom-comfyui-workflow"
+        )
+
+    @staticmethod
+    def _workflow_provenance(
+        inputs: dict[str, Any],
+        custom_workflow: bool,
+        output_node: str,
+        workflow: dict[str, Any],
+    ) -> dict[str, Any]:
+        if not custom_workflow:
+            return {
+                "source": "bundled",
+                "workflow": "flux2-txt2img.json",
+                "workflow_hash_sha256": workflow_hash(workflow),
+                "model_stack": model_stack("flux2-txt2img", inputs),
+                "output_node": output_node,
+            }
+        return {
+            "source": "user_supplied",
+            "workflow_name": inputs.get("workflow_name"),
+            "workflow_path": inputs.get("workflow_path"),
+            "model": inputs.get("workflow_model") or inputs.get("model"),
+            "workflow_hash_sha256": workflow_hash(workflow),
+            "model_stack": model_stack(None, inputs),
+            "model_stack_source": (
+                "caller_supplied"
+                if inputs.get("workflow_model_stack")
+                else "unknown_custom_workflow"
+            ),
+            "output_node": output_node,
+        }

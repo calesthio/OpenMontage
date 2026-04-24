@@ -1,6 +1,6 @@
 # ComfyUI Provider Adapter for OpenMontage
 
-**RFC: Native ComfyUI backend for image, video, and music generation**
+**RFC: Native ComfyUI backend for image and video generation**
 
 ---
 
@@ -36,12 +36,12 @@ on any hardware ComfyUI runs on, without shipping or maintaining PyTorch builds.
 OpenMontage Agent
     |
     v
-video_selector / image_selector / music_selector
-    |                                        
-    v                                        
-comfyui_video    comfyui_image    comfyui_music    (new tools)
-    |                |                |
-    v                v                v
+video_selector / image_selector
+    |
+    v
+comfyui_video    comfyui_image    (new tools)
+    |                |
+    v                v
 ComfyUI REST API  (POST /prompt, GET /history, GET /view)
     |
     v
@@ -50,7 +50,7 @@ GPU (any hardware ComfyUI supports)
 
 ### Integration model
 
-Three new `BaseTool` subclasses plus one shared client library:
+Two new `BaseTool` subclasses plus one shared client library:
 
 ```
 tools/
@@ -61,21 +61,20 @@ tools/
       flux2-txt2img.json
       wan22-t2v-4step.json
       wan22-i2v-4step.json
-      ace-step-music.json
   graphics/
     comfyui_image.py       # capability="image_generation", provider="comfyui"
   video/
     comfyui_video.py       # capability="video_generation", provider="comfyui"
-  audio/
-    comfyui_music.py       # capability="music_generation", provider="comfyui"
 ```
 
-### Zero changes to selectors or registry
+### Registry and selector integration
 
 The tools declare `capability` and `provider` as class attributes.
 `tool_registry.discover()` picks them up automatically via `pkgutil.walk_packages`.
-`video_selector`, `image_selector`, and `music_selector` find them via
-`registry.get_by_capability()` -- no hardcoded references needed.
+`video_selector` and `image_selector` find them via `registry.get_by_capability()`.
+The only selector change is operation-specific filtering in `video_selector` so
+ComfyUI is not selected for `image_to_video` when only the text-to-video bundled
+models are installed, or vice versa.
 
 ---
 
@@ -83,6 +82,25 @@ The tools declare `capability` and `provider` as class attributes.
 
 Encapsulates the ComfyUI REST API pattern proven in production (used by the
 Bard project's Airflow DAGs for thousands of generations):
+
+The endpoint contract was checked against current ComfyUI server documentation
+and the April 2026 third-party developer guide:
+
+- Official routes: `POST /prompt`, `GET /history/{prompt_id}`, `GET /view`,
+  `POST /upload/image`, `GET /object_info/{node_class}`, `GET /models/{folder}`,
+  `GET /system_stats`, and `WS /ws` are documented server routes.
+- `/prompt` accepts the workflow in API format under the `prompt` key and
+  returns `prompt_id`, `number`, and `node_errors` on validation.
+- `/history/{prompt_id}` returns completed node outputs; artifact records include
+  `filename`, `subfolder`, and `type`. The client passes all three through to
+  `/view` instead of assuming `type=output`.
+- Workflows must be exported in ComfyUI API format, not the regular visual
+  canvas workflow format.
+
+References:
+
+- https://docs.comfy.org/development/comfyui-server/comms_routes
+- https://www.runflow.io/blog/comfyui-api-developer-guide
 
 ```python
 class ComfyUIClient:
@@ -114,8 +132,8 @@ class ComfyUIClient:
 ```
 
 **Why a shared client?** The submit/poll/download cycle is identical across
-image, video, and music generation. The only differences are: which workflow
-template, which nodes to customize, and which output node to read from.
+image and video generation. The only differences are: which workflow template,
+which nodes to customize, and which output node to read from.
 
 ---
 
@@ -157,16 +175,30 @@ steps:         integer   # default 20
 seed:          integer   # optional (random if omitted)
 guidance:      number    # default 3.5
 output_path:   string    # where to save the image
-workflow_json: string    # optional override (full custom workflow)
+workflow_json: string    # optional custom workflow; requires output_node
+workflow_path: string    # optional path to workflow JSON; requires output_node
+output_node:   string    # required for custom workflows
+workflow_name: string    # optional custom workflow provenance label
+workflow_model: string   # optional custom model/provenance label
+workflow_model_stack: [] # optional custom dependency provenance
 ```
 
-**get_status():** Pings ComfyUI server. Returns `AVAILABLE` if reachable, `UNAVAILABLE` otherwise.
+**get_status():** Pings ComfyUI server and checks bundled FLUX model names via
+`/object_info`. Returns `AVAILABLE` when the server and bundled model set are
+ready, `DEGRADED` when the server is reachable but bundled models are missing,
+and `UNAVAILABLE` when the server cannot be reached.
 
 **execute() flow:**
 1. Deep-copy workflow template
 2. Inject prompt, seed, dimensions, steps into templated nodes
 3. `client.generate(workflow, output_node="13", dest=output_path)`
 4. Return `ToolResult` with artifact path, seed, model info
+
+For custom workflows, the caller must provide `workflow_json` or `workflow_path`
+plus `output_node`. The tool does not assume bundled node IDs for custom
+workflows, and provenance is reported as user-supplied unless the caller provides
+`workflow_model`. Results also include the final workflow SHA-256 hash and, for
+bundled workflows, the known model stack.
 
 ---
 
@@ -188,6 +220,14 @@ workflow_json: string    # optional override (full custom workflow)
 
 1. **`wan22-i2v-4step.json`** -- Image-to-video (WAN 2.2 14B, fp8, 4-step LightX2V LoRA)
 2. **`wan22-t2v-4step.json`** -- Text-to-video (WAN 2.2 14B, fp8, 4-step LightX2V LoRA)
+
+These bundled WAN 2.2 14B FP8 workflows are the high-quality profile and
+recommend roughly 16GB VRAM. That is not a ComfyUI-wide requirement. The
+`comfyui_video` tool's top-level `resource_profile` is an 8GB provider floor so
+preflight does not imply ComfyUI itself requires 16GB. Low-VRAM users should use
+custom workflows such as Wan 2.1 1.3B, LTX-Video/LTXV FP8 or quantized graphs,
+or Wan 2.2 GGUF/quantized community workflows, with shorter frame counts and
+lower resolutions as needed.
 
 **I2V workflow -- templated nodes:**
 
@@ -211,7 +251,12 @@ height:               integer   # default 640
 num_frames:           integer   # default 81 (5s at 16fps)
 seed:                 integer   # optional
 output_path:          string    # where to save the video
-workflow_json:        string    # optional override
+workflow_json:        string    # optional custom workflow; requires output_node
+workflow_path:        string    # optional path to workflow JSON; requires output_node
+output_node:          string    # required for custom workflows
+workflow_name:        string    # optional custom workflow provenance label
+workflow_model:       string    # optional custom model/provenance label
+workflow_model_stack: []        # optional custom dependency provenance
 ```
 
 **execute() flow (i2v):**
@@ -224,8 +269,15 @@ workflow_json:        string    # optional override
 **execute() flow (t2v):**
 1. Deep-copy t2v workflow template
 2. Inject prompt, seed, dimensions
-3. `client.generate(workflow, output_node="108", dest=output_path, timeout=900)`
+3. `client.generate(workflow, output_node="16", dest=output_path, timeout=900)`
 4. Return `ToolResult`
+
+`comfyui_video` publishes `operation_statuses` in `get_info()` and implements
+`is_operation_available(operation)` for selector routing. This keeps partial
+ComfyUI installs useful for the installed mode without advertising unavailable
+operation modes as ready. `video_selector` also applies this readiness check
+when `operation="rank"` by using `target_operation`, so preflight rankings do
+not promote ComfyUI for an operation whose bundled models are missing.
 
 ---
 
@@ -238,18 +290,19 @@ different class names (`AceStepModelLoader` vs native `TextEncodeAceStepAudio`,
 etc.).  Shipping a workflow that only works with one specific custom node
 pack would break for most users.
 
-**Future path:** Once a stable, widely-adopted ACE-Step node interface
-emerges, or if ComfyUI adds native audio generation support, a
-`comfyui_music` tool can be added following the same pattern as the image
-and video tools.  Users who have ACE-Step working can already use the
-`workflow_json` override on any tool to run custom workflows.
+**Future path:** ACE-Step support should be revisited once OpenMontage decides
+the music-generation routing shape and a portable ComfyUI audio workflow
+contract. Current image/video workflow overrides are intentionally scoped to
+image and video artifacts, not arbitrary audio workflows.
 
 ---
 
 ## Workflow Override Mechanism
 
-Every tool accepts an optional `workflow_json` input. When provided, it
-replaces the bundled template entirely. This enables:
+The image and video tools accept either `workflow_json` or `workflow_path`.
+When provided, the custom workflow replaces the bundled template entirely and
+the caller must also provide `output_node`. This stricter contract is required
+because community workflows use arbitrary node IDs.
 
 - Using newer model checkpoints without code changes
 - Custom sampling strategies (different schedulers, step counts, LoRAs)
@@ -258,6 +311,38 @@ replaces the bundled template entirely. This enables:
 
 The agent can also read workflow files from `tools/_comfyui/workflows/` and
 modify them programmatically before passing to `execute()`.
+
+Custom workflow result metadata reports `workflow_provenance.source` as
+`user_supplied` and uses `workflow_model`, `model`, or `workflow_name` as the
+model label when provided. If no custom label is supplied, the model is reported
+as `custom-comfyui-workflow` instead of one of the bundled model names. The
+provenance payload also records `workflow_hash_sha256`. For user-supplied
+workflows, callers should provide `workflow_model_stack` with base model, text
+encoder, VAE, LoRAs and strengths, scheduler, steps, and guidance when known.
+
+---
+
+## Agent Skill and Setup Contract
+
+Both ComfyUI tools advertise the Layer 3 `comfyui` skill. Agents must read
+`.agents/skills/comfyui/SKILL.md` before calling either tool so they know how to
+load community workflows, identify output nodes, handle LoRA loader chains, and
+record custom workflow provenance.
+
+Unavailable ComfyUI tools expose a structured `setup_offer` in `get_info()`,
+`provider_menu()`, and `provider_menu_summary().setup_offers[]`:
+
+```yaml
+kind: local_server
+env_var: COMFYUI_SERVER_URL
+default_url: http://localhost:8188
+health_check: GET /system_stats
+```
+
+When bundled models are missing, the tool returns a machine-readable
+`data.missing_models[]` list with filename, role, destination hint, and download
+URL when OpenMontage knows the canonical source. Agents should surface that
+payload rather than parsing prose error text.
 
 ---
 
@@ -298,9 +383,10 @@ using OpenMontage's 7-dimension scoring:
 | Latency | Medium | GPU-bound, no network round-trip |
 | Continuity | High | Deterministic with seeds |
 
-When ComfyUI is unavailable (server down), the selector falls through to
-`fallback_tools` automatically -- API providers like FLUX via fal.ai or
-HeyGen take over transparently.
+When ComfyUI is unavailable (server down), selectors fall through to other
+available providers. When only one video operation is configured, `video_selector`
+uses the tool's operation-specific readiness to avoid selecting ComfyUI for the
+missing mode.
 
 ---
 
@@ -309,8 +395,21 @@ HeyGen take over transparently.
 ### Immediate (with existing models)
 
 - **FLUX 2 Dev NVFP4** image generation -- Blackwell-optimized, ~60s per image
-- **WAN 2.2 14B** i2v with 4-step acceleration -- ~3.5 min per 5s clip
-- **WAN 2.2 14B** t2v (models downloaded, workflow included)
+- **WAN 2.2 14B FP8 high-quality profile** i2v with 4-step acceleration -- ~3.5 min per 5s clip, about 16GB VRAM recommended
+- **WAN 2.2 14B FP8 high-quality profile** t2v (models downloaded, workflow included), about 16GB VRAM recommended
+
+### Low-VRAM profile
+
+ComfyUI can still be useful on 8GB-12GB GPUs when the user supplies an
+appropriate `workflow_json` or `workflow_path`. Good candidates include:
+
+- Wan 2.1 1.3B workflows for lower-memory text-to-video.
+- LTX-Video/LTXV FP8 or quantized workflows for fast short clips.
+- Wan 2.2 GGUF/quantized community workflows at lower resolution and frame count.
+
+OpenMontage should treat those as custom workflow profiles until a blessed
+low-VRAM workflow is bundled. For custom workflows, resource requirements are
+workflow-supplied rather than inferred from the bundled WAN 2.2 14B profile.
 
 ### Future (add models to ComfyUI, no code changes to OpenMontage)
 
@@ -337,16 +436,20 @@ compatibility matrices. ComfyUI is the abstraction layer.
 | Component | Files | Estimated size |
 |-----------|-------|----------------|
 | Shared client | `tools/_comfyui/client.py` | ~180 lines |
+| Shared metadata | `tools/_comfyui/metadata.py` | setup, model stack, provenance helpers |
 | Image tool | `tools/graphics/comfyui_image.py` | ~140 lines |
 | Video tool | `tools/video/comfyui_video.py` | ~190 lines |
+| Layer 3 skill | `.agents/skills/comfyui/SKILL.md` | usage contract |
+| Registry summary | `tools/tool_registry.py` | setup offer surfacing |
+| Selector readiness filter | `tools/video/video_selector.py` | small operation-readiness check |
 | Workflow templates | `tools/_comfyui/workflows/*.json` | 3 files |
 | Tests | `tests/contracts/test_comfyui_tools.py` | ~200 lines |
 | Docs | `docs/comfyui-adapter-plan.md` | This file |
 
 **Total:** ~500 lines of Python + 3 workflow JSONs.
 
-No changes to: `base_tool.py`, `tool_registry.py`, any selector, any
-existing tool, any pipeline definition, or any schema.
+No changes to: `base_tool.py`, existing non-ComfyUI generation providers, any
+pipeline definition, or any schema.
 
 ---
 
@@ -363,7 +466,8 @@ existing tool, any pipeline definition, or any schema.
 3. **Multi-server:** Should the adapter support multiple ComfyUI instances
    (e.g., one for images, one for video) via per-capability URLs?
 
-4. **Music generation:** ACE-Step works in ComfyUI but the node interface
-   isn't standardized across custom node packs. Need to either wait for
-   convergence or find a portable workflow pattern. See the `comfyui_music`
-   section above for details.
+4. **Music generation:** ACE-Step works in ComfyUI but OpenMontage needs a
+   dedicated music-generation routing contract before adding `comfyui_music`.
+   The follow-up should decide selector integration, audio artifact schemas, and
+   a portable workflow/output-node contract rather than treating music as a
+   hidden image/video workflow override.

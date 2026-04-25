@@ -18,7 +18,14 @@ def load_env(project_root: Optional[Path] = None) -> None:
         project_root = Path(__file__).resolve().parent.parent
     env_path = project_root / ".env"
     if env_path.exists():
-        load_dotenv(env_path)
+        try:
+            load_dotenv(env_path)
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).warning(
+                f"Failed to load .env file at {env_path}: {exc}. "
+                "Environment loading will continue with currently-set variables."
+            )
 
 
 def get_env(key: str, default: Optional[str] = None) -> Optional[str]:

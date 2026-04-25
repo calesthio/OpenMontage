@@ -47,6 +47,39 @@ const toneGradient = (tone: CinematicTone) => {
   }
 };
 
+const MissingAssetPlaceholder: React.FC<{ label: string; tone: CinematicTone }> = ({
+  label,
+  tone,
+}) => {
+  return (
+    <AbsoluteFill
+      style={{
+        backgroundColor: "#020407",
+        justifyContent: "center",
+        alignItems: "center",
+        color: "#5b6f80",
+        fontFamily,
+        fontSize: 22,
+        letterSpacing: "0.18em",
+        textTransform: "uppercase",
+        textAlign: "center",
+        padding: 64,
+      }}
+    >
+      <div
+        style={{
+          padding: "18px 28px",
+          border: "1px dashed rgba(140, 170, 200, 0.35)",
+          borderRadius: 6,
+          background: toneGradient(tone),
+        }}
+      >
+        {label}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
 const SceneVideo: React.FC<{ scene: CinematicVideoScene }> = ({ scene }) => {
   const frame = useCurrentFrame();
   const { durationInFrames, fps } = useVideoConfig();
@@ -82,6 +115,17 @@ const SceneVideo: React.FC<{ scene: CinematicVideoScene }> = ({ scene }) => {
     scene.trimAfterSeconds !== undefined
       ? Math.round(scene.trimAfterSeconds * fps)
       : undefined;
+
+  if (!scene.src) {
+    return (
+      <AbsoluteFill style={{ opacity }}>
+        <MissingAssetPlaceholder
+          label={`Video asset missing — ${scene.id}`}
+          tone={scene.tone ?? "cold"}
+        />
+      </AbsoluteFill>
+    );
+  }
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#020407", opacity }}>
@@ -435,6 +479,10 @@ const Soundtrack: React.FC<{
       extrapolateRight: "clamp",
     },
   );
+
+  if (!src) {
+    return null;
+  }
 
   return (
     <Audio

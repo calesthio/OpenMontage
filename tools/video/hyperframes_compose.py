@@ -1089,6 +1089,19 @@ class HyperFramesCompose(BaseTool):
 
         # Unknown cut shape — render a placeholder text card so the render
         # still succeeds; lint/validate will surface the issue.
+        if ext in {".html", ".htm"} and src_path:
+            rel = self._rel_from_workspace(str(src_path))
+            composition_id = Path(rel).stem
+            html = (
+                f'<div id="{cut_id}" class="clip composition-clip" '
+                f'data-composition-id="{self._escape_attr(composition_id)}" '
+                f'data-composition-src="{self._escape_attr(rel)}" '
+                f'data-start="{self._f(in_s)}" data-duration="{self._f(duration)}" '
+                f'data-width="{width}" data-height="{height}" '
+                f'data-track-index="1"></div>'
+            )
+            return html, None
+
         placeholder = self._escape_text(text or cut.get("reason") or f"Scene {index + 1}")
         html = (
             f'<div id="{cut_id}" class="clip text-card" '
@@ -1182,5 +1195,10 @@ class HyperFramesCompose(BaseTool):
         # If it's already a relative path starting with assets/, keep as-is.
         if not p.is_absolute():
             return str(p).replace("\\", "/")
+        parts = p.parts
+        for anchor in ("assets", "compositions"):
+            if anchor in parts:
+                index = len(parts) - 1 - list(reversed(parts)).index(anchor)
+                return "/".join(parts[index:])
         # Otherwise emit just the basename under assets/.
         return f"assets/{p.name}"

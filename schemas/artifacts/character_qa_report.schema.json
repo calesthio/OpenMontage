@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/character_qa_report",
+  "title": "Character QA Report",
+  "description": "Structured review of character rig integrity, motion, and render readiness.",
+  "type": "object",
+  "required": ["version", "status", "checks"],
+  "properties": {
+    "version": { "type": "string", "const": "1.0" },
+    "status": { "type": "string", "enum": ["pass", "revise", "fail"] },
+    "preview_path": { "type": "string" },
+    "checks": {
+      "type": "object",
+      "properties": {
+        "schema_valid": { "type": "boolean" },
+        "assets_exist": { "type": "boolean" },
+        "pivots_defined": { "type": "boolean" },
+        "poses_defined": { "type": "boolean" },
+        "actions_timed": { "type": "boolean" },
+        "motion_detected": { "type": "boolean" },
+        "browser_preview_checked": { "type": "boolean" },
+        "frame_samples_checked": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "issues": { "type": "array", "items": { "type": "string" } },
+    "recommended_action": {
+      "type": "string",
+      "enum": ["present_to_user", "fix_rig", "fix_assets", "fix_timeline", "block"]
+    },
+    "metadata": { "type": "object" }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/character_design",
+  "title": "Character Design",
+  "description": "Character definitions for local rigged animation.",
+  "type": "object",
+  "required": ["version", "characters"],
+  "properties": {
+    "version": { "type": "string", "const": "1.0" },
+    "style": {
+      "type": "object",
+      "properties": {
+        "visual_style": { "type": "string" },
+        "palette": { "type": "array", "items": { "type": "string" } },
+        "line_style": { "type": "string" },
+        "texture": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "characters": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "role", "body_type", "style", "required_emotions", "required_actions"],
+        "properties": {
+          "id": { "type": "string" },
+          "display_name": { "type": "string" },
+          "role": { "type": "string" },
+          "body_type": { "type": "string" },
+          "style": { "type": "string" },
+          "silhouette_notes": { "type": "string" },
+          "required_emotions": { "type": "array", "items": { "type": "string" } },
+          "required_actions": { "type": "array", "items": { "type": "string" } },
+          "required_views": { "type": "array", "items": { "type": "string" } },
+          "props": { "type": "array", "items": { "type": "string" } },
+          "constraints": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": false
+      }
+    },
+    "metadata": { "type": "object" }
+  },
+  "additionalProperties": false
+}

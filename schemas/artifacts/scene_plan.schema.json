@@ -17,7 +17,7 @@
           "id": { "type": "string" },
           "type": {
             "type": "string",
-            "enum": ["talking_head", "broll", "animation", "diagram", "text_card", "transition", "generated", "screen_recording"]
+            "enum": ["talking_head", "broll", "animation", "character_scene", "diagram", "text_card", "transition", "generated", "screen_recording"]
           },
           "description": { "type": "string" },
           "start_seconds": { "type": "number", "minimum": 0 },
@@ -67,6 +67,27 @@
             "type": "boolean",
             "default": false,
             "description": "True if this is the visual peak of the video — deserves extra attention"
+          },
+          "character_actions": {
+            "type": "array",
+            "description": "Character-specific acting beats for rigged character animation scenes",
+            "items": {
+              "type": "object",
+              "required": ["character_id", "action_sequence"],
+              "properties": {
+                "character_id": { "type": "string" },
+                "emotion": { "type": "string" },
+                "action_sequence": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "minItems": 1
+                },
+                "dialogue": { "type": "string" },
+                "target": { "type": "string" },
+                "notes": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
           },
           "texture_keywords": {
             "type": "array",

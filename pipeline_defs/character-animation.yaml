@@ -1,0 +1,302 @@
+name: character-animation
+version: "0.1"
+description: >
+  Character animation pipeline for local, reusable cartoon characters. It turns
+  a script and scene plan into character specs, rig plans, pose libraries, action
+  timelines, and browser-rendered SVG/Canvas/Remotion/HyperFrames animation.
+  The pipeline is designed for deterministic local motion, not remote video-gen
+  replacement.
+category: animation
+stability: beta
+default_checkpoint_policy: guided
+
+reference_input:
+  supported: true
+  analysis_depth: standard
+  analysis_tools:
+    - video_analyzer
+    - transcript_fetcher
+    - video_downloader
+    - scene_detect
+    - frame_sampler
+
+extensions:
+  custom_scripts: true
+  custom_playbooks: true
+  custom_skills: true
+  custom_tools: false
+
+required_skills:
+  - pipelines/character-animation/executive-producer
+  - pipelines/character-animation/research-director
+  - pipelines/character-animation/proposal-director
+  - pipelines/character-animation/script-director
+  - pipelines/character-animation/character-design-director
+  - pipelines/character-animation/rig-plan-director
+  - pipelines/character-animation/scene-director
+  - pipelines/character-animation/asset-director
+  - pipelines/character-animation/edit-director
+  - pipelines/character-animation/compose-director
+  - pipelines/character-animation/publish-director
+  - meta/reviewer
+  - meta/checkpoint-protocol
+  - meta/animation-runtime-selector
+
+orchestration:
+  mode: executive-producer
+  skill: pipelines/character-animation/executive-producer
+  budget_default_usd: 2.00
+  max_revisions_per_stage: 3
+  max_send_backs: 3
+  max_wall_time_minutes: 20
+
+compatible_playbooks:
+  recommended:
+    - flat-motion-graphics
+  also_works:
+    - clean-professional
+    - minimalist-diagram
+  custom_allowed: true
+
+stages:
+  - name: research
+    skill: pipelines/character-animation/research-director
+    produces:
+      - research_brief
+    tools_available: []
+    checkpoint_required: false
+    human_approval_default: false
+    review_focus:
+      - Reference style and character-animation technique are researched when a reference exists
+      - At least 3 comparable character-animation examples or techniques are summarized
+      - Feasibility separates rigged local animation from frame-by-frame traditional animation
+    success_criteria:
+      - Schema-valid research_brief
+      - Technique notes identify reusable rigs, pose libraries, and effects needs
+
+  - name: proposal
+    skill: pipelines/character-animation/proposal-director
+    required_artifacts_in:
+      - research_brief
+    produces:
+      - proposal_packet
+      - decision_log
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Concepts are differentiated and not a carbon copy of any reference
+      - Character count, action complexity, and reuse strategy are explicit
+      - Render runtime selection presents Remotion and HyperFrames when both are available
+      - Motion requirement is preserved; FFmpeg-only fallback is not proposed for character acting
+      - Sample-first plan is included before full production
+    success_criteria:
+      - Schema-valid proposal_packet
+      - Selected concept includes character_count, rig_complexity, reuse_strategy, and render_runtime
+      - User approval is recorded before character assets are generated
+    sub_stages:
+      - name: sample
+        description: "10-15 second character-animation proof before full production"
+        condition: "approved_concept_exists"
+        human_approval_default: true
+        tools_available:
+          - character_spec_generator
+          - svg_rig_builder
+          - pose_library_builder
+          - action_timeline_compiler
+          - character_rig_renderer
+          - character_animation_reviewer
+          - video_compose
+        review_focus:
+          - Sample proves character style, rig integrity, pose readability, and motion timing
+
+  - name: script
+    skill: pipelines/character-animation/script-director
+    required_artifacts_in:
+      - proposal_packet
+    optional_artifacts_in:
+      - research_brief
+      - video_analysis_brief
+    produces:
+      - script
+    tools_available:
+      - transcriber
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Script is written as action beats, not only narration
+      - Dialogue/narration architecture is locked
+      - Every emotional turn can be expressed with poses and actions
+    success_criteria:
+      - Schema-valid script
+      - Character beats and audio architecture are explicit
+
+  - name: character_design
+    skill: pipelines/character-animation/character-design-director
+    required_artifacts_in:
+      - script
+      - proposal_packet
+    produces:
+      - character_design
+    tools_available:
+      - character_spec_generator
+      - image_selector
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Each character has a distinct role, silhouette, emotional range, and action list
+      - Character count is realistic for local rigging
+      - Style anchors are reusable across scenes
+    success_criteria:
+      - Schema-valid character_design
+      - Every main character has required emotions, actions, and views
+
+  - name: rig_plan
+    skill: pipelines/character-animation/rig-plan-director
+    required_artifacts_in:
+      - character_design
+    produces:
+      - rig_plan
+      - pose_library
+    tools_available:
+      - svg_rig_builder
+      - pose_library_builder
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Parts, pivots, layers, constraints, views, and required poses are complete
+      - Rig plan avoids per-character code paths; character differences are data
+      - Known risky motions are surfaced before asset generation
+    success_criteria:
+      - Schema-valid rig_plan
+      - Schema-valid pose_library
+      - Every required action has at least one pose or action strategy
+
+  - name: scene_plan
+    skill: pipelines/character-animation/scene-director
+    required_artifacts_in:
+      - script
+      - character_design
+      - rig_plan
+      - pose_library
+    optional_artifacts_in:
+      - proposal_packet
+    produces:
+      - scene_plan
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Scenes use character_scene or animation types with timed actions
+      - Each scene has characters, actions, camera/framing, background, and effects
+      - Scene complexity fits the approved sample and budget
+    success_criteria:
+      - Schema-valid scene_plan
+      - Every scene maps to rigged characters and required assets
+
+  - name: assets
+    skill: pipelines/character-animation/asset-director
+    required_artifacts_in:
+      - character_design
+      - rig_plan
+      - pose_library
+      - scene_plan
+    optional_artifacts_in:
+      - script
+      - proposal_packet
+    produces:
+      - asset_manifest
+    tools_available:
+      - image_selector
+      - tts_selector
+      - music_gen
+      - character_rig_renderer
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Character parts, backgrounds, props, audio, and effects are linked to scenes
+      - Layer 3 skills are read for every generation or animation-runtime tool
+      - Asset provenance and prompts are recorded
+      - Missing rig assets are blocked, not hidden
+    success_criteria:
+      - Schema-valid asset_manifest
+      - All referenced asset files exist
+      - Character assets are organized under projects/<name>/assets/characters
+
+  - name: edit
+    skill: pipelines/character-animation/edit-director
+    required_artifacts_in:
+      - scene_plan
+      - asset_manifest
+      - pose_library
+    optional_artifacts_in:
+      - script
+      - rig_plan
+    produces:
+      - edit_decisions
+      - action_timeline
+    tools_available:
+      - action_timeline_compiler
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Action timeline preserves acting beats and emotional readability
+      - Pose transitions are timed with holds, anticipation, and follow-through
+      - render_runtime is carried from proposal unchanged
+    success_criteria:
+      - Schema-valid edit_decisions
+      - Schema-valid action_timeline
+      - Every scene has timed actions
+
+  - name: compose
+    skill: pipelines/character-animation/compose-director
+    required_artifacts_in:
+      - edit_decisions
+      - action_timeline
+      - asset_manifest
+    optional_artifacts_in:
+      - rig_plan
+      - pose_library
+      - proposal_packet
+    produces:
+      - render_report
+      - final_review
+      - character_qa_report
+    tools_available:
+      - character_rig_renderer
+      - character_animation_reviewer
+      - video_compose
+      - audio_mixer
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Runtime chosen in proposal is the runtime actually used
+      - Browser preview passes Playwright/screenshot checks where available
+      - Final MP4 passes ffprobe, frame sampling, character QA, and visual self-review
+      - No silent downgrade to still-image motion
+    success_criteria:
+      - Schema-valid render_report
+      - Schema-valid final_review
+      - Schema-valid character_qa_report
+      - Output exists and passes technical validation
+
+  - name: publish
+    skill: pipelines/character-animation/publish-director
+    required_artifacts_in:
+      - render_report
+      - final_review
+      - character_qa_report
+    optional_artifacts_in:
+      - proposal_packet
+      - script
+    produces:
+      - publish_log
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Metadata describes the character-animation style honestly
+      - Thumbnail/poster frame features the main character and emotional hook
+      - Any limitations are surfaced in delivery notes
+    success_criteria:
+      - Schema-valid publish_log

@@ -1,0 +1,2 @@
+"""Character animation tools."""
+

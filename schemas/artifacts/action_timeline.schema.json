@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/action_timeline",
+  "title": "Action Timeline",
+  "description": "Timed character actions and poses compiled for rendering.",
+  "type": "object",
+  "required": ["version", "scenes"],
+  "properties": {
+    "version": { "type": "string", "const": "1.0" },
+    "fps": { "type": "number", "minimum": 1, "default": 30 },
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["scene_id", "start_seconds", "end_seconds", "actions"],
+        "properties": {
+          "scene_id": { "type": "string" },
+          "start_seconds": { "type": "number", "minimum": 0 },
+          "end_seconds": { "type": "number", "minimum": 0 },
+          "camera": { "type": "object" },
+          "background": { "type": "string" },
+          "effects": { "type": "array", "items": { "type": "string" } },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["at_seconds", "character_id", "action"],
+              "properties": {
+                "at_seconds": { "type": "number", "minimum": 0 },
+                "duration_seconds": { "type": "number", "minimum": 0 },
+                "character_id": { "type": "string" },
+                "action": { "type": "string" },
+                "pose": { "type": "string" },
+                "emotion": { "type": "string" },
+                "target": { "type": "string" },
+                "easing": { "type": "string" },
+                "notes": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "metadata": { "type": "object" }
+  },
+  "additionalProperties": false
+}

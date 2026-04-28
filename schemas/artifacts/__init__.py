@@ -15,7 +15,11 @@ ARTIFACT_NAMES = [
     "proposal_packet",
     "brief",
     "script",
+    "character_design",
+    "rig_plan",
+    "pose_library",
     "scene_plan",
+    "action_timeline",
     "asset_manifest",
     "edit_decisions",
     "render_report",
@@ -25,6 +29,7 @@ ARTIFACT_NAMES = [
     "decision_log",
     "source_media_review",
     "final_review",
+    "character_qa_report",
     "video_analysis_brief",
 ]
 

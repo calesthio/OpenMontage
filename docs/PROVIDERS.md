@@ -503,6 +503,39 @@ If Remotion is not installed, compositions fall back to FFmpeg Ken Burns pan-and
 
 ---
 
+### HyperFrames - HTML/CSS/GSAP Video Composition
+
+> **GSAP-native local rendering.** HyperFrames is the preferred runtime for motion-graphics-heavy HTML compositions and the `character-animation` pipeline's rigged SVG character acting.
+
+**Tool:** `hyperframes_compose` directly, or `video_compose` with `edit_decisions.render_runtime="hyperframes"`
+**Runtime:** CPU (Node.js >= 22, FFmpeg, and `npx` required)
+**Env var:** None
+
+#### Setup
+
+```bash
+node --version
+ffmpeg -version
+npx --yes hyperframes doctor
+```
+
+The CLI is consumed as `npx hyperframes`. Do not use `npx @hyperframes/cli`; that package name is not the OpenMontage runtime path.
+
+#### What HyperFrames Renders
+
+| Use case | What it produces |
+|----------|------------------|
+| **Kinetic typography** | HTML/CSS text animation driven by GSAP timelines |
+| **Product / launch videos** | Structured HTML scenes, registry blocks, and transitions |
+| **Website-to-video** | Browser-captured site compositions with HyperFrames validation |
+| **Character animation** | SVG character rigs, pose/action timelines, and GSAP acting beats rendered to `renders/final.mp4` |
+
+HyperFrames workspaces live under `projects/<project-name>/hyperframes/`. Final videos still follow the normal OpenMontage convention: `projects/<project-name>/renders/final.mp4`.
+
+**Cost:** Free. Always local.
+
+---
+
 ### Piper TTS — Offline Text-to-Speech
 
 > **Completely free, fully offline TTS.** No network required. Good quality for drafts and budget-constrained projects.

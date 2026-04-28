@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/pose_library",
+  "title": "Pose Library",
+  "description": "Named reusable poses, expressions, and transition hints for character rigs.",
+  "type": "object",
+  "required": ["version", "characters"],
+  "properties": {
+    "version": { "type": "string", "const": "1.0" },
+    "characters": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["character_id", "poses"],
+        "properties": {
+          "character_id": { "type": "string" },
+          "poses": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "description": { "type": "string" },
+                "parts": { "type": "object" },
+                "expression": { "type": "string" },
+                "hold_frames": { "type": "integer", "minimum": 0 },
+                "transition": { "type": "string" }
+              },
+              "additionalProperties": true
+            }
+          },
+          "mouth_shapes": { "type": "object" },
+          "action_cycles": { "type": "object" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "metadata": { "type": "object" }
+  },
+  "additionalProperties": false
+}

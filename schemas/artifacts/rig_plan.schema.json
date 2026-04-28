@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/rig_plan",
+  "title": "Rig Plan",
+  "description": "Rig parts, pivots, layers, constraints, and views for character animation.",
+  "type": "object",
+  "required": ["version", "characters"],
+  "properties": {
+    "version": { "type": "string", "const": "1.0" },
+    "characters": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["character_id", "parts", "joints", "layers", "required_poses"],
+        "properties": {
+          "character_id": { "type": "string" },
+          "rig_type": { "type": "string", "enum": ["svg_rig", "canvas_procedural", "lottie", "hybrid"], "default": "svg_rig" },
+          "parts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "kind", "layer"],
+              "properties": {
+                "id": { "type": "string" },
+                "kind": { "type": "string" },
+                "layer": { "type": "integer" },
+                "asset_path": { "type": "string" },
+                "parent": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          },
+          "joints": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "required": ["pivot"],
+              "properties": {
+                "pivot": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+                "rotation": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+                "scale": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
+              },
+              "additionalProperties": false
+            }
+          },
+          "layers": { "type": "array", "items": { "type": "string" } },
+          "views": { "type": "array", "items": { "type": "string" } },
+          "required_poses": { "type": "array", "items": { "type": "string" } },
+          "required_actions": { "type": "array", "items": { "type": "string" } },
+          "risks": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": false
+      }
+    },
+    "metadata": { "type": "object" }
+  },
+  "additionalProperties": false
+}

@@ -3,6 +3,8 @@
 > Source: [OpenAI Sora 2 Cookbook](https://developers.openai.com/cookbook/examples/sora/sora2_prompting_guide)
 > For universal vocabulary, see: `skills/creative/video-gen-prompting.md`
 
+**Word count:** Sora 2 plateaus around 100–250 words. Past 250, additional detail rarely improves output.
+
 ## Sora-Specific Prompt Template
 
 Sora responds best to a structured format with prose + cinematography block + action beats:
@@ -40,6 +42,9 @@ Sora uniquely responds to these production-level details that most models ignore
 | **Wardrobe** | "navy coat, sleeves rolled, suspenders loose" |
 | **Finishing** | "fine-grain overlay, mild halation, gate weave, soft vignette" |
 | **Shutter** | "180° shutter angle" |
+| **Playback speed** | "speed ramp from 1x to 0.25x mid-shot", "stop-motion staccato", "time-reversed exhale" |
+| **Lens distortion** | "fisheye barrel distortion at the edges", "subtle barrel curvature on straight lines" |
+| **Focus mode** | "rack focus from foreground bottle to background figure", "deep focus, FG to BG sharp" |
 
 ## What Sora Does Differently
 

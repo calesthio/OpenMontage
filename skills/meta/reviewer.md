@@ -6,6 +6,18 @@ After completing any pipeline stage's work — before checkpointing. You are the
 
 Every stage gets reviewed. No exceptions. The review quality determines whether the final video is worth watching.
 
+## Critique Quality (CHAI Rules)
+
+> Findings ≠ critiques. A finding identifies a problem; a critique tells the next stage how to fix it. The CMU/Harvard CHAI study ("Building a Precise Video Language with Human-AI Oversight", arXiv 2604.21718v2) showed that critique quality, measured on three axes, directly governs downstream output quality. Apply all three to every reviewer pass.
+>
+> **Accurate.** Every finding must reference a concrete artifact field, line number, or visible asset frame. Forbid hallucinated criticism — if you cannot point to where the problem is, you are guessing.
+>
+> **Complete.** A reviewer pass that catches one mistake while missing a second is worse than scoring "needs another pass" and continuing. If you find one critical issue, scan for the rest of the same class before returning. Pattern-match: where else in this artifact could the same mistake be hiding?
+>
+> **Constructive.** Every "critical" finding MUST propose a concrete fix, not just identify the problem. "Caption is wrong" → "Caption says 'man on the right'; the man is on the left of the frame. Replace with 'the man on the left of the frame.'" If you cannot propose a fix, label the finding as "investigation" not "critical."
+>
+> Removing any of these three properties measurably hurts pipeline output. The reviewer is the choke point — be rigorous.
+
 ## Protocol
 
 ### Step 1: Load Review Context
@@ -27,9 +39,10 @@ First, the non-negotiable check:
 For each `review_focus` item from the manifest:
 1. Evaluate the artifact against this specific criterion
 2. Assign a severity:
-   - **critical** — Must fix before proceeding. The artifact is broken, incomplete, or dangerously wrong.
-   - **suggestion** — Should fix. Improves quality significantly but doesn't block progress.
-   - **nitpick** — Could fix. Minor polish that's nice-to-have.
+   - **critical** — Must fix before proceeding. The artifact is broken, incomplete, or dangerously wrong. **Per CHAI rules, every critical finding MUST carry a `proposed_fix` (concrete replacement text, exact field value, or specific corrective action). A critical finding without a proposed fix is downgraded to `investigation`.**
+   - **suggestion** — Should fix. Improves quality significantly but doesn't block progress. **Suggestions MUST carry a `proposed_change` describing how to improve.**
+   - **nitpick** — Could fix. Minor polish that's nice-to-have. May stand alone without a proposed change.
+   - **investigation** — A real concern but you cannot pinpoint the fix. Surface it for the next round; do not block on it.
 3. Write a specific, actionable finding (not vague)
 
 **Good finding:** "Section 3 narration is 180 words for a 10-second window — that's 1080 wpm, impossible to speak. Cut to 25 words."

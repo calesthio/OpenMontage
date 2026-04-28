@@ -24,17 +24,49 @@ For model-specific tips, see the linked guides below.
 | **Kling 2.6** | [Kling Prompt Guide](https://fal.ai/learn/devs/kling-2-6-pro-prompt-guide) | 4-part structure. Supports `++emphasis++` syntax for key elements. |
 | **Wan 2.1 / CogVideoX** | Use this generic guide | No official prompt guide. Standard cinematographic vocabulary works well. |
 
+## Order Matters
+
+When listing multiple subjects or events:
+
+- **Temporal order** when events unfold over time ("First X enters, then Y reacts").
+- **Prominence order** when temporal isn't relevant — humans before objects, largest/most-centered first, then secondary subjects.
+
+## Self-Contained Prompt
+
+> Write the prompt so that someone who has never seen the intended video could picture the subjects, scene, motion, and camera work from your text alone. If a reader could not picture it, a generation model will not render it.
+
 ## Universal Prompt Formula
 
-All video generation models respond to this structure. Include what's relevant, omit what's not.
+Prior work (CMU/Harvard, "Building a Precise Video Language with Human-AI Oversight") shows VLMs reliably describe subject + scene but fail on motion, spatial, and camera. **Forcing prompts to fill all five slots is the highest-leverage change.**
+
+The OpenMontage canonical 5-aspect skeleton:
 
 ```
-[Shot type/framing] + [Camera movement] + [Subject description] +
-[Action/motion in beats] + [Setting/environment] + [Lighting] +
-[Style/aesthetic] + [Audio/atmosphere]
+[Subject]        type + key visual attributes + how to disambiguate when multiple
+[Subject Motion] actions in temporal order; subject↔object and subject↔subject interactions; group action
+[Scene]          overlays (separately!) + POV + setting + time of day + scene dynamics
+[Spatial]        shot size + position-in-frame + depth (FG/MG/BG) + camera-height-relative
+                 — and how those CHANGE during the clip
+[Camera]         playback speed → lens distortion → height → angle → focus/DoF → steadiness → movement
 ```
 
 **Shorter prompts = more creative freedom. Longer prompts = more control.**
+
+### Prompt Length by Model
+
+Empirical sweet spots from the paper's Section 6 findings — different models reward different prompt densities:
+
+| Model | Sweet Spot | Notes |
+|---|---|---|
+| Seedance 2.0 | 200–400 words for hero shots, 80–150 for inserts | Reward long, structured 5-aspect prompts |
+| Wan 2.2 | 200–400 words | Fine-tuned on long captions |
+| Sora 2 / VEO 3.1 | 100–250 words | Plateau past ~250 |
+| LTX-2 | ≤ 80 words | Degrades past that, keep tight |
+| Runway Gen-4 | ≤ 60 words | "Focus on motion, not appearance" |
+
+### Overlays Are Not Scene Depth
+
+> Overlays (titles, HUD, subtitles, watermarks, framing graphics) are NOT part of the scene's foreground/midground/background depth axis. List them separately with content and placement. Never say "overlay in the foreground."
 
 ---
 
@@ -58,23 +90,56 @@ All video generation models respond to this structure. Include what's relevant, 
 
 ## Camera Movements
 
-| Movement | What It Does | Best For |
-|----------|-------------|----------|
-| **Static / fixed** | No movement | Dialogue, contemplation, stability |
-| **Pan** (left/right) | Rotates horizontally | Revealing a scene, following action |
-| **Tilt** (up/down) | Rotates vertically | Revealing height, slow reveal |
-| **Dolly in / out** | Physically moves toward/away | Building tension, emphasis |
-| **Truck** (left/right) | Moves sideways | Parallels subject movement |
-| **Pedestal** (up/down) | Moves vertically | Smooth elevation changes |
-| **Crane shot** | Sweeping vertical arcs | Epic reveals, transitions |
-| **Tracking / follow** | Follows subject | Action sequences, walk-and-talk |
-| **Arc shot** | Circles around subject | Dramatic emphasis, 360° reveal |
-| **Zoom** (in/out) | Lens focal length change | Quick emphasis (cheaper than dolly) |
-| **Whip pan** | Extremely fast pan (blurs) | Transitions, energy, surprise |
-| **Handheld / shaky cam** | Unstable, human feel | Documentary, urgency, realism |
-| **Aerial / drone** | High altitude, smooth | Landscapes, establishing shots |
-| **Slow push-in** | Gradual forward movement | Building intimacy or tension |
-| **Dolly zoom (vertigo)** | Dolly one way, zoom opposite | Disorientation, revelation |
+The paper shows current models confuse translation, rotation, and lens-only changes — group your prompts so the model can't conflate them:
+
+| Group | Primitives | Rule |
+|---|---|---|
+| **Translation** (camera physically moves) | dolly in/out, truck left/right, pedestal up/down | "dolly forward toward subject" |
+| **Rotation** (camera pivots in place) | pan left/right, tilt up/down, roll CW/CCW | "pan right across the room" |
+| **Lens-only** (no camera move) | zoom in/out, rack focus, pull focus, focus tracking | "zoom in" ≠ "dolly in" |
+| **Hybrid / signature** | dolly zoom (vertigo), arc/orbit, crane, whip pan, tracking/follow, handheld | "vertigo" only at moments of revelation |
+| **Stillness states** | static (NO movement at all — strict), micro-shake, locked-off | "static" requires zero movement, focus change, or zoom |
+
+> **dolly ≠ zoom.** dolly is camera translation; zoom is focal-length change. Models follow whichever token dominates. **pan ≠ truck.** pan rotates, truck translates laterally.
+
+> **Static shot is strict.** A static shot has zero movement, zero focus change, zero zoom. If any of those occur, do NOT write "static camera" — pick the right movement primitive.
+
+## Camera Height (relative to ground)
+
+| Primitive | Example |
+|---|---|
+| Aerial-level | "drone-altitude wide of the city" |
+| Overhead-level | "rooftop height looking across the street" |
+| Eye-level | "framed at eye level" |
+| Hip-level | "hip-height tracking shot" |
+| Ground-level | "low to the ground, ankle height" |
+| Water-level | "skimming the water surface" |
+| Underwater | "submerged below the surface" |
+
+## Camera Angle (relative to subject)
+
+| Primitive | Definition |
+|---|---|
+| **Bird's-eye** | strict top-down. Not the same as aerial. |
+| High angle | looking down on subject |
+| Level angle | camera and subject at same height |
+| Low angle | looking up at subject |
+| Worm's-eye | looking straight up |
+| **Dutch angle (fixed)** | tilted horizon held steady |
+| **Dutch angle (rolling)** | horizon tilt changes during shot |
+
+> **bird's-eye = strict top-down. aerial = altitude.** A drone shot at 45° looking down is a high angle from aerial height, NOT bird's-eye.
+
+## Point of View (POV)
+
+| POV | Example |
+|---|---|
+| First-person | "the camera follows the character's viewpoint as they walk" |
+| Drone | "aerial drone footage of city skyline" |
+| Over-the-shoulder | "OTS framing of the laptop screen" |
+| Top-down oblique | "top-down view of the chess board, tilted slightly" |
+| Dashcam | "vehicle dashcam framing of the road" |
+| Objective / Neutral | (default — use when no specific POV) |
 
 ## Lighting Vocabulary
 
@@ -100,14 +165,51 @@ All video generation models respond to this structure. Include what's relevant, 
 
 | Effect | Result |
 |--------|--------|
-| **Shallow depth of field** | Subject sharp, background bokeh |
-| **Deep focus** | Everything sharp, foreground to background |
 | **Wide-angle lens** (24-35mm) | Broader view, exaggerated perspective |
 | **Telephoto** (85mm+) | Compressed perspective, subject isolation |
 | **Anamorphic** | Stretched aspect, signature lens flares |
 | **Lens flare** | Streaks from bright light hitting lens |
-| **Rack focus** | Shift focus between subjects in-shot |
-| **Fisheye** | Ultra-wide, barrel distortion |
+
+### Lens Distortion
+
+The paper distinguishes two primitives that models honor as separate effects — they are NOT interchangeable:
+
+| Primitive | Effect |
+|---|---|
+| **Fisheye** | extreme curvature, edges bent strongly outward |
+| **Barrel** | mild distortion, straight lines bow slightly outward |
+
+### Focus / Depth of Field
+
+| Primitive | Definition |
+|---|---|
+| Deep focus | everything sharp, FG to BG |
+| Shallow DoF | subject sharp, background bokeh |
+| Extremely shallow DoF | razor-thin focal plane |
+| Rack focus | shifts focus between two subjects mid-shot |
+| Pull focus | gradual focus shift (slower than rack) |
+| Focus tracking | focus follows a moving subject |
+
+When DoF changes during a shot, label start AND end focal plane (FG/MG/BG/out-of-focus).
+
+## Subject Transitions
+
+When subjects enter, leave, or hand off focus, name the transition explicitly:
+
+| Primitive | When |
+|---|---|
+| **Subject revealing** | a new subject enters frame (by subject movement OR camera movement) |
+| **Subject disappearing** | a subject exits frame |
+| **Subject switching** | focus shifts from one subject to another (often via rack focus or camera move) |
+| **Complex alternating** | subjects alternate focus multiple times |
+
+Always name the cause: "by subject movement" or "by camera movement". This unlocks reveal-style camerawork in multi-shot prompts.
+
+## Identity Anchoring for Multi-Shot Prompts
+
+> Models lose character identity across cuts unless you re-state it. In every shot of a multi-shot prompt, repeat the same 3–6 disambiguating visual attributes for each named subject verbatim. Pronouns and "the same character" do not work.
+>
+> Example: "Aang — bald, blue arrow tattoo on forehead, orange-and-yellow robes — plants his staff. … Aang — bald, blue arrow tattoo on forehead, orange-and-yellow robes — turns to camera."
 
 ## Style & Aesthetic References
 
@@ -137,10 +239,23 @@ All video generation models respond to this structure. Include what's relevant, 
 
 ## Temporal Effects
 
+### Playback Speed
+
+The paper defines six explicit playback-speed primitives. Use the right one — they're not synonymous:
+
+| Primitive | Definition |
+|---|---|
+| Time-lapse | events significantly faster than real time (clouds racing) |
+| Fast-motion | slightly faster than real (1x–3x) |
+| Slow-motion | slower than real |
+| Stop-motion | frame-by-frame discrete movements |
+| Speed-ramp | mix of fast and slow within the same shot |
+| Time-reversed | plays in reverse |
+
+### Other Temporal Devices
+
 | Effect | Use |
 |--------|-----|
-| **Slow motion** | Emphasis, beauty, impact |
-| **Time-lapse** | Passage of time, processes |
 | **Freeze-frame** | Dramatic pause |
 | **Rapid cuts** | Energy, urgency |
 | **Continuous / long take** | Immersion, tension |
@@ -159,6 +274,15 @@ Models that support audio generation (LTX-2, Sora 2, VEO 3) respond to:
 Put dialogue in quotation marks: `Character says: "Hello world."`
 
 ## What to Avoid
+
+> **Replace emotional adjectives with the visual cause of the emotion.**
+> - "sad character" → "tears on cheek, shoulders slumped, staring at empty chair"
+> - "cinematic mood" → "low-key Rembrandt key + 35mm anamorphic + crushed shadows, lifted-by-2-stops shadow detail"
+> - "epic" → "low-angle, 24mm wide, sun directly behind subject, lens flare on the rim"
+>
+> "Inspiring," "powerful," "moody," "epic" do not constrain pixels.
+
+> **Static shot is strict.** A static shot has zero movement, zero focus change, zero zoom. If any of those occur, do NOT write "static camera" — pick the right movement primitive.
 
 | Don't | Why | Do Instead |
 |-------|-----|-----------|

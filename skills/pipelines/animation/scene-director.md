@@ -85,9 +85,25 @@ Recommended metadata keys:
 - `tool_path_map`
 - `reusable_motifs`
 
-### 5. Quality Gate
+### 5. 5-Aspect Scene-Plan Checklist
+
+> Every scene must specify all five aspects, BUT the load shifts with the scene's `animation_mode`. Manim and other diagrammatic/programmatic scenes care most about **Subject** and **Spatial Framing** — Camera and Subject Motion in the cinematographic sense often map to N/A or to abstract equivalents. AI-video / `image_animation` / `anime_scene` scenes care about all five and behave like cinematic shots. Marking an aspect as N/A is allowed but must be explicit per scene; silent omission is forbidden.
+>
+> 1. **Subject** — type + key visual attributes; for Manim, the equation/object/graph being foregrounded; for `anime_scene`, the character or environment in focus.
+> 2. **Subject Motion** — for Manim, the order of `Create`/`Transform`/`FadeIn` and what each animation conveys; for AI-video, the actions and interactions in temporal order.
+> 3. **Scene** — overlays (separately!) + POV + setting + time of day + scene dynamics. For Manim, "setting" is the canvas background + axis style; for `anime_scene`, the environment + lighting gradient.
+> 4. **Spatial Framing** — shot size + position-in-frame + depth (FG/MG/BG) + camera-height-relative; and how those CHANGE. Manim cares about layout grid + element positions; AI-video cares about full cinematographic framing.
+> 5. **Camera** — playback speed → lens distortion → height → angle → focus/DoF → steadiness → movement. For Manim and pure motion-graphics, default to N/A unless using a virtual camera move (`MoveCamera`, `self.frame`). For `anime_scene` and AI-video, specify fully.
+>
+> Tie this back to `animation_mode` in scene metadata: a Manim scene that lists Camera fully is over-specified; an AI-video scene that omits Camera is under-specified. See `skills/creative/video-gen-prompting.md` for the primitive vocabulary.
+
+> **Overlays callout.** Overlays (titles, subtitles, HUD, watermarks, framing graphics, lower-thirds, `hero_title`, `section_title`, `provider_chip`) are NOT part of the scene's foreground/midground/background depth axis. List them separately in scene metadata (`overlays: [...]`) with content and placement. Never describe an overlay as "in the foreground" — that confuses both downstream tools and any video-understanding model that re-analyzes the output.
+
+### 6. Quality Gate
 
 - every scene has a clear timing intent,
+- the 5-aspect checklist is satisfied for the scene's `animation_mode` (with explicit N/A where appropriate),
+- overlays live under `overlays:`, never inside the framing description,
 - the transition system is limited and meaningful,
 - the tool path is explicit,
 - the sequence feels like one designed system.

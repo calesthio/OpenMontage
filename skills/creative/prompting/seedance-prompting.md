@@ -44,6 +44,8 @@ Seedance is unusually literal about camera language, multi-shot cuts, and quoted
 
 ## Multi-shot pattern
 
+> **Repeat identity verbatim across every shot.** "the same character" / pronouns / "Aang again" do not work. Repeat the 3–6 disambiguating visual attributes verbatim in every shot block. Seedance treats each shot as if you said it cold.
+
 Seedance honors explicit shot lists:
 
 ```
@@ -62,6 +64,22 @@ Aang says: "It's time."
 Style: anamorphic lens, teal-orange cinematic grade, 35mm film grain.
 Audio: rising orchestral swell with low taiko pulse, wind, distant wingbeats.
 ```
+
+### Subject transition primitives in multi-shot
+
+Seedance handles four distinct ways a subject can enter or exit a shot. Naming the primitive explicitly helps the model build the right transition between shots.
+
+- **Subject revealing** (by camera move OR subject move) — the subject becomes visible mid-shot.
+  Example: `Shot 2 (slow truck right): empty corridor at first; the camera trucks right to reveal Aang — bald, blue arrow tattoo, orange robes — pressed flat against the wall.`
+
+- **Subject disappearing** — the subject leaves frame, by motion or occlusion.
+  Example: `Shot 4 (static wide): Aang — bald, blue arrow tattoo, orange robes — sprints into the temple doorway and is swallowed by shadow; camera holds on the empty threshold.`
+
+- **Subject switching** (rack focus / camera move) — focus or framing transfers from one subject to another.
+  Example: `Shot 5 (close-up, rack focus): rack focus from Aang's glowing arrow tattoo in foreground to Sokka — dark hair, blue tunic, boomerang on back — emerging from the mist behind.`
+
+- **Complex alternating focus** — focus oscillates between two subjects within one shot.
+  Example: `Shot 7 (medium two-shot, alternating rack focus): focus on Aang — bald, blue arrow tattoo, orange robes — as he speaks, then pulls to Katara — long brown hair, blue water-tribe parka — as she answers, then back to Aang on the final beat.`
 
 ## Lip-sync pattern
 
@@ -84,6 +102,7 @@ Sokka, half a step behind, replies: "Then we fight."
 | `generate_audio` | Keep `true` — sync audio is the moat. Strip in compose if unused. |
 | `model_variant` | `standard` for hero + multi-shot + camera-heavy. `fast` for b-roll, previews, latency-capped jobs. |
 | `seed` | Lock once a shot composition reads; iterate variants with the same seed. |
+| `prompt length` | 200–400 words for hero shots; 80–150 for inserts. Seedance is one of the few models that rewards long, structured 5-aspect prompts. |
 
 ## Iteration strategy
 

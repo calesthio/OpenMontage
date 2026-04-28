@@ -58,6 +58,7 @@ Key capability families to look for in the output:
 | `audio_processing` | — | FFmpeg-based local tools |
 | `enhancement` | — | Mixed providers |
 | `analysis` | — | Mixed providers |
+| `character_animation` | — | Local character specs, SVG rigs, pose libraries, action timelines, previews, and QA |
 | `graphics` | — | Local rendering tools |
 | `music_generation` | — | Single-provider |
 | `subtitle` | — | Pure Python |
@@ -92,7 +93,7 @@ Key capability families to look for in the output:
 | Enhancement Strategy | `creative/enhancement-strategy.md` | Overlay placement and density | `ffmpeg` |
 | Data Visualization | `creative/data-visualization.md` | Chart type selection, animation, label placement | `d3-viz`, `remotion-best-practices` |
 | Video Stitching | `creative/video-stitching.md` | Multi-clip assembly, AI clip chaining, spatial composition | `ffmpeg`, `video_toolkit` |
-| Video Gen Prompting | `creative/video-gen-prompting.md` | Universal video generation prompt vocabulary | `ai-video-gen`, `ltx2`, `create-video` |
+| Video Gen Prompting | `creative/video-gen-prompting.md` | Universal video generation prompt vocabulary; **canonical 5-aspect spec** (Subject / Motion / Scene / Spatial / Camera); ~200 cinematography primitives | `ai-video-gen`, `ltx2`, `create-video` |
 | â†³ Seedance Prompting | `creative/prompting/seedance-prompting.md` | **Preferred premium default.** Seedance 2.0 8-component structure, multi-shot, lip-sync, reference-to-video | `seedance-2-0`, `ai-video-gen` |
 | â†³ Grok Prompting | `creative/prompting/grok-prompting.md` | Grok image/video prompting, edit flows, reference-image video | `grok-media` |
 | â†³ Sora Prompting | `creative/prompting/sora-prompting.md` | Sora 2 structured template, advanced fields | `ai-video-gen` |
@@ -127,6 +128,7 @@ Pipeline type skills provide production guidance for specific video formats, ind
 | Long-Form | `creative/long-form.md` | YouTube 10+ min â€" chapters, retention, end screens |
 | Screen Recording | `creative/screen-recording.md` | Code walkthroughs, tutorials, software demos |
 | Animation Pipeline | `creative/animation-pipeline.md` | Motion graphics, easing, transitions, composition |
+| Character Animation Pipeline | `pipelines/character-animation/` | Rigged local cartoon characters, pose libraries, action timelines, SVG/Canvas/Remotion/HyperFrames rendering |
 | Cinematic | `creative/cinematic.md` | Letterbox, film pacing, layered audio, color grading |
 
 ## Pipeline Stage Director Skills

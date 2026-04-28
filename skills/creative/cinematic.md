@@ -3,6 +3,8 @@
 > Sources: No Film School editorial guides, StudioBinder filmmaking resources, Film Riot
 > production tutorials, CinematographyDB shot databases, Walter Murch "In the Blink of an Eye"
 
+> For the universal cinematography vocabulary (camera, lens, motion, focus primitives, plus the 5-aspect Subject / Subject Motion / Scene / Spatial Framing / Camera spec), see `skills/creative/video-gen-prompting.md`. This file layers cinematic-specific conventions on top of those primitives — it does not redefine them.
+
 ## Quick Reference Card
 
 ```
@@ -15,6 +17,19 @@ AUDIO:            Layered: dialogue + ambient + Foley + score
 MUSIC:            60-90 BPM, orchestral or ambient, dynamic (not loop-based)
 TARGET LUFS:      -14 LUFS integrated, -24 LUFS for quiet moments
 ```
+
+## Replace Mood Adjectives with Visual Causes
+
+> **"Cinematic" and "epic" don't constrain pixels.** The cinematic look comes from concrete choices: aspect ratio, lens, lighting key, color grade, shot duration, and audio layer count. State those — the rest is decoration.
+>
+> The CMU/Harvard CHAI study showed subjective phrasing varies wildly across annotators and model interpretations, which means a beat tagged "moody" routes to a different visual every render. Replace the adjective with the lighting + grade + shot-duration combination that produces moodiness. See `skills/creative/storytelling.md` "Anti-Subjective Rule" for the script-side equivalent.
+>
+> | Mood adjective | Cinematic translation |
+> |---|---|
+> | "epic" | 2.39:1 letterbox, 24fps, 8s+ shot duration, orchestral score with crescendo |
+> | "moody" | `moody_dark` grade at 0.6, key light at 1/8 fill, 6s+ contemplative shots, ambient bed at -28dB |
+> | "intimate" | 1.85:1, 40-50mm equivalent, shallow DoF, 2 audio layers (dialogue + room tone), no music under dialogue |
+> | "cinematic" | (this word is banned — pick one of the above or describe the actual choices) |
 
 ## Aspect Ratios
 
@@ -113,6 +128,7 @@ Add a subtle ambient layer to fill silence and create depth:
 - Highlights should be slightly rolled off (never pure white)
 - Skin tones must stay on the vectorscope skin tone line
 - Consistency across all clips — one LUT/profile for the entire video
+- **If a beat is described as "moody," rewrite as the lighting + grade + shot-duration combination that produces moodiness.** Don't pass mood adjectives to the asset/edit stages.
 
 ## Applying to OpenMontage
 

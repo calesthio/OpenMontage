@@ -11,8 +11,12 @@ LTX-2 uses a clean, focused prompt structure:
 2. **Set the scene** — lighting, color palette, textures, atmosphere
 3. **Describe the action** — natural sequence flowing from beginning to end
 4. **Define the character(s)** — physical cues (age, hair, clothes), not abstract labels
-5. **Camera movement(s)** — specify how and when; describe what appears AFTER the movement
+5. **Camera movement(s)** — specify how and when; describe what appears AFTER the movement. (LTX honors the translation/rotation/lens distinction: `dolly` ≠ `zoom`, `pan` ≠ `truck`. Pick the right family — translation moves the rig, rotation pivots it, lens-only changes focal length or focal plane without moving the camera.)
 6. **Describe the audio** — ambient sound, music, speech, or singing
+
+### Strict-Static-Shot rule
+
+If you write "static camera," the shot must have NO movement, NO focus change, NO zoom. LTX takes "static" literally — adding any motion verb later in the prompt will either be ignored or will produce a glitch where the camera contradicts itself. Pick one: static, OR a single named movement.
 
 ## LTX-Specific Tips
 
@@ -51,6 +55,7 @@ LTX organizes styles into three families:
 | Overloaded scenes | Many characters/actions reduces coherence |
 | Conflicting lighting descriptions | Pick one setup, commit to it |
 | Starting complex | Build up: simple prompt first, add layers |
+| Prompts over ~80 words | LTX-2 degrades past that. Pick the most important 5–6 elements. |
 
 ## LTX Technical Notes
 

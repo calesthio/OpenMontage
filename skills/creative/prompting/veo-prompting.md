@@ -3,6 +3,8 @@
 > Source: [Vertex AI Video Gen Prompt Guide](https://cloud.google.com/vertex-ai/generative-ai/docs/video/video-gen-prompt-guide)
 > For universal vocabulary, see: `skills/creative/video-gen-prompting.md`
 
+**Word count:** VEO 3.1 sweet spot is 100–250 words; longer prompts stop helping.
+
 ## VEO-Specific 14-Component Structure
 
 VEO responds to the most comprehensive prompt structure of any model:
@@ -29,16 +31,30 @@ VEO responds to the most comprehensive prompt structure of any model:
 - **Negative prompts**: Explicitly supported — "no text overlays, no watermarks, no lens flare"
 - **Editing vocabulary**: Understands "match cut", "jump cut", "montage", "split diopter" as prompt terms.
 
+### Camera vocabulary VEO honors literally
+
+VEO 3.1 distinguishes the three camera-motion families and treats their tokens as separate primitives. Mixing them up (e.g. asking for a "zoom" when you mean a "dolly") will produce the wrong move.
+
+- **Translation (rig physically moves):** `dolly` (in/out along the lens axis), `truck` (left/right laterally), `pedestal` (up/down vertically)
+- **Rotation (rig stays put, camera rotates):** `pan` (yaw, left/right), `tilt` (pitch, up/down), `roll` (Dutch / Z-axis)
+- **Lens-only (rig and body don't move):** `zoom` (focal length change), `rack focus` / `pull focus` / `focus tracking` (focal-plane change)
+
+dolly ≠ zoom; pan ≠ truck. VEO follows whichever token leads.
+
 ## VEO Lens Effects (Unique)
 
 VEO specifically responds to optical effects most models ignore:
 
 | Effect | Prompt Language |
 |--------|----------------|
-| **Rack focus** | "rack focus from foreground flower to background figure" |
+| **Rack focus** | "rack focus from foreground flower to background figure" (snap shift) |
+| **Pull focus** | "slow pull focus from the candle in the foreground to the doorway behind" (gradual, slower than rack) |
+| **Focus tracking** | "focus tracks the runner as she crosses frame; background stays soft" (focus follows a moving subject) |
 | **Dolly zoom (vertigo)** | "vertigo effect as character realizes the truth" |
 | **Fisheye** | "fisheye lens distortion, skatepark POV" |
-| **Lens flare** | "anamorphic lens flare from setting sun" |
+| **Anamorphic lens flare** | "anamorphic lens flare streaking horizontally from setting sun" |
+
+These three focus modes (rack, pull, tracking) are different — VEO 3.1 honors the distinction per the paper.
 
 ## VEO Art Movement References
 

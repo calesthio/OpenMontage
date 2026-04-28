@@ -38,7 +38,8 @@ video_analyzer.execute({
 ```
 
 Read the resulting VideoAnalysisBrief. Before proceeding, present a summary to the
-user. This is NOT a raw dump. It's a conversational interpretation:
+user. This is NOT a raw dump. It's a conversational interpretation, and it MUST be
+structured by the 5 aspects so downstream stages can lift fields directly:
 
 ```
 "I've watched the video. Here's what I see:
@@ -48,11 +49,21 @@ user. This is NOT a raw dump. It's a conversational interpretation:
 **Structure:** [X scenes over Y seconds, pacing style]
 **Motion:** [N of M scenes are motion clips / animated stills / static images.
 This video uses [AI-generated video clips / still images with pan-zoom / a mix].]
+
+**5-aspect breakdown (per shot or per shot-group):**
+- Subject: [type, count, attributes; subject transitions across shots: revealing / disappearing / switching / complex-alternating; or N/A]
+- Subject Motion: [actions in temporal order; interactions; or N/A]
+- Scene: [overlays (text/graphics) listed separately; POV (drone/OTS/macro/etc.); setting; time of day; dynamics]
+- Spatial Framing: [shot size; subject position; depth; height-relative; how it changes]
+- Camera: [playback speed; lens; height; angle; focus/DoF; steadiness; movement]
+
 **What makes it work:** [2-3 specific things — the hook technique, the pacing,
 the visual transitions, the narration style]
 
 Now let me check what I can do with your current setup..."
 ```
+
+The 5-aspect block above is the **canonical form** that `proposal-director`, `script-director`, and `scene-director` will read. Do not collapse it back into prose — keep the labels.
 
 **Motion classification is critical.** The VideoAnalysisBrief now includes per-scene
 `motion_type` ("motion_clip", "animated_still", "static_image") and `flow_variance`.
@@ -80,6 +91,22 @@ enrich the VideoAnalysisBrief with:
 Update the brief's `content_analysis`, `style_profile`, and `replication_guidance`
 fields with your visual observations. This is where the analysis becomes truly
 comprehensive — the tools provide structure; your vision provides understanding.
+
+### 5-Aspect Structured Output (MANDATORY)
+
+The analyst's report MUST break down the reference video into the **five aspects** from the CMU/Harvard CHAI study (also the canonical structure used in `skills/creative/video-gen-prompting.md`). A narrative-only summary is no longer sufficient — downstream stages (proposal, script, scene-director) ingest the 5-aspect form directly without re-parsing prose.
+
+**Decision-tree captioning policy.** For each detected shot, walk all five aspects in order:
+
+> - **Subject:** type, attributes (count, age, role, costume, distinguishing features), multiple-subject disambiguation, transitions across shots (revealing / disappearing / switching / complex-alternating).
+> - **Subject Motion:** actions in temporal order; group/interaction patterns (parallel, sequential, reactive); locomotion vs gesture vs facial.
+> - **Scene:** **overlays separately** (text, lower thirds, graphics, watermark — call these out as their own layer, do not merge into setting) + POV (drone, aerial, OTS, macro, top-down, dashcam, FPV, handheld, locked-off) + setting + time of day + dynamics (weather, particles, crowd movement).
+> - **Spatial Framing:** shot size (ECU/CU/MS/WS/EWS), subject position in frame, depth (foreground/midground/background usage), height-relative (above/at/below subject) — and how each of these **changes** across the shot if the camera or subject moves.
+> - **Camera:** playback speed (real-time / slow-mo / time-lapse), lens distortion (anamorphic, fish-eye, tilt-shift), height (ground / eye / overhead), angle (high / low / Dutch), focus / DoF (rack focus, deep focus, shallow), steadiness (locked / handheld / gimbal), movement (push / pull / pan / tilt / dolly / truck / crane / orbit).
+>
+> **Mark any aspect explicitly as N/A** if it doesn't apply (e.g., "Subject: N/A — pure scenery shot," or "Scene overlays: N/A — no graphics"). **Silent omission is the most common analyst failure** and produces ambiguous downstream prompts.
+
+See `skills/creative/video-gen-prompting.md` for primitive definitions and the canonical vocabulary used at every aspect.
 
 ### Step 2: Capability Audit
 

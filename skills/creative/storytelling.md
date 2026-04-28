@@ -57,6 +57,32 @@ For a **3-minute explainer video** (scale proportionally for other lengths):
 | 3 min | 3-5 | 8s | 22s | 100s | 30s | 15s |
 | 5 min | 5-8 | 10s | 30s | 180s | 50s | 20s |
 
+## Anti-Subjective Rule
+
+> Hooks, beats, and section descriptions in OpenMontage scripts must describe the **visual cause** of the emotion, not the emotion itself. The CMU/Harvard CHAI study showed that subjective phrasing varies wildly across annotators and across model interpretations — so it does not constrain pixels and it doesn't reliably guide downstream generation tools.
+>
+> | Avoid | Use instead |
+> |---|---|
+> | "epic reveal" | "wide aerial pull-back; subject silhouetted against rising sun" |
+> | "inspiring moment" | "low angle on the subject's face; light catches the edge of a tear" |
+> | "moody atmosphere" | "low-key key light, lifted shadows by 2 stops, fog volumetrics" |
+> | "powerful music swell" | "music drops out at 0:42, holds 1.5s of silence, returns with low taiko at half tempo" |
+>
+> The rule applies to script narration AND to the metadata fields scene-director consumes. For the universal vocabulary that names these visual primitives, see `skills/creative/video-gen-prompting.md`.
+
+## Subject Transitions in the Script
+
+When a script beat introduces a new subject, kills one off, or hands focus from one subject to another, **name the transition explicitly** so the scene-director doesn't have to infer it. The CMU/Harvard taxonomy uses four labels:
+
+| Label | What it means |
+|---|---|
+| **revealing** | A new subject enters frame or is uncovered (door opens, camera pans to find them, fog clears). |
+| **disappearing** | An existing subject leaves frame or is removed (walks out, fades, eclipsed). |
+| **switching** | Focus jumps from subject A to subject B (cut, rack focus, camera whip). |
+| **complex-alternating** | Multiple subjects trade focus repeatedly within a beat (debate cross-cutting, ensemble action). |
+
+Add 1-2 sentences in the beat describing the mechanism (cut, pan, reveal-by-light, etc.). This propagates into the scene_plan as a transition primitive.
+
 ## Hook Types
 
 | Type | Pattern | Best For |
@@ -113,6 +139,20 @@ Don't explain the answer. **Reconstruct the reasoning path** so the viewer feels
 
 **Progressive Revelation:** Never show the full picture at once. Build visuals layer by layer.
 Each layer arrives exactly when the narration references it.
+
+## Camera Intent Per Beat
+
+When writing a beat, attach one line of camera intent so the scene-director doesn't have to invent it from a blank slate. Use the universal vocabulary in `skills/creative/video-gen-prompting.md` (Subject / Subject Motion / Scene / Spatial Framing / Camera). One line is enough — the scene-director will expand it.
+
+Example beat:
+
+```
+[0:30] Concept 1 — atoms aren't tiny planets
+Narration: "We grew up imagining electrons as tiny planets orbiting the nucleus..."
+Camera intent: medium shot of stylized atom; slow rotation; deep focus.
+```
+
+The camera-intent line is consumed verbatim by the scene-director's 5-aspect spec — keep it concrete, no mood adjectives.
 
 ## Pacing Rules
 

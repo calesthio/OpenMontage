@@ -70,14 +70,18 @@ Fallback: AI-generated image of server racks
 
 ### Query Templates by Scene Type
 
-| Scene Type | Query Template | Example |
+Add a **POV keyword** to every query. Stock libraries (Pexels, Pixabay, Storyblocks, Artgrid) explicitly index POV terms — drone, aerial, OTS (over-the-shoulder), macro, top-down, dashcam, FPV, handheld, locked-off — and adding the POV often unlocks better matches than refining the subject. The CMU/Harvard CHAI taxonomy treats POV as a first-class Scene aspect for the same reason: it changes which library shelf you're searching.
+
+| Scene Type | Query Template | Example with POV |
 |-----------|---------------|---------|
-| Establishing | `[place] [time of day]` | "tokyo skyline night" |
-| Activity | `[person] [action]` | "scientist microscope" |
-| Object | `[object] [style]` | "circuit board closeup" |
-| Nature | `[element] [quality]` | "ocean waves aerial" |
-| Abstract motion | `[movement] [style]` | "light trails timelapse" |
-| Workplace | `[setting] [activity]` | "modern office meeting" |
+| Establishing | `[place] [time of day] [POV]` | "tokyo skyline night drone" |
+| Activity | `[person] [action] [POV]` | "scientist microscope OTS" |
+| Object | `[object] [style] [POV]` | "circuit board macro top-down" |
+| Nature | `[element] [quality] [POV]` | "ocean waves aerial drone" |
+| Abstract motion | `[movement] [style] [POV]` | "light trails timelapse locked-off" |
+| Workplace | `[setting] [activity] [POV]` | "modern office meeting handheld" |
+
+If the scene description doesn't already imply a POV, ask the script/scene director — don't default to "no POV." A wrong-POV match (handheld when the scene needs drone) is harder to fix than a wrong color grade.
 
 ## Evaluating Stock Footage Quality
 
@@ -89,6 +93,7 @@ When the stock tool returns results, evaluate before using:
 - **Style compatibility:** Doesn't clash with the playbook's visual style
 - **No watermarks:** Pexels/Pixabay are license-free, but verify
 - **Composition:** Subject is well-framed, not cut off awkwardly
+- **POV match:** Does the footage's actual POV (drone, OTS, macro, handheld, locked-off, etc.) match what the scene needs? A wrong POV — e.g., handheld when the scene wants drone — is **more costly to fix than a wrong color grade**. Reject and re-query rather than try to crop your way out of it.
 
 ### Video Criteria (all image criteria plus)
 - **Duration:** At least as long as the scene needs (can trim, can't extend)

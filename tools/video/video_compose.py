@@ -1306,15 +1306,68 @@ class VideoCompose(BaseTool):
         # Deep-copy props so we don't mutate the original
         props = json.loads(json.dumps(composition_data))
 
+        # Resolve the target composition early so we can remap props to the
+        # shape that composition expects. Without this, Explainer-shaped
+        # `cuts[]` data handed to CinematicRenderer (which reads `scenes[]`)
+        # silently renders pure black — the scenes prop defaults to [].
+        renderer_family = (composition_data or {}).get("renderer_family", "explainer-data")
+        composition_id = self._get_composition_id(renderer_family)
+
+        # Adapter: the agent emits a single `cuts[]` shape across every
+        # renderer_family, but CinematicRenderer reads props.scenes[] with a
+        # different field layout. Translate cuts → scenes when we're
+        # targeting CinematicRenderer and the caller didn't already supply
+        # scenes. This keeps the edit-director's output schema uniform
+        # (edit_decisions.cuts) without hard-coding composition-specific
+        # shapes into the agent's skill prose.
+        if composition_id == "CinematicRenderer" and "scenes" not in props:
+            cursor = 0.0
+            scenes: list[dict[str, Any]] = []
+            for idx, cut in enumerate(props.get("cuts", [])):
+                in_s = float(cut.get("in_seconds") or cut.get("source_in_seconds") or 0)
+                out_s = cut.get("out_seconds")
+                if out_s is None:
+                    duration = float(cut.get("duration") or cut.get("duration_s") or 0)
+                else:
+                    duration = max(float(out_s) - in_s, 0.0)
+                scene: dict[str, Any] = {
+                    "id": cut.get("id") or f"scene-{idx}",
+                    "kind": "video",
+                    "src": cut.get("source") or cut.get("src") or "",
+                    "startSeconds": round(cursor, 3),
+                    "durationSeconds": round(duration, 3) if duration > 0 else 0,
+                }
+                if in_s > 0:
+                    scene["trimBeforeSeconds"] = in_s
+                for hint_src, hint_dst in (
+                    ("tone", "tone"),
+                    ("filter", "filter"),
+                    ("fade_in_frames", "fadeInFrames"),
+                    ("fade_out_frames", "fadeOutFrames"),
+                ):
+                    if hint_src in cut:
+                        scene[hint_dst] = cut[hint_src]
+                scenes.append(scene)
+                cursor += float(scene["durationSeconds"] or 0)
+            props["scenes"] = scenes
+
         # Convert absolute file paths to file:// URIs for Remotion's
-        # Img and OffthreadVideo components
-        for cut in props.get("cuts", []):
-            source = cut.get("source", "")
+        # Img and OffthreadVideo components. Apply to whichever prop shape
+        # the composition actually consumes.
+        def _resolve_path_to_uri(obj: dict[str, Any], field: str) -> None:
+            source = obj.get(field, "")
             if source and not source.startswith(("http://", "https://", "file://")):
                 resolved = Path(source).resolve()
                 if resolved.exists():
                     posix = resolved.as_posix()
-                    cut["source"] = f"file:///{posix}" if not posix.startswith("/") else f"file://{posix}"
+                    obj[field] = (
+                        f"file:///{posix}" if not posix.startswith("/") else f"file://{posix}"
+                    )
+
+        for cut in props.get("cuts", []):
+            _resolve_path_to_uri(cut, "source")
+        for scene in props.get("scenes", []):
+            _resolve_path_to_uri(scene, "src")
 
         # Build a custom themeConfig from the playbook's actual colors.
         # This ensures every video gets a unique visual identity derived
@@ -1342,11 +1395,8 @@ class VideoCompose(BaseTool):
                 error=f"Remotion composer project not found at {composer_dir}",
             )
 
-        # Route to the correct Remotion composition based on renderer_family.
-        # This prevents all pipelines from collapsing into the Explainer visual grammar.
-        renderer_family = (composition_data or {}).get("renderer_family", "explainer-data")
-        composition_id = self._get_composition_id(renderer_family)
-
+        # composition_id is already resolved above (pre-props-rewrite) so the
+        # scenes/cuts adapter could target the right shape. Reuse it here.
         cmd = [
             "npx", "remotion", "render",
             str(composer_dir / "src" / "index.tsx"),
@@ -1355,12 +1405,20 @@ class VideoCompose(BaseTool):
             "--props", str(props_path),
         ]
 
-        # Apply media profile dimensions
-        profile_name = inputs.get("profile")
-        if profile_name:
+        # Apply media profile dimensions. `profile` is documented as a string
+        # name (e.g. "youtube_landscape"), but LLM-driven callers sometimes
+        # pass a dict like {"width": 1280, "height": 720, "fps": 30}. Accept
+        # both rather than erroring with TypeError: unhashable type: 'dict'.
+        profile_input = inputs.get("profile")
+        if isinstance(profile_input, dict):
+            w = profile_input.get("width")
+            h = profile_input.get("height")
+            if w and h:
+                cmd.extend(["--width", str(w), "--height", str(h)])
+        elif isinstance(profile_input, str) and profile_input:
             try:
                 from lib.media_profiles import get_profile
-                p = get_profile(profile_name)
+                p = get_profile(profile_input)
                 cmd.extend(["--width", str(p.width), "--height", str(p.height)])
             except (ImportError, ValueError):
                 pass

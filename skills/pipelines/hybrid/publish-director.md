@@ -43,6 +43,10 @@ Recommended metadata keys:
 - export folders are organized by purpose,
 - the package is ready to use without manual cleanup.
 
+## Direct Publishing (Optional)
+
+If `UPLOADPOST_API_KEY` is set, use the `uploadpost_publisher` tool to publish the final video directly to social platforms (Instagram, TikTok, YouTube, LinkedIn, X, Threads, Pinterest, Bluesky, Reddit, Facebook, Google Business) instead of only exporting locally. See `skills/core/social-publishing.md` for integration details.
+
 ## Common Pitfalls
 
 - Hiding which output is the hero cut.

@@ -54,6 +54,10 @@ Recommended metadata keys:
 - copy matches the platform,
 - the release order reflects actual clip strength.
 
+## Direct Publishing (Optional)
+
+If `UPLOADPOST_API_KEY` is set, use the `uploadpost_publisher` tool to publish the final video directly to social platforms (Instagram, TikTok, YouTube, LinkedIn, X, Threads, Pinterest, Bluesky, Reddit, Facebook, Google Business) instead of only exporting locally. See `skills/core/social-publishing.md` for integration details.
+
 ## Common Pitfalls
 
 - Publishing clips without clear episode references.

@@ -1,0 +1,43 @@
+[Script Info]
+Title: Take Me Where The Stars Go - Chef-8080
+ScriptType: v4.00+
+WrapStyle: 0
+PlayResX: 1280
+PlayResY: 720
+ScaledBorderAndShadow: yes
+YCbCr Matrix: None
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Lyric,Arial,28,&H00FFFFFF,&H00FFFFFF,&H00000000,&H66000000,0,0,0,0,100,100,1.2,0,1,2.5,1.5,2,80,80,50,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:14.00,0:00:17.00,Lyric,,0,0,0,,Lady luck is callin' me
+Dialogue: 0,0:00:17.00,0:00:20.00,Lyric,,0,0,0,,To where night and day agree
+Dialogue: 0,0:00:20.00,0:00:22.00,Lyric,,0,0,0,,I feel the moon
+Dialogue: 0,0:00:22.00,0:00:25.00,Lyric,,0,0,0,,Pullin' me to somewhere I know
+Dialogue: 0,0:00:25.00,0:00:30.00,Lyric,,0,0,0,,Through the heart of neon lights
+Dialogue: 0,0:00:30.00,0:00:33.00,Lyric,,0,0,0,,The music is callin'
+Dialogue: 0,0:00:33.00,0:00:36.00,Lyric,,0,0,0,,Why would I not go
+Dialogue: 0,0:00:36.00,0:00:40.00,Lyric,,0,0,0,,Why would I say no
+Dialogue: 0,0:00:40.00,0:00:44.00,Lyric,,0,0,0,,Take me where the stars go
+Dialogue: 0,0:00:44.00,0:00:48.00,Lyric,,0,0,0,,Dreamin' on the dancefloor
+Dialogue: 0,0:00:48.00,0:00:52.00,Lyric,,0,0,0,,Risin' with the sunrise
+Dialogue: 0,0:00:52.00,0:00:55.00,Lyric,,0,0,0,,To the unknown
+Dialogue: 0,0:00:55.00,0:00:59.00,Lyric,,0,0,0,,Take me where the stars go
+Dialogue: 0,0:00:59.00,0:01:10.00,Lyric,,0,0,0,,Take me where the stars go
+Dialogue: 0,0:01:10.00,0:01:14.00,Lyric,,0,0,0,,Got my back against the wall
+Dialogue: 0,0:01:14.00,0:01:17.00,Lyric,,0,0,0,,And the shadows start to crawl
+Dialogue: 0,0:01:17.00,0:01:19.00,Lyric,,0,0,0,,I see the strobe
+Dialogue: 0,0:01:19.00,0:01:22.00,Lyric,,0,0,0,,Coming down and makin' me whole
+Dialogue: 0,0:01:22.00,0:01:27.00,Lyric,,0,0,0,,All my problems down below
+Dialogue: 0,0:01:27.00,0:01:30.00,Lyric,,0,0,0,,The music is callin'
+Dialogue: 0,0:01:30.00,0:01:33.00,Lyric,,0,0,0,,Why would I not go
+Dialogue: 0,0:01:33.00,0:01:37.00,Lyric,,0,0,0,,Why would I say no
+Dialogue: 0,0:01:37.00,0:01:41.00,Lyric,,0,0,0,,Take me where the stars go
+Dialogue: 0,0:01:41.00,0:01:45.00,Lyric,,0,0,0,,Dreamin' on the dancefloor
+Dialogue: 0,0:01:45.00,0:01:49.00,Lyric,,0,0,0,,Risin' with the sunrise
+Dialogue: 0,0:01:49.00,0:01:52.00,Lyric,,0,0,0,,To the unknown
+Dialogue: 0,0:01:52.00,0:01:56.00,Lyric,,0,0,0,,Take me where the stars go
+Dialogue: 0,0:01:56.00,0:02:10.00,Lyric,,0,0,0,,Take me where the stars go

@@ -10,6 +10,8 @@
 | Tool | Provider | Cost | Speed | Best For |
 |------|----------|------|-------|----------|
 | `flux_image` | FLUX 2 Pro via fal.ai | ~$0.03-0.05 | ~5-10s | Photorealism, general purpose, workhorse |
+| `gemini_image` | Gemini 2.5 Flash Image / 3 Pro Image Preview (Google) | ~$0.04 (Flash) / ~$0.10 (3 Pro) | ~5-15s | Iterative variants (Flash); precision text-heavy / brand-fidelity / strict prompt adherence (3 Pro) |
+| `google_imagen` | Imagen 4.0 (Google) | varies by tier | ~5-10s | Photorealism via Imagen family (separate from Gemini native image) |
 | `grok_image` | Grok Imagine Image (xAI) | $0.02/output + $0.002/input edit image | ~5-15s | Image edits, style transfer, multi-image compositing |
 | `openai_image` | GPT Image 1 (OpenAI) | ~$0.01-0.17 | ~5-15s | Complex instructions, text in images, multi-element |
 | `recraft_image` | Recraft V4 via fal.ai | ~$0.04-0.25 | ~5-10s | Logos, SVG vectors, brand assets, text rendering (see caveat below) |
@@ -39,8 +41,9 @@
 | **Style transfer / repaint of an existing image** | `grok_image` | Native edit flow, strong promptable transforms | `openai_image` |
 | **Multi-image merge / composite** | `grok_image` | Can combine multiple source images into one scene | `openai_image` |
 | **Logo or brand asset** | `recraft_image` | SVG support, text accuracy | `openai_image` |
-| **Image with text/labels** | `openai_image` | Best text rendering (GPT Image 1) | `recraft_image` |
-| **Complex multi-element composition** | `openai_image` | Best instruction following | `flux_image` |
+| **Image with text/labels** | `gemini_image` (model=`gemini-3-pro-image-preview`) | Newest precision text rendering | `openai_image` (GPT Image 1) → `recraft_image` |
+| **Complex multi-element composition** | `gemini_image` (model=`gemini-3-pro-image-preview`) | Strict prompt adherence on multi-constraint prompts | `openai_image` → `flux_image` |
+| **Fast iterative variants of a brand asset** | `gemini_image` (model=`gemini-2.5-flash-image`, default) | Cheap + fast for "give me 4 takes on this concept" | `flux_image` |
 | **Hero image (key visual)** | `flux_image` | Highest visual quality | `openai_image` |
 | **Thumbnail** | `flux_image` or `recraft_image` | Needs to be eye-catching | — |
 | **Budget/free project** | `pexels_image` or `pixabay_image` | Free, immediate | `local_diffusion` |
@@ -51,6 +54,12 @@
 ### Recraft V4 via fal.ai
 - **`style` parameter causes 422 errors** (as of 2026-04). The `style` enum values (`digital_illustration`, `realistic_image`, etc.) are rejected by fal.ai's Recraft V4 endpoint. **Workaround:** encode style direction in the prompt text instead (e.g. "digital illustration of a tooth cross-section" rather than `style="digital_illustration"`). The `image_size` and `colors` parameters work fine.
 - **Text rendering is unreliable for exact business names.** Recraft (like all AI image models) may hallucinate wrong text. For any scene where text must be verbatim (CTA screens, business names, phone numbers), use Remotion `text_card` instead of generating an image with text.
+
+### Gemini Image (`gemini_image`, added 2026-05-08)
+- **Two-tier model:** default `gemini-2.5-flash-image` (~$0.04/image, fast iteration); upgrade to `gemini-3-pro-image-preview` (~$0.10/image) for text-heavy / strict-composition / brand-fidelity work. Mirrors the OpenSwarm pattern of using Flash for variants and 3 Pro for precision.
+- **Aspect ratios:** broader than OpenAI (`1:1`, `2:3`, `3:2`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `16:9`, `21:9`).
+- **Pair with QC auto-fix loop** — see `image-qc-autofix.md`. The recommended pattern is: generate with `gemini-2.5-flash-image` → run QC → if any check fails, auto-retry once with `gemini-3-pro-image-preview` for the precision pass.
+- **Distinct from `google_imagen`** — that tool covers the Imagen 4.0 family (`imagen-4.0-generate-001`, `*-ultra`, `*-fast`); `gemini_image` covers Gemini's native multimodal image generation.
 
 ## Cost-Quality Tradeoff
 

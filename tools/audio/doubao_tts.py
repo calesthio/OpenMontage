@@ -25,7 +25,7 @@ from tools.base_tool import (
 
 class DoubaoTTS(BaseTool):
     name = "doubao_tts"
-    version = "0.1.0"
+    version = "0.2.0"
     tier = ToolTier.VOICE
     capability = "tts"
     provider = "doubao"
@@ -83,15 +83,23 @@ class DoubaoTTS(BaseTool):
                 "default": "seed-tts-2.0",
                 "description": "Volcengine resource id. Use seed-tts-2.0 for Doubao Speech 2.0 voices.",
             },
+            "model": {
+                "type": "string",
+                "description": "Optional req_params.model for compatible voices, e.g. seed-tts-2.0-expressive or seed-tts-2.0-standard.",
+            },
             "format": {
                 "type": "string",
                 "default": "mp3",
-                "enum": ["mp3", "ogg_opus", "pcm"],
+                "enum": ["mp3", "ogg_opus", "pcm", "wav"],
             },
             "sample_rate": {
                 "type": "integer",
                 "default": 24000,
                 "enum": [8000, 16000, 22050, 24000, 32000, 44100, 48000],
+            },
+            "bit_rate": {
+                "type": "integer",
+                "description": "Optional MP3 bit rate, when supported by the endpoint.",
             },
             "speech_rate": {
                 "type": "integer",
@@ -99,6 +107,79 @@ class DoubaoTTS(BaseTool):
                 "minimum": -50,
                 "maximum": 100,
                 "description": "Doubao speech rate. 0=normal, 100=2x, -50=0.5x.",
+            },
+            "emotion": {
+                "type": "string",
+                "description": "Optional Doubao emotion value, e.g. neutral, news, storytelling. Supported values depend on voice.",
+            },
+            "emotion_scale": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 5,
+                "description": "Emotion intensity when emotion is set. 1 is least expressive, 5 is strongest.",
+            },
+            "loudness_rate": {
+                "type": "integer",
+                "minimum": -50,
+                "maximum": 100,
+                "description": "Doubao loudness rate. 0=normal, 100=2x, -50=0.5x.",
+            },
+            "explicit_language": {
+                "type": "string",
+                "description": "Optional additions.explicit_language, e.g. zh-cn, en, crosslingual. Leave unset unless needed.",
+            },
+            "context_texts": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Optional context strings to guide style or dialogue context when supported.",
+            },
+            "silence_duration": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 30000,
+                "description": "Optional trailing silence in milliseconds.",
+            },
+            "enable_language_detector": {
+                "type": "boolean",
+                "description": "Optional automatic language detection.",
+            },
+            "disable_emoji_filter": {
+                "type": "boolean",
+                "description": "Optional emoji filter control.",
+            },
+            "mute_cut_threshold": {
+                "type": "integer",
+                "description": "Optional mute cutting threshold; sent with mute_cut_remain_ms as string additions.",
+            },
+            "mute_cut_remain_ms": {
+                "type": "integer",
+                "description": "Optional silence length to keep after mute cutting; sent as a string addition.",
+            },
+            "max_length_to_filter_parenthesis": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Optional parenthesis filtering threshold.",
+            },
+            "unsupported_char_ratio_thresh": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Optional unsupported-character ratio threshold.",
+            },
+            "post_process_pitch": {
+                "type": "integer",
+                "minimum": -12,
+                "maximum": 12,
+                "description": "Optional post-process pitch shift in semitones.",
+            },
+            "extra_audio_params": {
+                "type": "object",
+                "description": "Advanced raw req_params.audio_params overrides for newly documented Doubao fields.",
+            },
+            "extra_additions": {
+                "type": "object",
+                "description": "Advanced raw req_params.additions overrides for newly documented Doubao fields.",
             },
             "enable_timestamp": {
                 "type": "boolean",
@@ -270,10 +351,16 @@ class DoubaoTTS(BaseTool):
                 "provider": self.provider,
                 "model": resource_id,
                 "resource_id": resource_id,
+                "request_model": inputs.get("model"),
                 "voice_id": voice_id,
                 "format": fmt,
                 "sample_rate": inputs.get("sample_rate", 24000),
+                "bit_rate": inputs.get("bit_rate"),
                 "speech_rate": inputs.get("speech_rate", 0),
+                "emotion": inputs.get("emotion"),
+                "emotion_scale": inputs.get("emotion_scale"),
+                "loudness_rate": inputs.get("loudness_rate"),
+                "post_process_pitch": inputs.get("post_process_pitch"),
                 "text_length": len(text),
                 "task_id": task_id,
                 "task_status": data.get("task_status"),
@@ -316,18 +403,49 @@ class DoubaoTTS(BaseTool):
             "speech_rate": inputs.get("speech_rate", 0),
             "enable_timestamp": bool(inputs.get("enable_timestamp", True)),
         }
+        for key in ("bit_rate", "emotion", "emotion_scale", "loudness_rate"):
+            if inputs.get(key) is not None:
+                audio_params[key] = inputs[key]
+        extra_audio_params = inputs.get("extra_audio_params")
+        if isinstance(extra_audio_params, dict):
+            audio_params.update({key: value for key, value in extra_audio_params.items() if value is not None})
+
         additions = {
             "disable_markdown_filter": bool(inputs.get("disable_markdown_filter", False)),
         }
+        for key in (
+            "explicit_language",
+            "context_texts",
+            "silence_duration",
+            "enable_language_detector",
+            "disable_emoji_filter",
+            "max_length_to_filter_parenthesis",
+            "unsupported_char_ratio_thresh",
+        ):
+            if inputs.get(key) is not None:
+                additions[key] = inputs[key]
+        if inputs.get("mute_cut_threshold") is not None:
+            additions["mute_cut_threshold"] = str(inputs["mute_cut_threshold"])
+        if inputs.get("mute_cut_remain_ms") is not None:
+            additions["mute_cut_remain_ms"] = str(inputs["mute_cut_remain_ms"])
+        if inputs.get("post_process_pitch") is not None:
+            additions["post_process"] = {"pitch": inputs["post_process_pitch"]}
+        extra_additions = inputs.get("extra_additions")
+        if isinstance(extra_additions, dict):
+            additions.update({key: value for key, value in extra_additions.items() if value is not None})
+
+        req_params = {
+            "text": inputs["text"],
+            "speaker": voice_id,
+            "audio_params": audio_params,
+            "additions": json.dumps(additions, ensure_ascii=False),
+        }
+        if inputs.get("model") is not None:
+            req_params["model"] = inputs["model"]
         return {
             "user": {"uid": inputs.get("user_id", "openmontage")},
             "unique_id": request_id,
-            "req_params": {
-                "text": inputs["text"],
-                "speaker": voice_id,
-                "audio_params": audio_params,
-                "additions": json.dumps(additions, ensure_ascii=False),
-            },
+            "req_params": req_params,
         }
 
     def _poll_query(

@@ -1,4 +1,4 @@
-import { AbsoluteFill, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 
 interface TextCardProps {
   text: string;
@@ -16,7 +16,8 @@ export const TextCard: React.FC<TextCardProps> = ({
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const opacity = spring({ frame, fps, config: { damping: 20 } });
+  const entrance = spring({ frame, fps, config: { damping: 20 } });
+  const opacity = interpolate(entrance, [0, 1], [0.92, 1]);
   const scale = spring({
     frame,
     fps,
@@ -44,6 +45,7 @@ export const TextCard: React.FC<TextCardProps> = ({
           textAlign: "center",
           maxWidth: "80%",
           lineHeight: 1.3,
+          whiteSpace: "pre-line",
         }}
       >
         {text}

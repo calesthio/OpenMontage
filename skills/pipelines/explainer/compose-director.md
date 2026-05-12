@@ -429,6 +429,7 @@ Score (1-5):
 | **Audio quality** | Is narration clear, music balanced, no clipping? |
 | **Visual quality** | Are images sharp, transitions smooth, no artifacts? |
 | **Subtitle accuracy** | Are subtitles present, readable, and synced? |
+| **Visual timing** | If visual timing cues exist, does `visual_timing_qa` show the expected state at each cue? |
 
 If any dimension scores below 3, investigate and re-render.
 

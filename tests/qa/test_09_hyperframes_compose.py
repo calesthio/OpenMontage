@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """QA Test 09: HyperFrames end-to-end — scaffold + lint + validate + render.
 
-This test hits the real HyperFrames CLI via `npx @hyperframes/cli`. On first
-run, npm fetches the package (slow — ~30-90s) and then Chrome downloads its
+This test hits the real HyperFrames CLI via `npx hyperframes`. On first
+run, npm fetches the package (slow -- ~30-90s) and then Chrome downloads its
 browser for validation (~30s extra, cached thereafter). Skip unless
 HYPERFRAMES_QA=1 is set so CI doesn't pay the cost on every run.
 
@@ -11,6 +11,7 @@ The test is still valuable even without `--render`:
     composition.
   - lint exercises the static contract checker.
   - validate exercises the browser-based contract + contrast audit.
+  - inspect and snapshot exercise layout QA and visual keyframe capture.
 
 Full render (operation='render') is optional and gated on HYPERFRAMES_QA_RENDER=1.
 """
@@ -146,6 +147,29 @@ def test_hyperframes_scaffold_lint_validate(tmp_path: Path):
     # what we care about is that it at least ran and produced a report.
     assert "exit_code" in validate.data
     assert validate.data.get("stderr_tail") is not None or validate.data.get("report")
+
+    # 4. Inspect — layout QA for text/container overflow.
+    inspect = HyperFramesCompose().execute(
+        {
+            "operation": "inspect",
+            "workspace_path": str(workspace),
+            "samples": 3,
+            "max_issues": 20,
+        }
+    )
+    assert "exit_code" in inspect.data
+    assert inspect.data.get("stderr_tail") is not None or inspect.data.get("report")
+
+    # 5. Snapshot — keyframe capture for visual review.
+    snapshot = HyperFramesCompose().execute(
+        {
+            "operation": "snapshot",
+            "workspace_path": str(workspace),
+            "snapshot_frames": 2,
+        }
+    )
+    assert snapshot.success, snapshot.error
+    assert snapshot.data["snapshot_count"] >= 1
 
 
 @pytest.mark.skipif(

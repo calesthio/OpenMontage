@@ -73,10 +73,11 @@ class TTSSegmentLab(BaseTool):
     input_schema = {
         "type": "object",
         "properties": {
-            "operation": {"type": "string", "enum": ["dry_run", "generate", "select"], "default": "dry_run"},
+            "operation": {"type": "string", "enum": ["dry_run", "generate", "annotate", "select"], "default": "dry_run"},
             "manifest_path": {"type": "string"},
             "manifest": {"type": "object"},
             "results_path": {"type": "string"},
+            "annotations": {"type": ["object", "array"]},
             "selections": {"type": "object"},
             "output_path": {"type": "string"},
         },
@@ -90,6 +91,7 @@ class TTSSegmentLab(BaseTool):
             "output_dir": {"type": "string"},
             "results_path": {"type": "string"},
             "review_path": {"type": "string"},
+            "review_notes_path": {"type": "string"},
             "selection_path": {"type": "string"},
             "segments": {"type": "array"},
         },
@@ -97,11 +99,12 @@ class TTSSegmentLab(BaseTool):
     artifact_schema = {"type": "array", "items": {"type": "string"}}
 
     resource_profile = ResourceProfile(cpu_cores=1, ram_mb=256, vram_mb=0, disk_mb=100, network_required=True)
-    idempotency_key_fields = ["operation", "manifest_path", "manifest", "selections"]
+    idempotency_key_fields = ["operation", "manifest_path", "manifest", "annotations", "selections"]
     side_effects = [
         "writes TTS audition audio samples",
         "writes per-variant provider metadata",
         "writes results.json and review.md",
+        "writes review_notes.json and review_annotated.md in annotate mode",
         "writes selection.json in select mode",
         "calls configured TTS providers in generate mode",
     ]
@@ -138,6 +141,8 @@ class TTSSegmentLab(BaseTool):
         try:
             if operation == "select":
                 result = self._select(inputs)
+            elif operation == "annotate":
+                result = self._annotate(inputs)
             elif operation in {"dry_run", "generate"}:
                 result = self._run(inputs, generate=operation == "generate")
             else:
@@ -254,6 +259,73 @@ class TTSSegmentLab(BaseTool):
             error=None if results["status"] == "completed" else "One or more variants failed.",
         )
 
+    def _annotate(self, inputs: dict[str, Any]) -> ToolResult:
+        annotations = inputs.get("annotations")
+        if not annotations:
+            return ToolResult(success=False, error="annotate operation requires non-empty annotations")
+
+        results_path = self._results_path(inputs)
+        results = json.loads(results_path.read_text(encoding="utf-8"))
+        annotated_results = deepcopy(results)
+        by_segment = self._segment_lookup(annotated_results)
+        applied_annotations = []
+
+        for item in self._normalize_annotations(annotations):
+            segment_key = item["segment_key"]
+            variant_id = item["variant_id"]
+            segment = by_segment.get(segment_key)
+            if not segment:
+                return ToolResult(success=False, error=f"Unknown annotation segment/section key: {segment_key}")
+            variant = next((entry for entry in segment.get("variants", []) if entry.get("id") == variant_id), None)
+            if not variant:
+                return ToolResult(success=False, error=f"Unknown variant {variant_id!r} for segment {segment_key!r}")
+
+            annotation = self._clean_annotation(item)
+            variant["review"] = annotation
+            applied_annotations.append(
+                {
+                    "segment_id": segment["id"],
+                    "section_id": segment.get("section_id"),
+                    "label": segment.get("label"),
+                    "variant_id": variant["id"],
+                    **annotation,
+                }
+            )
+
+        summary = self._review_summary(annotated_results)
+        review_notes = {
+            "version": self.version,
+            "tool": self.name,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "source_results": str(results_path),
+            "project": results.get("project"),
+            "run_id": results.get("run_id"),
+            "summary": summary,
+            "annotations": applied_annotations,
+        }
+
+        output_path = Path(inputs.get("output_path") or results_path.with_name("review_notes.json"))
+        review_path = output_path.with_name("review_annotated.md")
+        annotated_results_path = output_path.with_name("results_annotated.json")
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        self._write_json(output_path, review_notes)
+        self._write_json(annotated_results_path, annotated_results)
+        review_path.write_text(self._review_markdown(annotated_results), encoding="utf-8")
+
+        return ToolResult(
+            success=True,
+            data={
+                "operation": "annotate",
+                "status": "completed",
+                "results_path": str(annotated_results_path),
+                "review_path": str(review_path),
+                "review_notes_path": str(output_path),
+                "summary": summary,
+                "annotations": applied_annotations,
+            },
+            artifacts=[str(output_path), str(annotated_results_path), str(review_path)],
+        )
+
     def _select(self, inputs: dict[str, Any]) -> ToolResult:
         selections = inputs.get("selections")
         if not isinstance(selections, dict) or not selections:
@@ -261,11 +333,7 @@ class TTSSegmentLab(BaseTool):
 
         results_path = self._results_path(inputs)
         results = json.loads(results_path.read_text(encoding="utf-8"))
-        by_segment: dict[str, dict[str, Any]] = {}
-        for segment in results.get("segments", []):
-            by_segment[segment["id"]] = segment
-            if segment.get("section_id"):
-                by_segment[segment["section_id"]] = segment
+        by_segment = self._segment_lookup(results)
 
         selected_items = []
         for segment_key, variant_id in selections.items():
@@ -317,6 +385,108 @@ class TTSSegmentLab(BaseTool):
             },
             artifacts=[str(output_path)],
         )
+
+    @staticmethod
+    def _segment_lookup(results: dict[str, Any]) -> dict[str, dict[str, Any]]:
+        by_segment: dict[str, dict[str, Any]] = {}
+        for segment in results.get("segments", []):
+            by_segment[segment["id"]] = segment
+            if segment.get("section_id"):
+                by_segment[segment["section_id"]] = segment
+        return by_segment
+
+    @staticmethod
+    def _normalize_annotations(raw_annotations: Any) -> list[dict[str, Any]]:
+        if isinstance(raw_annotations, list):
+            items = raw_annotations
+        elif isinstance(raw_annotations, dict):
+            items = []
+            for segment_key, segment_annotations in raw_annotations.items():
+                if isinstance(segment_annotations, list):
+                    for annotation in segment_annotations:
+                        if isinstance(annotation, dict):
+                            item = deepcopy(annotation)
+                            item.setdefault("segment_key", segment_key)
+                            items.append(item)
+                elif isinstance(segment_annotations, dict):
+                    if "variant_id" in segment_annotations:
+                        item = deepcopy(segment_annotations)
+                        item.setdefault("segment_key", segment_key)
+                        items.append(item)
+                    else:
+                        for variant_id, annotation in segment_annotations.items():
+                            item = deepcopy(annotation) if isinstance(annotation, dict) else {"decision": annotation}
+                            item.setdefault("segment_key", segment_key)
+                            item.setdefault("variant_id", variant_id)
+                            items.append(item)
+                else:
+                    raise ValueError(f"Annotation for {segment_key!r} must be an object or list")
+        else:
+            raise ValueError("annotations must be an object or list")
+
+        normalized = []
+        for item in items:
+            if not isinstance(item, dict):
+                raise ValueError("each annotation must be an object")
+            segment_key = item.get("segment_key") or item.get("segment_id") or item.get("section_id")
+            variant_id = item.get("variant_id") or item.get("variant")
+            if not segment_key or not variant_id:
+                raise ValueError("each annotation needs segment_key/segment_id/section_id and variant_id")
+            normalized.append({**item, "segment_key": str(segment_key), "variant_id": str(variant_id)})
+        return normalized
+
+    @staticmethod
+    def _clean_annotation(item: dict[str, Any]) -> dict[str, Any]:
+        allowed = {"APPROVED", "NEEDS_REVIEW", "REGENERATE", "REJECTED", "KEEP_REFERENCE"}
+        decision = str(item.get("decision", "NEEDS_REVIEW")).strip().upper().replace("-", "_")
+        if decision not in allowed:
+            raise ValueError(f"Unknown annotation decision {decision!r}; expected one of {sorted(allowed)}")
+        requires_user_review = item.get("requires_user_review")
+        if requires_user_review is None:
+            requires_user_review = decision == "NEEDS_REVIEW"
+        return {
+            "decision": decision,
+            "requires_user_review": bool(requires_user_review),
+            "issue_category": item.get("issue_category") or "",
+            "fix_target": item.get("fix_target") or "",
+            "notes": item.get("notes") or item.get("note") or "",
+            "user_decision": item.get("user_decision") or "",
+        }
+
+    @staticmethod
+    def _review_summary(results: dict[str, Any]) -> dict[str, Any]:
+        decisions = {
+            "APPROVED": 0,
+            "NEEDS_REVIEW": 0,
+            "REGENERATE": 0,
+            "REJECTED": 0,
+            "KEEP_REFERENCE": 0,
+            "UNREVIEWED": 0,
+        }
+        review_queue = []
+        total_variants = 0
+        for segment in results.get("segments", []):
+            for variant in segment.get("variants", []):
+                total_variants += 1
+                review = variant.get("review") or {}
+                decision = review.get("decision") or "UNREVIEWED"
+                decisions[decision] = decisions.get(decision, 0) + 1
+                if review.get("requires_user_review") or decision in {"NEEDS_REVIEW", "REGENERATE"}:
+                    review_queue.append(
+                        {
+                            "segment_id": segment.get("id"),
+                            "section_id": segment.get("section_id"),
+                            "variant_id": variant.get("id"),
+                            "decision": decision,
+                            "notes": review.get("notes", ""),
+                        }
+                    )
+        return {
+            "segments": len(results.get("segments", [])),
+            "variants": total_variants,
+            "decisions": decisions,
+            "review_queue": review_queue,
+        }
 
     def _load_manifest(self, inputs: dict[str, Any]) -> dict[str, Any]:
         if inputs.get("manifest") is not None:
@@ -468,8 +638,9 @@ class TTSSegmentLab(BaseTool):
     def _timestamp_id() -> str:
         return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
-    @staticmethod
-    def _review_markdown(results: dict[str, Any]) -> str:
+    @classmethod
+    def _review_markdown(cls, results: dict[str, Any]) -> str:
+        summary = cls._review_summary(results)
         lines = [
             f"# TTS Segment Lab Review: {results.get('run_id', '')}",
             "",
@@ -477,7 +648,22 @@ class TTSSegmentLab(BaseTool):
             f"- Created: `{results.get('created_at', '')}`",
             f"- Status: `{results.get('status', '')}`",
             "",
+            "## Summary",
+            "",
+            f"- Segments: `{summary['segments']}`",
+            f"- Variants: `{summary['variants']}`",
+            "- Decisions: "
+            + ", ".join(f"`{key}` {value}" for key, value in summary["decisions"].items() if value),
+            "",
         ]
+        if summary["review_queue"]:
+            lines.extend(["## Needs Human Review", ""])
+            for item in summary["review_queue"]:
+                note = f" {item.get('notes', '')}" if item.get("notes") else ""
+                lines.append(
+                    f"- `{item['segment_id']}` / `{item['variant_id']}`: `{item['decision']}`{note}"
+                )
+            lines.append("")
         for segment in results.get("segments", []):
             lines.extend(
                 [
@@ -487,8 +673,8 @@ class TTSSegmentLab(BaseTool):
                     f"- Section id: `{segment.get('section_id') or ''}`",
                     f"- Text: {segment.get('text', '')}",
                     "",
-                    "| Variant | Provider | Duration | Audio | Note | Key Params |",
-                    "|---|---|---:|---|---|---|",
+                    "| Variant | Provider | Duration | Audio | Decision | Review Notes | Note | Key Params |",
+                    "|---|---|---:|---|---|---|---|---|",
                 ]
             )
             for variant in segment.get("variants", []):
@@ -521,9 +707,12 @@ class TTSSegmentLab(BaseTool):
                 )
                 if variant.get("success") is False:
                     key_params = f"ERROR: {variant.get('error', '')}"
+                review = variant.get("review") or {}
+                decision = review.get("decision", "UNREVIEWED")
+                review_notes = review.get("notes", "")
                 lines.append(
                     f"| `{variant['id']}` | `{provider}` | {duration_text} | {audio_link} | "
-                    f"{variant.get('note', '')} | {key_params} |"
+                    f"`{decision}` | {review_notes} | {variant.get('note', '')} | {key_params} |"
                 )
             lines.append("")
         return "\n".join(lines)

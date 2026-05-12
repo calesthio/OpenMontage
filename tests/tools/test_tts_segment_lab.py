@@ -170,3 +170,58 @@ def test_select_can_choose_reference_variant(tmp_path):
     assert payload["selections"][0]["variant_id"] == "reference-current"
     assert payload["selections"][0]["selected_provider"] == "reference"
     assert payload["selections"][0]["selected_tool"] == "reference_audio"
+
+
+def test_annotate_writes_review_notes_and_review_queue(tmp_path):
+    tool = TTSSegmentLab()
+    dry_result = tool.execute({"operation": "dry_run", "manifest": base_manifest(tmp_path)})
+    assert dry_result.success
+
+    annotate_result = tool.execute(
+        {
+            "operation": "annotate",
+            "results_path": dry_result.data["results_path"],
+            "annotations": {
+                "opening": {
+                    "reference-current": {
+                        "decision": "KEEP_REFERENCE",
+                        "notes": "Still the safest approved take.",
+                    },
+                    "doubao": {
+                        "decision": "NEEDS_REVIEW",
+                        "issue_category": "tone",
+                        "fix_target": "Try a steadier delivery.",
+                        "notes": "Promising, but needs human listening.",
+                    },
+                }
+            },
+        }
+    )
+
+    assert annotate_result.success
+    review_notes = json.loads(Path(annotate_result.data["review_notes_path"]).read_text(encoding="utf-8"))
+    assert review_notes["summary"]["decisions"]["KEEP_REFERENCE"] == 1
+    assert review_notes["summary"]["decisions"]["NEEDS_REVIEW"] == 1
+    assert review_notes["summary"]["review_queue"][0]["variant_id"] == "doubao"
+
+    annotated_review = Path(annotate_result.data["review_path"]).read_text(encoding="utf-8")
+    assert "## Needs Human Review" in annotated_review
+    assert "`KEEP_REFERENCE`" in annotated_review
+    assert "Promising, but needs human listening." in annotated_review
+
+
+def test_annotate_rejects_unknown_variant(tmp_path):
+    tool = TTSSegmentLab()
+    dry_result = tool.execute({"operation": "dry_run", "manifest": base_manifest(tmp_path)})
+    assert dry_result.success
+
+    annotate_result = tool.execute(
+        {
+            "operation": "annotate",
+            "results_path": dry_result.data["results_path"],
+            "annotations": {"opening": {"missing": {"decision": "REJECTED"}}},
+        }
+    )
+
+    assert not annotate_result.success
+    assert "Unknown variant" in annotate_result.error

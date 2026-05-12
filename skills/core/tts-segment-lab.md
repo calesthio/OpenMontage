@@ -40,9 +40,10 @@ or delivery parameters can still improve the video.
 3. Add `reference` audio when a current approved version exists.
 4. Run `dry_run` to inspect the review structure without API calls.
 5. Run `generate` to create audition samples.
-6. Listen to `review.md`.
-7. Run `select` to write `selection.json`.
-8. Reuse selected audio in final asset generation.
+6. Listen to `review.md` and optionally run `annotate` for first-pass review notes.
+7. Ask the user to review only candidates marked `NEEDS_REVIEW` or `REGENERATE`.
+8. Run `select` to write `selection.json`.
+9. Reuse selected audio in final asset generation.
 
 ## Minimal Manifest
 
@@ -89,6 +90,37 @@ or delivery parameters can still improve the video.
   ]
 }
 ```
+
+## First-pass Annotation
+
+Use `annotate` after `generate` when an agent has listened to the candidates
+or compared them against reference audio. This does not make the final choice;
+it records the first-pass review and creates `review_annotated.md` plus
+`review_notes.json` so the user can focus on the uncertain candidates.
+
+```json
+{
+  "operation": "annotate",
+  "results_path": "projects/my-explainer/assets/tts-lab/opening-audition-v1/results.json",
+  "annotations": {
+    "opening": {
+      "reference-current": {
+        "decision": "KEEP_REFERENCE",
+        "notes": "Still the safest approved take."
+      },
+      "doubao-rate8": {
+        "decision": "NEEDS_REVIEW",
+        "issue_category": "tone",
+        "fix_target": "Try a steadier delivery if the user rejects this one.",
+        "notes": "Closest new candidate, but needs human listening."
+      }
+    }
+  }
+}
+```
+
+Supported decisions are `APPROVED`, `NEEDS_REVIEW`, `REGENERATE`, `REJECTED`,
+and `KEEP_REFERENCE`.
 
 ## Selection
 

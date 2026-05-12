@@ -1,0 +1,172 @@
+import json
+from pathlib import Path
+
+from tools.audio.tts_segment_lab import TTSSegmentLab
+from tools.base_tool import ToolResult
+
+
+def write_script(path: Path) -> None:
+    path.write_text(
+        json.dumps(
+            {
+                "sections": [
+                    {"id": "s1", "text": "Opening line for audition."},
+                    {"id": "s2", "text": "Second line for another voice."},
+                ]
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+
+
+def base_manifest(tmp_path: Path) -> dict:
+    script_path = tmp_path / "script.json"
+    write_script(script_path)
+    reference_audio = tmp_path / "reference.mp3"
+    reference_audio.write_bytes(b"reference audio")
+    return {
+        "project": "unit-test",
+        "run_id": "unit-run",
+        "script_path": str(script_path),
+        "output_dir": str(tmp_path / "tts-lab"),
+        "defaults": {"preferred_provider": "auto", "voice": "alloy"},
+        "segments": [
+            {
+                "id": "opening",
+                "section_id": "s1",
+                "label": "Opening",
+                "reference": {
+                    "id": "reference-current",
+                    "audio": str(reference_audio),
+                    "duration_seconds": 1.0,
+                    "note": "Current approved audio.",
+                },
+                "variants": [
+                    {
+                        "id": "auto",
+                        "note": "Auto route",
+                        "overrides": {"speed": 1.0},
+                    },
+                    {
+                        "id": "doubao",
+                        "provider": "doubao",
+                        "note": "Provider-specific route",
+                        "provider_options": {"voice_id": "zh_female_vv_uranus_bigtts"},
+                        "overrides": {"speech_rate": 8},
+                    },
+                ],
+            }
+        ],
+    }
+
+
+def test_dry_run_extracts_script_section_and_writes_review(tmp_path):
+    tool = TTSSegmentLab()
+    manifest = base_manifest(tmp_path)
+
+    result = tool.execute({"operation": "dry_run", "manifest": manifest})
+
+    assert result.success
+    assert result.data["status"] == "completed"
+    results_path = Path(result.data["results_path"])
+    review_path = Path(result.data["review_path"])
+    assert results_path.exists()
+    assert review_path.exists()
+
+    payload = json.loads(results_path.read_text(encoding="utf-8"))
+    assert payload["segments"][0]["text"] == "Opening line for audition."
+    assert payload["segments"][0]["variants"][0]["id"] == "reference-current"
+    assert payload["segments"][0]["variants"][0]["source_type"] == "reference"
+    assert payload["segments"][0]["variants"][1]["planned"] is True
+    assert "Opening line for audition." in review_path.read_text(encoding="utf-8")
+    assert "reference-current" in review_path.read_text(encoding="utf-8")
+
+
+def test_generate_routes_variants_through_tts_selector(monkeypatch, tmp_path):
+    calls = []
+
+    def fake_execute(self, inputs):
+        calls.append(inputs.copy())
+        output_path = Path(inputs["output_path"])
+        output_path.write_bytes(b"fake mp3")
+        return ToolResult(
+            success=True,
+            data={
+                "selected_provider": inputs.get("preferred_provider", "auto"),
+                "selected_tool": f"{inputs.get('preferred_provider', 'auto')}_tts",
+                "audio_duration_seconds": 1.23,
+                "output": str(output_path),
+            },
+            artifacts=[str(output_path)],
+        )
+
+    monkeypatch.setattr("tools.audio.tts_selector.TTSSelector.execute", fake_execute)
+    monkeypatch.setattr("tools.audio.tts_selector.TTSSelector.estimate_cost", lambda self, inputs: 0.01)
+
+    tool = TTSSegmentLab()
+    result = tool.execute({"operation": "generate", "manifest": base_manifest(tmp_path)})
+
+    assert result.success
+    assert len(calls) == 2
+    assert calls[0]["text"] == "Opening line for audition."
+    assert calls[0]["preferred_provider"] == "auto"
+    assert calls[1]["preferred_provider"] == "doubao"
+    assert calls[1]["voice_id"] == "zh_female_vv_uranus_bigtts"
+    assert calls[1]["speech_rate"] == 8
+    assert Path(result.data["results_path"]).exists()
+
+
+def test_select_writes_selection_manifest(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        "tools.audio.tts_selector.TTSSelector.execute",
+        lambda self, inputs: ToolResult(
+            success=True,
+            data={
+                "selected_provider": inputs.get("preferred_provider", "auto"),
+                "selected_tool": "fake_tts",
+                "audio_duration_seconds": 2.0,
+            },
+            artifacts=[inputs["output_path"]],
+        ),
+    )
+    monkeypatch.setattr("tools.audio.tts_selector.TTSSelector.estimate_cost", lambda self, inputs: 0.0)
+
+    tool = TTSSegmentLab()
+    generate_result = tool.execute({"operation": "generate", "manifest": base_manifest(tmp_path)})
+    assert generate_result.success
+
+    select_result = tool.execute(
+        {
+            "operation": "select",
+            "manifest": base_manifest(tmp_path),
+            "selections": {"opening": "doubao"},
+        }
+    )
+
+    assert select_result.success
+    selection_path = Path(select_result.data["selection_path"])
+    payload = json.loads(selection_path.read_text(encoding="utf-8"))
+    assert payload["selections"][0]["segment_id"] == "opening"
+    assert payload["selections"][0]["variant_id"] == "doubao"
+    assert payload["selections"][0]["selected_provider"] == "doubao"
+
+
+def test_select_can_choose_reference_variant(tmp_path):
+    tool = TTSSegmentLab()
+    dry_result = tool.execute({"operation": "dry_run", "manifest": base_manifest(tmp_path)})
+    assert dry_result.success
+
+    select_result = tool.execute(
+        {
+            "operation": "select",
+            "manifest": base_manifest(tmp_path),
+            "selections": {"opening": "reference-current"},
+        }
+    )
+
+    assert select_result.success
+    payload = json.loads(Path(select_result.data["selection_path"]).read_text(encoding="utf-8"))
+    assert payload["selections"][0]["variant_id"] == "reference-current"
+    assert payload["selections"][0]["selected_provider"] == "reference"
+    assert payload["selections"][0]["selected_tool"] == "reference_audio"

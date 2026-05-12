@@ -31,7 +31,7 @@ Quick routing for common explainer needs:
 | Schema | `schemas/artifacts/asset_manifest.schema.json` | Artifact validation |
 | Prior artifacts | `state.artifacts["scene_plan"]["scene_plan"]`, `state.artifacts["script"]["script"]`, `state.artifacts["proposal"]["proposal_packet"]` | What to produce |
 | Playbook | Active style playbook | Image prompts, diagram style, audio preferences |
-| Tools | `tts_selector`, `image_selector`, `video_selector`, `diagram_gen`, `code_snippet`, `music_gen` — selectors auto-discover all available providers from the registry | Generation capabilities |
+| Tools | `tts_segment_lab`, `tts_selector`, `image_selector`, `video_selector`, `diagram_gen`, `code_snippet`, `music_gen` — selectors auto-discover all available providers from the registry | Audition and generation capabilities |
 | Cost tracker | `tools/cost_tracker.py` | Budget governance |
 
 ## Process
@@ -51,7 +51,7 @@ Asset Task:
 ```
 
 Also create tasks for:
-- **Narration audio** — one per script section (use `tts_selector` or a concrete TTS provider)
+- **Narration audio** — one per script section (reuse `tts_segment_lab` selections when present; otherwise use `tts_selector` or a concrete TTS provider)
 - **Background music** — one track for the whole video (use `music_gen` or select from library)
 - **Sound effects** — per playbook's `sfx_style` (optional, use `music_gen` or stock)
 
@@ -70,9 +70,10 @@ Before generating anything:
 
 Before batch-generating assets, produce one sample of each expensive asset type and present them to the user for approval:
 
-1. **TTS sample**: Generate narration for the first script section only. Play it for the user. Confirm voice, pace, and tone are acceptable before generating the rest.
-2. **Image sample**: Generate one image for the most representative scene. Show it to the user. Confirm the style, quality, and prompt approach before batch-generating all images.
-3. **Music sample** (if using `music_gen`): Generate one short clip. Confirm mood and energy before committing.
+1. **TTS audition**: If the script contains TTS audition cues or voice-sensitive sections, run `tts_segment_lab` first. Compare provider/voice/parameter variants, write `review.md`, and record approved choices in `selection.json`.
+2. **TTS sample**: If no audition is needed, generate narration for the first script section only. Play it for the user. Confirm voice, pace, and tone are acceptable before generating the rest.
+3. **Image sample**: Generate one image for the most representative scene. Show it to the user. Confirm the style, quality, and prompt approach before batch-generating all images.
+4. **Music sample** (if using `music_gen`): Generate one short clip. Confirm mood and energy before committing.
 
 If the user rejects a sample:
 - Adjust the parameters (voice, prompt style, provider) and regenerate the sample.
@@ -83,7 +84,12 @@ This step typically costs $0.03–0.08 total and prevents $1–3 of wasted gener
 
 ### Step 3: Generate Narration
 
-For each script section:
+Before generating narration, check whether a `tts_segment_lab` `selection.json`
+exists for this project. If it exists, reuse the selected audio for matching
+sections and include those files in the asset manifest. For sections without a
+selection, generate narration normally.
+
+For each script section that still needs narration:
 1. Extract the narration text
 2. Apply speaker directions from the script (pace, emphasis, emotion)
 3. Apply the playbook's `audio.voice_style`

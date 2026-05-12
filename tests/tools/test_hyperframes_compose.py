@@ -822,7 +822,9 @@ def test_hyperframes_root_composition_has_data_start_and_duration(tmp_path):
     assert result.success, result.error
     html = (workspace / "index.html").read_text(encoding="utf-8")
     # Must have all four required root attributes per the HyperFrames contract.
+    assert 'id="root"' in html
     assert 'data-composition-id="root"' in html
+    assert '[data-composition-id="root"]' not in html
     assert 'data-start="0"' in html  # per SKILL.md: root composition: use "0"
     # data-duration must match the timeline total; value can be '5' or '5.0' etc.
     import re
@@ -937,7 +939,9 @@ def test_scaffold_workspace_generates_html_and_assets(tmp_path: Path):
     html = index.read_text(encoding="utf-8")
 
     # HyperFrames authoring contract requirements we MUST emit:
+    assert 'id="root"' in html
     assert 'data-composition-id="root"' in html
+    assert '[data-composition-id="root"]' not in html
     assert 'window.__timelines["root"]' in html
     assert 'paused: true' in html
     assert 'class="clip' in html

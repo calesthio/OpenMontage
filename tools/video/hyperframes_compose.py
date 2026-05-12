@@ -958,10 +958,20 @@ class HyperFramesCompose(BaseTool):
         vars_css = "\n      ".join(f"{k}: {v};" for k, v in css_vars.items())
 
         clip_html: list[str] = []
+        visibility_tweens: list[str] = []
         entrance_tweens: list[str] = []
         for i, cut in enumerate(cuts):
             html, tween = self._cut_to_html(i, cut, width, height)
             clip_html.append(html)
+            in_s = float(cut.get("in_seconds", 0) or 0)
+            out_s = float(cut.get("out_seconds", 0) or 0)
+            visibility_tweens.append(
+                f'tl.set("#cut-{i}", {{ opacity: 1 }}, {self._f(in_s)});'
+            )
+            if out_s and out_s < total_duration:
+                visibility_tweens.append(
+                    f'tl.set("#cut-{i}", {{ opacity: 0 }}, {self._f(out_s)});'
+                )
             if tween:
                 entrance_tweens.append(tween)
 
@@ -988,7 +998,8 @@ class HyperFramesCompose(BaseTool):
                 f'data-volume="{self._f(music["volume"])}"></audio>'
             )
 
-        tween_block = "\n        ".join(entrance_tweens) if entrance_tweens else "// no tweens"
+        timeline_tweens = [*visibility_tweens, *entrance_tweens]
+        tween_block = "\n        ".join(timeline_tweens) if timeline_tweens else "// no tweens"
 
         return f"""<!DOCTYPE html>
 <html lang="en">
@@ -1006,7 +1017,7 @@ class HyperFramesCompose(BaseTool):
       height: {height}px;
       overflow: hidden;
     }}
-    .clip {{ position: absolute; inset: 0; }}
+    .clip {{ position: absolute; inset: 0; opacity: 0; }}
     .clip.video-clip, .clip.image-clip {{ object-fit: cover; width: 100%; height: 100%; }}
     .clip.text-card {{ display: flex; align-items: center; justify-content: center; padding: 120px 160px; box-sizing: border-box; text-align: center; }}
     .clip.text-card h1 {{ font-family: var(--font-heading); font-weight: 700; font-size: 96px; line-height: 1.1; margin: 0; color: var(--color-fg); }}
@@ -1056,9 +1067,10 @@ class HyperFramesCompose(BaseTool):
                 f'data-start="{self._f(in_s)}" data-duration="{self._f(duration)}" '
                 f'data-track-index="1">{inner}</div>'
             )
-            # Mild entrance — fade + lift.
+            # Mild entrance. Clip visibility is controlled separately so
+            # generated snapshots do not catch a blank first frame.
             tween = (
-                f'tl.from("#{cut_id} h1", {{ y: 40, opacity: 0, duration: 0.6, '
+                f'tl.from("#{cut_id} h1", {{ y: 40, duration: 0.6, '
                 f'ease: "power3.out" }}, {self._f(in_s + 0.1)});'
             )
             return html, tween

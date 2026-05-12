@@ -941,6 +941,12 @@ def test_scaffold_workspace_generates_html_and_assets(tmp_path: Path):
     assert 'window.__timelines["root"]' in html
     assert 'paused: true' in html
     assert 'class="clip' in html
+    assert ".clip { position: absolute; inset: 0; opacity: 0; }" in html
+    assert 'tl.set("#cut-0", { opacity: 1 }, 0);' in html
+    assert 'tl.set("#cut-0", { opacity: 0 }, 3);' in html
+    assert 'tl.set("#cut-1", { opacity: 1 }, 3);' in html
+    assert 'tl.set("#cut-1", { opacity: 0 }, 6);' not in html
+    assert 'tl.from("#cut-1 h1", { y: 40, duration: 0.6,' in html
     assert "gsap" in html.lower()
 
     # Text card for c2 must carry data-start and data-duration.

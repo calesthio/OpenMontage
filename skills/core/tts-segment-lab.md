@@ -40,10 +40,12 @@ or delivery parameters can still improve the video.
 3. Add `reference` audio when a current approved version exists.
 4. Run `dry_run` to inspect the review structure without API calls.
 5. Run `generate` to create audition samples.
-6. Listen to `review.md` and optionally run `annotate` for first-pass review notes.
-7. Ask the user to review only candidates marked `NEEDS_REVIEW` or `REGENERATE`.
-8. Run `select` to write `selection.json`.
-9. Reuse selected audio in final asset generation.
+6. Optionally run `analyze` to reuse OpenMontage's existing audio probe,
+   energy, provider metadata, and optional transcription checks.
+7. Listen to `review.md` and optionally run `annotate` for first-pass review notes.
+8. Ask the user to review only candidates marked `NEEDS_REVIEW` or `REGENERATE`.
+9. Run `select` to write `selection.json`.
+10. Reuse selected audio in final asset generation.
 
 ## Minimal Manifest
 
@@ -90,6 +92,34 @@ or delivery parameters can still improve the video.
   ]
 }
 ```
+
+## Audio Analysis
+
+Use `analyze` after `generate` when you want a quick, explainable screening pass
+before asking the user to listen. It does not judge taste automatically. It
+reuses existing OpenMontage tools where available:
+
+- `audio_probe` for duration and media validity;
+- `audio_energy` for loudness/low-energy patterns;
+- provider metadata for timestamp or alignment hints when a TTS provider emits them;
+- `transcriber` only when `analysis_options.include_transcript` is true.
+
+```json
+{
+  "operation": "analyze",
+  "results_path": "projects/my-explainer/assets/tts-lab/opening-audition-v1/results.json",
+  "analysis_options": {
+    "duration_tolerance_ratio": 0.35,
+    "energy_threshold_lufs": -45,
+    "long_quiet_run_seconds": 2,
+    "include_transcript": false
+  }
+}
+```
+
+The tool writes `audio_profile.json` and `analysis.md`. Treat findings as
+review prioritization, not final approval. Subjective delivery calls such as
+"mysterious but not sentimental" still require human listening.
 
 ## First-pass Annotation
 

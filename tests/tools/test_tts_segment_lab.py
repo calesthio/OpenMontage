@@ -172,6 +172,68 @@ def test_select_can_choose_reference_variant(tmp_path):
     assert payload["selections"][0]["selected_tool"] == "reference_audio"
 
 
+def test_analyze_writes_audio_profile_and_review_queue(monkeypatch, tmp_path):
+    def fake_tts_execute(self, inputs):
+        output_path = Path(inputs["output_path"])
+        output_path.write_bytes(b"fake mp3")
+        return ToolResult(
+            success=True,
+            data={
+                "selected_provider": inputs.get("preferred_provider", "auto"),
+                "selected_tool": "fake_tts",
+                "audio_duration_seconds": 1.0,
+            },
+            artifacts=[str(output_path)],
+        )
+
+    monkeypatch.setattr("tools.audio.tts_selector.TTSSelector.execute", fake_tts_execute)
+    monkeypatch.setattr("tools.audio.tts_selector.TTSSelector.estimate_cost", lambda self, inputs: 0.0)
+    monkeypatch.setattr(
+        "tools.analysis.audio_probe.AudioProbe.execute",
+        lambda self, inputs: ToolResult(success=True, data={"duration_seconds": 1.0, "audio": {"sample_rate": 44100}}),
+    )
+    monkeypatch.setattr(
+        "tools.analysis.audio_energy.AudioEnergy.execute",
+        lambda self, inputs: ToolResult(
+            success=True,
+            data={
+                "analysis": {"quiet_intro_seconds": 0, "active_seconds": 1},
+                "energy_profile": [{"time_seconds": 0, "loudness_lufs": -24, "active": True}],
+            },
+        ),
+    )
+
+    tool = TTSSegmentLab()
+    generate_result = tool.execute({"operation": "generate", "manifest": base_manifest(tmp_path)})
+    assert generate_result.success
+
+    analyze_result = tool.execute({"operation": "analyze", "results_path": generate_result.data["results_path"]})
+
+    assert analyze_result.success
+    profile_path = Path(analyze_result.data["audio_profile_path"])
+    analysis_path = Path(analyze_result.data["analysis_path"])
+    assert profile_path.exists()
+    assert analysis_path.exists()
+    profile = json.loads(profile_path.read_text(encoding="utf-8"))
+    assert profile["summary"]["variants"] == 3
+    assert profile["segments"][0]["variants"][1]["probe"]["status"] == "ok"
+    assert "These checks are heuristics" in analysis_path.read_text(encoding="utf-8")
+
+
+def test_analyze_flags_missing_audio(tmp_path):
+    tool = TTSSegmentLab()
+    dry_result = tool.execute({"operation": "dry_run", "manifest": base_manifest(tmp_path)})
+    assert dry_result.success
+
+    analyze_result = tool.execute({"operation": "analyze", "results_path": dry_result.data["results_path"]})
+
+    assert analyze_result.success
+    profile = json.loads(Path(analyze_result.data["audio_profile_path"]).read_text(encoding="utf-8"))
+    missing_variant = profile["segments"][0]["variants"][1]
+    assert missing_variant["suggested_review"] is True
+    assert missing_variant["findings"][0]["kind"] == "audio_missing"
+
+
 def test_annotate_writes_review_notes_and_review_queue(tmp_path):
     tool = TTSSegmentLab()
     dry_result = tool.execute({"operation": "dry_run", "manifest": base_manifest(tmp_path)})

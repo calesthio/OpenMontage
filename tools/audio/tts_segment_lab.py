@@ -48,13 +48,16 @@ class TTSSegmentLab(BaseTool):
         "tts_audition_batch",
         "script_section_extraction",
         "provider_comparison",
+        "tts_candidate_audio_analysis",
         "voice_variant_selection",
     ]
     supports = {
         "dry_run": True,
+        "audio_analysis": True,
         "provider_comparison": True,
         "selection_manifest": True,
         "timestamps_when_provider_supports_them": True,
+        "optional_transcription_check": True,
     }
     best_for = [
         "auditioning generated narration before final asset generation",
@@ -73,10 +76,15 @@ class TTSSegmentLab(BaseTool):
     input_schema = {
         "type": "object",
         "properties": {
-            "operation": {"type": "string", "enum": ["dry_run", "generate", "annotate", "select"], "default": "dry_run"},
+            "operation": {
+                "type": "string",
+                "enum": ["dry_run", "generate", "analyze", "annotate", "select"],
+                "default": "dry_run",
+            },
             "manifest_path": {"type": "string"},
             "manifest": {"type": "object"},
             "results_path": {"type": "string"},
+            "analysis_options": {"type": "object"},
             "annotations": {"type": ["object", "array"]},
             "selections": {"type": "object"},
             "output_path": {"type": "string"},
@@ -91,6 +99,8 @@ class TTSSegmentLab(BaseTool):
             "output_dir": {"type": "string"},
             "results_path": {"type": "string"},
             "review_path": {"type": "string"},
+            "audio_profile_path": {"type": "string"},
+            "analysis_path": {"type": "string"},
             "review_notes_path": {"type": "string"},
             "selection_path": {"type": "string"},
             "segments": {"type": "array"},
@@ -99,11 +109,12 @@ class TTSSegmentLab(BaseTool):
     artifact_schema = {"type": "array", "items": {"type": "string"}}
 
     resource_profile = ResourceProfile(cpu_cores=1, ram_mb=256, vram_mb=0, disk_mb=100, network_required=True)
-    idempotency_key_fields = ["operation", "manifest_path", "manifest", "annotations", "selections"]
+    idempotency_key_fields = ["operation", "manifest_path", "manifest", "analysis_options", "annotations", "selections"]
     side_effects = [
         "writes TTS audition audio samples",
         "writes per-variant provider metadata",
         "writes results.json and review.md",
+        "writes audio_profile.json and analysis.md in analyze mode",
         "writes review_notes.json and review_annotated.md in annotate mode",
         "writes selection.json in select mode",
         "calls configured TTS providers in generate mode",
@@ -143,6 +154,8 @@ class TTSSegmentLab(BaseTool):
                 result = self._select(inputs)
             elif operation == "annotate":
                 result = self._annotate(inputs)
+            elif operation == "analyze":
+                result = self._analyze(inputs)
             elif operation in {"dry_run", "generate"}:
                 result = self._run(inputs, generate=operation == "generate")
             else:
@@ -186,6 +199,9 @@ class TTSSegmentLab(BaseTool):
                 "text": segment["text"],
                 "variants": [],
             }
+            for timing_key in ("start_seconds", "end_seconds", "expected_duration_seconds"):
+                if segment.get(timing_key) is not None:
+                    segment_result[timing_key] = segment[timing_key]
             segment_result["variants"].extend(self._reference_variants(segment))
             for variant in segment.get("variants", []):
                 variant_id = self._slug(variant["id"])
@@ -257,6 +273,66 @@ class TTSSegmentLab(BaseTool):
             },
             artifacts=artifacts,
             error=None if results["status"] == "completed" else "One or more variants failed.",
+        )
+
+    def _analyze(self, inputs: dict[str, Any]) -> ToolResult:
+        results_path = self._results_path(inputs)
+        results = json.loads(results_path.read_text(encoding="utf-8"))
+        options = self._analysis_options(inputs.get("analysis_options", {}))
+        profile = {
+            "version": self.version,
+            "tool": self.name,
+            "operation": "analyze",
+            "status": "completed",
+            "project": results.get("project"),
+            "run_id": results.get("run_id"),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "source_results": str(results_path),
+            "analysis_options": options,
+            "segments": [],
+            "review_queue": [],
+        }
+
+        for segment in results.get("segments", []):
+            segment_profile = {
+                "id": segment["id"],
+                "section_id": segment.get("section_id"),
+                "label": segment.get("label"),
+                "text": segment.get("text", ""),
+                "variants": [],
+            }
+            for variant in segment.get("variants", []):
+                variant_profile = self._analyze_variant(segment, variant, options)
+                segment_profile["variants"].append(variant_profile)
+                if variant_profile.get("suggested_review"):
+                    profile["review_queue"].append(
+                        {
+                            "segment_id": segment.get("id"),
+                            "section_id": segment.get("section_id"),
+                            "variant_id": variant.get("id"),
+                            "reasons": [item["message"] for item in variant_profile.get("findings", [])],
+                        }
+                    )
+            profile["segments"].append(segment_profile)
+
+        profile["summary"] = self._analysis_summary(profile)
+        output_path = Path(inputs.get("output_path") or results_path.with_name("audio_profile.json"))
+        analysis_path = output_path.with_name("analysis.md")
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        self._write_json(output_path, profile)
+        analysis_path.write_text(self._analysis_markdown(profile), encoding="utf-8")
+
+        return ToolResult(
+            success=True,
+            data={
+                "operation": "analyze",
+                "status": "completed",
+                "audio_profile_path": str(output_path),
+                "analysis_path": str(analysis_path),
+                "summary": profile["summary"],
+                "review_queue": profile["review_queue"],
+            },
+            artifacts=[str(output_path), str(analysis_path)],
         )
 
     def _annotate(self, inputs: dict[str, Any]) -> ToolResult:
@@ -487,6 +563,325 @@ class TTSSegmentLab(BaseTool):
             "decisions": decisions,
             "review_queue": review_queue,
         }
+
+    @staticmethod
+    def _analysis_options(raw_options: Any) -> dict[str, Any]:
+        options = raw_options if isinstance(raw_options, dict) else {}
+        return {
+            "duration_tolerance_ratio": float(options.get("duration_tolerance_ratio", 0.35)),
+            "energy_threshold_lufs": float(options.get("energy_threshold_lufs", -45)),
+            "long_quiet_run_seconds": int(options.get("long_quiet_run_seconds", 2)),
+            "quiet_intro_seconds": float(options.get("quiet_intro_seconds", 1.0)),
+            "include_transcript": bool(options.get("include_transcript", False)),
+            "transcriber_model_size": options.get("transcriber_model_size", "base"),
+            "language": options.get("language"),
+        }
+
+    def _analyze_variant(self, segment: dict[str, Any], variant: dict[str, Any], options: dict[str, Any]) -> dict[str, Any]:
+        audio_path = Path(variant.get("audio", "")).expanduser() if variant.get("audio") else None
+        findings: list[dict[str, str]] = []
+        profile: dict[str, Any] = {
+            "id": variant.get("id"),
+            "source_type": variant.get("source_type", "generated"),
+            "selected_provider": variant.get("selected_provider") or variant.get("preferred_provider"),
+            "audio": str(audio_path) if audio_path else None,
+            "text": variant.get("text") or segment.get("text", ""),
+            "findings": findings,
+            "suggested_review": False,
+        }
+
+        if variant.get("success") is False:
+            findings.append({"severity": "error", "kind": "generation_failed", "message": variant.get("error", "Generation failed.")})
+        if not audio_path or not audio_path.exists():
+            findings.append({"severity": "error", "kind": "audio_missing", "message": "Audio file is missing; cannot analyze this candidate."})
+            profile["suggested_review"] = True
+            return profile
+
+        probe = self._run_audio_probe(audio_path)
+        profile["probe"] = probe
+        duration = probe.get("duration_seconds") or variant.get("duration_seconds")
+        expected_duration = self._expected_duration_seconds(segment, variant)
+        profile["duration_check"] = self._duration_check(duration, expected_duration, options)
+        if profile["duration_check"].get("outside_tolerance"):
+            findings.append(
+                {
+                    "severity": "warning",
+                    "kind": "duration_outlier",
+                    "message": profile["duration_check"]["message"],
+                }
+            )
+
+        energy = self._run_audio_energy(audio_path, options)
+        profile["energy"] = energy
+        for issue in self._energy_findings(energy, options):
+            findings.append(issue)
+
+        timing_hints = self._extract_variant_timing_hints(variant)
+        profile["timing_hints"] = timing_hints
+
+        if options.get("include_transcript"):
+            transcript = self._run_transcriber(audio_path, options)
+            profile["transcript"] = transcript
+            for issue in self._transcript_findings(profile["text"], transcript):
+                findings.append(issue)
+        else:
+            profile["transcript"] = {"status": "skipped", "reason": "Set analysis_options.include_transcript=true to run ASR checks."}
+
+        profile["suggested_review"] = any(item.get("severity") in {"error", "warning"} for item in findings)
+        return profile
+
+    def _run_audio_probe(self, audio_path: Path) -> dict[str, Any]:
+        try:
+            from tools.analysis.audio_probe import AudioProbe
+
+            result = AudioProbe().execute({"input_path": str(audio_path)})
+            if result.success:
+                return {"status": "ok", **(result.data or {})}
+            return {"status": "failed", "error": result.error}
+        except Exception as exc:
+            return {"status": "failed", "error": str(exc)}
+
+    def _run_audio_energy(self, audio_path: Path, options: dict[str, Any]) -> dict[str, Any]:
+        try:
+            from tools.analysis.audio_energy import AudioEnergy
+
+            result = AudioEnergy().execute(
+                {
+                    "input_path": str(audio_path),
+                    "energy_threshold_lufs": options["energy_threshold_lufs"],
+                }
+            )
+            if result.success:
+                return {"status": "ok", **(result.data or {})}
+            return {"status": "failed", "error": result.error}
+        except Exception as exc:
+            return {"status": "failed", "error": str(exc)}
+
+    def _run_transcriber(self, audio_path: Path, options: dict[str, Any]) -> dict[str, Any]:
+        try:
+            from tools.analysis.transcriber import Transcriber
+
+            result = Transcriber().execute(
+                {
+                    "input_path": str(audio_path),
+                    "model_size": options["transcriber_model_size"],
+                    "language": options.get("language"),
+                    "diarize": False,
+                    "output_dir": str(audio_path.parent),
+                }
+            )
+            if result.success:
+                data = result.data or {}
+                return {
+                    "status": "ok",
+                    "language": data.get("language"),
+                    "segments": data.get("segments", []),
+                    "word_timestamps_count": len(data.get("word_timestamps", [])),
+                    "text": " ".join(item.get("text", "") for item in data.get("segments", [])).strip(),
+                }
+            return {"status": "failed", "error": result.error}
+        except Exception as exc:
+            return {"status": "failed", "error": str(exc)}
+
+    @classmethod
+    def _expected_duration_seconds(cls, segment: dict[str, Any], variant: dict[str, Any]) -> float:
+        explicit = (
+            variant.get("expected_duration_seconds")
+            or segment.get("expected_duration_seconds")
+            or (
+                float(segment["end_seconds"]) - float(segment["start_seconds"])
+                if segment.get("start_seconds") is not None and segment.get("end_seconds") is not None
+                else None
+            )
+        )
+        if explicit:
+            return round(float(explicit), 2)
+        return cls._estimate_speech_duration(variant.get("text") or segment.get("text", ""))
+
+    @staticmethod
+    def _estimate_speech_duration(text: str) -> float:
+        cjk_chars = len(re.findall(r"[\u3400-\u9fff]", text))
+        latin_words = len(re.findall(r"[A-Za-z0-9]+(?:['-][A-Za-z0-9]+)?", text))
+        punctuation_pauses = len(re.findall(r"[，。！？,.!?;；:：]", text)) * 0.18
+        duration = (cjk_chars / 4.6) + (latin_words / 2.7) + punctuation_pauses
+        return round(max(duration, 0.8), 2)
+
+    @staticmethod
+    def _duration_check(duration: Any, expected_duration: float, options: dict[str, Any]) -> dict[str, Any]:
+        if not isinstance(duration, (int, float)) or duration <= 0:
+            return {
+                "status": "unknown",
+                "expected_duration_seconds": expected_duration,
+                "message": "Audio duration is unavailable.",
+            }
+        tolerance = float(options["duration_tolerance_ratio"])
+        ratio = abs(float(duration) - expected_duration) / max(expected_duration, 0.1)
+        outside = ratio > tolerance
+        return {
+            "status": "outside_tolerance" if outside else "ok",
+            "duration_seconds": round(float(duration), 2),
+            "expected_duration_seconds": expected_duration,
+            "difference_ratio": round(ratio, 3),
+            "outside_tolerance": outside,
+            "message": (
+                f"Duration {round(float(duration), 2)}s differs from estimated {expected_duration}s by {round(ratio * 100)}%."
+                if outside
+                else "Duration is within the heuristic tolerance."
+            ),
+        }
+
+    @staticmethod
+    def _energy_findings(energy: dict[str, Any], options: dict[str, Any]) -> list[dict[str, str]]:
+        if energy.get("status") != "ok":
+            return [{"severity": "info", "kind": "energy_unavailable", "message": energy.get("error", "Energy analysis unavailable.")}]
+        analysis = energy.get("analysis", {})
+        profile = energy.get("energy_profile", [])
+        findings = []
+        quiet_intro = float(analysis.get("quiet_intro_seconds", 0) or 0)
+        if quiet_intro > float(options["quiet_intro_seconds"]):
+            findings.append(
+                {
+                    "severity": "warning",
+                    "kind": "quiet_intro",
+                    "message": f"Detected {quiet_intro}s before the first active speech/music energy point.",
+                }
+            )
+        longest_quiet_run = TTSSegmentLab._longest_inactive_run(profile)
+        if longest_quiet_run >= int(options["long_quiet_run_seconds"]):
+            findings.append(
+                {
+                    "severity": "warning",
+                    "kind": "long_low_energy_run",
+                    "message": f"Detected a low-energy run of about {longest_quiet_run}s; review for awkward pause or dropped delivery.",
+                }
+            )
+        return findings
+
+    @staticmethod
+    def _longest_inactive_run(energy_profile: list[dict[str, Any]]) -> int:
+        longest = 0
+        current = 0
+        for point in energy_profile:
+            if point.get("active"):
+                current = 0
+            else:
+                current += 1
+                longest = max(longest, current)
+        return longest
+
+    def _extract_variant_timing_hints(self, variant: dict[str, Any]) -> dict[str, Any]:
+        payloads = []
+        for key in ("provider_metadata_path", "metadata"):
+            if variant.get(key):
+                path = Path(variant[key]).expanduser()
+                if path.exists():
+                    try:
+                        payloads.append(json.loads(path.read_text(encoding="utf-8")))
+                    except Exception:
+                        pass
+        found = []
+        for payload in payloads:
+            found.extend(self._find_timing_like_values(payload))
+        return {
+            "status": "found" if found else "not_found",
+            "source_count": len(payloads),
+            "hint_count": len(found),
+            "hints": found[:5],
+        }
+
+    def _find_timing_like_values(self, payload: Any, path: str = "$") -> list[dict[str, Any]]:
+        found = []
+        if isinstance(payload, dict):
+            for key, value in payload.items():
+                next_path = f"{path}.{key}"
+                key_lower = str(key).lower()
+                if any(token in key_lower for token in ("timestamp", "timestamps", "word", "words", "phoneme", "alignment")):
+                    if isinstance(value, (list, dict)):
+                        found.append({"path": next_path, "type": type(value).__name__})
+                found.extend(self._find_timing_like_values(value, next_path))
+        elif isinstance(payload, list):
+            for index, item in enumerate(payload[:20]):
+                found.extend(self._find_timing_like_values(item, f"{path}[{index}]"))
+        return found
+
+    @staticmethod
+    def _transcript_findings(expected_text: str, transcript: dict[str, Any]) -> list[dict[str, str]]:
+        if transcript.get("status") != "ok":
+            return [{"severity": "info", "kind": "transcript_unavailable", "message": transcript.get("error", "Transcript check unavailable.")}]
+        expected_norm = TTSSegmentLab._normalize_text_for_compare(expected_text)
+        actual_norm = TTSSegmentLab._normalize_text_for_compare(transcript.get("text", ""))
+        if not actual_norm:
+            return [{"severity": "warning", "kind": "empty_transcript", "message": "ASR returned no transcript text."}]
+        if expected_norm and expected_norm not in actual_norm and actual_norm not in expected_norm:
+            return [{"severity": "warning", "kind": "transcript_mismatch", "message": "ASR transcript differs from the expected script; review for misread or pronunciation issue."}]
+        return []
+
+    @staticmethod
+    def _normalize_text_for_compare(text: str) -> str:
+        return re.sub(r"\s+", "", re.sub(r"[^\w\u3400-\u9fff]+", "", text.lower()))
+
+    @staticmethod
+    def _analysis_summary(profile: dict[str, Any]) -> dict[str, Any]:
+        variants = 0
+        findings = 0
+        warnings = 0
+        errors = 0
+        for segment in profile.get("segments", []):
+            for variant in segment.get("variants", []):
+                variants += 1
+                for item in variant.get("findings", []):
+                    findings += 1
+                    warnings += 1 if item.get("severity") == "warning" else 0
+                    errors += 1 if item.get("severity") == "error" else 0
+        return {
+            "segments": len(profile.get("segments", [])),
+            "variants": variants,
+            "findings": findings,
+            "warnings": warnings,
+            "errors": errors,
+            "review_queue_count": len(profile.get("review_queue", [])),
+        }
+
+    @staticmethod
+    def _analysis_markdown(profile: dict[str, Any]) -> str:
+        summary = profile.get("summary", {})
+        lines = [
+            f"# TTS Segment Lab Analysis: {profile.get('run_id', '')}",
+            "",
+            f"- Project: `{profile.get('project', '')}`",
+            f"- Created: `{profile.get('created_at', '')}`",
+            f"- Source results: `{profile.get('source_results', '')}`",
+            "",
+            "## Summary",
+            "",
+            f"- Segments: `{summary.get('segments', 0)}`",
+            f"- Variants: `{summary.get('variants', 0)}`",
+            f"- Findings: `{summary.get('findings', 0)}` (`{summary.get('warnings', 0)}` warnings, `{summary.get('errors', 0)}` errors)",
+            f"- Suggested human review: `{summary.get('review_queue_count', 0)}`",
+            "",
+            "These checks are heuristics. Use them to prioritize listening; do not treat them as final creative approval.",
+            "",
+        ]
+        if profile.get("review_queue"):
+            lines.extend(["## Suggested Review Queue", ""])
+            for item in profile["review_queue"]:
+                reason = "; ".join(item.get("reasons", []))
+                lines.append(f"- `{item['segment_id']}` / `{item['variant_id']}`: {reason}")
+            lines.append("")
+        for segment in profile.get("segments", []):
+            lines.extend([f"## {segment.get('label') or segment['id']}", "", f"- Text: {segment.get('text', '')}", ""])
+            lines.extend(["| Variant | Duration Check | Energy | Timing Hints | Findings |", "|---|---|---|---|---|"])
+            for variant in segment.get("variants", []):
+                duration = variant.get("duration_check", {})
+                energy = variant.get("energy", {})
+                timing = variant.get("timing_hints", {})
+                findings = "<br>".join(item.get("message", "") for item in variant.get("findings", [])) or "-"
+                lines.append(
+                    f"| `{variant.get('id')}` | {duration.get('status', '-')} | "
+                    f"{energy.get('status', '-')} | {timing.get('status', '-')} ({timing.get('hint_count', 0)}) | {findings} |"
+                )
+            lines.append("")
+        return "\n".join(lines)
 
     def _load_manifest(self, inputs: dict[str, Any]) -> dict[str, Any]:
         if inputs.get("manifest") is not None:

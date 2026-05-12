@@ -240,8 +240,13 @@ declaring a render complete:
    contrast ratios, verifies `window.__timelines` registration and
    `class="clip"` on timed elements. MUST pass before render (contrast can
    be deferred with `--no-contrast` during iteration, but not for final).
-3. **`npx hyperframes render --quality standard`** — produces the MP4.
-4. **Post-render final review** — probe with ffprobe, sample frames,
+3. **`npx hyperframes inspect --json`** — samples the timeline for text
+   overflow, container clipping, and layout problems. Use this before final
+   render for text-heavy or UI-heavy HyperFrames scenes.
+4. **`npx hyperframes snapshot`** — captures key PNG frames for human review
+   and visual QA. Use explicit timestamps when the script has important beats.
+5. **`npx hyperframes render --quality standard`** — produces the MP4.
+6. **Post-render final review** — probe with ffprobe, sample frames,
    transcribe audio, compare to script. Same contract as the Remotion path.
    See `final_review.schema.json`.
 
@@ -249,6 +254,11 @@ If lint or validate fails, do **not** render. Fix the composition and re-run.
 Silent render from a failing composition is a contract violation — the whole
 point of HyperFrames is that validate catches issues that FFmpeg or Remotion
 cannot.
+
+If `inspect` reports layout issues, treat them as QA blockers for final
+delivery unless the issue is an intentional off-screen animation state. If
+`snapshot` frames show unexpected blank, cropped, or overlapping states, fix
+the composition before rendering the final delivery.
 
 ---
 

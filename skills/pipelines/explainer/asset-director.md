@@ -70,10 +70,15 @@ Before generating anything:
 
 Before batch-generating assets, produce one sample of each expensive asset type and present them to the user for approval:
 
-1. **TTS audition**: If the script contains TTS audition cues or voice-sensitive sections, run `tts_segment_lab` first. Compare provider/voice/parameter variants, write `review.md`, and record approved choices in `selection.json`.
+1. **TTS audition**: If the project is generated-narration-led and the script contains TTS audition cues or voice-sensitive sections, run `tts_segment_lab` first. Compare provider/voice/parameter variants, write `review.md`, and record approved choices in `selection.json`.
 2. **TTS sample**: If no audition is needed, generate narration for the first script section only. Play it for the user. Confirm voice, pace, and tone are acceptable before generating the rest.
 3. **Image sample**: Generate one image for the most representative scene. Show it to the user. Confirm the style, quality, and prompt approach before batch-generating all images.
 4. **Music sample** (if using `music_gen`): Generate one short clip. Confirm mood and energy before committing.
+
+Do not run `tts_segment_lab` blindly. Skip it when the voice is source footage,
+human-recorded, already approved, or when the video is mostly music/SFX-led.
+Use it only when a user-visible choice between TTS providers, voices, or
+delivery parameters is still useful.
 
 If the user rejects a sample:
 - Adjust the parameters (voice, prompt style, provider) and regenerate the sample.

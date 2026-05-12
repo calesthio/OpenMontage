@@ -57,13 +57,16 @@ class TTSSegmentLab(BaseTool):
         "timestamps_when_provider_supports_them": True,
     }
     best_for = [
-        "auditioning narration before final asset generation",
+        "auditioning generated narration before final asset generation",
+        "generated explainers, product demos, and animated UI walkthroughs",
         "comparing TTS providers and voices for sensitive script lines",
         "recording chosen voiceover variants for production reuse",
     ]
     not_good_for = [
         "objective speech-quality benchmarking",
         "large-scale MOS listening studies",
+        "source-footage voice, human-recorded narration, or already-approved voice tracks",
+        "music-led or SFX-led videos where TTS does not carry the story",
         "subtitle generation after narration is locked",
     ]
 

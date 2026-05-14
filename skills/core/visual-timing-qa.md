@@ -112,9 +112,25 @@ The tool writes:
 - `review.md`: human-readable cue checklist with before/at/after frames;
 - per-cue frame images and contact sheets.
 
-First version is intentionally human-in-the-loop. Do not treat contact sheets as
-automatic approval. A reviewer still decides whether the visual state is correct,
-early, late, crowded, or inconsistent with the line.
+`review` also runs a conservative local initial review. It does not perform
+semantic video understanding, but it flags obvious risks that should not be
+left for the user to discover from raw screenshots:
+
+- frame extraction failures;
+- little or no visible change around a reveal/highlight cue;
+- visual change concentrated before the target frame, suggesting an early
+  reveal;
+- visual change concentrated after the target frame, suggesting a late reveal;
+- subtitle/caption cues whose lower-frame band appears visually empty.
+
+Initial review writes `cue.initial_review` and adds an "Initial auto-review
+queue" to `review.md`. Treat `NEEDS_REVIEW` as a blocker for agent handoff until
+the contact sheet has been inspected and either fixed or explicitly accepted.
+
+This is still human-in-the-loop. Do not treat a local `PASS` as semantic
+approval; it only means the conservative heuristics did not find an obvious
+timing/layout risk. A reviewer still decides whether the visual state is
+correct, crowded, or inconsistent with the line.
 
 ## Annotation
 

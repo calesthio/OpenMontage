@@ -46,6 +46,7 @@ class VisualTimingQA(BaseTool):
     capabilities = [
         "post_render_visual_timing_review",
         "rule_based_cue_suggestion",
+        "rule_based_initial_review",
         "cue_window_frame_extraction",
         "contact_sheet_generation",
         "review_markdown_generation",
@@ -58,6 +59,7 @@ class VisualTimingQA(BaseTool):
         "contact_sheets": True,
         "reviewer_annotations": True,
         "rule_based_suggest_cues": True,
+        "rule_based_initial_review": True,
         "automated_semantic_judgment": False,
     }
     best_for = [
@@ -96,6 +98,11 @@ class VisualTimingQA(BaseTool):
             },
             "max_cues": {"type": "integer", "default": 12},
             "per_category_limit": {"type": "integer", "default": 3},
+            "auto_review": {
+                "type": "boolean",
+                "default": True,
+                "description": "Run conservative rule-based initial review on extracted cue frames.",
+            },
         },
         "anyOf": [
             {"required": ["manifest_path"]},
@@ -219,6 +226,7 @@ class VisualTimingQA(BaseTool):
 
         duration = self._get_duration(video_path) if extract else manifest.get("duration_seconds")
         cues = self._build_cues(manifest, duration=duration)
+        auto_review = bool(inputs.get("auto_review", manifest.get("auto_review", True)))
 
         results: dict[str, Any] = {
             "version": self.version,
@@ -250,6 +258,8 @@ class VisualTimingQA(BaseTool):
                 artifacts.extend(frame["path"] for frame in cue_result["frames"] if frame.get("path"))
             else:
                 cue_result["planned"] = True
+            if auto_review:
+                cue_result["initial_review"] = self._initial_review(cue_result, extract=extract)
             results["cues"].append(cue_result)
 
         results_path = output_dir / "results.json"
@@ -630,6 +640,174 @@ class VisualTimingQA(BaseTool):
         except Exception:
             return None
 
+    def _initial_review(self, cue: dict[str, Any], *, extract: bool) -> dict[str, Any]:
+        """Conservative local first pass for obvious cue review risks.
+
+        This is intentionally not semantic video understanding. It only flags
+        conditions that should stop the agent from treating contact sheets as
+        reviewed: missing frames, no visible change around a reveal cue,
+        changes that appear before/after the target timestamp, and subtitle-like
+        cues whose lower frame band looks visually empty.
+        """
+        if not extract:
+            return {
+                "decision": "UNREVIEWED",
+                "confidence": "low",
+                "issue_category": "dry_run",
+                "notes": "Dry run planned cue windows but did not extract frames.",
+                "requires_human_review": True,
+            }
+
+        frames = cue.get("frames", [])
+        issues: list[str] = []
+        metrics: dict[str, Any] = {}
+
+        missing = [
+            frame for frame in frames
+            if frame.get("error") or not frame.get("path") or not Path(frame["path"]).exists()
+        ]
+        if missing:
+            issues.append(f"{len(missing)} cue frame(s) were not extracted successfully.")
+
+        diffs = self._frame_diffs(frames)
+        if diffs:
+            metrics["frame_diffs"] = diffs
+        text = " ".join(
+            str(cue.get(key, ""))
+            for key in ("narration", "expected_state", "risk", "label")
+        ).lower()
+        reveal_sensitive = any(
+            token in text
+            for token in (
+                "highlight",
+                "highlighted",
+                "reveal",
+                "visible",
+                "appear",
+                "node",
+                "flow",
+                "点亮",
+                "亮起",
+                "出现",
+                "展示",
+                "流程",
+                "节点",
+                "字幕",
+                "caption",
+                "subtitle",
+            )
+        )
+        if reveal_sensitive and len(diffs) >= 2:
+            before_to_target = diffs[0]["mean_abs_diff"]
+            target_to_after = diffs[1]["mean_abs_diff"]
+            quiet_threshold = 2.0
+            active_threshold = 7.0
+            if max(before_to_target, target_to_after) < quiet_threshold:
+                issues.append(
+                    "Little visible change was detected across the cue window; verify the expected reveal/state is actually present."
+                )
+            elif before_to_target >= active_threshold and target_to_after < quiet_threshold:
+                issues.append(
+                    "Most visible change happens before the target frame; the reveal may be early."
+                )
+            elif before_to_target < quiet_threshold and target_to_after >= active_threshold:
+                issues.append(
+                    "Most visible change happens after the target frame; the reveal may be late."
+                )
+
+        subtitle_sensitive = any(
+            token in text for token in ("字幕", "caption", "captions", "subtitle", "subtitles")
+        )
+        if subtitle_sensitive:
+            subtitle_metrics = self._subtitle_band_metrics(frames)
+            if subtitle_metrics:
+                metrics["subtitle_band"] = subtitle_metrics
+                if subtitle_metrics.get("max_edge_density", 0.0) < 0.015:
+                    issues.append(
+                        "Subtitle/caption cue has very low lower-frame edge density; subtitles may be missing or too faint."
+                    )
+
+        if issues:
+            return {
+                "decision": "NEEDS_REVIEW",
+                "confidence": "medium" if len(issues) > 1 else "low",
+                "issue_category": "auto_initial_review",
+                "notes": " ".join(issues),
+                "fix_target": "Inspect the contact sheet and adjust cue timing, animation timing, or subtitle rendering before delivery.",
+                "requires_human_review": True,
+                "metrics": metrics,
+            }
+        return {
+            "decision": "PASS",
+            "confidence": "low",
+            "issue_category": "auto_initial_review",
+            "notes": "No obvious local heuristic issue found. Human review is still required for semantic correctness.",
+            "requires_human_review": True,
+            "metrics": metrics,
+        }
+
+    @staticmethod
+    def _frame_diffs(frames: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        try:
+            from PIL import Image, ImageChops, ImageStat
+        except Exception:
+            return []
+
+        images = []
+        for frame in frames:
+            path = frame.get("path")
+            if not path or not Path(path).exists() or frame.get("error"):
+                continue
+            try:
+                image = Image.open(path).convert("L").resize((96, 54))
+                images.append((frame, image))
+            except Exception:
+                continue
+        diffs = []
+        for index in range(1, len(images)):
+            prev_frame, prev_image = images[index - 1]
+            curr_frame, curr_image = images[index]
+            diff = ImageChops.difference(prev_image, curr_image)
+            mean_abs = ImageStat.Stat(diff).mean[0]
+            diffs.append(
+                {
+                    "from_offset_seconds": prev_frame.get("offset_seconds"),
+                    "to_offset_seconds": curr_frame.get("offset_seconds"),
+                    "mean_abs_diff": round(float(mean_abs), 3),
+                }
+            )
+        return diffs
+
+    @staticmethod
+    def _subtitle_band_metrics(frames: list[dict[str, Any]]) -> dict[str, Any]:
+        try:
+            from PIL import Image, ImageFilter, ImageStat
+        except Exception:
+            return {}
+
+        densities = []
+        for frame in frames:
+            path = frame.get("path")
+            if not path or not Path(path).exists() or frame.get("error"):
+                continue
+            try:
+                image = Image.open(path).convert("L")
+                width, height = image.size
+                band_top = int(height * 0.72)
+                band = image.crop((0, band_top, width, height))
+                edges = band.filter(ImageFilter.FIND_EDGES)
+                stat = ImageStat.Stat(edges)
+                edge_density = float(stat.mean[0]) / 255.0
+                densities.append(round(edge_density, 4))
+            except Exception:
+                continue
+        if not densities:
+            return {}
+        return {
+            "edge_density_by_frame": densities,
+            "max_edge_density": max(densities),
+        }
+
     def _get_duration(self, video_path: Path) -> float:
         cmd = [
             "ffprobe",
@@ -674,6 +852,19 @@ class VisualTimingQA(BaseTool):
             )
             if cue.get("risk"):
                 lines.append(f"- Risk: {cue['risk']}")
+            if cue.get("initial_review"):
+                initial = cue["initial_review"]
+                lines.extend(
+                    [
+                        "- Initial auto review:",
+                        f"  - Decision: `{initial.get('decision', '')}`",
+                        f"  - Confidence: `{initial.get('confidence', '')}`",
+                        f"  - Category: `{initial.get('issue_category', '')}`",
+                        f"  - Notes: {initial.get('notes', '')}",
+                    ]
+                )
+                if initial.get("fix_target"):
+                    lines.append(f"  - Fix target: {initial['fix_target']}")
             if cue.get("review_questions"):
                 lines.append("- Review questions:")
                 for question in cue["review_questions"]:
@@ -788,27 +979,46 @@ class VisualTimingQA(BaseTool):
     def _summary_lines(results: dict[str, Any]) -> list[str]:
         cues = results.get("cues", [])
         counts = {"PASS": 0, "NEEDS_REVIEW": 0, "WRONG_EXPECTATION": 0, "UNREVIEWED": 0}
+        initial_counts = {"PASS": 0, "NEEDS_REVIEW": 0, "UNREVIEWED": 0}
         user_review = []
+        initial_review_queue = []
         for cue in cues:
             annotation = cue.get("reviewer_annotation") or {}
             decision = annotation.get("decision")
+            initial = cue.get("initial_review") or {}
+            initial_decision = initial.get("decision")
+            if initial_decision in initial_counts:
+                initial_counts[initial_decision] += 1
             if decision in counts:
                 counts[decision] += 1
             else:
                 counts["UNREVIEWED"] += 1
             if annotation.get("requires_user_review") or decision in {"NEEDS_REVIEW", "WRONG_EXPECTATION"}:
                 user_review.append(cue)
+            if initial_decision == "NEEDS_REVIEW":
+                initial_review_queue.append(cue)
 
         lines = [
             "## Summary",
             "",
             f"- Total cues: `{len(cues)}`",
+            f"- Initial auto PASS: `{initial_counts['PASS']}`",
+            f"- Initial auto NEEDS_REVIEW: `{initial_counts['NEEDS_REVIEW']}`",
+            f"- Initial auto UNREVIEWED: `{initial_counts['UNREVIEWED']}`",
             f"- PASS: `{counts['PASS']}`",
             f"- NEEDS_REVIEW: `{counts['NEEDS_REVIEW']}`",
             f"- WRONG_EXPECTATION: `{counts['WRONG_EXPECTATION']}`",
             f"- UNREVIEWED: `{counts['UNREVIEWED']}`",
             "",
         ]
+        if initial_review_queue:
+            lines.append("Initial auto-review queue:")
+            for cue in initial_review_queue:
+                initial = cue.get("initial_review") or {}
+                lines.append(
+                    f"- `{cue['id']}` - {initial.get('notes', '')}"
+                )
+            lines.append("")
         if user_review:
             lines.append("Reviewer queue:")
             for cue in user_review:

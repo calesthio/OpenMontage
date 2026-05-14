@@ -2,6 +2,8 @@ import json
 import subprocess
 from pathlib import Path
 
+from PIL import Image, ImageDraw
+
 from tools.analysis.visual_timing_qa import VisualTimingQA
 
 
@@ -43,9 +45,11 @@ def test_dry_run_writes_review_without_extracting_frames(tmp_path):
     payload = json.loads(results_path.read_text(encoding="utf-8"))
     cue = payload["cues"][0]
     assert cue["planned"] is True
+    assert cue["initial_review"]["decision"] == "UNREVIEWED"
     assert [point["timestamp_seconds"] for point in cue["frame_points"]] == [3.5, 4.0, 4.5]
     review = review_path.read_text(encoding="utf-8")
     assert "Feedback returns to the user." in review
+    assert "Initial auto UNREVIEWED: `1`" in review
     assert "Reviewer decision:" in review
     assert "PASS - visual timing and state match the cue" in review
     assert "WRONG_EXPECTATION" in review
@@ -74,6 +78,7 @@ def test_review_extracts_cue_frames_and_contact_sheet(monkeypatch, tmp_path):
     cue = result.data["cues"][0]
     assert len(cue["frames"]) == 3
     assert cue["contact_sheet"]
+    assert cue["initial_review"]["decision"] in {"PASS", "NEEDS_REVIEW"}
     assert Path(cue["contact_sheet"]).exists()
     assert any(cmd[0] == "ffprobe" for cmd in commands)
     assert sum(1 for cmd in commands if cmd[0] == "ffmpeg") == 4
@@ -191,3 +196,106 @@ def test_suggest_cues_from_captions(tmp_path):
     assert any(cue["timestamp_seconds"] == 2.0 for cue in cues)
     assert all(cue.get("category") for cue in cues)
     assert "Manifest Draft" in Path(result.data["suggested_review_path"]).read_text(encoding="utf-8")
+
+
+def test_initial_review_flags_static_reveal_window(monkeypatch, tmp_path):
+    manifest = base_manifest(tmp_path)
+
+    def fake_run_command(self, cmd, *, timeout=None, cwd=None):
+        if cmd[0] == "ffprobe":
+            return subprocess.CompletedProcess(cmd, 0, stdout='{"format":{"duration":"12.0"}}', stderr="")
+        output_path = Path(cmd[-1])
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        image = Image.new("RGB", (320, 180), "navy")
+        image.save(output_path)
+        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(VisualTimingQA, "run_command", fake_run_command)
+
+    result = VisualTimingQA().execute({"operation": "review", "manifest": manifest})
+
+    assert result.success
+    initial = result.data["cues"][0]["initial_review"]
+    assert initial["decision"] == "NEEDS_REVIEW"
+    assert "Little visible change" in initial["notes"]
+    review = Path(result.data["review_path"]).read_text(encoding="utf-8")
+    assert "Initial auto NEEDS_REVIEW: `1`" in review
+    assert "Initial auto-review queue:" in review
+
+
+def test_initial_review_flags_late_reveal(monkeypatch, tmp_path):
+    manifest = base_manifest(tmp_path)
+    calls = {"frame": 0}
+
+    def fake_run_command(self, cmd, *, timeout=None, cwd=None):
+        if cmd[0] == "ffprobe":
+            return subprocess.CompletedProcess(cmd, 0, stdout='{"format":{"duration":"12.0"}}', stderr="")
+        output_path = Path(cmd[-1])
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        if output_path.name.endswith("_contact_sheet.jpg"):
+            image = Image.new("RGB", (960, 180), "white")
+        else:
+            calls["frame"] += 1
+            color = "black" if calls["frame"] < 3 else "white"
+            image = Image.new("RGB", (320, 180), color)
+        image.save(output_path)
+        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(VisualTimingQA, "run_command", fake_run_command)
+
+    result = VisualTimingQA().execute({"operation": "review", "manifest": manifest})
+
+    assert result.success
+    initial = result.data["cues"][0]["initial_review"]
+    assert initial["decision"] == "NEEDS_REVIEW"
+    assert "after the target frame" in initial["notes"]
+
+
+def test_initial_review_flags_empty_subtitle_band(monkeypatch, tmp_path):
+    manifest = base_manifest(tmp_path)
+    manifest["cues"][0]["expected_state"] = "字幕 should be visible at the bottom."
+    manifest["cues"][0]["narration"] = "字幕出现。"
+
+    def fake_run_command(self, cmd, *, timeout=None, cwd=None):
+        if cmd[0] == "ffprobe":
+            return subprocess.CompletedProcess(cmd, 0, stdout='{"format":{"duration":"12.0"}}', stderr="")
+        output_path = Path(cmd[-1])
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        image = Image.new("RGB", (320, 180), "black")
+        image.save(output_path)
+        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(VisualTimingQA, "run_command", fake_run_command)
+
+    result = VisualTimingQA().execute({"operation": "review", "manifest": manifest})
+
+    assert result.success
+    initial = result.data["cues"][0]["initial_review"]
+    assert initial["decision"] == "NEEDS_REVIEW"
+    assert "subtitles may be missing" in initial["notes"]
+
+
+def test_initial_review_passes_when_bottom_caption_has_edges(monkeypatch, tmp_path):
+    manifest = base_manifest(tmp_path)
+    manifest["cues"][0]["expected_state"] = "字幕 should be visible at the bottom."
+    manifest["cues"][0]["narration"] = "字幕出现。"
+
+    def fake_run_command(self, cmd, *, timeout=None, cwd=None):
+        if cmd[0] == "ffprobe":
+            return subprocess.CompletedProcess(cmd, 0, stdout='{"format":{"duration":"12.0"}}', stderr="")
+        output_path = Path(cmd[-1])
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        image = Image.new("RGB", (320, 180), "black")
+        draw = ImageDraw.Draw(image)
+        draw.rectangle((55, 135, 265, 170), fill="white")
+        draw.text((70, 145), "caption text", fill="black")
+        image.save(output_path)
+        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(VisualTimingQA, "run_command", fake_run_command)
+
+    result = VisualTimingQA().execute({"operation": "review", "manifest": manifest})
+
+    assert result.success
+    initial = result.data["cues"][0]["initial_review"]
+    assert "Subtitles may be missing" not in initial["notes"]

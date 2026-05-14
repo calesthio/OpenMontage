@@ -11,6 +11,8 @@ This is where a great video reaches its audience. Without proper metadata and pa
 | Layer | Resource | Purpose |
 |-------|----------|---------|
 | Schema | `schemas/artifacts/publish_log.schema.json` | Artifact validation |
+| Optional schema | `schemas/artifacts/final_package_manifest.schema.json` | Final package file list, cover, checksum, and verification metadata |
+| Optional tool | `publish_packager` | Copy final assets, optionally replace the first video frame with the cover, and write a final package manifest |
 | Prior artifacts | `state.artifacts["compose"]["render_report"]`, `state.artifacts["proposal"]["proposal_packet"]`, `state.artifacts["research"]["research_brief"]` | Video file and original proposal |
 | Playbook | Active style playbook | Visual style for thumbnail |
 
@@ -47,7 +49,23 @@ Collect everything needed for metadata:
 - 3-5 relevant hashtags
 - Mix trending and niche
 
-### Step 3: Generate Thumbnail Concept
+### Step 3: Resolve Cover Policy, Direction, and Thumbnail Concept
+
+Read `script.cover_policy` first:
+
+- if `required` is `false`, do not create a final cover unless the target
+  platform requires one;
+- if `required` is `true`, use `cover_direction` as the creative brief for the
+  poster/thumbnail;
+- if `user_decision` is `review_final_cover` or `approve_before_publish`,
+  present the final cover before final delivery/publish;
+- if `first_frame_mode` is `replace_first_frame`, pass
+  `cover_mode: "replace_first_frame"` to `publish_packager` after the cover is
+  selected.
+
+Do not treat `cover_direction` as a finished asset: review the completed video
+first, then choose whether the final cover should be generated from the
+direction, derived from a strong frame, or supplied by the user.
 
 Describe a thumbnail that:
 1. Uses the playbook's visual style
@@ -100,6 +118,16 @@ exports/
     thumbnails/
       concept.json          # Thumbnail concept (or generated image)
 ```
+
+For final deliverables, use `publish_packager` when available instead of
+manually copying files. It should package the approved render, cover/poster
+image, subtitles, metadata, and review sidecars into a final directory and
+write `final_package_manifest.json`.
+
+When `cover_policy.first_frame_mode` is `replace_first_frame`, prefer
+`cover_mode: "replace_first_frame"` rather than prepending extra video time.
+This swaps the first visible frame while keeping the original audio timing and
+avoids accidental narration drift.
 
 ### Step 6: Build Publish Log
 

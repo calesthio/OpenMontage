@@ -254,7 +254,9 @@ stages:
       - proposal_packet
     produces:
       - publish_log
-    tools_available: []
+      - final_package_manifest
+    tools_available:
+      - publish_packager
     checkpoint_required: true
     human_approval_default: true
     review_focus:
@@ -263,4 +265,5 @@ stages:
       - Export package structured correctly
     success_criteria:
       - Schema-valid publish_log
+      - Final package manifest present when publish_packager is used
       - Export directory contains video, metadata, and thumbnail concept

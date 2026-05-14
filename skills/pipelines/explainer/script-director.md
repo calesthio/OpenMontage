@@ -129,6 +129,67 @@ Write directions that TTS can actually implement. Reference ElevenLabs capabilit
 
 Avoid directions TTS can't do: "smile while speaking", "gesture toward screen", "look at camera."
 
+#### Cover Policy and Direction
+
+Decide whether the video needs a cover/poster frame while writing the script.
+Do not ask the user for every routine project; apply the workflow rules below
+and only escalate when the cover affects brand, external distribution, or a
+page's first impression.
+
+Default to `cover_policy.required: true` when:
+
+- the video will be embedded on a page, list, knowledge base, install page, or
+  product page where it appears static before playback;
+- the video will be shared externally or in a feed;
+- the video is marketing, education, tutorial, product demo, sales enablement,
+  or an executive/meeting opener;
+- the user explicitly mentions cover, poster, first frame, thumbnail, or
+  "what shows before playback";
+- the first rendered frame is likely to be black, blank, loading, transitional,
+  or too weak to represent the video.
+
+Default to `cover_policy.required: false` for internal drafts, technical smoke
+tests, TTS auditions, motion tests, source-footage-only processing, and other
+non-distribution intermediates.
+
+Use `user_decision: "review_final_cover"` when the user should see the final
+cover before delivery. Use `approve_before_publish` for brand-sensitive
+external releases. Use `none` only when skipping the cover or when the workflow
+can safely proceed without user review.
+
+Then add `cover_direction` when a cover is required. It gives production a
+clear first impression to design toward, while the publish stage picks or
+generates the final cover after the completed video can be reviewed.
+
+Add a top-level `cover_direction` object when the video will be distributed in
+a feed, embedded on a landing page, or shown before playback:
+
+```json
+{
+  "cover_policy": {
+    "required": true,
+    "reason": "Video will be embedded on a product page before playback",
+    "user_decision": "review_final_cover",
+    "first_frame_mode": "replace_first_frame",
+    "triggers": ["page_embed", "product_marketing"]
+  },
+  "cover_direction": {
+    "primary_message": "The one idea a viewer should understand before pressing play",
+    "visual_anchor": "The strongest visual motif or frame family to build around",
+    "title": "Short cover title",
+    "subtitle": "Optional supporting line",
+    "style_notes": "High-contrast glass UI, product name visible, no tiny text",
+    "candidate_source": "generated_image",
+    "avoid": ["generic stock imagery", "text-heavy layouts"]
+  }
+}
+```
+
+Treat this as creative intent. The publish stage may use the final render,
+`cover_direction`, and platform needs to create a final poster image or replace
+the video's first frame for static embeds. `candidate_source` is a planning
+hint only; it may point to a rendered frame, generated image, generated video
+frame, source-footage frame, or manual design.
 #### Enhancement Cues
 
 Every section should have at least one enhancement cue. These tell the Scene Planner and Asset Generator what visuals to create.

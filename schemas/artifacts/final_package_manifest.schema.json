@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/final_package_manifest",
+  "title": "Final Package Manifest",
+  "description": "Records the files and verification metadata for a final publish-ready deliverable package.",
+  "type": "object",
+  "required": ["version", "created_at", "package_dir", "video", "files"],
+  "properties": {
+    "version": { "type": "string", "const": "1.0" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "package_dir": { "type": "string" },
+    "project_id": { "type": "string" },
+    "variant_id": { "type": "string" },
+    "channel": { "type": "string" },
+    "cover_direction": {
+      "type": "object",
+      "description": "Copied from the script artifact when available, so the final cover can be traced back to the early creative intent.",
+      "additionalProperties": true
+    },
+    "cover_policy": {
+      "type": "object",
+      "description": "Copied from the script artifact when available, so the final cover/first-frame decision can be audited.",
+      "additionalProperties": true
+    },
+    "video": {
+      "type": "object",
+      "required": ["source_path", "package_path"],
+      "properties": {
+        "source_path": { "type": "string" },
+        "package_path": { "type": "string" },
+        "duration_seconds": { "type": ["number", "null"] },
+        "source_duration_seconds": { "type": ["number", "null"] },
+        "duration_delta_seconds": { "type": ["number", "null"] },
+        "cover_first_frame": { "type": "boolean" },
+        "cover_mode": { "type": "string", "enum": ["none", "replace_first_frame"] },
+        "first_frame_verified": { "type": ["boolean", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "cover": {
+      "type": "object",
+      "properties": {
+        "source_path": { "type": "string" },
+        "package_path": { "type": "string" },
+        "role": { "type": "string", "enum": ["poster", "first_frame", "poster_and_first_frame"] },
+        "source_kind": {
+          "type": "string",
+          "enum": ["rendered_frame", "generated_image", "generated_video_frame", "source_footage_frame", "manual_design", "unknown"]
+        },
+        "generator": {
+          "type": "object",
+          "description": "Optional provenance for generated covers, such as provider/model/prompt id.",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["role", "path", "sha256", "size_bytes"],
+        "properties": {
+          "role": { "type": "string" },
+          "path": { "type": "string" },
+          "sha256": { "type": "string" },
+          "size_bytes": { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "verification": {
+      "type": "object",
+      "properties": {
+        "duration_tolerance_seconds": { "type": "number" },
+        "passed": { "type": "boolean" },
+        "warnings": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -9,6 +9,8 @@ Package the finished demo so the user can publish it quickly and so the metadata
 | Layer | Resource | Purpose |
 |-------|----------|---------|
 | Schema | `schemas/artifacts/publish_log.schema.json` | Artifact validation |
+| Optional schema | `schemas/artifacts/final_package_manifest.schema.json` | Final package file list, cover, checksum, and verification metadata |
+| Optional tool | `publish_packager` | Copy final assets, optionally replace the first video frame with the cover, and write a final package manifest |
 | Prior artifacts | `state.artifacts["compose"]["render_report"]`, `state.artifacts["idea"]["brief"]`, `state.artifacts["script"]["script"]` | Video, brief, and sections |
 | Playbook | Active style playbook | Thumbnail and copy tone |
 
@@ -50,6 +52,17 @@ If a thumbnail concept is needed, it should show:
 
 Store the concept in `publish_log.metadata.thumbnail_concepts`.
 
+Read `script.cover_policy` before creating cover assets. If it is missing,
+infer it from the distribution context: page embeds, product demos, tutorials,
+and external sharing usually need a cover; internal drafts and raw capture
+tests usually do not.
+
+If the policy requires a cover, use `cover_direction` as the thumbnail/poster
+brief and compare it against the finished render. The final cover may be
+generated from that direction, selected from a strong rendered frame, or
+supplied by the user. If `user_decision` requests review, show the final cover
+before final handoff or publish.
+
 ### 4. Package By Platform
 
 Prepare:
@@ -65,6 +78,12 @@ For developer or product-demo content, also package:
 - commands shown,
 - software/version mentions,
 - error terms if it is a troubleshooting demo.
+
+Use `publish_packager` when available to produce a final package directory and
+`final_package_manifest.json`. If `cover_policy.first_frame_mode` is
+`replace_first_frame`, use `cover_mode: "replace_first_frame"` so the cover
+becomes the first visible frame without adding extra time before the original
+audio.
 
 ### 5. Quality Gate
 

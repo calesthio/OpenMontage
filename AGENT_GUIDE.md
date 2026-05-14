@@ -534,6 +534,7 @@ Each stage produces one canonical artifact that becomes the contract for the nex
 | `assets` | `*-director.md` | `asset_manifest` | Provenance, paths, model/tool metadata, scene linkage |
 | `edit` | `*-director.md` | `edit_decisions` | Concrete cuts, overlays, subtitle/music decisions |
 | `compose` | `*-director.md` | `render_report` | Output paths, encoding profile, verification notes |
+| post-compose / publish prep | `publish_packager` | `final_package_manifest` | Final package file list, cover/first-frame handling, input/output refs |
 
 Stage contract rules:
 

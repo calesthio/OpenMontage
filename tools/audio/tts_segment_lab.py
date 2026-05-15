@@ -1263,13 +1263,14 @@ a:hover { text-decoration: underline; }
         audio_src = cls._html_audio_src(audio, html_path) if audio else ""
         note = variant.get("note") or ""
         decision = (variant.get("review") or {}).get("decision", "UNREVIEWED")
+        audio_is_current = bool(audio and Path(audio).expanduser().exists()) and not variant.get("planned")
 
         lines = [
             "<article class=\"card\">",
             f"<h3>{escape(str(variant.get('id') or 'variant'))}</h3>",
             f"<div class=\"meta\">{escape(str(provider))} · {escape(str(voice))} · {escape(duration_text)}</div>",
         ]
-        if audio and Path(audio).expanduser().exists():
+        if audio_is_current:
             lines.extend(
                 [
                     f"<audio controls preload=\"metadata\" src=\"{escape(audio_src, quote=True)}\"></audio>",

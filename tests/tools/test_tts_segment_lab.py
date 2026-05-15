@@ -158,6 +158,21 @@ def test_compare_page_uses_chinese_ui_for_chinese_script(tmp_path):
     assert "尚未生成音频" in compare_html
 
 
+def test_dry_run_compare_page_does_not_link_stale_generated_audio(tmp_path):
+    manifest = base_manifest(tmp_path)
+    output_dir = Path(manifest["output_dir"])
+    output_dir.mkdir(parents=True)
+    stale_audio = output_dir / "opening__auto.mp3"
+    stale_audio.write_bytes(b"stale generated audio from an earlier run")
+
+    result = TTSSegmentLab().execute({"operation": "dry_run", "manifest": manifest})
+
+    assert result.success
+    compare_html = Path(result.data["compare_path"]).read_text(encoding="utf-8")
+    assert "opening__auto.mp3" not in compare_html
+    assert "Audio has not been generated yet" in compare_html
+
+
 def test_select_writes_selection_manifest(monkeypatch, tmp_path):
     monkeypatch.setattr(
         "tools.audio.tts_selector.TTSSelector.execute",

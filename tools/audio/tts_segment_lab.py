@@ -8,6 +8,7 @@ and writes a selection file that later asset generation can reuse.
 from __future__ import annotations
 
 import json
+import os
 import re
 import time
 from html import escape
@@ -79,7 +80,7 @@ class TTSSegmentLab(BaseTool):
         "properties": {
             "operation": {
                 "type": "string",
-                "enum": ["dry_run", "generate", "analyze", "annotate", "select"],
+                "enum": ["dry_run", "generate", "analyze", "annotate", "apply_review", "select"],
                 "default": "dry_run",
             },
             "manifest_path": {"type": "string"},
@@ -87,8 +88,12 @@ class TTSSegmentLab(BaseTool):
             "results_path": {"type": "string"},
             "analysis_options": {"type": "object"},
             "annotations": {"type": ["object", "array"]},
+            "annotations_path": {"type": "string"},
             "selections": {"type": "object"},
+            "segment_actions": {"type": "object"},
+            "generate": {"type": "boolean"},
             "output_path": {"type": "string"},
+            "output_dir": {"type": "string"},
         },
         "anyOf": [{"required": ["manifest_path"]}, {"required": ["manifest"]}, {"required": ["results_path"]}],
     }
@@ -105,19 +110,35 @@ class TTSSegmentLab(BaseTool):
             "analysis_path": {"type": "string"},
             "review_notes_path": {"type": "string"},
             "selection_path": {"type": "string"},
+            "review_complete": {"type": "boolean"},
+            "next_operation": {"type": "string"},
+            "loaded_env_files": {"type": "array", "items": {"type": "string"}},
             "segments": {"type": "array"},
         },
     }
     artifact_schema = {"type": "array", "items": {"type": "string"}}
 
     resource_profile = ResourceProfile(cpu_cores=1, ram_mb=256, vram_mb=0, disk_mb=100, network_required=True)
-    idempotency_key_fields = ["operation", "manifest_path", "manifest", "analysis_options", "annotations", "selections"]
+    idempotency_key_fields = [
+        "operation",
+        "manifest_path",
+        "manifest",
+        "results_path",
+        "analysis_options",
+        "annotations",
+        "annotations_path",
+        "selections",
+        "segment_actions",
+        "generate",
+        "output_dir",
+    ]
     side_effects = [
         "writes TTS audition audio samples",
         "writes per-variant provider metadata",
         "writes results.json, review.md, and compare.html",
         "writes audio_profile.json and analysis.md in analyze mode",
         "writes review_notes.json and review_annotated.md in annotate mode",
+        "writes a follow-up audition round in apply_review mode",
         "writes selection.json in select mode",
         "calls configured TTS providers in generate mode",
     ]
@@ -154,6 +175,8 @@ class TTSSegmentLab(BaseTool):
         try:
             if operation == "select":
                 result = self._select(inputs)
+            elif operation == "apply_review":
+                result = self._apply_review(inputs)
             elif operation == "annotate":
                 result = self._annotate(inputs)
             elif operation == "analyze":
@@ -172,6 +195,9 @@ class TTSSegmentLab(BaseTool):
         manifest = self._load_manifest(inputs)
         output_dir = self._output_dir(manifest)
         output_dir.mkdir(parents=True, exist_ok=True)
+        loaded_env_files = self._load_project_env_files(
+            self._env_search_roots(inputs, manifest=manifest, output_dir=output_dir)
+        )
 
         selector = None
         if generate:
@@ -192,6 +218,8 @@ class TTSSegmentLab(BaseTool):
             "review_language": manifest.get("review_language", "auto"),
             "segments": [],
         }
+        if loaded_env_files:
+            results["loaded_env_files"] = loaded_env_files
         artifacts: list[str] = []
 
         for segment in self._segments_with_text(manifest):
@@ -275,6 +303,7 @@ class TTSSegmentLab(BaseTool):
                 "results_path": str(results_path),
                 "review_path": str(review_path),
                 "compare_path": str(compare_path),
+                "loaded_env_files": loaded_env_files,
                 "segments": results["segments"],
             },
             artifacts=artifacts,
@@ -342,9 +371,12 @@ class TTSSegmentLab(BaseTool):
         )
 
     def _annotate(self, inputs: dict[str, Any]) -> ToolResult:
-        annotations = inputs.get("annotations")
-        if not annotations:
-            return ToolResult(success=False, error="annotate operation requires non-empty annotations")
+        review_payload = self._review_payload(inputs)
+        annotations = review_payload.get("annotations")
+        selections = review_payload.get("selections")
+        segment_actions = review_payload.get("segment_actions")
+        if not annotations and not segment_actions:
+            return ToolResult(success=False, error="annotate operation requires non-empty annotations/segment_actions or annotations_path")
 
         results_path = self._results_path(inputs)
         results = json.loads(results_path.read_text(encoding="utf-8"))
@@ -352,29 +384,48 @@ class TTSSegmentLab(BaseTool):
         by_segment = self._segment_lookup(annotated_results)
         applied_annotations = []
 
-        for item in self._normalize_annotations(annotations):
-            segment_key = item["segment_key"]
-            variant_id = item["variant_id"]
+        if annotations:
+            for item in self._normalize_annotations(annotations):
+                segment_key = item["segment_key"]
+                variant_id = item["variant_id"]
+                segment = by_segment.get(segment_key)
+                if not segment:
+                    return ToolResult(success=False, error=f"Unknown annotation segment/section key: {segment_key}")
+                variant = next((entry for entry in segment.get("variants", []) if entry.get("id") == variant_id), None)
+                if not variant:
+                    return ToolResult(success=False, error=f"Unknown variant {variant_id!r} for segment {segment_key!r}")
+
+                annotation = self._clean_annotation(item)
+                variant["review"] = annotation
+                applied_annotations.append(
+                    {
+                        "segment_id": segment["id"],
+                        "section_id": segment.get("section_id"),
+                        "label": segment.get("label"),
+                        "variant_id": variant["id"],
+                        **annotation,
+                    }
+                )
+
+        applied_segment_actions = []
+        for segment_key, action in self._normalize_segment_actions(segment_actions).items():
             segment = by_segment.get(segment_key)
             if not segment:
-                return ToolResult(success=False, error=f"Unknown annotation segment/section key: {segment_key}")
-            variant = next((entry for entry in segment.get("variants", []) if entry.get("id") == variant_id), None)
-            if not variant:
-                return ToolResult(success=False, error=f"Unknown variant {variant_id!r} for segment {segment_key!r}")
-
-            annotation = self._clean_annotation(item)
-            variant["review"] = annotation
-            applied_annotations.append(
+                return ToolResult(success=False, error=f"Unknown segment action key: {segment_key}")
+            clean_action = self._clean_segment_action(action)
+            segment["review_action"] = clean_action
+            applied_segment_actions.append(
                 {
                     "segment_id": segment["id"],
                     "section_id": segment.get("section_id"),
                     "label": segment.get("label"),
-                    "variant_id": variant["id"],
-                    **annotation,
+                    **clean_action,
                 }
             )
 
         summary = self._review_summary(annotated_results)
+        action_items = self._action_items(applied_annotations, applied_segment_actions)
+        completion = self._review_completion(annotated_results, selections or {}, action_items)
         review_notes = {
             "version": self.version,
             "tool": self.name,
@@ -383,16 +434,35 @@ class TTSSegmentLab(BaseTool):
             "project": results.get("project"),
             "run_id": results.get("run_id"),
             "summary": summary,
+            "completion": completion,
+            "action_items": action_items,
+            "segment_actions": applied_segment_actions,
             "annotations": applied_annotations,
         }
 
         output_path = Path(inputs.get("output_path") or results_path.with_name("review_notes.json"))
         review_path = output_path.with_name("review_annotated.md")
         annotated_results_path = output_path.with_name("results_annotated.json")
+        compare_path = output_path.with_name("compare_annotated.html")
         output_path.parent.mkdir(parents=True, exist_ok=True)
         self._write_json(output_path, review_notes)
         self._write_json(annotated_results_path, annotated_results)
         review_path.write_text(self._review_markdown(annotated_results), encoding="utf-8")
+        compare_path.write_text(self._comparison_html(annotated_results, compare_path), encoding="utf-8")
+
+        selection_path = None
+        selection_payload = None
+        if selections:
+            annotated_results["selections"] = selections
+        if segment_actions:
+            annotated_results["segment_actions"] = segment_actions
+        if selections or segment_actions:
+            self._write_json(annotated_results_path, annotated_results)
+            compare_path.write_text(self._comparison_html(annotated_results, compare_path), encoding="utf-8")
+        if selections and completion["review_complete"]:
+            selection_path = output_path.with_name("selection.json")
+            selection_payload = self._build_selection_payload(results, results_path, selections)
+            self._write_json(selection_path, selection_payload)
 
         return ToolResult(
             success=True,
@@ -401,11 +471,226 @@ class TTSSegmentLab(BaseTool):
                 "status": "completed",
                 "results_path": str(annotated_results_path),
                 "review_path": str(review_path),
+                "compare_path": str(compare_path),
                 "review_notes_path": str(output_path),
+                "selection_path": str(selection_path) if selection_path else None,
                 "summary": summary,
+                "review_complete": completion["review_complete"],
+                "next_operation": completion["next_operation"],
+                "missing_selection_segments": completion["missing_selection_segments"],
+                "pending_review_segments": completion["pending_review_segments"],
+                "selection_deferred_reason": completion["selection_deferred_reason"],
+                "action_item_count": len(action_items),
+                "action_items": action_items,
+                "segment_actions": applied_segment_actions,
+                "selection_count": len(selection_payload["selections"]) if selection_payload else 0,
                 "annotations": applied_annotations,
             },
-            artifacts=[str(output_path), str(annotated_results_path), str(review_path)],
+            artifacts=[
+                str(path)
+                for path in [output_path, annotated_results_path, review_path, compare_path, selection_path]
+                if path
+            ],
+        )
+
+    def _apply_review(self, inputs: dict[str, Any]) -> ToolResult:
+        review_payload = self._review_payload(inputs)
+        annotations = review_payload.get("annotations")
+        selections = review_payload.get("selections") or {}
+        segment_actions = review_payload.get("segment_actions") or {}
+        if not annotations and not segment_actions:
+            return ToolResult(success=False, error="apply_review operation requires annotations/segment_actions or annotations_path")
+
+        results_path = self._results_path(inputs)
+        source_results = json.loads(results_path.read_text(encoding="utf-8"))
+        source_segments = self._segment_lookup(source_results)
+        output_dir = Path(
+            inputs.get("output_dir")
+            or results_path.with_name(f"{source_results.get('run_id') or 'tts-review'}-review-round")
+        ).expanduser().resolve()
+        output_dir.mkdir(parents=True, exist_ok=True)
+        loaded_env_files = self._load_project_env_files(
+            self._env_search_roots(inputs, results_path=results_path, output_dir=output_dir)
+        )
+
+        submission_path = output_dir / "review_submission.json"
+        self._write_json(submission_path, review_payload)
+
+        generate_audio = bool(inputs.get("generate", True))
+        selector = None
+        if generate_audio:
+            from tools.audio.tts_selector import TTSSelector
+
+            selector = TTSSelector()
+
+        round_results: dict[str, Any] = {
+            "version": self.version,
+            "tool": self.name,
+            "operation": "apply_review",
+            "status": "completed",
+            "project": source_results.get("project"),
+            "run_id": inputs.get("run_id") or f"{source_results.get('run_id') or 'tts-review'}-review-round",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "output_dir": str(output_dir),
+            "script_path": source_results.get("script_path"),
+            "review_language": source_results.get("review_language", "auto"),
+            "source_results": str(results_path),
+            "review_submission": str(submission_path),
+            "selections": {},
+            "segments": [],
+        }
+        if loaded_env_files:
+            round_results["loaded_env_files"] = loaded_env_files
+        artifacts: list[str] = [str(submission_path)]
+        regenerated: list[dict[str, Any]] = []
+        approved: list[dict[str, Any]] = []
+
+        normalized_annotations = self._normalize_annotations(annotations) if annotations else []
+        annotation_by_segment = {item["segment_key"]: item for item in normalized_annotations}
+        segment_action_map = self._normalize_segment_actions(segment_actions)
+
+        for source_segment in source_results.get("segments", []):
+            segment_id = str(source_segment.get("id") or "")
+            section_id = str(source_segment.get("section_id") or "")
+            annotation = annotation_by_segment.get(segment_id) or annotation_by_segment.get(section_id)
+            segment_action = segment_action_map.get(segment_id) or segment_action_map.get(section_id)
+            selected_variant_id = selections.get(segment_id) or selections.get(section_id)
+
+            round_segment = {
+                "id": segment_id,
+                "section_id": source_segment.get("section_id"),
+                "label": source_segment.get("label", segment_id),
+                "text": source_segment.get("text", ""),
+                "variants": [],
+            }
+            for timing_key in ("start_seconds", "end_seconds", "expected_duration_seconds"):
+                if source_segment.get(timing_key) is not None:
+                    round_segment[timing_key] = source_segment[timing_key]
+
+            if segment_action:
+                action = self._clean_segment_action(segment_action)
+                variant_result, generated_artifacts = self._review_regenerate_variant(
+                    source_results,
+                    source_segment,
+                    None,
+                    action,
+                    output_dir,
+                    selector,
+                    generate=generate_audio,
+                    suffix="new",
+                )
+                round_segment["variants"].append(variant_result)
+                round_results["selections"][segment_id] = variant_result["id"]
+                regenerated.append(
+                    {
+                        "segment_id": segment_id,
+                        "section_id": source_segment.get("section_id"),
+                        "variant_id": variant_result["id"],
+                        "source_variant_id": None,
+                        "notes": action["notes"],
+                        "adjustment": variant_result.get("note", ""),
+                    }
+                )
+                artifacts.extend(generated_artifacts)
+                if variant_result.get("success") is False:
+                    round_results["status"] = "completed-with-errors"
+            elif annotation and selected_variant_id:
+                source_variant = self._find_segment_variant(source_segments, segment_id, selected_variant_id)
+                clean_annotation = self._clean_annotation(annotation)
+                notes = clean_annotation.get("notes") or clean_annotation.get("fix_target") or ""
+                if clean_annotation["decision"] in {"REGENERATE", "NEEDS_REVIEW"} or notes:
+                    variant_result, generated_artifacts = self._review_regenerate_variant(
+                        source_results,
+                        source_segment,
+                        source_variant,
+                        clean_annotation,
+                        output_dir,
+                        selector,
+                        generate=generate_audio,
+                        suffix="adjusted",
+                    )
+                    round_segment["variants"].append(variant_result)
+                    round_results["selections"][segment_id] = variant_result["id"]
+                    regenerated.append(
+                        {
+                            "segment_id": segment_id,
+                            "section_id": source_segment.get("section_id"),
+                            "variant_id": variant_result["id"],
+                            "source_variant_id": source_variant.get("id"),
+                            "notes": notes,
+                            "adjustment": variant_result.get("note", ""),
+                        }
+                    )
+                    artifacts.extend(generated_artifacts)
+                    if variant_result.get("success") is False:
+                        round_results["status"] = "completed-with-errors"
+                else:
+                    kept_variant = deepcopy(source_variant)
+                    kept_variant["note"] = self._append_note(
+                        kept_variant.get("note", ""),
+                        "上一轮已通过，保留为当前选择。",
+                    )
+                    kept_variant["review_source"] = {"decision": "APPROVED", "round": "previous"}
+                    round_segment["variants"].append(kept_variant)
+                    round_results["selections"][segment_id] = kept_variant["id"]
+                    approved.append(
+                        {
+                            "segment_id": segment_id,
+                            "section_id": source_segment.get("section_id"),
+                            "variant_id": kept_variant["id"],
+                        }
+                    )
+            else:
+                round_segment["variants"].extend(deepcopy(source_segment.get("variants", [])))
+                if selected_variant_id:
+                    round_results["selections"][segment_id] = str(selected_variant_id)
+
+            round_results["segments"].append(round_segment)
+
+        results_out = output_dir / "results.json"
+        review_out = output_dir / "review.md"
+        compare_out = output_dir / "compare.html"
+        summary_out = output_dir / "review_round_summary.json"
+        round_summary = {
+            "version": self.version,
+            "tool": self.name,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "source_results": str(results_path),
+            "review_submission": str(submission_path),
+            "approved": approved,
+            "regenerated": regenerated,
+            "selection_count": len(round_results["selections"]),
+            "review_complete": False,
+            "next_operation": "annotate",
+            "loaded_env_files": loaded_env_files,
+        }
+        self._write_json(results_out, round_results)
+        self._write_json(summary_out, round_summary)
+        review_out.write_text(self._review_markdown(round_results), encoding="utf-8")
+        compare_out.write_text(self._comparison_html(round_results, compare_out), encoding="utf-8")
+        artifacts.extend([str(results_out), str(review_out), str(compare_out), str(summary_out)])
+
+        return ToolResult(
+            success=round_results["status"] != "completed-with-errors",
+            data={
+                "operation": "apply_review",
+                "status": round_results["status"],
+                "output_dir": str(output_dir),
+                "results_path": str(results_out),
+                "review_path": str(review_out),
+                "compare_path": str(compare_out),
+                "review_submission_path": str(submission_path),
+                "summary_path": str(summary_out),
+                "approved_count": len(approved),
+                "regenerated_count": len(regenerated),
+                "selection_count": len(round_results["selections"]),
+                "review_complete": False,
+                "next_operation": "annotate",
+                "loaded_env_files": loaded_env_files,
+                "regenerated": regenerated,
+            },
+            artifacts=artifacts,
+            error=None if round_results["status"] == "completed" else "One or more review-round variants failed.",
         )
 
     def _select(self, inputs: dict[str, Any]) -> ToolResult:
@@ -415,16 +700,35 @@ class TTSSegmentLab(BaseTool):
 
         results_path = self._results_path(inputs)
         results = json.loads(results_path.read_text(encoding="utf-8"))
-        by_segment = self._segment_lookup(results)
+        selection = self._build_selection_payload(results, results_path, selections)
+        output_path = Path(inputs.get("output_path") or results_path.with_name("selection.json"))
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        self._write_json(output_path, selection)
 
+        return ToolResult(
+            success=True,
+            data={
+                "operation": "select",
+                "status": "completed",
+                "selection_path": str(output_path),
+                "selection_count": len(selection["selections"]),
+                "selections": selection["selections"],
+            },
+            artifacts=[str(output_path)],
+        )
+
+    def _build_selection_payload(self, results: dict[str, Any], results_path: Path, selections: dict[str, Any]) -> dict[str, Any]:
+        if not isinstance(selections, dict) or not selections:
+            raise ValueError("selections must be a non-empty mapping")
+        by_segment = self._segment_lookup(results)
         selected_items = []
         for segment_key, variant_id in selections.items():
-            segment = by_segment.get(segment_key)
+            segment = by_segment.get(str(segment_key))
             if not segment:
-                return ToolResult(success=False, error=f"Unknown segment/section selection key: {segment_key}")
-            variant = next((item for item in segment.get("variants", []) if item.get("id") == variant_id), None)
+                raise ValueError(f"Unknown segment/section selection key: {segment_key}")
+            variant = next((item for item in segment.get("variants", []) if item.get("id") == str(variant_id)), None)
             if not variant:
-                return ToolResult(success=False, error=f"Unknown variant {variant_id!r} for segment {segment_key!r}")
+                raise ValueError(f"Unknown variant {variant_id!r} for segment {segment_key!r}")
             selected_items.append(
                 {
                     "segment_id": segment["id"],
@@ -443,7 +747,7 @@ class TTSSegmentLab(BaseTool):
                 }
             )
 
-        selection = {
+        return {
             "version": self.version,
             "tool": self.name,
             "created_at": datetime.now(timezone.utc).isoformat(),
@@ -452,21 +756,136 @@ class TTSSegmentLab(BaseTool):
             "run_id": results.get("run_id"),
             "selections": selected_items,
         }
-        output_path = Path(inputs.get("output_path") or results_path.with_name("selection.json"))
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        self._write_json(output_path, selection)
 
-        return ToolResult(
-            success=True,
-            data={
-                "operation": "select",
-                "status": "completed",
-                "selection_path": str(output_path),
-                "selection_count": len(selected_items),
-                "selections": selected_items,
-            },
-            artifacts=[str(output_path)],
+    @classmethod
+    def _review_completion(
+        cls,
+        results: dict[str, Any],
+        selections: dict[str, Any],
+        action_items: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        selected_segment_ids: set[str] = set()
+        by_segment = cls._segment_lookup(results)
+        for segment_key, variant_id in (selections or {}).items():
+            segment = by_segment.get(str(segment_key))
+            if not segment:
+                continue
+            if any(str(variant.get("id")) == str(variant_id) for variant in segment.get("variants", [])):
+                selected_segment_ids.add(str(segment.get("id")))
+
+        missing_selection_segments = [
+            str(segment.get("id"))
+            for segment in results.get("segments", [])
+            if str(segment.get("id")) not in selected_segment_ids
+        ]
+        pending_review_segments = sorted(
+            {
+                str(item.get("segment_id"))
+                for item in action_items
+                if item.get("segment_id")
+            }
         )
+        review_complete = not missing_selection_segments and not pending_review_segments
+        if review_complete:
+            next_operation = "complete"
+            selection_deferred_reason = ""
+        elif pending_review_segments:
+            next_operation = "apply_review"
+            selection_deferred_reason = "pending_review_actions"
+        else:
+            next_operation = "annotate"
+            selection_deferred_reason = "missing_segment_selections"
+        return {
+            "review_complete": review_complete,
+            "next_operation": next_operation,
+            "missing_selection_segments": missing_selection_segments,
+            "pending_review_segments": pending_review_segments,
+            "selection_deferred_reason": selection_deferred_reason,
+        }
+
+    @classmethod
+    def _env_search_roots(
+        cls,
+        inputs: dict[str, Any],
+        *,
+        manifest: dict[str, Any] | None = None,
+        results_path: Path | None = None,
+        output_dir: Path | None = None,
+    ) -> list[Path]:
+        roots: list[Path] = [Path.cwd()]
+        if inputs.get("manifest_path"):
+            roots.append(Path(inputs["manifest_path"]).expanduser())
+        if manifest:
+            for key in ("script_path", "script", "output_dir"):
+                if manifest.get(key):
+                    roots.append(Path(str(manifest[key])).expanduser())
+        if results_path:
+            roots.append(results_path)
+            try:
+                source_results = json.loads(results_path.read_text(encoding="utf-8"))
+                if source_results.get("script_path"):
+                    roots.append(Path(str(source_results["script_path"])).expanduser())
+                if source_results.get("output_dir"):
+                    roots.append(Path(str(source_results["output_dir"])).expanduser())
+            except Exception:
+                pass
+        if output_dir:
+            roots.append(output_dir)
+        return roots
+
+    @classmethod
+    def _load_project_env_files(cls, roots: list[Path]) -> list[str]:
+        loaded: list[str] = []
+        seen: set[Path] = set()
+        for raw_root in roots:
+            try:
+                root = raw_root.expanduser().resolve()
+            except Exception:
+                continue
+            if root.is_file():
+                root = root.parent
+            for parent in (root, *root.parents):
+                env_path = parent / ".env"
+                if env_path in seen:
+                    pass
+                elif env_path.exists() and env_path.is_file():
+                    cls._load_env_file(env_path)
+                    loaded.append(str(env_path))
+                    seen.add(env_path)
+                if parent == Path.home() or parent.parent == parent:
+                    break
+        return loaded
+
+    @staticmethod
+    def _load_env_file(env_path: Path) -> None:
+        for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.startswith("export "):
+                line = line[len("export ") :].strip()
+            if "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key = key.strip()
+            if not re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", key):
+                continue
+            if key in os.environ:
+                continue
+            value = value.strip()
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+                value = value[1:-1]
+            os.environ[key] = value
+
+    @staticmethod
+    def _review_payload(inputs: dict[str, Any]) -> dict[str, Any]:
+        payload: dict[str, Any] = {}
+        if inputs.get("annotations_path"):
+            payload.update(json.loads(Path(inputs["annotations_path"]).expanduser().read_text(encoding="utf-8")))
+        for key in ("annotations", "selections", "segment_actions"):
+            if inputs.get(key) is not None:
+                payload[key] = inputs[key]
+        return payload
 
     @staticmethod
     def _segment_lookup(results: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -476,6 +895,186 @@ class TTSSegmentLab(BaseTool):
             if segment.get("section_id"):
                 by_segment[segment["section_id"]] = segment
         return by_segment
+
+    @staticmethod
+    def _find_segment_variant(
+        by_segment: dict[str, dict[str, Any]],
+        segment_key: str,
+        variant_id: str,
+    ) -> dict[str, Any]:
+        segment = by_segment.get(str(segment_key))
+        if not segment:
+            raise ValueError(f"Unknown segment/section key: {segment_key}")
+        variant = next((item for item in segment.get("variants", []) if item.get("id") == str(variant_id)), None)
+        if not variant:
+            raise ValueError(f"Unknown variant {variant_id!r} for segment {segment_key!r}")
+        return variant
+
+    def _review_regenerate_variant(
+        self,
+        source_results: dict[str, Any],
+        source_segment: dict[str, Any],
+        source_variant: dict[str, Any] | None,
+        review: dict[str, Any],
+        output_dir: Path,
+        selector: Any,
+        *,
+        generate: bool,
+        suffix: str,
+    ) -> tuple[dict[str, Any], list[str]]:
+        notes = review.get("notes") or review.get("fix_target") or ""
+        base_variant = source_variant or self._first_generated_variant(source_segment)
+        source_id = str(base_variant.get("id") or "auto")
+        variant_id = self._unique_variant_id(source_segment, self._slug(f"{source_id}-review-{suffix}"))
+        stem = f"{self._slug(source_segment.get('id', 'segment'))}__{variant_id}"
+        output_path = output_dir / f"{stem}.mp3"
+        metadata_path = output_dir / f"{stem}_metadata.json"
+        selector_inputs = self._selector_inputs_from_result_variant(source_segment, base_variant, output_path=output_path)
+        selector_inputs = self._apply_review_adjustments(selector_inputs, notes, source_results, base_variant)
+        variant_result: dict[str, Any] = {
+            "id": variant_id,
+            "source_type": "review_adjustment" if source_variant else "review_regeneration",
+            "source_variant_id": source_variant.get("id") if source_variant else None,
+            "note": self._adjustment_note(notes, selector_inputs, base_variant, suffix=suffix),
+            "preferred_provider": selector_inputs.get("preferred_provider", "auto"),
+            "text": selector_inputs["text"],
+            "audio": str(output_path),
+            "metadata": str(metadata_path),
+            "params": self._visible_params(selector_inputs),
+            "review_instruction": {
+                "decision": review.get("decision", "REGENERATE"),
+                "notes": notes,
+                "fix_target": review.get("fix_target") or notes,
+            },
+        }
+        artifacts: list[str] = []
+        if not generate:
+            variant_result["planned"] = True
+            return variant_result, artifacts
+
+        provider_result = selector.execute(selector_inputs)
+        metadata_payload = {
+            "selector_inputs": self._metadata_safe_inputs(selector_inputs),
+            "success": provider_result.success,
+            "data": provider_result.data,
+            "artifacts": provider_result.artifacts,
+            "error": provider_result.error,
+        }
+        self._write_json(metadata_path, metadata_payload)
+        artifacts.append(str(metadata_path))
+        if provider_result.success:
+            data = provider_result.data
+            variant_result.update(
+                {
+                    "success": True,
+                    "selected_provider": data.get("selected_provider") or data.get("provider"),
+                    "selected_tool": data.get("selected_tool"),
+                    "duration_seconds": data.get("audio_duration_seconds"),
+                    "provider_metadata_path": data.get("metadata_path"),
+                    "provider_artifacts": provider_result.artifacts,
+                }
+            )
+            if output_path.exists():
+                artifacts.append(str(output_path))
+        else:
+            variant_result["success"] = False
+            variant_result["error"] = provider_result.error
+        return variant_result, artifacts
+
+    @staticmethod
+    def _first_generated_variant(segment: dict[str, Any]) -> dict[str, Any]:
+        for variant in segment.get("variants", []):
+            if variant.get("source_type") != "reference":
+                return variant
+        if segment.get("variants"):
+            return segment["variants"][0]
+        raise ValueError(f"Segment {segment.get('id')} has no source variants to regenerate from")
+
+    def _selector_inputs_from_result_variant(
+        self,
+        segment: dict[str, Any],
+        variant: dict[str, Any],
+        *,
+        output_path: Path,
+    ) -> dict[str, Any]:
+        inputs = deepcopy(variant.get("params") or {})
+        inputs["text"] = variant.get("text") or segment.get("text", "")
+        inputs["operation"] = "generate"
+        inputs["output_path"] = str(output_path)
+        if "preferred_provider" not in inputs:
+            inputs["preferred_provider"] = variant.get("selected_provider") or variant.get("preferred_provider") or "auto"
+        return inputs
+
+    def _apply_review_adjustments(
+        self,
+        inputs: dict[str, Any],
+        notes: str,
+        source_results: dict[str, Any],
+        source_variant: dict[str, Any],
+    ) -> dict[str, Any]:
+        adjusted = deepcopy(inputs)
+        normalized = notes.lower()
+        mentions_speed = "语速" in notes or "速度" in notes or "speed" in normalized or "rate" in normalized
+        if mentions_speed and ("快" in notes or "faster" in normalized):
+            adjusted["speech_rate"] = min(int(adjusted.get("speech_rate", 0) or 0) + (1 if "稍微" in notes else 2), 100)
+        if mentions_speed and ("慢" in notes or "slower" in normalized):
+            adjusted["speech_rate"] = max(int(adjusted.get("speech_rate", 0) or 0) - (1 if "稍微" in notes else 2), -50)
+        if any(token in notes for token in ("换一个声音", "换个声音", "换音色", "换一个音色")) or "different voice" in normalized:
+            alternate_voice = self._alternate_voice_id(source_results, source_variant)
+            if alternate_voice:
+                adjusted["voice_id"] = alternate_voice
+            else:
+                adjusted.pop("voice_id", None)
+                adjusted["preferred_provider"] = "auto"
+        if notes:
+            context_texts = list(adjusted.get("context_texts") or [])
+            context_texts.append(f"上一轮试听反馈：{notes}。请按反馈微调，但保持原脚本含义不变。")
+            adjusted["context_texts"] = context_texts
+        return adjusted
+
+    @staticmethod
+    def _alternate_voice_id(source_results: dict[str, Any], source_variant: dict[str, Any]) -> str | None:
+        current = (source_variant.get("params") or {}).get("voice_id")
+        seen: list[str] = []
+        for segment in source_results.get("segments", []):
+            for variant in segment.get("variants", []):
+                voice_id = (variant.get("params") or {}).get("voice_id")
+                if voice_id and voice_id not in seen:
+                    seen.append(voice_id)
+        for voice_id in seen:
+            if voice_id != current:
+                return voice_id
+        return None
+
+    @staticmethod
+    def _unique_variant_id(segment: dict[str, Any], candidate: str) -> str:
+        existing = {str(variant.get("id")) for variant in segment.get("variants", [])}
+        if candidate not in existing:
+            return candidate
+        index = 2
+        while f"{candidate}-{index}" in existing:
+            index += 1
+        return f"{candidate}-{index}"
+
+    @staticmethod
+    def _adjustment_note(notes: str, selector_inputs: dict[str, Any], source_variant: dict[str, Any], *, suffix: str) -> str:
+        prefix = "已按上一轮建议重新生成" if suffix == "adjusted" else "已按上一轮反馈生成新候选"
+        details = []
+        source_rate = (source_variant.get("params") or {}).get("speech_rate")
+        target_rate = selector_inputs.get("speech_rate")
+        if source_rate != target_rate and target_rate is not None:
+            details.append(f"speech_rate {source_rate} -> {target_rate}")
+        source_voice = (source_variant.get("params") or {}).get("voice_id")
+        target_voice = selector_inputs.get("voice_id")
+        if source_voice != target_voice and target_voice:
+            details.append(f"voice {source_voice} -> {target_voice}")
+        detail_text = f"（{'; '.join(details)}）" if details else ""
+        return f"{prefix}{detail_text}：{notes}".rstrip("：")
+
+    @staticmethod
+    def _append_note(existing: str, addition: str) -> str:
+        existing = str(existing or "").strip()
+        return f"{existing} {addition}".strip() if existing else addition
 
     @staticmethod
     def _normalize_annotations(raw_annotations: Any) -> list[dict[str, Any]]:
@@ -536,6 +1135,36 @@ class TTSSegmentLab(BaseTool):
         }
 
     @staticmethod
+    def _normalize_segment_actions(raw_actions: Any) -> dict[str, dict[str, Any]]:
+        if not raw_actions:
+            return {}
+        if not isinstance(raw_actions, dict):
+            raise ValueError("segment_actions must be an object")
+        normalized = {}
+        for segment_key, action in raw_actions.items():
+            if isinstance(action, dict):
+                normalized[str(segment_key)] = action
+            else:
+                normalized[str(segment_key)] = {"decision": action}
+        return normalized
+
+    @staticmethod
+    def _clean_segment_action(item: dict[str, Any]) -> dict[str, Any]:
+        allowed = {"REGENERATE", "NEEDS_REVIEW"}
+        decision = str(item.get("decision", "REGENERATE")).strip().upper().replace("-", "_")
+        if decision not in allowed:
+            raise ValueError(f"Unknown segment action decision {decision!r}; expected one of {sorted(allowed)}")
+        notes = item.get("notes") or item.get("note") or item.get("fix_target") or ""
+        return {
+            "decision": decision,
+            "requires_user_review": bool(item.get("requires_user_review", True)),
+            "issue_category": item.get("issue_category") or "voice_review",
+            "fix_target": item.get("fix_target") or notes,
+            "notes": notes,
+            "user_decision": item.get("user_decision") or "",
+        }
+
+    @staticmethod
     def _review_summary(results: dict[str, Any]) -> dict[str, Any]:
         decisions = {
             "APPROVED": 0,
@@ -569,6 +1198,76 @@ class TTSSegmentLab(BaseTool):
             "decisions": decisions,
             "review_queue": review_queue,
         }
+
+    @staticmethod
+    def _comparison_review_state(results: dict[str, Any], summary: dict[str, Any], copy: dict[str, str]) -> dict[str, Any]:
+        segment_count = len(results.get("segments", []))
+        selections = results.get("selections") if isinstance(results.get("selections"), dict) else {}
+        selected_count = len(selections)
+        segment_actions = results.get("segment_actions") if isinstance(results.get("segment_actions"), dict) else {}
+        segment_action_count = len(segment_actions)
+        segment_action_count += sum(1 for segment in results.get("segments", []) if segment.get("review_action"))
+        decisions = summary.get("decisions", {})
+        reviewed_count = sum(
+            int(decisions.get(key, 0) or 0)
+            for key in ("APPROVED", "NEEDS_REVIEW", "REGENERATE", "REJECTED", "KEEP_REFERENCE")
+        )
+        action_count = len(summary.get("review_queue", [])) + segment_action_count
+        has_review_round_candidates = any(
+            variant.get("source_type") in {"review_adjustment", "review_regeneration"}
+            for segment in results.get("segments", [])
+            for variant in segment.get("variants", [])
+        )
+        if action_count:
+            state = copy["review_state_needs_changes"]
+        elif reviewed_count and int(decisions.get("APPROVED", 0) or 0) + int(decisions.get("KEEP_REFERENCE", 0) or 0) == summary.get("variants", 0):
+            state = copy["review_state_approved"]
+        elif has_review_round_candidates or results.get("operation") == "apply_review":
+            state = copy["review_state_recheck"]
+        elif selected_count:
+            state = copy["review_state_selected"]
+        else:
+            state = copy["review_state_unreviewed"]
+        return {
+            "selected_count": selected_count,
+            "segment_count": segment_count,
+            "state": state,
+        }
+
+    @staticmethod
+    def _action_items(
+        annotations: list[dict[str, Any]],
+        segment_actions: list[dict[str, Any]] | None = None,
+    ) -> list[dict[str, Any]]:
+        items = []
+        for annotation in annotations:
+            decision = annotation.get("decision")
+            if decision not in {"NEEDS_REVIEW", "REGENERATE"} and not annotation.get("requires_user_review"):
+                continue
+            items.append(
+                {
+                    "segment_id": annotation.get("segment_id"),
+                    "section_id": annotation.get("section_id"),
+                    "variant_id": annotation.get("variant_id"),
+                    "decision": decision,
+                    "issue_category": annotation.get("issue_category", ""),
+                    "notes": annotation.get("notes", ""),
+                    "fix_target": annotation.get("fix_target", ""),
+                }
+            )
+        for action in segment_actions or []:
+            items.append(
+                {
+                    "segment_id": action.get("segment_id"),
+                    "section_id": action.get("section_id"),
+                    "variant_id": None,
+                    "decision": action.get("decision"),
+                    "issue_category": action.get("issue_category", ""),
+                    "notes": action.get("notes", ""),
+                    "fix_target": action.get("fix_target", ""),
+                }
+            )
+        return items
 
     @staticmethod
     def _analysis_options(raw_options: Any) -> dict[str, Any]:
@@ -1124,6 +1823,7 @@ class TTSSegmentLab(BaseTool):
         copy = cls._ui_copy(language)
         title = f"{copy['title']}: {results.get('run_id', '')}".strip()
         summary = cls._review_summary(results)
+        review_state = cls._comparison_review_state(results, summary, copy)
 
         css = """
 :root {
@@ -1135,6 +1835,9 @@ class TTSSegmentLab(BaseTool):
   --text: #eef4ff;
   --muted: #aebbd0;
   --accent: #68d8ff;
+  --ok: #4ade80;
+  --warn: #facc15;
+  --bad: #fb7185;
 }
 * { box-sizing: border-box; }
 body {
@@ -1151,6 +1854,38 @@ header { margin-bottom: 26px; }
 h1 { margin: 0 0 10px; font-size: 30px; letter-spacing: 0; }
 p { color: var(--muted); }
 .summary { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.review-toolbar {
+  align-items: start;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.045);
+  border-radius: 12px;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin-top: 18px;
+  padding: 14px;
+}
+.review-copy {
+  display: grid;
+  gap: 10px;
+}
+.review-action {
+  align-items: flex-end;
+  display: flex;
+  justify-content: flex-end;
+}
+.review-copy .hint,
+.save-status {
+  background: rgba(8,14,27,.38);
+  border: 1px solid rgba(149,172,214,.14);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 9px 11px;
+}
+.review-copy .hint {
+  border-color: rgba(98,216,255,.22);
+}
 .pill {
   border: 1px solid var(--border);
   background: var(--panel);
@@ -1158,6 +1893,29 @@ p { color: var(--muted); }
   padding: 6px 12px;
   color: #dbe7fb;
   font-size: 13px;
+}
+button.pill {
+  cursor: pointer;
+  font: inherit;
+}
+.primary-action {
+  background: linear-gradient(135deg, rgba(98,216,255,.95), rgba(74,222,128,.74));
+  border-color: rgba(98,216,255,.9);
+  box-shadow: 0 12px 32px rgba(98,216,255,.2);
+  color: #06111f;
+  font-weight: 700;
+  min-height: 40px;
+  padding: 9px 16px;
+}
+.floating-actions {
+  bottom: 22px;
+  position: fixed;
+  right: 22px;
+  z-index: 45;
+}
+.floating-actions .pill {
+  backdrop-filter: blur(12px);
+  box-shadow: 0 14px 34px rgba(0,0,0,.26);
 }
 .segment {
   border: 1px solid var(--border);
@@ -1191,6 +1949,95 @@ p { color: var(--muted); }
 .meta { color: #94a7c4; font-size: 13px; margin-bottom: 10px; }
 .note { min-height: 1.5em; color: var(--muted); font-size: 13px; }
 audio { width: 100%; margin: 8px 0; }
+.choose-row,
+.decision-row,
+.regenerate-all {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+.choose-pill,
+.decision-pill,
+.regenerate-pill {
+  align-items: center;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.22);
+  border-radius: 999px;
+  color: #dbe8fb;
+  cursor: pointer;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 18px 1fr;
+  min-height: 38px;
+  padding: 8px 12px;
+  text-align: left;
+}
+.choose-pill input,
+.decision-pill input,
+.regenerate-pill input {
+  accent-color: var(--accent);
+  margin: 0;
+  place-self: center;
+}
+.choose-pill span,
+.decision-pill span,
+.regenerate-pill span {
+  min-width: 0;
+  white-space: nowrap;
+}
+.choose-pill:has(input:checked),
+.decision-pill:has(input:checked),
+.regenerate-pill:has(input:checked) {
+  background: rgba(98,216,255,.16);
+  border-color: rgba(98,216,255,.68);
+  color: var(--text);
+}
+.decision-row {
+  grid-template-columns: repeat(auto-fit, minmax(136px, 1fr));
+}
+.review-note {
+  background: rgba(0,0,0,.24);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 8px;
+  color: var(--text);
+  font: inherit;
+  margin-top: 10px;
+  line-height: 1.45;
+  min-height: 96px;
+  padding: 10px 12px;
+  resize: vertical;
+  width: 100%;
+}
+.review-note.is-hidden { display: none; }
+.regenerate-all {
+  border: 1px dashed rgba(149,172,214,.3);
+  border-radius: 12px;
+  padding: 12px;
+}
+.regenerate-all textarea {
+  background: rgba(0,0,0,.24);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 8px;
+  color: var(--text);
+  display: none;
+  font: inherit;
+  min-height: 74px;
+  padding: 8px 10px;
+  resize: vertical;
+  width: 100%;
+}
+.regenerate-all.is-active textarea { display: block; }
+.regenerate-all.is-missing-note {
+  border-color: rgba(251,113,133,.72);
+}
+.segment.is-missing-selection {
+  border-color: rgba(251,113,133,.7);
+  box-shadow: 0 0 0 1px rgba(251,113,133,.28), 0 18px 48px rgba(0,0,0,.22);
+}
+.badge { border: 1px solid var(--border); border-radius: 999px; padding: 3px 8px; }
+.approved { color: var(--ok); border-color: rgba(74,222,128,.42); }
+.needs, .regenerate { color: var(--warn); border-color: rgba(250,204,21,.45); }
+.rejected { color: var(--bad); border-color: rgba(251,113,133,.45); }
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 .missing {
@@ -1200,9 +2047,54 @@ a:hover { text-decoration: underline; }
   padding: 10px 12px;
   font-size: 14px;
 }
+.export-panel {
+  border: 1px solid rgba(98,216,255,.24);
+  background: rgba(8,14,27,.9);
+  border-radius: 12px;
+  display: none;
+  margin-top: 18px;
+  padding: 14px;
+}
+.export-panel.is-visible { display: block; }
+.export-panel textarea {
+  background: rgba(0,0,0,.32);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 8px;
+  color: var(--text);
+  font: 12px ui-monospace, SFMono-Regular, Menlo, monospace;
+  min-height: 180px;
+  padding: 10px;
+  width: 100%;
+}
+.toast {
+  background: rgba(8,14,27,.96);
+  border: 1px solid rgba(98,216,255,.35);
+  border-radius: 12px;
+  box-shadow: 0 18px 42px rgba(0,0,0,.36);
+  color: var(--text);
+  display: grid;
+  gap: 4px;
+  left: 50%;
+  max-width: min(520px, calc(100vw - 32px));
+  opacity: 0;
+  padding: 14px 16px;
+  pointer-events: none;
+  position: fixed;
+  top: 18px;
+  transform: translate(-50%, -12px);
+  transition: opacity .18s ease, transform .18s ease;
+  z-index: 60;
+}
+.toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
 @media (max-width: 720px) {
   main { padding: 28px 16px 46px; }
   h1 { font-size: 25px; }
+  .review-toolbar { align-items: stretch; grid-template-columns: 1fr; }
+  .review-action { justify-content: start; }
+  .floating-actions { bottom: 14px; right: 14px; }
 }
 """.strip()
 
@@ -1224,29 +2116,83 @@ a:hover { text-decoration: underline; }
             f"<span class=\"pill\">{escape(copy['project'])}: {escape(str(results.get('project') or '-'))}</span>",
             f"<span class=\"pill\">{escape(copy['segments'])}: {summary['segments']}</span>",
             f"<span class=\"pill\">{escape(copy['variants'])}: {summary['variants']}</span>",
-            f"<span class=\"pill\">{escape(copy['status'])}: {escape(str(results.get('status') or '-'))}</span>",
+            f"<span class=\"pill\">{escape(copy['selected'])}: {review_state['selected_count']}/{review_state['segment_count']}</span>",
+            f"<span class=\"pill\">{escape(copy['review_status'])}: {escape(str(review_state['state']))}</span>",
+            "</div>",
+            "<div class=\"review-toolbar\">",
+            "<div class=\"review-copy\">",
+            f"<span class=\"save-status\" data-save-status data-submitted-text=\"{escape(copy['submitted_hint'], quote=True)}\">{escape(copy['save_hint'])}</span>",
+            f"<span class=\"hint\">{escape(copy['submit_hint'])}</span>",
+            "</div>",
+            "<div class=\"review-action\">",
+            (
+                f"<button type=\"button\" class=\"pill primary-action\" data-save-review "
+                f"data-submitted-label=\"{escape(copy['submitted_button'], quote=True)}\" "
+                f"data-run-id=\"{escape(str(results.get('run_id') or 'tts-segment-review'), quote=True)}\">"
+                f"{escape(copy['save_review'])}</button>"
+            ),
+            "</div>",
+            "</div>",
+            "<section class=\"export-panel\" data-export-panel>",
+            f"<h2>{escape(copy['export_title'])}</h2>",
+            f"<p>{escape(copy['export_body'])}</p>",
+            "<textarea data-export-json readonly></textarea>",
+            "</section>",
+            "<div class=\"floating-actions\">",
+            f"<button type=\"button\" class=\"pill\" data-scroll-top>{escape(copy['back_to_top'])}</button>",
             "</div>",
             "</header>",
         ]
 
+        selections = results.get("selections") if isinstance(results.get("selections"), dict) else {}
+        segment_actions = results.get("segment_actions") if isinstance(results.get("segment_actions"), dict) else {}
         for segment in results.get("segments", []):
+            segment_id = str(segment.get("id") or "")
+            segment_action = segment.get("review_action") or segment_actions.get(segment.get("id")) or segment_actions.get(segment.get("section_id")) or {}
+            segment_for_html = deepcopy(segment)
+            segment_for_html["_selected_variant_id"] = (
+                selections.get(segment.get("id"))
+                or selections.get(segment.get("section_id"))
+                or ""
+            )
             lines.extend(
                 [
-                    "<section class=\"segment\">",
+                    f"<section class=\"segment\" data-segment-card data-segment-id=\"{escape(segment_id, quote=True)}\">",
                     f"<h2>{escape(str(segment.get('label') or segment.get('id') or ''))}</h2>",
                     f"<div class=\"text\">{escape(str(segment.get('text') or ''))}</div>",
                     "<div class=\"grid\">",
                 ]
             )
             for variant in segment.get("variants", []):
-                lines.append(cls._comparison_card_html(variant, html_path, copy))
-            lines.extend(["</div>", "</section>"])
+                lines.append(cls._comparison_card_html(segment_for_html, variant, html_path, copy))
+            segment_action_notes = segment_action.get("notes") or segment_action.get("fix_target") or ""
+            segment_action_active = bool(segment_action)
+            lines.extend(
+                [
+                    "</div>",
+                    f"<div class=\"regenerate-all{' is-active' if segment_action_active else ''}\" data-regenerate-all>",
+                    (
+                        f"<label class=\"regenerate-pill\"><input type=\"radio\" "
+                        f"name=\"selection-{escape(segment_id, quote=True)}\" data-regenerate-all-field "
+                        f"value=\"__regenerate__\"{' checked' if segment_action_active else ''}>"
+                        f"<span>{escape(copy['regenerate_all'])}</span></label>"
+                    ),
+                    (
+                        f"<textarea data-segment-action-notes placeholder=\"{escape(copy['regenerate_all_placeholder'], quote=True)}\">"
+                        f"{escape(segment_action_notes)}</textarea>"
+                    ),
+                    "</div>",
+                    "</section>",
+                ]
+            )
 
-        lines.extend(["</main>", "</body>", "</html>"])
+        lines.extend([cls._comparison_script(copy), "</main>", "</body>", "</html>"])
         return "\n".join(lines) + "\n"
 
     @classmethod
-    def _comparison_card_html(cls, variant: dict[str, Any], html_path: Path, copy: dict[str, str]) -> str:
+    def _comparison_card_html(cls, segment: dict[str, Any], variant: dict[str, Any], html_path: Path, copy: dict[str, str]) -> str:
+        segment_id = str(segment.get("id") or "")
+        variant_id = str(variant.get("id") or "variant")
         provider = variant.get("selected_provider") or variant.get("preferred_provider") or "auto"
         params = variant.get("params", {})
         voice = (
@@ -1262,12 +2208,16 @@ a:hover { text-decoration: underline; }
         audio = variant.get("audio")
         audio_src = cls._html_audio_src(audio, html_path) if audio else ""
         note = variant.get("note") or ""
-        decision = (variant.get("review") or {}).get("decision", "UNREVIEWED")
+        review_notes = (variant.get("review") or {}).get("notes", "")
         audio_is_current = bool(audio and Path(audio).expanduser().exists()) and not variant.get("planned")
+        selected = str(segment.get("_selected_variant_id") or "") == variant_id
 
         lines = [
-            "<article class=\"card\">",
-            f"<h3>{escape(str(variant.get('id') or 'variant'))}</h3>",
+            (
+                f"<article class=\"card\" data-variant-card data-segment-id=\"{escape(segment_id, quote=True)}\" "
+                f"data-variant-id=\"{escape(variant_id, quote=True)}\">"
+            ),
+            f"<h3>{escape(variant_id)}</h3>",
             f"<div class=\"meta\">{escape(str(provider))} · {escape(str(voice))} · {escape(duration_text)}</div>",
         ]
         if audio_is_current:
@@ -1282,11 +2232,265 @@ a:hover { text-decoration: underline; }
         lines.extend(
             [
                 f"<p class=\"note\">{escape(note)}</p>",
-                f"<div class=\"meta\">{escape(copy['decision'])}: {escape(str(decision))}</div>",
+                "<div class=\"choose-row\">",
+                (
+                    f"<label class=\"choose-pill\"><input type=\"radio\" "
+                    f"name=\"selection-{escape(segment_id, quote=True)}\" "
+                    f"data-selection-field value=\"{escape(variant_id, quote=True)}\""
+                    f"{' checked' if selected else ''}>"
+                    f"<span>{escape(copy['use_this_take'])}</span></label>"
+                ),
+                "</div>",
+                (
+                    f"<textarea class=\"review-note{' is-hidden' if not selected and not review_notes else ''}\" "
+                    f"data-selection-note placeholder=\"{escape(copy['notes_placeholder'], quote=True)}\">"
+                    f"{escape(review_notes)}</textarea>"
+                ),
                 "</article>",
             ]
         )
         return "\n".join(lines)
+
+    @staticmethod
+    def _tts_decision_class(decision: str) -> str:
+        normalized = (decision or "UNREVIEWED").lower()
+        if normalized in {"approved", "keep_reference"}:
+            return "approved"
+        if normalized in {"needs_review", "regenerate"}:
+            return "regenerate"
+        if normalized == "rejected":
+            return "rejected"
+        return "unreviewed"
+
+    @staticmethod
+    def _comparison_script(copy: dict[str, str]) -> str:
+        script = f"""
+<div class=\"toast\" data-toast><strong>{escape(copy['toast_title'])}</strong><span>{escape(copy['toast_body'])}</span></div>
+<script>
+(() => {{
+  const storageKey = `tts-segment-lab-review:${{location.pathname}}`;
+  const segmentCards = Array.from(document.querySelectorAll('[data-segment-card]'));
+  const variantCards = Array.from(document.querySelectorAll('[data-variant-card]'));
+  const saveButtons = Array.from(document.querySelectorAll('[data-save-review]'));
+  const status = document.querySelector('[data-save-status]');
+  const exportPanel = document.querySelector('[data-export-panel]');
+  const exportJson = document.querySelector('[data-export-json]');
+  const toast = document.querySelector('[data-toast]');
+  const runId = saveButtons[0]?.dataset.runId || document.title;
+  const audioPlayers = Array.from(document.querySelectorAll('audio'));
+
+  audioPlayers.forEach((audio) => {{
+    audio.addEventListener('play', () => {{
+      audioPlayers.forEach((other) => {{
+        if (other !== audio) {{
+          other.pause();
+          other.currentTime = 0;
+        }}
+      }});
+    }});
+  }});
+
+  document.querySelector('[data-scroll-top]')?.addEventListener('click', () => {{
+    window.scrollTo({{ top: 0, behavior: 'smooth' }});
+  }});
+
+  function storeDraft(payload) {{
+    try {{ localStorage.setItem(storageKey, JSON.stringify(payload)); }} catch (_) {{}}
+  }}
+
+  async function copyText(text) {{
+    try {{
+      if (navigator.clipboard?.writeText) {{
+        await navigator.clipboard.writeText(text);
+        return true;
+      }}
+    }} catch (_) {{}}
+    try {{
+      const buffer = document.createElement('textarea');
+      buffer.value = text;
+      buffer.setAttribute('readonly', '');
+      buffer.style.position = 'fixed';
+      buffer.style.left = '-9999px';
+      document.body.appendChild(buffer);
+      buffer.select();
+      const copied = document.execCommand('copy');
+      buffer.remove();
+      return copied;
+    }} catch (_) {{
+      return false;
+    }}
+  }}
+
+  function refreshSegment(segment) {{
+    const selected = segment.querySelector('[data-selection-field]:checked');
+    const regenerateField = segment.querySelector('[data-regenerate-all-field]');
+    const regenerateBlock = segment.querySelector('[data-regenerate-all]');
+    const regenerateActive = Boolean(regenerateField?.checked);
+    regenerateBlock?.classList.toggle('is-active', regenerateActive);
+    segment.querySelectorAll('[data-variant-card]').forEach((card) => {{
+      const variantSelected = selected && card.dataset.variantId === selected.value;
+      const note = card.querySelector('[data-selection-note]');
+      note?.classList.toggle('is-hidden', !variantSelected);
+    }});
+  }}
+
+  function collectPayload() {{
+    const selections = {{}};
+    const annotations = {{}};
+    const segment_actions = {{}};
+    segmentCards.forEach((segment) => {{
+      const segmentId = segment.dataset.segmentId;
+      const selected = segment.querySelector('[data-selection-field]:checked')?.value || '';
+      const regenerateSelected = Boolean(segment.querySelector('[data-regenerate-all-field]:checked'));
+      if (regenerateSelected) {{
+        const notes = segment.querySelector('[data-segment-action-notes]')?.value.trim() || '';
+        segment_actions[segmentId] = {{
+          decision: 'REGENERATE',
+          issue_category: 'voice_review',
+          notes,
+          fix_target: notes,
+          requires_user_review: true,
+          user_decision: ''
+        }};
+        return;
+      }}
+      if (!selected) return;
+      selections[segmentId] = selected;
+      const card = segment.querySelector(`[data-variant-card][data-variant-id="${{CSS.escape(selected)}}"]`);
+      const notes = card?.querySelector('[data-selection-note]')?.value.trim() || '';
+      const decision = notes ? 'REGENERATE' : (selected.includes('reference') ? 'KEEP_REFERENCE' : 'APPROVED');
+      annotations[segmentId] = {{
+        [selected]: {{
+        decision,
+        reviewer: 'human',
+        issue_category: notes ? 'voice_review' : '',
+        notes,
+        fix_target: notes,
+        requires_user_review: Boolean(notes),
+        user_decision: ''
+        }}
+      }};
+    }});
+    return {{
+      version: '1.0',
+      run_id: runId,
+      saved_at: new Date().toISOString(),
+      selection_policy: 'one_variant_per_segment',
+      selections,
+      segment_actions,
+      annotations
+    }};
+  }}
+
+  function applyPayload(payload) {{
+    if (payload.selections) {{
+      Object.entries(payload.selections).forEach(([segmentId, variantId]) => {{
+        const field = document.querySelector(`[data-segment-card][data-segment-id="${{CSS.escape(segmentId)}}"] [data-selection-field][value="${{CSS.escape(variantId)}}"]`);
+        if (field) field.checked = true;
+      }});
+    }}
+    if (payload.segment_actions) {{
+      Object.entries(payload.segment_actions).forEach(([segmentId, action]) => {{
+        const segment = document.querySelector(`[data-segment-card][data-segment-id="${{CSS.escape(segmentId)}}"]`);
+        const field = segment?.querySelector('[data-regenerate-all-field]');
+        if (field) field.checked = true;
+        const notes = segment?.querySelector('[data-segment-action-notes]');
+        if (notes) notes.value = action.notes || action.fix_target || '';
+      }});
+    }}
+    const annotations = payload.annotations || {{}};
+    Object.entries(annotations).forEach(([segmentId, variants]) => {{
+      Object.entries(variants || {{}}).forEach(([variantId, annotation]) => {{
+        const card = document.querySelector(`[data-variant-card][data-segment-id="${{CSS.escape(segmentId)}}"][data-variant-id="${{CSS.escape(variantId)}}"]`);
+        if (!card) return;
+        const notes = card.querySelector('[data-selection-note]');
+        if (notes) notes.value = annotation.notes || annotation.fix_target || '';
+      }});
+    }});
+    segmentCards.forEach((segment) => refreshSegment(segment));
+  }}
+
+  function missingSelections() {{
+    const missing = [];
+    segmentCards.forEach((segment) => {{
+      const hasSelection = Boolean(segment.querySelector('[data-selection-field]:checked'));
+      const regenerateSelected = Boolean(segment.querySelector('[data-regenerate-all-field]:checked'));
+      const regenerateNotes = segment.querySelector('[data-segment-action-notes]')?.value.trim() || '';
+      const regenerateBlock = segment.querySelector('[data-regenerate-all]');
+      const missingSelection = !hasSelection && !regenerateSelected;
+      const missingRegenerateNote = regenerateSelected && !regenerateNotes;
+      segment.classList.toggle('is-missing-selection', missingSelection);
+      regenerateBlock?.classList.toggle('is-missing-note', missingRegenerateNote);
+      if (missingSelection || missingRegenerateNote) missing.push(segment.dataset.segmentId);
+    }});
+    return missing;
+  }}
+
+  try {{
+    const saved = JSON.parse(localStorage.getItem(storageKey) || '{{}}');
+    if (saved.selections || saved.annotations || saved.segment_actions) applyPayload(saved);
+  }} catch (_) {{}}
+
+  segmentCards.forEach((segment) => refreshSegment(segment));
+  document.addEventListener('input', (event) => {{
+    if (!event.target.matches('[data-selection-field], [data-selection-note], [data-regenerate-all-field], [data-segment-action-notes]')) return;
+    segmentCards.forEach((segment) => refreshSegment(segment));
+    storeDraft(collectPayload());
+  }});
+  document.addEventListener('change', (event) => {{
+    if (!event.target.matches('[data-selection-field], [data-selection-note], [data-regenerate-all-field], [data-segment-action-notes]')) return;
+    segmentCards.forEach((segment) => refreshSegment(segment));
+    storeDraft(collectPayload());
+    missingSelections();
+  }});
+
+  async function submitReview(clickedButton) {{
+    const missing = missingSelections();
+    if (missing.length) {{
+      if (status) status.textContent = `{copy['missing_selection_prefix']} ${{missing.join(', ')}}`;
+      if (toast) {{
+        toast.querySelector('strong').textContent = `{copy['missing_selection_title']}`;
+        toast.querySelector('span').textContent = `{copy['missing_selection_body']}`;
+        toast.classList.add('is-visible');
+        window.clearTimeout(toast._timer);
+        toast._timer = window.setTimeout(() => toast.classList.remove('is-visible'), 4200);
+      }}
+      return;
+    }}
+    const originalTexts = new Map(saveButtons.map((button) => [button, button.textContent]));
+    saveButtons.forEach((button) => {{
+      button.disabled = true;
+      button.textContent = button.dataset.submittedLabel || 'Submitted';
+    }});
+    const payload = collectPayload();
+    const jsonText = JSON.stringify(payload, null, 2);
+    storeDraft(payload);
+    const copied = await copyText(jsonText);
+    if (exportPanel && exportJson) {{
+      exportJson.value = jsonText;
+      exportPanel.classList.toggle('is-visible', !copied);
+    }}
+    if (status) status.textContent = status.dataset.submittedText || 'Review submitted.';
+    if (toast) {{
+      toast.querySelector('strong').textContent = `{copy['toast_title']}`;
+      toast.querySelector('span').textContent = `{copy['toast_body']}`;
+      toast.classList.add('is-visible');
+      window.clearTimeout(toast._timer);
+      toast._timer = window.setTimeout(() => {{
+        toast.classList.remove('is-visible');
+        saveButtons.forEach((button) => {{
+          button.disabled = false;
+          button.textContent = originalTexts.get(button) || button.textContent;
+        }});
+      }}, 5200);
+    }}
+  }}
+
+  saveButtons.forEach((button) => button.addEventListener('click', () => submitReview(button)));
+}})();
+</script>
+""".strip()
+        return script
 
     @staticmethod
     def _html_audio_src(audio: str, html_path: Path) -> str:
@@ -1313,22 +2517,80 @@ a:hover { text-decoration: underline; }
         if language == "zh":
             return {
                 "title": "TTS 音色对比",
-                "description": "同一段旁白下的不同 provider、音色和参数候选。逐段试听后，再把最终选择写入 selection.json。",
+                "description": "同一段旁白下的不同 provider、音色和参数候选。逐段试听后，提交评审给 Agent 继续处理。",
                 "project": "项目",
                 "segments": "片段",
                 "variants": "候选",
-                "status": "状态",
+                "selected": "已选",
+                "review_status": "评审状态",
+                "review_state_unreviewed": "待评审",
+                "review_state_selected": "待提交",
+                "review_state_recheck": "待复审",
+                "review_state_needs_changes": "有待调整",
+                "review_state_approved": "已通过",
+                "save_review": "提交试听评审",
+                "submitted_button": "已提交",
+                "save_hint": "每段旁白选择一个最终候选；如果选中的候选还需要微调，请在建议里写清楚。",
+                "submit_hint": "提交后会复制评审内容，粘贴发送给 Agent 即可继续处理。",
+                "submitted_hint": "试听评审已复制到剪贴板。粘贴发送给 Agent 即可继续处理。",
+                "export_title": "自动复制失败",
+                "export_body": "请手动复制下面的评审内容，并发送给 Agent 继续处理。",
+                "toast_title": "试听评审已保存",
+                "toast_body": "评审内容已复制到剪贴板。粘贴发送给 Agent 即可继续处理。",
+                "back_to_top": "返回顶部",
+                "use_this_take": "选用这条",
+                "variant_review": "微调建议",
+                "decision_empty": "未评审",
+                "decision_approved": "通过",
+                "decision_keep_reference": "保留参考",
+                "decision_regenerate": "需要重生成",
+                "decision_rejected": "不采纳",
+                "notes_placeholder": "可选：需要微调就写语气、重音、发音或速度建议；留空表示直接选用。",
+                "regenerate_all": "以上都不选，重新生成新的",
+                "regenerate_all_placeholder": "必填：请说明为什么这些都不合适，以及希望新音频怎么调整。",
+                "missing_selection_prefix": "还有片段未选择最终候选:",
+                "missing_selection_title": "请选择最终候选",
+                "missing_selection_body": "每段旁白都需要选一条候选，或选择重新生成并填写意见。",
                 "open_audio": "打开音频",
                 "audio_missing": "尚未生成音频。先运行 generate，或检查 reference 音频路径。",
                 "decision": "评审",
             }
         return {
             "title": "TTS Voice Comparison",
-            "description": "Audition provider, voice, and parameter variants against the same narration text. Listen by segment before writing final choices to selection.json.",
+            "description": "Audition provider, voice, and parameter variants against the same narration text. Listen by segment, then submit the review to the Agent.",
             "project": "Project",
             "segments": "Segments",
             "variants": "Variants",
-            "status": "Status",
+            "selected": "Selected",
+            "review_status": "Review",
+            "review_state_unreviewed": "Unreviewed",
+            "review_state_selected": "Ready to submit",
+            "review_state_recheck": "Needs recheck",
+            "review_state_needs_changes": "Needs changes",
+            "review_state_approved": "Approved",
+            "save_review": "Submit audition review",
+            "submitted_button": "Submitted",
+            "save_hint": "Choose one final take per segment; add optional notes if the chosen take needs refinement.",
+            "submit_hint": "Submitting copies the review content. Paste it to the Agent to continue.",
+            "submitted_hint": "Audition review was copied to the clipboard. Paste it to the Agent to continue.",
+            "export_title": "Automatic copy failed",
+            "export_body": "Manually copy the review content below and send it to the Agent.",
+            "toast_title": "Audition review saved",
+            "toast_body": "Review content was copied to the clipboard. Paste it to the Agent to continue.",
+            "back_to_top": "Back to top",
+            "use_this_take": "Use this take",
+            "variant_review": "Refinement note",
+            "decision_empty": "Unreviewed",
+            "decision_approved": "Pass",
+            "decision_keep_reference": "Keep reference",
+            "decision_regenerate": "Regenerate",
+            "decision_rejected": "Reject",
+            "notes_placeholder": "Optional: add tone, emphasis, pronunciation, or pace tweaks. Leave blank to use this take as-is.",
+            "regenerate_all": "None of these; generate a new take",
+            "regenerate_all_placeholder": "Required: explain why none work and how the next take should change.",
+            "missing_selection_prefix": "Segments missing a final take:",
+            "missing_selection_title": "Choose final takes",
+            "missing_selection_body": "Each segment needs a selected take, or a regenerate-new choice with notes.",
             "open_audio": "Open audio",
             "audio_missing": "Audio has not been generated yet. Run generate or check the reference audio path.",
             "decision": "Review",

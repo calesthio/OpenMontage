@@ -42,11 +42,27 @@ or delivery parameters can still improve the video.
 5. Run `generate` to create audition samples.
 6. Optionally run `analyze` to reuse OpenMontage's existing audio probe,
    energy, provider metadata, and optional transcription checks.
-7. Listen in `compare.html` or `review.md`, then optionally run `annotate`
-   for first-pass review notes.
-8. Ask the user to review only candidates marked `NEEDS_REVIEW` or `REGENERATE`.
-9. Run `select` to write `selection.json`.
-10. Reuse selected audio in final asset generation.
+7. Listen in `compare.html` or `review.md`, then run `annotate` with the
+   user's submitted comparison-page review to preserve the review record.
+8. If any selected take has refinement notes, or if the user selects "none of
+   these", run `apply_review` to generate a follow-up audition round. Send that
+   new `compare.html` back to the user for re-review.
+9. Repeat `annotate` -> `apply_review` for as many rounds as needed. Do not
+   assume the second page is final; continue until every segment has one
+   selected candidate and the submitted review has no `REGENERATE`,
+   `NEEDS_REVIEW`, or segment-level regenerate actions.
+10. When the user approves every segment, run `annotate` one last time with
+    the approved review payload; only that completed review writes the final
+    `selection.json`.
+11. Reuse selected audio in final asset generation.
+
+Before running `generate` or `apply_review`, make sure provider credentials are
+available. The tool automatically looks for `.env` files from the current
+workspace and relevant project/result directories upward, loads missing
+environment variables without overriding existing ones, and records only the
+loaded file paths in `loaded_env_files`. It never writes secret values into
+review artifacts. If no local `.env` is available, provide credentials through
+the normal process environment.
 
 ## Minimal Manifest
 
@@ -138,10 +154,13 @@ review prioritization, not final approval. Subjective delivery calls such as
 
 ## First-pass Annotation
 
-Use `annotate` after `generate` when an agent has listened to the candidates
-or compared them against reference audio. This does not make the final choice;
-it records the first-pass review and creates `review_annotated.md` plus
-`review_notes.json` so the user can focus on the uncertain candidates.
+Use `annotate` after `generate`, or after a user submits the interactive
+comparison-page review. It records the review, writes
+`review_annotated.md`/`review_notes.json`, and writes `selection.json` when the
+payload includes complete approved selections for every segment. If any selected
+take still has refinement notes, or if any segment asks for a fresh candidate,
+`selection.json` is deferred and `next_operation` tells the agent to run
+`apply_review`. It does not itself regenerate audio.
 
 ```json
 {
@@ -166,6 +185,44 @@ it records the first-pass review and creates `review_annotated.md` plus
 
 Supported decisions are `APPROVED`, `NEEDS_REVIEW`, `REGENERATE`, `REJECTED`,
 and `KEEP_REFERENCE`.
+
+The interactive `compare.html` exports the same structure. A selected take with
+no notes is treated as approved; a selected take with notes becomes a
+regeneration request; a segment-level `segment_actions` entry means no current
+candidate was acceptable and a fresh take is needed.
+
+The completion fields are machine-readable:
+
+- `review_complete=true` and `next_operation=complete`: final `selection.json`
+  is ready for Asset Director reuse.
+- `review_complete=false` and `next_operation=apply_review`: run a follow-up
+  audition round from the submitted notes.
+- `review_complete=false` and `next_operation=annotate`: at least one segment
+  still lacks a selected candidate.
+
+## Apply Review Feedback
+
+Use `apply_review` after `annotate` when the submitted review contains
+`REGENERATE`, `NEEDS_REVIEW`, or segment-level regenerate actions. It preserves
+the submitted review, creates a follow-up audition directory, keeps approved
+takes selected, and generates new takes for the parts that need refinement.
+
+```json
+{
+  "operation": "apply_review",
+  "results_path": "projects/my-explainer/assets/tts-lab/opening-audition-v1/results.json",
+  "annotations_path": "projects/my-explainer/assets/tts-lab/opening-audition-v1/review_submission.json",
+  "output_dir": "projects/my-explainer/assets/tts-lab/opening-audition-v2"
+}
+```
+
+The follow-up `compare.html` shows what changed, such as a speech-rate or voice
+change, and defaults the regenerated candidate as selected so the user can
+quickly accept it or request another adjustment.
+
+If the user still is not satisfied, run `annotate` on that follow-up page and
+then run `apply_review` again against the follow-up `results.json`. Continue
+this loop until the final submitted review is complete.
 
 ## Selection
 

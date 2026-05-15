@@ -70,7 +70,7 @@ Before generating anything:
 
 Before batch-generating assets, produce one sample of each expensive asset type and present them to the user for approval:
 
-1. **TTS audition**: If the project is generated-narration-led and the script contains TTS audition cues or voice-sensitive sections, run `tts_segment_lab` first. Compare provider/voice/parameter variants, write `review.md`, optionally run `analyze` for duration/energy/timing-hint checks, optionally use `annotate` for a first-pass review queue, ask the user to check only the uncertain candidates, and record approved choices in `selection.json`.
+1. **TTS audition**: If the project is generated-narration-led and the script contains TTS audition cues or voice-sensitive sections, run `tts_segment_lab` first. Compare provider/voice/parameter variants, write `review.md`, optionally run `analyze` for duration/energy/timing-hint checks, ask the user to review `compare.html`, then run `annotate` with their submitted review. If `next_operation=apply_review`, generate a follow-up audition page and ask the user to review that page. Repeat this loop as many times as needed until `review_complete=true` and the final `selection.json` exists.
 2. **TTS sample**: If no audition is needed, generate narration for the first script section only. Play it for the user. Confirm voice, pace, and tone are acceptable before generating the rest.
 3. **Image sample**: Generate one image for the most representative scene. Show it to the user. Confirm the style, quality, and prompt approach before batch-generating all images.
 4. **Music sample** (if using `music_gen`): Generate one short clip. Confirm mood and energy before committing.
@@ -82,8 +82,13 @@ delivery parameters is still useful.
 
 If the user rejects a sample:
 - Adjust the parameters (voice, prompt style, provider) and regenerate the sample.
+- For TTS Segment Lab reviews, prefer `apply_review` so the original review is
+  preserved and the next `compare.html` shows what changed. Keep iterating
+  until the user has approved one candidate for every reviewed segment; do not
+  use partial or pending-review selections as production narration.
 - Do not batch-generate until the sample is approved.
-- Max 3 sample iterations per asset type before escalating to the user for a decision.
+- Max 3 sample iterations per non-TTS asset type before escalating to the user
+  for a decision.
 
 This step typically costs $0.03–0.08 total and prevents $1–3 of wasted generation.
 

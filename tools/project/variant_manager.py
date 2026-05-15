@@ -6,6 +6,7 @@ import copy
 import json
 import time
 from datetime import datetime, timezone
+from html import escape
 from pathlib import Path
 from typing import Any
 
@@ -67,6 +68,8 @@ class VariantManager(BaseTool):
         "promote_variant",
         "archive_variant",
         "compare_variants",
+        "create_variant_review_page",
+        "apply_variant_review_payload",
         "validate_variant_manifest",
     ]
     best_for = [
@@ -94,6 +97,8 @@ class VariantManager(BaseTool):
                     "promote",
                     "archive",
                     "compare",
+                    "review",
+                    "annotate",
                     "validate",
                 ],
             },
@@ -143,6 +148,22 @@ class VariantManager(BaseTool):
                 "description": "Allow add to update an existing variant id.",
             },
             "archive_reason": {"type": "string"},
+            "output_dir": {
+                "type": "string",
+                "description": "Directory for review artifacts produced by operation='review'.",
+            },
+            "run_id": {
+                "type": "string",
+                "description": "Stable id for a review round. Defaults to project/channel/variant-review.",
+            },
+            "review_payload": {
+                "type": "object",
+                "description": "Review JSON pasted back from a generated review page.",
+            },
+            "annotations_path": {
+                "type": "string",
+                "description": "Path to review JSON pasted back from a generated review page.",
+            },
         },
     }
 
@@ -151,7 +172,10 @@ class VariantManager(BaseTool):
     )
     retry_policy = RetryPolicy(max_retries=0, retryable_errors=[])
     idempotency_key_fields = ["operation", "manifest_path", "variant_id", "channel"]
-    side_effects = ["writes variant manifest JSON for mutating operations"]
+    side_effects = [
+        "writes variant manifest JSON for mutating operations",
+        "writes local HTML/Markdown/JSON review artifacts for operation='review'",
+    ]
     user_visible_verification = [
         "Review the manifest current channels and variant summaries before delivery",
     ]
@@ -179,6 +203,10 @@ class VariantManager(BaseTool):
                 result = self._archive(inputs)
             elif operation == "compare":
                 result = self._compare(inputs)
+            elif operation == "review":
+                result = self._review(inputs)
+            elif operation == "annotate":
+                result = self._annotate(inputs)
             elif operation == "validate":
                 result = self._validate(inputs)
             else:
@@ -451,6 +479,571 @@ class VariantManager(BaseTool):
                 "changed_fields": sorted(diff),
                 "diff": diff,
             },
+        )
+
+    def _filtered_variants(
+        self, manifest: dict[str, Any], inputs: dict[str, Any]
+    ) -> list[dict[str, Any]]:
+        status = inputs.get("status")
+        purpose = inputs.get("purpose")
+        tag = inputs.get("tag")
+        include_archived = inputs.get("include_archived", False)
+        variants = []
+        for variant in manifest.get("variants", []):
+            if (
+                not include_archived
+                and status != "archived"
+                and variant.get("status") == "archived"
+            ):
+                continue
+            if status and variant.get("status") != status:
+                continue
+            if purpose and variant.get("purpose") != purpose:
+                continue
+            if tag and tag not in variant.get("tags", []):
+                continue
+            variants.append(variant)
+        return variants
+
+    def _review_output_dir(self, inputs: dict[str, Any], manifest_path: Path) -> Path:
+        output_dir = inputs.get("output_dir")
+        if output_dir:
+            return Path(output_dir).expanduser().resolve()
+        return manifest_path.with_name("variant-review")
+
+    def _review_payload(self, inputs: dict[str, Any]) -> dict[str, Any]:
+        if inputs.get("review_payload"):
+            return copy.deepcopy(inputs["review_payload"])
+        annotations_path = inputs.get("annotations_path")
+        if not annotations_path:
+            raise ValueError("review_payload or annotations_path is required for annotate")
+        path = Path(annotations_path).expanduser().resolve()
+        with open(path, encoding="utf-8") as handle:
+            return json.load(handle)
+
+    def _review(self, inputs: dict[str, Any]) -> ToolResult:
+        manifest_path = self._manifest_path(inputs)
+        manifest = self._read(manifest_path)
+        channel = inputs.get("channel") or "default"
+        variants = self._filtered_variants(manifest, inputs)
+        output_dir = self._review_output_dir(inputs, manifest_path)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        run_id = inputs.get("run_id") or (
+            f"{manifest.get('project_id', 'project')}-{channel}-variant-review"
+        )
+
+        review_data = {
+            "version": "1.0",
+            "tool": self.name,
+            "run_id": run_id,
+            "created_at": _now(),
+            "project_id": manifest.get("project_id"),
+            "channel": channel,
+            "source_manifest": str(manifest_path),
+            "current_variant_id": manifest.get("current", {}).get(channel),
+            "selection_policy": "one_variant_per_channel",
+            "variants": [
+                {
+                    "id": variant.get("id"),
+                    "name": variant.get("name"),
+                    "status": variant.get("status"),
+                    "purpose": variant.get("purpose"),
+                    "tags": variant.get("tags", []),
+                    "lineage": variant.get("lineage", {}),
+                    "inputs": variant.get("inputs", {}),
+                    "outputs": variant.get("outputs", {}),
+                    "review": variant.get("review", {}),
+                    "is_current": manifest.get("current", {}).get(channel) == variant.get("id"),
+                }
+                for variant in variants
+            ],
+        }
+
+        review_json_path = output_dir / "variant_review.json"
+        review_md_path = output_dir / "variant_review.md"
+        review_html_path = output_dir / "variant_review.html"
+        self._write_json(review_json_path, review_data)
+        review_md_path.write_text(
+            self._review_markdown(review_data), encoding="utf-8"
+        )
+        review_html_path.write_text(
+            self._review_html(review_data), encoding="utf-8"
+        )
+        return ToolResult(
+            success=True,
+            data={
+                "operation": "review",
+                "project_id": manifest.get("project_id"),
+                "channel": channel,
+                "run_id": run_id,
+                "variant_count": len(variants),
+                "current_variant_id": review_data["current_variant_id"],
+                "review_json": str(review_json_path),
+                "review_markdown": str(review_md_path),
+                "review_html": str(review_html_path),
+                "next_step": "Open review_html, choose a variant or request another variant, then paste the copied review JSON back into operation='annotate'.",
+            },
+            artifacts=[str(review_json_path), str(review_md_path), str(review_html_path)],
+        )
+
+    def _write_json(self, path: Path, data: dict[str, Any]) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(path.suffix + ".tmp")
+        with open(tmp, "w", encoding="utf-8") as handle:
+            json.dump(data, handle, indent=2, ensure_ascii=False)
+            handle.write("\n")
+        tmp.replace(path)
+
+    def _review_markdown(self, review_data: dict[str, Any]) -> str:
+        lines = [
+            "# Variant Review",
+            "",
+            f"- Project: `{review_data.get('project_id')}`",
+            f"- Channel: `{review_data.get('channel')}`",
+            f"- Run: `{review_data.get('run_id')}`",
+            f"- Current: `{review_data.get('current_variant_id') or 'none'}`",
+            "",
+            "## Candidates",
+            "",
+        ]
+        for variant in review_data.get("variants", []):
+            outputs = variant.get("outputs", {})
+            review = variant.get("review", {})
+            lines.extend(
+                [
+                    f"### {variant.get('name')} (`{variant.get('id')}`)",
+                    "",
+                    f"- Status: `{variant.get('status')}`",
+                    f"- Purpose: `{variant.get('purpose')}`",
+                    f"- Video: `{outputs.get('video') or ''}`",
+                    f"- Review: `{review.get('decision') or ''}` {review.get('notes') or ''}".rstrip(),
+                    "",
+                ]
+            )
+        lines.extend(
+            [
+                "## Human Review Loop",
+                "",
+                "Use `variant_manager` operation `annotate` with the copied review JSON.",
+                "If the selected variant is approved, it is promoted for the channel.",
+                "If notes request changes, the manifest records the requested revision and the workflow should render a new candidate before another review round.",
+                "",
+            ]
+        )
+        return "\n".join(lines)
+
+    def _review_html(self, review_data: dict[str, Any]) -> str:
+        payload = json.dumps(review_data, ensure_ascii=False)
+        variants_html = "\n".join(
+            self._variant_card_html(variant) for variant in review_data.get("variants", [])
+        )
+        project = escape(str(review_data.get("project_id") or ""))
+        channel = escape(str(review_data.get("channel") or "default"))
+        current = escape(str(review_data.get("current_variant_id") or "none"))
+        count = len(review_data.get("variants", []))
+        return f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Variant Manager Review</title>
+  <style>
+    :root {{
+      color-scheme: dark;
+      --bg: #07111f;
+      --panel: #101c2d;
+      --panel-2: #0b1424;
+      --line: #2a3b52;
+      --text: #eef6ff;
+      --muted: #a9b8cc;
+      --accent: #43d5ff;
+      --good: #5be49b;
+      --warn: #ffd166;
+    }}
+    * {{ box-sizing: border-box; }}
+    body {{
+      margin: 0;
+      background: radial-gradient(circle at top left, #12324b 0, var(--bg) 36rem);
+      color: var(--text);
+      font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }}
+    main {{ max-width: 1180px; margin: 0 auto; padding: 36px 24px 80px; }}
+    header {{
+      display: grid;
+      gap: 18px;
+      padding: 26px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: rgba(16, 28, 45, 0.78);
+      box-shadow: 0 18px 60px rgba(0,0,0,.25);
+    }}
+    h1 {{ margin: 0; font-size: clamp(32px, 5vw, 54px); letter-spacing: 0; }}
+    .muted {{ color: var(--muted); }}
+    .pills {{ display: flex; gap: 12px; flex-wrap: wrap; }}
+    .pill {{
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 14px;
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      font-weight: 700;
+    }}
+    .toolbar {{
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 20px;
+      align-items: center;
+      margin: 22px 0;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: rgba(9, 18, 31, .92);
+      backdrop-filter: blur(16px);
+    }}
+    .submit {{
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      padding: 14px 24px;
+      background: linear-gradient(135deg, #63ddff, #44d38d);
+      color: #02111d;
+      font-weight: 900;
+      font-size: 18px;
+      cursor: pointer;
+    }}
+    .notice {{
+      display: none;
+      margin-top: 12px;
+      padding: 14px 16px;
+      border: 1px solid rgba(91,228,155,.55);
+      border-radius: 16px;
+      background: rgba(91,228,155,.13);
+      color: #dfffee;
+      font-weight: 800;
+    }}
+    .notice.show {{ display: block; }}
+    .grid {{ display: grid; gap: 18px; }}
+    .card {{
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(16, 28, 45, 0.72);
+    }}
+    .card.current {{ border-color: rgba(91,228,155,.7); }}
+    .card h2 {{ margin: 0 0 10px; font-size: 28px; letter-spacing: 0; }}
+    .meta {{ display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0 18px; }}
+    .label {{
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+      font-weight: 700;
+    }}
+    .choose {{
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 18px 0 14px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      cursor: pointer;
+      font-weight: 900;
+      font-size: 18px;
+    }}
+    input[type="radio"] {{ width: 20px; height: 20px; accent-color: var(--accent); }}
+    textarea {{
+      width: 100%;
+      min-height: 92px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      resize: vertical;
+      background: var(--panel-2);
+      color: var(--text);
+      font: inherit;
+    }}
+    dl {{ display: grid; grid-template-columns: minmax(120px, 180px) 1fr; gap: 8px 14px; }}
+    dt {{ color: var(--muted); font-weight: 800; }}
+    dd {{ margin: 0; word-break: break-word; }}
+    pre {{
+      overflow: auto;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(0,0,0,.25);
+      color: var(--muted);
+    }}
+    .new-request {{ border-color: rgba(255,209,102,.65); }}
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Variant Manager Review</h1>
+    <p class="muted">Choose the deliverable variant for this channel. If none is good enough, request a new variant and paste the copied review JSON back to the Agent.</p>
+    <div class="pills">
+      <span class="pill">Project: {project}</span>
+      <span class="pill">Channel: {channel}</span>
+      <span class="pill">Variants: {count}</span>
+      <span class="pill">Current: {current}</span>
+    </div>
+  </header>
+
+  <section class="toolbar">
+    <div>
+      <strong>Review rule:</strong>
+      <span class="muted">pick one approved variant, or request another round. Notes on a selected variant mean it needs revision before promotion.</span>
+      <div id="notice" class="notice"></div>
+    </div>
+    <button class="submit" type="button" id="submit">Submit Review</button>
+  </section>
+
+  <section class="grid">
+    {variants_html}
+    <article class="card new-request">
+      <h2>None of these variants</h2>
+      <p class="muted">Use this when no current candidate should be promoted. Notes are required so the Agent can generate a better candidate.</p>
+      <label class="choose">
+        <input type="radio" name="selected_variant" value="__new_variant__" />
+        Request a new variant
+      </label>
+      <textarea id="new_variant_notes" placeholder="Required: describe what the next variant should change."></textarea>
+    </article>
+  </section>
+</main>
+<script id="review-data" type="application/json">{escape(payload)}</script>
+<script>
+  const reviewData = JSON.parse(document.getElementById('review-data').textContent);
+  const notice = document.getElementById('notice');
+  function selectedValue() {{
+    const selected = document.querySelector('input[name="selected_variant"]:checked');
+    return selected ? selected.value : '';
+  }}
+  function copyText(text) {{
+    if (navigator.clipboard && navigator.clipboard.writeText) {{
+      return navigator.clipboard.writeText(text);
+    }}
+    const area = document.createElement('textarea');
+    area.value = text;
+    document.body.appendChild(area);
+    area.select();
+    document.execCommand('copy');
+    area.remove();
+    return Promise.resolve();
+  }}
+  function buildPayload() {{
+    const selected = selectedValue();
+    if (!selected) {{
+      throw new Error('Please choose a variant or request a new one.');
+    }}
+    const now = new Date().toISOString();
+    if (selected === '__new_variant__') {{
+      const notes = document.getElementById('new_variant_notes').value.trim();
+      if (!notes) {{
+        throw new Error('Please describe what the new variant should change.');
+      }}
+      return {{
+        version: '1.0',
+        run_id: reviewData.run_id,
+        saved_at: now,
+        channel: reviewData.channel,
+        selection_policy: 'one_variant_per_channel',
+        selected_variant_id: '',
+        decision: 'REQUEST_NEW_VARIANT',
+        notes,
+        action: {{ decision: 'REQUEST_NEW_VARIANT', notes }}
+      }};
+    }}
+    const notes = (document.querySelector(`[data-notes-for="${{selected}}"]`) || {{ value: '' }}).value.trim();
+    return {{
+      version: '1.0',
+      run_id: reviewData.run_id,
+      saved_at: now,
+      channel: reviewData.channel,
+      selection_policy: 'one_variant_per_channel',
+      selected_variant_id: selected,
+      decision: notes ? 'NEEDS_REVISION' : 'APPROVED',
+      notes
+    }};
+  }}
+  document.getElementById('submit').addEventListener('click', async () => {{
+    try {{
+      const payload = buildPayload();
+      await copyText(JSON.stringify(payload, null, 2));
+      notice.textContent = 'Review copied to clipboard. Paste it back to the Agent; approved selections will be promoted, and revision/new-variant requests will start another round.';
+      notice.classList.add('show');
+      window.scrollTo({{ top: 0, behavior: 'smooth' }});
+    }} catch (err) {{
+      notice.textContent = err.message || String(err);
+      notice.classList.add('show');
+    }}
+  }});
+</script>
+</body>
+</html>
+"""
+
+    def _variant_card_html(self, variant: dict[str, Any]) -> str:
+        outputs = variant.get("outputs", {})
+        inputs = variant.get("inputs", {})
+        review = variant.get("review", {})
+        tags = " ".join(
+            f'<span class="label">{escape(str(tag))}</span>'
+            for tag in variant.get("tags", [])
+        )
+        outputs_json = escape(json.dumps(outputs, indent=2, ensure_ascii=False))
+        inputs_json = escape(json.dumps(inputs, indent=2, ensure_ascii=False))
+        current_class = " current" if variant.get("is_current") else ""
+        current_badge = '<span class="label">current</span>' if variant.get("is_current") else ""
+        vid = escape(str(variant.get("id") or ""))
+        name = escape(str(variant.get("name") or vid))
+        status = escape(str(variant.get("status") or ""))
+        purpose = escape(str(variant.get("purpose") or ""))
+        video = escape(str(outputs.get("video") or ""))
+        review_decision = escape(str(review.get("decision") or ""))
+        review_notes = escape(str(review.get("notes") or ""))
+        return f"""<article class="card{current_class}">
+  <h2>{name}</h2>
+  <div class="meta">
+    <span class="label">id: {vid}</span>
+    <span class="label">status: {status}</span>
+    <span class="label">purpose: {purpose}</span>
+    {current_badge}
+    {tags}
+  </div>
+  <dl>
+    <dt>Video</dt><dd>{video}</dd>
+    <dt>Review</dt><dd>{review_decision} {review_notes}</dd>
+  </dl>
+  <label class="choose">
+    <input type="radio" name="selected_variant" value="{vid}" />
+    Use this variant
+  </label>
+  <textarea data-notes-for="{vid}" placeholder="Optional: leave blank to approve and promote this variant. Add notes only if it needs revision before promotion."></textarea>
+  <details>
+    <summary>Inputs and outputs</summary>
+    <h3>Outputs</h3>
+    <pre>{outputs_json}</pre>
+    <h3>Inputs</h3>
+    <pre>{inputs_json}</pre>
+  </details>
+</article>"""
+
+    def _annotate(self, inputs: dict[str, Any]) -> ToolResult:
+        path = self._manifest_path(inputs)
+        manifest = self._read(path)
+        payload = self._review_payload(inputs)
+        channel = payload.get("channel") or inputs.get("channel") or "default"
+        selected_variant_id = payload.get("selected_variant_id") or payload.get("variant_id")
+        decision = str(payload.get("decision") or "").upper()
+        notes = str(payload.get("notes") or "").strip()
+        action = payload.get("action") or {}
+        now = _now()
+        artifacts = [str(path)]
+        metadata = manifest.setdefault("metadata", {})
+        metadata.setdefault("variant_review_history", []).append(
+            {
+                "run_id": payload.get("run_id"),
+                "saved_at": payload.get("saved_at"),
+                "applied_at": now,
+                "channel": channel,
+                "selected_variant_id": selected_variant_id or "",
+                "decision": decision,
+                "notes": notes,
+            }
+        )
+
+        review_complete = False
+        next_operation = "review"
+        pending_variant_ids: list[str] = []
+        approved_variant_id = ""
+
+        if action.get("decision") == "REQUEST_NEW_VARIANT" or decision == "REQUEST_NEW_VARIANT":
+            request_notes = str(action.get("notes") or notes).strip()
+            if not request_notes:
+                return ToolResult(
+                    success=False,
+                    error="notes are required when requesting a new variant",
+                )
+            metadata.setdefault("variant_review_requests", []).append(
+                {
+                    "run_id": payload.get("run_id"),
+                    "created_at": now,
+                    "channel": channel,
+                    "decision": "request_new_variant",
+                    "notes": request_notes,
+                }
+            )
+            next_operation = "add_variant"
+        elif selected_variant_id:
+            variant = self._get_variant(manifest, selected_variant_id)
+            needs_revision = decision in {
+                "NEEDS_REVISION",
+                "NEEDS_REVIEW",
+                "REQUEST_CHANGES",
+            } or bool(notes)
+            if needs_revision:
+                variant["review"] = {
+                    "decision": "needs_revision",
+                    "notes": notes or "Selected variant needs revision before promotion.",
+                    "known_issues": [notes] if notes else [],
+                }
+                variant["updated_at"] = now
+                pending_variant_ids = [selected_variant_id]
+                next_operation = "revise_variant"
+            else:
+                manifest.setdefault("current", {})[channel] = selected_variant_id
+                if variant.get("status") in {"draft", "candidate"}:
+                    variant["status"] = "approved"
+                variant["review"] = {
+                    "decision": "approved",
+                    "notes": notes,
+                    "known_issues": [],
+                }
+                variant["updated_at"] = now
+                review_complete = True
+                next_operation = "package_or_publish"
+                approved_variant_id = selected_variant_id
+        else:
+            next_operation = "review"
+
+        failed = self._save_checked(path, manifest)
+        if failed:
+            return failed
+
+        notes_path = path.with_name(f"{path.stem}.{channel}.review_notes.json")
+        review_notes = {
+            "version": "1.0",
+            "source_payload": payload,
+            "manifest_path": str(path),
+            "project_id": manifest.get("project_id"),
+            "channel": channel,
+            "applied_at": now,
+            "review_complete": review_complete,
+            "next_operation": next_operation,
+            "approved_variant_id": approved_variant_id,
+            "pending_variant_ids": pending_variant_ids,
+            "current": manifest.get("current", {}),
+        }
+        self._write_json(notes_path, review_notes)
+        artifacts.append(str(notes_path))
+        return ToolResult(
+            success=True,
+            data={
+                "operation": "annotate",
+                "project_id": manifest.get("project_id"),
+                "channel": channel,
+                "review_complete": review_complete,
+                "next_operation": next_operation,
+                "approved_variant_id": approved_variant_id,
+                "pending_variant_ids": pending_variant_ids,
+                "current": manifest.get("current", {}),
+                "review_notes": str(notes_path),
+            },
+            artifacts=artifacts,
         )
 
     def _validate(self, inputs: dict[str, Any]) -> ToolResult:

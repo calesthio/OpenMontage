@@ -84,6 +84,12 @@ projects/<project-id>/artifacts/variants.json
 - `archive`: archive a non-current variant.
 - `compare`: compare the tracked inputs, outputs, review state, and lineage of
   two variants.
+- `review`: generate a local HTML/Markdown/JSON review page for the current
+  set of candidate variants.
+- `annotate`: apply the review JSON pasted back from the review page. Approved
+  selections are promoted for the requested channel; revision notes are written
+  back to the selected variant without promoting it; "none of these" requests
+  are recorded as a new-variant request.
 - `validate`: validate schema, duplicate ids, and current-channel references.
 
 ## Workflow Placement
@@ -110,3 +116,51 @@ instead of overwriting one global winner. Examples:
 Promote a variant only after it has passed the relevant human or agent review.
 Archive a variant only after another variant has replaced it for every current
 channel where it was used.
+
+## Human Review Loop
+
+Use `review` when several render candidates are ready and a human needs to pick
+the delivery variant:
+
+```json
+{
+  "operation": "review",
+  "manifest_path": "projects/demo/artifacts/variants.json",
+  "channel": "standalone_teaser",
+  "output_dir": "projects/demo/reviews/variant-round-1"
+}
+```
+
+Open the generated `variant_review.html`, choose one variant, or choose "none of
+these" and describe what should change. The page copies a small review JSON
+payload. Pass that payload to `annotate`:
+
+```json
+{
+  "operation": "annotate",
+  "manifest_path": "projects/demo/artifacts/variants.json",
+  "review_payload": {
+    "version": "1.0",
+    "run_id": "demo-standalone_teaser-variant-review",
+    "channel": "standalone_teaser",
+    "selected_variant_id": "v3-standalone",
+    "decision": "APPROVED",
+    "notes": ""
+  }
+}
+```
+
+`annotate` returns a workflow hint:
+
+- `review_complete=true`, `next_operation=package_or_publish`: the selected
+  variant is now current for the channel and downstream packaging can proceed.
+- `review_complete=false`, `next_operation=revise_variant`: the selected
+  variant has human notes and should be revised into a new candidate before the
+  next review round.
+- `review_complete=false`, `next_operation=add_variant`: none of the candidates
+  were accepted, so the workflow should create a new candidate from the review
+  notes.
+
+This keeps Variant Manager focused on decision history. It does not render the
+revision itself and does not package final files; those steps remain with the
+composer and final package helper.

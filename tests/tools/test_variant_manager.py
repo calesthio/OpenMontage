@@ -223,6 +223,133 @@ def test_compare_reports_changed_fields(tmp_path: Path):
     assert result.data["diff"]["outputs"]["b"]["video"] == "renders/final-v2.mp4"
 
 
+def test_review_writes_interactive_page(tmp_path: Path):
+    path = _init_manifest(tmp_path)
+    output_dir = tmp_path / "variant-review"
+    tool = VariantManager()
+    tool.execute({"operation": "add", "manifest_path": str(path), "variant": _variant("v1")})
+    tool.execute(
+        {
+            "operation": "add",
+            "manifest_path": str(path),
+            "variant": _variant("v2", video="renders/final-v2.mp4"),
+        }
+    )
+
+    result = tool.execute(
+        {
+            "operation": "review",
+            "manifest_path": str(path),
+            "channel": "standalone",
+            "output_dir": str(output_dir),
+            "run_id": "round-1",
+        }
+    )
+
+    assert result.success, result.error
+    html = (output_dir / "variant_review.html").read_text(encoding="utf-8")
+    assert "Variant Manager Review" in html
+    assert "Use this variant" in html
+    assert "Request a new variant" in html
+    assert "round-1" in html
+    assert result.data["variant_count"] == 2
+
+
+def test_annotate_promotes_approved_selection(tmp_path: Path):
+    path = _init_manifest(tmp_path)
+    tool = VariantManager()
+    tool.execute({"operation": "add", "manifest_path": str(path), "variant": _variant("v1")})
+    tool.execute(
+        {
+            "operation": "add",
+            "manifest_path": str(path),
+            "variant": _variant("v2", video="renders/final-v2.mp4"),
+        }
+    )
+
+    result = tool.execute(
+        {
+            "operation": "annotate",
+            "manifest_path": str(path),
+            "review_payload": {
+                "version": "1.0",
+                "run_id": "round-1",
+                "channel": "standalone",
+                "selected_variant_id": "v2",
+                "decision": "APPROVED",
+                "notes": "",
+            },
+        }
+    )
+
+    assert result.success, result.error
+    assert result.data["review_complete"] is True
+    assert result.data["next_operation"] == "package_or_publish"
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    assert manifest["current"] == {"standalone": "v2"}
+    assert manifest["variants"][1]["status"] == "approved"
+    assert manifest["variants"][1]["review"]["decision"] == "approved"
+
+
+def test_annotate_keeps_candidate_when_revision_requested(tmp_path: Path):
+    path = _init_manifest(tmp_path)
+    tool = VariantManager()
+    tool.execute({"operation": "add", "manifest_path": str(path), "variant": _variant("v1")})
+
+    result = tool.execute(
+        {
+            "operation": "annotate",
+            "manifest_path": str(path),
+            "review_payload": {
+                "version": "1.0",
+                "run_id": "round-1",
+                "channel": "default",
+                "selected_variant_id": "v1",
+                "decision": "NEEDS_REVISION",
+                "notes": "The closing frame should hold longer.",
+            },
+        }
+    )
+
+    assert result.success, result.error
+    assert result.data["review_complete"] is False
+    assert result.data["next_operation"] == "revise_variant"
+    assert result.data["pending_variant_ids"] == ["v1"]
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    assert manifest["current"] == {}
+    assert manifest["variants"][0]["status"] == "candidate"
+    assert manifest["variants"][0]["review"]["decision"] == "needs_revision"
+
+
+def test_annotate_records_new_variant_request(tmp_path: Path):
+    path = _init_manifest(tmp_path)
+    result = VariantManager().execute(
+        {
+            "operation": "annotate",
+            "manifest_path": str(path),
+            "review_payload": {
+                "version": "1.0",
+                "run_id": "round-1",
+                "channel": "default",
+                "decision": "REQUEST_NEW_VARIANT",
+                "notes": "None of these work for a standalone teaser.",
+                "action": {
+                    "decision": "REQUEST_NEW_VARIANT",
+                    "notes": "None of these work for a standalone teaser.",
+                },
+            },
+        }
+    )
+
+    assert result.success, result.error
+    assert result.data["review_complete"] is False
+    assert result.data["next_operation"] == "add_variant"
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    requests = manifest["metadata"]["variant_review_requests"]
+    assert requests[0]["decision"] == "request_new_variant"
+    assert "standalone teaser" in requests[0]["notes"]
+
+
 def test_validate_reports_missing_current_reference(tmp_path: Path):
     path = _init_manifest(tmp_path)
     manifest = json.loads(path.read_text())

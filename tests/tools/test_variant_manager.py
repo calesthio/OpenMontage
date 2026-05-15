@@ -226,6 +226,13 @@ def test_compare_reports_changed_fields(tmp_path: Path):
 def test_review_writes_interactive_page(tmp_path: Path):
     path = _init_manifest(tmp_path)
     output_dir = tmp_path / "variant-review"
+    (tmp_path / "artifacts").mkdir()
+    (tmp_path / "artifacts" / "captions.json").write_text(
+        json.dumps({"lines": ["生产问题出现后，先找到线索，再定位调用链。"]}),
+        encoding="utf-8",
+    )
+    (tmp_path / "renders").mkdir()
+    (tmp_path / "renders" / "final.mp4").write_bytes(b"fake mp4")
     tool = VariantManager()
     tool.execute({"operation": "add", "manifest_path": str(path), "variant": _variant("v1")})
     tool.execute(
@@ -248,15 +255,32 @@ def test_review_writes_interactive_page(tmp_path: Path):
 
     assert result.success, result.error
     html = (output_dir / "variant_review.html").read_text(encoding="utf-8")
-    assert "Variant Manager Review" in html
-    assert "Use this variant" in html
-    assert "Request a new variant" in html
+    assert result.data["language"] == "zh"
+    assert 'lang="zh-CN"' in html
+    assert "Variant Manager 版本评审" in html
+    assert "选用这个版本" in html
+    assert "要求生成新版本" in html
+    assert "<video controls" in html
+    assert "&quot;tool&quot;" not in html
+    assert '"tool": "variant_manager"' in html
+    assert "onplay=" in html
     assert "round-1" in html
     assert result.data["variant_count"] == 2
 
 
 def test_annotate_promotes_approved_selection(tmp_path: Path):
     path = _init_manifest(tmp_path)
+    (tmp_path / "renders").mkdir()
+    (tmp_path / "renders" / "final-v2.mp4").write_bytes(b"fake video")
+    (tmp_path / "artifacts").mkdir()
+    (tmp_path / "artifacts" / "script.json").write_text(
+        json.dumps({"version": "1.0", "title": "Demo", "sections": []}),
+        encoding="utf-8",
+    )
+    (tmp_path / "artifacts" / "captions.json").write_text(
+        json.dumps({"lines": ["Hello"]}),
+        encoding="utf-8",
+    )
     tool = VariantManager()
     tool.execute({"operation": "add", "manifest_path": str(path), "variant": _variant("v1")})
     tool.execute(
@@ -285,6 +309,13 @@ def test_annotate_promotes_approved_selection(tmp_path: Path):
     assert result.success, result.error
     assert result.data["review_complete"] is True
     assert result.data["next_operation"] == "package_or_publish"
+    assert result.data["package_inputs"]["project_id"] == "demo-project"
+    assert result.data["package_inputs"]["variant_id"] == "v2"
+    assert result.data["package_inputs"]["channel"] == "standalone"
+    assert result.data["package_inputs"]["video_path"].endswith("renders/final-v2.mp4")
+    assert result.data["package_inputs"]["script_path"].endswith("artifacts/script.json")
+    roles = {item["role"] for item in result.data["package_inputs"]["extra_files"]}
+    assert {"captions", "variant_review_notes"} <= roles
     manifest = json.loads(path.read_text(encoding="utf-8"))
     assert manifest["current"] == {"standalone": "v2"}
     assert manifest["variants"][1]["status"] == "approved"

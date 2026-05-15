@@ -154,6 +154,9 @@ payload. Pass that payload to `annotate`:
 
 - `review_complete=true`, `next_operation=package_or_publish`: the selected
   variant is now current for the channel and downstream packaging can proceed.
+  The result also includes `package_inputs` with the approved `video_path`,
+  `project_id`, `variant_id`, `channel`, review notes, and any existing sidecar
+  files that can be passed to the final package helper.
 - `review_complete=false`, `next_operation=revise_variant`: the selected
   variant has human notes and should be revised into a new candidate before the
   next review round.

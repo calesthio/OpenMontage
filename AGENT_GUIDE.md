@@ -534,6 +534,7 @@ Each stage produces one canonical artifact that becomes the contract for the nex
 | `assets` | `*-director.md` | `asset_manifest` | Provenance, paths, model/tool metadata, scene linkage |
 | `edit` | `*-director.md` | `edit_decisions` | Concrete cuts, overlays, subtitle/music decisions |
 | `compose` | `*-director.md` | `render_report` | Output paths, encoding profile, verification notes |
+| post-compose / publish prep | `variant_manager` | `variant_manifest` | Current deliverable channels, variant lineage, input/output refs |
 
 Stage contract rules:
 
@@ -541,6 +542,10 @@ Stage contract rules:
 - Canonical artifacts must validate against the JSON schema in `schemas/artifacts/`.
 - Non-canonical outputs such as media files belong in stage-specific directories.
 - Tools should record seeds/model versions for reproducibility.
+- When a project has multiple delivery variants, maintain a `variant_manifest`
+  so current versions and superseded candidates are explicit.
+- Track complete render candidates and approved deliverables; do not clutter
+  the manifest with scratch previews or one-off local experiments.
 
 ## Reviewer Protocol
 

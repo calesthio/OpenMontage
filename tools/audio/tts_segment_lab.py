@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import re
 import time
+from html import escape
 from copy import deepcopy
 from datetime import datetime, timezone
 from pathlib import Path
@@ -99,6 +100,7 @@ class TTSSegmentLab(BaseTool):
             "output_dir": {"type": "string"},
             "results_path": {"type": "string"},
             "review_path": {"type": "string"},
+            "compare_path": {"type": "string"},
             "audio_profile_path": {"type": "string"},
             "analysis_path": {"type": "string"},
             "review_notes_path": {"type": "string"},
@@ -113,14 +115,14 @@ class TTSSegmentLab(BaseTool):
     side_effects = [
         "writes TTS audition audio samples",
         "writes per-variant provider metadata",
-        "writes results.json and review.md",
+        "writes results.json, review.md, and compare.html",
         "writes audio_profile.json and analysis.md in analyze mode",
         "writes review_notes.json and review_annotated.md in annotate mode",
         "writes selection.json in select mode",
         "calls configured TTS providers in generate mode",
     ]
     user_visible_verification = [
-        "Listen to generated samples in review.md",
+        "Listen to generated samples in compare.html or review.md",
         "Confirm selection.json points to the chosen narration variants",
     ]
 
@@ -187,6 +189,7 @@ class TTSSegmentLab(BaseTool):
             "created_at": datetime.now(timezone.utc).isoformat(),
             "output_dir": str(output_dir),
             "script_path": manifest.get("script_path") or manifest.get("script"),
+            "review_language": manifest.get("review_language", "auto"),
             "segments": [],
         }
         artifacts: list[str] = []
@@ -257,9 +260,11 @@ class TTSSegmentLab(BaseTool):
 
         results_path = output_dir / "results.json"
         review_path = output_dir / "review.md"
+        compare_path = output_dir / "compare.html"
         self._write_json(results_path, results)
         review_path.write_text(self._review_markdown(results), encoding="utf-8")
-        artifacts.extend([str(results_path), str(review_path)])
+        compare_path.write_text(self._comparison_html(results, compare_path), encoding="utf-8")
+        artifacts.extend([str(results_path), str(review_path), str(compare_path)])
 
         return ToolResult(
             success=results["status"] != "completed-with-errors",
@@ -269,6 +274,7 @@ class TTSSegmentLab(BaseTool):
                 "output_dir": str(output_dir),
                 "results_path": str(results_path),
                 "review_path": str(review_path),
+                "compare_path": str(compare_path),
                 "segments": results["segments"],
             },
             artifacts=artifacts,
@@ -1111,3 +1117,218 @@ class TTSSegmentLab(BaseTool):
                 )
             lines.append("")
         return "\n".join(lines)
+
+    @classmethod
+    def _comparison_html(cls, results: dict[str, Any], html_path: Path) -> str:
+        language = cls._review_language(results)
+        copy = cls._ui_copy(language)
+        title = f"{copy['title']}: {results.get('run_id', '')}".strip()
+        summary = cls._review_summary(results)
+
+        css = """
+:root {
+  color-scheme: dark;
+  --bg: #0c111d;
+  --panel: rgba(255,255,255,.06);
+  --panel-strong: rgba(255,255,255,.1);
+  --border: rgba(149,172,214,.24);
+  --text: #eef4ff;
+  --muted: #aebbd0;
+  --accent: #68d8ff;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(104,216,255,.16), transparent 32rem),
+    linear-gradient(135deg, #0a0f1d 0%, var(--bg) 54%, #101524 100%);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", sans-serif;
+  line-height: 1.5;
+}
+main { max-width: 1120px; margin: 0 auto; padding: 36px 28px 64px; }
+header { margin-bottom: 26px; }
+h1 { margin: 0 0 10px; font-size: 30px; letter-spacing: 0; }
+p { color: var(--muted); }
+.summary { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.pill {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: 999px;
+  padding: 6px 12px;
+  color: #dbe7fb;
+  font-size: 13px;
+}
+.segment {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: 14px;
+  padding: 22px;
+  margin: 22px 0;
+  box-shadow: 0 18px 48px rgba(0,0,0,.22);
+}
+.segment h2 { margin: 0 0 12px; font-size: 22px; letter-spacing: 0; }
+.text {
+  color: #dbe7fb;
+  background: rgba(0,0,0,.2);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+.card {
+  border: 1px solid rgba(149,172,214,.22);
+  background: rgba(8,14,27,.74);
+  border-radius: 12px;
+  padding: 14px;
+}
+.card h3 { margin: 0 0 6px; font-size: 16px; letter-spacing: 0; }
+.meta { color: #94a7c4; font-size: 13px; margin-bottom: 10px; }
+.note { min-height: 1.5em; color: var(--muted); font-size: 13px; }
+audio { width: 100%; margin: 8px 0; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.missing {
+  border: 1px dashed rgba(149,172,214,.28);
+  color: #94a7c4;
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+@media (max-width: 720px) {
+  main { padding: 28px 16px 46px; }
+  h1 { font-size: 25px; }
+}
+""".strip()
+
+        lines = [
+            "<!doctype html>",
+            f"<html lang=\"{escape(language)}\">",
+            "<head>",
+            "<meta charset=\"utf-8\">",
+            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">",
+            f"<title>{escape(title)}</title>",
+            f"<style>{css}</style>",
+            "</head>",
+            "<body>",
+            "<main>",
+            "<header>",
+            f"<h1>{escape(title)}</h1>",
+            f"<p>{escape(copy['description'])}</p>",
+            "<div class=\"summary\">",
+            f"<span class=\"pill\">{escape(copy['project'])}: {escape(str(results.get('project') or '-'))}</span>",
+            f"<span class=\"pill\">{escape(copy['segments'])}: {summary['segments']}</span>",
+            f"<span class=\"pill\">{escape(copy['variants'])}: {summary['variants']}</span>",
+            f"<span class=\"pill\">{escape(copy['status'])}: {escape(str(results.get('status') or '-'))}</span>",
+            "</div>",
+            "</header>",
+        ]
+
+        for segment in results.get("segments", []):
+            lines.extend(
+                [
+                    "<section class=\"segment\">",
+                    f"<h2>{escape(str(segment.get('label') or segment.get('id') or ''))}</h2>",
+                    f"<div class=\"text\">{escape(str(segment.get('text') or ''))}</div>",
+                    "<div class=\"grid\">",
+                ]
+            )
+            for variant in segment.get("variants", []):
+                lines.append(cls._comparison_card_html(variant, html_path, copy))
+            lines.extend(["</div>", "</section>"])
+
+        lines.extend(["</main>", "</body>", "</html>"])
+        return "\n".join(lines) + "\n"
+
+    @classmethod
+    def _comparison_card_html(cls, variant: dict[str, Any], html_path: Path, copy: dict[str, str]) -> str:
+        provider = variant.get("selected_provider") or variant.get("preferred_provider") or "auto"
+        params = variant.get("params", {})
+        voice = (
+            params.get("voice_id")
+            or params.get("voice")
+            or params.get("model")
+            or params.get("model_id")
+            or params.get("source")
+            or provider
+        )
+        duration = variant.get("duration_seconds")
+        duration_text = f"{duration:.2f}s" if isinstance(duration, (int, float)) else "-"
+        audio = variant.get("audio")
+        audio_src = cls._html_audio_src(audio, html_path) if audio else ""
+        note = variant.get("note") or ""
+        decision = (variant.get("review") or {}).get("decision", "UNREVIEWED")
+
+        lines = [
+            "<article class=\"card\">",
+            f"<h3>{escape(str(variant.get('id') or 'variant'))}</h3>",
+            f"<div class=\"meta\">{escape(str(provider))} · {escape(str(voice))} · {escape(duration_text)}</div>",
+        ]
+        if audio and Path(audio).expanduser().exists():
+            lines.extend(
+                [
+                    f"<audio controls preload=\"metadata\" src=\"{escape(audio_src, quote=True)}\"></audio>",
+                    f"<p><a href=\"{escape(audio_src, quote=True)}\">{escape(copy['open_audio'])}</a></p>",
+                ]
+            )
+        else:
+            lines.append(f"<div class=\"missing\">{escape(copy['audio_missing'])}</div>")
+        lines.extend(
+            [
+                f"<p class=\"note\">{escape(note)}</p>",
+                f"<div class=\"meta\">{escape(copy['decision'])}: {escape(str(decision))}</div>",
+                "</article>",
+            ]
+        )
+        return "\n".join(lines)
+
+    @staticmethod
+    def _html_audio_src(audio: str, html_path: Path) -> str:
+        audio_path = Path(audio).expanduser().resolve()
+        try:
+            return audio_path.relative_to(html_path.parent.resolve()).as_posix()
+        except ValueError:
+            return audio_path.as_uri()
+
+    @classmethod
+    def _review_language(cls, results: dict[str, Any]) -> str:
+        requested = str(results.get("review_language") or "auto").lower()
+        if requested in {"zh", "zh-cn", "cn", "chinese"}:
+            return "zh"
+        if requested in {"en", "en-us", "english"}:
+            return "en"
+        text = " ".join(str(segment.get("text", "")) for segment in results.get("segments", []))
+        cjk_chars = len(re.findall(r"[\u3400-\u9fff]", text))
+        latin_words = len(re.findall(r"[A-Za-z]+", text))
+        return "zh" if cjk_chars >= 10 and cjk_chars >= latin_words else "en"
+
+    @staticmethod
+    def _ui_copy(language: str) -> dict[str, str]:
+        if language == "zh":
+            return {
+                "title": "TTS 音色对比",
+                "description": "同一段旁白下的不同 provider、音色和参数候选。逐段试听后，再把最终选择写入 selection.json。",
+                "project": "项目",
+                "segments": "片段",
+                "variants": "候选",
+                "status": "状态",
+                "open_audio": "打开音频",
+                "audio_missing": "尚未生成音频。先运行 generate，或检查 reference 音频路径。",
+                "decision": "评审",
+            }
+        return {
+            "title": "TTS Voice Comparison",
+            "description": "Audition provider, voice, and parameter variants against the same narration text. Listen by segment before writing final choices to selection.json.",
+            "project": "Project",
+            "segments": "Segments",
+            "variants": "Variants",
+            "status": "Status",
+            "open_audio": "Open audio",
+            "audio_missing": "Audio has not been generated yet. Run generate or check the reference audio path.",
+            "decision": "Review",
+        }

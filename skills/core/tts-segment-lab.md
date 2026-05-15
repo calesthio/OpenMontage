@@ -42,7 +42,8 @@ or delivery parameters can still improve the video.
 5. Run `generate` to create audition samples.
 6. Optionally run `analyze` to reuse OpenMontage's existing audio probe,
    energy, provider metadata, and optional transcription checks.
-7. Listen to `review.md` and optionally run `annotate` for first-pass review notes.
+7. Listen in `compare.html` or `review.md`, then optionally run `annotate`
+   for first-pass review notes.
 8. Ask the user to review only candidates marked `NEEDS_REVIEW` or `REGENERATE`.
 9. Run `select` to write `selection.json`.
 10. Reuse selected audio in final asset generation.
@@ -92,6 +93,20 @@ or delivery parameters can still improve the video.
   ]
 }
 ```
+
+## Review Outputs
+
+`dry_run` and `generate` both write review artifacts:
+
+- `results.json` with every segment, variant, audio path, provider, duration,
+  and parameter summary;
+- `review.md` for text-first review and linking;
+- `compare.html` for segment-by-segment browser playback of generated and
+  reference candidates.
+
+The comparison page defaults to English UI copy, but automatically switches to
+Chinese when the narration text is primarily Chinese. Set `review_language` to
+`en` or `zh` in the manifest to override the automatic choice.
 
 ## Audio Analysis
 

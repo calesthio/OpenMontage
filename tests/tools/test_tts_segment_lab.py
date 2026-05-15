@@ -71,8 +71,10 @@ def test_dry_run_extracts_script_section_and_writes_review(tmp_path):
     assert result.data["status"] == "completed"
     results_path = Path(result.data["results_path"])
     review_path = Path(result.data["review_path"])
+    compare_path = Path(result.data["compare_path"])
     assert results_path.exists()
     assert review_path.exists()
+    assert compare_path.exists()
 
     payload = json.loads(results_path.read_text(encoding="utf-8"))
     assert payload["segments"][0]["text"] == "Opening line for audition."
@@ -81,6 +83,11 @@ def test_dry_run_extracts_script_section_and_writes_review(tmp_path):
     assert payload["segments"][0]["variants"][1]["planned"] is True
     assert "Opening line for audition." in review_path.read_text(encoding="utf-8")
     assert "reference-current" in review_path.read_text(encoding="utf-8")
+    compare_html = compare_path.read_text(encoding="utf-8")
+    assert "TTS Voice Comparison" in compare_html
+    assert "Opening line for audition." in compare_html
+    assert "reference-current" in compare_html
+    assert "Audio has not been generated yet" in compare_html
 
 
 def test_generate_routes_variants_through_tts_selector(monkeypatch, tmp_path):
@@ -115,6 +122,40 @@ def test_generate_routes_variants_through_tts_selector(monkeypatch, tmp_path):
     assert calls[1]["voice_id"] == "zh_female_vv_uranus_bigtts"
     assert calls[1]["speech_rate"] == 8
     assert Path(result.data["results_path"]).exists()
+    compare_path = Path(result.data["compare_path"])
+    assert compare_path.exists()
+    compare_html = compare_path.read_text(encoding="utf-8")
+    assert "doubao" in compare_html
+    assert "opening__doubao.mp3" in compare_html
+
+
+def test_compare_page_uses_chinese_ui_for_chinese_script(tmp_path):
+    script_path = tmp_path / "script.json"
+    script_path.write_text(
+        json.dumps({"sections": [{"id": "s1", "text": "生产问题出现时，先从日志里找到线索。"}]}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    manifest = {
+        "project": "unit-test",
+        "run_id": "zh-run",
+        "script_path": str(script_path),
+        "output_dir": str(tmp_path / "tts-lab-zh"),
+        "segments": [
+            {
+                "id": "opening",
+                "section_id": "s1",
+                "variants": [{"id": "auto"}],
+            }
+        ],
+    }
+
+    result = TTSSegmentLab().execute({"operation": "dry_run", "manifest": manifest})
+
+    assert result.success
+    compare_html = Path(result.data["compare_path"]).read_text(encoding="utf-8")
+    assert '<html lang="zh">' in compare_html
+    assert "TTS 音色对比" in compare_html
+    assert "尚未生成音频" in compare_html
 
 
 def test_select_writes_selection_manifest(monkeypatch, tmp_path):

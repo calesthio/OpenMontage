@@ -12,6 +12,7 @@ import re
 import time
 from copy import deepcopy
 from datetime import datetime, timezone
+from html import escape
 from pathlib import Path
 from typing import Any
 
@@ -120,8 +121,10 @@ class VisualTimingQA(BaseTool):
             "output_dir": {"type": "string"},
             "results_path": {"type": "string"},
             "review_path": {"type": "string"},
+            "review_html_path": {"type": "string"},
             "review_notes_path": {"type": "string"},
             "annotated_review_path": {"type": "string"},
+            "annotated_review_html_path": {"type": "string"},
             "suggested_cues_path": {"type": "string"},
             "suggested_review_path": {"type": "string"},
             "cue_count": {"type": "integer"},
@@ -134,12 +137,12 @@ class VisualTimingQA(BaseTool):
     side_effects = [
         "writes cue frame images",
         "writes per-cue contact sheets",
-        "writes results.json and review.md",
+        "writes results.json, review.md, and review.html",
         "writes suggested_cues.json and suggested_cues.md in suggest_cues mode",
-        "writes review_notes.json and review_annotated.md in annotate mode",
+        "writes review_notes.json, review_annotated.md, and review_annotated.html in annotate mode",
     ]
     user_visible_verification = [
-        "Inspect review.md contact sheets for early, late, or wrong visual states",
+        "Inspect review.html contact sheets for early, late, or wrong visual states",
     ]
 
     def get_status(self) -> ToolStatus:
@@ -264,9 +267,11 @@ class VisualTimingQA(BaseTool):
 
         results_path = output_dir / "results.json"
         review_path = output_dir / "review.md"
+        review_html_path = output_dir / "review.html"
         self._write_json(results_path, results)
         review_path.write_text(self._review_markdown(results), encoding="utf-8")
-        artifacts.extend([str(results_path), str(review_path)])
+        review_html_path.write_text(self._review_html(results, review_html_path), encoding="utf-8")
+        artifacts.extend([str(results_path), str(review_path), str(review_html_path)])
 
         return ToolResult(
             success=True,
@@ -276,6 +281,7 @@ class VisualTimingQA(BaseTool):
                 "output_dir": str(output_dir),
                 "results_path": str(results_path),
                 "review_path": str(review_path),
+                "review_html_path": str(review_html_path),
                 "cue_count": len(results["cues"]),
                 "cues": results["cues"],
             },
@@ -332,8 +338,10 @@ class VisualTimingQA(BaseTool):
         }
         output_path = Path(inputs.get("output_path") or results_path.with_name("review_notes.json")).expanduser().resolve()
         annotated_review_path = output_path.with_name("review_annotated.md")
+        annotated_review_html_path = output_path.with_name("review_annotated.html")
         self._write_json(output_path, notes)
         annotated_review_path.write_text(self._review_markdown(results), encoding="utf-8")
+        annotated_review_html_path.write_text(self._review_html(results, annotated_review_html_path), encoding="utf-8")
 
         return ToolResult(
             success=True,
@@ -342,10 +350,11 @@ class VisualTimingQA(BaseTool):
                 "status": "completed",
                 "review_notes_path": str(output_path),
                 "annotated_review_path": str(annotated_review_path),
+                "annotated_review_html_path": str(annotated_review_html_path),
                 "annotation_count": len(notes["annotations"]),
                 "annotations": notes["annotations"],
             },
-            artifacts=[str(output_path), str(annotated_review_path)],
+            artifacts=[str(output_path), str(annotated_review_path), str(annotated_review_html_path)],
         )
 
     def _load_manifest(self, inputs: dict[str, Any]) -> dict[str, Any]:
@@ -896,6 +905,382 @@ class VisualTimingQA(BaseTool):
                 lines.extend(["", f"- Planned frame timestamps: `{planned}`"])
             lines.append("")
         return "\n".join(lines)
+
+    @classmethod
+    def _review_html(cls, results: dict[str, Any], html_path: Path) -> str:
+        language = cls._review_language(results)
+        copy = cls._ui_copy(language)
+        title = f"{copy['title']}: {results.get('run_id', '')}".strip()
+        summary = cls._summary_counts(results)
+
+        css = """
+:root {
+  color-scheme: dark;
+  --bg: #09111e;
+  --panel: rgba(255,255,255,.06);
+  --panel-strong: rgba(255,255,255,.1);
+  --border: rgba(150,176,220,.24);
+  --text: #eef5ff;
+  --muted: #a8b7d0;
+  --accent: #62d8ff;
+  --ok: #4ade80;
+  --warn: #facc15;
+  --bad: #fb7185;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(98,216,255,.18), transparent 30rem),
+    linear-gradient(145deg, #07101d 0%, var(--bg) 58%, #0f1626 100%);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", sans-serif;
+  line-height: 1.5;
+}
+main { max-width: 1180px; margin: 0 auto; padding: 34px 28px 64px; }
+header { margin-bottom: 24px; }
+h1 { margin: 0 0 10px; font-size: 30px; letter-spacing: 0; }
+p { color: var(--muted); }
+.summary { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.pill {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: 999px;
+  padding: 6px 12px;
+  color: #dbe8fb;
+  font-size: 13px;
+}
+.cue {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: 14px;
+  padding: 22px;
+  margin: 22px 0;
+  box-shadow: 0 20px 52px rgba(0,0,0,.24);
+}
+.cue-head { display: flex; gap: 12px; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; }
+.cue h2 { margin: 0; font-size: 22px; letter-spacing: 0; }
+.badges { display: flex; gap: 8px; flex-wrap: wrap; }
+.badge {
+  border: 1px solid var(--border);
+  background: rgba(8,14,27,.72);
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 12px;
+  color: #dbe8fb;
+}
+.pass { border-color: rgba(74,222,128,.45); color: var(--ok); }
+.needs { border-color: rgba(250,204,21,.5); color: var(--warn); }
+.wrong, .rejected { border-color: rgba(251,113,133,.5); color: var(--bad); }
+.unreviewed { color: var(--muted); }
+.meta { color: #94a7c4; font-size: 13px; margin: 10px 0; }
+.text-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.box {
+  border: 1px solid rgba(255,255,255,.07);
+  background: rgba(0,0,0,.2);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.box-title { color: var(--muted); font-size: 12px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+.review-note { color: #dbe8fb; }
+.questions { margin: 12px 0 0; color: var(--muted); }
+.sheet { margin-top: 16px; }
+.sheet img {
+  display: block;
+  width: 100%;
+  max-height: 460px;
+  object-fit: contain;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px;
+  background: rgba(0,0,0,.25);
+}
+.frames {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+.frame {
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(8,14,27,.66);
+  border-radius: 10px;
+  padding: 10px;
+}
+.frame img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 8px;
+  background: rgba(0,0,0,.28);
+}
+.frame .meta { margin: 7px 0 0; }
+.empty {
+  border: 1px dashed rgba(150,176,220,.26);
+  color: var(--muted);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 14px;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+@media (max-width: 760px) {
+  main { padding: 28px 16px 46px; }
+  h1 { font-size: 25px; }
+  .text-grid { grid-template-columns: 1fr; }
+}
+""".strip()
+
+        lines = [
+            "<!doctype html>",
+            f"<html lang=\"{escape(language)}\">",
+            "<head>",
+            "<meta charset=\"utf-8\">",
+            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">",
+            f"<title>{escape(title)}</title>",
+            f"<style>{css}</style>",
+            "</head>",
+            "<body>",
+            "<main>",
+            "<header>",
+            f"<h1>{escape(title)}</h1>",
+            f"<p>{escape(copy['description'])}</p>",
+            "<div class=\"summary\">",
+            f"<span class=\"pill\">{escape(copy['project'])}: {escape(str(results.get('project') or '-'))}</span>",
+            f"<span class=\"pill\">{escape(copy['cues'])}: {summary['total']}</span>",
+            f"<span class=\"pill\">{escape(copy['initial_needs'])}: {summary['initial_needs_review']}</span>",
+            f"<span class=\"pill\">{escape(copy['reviewer_needs'])}: {summary['reviewer_needs_review']}</span>",
+            f"<span class=\"pill\">{escape(copy['unreviewed'])}: {summary['unreviewed']}</span>",
+            "</div>",
+            "</header>",
+        ]
+
+        if summary["initial_queue"]:
+            lines.extend(["<section class=\"cue\">", f"<h2>{escape(copy['initial_queue'])}</h2>"])
+            for cue in summary["initial_queue"]:
+                initial = cue.get("initial_review") or {}
+                lines.append(
+                    f"<p><strong>{escape(str(cue.get('id')))}</strong>: {escape(str(initial.get('notes') or ''))}</p>"
+                )
+            lines.append("</section>")
+
+        for cue in results.get("cues", []):
+            lines.append(cls._cue_html(cue, html_path, copy))
+
+        lines.extend(["</main>", "</body>", "</html>"])
+        return "\n".join(lines) + "\n"
+
+    @classmethod
+    def _cue_html(cls, cue: dict[str, Any], html_path: Path, copy: dict[str, str]) -> str:
+        initial = cue.get("initial_review") or {}
+        annotation = cue.get("reviewer_annotation") or {}
+        initial_decision = initial.get("decision", "UNREVIEWED")
+        reviewer_decision = annotation.get("decision", "UNREVIEWED")
+        badge_initial = cls._decision_class(initial_decision)
+        badge_reviewer = cls._decision_class(reviewer_decision)
+        target = cue.get("timestamp_seconds", 0)
+        tolerance = cue.get("tolerance_seconds", 0.5)
+
+        lines = [
+            "<section class=\"cue\">",
+            "<div class=\"cue-head\">",
+            f"<h2>{escape(str(cue.get('label') or cue.get('id') or ''))}</h2>",
+            "<div class=\"badges\">",
+            f"<span class=\"badge {badge_initial}\">{escape(copy['auto'])}: {escape(str(initial_decision))}</span>",
+            f"<span class=\"badge {badge_reviewer}\">{escape(copy['reviewer'])}: {escape(str(reviewer_decision))}</span>",
+            "</div>",
+            "</div>",
+            (
+                f"<div class=\"meta\">{escape(copy['cue_id'])}: {escape(str(cue.get('id') or ''))} · "
+                f"{escape(copy['section'])}: {escape(str(cue.get('section_id') or '-'))} · "
+                f"{escape(copy['time'])}: {float(target):.3f}s · "
+                f"{escape(copy['tolerance'])}: +/-{float(tolerance):.3f}s</div>"
+            ),
+            "<div class=\"text-grid\">",
+            cls._html_box(copy["narration"], cue.get("narration", "")),
+            cls._html_box(copy["expected"], cue.get("expected_state", "")),
+            "</div>",
+        ]
+        if cue.get("risk"):
+            lines.append(cls._html_box(copy["risk"], cue.get("risk", "")))
+        if initial:
+            lines.append(cls._html_box(copy["auto_notes"], initial.get("notes", ""), class_name="review-note"))
+            if initial.get("fix_target"):
+                lines.append(cls._html_box(copy["fix_target"], initial.get("fix_target", "")))
+        if annotation:
+            review_text = annotation.get("notes") or annotation.get("fix_target") or ""
+            lines.append(cls._html_box(copy["review_notes"], review_text))
+            if annotation.get("user_decision") or annotation.get("user_notes"):
+                lines.append(
+                    cls._html_box(
+                        copy["user_decision"],
+                        f"{annotation.get('user_decision', '')} {annotation.get('user_notes', '')}".strip(),
+                    )
+                )
+        if cue.get("review_questions"):
+            lines.append("<div class=\"questions\"><strong>" + escape(copy["questions"]) + "</strong><ul>")
+            for question in cue["review_questions"]:
+                lines.append(f"<li>{escape(str(question))}</li>")
+            lines.append("</ul></div>")
+
+        if cue.get("contact_sheet") and Path(cue["contact_sheet"]).expanduser().exists():
+            src = cls._html_asset_src(cue["contact_sheet"], html_path)
+            lines.extend(
+                [
+                    "<div class=\"sheet\">",
+                    f"<div class=\"box-title\">{escape(copy['contact_sheet'])}</div>",
+                    f"<a href=\"{escape(src, quote=True)}\"><img src=\"{escape(src, quote=True)}\" alt=\"{escape(copy['contact_sheet'])}\"></a>",
+                    "</div>",
+                ]
+            )
+
+        if cue.get("frames"):
+            lines.append("<div class=\"frames\">")
+            for frame in cue["frames"]:
+                lines.append(cls._frame_html(frame, html_path, copy))
+            lines.append("</div>")
+        else:
+            planned = ", ".join(f"{point['timestamp_seconds']:.3f}s" for point in cue.get("frame_points", []))
+            lines.append(f"<div class=\"empty\">{escape(copy['planned_frames'])}: {escape(planned)}</div>")
+
+        lines.append("</section>")
+        return "\n".join(lines)
+
+    @staticmethod
+    def _html_box(title: str, value: Any, *, class_name: str = "") -> str:
+        return (
+            "<div class=\"box\">"
+            f"<div class=\"box-title\">{escape(str(title))}</div>"
+            f"<div class=\"{escape(class_name)}\">{escape(str(value or '-'))}</div>"
+            "</div>"
+        )
+
+    @classmethod
+    def _frame_html(cls, frame: dict[str, Any], html_path: Path, copy: dict[str, str]) -> str:
+        path = frame.get("path")
+        offset = frame.get("offset_seconds", 0)
+        ts = frame.get("timestamp_seconds", 0)
+        if path and Path(path).expanduser().exists() and not frame.get("error"):
+            src = cls._html_asset_src(path, html_path)
+            media = f"<a href=\"{escape(src, quote=True)}\"><img src=\"{escape(src, quote=True)}\" alt=\"frame\"></a>"
+        else:
+            media = f"<div class=\"empty\">{escape(copy['frame_missing'])}</div>"
+        error = f" · {escape(str(frame.get('error')))}" if frame.get("error") else ""
+        return (
+            "<article class=\"frame\">"
+            f"{media}"
+            f"<div class=\"meta\">{float(offset):+.3f}s · {float(ts):.3f}s{error}</div>"
+            "</article>"
+        )
+
+    @staticmethod
+    def _html_asset_src(path: str, html_path: Path) -> str:
+        asset_path = Path(path).expanduser().resolve()
+        try:
+            return asset_path.relative_to(html_path.parent.resolve()).as_posix()
+        except ValueError:
+            return asset_path.as_uri()
+
+    @staticmethod
+    def _decision_class(decision: str) -> str:
+        normalized = (decision or "UNREVIEWED").lower()
+        if normalized == "pass":
+            return "pass"
+        if normalized in {"needs_review", "fix_requested"}:
+            return "needs"
+        if normalized in {"wrong_expectation", "rejected"}:
+            return "wrong"
+        return "unreviewed"
+
+    @classmethod
+    def _summary_counts(cls, results: dict[str, Any]) -> dict[str, Any]:
+        counts = {
+            "total": len(results.get("cues", [])),
+            "initial_needs_review": 0,
+            "reviewer_needs_review": 0,
+            "unreviewed": 0,
+            "initial_queue": [],
+        }
+        for cue in results.get("cues", []):
+            initial = cue.get("initial_review") or {}
+            annotation = cue.get("reviewer_annotation") or {}
+            if initial.get("decision") == "NEEDS_REVIEW":
+                counts["initial_needs_review"] += 1
+                counts["initial_queue"].append(cue)
+            decision = annotation.get("decision")
+            if decision in {"NEEDS_REVIEW", "WRONG_EXPECTATION"} or annotation.get("requires_user_review"):
+                counts["reviewer_needs_review"] += 1
+            if not decision:
+                counts["unreviewed"] += 1
+        return counts
+
+    @classmethod
+    def _review_language(cls, results: dict[str, Any]) -> str:
+        text = " ".join(
+            " ".join(str(cue.get(key, "")) for key in ("label", "narration", "expected_state", "risk"))
+            for cue in results.get("cues", [])
+        )
+        cjk_chars = len(re.findall(r"[\u3400-\u9fff]", text))
+        latin_words = len(re.findall(r"[A-Za-z]+", text))
+        return "zh" if cjk_chars >= 10 and cjk_chars >= latin_words else "en"
+
+    @staticmethod
+    def _ui_copy(language: str) -> dict[str, str]:
+        if language == "zh":
+            return {
+                "title": "Visual Timing QA 审片",
+                "description": "逐个检查旁白时间点附近的画面状态、截图窗口和自动初审结果。",
+                "project": "项目",
+                "cues": "检查点",
+                "initial_needs": "自动初审待看",
+                "reviewer_needs": "人工待看",
+                "unreviewed": "未评审",
+                "initial_queue": "自动初审队列",
+                "auto": "自动初审",
+                "reviewer": "人工评审",
+                "cue_id": "Cue",
+                "section": "段落",
+                "time": "时间",
+                "tolerance": "容差",
+                "narration": "旁白",
+                "expected": "期望画面",
+                "risk": "风险",
+                "auto_notes": "自动初审说明",
+                "review_notes": "人工评审说明",
+                "fix_target": "修复目标",
+                "user_decision": "用户决定",
+                "questions": "检查问题",
+                "contact_sheet": "Contact Sheet",
+                "planned_frames": "计划抽帧时间",
+                "frame_missing": "截图缺失",
+            }
+        return {
+            "title": "Visual Timing QA Review",
+            "description": "Review nearby frames, expected visual states, and initial auto-review results for each narration cue.",
+            "project": "Project",
+            "cues": "Cues",
+            "initial_needs": "Auto needs review",
+            "reviewer_needs": "Reviewer needs review",
+            "unreviewed": "Unreviewed",
+            "initial_queue": "Initial auto-review queue",
+            "auto": "Auto",
+            "reviewer": "Reviewer",
+            "cue_id": "Cue",
+            "section": "Section",
+            "time": "Time",
+            "tolerance": "Tolerance",
+            "narration": "Narration",
+            "expected": "Expected visual state",
+            "risk": "Risk",
+            "auto_notes": "Auto-review notes",
+            "review_notes": "Reviewer notes",
+            "fix_target": "Fix target",
+            "user_decision": "User decision",
+            "questions": "Review questions",
+            "contact_sheet": "Contact sheet",
+            "planned_frames": "Planned frame timestamps",
+            "frame_missing": "Frame missing",
+        }
 
     @staticmethod
     def _suggestions_markdown(payload: dict[str, Any]) -> str:

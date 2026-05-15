@@ -42,6 +42,7 @@ def test_dry_run_writes_review_without_extracting_frames(tmp_path):
 
     results_path = Path(result.data["results_path"])
     review_path = Path(result.data["review_path"])
+    review_html_path = Path(result.data["review_html_path"])
     payload = json.loads(results_path.read_text(encoding="utf-8"))
     cue = payload["cues"][0]
     assert cue["planned"] is True
@@ -55,6 +56,11 @@ def test_dry_run_writes_review_without_extracting_frames(tmp_path):
     assert "WRONG_EXPECTATION" in review
     assert "## Summary" in review
     assert "UNREVIEWED: `1`" in review
+    html = review_html_path.read_text(encoding="utf-8")
+    assert "Visual Timing QA Review" in html
+    assert "Feedback returns to the user." in html
+    assert "Planned frame timestamps" in html
+    assert "Reviewer: UNREVIEWED" in html
 
 
 def test_review_extracts_cue_frames_and_contact_sheet(monkeypatch, tmp_path):
@@ -80,6 +86,10 @@ def test_review_extracts_cue_frames_and_contact_sheet(monkeypatch, tmp_path):
     assert cue["contact_sheet"]
     assert cue["initial_review"]["decision"] in {"PASS", "NEEDS_REVIEW"}
     assert Path(cue["contact_sheet"]).exists()
+    review_html = Path(result.data["review_html_path"]).read_text(encoding="utf-8")
+    assert "Contact sheet" in review_html
+    assert "feedback_contact_sheet.jpg" in review_html
+    assert "00_minus0_500_3.500s.jpg" in review_html
     assert any(cmd[0] == "ffprobe" for cmd in commands)
     assert sum(1 for cmd in commands if cmd[0] == "ffmpeg") == 4
 
@@ -134,8 +144,10 @@ def test_annotate_writes_notes_and_annotated_review(tmp_path):
     assert annotate_result.success
     notes_path = Path(annotate_result.data["review_notes_path"])
     annotated_path = Path(annotate_result.data["annotated_review_path"])
+    annotated_html_path = Path(annotate_result.data["annotated_review_html_path"])
     notes = json.loads(notes_path.read_text(encoding="utf-8"))
     review = annotated_path.read_text(encoding="utf-8")
+    html = annotated_html_path.read_text(encoding="utf-8")
 
     assert notes["annotations"][0]["decision"] == "NEEDS_REVIEW"
     assert notes["annotations"][0]["issue_category"] == "scene_expectation"
@@ -145,6 +157,9 @@ def test_annotate_writes_notes_and_annotated_review(tmp_path):
     assert "Reviewer queue:" in review
     assert "Issue category: scene_expectation" in review
     assert "Looks close, but the reviewer should confirm" in review
+    assert "Reviewer: NEEDS_REVIEW" in html
+    assert "Looks close, but the reviewer should confirm" in html
+    assert "DEFERRED Reviewer will check later." in html
 
 
 def test_review_supports_five_frame_windows(tmp_path):

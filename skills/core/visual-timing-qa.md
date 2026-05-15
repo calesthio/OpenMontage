@@ -38,9 +38,10 @@ question such as "when this line is spoken, is the right visual state on screen?
 4. Create a manifest with `video_path`, `output_dir`, and confirmed `cues`.
 5. Run `dry_run` to verify cue timestamps and frame windows.
 6. Run `review` to extract before/at/after frames and contact sheets.
-7. Inspect `review.md`.
+7. Inspect `review.html` for visual review, or `review.md` for text-first review.
 8. Run `annotate` after the agent or reviewer has made an initial decision.
-   This writes `review_notes.json` and `review_annotated.md`.
+   This writes `review_notes.json`, `review_annotated.md`, and
+   `review_annotated.html`.
 9. If a cue is early, late, or visually wrong, send work back to edit, compose,
    scene, or asset generation depending on the cause.
 
@@ -110,6 +111,8 @@ The tool writes:
 
 - `results.json`: cue metadata, frame paths, and contact sheet paths;
 - `review.md`: human-readable cue checklist with before/at/after frames;
+- `review.html`: browser review page with cue cards, contact sheets, extracted
+  frames, initial auto-review status, and reviewer status;
 - per-cue frame images and contact sheets.
 
 `review` also runs a conservative local initial review. It does not perform
@@ -124,8 +127,9 @@ left for the user to discover from raw screenshots:
 - subtitle/caption cues whose lower-frame band appears visually empty.
 
 Initial review writes `cue.initial_review` and adds an "Initial auto-review
-queue" to `review.md`. Treat `NEEDS_REVIEW` as a blocker for agent handoff until
-the contact sheet has been inspected and either fixed or explicitly accepted.
+queue" to both `review.md` and `review.html`. Treat `NEEDS_REVIEW` as a blocker
+for agent handoff until the contact sheet has been inspected and either fixed or
+explicitly accepted.
 
 This is still human-in-the-loop. Do not treat a local `PASS` as semantic
 approval; it only means the conservative heuristics did not find an obvious

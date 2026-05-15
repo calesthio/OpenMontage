@@ -126,6 +126,10 @@ class VisualTimingQA(BaseTool):
             "review_notes_path": {"type": "string"},
             "annotated_review_path": {"type": "string"},
             "annotated_review_html_path": {"type": "string"},
+            "review_complete": {"type": "boolean"},
+            "next_operation": {"type": "string"},
+            "missing_review_cues": {"type": "array"},
+            "pending_review_cues": {"type": "array"},
             "suggested_cues_path": {"type": "string"},
             "suggested_review_path": {"type": "string"},
             "cue_count": {"type": "integer"},
@@ -134,7 +138,16 @@ class VisualTimingQA(BaseTool):
     }
 
     resource_profile = ResourceProfile(cpu_cores=1, ram_mb=512, vram_mb=0, disk_mb=500)
-    idempotency_key_fields = ["operation", "manifest_path", "manifest"]
+    idempotency_key_fields = [
+        "operation",
+        "manifest_path",
+        "manifest",
+        "results_path",
+        "annotations",
+        "annotations_path",
+        "output_path",
+        "output_dir",
+    ]
     side_effects = [
         "writes cue frame images",
         "writes per-cue contact sheets",
@@ -292,9 +305,13 @@ class VisualTimingQA(BaseTool):
 
     def _annotate(self, inputs: dict[str, Any]) -> ToolResult:
         annotations = inputs.get("annotations")
+        unreviewed_policy = ""
         if not annotations and inputs.get("annotations_path"):
             annotations_payload = json.loads(Path(inputs["annotations_path"]).expanduser().read_text(encoding="utf-8"))
+            unreviewed_policy = str(annotations_payload.get("unreviewed_policy", "")).upper()
             annotations = annotations_payload.get("annotations", annotations_payload)
+        else:
+            unreviewed_policy = str(inputs.get("unreviewed_policy", "")).upper()
         if not isinstance(annotations, dict) or not annotations:
             return ToolResult(success=False, error="annotate operation requires non-empty annotations or annotations_path")
 
@@ -303,6 +320,9 @@ class VisualTimingQA(BaseTool):
         valid_decisions = {"PASS", "NEEDS_REVIEW", "WRONG_EXPECTATION"}
         valid_user_decisions = {"APPROVED", "FIX_REQUESTED", "DEFERRED", "REJECTED"}
         by_id = {cue["id"]: cue for cue in results.get("cues", [])}
+        if unreviewed_policy == "PASS":
+            for cue_id in by_id:
+                annotations.setdefault(cue_id, {"decision": "PASS", "reviewer": "human"})
         for cue_id, annotation in annotations.items():
             if cue_id not in by_id:
                 return ToolResult(success=False, error=f"Unknown cue id: {cue_id}")
@@ -343,6 +363,7 @@ class VisualTimingQA(BaseTool):
             for annotation in annotated_cues
             if annotation.get("decision") != "PASS" or annotation.get("requires_user_review")
         ]
+        completion = self._review_completion(results, action_items)
         notes = {
             "version": self.version,
             "tool": self.name,
@@ -356,6 +377,7 @@ class VisualTimingQA(BaseTool):
                 "pass_count": sum(1 for annotation in annotated_cues if annotation.get("decision") == "PASS"),
                 "action_item_count": len(action_items),
             },
+            "completion": completion,
             "action_items": action_items,
             "annotations": annotated_cues,
         }
@@ -375,12 +397,46 @@ class VisualTimingQA(BaseTool):
                 "annotated_review_path": str(annotated_review_path),
                 "annotated_review_html_path": str(annotated_review_html_path),
                 "annotation_count": len(notes["annotations"]),
+                "review_complete": completion["review_complete"],
+                "next_operation": completion["next_operation"],
+                "missing_review_cues": completion["missing_review_cues"],
+                "pending_review_cues": completion["pending_review_cues"],
                 "action_item_count": len(action_items),
                 "action_items": action_items,
                 "annotations": notes["annotations"],
             },
             artifacts=[str(output_path), str(annotated_review_path), str(annotated_review_html_path)],
         )
+
+    @staticmethod
+    def _review_completion(results: dict[str, Any], action_items: list[dict[str, Any]]) -> dict[str, Any]:
+        annotated = {
+            str(cue.get("id"))
+            for cue in results.get("cues", [])
+            if cue.get("reviewer_annotation", {}).get("decision")
+        }
+        all_cue_ids = [str(cue.get("id")) for cue in results.get("cues", [])]
+        missing_review_cues = [cue_id for cue_id in all_cue_ids if cue_id not in annotated]
+        pending_review_cues = sorted(
+            {
+                str(item.get("cue_id"))
+                for item in action_items
+                if item.get("cue_id")
+            }
+        )
+        review_complete = not missing_review_cues and not pending_review_cues
+        if review_complete:
+            next_operation = "complete"
+        elif pending_review_cues:
+            next_operation = "revise_and_rerun_review"
+        else:
+            next_operation = "annotate"
+        return {
+            "review_complete": review_complete,
+            "next_operation": next_operation,
+            "missing_review_cues": missing_review_cues,
+            "pending_review_cues": pending_review_cues,
+        }
 
     def _load_manifest(self, inputs: dict[str, Any]) -> dict[str, Any]:
         if inputs.get("manifest") is not None:

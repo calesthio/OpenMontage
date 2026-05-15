@@ -42,8 +42,11 @@ question such as "when this line is spoken, is the right visual state on screen?
 8. Run `annotate` after the agent or reviewer has made an initial decision.
    This writes `review_notes.json`, `review_annotated.md`, and
    `review_annotated.html`.
-9. If a cue is early, late, or visually wrong, send work back to edit, compose,
-   scene, or asset generation depending on the cause.
+9. If `annotate` returns `next_operation=revise_and_rerun_review`, send work
+   back to edit, compose, scene, or asset generation depending on the cause,
+   then render again and run `review` on the revised video.
+10. Repeat `review` -> `annotate` until `review_complete=true`. Do not treat a
+    partially reviewed page or a page with pending cue fixes as final approval.
 
 ## Cue Suggestions
 
@@ -139,7 +142,9 @@ correct, crowded, or inconsistent with the line.
 ## Annotation
 
 Use `annotate` after inspecting the contact sheets. The operation records the
-initial reviewer decision without regenerating frames:
+initial reviewer decision without regenerating frames. When the interactive
+page submits `unreviewed_policy=PASS`, cues the reviewer did not touch are
+recorded as `PASS`; otherwise missing cue decisions keep the review incomplete.
 
 ```json
 {
@@ -183,3 +188,16 @@ Optional `user_decision` values:
 - `FIX_REQUESTED`: user wants a revision;
 - `DEFERRED`: user will decide later;
 - `REJECTED`: user rejects the current visual state.
+
+`annotate` also writes completion fields for iterative review:
+
+- `review_complete=true` and `next_operation=complete`: all cues are reviewed
+  and no cue requires changes.
+- `review_complete=false` and `next_operation=revise_and_rerun_review`: at
+  least one cue needs timing, layout, expectation, or render changes. Fix the
+  video, run `review` again, and ask the user to review the new page.
+- `review_complete=false` and `next_operation=annotate`: one or more cues are
+  still missing a reviewer decision.
+
+Continue this loop until the user has passed every cue on the current rendered
+video.

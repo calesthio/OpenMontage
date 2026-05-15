@@ -208,6 +208,12 @@ def test_annotate_writes_notes_and_annotated_review(tmp_path):
     assert notes["annotations"][0]["issue_category"] == "scene_expectation"
     assert notes["annotations"][0]["user_decision"] == "DEFERRED"
     assert notes["summary"] == {"annotation_count": 1, "pass_count": 0, "action_item_count": 1}
+    assert notes["completion"] == {
+        "review_complete": False,
+        "next_operation": "revise_and_rerun_review",
+        "missing_review_cues": [],
+        "pending_review_cues": ["feedback"],
+    }
     assert notes["action_items"] == [
         {
             "cue_id": "feedback",
@@ -218,6 +224,9 @@ def test_annotate_writes_notes_and_annotated_review(tmp_path):
         }
     ]
     assert annotate_result.data["action_item_count"] == 1
+    assert annotate_result.data["review_complete"] is False
+    assert annotate_result.data["next_operation"] == "revise_and_rerun_review"
+    assert annotate_result.data["pending_review_cues"] == ["feedback"]
     assert annotate_result.data["action_items"][0]["cue_id"] == "feedback"
     assert "- [x] NEEDS_REVIEW" in review
     assert "NEEDS_REVIEW: `1`" in review
@@ -227,6 +236,104 @@ def test_annotate_writes_notes_and_annotated_review(tmp_path):
     assert "Reviewer: NEEDS_REVIEW" in html
     assert "Looks close, but the reviewer should confirm" in html
     assert "DEFERRED Reviewer will check later." in html
+
+
+def test_annotate_marks_complete_when_all_cues_pass(tmp_path):
+    tool = VisualTimingQA()
+    dry_result = tool.execute({"operation": "dry_run", "manifest": base_manifest(tmp_path)})
+    assert dry_result.success
+
+    annotate_result = tool.execute(
+        {
+            "operation": "annotate",
+            "results_path": dry_result.data["results_path"],
+            "annotations": {"feedback": {"decision": "PASS", "reviewer": "human"}},
+        }
+    )
+
+    assert annotate_result.success
+    assert annotate_result.data["review_complete"] is True
+    assert annotate_result.data["next_operation"] == "complete"
+    assert annotate_result.data["missing_review_cues"] == []
+    assert annotate_result.data["pending_review_cues"] == []
+
+
+def test_annotate_honors_unreviewed_policy_pass(tmp_path):
+    tool = VisualTimingQA()
+    manifest = base_manifest(tmp_path)
+    manifest["cues"].append(
+        {
+            "id": "second",
+            "section_id": "s7",
+            "label": "Second reveal",
+            "timestamp_seconds": 7.0,
+            "narration": "The output card is ready.",
+            "expected_state": "The final output card is highlighted.",
+        }
+    )
+    dry_result = tool.execute({"operation": "dry_run", "manifest": manifest})
+    assert dry_result.success
+    annotations_path = tmp_path / "review-notes.json"
+    annotations_path.write_text(
+        json.dumps(
+            {
+                "unreviewed_policy": "PASS",
+                "annotations": {
+                    "feedback": {
+                        "decision": "NEEDS_REVIEW",
+                        "notes": "The highlight appears late.",
+                        "fix_target": "Move the highlight earlier.",
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    annotate_result = tool.execute(
+        {
+            "operation": "annotate",
+            "results_path": dry_result.data["results_path"],
+            "annotations_path": str(annotations_path),
+        }
+    )
+
+    assert annotate_result.success
+    assert annotate_result.data["annotation_count"] == 2
+    assert annotate_result.data["review_complete"] is False
+    assert annotate_result.data["next_operation"] == "revise_and_rerun_review"
+    notes = json.loads(Path(annotate_result.data["review_notes_path"]).read_text(encoding="utf-8"))
+    assert notes["summary"]["pass_count"] == 1
+    assert notes["completion"]["missing_review_cues"] == []
+    assert notes["completion"]["pending_review_cues"] == ["feedback"]
+
+
+def test_annotate_reports_missing_reviews_without_unreviewed_policy(tmp_path):
+    tool = VisualTimingQA()
+    manifest = base_manifest(tmp_path)
+    manifest["cues"].append(
+        {
+            "id": "second",
+            "timestamp_seconds": 7.0,
+            "narration": "The output card is ready.",
+            "expected_state": "The final output card is highlighted.",
+        }
+    )
+    dry_result = tool.execute({"operation": "dry_run", "manifest": manifest})
+    assert dry_result.success
+
+    annotate_result = tool.execute(
+        {
+            "operation": "annotate",
+            "results_path": dry_result.data["results_path"],
+            "annotations": {"feedback": {"decision": "PASS"}},
+        }
+    )
+
+    assert annotate_result.success
+    assert annotate_result.data["review_complete"] is False
+    assert annotate_result.data["next_operation"] == "annotate"
+    assert annotate_result.data["missing_review_cues"] == ["second"]
 
 
 def test_review_supports_five_frame_windows(tmp_path):

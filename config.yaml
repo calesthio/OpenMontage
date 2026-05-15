@@ -1,7 +1,7 @@
 # OpenMontage - Global Configuration
 
 llm:
-  provider: anthropic            # anthropic | openai | gemini | openrouter | ollama | mistral | minimax
+  provider: anthropic            # anthropic | openai | gemini | openrouter | ollama | mistral | minimax | astraflow | astraflow-cn
   model: null                    # null = use provider default
   temperature: 0.7
   max_tokens: 4096

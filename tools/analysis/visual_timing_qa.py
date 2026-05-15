@@ -1216,13 +1216,22 @@ a:hover { text-decoration: underline; }
 
     @classmethod
     def _review_language(cls, results: dict[str, Any]) -> str:
+        narration_text = " ".join(str(cue.get("narration", "")) for cue in results.get("cues", []))
+        if cls._looks_chinese(narration_text):
+            return "zh"
         text = " ".join(
             " ".join(str(cue.get(key, "")) for key in ("label", "narration", "expected_state", "risk"))
             for cue in results.get("cues", [])
         )
+        if cls._looks_chinese(text):
+            return "zh"
+        return "en"
+
+    @staticmethod
+    def _looks_chinese(text: str) -> bool:
         cjk_chars = len(re.findall(r"[\u3400-\u9fff]", text))
         latin_words = len(re.findall(r"[A-Za-z]+", text))
-        return "zh" if cjk_chars >= 10 and cjk_chars >= latin_words else "en"
+        return cjk_chars >= 10 and cjk_chars >= latin_words
 
     @staticmethod
     def _ui_copy(language: str) -> dict[str, str]:

@@ -63,6 +63,21 @@ def test_dry_run_writes_review_without_extracting_frames(tmp_path):
     assert "Reviewer: UNREVIEWED" in html
 
 
+def test_review_html_prefers_narration_language(tmp_path):
+    manifest = base_manifest(tmp_path)
+    manifest["cues"][0]["narration"] = "这段旁白会说明用户怎么检查日志、定位问题，并继续排查调用链。"
+    manifest["cues"][0]["expected_state"] = "The Graylog and TID nodes are highlighted."
+    manifest["cues"][0]["risk"] = "Reveal may run too early."
+
+    result = VisualTimingQA().execute({"operation": "dry_run", "manifest": manifest})
+
+    assert result.success
+    html = Path(result.data["review_html_path"]).read_text(encoding="utf-8")
+    assert '<html lang="zh">' in html
+    assert "Visual Timing QA 审片" in html
+    assert "旁白" in html
+
+
 def test_review_extracts_cue_frames_and_contact_sheet(monkeypatch, tmp_path):
     commands = []
 

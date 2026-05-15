@@ -88,6 +88,7 @@ class VisualTimingQA(BaseTool):
             "script_path": {"type": "string"},
             "results_path": {"type": "string"},
             "annotations": {"type": "object"},
+            "annotations_path": {"type": "string"},
             "output_path": {"type": "string"},
             "output_dir": {"type": "string"},
             "project": {"type": "string"},
@@ -239,6 +240,7 @@ class VisualTimingQA(BaseTool):
             "project": manifest.get("project"),
             "run_id": manifest.get("run_id") or self._timestamp_id(),
             "created_at": datetime.now(timezone.utc).isoformat(),
+            "review_language": manifest.get("review_language") or manifest.get("language") or manifest.get("ui_language"),
             "video_path": str(video_path),
             "duration_seconds": duration,
             "output_dir": str(output_dir),
@@ -290,8 +292,11 @@ class VisualTimingQA(BaseTool):
 
     def _annotate(self, inputs: dict[str, Any]) -> ToolResult:
         annotations = inputs.get("annotations")
+        if not annotations and inputs.get("annotations_path"):
+            annotations_payload = json.loads(Path(inputs["annotations_path"]).expanduser().read_text(encoding="utf-8"))
+            annotations = annotations_payload.get("annotations", annotations_payload)
         if not isinstance(annotations, dict) or not annotations:
-            return ToolResult(success=False, error="annotate operation requires non-empty annotations")
+            return ToolResult(success=False, error="annotate operation requires non-empty annotations or annotations_path")
 
         results_path = Path(inputs["results_path"]).expanduser().resolve()
         results = json.loads(results_path.read_text(encoding="utf-8"))
@@ -319,6 +324,25 @@ class VisualTimingQA(BaseTool):
                 "user_notes": annotation.get("user_notes", ""),
             }
 
+        annotated_cues = [
+            {
+                "cue_id": cue["id"],
+                **cue["reviewer_annotation"],
+            }
+            for cue in results.get("cues", [])
+            if cue.get("reviewer_annotation")
+        ]
+        action_items = [
+            {
+                "cue_id": annotation["cue_id"],
+                "decision": annotation["decision"],
+                "issue_category": annotation.get("issue_category", ""),
+                "notes": annotation.get("notes", ""),
+                "fix_target": annotation.get("fix_target", ""),
+            }
+            for annotation in annotated_cues
+            if annotation.get("decision") != "PASS" or annotation.get("requires_user_review")
+        ]
         notes = {
             "version": self.version,
             "tool": self.name,
@@ -327,14 +351,13 @@ class VisualTimingQA(BaseTool):
             "source_results": str(results_path),
             "project": results.get("project"),
             "run_id": results.get("run_id"),
-            "annotations": [
-                {
-                    "cue_id": cue["id"],
-                    **cue["reviewer_annotation"],
-                }
-                for cue in results.get("cues", [])
-                if cue.get("reviewer_annotation")
-            ],
+            "summary": {
+                "annotation_count": len(annotated_cues),
+                "pass_count": sum(1 for annotation in annotated_cues if annotation.get("decision") == "PASS"),
+                "action_item_count": len(action_items),
+            },
+            "action_items": action_items,
+            "annotations": annotated_cues,
         }
         output_path = Path(inputs.get("output_path") or results_path.with_name("review_notes.json")).expanduser().resolve()
         annotated_review_path = output_path.with_name("review_annotated.md")
@@ -352,6 +375,8 @@ class VisualTimingQA(BaseTool):
                 "annotated_review_path": str(annotated_review_path),
                 "annotated_review_html_path": str(annotated_review_html_path),
                 "annotation_count": len(notes["annotations"]),
+                "action_item_count": len(action_items),
+                "action_items": action_items,
                 "annotations": notes["annotations"],
             },
             artifacts=[str(output_path), str(annotated_review_path), str(annotated_review_html_path)],
@@ -551,6 +576,7 @@ class VisualTimingQA(BaseTool):
                     "timestamp_seconds": float(timestamp),
                     "tolerance_seconds": float(cue.get("tolerance_seconds", default_tolerance)),
                     "narration": cue.get("narration") or cue.get("line") or cue.get("text", ""),
+                    "subtitle": cue.get("subtitle") or cue.get("caption") or cue.get("caption_text", ""),
                     "expected_state": cue.get("expected_state") or cue.get("expected") or "",
                     "risk": cue.get("risk", ""),
                     "review_questions": cue.get("review_questions", []),
@@ -658,12 +684,16 @@ class VisualTimingQA(BaseTool):
         changes that appear before/after the target timestamp, and subtitle-like
         cues whose lower frame band looks visually empty.
         """
+        language = self._cue_language(cue)
+        zh = language == "zh"
         if not extract:
             return {
                 "decision": "UNREVIEWED",
                 "confidence": "low",
                 "issue_category": "dry_run",
-                "notes": "Dry run planned cue windows but did not extract frames.",
+                "notes": "Dry run planned cue windows but did not extract frames."
+                if not zh
+                else "Dry run 只规划了检查窗口，尚未抽取截图。",
                 "requires_human_review": True,
             }
 
@@ -676,7 +706,11 @@ class VisualTimingQA(BaseTool):
             if frame.get("error") or not frame.get("path") or not Path(frame["path"]).exists()
         ]
         if missing:
-            issues.append(f"{len(missing)} cue frame(s) were not extracted successfully.")
+            issues.append(
+                f"{len(missing)} cue frame(s) were not extracted successfully."
+                if not zh
+                else f"{len(missing)} 张 cue 截图没有成功抽取。"
+            )
 
         diffs = self._frame_diffs(frames)
         if diffs:
@@ -714,14 +748,20 @@ class VisualTimingQA(BaseTool):
             if max(before_to_target, target_to_after) < quiet_threshold:
                 issues.append(
                     "Little visible change was detected across the cue window; verify the expected reveal/state is actually present."
+                    if not zh
+                    else "cue 窗口内可见变化很小，请确认期望的画面状态或点亮效果是否真的出现。"
                 )
             elif before_to_target >= active_threshold and target_to_after < quiet_threshold:
                 issues.append(
                     "Most visible change happens before the target frame; the reveal may be early."
+                    if not zh
+                    else "主要画面变化发生在目标帧之前，点亮或切换可能偏早。"
                 )
             elif before_to_target < quiet_threshold and target_to_after >= active_threshold:
                 issues.append(
                     "Most visible change happens after the target frame; the reveal may be late."
+                    if not zh
+                    else "主要画面变化发生在目标帧之后，点亮或切换可能偏晚。"
                 )
 
         subtitle_sensitive = any(
@@ -734,6 +774,8 @@ class VisualTimingQA(BaseTool):
                 if subtitle_metrics.get("max_edge_density", 0.0) < 0.015:
                     issues.append(
                         "Subtitle/caption cue has very low lower-frame edge density; subtitles may be missing or too faint."
+                        if not zh
+                        else "字幕 cue 的画面下方边缘密度很低，字幕可能缺失或太淡。"
                     )
 
         if issues:
@@ -742,7 +784,9 @@ class VisualTimingQA(BaseTool):
                 "confidence": "medium" if len(issues) > 1 else "low",
                 "issue_category": "auto_initial_review",
                 "notes": " ".join(issues),
-                "fix_target": "Inspect the contact sheet and adjust cue timing, animation timing, or subtitle rendering before delivery.",
+                "fix_target": "Inspect the contact sheet and adjust cue timing, animation timing, or subtitle rendering before delivery."
+                if not zh
+                else "请查看截图窗口，并在交付前调整 cue 时间点、动画时间或字幕渲染。",
                 "requires_human_review": True,
                 "metrics": metrics,
             }
@@ -750,10 +794,22 @@ class VisualTimingQA(BaseTool):
             "decision": "PASS",
             "confidence": "low",
             "issue_category": "auto_initial_review",
-            "notes": "No obvious local heuristic issue found. Human review is still required for semantic correctness.",
+            "notes": "No obvious local heuristic issue found. Human review is still required for semantic correctness."
+            if not zh
+            else "本地启发式检查没有发现明显问题，但仍需要人工确认语义是否对齐。",
             "requires_human_review": True,
             "metrics": metrics,
         }
+
+    @classmethod
+    def _cue_language(cls, cue: dict[str, Any]) -> str:
+        text = " ".join(
+            str(cue.get(key, ""))
+            for key in ("subtitle", "narration", "text", "caption", "expected_state", "risk", "label")
+        )
+        cjk_chars = len(re.findall(r"[\u3400-\u9fff]", text))
+        latin_words = len(re.findall(r"[A-Za-z]+", text))
+        return "zh" if cjk_chars >= 2 and cjk_chars >= latin_words * 0.2 else "en"
 
     @staticmethod
     def _frame_diffs(frames: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -942,6 +998,48 @@ header { margin-bottom: 24px; }
 h1 { margin: 0 0 10px; font-size: 30px; letter-spacing: 0; }
 p { color: var(--muted); }
 .summary { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.review-toolbar {
+  align-items: flex-end;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.045);
+  border-radius: 12px;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  margin-top: 18px;
+  padding: 14px;
+}
+.filter-controls {
+  align-items: flex-end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.filter-control {
+  color: var(--muted);
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+}
+.filter-control select,
+.review-form textarea {
+  background: rgba(0,0,0,.24);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 8px;
+  color: var(--text);
+  font: inherit;
+  padding: 8px 10px;
+  width: 100%;
+}
+.filter-control select { min-width: 170px; }
+.review-action {
+  align-items: flex-end;
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+  max-width: 360px;
+}
+.review-action .hint { color: var(--muted); font-size: 13px; text-align: right; }
 .pill {
   border: 1px solid var(--border);
   background: var(--panel);
@@ -950,6 +1048,52 @@ p { color: var(--muted); }
   color: #dbe8fb;
   font-size: 13px;
 }
+.primary-action {
+  background: linear-gradient(135deg, rgba(98,216,255,.95), rgba(74,222,128,.74));
+  border-color: rgba(98,216,255,.9);
+  box-shadow: 0 12px 32px rgba(98,216,255,.2);
+  color: #06111f;
+  font-weight: 700;
+  min-height: 40px;
+  padding: 9px 16px;
+}
+.primary-action:hover,
+.primary-action:focus-visible {
+  background: linear-gradient(135deg, rgba(129,230,255,1), rgba(94,234,148,.86));
+  color: #06111f;
+}
+.floating-actions {
+  bottom: 22px;
+  display: grid;
+  gap: 10px;
+  position: fixed;
+  right: 22px;
+  z-index: 45;
+}
+.floating-actions .pill {
+  backdrop-filter: blur(12px);
+  box-shadow: 0 14px 34px rgba(0,0,0,.26);
+}
+button.pill {
+  cursor: pointer;
+  font: inherit;
+}
+button.pill:hover,
+button.pill:focus-visible,
+button.pill.is-active {
+  background: rgba(98,216,255,.16);
+  border-color: rgba(98,216,255,.62);
+  color: var(--text);
+  outline: none;
+}
+.cue.is-hidden { display: none; }
+.save-row {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+.save-status { color: var(--muted); font-size: 13px; }
 .cue {
   border: 1px solid var(--border);
   background: var(--panel);
@@ -984,15 +1128,92 @@ p { color: var(--muted); }
 .box-title { color: var(--muted); font-size: 12px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
 .review-note { color: #dbe8fb; }
 .questions { margin: 12px 0 0; color: var(--muted); }
-.sheet { margin-top: 16px; }
-.sheet img {
-  display: block;
-  width: 100%;
-  max-height: 460px;
-  object-fit: contain;
-  border: 1px solid rgba(255,255,255,.1);
+.review-form {
+  border: 1px solid rgba(98,216,255,.18);
+  background: rgba(8,14,27,.54);
   border-radius: 10px;
-  background: rgba(0,0,0,.25);
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 12px;
+}
+.review-form label {
+  color: var(--muted);
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+}
+.review-options {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+.review-options legend {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+.radio-row {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+.radio-pill {
+  align-items: center;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.22);
+  border-radius: 999px;
+  color: #dbe8fb;
+  cursor: pointer;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 18px 1fr;
+  justify-items: start;
+  min-height: 42px;
+  padding: 8px 12px;
+  text-align: left;
+  width: 100%;
+}
+.radio-pill input {
+  accent-color: var(--accent);
+  margin: 0;
+  place-self: center;
+}
+.radio-pill span {
+  align-self: center;
+  min-width: 0;
+  white-space: nowrap;
+}
+.radio-pill:has(input:checked) {
+  background: rgba(98,216,255,.16);
+  border-color: rgba(98,216,255,.68);
+  color: var(--text);
+}
+.review-form textarea { min-height: 74px; resize: vertical; }
+.review-form .conditional-note.is-hidden { display: none; }
+.warning-note {
+  border: 1px solid rgba(250,204,21,.32);
+  background: rgba(250,204,21,.08);
+  border-radius: 8px;
+  color: #fde68a;
+  display: none;
+  font-size: 13px;
+  padding: 8px 10px;
+}
+.warning-note.is-visible { display: block; }
+.form-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr;
+}
+.sheet { margin-top: 14px; }
+.sheet-action {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+  min-height: 38px;
+  padding: 8px 12px;
+  width: auto;
 }
 .frames {
   display: grid;
@@ -1006,7 +1227,27 @@ p { color: var(--muted); }
   border-radius: 10px;
   padding: 10px;
 }
-.frame img {
+.image-open {
+  appearance: none;
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 8px;
+  color: inherit;
+  cursor: zoom-in;
+  display: block;
+  font: inherit;
+  overflow: hidden;
+  padding: 0;
+  text-align: left;
+  width: 100%;
+}
+.image-open:hover,
+.image-open:focus-visible {
+  border-color: rgba(98,216,255,.7);
+  box-shadow: 0 0 0 3px rgba(98,216,255,.16);
+  outline: none;
+}
+.image-open img {
   display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -1015,6 +1256,145 @@ p { color: var(--muted); }
   background: rgba(0,0,0,.28);
 }
 .frame .meta { margin: 7px 0 0; }
+.lightbox-open { overflow: hidden; }
+.lightbox {
+  align-items: center;
+  background: rgba(2,7,15,.92);
+  display: none;
+  inset: 0;
+  justify-content: center;
+  padding: 70px 72px 34px;
+  position: fixed;
+  z-index: 50;
+}
+.lightbox.is-open { display: flex; }
+.lightbox-main {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  width: 100%;
+}
+.lightbox img {
+  background: rgba(0,0,0,.3);
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 10px;
+  box-shadow: 0 24px 72px rgba(0,0,0,.45);
+  max-height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+}
+.lightbox-bar {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  left: 22px;
+  position: absolute;
+  right: 22px;
+  top: 18px;
+}
+.lightbox-title {
+  color: #dbe8fb;
+  flex: 1;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lightbox-btn {
+  appearance: none;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 999px;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  min-height: 36px;
+  padding: 7px 12px;
+}
+.lightbox-btn:hover,
+.lightbox-btn:focus-visible {
+  background: rgba(98,216,255,.18);
+  border-color: rgba(98,216,255,.62);
+  outline: none;
+}
+.lightbox-btn:disabled {
+  cursor: not-allowed;
+  opacity: .32;
+}
+.lightbox-btn:disabled:hover {
+  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.18);
+}
+.lightbox-arrow {
+  border-radius: 999px;
+  font-size: 30px;
+  height: 52px;
+  line-height: 1;
+  padding: 0;
+  position: absolute;
+  top: calc(50% - 26px);
+  width: 52px;
+}
+.lightbox-prev { left: 14px; }
+.lightbox-next { right: 14px; }
+.lightbox-counter { color: var(--muted); min-width: 54px; text-align: center; }
+.toast {
+  align-items: center;
+  background: rgba(9,17,30,.96);
+  border: 1px solid rgba(98,216,255,.72);
+  border-radius: 16px;
+  box-shadow: 0 18px 48px rgba(0,0,0,.42);
+  color: var(--text);
+  display: none;
+  gap: 12px;
+  left: 50%;
+  max-width: min(560px, calc(100vw - 36px));
+  padding: 18px 20px;
+  position: fixed;
+  top: 90px;
+  transform: translateX(-50%);
+  width: max-content;
+  z-index: 60;
+}
+.toast.is-visible { display: flex; }
+.toast::before {
+  align-items: center;
+  background: rgba(74,222,128,.16);
+  border: 1px solid rgba(74,222,128,.48);
+  border-radius: 999px;
+  color: var(--ok);
+  content: "✓";
+  display: flex;
+  flex: 0 0 auto;
+  font-weight: 700;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+.toast strong { display: block; margin-bottom: 4px; }
+.toast span { color: var(--muted); font-size: 13px; }
+.export-panel {
+  border: 1px solid rgba(98,216,255,.28);
+  background: rgba(8,14,27,.72);
+  border-radius: 12px;
+  display: none;
+  margin-top: 14px;
+  padding: 14px;
+}
+.export-panel.is-visible { display: block; }
+.export-panel h2 { font-size: 18px; margin: 0 0 8px; }
+.export-panel p { margin: 0 0 10px; }
+.export-panel textarea {
+  background: rgba(0,0,0,.28);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 8px;
+  color: var(--text);
+  font: 12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  min-height: 180px;
+  padding: 10px;
+  width: 100%;
+}
 .empty {
   border: 1px dashed rgba(150,176,220,.26);
   color: var(--muted);
@@ -1027,7 +1407,19 @@ a:hover { text-decoration: underline; }
 @media (max-width: 760px) {
   main { padding: 28px 16px 46px; }
   h1 { font-size: 25px; }
+  .review-toolbar { align-items: stretch; flex-direction: column; }
+  .review-action { justify-items: start; max-width: none; }
+  .review-action .hint { text-align: left; }
   .text-grid { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .floating-actions {
+    bottom: 14px;
+    left: 14px;
+    right: 14px;
+    grid-template-columns: 1fr 1fr;
+  }
+  .lightbox { padding: 62px 14px 22px; }
+  .lightbox-arrow { bottom: 18px; top: auto; }
 }
 """.strip()
 
@@ -1048,27 +1440,76 @@ a:hover { text-decoration: underline; }
             "<div class=\"summary\">",
             f"<span class=\"pill\">{escape(copy['project'])}: {escape(str(results.get('project') or '-'))}</span>",
             f"<span class=\"pill\">{escape(copy['cues'])}: {summary['total']}</span>",
-            f"<span class=\"pill\">{escape(copy['initial_needs'])}: {summary['initial_needs_review']}</span>",
-            f"<span class=\"pill\">{escape(copy['reviewer_needs'])}: {summary['reviewer_needs_review']}</span>",
-            f"<span class=\"pill\">{escape(copy['unreviewed'])}: {summary['unreviewed']}</span>",
+            "</div>",
+            "<div class=\"review-toolbar\">",
+            "<div class=\"filter-controls\">",
+            "<label class=\"filter-control\">",
+            f"{escape(copy['initial_filter'])}",
+            (
+                "<select data-initial-filter>"
+                f"<option value=\"all\">{escape(copy['filter_all'])}</option>"
+                f"<option value=\"pass\">{escape(copy['initial_pass'])}: {summary['initial_pass']}</option>"
+                f"<option value=\"needs\">{escape(copy['initial_failed'])}: {summary['initial_needs_review']}</option>"
+                "</select>"
+            ),
+            "</label>",
+            "<label class=\"filter-control\">",
+            f"{escape(copy['review_filter'])}",
+            (
+                "<select data-review-filter>"
+                f"<option value=\"all\">{escape(copy['filter_all'])}</option>"
+                f"<option value=\"reviewed\">{escape(copy['reviewed'])}: {summary['reviewed']}</option>"
+                f"<option value=\"unreviewed\">{escape(copy['unreviewed'])}: {summary['unreviewed']}</option>"
+                "</select>"
+            ),
+            "</label>",
+            "</div>",
+            "<div class=\"review-action\">",
+            (
+                f"<button type=\"button\" class=\"pill primary-action\" data-save-review "
+                f"data-submitted-label=\"{escape(copy['submitted_button'], quote=True)}\" "
+                f"data-run-id=\"{escape(str(results.get('run_id') or 'visual-timing-review'), quote=True)}\">"
+                f"{escape(copy['save_review'])}</button>"
+            ),
+            (
+                f"<span class=\"save-status\" data-save-status "
+                f"data-submitted-text=\"{escape(copy['submitted_hint'], quote=True)}\">"
+                f"{escape(copy['save_hint'])}</span>"
+            ),
+            "</div>",
+            "</div>",
+            "<section class=\"export-panel\" data-export-panel>",
+            f"<h2>{escape(copy['export_title'])}</h2>",
+            f"<p>{escape(copy['export_body'])}</p>",
+            "<textarea data-export-json readonly></textarea>",
+            "</section>",
+            "<div class=\"floating-actions\">",
+            f"<button type=\"button\" class=\"pill\" data-scroll-top>{escape(copy['back_to_top'])}</button>",
             "</div>",
             "</header>",
         ]
 
-        if summary["initial_queue"]:
-            lines.extend(["<section class=\"cue\">", f"<h2>{escape(copy['initial_queue'])}</h2>"])
-            for cue in summary["initial_queue"]:
-                initial = cue.get("initial_review") or {}
-                lines.append(
-                    f"<p><strong>{escape(str(cue.get('id')))}</strong>: {escape(str(initial.get('notes') or ''))}</p>"
-                )
-            lines.append("</section>")
-
         for cue in results.get("cues", []):
             lines.append(cls._cue_html(cue, html_path, copy))
 
-        lines.extend(["</main>", "</body>", "</html>"])
+        lines.extend(
+            [
+                "</main>",
+                cls._lightbox_html(copy),
+                "</body>",
+                "</html>",
+            ]
+        )
         return "\n".join(lines) + "\n"
+
+    @staticmethod
+    def _filter_button(label: str, count: int, filter_name: str, *, active: bool = False) -> str:
+        active_class = " is-active" if active else ""
+        return (
+            f"<button type=\"button\" class=\"pill filter-pill{active_class}\" "
+            f"data-filter=\"{escape(filter_name, quote=True)}\">"
+            f"{escape(label)}: {int(count)}</button>"
+        )
 
     @classmethod
     def _cue_html(cls, cue: dict[str, Any], html_path: Path, copy: dict[str, str]) -> str:
@@ -1080,9 +1521,19 @@ a:hover { text-decoration: underline; }
         badge_reviewer = cls._decision_class(reviewer_decision)
         target = cue.get("timestamp_seconds", 0)
         tolerance = cue.get("tolerance_seconds", 0.5)
+        requires_reviewer = (
+            reviewer_decision in {"NEEDS_REVIEW", "WRONG_EXPECTATION"}
+            or bool(annotation.get("requires_user_review"))
+        )
 
         lines = [
-            "<section class=\"cue\">",
+            (
+                f"<section class=\"cue\" data-cue-card "
+                f"data-initial-decision=\"{escape(str(initial_decision), quote=True)}\" "
+                f"data-reviewer-decision=\"{escape(str(reviewer_decision), quote=True)}\" "
+                f"data-reviewer-needs=\"{'true' if requires_reviewer else 'false'}\" "
+                f"data-reviewed=\"{'true' if annotation.get('decision') else 'false'}\">"
+            ),
             "<div class=\"cue-head\">",
             f"<h2>{escape(str(cue.get('label') or cue.get('id') or ''))}</h2>",
             "<div class=\"badges\">",
@@ -1123,21 +1574,12 @@ a:hover { text-decoration: underline; }
                 lines.append(f"<li>{escape(str(question))}</li>")
             lines.append("</ul></div>")
 
-        if cue.get("contact_sheet") and Path(cue["contact_sheet"]).expanduser().exists():
-            src = cls._html_asset_src(cue["contact_sheet"], html_path)
-            lines.extend(
-                [
-                    "<div class=\"sheet\">",
-                    f"<div class=\"box-title\">{escape(copy['contact_sheet'])}</div>",
-                    f"<a href=\"{escape(src, quote=True)}\"><img src=\"{escape(src, quote=True)}\" alt=\"{escape(copy['contact_sheet'])}\"></a>",
-                    "</div>",
-                ]
-            )
+        lines.append(cls._review_form_html(cue, copy))
 
         if cue.get("frames"):
             lines.append("<div class=\"frames\">")
             for frame in cue["frames"]:
-                lines.append(cls._frame_html(frame, html_path, copy))
+                lines.append(cls._frame_html(frame, html_path, copy, group=str(cue.get("id") or "cue")))
             lines.append("</div>")
         else:
             planned = ", ".join(f"{point['timestamp_seconds']:.3f}s" for point in cue.get("frame_points", []))
@@ -1145,6 +1587,328 @@ a:hover { text-decoration: underline; }
 
         lines.append("</section>")
         return "\n".join(lines)
+
+    @staticmethod
+    def _review_form_html(cue: dict[str, Any], copy: dict[str, str]) -> str:
+        cue_id = str(cue.get("id") or "")
+        annotation = cue.get("reviewer_annotation") or {}
+        decision = str(annotation.get("decision") or "")
+        notes = str(annotation.get("notes") or "")
+        option_specs = [
+            ("", copy["decision_empty"]),
+            ("PASS", copy["decision_pass"]),
+            ("NEEDS_REVIEW", copy["decision_needs"]),
+            ("WRONG_EXPECTATION", copy["decision_wrong"]),
+        ]
+
+        def radios(specs: list[tuple[str, str]], selected: str) -> str:
+            return "".join(
+                (
+                    f"<label class=\"radio-pill\">"
+                    f"<input type=\"radio\" name=\"decision-{escape(cue_id, quote=True)}\" "
+                    f"data-review-field=\"decision\" value=\"{escape(value, quote=True)}\""
+                    f"{' checked' if value == selected else ''}>"
+                    f"<span>{escape(label)}</span>"
+                    f"</label>"
+                )
+                for value, label in specs
+            )
+
+        return "\n".join(
+            [
+                f"<form class=\"review-form\" data-review-form data-cue-id=\"{escape(cue_id, quote=True)}\">",
+                "<div class=\"form-grid\">",
+                "<fieldset class=\"review-options\">",
+                f"<legend>{escape(copy['review_decision'])}</legend>",
+                f"<div class=\"radio-row\">{radios(option_specs, decision)}</div>",
+                "</fieldset>",
+                f"<label class=\"conditional-note{' is-hidden' if decision not in {'NEEDS_REVIEW', 'WRONG_EXPECTATION'} else ''}\">",
+                f"{escape(copy['review_notes_field'])}",
+                f"<textarea data-review-field=\"notes\">{escape(notes)}</textarea>",
+                "</label>",
+                "</div>",
+                f"<div class=\"warning-note{' is-visible' if decision == 'WRONG_EXPECTATION' else ''}\" data-wrong-warning>{escape(copy['wrong_warning'])}</div>",
+                "</form>",
+            ]
+        )
+
+    @staticmethod
+    def _lightbox_html(copy: dict[str, str]) -> str:
+        script = """
+(() => {
+  const items = Array.from(document.querySelectorAll('[data-lightbox-src]')).map((button) => ({
+    src: button.dataset.lightboxSrc,
+    title: button.dataset.lightboxTitle || button.querySelector('img')?.alt || '',
+    group: button.dataset.lightboxGroup || 'default'
+  }));
+  if (!items.length) return;
+  const groups = new Map();
+  items.forEach((item) => {
+    if (!groups.has(item.group)) groups.set(item.group, []);
+    groups.get(item.group).push(item);
+  });
+  const modal = document.querySelector('[data-lightbox]');
+  const image = modal.querySelector('[data-lightbox-image]');
+  const title = modal.querySelector('[data-lightbox-title]');
+  const counter = modal.querySelector('[data-lightbox-counter]');
+  const prevButton = modal.querySelector('[data-lightbox-prev]');
+  const nextButton = modal.querySelector('[data-lightbox-next]');
+  let activeItems = items;
+  let index = 0;
+
+  function show(nextIndex) {
+    index = Math.max(0, Math.min(nextIndex, activeItems.length - 1));
+    image.src = activeItems[index].src;
+    image.alt = activeItems[index].title;
+    title.textContent = activeItems[index].title;
+    counter.textContent = `${index + 1} / ${activeItems.length}`;
+    prevButton.disabled = index === 0;
+    nextButton.disabled = index === activeItems.length - 1;
+  }
+
+  function open(buttonIndex) {
+    const item = items[buttonIndex];
+    activeItems = groups.get(item.group) || [item];
+    show(activeItems.indexOf(item));
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('lightbox-open');
+    modal.querySelector('[data-lightbox-close]').focus();
+  }
+
+  function close() {
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('lightbox-open');
+    image.removeAttribute('src');
+  }
+
+  document.querySelectorAll('[data-lightbox-src]').forEach((button, buttonIndex) => {
+    button.addEventListener('click', () => open(buttonIndex));
+  });
+  prevButton.addEventListener('click', () => show(index - 1));
+  nextButton.addEventListener('click', () => show(index + 1));
+  modal.querySelector('[data-lightbox-close]').addEventListener('click', close);
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) close();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (!modal.classList.contains('is-open')) return;
+    if (event.key === 'Escape') close();
+    if (event.key === 'ArrowLeft' && index > 0) show(index - 1);
+    if (event.key === 'ArrowRight' && index < activeItems.length - 1) show(index + 1);
+  });
+
+  const initialFilter = document.querySelector('[data-initial-filter]');
+  const reviewFilter = document.querySelector('[data-review-filter]');
+  const cueCards = Array.from(document.querySelectorAll('[data-cue-card]'));
+  function matchesFilters(card) {
+    const initial = initialFilter?.value || 'all';
+    const review = reviewFilter?.value || 'all';
+    const initialOk =
+      initial === 'all' ||
+      (initial === 'pass' && card.dataset.initialDecision === 'PASS') ||
+      (initial === 'needs' && card.dataset.initialDecision === 'NEEDS_REVIEW');
+    const reviewOk =
+      review === 'all' ||
+      (review === 'reviewed' && card.dataset.reviewed === 'true') ||
+      (review === 'unreviewed' && card.dataset.reviewed !== 'true');
+    return initialOk && reviewOk;
+  }
+  function applyFilters() {
+    cueCards.forEach((card) => card.classList.toggle('is-hidden', !matchesFilters(card)));
+  }
+  initialFilter?.addEventListener('change', applyFilters);
+  reviewFilter?.addEventListener('change', applyFilters);
+
+  const storageKey = `visual-timing-review:${location.pathname}`;
+  const forms = Array.from(document.querySelectorAll('[data-review-form]'));
+  const status = document.querySelector('[data-save-status]');
+  const saveButtons = Array.from(document.querySelectorAll('[data-save-review]'));
+  const runId = saveButtons[0]?.dataset.runId || document.title;
+  const toast = document.querySelector('[data-toast]');
+  const exportPanel = document.querySelector('[data-export-panel]');
+  const exportJson = document.querySelector('[data-export-json]');
+  document.querySelector('[data-scroll-top]')?.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  function storeDraft(payload) {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(payload));
+    } catch (_) {}
+  }
+  async function copyText(text) {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (_) {}
+    try {
+      const buffer = document.createElement('textarea');
+      buffer.value = text;
+      buffer.setAttribute('readonly', '');
+      buffer.style.position = 'fixed';
+      buffer.style.left = '-9999px';
+      document.body.appendChild(buffer);
+      buffer.select();
+      const copied = document.execCommand('copy');
+      buffer.remove();
+      return copied;
+    } catch (_) {
+      return false;
+    }
+  }
+  function refreshForm(form) {
+    const decision = form.querySelector('[data-review-field="decision"]:checked')?.value || '';
+    form.querySelector('.conditional-note')?.classList.toggle('is-hidden', !['NEEDS_REVIEW', 'WRONG_EXPECTATION'].includes(decision));
+    form.querySelector('[data-wrong-warning]')?.classList.toggle('is-visible', decision === 'WRONG_EXPECTATION');
+    const card = form.closest('[data-cue-card]');
+    if (card) {
+      card.dataset.reviewed = decision ? 'true' : 'false';
+      card.dataset.reviewerDecision = decision || 'UNREVIEWED';
+      card.dataset.reviewerNeeds = decision && decision !== 'PASS' ? 'true' : 'false';
+    }
+    applyFilters();
+  }
+  function collectAnnotations({ includeImplicitPass = false } = {}) {
+    const annotations = {};
+    forms.forEach((form) => {
+      const cueId = form.dataset.cueId;
+      const fields = {};
+      form.querySelectorAll('[data-review-field]').forEach((field) => {
+        const name = field.dataset.reviewField;
+        if (field.type === 'radio') {
+          if (field.checked) fields[name] = field.value.trim();
+        } else {
+          fields[name] = field.value.trim();
+        }
+      });
+      const decision = fields.decision || (includeImplicitPass ? 'PASS' : '');
+      if (decision) {
+        const needsAdjustment = decision !== 'PASS';
+        annotations[cueId] = {
+          decision,
+          reviewer: 'human',
+          confidence: '',
+          issue_category: decision === 'WRONG_EXPECTATION' ? 'cue_expectation' : '',
+          notes: fields.notes || '',
+          fix_target: needsAdjustment ? (fields.notes || '') : '',
+          requires_user_review: needsAdjustment,
+          user_decision: '',
+          user_notes: ''
+        };
+      }
+    });
+    return annotations;
+  }
+  function applyAnnotations(annotations) {
+    forms.forEach((form) => {
+      const annotation = annotations[form.dataset.cueId];
+      if (!annotation) return;
+      form.querySelectorAll('[data-review-field]').forEach((field) => {
+        const name = field.dataset.reviewField;
+        if (!(name in annotation)) return;
+        if (field.type === 'radio') field.checked = field.value === (annotation[name] || '');
+        else field.value = annotation[name] || '';
+      });
+      refreshForm(form);
+    });
+  }
+  try {
+    const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    if (saved.annotations) applyAnnotations(saved.annotations);
+  } catch (_) {}
+  forms.forEach((form) => {
+    refreshForm(form);
+    form.addEventListener('input', () => {
+      refreshForm(form);
+      const payload = { saved_at: new Date().toISOString(), annotations: collectAnnotations() };
+      storeDraft(payload);
+      if (status) status.textContent = status.dataset.draftText || status.textContent;
+    });
+    form.addEventListener('change', () => {
+      refreshForm(form);
+      const payload = { saved_at: new Date().toISOString(), annotations: collectAnnotations() };
+      storeDraft(payload);
+      if (status) status.textContent = status.dataset.draftText || status.textContent;
+    });
+  });
+  if (status) status.dataset.draftText = status.textContent;
+  async function submitReview(clickedButton) {
+      const originalTexts = new Map(saveButtons.map((button) => [button, button.textContent]));
+      saveButtons.forEach((button) => {
+        button.disabled = true;
+        button.textContent = button.dataset.submittedLabel || 'Submitted';
+      });
+      const annotations = collectAnnotations({ includeImplicitPass: true });
+      const payload = {
+        version: '1.0',
+        run_id: runId,
+        saved_at: new Date().toISOString(),
+        unreviewed_policy: 'PASS',
+        annotations
+      };
+      const jsonText = JSON.stringify(payload, null, 2);
+      storeDraft(payload);
+      const copied = await copyText(jsonText);
+      try {
+        const blob = new Blob([jsonText], { type: 'application/json' });
+        const link = document.createElement('a');
+        const safeRun = (payload.run_id || 'visual-timing-review').replace(/[^a-zA-Z0-9_-]+/g, '-');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${safeRun}-review-notes.json`;
+        document.body.appendChild(link);
+        link.click();
+        URL.revokeObjectURL(link.href);
+        link.remove();
+      } catch (_) {}
+      if (exportPanel && exportJson) {
+        exportJson.value = jsonText;
+        exportPanel.classList.toggle('is-visible', !copied);
+      }
+      if (status) status.textContent = status.dataset.submittedText || 'Review submitted.';
+      if (toast) {
+        toast.classList.add('is-visible');
+        window.clearTimeout(toast._timer);
+        toast._timer = window.setTimeout(() => {
+          toast.classList.remove('is-visible');
+          saveButtons.forEach((button) => {
+            button.disabled = false;
+            button.textContent = originalTexts.get(button) || button.textContent;
+          });
+        }, 5200);
+      } else {
+        window.setTimeout(() => {
+          saveButtons.forEach((button) => {
+            button.disabled = false;
+            button.textContent = originalTexts.get(button) || button.textContent;
+          });
+        }, 1800);
+      }
+  }
+  saveButtons.forEach((button) => button.addEventListener('click', () => submitReview(button)));
+})();
+""".strip()
+        return "\n".join(
+            [
+                "<div class=\"lightbox\" data-lightbox aria-hidden=\"true\" role=\"dialog\" aria-modal=\"true\">",
+                "<div class=\"lightbox-bar\">",
+                f"<div class=\"lightbox-title\" data-lightbox-title>{escape(copy['image_preview'])}</div>",
+                "<div class=\"lightbox-counter\" data-lightbox-counter></div>",
+                f"<button type=\"button\" class=\"lightbox-btn\" data-lightbox-close>{escape(copy['close'])}</button>",
+                "</div>",
+                f"<button type=\"button\" class=\"lightbox-btn lightbox-arrow lightbox-prev\" data-lightbox-prev aria-label=\"{escape(copy['previous'], quote=True)}\">‹</button>",
+                "<div class=\"lightbox-main\"><img data-lightbox-image alt=\"\"></div>",
+                f"<button type=\"button\" class=\"lightbox-btn lightbox-arrow lightbox-next\" data-lightbox-next aria-label=\"{escape(copy['next'], quote=True)}\">›</button>",
+                "</div>",
+                f"<script>{script}</script>",
+                "<div class=\"toast\" data-toast>",
+                f"<strong>{escape(copy['toast_title'])}</strong>",
+                f"<span>{escape(copy['toast_body'])}</span>",
+                "</div>",
+            ]
+        )
 
     @staticmethod
     def _html_box(title: str, value: Any, *, class_name: str = "") -> str:
@@ -1156,13 +1920,21 @@ a:hover { text-decoration: underline; }
         )
 
     @classmethod
-    def _frame_html(cls, frame: dict[str, Any], html_path: Path, copy: dict[str, str]) -> str:
+    def _frame_html(cls, frame: dict[str, Any], html_path: Path, copy: dict[str, str], *, group: str) -> str:
         path = frame.get("path")
         offset = frame.get("offset_seconds", 0)
         ts = frame.get("timestamp_seconds", 0)
         if path and Path(path).expanduser().exists() and not frame.get("error"):
             src = cls._html_asset_src(path, html_path)
-            media = f"<a href=\"{escape(src, quote=True)}\"><img src=\"{escape(src, quote=True)}\" alt=\"frame\"></a>"
+            title = f"{copy['frame']}: {float(offset):+.3f}s / {float(ts):.3f}s"
+            media = (
+                f"<button type=\"button\" class=\"image-open\" "
+                f"data-lightbox-src=\"{escape(src, quote=True)}\" "
+                f"data-lightbox-group=\"{escape(group, quote=True)}\" "
+                f"data-lightbox-title=\"{escape(title, quote=True)}\">"
+                f"<img src=\"{escape(src, quote=True)}\" alt=\"{escape(title, quote=True)}\" loading=\"lazy\">"
+                "</button>"
+            )
         else:
             media = f"<div class=\"empty\">{escape(copy['frame_missing'])}</div>"
         error = f" · {escape(str(frame.get('error')))}" if frame.get("error") else ""
@@ -1197,7 +1969,9 @@ a:hover { text-decoration: underline; }
         counts = {
             "total": len(results.get("cues", [])),
             "initial_needs_review": 0,
+            "initial_pass": 0,
             "reviewer_needs_review": 0,
+            "reviewed": 0,
             "unreviewed": 0,
             "initial_queue": [],
         }
@@ -1207,20 +1981,30 @@ a:hover { text-decoration: underline; }
             if initial.get("decision") == "NEEDS_REVIEW":
                 counts["initial_needs_review"] += 1
                 counts["initial_queue"].append(cue)
+            if initial.get("decision") == "PASS":
+                counts["initial_pass"] += 1
             decision = annotation.get("decision")
             if decision in {"NEEDS_REVIEW", "WRONG_EXPECTATION"} or annotation.get("requires_user_review"):
                 counts["reviewer_needs_review"] += 1
-            if not decision:
+            if decision:
+                counts["reviewed"] += 1
+            else:
                 counts["unreviewed"] += 1
         return counts
 
     @classmethod
     def _review_language(cls, results: dict[str, Any]) -> str:
+        explicit_language = str(results.get("review_language") or "").lower()
+        if explicit_language.startswith("zh"):
+            return "zh"
+        if explicit_language.startswith("en"):
+            return "en"
+        subtitle_text = " ".join(str(cue.get("subtitle", "")) for cue in results.get("cues", []))
         narration_text = " ".join(str(cue.get("narration", "")) for cue in results.get("cues", []))
-        if cls._looks_chinese(narration_text):
+        if cls._looks_chinese(f"{subtitle_text} {narration_text}"):
             return "zh"
         text = " ".join(
-            " ".join(str(cue.get(key, "")) for key in ("label", "narration", "expected_state", "risk"))
+            " ".join(str(cue.get(key, "")) for key in ("label", "subtitle", "narration", "expected_state", "risk"))
             for cue in results.get("cues", [])
         )
         if cls._looks_chinese(text):
@@ -1231,7 +2015,7 @@ a:hover { text-decoration: underline; }
     def _looks_chinese(text: str) -> bool:
         cjk_chars = len(re.findall(r"[\u3400-\u9fff]", text))
         latin_words = len(re.findall(r"[A-Za-z]+", text))
-        return cjk_chars >= 10 and cjk_chars >= latin_words
+        return cjk_chars >= 10 and cjk_chars >= latin_words * 0.35
 
     @staticmethod
     def _ui_copy(language: str) -> dict[str, str]:
@@ -1242,8 +2026,23 @@ a:hover { text-decoration: underline; }
                 "project": "项目",
                 "cues": "检查点",
                 "initial_needs": "自动初审待看",
+                "initial_pass": "自动初审通过",
+                "initial_failed": "初审未通过",
+                "initial_filter": "初审状态",
+                "review_filter": "评审状态",
+                "filter_all": "全部",
+                "reviewed": "已评审",
                 "reviewer_needs": "人工待看",
                 "unreviewed": "未评审",
+                "save_review": "提交评审",
+                "submitted_button": "已提交",
+                "back_to_top": "返回顶部",
+                "save_hint": "只标需要调整的项即可；提交时未评审项会按通过记录。",
+                "submitted_hint": "评审内容已复制到剪贴板。粘贴发送给 Agent 后，Agent 会按评审结果调整和记录；未评审项按通过处理。",
+                "toast_title": "评审已保存",
+                "toast_body": "评审内容已复制到剪贴板。粘贴发送给 Agent 即可处理；未评审项会按通过记录。",
+                "export_title": "评审记录已生成",
+                "export_body": "自动复制失败时才会显示这里的 JSON；请复制后发送给 Agent。未评审项会按通过记录。",
                 "initial_queue": "自动初审队列",
                 "auto": "自动初审",
                 "reviewer": "人工评审",
@@ -1256,10 +2055,30 @@ a:hover { text-decoration: underline; }
                 "risk": "风险",
                 "auto_notes": "自动初审说明",
                 "review_notes": "人工评审说明",
+                "review_decision": "人工结论",
+                "review_notes_field": "评审意见",
+                "wrong_warning": "选择“检查点不准确”表示这个检查点本身可能需要调整，会触发对 QA 检查点设计或抓取逻辑的复盘，请谨慎使用。",
                 "fix_target": "修复目标",
                 "user_decision": "用户决定",
+                "user_notes": "补充说明",
+                "requires_user_review": "需要继续人工确认",
+                "decision_empty": "未评审",
+                "decision_pass": "通过",
+                "decision_needs": "需要调整",
+                "decision_wrong": "检查点不准确",
+                "user_decision_empty": "无需用户决定",
+                "user_approved": "确认通过",
+                "user_fix_requested": "要求调整",
+                "user_deferred": "稍后再看",
+                "user_rejected": "不采纳",
                 "questions": "检查问题",
-                "contact_sheet": "Contact Sheet",
+                "contact_sheet": "拼图概览",
+                "open_contact_sheet": "打开拼图概览",
+                "frame": "截图",
+                "image_preview": "图片预览",
+                "previous": "上一张",
+                "next": "下一张",
+                "close": "关闭",
                 "planned_frames": "计划抽帧时间",
                 "frame_missing": "截图缺失",
             }
@@ -1269,8 +2088,23 @@ a:hover { text-decoration: underline; }
             "project": "Project",
             "cues": "Cues",
             "initial_needs": "Auto needs review",
+            "initial_pass": "Auto pass",
+            "initial_failed": "Auto failed",
+            "initial_filter": "Auto-review status",
+            "review_filter": "Review status",
+            "filter_all": "All",
+            "reviewed": "Reviewed",
             "reviewer_needs": "Reviewer needs review",
             "unreviewed": "Unreviewed",
+            "save_review": "Submit review",
+            "submitted_button": "Submitted",
+            "back_to_top": "Back to top",
+            "save_hint": "Mark only items that need changes; unreviewed items are recorded as passed on submit.",
+            "submitted_hint": "Review content was copied to the clipboard. Paste it to the Agent so it can adjust and record the results; unreviewed items are treated as passed.",
+            "toast_title": "Review saved",
+            "toast_body": "Review content was copied to the clipboard. Paste it to the Agent; unreviewed items are recorded as passed.",
+            "export_title": "Review notes generated",
+            "export_body": "This JSON is shown only if automatic copy fails. Copy it to the Agent; unreviewed items are recorded as passed.",
             "initial_queue": "Initial auto-review queue",
             "auto": "Auto",
             "reviewer": "Reviewer",
@@ -1283,10 +2117,30 @@ a:hover { text-decoration: underline; }
             "risk": "Risk",
             "auto_notes": "Auto-review notes",
             "review_notes": "Reviewer notes",
+            "review_decision": "Reviewer decision",
+            "review_notes_field": "Review notes",
+            "wrong_warning": "Choosing Wrong expectation means this cue itself may need framework or cue-selection changes. Use it sparingly.",
             "fix_target": "Fix target",
             "user_decision": "User decision",
+            "user_notes": "Additional notes",
+            "requires_user_review": "Needs further human review",
+            "decision_empty": "Unreviewed",
+            "decision_pass": "Pass",
+            "decision_needs": "Needs adjustment",
+            "decision_wrong": "Wrong expectation",
+            "user_decision_empty": "No user decision",
+            "user_approved": "Approved",
+            "user_fix_requested": "Fix requested",
+            "user_deferred": "Deferred",
+            "user_rejected": "Rejected",
             "questions": "Review questions",
             "contact_sheet": "Contact sheet",
+            "open_contact_sheet": "Open contact sheet",
+            "frame": "Frame",
+            "image_preview": "Image preview",
+            "previous": "Previous",
+            "next": "Next",
+            "close": "Close",
             "planned_frames": "Planned frame timestamps",
             "frame_missing": "Frame missing",
         }

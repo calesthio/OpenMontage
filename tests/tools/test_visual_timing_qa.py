@@ -102,9 +102,40 @@ def test_review_extracts_cue_frames_and_contact_sheet(monkeypatch, tmp_path):
     assert cue["initial_review"]["decision"] in {"PASS", "NEEDS_REVIEW"}
     assert Path(cue["contact_sheet"]).exists()
     review_html = Path(result.data["review_html_path"]).read_text(encoding="utf-8")
-    assert "Contact sheet" in review_html
-    assert "feedback_contact_sheet.jpg" in review_html
+    assert "Contact sheet" not in review_html
+    assert "feedback_contact_sheet.jpg" not in review_html
     assert "00_minus0_500_3.500s.jpg" in review_html
+    assert "data-lightbox-src=" in review_html
+    assert 'data-lightbox-group="feedback"' in review_html
+    assert 'data-lightbox-group="feedback-contact"' not in review_html
+    assert "data-lightbox-next" in review_html
+    assert "data-lightbox-prev" in review_html
+    assert "data-review-form" in review_html
+    assert "data-save-review" in review_html
+    assert review_html.count("<button type=\"button\" class=\"pill primary-action\" data-save-review") == 1
+    assert "Submit review" in review_html
+    assert "data-scroll-top" in review_html
+    assert "Back to top" in review_html
+    assert "primary-action" in review_html
+    assert "floating-actions" in review_html
+    assert "unreviewed items are recorded as passed" in review_html
+    assert "includeImplicitPass: true" in review_html
+    assert "unreviewed_policy: 'PASS'" in review_html
+    assert "data-initial-filter" in review_html
+    assert "data-review-filter" in review_html
+    assert '<option value="pass">Auto pass' in review_html
+    assert '<option value="needs">Auto failed' in review_html
+    assert '<option value="reviewed">Reviewed' in review_html
+    assert '<option value="unreviewed">Unreviewed' in review_html
+    assert "Wrong expectation means this cue itself may need framework" in review_html
+    assert "data-wrong-warning" in review_html
+    assert 'type="radio"' in review_html
+    assert 'name="decision-feedback"' in review_html
+    assert "<select data-review-field=\"decision\"" not in review_html
+    assert "data-cue-card" in review_html
+    assert "data-initial-decision=" in review_html
+    assert '<a href="feedback_contact_sheet.jpg"' not in review_html
+    assert "Initial auto-review queue" not in review_html
     assert any(cmd[0] == "ffprobe" for cmd in commands)
     assert sum(1 for cmd in commands if cmd[0] == "ffmpeg") == 4
 
@@ -135,24 +166,33 @@ def test_annotate_writes_notes_and_annotated_review(tmp_path):
     tool = VisualTimingQA()
     dry_result = tool.execute({"operation": "dry_run", "manifest": base_manifest(tmp_path)})
     assert dry_result.success
+    annotations_path = tmp_path / "review-notes.json"
+    annotations_path.write_text(
+        json.dumps(
+            {
+                "annotations": {
+                    "feedback": {
+                        "decision": "NEEDS_REVIEW",
+                        "reviewer": "agent",
+                        "confidence": "medium",
+                        "issue_category": "scene_expectation",
+                        "notes": "Looks close, but the reviewer should confirm the intended state.",
+                        "fix_target": "Confirm cue expectation.",
+                        "requires_user_review": True,
+                        "user_decision": "DEFERRED",
+                        "user_notes": "Reviewer will check later.",
+                    }
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
 
     annotate_result = tool.execute(
         {
             "operation": "annotate",
             "results_path": dry_result.data["results_path"],
-            "annotations": {
-                "feedback": {
-                    "decision": "NEEDS_REVIEW",
-                    "reviewer": "agent",
-                    "confidence": "medium",
-                    "issue_category": "scene_expectation",
-                    "notes": "Looks close, but the reviewer should confirm the intended state.",
-                    "fix_target": "Confirm cue expectation.",
-                    "requires_user_review": True,
-                    "user_decision": "DEFERRED",
-                    "user_notes": "Reviewer will check later.",
-                }
-            },
+            "annotations_path": str(annotations_path),
         }
     )
 
@@ -167,6 +207,18 @@ def test_annotate_writes_notes_and_annotated_review(tmp_path):
     assert notes["annotations"][0]["decision"] == "NEEDS_REVIEW"
     assert notes["annotations"][0]["issue_category"] == "scene_expectation"
     assert notes["annotations"][0]["user_decision"] == "DEFERRED"
+    assert notes["summary"] == {"annotation_count": 1, "pass_count": 0, "action_item_count": 1}
+    assert notes["action_items"] == [
+        {
+            "cue_id": "feedback",
+            "decision": "NEEDS_REVIEW",
+            "issue_category": "scene_expectation",
+            "notes": "Looks close, but the reviewer should confirm the intended state.",
+            "fix_target": "Confirm cue expectation.",
+        }
+    ]
+    assert annotate_result.data["action_item_count"] == 1
+    assert annotate_result.data["action_items"][0]["cue_id"] == "feedback"
     assert "- [x] NEEDS_REVIEW" in review
     assert "NEEDS_REVIEW: `1`" in review
     assert "Reviewer queue:" in review
@@ -302,7 +354,8 @@ def test_initial_review_flags_empty_subtitle_band(monkeypatch, tmp_path):
     assert result.success
     initial = result.data["cues"][0]["initial_review"]
     assert initial["decision"] == "NEEDS_REVIEW"
-    assert "subtitles may be missing" in initial["notes"]
+    assert "字幕可能缺失" in initial["notes"]
+    assert "交付前调整" in initial["fix_target"]
 
 
 def test_initial_review_passes_when_bottom_caption_has_edges(monkeypatch, tmp_path):

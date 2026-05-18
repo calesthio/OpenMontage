@@ -62,6 +62,23 @@
         "required": ["role", "path", "sha256", "size_bytes"],
         "properties": {
           "role": { "type": "string" },
+          "label": { "type": "string" },
+          "path": { "type": "string" },
+          "sha256": { "type": "string" },
+          "size_bytes": { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "references": {
+      "type": "array",
+      "description": "Local reference files/pages that remain at their original path because they may depend on adjacent assets.",
+      "items": {
+        "type": "object",
+        "required": ["role", "path", "sha256", "size_bytes"],
+        "properties": {
+          "role": { "type": "string" },
+          "label": { "type": "string" },
           "path": { "type": "string" },
           "sha256": { "type": "string" },
           "size_bytes": { "type": "integer", "minimum": 0 }

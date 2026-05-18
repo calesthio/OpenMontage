@@ -85,10 +85,15 @@ def test_package_copies_assets_and_writes_manifest(tmp_path: Path):
     assert manifest["video"]["cover_mode"] == "none"
     assert manifest["video"]["cover_first_frame"] is False
     roles = {entry["role"] for entry in manifest["files"]}
-    assert roles == {"video", "cover", "captions"}
+    assert roles == {"video", "cover", "captions", "final_package_summary"}
     assert (tmp_path / "final" / "video" / "render.mp4").exists()
     assert (tmp_path / "final" / "cover" / "cover.jpg").exists()
     assert (tmp_path / "final" / "sidecars" / "captions.srt").exists()
+    summary = tmp_path / "final" / "FINAL_PACKAGE.md"
+    assert summary.exists()
+    assert str(tmp_path / "final" / "video" / "render.mp4") in summary.read_text(
+        encoding="utf-8"
+    )
 
 
 def test_script_schema_accepts_cover_policy():
@@ -211,6 +216,173 @@ def test_dry_run_reports_first_frame_ffmpeg_need(tmp_path: Path):
 
     assert plan["requires_ffmpeg"] is True
     assert any(path.endswith("final_package_manifest.json") for path in plan["would_write"])
+
+
+def test_review_generates_local_html_with_detected_language(tmp_path: Path):
+    video = tmp_path / "render.mp4"
+    cover = tmp_path / "cover.jpg"
+    captions = tmp_path / "captions.srt"
+    video.write_bytes(b"fake video")
+    cover.write_bytes(b"fake cover")
+    captions.write_text(
+        "1\n00:00:00,000 --> 00:00:01,000\n最终视频字幕\n",
+        encoding="utf-8",
+    )
+    package = PublishPackager().execute(
+        {
+            "video_path": str(video),
+            "cover_path": str(cover),
+            "output_dir": str(tmp_path / "final"),
+            "project_id": "demo",
+            "variant_id": "v1",
+            "channel": "landing_page",
+            "extra_files": [{"path": str(captions), "role": "captions"}],
+        }
+    )
+    assert package.success, package.error
+
+    result = PublishPackager().execute(
+        {
+            "operation": "review",
+            "manifest_path": str(tmp_path / "final" / "final_package_manifest.json"),
+            "review_output_dir": str(tmp_path / "review"),
+            "language": "auto",
+        }
+    )
+
+    assert result.success, result.error
+    assert result.data["language"] == "zh"
+    html = (tmp_path / "review" / "final_package_review.html").read_text(
+        encoding="utf-8"
+    )
+    assert "最终交付包确认" in html
+    assert "<video controls" in html
+    assert 'class="cover"' in html
+    assert "如果发现视频、封面或附属文件不对" in html
+
+
+def test_review_uses_labels_for_html_review_artifacts(tmp_path: Path):
+    video = tmp_path / "render.mp4"
+    timing_page = tmp_path / "timing.html"
+    video.write_bytes(b"fake video")
+    timing_page.write_text("<html>Timing</html>", encoding="utf-8")
+    package = PublishPackager().execute(
+        {
+            "video_path": str(video),
+            "output_dir": str(tmp_path / "final"),
+            "reference_files": [
+                {
+                    "path": str(timing_page),
+                    "role": "visual_timing_review_page",
+                    "label": "Timing QA 页面",
+                }
+            ],
+        }
+    )
+    assert package.success, package.error
+    manifest = json.loads(
+        (tmp_path / "final" / "final_package_manifest.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    validate_artifact("final_package_manifest", manifest)
+    page_entry = next(
+        item
+        for item in manifest["references"]
+        if item["role"] == "visual_timing_review_page"
+    )
+    assert page_entry["label"] == "Timing QA 页面"
+
+    result = PublishPackager().execute(
+        {
+            "operation": "review",
+            "manifest_path": str(tmp_path / "final" / "final_package_manifest.json"),
+            "review_output_dir": str(tmp_path / "review"),
+            "language": "zh",
+        }
+    )
+    assert result.success, result.error
+    html = (tmp_path / "review" / "final_package_review.html").read_text(
+        encoding="utf-8"
+    )
+    assert "Timing QA 页面" in html
+    assert "相关页面" in html
+    assert "timing.html" in html
+
+
+def test_annotate_records_approved_review_payload(tmp_path: Path):
+    video = tmp_path / "render.mp4"
+    video.write_bytes(b"fake video")
+    package = PublishPackager().execute(
+        {
+            "video_path": str(video),
+            "output_dir": str(tmp_path / "final"),
+            "project_id": "demo",
+            "variant_id": "v1",
+            "channel": "landing_page",
+        }
+    )
+    assert package.success, package.error
+    manifest_path = tmp_path / "final" / "final_package_manifest.json"
+
+    result = PublishPackager().execute(
+        {
+            "operation": "annotate",
+            "review_payload": {
+                "version": "1.0",
+                "run_id": "demo-review",
+                "manifest_path": str(manifest_path),
+                "decision": "APPROVED",
+                "notes": "",
+            },
+        }
+    )
+
+    assert result.success, result.error
+    assert result.data["review_complete"] is True
+    assert result.data["next_operation"] == "deliver_or_publish"
+    notes_path = tmp_path / "final" / "final_package_review_notes.json"
+    notes = json.loads(notes_path.read_text(encoding="utf-8"))
+    assert notes["decision"] == "APPROVED"
+    assert notes["package"]["video_path"].endswith("render.mp4")
+
+
+def test_annotate_records_revision_request(tmp_path: Path):
+    video = tmp_path / "render.mp4"
+    video.write_bytes(b"fake video")
+    package = PublishPackager().execute(
+        {
+            "video_path": str(video),
+            "output_dir": str(tmp_path / "final"),
+            "project_id": "demo",
+            "variant_id": "v1",
+        }
+    )
+    assert package.success, package.error
+    manifest_path = tmp_path / "final" / "final_package_manifest.json"
+
+    result = PublishPackager().execute(
+        {
+            "operation": "annotate",
+            "review_payload": {
+                "version": "1.0",
+                "run_id": "demo-review",
+                "manifest_path": str(manifest_path),
+                "decision": "NEEDS_REVISION",
+                "notes": "Cover file is not the approved one.",
+            },
+        }
+    )
+
+    assert result.success, result.error
+    assert result.data["review_complete"] is False
+    assert result.data["next_operation"] == "repackage_final"
+    notes = json.loads(
+        (tmp_path / "final" / "final_package_review_notes.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert notes["notes"] == "Cover file is not the approved one."
 
 
 @pytest.mark.skipif(

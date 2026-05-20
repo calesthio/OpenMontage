@@ -129,10 +129,20 @@ left for the user to discover from raw screenshots:
 - visual change concentrated after the target frame, suggesting a late reveal;
 - subtitle/caption cues whose lower-frame band appears visually empty.
 
-Initial review writes `cue.initial_review` and adds an "Initial auto-review
-queue" to both `review.md` and `review.html`. Treat `NEEDS_REVIEW` as a blocker
-for agent handoff until the contact sheet has been inspected and either fixed or
-explicitly accepted.
+Initial review writes `cue.initial_review` plus a top-level
+`agent_initial_review` handoff contract. The agent must inspect the cue cards
+before asking the user to review them, using the generated checklist:
+
+- confirm subtitles are present and semantically broken at the reviewed cue;
+- compare before / at / after frames against the spoken cue timing;
+- verify `expected_state` matches the approved creative direction;
+- check for blank frames, missing highlights, layout overlap, or important UI
+  hidden behind subtitles.
+
+Treat `NEEDS_REVIEW` as a blocker for user handoff until the contact sheet has
+been inspected and either fixed or explicitly accepted. The HTML page stays
+focused on per-cue review; the queue and checklist are available in `results.json`
+and `review.md` for the agent workflow.
 
 This is still human-in-the-loop. Do not treat a local `PASS` as semantic
 approval; it only means the conservative heuristics did not find an obvious

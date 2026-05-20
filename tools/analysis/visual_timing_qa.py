@@ -51,6 +51,7 @@ class VisualTimingQA(BaseTool):
         "cue_window_frame_extraction",
         "contact_sheet_generation",
         "review_markdown_generation",
+        "agent_initial_review_handoff",
         "human_reviewer_annotation",
     ]
     supports = {
@@ -61,6 +62,7 @@ class VisualTimingQA(BaseTool):
         "reviewer_annotations": True,
         "rule_based_suggest_cues": True,
         "rule_based_initial_review": True,
+        "agent_initial_review_checklist": True,
         "automated_semantic_judgment": False,
     }
     best_for = [
@@ -279,6 +281,7 @@ class VisualTimingQA(BaseTool):
             if auto_review:
                 cue_result["initial_review"] = self._initial_review(cue_result, extract=extract)
             results["cues"].append(cue_result)
+        results["agent_initial_review"] = self._agent_initial_review_payload(results)
 
         results_path = output_dir / "results.json"
         review_path = output_dir / "review.md"
@@ -297,6 +300,7 @@ class VisualTimingQA(BaseTool):
                 "results_path": str(results_path),
                 "review_path": str(review_path),
                 "review_html_path": str(review_html_path),
+                "agent_initial_review": results["agent_initial_review"],
                 "cue_count": len(results["cues"]),
                 "cues": results["cues"],
             },
@@ -1024,6 +1028,7 @@ class VisualTimingQA(BaseTool):
         copy = cls._ui_copy(language)
         title = f"{copy['title']}: {results.get('run_id', '')}".strip()
         summary = cls._summary_counts(results)
+        agent_review = results.get("agent_initial_review") or {}
 
         css = """
 :root {
@@ -1496,6 +1501,10 @@ a:hover { text-decoration: underline; }
             "<div class=\"summary\">",
             f"<span class=\"pill\">{escape(copy['project'])}: {escape(str(results.get('project') or '-'))}</span>",
             f"<span class=\"pill\">{escape(copy['cues'])}: {summary['total']}</span>",
+            (
+                f"<span class=\"pill\">{escape(copy['agent_first_pass'])}: "
+                f"{escape(copy['agent_required'] if agent_review.get('required_before_user_handoff') else copy['not_required'])}</span>"
+            ),
             "</div>",
             "<div class=\"review-toolbar\">",
             "<div class=\"filter-controls\">",
@@ -2086,6 +2095,9 @@ a:hover { text-decoration: underline; }
                 "initial_failed": "初审未通过",
                 "initial_filter": "初审状态",
                 "review_filter": "评审状态",
+                "agent_first_pass": "Agent 初审",
+                "agent_required": "必需",
+                "not_required": "不需要",
                 "filter_all": "全部",
                 "reviewed": "已评审",
                 "reviewer_needs": "人工待看",
@@ -2148,6 +2160,9 @@ a:hover { text-decoration: underline; }
             "initial_failed": "Auto failed",
             "initial_filter": "Auto-review status",
             "review_filter": "Review status",
+            "agent_first_pass": "Agent first pass",
+            "agent_required": "required",
+            "not_required": "not required",
             "filter_all": "All",
             "reviewed": "Reviewed",
             "reviewer_needs": "Reviewer needs review",
@@ -2309,12 +2324,20 @@ a:hover { text-decoration: underline; }
             f"- Initial auto PASS: `{initial_counts['PASS']}`",
             f"- Initial auto NEEDS_REVIEW: `{initial_counts['NEEDS_REVIEW']}`",
             f"- Initial auto UNREVIEWED: `{initial_counts['UNREVIEWED']}`",
+            f"- Agent initial review: `{(results.get('agent_initial_review') or {}).get('status', 'required')}`",
             f"- PASS: `{counts['PASS']}`",
             f"- NEEDS_REVIEW: `{counts['NEEDS_REVIEW']}`",
             f"- WRONG_EXPECTATION: `{counts['WRONG_EXPECTATION']}`",
             f"- UNREVIEWED: `{counts['UNREVIEWED']}`",
             "",
         ]
+        agent_review = results.get("agent_initial_review") or {}
+        checklist = agent_review.get("checklist") or []
+        if checklist:
+            lines.append("Agent initial review checklist:")
+            for item in checklist:
+                lines.append(f"- {item}")
+            lines.append("")
         if initial_review_queue:
             lines.append("Initial auto-review queue:")
             for cue in initial_review_queue:
@@ -2335,6 +2358,27 @@ a:hover { text-decoration: underline; }
         else:
             lines.extend(["Reviewer queue: none", ""])
         return lines
+
+    @staticmethod
+    def _agent_initial_review_payload(results: dict[str, Any]) -> dict[str, Any]:
+        cues = results.get("cues", [])
+        initial_needs_review = [
+            str(cue.get("id"))
+            for cue in cues
+            if (cue.get("initial_review") or {}).get("decision") == "NEEDS_REVIEW"
+        ]
+        planned_only = any(cue.get("planned") for cue in cues)
+        return {
+            "required_before_user_handoff": True,
+            "status": "needs_agent_review" if initial_needs_review or planned_only else "agent_review_ready",
+            "checklist": [
+                "Confirm subtitle text is present and semantically broken at the reviewed cue.",
+                "Compare before / at / after frames against the spoken cue timing.",
+                "Verify expected_state matches the actual creative direction; mark WRONG_EXPECTATION if the cue itself is wrong.",
+                "Check for blank frames, missing highlights, layout overlap, or important UI hidden behind subtitles.",
+            ],
+            "initial_needs_review_cues": initial_needs_review,
+        }
 
     @staticmethod
     def _offset_label(offset: float) -> str:

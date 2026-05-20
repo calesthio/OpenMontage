@@ -47,9 +47,13 @@ def test_dry_run_writes_review_without_extracting_frames(tmp_path):
     cue = payload["cues"][0]
     assert cue["planned"] is True
     assert cue["initial_review"]["decision"] == "UNREVIEWED"
+    assert payload["agent_initial_review"]["required_before_user_handoff"] is True
+    assert payload["agent_initial_review"]["status"] == "needs_agent_review"
+    assert "Confirm subtitle text" in payload["agent_initial_review"]["checklist"][0]
     assert [point["timestamp_seconds"] for point in cue["frame_points"]] == [3.5, 4.0, 4.5]
     review = review_path.read_text(encoding="utf-8")
     assert "Feedback returns to the user." in review
+    assert "Agent initial review checklist:" in review
     assert "Initial auto UNREVIEWED: `1`" in review
     assert "Reviewer decision:" in review
     assert "PASS - visual timing and state match the cue" in review
@@ -61,6 +65,7 @@ def test_dry_run_writes_review_without_extracting_frames(tmp_path):
     assert "Feedback returns to the user." in html
     assert "Planned frame timestamps" in html
     assert "Reviewer: UNREVIEWED" in html
+    assert "Agent first pass" in html
 
 
 def test_review_html_prefers_narration_language(tmp_path):
@@ -76,6 +81,7 @@ def test_review_html_prefers_narration_language(tmp_path):
     assert '<html lang="zh">' in html
     assert "Visual Timing QA 审片" in html
     assert "旁白" in html
+    assert "Agent 初审" in html
 
 
 def test_review_extracts_cue_frames_and_contact_sheet(monkeypatch, tmp_path):

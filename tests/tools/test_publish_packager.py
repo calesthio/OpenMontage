@@ -152,6 +152,37 @@ def test_package_requires_cover_for_first_frame_mode(tmp_path: Path):
     assert "cover_path is required" in result.error
 
 
+def test_package_blocks_effectively_silent_audio_track(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    video = tmp_path / "render.mp4"
+    video.write_bytes(b"fake video")
+
+    def fake_audio_check(self, video_path: Path, min_mean_volume_db: float):
+        return {
+            "status": "failed",
+            "has_audio_stream": True,
+            "mean_volume_db": -91.0,
+            "max_volume_db": -91.0,
+            "threshold_mean_volume_db": min_mean_volume_db,
+            "message": "Audio mean volume -91.0 dB is at or below threshold -60.0 dB; the packaged video may be silent.",
+        }
+
+    monkeypatch.setattr(PublishPackager, "_audio_loudness_check", fake_audio_check)
+
+    result = PublishPackager().execute(
+        {
+            "video_path": str(video),
+            "output_dir": str(tmp_path / "final"),
+        }
+    )
+
+    assert not result.success
+    assert "may be silent" in result.error
+    assert result.data["verification"]["audio"]["status"] == "failed"
+    assert result.data["verification"]["passed"] is False
+
+
 def test_package_uses_cover_policy_first_frame_mode_when_cover_mode_omitted(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ):

@@ -100,6 +100,7 @@ class PublishPackager(BaseTool):
         "write_final_package_manifest",
         "create_final_package_review_page",
         "verify_duration_delta",
+        "verify_audio_is_not_silent",
     ]
     best_for = [
         "turning an approved render into a publish-ready final package",
@@ -223,6 +224,11 @@ class PublishPackager(BaseTool):
                 "default": 0.15,
                 "description": "Allowed duration delta after packaging.",
             },
+            "audio_min_mean_volume_db": {
+                "type": "number",
+                "default": -60.0,
+                "description": "Minimum allowed mean volume when an audio stream exists. Lower values are treated as effectively silent.",
+            },
             "overwrite": {"type": "boolean", "default": False},
         },
     }
@@ -336,6 +342,7 @@ class PublishPackager(BaseTool):
         ).get("first_frame_mode", "none")
         overwrite = bool(inputs.get("overwrite", False))
         tolerance = float(inputs.get("duration_tolerance_seconds", 0.15))
+        audio_threshold = float(inputs.get("audio_min_mean_volume_db", -60.0))
 
         if not video_path.exists():
             return ToolResult(success=False, error=f"Video not found: {video_path}")
@@ -402,6 +409,9 @@ class PublishPackager(BaseTool):
             warnings.append(
                 f"Duration delta {duration_delta}s exceeds tolerance {tolerance}s"
             )
+        audio_check = self._audio_loudness_check(video_out, audio_threshold)
+        if audio_check.get("status") == "failed":
+            warnings.append(str(audio_check.get("message") or "Audio loudness check failed"))
 
         manifest: dict[str, Any] = {
             "version": "1.0",
@@ -421,6 +431,8 @@ class PublishPackager(BaseTool):
             "references": references,
             "verification": {
                 "duration_tolerance_seconds": tolerance,
+                "audio_min_mean_volume_db": audio_threshold,
+                "audio": audio_check,
                 "passed": not warnings,
                 "warnings": warnings,
             },
@@ -517,9 +529,18 @@ class PublishPackager(BaseTool):
                 "",
                 f"- Passed: `{(manifest.get('verification') or {}).get('passed')}`",
                 f"- Warnings: `{'; '.join(warnings) if warnings else 'none'}`",
-                "",
             ]
         )
+        audio = (manifest.get("verification") or {}).get("audio") or {}
+        if audio:
+            lines.extend(
+                [
+                    f"- Audio check: `{audio.get('status')}`",
+                    f"- Audio mean volume: `{audio.get('mean_volume_db')}`",
+                    f"- Audio max volume: `{audio.get('max_volume_db')}`",
+                ]
+            )
+        lines.append("")
         return "\n".join(lines)
 
     def _manifest_path(self, inputs: dict[str, Any]) -> Path:
@@ -754,6 +775,8 @@ class PublishPackager(BaseTool):
                 "duration": "时长",
                 "cover_first_frame": "封面帧",
                 "warnings": "警告",
+                "audio": "音频",
+                "audio_mean": "平均音量",
                 "none": "无",
                 "no_cover_policy": "未记录封面策略。若脚本 JSON 提供 cover_policy 或 cover_direction，后续会在这里展示。",
                 "yes": "是",
@@ -788,6 +811,8 @@ class PublishPackager(BaseTool):
             "duration": "Duration",
             "cover_first_frame": "Cover frame",
             "warnings": "Warnings",
+            "audio": "Audio",
+            "audio_mean": "Mean volume",
             "none": "None",
             "no_cover_policy": "No cover policy was recorded. Future packages will show cover_policy or cover_direction here when the script JSON provides it.",
             "yes": "Yes",
@@ -912,6 +937,14 @@ class PublishPackager(BaseTool):
         cover_src = _as_file_uri(cover.get("package_path"))
         warnings = verification.get("warnings") or []
         warning_text = "; ".join(str(item) for item in warnings) or labels["none"]
+        audio = verification.get("audio") or {}
+        audio_status = str(audio.get("status") or labels["none"])
+        mean_volume = audio.get("mean_volume_db")
+        audio_mean_text = (
+            f"{float(mean_volume):.1f} dB"
+            if isinstance(mean_volume, (int, float))
+            else labels["none"]
+        )
         files_html = "\n".join(
             self._file_row_html(item, labels) for item in review_data.get("files") or []
         )
@@ -1120,6 +1153,8 @@ button {{
           <div class="metric ok"><span>{escape(labels["passed"])}</span><strong>{escape(self._bool_label(verification.get("passed"), labels))}</strong></div>
           <div class="metric"><span>{escape(labels["duration"])}</span><strong>{escape(duration_text)}</strong></div>
           <div class="metric"><span>{escape(labels["cover_first_frame"])}</span><strong>{escape(self._bool_label(video.get("cover_first_frame"), labels))}</strong></div>
+          <div class="metric"><span>{escape(labels["audio"])}</span><strong>{escape(audio_status)}</strong></div>
+          <div class="metric"><span>{escape(labels["audio_mean"])}</span><strong>{escape(audio_mean_text)}</strong></div>
           <div class="metric warn"><span>{escape(labels["warnings"])}</span><strong>{escape(warning_text)}</strong></div>
         </div>
       </section>
@@ -1204,6 +1239,101 @@ button {{
         except json.JSONDecodeError:
             return None, None
         return script.get("cover_direction"), script.get("cover_policy")
+
+    def _audio_loudness_check(self, video_path: Path, min_mean_volume_db: float) -> dict[str, Any]:
+        ffprobe = shutil.which("ffprobe")
+        ffmpeg = shutil.which("ffmpeg")
+        if not ffprobe or not ffmpeg:
+            return {
+                "status": "skipped",
+                "reason": "ffprobe or ffmpeg not found",
+                "threshold_mean_volume_db": min_mean_volume_db,
+            }
+
+        try:
+            probe = subprocess.run(
+                [
+                    ffprobe,
+                    "-v",
+                    "quiet",
+                    "-print_format",
+                    "json",
+                    "-select_streams",
+                    "a",
+                    "-show_streams",
+                    str(video_path),
+                ],
+                capture_output=True,
+                text=True,
+                timeout=15,
+            )
+            streams = json.loads(probe.stdout or "{}").get("streams") or []
+        except Exception:
+            return {
+                "status": "skipped",
+                "reason": "audio stream probe failed",
+                "threshold_mean_volume_db": min_mean_volume_db,
+            }
+        if not streams:
+            return {
+                "status": "skipped",
+                "reason": "no audio stream",
+                "has_audio_stream": False,
+                "threshold_mean_volume_db": min_mean_volume_db,
+            }
+
+        try:
+            result = subprocess.run(
+                [
+                    ffmpeg,
+                    "-hide_banner",
+                    "-i",
+                    str(video_path),
+                    "-af",
+                    "volumedetect",
+                    "-f",
+                    "null",
+                    "-",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=180,
+            )
+        except subprocess.TimeoutExpired:
+            return {
+                "status": "skipped",
+                "reason": "volumedetect timed out",
+                "has_audio_stream": True,
+                "threshold_mean_volume_db": min_mean_volume_db,
+            }
+
+        stderr = result.stderr or ""
+        mean_match = re.search(r"mean_volume:\s*(-?[\d.]+)\s*dB", stderr)
+        max_match = re.search(r"max_volume:\s*(-?[\d.]+)\s*dB", stderr)
+        if not mean_match:
+            return {
+                "status": "skipped",
+                "reason": "volumedetect did not report mean volume",
+                "has_audio_stream": True,
+                "threshold_mean_volume_db": min_mean_volume_db,
+            }
+
+        mean_volume = float(mean_match.group(1))
+        max_volume = float(max_match.group(1)) if max_match else None
+        passed = mean_volume > min_mean_volume_db
+        check = {
+            "status": "passed" if passed else "failed",
+            "has_audio_stream": True,
+            "mean_volume_db": mean_volume,
+            "max_volume_db": max_volume,
+            "threshold_mean_volume_db": min_mean_volume_db,
+        }
+        if not passed:
+            check["message"] = (
+                f"Audio mean volume {mean_volume} dB is at or below "
+                f"threshold {min_mean_volume_db} dB; the packaged video may be silent."
+            )
+        return check
 
     def _replace_first_frame(self, video_path: Path, cover_path: Path, output_path: Path) -> None:
         ffmpeg = shutil.which("ffmpeg")

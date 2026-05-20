@@ -90,6 +90,20 @@
       "type": "object",
       "properties": {
         "duration_tolerance_seconds": { "type": "number" },
+        "audio_min_mean_volume_db": { "type": "number" },
+        "audio": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string" },
+            "reason": { "type": "string" },
+            "message": { "type": "string" },
+            "has_audio_stream": { "type": "boolean" },
+            "mean_volume_db": { "type": "number" },
+            "max_volume_db": { "type": ["number", "null"] },
+            "threshold_mean_volume_db": { "type": "number" }
+          },
+          "additionalProperties": false
+        },
         "passed": { "type": "boolean" },
         "warnings": {
           "type": "array",

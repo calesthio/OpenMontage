@@ -142,6 +142,93 @@ def test_generate_routes_variants_through_tts_selector(monkeypatch, tmp_path):
     assert "opening__doubao.mp3" in compare_html
 
 
+def test_generate_blocks_when_required_script_approval_is_missing(monkeypatch, tmp_path):
+    def fail_if_called(self, inputs):
+        raise AssertionError("TTS provider should not be called before script approval")
+
+    monkeypatch.setattr("tools.audio.tts_selector.TTSSelector.execute", fail_if_called)
+    monkeypatch.setattr("tools.audio.tts_selector.TTSSelector.estimate_cost", lambda self, inputs: 0.0)
+    manifest = base_manifest(tmp_path)
+    manifest["require_script_approval"] = True
+
+    result = TTSSegmentLab().execute({"operation": "generate", "manifest": manifest})
+
+    assert not result.success
+    assert result.data["status"] == "blocked"
+    assert result.data["script_approval"]["status"] == "missing"
+    assert "Script approval is required" in result.error
+
+
+def test_generate_accepts_script_approval_marker(monkeypatch, tmp_path):
+    calls = []
+
+    def fake_execute(self, inputs):
+        calls.append(inputs.copy())
+        output_path = Path(inputs["output_path"])
+        output_path.write_bytes(b"fake mp3")
+        return ToolResult(
+            success=True,
+            data={
+                "selected_provider": inputs.get("preferred_provider", "auto"),
+                "selected_tool": "fake_tts",
+                "audio_duration_seconds": 1.0,
+            },
+            artifacts=[str(output_path)],
+        )
+
+    monkeypatch.setattr("tools.audio.tts_selector.TTSSelector.execute", fake_execute)
+    monkeypatch.setattr("tools.audio.tts_selector.TTSSelector.estimate_cost", lambda self, inputs: 0.0)
+    manifest = base_manifest(tmp_path)
+    script_path = Path(manifest["script_path"])
+    payload = json.loads(script_path.read_text(encoding="utf-8"))
+    payload["approval_status"] = "approved"
+    script_path.write_text(json.dumps(payload), encoding="utf-8")
+    manifest["require_script_approval"] = True
+
+    result = TTSSegmentLab().execute({"operation": "generate", "manifest": manifest})
+
+    assert result.success
+    assert len(calls) == 2
+    assert result.data["segments"][0]["variants"][1]["attempts"] == 1
+
+
+def test_generate_retries_failed_tts_candidate(monkeypatch, tmp_path):
+    calls = []
+
+    def fake_execute(self, inputs):
+        calls.append(inputs.copy())
+        output_path = Path(inputs["output_path"])
+        if len(calls) == 1:
+            return ToolResult(success=False, error="temporary provider failure")
+        output_path.write_bytes(b"fake mp3")
+        return ToolResult(
+            success=True,
+            data={
+                "selected_provider": inputs.get("preferred_provider", "auto"),
+                "selected_tool": "fake_tts",
+                "audio_duration_seconds": 1.0,
+            },
+            artifacts=[str(output_path)],
+        )
+
+    monkeypatch.setattr("tools.audio.tts_selector.TTSSelector.execute", fake_execute)
+    monkeypatch.setattr("tools.audio.tts_selector.TTSSelector.estimate_cost", lambda self, inputs: 0.0)
+    manifest = base_manifest(tmp_path)
+    manifest["segments"][0].pop("reference")
+    manifest["segments"][0]["variants"] = [{"id": "retry-me", "max_generation_retries": 1}]
+
+    result = TTSSegmentLab().execute({"operation": "generate", "manifest": manifest})
+
+    assert result.success
+    assert len(calls) == 2
+    payload = json.loads(Path(result.data["results_path"]).read_text(encoding="utf-8"))
+    variant = payload["segments"][0]["variants"][0]
+    assert variant["success"] is True
+    assert variant["attempts"] == 2
+    metadata = json.loads(Path(variant["metadata"]).read_text(encoding="utf-8"))
+    assert [attempt["success"] for attempt in metadata["attempts"]] == [False, True]
+
+
 def test_compare_page_uses_chinese_ui_for_chinese_script(tmp_path):
     script_path = tmp_path / "script.json"
     script_path.write_text(

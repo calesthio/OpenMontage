@@ -94,6 +94,7 @@ class TTSSegmentLab(BaseTool):
             "generate": {"type": "boolean"},
             "output_path": {"type": "string"},
             "output_dir": {"type": "string"},
+            "require_script_approval": {"type": "boolean"},
         },
         "anyOf": [{"required": ["manifest_path"]}, {"required": ["manifest"]}, {"required": ["results_path"]}],
     }
@@ -131,6 +132,7 @@ class TTSSegmentLab(BaseTool):
         "segment_actions",
         "generate",
         "output_dir",
+        "require_script_approval",
     ]
     side_effects = [
         "writes TTS audition audio samples",
@@ -198,6 +200,19 @@ class TTSSegmentLab(BaseTool):
         loaded_env_files = self._load_project_env_files(
             self._env_search_roots(inputs, manifest=manifest, output_dir=output_dir)
         )
+        script_approval = self._script_approval_status(manifest, require=bool(inputs.get("require_script_approval")))
+        if generate and script_approval["required"] and script_approval["status"] != "approved":
+            return ToolResult(
+                success=False,
+                error=script_approval["message"],
+                data={
+                    "operation": "generate",
+                    "status": "blocked",
+                    "output_dir": str(output_dir),
+                    "script_approval": script_approval,
+                    "loaded_env_files": loaded_env_files,
+                },
+            )
 
         selector = None
         if generate:
@@ -215,6 +230,7 @@ class TTSSegmentLab(BaseTool):
             "created_at": datetime.now(timezone.utc).isoformat(),
             "output_dir": str(output_dir),
             "script_path": manifest.get("script_path") or manifest.get("script"),
+            "script_approval": script_approval,
             "review_language": manifest.get("review_language", "auto"),
             "segments": [],
         }
@@ -254,10 +270,15 @@ class TTSSegmentLab(BaseTool):
                     variant_result["planned"] = True
                 else:
                     assert selector is not None
-                    provider_result = selector.execute(selector_inputs)
+                    provider_result, attempts = self._execute_selector_with_retries(
+                        selector,
+                        selector_inputs,
+                        max_retries=self._generation_retry_count(manifest, variant),
+                    )
                     metadata_payload = {
                         "selector_inputs": self._metadata_safe_inputs(selector_inputs),
                         "success": provider_result.success,
+                        "attempts": attempts,
                         "data": provider_result.data,
                         "artifacts": provider_result.artifacts,
                         "error": provider_result.error,
@@ -276,11 +297,13 @@ class TTSSegmentLab(BaseTool):
                                 "provider_artifacts": provider_result.artifacts,
                             }
                         )
+                        variant_result["attempts"] = len(attempts)
                         if output_path.exists():
                             artifacts.append(str(output_path))
                     else:
                         variant_result["success"] = False
                         variant_result["error"] = provider_result.error
+                        variant_result["attempts"] = len(attempts)
                         results["status"] = "completed-with-errors"
 
                 segment_result["variants"].append(variant_result)
@@ -952,10 +975,15 @@ class TTSSegmentLab(BaseTool):
             variant_result["planned"] = True
             return variant_result, artifacts
 
-        provider_result = selector.execute(selector_inputs)
+        provider_result, attempts = self._execute_selector_with_retries(
+            selector,
+            selector_inputs,
+            max_retries=self._generation_retry_count(source_results, base_variant),
+        )
         metadata_payload = {
             "selector_inputs": self._metadata_safe_inputs(selector_inputs),
             "success": provider_result.success,
+            "attempts": attempts,
             "data": provider_result.data,
             "artifacts": provider_result.artifacts,
             "error": provider_result.error,
@@ -974,11 +1002,13 @@ class TTSSegmentLab(BaseTool):
                     "provider_artifacts": provider_result.artifacts,
                 }
             )
+            variant_result["attempts"] = len(attempts)
             if output_path.exists():
                 artifacts.append(str(output_path))
         else:
             variant_result["success"] = False
             variant_result["error"] = provider_result.error
+            variant_result["attempts"] = len(attempts)
         return variant_result, artifacts
 
     @staticmethod
@@ -1600,6 +1630,132 @@ class TTSSegmentLab(BaseTool):
         if not manifest.get("segments"):
             raise ValueError("manifest.segments must contain at least one segment")
         return manifest
+
+    def _script_approval_status(self, manifest: dict[str, Any], *, require: bool = False) -> dict[str, Any]:
+        script_payload = self._load_script_payload(manifest)
+        candidates = [
+            ("manifest.script_approval", manifest.get("script_approval")),
+            ("manifest.script_approval_status", manifest.get("script_approval_status")),
+            ("manifest.approval_status", manifest.get("approval_status")),
+            ("manifest.script_approved", manifest.get("script_approved")),
+            ("manifest.approved", manifest.get("approved")),
+        ]
+        if isinstance(script_payload, dict):
+            candidates.extend(
+                [
+                    ("script.script_approval", script_payload.get("script_approval")),
+                    ("script.approval", script_payload.get("approval")),
+                    ("script.script_approval_status", script_payload.get("script_approval_status")),
+                    ("script.approval_status", script_payload.get("approval_status")),
+                    ("script.status", script_payload.get("status")),
+                    ("script.approved", script_payload.get("approved")),
+                ]
+            )
+
+        explicit = next(
+            ((source, value) for source, value in candidates if value is not None),
+            None,
+        )
+        required = bool(
+            require
+            or manifest.get("require_script_approval")
+            or manifest.get("script_approval_required")
+            or manifest.get("production_script_gate")
+            or explicit
+        )
+        if not required:
+            return {
+                "required": False,
+                "status": "not_required",
+                "source": None,
+                "message": "Script approval gate is not required for this run.",
+            }
+        if not explicit:
+            return {
+                "required": True,
+                "status": "missing",
+                "source": None,
+                "message": "Script approval is required before generating TTS variants, but no approval marker was found.",
+            }
+
+        source, raw_value = explicit
+        approved = self._is_script_approval_value_approved(raw_value)
+        return {
+            "required": True,
+            "status": "approved" if approved else "blocked",
+            "source": source,
+            "value": raw_value if isinstance(raw_value, (str, bool, int, float)) else None,
+            "message": (
+                "Script has been approved for TTS generation."
+                if approved
+                else f"Script approval gate blocked TTS generation from {source}."
+            ),
+        }
+
+    def _load_script_payload(self, manifest: dict[str, Any]) -> Any:
+        script_path = manifest.get("script_path") or manifest.get("script")
+        if not script_path:
+            return None
+        path = Path(script_path).expanduser()
+        if not path.exists():
+            return None
+        return json.loads(path.read_text(encoding="utf-8"))
+
+    @staticmethod
+    def _is_script_approval_value_approved(value: Any) -> bool:
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, dict):
+            for key in ("status", "state", "decision", "approved"):
+                if key in value:
+                    return TTSSegmentLab._is_script_approval_value_approved(value[key])
+            return False
+        normalized = str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
+        return normalized in {"approved", "approve", "confirmed", "final", "locked", "ready", "true", "yes", "pass"}
+
+    @staticmethod
+    def _generation_retry_count(manifest: dict[str, Any], variant: dict[str, Any] | None = None) -> int:
+        variant = variant or {}
+        defaults = manifest.get("defaults") if isinstance(manifest.get("defaults"), dict) else {}
+        raw = (
+            variant.get("max_generation_retries")
+            if variant.get("max_generation_retries") is not None
+            else variant.get("generation_retries")
+            if variant.get("generation_retries") is not None
+            else manifest.get("max_generation_retries")
+            if manifest.get("max_generation_retries") is not None
+            else manifest.get("generation_retries")
+            if manifest.get("generation_retries") is not None
+            else defaults.get("max_generation_retries")
+            if defaults.get("max_generation_retries") is not None
+            else defaults.get("generation_retries")
+        )
+        try:
+            return max(0, min(int(raw if raw is not None else 1), 5))
+        except (TypeError, ValueError):
+            return 1
+
+    @staticmethod
+    def _execute_selector_with_retries(selector: Any, selector_inputs: dict[str, Any], *, max_retries: int) -> tuple[ToolResult, list[dict[str, Any]]]:
+        attempts: list[dict[str, Any]] = []
+        last_result: ToolResult | None = None
+        total_attempts = max_retries + 1
+        for index in range(total_attempts):
+            result = selector.execute(selector_inputs)
+            attempts.append(
+                {
+                    "attempt": index + 1,
+                    "success": result.success,
+                    "error": result.error,
+                    "selected_provider": (result.data or {}).get("selected_provider") or (result.data or {}).get("provider"),
+                    "selected_tool": (result.data or {}).get("selected_tool"),
+                }
+            )
+            last_result = result
+            if result.success:
+                return result, attempts
+        assert last_result is not None
+        return last_result, attempts
 
     def _output_dir(self, manifest: dict[str, Any]) -> Path:
         return Path(manifest["output_dir"]).expanduser().resolve()

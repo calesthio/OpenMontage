@@ -39,22 +39,25 @@ or delivery parameters can still improve the video.
 2. Create a manifest with `script_path`, `output_dir`, `segments`, and variants.
 3. Add `reference` audio when a current approved version exists.
 4. Run `dry_run` to inspect the review structure without API calls.
-5. Run `generate` to create audition samples.
-6. Optionally run `analyze` to reuse OpenMontage's existing audio probe,
+5. Confirm the narration script is approved. For production runs, set
+   `require_script_approval=true` in the manifest or tool input so `generate`
+   blocks if no approval marker is present.
+6. Run `generate` to create audition samples.
+7. Optionally run `analyze` to reuse OpenMontage's existing audio probe,
    energy, provider metadata, and optional transcription checks.
-7. Listen in `compare.html` or `review.md`, then run `annotate` with the
+8. Listen in `compare.html` or `review.md`, then run `annotate` with the
    user's submitted comparison-page review to preserve the review record.
-8. If any selected take has refinement notes, or if the user selects "none of
+9. If any selected take has refinement notes, or if the user selects "none of
    these", run `apply_review` to generate a follow-up audition round. Send that
    new `compare.html` back to the user for re-review.
-9. Repeat `annotate` -> `apply_review` for as many rounds as needed. Do not
+10. Repeat `annotate` -> `apply_review` for as many rounds as needed. Do not
    assume the second page is final; continue until every segment has one
    selected candidate and the submitted review has no `REGENERATE`,
    `NEEDS_REVIEW`, or segment-level regenerate actions.
-10. When the user approves every segment, run `annotate` one last time with
+11. When the user approves every segment, run `annotate` one last time with
     the approved review payload; only that completed review writes the final
     `selection.json`.
-11. Reuse selected audio in final asset generation.
+12. Reuse selected audio in final asset generation.
 
 Before running `generate` or `apply_review`, make sure provider credentials are
 available. The tool automatically looks for `.env` files from the current
@@ -71,6 +74,8 @@ the normal process environment.
   "project": "my-explainer",
   "run_id": "opening-audition-v1",
   "script_path": "projects/my-explainer/artifacts/script.json",
+  "require_script_approval": true,
+  "max_generation_retries": 1,
   "output_dir": "projects/my-explainer/assets/tts-lab/opening-audition-v1",
   "defaults": {
     "preferred_provider": "auto"
@@ -109,6 +114,16 @@ the normal process environment.
   ]
 }
 ```
+
+When `require_script_approval` is true, `generate` checks the manifest or script
+JSON for an approval marker such as `approval_status: "approved"`,
+`script_approval.status: "approved"`, or `approved: true`. `dry_run` is still
+allowed before approval so the team can inspect the planned comparison page.
+
+`max_generation_retries` controls automatic retries for transient provider
+failures. It defaults to one retry and can be overridden per variant with
+`max_generation_retries` or `generation_retries`; retry attempts are recorded in
+each variant metadata file.
 
 ## Review Outputs
 

@@ -50,6 +50,9 @@ def test_dry_run_writes_review_without_extracting_frames(tmp_path):
     assert payload["agent_initial_review"]["required_before_user_handoff"] is True
     assert payload["agent_initial_review"]["status"] == "needs_agent_review"
     assert "Confirm subtitle text" in payload["agent_initial_review"]["checklist"][0]
+    assert "pre-target frame" in payload["agent_initial_review"]["checklist"][2]
+    assert cue["early_complete_check"]["status"] == "requires_review"
+    assert "already completed" in cue["early_complete_check"]["question"]
     assert [point["timestamp_seconds"] for point in cue["frame_points"]] == [3.5, 4.0, 4.5]
     review = review_path.read_text(encoding="utf-8")
     assert "Feedback returns to the user." in review
@@ -58,6 +61,8 @@ def test_dry_run_writes_review_without_extracting_frames(tmp_path):
     assert "Reviewer decision:" in review
     assert "PASS - visual timing and state match the cue" in review
     assert "WRONG_EXPECTATION" in review
+    assert "Early-complete check" in review
+    assert "Expected before target" in review
     assert "## Summary" in review
     assert "UNREVIEWED: `1`" in review
     html = review_html_path.read_text(encoding="utf-8")
@@ -66,6 +71,7 @@ def test_dry_run_writes_review_without_extracting_frames(tmp_path):
     assert "Planned frame timestamps" in html
     assert "Reviewer: UNREVIEWED" in html
     assert "Agent first pass" in html
+    assert "Early-complete check" in html
 
 
 def test_review_html_prefers_narration_language(tmp_path):
@@ -413,6 +419,7 @@ def test_initial_review_flags_static_reveal_window(monkeypatch, tmp_path):
     initial = result.data["cues"][0]["initial_review"]
     assert initial["decision"] == "NEEDS_REVIEW"
     assert "Little visible change" in initial["notes"]
+    assert "not already complete before the narration" in initial["notes"]
     review = Path(result.data["review_path"]).read_text(encoding="utf-8")
     assert "Initial auto NEEDS_REVIEW: `1`" in review
     assert "Initial auto-review queue:" in review

@@ -63,6 +63,7 @@ class VisualTimingQA(BaseTool):
         "rule_based_suggest_cues": True,
         "rule_based_initial_review": True,
         "agent_initial_review_checklist": True,
+        "early_complete_process_check": True,
         "automated_semantic_judgment": False,
     }
     best_for = [
@@ -554,6 +555,7 @@ class VisualTimingQA(BaseTool):
                     "review_questions": [
                         "Does the visible state match this spoken cue?",
                         "Is the reveal early, late, or visually crowded?",
+                        "For process or node-flow cues, has the state already completed before the narration reaches this cue?",
                     ],
                     "score": score,
                     "category": category,
@@ -628,6 +630,10 @@ class VisualTimingQA(BaseTool):
                         "timestamp_seconds": self._clamp_timestamp(ts, duration),
                     }
                 )
+            early_complete_check = self._early_complete_check(cue)
+            review_questions = list(cue.get("review_questions", []))
+            if early_complete_check and not any("already" in str(question).lower() or "过早" in str(question) for question in review_questions):
+                review_questions.append(early_complete_check["question"])
             cues.append(
                 {
                     "id": cue_id,
@@ -639,11 +645,64 @@ class VisualTimingQA(BaseTool):
                     "subtitle": cue.get("subtitle") or cue.get("caption") or cue.get("caption_text", ""),
                     "expected_state": cue.get("expected_state") or cue.get("expected") or "",
                     "risk": cue.get("risk", ""),
-                    "review_questions": cue.get("review_questions", []),
+                    "review_questions": review_questions,
+                    "early_complete_check": early_complete_check,
                     "frame_points": frame_points,
                 }
             )
         return cues
+
+    @classmethod
+    def _early_complete_check(cls, cue: dict[str, Any]) -> dict[str, Any] | None:
+        raw = cue.get("early_complete_check")
+        if raw is False:
+            return None
+        if isinstance(raw, dict):
+            return {
+                "status": "requires_review",
+                "question": raw.get("question") or cls._early_complete_question(cue),
+                "expected_before_state": raw.get("expected_before_state") or cue.get("expected_before_state") or "not yet complete",
+                "target_state": raw.get("target_state") or cue.get("expected_state") or cue.get("expected") or "",
+            }
+        text = " ".join(
+            str(cue.get(key, ""))
+            for key in ("label", "narration", "subtitle", "expected_state", "expected", "risk")
+        ).lower()
+        process_tokens = (
+            "flow",
+            "process",
+            "pipeline",
+            "sequence",
+            "step",
+            "node",
+            "progress",
+            "workflow",
+            "流程",
+            "节点",
+            "步骤",
+            "顺序",
+            "点亮",
+            "提交",
+            "部署",
+            "验证",
+            "调整",
+            "闭环",
+        )
+        if raw is True or any(token in text for token in process_tokens):
+            return {
+                "status": "requires_review",
+                "question": cls._early_complete_question(cue),
+                "expected_before_state": cue.get("expected_before_state") or "not yet complete",
+                "target_state": cue.get("expected_state") or cue.get("expected") or "",
+            }
+        return None
+
+    @staticmethod
+    def _early_complete_question(cue: dict[str, Any]) -> str:
+        text = " ".join(str(cue.get(key, "")) for key in ("label", "narration", "expected_state", "risk"))
+        if re.search(r"[\u3400-\u9fff]", text):
+            return "目标时间点之前，流程节点或步骤是否已经过早完成？"
+        return "Before the target timestamp, has this process step or node state already completed?"
 
     @staticmethod
     def _cue_timestamp(cue: dict[str, Any]) -> float:
@@ -824,6 +883,43 @@ class VisualTimingQA(BaseTool):
                     else "主要画面变化发生在目标帧之后，点亮或切换可能偏晚。"
                 )
 
+        early_complete_check = cue.get("early_complete_check") or {}
+        if early_complete_check:
+            pre_target_frames = [
+                frame for frame in frames
+                if float(frame.get("offset_seconds", 0) or 0) < 0
+                and frame.get("path")
+                and Path(frame["path"]).exists()
+                and not frame.get("error")
+            ]
+            metrics["early_complete_check"] = {
+                "status": "requires_review",
+                "pre_target_frame_count": len(pre_target_frames),
+                "question": early_complete_check.get("question", ""),
+                "expected_before_state": early_complete_check.get("expected_before_state", ""),
+            }
+            if not pre_target_frames:
+                issues.append(
+                    "Early-complete check needs at least one pre-target frame; add a negative offset such as -0.5s."
+                    if not zh
+                    else "过早完成检查至少需要一张目标时间点之前的截图；请增加类似 -0.5s 的负 offset。"
+                )
+            elif len(diffs) >= 2:
+                before_to_target = diffs[0]["mean_abs_diff"]
+                target_to_after = diffs[1]["mean_abs_diff"]
+                if before_to_target < 2.0 and target_to_after < 2.0:
+                    issues.append(
+                        "Process/node cue shows little change from pre-target through after-target; verify the step was not already complete before the narration reached it."
+                        if not zh
+                        else "流程/节点 cue 从目标前到目标后变化很小，请确认该步骤不是在旁白讲到前就已经完成。"
+                    )
+                elif before_to_target >= 7.0 and target_to_after < 2.0:
+                    issues.append(
+                        "Process/node cue appears to settle at the target frame; check whether the final state became complete before the spoken cue."
+                        if not zh
+                        else "流程/节点 cue 在目标帧时似乎已经稳定，请检查最终状态是否在旁白 cue 前已经完成。"
+                    )
+
         subtitle_sensitive = any(
             token in text for token in ("字幕", "caption", "captions", "subtitle", "subtitles")
         )
@@ -977,6 +1073,15 @@ class VisualTimingQA(BaseTool):
             )
             if cue.get("risk"):
                 lines.append(f"- Risk: {cue['risk']}")
+            if cue.get("early_complete_check"):
+                early = cue["early_complete_check"]
+                lines.extend(
+                    [
+                        f"- Early-complete check: `{early.get('status', 'requires_review')}`",
+                        f"  - Question: {early.get('question', '')}",
+                        f"  - Expected before target: {early.get('expected_before_state', '')}",
+                    ]
+                )
             if cue.get("initial_review"):
                 initial = cue["initial_review"]
                 lines.extend(
@@ -1619,6 +1724,14 @@ a:hover { text-decoration: underline; }
         ]
         if cue.get("risk"):
             lines.append(cls._html_box(copy["risk"], cue.get("risk", "")))
+        if cue.get("early_complete_check"):
+            early = cue["early_complete_check"]
+            lines.append(
+                cls._html_box(
+                    copy["early_complete"],
+                    f"{early.get('question', '')}\n{copy['expected_before']}: {early.get('expected_before_state', '')}",
+                )
+            )
         if initial:
             lines.append(cls._html_box(copy["auto_notes"], initial.get("notes", ""), class_name="review-note"))
             if initial.get("fix_target"):
@@ -2121,6 +2234,8 @@ a:hover { text-decoration: underline; }
                 "narration": "旁白",
                 "expected": "期望画面",
                 "risk": "风险",
+                "early_complete": "过早完成检查",
+                "expected_before": "目标前期望状态",
                 "auto_notes": "自动初审说明",
                 "review_notes": "人工评审说明",
                 "review_decision": "人工结论",
@@ -2186,6 +2301,8 @@ a:hover { text-decoration: underline; }
             "narration": "Narration",
             "expected": "Expected visual state",
             "risk": "Risk",
+            "early_complete": "Early-complete check",
+            "expected_before": "Expected before target",
             "auto_notes": "Auto-review notes",
             "review_notes": "Reviewer notes",
             "review_decision": "Reviewer decision",
@@ -2250,6 +2367,7 @@ a:hover { text-decoration: underline; }
                     "expected_state": cue.get("expected_state", ""),
                     "risk": cue.get("risk", ""),
                     "review_questions": cue.get("review_questions", []),
+                    "early_complete_check": cue.get("category") in {"visual-reveal", "feedback", "next-version"},
                 }
                 for cue in payload.get("suggestions", [])
             ],
@@ -2374,6 +2492,7 @@ a:hover { text-decoration: underline; }
             "checklist": [
                 "Confirm subtitle text is present and semantically broken at the reviewed cue.",
                 "Compare before / at / after frames against the spoken cue timing.",
+                "For process/node cues, confirm the final state has not already completed in the pre-target frame.",
                 "Verify expected_state matches the actual creative direction; mark WRONG_EXPECTATION if the cue itself is wrong.",
                 "Check for blank frames, missing highlights, layout overlap, or important UI hidden behind subtitles.",
             ],

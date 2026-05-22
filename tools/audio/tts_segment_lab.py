@@ -51,6 +51,7 @@ class TTSSegmentLab(BaseTool):
         "script_section_extraction",
         "provider_comparison",
         "tts_candidate_audio_analysis",
+        "retry_result_merge",
         "voice_variant_selection",
     ]
     supports = {
@@ -80,12 +81,13 @@ class TTSSegmentLab(BaseTool):
         "properties": {
             "operation": {
                 "type": "string",
-                "enum": ["dry_run", "generate", "analyze", "annotate", "apply_review", "select"],
+                "enum": ["dry_run", "generate", "analyze", "annotate", "apply_review", "merge_retry", "select"],
                 "default": "dry_run",
             },
             "manifest_path": {"type": "string"},
             "manifest": {"type": "object"},
             "results_path": {"type": "string"},
+            "retry_results_path": {"type": "string"},
             "analysis_options": {"type": "object"},
             "annotations": {"type": ["object", "array"]},
             "annotations_path": {"type": "string"},
@@ -141,6 +143,7 @@ class TTSSegmentLab(BaseTool):
         "writes audio_profile.json and analysis.md in analyze mode",
         "writes review_notes.json and review_annotated.md in annotate mode",
         "writes a follow-up audition round in apply_review mode",
+        "merges successful retry candidates back into the original compare page in merge_retry mode",
         "writes selection.json in select mode",
         "calls configured TTS providers in generate mode",
     ]
@@ -179,6 +182,8 @@ class TTSSegmentLab(BaseTool):
                 result = self._select(inputs)
             elif operation == "apply_review":
                 result = self._apply_review(inputs)
+            elif operation == "merge_retry":
+                result = self._merge_retry(inputs)
             elif operation == "annotate":
                 result = self._annotate(inputs)
             elif operation == "analyze":
@@ -714,6 +719,116 @@ class TTSSegmentLab(BaseTool):
             },
             artifacts=artifacts,
             error=None if round_results["status"] == "completed" else "One or more review-round variants failed.",
+        )
+
+    def _merge_retry(self, inputs: dict[str, Any]) -> ToolResult:
+        results_path = self._results_path(inputs)
+        retry_raw = inputs.get("retry_results_path")
+        if not retry_raw:
+            return ToolResult(success=False, error="merge_retry operation requires retry_results_path")
+        retry_results_path = Path(retry_raw).expanduser().resolve()
+        if not retry_results_path.exists():
+            return ToolResult(success=False, error=f"retry_results_path does not exist: {retry_results_path}")
+
+        base_results = json.loads(results_path.read_text(encoding="utf-8"))
+        retry_results = json.loads(retry_results_path.read_text(encoding="utf-8"))
+        merged_results = deepcopy(base_results)
+        base_by_segment = self._segment_lookup(merged_results)
+        merged: list[dict[str, Any]] = []
+        appended: list[dict[str, Any]] = []
+        skipped: list[dict[str, Any]] = []
+
+        for retry_segment in retry_results.get("segments", []):
+            segment_key = str(retry_segment.get("id") or retry_segment.get("section_id") or "")
+            base_segment = base_by_segment.get(segment_key)
+            if not base_segment and retry_segment.get("section_id"):
+                base_segment = base_by_segment.get(str(retry_segment.get("section_id")))
+            if not base_segment:
+                skipped.append({"segment_id": segment_key, "reason": "base segment not found"})
+                continue
+
+            variants = base_segment.setdefault("variants", [])
+            by_variant = {str(variant.get("id")): index for index, variant in enumerate(variants)}
+            for retry_variant in retry_segment.get("variants", []):
+                variant_id = str(retry_variant.get("id") or "")
+                if retry_variant.get("source_type") == "reference":
+                    skipped.append(
+                        {
+                            "segment_id": base_segment.get("id"),
+                            "variant_id": variant_id,
+                            "reason": "reference variants are not merged",
+                        }
+                    )
+                    continue
+                candidate = deepcopy(retry_variant)
+                candidate["retry_source_results"] = str(retry_results_path)
+                item = {
+                    "segment_id": base_segment.get("id"),
+                    "variant_id": variant_id,
+                    "success": candidate.get("success"),
+                }
+                if variant_id in by_variant:
+                    variants[by_variant[variant_id]] = candidate
+                    merged.append({**item, "mode": "replaced"})
+                else:
+                    variants.append(candidate)
+                    appended.append({**item, "mode": "appended"})
+
+        merged_results["status"] = self._recompute_results_status(merged_results)
+        merged_results.setdefault("retry_merges", []).append(
+            {
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "retry_results": str(retry_results_path),
+                "merged": merged,
+                "appended": appended,
+                "skipped": skipped,
+            }
+        )
+
+        output_path = Path(inputs.get("output_path") or results_path).expanduser().resolve()
+        review_path = output_path.with_name("review.md")
+        compare_path = output_path.with_name("compare.html")
+        summary_path = output_path.with_name("retry_merge_summary.json")
+        summary = {
+            "version": self.version,
+            "tool": self.name,
+            "operation": "merge_retry",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "source_results": str(results_path),
+            "retry_results": str(retry_results_path),
+            "output_results": str(output_path),
+            "status": merged_results["status"],
+            "merged_count": len(merged),
+            "appended_count": len(appended),
+            "skipped_count": len(skipped),
+            "merged": merged,
+            "appended": appended,
+            "skipped": skipped,
+        }
+
+        self._write_json(output_path, merged_results)
+        self._write_json(summary_path, summary)
+        review_path.write_text(self._review_markdown(merged_results), encoding="utf-8")
+        compare_path.write_text(self._comparison_html(merged_results, compare_path), encoding="utf-8")
+
+        return ToolResult(
+            success=merged_results["status"] != "completed-with-errors",
+            data={
+                "operation": "merge_retry",
+                "status": merged_results["status"],
+                "results_path": str(output_path),
+                "review_path": str(review_path),
+                "compare_path": str(compare_path),
+                "summary_path": str(summary_path),
+                "merged_count": len(merged),
+                "appended_count": len(appended),
+                "skipped_count": len(skipped),
+                "merged": merged,
+                "appended": appended,
+                "skipped": skipped,
+            },
+            artifacts=[str(output_path), str(review_path), str(compare_path), str(summary_path)],
+            error=None if merged_results["status"] == "completed" else "One or more variants still failed after retry merge.",
         )
 
     def _select(self, inputs: dict[str, Any]) -> ToolResult:
@@ -1757,6 +1872,16 @@ class TTSSegmentLab(BaseTool):
         assert last_result is not None
         return last_result, attempts
 
+    @staticmethod
+    def _recompute_results_status(results: dict[str, Any]) -> str:
+        for segment in results.get("segments", []):
+            for variant in segment.get("variants", []):
+                if variant.get("planned") or variant.get("source_type") == "reference":
+                    continue
+                if variant.get("success") is False:
+                    return "completed-with-errors"
+        return "completed"
+
     def _output_dir(self, manifest: dict[str, Any]) -> Path:
         return Path(manifest["output_dir"]).expanduser().resolve()
 
@@ -2203,6 +2328,15 @@ a:hover { text-decoration: underline; }
   padding: 10px 12px;
   font-size: 14px;
 }
+.error {
+  border: 1px solid rgba(251,113,133,.36);
+  background: rgba(251,113,133,.1);
+  border-radius: 9px;
+  color: #fecdd3;
+  font-size: 13px;
+  margin: 8px 0;
+  padding: 9px 11px;
+}
 .export-panel {
   border: 1px solid rgba(98,216,255,.24);
   background: rgba(8,14,27,.9);
@@ -2385,6 +2519,13 @@ a:hover { text-decoration: underline; }
             )
         else:
             lines.append(f"<div class=\"missing\">{escape(copy['audio_missing'])}</div>")
+        if variant.get("success") is False:
+            attempts = variant.get("attempts")
+            attempt_text = f" · attempts: {attempts}" if isinstance(attempts, int) else ""
+            lines.append(
+                f"<div class=\"error\">{escape(copy['generation_failed'])}: "
+                f"{escape(str(variant.get('error') or 'Unknown provider error'))}{escape(attempt_text)}</div>"
+            )
         lines.extend(
             [
                 f"<p class=\"note\">{escape(note)}</p>",
@@ -2709,6 +2850,7 @@ a:hover { text-decoration: underline; }
                 "missing_selection_body": "每段旁白都需要选一条候选，或选择重新生成并填写意见。",
                 "open_audio": "打开音频",
                 "audio_missing": "尚未生成音频。先运行 generate，或检查 reference 音频路径。",
+                "generation_failed": "生成失败",
                 "decision": "评审",
             }
         return {
@@ -2749,5 +2891,6 @@ a:hover { text-decoration: underline; }
             "missing_selection_body": "Each segment needs a selected take, or a regenerate-new choice with notes.",
             "open_audio": "Open audio",
             "audio_missing": "Audio has not been generated yet. Run generate or check the reference audio path.",
+            "generation_failed": "Generation failed",
             "decision": "Review",
         }

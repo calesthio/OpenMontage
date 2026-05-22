@@ -45,19 +45,26 @@ or delivery parameters can still improve the video.
 6. Run `generate` to create audition samples.
 7. Optionally run `analyze` to reuse OpenMontage's existing audio probe,
    energy, provider metadata, and optional transcription checks.
+   Failed generated variants remain visible in `compare.html` with the provider
+   error and attempt count, so a missing audio control is not mistaken for a
+   successful candidate.
 8. Listen in `compare.html` or `review.md`, then run `annotate` with the
    user's submitted comparison-page review to preserve the review record.
 9. If any selected take has refinement notes, or if the user selects "none of
    these", run `apply_review` to generate a follow-up audition round. Send that
    new `compare.html` back to the user for re-review.
-10. Repeat `annotate` -> `apply_review` for as many rounds as needed. Do not
+10. If a retry/follow-up run is meant to repair missing candidates on the page
+    the user already has open, run `merge_retry` to merge successful retry
+    variants back into the original `results.json`, `review.md`, and
+    `compare.html`.
+11. Repeat `annotate` -> `apply_review` for as many rounds as needed. Do not
    assume the second page is final; continue until every segment has one
    selected candidate and the submitted review has no `REGENERATE`,
    `NEEDS_REVIEW`, or segment-level regenerate actions.
-11. When the user approves every segment, run `annotate` one last time with
+12. When the user approves every segment, run `annotate` one last time with
     the approved review payload; only that completed review writes the final
     `selection.json`.
-12. Reuse selected audio in final asset generation.
+13. Reuse selected audio in final asset generation.
 
 Before running `generate` or `apply_review`, make sure provider credentials are
 available. The tool automatically looks for `.env` files from the current
@@ -238,6 +245,26 @@ quickly accept it or request another adjustment.
 If the user still is not satisfied, run `annotate` on that follow-up page and
 then run `apply_review` again against the follow-up `results.json`. Continue
 this loop until the final submitted review is complete.
+
+## Merge Retry Results
+
+Use `merge_retry` when a retry run generated playable samples that should
+appear on the original comparison page. This is useful when a provider failed
+on the first run, the user is already looking at the original `compare.html`,
+and you want them to refresh that page instead of opening a hidden retry
+directory.
+
+```json
+{
+  "operation": "merge_retry",
+  "results_path": "projects/my-explainer/assets/tts-lab/opening-audition-v1/results.json",
+  "retry_results_path": "projects/my-explainer/assets/tts-lab/opening-audition-v1-retry/results.json"
+}
+```
+
+Matching variants replace the original variant in-place; new variant ids are
+appended. The tool rewrites the original `results.json`, `review.md`, and
+`compare.html`, and writes `retry_merge_summary.json` so the merge is auditable.
 
 ## Selection
 

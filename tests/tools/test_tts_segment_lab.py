@@ -229,6 +229,80 @@ def test_generate_retries_failed_tts_candidate(monkeypatch, tmp_path):
     assert [attempt["success"] for attempt in metadata["attempts"]] == [False, True]
 
 
+def test_compare_page_surfaces_failed_candidate_reason(monkeypatch, tmp_path):
+    def fake_execute(self, inputs):
+        return ToolResult(success=False, error="provider returned 400: unsupported voice")
+
+    monkeypatch.setattr("tools.audio.tts_selector.TTSSelector.execute", fake_execute)
+    monkeypatch.setattr("tools.audio.tts_selector.TTSSelector.estimate_cost", lambda self, inputs: 0.0)
+    manifest = base_manifest(tmp_path)
+    manifest["segments"][0].pop("reference")
+    manifest["segments"][0]["variants"] = [{"id": "broken", "max_generation_retries": 0}]
+
+    result = TTSSegmentLab().execute({"operation": "generate", "manifest": manifest})
+
+    assert not result.success
+    compare_html = Path(result.data["compare_path"]).read_text(encoding="utf-8")
+    assert "Generation failed" in compare_html
+    assert "provider returned 400: unsupported voice" in compare_html
+    assert "attempts: 1" in compare_html
+
+
+def test_merge_retry_replaces_failed_candidate_in_original_compare(monkeypatch, tmp_path):
+    calls = []
+
+    def fake_execute(self, inputs):
+        calls.append(inputs.copy())
+        output_path = Path(inputs["output_path"])
+        if len(calls) == 1:
+            return ToolResult(success=False, error="temporary provider failure")
+        output_path.write_bytes(b"fixed mp3")
+        return ToolResult(
+            success=True,
+            data={
+                "selected_provider": inputs.get("preferred_provider", "auto"),
+                "selected_tool": "fake_tts",
+                "audio_duration_seconds": 1.4,
+            },
+            artifacts=[str(output_path)],
+        )
+
+    monkeypatch.setattr("tools.audio.tts_selector.TTSSelector.execute", fake_execute)
+    monkeypatch.setattr("tools.audio.tts_selector.TTSSelector.estimate_cost", lambda self, inputs: 0.0)
+    base = base_manifest(tmp_path)
+    base["segments"][0].pop("reference")
+    base["segments"][0]["variants"] = [{"id": "retry-me", "max_generation_retries": 0}]
+
+    first = TTSSegmentLab().execute({"operation": "generate", "manifest": base})
+    assert not first.success
+
+    retry = base_manifest(tmp_path)
+    retry["output_dir"] = str(tmp_path / "tts-lab-retry")
+    retry["segments"][0].pop("reference")
+    retry["segments"][0]["variants"] = [{"id": "retry-me", "max_generation_retries": 0}]
+    second = TTSSegmentLab().execute({"operation": "generate", "manifest": retry})
+    assert second.success
+
+    merged = TTSSegmentLab().execute(
+        {
+            "operation": "merge_retry",
+            "results_path": first.data["results_path"],
+            "retry_results_path": second.data["results_path"],
+        }
+    )
+
+    assert merged.success
+    assert merged.data["merged_count"] == 1
+    payload = json.loads(Path(first.data["results_path"]).read_text(encoding="utf-8"))
+    variant = payload["segments"][0]["variants"][0]
+    assert variant["success"] is True
+    assert variant["duration_seconds"] == 1.4
+    assert variant["retry_source_results"] == second.data["results_path"]
+    compare_html = Path(first.data["compare_path"]).read_text(encoding="utf-8")
+    assert "temporary provider failure" not in compare_html
+    assert "opening__retry-me.mp3" in compare_html
+
+
 def test_compare_page_uses_chinese_ui_for_chinese_script(tmp_path):
     script_path = tmp_path / "script.json"
     script_path.write_text(

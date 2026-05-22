@@ -253,6 +253,27 @@ Gemini API TTS supports prompt-directed single-speaker and two-speaker audio. Us
 }
 ```
 
+For repeatable narration auditions, prefer `delivery_preset` plus optional `duration_target_seconds` before hand-writing long prompt instructions. The duration target is prompt guidance, not a hard API speed parameter, so always listen to the sample and probe the final audio duration:
+
+```json
+{
+  "text": "遇到生产问题时，先让 Agent 汇总日志线索。",
+  "voice": "Kore",
+  "delivery_preset": "technical_briefing",
+  "duration_target_seconds": 5.2,
+  "prompt": "Mandarin narration, mature and steady, with clear product-demo pacing."
+}
+```
+
+Available delivery presets:
+
+| Preset | Use when |
+|--------|----------|
+| `technical_briefing` | Product demos, system explainers, and precise technical narration |
+| `compact_explainer` | A segment must stay tight without losing clarity |
+| `warm_opening` | Opening lines need a softer lead-in before the main problem statement |
+| `clear_cta` | Closing or action-oriented lines need faster, crisp emphasis |
+
 #### Google Imagen Pricing
 
 | Model | Price per image |

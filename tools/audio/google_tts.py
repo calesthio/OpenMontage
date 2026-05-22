@@ -49,6 +49,8 @@ class GoogleTTS(BaseTool):
         "style_prompting",
         "multi_speaker",
         "gemini_api_tts",
+        "delivery_presets",
+        "duration_guidance",
     ]
     supports = {
         "voice_cloning": False,
@@ -59,6 +61,8 @@ class GoogleTTS(BaseTool):
         "style_prompting": True,
         "gemini_api_key_auth": True,
         "multi_speaker": True,
+        "delivery_presets": True,
+        "duration_guidance": True,
     }
     best_for = [
         "latest Gemini API TTS narration with API-key setup",
@@ -72,6 +76,25 @@ class GoogleTTS(BaseTool):
 
     DEFAULT_MODEL = "gemini-3.1-flash-tts-preview"
     DEFAULT_VOICE = "Kore"
+    DELIVERY_PRESETS = {
+        "technical_briefing": (
+            "Deliver as a focused technical product briefing: confident, crisp, "
+            "direct, and calm. Keep Chinese technical terms clear, separate clauses "
+            "cleanly, and avoid theatrical emotion."
+        ),
+        "compact_explainer": (
+            "Deliver as a compact explainer: efficient pacing, short pauses, clear "
+            "articulation, and no dragged endings. Preserve intelligibility over speed."
+        ),
+        "warm_opening": (
+            "Deliver as a warm but professional opening: welcoming, steady, and "
+            "credible, with a natural first sentence rather than a hard sales tone."
+        ),
+        "clear_cta": (
+            "Deliver as a clear call to action: slightly faster, decisive, and easy "
+            "to follow, emphasizing the action words without sounding urgent."
+        ),
+    }
     _MODELS = {
         "gemini-3.1-flash-tts-preview",
         "gemini-2.5-flash-preview-tts",
@@ -89,6 +112,16 @@ class GoogleTTS(BaseTool):
             "prompt": {
                 "type": "string",
                 "description": "Natural-language direction for tone, pacing, accent, emotion, and delivery.",
+            },
+            "delivery_preset": {
+                "type": "string",
+                "enum": sorted(DELIVERY_PRESETS),
+                "description": "Reusable Gemini prompt preset for common narration styles.",
+            },
+            "duration_target_seconds": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Approximate target duration. Gemini has no hard speed control, so this is encoded as prompt guidance.",
             },
             "model": {
                 "type": "string",
@@ -193,6 +226,8 @@ class GoogleTTS(BaseTool):
                 "provider": self.provider,
                 "model": model,
                 "voice": voice_name,
+                "delivery_preset": inputs.get("delivery_preset"),
+                "duration_target_seconds": inputs.get("duration_target_seconds"),
                 "speaker_voice_configs": inputs.get("speaker_voice_configs"),
                 "text_length": len(inputs.get("text", "")),
                 "prompt": inputs.get("prompt"),
@@ -248,13 +283,38 @@ class GoogleTTS(BaseTool):
             }
         }
 
-    @staticmethod
-    def _prompted_text(inputs: dict[str, Any]) -> str:
+    @classmethod
+    def _prompted_text(cls, inputs: dict[str, Any]) -> str:
         text = inputs["text"]
-        prompt = inputs.get("prompt")
-        if not prompt:
+        directions = cls._prompt_directions(inputs)
+        if not directions:
             return text
-        return f"{prompt.strip()}\n\n{text}"
+        return f"{' '.join(directions)}\n\n{text}"
+
+    @classmethod
+    def _prompt_directions(cls, inputs: dict[str, Any]) -> list[str]:
+        directions: list[str] = []
+        preset = inputs.get("delivery_preset")
+        if preset:
+            directions.append(cls.DELIVERY_PRESETS[preset])
+
+        duration_target = inputs.get("duration_target_seconds")
+        if duration_target:
+            directions.append(cls._duration_instruction(float(duration_target)))
+
+        prompt = inputs.get("prompt")
+        if prompt:
+            directions.append(prompt.strip())
+        return directions
+
+    @staticmethod
+    def _duration_instruction(target_seconds: float) -> str:
+        rounded = round(target_seconds, 1)
+        return (
+            f"Aim for approximately {rounded:g} seconds of audio. Use natural but "
+            "compact pacing; if exact timing conflicts with clarity, keep the speech "
+            "clear and close to the target duration."
+        )
 
     @staticmethod
     def _extract_audio(payload: dict[str, Any]) -> bytes:
@@ -284,6 +344,15 @@ class GoogleTTS(BaseTool):
         model = self._resolve_model(inputs)
         if model not in self._MODELS:
             raise ValueError(f"Unsupported Gemini TTS model: {model}")
+
+        preset = inputs.get("delivery_preset")
+        if preset and preset not in self.DELIVERY_PRESETS:
+            allowed = ", ".join(sorted(self.DELIVERY_PRESETS))
+            raise ValueError(f"Unsupported Google TTS delivery_preset: {preset}. Expected one of: {allowed}")
+
+        duration_target = inputs.get("duration_target_seconds")
+        if duration_target is not None and float(duration_target) <= 0:
+            raise ValueError("duration_target_seconds must be greater than 0.")
 
         speakers = inputs.get("speaker_voice_configs") or []
         if len(speakers) > 2:

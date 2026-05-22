@@ -114,6 +114,33 @@ class TestGoogleTTS:
             == "Kore"
         )
 
+    def test_delivery_preset_and_duration_target_become_prompt_guidance(self):
+        tool = GoogleTTS()
+        payload = tool._payload(
+            {
+                "text": "遇到生产问题时，先让 Agent 汇总日志线索。",
+                "delivery_preset": "technical_briefing",
+                "duration_target_seconds": 5.2,
+                "prompt": "Use a mature female Mandarin voice direction.",
+            },
+            voice_name="Kore",
+        )
+        text = payload["contents"][0]["parts"][0]["text"]
+        assert "focused technical product briefing" in text
+        assert "approximately 5.2 seconds" in text
+        assert "Use a mature female Mandarin voice direction." in text
+        assert text.endswith("遇到生产问题时，先让 Agent 汇总日志线索。")
+
+    def test_rejects_unknown_delivery_preset(self):
+        tool = GoogleTTS()
+        with pytest.raises(ValueError, match="delivery_preset"):
+            tool._validate_inputs({"text": "Hello", "delivery_preset": "sleepy_anchor"})
+
+    def test_rejects_non_positive_duration_target(self):
+        tool = GoogleTTS()
+        with pytest.raises(ValueError, match="duration_target_seconds"):
+            tool._validate_inputs({"text": "Hello", "duration_target_seconds": 0})
+
     def test_multi_speaker_payload_maps_speakers_to_voices(self):
         tool = GoogleTTS()
         payload = tool._payload(

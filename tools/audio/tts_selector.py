@@ -70,6 +70,15 @@ class TTSSelector(BaseTool):
                 "description": "Provider name or 'auto'. Valid values are discovered at runtime from the registry.",
                 "default": "auto",
             },
+            "preferred_tool": {
+                "type": "string",
+                "description": "Exact TTS tool name to prefer, e.g. openai_audio_tts.",
+            },
+            "prefer_audio_output": {
+                "type": "boolean",
+                "default": False,
+                "description": "For OpenAI routing, prefer the audio-output chat model path over the dedicated Speech API.",
+            },
             "allowed_providers": {
                 "type": "array",
                 "items": {"type": "string"},
@@ -163,7 +172,13 @@ class TTSSelector(BaseTool):
         """Select the best TTS provider using scored ranking."""
         from lib.scoring import rank_providers
 
-        preferred = inputs.get("preferred_provider", "auto")
+        preferred_tool = inputs.get("preferred_tool")
+        if preferred_tool:
+            for tool in candidates:
+                if tool.name == preferred_tool and tool.get_status() == ToolStatus.AVAILABLE:
+                    return tool, None
+
+        preferred = self._preferred_provider(inputs)
 
         rankings = rank_providers(candidates, task_context)
 
@@ -182,6 +197,19 @@ class TTSSelector(BaseTool):
                 return tool_by_provider[score_item.provider], score_item
 
         return None, None
+
+    @staticmethod
+    def _preferred_provider(inputs: dict[str, Any]) -> str:
+        preferred = inputs.get("preferred_provider", "auto")
+        task_context = inputs.get("task_context") or {}
+        wants_audio_output = bool(
+            inputs.get("prefer_audio_output")
+            or task_context.get("prefer_audio_output")
+            or task_context.get("audio_output_chat_completions")
+        )
+        if preferred == "openai" and wants_audio_output:
+            return "openai_audio"
+        return preferred
 
     @staticmethod
     def _filter_candidates(candidates: list[BaseTool], inputs: dict[str, Any]) -> list[BaseTool]:

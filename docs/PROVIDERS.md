@@ -309,6 +309,11 @@ through Chat Completions audio output. Use it when you want to audition the
 newer OpenAI audio model family for expressive narration. Use `openai_tts`
 when you need the dedicated Speech API path.
 
+When routing through `tts_selector`, set `preferred_tool: "openai_audio_tts"`
+for the exact audio-output path, or set `preferred_provider: "openai"` with
+`prefer_audio_output: true` when you want OpenAI but specifically prefer the
+chat audio model route.
+
 Supported audio-output formats: `wav`, `mp3`, `flac`, `opus`, `pcm16`.
 This route does not return word-level timestamps; use transcription/alignment
 before subtitle timing.

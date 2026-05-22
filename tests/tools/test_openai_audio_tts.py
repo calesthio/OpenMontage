@@ -2,6 +2,7 @@ import base64
 from pathlib import Path
 
 from tools.audio.openai_audio_tts import OpenAIAudioTTS
+from tools.audio.openai_tts import OpenAITTS
 from tools.audio.piper_tts import PiperTTS
 from tools.audio.tts_selector import TTSSelector
 
@@ -64,6 +65,8 @@ def test_openai_audio_tts_posts_chat_audio_request(monkeypatch, tmp_path):
     assert result.data["model"] == "gpt-audio-1.5"
     assert result.data["voice"] == "cedar"
     assert result.data["transcript"] == "Read this exactly."
+    assert result.data["instructions_applied"] is True
+    assert result.data["strict_script"] is True
     assert result.data["timestamps"] is False
 
     request = calls[0]
@@ -119,3 +122,36 @@ def test_tts_selector_rank_respects_openai_audio_allowed_provider(monkeypatch):
 
     assert result.success
     assert [item["provider"] for item in result.data["rankings"]] == ["openai_audio"]
+
+
+def test_tts_selector_can_prefer_openai_audio_tool(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    selector = TTSSelector()
+    candidates = [OpenAITTS(), OpenAIAudioTTS()]
+
+    tool, score = selector._select_best_tool(
+        {"preferred_tool": "openai_audio_tts", "text": "Read this."},
+        candidates,
+        selector._prepare_task_context({"text": "Read this."}),
+    )
+
+    assert tool.name == "openai_audio_tts"
+    assert score is None
+
+
+def test_tts_selector_routes_openai_to_audio_output_when_requested(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    selector = TTSSelector()
+    candidates = [OpenAITTS(), OpenAIAudioTTS()]
+
+    tool, _ = selector._select_best_tool(
+        {
+            "preferred_provider": "openai",
+            "prefer_audio_output": True,
+            "text": "Read this with delivery direction.",
+        },
+        candidates,
+        selector._prepare_task_context({"text": "Read this with delivery direction."}),
+    )
+
+    assert tool.name == "openai_audio_tts"

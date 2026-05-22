@@ -205,6 +205,8 @@ class OpenAIAudioTTS(BaseTool):
                 "audio_duration_seconds": round(audio_duration, 2) if audio_duration else None,
                 "output": str(output_path),
                 "transcript": audio.get("transcript") or message.get("content"),
+                "instructions_applied": bool(inputs.get("instructions")),
+                "strict_script": bool(inputs.get("strict_script", True)),
                 "selected_provider": self.provider,
                 "selected_tool": self.name,
                 "timestamps": False,

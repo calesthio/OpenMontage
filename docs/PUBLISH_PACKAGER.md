@@ -42,6 +42,12 @@ with the cover and keeps the original audio timing.
 review pages that depend on adjacent images, audio, or other assets; they stay
 at their original path so their embedded media still works.
 
+Set `require_timing_qa=true` for final packages whose narration, subtitles,
+screen states, or motion timing changed materially. The package will only pass
+when a Timing QA artifact is attached through `extra_files` or
+`reference_files` using a role such as `visual_timing_review_page`,
+`visual_timing_annotated_review`, or `timing_qa_page`.
+
 Packaging also writes `FINAL_PACKAGE.md`, a standard package summary with
 absolute paths for the video, cover, copied files, reference pages, and
 checksums. Prefer this over adding ad hoc archive-manifest sidecars.
@@ -55,7 +61,7 @@ Creates a local confirmation page for the package:
 - `final_package_review.json`
 
 The page embeds the packaged video, cover, copied file list, reference page
-list, checksums, verification status, and copy-path shortcuts. It is a lightweight
+list, checksums, Timing QA status, verification status, and copy-path shortcuts. It is a lightweight
 handoff check: if something is wrong, tell the agent what to adjust and rerun
 packaging. The UI language can be set with `language`, or left as `auto` to
 infer Chinese/English from captions, script sidecars, references, and package

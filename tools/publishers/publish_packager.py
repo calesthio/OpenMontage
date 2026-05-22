@@ -101,6 +101,7 @@ class PublishPackager(BaseTool):
         "create_final_package_review_page",
         "verify_duration_delta",
         "verify_audio_is_not_silent",
+        "verify_timing_qa_reference",
     ]
     best_for = [
         "turning an approved render into a publish-ready final package",
@@ -229,6 +230,11 @@ class PublishPackager(BaseTool):
                 "default": -60.0,
                 "description": "Minimum allowed mean volume when an audio stream exists. Lower values are treated as effectively silent.",
             },
+            "require_timing_qa": {
+                "type": "boolean",
+                "default": False,
+                "description": "Require a visual timing QA reference file/page before final packaging can pass.",
+            },
             "overwrite": {"type": "boolean", "default": False},
         },
     }
@@ -343,6 +349,7 @@ class PublishPackager(BaseTool):
         overwrite = bool(inputs.get("overwrite", False))
         tolerance = float(inputs.get("duration_tolerance_seconds", 0.15))
         audio_threshold = float(inputs.get("audio_min_mean_volume_db", -60.0))
+        require_timing_qa = bool(inputs.get("require_timing_qa", False))
 
         if not video_path.exists():
             return ToolResult(success=False, error=f"Video not found: {video_path}")
@@ -412,6 +419,13 @@ class PublishPackager(BaseTool):
         audio_check = self._audio_loudness_check(video_out, audio_threshold)
         if audio_check.get("status") == "failed":
             warnings.append(str(audio_check.get("message") or "Audio loudness check failed"))
+        timing_qa_check = self._timing_qa_check(
+            files,
+            references,
+            required=require_timing_qa,
+        )
+        if timing_qa_check.get("status") == "missing_required":
+            warnings.append(str(timing_qa_check["message"]))
 
         manifest: dict[str, Any] = {
             "version": "1.0",
@@ -433,6 +447,7 @@ class PublishPackager(BaseTool):
                 "duration_tolerance_seconds": tolerance,
                 "audio_min_mean_volume_db": audio_threshold,
                 "audio": audio_check,
+                "timing_qa": timing_qa_check,
                 "passed": not warnings,
                 "warnings": warnings,
             },
@@ -538,6 +553,14 @@ class PublishPackager(BaseTool):
                     f"- Audio check: `{audio.get('status')}`",
                     f"- Audio mean volume: `{audio.get('mean_volume_db')}`",
                     f"- Audio max volume: `{audio.get('max_volume_db')}`",
+                ]
+            )
+        timing_qa = (manifest.get("verification") or {}).get("timing_qa") or {}
+        if timing_qa:
+            lines.extend(
+                [
+                    f"- Timing QA: `{timing_qa.get('status')}`",
+                    f"- Timing QA references: `{timing_qa.get('reference_count')}`",
                 ]
             )
         lines.append("")
@@ -777,6 +800,7 @@ class PublishPackager(BaseTool):
                 "warnings": "警告",
                 "audio": "音频",
                 "audio_mean": "平均音量",
+                "timing_qa": "Timing QA",
                 "none": "无",
                 "no_cover_policy": "未记录封面策略。若脚本 JSON 提供 cover_policy 或 cover_direction，后续会在这里展示。",
                 "yes": "是",
@@ -813,6 +837,7 @@ class PublishPackager(BaseTool):
             "warnings": "Warnings",
             "audio": "Audio",
             "audio_mean": "Mean volume",
+            "timing_qa": "Timing QA",
             "none": "None",
             "no_cover_policy": "No cover policy was recorded. Future packages will show cover_policy or cover_direction here when the script JSON provides it.",
             "yes": "Yes",
@@ -893,12 +918,14 @@ class PublishPackager(BaseTool):
                     f"- `{item.get('role')}`: `{item.get('path')}` ({item.get('size_bytes')} bytes)"
                 )
         verification = review_data.get("verification") or {}
+        timing_qa = verification.get("timing_qa") or {}
         lines.extend(
             [
                 "",
                 "## Verification",
                 f"- Passed: `{verification.get('passed')}`",
                 f"- Warnings: `{'; '.join(verification.get('warnings') or []) or 'none'}`",
+                f"- Timing QA: `{timing_qa.get('status') or 'none'}`",
                 "",
                 "If the package contents are wrong, tell the agent what to adjust and rerun packaging.",
             ]
@@ -938,7 +965,9 @@ class PublishPackager(BaseTool):
         warnings = verification.get("warnings") or []
         warning_text = "; ".join(str(item) for item in warnings) or labels["none"]
         audio = verification.get("audio") or {}
+        timing_qa = verification.get("timing_qa") or {}
         audio_status = str(audio.get("status") or labels["none"])
+        timing_qa_status = str(timing_qa.get("status") or labels["none"])
         mean_volume = audio.get("mean_volume_db")
         audio_mean_text = (
             f"{float(mean_volume):.1f} dB"
@@ -1155,6 +1184,7 @@ button {{
           <div class="metric"><span>{escape(labels["cover_first_frame"])}</span><strong>{escape(self._bool_label(video.get("cover_first_frame"), labels))}</strong></div>
           <div class="metric"><span>{escape(labels["audio"])}</span><strong>{escape(audio_status)}</strong></div>
           <div class="metric"><span>{escape(labels["audio_mean"])}</span><strong>{escape(audio_mean_text)}</strong></div>
+          <div class="metric"><span>{escape(labels["timing_qa"])}</span><strong>{escape(timing_qa_status)}</strong></div>
           <div class="metric warn"><span>{escape(labels["warnings"])}</span><strong>{escape(warning_text)}</strong></div>
         </div>
       </section>
@@ -1334,6 +1364,49 @@ button {{
                 f"threshold {min_mean_volume_db} dB; the packaged video may be silent."
             )
         return check
+
+    def _timing_qa_check(
+        self,
+        files: list[dict[str, Any]],
+        references: list[dict[str, Any]],
+        *,
+        required: bool,
+    ) -> dict[str, Any]:
+        timing_roles = {
+            "visual_timing_review",
+            "visual_timing_review_page",
+            "visual_timing_annotated_review",
+            "visual_timing_notes",
+            "timing_qa",
+            "timing_qa_page",
+            "timing_qa_notes",
+        }
+        matches = [
+            item
+            for item in [*files, *references]
+            if str(item.get("role") or "").lower() in timing_roles
+        ]
+        if matches:
+            return {
+                "status": "passed",
+                "required": required,
+                "reference_count": len(matches),
+                "roles": [str(item.get("role") or "") for item in matches],
+                "paths": [str(item.get("path") or "") for item in matches],
+            }
+        if required:
+            return {
+                "status": "missing_required",
+                "required": True,
+                "reference_count": 0,
+                "message": "Timing QA reference is required before final packaging can pass.",
+            }
+        return {
+            "status": "not_provided",
+            "required": False,
+            "reference_count": 0,
+            "message": "No Timing QA reference was attached to this final package.",
+        }
 
     def _replace_first_frame(self, video_path: Path, cover_path: Path, output_path: Path) -> None:
         ffmpeg = shutil.which("ffmpeg")

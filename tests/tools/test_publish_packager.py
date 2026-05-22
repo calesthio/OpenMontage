@@ -183,6 +183,59 @@ def test_package_blocks_effectively_silent_audio_track(
     assert result.data["verification"]["passed"] is False
 
 
+def test_package_requires_timing_qa_when_gate_enabled(tmp_path: Path):
+    video = tmp_path / "render.mp4"
+    video.write_bytes(b"fake video")
+
+    result = PublishPackager().execute(
+        {
+            "video_path": str(video),
+            "output_dir": str(tmp_path / "final"),
+            "require_timing_qa": True,
+        }
+    )
+
+    assert not result.success
+    assert "Timing QA reference is required" in result.error
+    assert result.data["verification"]["timing_qa"]["status"] == "missing_required"
+    assert result.data["verification"]["passed"] is False
+
+
+def test_package_accepts_timing_qa_reference_when_gate_enabled(tmp_path: Path):
+    video = tmp_path / "render.mp4"
+    timing_page = tmp_path / "timing.html"
+    video.write_bytes(b"fake video")
+    timing_page.write_text("<html>Timing QA</html>", encoding="utf-8")
+
+    result = PublishPackager().execute(
+        {
+            "video_path": str(video),
+            "output_dir": str(tmp_path / "final"),
+            "require_timing_qa": True,
+            "reference_files": [
+                {
+                    "path": str(timing_page),
+                    "role": "visual_timing_review_page",
+                    "label": "Timing QA",
+                }
+            ],
+        }
+    )
+
+    assert result.success, result.error
+    manifest = json.loads(
+        (tmp_path / "final" / "final_package_manifest.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    validate_artifact("final_package_manifest", manifest)
+    timing_qa = manifest["verification"]["timing_qa"]
+    assert timing_qa["status"] == "passed"
+    assert timing_qa["required"] is True
+    assert timing_qa["reference_count"] == 1
+    assert timing_qa["roles"] == ["visual_timing_review_page"]
+
+
 def test_package_uses_cover_policy_first_frame_mode_when_cover_mode_omitted(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ):

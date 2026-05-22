@@ -104,6 +104,24 @@
           },
           "additionalProperties": false
         },
+        "timing_qa": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string" },
+            "required": { "type": "boolean" },
+            "reference_count": { "type": "integer", "minimum": 0 },
+            "roles": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "paths": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "message": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
         "passed": { "type": "boolean" },
         "warnings": {
           "type": "array",

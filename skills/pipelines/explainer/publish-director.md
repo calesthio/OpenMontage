@@ -124,6 +124,12 @@ manually copying files. It should package the approved render, cover/poster
 image, subtitles, metadata, and review sidecars into a final directory and
 write `final_package_manifest.json`.
 
+If the approved render has material narration, subtitle, screen-state, or motion
+timing changes, run Visual Timing QA before packaging and pass its review page
+or annotated notes as a `reference_files` entry. Set `require_timing_qa=true`
+for that package so the final package manifest and review page clearly show
+whether the Timing QA gate was satisfied.
+
 When `cover_policy.first_frame_mode` is `replace_first_frame`, prefer
 `cover_mode: "replace_first_frame"` rather than prepending extra video time.
 This swaps the first visible frame while keeping the original audio timing and

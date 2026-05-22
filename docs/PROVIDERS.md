@@ -278,7 +278,7 @@ Google TTS offers 700+ voices across 50+ languages. Voice names follow the patte
 
 > **Solid all-rounder.** DALL-E 3 handles complex multi-element compositions well. TTS is fast and affordable.
 
-**Tools unlocked:** `openai_tts`, `openai_image`
+**Tools unlocked:** `openai_tts`, `openai_audio_tts`, `openai_image`
 **Env var:** `OPENAI_API_KEY`
 
 #### Setup
@@ -296,6 +296,22 @@ Google TTS offers 700+ voices across 50+ languages. Voice names follow the patte
 | tts-1 | $15.00 |
 | tts-1-hd | $30.00 |
 | gpt-4o-mini-tts | $12.00 |
+
+The Speech API supports 13 built-in voices: `alloy`, `ash`, `ballad`,
+`coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer`, `verse`,
+`marin`, and `cedar`. For best quality, start with `marin` or `cedar`.
+Custom voice IDs are also supported for eligible accounts.
+
+#### Audio-output TTS
+
+`openai_audio_tts` uses audio-capable chat models such as `gpt-audio-1.5`
+through Chat Completions audio output. Use it when you want to audition the
+newer OpenAI audio model family for expressive narration. Use `openai_tts`
+when you need the dedicated Speech API path.
+
+Supported audio-output formats: `wav`, `mp3`, `flac`, `opus`, `pcm16`.
+This route does not return word-level timestamps; use transcription/alignment
+before subtitle timing.
 
 #### Image Pricing
 
@@ -725,7 +741,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **Google** | `GOOGLE_API_KEY` | `google_tts`, `google_imagen` | Free tier + paid |
 | **ElevenLabs** | `ELEVENLABS_API_KEY` | `elevenlabs_tts`, `music_gen` | Free tier + paid |
 | **fal.ai** | `FAL_KEY` | `flux_image`, `recraft_image`, `kling_video`, `veo_video`, `minimax_video` | Pay-as-you-go |
-| **OpenAI** | `OPENAI_API_KEY` | `openai_tts`, `openai_image` | Paid only |
+| **OpenAI** | `OPENAI_API_KEY` | `openai_tts`, `openai_audio_tts`, `openai_image` | Paid only |
 | **xAI** | `XAI_API_KEY` | `grok_image`, `grok_video` | Paid only |
 | **Runway** | `RUNWAY_API_KEY` | `runway_video` | Free trial + paid |
 | **Higgsfield** | `HIGGSFIELD_API_KEY` + `HIGGSFIELD_API_SECRET` | `higgsfield_video` | Subscription ($15-84/mo) |

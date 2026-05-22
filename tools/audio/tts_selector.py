@@ -121,7 +121,7 @@ class TTSSelector(BaseTool):
         from lib.scoring import rank_providers
 
         task_context = self._prepare_task_context(inputs)
-        candidates = self._providers()
+        candidates = self._filter_candidates(self._providers(), inputs)
 
         # Rank mode — return scored provider rankings without generating
         if inputs.get("operation") == "rank":
@@ -164,9 +164,6 @@ class TTSSelector(BaseTool):
         from lib.scoring import rank_providers
 
         preferred = inputs.get("preferred_provider", "auto")
-        allowed = set(inputs.get("allowed_providers") or [])
-        if allowed:
-            candidates = [tool for tool in candidates if tool.provider in allowed]
 
         rankings = rank_providers(candidates, task_context)
 
@@ -185,6 +182,13 @@ class TTSSelector(BaseTool):
                 return tool_by_provider[score_item.provider], score_item
 
         return None, None
+
+    @staticmethod
+    def _filter_candidates(candidates: list[BaseTool], inputs: dict[str, Any]) -> list[BaseTool]:
+        allowed = set(inputs.get("allowed_providers") or [])
+        if not allowed:
+            return candidates
+        return [tool for tool in candidates if tool.provider in allowed or tool.name in allowed]
 
     def _prepare_task_context(self, inputs: dict[str, Any]) -> dict[str, Any]:
         from lib.scoring import normalize_task_context

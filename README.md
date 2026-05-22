@@ -171,7 +171,7 @@ SUNO_API_KEY=your-key          # Full songs, instrumentals, any genre
 
 # Voice & images:
 ELEVENLABS_API_KEY=your-key    # Premium TTS, AI music, sound effects
-OPENAI_API_KEY=your-key        # OpenAI TTS, DALL-E 3 images
+OPENAI_API_KEY=your-key        # OpenAI TTS/audio-output narration, DALL-E 3 images
 XAI_API_KEY=your-key           # xAI Grok image edits/generation + Grok video generation
 GOOGLE_API_KEY=your-key        # Google Imagen images, Google TTS (700+ voices)
 
@@ -446,13 +446,14 @@ Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to
 </details>
 
 <details>
-<summary><strong>Text-to-Speech — 4 providers</strong></summary>
+<summary><strong>Text-to-Speech — 5 providers</strong></summary>
 
 | Provider | Type | Notes |
 |----------|------|-------|
 | **ElevenLabs** | Cloud API | Premium voice quality |
 | **Google TTS** | Cloud API | 700+ voices, 50+ languages — best for localization |
-| **OpenAI TTS** | Cloud API | Fast, affordable |
+| **OpenAI Speech API** | Cloud API | Fast, affordable, instruction-directed with `gpt-4o-mini-tts` |
+| **OpenAI Audio TTS** | Cloud API | Audio-output chat models such as `gpt-audio-1.5` |
 | **Piper** | Local | Completely free, offline |
 
 </details>

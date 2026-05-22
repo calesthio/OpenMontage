@@ -88,8 +88,8 @@ class AzureTTS(BaseTool):
             "operation": {
                 "type": "string",
                 "default": "synthesize",
-                "enum": ["synthesize", "list_voices"],
-                "description": "Use list_voices to fetch the Azure voice catalog without generating audio.",
+                "enum": ["synthesize", "list_voices", "preflight"],
+                "description": "Use list_voices to fetch the Azure voice catalog, or preflight to inspect credentials and optional SDK availability.",
             },
             "text": {"type": "string", "description": "Text to convert to speech"},
             "backend": {
@@ -102,6 +102,11 @@ class AzureTTS(BaseTool):
                 "type": "boolean",
                 "default": False,
                 "description": "Use Azure Speech SDK to capture word-boundary timing metadata for subtitles and visual cue alignment. Requires azure-cognitiveservices-speech.",
+            },
+            "require_word_boundaries": {
+                "type": "boolean",
+                "default": False,
+                "description": "Fail instead of falling back to REST when word-boundary metadata was requested but the optional SDK is unavailable.",
             },
             "ssml": {
                 "type": "string",
@@ -248,6 +253,8 @@ class AzureTTS(BaseTool):
             operation = inputs.get("operation", "synthesize")
             if operation == "list_voices":
                 result = self._list_voices(inputs)
+            elif operation == "preflight":
+                result = self._preflight(inputs)
             elif self._should_use_sdk(inputs):
                 result = self._synthesize_with_sdk(inputs)
             else:
@@ -264,6 +271,14 @@ class AzureTTS(BaseTool):
         try:
             speechsdk = importlib.import_module("azure.cognitiveservices.speech")
         except ImportError:
+            if self._can_fallback_to_rest(inputs):
+                result = self._synthesize(inputs)
+                self._mark_word_boundary_fallback(
+                    result,
+                    "Azure word-boundary timing requires the optional Speech SDK: "
+                    "pip install azure-cognitiveservices-speech",
+                )
+                return result
             return ToolResult(
                 success=False,
                 error=(
@@ -408,9 +423,68 @@ class AzureTTS(BaseTool):
             model="azure-tts/voices-list",
         )
 
+    def _preflight(self, inputs: dict[str, Any]) -> ToolResult:
+        region = self._get_region(inputs)
+        endpoint = self._get_endpoint(inputs)
+        has_key = bool(self._get_key())
+        has_token = bool(self._get_auth_token())
+        sdk_available = self._sdk_available()
+        wants_word_boundaries = bool(inputs.get("enable_word_boundaries"))
+        can_synthesize = bool((has_key or has_token) and (region or endpoint))
+        warnings = []
+        if wants_word_boundaries and not sdk_available:
+            if self._can_fallback_to_rest(inputs):
+                warnings.append(
+                    "Azure Speech SDK is unavailable; synthesis can fall back to REST without word-boundary metadata."
+                )
+            else:
+                warnings.append(
+                    "Azure Speech SDK is unavailable and word-boundary metadata is required."
+                )
+        return ToolResult(
+            success=True,
+            data={
+                "provider": self.provider,
+                "operation": "preflight",
+                "status": "available" if can_synthesize else "unavailable",
+                "has_key": has_key,
+                "has_auth_token": has_token,
+                "region": region,
+                "endpoint": self._safe_endpoint(inputs),
+                "sdk_available": sdk_available,
+                "word_boundaries_requested": wants_word_boundaries,
+                "rest_fallback_available": self._can_fallback_to_rest(inputs),
+                "warnings": warnings,
+            },
+            model="azure-tts/preflight",
+        )
+
     @staticmethod
     def _should_use_sdk(inputs: dict[str, Any]) -> bool:
         return inputs.get("backend") == "sdk" or bool(inputs.get("enable_word_boundaries"))
+
+    @staticmethod
+    def _can_fallback_to_rest(inputs: dict[str, Any]) -> bool:
+        return inputs.get("backend") != "sdk" and not bool(inputs.get("require_word_boundaries"))
+
+    @staticmethod
+    def _sdk_available() -> bool:
+        try:
+            return importlib.util.find_spec("azure.cognitiveservices.speech") is not None
+        except (ImportError, ValueError):
+            return False
+
+    @staticmethod
+    def _mark_word_boundary_fallback(result: ToolResult, reason: str) -> None:
+        if result.data is None:
+            result.data = {}
+        warnings = list(result.data.get("warnings") or [])
+        warnings.append(reason)
+        result.data["warnings"] = warnings
+        result.data["word_boundaries_requested"] = True
+        result.data["word_boundary_fallback"] = "rest_without_word_boundaries"
+        result.data["boundaries"] = []
+        result.data["words"] = []
 
     def _sdk_speech_config(self, speechsdk: Any, inputs: dict[str, Any]) -> Any:
         endpoint = self._get_endpoint(inputs)

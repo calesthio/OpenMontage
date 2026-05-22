@@ -283,6 +283,15 @@ timing metadata:
 Setting `enable_word_boundaries: true` or `backend: "sdk"` uses the optional
 Azure Speech SDK. The output metadata includes `boundaries` and `words` with
 `audio_offset_seconds`, `duration_seconds`, `text_offset`, and `word_length`.
+If the SDK is unavailable and `require_word_boundaries` is not set, OpenMontage
+falls back to REST synthesis so voice auditions still produce audio; metadata
+records `word_boundary_fallback: "rest_without_word_boundaries"` plus a warning.
+Set `require_word_boundaries: true` when missing timing metadata should block
+the run.
+
+Use `operation: "preflight"` before large batches to confirm credentials,
+region/endpoint configuration, SDK availability, and whether REST fallback will
+be used.
 
 #### What It Is Best For
 
@@ -295,6 +304,8 @@ Azure Speech SDK. The output metadata includes `boundaries` and `words` with
 
 REST mode is intentionally lightweight and does not return word-boundary events.
 SDK mode adds those events when `azure-cognitiveservices-speech` is installed.
+For TTS Segment Lab auditions, prefer fallback unless the review specifically
+depends on word-level timing.
 
 #### Pricing
 

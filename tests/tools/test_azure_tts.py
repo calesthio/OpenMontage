@@ -159,6 +159,35 @@ def test_word_boundaries_require_optional_sdk(monkeypatch, tmp_path):
     monkeypatch.setenv("AZURE_SPEECH_KEY", "test-key")
     monkeypatch.setenv("AZURE_SPEECH_REGION", "eastus")
 
+    def fake_post(url, *, headers, data, timeout):
+        return FakeResponse(content=b"rest-audio", headers={"X-RequestId": "req-fallback"})
+
+    def missing_sdk(module_name):
+        if module_name == "azure.cognitiveservices.speech":
+            raise ImportError("missing sdk")
+        raise AssertionError(module_name)
+
+    monkeypatch.setattr("tools.audio.azure_tts.importlib.import_module", missing_sdk)
+    monkeypatch.setitem(sys.modules, "requests", SimpleNamespace(post=fake_post))
+
+    result = AzureTTS().execute({
+        "text": "需要时间戳。",
+        "enable_word_boundaries": True,
+        "output_path": str(tmp_path / "timed.mp3"),
+    })
+
+    assert result.success
+    assert result.data["backend"] == "rest"
+    assert result.data["word_boundary_fallback"] == "rest_without_word_boundaries"
+    assert result.data["words"] == []
+    assert "pip install azure-cognitiveservices-speech" in result.data["warnings"][0]
+    assert (tmp_path / "timed.mp3").read_bytes() == b"rest-audio"
+
+
+def test_word_boundaries_can_be_required(monkeypatch, tmp_path):
+    monkeypatch.setenv("AZURE_SPEECH_KEY", "test-key")
+    monkeypatch.setenv("AZURE_SPEECH_REGION", "eastus")
+
     def missing_sdk(module_name):
         if module_name == "azure.cognitiveservices.speech":
             raise ImportError("missing sdk")
@@ -169,11 +198,26 @@ def test_word_boundaries_require_optional_sdk(monkeypatch, tmp_path):
     result = AzureTTS().execute({
         "text": "需要时间戳。",
         "enable_word_boundaries": True,
+        "require_word_boundaries": True,
         "output_path": str(tmp_path / "timed.mp3"),
     })
 
     assert not result.success
     assert "pip install azure-cognitiveservices-speech" in result.error
+
+
+def test_preflight_reports_sdk_fallback(monkeypatch):
+    monkeypatch.setenv("AZURE_SPEECH_KEY", "test-key")
+    monkeypatch.setenv("AZURE_SPEECH_REGION", "eastus")
+    monkeypatch.setattr("tools.audio.azure_tts.AzureTTS._sdk_available", staticmethod(lambda: False))
+
+    result = AzureTTS().execute({"operation": "preflight", "enable_word_boundaries": True})
+
+    assert result.success
+    assert result.data["status"] == "available"
+    assert result.data["sdk_available"] is False
+    assert result.data["rest_fallback_available"] is True
+    assert "fall back to REST" in result.data["warnings"][0]
 
 
 def test_sdk_backend_writes_word_boundary_metadata(monkeypatch, tmp_path):

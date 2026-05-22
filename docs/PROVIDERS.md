@@ -41,6 +41,9 @@ OPENAI_API_KEY=              # OpenAI TTS + DALL-E 3 images
 XAI_API_KEY=                 # xAI Grok image generation/editing + Grok video generation
 DOUBAO_SPEECH_API_KEY=       # Volcengine Doubao Speech TTS (strong Mandarin narration)
 DOUBAO_SPEECH_VOICE_TYPE=    # Default Doubao speaker/voice type
+MINIMAX_API_KEY=             # MiniMax Speech TTS, voice cloning, and voice design
+MINIMAX_TTS_VOICE_ID=        # Default MiniMax system/designed/cloned voice ID
+MINIMAX_TTS_MODEL=           # Optional MiniMax TTS model override
 
 # MULTI-MODEL GATEWAY (one key, 6+ tools)
 FAL_KEY=                     # FLUX, Recraft, Kling, Veo, MiniMax video
@@ -204,6 +207,52 @@ Start with `speech_rate: 0` for natural Mandarin delivery. If the approved forma
 #### Pricing
 
 Doubao Speech 2.0 is billed by character package or usage in Volcengine. OpenMontage estimates cost from text length and prefers provider-returned usage metadata when available.
+
+---
+
+### MiniMax Speech - Expressive Multilingual TTS
+
+> **Expressive multilingual narration.** MiniMax Speech is useful for short and medium voiceover segments, cloned voices, and subtitle-aware narration across Chinese, English, and other supported languages.
+
+**Tools unlocked:** `minimax_tts`
+**Env vars:** `MINIMAX_API_KEY`, `MINIMAX_TTS_VOICE_ID`, `MINIMAX_TTS_MODEL`
+
+#### Setup
+
+1. Open the MiniMax platform and create an API key.
+2. Choose a system voice from the MiniMax voice list, or use a designed/cloned voice ID.
+3. Add to `.env`:
+   ```bash
+   MINIMAX_API_KEY=your-api-key
+   MINIMAX_TTS_VOICE_ID=your-voice-id
+   MINIMAX_TTS_MODEL=speech-2.8-hd
+   ```
+
+#### API Notes
+
+OpenMontage uses the synchronous HTTP T2A API:
+
+```text
+POST https://api.minimax.io/v1/t2a_v2
+Authorization: Bearer ${MINIMAX_API_KEY}
+```
+
+By default, OpenMontage requests MiniMax `hex` audio output, decodes it into `output_path`, and saves the full response JSON next to the audio file. Set `output_format: "url"` when you want MiniMax to return a temporary audio URL for OpenMontage to download.
+
+#### What It Is Best For
+
+- Expressive multilingual narration with current MiniMax Speech models
+- Short and medium narration segments under the HTTP T2A 10,000-character limit
+- Custom, designed, or cloned MiniMax voices
+- Sentence or word subtitle metadata for caption alignment
+
+#### Pacing
+
+Start with `speed: 1.0`, `pitch: 0`, and `language_boost: "auto"`. For Mandarin explainers, compare short samples before changing speed or pitch so the approved voice direction stays consistent.
+
+#### Pricing
+
+MiniMax Speech billing varies by plan and model. OpenMontage estimates cost from character count and prefers provider-returned `usage_characters` when available.
 
 ---
 

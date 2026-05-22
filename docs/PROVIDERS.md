@@ -41,6 +41,8 @@ OPENAI_API_KEY=              # OpenAI TTS + DALL-E 3 images
 XAI_API_KEY=                 # xAI Grok image generation/editing + Grok video generation
 DOUBAO_SPEECH_API_KEY=       # Volcengine Doubao Speech TTS (strong Mandarin narration)
 DOUBAO_SPEECH_VOICE_TYPE=    # Default Doubao speaker/voice type
+AZURE_SPEECH_KEY=            # Azure AI Speech TTS
+AZURE_SPEECH_REGION=         # Azure Speech region, e.g. eastus
 
 # MULTI-MODEL GATEWAY (one key, 6+ tools)
 FAL_KEY=                     # FLUX, Recraft, Kling, Veo, MiniMax video
@@ -204,6 +206,100 @@ Start with `speech_rate: 0` for natural Mandarin delivery. If the approved forma
 #### Pricing
 
 Doubao Speech 2.0 is billed by character package or usage in Volcengine. OpenMontage estimates cost from text length and prefers provider-returned usage metadata when available.
+
+---
+
+### Azure AI Speech — Enterprise TTS
+
+> **SSML-directed production voice.** Azure AI Speech is a strong option for enterprise narration, multilingual localization, and Chinese voiceovers that need stable REST generation plus fine SSML control.
+
+**Tools unlocked:** `azure_tts`
+**Env vars:** `AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION`
+
+Optional:
+
+- `AZURE_SPEECH_ENDPOINT` for a custom Speech endpoint
+- `AZURE_SPEECH_AUTH_TOKEN` for token-based auth
+- `azure-cognitiveservices-speech` Python package for word-boundary timing metadata
+
+#### Setup
+
+1. Create an Azure AI Speech resource in the Azure portal.
+2. Copy the resource key and region.
+3. Add to `.env`:
+   ```bash
+   AZURE_SPEECH_KEY=your-key
+   AZURE_SPEECH_REGION=eastus
+   ```
+4. Use `operation: list_voices` to fetch available voices before choosing a production voice.
+
+For subtitle or visual cue timing, install the optional SDK:
+
+```bash
+pip install azure-cognitiveservices-speech
+```
+
+#### API Notes
+
+OpenMontage uses the Azure AI Speech REST endpoint by default:
+
+```text
+POST https://{region}.tts.speech.microsoft.com/cognitiveservices/v1
+Ocp-Apim-Subscription-Key: ${AZURE_SPEECH_KEY}
+Content-Type: application/ssml+xml
+X-Microsoft-OutputFormat: audio-24khz-160kbitrate-mono-mp3
+```
+
+For custom voice deployments, pass `deployment_id`; OpenMontage appends it as
+`deploymentId` on the synthesis request. If you provide `ssml`, OpenMontage
+sends it directly. Otherwise it builds SSML from `text`, `voice`, `style`,
+`style_degree`, `role`, `rate`, `pitch`, `volume`, and optional sentence
+silence.
+
+#### REST vs SDK Mode
+
+Use the default REST mode for normal narration:
+
+```json
+{
+  "preferred_provider": "azure",
+  "text": "System narration",
+  "voice": "zh-CN-YunxiNeural"
+}
+```
+
+Use SDK mode when subtitles, karaoke text, or cue-aligned visuals need spoken
+timing metadata:
+
+```json
+{
+  "preferred_provider": "azure",
+  "text": "系统问题分析助手可以串联日志、TID 和代码上下文。",
+  "voice": "zh-CN-YunxiNeural",
+  "enable_word_boundaries": true
+}
+```
+
+Setting `enable_word_boundaries: true` or `backend: "sdk"` uses the optional
+Azure Speech SDK. The output metadata includes `boundaries` and `words` with
+`audio_offset_seconds`, `duration_seconds`, `text_offset`, and `word_length`.
+
+#### What It Is Best For
+
+- Enterprise-grade TTS with stable REST generation
+- Mandarin and multilingual narration that needs SSML control
+- Voice catalog discovery before TTS Segment Lab auditions
+- Styles and roles through `mstts:express-as`, when supported by the selected voice
+
+#### Timing Note
+
+REST mode is intentionally lightweight and does not return word-boundary events.
+SDK mode adds those events when `azure-cognitiveservices-speech` is installed.
+
+#### Pricing
+
+Azure AI Speech is billed by character usage and voice class. OpenMontage uses a
+conservative character estimate; Azure billing remains the source of truth.
 
 ---
 
@@ -723,6 +819,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **Pixabay** | `PIXABAY_API_KEY` | `pixabay_image`, `pixabay_video` | Free |
 | **Piper** | — (install only) | `piper_tts` | Free |
 | **Google** | `GOOGLE_API_KEY` | `google_tts`, `google_imagen` | Free tier + paid |
+| **Azure AI Speech** | `AZURE_SPEECH_KEY` + `AZURE_SPEECH_REGION` | `azure_tts` | Free tier + paid |
 | **ElevenLabs** | `ELEVENLABS_API_KEY` | `elevenlabs_tts`, `music_gen` | Free tier + paid |
 | **fal.ai** | `FAL_KEY` | `flux_image`, `recraft_image`, `kling_video`, `veo_video`, `minimax_video` | Pay-as-you-go |
 | **OpenAI** | `OPENAI_API_KEY` | `openai_tts`, `openai_image` | Paid only |
@@ -745,7 +842,7 @@ How many providers cover each capability:
 |-----------|----------------|-----------------|--------------|
 | **Image Generation** | FLUX, Grok, Google Imagen, DALL-E 3, Recraft | Local Diffusion | Pexels, Pixabay (stock) |
 | **Video Generation** | Grok, Kling, Runway, Veo, Higgsfield, MiniMax, HeyGen | WAN, Hunyuan, CogVideo, LTX | Pexels, Pixabay (stock) |
-| **Text-to-Speech** | ElevenLabs, Google TTS, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier |
+| **Text-to-Speech** | Azure AI Speech, ElevenLabs, Google TTS, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier |
 | **Music Generation** | ElevenLabs, Suno | — | ElevenLabs free tier |
 | **Post-Production** | — | FFmpeg (compose, stitch, trim, mix, enhance, grade) | All free |
 | **Analysis** | — | WhisperX, Scene Detect, Frame Sampler, CLIP/BLIP-2 | All free |

@@ -174,6 +174,9 @@ ELEVENLABS_API_KEY=your-key    # Premium TTS, AI music, sound effects
 OPENAI_API_KEY=your-key        # OpenAI TTS, DALL-E 3 images
 XAI_API_KEY=your-key           # xAI Grok image edits/generation + Grok video generation
 GOOGLE_API_KEY=your-key        # Google Imagen images, Google TTS (700+ voices)
+AZURE_SPEECH_KEY=your-key      # Azure AI Speech TTS
+AZURE_SPEECH_REGION=eastus     # Azure Speech region
+# Optional for Azure word-boundary timing: pip install azure-cognitiveservices-speech
 
 # More video providers:
 HEYGEN_API_KEY=your-key        # HeyGen — VEO, Sora, Runway, Kling via single gateway
@@ -446,10 +449,11 @@ Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to
 </details>
 
 <details>
-<summary><strong>Text-to-Speech — 4 providers</strong></summary>
+<summary><strong>Text-to-Speech — 5 providers</strong></summary>
 
 | Provider | Type | Notes |
 |----------|------|-------|
+| **Azure AI Speech** | Cloud API | SSML-directed enterprise TTS, strong multilingual and Mandarin coverage |
 | **ElevenLabs** | Cloud API | Premium voice quality |
 | **Google TTS** | Cloud API | 700+ voices, 50+ languages — best for localization |
 | **OpenAI TTS** | Cloud API | Fast, affordable |

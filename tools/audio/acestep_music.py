@@ -80,6 +80,152 @@ DEFAULT_LM_BACKEND = "vllm"
 PID_FILE = Path.home() / ".cache" / "openmontage" / "acestep_server.pid"
 LOG_FILE = Path.home() / ".cache" / "openmontage" / "acestep_server.log"
 
+
+def stop_server_tree(pid_file: Path = PID_FILE, graceful_seconds: float = 3.0) -> dict[str, Any]:
+    """Stop the acestep-api server tree rooted at the captured PID and clear the file.
+
+    Only ever stops processes whose PID we recorded at launch — walks that PID's
+    descendant tree, never matches by image name. Tries graceful terminate first
+    (TERM on POSIX, kill() on Windows which sends WM_CLOSE/TerminateProcess),
+    waits up to `graceful_seconds`, then force-kills survivors.
+
+    Returns a dict describing what happened — empty children/parent lists mean
+    the PID file was missing or already stale. Callers can decide to log/surface.
+    """
+    result: dict[str, Any] = {
+        "pid_file": str(pid_file),
+        "parent_pid": None,
+        "children_pids": [],
+        "stopped": [],
+        "survivors": [],
+        "pid_file_removed": False,
+        "notes": [],
+    }
+
+    if not pid_file.exists():
+        result["notes"].append("PID file does not exist; nothing to stop")
+        return result
+
+    try:
+        parent_pid = int(pid_file.read_text().strip())
+    except (ValueError, OSError) as exc:
+        result["notes"].append(f"could not parse PID file: {exc}")
+        try:
+            pid_file.unlink()
+            result["pid_file_removed"] = True
+        except OSError:
+            pass
+        return result
+
+    result["parent_pid"] = parent_pid
+
+    try:
+        import psutil  # local import — keep tool importable without psutil
+    except ImportError:
+        result["notes"].append(
+            "psutil not installed; falling back to platform-specific stop"
+        )
+        return _stop_server_tree_no_psutil(pid_file, parent_pid, result)
+
+    try:
+        parent = psutil.Process(parent_pid)
+    except psutil.NoSuchProcess:
+        result["notes"].append(f"PID {parent_pid} not running (stale PID file)")
+        try:
+            pid_file.unlink()
+            result["pid_file_removed"] = True
+        except OSError:
+            pass
+        return result
+
+    descendants = parent.children(recursive=True)
+    result["children_pids"] = [p.pid for p in descendants]
+    targets = descendants + [parent]  # stop children first to avoid orphans
+
+    for p in targets:
+        try:
+            p.terminate()
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+
+    gone, alive = psutil.wait_procs(targets, timeout=graceful_seconds)
+    result["stopped"].extend(p.pid for p in gone)
+
+    for p in alive:
+        try:
+            p.kill()
+            result["stopped"].append(p.pid)
+            result["notes"].append(f"PID {p.pid} required SIGKILL/force")
+        except (psutil.NoSuchProcess, psutil.AccessDenied) as exc:
+            result["survivors"].append({"pid": p.pid, "reason": str(exc)})
+
+    try:
+        pid_file.unlink()
+        result["pid_file_removed"] = True
+    except OSError as exc:
+        result["notes"].append(f"could not remove PID file: {exc}")
+
+    return result
+
+
+def _stop_server_tree_no_psutil(
+    pid_file: Path, parent_pid: int, result: dict[str, Any]
+) -> dict[str, Any]:
+    """Fallback when psutil isn't installed. Tree-kill semantics on both OSes.
+
+    Windows: `taskkill /F /T /PID <pid>` — forced tree-kill rooted at OUR captured PID.
+    POSIX: SIGTERM then SIGKILL to the *process group*. We launched the server
+        with `start_new_session=True` so the captured PID is its own process
+        group leader (pgid == pid); signaling the group atomically reaches the
+        whole tree, matching Windows `/T` semantics. Same image-name-safety
+        contract — the group ID is the PID we recorded ourselves, not a broad
+        match.
+    """
+    if sys.platform == "win32":
+        try:
+            cp = subprocess.run(
+                ["taskkill", "/F", "/T", "/PID", str(parent_pid)],
+                capture_output=True, text=True, timeout=10,
+            )
+            if cp.returncode == 0:
+                result["stopped"].append(parent_pid)
+            else:
+                result["notes"].append(
+                    f"taskkill failed (rc={cp.returncode}): "
+                    f"{(cp.stderr or cp.stdout or '').strip()}"
+                )
+        except Exception as exc:
+            result["notes"].append(f"taskkill invocation failed: {exc}")
+    else:
+        import signal as _sig
+        try:
+            os.killpg(parent_pid, _sig.SIGTERM)
+            time.sleep(2.0)
+            try:
+                os.kill(parent_pid, 0)
+                os.killpg(parent_pid, _sig.SIGKILL)
+                result["notes"].append(f"process group {parent_pid} required SIGKILL")
+            except ProcessLookupError:
+                pass
+            result["stopped"].append(parent_pid)
+        except ProcessLookupError:
+            result["notes"].append(f"PID {parent_pid} already dead")
+        except PermissionError as exc:
+            result["notes"].append(
+                f"insufficient permission to signal process group {parent_pid}: {exc}"
+            )
+        except Exception as exc:
+            result["notes"].append(f"failed to signal process group {parent_pid}: {exc}")
+
+    try:
+        pid_file.unlink()
+        result["pid_file_removed"] = True
+    except OSError as exc:
+        result["notes"].append(f"could not remove PID file: {exc}")
+
+    return result
+
+
 # Generous bounds for first-run model download. Subsequent boots are fast.
 SERVER_BOOT_TIMEOUT_SECONDS = 600  # 10 min — allows first-time model download
 JOB_POLL_INTERVAL_SECONDS = 2.0
@@ -242,6 +388,17 @@ class AceStepMusic(BaseTool):
             "output_path": {
                 "type": "string",
                 "description": "Where to write the generated audio.",
+            },
+            "shutdown_after_generation": {
+                "type": "boolean",
+                "default": False,
+                "description": (
+                    "If True, stop the acestep-api server (parent + descendants) "
+                    "after the audio is written and clear the PID file. "
+                    "Default False — leaves the server warm for back-to-back "
+                    "jobs. Set True for one-shot runs so the ~12-18 GB of VRAM "
+                    "the model holds is released immediately."
+                ),
             },
         },
     }
@@ -825,6 +982,16 @@ class AceStepMusic(BaseTool):
             )
 
         metas = result.get("metas") or {}
+
+        # Optional one-shot cleanup: stop the server tree we launched so the
+        # VRAM is released. Default is to leave it warm for follow-up jobs.
+        shutdown_info: Optional[dict[str, Any]] = None
+        if inputs.get("shutdown_after_generation"):
+            try:
+                shutdown_info = stop_server_tree()
+            except Exception as exc:
+                shutdown_info = {"error": f"shutdown_after_generation failed: {exc}"}
+
         return ToolResult(
             success=True,
             data={
@@ -842,6 +1009,7 @@ class AceStepMusic(BaseTool):
                 "output": str(output_path),
                 "format": audio_format,
                 "license": "MIT (ACE-Step) — output is fully owned",
+                "server_shutdown": shutdown_info,
             },
             artifacts=[str(output_path)],
             cost_usd=0.0,

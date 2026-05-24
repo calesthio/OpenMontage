@@ -1,16 +1,18 @@
 """Music search and download from Pixabay Music (free, no API key).
 
-Scrapes Pixabay's music section to find and download royalty-free
-background music tracks. No API key required — uses web scraping.
+Searches Pixabay's music section by calling the same JSON endpoint the SPA
+itself uses (`Accept: application/json` + `X-Fetch-Bootstrap: 1` against
+`/music/search/<query>/`). Cloudflare guards the page, so the search call
+goes through `cloudscraper`. The returned CDN MP3 URL is then fetched with
+plain `urllib`.
 
-Stability: EXPERIMENTAL — Pixabay's HTML structure may change without
-notice, which could break the scraper. Use freesound_music or music_gen
-as more stable alternatives.
+Stability: EXPERIMENTAL — depends on Pixabay's bootstrap-fetch contract
+(headers + JSON shape). If it breaks again, fall back to `freesound_music`
+or `music_gen`.
 """
 
 from __future__ import annotations
 
-import json
 import re
 import time
 import urllib.parse
@@ -31,10 +33,17 @@ from tools.base_tool import (
     ToolTier,
 )
 
+try:
+    import cloudscraper as _cloudscraper
+    _HAVE_CLOUDSCRAPER = True
+except ImportError:
+    _cloudscraper = None
+    _HAVE_CLOUDSCRAPER = False
+
 
 class PixabayMusic(BaseTool):
     name = "pixabay_music"
-    version = "0.1.0"
+    version = "0.2.0"
     tier = ToolTier.SOURCE
     capability = "music_search"
     provider = "pixabay_music"
@@ -43,11 +52,13 @@ class PixabayMusic(BaseTool):
     determinism = Determinism.DETERMINISTIC
     runtime = ToolRuntime.API
 
-    dependencies = []  # no API key needed — web scraping
+    dependencies = []  # cloudscraper is a soft dependency — see get_status()
     install_instructions = (
-        "No setup required. Pixabay Music is free and needs no API key.\n"
-        "Note: This tool scrapes the Pixabay website. If it breaks, the\n"
-        "site's HTML structure may have changed. Use freesound_music as fallback."
+        "Install cloudscraper to bypass Pixabay's Cloudflare challenge:\n"
+        "  pip install cloudscraper\n"
+        "No API key required. Pixabay Music is free and royalty-free.\n"
+        "If the search keeps failing, the bootstrap-fetch contract may have\n"
+        "changed again — fall back to freesound_music or music_gen."
     )
 
     agent_skills = ["music"]
@@ -64,7 +75,7 @@ class PixabayMusic(BaseTool):
         "high-quality produced tracks (not raw samples)",
     ]
     not_good_for = [
-        "reliable long-term automation (scraping may break)",
+        "reliable long-term automation (Pixabay may change the bootstrap contract)",
         "precise metadata filtering",
         "offline use",
     ]
@@ -103,7 +114,7 @@ class PixabayMusic(BaseTool):
     )
     retry_policy = RetryPolicy(max_retries=2, retryable_errors=["timeout"])
     idempotency_key_fields = ["query", "min_duration", "max_duration"]
-    side_effects = ["writes audio file to output_path", "scrapes Pixabay website"]
+    side_effects = ["writes audio file to output_path", "calls Pixabay's bootstrap-fetch endpoint"]
     user_visible_verification = [
         "Listen to downloaded track for mood and quality",
     ]
@@ -113,25 +124,16 @@ class PixabayMusic(BaseTool):
         "AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/131.0.0.0 Safari/537.36"
     )
-
-    _BROWSER_HEADERS = {
-        "Accept": (
-            "text/html,application/xhtml+xml,application/xml;"
-            "q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"
-        ),
-        "Accept-Language": "en-US,en;q=0.9",
-        "Sec-Ch-Ua": '"Chromium";v="131", "Not_A Brand";v="24"',
-        "Sec-Ch-Ua-Mobile": "?0",
-        "Sec-Ch-Ua-Platform": '"Windows"',
-        "Sec-Fetch-Dest": "document",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "none",
-        "Sec-Fetch-User": "?1",
-        "Upgrade-Insecure-Requests": "1",
+    _SEARCH_HEADERS = {
+        "Accept": "application/json",
+        "X-Fetch-Bootstrap": "1",
+        "Referer": "https://pixabay.com/music/",
     }
+    _MAX_PAGES = 5  # cap pagination at 100 tracks before giving up on the window
 
     def get_status(self) -> ToolStatus:
-        # Always available — no API key required
+        if not _HAVE_CLOUDSCRAPER:
+            return ToolStatus.UNAVAILABLE
         return ToolStatus.AVAILABLE
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
@@ -140,8 +142,17 @@ class PixabayMusic(BaseTool):
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         start = time.time()
 
+        if not _HAVE_CLOUDSCRAPER:
+            return ToolResult(
+                success=False,
+                error=(
+                    "cloudscraper not installed — required to bypass Pixabay's "
+                    "Cloudflare challenge. Run: pip install cloudscraper"
+                ),
+                duration_seconds=round(time.time() - start, 2),
+            )
+
         try:
-            # Step 1: Search Pixabay Music
             tracks = self._search(inputs)
             if not tracks:
                 return ToolResult(
@@ -151,7 +162,6 @@ class PixabayMusic(BaseTool):
                     duration_seconds=round(time.time() - start, 2),
                 )
 
-            # Step 2: Filter by duration
             min_dur = inputs.get("min_duration", 30)
             max_dur = inputs.get("max_duration", 120)
             filtered = [
@@ -159,15 +169,11 @@ class PixabayMusic(BaseTool):
                 if t.get("duration") is not None
                 and min_dur <= t["duration"] <= max_dur
             ]
-
             # Fall back to unfiltered if no matches within duration range
             if not filtered:
                 filtered = tracks
 
-            # Step 3: Pick the first matching track
             track = filtered[0]
-
-            # Step 4: Download the audio
             output_path = self._download(track, inputs)
 
         except Exception as e:
@@ -196,143 +202,103 @@ class PixabayMusic(BaseTool):
             duration_seconds=round(time.time() - start, 2),
         )
 
-    def _build_opener(self) -> urllib.request.OpenerDirector:
-        """Build a URL opener with cookie support for session persistence."""
-        import http.cookiejar
-
-        cj = http.cookiejar.CookieJar()
-        return urllib.request.build_opener(
-            urllib.request.HTTPCookieProcessor(cj)
-        )
-
     def _search(self, inputs: dict[str, Any]) -> list[dict]:
-        """Search Pixabay Music via the bootstrap JSON API.
+        """Search Pixabay Music via the bootstrap-fetch JSON endpoint.
 
-        Pixabay's music page loads track data from a bootstrap JSON endpoint
-        whose URL is embedded in the HTML. We:
-        1. Fetch the search page HTML (which sets session cookies).
-        2. Extract the __BOOTSTRAP_URL__ from an inline script tag.
-        3. Fetch the bootstrap JSON (same session) to get structured track data
-           including direct CDN MP3 URLs, durations, and metadata.
-        4. Fall back to HTML-scraping if bootstrap extraction fails.
+        Pixabay's SPA loads track data by re-requesting the same `/music/search/<slug>/`
+        URL with `Accept: application/json` and `X-Fetch-Bootstrap: 1`. The server
+        does content negotiation and returns the page state as JSON instead of HTML.
+        Cloudflare guards the path, so we go through `cloudscraper`.
+
+        Pagination uses `?pagi=N`. We page up to `_MAX_PAGES` looking for tracks
+        that fit the requested duration window before returning whatever we have.
         """
         query = inputs["query"]
         slug = re.sub(r"\s+", "-", query.strip().lower())
         slug = urllib.parse.quote(slug, safe="-")
         search_url = f"https://pixabay.com/music/search/{slug}/"
 
-        opener = self._build_opener()
+        min_dur = inputs.get("min_duration", 30)
+        max_dur = inputs.get("max_duration", 120)
 
-        # Step 1: Fetch search page HTML (sets cookies)
-        request = urllib.request.Request(search_url)
-        request.add_header("User-Agent", self._USER_AGENT)
-        for key, val in self._BROWSER_HEADERS.items():
-            request.add_header(key, val)
-
-        with opener.open(request, timeout=30) as response:
-            html = response.read().decode("utf-8", errors="replace")
-
-        # Step 2: Extract bootstrap URL and fetch track data
-        tracks = self._parse_bootstrap(html, search_url, opener)
-        if tracks:
-            return tracks
-
-        # Step 3: Fallback — scrape HTML directly (legacy strategies)
-        return self._parse_tracks_html(html)
-
-    def _parse_bootstrap(
-        self,
-        html: str,
-        referer: str,
-        opener: urllib.request.OpenerDirector,
-    ) -> list[dict]:
-        """Extract tracks from Pixabay's bootstrap JSON endpoint."""
-        match = re.search(
-            r'window\.__BOOTSTRAP_URL__\s*=\s*["\']([^"\']+)["\']',
-            html,
+        scraper = _cloudscraper.create_scraper(
+            browser={"browser": "chrome", "platform": "windows", "desktop": True},
         )
-        if not match:
-            return []
 
-        bootstrap_path = match.group(1)
-        if not bootstrap_path or bootstrap_path == "":
-            return []
+        all_tracks: list[dict] = []
+        for pagi in range(1, self._MAX_PAGES + 1):
+            params = None if pagi == 1 else {"pagi": pagi}
+            try:
+                response = scraper.get(
+                    search_url,
+                    params=params,
+                    headers=self._SEARCH_HEADERS,
+                    timeout=30,
+                )
+            except Exception as exc:
+                if pagi == 1:
+                    raise RuntimeError(f"Cloudflare/network failure: {exc}") from exc
+                break
 
-        bootstrap_url = f"https://pixabay.com{bootstrap_path}"
+            content_type = (response.headers.get("content-type") or "").lower()
+            if response.status_code != 200 or "json" not in content_type:
+                if pagi == 1:
+                    raise RuntimeError(
+                        f"Pixabay returned status={response.status_code} "
+                        f"content-type={content_type or 'unknown'} "
+                        f"— bootstrap-fetch contract may have changed"
+                    )
+                break
 
-        req = urllib.request.Request(bootstrap_url)
-        req.add_header("User-Agent", self._USER_AGENT)
-        req.add_header("Accept", "application/json, text/plain, */*")
-        req.add_header("Referer", referer)
-        req.add_header("Sec-Fetch-Dest", "empty")
-        req.add_header("Sec-Fetch-Mode", "cors")
-        req.add_header("Sec-Fetch-Site", "same-origin")
+            data = response.json()
+            page = data.get("page") or {}
+            results = page.get("results") or []
 
-        try:
-            with opener.open(req, timeout=15) as response:
-                data = json.loads(response.read().decode("utf-8"))
-        except Exception:
-            return []
-
-        results = data.get("page", {}).get("results", [])
-        tracks: list[dict] = []
-
-        for item in results:
-            sources = item.get("sources", {})
-            audio_url = sources.get("src")
-            if not audio_url:
-                continue
-
-            user = item.get("user", {}) or {}
-            tracks.append({
-                "title": item.get("name") or sources.get("filename", "Unknown"),
-                "audio_url": audio_url,
-                "duration": item.get("duration"),
-                "artist": user.get("username", "Unknown"),
-                "rating": item.get("rating"),
-                "download_count": item.get("downloadCount"),
-                "pixabay_id": item.get("id"),
-            })
-
-        return tracks
-
-    def _parse_tracks_html(self, html: str) -> list[dict]:
-        """Fallback: extract track info from HTML when bootstrap fails.
-
-        Tries brute-force scan for CDN MP3 URLs in the page source.
-        """
-        tracks: list[dict] = []
-
-        mp3_urls = re.findall(
-            r'(https?://cdn\.pixabay\.com/audio/[^\s"\'<>]+\.mp3[^\s"\'<>]*)',
-            html,
-        )
-        seen: set[str] = set()
-        for url in mp3_urls:
-            if url not in seen:
-                seen.add(url)
-                tracks.append({
-                    "title": "Unknown",
-                    "audio_url": url,
-                    "duration": None,
-                    "artist": "Unknown",
+            for item in results:
+                sources = item.get("sources") or {}
+                audio_url = sources.get("src")
+                if not audio_url:
+                    continue
+                user = item.get("user") or {}
+                all_tracks.append({
+                    "title": item.get("name") or sources.get("filename", "Unknown"),
+                    "audio_url": audio_url,
+                    "duration": item.get("duration"),
+                    "artist": user.get("username", "Unknown"),
+                    "rating": item.get("rating"),
+                    "download_count": item.get("downloadCount"),
+                    "pixabay_id": item.get("id"),
                 })
 
-        return tracks
+            in_window = [
+                t for t in all_tracks
+                if t.get("duration") is not None
+                and min_dur <= t["duration"] <= max_dur
+            ]
+            if len(in_window) >= 5:
+                break
+
+            total_pages = page.get("pages") or 1
+            if pagi >= total_pages:
+                break
+
+        return all_tracks
 
     def _download(self, track: dict, inputs: dict[str, Any]) -> Path:
-        """Download an MP3 track to the output path."""
+        """Download an MP3 track to the output path.
+
+        The CDN at `cdn.pixabay.com` is not Cloudflare-protected, so plain
+        `urllib` is sufficient — no need to drag the scraper into the audio fetch.
+        """
         audio_url = track.get("audio_url")
         if not audio_url:
             raise RuntimeError("No audio URL found for the selected track.")
 
-        # Ensure URL is absolute
         if audio_url.startswith("//"):
             audio_url = "https:" + audio_url
         elif audio_url.startswith("/"):
             audio_url = "https://pixabay.com" + audio_url
 
-        # Build output path
         track_title = track.get("title", "pixabay_music")
         safe_title = "".join(
             c if c.isalnum() or c in "._- " else "_" for c in track_title
@@ -348,7 +314,6 @@ class PixabayMusic(BaseTool):
                 "Referer": "https://pixabay.com/music/",
             },
         )
-
         with urllib.request.urlopen(request, timeout=60) as response:
             output_path.write_bytes(response.read())
 

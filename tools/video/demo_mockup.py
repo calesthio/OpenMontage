@@ -507,13 +507,3 @@ class DemoMockup(BaseTool):
             str(out_path),
         ]
         subprocess.run(cmd, check=True, capture_output=True)
-
-    @staticmethod
-    def _escape_drawtext(text: str) -> str:
-        """Escape special chars for FFmpeg drawtext filter."""
-        return (
-            text.replace("\\", "\\\\")
-            .replace("'", r"\'")
-            .replace(":", r"\:")
-            .replace(",", r"\,")
-        )

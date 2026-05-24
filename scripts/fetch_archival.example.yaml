@@ -1,0 +1,56 @@
+# Example config for scripts/fetch_archival.py.
+# Copy this into your project's artifacts/ dir (typically
+# projects/<name>/artifacts/wikimedia_queries.yaml) and tailor for your
+# narrative. Then run:
+#
+#     python scripts/fetch_archival.py --config projects/<name>/artifacts/wikimedia_queries.yaml
+#
+# All requests go through the central tools/video/stock_sources/wikimedia.py
+# adapter, which enforces compliant UA + 1.2s pacing + Retry-After
+# honoring + visible status codes. Re-running is additive (existing
+# manifest entries are preserved); pass --clean to start fresh.
+
+# Project name. When set, paths default to:
+#   out_dir  = projects/<project>/assets/images/archival
+#   manifest = projects/<project>/artifacts/wikimedia_manifest.json
+project: example-project
+
+# Required. The Wikimedia search queries to run. Commons CirrusSearch is
+# AND across multi-word queries — keep queries 2-5 distinctive tokens.
+queries:
+  - "Interstate 77 North Carolina"
+  - "Charlotte North Carolina skyline"
+  - "Lake Norman bridge"
+  - "Mecklenburg County government"
+
+# Optional. Case-insensitive substring allowlist. A candidate's title
+# must contain at least one of these to be kept. Use this to filter out
+# false-positive matches (e.g. "I-77 in Hungary") that Commons' relevance
+# ranker lets through.
+#
+# Omit or leave empty to disable the filter (keep all relevance-ranked results).
+keep_keywords:
+  - "i-77"
+  - "interstate 77"
+  - "charlotte"
+  - "lake norman"
+  - "mecklenburg"
+
+# Optional. MIME types to accept. Default: image/jpeg + image/png.
+mime_allow:
+  - image/jpeg
+  - image/png
+
+# Optional. How many candidates Commons returns per query before the
+# keep_keywords filter runs. Default 15. Raise if filters are aggressive
+# and you're losing too many candidates.
+per_query_limit: 15
+
+# Optional. Minimum image width in pixels. Passed to SearchFilters.min_width.
+# Useful for filtering tiny thumbnails. Default 0 (no filter).
+min_width: 800
+
+# Optional explicit overrides. Use these instead of `project:` if your
+# layout differs from the conventional projects/<name>/... pattern.
+# out_dir: path/to/images/
+# manifest: path/to/manifest.json

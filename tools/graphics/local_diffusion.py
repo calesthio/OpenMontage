@@ -18,6 +18,7 @@ from tools.base_tool import (
     ToolStatus,
     ToolTier,
 )
+from tools.dam_hook import DAM_INPUT_SCHEMA_FRAGMENT, maybe_register_artifact
 
 
 class LocalDiffusion(BaseTool):
@@ -71,6 +72,7 @@ class LocalDiffusion(BaseTool):
             "num_inference_steps": {"type": "integer", "default": 30},
             "guidance_scale": {"type": "number", "default": 7.5},
             "output_path": {"type": "string"},
+            **DAM_INPUT_SCHEMA_FRAGMENT,
         },
     }
 
@@ -161,7 +163,7 @@ class LocalDiffusion(BaseTool):
         except Exception as e:
             return ToolResult(success=False, error=f"Local diffusion generation failed: {e}")
 
-        return ToolResult(
+        result = ToolResult(
             success=True,
             data={
                 "provider": "local_diffusion",
@@ -175,3 +177,10 @@ class LocalDiffusion(BaseTool):
             seed=seed,
             model=model_id,
         )
+        asset_id = maybe_register_artifact(
+            tool_result=result, inputs=inputs, capability=self.capability,
+            created_by_tool=self.name, artifact_path=str(output_path),
+        )
+        if asset_id:
+            result.data["dam_asset_id"] = asset_id
+        return result

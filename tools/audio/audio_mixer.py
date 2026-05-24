@@ -21,6 +21,7 @@ from tools.base_tool import (
     ToolStatus,
     ToolTier,
 )
+from tools.dam_hook import DAM_INPUT_SCHEMA_FRAGMENT, maybe_register_artifact
 
 
 class AudioMixer(BaseTool):
@@ -170,6 +171,7 @@ class AudioMixer(BaseTool):
                 "default": 0.5,
                 "description": "Duration of fade in/out at segment boundaries (seconds).",
             },
+            **DAM_INPUT_SCHEMA_FRAGMENT,
         },
     }
 
@@ -201,6 +203,13 @@ class AudioMixer(BaseTool):
             return ToolResult(success=False, error=str(e))
 
         result.duration_seconds = round(time.time() - start, 2)
+        if result.success:
+            asset_id = maybe_register_artifact(
+                tool_result=result, inputs=inputs, capability=self.capability,
+                created_by_tool=self.name,
+            )
+            if asset_id:
+                result.data["dam_asset_id"] = asset_id
         return result
 
     def _mix(self, inputs: dict[str, Any]) -> ToolResult:

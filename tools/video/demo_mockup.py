@@ -47,6 +47,7 @@ from tools.base_tool import (
     ToolStability,
     ToolTier,
 )
+from tools.dam_hook import DAM_INPUT_SCHEMA_FRAGMENT, maybe_register_artifact
 
 
 class DemoMockup(BaseTool):
@@ -157,6 +158,7 @@ class DemoMockup(BaseTool):
                 "type": "integer",
                 "default": 48,
             },
+            **DAM_INPUT_SCHEMA_FRAGMENT,
         },
     }
 
@@ -260,16 +262,25 @@ class DemoMockup(BaseTool):
                 pass  # leave tmp residue rather than fail the run
 
             duration_s = round(time.time() - start, 2)
-            return ToolResult(
+            duration_estimate_s = len(stills) * still_dur + intro_dur + outro_dur
+            result = ToolResult(
                 success=True,
                 data={
                     "output_path": str(output_path),
                     "segments": len(segments),
-                    "duration_estimate_s": len(stills) * still_dur + intro_dur + outro_dur,
+                    "duration_estimate_s": duration_estimate_s,
                 },
                 artifacts=[str(output_path)],
                 duration_seconds=duration_s,
             )
+            asset_id = maybe_register_artifact(
+                tool_result=result, inputs=inputs, capability=self.capability,
+                created_by_tool=self.name, artifact_path=str(output_path),
+                width=width, height=height, duration_s=duration_estimate_s,
+            )
+            if asset_id:
+                result.data["dam_asset_id"] = asset_id
+            return result
         except Exception as exc:
             return ToolResult(success=False, error=f"demo_mockup failed: {exc}", duration_seconds=round(time.time() - start, 2))
 

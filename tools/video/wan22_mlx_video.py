@@ -49,6 +49,7 @@ from tools.base_tool import (
     ToolStatus,
     ToolTier,
 )
+from tools.dam_hook import DAM_INPUT_SCHEMA_FRAGMENT, maybe_register_artifact
 
 
 WAN22_MLX_VARIANTS = {
@@ -183,6 +184,7 @@ class Wan22MlxVideo(BaseTool):
                 "items": {"type": "string"},
                 "description": "Pass-through extra CLI args for mlx-video. Use for new flags ahead of this tool's schema being updated.",
             },
+            **DAM_INPUT_SCHEMA_FRAGMENT,
         },
     }
 
@@ -324,7 +326,7 @@ class Wan22MlxVideo(BaseTool):
                     seed=seed if isinstance(seed, int) else None,
                 )
 
-            return ToolResult(
+            result = ToolResult(
                 success=True,
                 data={
                     "provider": "wan-mlx",
@@ -333,6 +335,7 @@ class Wan22MlxVideo(BaseTool):
                     "operation": operation,
                     "prompt": prompt,
                     "output_path": str(output_path),
+                    "output": str(output_path),
                     "width": width,
                     "height": height,
                     "num_frames": num_frames,
@@ -346,6 +349,15 @@ class Wan22MlxVideo(BaseTool):
                 seed=seed if isinstance(seed, int) else None,
                 model=meta["hf_id"],
             )
+            asset_id = maybe_register_artifact(
+                tool_result=result, inputs=inputs, capability=self.capability,
+                created_by_tool=self.name, artifact_path=str(output_path),
+                width=width, height=height,
+                duration_s=num_frames / meta["fps"],
+            )
+            if asset_id:
+                result.data["dam_asset_id"] = asset_id
+            return result
         except FileNotFoundError as exc:
             return ToolResult(
                 success=False,

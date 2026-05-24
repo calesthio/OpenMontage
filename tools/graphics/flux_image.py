@@ -19,6 +19,7 @@ from tools.base_tool import (
     ToolStatus,
     ToolTier,
 )
+from tools.dam_hook import DAM_INPUT_SCHEMA_FRAGMENT, maybe_register_artifact
 
 
 class FluxImage(BaseTool):
@@ -69,6 +70,7 @@ class FluxImage(BaseTool):
             "num_inference_steps": {"type": "integer"},
             "guidance_scale": {"type": "number"},
             "output_path": {"type": "string"},
+            **DAM_INPUT_SCHEMA_FRAGMENT,
         },
     }
 
@@ -147,7 +149,7 @@ class FluxImage(BaseTool):
         except Exception as e:
             return ToolResult(success=False, error=f"FLUX generation failed: {e}")
 
-        return ToolResult(
+        result = ToolResult(
             success=True,
             data={
                 "provider": "flux",
@@ -162,3 +164,11 @@ class FluxImage(BaseTool):
             seed=data.get("seed"),
             model=f"fal-ai/{model}",
         )
+        asset_id = maybe_register_artifact(
+            tool_result=result, inputs=inputs, capability=self.capability,
+            created_by_tool=self.name, artifact_path=str(output_path),
+            width=width, height=height,
+        )
+        if asset_id:
+            result.data["dam_asset_id"] = asset_id
+        return result

@@ -116,15 +116,33 @@ class LocalDiffusion(BaseTool):
         guidance = inputs.get("guidance_scale", 7.5)
 
         try:
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-            dtype = torch.float16 if device == "cuda" else torch.float32
+            # Device autoselect: CUDA → MPS (Apple Silicon) → CPU
+            # MPS support added 2026-05-23 — diffusers on M5 Max 128GB / M4 32GB
+            # runs SD2.1-base at ~1-2 it/s with fp16; CPU fallback is ~5x slower.
+            if torch.cuda.is_available():
+                device = "cuda"
+                dtype = torch.float16
+            elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+                device = "mps"
+                dtype = torch.float16
+            else:
+                device = "cpu"
+                dtype = torch.float32
 
             pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=dtype)
             pipe = pipe.to(device)
 
+            # MPS-specific: enable attention slicing to fit larger resolutions
+            # in unified memory; harmless on CUDA/CPU but skip there.
+            if device == "mps":
+                pipe.enable_attention_slicing()
+
+            # MPS doesn't support torch.Generator(device='mps'); use CPU generator
+            # and the pipeline handles device transfer correctly.
             generator = None
             if seed is not None:
-                generator = torch.Generator(device=device).manual_seed(seed)
+                gen_device = "cpu" if device == "mps" else device
+                generator = torch.Generator(device=gen_device).manual_seed(seed)
 
             image = pipe(
                 prompt,

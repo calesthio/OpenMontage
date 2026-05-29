@@ -74,6 +74,17 @@ loaded file paths in `loaded_env_files`. It never writes secret values into
 review artifacts. If no local `.env` is available, provide credentials through
 the normal process environment.
 
+Keep spoken narration separate from delivery guidance. Put only the words that
+should be read aloud in `spoken_text`, `narration_text`, `voiceover_text`,
+`tts_text`, or `text`. Put tone/style/provider guidance in
+`delivery_instructions`, `voice_instructions`, `voice_direction`,
+`director_notes`, or `style_prompt`. The lab passes these guidance fields as
+provider instructions when supported, but they are not used as the generated
+speech text. By default, the lab blocks text that looks like an agent prompt or
+retry note, such as "R2 reference is too long; regenerate compact alternatives."
+Set `allow_prompt_like_text=true` only when that wording is intentionally meant
+to be narrated.
+
 ## Minimal Manifest
 
 ```json
@@ -92,6 +103,8 @@ the normal process environment.
       "id": "opening",
       "section_id": "s1",
       "label": "Opening hook",
+      "spoken_text": "This is the exact line to read aloud.",
+      "director_notes": "Calm technical briefing tone; pause briefly after the hook.",
       "reference": {
         "id": "reference-current",
         "audio": "projects/my-explainer/assets/audio/current-opening.mp3",
@@ -101,7 +114,8 @@ the normal process environment.
       "variants": [
         {
           "id": "auto",
-          "note": "Let tts_selector choose the best available provider."
+          "note": "Let tts_selector choose the best available provider.",
+          "voice_instructions": "Sound clear and assured, not theatrical."
         },
         {
           "id": "doubao-rate8",

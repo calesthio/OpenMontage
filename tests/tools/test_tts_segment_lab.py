@@ -142,6 +142,62 @@ def test_generate_routes_variants_through_tts_selector(monkeypatch, tmp_path):
     assert "opening__doubao.mp3" in compare_html
 
 
+def test_generate_keeps_delivery_instructions_out_of_spoken_text(monkeypatch, tmp_path):
+    calls = []
+
+    def fake_execute(self, inputs):
+        calls.append(inputs.copy())
+        output_path = Path(inputs["output_path"])
+        output_path.write_bytes(b"fake mp3")
+        return ToolResult(
+            success=True,
+            data={
+                "selected_provider": inputs.get("preferred_provider", "auto"),
+                "selected_tool": "fake_tts",
+                "audio_duration_seconds": 1.0,
+            },
+            artifacts=[str(output_path)],
+        )
+
+    monkeypatch.setattr("tools.audio.tts_selector.TTSSelector.execute", fake_execute)
+    monkeypatch.setattr("tools.audio.tts_selector.TTSSelector.estimate_cost", lambda self, inputs: 0.0)
+    manifest = base_manifest(tmp_path)
+    manifest["delivery_instructions"] = "Use a calm technical briefing delivery."
+    manifest["segments"][0]["spoken_text"] = "Only this sentence should be narrated."
+    manifest["segments"][0]["director_notes"] = "Pause briefly after the opening phrase."
+    manifest["segments"][0]["variants"] = [
+        {
+            "id": "openai-directed",
+            "provider": "openai",
+            "voice_instructions": "Do not read these notes aloud.",
+            "overrides": {"voice": "alloy"},
+        }
+    ]
+
+    result = TTSSegmentLab().execute({"operation": "generate", "manifest": manifest})
+
+    assert result.success
+    assert calls[0]["text"] == "Only this sentence should be narrated."
+    assert "calm technical briefing" in calls[0]["instructions"]
+    assert "Pause briefly" in calls[0]["instructions"]
+    assert "Do not read these notes aloud." in calls[0]["instructions"]
+    payload = json.loads(Path(result.data["results_path"]).read_text(encoding="utf-8"))
+    variant = payload["segments"][0]["variants"][1]
+    assert variant["text"] == "Only this sentence should be narrated."
+    assert variant["spoken_text_source"] == "segment.spoken_text"
+
+
+def test_generate_blocks_prompt_like_text_by_default(tmp_path):
+    manifest = base_manifest(tmp_path)
+    manifest["segments"][0]["text"] = "R2 reference is too long; regenerate compact alternatives."
+
+    result = TTSSegmentLab().execute({"operation": "dry_run", "manifest": manifest})
+
+    assert not result.success
+    assert "looks like direction/prompt text" in result.error
+    assert "allow_prompt_like_text=true" in result.error
+
+
 def test_generate_blocks_when_required_script_approval_is_missing(monkeypatch, tmp_path):
     def fail_if_called(self, inputs):
         raise AssertionError("TTS provider should not be called before script approval")

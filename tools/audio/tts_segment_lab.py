@@ -97,6 +97,7 @@ class TTSSegmentLab(BaseTool):
             "output_path": {"type": "string"},
             "output_dir": {"type": "string"},
             "require_script_approval": {"type": "boolean"},
+            "spoken_text_guard": {"type": "boolean"},
         },
         "anyOf": [{"required": ["manifest_path"]}, {"required": ["manifest"]}, {"required": ["results_path"]}],
     }
@@ -249,6 +250,7 @@ class TTSSegmentLab(BaseTool):
                 "section_id": segment.get("section_id"),
                 "label": segment.get("label", segment["id"]),
                 "text": segment["text"],
+                "spoken_text_source": segment.get("spoken_text_source"),
                 "variants": [],
             }
             for timing_key in ("start_seconds", "end_seconds", "expected_duration_seconds"):
@@ -266,6 +268,7 @@ class TTSSegmentLab(BaseTool):
                     "note": variant.get("note", ""),
                     "preferred_provider": selector_inputs.get("preferred_provider", "auto"),
                     "text": selector_inputs["text"],
+                    "spoken_text_source": selector_inputs.get("_spoken_text_source"),
                     "audio": str(output_path),
                     "metadata": str(metadata_path),
                     "params": self._visible_params(selector_inputs),
@@ -589,6 +592,7 @@ class TTSSegmentLab(BaseTool):
                 "section_id": source_segment.get("section_id"),
                 "label": source_segment.get("label", segment_id),
                 "text": source_segment.get("text", ""),
+                "spoken_text_source": source_segment.get("spoken_text_source"),
                 "variants": [],
             }
             for timing_key in ("start_seconds", "end_seconds", "expected_duration_seconds"):
@@ -1076,6 +1080,7 @@ class TTSSegmentLab(BaseTool):
             "note": self._adjustment_note(notes, selector_inputs, base_variant, suffix=suffix),
             "preferred_provider": selector_inputs.get("preferred_provider", "auto"),
             "text": selector_inputs["text"],
+            "spoken_text_source": selector_inputs.get("_spoken_text_source"),
             "audio": str(output_path),
             "metadata": str(metadata_path),
             "params": self._visible_params(selector_inputs),
@@ -1144,6 +1149,8 @@ class TTSSegmentLab(BaseTool):
     ) -> dict[str, Any]:
         inputs = deepcopy(variant.get("params") or {})
         inputs["text"] = variant.get("text") or segment.get("text", "")
+        if variant.get("spoken_text_source"):
+            inputs["_spoken_text_source"] = variant.get("spoken_text_source")
         inputs["operation"] = "generate"
         inputs["output_path"] = str(output_path)
         if "preferred_provider" not in inputs:
@@ -1897,12 +1904,18 @@ class TTSSegmentLab(BaseTool):
         for raw_segment in manifest.get("segments", []):
             segment = deepcopy(raw_segment)
             section_id = segment.get("section_id") or segment.get("script_section_id")
-            if not segment.get("text") and section_id:
+            spoken_text, spoken_source = self._spoken_text_from_mapping(segment, prefix="segment")
+            if not spoken_text and section_id:
                 if section_id not in script_sections:
                     raise ValueError(f"Script section not found: {section_id}")
-                segment["text"] = script_sections[section_id]
-            if not segment.get("text"):
+                spoken_text = script_sections[section_id]
+                spoken_source = f"script_section:{section_id}"
+            if not spoken_text:
                 raise ValueError(f"Segment {segment.get('id', '<unknown>')} needs text or section_id")
+            if self._spoken_text_guard_enabled(manifest, segment):
+                self._validate_spoken_text(spoken_text, source=spoken_source or f"segment:{segment.get('id', '<unknown>')}")
+            segment["text"] = spoken_text
+            segment["spoken_text_source"] = spoken_source
             if "id" not in segment:
                 segment["id"] = section_id or self._slug(segment["text"][:32])
             segment["section_id"] = section_id
@@ -1934,7 +1947,18 @@ class TTSSegmentLab(BaseTool):
             if not isinstance(item, dict):
                 continue
             section_id = item.get("id") or item.get("section_id") or item.get("scene_id")
-            text = item.get("text") or item.get("narration") or item.get("voiceover")
+            text = self._first_present(
+                item,
+                (
+                    "spoken_text",
+                    "narration_text",
+                    "voiceover_text",
+                    "tts_text",
+                    "text",
+                    "narration",
+                    "voiceover",
+                ),
+            )
             if section_id and text:
                 sections[str(section_id)] = str(text)
         return sections
@@ -1954,13 +1978,108 @@ class TTSSegmentLab(BaseTool):
         inputs.update(defaults)
         inputs.update(provider_options)
         inputs.update(overrides)
-        inputs["text"] = variant.get("text") or segment["text"]
+        spoken_text, spoken_source = self._spoken_text_from_mapping(variant, prefix="variant")
+        inputs["text"] = spoken_text or segment["text"]
+        inputs["_spoken_text_source"] = spoken_source or segment.get("spoken_text_source") or "segment.text"
+        self._merge_delivery_instructions(inputs, manifest, segment, variant)
         if "provider" in variant:
             inputs["preferred_provider"] = variant["provider"]
         inputs.setdefault("preferred_provider", manifest.get("preferred_provider", "auto"))
         inputs.setdefault("operation", "generate")
         inputs["output_path"] = str(output_path)
         return inputs
+
+    @classmethod
+    def _spoken_text_from_mapping(cls, payload: dict[str, Any], *, prefix: str) -> tuple[str, str | None]:
+        for key in ("spoken_text", "narration_text", "voiceover_text", "tts_text", "text"):
+            value = payload.get(key)
+            if value:
+                return str(value), f"{prefix}.{key}"
+        return "", None
+
+    @staticmethod
+    def _first_present(payload: dict[str, Any], keys: tuple[str, ...]) -> Any:
+        for key in keys:
+            if payload.get(key):
+                return payload[key]
+        return None
+
+    @classmethod
+    def _merge_delivery_instructions(
+        cls,
+        inputs: dict[str, Any],
+        manifest: dict[str, Any],
+        segment: dict[str, Any],
+        variant: dict[str, Any],
+    ) -> None:
+        instruction_parts: list[str] = []
+        for payload in (manifest, segment, variant):
+            instruction_parts.extend(cls._delivery_instruction_values(payload))
+        if not instruction_parts:
+            return
+        existing = str(inputs.get("instructions") or "").strip()
+        joined = "\n".join(part for part in instruction_parts if part)
+        inputs["instructions"] = f"{existing}\n{joined}".strip() if existing else joined
+
+    @classmethod
+    def _delivery_instruction_values(cls, payload: dict[str, Any]) -> list[str]:
+        values: list[str] = []
+        for key in (
+            "delivery_instructions",
+            "voice_instructions",
+            "voice_direction",
+            "director_notes",
+            "style_prompt",
+            "performance_prompt",
+            "prompt",
+            "instructions",
+        ):
+            value = payload.get(key)
+            if isinstance(value, str) and value.strip():
+                values.append(value.strip())
+            elif isinstance(value, list):
+                values.extend(str(item).strip() for item in value if str(item).strip())
+        context_texts = payload.get("context_texts")
+        if isinstance(context_texts, list):
+            values.extend(str(item).strip() for item in context_texts if str(item).strip())
+        return values
+
+    @staticmethod
+    def _spoken_text_guard_enabled(manifest: dict[str, Any], segment: dict[str, Any]) -> bool:
+        if segment.get("allow_prompt_like_text") or manifest.get("allow_prompt_like_text"):
+            return False
+        raw = segment.get("spoken_text_guard")
+        if raw is None:
+            raw = manifest.get("spoken_text_guard", True)
+        return bool(raw)
+
+    @classmethod
+    def _validate_spoken_text(cls, text: str, *, source: str) -> None:
+        suspicious = cls._prompt_like_markers(text)
+        if suspicious:
+            markers = ", ".join(sorted(suspicious))
+            raise ValueError(
+                f"Spoken TTS text from {source} looks like direction/prompt text ({markers}). "
+                "Put only the words to be read aloud in spoken_text/narration_text/text, "
+                "move delivery guidance to delivery_instructions/director_notes, or set "
+                "allow_prompt_like_text=true if this wording is intentional."
+            )
+
+    @staticmethod
+    def _prompt_like_markers(text: str) -> set[str]:
+        normalized = re.sub(r"\s+", " ", text.strip().lower())
+        markers: set[str] = set()
+        patterns = {
+            "duration_target": r"\b(duration|target)\b.{0,24}\b(target|seconds?|longer than|shorter than)\b",
+            "regenerate_instruction": r"\b(regenerate|generate)\b.{0,40}\b(alternatives?|candidates?|takes?)\b",
+            "reference_instruction": r"\br\d+\s+reference\b|\breference is\b",
+            "prompt_contract": r"\b(system|developer|constraints?|instructions?|director notes?|voice direction)\s*:",
+            "do_not_read": r"\b(do not read|not for narration|for the agent|for agent only)\b",
+        }
+        for name, pattern in patterns.items():
+            if re.search(pattern, normalized):
+                markers.add(name)
+        return markers
 
     def _reference_variants(self, segment: dict[str, Any]) -> list[dict[str, Any]]:
         raw_references = []
@@ -1999,7 +2118,7 @@ class TTSSegmentLab(BaseTool):
 
     @staticmethod
     def _visible_params(inputs: dict[str, Any]) -> dict[str, Any]:
-        hidden = {"text", "output_path", "operation"}
+        hidden = {"text", "output_path", "operation", "_spoken_text_source"}
         return {key: value for key, value in inputs.items() if key not in hidden and value is not None}
 
     @staticmethod

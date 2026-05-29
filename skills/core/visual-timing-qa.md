@@ -39,6 +39,9 @@ question such as "when this line is spoken, is the right visual state on screen?
 5. Run `dry_run` to verify cue timestamps and frame windows.
 6. Run `review` to extract before/at/after frames and contact sheets.
 7. Inspect `review.html` for visual review, or `review.md` for text-first review.
+   Use the generated `agent_initial_review.recommended_route` to decide whether
+   the agent can continue without user handoff, should fix an obvious issue
+   first, or should ask the user because the judgment is semantic/creative.
 8. Run `annotate` after the agent or reviewer has made an initial decision.
    This writes `review_notes.json`, `review_annotated.md`, and
    `review_annotated.html`.
@@ -94,6 +97,7 @@ approved creative direction.
       "timestamp_seconds": 126.4,
       "narration": "The user reports the issue, and the platform prepares the next Skill version.",
       "expected_state": "The feedback pipeline is visible and the next-version node is highlighted.",
+      "forbidden_state": "The previous static title card is still visible.",
       "risk": "Node reveal may run ahead of the narration.",
       "review_questions": [
         "Is the next-version node visible by the target frame?",
@@ -136,13 +140,20 @@ before asking the user to review them, using the generated checklist:
 - confirm subtitles are present and semantically broken at the reviewed cue;
 - compare before / at / after frames against the spoken cue timing;
 - verify `expected_state` matches the approved creative direction;
+- for `forbidden_state`, `absent_state`, `must_not_show`, `forbidden_states`,
+  or `absence_checks`, confirm stale visual layers or outdated states are not
+  visible in the reviewed frame window;
 - check for blank frames, missing highlights, layout overlap, or important UI
   hidden behind subtitles.
 
-Treat `NEEDS_REVIEW` as a blocker for user handoff until the contact sheet has
-been inspected and either fixed or explicitly accepted. The HTML page stays
-focused on per-cue review; the queue and checklist are available in `results.json`
-and `review.md` for the agent workflow.
+Treat `NEEDS_REVIEW` as an agent blocker, not an automatic user task. First
+inspect the contact sheet and frame lightbox. If the issue is obvious, revise
+the timing/layout and rerun `review`. If every cue is clean after agent
+inspection, run `annotate` with pass decisions and continue without asking the
+user. Ask the user only when the remaining question is semantic or creative and
+the agent cannot confidently decide. The HTML page stays focused on per-cue
+review; the queue, recommended route, and checklist are available in
+`results.json` and `review.md` for the agent workflow.
 
 This is still human-in-the-loop. Do not treat a local `PASS` as semantic
 approval; it only means the conservative heuristics did not find an obvious

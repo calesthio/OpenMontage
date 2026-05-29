@@ -52,6 +52,8 @@ class VisualTimingQA(BaseTool):
         "contact_sheet_generation",
         "review_markdown_generation",
         "agent_initial_review_handoff",
+        "review_result_routing",
+        "absence_expectation_checks",
         "human_reviewer_annotation",
     ]
     supports = {
@@ -64,6 +66,9 @@ class VisualTimingQA(BaseTool):
         "rule_based_initial_review": True,
         "agent_initial_review_checklist": True,
         "early_complete_process_check": True,
+        "absence_expectation_checks": True,
+        "lightbox_contact_sheet_navigation": True,
+        "agent_result_routing": True,
         "automated_semantic_judgment": False,
     }
     best_for = [
@@ -634,6 +639,9 @@ class VisualTimingQA(BaseTool):
             review_questions = list(cue.get("review_questions", []))
             if early_complete_check and not any("already" in str(question).lower() or "过早" in str(question) for question in review_questions):
                 review_questions.append(early_complete_check["question"])
+            absence_checks = self._absence_checks(cue)
+            if absence_checks and not any("stale" in str(question).lower() or "旧" in str(question) for question in review_questions):
+                review_questions.append(self._absence_question(cue, absence_checks))
             cues.append(
                 {
                     "id": cue_id,
@@ -647,10 +655,55 @@ class VisualTimingQA(BaseTool):
                     "risk": cue.get("risk", ""),
                     "review_questions": review_questions,
                     "early_complete_check": early_complete_check,
+                    "absence_checks": absence_checks,
                     "frame_points": frame_points,
                 }
             )
         return cues
+
+    @classmethod
+    def _absence_checks(cls, cue: dict[str, Any]) -> list[dict[str, str]]:
+        raw_items: list[Any] = []
+        for key in ("absence_checks", "forbidden_states", "must_not_show"):
+            value = cue.get(key)
+            if isinstance(value, list):
+                raw_items.extend(value)
+            elif value:
+                raw_items.append(value)
+        if cue.get("forbidden_state"):
+            raw_items.append(cue["forbidden_state"])
+        if cue.get("absent_state"):
+            raw_items.append(cue["absent_state"])
+
+        checks = []
+        for index, item in enumerate(raw_items, start=1):
+            if isinstance(item, dict):
+                description = item.get("description") or item.get("state") or item.get("text") or item.get("label")
+                reason = item.get("reason") or item.get("risk") or ""
+            else:
+                description = str(item)
+                reason = ""
+            if not description:
+                continue
+            checks.append(
+                {
+                    "id": str(item.get("id") if isinstance(item, dict) and item.get("id") else f"absence-{index}"),
+                    "description": str(description),
+                    "reason": str(reason),
+                }
+            )
+        return checks
+
+    @classmethod
+    def _absence_question(cls, cue: dict[str, Any], absence_checks: list[dict[str, str]]) -> str:
+        text = " ".join(
+            str(cue.get(key, ""))
+            for key in ("label", "narration", "expected_state", "risk")
+        )
+        target = "；".join(item["description"] for item in absence_checks[:3])
+        if re.search(r"[\u3400-\u9fff]", text + target):
+            return f"是否仍能看到不该出现的旧画面/旧状态：{target}？"
+        return f"Is any stale or forbidden visual state still visible: {target}?"
 
     @classmethod
     def _early_complete_check(cls, cue: dict[str, Any]) -> dict[str, Any] | None:
@@ -920,6 +973,14 @@ class VisualTimingQA(BaseTool):
                         else "流程/节点 cue 在目标帧时似乎已经稳定，请检查最终状态是否在旁白 cue 前已经完成。"
                     )
 
+        absence_checks = cue.get("absence_checks") or []
+        if absence_checks:
+            metrics["absence_checks"] = {
+                "status": "requires_agent_inspection",
+                "count": len(absence_checks),
+                "items": absence_checks,
+            }
+
         subtitle_sensitive = any(
             token in text for token in ("字幕", "caption", "captions", "subtitle", "subtitles")
         )
@@ -1082,6 +1143,11 @@ class VisualTimingQA(BaseTool):
                         f"  - Expected before target: {early.get('expected_before_state', '')}",
                     ]
                 )
+            if cue.get("absence_checks"):
+                lines.append("- Absence checks:")
+                for item in cue["absence_checks"]:
+                    reason = f" — {item.get('reason')}" if item.get("reason") else ""
+                    lines.append(f"  - {item.get('description', '')}{reason}")
             if cue.get("initial_review"):
                 initial = cue["initial_review"]
                 lines.extend(
@@ -1732,6 +1798,12 @@ a:hover { text-decoration: underline; }
                     f"{early.get('question', '')}\n{copy['expected_before']}: {early.get('expected_before_state', '')}",
                 )
             )
+        if cue.get("absence_checks"):
+            absence_text = "\n".join(
+                f"- {item.get('description', '')}" + (f" ({item.get('reason')})" if item.get("reason") else "")
+                for item in cue["absence_checks"]
+            )
+            lines.append(cls._html_box(copy["absence_checks"], absence_text))
         if initial:
             lines.append(cls._html_box(copy["auto_notes"], initial.get("notes", ""), class_name="review-note"))
             if initial.get("fix_target"):
@@ -1754,6 +1826,9 @@ a:hover { text-decoration: underline; }
 
         lines.append(cls._review_form_html(cue, copy))
 
+        if cue.get("contact_sheet"):
+            lines.append(cls._contact_sheet_html(cue, html_path, copy, group=str(cue.get("id") or "cue")))
+
         if cue.get("frames"):
             lines.append("<div class=\"frames\">")
             for frame in cue["frames"]:
@@ -1765,6 +1840,24 @@ a:hover { text-decoration: underline; }
 
         lines.append("</section>")
         return "\n".join(lines)
+
+    @classmethod
+    def _contact_sheet_html(cls, cue: dict[str, Any], html_path: Path, copy: dict[str, str], *, group: str) -> str:
+        src = cls._html_asset_src(str(cue["contact_sheet"]), html_path)
+        title = f"{copy['contact_sheet']}: {cue.get('label') or cue.get('id') or group}"
+        return "\n".join(
+            [
+                "<div class=\"sheet\">",
+                (
+                    f"<button type=\"button\" class=\"pill sheet-action\" "
+                    f"data-lightbox-src=\"{escape(src, quote=True)}\" "
+                    f"data-lightbox-group=\"{escape(group, quote=True)}\" "
+                    f"data-lightbox-title=\"{escape(title, quote=True)}\">"
+                    f"{escape(copy['open_contact_sheet'])}</button>"
+                ),
+                "</div>",
+            ]
+        )
 
     @staticmethod
     def _review_form_html(cue: dict[str, Any], copy: dict[str, str]) -> str:
@@ -2236,6 +2329,7 @@ a:hover { text-decoration: underline; }
                 "risk": "风险",
                 "early_complete": "过早完成检查",
                 "expected_before": "目标前期望状态",
+                "absence_checks": "禁止出现/旧状态检查",
                 "auto_notes": "自动初审说明",
                 "review_notes": "人工评审说明",
                 "review_decision": "人工结论",
@@ -2303,6 +2397,7 @@ a:hover { text-decoration: underline; }
             "risk": "Risk",
             "early_complete": "Early-complete check",
             "expected_before": "Expected before target",
+            "absence_checks": "Absent or stale-state checks",
             "auto_notes": "Auto-review notes",
             "review_notes": "Reviewer notes",
             "review_decision": "Reviewer decision",
@@ -2486,17 +2581,36 @@ a:hover { text-decoration: underline; }
             if (cue.get("initial_review") or {}).get("decision") == "NEEDS_REVIEW"
         ]
         planned_only = any(cue.get("planned") for cue in cues)
+        absence_check_cues = [
+            str(cue.get("id"))
+            for cue in cues
+            if cue.get("absence_checks")
+        ]
+        if planned_only:
+            recommended_route = "agent_review_required_before_user_handoff"
+        elif initial_needs_review:
+            recommended_route = "agent_inspect_and_fix_obvious_issues_before_user_handoff"
+        else:
+            recommended_route = "agent_may_annotate_pass_without_user_handoff_after_inspection"
         return {
             "required_before_user_handoff": True,
             "status": "needs_agent_review" if initial_needs_review or planned_only else "agent_review_ready",
+            "recommended_route": recommended_route,
+            "user_handoff_policy": (
+                "Ask the user only for semantic uncertainty or creative judgment. "
+                "If the agent can confirm all cues pass, annotate PASS and continue without user handoff; "
+                "if an issue is obvious, revise and rerun review before user handoff."
+            ),
             "checklist": [
                 "Confirm subtitle text is present and semantically broken at the reviewed cue.",
                 "Compare before / at / after frames against the spoken cue timing.",
                 "For process/node cues, confirm the final state has not already completed in the pre-target frame.",
+                "For absence checks, confirm stale visual layers or outdated states are not visible.",
                 "Verify expected_state matches the actual creative direction; mark WRONG_EXPECTATION if the cue itself is wrong.",
                 "Check for blank frames, missing highlights, layout overlap, or important UI hidden behind subtitles.",
             ],
             "initial_needs_review_cues": initial_needs_review,
+            "absence_check_cues": absence_check_cues,
         }
 
     @staticmethod

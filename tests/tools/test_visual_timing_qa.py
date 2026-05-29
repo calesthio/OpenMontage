@@ -49,8 +49,10 @@ def test_dry_run_writes_review_without_extracting_frames(tmp_path):
     assert cue["initial_review"]["decision"] == "UNREVIEWED"
     assert payload["agent_initial_review"]["required_before_user_handoff"] is True
     assert payload["agent_initial_review"]["status"] == "needs_agent_review"
+    assert payload["agent_initial_review"]["recommended_route"] == "agent_review_required_before_user_handoff"
     assert "Confirm subtitle text" in payload["agent_initial_review"]["checklist"][0]
     assert "pre-target frame" in payload["agent_initial_review"]["checklist"][2]
+    assert "stale visual layers" in payload["agent_initial_review"]["checklist"][3]
     assert cue["early_complete_check"]["status"] == "requires_review"
     assert "already completed" in cue["early_complete_check"]["question"]
     assert [point["timestamp_seconds"] for point in cue["frame_points"]] == [3.5, 4.0, 4.5]
@@ -114,12 +116,11 @@ def test_review_extracts_cue_frames_and_contact_sheet(monkeypatch, tmp_path):
     assert cue["initial_review"]["decision"] in {"PASS", "NEEDS_REVIEW"}
     assert Path(cue["contact_sheet"]).exists()
     review_html = Path(result.data["review_html_path"]).read_text(encoding="utf-8")
-    assert "Contact sheet" not in review_html
-    assert "feedback_contact_sheet.jpg" not in review_html
+    assert "Contact sheet" in review_html
+    assert "feedback_contact_sheet.jpg" in review_html
     assert "00_minus0_500_3.500s.jpg" in review_html
     assert "data-lightbox-src=" in review_html
     assert 'data-lightbox-group="feedback"' in review_html
-    assert 'data-lightbox-group="feedback-contact"' not in review_html
     assert "data-lightbox-next" in review_html
     assert "data-lightbox-prev" in review_html
     assert "data-review-form" in review_html
@@ -146,10 +147,31 @@ def test_review_extracts_cue_frames_and_contact_sheet(monkeypatch, tmp_path):
     assert "<select data-review-field=\"decision\"" not in review_html
     assert "data-cue-card" in review_html
     assert "data-initial-decision=" in review_html
-    assert '<a href="feedback_contact_sheet.jpg"' not in review_html
+    assert "Open contact sheet" in review_html
     assert "Initial auto-review queue" not in review_html
     assert any(cmd[0] == "ffprobe" for cmd in commands)
     assert sum(1 for cmd in commands if cmd[0] == "ffmpeg") == 4
+
+
+def test_review_supports_absence_checks_for_stale_visual_layers(tmp_path):
+    manifest = base_manifest(tmp_path)
+    manifest["cues"][0]["forbidden_state"] = "The old S7 communication-script panel is still visible."
+
+    result = VisualTimingQA().execute({"operation": "dry_run", "manifest": manifest})
+
+    assert result.success
+    payload = json.loads(Path(result.data["results_path"]).read_text(encoding="utf-8"))
+    cue = payload["cues"][0]
+    assert cue["absence_checks"][0]["description"] == "The old S7 communication-script panel is still visible."
+    assert "stale or forbidden visual state" in cue["review_questions"][-1]
+    assert payload["agent_initial_review"]["absence_check_cues"] == ["feedback"]
+    assert "agent_review_required_before_user_handoff" == payload["agent_initial_review"]["recommended_route"]
+    review = Path(result.data["review_path"]).read_text(encoding="utf-8")
+    assert "Absence checks" in review
+    assert "old S7 communication-script panel" in review
+    html = Path(result.data["review_html_path"]).read_text(encoding="utf-8")
+    assert "Absent or stale-state checks" in html
+    assert "old S7 communication-script panel" in html
 
 
 def test_review_clamps_frame_points_to_video_bounds(monkeypatch, tmp_path):
@@ -502,3 +524,28 @@ def test_initial_review_passes_when_bottom_caption_has_edges(monkeypatch, tmp_pa
     assert result.success
     initial = result.data["cues"][0]["initial_review"]
     assert "Subtitles may be missing" not in initial["notes"]
+
+
+def test_agent_routing_allows_no_user_handoff_after_clean_agent_review(monkeypatch, tmp_path):
+    manifest = base_manifest(tmp_path)
+    manifest["cues"][0]["label"] = "Summary card"
+    manifest["cues"][0]["narration"] = "The summary is ready."
+    manifest["cues"][0]["expected_state"] = "The summary card is readable."
+    manifest["cues"][0]["risk"] = ""
+
+    def fake_run_command(self, cmd, *, timeout=None, cwd=None):
+        if cmd[0] == "ffprobe":
+            return subprocess.CompletedProcess(cmd, 0, stdout='{"format":{"duration":"12.0"}}', stderr="")
+        output_path = Path(cmd[-1])
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        image = Image.new("RGB", (320, 180), "navy")
+        image.save(output_path)
+        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(VisualTimingQA, "run_command", fake_run_command)
+
+    result = VisualTimingQA().execute({"operation": "review", "manifest": manifest})
+
+    assert result.success
+    assert result.data["cues"][0]["initial_review"]["decision"] == "PASS"
+    assert result.data["agent_initial_review"]["recommended_route"] == "agent_may_annotate_pass_without_user_handoff_after_inspection"

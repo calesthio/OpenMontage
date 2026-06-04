@@ -13,13 +13,13 @@ status codes). Fix the adapter once, every project benefits.
 The config drives everything: the queries to run, the substring allow-
 list, and the output paths. Minimal config:
 
-    project: i77-toll-killed
+    project: example-project
     queries:
-      - "Interstate 77 North Carolina"
-      - "Charlotte skyline uptown"
+      - "Coastal harbor lighthouse"
+      - "Old stone bridge"
     keep_keywords:
-      - "i-77"
-      - "charlotte"
+      - "lighthouse"
+      - "bridge"
 
 If `project` is set, paths default to
   out_dir  = projects/<project>/assets/images/archival/

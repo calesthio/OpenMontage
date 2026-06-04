@@ -18,23 +18,22 @@ project: example-project
 # Required. The Wikimedia search queries to run. Commons CirrusSearch is
 # AND across multi-word queries — keep queries 2-5 distinctive tokens.
 queries:
-  - "Interstate 77 North Carolina"
-  - "Charlotte North Carolina skyline"
-  - "Lake Norman bridge"
-  - "Mecklenburg County government"
+  - "Coastal harbor lighthouse"
+  - "Alpine ridge sunrise"
+  - "Old stone bridge"
+  - "Lakefront pier sunset"
 
 # Optional. Case-insensitive substring allowlist. A candidate's title
 # must contain at least one of these to be kept. Use this to filter out
-# false-positive matches (e.g. "I-77 in Hungary") that Commons' relevance
+# false-positive matches (e.g. a "lighthouse cafe" interior when you wanted a coastal lighthouse) that Commons' relevance
 # ranker lets through.
 #
 # Omit or leave empty to disable the filter (keep all relevance-ranked results).
 keep_keywords:
-  - "i-77"
-  - "interstate 77"
-  - "charlotte"
-  - "lake norman"
-  - "mecklenburg"
+  - "lighthouse"
+  - "ridge"
+  - "bridge"
+  - "pier"
 
 # Optional. MIME types to accept. Default: image/jpeg + image/png.
 mime_allow:

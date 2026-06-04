@@ -123,8 +123,8 @@ class F5TTS(BaseTool):
                 "type": "number",
                 "default": 1.0,
                 "description": (
-                    "Pacing multiplier. <1.0 slows speech (use ~0.95-0.97 to match "
-                    "ElevenLabs Brian's pacing more closely)."
+                    "Pacing multiplier. <1.0 slows speech (use ~0.95-0.97 to "
+                    "match a typical cloud-TTS narrator pacing more closely)."
                 ),
             },
             "seed": {"type": "integer", "default": 42},

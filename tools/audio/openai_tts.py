@@ -39,7 +39,7 @@ class OpenAITTS(BaseTool):
         "Get a key at https://platform.openai.com/"
     )
     fallback = "piper_tts"
-    fallback_tools = ["piper_tts"]
+    fallback_tools = ["sixtydb_tts", "elevenlabs_tts", "piper_tts"]
     agent_skills = ["openai-docs"]
 
     capabilities = [

@@ -29,6 +29,7 @@ from tools.tool_registry import ToolRegistry
 from tools.audio.elevenlabs_tts import ElevenLabsTTS
 from tools.audio.openai_tts import OpenAITTS
 from tools.audio.piper_tts import PiperTTS
+from tools.audio.sixtydb_tts import SixtyDbTTS
 from tools.audio.tts_selector import TTSSelector
 
 
@@ -53,6 +54,42 @@ class TestElevenLabsTTS:
         tool = ElevenLabsTTS()
         assert "text_to_speech" in tool.capabilities
         assert "voice_selection" in tool.capabilities
+
+
+class TestSixtyDbTTS:
+    def test_identity(self):
+        tool = SixtyDbTTS()
+        info = tool.get_info()
+        assert info["name"] == "sixtydb_tts"
+        assert info["tier"] == "voice"
+        assert info["capability"] == "tts"
+        assert info["provider"] == "sixtydb"
+
+    def test_cost_estimate(self):
+        tool = SixtyDbTTS()
+        cost = tool.estimate_cost({"text": "Hello world, this is a test."})
+        assert cost > 0
+        assert cost < 0.01
+
+    def test_capabilities(self):
+        tool = SixtyDbTTS()
+        assert "text_to_speech" in tool.capabilities
+        assert "voice_selection" in tool.capabilities
+
+    def test_format_normalization(self):
+        # ElevenLabs-style codec tokens must collapse to 60db codecs.
+        assert SixtyDbTTS._normalize_format("mp3_44100_128") == "mp3"
+        assert SixtyDbTTS._normalize_format("pcm_16000") == "wav"
+        assert SixtyDbTTS._normalize_format("flac") == "flac"
+        assert SixtyDbTTS._normalize_format("bogus") == "mp3"
+
+    def test_unit_to_pct_scaling(self):
+        # 0..1 selector range → 0..100 60db range.
+        assert SixtyDbTTS._scale_unit_to_pct(0.5, 0.5) == 50
+        assert SixtyDbTTS._scale_unit_to_pct(0.75, 0.5) == 75
+        assert SixtyDbTTS._scale_unit_to_pct(None, 0.5) == 50
+        assert SixtyDbTTS._scale_unit_to_pct(1.5, 0.5) == 100   # clamped
+        assert SixtyDbTTS._scale_unit_to_pct(-1, 0.5) == 0      # clamped
 
 
 class TestPiperTTS:
@@ -126,14 +163,17 @@ class TestCapabilityMetadata:
         reg.register(ElevenLabsTTS())
         reg.register(OpenAITTS())
         reg.register(PiperTTS())
+        reg.register(SixtyDbTTS())
         reg.register(TTSSelector())
         assert {tool.name for tool in reg.get_by_capability("tts")} == {
             "elevenlabs_tts",
             "openai_tts",
             "piper_tts",
+            "sixtydb_tts",
             "tts_selector",
         }
         assert {tool.name for tool in reg.get_by_provider("elevenlabs")} == {"elevenlabs_tts"}
+        assert {tool.name for tool in reg.get_by_provider("sixtydb")} == {"sixtydb_tts"}
 
     def test_registry_catalog_views(self):
         reg = ToolRegistry()

@@ -41,7 +41,7 @@ class DoubaoTTS(BaseTool):
         "Use the new console API key flow; do not pass app id/access token as the API key."
     )
     fallback = "google_tts"
-    fallback_tools = ["google_tts", "elevenlabs_tts", "openai_tts", "piper_tts"]
+    fallback_tools = ["sixtydb_tts", "google_tts", "elevenlabs_tts", "openai_tts", "piper_tts"]
     agent_skills = ["doubao-tts", "text-to-speech"]
 
     capabilities = [

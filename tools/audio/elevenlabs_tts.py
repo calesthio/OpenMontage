@@ -39,7 +39,7 @@ class ElevenLabsTTS(BaseTool):
         "Get a key at https://elevenlabs.io"
     )
     fallback = "openai_tts"
-    fallback_tools = ["openai_tts", "piper_tts"]
+    fallback_tools = ["sixtydb_tts", "openai_tts", "piper_tts"]
     agent_skills = ["elevenlabs", "text-to-speech"]
 
     capabilities = [

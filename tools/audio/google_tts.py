@@ -44,7 +44,7 @@ class GoogleTTS(BaseTool):
         "  Or use GOOGLE_APPLICATION_CREDENTIALS for service account auth."
     )
     fallback = "openai_tts"
-    fallback_tools = ["openai_tts", "elevenlabs_tts", "piper_tts"]
+    fallback_tools = ["sixtydb_tts", "openai_tts", "elevenlabs_tts", "piper_tts"]
     agent_skills = ["text-to-speech"]
 
     capabilities = [

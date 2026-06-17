@@ -15,13 +15,14 @@ Everything you need to know about every provider in OpenMontage — setup instru
 | 3 | **$0** | ElevenLabs | Premium TTS + music + SFX (10K chars/month free) |
 | 4 | **$0** | Piper (local install) | Fully offline TTS — no API key, no cost, no network |
 | 5 | **~$0.03/image** | fal.ai | FLUX images + Kling/Veo/MiniMax video + Recraft — broad single-key image + video coverage |
-| 6 | **~$0.04/image** | OpenAI | DALL-E 3 images + OpenAI TTS |
-| 7 | **~$0.04/image** | Google Imagen | Imagen 4 images (shares the Google API key) |
-| 8 | **$12/month** | Runway | Gen-4 video — highest quality AI video |
-| 9 | **pay-as-you-go** | HeyGen | Avatar videos, multi-model video gateway |
-| 10 | **pay-as-you-go** | Suno | Full song generation with vocals and lyrics |
-| 11 | **$0 + GPU** | Local video gen | WAN 2.1, Hunyuan, CogVideo, LTX — free, offline |
-| 12 | **$0 + GPU** | Local Diffusion | Stable Diffusion images — free, offline |
+| 6 | **pay-as-you-go** | EvoLink | Seedance 2.0 text-to-video and image-to-video via one EvoLink key |
+| 7 | **~$0.04/image** | OpenAI | DALL-E 3 images + OpenAI TTS |
+| 8 | **~$0.04/image** | Google Imagen | Imagen 4 images (shares the Google API key) |
+| 9 | **$12/month** | Runway | Gen-4 video — highest quality AI video |
+| 10 | **pay-as-you-go** | HeyGen | Avatar videos, multi-model video gateway |
+| 11 | **pay-as-you-go** | Suno | Full song generation with vocals and lyrics |
+| 12 | **$0 + GPU** | Local video gen | WAN 2.1, Hunyuan, CogVideo, LTX — free, offline |
+| 13 | **$0 + GPU** | Local Diffusion | Stable Diffusion images — free, offline |
 
 ### Environment Variable Summary
 
@@ -44,6 +45,7 @@ DOUBAO_SPEECH_VOICE_TYPE=    # Default Doubao speaker/voice type
 
 # MULTI-MODEL GATEWAY (one key, 6+ tools)
 FAL_KEY=                     # FLUX, Recraft, Kling, Veo, MiniMax video
+EVOLINK_API_KEY=             # EvoLink Seedance 2.0 video generation
 
 # VIDEO
 HEYGEN_API_KEY=              # HeyGen avatar video gateway
@@ -130,6 +132,29 @@ No subscription — pure pay-as-you-go, no minimum spend.
 | WAN 2.5 | $0.05/sec | 20 seconds |
 
 **Free tier:** None — but $0 to start, you only pay for what you use.
+
+---
+
+### EvoLink — Seedance 2.0 Video Gateway
+
+> **Best if you already use EvoLink for AI model access.** One key unlocks
+> Seedance 2.0 text-to-video and image-to-video through EvoLink's async task API.
+
+**Tools unlocked:** `evolink_video`
+**Env var:** `EVOLINK_API_KEY`
+
+#### Setup
+
+1. Go to [evolink.ai/dashboard/keys](https://evolink.ai/dashboard/keys)
+2. Create or copy an API key
+3. Add to `.env`: `EVOLINK_API_KEY=your-key-here`
+
+#### What it's best for
+
+- Seedance 2.0 short-form text-to-video
+- First-frame image-to-video with a publicly accessible image URL
+- Optional synchronized audio and web-search enhanced prompts
+- Teams that want to route production through EvoLink rather than a model-specific key
 
 ---
 
@@ -725,6 +750,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **Google** | `GOOGLE_API_KEY` | `google_tts`, `google_imagen` | Free tier + paid |
 | **ElevenLabs** | `ELEVENLABS_API_KEY` | `elevenlabs_tts`, `music_gen` | Free tier + paid |
 | **fal.ai** | `FAL_KEY` | `flux_image`, `recraft_image`, `kling_video`, `veo_video`, `minimax_video` | Pay-as-you-go |
+| **EvoLink** | `EVOLINK_API_KEY` | `evolink_video` | Pay-as-you-go |
 | **OpenAI** | `OPENAI_API_KEY` | `openai_tts`, `openai_image` | Paid only |
 | **xAI** | `XAI_API_KEY` | `grok_image`, `grok_video` | Paid only |
 | **Runway** | `RUNWAY_API_KEY` | `runway_video` | Free trial + paid |

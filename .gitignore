@@ -5,6 +5,7 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+venv/
 
 # Test/IDE
 .pytest_cache/

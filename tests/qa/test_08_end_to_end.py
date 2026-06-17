@@ -445,6 +445,7 @@ edit_decisions = {
         "enabled": True,
         "style": "clean-professional",
     },
+    "render_runtime": "ffmpeg",
 }
 
 try:

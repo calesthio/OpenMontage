@@ -406,13 +406,14 @@ Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to
 > **Full setup guide with pricing and free tiers:** [`docs/PROVIDERS.md`](docs/PROVIDERS.md)
 
 <details>
-<summary><strong>Video Generation — 14 providers</strong></summary>
+<summary><strong>Video Generation Providers</strong></summary>
 
 | Provider | Type | Notes |
 |----------|------|-------|
 | **Kling** | Cloud API | High quality, fast |
 | **Runway Gen-4** | Cloud API | Cinematic quality, Gen-3 Alpha Turbo / Gen-4 Turbo / Gen-4 Aleph |
 | **Google Veo 3** | Cloud API | Long-form, cinematic. Via fal.ai or HeyGen. |
+| **Google Flow** | Experimental local browser | Uses a dedicated logged-in Flow UI profile only when explicitly selected |
 | **Grok Imagine Video** | Cloud API | Strong reference-image video and xAI-native short-form generation |
 | **Higgsfield** | Cloud API | Multi-model orchestrator with Soul ID for character consistency |
 | **MiniMax** | Cloud API | Cost-effective |
@@ -426,6 +427,17 @@ Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to
 | **Wikimedia Commons** | Stock | Free/open stock footage and archival video |
 
 </details>
+
+> Google Flow support is experimental and local-only. It automates the public
+> Flow web UI through Playwright so you can use an already logged-in Google AI
+> Pro / Flow session, but it is never selected by `auto` routing. The dedicated
+> local browser profile stores the browser session on your machine, while
+> OpenMontage does not write cookies, tokens, storage snapshots, HARs, DOM dumps,
+> or screenshots into project artifacts. Install
+> `requirements-browser.txt`, set `GOOGLE_FLOW_ENABLED=true` plus
+> `OPENMONTAGE_EXPERIMENTAL_GOOGLE_FLOW=1`, then pass
+> `preferred_provider="google_flow"` and `confirm_browser_automation=true` for
+> any generation run.
 
 <details>
 <summary><strong>Image Generation — 10 tools/providers</strong></summary>

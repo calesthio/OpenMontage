@@ -325,16 +325,16 @@ class HyperFramesCompose(BaseTool):
         if not ffmpeg_ok:
             reasons.append("ffmpeg not found on PATH")
 
-        # Only probe npm if the local tooling is actually usable — otherwise
-        # a missing-node run would also show a confusing npm error.
+        # Probe npm resolve unconditionally so diagnostics always include the
+        # concrete package-resolution signal (for example a 404) in addition
+        # to local binary/version failures.
         npm_resolve: dict[str, str] = {}
-        if not reasons:
-            npm_resolve = self._resolve_npm_package()
-            if "error" in npm_resolve:
-                reasons.append(
-                    f"npm package `{self._NPM_PACKAGE}` not resolvable: "
-                    f"{npm_resolve['error']}"
-                )
+        npm_resolve = self._resolve_npm_package()
+        if "error" in npm_resolve:
+            reasons.append(
+                f"npm package `{self._NPM_PACKAGE}` not resolvable: "
+                f"{npm_resolve['error']}"
+            )
 
         return {
             "runtime_available": not reasons,

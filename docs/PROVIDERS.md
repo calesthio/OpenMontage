@@ -20,6 +20,7 @@ Everything you need to know about every provider in OpenMontage — setup instru
 | 8 | **$12/month** | Runway | Gen-4 video — highest quality AI video |
 | 9 | **pay-as-you-go** | HeyGen | Avatar videos, multi-model video gateway |
 | 10 | **pay-as-you-go** | Suno | Full song generation with vocals and lyrics |
+| 10b | **Pro plan + credits** | ZapCap | Animated/word-synced styled captions (Hormozi, Beast, ...) |
 | 11 | **$0 + GPU** | Local video gen | WAN 2.1, Hunyuan, CogVideo, LTX — free, offline |
 | 12 | **$0 + GPU** | Local Diffusion | Stable Diffusion images — free, offline |
 
@@ -49,6 +50,9 @@ FAL_KEY=                     # FLUX, Recraft, Kling, Veo, MiniMax video
 HEYGEN_API_KEY=              # HeyGen avatar video gateway
 RUNWAY_API_KEY=              # Runway Gen-4 video (direct)
 SUNO_API_KEY=                # Suno music generation
+
+# CAPTIONS (styled subtitles)
+ZAPCAP_API_KEY=              # ZapCap animated/word-synced caption templates
 
 # LOCAL (no keys needed — just GPU + install)
 VIDEO_GEN_LOCAL_ENABLED=     # Set to "true" for local video gen
@@ -204,6 +208,56 @@ Start with `speech_rate: 0` for natural Mandarin delivery. If the approved forma
 #### Pricing
 
 Doubao Speech 2.0 is billed by character package or usage in Volcengine. OpenMontage estimates cost from text length and prefers provider-returned usage metadata when available.
+
+---
+
+### ZapCap — Caption Templates
+
+> **Animated, word-synced caption templates.** Upload a video, pick a template (Hormozi, Beast, Devin, ...), and ZapCap transcribes and burns in styled subtitles.
+
+**Tools unlocked:** `zapcap_captions`
+**Env var:** `ZAPCAP_API_KEY`
+**Layer 3 skill:** `.agents/skills/zapcap-captions/SKILL.md`
+
+#### Setup
+
+1. Subscribe to a ZapCap Pro plan and buy API credits at [platform.zapcap.ai](https://platform.zapcap.ai/dashboard/billing).
+2. Copy your key from the [API key page](https://platform.zapcap.ai/dashboard/api-key).
+3. Add to `.env`: `ZAPCAP_API_KEY=your-key-here`
+
+#### What It Is Best For
+
+- Viral caption styles (Hormozi, Beast, Devin, Ella, ...) out of the box
+- Word-level highlight + emoji captions burned into the video
+- Translating + captioning the same video into many languages (transcribe once, fan out)
+- Speech-driven social clips (`clip-factory`, `podcast-repurpose`, `talking-head`, `localization-dub`)
+
+Needs a speech audio track (it transcribes to caption). Max length 30 min.
+For local/offline burn-in use `remotion_caption_burn`; for plain SRT/VTT use
+`subtitle_gen`.
+
+#### Usage
+
+```python
+from tools.subtitle.zapcap_captions import ZapCapCaptions
+
+res = ZapCapCaptions().execute({
+    "input_path": "projects/demo/renders/final.mp4",
+    "template_name": "Hormozi 1",          # or template_id="a51c5222-..."
+    "output_path": "projects/demo/renders/final_captioned.mp4",
+})
+# res.artifacts -> ["projects/demo/renders/final_captioned.mp4"]
+```
+
+`action="list_templates"` lists templates; `render_options` overrides subtitle
+appearance; `translate_to` + `transcript_task_id` drive multi-language fan-out.
+See the Layer 3 skill for the full schema.
+
+#### Pricing
+
+Billed in ZapCap API credits (Pro plan + credits required). Cost scales with
+video minutes processed. The tool does not estimate USD; track credits on the
+[ZapCap dashboard](https://platform.zapcap.ai/dashboard/billing).
 
 ---
 

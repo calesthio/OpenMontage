@@ -129,6 +129,22 @@ Write directions that TTS can actually implement. Reference ElevenLabs capabilit
 
 Avoid directions TTS can't do: "smile while speaking", "gesture toward screen", "look at camera."
 
+#### TTS Audition Cues
+
+Mark high-risk narration sections so the Asset Director can run
+`tts_segment_lab` before final narration generation. Use this when a line is
+likely to need voice comparison, emphasis tuning, or delivery approval:
+
+- opening hooks and first-person framing;
+- emotional turns that could become too sentimental or too flat;
+- product reveals where emphasis matters;
+- pronunciation-sensitive names, acronyms, or mixed-language terms;
+- ending handoffs, cliffhangers, and calls to action.
+
+Record the audition need in `speaker_directions` or an enhancement cue, for
+example: "TTS audition: compare neutral vs slightly forward delivery; avoid
+low, sentimental read on the first sentence."
+
 #### Enhancement Cues
 
 Every section should have at least one enhancement cue. These tell the Scene Planner and Asset Generator what visuals to create.

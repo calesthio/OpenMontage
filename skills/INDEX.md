@@ -83,6 +83,7 @@ Key capability families to look for in the output:
 | HyperFrames | `core/hyperframes.md` | HTML/CSS/GSAP composition runtime — kinetic typography, product promos, website-to-video, registry blocks | `hyperframes`, `hyperframes-cli`, `hyperframes-registry`, `website-to-hyperframes`, `gsap-core`, `gsap-timeline` |
 | WhisperX | `core/whisperx.md` | Transcription with word-level timestamps | `speech-to-text` |
 | Subtitle Sync | `core/subtitle-sync.md` | Subtitle timing and alignment | `remotion-best-practices` |
+| TTS Segment Lab | `core/tts-segment-lab.md` | Narration audition before final TTS generation | `text-to-speech` |
 | Color Grading | `core/color-grading.md` | FFmpeg color profiles, LUT workflow, accessibility | `ffmpeg` |
 
 ## Creative Skills

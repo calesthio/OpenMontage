@@ -234,7 +234,9 @@ stages:
       - brief
     produces:
       - publish_log
-    tools_available: []
+      - final_package_manifest
+    tools_available:
+      - publish_packager
     checkpoint_required: true
     human_approval_default: true
     review_focus:
@@ -243,4 +245,5 @@ stages:
       - Export package is complete
     success_criteria:
       - Schema-valid publish_log artifact
+      - Final package manifest present when publish_packager is used
       - Export directory contains video, metadata, and thumbnail concept

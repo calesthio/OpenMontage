@@ -9,6 +9,64 @@
     "version": { "type": "string", "const": "1.0" },
     "title": { "type": "string" },
     "total_duration_seconds": { "type": "number", "minimum": 1 },
+    "cover_direction": {
+      "type": "object",
+      "description": "Early creative intent for the final cover/poster frame. This guides production, but the final cover asset is selected or generated at publish time.",
+      "properties": {
+        "primary_message": { "type": "string" },
+        "visual_anchor": { "type": "string" },
+        "title": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "style_notes": { "type": "string" },
+        "candidate_source": {
+          "type": "string",
+          "enum": ["rendered_frame", "generated_image", "generated_video_frame", "source_footage_frame", "manual_design", "unspecified"],
+          "description": "Likely source for the final cover asset. This is a planning hint, not a binding provider choice."
+        },
+        "avoid": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "cover_policy": {
+      "type": "object",
+      "description": "Workflow decision for whether a cover/poster frame is needed, whether the user should approve it, and whether it should become the first video frame.",
+      "required": ["required", "reason", "user_decision", "first_frame_mode"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "reason": { "type": "string" },
+        "user_decision": {
+          "type": "string",
+          "enum": ["none", "review_final_cover", "approve_before_publish"],
+          "description": "none for drafts/internal tests; review_final_cover when the cover affects presentation; approve_before_publish for brand-sensitive external releases."
+        },
+        "first_frame_mode": {
+          "type": "string",
+          "enum": ["none", "replace_first_frame"],
+          "description": "replace_first_frame makes the poster the first visible frame without adding time before the original audio."
+        },
+        "triggers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "external_distribution",
+              "page_embed",
+              "product_marketing",
+              "tutorial_or_demo",
+              "user_requested",
+              "weak_initial_frame",
+              "draft_or_internal_only",
+              "source_footage_only"
+            ]
+          }
+        },
+        "notes": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
     "sections": {
       "type": "array",
       "items": {

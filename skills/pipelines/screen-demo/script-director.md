@@ -97,7 +97,43 @@ Recommended `script.metadata` fields:
 - `callout_candidates`
 - `sections_needing_zoom`
 
-### 7. Quality Gate
+### 7. Set Cover Policy and Direction When Needed
+
+If the demo will be embedded on a page, shared in a feed, or used as a product
+intro, add a top-level `cover_policy` and `cover_direction` object to the
+script. The policy decides whether a cover is needed and whether the user must
+review it; the direction names the first impression the static video should
+create before playback.
+
+Default to a required cover for demos used on pages, docs, app listings,
+release notes, product intros, and external sharing. Skip it for raw screen
+captures, draft workflow checks, and short internal troubleshooting clips.
+
+```json
+{
+  "cover_policy": {
+    "required": true,
+    "reason": "Screen demo will be embedded in a product doc page",
+    "user_decision": "review_final_cover",
+    "first_frame_mode": "replace_first_frame",
+    "triggers": ["page_embed", "tutorial_or_demo"]
+  },
+  "cover_direction": {
+    "primary_message": "What the demo proves at a glance",
+    "visual_anchor": "The recognizable product/tool surface or result state",
+    "title": "Short cover title",
+    "subtitle": "Optional supporting line",
+    "style_notes": "Readable at small size, product UI visible",
+    "candidate_source": "rendered_frame",
+    "avoid": ["generic setup screens", "dense screenshots"]
+  }
+}
+```
+
+This is not the final cover asset. It guides capture, zoom choices, and the
+publish-stage poster/first-frame decision after the finished render exists.
+
+### 8. Quality Gate
 
 | Criterion | Question |
 |-----------|----------|

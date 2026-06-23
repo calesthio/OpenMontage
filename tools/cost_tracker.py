@@ -249,7 +249,7 @@ class CostTracker:
             if motion_ratio > 0
             else 0
         )
-        estimated_still_scenes = estimated_scenes - estimated_motion_scenes
+        estimated_still_scenes = estimated_scenes - estimated_motion_scenes  # noqa: F841
 
         # ── Video clip coverage ──
         # Video gen tools produce clips of limited duration (typically 5-10s).

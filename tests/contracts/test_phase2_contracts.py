@@ -1,7 +1,5 @@
 """Phase 2 contract tests — Enhancement Layer tools."""
 
-import json
-import shutil
 import sys
 from pathlib import Path
 
@@ -10,16 +8,16 @@ import pytest
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from tools.base_tool import BaseTool, ToolResult, ToolTier, ToolStatus
-from tools.tool_registry import ToolRegistry
+from tools.base_tool import BaseTool, ToolResult, ToolTier, ToolStatus  # noqa: E402
+from tools.tool_registry import ToolRegistry  # noqa: E402
 
-from tools.enhancement.face_enhance import FaceEnhance, PRESETS as FACE_PRESETS
-from tools.analysis.scene_detect import SceneDetect
-from tools.enhancement.color_grade import ColorGrade, PROFILES as COLOR_PROFILES
-from tools.audio.audio_enhance import AudioEnhance, PRESETS as AUDIO_PRESETS
-from tools.graphics.image_selector import ImageSelector
-from tools.graphics.code_snippet import CodeSnippet, THEMES as CODE_THEMES
-from tools.graphics.diagram_gen import DiagramGen
+from tools.enhancement.face_enhance import FaceEnhance, PRESETS as FACE_PRESETS  # noqa: E402
+from tools.analysis.scene_detect import SceneDetect  # noqa: E402
+from tools.enhancement.color_grade import ColorGrade, PROFILES as COLOR_PROFILES  # noqa: E402
+from tools.audio.audio_enhance import AudioEnhance, PRESETS as AUDIO_PRESETS  # noqa: E402
+from tools.graphics.image_selector import ImageSelector  # noqa: E402
+from tools.graphics.code_snippet import CodeSnippet, THEMES as CODE_THEMES  # noqa: E402
+from tools.graphics.diagram_gen import DiagramGen  # noqa: E402
 
 
 PHASE2_TOOLS = [

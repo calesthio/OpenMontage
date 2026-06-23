@@ -5,7 +5,6 @@ query/key space where dot products measure relevance.
 """
 
 from manimlib import *
-import numpy as np
 
 
 class QueryKeySpaceMapping(InteractiveScene):

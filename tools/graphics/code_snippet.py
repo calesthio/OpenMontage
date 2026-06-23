@@ -121,7 +121,7 @@ class CodeSnippet(BaseTool):
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         try:
-            from PIL import Image, ImageDraw, ImageFont
+            from PIL import Image, ImageDraw, ImageFont  # noqa: F401
             from pygments import highlight
             from pygments.lexers import get_lexer_by_name, guess_lexer
             from pygments.formatters import ImageFormatter

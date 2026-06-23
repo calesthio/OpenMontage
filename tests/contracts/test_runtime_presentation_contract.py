@@ -107,7 +107,7 @@ def test_planning_skill_mentions_runtime_contract(manifest_path: Path):
         covers_conversation = any(token in body for token in _CONVERSATION_TOKENS)
         if covers_required and covers_conversation:
             matched_skill = skill_ref
-            matched_why = {
+            matched_why = {  # noqa: F841
                 "mentions_render_runtime": "render_runtime" in body,
                 "mentions_hyperframes": "hyperframes" in body,
                 "conversation_token_found": covers_conversation,

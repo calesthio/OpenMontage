@@ -5,14 +5,17 @@ Creates a video from static images with audio and optional subtitles.
 Uses ffmpeg-generated fixtures if prior test outputs don't exist.
 """
 
-import sys, os, json, subprocess
+import sys
+import os
+import json
+import subprocess
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from lib.env_loader import load_env
 load_env()
 
-from tools.video.video_compose import VideoCompose
+from tools.video.video_compose import VideoCompose  # noqa: E402
 
 OUT = os.path.join(os.path.dirname(__file__), "output")
 os.makedirs(OUT, exist_ok=True)
@@ -106,8 +109,8 @@ r1 = tool.execute({
     "output_path": os.path.join(OUT, "compose_basic.mp4"),
 })
 print(f"Success: {r1.success}, Duration: {r1.duration_seconds:.2f}s")
-if r1.error: print(f"Error: {r1.error}")
-if r1.artifacts: print(f"Artifacts: {r1.artifacts}")
+if r1.error: print(f"Error: {r1.error}")  # noqa: E701
+if r1.artifacts: print(f"Artifacts: {r1.artifacts}")  # noqa: E701
 
 # --- Test 2: Compose with subtitles ---
 print("\n--- Test 2: Compose with subtitles ---")
@@ -132,8 +135,8 @@ r2 = tool.execute({
     "output_path": os.path.join(OUT, "compose_subtitled.mp4"),
 })
 print(f"Success: {r2.success}, Duration: {r2.duration_seconds:.2f}s")
-if r2.error: print(f"Error: {r2.error}")
-if r2.artifacts: print(f"Artifacts: {r2.artifacts}")
+if r2.error: print(f"Error: {r2.error}")  # noqa: E701
+if r2.artifacts: print(f"Artifacts: {r2.artifacts}")  # noqa: E701
 
 # --- Test 3: Burn subtitles onto existing video ---
 print("\n--- Test 3: Burn subtitles standalone ---")
@@ -149,8 +152,8 @@ r3 = tool.execute({
     "output_path": os.path.join(OUT, "compose_burn_subs.mp4"),
 })
 print(f"Success: {r3.success}, Duration: {r3.duration_seconds:.2f}s")
-if r3.error: print(f"Error: {r3.error}")
-if r3.artifacts: print(f"Artifacts: {r3.artifacts}")
+if r3.error: print(f"Error: {r3.error}")  # noqa: E701
+if r3.artifacts: print(f"Artifacts: {r3.artifacts}")  # noqa: E701
 
 # --- Test 4: Encode with media profile ---
 print("\n--- Test 4: Re-encode with profile ---")
@@ -163,8 +166,8 @@ r4 = tool.execute({
     "output_path": os.path.join(OUT, "compose_encoded.mp4"),
 })
 print(f"Success: {r4.success}, Duration: {r4.duration_seconds:.2f}s")
-if r4.error: print(f"Error: {r4.error}")
-if r4.artifacts: print(f"Artifacts: {r4.artifacts}")
+if r4.error: print(f"Error: {r4.error}")  # noqa: E701
+if r4.artifacts: print(f"Artifacts: {r4.artifacts}")  # noqa: E701
 
 # --- Test 5: Overlay ---
 print("\n--- Test 5: Overlay image on video ---")
@@ -187,8 +190,8 @@ r5 = tool.execute({
     "output_path": os.path.join(OUT, "compose_overlay.mp4"),
 })
 print(f"Success: {r5.success}, Duration: {r5.duration_seconds:.2f}s")
-if r5.error: print(f"Error: {r5.error}")
-if r5.artifacts: print(f"Artifacts: {r5.artifacts}")
+if r5.error: print(f"Error: {r5.error}")  # noqa: E701
+if r5.artifacts: print(f"Artifacts: {r5.artifacts}")  # noqa: E701
 
 # --- Probe all outputs ---
 print("\n--- Output inspection ---")

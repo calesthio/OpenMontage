@@ -200,7 +200,7 @@ class VideoSelector(BaseTool):
         Respects preferred_provider and environment hints as tie-breakers,
         but the scoring engine drives the primary selection.
         """
-        from lib.scoring import rank_providers, ProviderScore
+        from lib.scoring import rank_providers
 
         preferred = inputs.get("preferred_provider", "auto")
         allowed = set(inputs.get("allowed_providers") or [])

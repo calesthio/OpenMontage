@@ -6,13 +6,12 @@ type scale computation, type hierarchy validation, font pairing suggestions,
 and full accessibility audit across all 3 playbooks.
 """
 
-import sys, os, json
+import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from styles.playbook_loader import (
     load_playbook,
-    validate_playbook,
     list_playbooks,
     validate_contrast,
     check_color_blind_safety,
@@ -160,7 +159,7 @@ for ratio_name, ratio_val in TYPE_SCALE_RATIOS.items():
     check(f"Scale {ratio_name}: display > heading > subheading > body > caption",
           sizes["display"] > sizes["heading"] > sizes["subheading"] > sizes["body"] > sizes["caption"],
           f"{sizes}")
-    check(f"  Base preserved", sizes["body"] == 24)
+    check("  Base preserved", sizes["body"] == 24)
 
 # Custom numeric ratio
 scale = compute_type_scale(24, "1.5")

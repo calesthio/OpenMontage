@@ -35,10 +35,9 @@ from orbit) — the core material comes from Pexels and Archive.org.
 """
 from __future__ import annotations
 
-import os
 import re
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 from urllib.parse import quote, urlparse, urlunparse
 
 from .base import Candidate, SearchFilters

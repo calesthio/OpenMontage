@@ -494,7 +494,7 @@ class VideoStitch(BaseTool):
         transition = inputs.get("transition", "cut")
         transition_dur = inputs.get("transition_duration", 0.5)
         auto_normalize = inputs.get("auto_normalize", False)
-        codec = inputs.get("codec", "libx264")
+        codec = inputs.get("codec", "libx264")  # noqa: F841
         crf = inputs.get("crf", 23)
         preset = inputs.get("preset", "medium")
 

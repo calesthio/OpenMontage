@@ -6,7 +6,6 @@ using the Manim Community Edition engine. Free, local, no API key required.
 
 from __future__ import annotations
 
-import os
 import shutil
 import subprocess
 import tempfile
@@ -237,7 +236,7 @@ class MathAnimate(BaseTool):
             self._cleanup(work_dir)
             return ToolResult(
                 success=False,
-                error=f"Manim render timed out after 300s. Try 'low' or 'preview' quality.",
+                error="Manim render timed out after 300s. Try 'low' or 'preview' quality.",
             )
 
         if proc.returncode != 0:
@@ -245,7 +244,7 @@ class MathAnimate(BaseTool):
             # Extract the most useful part of the error
             lines = error_msg.strip().split("\n")
             # Look for the actual error (skip Manim header/progress)
-            error_lines = [l for l in lines if "Error" in l or "error" in l or "Traceback" in l]
+            error_lines = [l for l in lines if "Error" in l or "error" in l or "Traceback" in l]  # noqa: E741
             if error_lines:
                 error_msg = "\n".join(lines[lines.index(error_lines[0]):])
             self._cleanup(work_dir)

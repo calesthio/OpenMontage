@@ -7,7 +7,6 @@ pipeline manifests + stage director skills + meta skills.
 """
 
 import importlib
-import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -18,16 +17,15 @@ import pytest
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from lib.config_model import OpenMontageConfig
-from lib.checkpoint import (
+from lib.config_model import OpenMontageConfig  # noqa: E402
+from lib.checkpoint import (  # noqa: E402
     CheckpointValidationError,
-    STAGES,
     get_next_stage,
     read_checkpoint,
     write_checkpoint,
 )
-from lib.media_profiles import get_profile, ffmpeg_output_args, ALL_PROFILES
-from lib.pipeline_loader import (
+from lib.media_profiles import get_profile, ffmpeg_output_args, ALL_PROFILES  # noqa: E402
+from lib.pipeline_loader import (  # noqa: E402
     get_required_tools,
     get_stage_order,
     get_stage_skill,
@@ -37,10 +35,10 @@ from lib.pipeline_loader import (
     load_pipeline,
     pipeline_supports_reference_input,
 )
-from tools.base_tool import BaseTool, ToolResult, ToolTier, ToolStatus
-from tools.tool_registry import ToolRegistry
-from tools.cost_tracker import CostTracker, BudgetMode, BudgetExceededError, ApprovalRequiredError
-from schemas.artifacts import load_schema, validate_artifact, list_schemas
+from tools.base_tool import BaseTool, ToolResult, ToolTier, ToolStatus  # noqa: E402
+from tools.tool_registry import ToolRegistry  # noqa: E402
+from tools.cost_tracker import CostTracker, BudgetMode, BudgetExceededError  # noqa: E402
+from schemas.artifacts import load_schema, validate_artifact, list_schemas  # noqa: E402
 
 
 def sample_artifact(name: str) -> dict:

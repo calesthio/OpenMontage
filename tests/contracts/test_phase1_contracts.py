@@ -9,19 +9,19 @@ import pytest
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from tools.base_tool import BaseTool, ToolResult, ToolTier, ToolStatus, DependencyError
-from tools.tool_registry import ToolRegistry
-from lib.pipeline_loader import load_pipeline, get_stage_order, get_required_tools, list_pipelines
+from tools.base_tool import BaseTool, ToolTier, ToolStatus  # noqa: E402
+from tools.tool_registry import ToolRegistry  # noqa: E402
+from lib.pipeline_loader import load_pipeline, get_stage_order, get_required_tools, list_pipelines  # noqa: E402
 
 
 # ---- Tool imports ----
 
-from tools.analysis.transcriber import Transcriber
-from tools.video.video_trimmer import VideoTrimmer
-from tools.subtitle.subtitle_gen import SubtitleGen
-from tools.analysis.frame_sampler import FrameSampler
-from tools.audio.audio_mixer import AudioMixer
-from tools.video.video_compose import VideoCompose
+from tools.analysis.transcriber import Transcriber  # noqa: E402
+from tools.video.video_trimmer import VideoTrimmer  # noqa: E402
+from tools.subtitle.subtitle_gen import SubtitleGen  # noqa: E402
+from tools.analysis.frame_sampler import FrameSampler  # noqa: E402
+from tools.audio.audio_mixer import AudioMixer  # noqa: E402
+from tools.video.video_compose import VideoCompose  # noqa: E402
 
 
 # ---- Contract: every tool inherits BaseTool and has required fields ----

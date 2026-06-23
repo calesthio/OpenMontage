@@ -77,13 +77,13 @@ class HunyuanVideo(BaseTool):
     def get_status(self) -> ToolStatus:
         return local_generation_status()
 
-    def estimate_cost(self, inputs: dict[str, Any]) -> float:
+    def estimate_cost(self, inputs: dict[str, Any]) -> float:  # noqa: F821
         return 0.0
 
-    def estimate_runtime(self, inputs: dict[str, Any]) -> float:
+    def estimate_runtime(self, inputs: dict[str, Any]) -> float:  # noqa: F821
         return estimate_local_runtime(HUNYUAN_VARIANTS["hunyuan-1.5"]["speed"])
 
-    def execute(self, inputs: dict[str, Any]) -> ToolResult:
+    def execute(self, inputs: dict[str, Any]) -> ToolResult:  # noqa: F821
         if self.get_status() != ToolStatus.AVAILABLE:
             return ToolResult(success=False, error="Hunyuan local video generation is unavailable. " + self.install_instructions)
         start = time.time()

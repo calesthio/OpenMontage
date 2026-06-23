@@ -17,7 +17,6 @@ from tools.base_tool import (
     ResourceProfile,
     ToolResult,
     ToolStability,
-    ToolStatus,
     ToolTier,
     ToolRuntime,
 )
@@ -133,7 +132,7 @@ class TranscriptFetcher(BaseTool):
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         video_id = self._extract_video_id(inputs["url_or_video_id"])
         languages = inputs.get("languages", ["en"])
-        include_auto = inputs.get("include_auto_generated", True)
+        include_auto = inputs.get("include_auto_generated", True)  # noqa: F841
 
         start = time.time()
 

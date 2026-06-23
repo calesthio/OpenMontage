@@ -5,14 +5,17 @@ Tests the VideoStitch tool with both matching and mismatched clips.
 Generates fixtures via ffmpeg — no API keys needed.
 """
 
-import sys, os, json, subprocess
+import sys
+import os
+import json
+import subprocess
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from lib.env_loader import load_env
 load_env()
 
-from tools.video.video_stitch import VideoStitch
+from tools.video.video_stitch import VideoStitch  # noqa: E402
 
 OUT = os.path.join(os.path.dirname(__file__), "output")
 os.makedirs(OUT, exist_ok=True)
@@ -67,7 +70,7 @@ if r1.data:
     print(f"  Compatible: {r1.data.get('compatible')}")
     print(f"  Total duration: {r1.data.get('total_duration')}s")
     print(f"  Mismatches: {len(r1.data.get('mismatches', []))}")
-if r1.error: print(f"Error: {r1.error}")
+if r1.error: print(f"Error: {r1.error}")  # noqa: E701
 
 # --- Test 2: Validate mismatched clips ---
 print("\n--- Test 2: Validate mismatched clips ---")
@@ -91,8 +94,8 @@ r3 = tool.execute({
     "output_path": os.path.join(OUT, "stitch_cut.mp4"),
 })
 print(f"Success: {r3.success}, Duration: {r3.duration_seconds:.2f}s")
-if r3.data: print(f"  Output duration: {r3.data.get('duration')}s, Method: {r3.data.get('method')}")
-if r3.error: print(f"Error: {r3.error}")
+if r3.data: print(f"  Output duration: {r3.data.get('duration')}s, Method: {r3.data.get('method')}")  # noqa: E701
+if r3.error: print(f"Error: {r3.error}")  # noqa: E701
 
 # --- Test 4: Crossfade stitch ---
 print("\n--- Test 4: Crossfade stitch (2 clips) ---")
@@ -104,8 +107,8 @@ r4 = tool.execute({
     "output_path": os.path.join(OUT, "stitch_crossfade.mp4"),
 })
 print(f"Success: {r4.success}, Duration: {r4.duration_seconds:.2f}s")
-if r4.data: print(f"  Output duration: {r4.data.get('duration')}s, Method: {r4.data.get('method')}")
-if r4.error: print(f"Error: {r4.error}")
+if r4.data: print(f"  Output duration: {r4.data.get('duration')}s, Method: {r4.data.get('method')}")  # noqa: E701
+if r4.error: print(f"Error: {r4.error}")  # noqa: E701
 
 # --- Test 5: Fade-through-black (3 clips) ---
 print("\n--- Test 5: Fade through black (3 clips) ---")
@@ -117,8 +120,8 @@ r5 = tool.execute({
     "output_path": os.path.join(OUT, "stitch_fadeblack.mp4"),
 })
 print(f"Success: {r5.success}, Duration: {r5.duration_seconds:.2f}s")
-if r5.data: print(f"  Output duration: {r5.data.get('duration')}s, Method: {r5.data.get('method')}")
-if r5.error: print(f"Error: {r5.error}")
+if r5.data: print(f"  Output duration: {r5.data.get('duration')}s, Method: {r5.data.get('method')}")  # noqa: E701
+if r5.error: print(f"Error: {r5.error}")  # noqa: E701
 
 # --- Test 6: Auto-normalize mismatched clips ---
 print("\n--- Test 6: Stitch mismatched clips (auto_normalize) ---")
@@ -130,8 +133,8 @@ r6 = tool.execute({
     "output_path": os.path.join(OUT, "stitch_normalized.mp4"),
 })
 print(f"Success: {r6.success}, Duration: {r6.duration_seconds:.2f}s")
-if r6.data: print(f"  Output duration: {r6.data.get('duration')}s, Normalized: {r6.data.get('auto_normalized')}")
-if r6.error: print(f"Error: {r6.error}")
+if r6.data: print(f"  Output duration: {r6.data.get('duration')}s, Normalized: {r6.data.get('auto_normalized')}")  # noqa: E701
+if r6.error: print(f"Error: {r6.error}")  # noqa: E701
 
 # --- Test 7: Preview stitch (low-res) ---
 print("\n--- Test 7: Preview stitch ---")
@@ -142,8 +145,8 @@ r7 = tool.execute({
     "output_path": os.path.join(OUT, "stitch_preview.mp4"),
 })
 print(f"Success: {r7.success}, Duration: {r7.duration_seconds:.2f}s")
-if r7.data: print(f"  Preview resolution: {r7.data.get('preview_resolution')}")
-if r7.error: print(f"Error: {r7.error}")
+if r7.data: print(f"  Preview resolution: {r7.data.get('preview_resolution')}")  # noqa: E701
+if r7.error: print(f"Error: {r7.error}")  # noqa: E701
 
 # --- Test 8: Spatial — side by side ---
 print("\n--- Test 8: Spatial side-by-side ---")
@@ -154,8 +157,8 @@ r8 = tool.execute({
     "output_path": os.path.join(OUT, "stitch_side_by_side.mp4"),
 })
 print(f"Success: {r8.success}, Duration: {r8.duration_seconds:.2f}s")
-if r8.data: print(f"  Layout: {r8.data.get('layout')}, Duration: {r8.data.get('duration')}s")
-if r8.error: print(f"Error: {r8.error}")
+if r8.data: print(f"  Layout: {r8.data.get('layout')}, Duration: {r8.data.get('duration')}s")  # noqa: E701
+if r8.error: print(f"Error: {r8.error}")  # noqa: E701
 
 # --- Test 9: Spatial — picture-in-picture ---
 print("\n--- Test 9: Spatial PIP (bottom-right) ---")
@@ -169,8 +172,8 @@ r9 = tool.execute({
     "output_path": os.path.join(OUT, "stitch_pip.mp4"),
 })
 print(f"Success: {r9.success}, Duration: {r9.duration_seconds:.2f}s")
-if r9.data: print(f"  Layout: {r9.data.get('layout')}, Duration: {r9.data.get('duration')}s")
-if r9.error: print(f"Error: {r9.error}")
+if r9.data: print(f"  Layout: {r9.data.get('layout')}, Duration: {r9.data.get('duration')}s")  # noqa: E701
+if r9.error: print(f"Error: {r9.error}")  # noqa: E701
 
 # --- Test 10: Spatial — vertical stack ---
 print("\n--- Test 10: Spatial vertical stack ---")
@@ -181,8 +184,8 @@ r10 = tool.execute({
     "output_path": os.path.join(OUT, "stitch_vstack.mp4"),
 })
 print(f"Success: {r10.success}, Duration: {r10.duration_seconds:.2f}s")
-if r10.data: print(f"  Layout: {r10.data.get('layout')}, Duration: {r10.data.get('duration')}s")
-if r10.error: print(f"Error: {r10.error}")
+if r10.data: print(f"  Layout: {r10.data.get('layout')}, Duration: {r10.data.get('duration')}s")  # noqa: E701
+if r10.error: print(f"Error: {r10.error}")  # noqa: E701
 
 # --- Probe all video outputs ---
 print("\n--- Output inspection ---")

@@ -279,7 +279,7 @@ class VideoUnderstand(BaseTool):
                 ]
             else:
                 # Get total frame count first
-                probe_cmd = [
+                probe_cmd = [  # noqa: F841
                     "ffmpeg", "-i", str(video_path),
                     "-map", "0:v:0", "-c", "copy", "-f", "null", "-",
                 ]
@@ -364,8 +364,6 @@ class VideoUnderstand(BaseTool):
         from transformers import (
             CLIPProcessor,
             CLIPModel,
-            BlipProcessor,
-            BlipForConditionalGeneration,
             Blip2Processor,
             Blip2ForConditionalGeneration,
             AutoProcessor,

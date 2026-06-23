@@ -13,6 +13,7 @@
   <a href="#pipelines">Pipelines</a> &nbsp;·&nbsp;
   <a href="#how-it-works">How It Works</a> &nbsp;·&nbsp;
   <a href="docs/PROVIDERS.md">Providers</a> &nbsp;·&nbsp;
+  <a href="docs/VIDEO_TUTORIAL_GUIDE.md">Tutorial</a> &nbsp;·&nbsp;
   <a href="AGENT_GUIDE.md">Agent Guide</a>
 </p>
 

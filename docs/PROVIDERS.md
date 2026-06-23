@@ -32,8 +32,9 @@ Everything you need to know about every provider in OpenMontage — setup instru
 PEXELS_API_KEY=              # Stock photos + videos
 PIXABAY_API_KEY=             # Stock photos + videos
 
-# GOOGLE (one key, two tools, generous free tier)
-GOOGLE_API_KEY=              # Google TTS + Google Imagen
+# GOOGLE
+GOOGLE_API_KEY=              # Gemini API TTS + Google Imagen
+GEMINI_API_KEY=              # Optional Gemini API TTS alias
 
 # VOICE + MUSIC
 ELEVENLABS_API_KEY=          # TTS, music, sound effects (10K chars/month free)
@@ -207,12 +208,12 @@ Doubao Speech 2.0 is billed by character package or usage in Volcengine. OpenMon
 
 ---
 
-### Google — TTS + Imagen (Shared Key)
+### Google — Gemini API TTS + Imagen
 
-> **One key, two tools.** Google Cloud TTS has 700+ voices in 50+ languages — the strongest localization option. Imagen 4 generates high-quality images.
+> **Latest Google TTS only.** OpenMontage uses Gemini API TTS, defaulting to `gemini-3.1-flash-tts-preview`. Imagen 4 uses the same Google API key family.
 
 **Tools unlocked:** `google_tts`, `google_imagen`
-**Env var:** `GOOGLE_API_KEY`
+**Env vars:** `GOOGLE_API_KEY` or `GEMINI_API_KEY` for Gemini API TTS.
 
 #### Setup
 
@@ -220,28 +221,58 @@ Doubao Speech 2.0 is billed by character package or usage in Volcengine. OpenMon
 2. Navigate to [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
 3. Click **Create API Key**, select a Google Cloud project
 4. Copy the key
-5. Add to `.env`: `GOOGLE_API_KEY=AIza...`
+5. Add to `.env`: `GOOGLE_API_KEY=AIza...` or `GEMINI_API_KEY=AIza...`
 
-**For TTS specifically**, you also need to enable the Text-to-Speech API:
-1. Visit [console.cloud.google.com/apis/library/texttospeech.googleapis.com](https://console.cloud.google.com/apis/library/texttospeech.googleapis.com)
-2. Click **Enable**
-3. Make sure your API key's restrictions allow the Text-to-Speech API
+OpenMontage `google_tts` defaults to:
+
+```json
+{
+  "model": "gemini-3.1-flash-tts-preview",
+  "voice": "Kore"
+}
+```
+
+Gemini API returns 24 kHz PCM audio. OpenMontage writes a WAV file by default.
 
 **For Imagen**, enable the Generative Language API:
 1. Visit [console.cloud.google.com/apis/library/generativelanguage.googleapis.com](https://console.cloud.google.com/apis/library/generativelanguage.googleapis.com)
 2. Click **Enable**
 
-#### Google TTS Pricing
+#### Gemini API TTS
 
-| Voice Type | Free tier | Paid (per 1M chars) | Notes |
-|-----------|-----------|---------------------|-------|
-| **Standard** | 1M chars/month | $4.00 | Basic quality, fast |
-| **WaveNet** | 1M chars/month | $16.00 | Natural-sounding |
-| **Neural2** | 1M chars/month | $16.00 | Best quality |
-| **Studio** | — | $24.00 | Professional studio voices |
-| **Chirp** | — | $4.00 | Conversational style |
+Gemini API TTS supports prompt-directed single-speaker and two-speaker audio. Use `prompt` to describe tone, pace, accent, and emotion. Use `speaker_voice_configs` for dialogue:
 
-The free tiers apply *independently* — you get 1M Standard AND 1M WaveNet AND 1M Neural2 characters per month free. That's roughly 250+ minutes of narration per month at zero cost.
+```json
+{
+  "text": "Host: Welcome.\nGuest: Thanks for having me.",
+  "prompt": "Warm podcast conversation, natural pacing.",
+  "speaker_voice_configs": [
+    {"speaker": "Host", "voice": "Kore"},
+    {"speaker": "Guest", "voice": "Puck"}
+  ]
+}
+```
+
+For repeatable narration auditions, prefer `delivery_preset` plus optional `duration_target_seconds` before hand-writing long prompt instructions. The duration target is prompt guidance, not a hard API speed parameter, so always listen to the sample and probe the final audio duration:
+
+```json
+{
+  "text": "遇到生产问题时，先让 Agent 汇总日志线索。",
+  "voice": "Kore",
+  "delivery_preset": "technical_briefing",
+  "duration_target_seconds": 5.2,
+  "prompt": "Mandarin narration, mature and steady, with clear product-demo pacing."
+}
+```
+
+Available delivery presets:
+
+| Preset | Use when |
+|--------|----------|
+| `technical_briefing` | Product demos, system explainers, and precise technical narration |
+| `compact_explainer` | A segment must stay tight without losing clarity |
+| `warm_opening` | Opening lines need a softer lead-in before the main problem statement |
+| `clear_cta` | Closing or action-oriented lines need faster, crisp emphasis |
 
 #### Google Imagen Pricing
 
@@ -251,26 +282,22 @@ The free tiers apply *independently* — you get 1M Standard AND 1M WaveNet AND 
 | Imagen 4 Standard | $0.04 |
 | Imagen 4 Ultra | $0.06 |
 
-**Free tier for Imagen:** None. Paid tier only.
+#### Gemini API TTS Voice Options
 
-**New account bonus:** Google Cloud offers **$300 in free credits** for new accounts (90-day trial), applicable to both TTS and Imagen.
+Use Gemini prebuilt voice names such as:
 
-#### Google TTS Voice Types
+| Voice | Character |
+|-------|-----------|
+| `Kore` | Firm |
+| `Charon` | Informative |
+| `Aoede` | Breezy |
+| `Puck` | Upbeat |
+| `Orus` | Firm |
+| `Leda` | Youthful |
 
-Google TTS offers 700+ voices across 50+ languages. Voice names follow the pattern `{language}-{type}-{letter}`:
+**Recommended voices:** Start with `Kore` for firm narration, `Charon` for informative explainers, `Aoede` for breezy friendly narration, and `Puck` for upbeat dialogue.
 
-| Type | Example | Quality | Cost |
-|------|---------|---------|------|
-| **Chirp 3 HD** | `en-US-Chirp3-HD-Orus` | **Best (2024, most natural)** | **Mid — default** |
-| Standard | `en-US-Standard-A` | Good | Cheapest |
-| WaveNet | `en-US-WaveNet-D` | Very good | Mid |
-| Neural2 | `en-US-Neural2-D` | Excellent | Mid |
-| Studio | `en-US-Studio-O` | Professional | Highest |
-| Journey | `en-US-Journey-D` | Conversational (long-form) | Mid |
-
-**Recommended voices:** `en-US-Chirp3-HD-Orus` (male, rich/cinematic), `en-US-Chirp3-HD-Aoede` (female, warm). These are Google's newest tier — most natural-sounding, uses the v1beta1 endpoint automatically.
-
-**Languages include:** English (US, UK, AU, IN), Spanish, French, German, Italian, Portuguese, Japanese, Korean, Chinese (Mandarin, Cantonese), Arabic, Hindi, Russian, Dutch, Polish, Turkish, Vietnamese, Thai, Indonesian, and 30+ more.
+**Languages include:** Gemini API TTS supports automatic language detection across its supported TTS languages.
 
 ---
 

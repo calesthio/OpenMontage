@@ -61,9 +61,11 @@ Before rendering, present the user with audio options and get their preferences.
 
 > **Audio setup for this video:**
 >
-> **Narration:** I can generate TTS narration using OpenAI TTS (`gpt-4o-mini-tts` — $0.015/min, 6 voices, voice direction). Which voice and tone would you like? I'll propose a voice based on the video topic, or you can choose:
+> **Narration:** I can generate TTS narration through `tts_selector`, including OpenAI Speech API (`gpt-4o-mini-tts`), OpenAI audio-output models (`gpt-audio-1.5`), ElevenLabs, Google TTS, or local Piper depending on what is configured. Which voice and tone would you like? I'll propose a voice based on the video topic, or you can choose:
 > - `onyx` — deep, authoritative (documentaries, tech)
 > - `echo` — resonant, futuristic (product ads, sci-fi)
+> - `marin` — high-quality OpenAI speech voice
+> - `cedar` — high-quality OpenAI speech voice
 > - `nova` — bright, energetic (upbeat, explainers)
 > - `fable` — warm, storytelling (narratives, education)
 > - `shimmer` — expressive, warm (organic, lifestyle)
@@ -85,8 +87,8 @@ Before rendering, present the user with audio options and get their preferences.
 
 2. **Generate TTS narration:**
    ```python
-   from tools.audio.openai_tts import OpenAITTS
-   result = OpenAITTS().execute({
+   from tools.audio.tts_selector import TTSSelector
+   result = TTSSelector().execute({
        'text': narration_script,
        'voice': '<user-chosen or agent-recommended>',
        'instructions': '<voice direction matching video tone>',

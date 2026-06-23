@@ -70,6 +70,15 @@ class TTSSelector(BaseTool):
                 "description": "Provider name or 'auto'. Valid values are discovered at runtime from the registry.",
                 "default": "auto",
             },
+            "preferred_tool": {
+                "type": "string",
+                "description": "Exact TTS tool name to prefer, e.g. openai_audio_tts.",
+            },
+            "prefer_audio_output": {
+                "type": "boolean",
+                "default": False,
+                "description": "For OpenAI routing, prefer the audio-output chat model path over the dedicated Speech API.",
+            },
             "allowed_providers": {
                 "type": "array",
                 "items": {"type": "string"},
@@ -121,7 +130,7 @@ class TTSSelector(BaseTool):
         from lib.scoring import rank_providers
 
         task_context = self._prepare_task_context(inputs)
-        candidates = self._providers()
+        candidates = self._filter_candidates(self._providers(), inputs)
 
         # Rank mode — return scored provider rankings without generating
         if inputs.get("operation") == "rank":
@@ -163,10 +172,13 @@ class TTSSelector(BaseTool):
         """Select the best TTS provider using scored ranking."""
         from lib.scoring import rank_providers
 
-        preferred = inputs.get("preferred_provider", "auto")
-        allowed = set(inputs.get("allowed_providers") or [])
-        if allowed:
-            candidates = [tool for tool in candidates if tool.provider in allowed]
+        preferred_tool = inputs.get("preferred_tool")
+        if preferred_tool:
+            for tool in candidates:
+                if tool.name == preferred_tool and tool.get_status() == ToolStatus.AVAILABLE:
+                    return tool, None
+
+        preferred = self._preferred_provider(inputs)
 
         rankings = rank_providers(candidates, task_context)
 
@@ -185,6 +197,26 @@ class TTSSelector(BaseTool):
                 return tool_by_provider[score_item.provider], score_item
 
         return None, None
+
+    @staticmethod
+    def _preferred_provider(inputs: dict[str, Any]) -> str:
+        preferred = inputs.get("preferred_provider", "auto")
+        task_context = inputs.get("task_context") or {}
+        wants_audio_output = bool(
+            inputs.get("prefer_audio_output")
+            or task_context.get("prefer_audio_output")
+            or task_context.get("audio_output_chat_completions")
+        )
+        if preferred == "openai" and wants_audio_output:
+            return "openai_audio"
+        return preferred
+
+    @staticmethod
+    def _filter_candidates(candidates: list[BaseTool], inputs: dict[str, Any]) -> list[BaseTool]:
+        allowed = set(inputs.get("allowed_providers") or [])
+        if not allowed:
+            return candidates
+        return [tool for tool in candidates if tool.provider in allowed or tool.name in allowed]
 
     def _prepare_task_context(self, inputs: dict[str, Any]) -> dict[str, Any]:
         from lib.scoring import normalize_task_context

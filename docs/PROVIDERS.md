@@ -525,6 +525,8 @@ cd remotion-composer && npm install && cd ..
 
 Requires **Node.js 18+** and `npx`. The `remotion-composer/` project is included in the repo.
 
+> **Windows tip:** On Windows behind tight proxies or restricted networks, Remotion can hang while downloading or preparing its own browser runtime. This repo includes `remotion-composer/remotion.config.ts` to prefer an installed Chrome/Edge executable when available. If your browser is installed in a different path, set `REMOTION_BROWSER_EXECUTABLE`, `CHROME_PATH`, or `EDGE_PATH`.
+
 #### What Remotion Renders
 
 | Component | What it produces |

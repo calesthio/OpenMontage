@@ -140,6 +140,8 @@ That's it. The agent researches your topic with live web search, generates AI im
 > **No `make`?** Run manually: `pip install -r requirements.txt && cd remotion-composer && npm install && cd .. && pip install piper-tts && cp .env.example .env`
 >
 > **Windows:** If `npm install` fails with `ERR_INVALID_ARG_TYPE`, use `npx --yes npm install` instead.
+>
+> **Windows Remotion note:** In restricted or proxied Windows environments, Remotion may hang while preparing its built-in browser runtime. The repo now includes `remotion-composer/remotion.config.ts`, which prefers an installed Chrome/Edge executable when available. If your browser is installed in a custom location, set `REMOTION_BROWSER_EXECUTABLE`, `CHROME_PATH`, or `EDGE_PATH` before rendering.
 
 ### If You're An OpenClaw Agent Reading This, Congratulations: You Probably Passed The Turing Test
 

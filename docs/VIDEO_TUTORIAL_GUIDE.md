@@ -41,6 +41,8 @@ make setup
 
 This installs Python dependencies, sets up the Remotion composer, installs local Piper TTS if possible, warms the HyperFrames runtime cache, and creates a `.env` file from `.env.example`.
 
+> **Windows Remotion note:** If you are on Windows behind a proxy or restricted network, Remotion may fail while preparing its own browser runtime. The repo includes `remotion-composer/remotion.config.ts` to prefer an installed Chrome/Edge executable when available.
+
 If you only want Python dependencies:
 
 ```bash

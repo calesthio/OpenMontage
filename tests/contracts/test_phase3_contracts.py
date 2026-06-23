@@ -29,6 +29,7 @@ from tools.tool_registry import ToolRegistry
 from tools.audio.elevenlabs_tts import ElevenLabsTTS
 from tools.audio.openai_tts import OpenAITTS
 from tools.audio.piper_tts import PiperTTS
+from tools.audio.minimax_tts import MiniMaxTTS
 from tools.audio.tts_selector import TTSSelector
 
 
@@ -72,6 +73,28 @@ class TestPiperTTS:
         tool = PiperTTS()
         assert "text_to_speech" in tool.capabilities
         assert "offline_generation" in tool.capabilities
+
+
+class TestMiniMaxTTS:
+    def test_identity(self):
+        tool = MiniMaxTTS()
+        info = tool.get_info()
+        assert info["name"] == "minimax_tts"
+        assert info["tier"] == "voice"
+        assert info["capability"] == "tts"
+        assert info["provider"] == "minimax"
+
+    def test_cost_estimate(self):
+        tool = MiniMaxTTS()
+        cost = tool.estimate_cost({"text": "Hello world, this is a test."})
+        assert cost > 0
+        assert cost < 0.01
+
+    def test_capabilities(self):
+        tool = MiniMaxTTS()
+        assert "text_to_speech" in tool.capabilities
+        assert "voice_selection" in tool.capabilities
+        assert "timestamp_alignment" in tool.capabilities
 
 
 class TestMusicGen:
@@ -143,7 +166,7 @@ class TestCapabilityMetadata:
         catalog = reg.capability_catalog()
         assert "tts" in catalog
         providers = {item["provider"] for item in catalog["tts"] if item["provider"] != "selector"}
-        assert providers == {"elevenlabs", "google_tts", "openai", "piper"}
+        assert providers == {"doubao", "elevenlabs", "google_tts", "minimax", "openai", "piper"}
 
 
 # ---- Animated Explainer Pipeline ----

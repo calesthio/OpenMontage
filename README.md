@@ -178,6 +178,8 @@ ELEVENLABS_API_KEY=your-key    # Premium TTS, AI music, sound effects
 OPENAI_API_KEY=your-key        # OpenAI TTS, DALL-E 3 images
 XAI_API_KEY=your-key           # xAI Grok image edits/generation + Grok video generation
 GOOGLE_API_KEY=your-key        # Google Imagen images, Google TTS (700+ voices)
+DOUBAO_SPEECH_API_KEY=your-key # Doubao Speech Mandarin TTS
+MINIMAX_API_KEY=your-key       # MiniMax Speech TTS, voice cloning, voice design
 
 # More video providers:
 HEYGEN_API_KEY=your-key        # HeyGen — VEO, Sora, Runway, Kling via single gateway
@@ -372,7 +374,7 @@ Final video output -- only if self-review passes
 OpenMontage/
 ├── tools/              # 48 Python tools (the agent's hands)
 │   ├── video/          # 13 video gen tools + compose, stitch, trim
-│   ├── audio/          # 4 TTS providers + Suno/ElevenLabs music, mixing, enhancement
+│   ├── audio/          # 6 TTS providers + Suno/ElevenLabs music, mixing, enhancement
 │   ├── graphics/       # 9 image/graphics generation tools + diagrams, code snippets, math
 │   ├── enhancement/    # Upscale, bg remove, face enhance, color grade
 │   ├── analysis/       # Transcription, scene detect, frame sampling
@@ -450,13 +452,15 @@ Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to
 </details>
 
 <details>
-<summary><strong>Text-to-Speech — 4 providers</strong></summary>
+<summary><strong>Text-to-Speech — 6 providers</strong></summary>
 
 | Provider | Type | Notes |
 |----------|------|-------|
 | **ElevenLabs** | Cloud API | Premium voice quality |
 | **Google TTS** | Cloud API | 700+ voices, 50+ languages — best for localization |
 | **OpenAI TTS** | Cloud API | Fast, affordable |
+| **Doubao Speech** | Cloud API | Strong Mandarin narration with timestamp metadata |
+| **MiniMax Speech** | Cloud API | Expressive multilingual voices, cloned voices, subtitle metadata |
 | **Piper** | Local | Completely free, offline |
 
 </details>

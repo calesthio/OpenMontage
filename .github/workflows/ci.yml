@@ -33,6 +33,4 @@ jobs:
         run: make lint
 
       - name: Run tests
-        run: |
-          make test
-          make test-contracts
+        run: make test

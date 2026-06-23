@@ -12,7 +12,7 @@ import pytest
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from lib.pipeline_loader import (
+from lib.pipeline_loader import (  # noqa: E402
     load_pipeline,
     get_stage_order,
     get_required_tools,
@@ -20,16 +20,14 @@ from lib.pipeline_loader import (
     get_stage_review_focus,
     list_pipelines,
 )
-from lib.checkpoint import STAGES
-from schemas.artifacts import list_schemas
-from styles.playbook_loader import load_playbook, list_playbooks, validate_playbook
-from tools.base_tool import ToolTier
-from tools.audio.music_gen import MusicGen
-from tools.tool_registry import ToolRegistry
-from tools.audio.elevenlabs_tts import ElevenLabsTTS
-from tools.audio.openai_tts import OpenAITTS
-from tools.audio.piper_tts import PiperTTS
-from tools.audio.tts_selector import TTSSelector
+from styles.playbook_loader import load_playbook, list_playbooks  # noqa: E402
+from tools.base_tool import ToolTier  # noqa: E402
+from tools.audio.music_gen import MusicGen  # noqa: E402
+from tools.tool_registry import ToolRegistry  # noqa: E402
+from tools.audio.elevenlabs_tts import ElevenLabsTTS  # noqa: E402
+from tools.audio.openai_tts import OpenAITTS  # noqa: E402
+from tools.audio.piper_tts import PiperTTS  # noqa: E402
+from tools.audio.tts_selector import TTSSelector  # noqa: E402
 
 
 # ---- TTS Provider Tools ----

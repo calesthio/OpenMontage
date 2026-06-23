@@ -13,7 +13,6 @@ Methods:
 from __future__ import annotations
 
 import json
-import os
 import platform
 import shutil
 import time
@@ -133,7 +132,7 @@ class GreenScreenProcessor(BaseTool):
         duration = probe["duration"]
         width = probe["width"]
         height = probe["height"]
-        src_fps = probe["fps"]
+        src_fps = probe["fps"]  # noqa: F841
 
         # Step 2: Determine method
         if method == "auto":
@@ -313,11 +312,11 @@ class GreenScreenProcessor(BaseTool):
             try:
                 result = self.run_command(cmd, timeout=15)
                 # Check stderr for color stats
-                output = result.stderr or ""
+                output = result.stderr or ""  # noqa: F841
 
                 # Alternative: use FFmpeg to count green-ish pixels
                 # Run a simpler hue check with colorchannelmixer
-                cmd2 = [
+                cmd2 = [  # noqa: F841
                     "ffmpeg", "-y",
                     "-i", str(sample),
                     "-vf", (
@@ -424,7 +423,7 @@ class GreenScreenProcessor(BaseTool):
 
         try:
             self.run_command(cmd, timeout=600)
-        except Exception as e:
+        except Exception:
             # ffmpeg may return non-zero but still produce frames
             pass
 
@@ -465,9 +464,9 @@ class GreenScreenProcessor(BaseTool):
                 "-i", str(frame),
                 "-filter_complex",
                 (
-                    f"[0:v]scale=iw:ih[bg];"
-                    f"[1:v]chromakey=color=0x00FF00:similarity=0.3:blend=0.08[fg];"
-                    f"[bg][fg]overlay=0:0"
+                    "[0:v]scale=iw:ih[bg];"
+                    "[1:v]chromakey=color=0x00FF00:similarity=0.3:blend=0.08[fg];"
+                    "[bg][fg]overlay=0:0"
                 ),
                 "-frames:v", "1",
                 str(out_path),
@@ -479,7 +478,7 @@ class GreenScreenProcessor(BaseTool):
             except Exception:
                 # Try with the frame size explicitly to fix scale
                 try:
-                    cmd_retry = [
+                    cmd_retry = [  # noqa: F841
                         "ffmpeg", "-y",
                         "-i", str(frame),
                         "-vf",
@@ -495,7 +494,7 @@ class GreenScreenProcessor(BaseTool):
                     cmd_simple = [
                         "ffmpeg", "-y",
                         "-i", str(frame),
-                        "-vf", f"chromakey=color=0x00FF00:similarity=0.3:blend=0.08",
+                        "-vf", "chromakey=color=0x00FF00:similarity=0.3:blend=0.08",
                         str(out_path),
                     ]
                     self.run_command(cmd_simple, timeout=30)

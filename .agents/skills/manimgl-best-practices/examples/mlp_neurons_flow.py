@@ -9,7 +9,6 @@ Run: manimgl mlp_neurons_flow.py MLPNeuronsFlow -o
 from manimlib import *
 import numpy as np
 import random
-import itertools as it
 
 
 def value_to_color(

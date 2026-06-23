@@ -8,9 +8,9 @@ import pytest
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from lib.pipeline_loader import get_required_tools, get_stage_order, load_pipeline
-from schemas.artifacts import ARTIFACT_NAMES, validate_artifact
-from tools.character.character_animation import (
+from lib.pipeline_loader import get_required_tools, get_stage_order, load_pipeline  # noqa: E402
+from schemas.artifacts import ARTIFACT_NAMES, validate_artifact  # noqa: E402
+from tools.character.character_animation import (  # noqa: E402
     ActionTimelineCompiler,
     CharacterAnimationReviewer,
     CharacterRigRenderer,
@@ -18,9 +18,9 @@ from tools.character.character_animation import (
     PoseLibraryBuilder,
     SvgRigBuilder,
 )
-from tools.tool_registry import registry
-from tools.video.hyperframes_compose import HyperFramesCompose
-from tools.video.video_compose import VideoCompose
+from tools.tool_registry import registry  # noqa: E402
+from tools.video.hyperframes_compose import HyperFramesCompose  # noqa: E402
+from tools.video.video_compose import VideoCompose  # noqa: E402
 
 
 def test_character_animation_manifest_contract():

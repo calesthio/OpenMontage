@@ -122,7 +122,7 @@ class MusicGen(BaseTool):
         import logging
         import requests
 
-        logger = logging.getLogger(__name__)
+        logger = logging.getLogger(__name__)  # noqa: F841
 
         prompt = inputs["prompt"]
         duration = inputs.get("duration_seconds")

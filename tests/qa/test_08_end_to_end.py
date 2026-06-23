@@ -9,27 +9,30 @@ an actual output video. All other stages use synthetic data.
 No API keys needed -- uses ffmpeg-generated fixtures throughout.
 """
 
-import sys, os, json, subprocess, shutil
+import sys
+import os
+import json
+import subprocess
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
 PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
 sys.path.insert(0, PROJECT_ROOT)
 
-from lib.env_loader import load_env
+from lib.env_loader import load_env  # noqa: E402
 load_env()
 
-from lib.checkpoint import (
+from lib.checkpoint import (  # noqa: E402
     write_checkpoint,
     read_checkpoint,
     get_completed_stages,
     get_next_stage,
-    STAGES,
     CANONICAL_STAGE_ARTIFACTS,
 )
-from tools.cost_tracker import CostTracker, BudgetMode
-from schemas.artifacts import validate_artifact, list_schemas
-from styles.playbook_loader import load_playbook, validate_accessibility
+from tools.cost_tracker import CostTracker, BudgetMode  # noqa: E402
+from schemas.artifacts import validate_artifact, list_schemas  # noqa: E402
+from styles.playbook_loader import load_playbook, validate_accessibility  # noqa: E402
 
 OUT = os.path.join(os.path.dirname(__file__), "output")
 PIPELINE_DIR = Path(OUT) / "e2e_pipeline"
@@ -358,7 +361,7 @@ for i, (sid, label, start, end, _) in enumerate(SECTIONS):
     img_path = str(ASSETS_DIR / f"img_{scene_id}.png")
     subprocess.run(
         ["ffmpeg", "-y", "-f", "lavfi", "-i",
-         f"color=c=darkblue:s=1280x720:d=1", "-frames:v", "1", img_path],
+         "color=c=darkblue:s=1280x720:d=1", "-frames:v", "1", img_path],
         capture_output=True, check=True,
     )
     clean_assets.append({
@@ -464,8 +467,8 @@ write_checkpoint(
 # ===================================================================
 print("\n--- Stage 6: compose (real tools) ---")
 
-from tools.audio.audio_mixer import AudioMixer
-from tools.video.video_compose import VideoCompose
+from tools.audio.audio_mixer import AudioMixer  # noqa: E402
+from tools.video.video_compose import VideoCompose  # noqa: E402
 
 # Step 1: Mix narration + music
 print("  Mixing audio...")

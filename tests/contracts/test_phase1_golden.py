@@ -18,15 +18,11 @@ import pytest
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from lib.checkpoint import STAGES
-from lib.pipeline_loader import (
+from lib.pipeline_loader import (  # noqa: E402
     load_pipeline,
     get_stage_order,
-    get_stage_skill,
-    get_stage_review_focus,
     list_pipelines,
 )
-from schemas.artifacts import load_schema, validate_artifact, list_schemas
 
 
 class TestTalkingHeadManifest:

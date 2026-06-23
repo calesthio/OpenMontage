@@ -16,8 +16,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from helpers import (
     NumericEmbedding, WeightMatrix, ContextAnimation,
-    NeuralNetwork, AttentionPattern, softmax, value_to_color,
-    random_bright_color, show_attention_flow
+    softmax
 )
 
 

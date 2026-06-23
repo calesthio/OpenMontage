@@ -5,14 +5,17 @@ Depends on test_01 and test_03 outputs (TTS + music files).
 If those don't exist, generates minimal test fixtures via ffmpeg.
 """
 
-import sys, os, json, subprocess
+import sys
+import os
+import json
+import subprocess
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from lib.env_loader import load_env
 load_env()
 
-from tools.audio.audio_mixer import AudioMixer
+from tools.audio.audio_mixer import AudioMixer  # noqa: E402
 
 OUT = os.path.join(os.path.dirname(__file__), "output")
 os.makedirs(OUT, exist_ok=True)
@@ -58,8 +61,8 @@ r1 = tool.execute({
     "output_path": os.path.join(OUT, "mix_basic.wav"),
 })
 print(f"Success: {r1.success}, Duration: {r1.duration_seconds:.2f}s")
-if r1.error: print(f"Error: {r1.error}")
-if r1.artifacts: print(f"Artifacts: {r1.artifacts}")
+if r1.error: print(f"Error: {r1.error}")  # noqa: E701
+if r1.artifacts: print(f"Artifacts: {r1.artifacts}")  # noqa: E701
 
 # --- Test 2: Mix with fades ---
 print("\n--- Test 2: Mix with fades ---")
@@ -73,8 +76,8 @@ r2 = tool.execute({
     "output_path": os.path.join(OUT, "mix_fades.wav"),
 })
 print(f"Success: {r2.success}, Duration: {r2.duration_seconds:.2f}s")
-if r2.error: print(f"Error: {r2.error}")
-if r2.artifacts: print(f"Artifacts: {r2.artifacts}")
+if r2.error: print(f"Error: {r2.error}")  # noqa: E701
+if r2.artifacts: print(f"Artifacts: {r2.artifacts}")  # noqa: E701
 
 # --- Test 3: Ducking (sidechain compress music under speech) ---
 print("\n--- Test 3: Ducking ---")
@@ -93,8 +96,8 @@ r3 = tool.execute({
     "output_path": os.path.join(OUT, "mix_ducked.wav"),
 })
 print(f"Success: {r3.success}, Duration: {r3.duration_seconds:.2f}s")
-if r3.error: print(f"Error: {r3.error}")
-if r3.artifacts: print(f"Artifacts: {r3.artifacts}")
+if r3.error: print(f"Error: {r3.error}")  # noqa: E701
+if r3.artifacts: print(f"Artifacts: {r3.artifacts}")  # noqa: E701
 
 # --- Test 4: Mix with delayed music start ---
 print("\n--- Test 4: Delayed music start ---")
@@ -108,8 +111,8 @@ r4 = tool.execute({
     "output_path": os.path.join(OUT, "mix_delayed.wav"),
 })
 print(f"Success: {r4.success}, Duration: {r4.duration_seconds:.2f}s")
-if r4.error: print(f"Error: {r4.error}")
-if r4.artifacts: print(f"Artifacts: {r4.artifacts}")
+if r4.error: print(f"Error: {r4.error}")  # noqa: E701
+if r4.artifacts: print(f"Artifacts: {r4.artifacts}")  # noqa: E701
 
 # --- Probe all outputs ---
 print("\n--- Output inspection ---")

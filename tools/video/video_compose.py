@@ -389,7 +389,7 @@ class VideoCompose(BaseTool):
             try:
                 from lib.media_profiles import get_profile
                 p = get_profile(profile_name)
-                resolution = f"{p.width}x{p.height}"
+                resolution = f"{p.width}x{p.height}"  # noqa: F841
             except (ImportError, ValueError):
                 pass
 
@@ -737,8 +737,8 @@ class VideoCompose(BaseTool):
             theme["captionHighlightColor"] = primary
             # Caption background: semi-transparent version of the bg color
             theme["captionBackgroundColor"] = (
-                f"rgba(255, 255, 255, 0.85)" if bg.upper() in ("#FFFFFF", "#FAFAFA", "#F9FAFB")
-                else f"rgba(15, 23, 42, 0.75)"
+                "rgba(255, 255, 255, 0.85)" if bg.upper() in ("#FFFFFF", "#FAFAFA", "#F9FAFB")
+                else "rgba(15, 23, 42, 0.75)"
             )
 
             # Motion style from playbook
@@ -2030,7 +2030,7 @@ class VideoCompose(BaseTool):
             y = int(ov.get("y", 0))
             start = ov.get("start_seconds", 0)
             end = ov.get("end_seconds")
-            opacity = ov.get("opacity", 1.0)
+            opacity = ov.get("opacity", 1.0)  # noqa: F841
 
             overlay_input = f"{i + 1}:v"
 
@@ -2093,7 +2093,7 @@ class VideoCompose(BaseTool):
         # Apply media profile if specified
         if profile_name:
             try:
-                from lib.media_profiles import get_profile, ffmpeg_output_args
+                from lib.media_profiles import get_profile, ffmpeg_output_args  # noqa: F401
                 profile = get_profile(profile_name)
                 cmd.extend(["-s", f"{profile.width}x{profile.height}"])
                 cmd.extend(["-r", str(profile.fps)])

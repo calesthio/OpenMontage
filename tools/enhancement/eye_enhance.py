@@ -13,7 +13,6 @@ Falls back to FFmpeg region-based filters if MediaPipe is not installed.
 
 from __future__ import annotations
 
-import json
 import time
 from pathlib import Path
 from typing import Any
@@ -151,7 +150,7 @@ class EyeEnhance(BaseTool):
         if not input_path.exists():
             return ToolResult(success=False, error=f"Input not found: {input_path}")
 
-        operations = inputs.get("operations", ["dark_circles", "brighten_eyes"])
+        operations = inputs.get("operations", ["dark_circles", "brighten_eyes"])  # noqa: F841
         output_path = Path(
             inputs.get("output_path", str(input_path.with_stem(f"{input_path.stem}_eye_enhanced")))
         )
@@ -178,14 +177,13 @@ class EyeEnhance(BaseTool):
     ) -> ToolResult:
         """Full MediaPipe Face Mesh + OpenCV pipeline for precise eye enhancement."""
         import cv2
-        import numpy as np
         import mediapipe as mp
 
         operations = inputs.get("operations", ["dark_circles", "brighten_eyes"])
         dark_intensity = inputs.get("dark_circle_intensity", 0.4)
         brighten_intensity = inputs.get("eye_brighten_intensity", 0.3)
         sharpen_intensity = inputs.get("sharpen_intensity", 0.3)
-        codec_fourcc = inputs.get("codec", "libx264")
+        codec_fourcc = inputs.get("codec", "libx264")  # noqa: F841
         crf = inputs.get("crf", 18)
 
         mp_face_mesh = mp.solutions.face_mesh
@@ -194,7 +192,7 @@ class EyeEnhance(BaseTool):
         fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))  # noqa: F841
 
         # Write to temp file, then mux audio via FFmpeg
         temp_video = output_path.parent / f".{output_path.stem}_temp.mp4"
@@ -279,7 +277,6 @@ class EyeEnhance(BaseTool):
         sharpen_intensity: float,
     ):
         """Apply eye enhancements to a single frame using detected landmarks."""
-        import cv2
         import numpy as np
 
         result = frame.copy()

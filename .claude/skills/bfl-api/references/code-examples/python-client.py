@@ -17,9 +17,9 @@ import time
 import hmac
 import hashlib
 import logging
-from typing import Optional, Dict, Any, List, Callable
+from typing import Dict, Any, List
 from dataclasses import dataclass
-from threading import Semaphore, Lock
+from threading import Semaphore
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests

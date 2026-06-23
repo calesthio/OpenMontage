@@ -187,9 +187,9 @@ class PathDifferenceExplanation(Scene):
         d1 = path1.get_length()
         d2 = path2.get_length()
 
-        d1_label = Tex(f"d_1", color=RED, font_size=36)
+        d1_label = Tex("d_1", color=RED, font_size=36)
         d1_label.move_to(path1.get_center() + 0.5 * LEFT)
-        d2_label = Tex(f"d_2", color=BLUE, font_size=36)
+        d2_label = Tex("d_2", color=BLUE, font_size=36)
         d2_label.move_to(path2.get_center() + 0.5 * RIGHT)
 
         # Title

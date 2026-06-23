@@ -9,7 +9,7 @@ Scores are normalized 0-1. Higher is better.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict, field
+from dataclasses import dataclass, asdict
 import re
 from typing import Any
 

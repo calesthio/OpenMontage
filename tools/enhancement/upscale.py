@@ -301,7 +301,7 @@ class Upscale(BaseTool):
                 bg_upsampler=upsampler,
             )
             # Monkey-patch so the caller can use the same interface
-            original_enhance = upsampler.enhance
+            original_enhance = upsampler.enhance  # noqa: F841
 
             def enhance_with_face(img, outscale=scale):
                 _, _, output = face_enhancer.enhance(

@@ -9,7 +9,6 @@ from manim import *
 import numpy as np
 import warnings
 import random
-import itertools as it
 from typing import Optional, Tuple
 
 

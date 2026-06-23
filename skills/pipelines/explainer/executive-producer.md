@@ -151,6 +151,9 @@ FINAL_QA:
      - Compare narration timestamps to visual cut points
      - Flag any section where narration plays over the wrong visual
      - Tolerance: ±0.5 seconds
+     - If the project is generated-narration-led and contains visual timing
+       cues, run `visual_timing_qa` on the rendered video and inspect
+       `review.md` contact sheets before publish approval
 
   3. STYLE CONSISTENCY:
      - Review all generated images: do they look like the same video?

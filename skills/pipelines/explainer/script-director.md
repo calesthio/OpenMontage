@@ -129,6 +129,18 @@ Write directions that TTS can actually implement. Reference ElevenLabs capabilit
 
 Avoid directions TTS can't do: "smile while speaking", "gesture toward screen", "look at camera."
 
+#### Visual Timing QA Cues
+
+Mark post-render visual timing cues when a later reviewer must verify that a
+specific screen state appears with a specific line. Use these for generated
+narration-led videos with animated UI, node reveals, diagrams, text cards, or
+step-by-step product flows. Skip them for source-footage or interview-style
+videos where there is no planned visual state to check.
+
+Record the cue in `enhancement_cues` or section metadata with a concrete
+expected state, for example: "Visual timing QA: when the line mentions feedback
+returning to the user, the next-version Skill node is highlighted."
+
 #### Enhancement Cues
 
 Every section should have at least one enhancement cue. These tell the Scene Planner and Asset Generator what visuals to create.

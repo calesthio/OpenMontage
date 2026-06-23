@@ -669,4 +669,4 @@ make test
 
 If this project looks useful to you, a star would really mean a lot — it helps others discover it too.
 
-Special thanks to Ashwnai!
+Special thanks to Ashwani!

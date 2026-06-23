@@ -424,6 +424,7 @@ for i, scene in enumerate(scene_plan["scenes"]):
 
 edit_decisions = {
     "version": "1.0",
+    "render_runtime": "remotion",
     "cuts": [
         {
             "id": f"cut_{scene['id']}",

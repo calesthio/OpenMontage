@@ -628,7 +628,7 @@ OpenMontage is built to be extended. The two most common contributions:
 2. Create stage director skills in `skills/pipelines/<your-pipeline>/`
 3. Reference existing tools — or add new ones if needed
 
-See `docs/ARCHITECTURE.md` for the full technical reference, `docs/PROVIDERS.md` for the complete provider guide (setup, pricing, free tiers), `docs/REVIEWER_GUIDE.md` for reviewer onboarding, and `AGENT_GUIDE.md` for the agent contract.
+See `docs/ARCHITECTURE.md` for the full technical reference, `docs/PROVIDERS.md` for the complete provider guide (setup, pricing, free tiers), `CONTRIBUTING.md` for contributor onboarding, `docs/REVIEWER_GUIDE.md` for reviewer onboarding, and `AGENT_GUIDE.md` for the agent contract.
 
 ### Join the Community
 

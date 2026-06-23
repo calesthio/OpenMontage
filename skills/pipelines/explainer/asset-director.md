@@ -92,6 +92,14 @@ For each script section:
 
 **Pronunciation guide**: If the script contains technical terms, jargon, or names with non-obvious pronunciation, include a pronunciation map in the TTS request.
 
+**Azure timing option**: When Azure AI Speech is selected and the video needs
+subtitle timing, karaoke captions, or cue-aligned visual reveals, set
+`enable_word_boundaries: true` on the TTS request. This uses the optional Azure
+Speech SDK and returns `words`/`boundaries` metadata for downstream subtitle and
+visual-timing work. If the SDK is missing, report the install command
+(`pip install azure-cognitiveservices-speech`) and either install it with user
+approval or fall back to REST-only narration.
+
 ### Step 4: Generate Visual Assets
 
 Process asset tasks grouped by tool for efficiency:

@@ -24,6 +24,7 @@ from lib.checkpoint import STAGES
 from schemas.artifacts import list_schemas
 from styles.playbook_loader import load_playbook, list_playbooks, validate_playbook
 from tools.base_tool import ToolTier
+from tools.audio.azure_tts import AzureTTS
 from tools.audio.music_gen import MusicGen
 from tools.tool_registry import ToolRegistry
 from tools.audio.elevenlabs_tts import ElevenLabsTTS
@@ -102,13 +103,14 @@ class TestNewToolsRegistry:
 
     def test_voice_tier_tools(self):
         reg = ToolRegistry()
+        reg.register(AzureTTS())
         reg.register(ElevenLabsTTS())
         reg.register(OpenAITTS())
         reg.register(PiperTTS())
         voice_tools = reg.get_by_tier(ToolTier.VOICE)
-        assert len(voice_tools) == 3
+        assert len(voice_tools) == 4
         names = {t.name for t in voice_tools}
-        assert names == {"elevenlabs_tts", "openai_tts", "piper_tts"}
+        assert names == {"azure_tts", "elevenlabs_tts", "openai_tts", "piper_tts"}
 
 
 class TestCapabilityMetadata:
@@ -123,16 +125,19 @@ class TestCapabilityMetadata:
 
     def test_provider_specific_tts_tools_register(self):
         reg = ToolRegistry()
+        reg.register(AzureTTS())
         reg.register(ElevenLabsTTS())
         reg.register(OpenAITTS())
         reg.register(PiperTTS())
         reg.register(TTSSelector())
         assert {tool.name for tool in reg.get_by_capability("tts")} == {
+            "azure_tts",
             "elevenlabs_tts",
             "openai_tts",
             "piper_tts",
             "tts_selector",
         }
+        assert {tool.name for tool in reg.get_by_provider("azure")} == {"azure_tts"}
         assert {tool.name for tool in reg.get_by_provider("elevenlabs")} == {"elevenlabs_tts"}
 
     def test_registry_catalog_views(self):
@@ -143,7 +148,7 @@ class TestCapabilityMetadata:
         catalog = reg.capability_catalog()
         assert "tts" in catalog
         providers = {item["provider"] for item in catalog["tts"] if item["provider"] != "selector"}
-        assert providers == {"elevenlabs", "google_tts", "openai", "piper"}
+        assert providers == {"azure", "doubao", "elevenlabs", "google_tts", "openai", "piper"}
 
 
 # ---- Animated Explainer Pipeline ----

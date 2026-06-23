@@ -202,14 +202,15 @@ class TestStylePlaybooks:
         assert "clean-professional" in playbooks
         assert "flat-motion-graphics" in playbooks
         assert "minimalist-diagram" in playbooks
+        assert "corporate-lms" in playbooks
 
-    @pytest.mark.parametrize("name", ["clean-professional", "flat-motion-graphics", "minimalist-diagram"])
+    @pytest.mark.parametrize("name", ["clean-professional", "flat-motion-graphics", "minimalist-diagram", "corporate-lms"])
     def test_loads_and_validates(self, name):
         pb = load_playbook(name)
         assert pb["identity"]["name"]
         assert pb["identity"]["category"]
 
-    @pytest.mark.parametrize("name", ["clean-professional", "flat-motion-graphics", "minimalist-diagram"])
+    @pytest.mark.parametrize("name", ["clean-professional", "flat-motion-graphics", "minimalist-diagram", "corporate-lms"])
     def test_has_required_sections(self, name):
         pb = load_playbook(name)
         assert "visual_language" in pb

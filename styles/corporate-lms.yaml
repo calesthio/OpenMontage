@@ -1,0 +1,108 @@
+identity:
+  name: "Corporate LMS"
+  category: motion-graphics
+  mood: calm, instructional, trustworthy, inclusive
+  pace: deliberate
+  best_for: "Internal training, employee onboarding, compliance learning, and corporate LMS modules"
+
+visual_language:
+  color_palette:
+    primary: ["#1F4E79", "#0F74B5"]
+    accent: ["#E4A11B", "#2C7A7B"]
+    background: "#F8FAFC"
+    text: "#0F172A"
+    muted: "#64748B"
+  composition: "structured grid layout, clear headings, consistent section headers, generous whitespace"
+  texture: "flat minimal, subtle depth, no noise"
+
+typography:
+  headings:
+    font: "Inter"
+    weight: 700
+    tracking: "-0.02em"
+  body:
+    font: "Inter"
+    weight: 400
+    line_height: 1.75
+  code:
+    font: "JetBrains Mono"
+    weight: 400
+  stat_card:
+    font: "Inter"
+    weight: 700
+    size_multiplier: 2.5
+  scale_system: "major_third"
+  weight_matrix:
+    title: 800
+    heading: 700
+    body: 400
+    caption: 400
+
+motion:
+  transitions: [fade, dissolve, wipe-right]
+  animation_style: "smooth, measured, no bounce"
+  pacing_rules:
+    min_scene_hold_seconds: 3.0
+    max_scene_hold_seconds: 15
+    text_card_hold_seconds: 4.0
+    stat_card_hold_seconds: 3.5
+    transition_duration_seconds: 0.5
+  entrance: "fade-up with soft scale"
+  exit: "fade-out"
+
+audio:
+  voice_style: "clear, conversational, moderately paced, neutral corporate tone"
+  music_mood: "soft ambient, calm, unobtrusive"
+  music_volume: 0.06
+  sfx_style: "subtle transitions, gentle chimes on section changes"
+  ducking_threshold_db: -6
+  voice_variation_allowed: false
+
+asset_generation:
+  image_prompt_prefix: "clean corporate learning illustration, diverse workplace, modern office, clear people-first visuals, accessible layout, "
+  image_negative_prompt: "fashion photography, overly stylized characters, loud marketing graphics, dark moody lighting, low quality"
+  diagram_style: "simple process diagrams, icon-supported learning steps, clear callouts"
+  consistency_anchors:
+    - "Consistent calm blue and teal palette across instructional visuals"
+    - "Diverse workplace representation in all people imagery"
+    - "Flat, accessible illustration style with no dramatic shadows"
+    - "Clear visual labeling and step-by-step structure"
+
+overlays:
+  stat_card:
+    bg: "#FFFFFF"
+    border: "#0F4E79"
+    radius: 10
+    shadow: "0 4px 16px rgba(15, 23, 42, 0.08)"
+  key_term:
+    bg: "#E5F6FF"
+    text: "#0F4E79"
+    radius: 6
+  code_block:
+    bg: "#0F172A"
+    text: "#E2E8F0"
+    highlight: "#F59E0B"
+
+quality_rules:
+  - "Use Bloom's taxonomy verbs in learning objectives"
+  - "No marketing CTA or promotional language"
+  - "Transcript artifact must be generated and available"
+  - "Captions must stay within a safe screen zone and avoid bottom edge clutter"
+  - "Scenes should not cut faster than 3 seconds"
+  - "Citations are required for factual claims"
+  - "Imagery should reflect diverse workplace representation"
+  - "Localization should be locked at the brief stage"
+  - "Avoid branded product marketing or overly stylized characters"
+
+chart_palette:
+  - "#0F74B5"
+  - "#1F4E79"
+  - "#2C7A7B"
+  - "#E4A11B"
+  - "#F9A825"
+  - "#64748B"
+
+color_rules:
+  harmony_type: "analogous"
+  contrast_validation: true
+  colorblind_safe: true

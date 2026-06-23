@@ -2,3 +2,6 @@
 -r requirements.txt
 pytest>=8.0
 pytest-asyncio>=0.23
+ruff>=0.0.280
+black>=24.10.0
+mypy>=1.9

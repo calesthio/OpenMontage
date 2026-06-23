@@ -73,10 +73,9 @@ demo-list:
 	@$(PYTHON) render_demo.py --list
 
 lint:
-	$(PYTHON) -m py_compile tools/base_tool.py
-	$(PYTHON) -m py_compile tools/tool_registry.py
-	$(PYTHON) -m py_compile tools/cost_tracker.py
-	$(PYTHON) -m py_compile tools/analysis/composition_validator.py
+	$(PYTHON) -m ruff check lib tools tests
+	$(PYTHON) -m black --check lib tools tests
+	$(PYTHON) -m mypy lib tools
 
 clean:
 	$(PYTHON) -c "import pathlib, shutil; [shutil.rmtree(p) for p in pathlib.Path('.').rglob('__pycache__')]; [p.unlink() for p in pathlib.Path('.').rglob('*.pyc')]"

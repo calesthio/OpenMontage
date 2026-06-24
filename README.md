@@ -181,7 +181,7 @@ RUNWAY_API_KEY=your-key        # Runway Gen-4 direct
 ```
 
 <details>
-<summary><strong>Have a GPU? Unlock free local video generation</strong></summary>
+<summary><strong>Have a GPU? Unlock free local video + music generation</strong></summary>
 
 ```bash
 make install-gpu
@@ -190,6 +190,9 @@ make install-gpu
 VIDEO_GEN_LOCAL_ENABLED=true
 VIDEO_GEN_LOCAL_MODEL=wan2.1-1.3b  # or wan2.1-14b, hunyuan-1.5, ltx2-local, cogvideo-5b
 ```
+
+MusicGen Local is also available immediately after `make install-gpu` — no extra config needed.
+Generate background music from text prompts, fully offline, no API key.
 
 </details>
 
@@ -202,6 +205,7 @@ You don't need paid API keys to make real videos. Out of the box, `make setup` g
 | Capability | Free Tool | What It Does |
 |-----------|-----------|-------------|
 | **Narration** | Piper TTS | Free offline text-to-speech — real human-sounding narration |
+| **Music** | MusicGen Local | Free offline music generation via Meta's MusicGen (GPU required) |
 | **Open footage** | Archive.org + NASA + Wikimedia Commons | Free/open archival footage, educational media, and documentary texture |
 | **Extra stock** | Pexels + Unsplash + Pixabay | Free stock footage/images (developer keys are free to get) |
 | **Composition (React)** | Remotion | React-based rendering — spring-animated image scenes, text cards, stat cards, charts, TikTok-style word-level captions, TalkingHead |
@@ -368,7 +372,7 @@ Final video output -- only if self-review passes
 OpenMontage/
 ├── tools/              # 48 Python tools (the agent's hands)
 │   ├── video/          # 13 video gen tools + compose, stitch, trim
-│   ├── audio/          # 4 TTS providers + Suno/ElevenLabs music, mixing, enhancement
+│   ├── audio/          # 4 TTS providers + Suno/ElevenLabs/MusicGen music, mixing, enhancement
 │   ├── graphics/       # 9 image/graphics generation tools + diagrams, code snippets, math
 │   ├── enhancement/    # Upscale, bg remove, face enhance, color grade
 │   ├── analysis/       # Transcription, scene detect, frame sampling
@@ -467,6 +471,7 @@ Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to
 | **Suno AI** | Cloud API | Full song generation with vocals, lyrics, any genre. Up to 8 minutes. |
 | **ElevenLabs Music** | Cloud API | AI music generation |
 | **ElevenLabs SFX** | Cloud API | Sound effect generation |
+| **MusicGen Local** | Local GPU | Free offline music generation via Meta's MusicGen. 4 model sizes. |
 
 **Post-Production (always available, always free):**
 

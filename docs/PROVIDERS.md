@@ -22,6 +22,7 @@ Everything you need to know about every provider in OpenMontage — setup instru
 | 10 | **pay-as-you-go** | Suno | Full song generation with vocals and lyrics |
 | 11 | **$0 + GPU** | Local video gen | WAN 2.1, Hunyuan, CogVideo, LTX — free, offline |
 | 12 | **$0 + GPU** | Local Diffusion | Stable Diffusion images — free, offline |
+| 13 | **$0 + GPU** | MusicGen Local | Free offline music generation via Meta's MusicGen — 4 model sizes |
 
 ### Environment Variable Summary
 
@@ -53,6 +54,8 @@ SUNO_API_KEY=                # Suno music generation
 # LOCAL (no keys needed — just GPU + install)
 VIDEO_GEN_LOCAL_ENABLED=     # Set to "true" for local video gen
 VIDEO_GEN_LOCAL_MODEL=       # wan2.1-1.3b, wan2.1-14b, hunyuan-1.5, ltx2-local, cogvideo-5b
+
+# MusicGen Local is auto-enabled when dependencies are installed — no env var needed
 ```
 
 ---
@@ -584,6 +587,62 @@ HyperFrames workspaces live under `projects/<project-name>/hyperframes/`. Final 
 
 ---
 
+### MusicGen Local — Offline Music Generation (GPU Required)
+
+> **Free AI music generation via Meta's MusicGen.** No API cost, no network required.
+> Generate instrumental background music from text descriptions — fully offline once weights are cached.
+
+**Tool:** `musicgen_local`
+**Runtime:** Local GPU (CUDA required)
+**Env var:** None (auto-enabled when dependencies are installed)
+
+#### Setup
+
+```bash
+# Dependencies are included in make install-gpu, or install manually:
+pip install transformers torch torchaudio scipy
+```
+
+First run downloads the model weights (~2-6 GB depending on model size). Subsequent runs use the cached model.
+
+**Model options:**
+
+| Model ID | Size | VRAM | Quality | Best for |
+|----------|------|------|---------|----------|
+| `facebook/musicgen-small` | ~2 GB | 4GB+ | Good | Entry-level GPUs, quick drafts |
+| `facebook/musicgen-medium` | ~4 GB | 6GB+ | Very good | Balanced quality/speed |
+| `facebook/musicgen-large` | ~6 GB | 8GB+ | Excellent | Best quality, highest fidelity |
+| `facebook/musicgen-melody` | ~4 GB | 6GB+ | Very good | Melody conditioning support |
+
+#### Parameters
+
+| Parameter | Default | Range | Description |
+|-----------|---------|-------|-------------|
+| `duration_seconds` | 15 | 1-120 | Length of generated music |
+| `guidance_scale` | 3.0 | 2.0-7.0 | How closely to follow the prompt |
+| `temperature` | 1.0 | 0.0-2.0 | Creativity vs. conservatism |
+| `seed` | — | any int | Reproducible generation |
+
+#### Prompt Examples
+
+```
+"upbeat electronic dance music with a driving bass line and syncopated drums"
+"melancholic piano melody in A minor, 65 BPM, soft and reflective"
+"cinematic orchestral, 80 BPM, building tension, strings and brass"
+"minimal ambient electronic, soft Rhodes piano and subtle bass"
+```
+
+#### Known Limitations
+
+- Instrumental only (no vocals or lyrics in base model)
+- Generation takes 10-60 seconds depending on model size and duration
+- Quality is good but below ElevenLabs Music or Suno for complex compositions
+- Falls back to `music_gen` (ElevenLabs) → `pixabay_music` → `freesound_music` automatically
+
+**Cost:** Free. Always local.
+
+---
+
 ### Piper TTS — Offline Text-to-Speech
 
 > **Completely free, fully offline TTS.** No network required. Good quality for drafts and budget-constrained projects.
@@ -731,6 +790,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **Higgsfield** | `HIGGSFIELD_API_KEY` + `HIGGSFIELD_API_SECRET` | `higgsfield_video` | Subscription ($15-84/mo) |
 | **HeyGen** | `HEYGEN_API_KEY` | `heygen_video` | Pay-as-you-go |
 | **Suno** | `SUNO_API_KEY` | `suno_music` | Pay-as-you-go |
+| **MusicGen Local** | — (install only) | `musicgen_local` | Free (GPU required) |
 | **Local GPU** | `VIDEO_GEN_LOCAL_ENABLED` | `wan_video`, `hunyuan_video`, `cogvideo_video`, `ltx_video_local` | Free (GPU required) |
 | **Local Diffusion** | — (install only) | `local_diffusion` | Free (GPU required) |
 | **Modal** | `MODAL_LTX2_ENDPOINT_URL` | `ltx_video_modal` | Self-hosted cloud |
@@ -746,7 +806,7 @@ How many providers cover each capability:
 | **Image Generation** | FLUX, Grok, Google Imagen, DALL-E 3, Recraft | Local Diffusion | Pexels, Pixabay (stock) |
 | **Video Generation** | Grok, Kling, Runway, Veo, Higgsfield, MiniMax, HeyGen | WAN, Hunyuan, CogVideo, LTX | Pexels, Pixabay (stock) |
 | **Text-to-Speech** | ElevenLabs, Google TTS, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier |
-| **Music Generation** | ElevenLabs, Suno | — | ElevenLabs free tier |
+| **Music Generation** | ElevenLabs, Suno | MusicGen Local | ElevenLabs free tier, MusicGen Local (free, GPU) |
 | **Post-Production** | — | FFmpeg (compose, stitch, trim, mix, enhance, grade) | All free |
 | **Analysis** | — | WhisperX, Scene Detect, Frame Sampler, CLIP/BLIP-2 | All free |
 | **Enhancement** | — | Upscale, BG Remove, Face Enhance, Face Restore | All free |
@@ -766,7 +826,7 @@ A: Yes. The agent generates still images (via any image provider — even free s
 A: fal.ai (`FAL_KEY`) is one pay-as-you-go option with broad single-key coverage. It unlocks FLUX images plus multiple video providers. No subscription — pay only for what you generate.
 
 **Q: I have a GPU. What can I run locally for free?**
-A: Set `VIDEO_GEN_LOCAL_ENABLED=true` and install `diffusers`. You get WAN 2.1, Hunyuan, CogVideo, and LTX video generation plus Stable Diffusion image generation — all free, all offline.
+A: Set `VIDEO_GEN_LOCAL_ENABLED=true` and install `diffusers`. You get WAN 2.1, Hunyuan, CogVideo, and LTX video generation plus Stable Diffusion image generation and MusicGen local music generation — all free, all offline.
 
 **Q: Which TTS provider should I use?**
 A: For quality → ElevenLabs. For localization (50+ languages) → Google TTS. For budget → Google free tier (1M chars/month). For offline → Piper.

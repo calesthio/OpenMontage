@@ -36,7 +36,7 @@ install-dev:
 
 install-gpu:
 	pip install -r requirements-gpu.txt
-	pip install diffusers transformers accelerate
+	pip install diffusers transformers accelerate scipy
 
 # ---- Testing ----
 

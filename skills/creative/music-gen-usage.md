@@ -3,6 +3,8 @@
 > Sources: ElevenLabs Music API documentation, ElevenLabs best practices guide, Artlist BPM
 > guide, existing Layer 3 skills at `.agents/skills/music/` and `.agents/skills/elevenlabs/`
 
+OpenMontage has three music generation options: **ElevenLabs Music** (cloud API, paid), **Suno AI** (cloud API, paid), and **MusicGen Local** (free, offline, GPU required). This skill covers prompting techniques that apply across all three, with provider-specific notes where they differ.
+
 ## Quick Reference Card
 
 ```
@@ -12,6 +14,34 @@ MAX DURATION:     600,000ms (10 min)
 INSTRUMENTAL:     Always set force_instrumental=true for video background
 COST:             ~$0.05 per 30 seconds
 KEY RULE:         Music must be 18-20 dB below narration (see sound-design.md)
+
+# LOCAL OPTION: MusicGen Local
+
+```
+
+Tool: musicgen_local
+Provider: musicgen_local (Meta's MusicGen via Hugging Face transformers)
+Runtime: LOCAL_GPU — requires CUDA
+Cost: $0.00 (free)
+Models: small (~2 GB), medium (~4 GB), large (~6 GB), melody (~4 GB)
+Duration: 1-120 seconds
+
+```
+
+When to use:
+- No API keys configured for ElevenLabs or Suno
+- Privacy-sensitive or air-gapped workflows
+- Iterative drafts where zero marginal cost matters
+- Background music beds where "good enough" quality suffices
+
+When NOT to use:
+- CPU-only machines (extremely slow without GPU)
+- Vocals or lyrics needed (instrumental only)
+- High-fidelity cinematic scoring (use ElevenLabs or Suno)
+
+Prompting is the same as ElevenLabs — use the BPM/key/mood tables below.
+MusicGen responds well to instrument names (piano, guitar, strings, synth pad)
+and genre labels (lo-fi, ambient, cinematic, electronic).
 ```
 
 ## BPM Selection by Video Type
@@ -121,6 +151,14 @@ For cleaner ducking control, generate isolated stems:
 - Layer stems in FFmpeg during composition for precise ducking control
 
 ## Applying to OpenMontage
+
+The registry auto-discovers all available music providers. Check which are available:
+
+```bash
+python -c "from tools.tool_registry import registry; registry.discover(); print(registry.provider_menu_summary())"
+```
+
+When multiple music providers are available, the agent should prefer `musicgen_local` for draft/iteration (free) and switch to ElevenLabs or Suno for final renders if higher quality is needed. The `musicgen_local` tool automatically falls back to `music_gen` (ElevenLabs) → `pixabay_music` → `freesound_music`.
 
 When using the `music_gen` tool:
 

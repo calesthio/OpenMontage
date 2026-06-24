@@ -889,7 +889,7 @@ class CharacterAnimationReviewer(BaseTool):
         }
         artifacts = _write_json(inputs.get("output_path"), report)
         return ToolResult(
-            success=True,
+            success=not issues,
             data={"character_qa_report": report},
             artifacts=artifacts,
             duration_seconds=round(time.time() - start, 2),

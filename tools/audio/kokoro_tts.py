@@ -23,7 +23,7 @@ from tools.base_tool import (
 
 class KokoroTTS(BaseTool):
     name = "kokoro_tts"
-    version = "1.0.0"
+    version = "0.7.16"  # PyPI package version (uses model kokoro-v1_0.pth)
     tier = ToolTier.VOICE
     capability = "tts"
     provider = "kokoro"
@@ -32,11 +32,11 @@ class KokoroTTS(BaseTool):
     determinism = Determinism.DETERMINISTIC
     runtime = ToolRuntime.LOCAL
 
-    dependencies = ["pip:kokoro", "pip:soundfile", "pip:torch"]
+    dependencies = ["python:kokoro", "python:soundfile", "python:torch"]
     install_instructions = (
-        "Install Kokoro TTS and dependencies:\n"
+        "Install Kokoro TTS package (v0.7.16) and dependencies:\n"
         "  pip install kokoro soundfile torch\n"
-        "You may also need to install espeak-ng on your system:\n"
+        "For multilingual (non-English) support, espeak-ng is also required:\n"
         "  Ubuntu: sudo apt-get install espeak-ng\n"
         "  Mac: brew install espeak\n"
         "  Windows: Download from https://github.com/espeak-ng/espeak-ng/releases"
@@ -49,7 +49,7 @@ class KokoroTTS(BaseTool):
     ]
     supports = {
         "voice_cloning": False,
-        "multilingual": True,
+        "multilingual": False,  # True only if espeak-ng and language packs are installed
         "offline": True,
         "native_audio": True,
     }
@@ -72,21 +72,30 @@ class KokoroTTS(BaseTool):
                 "default": "af_heart",
                 "description": "The voice model to use. Defaults to American female 'af_heart'.",
             },
+            "voice_id": {
+                "type": "string",
+                "description": "Compatibility alias for voice.",
+            },
             "lang_code": {
                 "type": "string",
                 "default": "a",
                 "description": "Language code for the pipeline (e.g., 'a' for American English).",
+            },
+            "output_format": {
+                "type": "string",
+                "default": "wav",
+                "description": "Output audio format (e.g., 'wav'). Only 'wav' is natively supported.",
             },
             "output_path": {"type": "string"},
         },
     }
 
     resource_profile = ResourceProfile(
-        cpu_cores=2, ram_mb=1024, vram_mb=0, disk_mb=200, network_required=False
+        cpu_cores=2, ram_mb=4096, vram_mb=0, disk_mb=1000, network_required=True
     )
     retry_policy = RetryPolicy(max_retries=1, retryable_errors=[])
     idempotency_key_fields = ["text", "voice", "lang_code"]
-    side_effects = ["writes audio file to output_path", "downloads model weights on first run"]
+    side_effects = ["writes audio file to output_path", "downloads model cache (kokoro-v1_0.pth) on first run"]
     user_visible_verification = ["Listen to generated audio for intelligibility and quality"]
 
     def get_status(self) -> ToolStatus:
@@ -117,7 +126,11 @@ class KokoroTTS(BaseTool):
         import numpy as np
 
         text = inputs["text"]
-        voice = inputs.get("voice", "af_heart")
+        voice = inputs.get("voice_id") or inputs.get("voice", "af_heart")
+        output_format = inputs.get("output_format", "wav").lower()
+        if output_format != "wav":
+            return ToolResult(success=False, error=f"KokoroTTS natively supports only 'wav' output. Requested: {output_format}")
+            
         lang_code = inputs.get("lang_code", "a")
         output_path = Path(inputs.get("output_path", "tts_output.wav"))
         output_path.parent.mkdir(parents=True, exist_ok=True)

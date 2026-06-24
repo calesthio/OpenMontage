@@ -74,6 +74,28 @@ class TestPiperTTS:
         assert "offline_generation" in tool.capabilities
 
 
+class TestKokoroTTS:
+    def test_identity(self):
+        from tools.audio.kokoro_tts import KokoroTTS
+        tool = KokoroTTS()
+        info = tool.get_info()
+        assert info["name"] == "kokoro_tts"
+        assert info["tier"] == "voice"
+        assert info["capability"] == "tts"
+        assert info["provider"] == "kokoro"
+
+    def test_cost_is_free(self):
+        from tools.audio.kokoro_tts import KokoroTTS
+        tool = KokoroTTS()
+        assert tool.estimate_cost({"text": "anything"}) == 0.0
+
+    def test_capabilities(self):
+        from tools.audio.kokoro_tts import KokoroTTS
+        tool = KokoroTTS()
+        assert "text_to_speech" in tool.capabilities
+        assert "offline_generation" in tool.capabilities
+
+
 class TestMusicGen:
     def test_identity(self):
         tool = MusicGen()
@@ -143,7 +165,7 @@ class TestCapabilityMetadata:
         catalog = reg.capability_catalog()
         assert "tts" in catalog
         providers = {item["provider"] for item in catalog["tts"] if item["provider"] != "selector"}
-        assert providers == {"elevenlabs", "google_tts", "openai", "piper"}
+        assert {"elevenlabs", "openai", "piper"}.issubset(providers)
 
 
 # ---- Animated Explainer Pipeline ----

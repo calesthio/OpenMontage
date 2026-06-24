@@ -477,7 +477,7 @@ Three selector tools abstract multi-provider capabilities. **Selectors auto-disc
 
 | Selector | Routes to | How it discovers |
 |----------|-----------|-----------------|
-| `tts_selector` | All tools with `capability="tts"` (ElevenLabs, Google TTS, OpenAI, Piper) | `registry.get_by_capability("tts")` |
+| `tts_selector` | All tools with `capability="tts"` (ElevenLabs, Google TTS, OpenAI, Piper, Kokoro) | `registry.get_by_capability("tts")` |
 | `image_selector` | All tools with `capability="image_generation"` (FLUX, Google Imagen, DALL-E, Recraft, etc.) | `registry.get_by_capability("image_generation")` |
 | `video_selector` | All tools with `capability="video_generation"` | `registry.get_by_capability("video_generation")` |
 

@@ -54,6 +54,12 @@ class VideoSelector(BaseTool):
                 "enum": ["text_to_video", "image_to_video", "reference_to_video", "rank"],
                 "default": "text_to_video",
             },
+            "target_operation": {
+                "type": "string",
+                "enum": ["text_to_video", "image_to_video", "reference_to_video"],
+                "description": "Operation to score when operation='rank'.",
+                "default": "text_to_video",
+            },
             "aspect_ratio": {
                 "type": "string",
                 "enum": ["16:9", "9:16", "1:1"],
@@ -137,11 +143,13 @@ class VideoSelector(BaseTool):
     def execute(self, inputs: dict[str, object]) -> ToolResult:
         from lib.scoring import rank_providers
 
-        task_context = self._prepare_task_context(inputs)
         candidates = self._providers()
 
         # Rank mode — return scored provider rankings without generating
         if inputs.get("operation") == "rank":
+            rank_inputs = self._rank_inputs(inputs)
+            task_context = self._prepare_task_context(rank_inputs)
+            candidates = self._filter_candidates(rank_inputs, candidates)
             rankings = rank_providers(candidates, task_context)
             return ToolResult(
                 success=True,
@@ -153,6 +161,7 @@ class VideoSelector(BaseTool):
             )
 
         # Normal generation — use scored selection
+        task_context = self._prepare_task_context(inputs)
         tool, score = self._select_best_tool(inputs, candidates, task_context)
         if tool is None:
             return ToolResult(success=False, error="No video generation provider available.")
@@ -253,6 +262,12 @@ class VideoSelector(BaseTool):
         )
 
     @staticmethod
+    def _rank_inputs(inputs: dict[str, object]) -> dict[str, object]:
+        rank_inputs = dict(inputs)
+        rank_inputs["operation"] = inputs.get("target_operation", "text_to_video")
+        return rank_inputs
+
+    @staticmethod
     def _tool_context_payload(tool: BaseTool) -> dict[str, object]:
         info = tool.get_info()
         return {
@@ -285,23 +300,36 @@ class VideoSelector(BaseTool):
     ) -> list[BaseTool]:
         operation = inputs.get("operation", "text_to_video")
         if operation == "rank":
-            return candidates
+            operation = inputs.get("target_operation", "text_to_video")
 
         filtered: list[BaseTool] = []
+        matched_operation = False
         for tool in candidates:
             supports = getattr(tool, "supports", {})
             props = getattr(tool, "input_schema", {}).get("properties", {})
 
             if operation == "image_to_video":
                 if supports.get("image_to_video") or "image_url" in props or "reference_image_url" in props:
-                    filtered.append(tool)
+                    matched_operation = True
+                    if self._operation_ready(tool, "image_to_video"):
+                        filtered.append(tool)
                 continue
 
             if operation == "reference_to_video":
                 if supports.get("reference_to_video") or "reference_image_urls" in props:
+                    matched_operation = True
                     filtered.append(tool)
                 continue
 
-            filtered.append(tool)
+            matched_operation = True
+            if self._operation_ready(tool, str(operation)):
+                filtered.append(tool)
 
-        return filtered or candidates
+        return filtered if matched_operation else candidates
+
+    @staticmethod
+    def _operation_ready(tool: BaseTool, operation: str) -> bool:
+        checker = getattr(tool, "is_operation_available", None)
+        if not callable(checker):
+            return True
+        return bool(checker(operation))

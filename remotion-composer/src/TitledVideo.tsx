@@ -214,14 +214,42 @@ export const TitledVideo: React.FC<TitledVideoProps> = ({
       {/* Full-bleed background video — no fades, no vignette, no color shift.
           The source is already color-graded final.mp4 with music baked in;
           we play it through untouched, audio included. */}
-      <OffthreadVideo
-        src={resolveAsset(videoSrc)}
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-        }}
-      />
+      {videoSrc ? (
+        <OffthreadVideo
+          src={resolveAsset(videoSrc)}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background:
+              "linear-gradient(180deg, #1a1410 0%, #0a0806 100%)",
+            justifyContent: "center",
+            alignItems: "center",
+            color: "#6b5a48",
+            fontFamily,
+            fontSize: 28,
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            textAlign: "center",
+            padding: 40,
+          }}
+        >
+          <div
+            style={{
+              padding: "20px 28px",
+              border: "1px dashed rgba(180, 150, 110, 0.35)",
+              borderRadius: 8,
+            }}
+          >
+            Pass a videoSrc to render the titled clip
+          </div>
+        </AbsoluteFill>
+      )}
 
       {/* Tagline overlay in its own Sequence so it mounts exactly on the
           fade-in frame and carries its own local frame counter. */}

@@ -317,10 +317,38 @@ export const TalkingHead: React.FC<TalkingHeadProps> = ({
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
       {/* Layer 1: Video background */}
-      <OffthreadVideo
-        src={videoSrc}
-        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-      />
+      {videoSrc ? (
+        <OffthreadVideo
+          src={videoSrc}
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background:
+              "linear-gradient(180deg, #0F172A 0%, #020617 100%)",
+            justifyContent: "center",
+            alignItems: "center",
+            color: "#64748B",
+            fontFamily: "ui-sans-serif, system-ui, sans-serif",
+            fontSize: 28,
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            textAlign: "center",
+            padding: 40,
+          }}
+        >
+          <div
+            style={{
+              padding: "20px 28px",
+              border: "1px dashed rgba(148, 163, 184, 0.35)",
+              borderRadius: 8,
+            }}
+          >
+            Pass a videoSrc to render a talking-head
+          </div>
+        </AbsoluteFill>
+      )}
 
       {/* Layer 2: Overlays (charts, stats, callouts, etc.) */}
       {overlays?.map((overlay, i) => {

@@ -206,7 +206,7 @@ You don't need paid API keys to make real videos. Out of the box, `make setup` g
 
 | Capability | Free Tool | What It Does |
 |-----------|-----------|-------------|
-| **Narration** | Piper TTS | Free offline text-to-speech — real human-sounding narration |
+| **Narration** | Kokoro & Piper TTS | Free offline text-to-speech — real human-sounding narration |
 | **Open footage** | Archive.org + NASA + Wikimedia Commons | Free/open archival footage, educational media, and documentary texture |
 | **Extra stock** | Pexels + Unsplash + Pixabay | Free stock footage/images (developer keys are free to get) |
 | **Composition (React)** | Remotion | React-based rendering — spring-animated image scenes, text cards, stat cards, charts, TikTok-style word-level captions, TalkingHead |
@@ -218,7 +218,7 @@ OpenMontage picks between Remotion and HyperFrames at proposal time (locked as `
 
 **Two free-ish paths:**
 
-- **Image-based video:** Piper narrates your script, images provide the visuals, and Remotion animates them into a polished edit.
+- **Image-based video:** Kokoro or Piper narrates your script, images provide the visuals, and Remotion animates them into a polished edit.
 - **Local character animation:** SVG rigs, pose libraries, GSAP timelines, and HyperFrames render cartoon character acting to `projects/<project-name>/renders/final.mp4`.
 - **Real-footage video:** the documentary montage pipeline builds a CLIP-searchable corpus from Archive.org, NASA, Wikimedia Commons, and optional free-key sources like Pexels and Unsplash, then cuts together actual motion footage into a finished video.
 
@@ -459,6 +459,7 @@ Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to
 | **Google TTS** | Cloud API | 700+ voices, 50+ languages — best for localization |
 | **OpenAI TTS** | Cloud API | Fast, affordable |
 | **Piper** | Local | Completely free, offline |
+| **Kokoro** | Local | High-quality, offline |
 
 </details>
 

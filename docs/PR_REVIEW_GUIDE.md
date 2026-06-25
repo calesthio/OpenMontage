@@ -311,6 +311,8 @@ Ask:
 
 - Is this provider useful for OpenMontage workflows?
 - Does it add real coverage or just duplicate an existing provider?
+- Is the provider internationally known, nationally or regionally important,
+  or otherwise clearly valuable to OpenMontage users?
 - Is the tool discoverable through the registry?
 - Does the matching selector discover and route to it?
 - Are provider inputs compatible with selector inputs?
@@ -327,6 +329,24 @@ Minimum expected coverage:
 - Status behavior test with dependencies mocked when needed
 - Selector/routing test if it joins a selector-backed capability
 - Docs update for user-visible providers
+
+Provider viability matters. OpenMontage should not become a grab bag of
+unmaintained or one-off integrations. A provider does not need to be globally
+dominant, but it should have a clear reason to belong here.
+
+Consider:
+
+- Is there evidence of an active user base, maintained API docs, SDK support,
+  or community adoption?
+- Is it widely used internationally, or meaningfully popular in a specific
+  national, regional, language, or industry market?
+- Does it unlock a capability, language, price point, region, quality tier,
+  compliance posture, or local/offline workflow that existing providers do not
+  cover well?
+- Are pricing, quotas, API access, model availability, and terms clear enough
+  for contributors to test and maintain the integration?
+- Is the provider likely to remain usable over the next six months?
+- Does the provider's value justify the maintenance burden it adds?
 
 ### Selector Change
 

@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & troubleshooting
+    url: https://github.com/calesthio/OpenMontage/discussions/categories/q-a
+    about: Ask setup, pipeline, or troubleshooting questions in Discussions.
+  - name: Ideas & feature brainstorming
+    url: https://github.com/calesthio/OpenMontage/discussions/categories/ideas
+    about: Propose and discuss new pipelines, tools, or integrations.
+  - name: Show and Tell
+    url: https://github.com/calesthio/OpenMontage/discussions/categories/show-and-tell
+    about: Share videos, prompts, or workflows you've built.

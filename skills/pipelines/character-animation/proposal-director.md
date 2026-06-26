@@ -33,6 +33,9 @@ When both Remotion and HyperFrames are available:
 - FFmpeg: post-processing only. Do not pick FFmpeg as the primary runtime for
   character acting.
 
+Present both Remotion and HyperFrames to the user before recommending one.
+Record the alternatives considered in the decision log as
+`render_runtime_selection`, including why `hyperframes` was accepted or rejected.
 Wait for user approval before locking `render_runtime`.
 
 ## Sample-First Rule

@@ -1,5 +1,5 @@
 ---
-name: video_toolkit
+name: video-toolkit
 description: Create professional videos autonomously using claude-code-video-toolkit — AI voiceovers, image generation, music, talking heads, and Remotion rendering.
 metadata:
   openclaw:

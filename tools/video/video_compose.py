@@ -1352,7 +1352,12 @@ class VideoCompose(BaseTool):
             str(composer_dir / "src" / "index.tsx"),
             composition_id,
             str(output_path),
-            "--props", str(props_path),
+            # Use the `--props=<path>` equals form rather than two separate
+            # args. On Windows, passing `--props` and the path separately makes
+            # Remotion mis-parse the value (quote escaping differs), failing
+            # with "neither valid JSON nor a file path". The equals form is the
+            # API Remotion recommends for file paths and is cross-platform safe.
+            f"--props={props_path}",
         ]
 
         # Apply media profile dimensions

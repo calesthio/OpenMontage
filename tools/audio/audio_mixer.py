@@ -38,7 +38,7 @@ class AudioMixer(BaseTool):
         "FFmpeg is required. pydub is optional for advanced mixing:\n"
         "pip install pydub"
     )
-    agent_skills = ["ffmpeg", "video_toolkit"]
+    agent_skills = ["ffmpeg", "video-toolkit"]
 
     capabilities = ["mix", "duck", "fade", "normalize", "extract_audio", "segmented_music"]
 

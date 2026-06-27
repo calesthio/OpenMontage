@@ -1,0 +1,5 @@
+# Optional browser automation dependencies.
+# Install only when using local browser bridges such as Google Flow:
+#   pip install -r requirements-browser.txt
+#   python -m playwright install chromium
+playwright>=1.49

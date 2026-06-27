@@ -20,8 +20,9 @@ Everything you need to know about every provider in OpenMontage — setup instru
 | 8 | **$12/month** | Runway | Gen-4 video — highest quality AI video |
 | 9 | **pay-as-you-go** | HeyGen | Avatar videos, multi-model video gateway |
 | 10 | **pay-as-you-go** | Suno | Full song generation with vocals and lyrics |
-| 11 | **$0 + GPU** | Local video gen | WAN 2.1, Hunyuan, CogVideo, LTX — free, offline |
-| 12 | **$0 + GPU** | Local Diffusion | Stable Diffusion images — free, offline |
+| 11 | **Existing Google web credits** | Google Flow browser bridge | Experimental local UI automation for logged-in Flow sessions |
+| 12 | **$0 + GPU** | Local video gen | WAN 2.1, Hunyuan, CogVideo, LTX — free, offline |
+| 13 | **$0 + GPU** | Local Diffusion | Stable Diffusion images — free, offline |
 
 ### Environment Variable Summary
 
@@ -49,6 +50,14 @@ FAL_KEY=                     # FLUX, Recraft, Kling, Veo, MiniMax video
 HEYGEN_API_KEY=              # HeyGen avatar video gateway
 RUNWAY_API_KEY=              # Runway Gen-4 video (direct)
 SUNO_API_KEY=                # Suno music generation
+
+# EXPERIMENTAL LOCAL BROWSER BRIDGE
+GOOGLE_FLOW_ENABLED=false
+OPENMONTAGE_EXPERIMENTAL_GOOGLE_FLOW=
+GOOGLE_FLOW_BROWSER_PROFILE_DIR=~/.openmontage/google-flow-profile
+GOOGLE_FLOW_CDP_URL=
+GOOGLE_FLOW_URL=https://labs.google/fx/tools/flow
+GOOGLE_FLOW_HEADLESS=false
 
 # LOCAL (no keys needed — just GPU + install)
 VIDEO_GEN_LOCAL_ENABLED=     # Set to "true" for local video gen
@@ -254,6 +263,86 @@ The free tiers apply *independently* — you get 1M Standard AND 1M WaveNet AND 
 **Free tier for Imagen:** None. Paid tier only.
 
 **New account bonus:** Google Cloud offers **$300 in free credits** for new accounts (90-day trial), applicable to both TTS and Imagen.
+
+---
+
+### Google Flow - Experimental Browser Bridge
+
+> **Local-only, opt-in UI automation.** This provider uses a dedicated Chrome
+> profile and the public Google Flow web UI. It is useful only when you
+> explicitly want OpenMontage to spend credits from a logged-in Google AI Pro /
+> Flow session. It is not an official Google API integration.
+
+**Tools unlocked:** `google_flow_video`
+**Runtime:** local browser automation
+**Default profile:** `~/.openmontage/google-flow-profile`
+
+#### Setup
+
+1. Install optional browser dependencies:
+   ```bash
+   pip install -r requirements-browser.txt
+   python -m playwright install chromium
+   ```
+2. Add explicit opt-in flags to `.env`:
+   ```bash
+   GOOGLE_FLOW_ENABLED=true
+   OPENMONTAGE_EXPERIMENTAL_GOOGLE_FLOW=1
+   GOOGLE_FLOW_BROWSER_PROFILE_DIR=~/.openmontage/google-flow-profile
+   ```
+3. Open the login flow through the tool:
+   ```python
+   from tools.video.google_flow_video import GoogleFlowVideo
+   GoogleFlowVideo().execute({"operation": "open_login"})
+   ```
+4. Sign in manually in the dedicated browser profile, then verify:
+   ```python
+   GoogleFlowVideo().execute({"operation": "check_auth"})
+   ```
+
+#### Required Generation Flags
+
+Generation must be explicitly selected on every call:
+
+```python
+GoogleFlowVideo().execute({
+    "operation": "text_to_video",
+    "preferred_provider": "google_flow",
+    "confirm_browser_automation": True,
+    "prompt": "A short vertical travel clip...",
+    "aspect_ratio": "9:16",
+    "output_path": "projects/demo/assets/video/flow.mp4",
+})
+```
+
+The `video_selector` will not auto-select this provider. It can route to Flow
+only when `preferred_provider="google_flow"` is supplied.
+
+#### Security And Support Notes
+
+- This bridge automates the visible Flow UI only. It must not scrape hidden
+  tokens, bypass CAPTCHA, bypass account limits, or call private endpoints.
+- Browser state lives in the dedicated local Chrome profile. OpenMontage does
+  not write cookies, storage state, HAR files, screenshots, DOM dumps, tokens,
+  auth headers, or account identifiers into repo artifacts.
+- `GOOGLE_FLOW_URL` must point at an expected Google Flow HTTPS host
+  (`labs.google`, `labs.google.com`, or `flow.google.com`) so the dedicated
+  Google-account profile is not navigated to arbitrary origins.
+- `GOOGLE_FLOW_CDP_URL`, when used for an already-running browser, must point
+  at a localhost debugging endpoint. CDP mode uses that existing local browser
+  context instead of launching the default dedicated profile.
+- Redacted errors are returned when the UI changes, login expires, generation
+  times out, or a download fails.
+- Live tests are opt-in only:
+  ```bash
+  GOOGLE_FLOW_E2E=1 GOOGLE_FLOW_ENABLED=true OPENMONTAGE_EXPERIMENTAL_GOOGLE_FLOW=1 pytest tests/tools/test_google_flow_video.py -k live
+  ```
+
+#### Pricing
+
+OpenMontage reports `$0.00` API cost for this tool because there is no
+OpenMontage-metered API call. The real cost is whatever Google Flow or Google
+AI Pro credits your logged-in account consumes in the web UI.
 
 #### Google TTS Voice Types
 
@@ -744,7 +833,7 @@ How many providers cover each capability:
 | Capability | Cloud Providers | Local Providers | Free Options |
 |-----------|----------------|-----------------|--------------|
 | **Image Generation** | FLUX, Grok, Google Imagen, DALL-E 3, Recraft | Local Diffusion | Pexels, Pixabay (stock) |
-| **Video Generation** | Grok, Kling, Runway, Veo, Higgsfield, MiniMax, HeyGen | WAN, Hunyuan, CogVideo, LTX | Pexels, Pixabay (stock) |
+| **Video Generation** | Grok, Kling, Runway, Veo, Higgsfield, MiniMax, HeyGen, Google Flow browser bridge (experimental) | WAN, Hunyuan, CogVideo, LTX | Pexels, Pixabay (stock) |
 | **Text-to-Speech** | ElevenLabs, Google TTS, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier |
 | **Music Generation** | ElevenLabs, Suno | — | ElevenLabs free tier |
 | **Post-Production** | — | FFmpeg (compose, stitch, trim, mix, enhance, grade) | All free |

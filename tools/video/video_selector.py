@@ -142,6 +142,7 @@ class VideoSelector(BaseTool):
 
         # Rank mode — return scored provider rankings without generating
         if inputs.get("operation") == "rank":
+            candidates = self._exclude_explicit_only_auto_candidates(inputs, candidates)
             rankings = rank_providers(candidates, task_context)
             return ToolResult(
                 success=True,
@@ -220,6 +221,8 @@ class VideoSelector(BaseTool):
         if preferred == "auto" and env_hint in env_map:
             preferred = env_map[env_hint]
 
+        candidates = self._exclude_explicit_only_auto_candidates(inputs, candidates)
+
         rankings = rank_providers(candidates, task_context)
 
         # Build tool lookup: provider → tool (first available per provider)
@@ -241,6 +244,18 @@ class VideoSelector(BaseTool):
                 return tool_by_provider[score.provider], score
 
         return None, None
+
+    @staticmethod
+    def _exclude_explicit_only_auto_candidates(
+        inputs: dict[str, object],
+        candidates: list[BaseTool],
+    ) -> list[BaseTool]:
+        if inputs.get("preferred_provider", "auto") != "auto":
+            return candidates
+        return [
+            tool for tool in candidates
+            if not getattr(tool, "supports", {}).get("requires_explicit_preference")
+        ]
 
     def _prepare_task_context(self, inputs: dict[str, object]) -> dict[str, object]:
         from lib.scoring import normalize_task_context

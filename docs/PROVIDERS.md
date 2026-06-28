@@ -11,17 +11,18 @@ Everything you need to know about every provider in OpenMontage — setup instru
 | Step | Cost | What to set up | What it unlocks |
 |------|------|----------------|-----------------|
 | 1 | **$0** | Pexels + Pixabay | Stock photos and videos — enough to produce basic videos |
-| 2 | **$0** | Google API key | TTS with 700+ voices (1M chars/month free) + $300 new account credit |
-| 3 | **$0** | ElevenLabs | Premium TTS + music + SFX (10K chars/month free) |
-| 4 | **$0** | Piper (local install) | Fully offline TTS — no API key, no cost, no network |
-| 5 | **~$0.03/image** | fal.ai | FLUX images + Kling/Veo/MiniMax video + Recraft — broad single-key image + video coverage |
-| 6 | **~$0.04/image** | OpenAI | DALL-E 3 images + OpenAI TTS |
-| 7 | **~$0.04/image** | Google Imagen | Imagen 4 images (shares the Google API key) |
-| 8 | **$12/month** | Runway | Gen-4 video — highest quality AI video |
-| 9 | **pay-as-you-go** | HeyGen | Avatar videos, multi-model video gateway |
-| 10 | **pay-as-you-go** | Suno | Full song generation with vocals and lyrics |
-| 11 | **$0 + GPU** | Local video gen | WAN 2.1, Hunyuan, CogVideo, LTX — free, offline |
-| 12 | **$0 + GPU** | Local Diffusion | Stable Diffusion images — free, offline |
+| 2 | **$0** | edge-tts | Free Chinese TTS via Microsoft Edge — no API key, pip install edge-tts |
+| 3 | **$0** | Google API key | TTS with 700+ voices (1M chars/month free) + $300 new account credit |
+| 4 | **$0** | ElevenLabs | Premium TTS + music + SFX (10K chars/month free) |
+| 5 | **$0** | Piper (local install) | Fully offline TTS — no API key, no cost, no network |
+| 6 | **~$0.03/image** | fal.ai | FLUX images + Kling/Veo/MiniMax video + Recraft — broad single-key image + video coverage |
+| 7 | **~$0.04/image** | OpenAI | DALL-E 3 images + OpenAI TTS |
+| 8 | **~$0.04/image** | Google Imagen | Imagen 4 images (shares the Google API key) |
+| 9 | **$12/month** | Runway | Gen-4 video — highest quality AI video |
+| 10 | **pay-as-you-go** | HeyGen | Avatar videos, multi-model video gateway |
+| 11 | **pay-as-you-go** | Suno | Full song generation with vocals and lyrics |
+| 12 | **$0 + GPU** | Local video gen | WAN 2.1, Hunyuan, CogVideo, LTX — free, offline |
+| 13 | **$0 + GPU** | Local Diffusion | Stable Diffusion images — free, offline |
 
 ### Environment Variable Summary
 
@@ -158,6 +159,55 @@ No subscription — pure pay-as-you-go, no minimum spend.
 | Scale | $330/mo | 2,000,000 | Priority support |
 
 **Free tier:** 10,000 characters/month (roughly 2-3 minutes of narration). API access included. Music generation and sound effects also available on free tier with limited credits.
+
+---
+
+### Edge-TTS — Free Chinese Voiceover (MVP/Testing)
+
+> **Best if you need free Chinese TTS with no API key for demos and testing.**
+> Not a production SLA-backed API — use Doubao, Google TTS, or ElevenLabs for formal publishing.
+
+**Tools unlocked:** `edge_tts`
+**Env var:** None (no API key required)
+
+#### Setup
+
+```bash
+pip install edge-tts
+```
+
+No API key, no registration, no configuration. It uses Microsoft Edge's free TTS service.
+
+#### Recommended Chinese Voices
+
+| Voice | Gender | Style |
+|-------|--------|-------|
+| `zh-CN-XiaoxiaoNeural` | Female | Default, natural (recommended) |
+| `zh-CN-YunxiNeural` | Male | Calm, warm |
+| `zh-CN-XiaoyiNeural` | Female | Expressive, lively |
+| `zh-CN-YunjianNeural` | Male | Deep, authoritative |
+| `zh-HK-HiuGaaiNeural` | Female | Cantonese |
+
+#### Usage
+
+```python
+from tools.audio.tts_selector import TTSSelector
+
+result = TTSSelector().execute({
+    "preferred_provider": "edge_tts",
+    "text": "深圳的城市公园里，也藏着一个热闹的自然世界。",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "output_path": "projects/my-video/assets/audio/narration.mp3",
+    "subtitle_path": "projects/my-video/assets/subtitles/narration.srt",
+})
+```
+
+#### Limitations
+
+- **Online only:** requires internet connection.
+- **Free, no SLA:** this scrapes Microsoft Edge's undocumented TTS endpoint. It may break or be rate-limited at any time.
+- **Expressive range:** limited compared to ElevenLabs or Doubao.
+- **For production Chinese videos**, prefer `doubao_tts`, `google_tts`, or manual voiceover.
 
 ---
 

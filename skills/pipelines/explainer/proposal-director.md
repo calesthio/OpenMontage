@@ -320,6 +320,11 @@ For each stage in the pipeline manifest (`animated-explainer.yaml`), specify:
 4. **Why this provider** — explain the choice ("ElevenLabs for narration because voice quality is critical for this topic" or "Piper TTS because running local-only and free")
 5. **Fallback if unavailable** — what happens if the primary tool is down
 
+**Chinese narration policy:**
+- For Chinese videos, prefer `doubao_tts` or `google_tts` for production-quality narration (requires API key).
+- Use `edge_tts` as a free MVP/testing provider when no paid TTS key is configured.
+- Do NOT silently fallback to `piper_tts` for Chinese narration — it is English-oriented. If no Chinese-capable TTS is available, surface this to the user explicitly rather than defaulting to English TTS.
+
 **Tool selection rationale must be honest:**
 - If using a free/local tool because the cloud tool is unavailable, say so
 - If using a cloud tool when a local alternative exists, explain the quality tradeoff
@@ -333,7 +338,9 @@ For each meaningful choice, present the tradeoff:
 TRADEOFF: TTS Provider
 ├── Premium: ElevenLabs ($0.18-0.30) — natural voice, emotional delivery
 ├── Standard: OpenAI TTS ($0.05-0.15) — good quality, less expressive
-└── Free: Piper local ($0.00) — robotic but works offline
+├── Chinese Production: Doubao ($0.00/cost) — best Mandarin, needs API key
+├── Chinese MVP: edge-tts ($0.00, no key) — free Chinese via Microsoft Edge, experimental
+└── Free local: Piper ($0.00) — English-oriented, robotic, offline
 
 TRADEOFF: Visual Assets
 ├── Premium: AI video clips ($0.10-0.50/clip) — motion, dynamic

@@ -212,7 +212,7 @@ At 3840x2160: Title Safe = inner **3072x1728px**
 4. **Darkened region** — gradient overlay behind text area
 5. **Full-screen overlay** — 30-50% dark overlay for text-heavy screens
 
-## Applying to OpenMontage
+## Applying to Balamonis Studio
 
 When generating text for video in the compose/asset stages:
 

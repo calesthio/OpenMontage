@@ -25,7 +25,7 @@ Apply when:
 
 ## Runtime choice (Remotion vs HyperFrames vs FFmpeg)
 
-OpenMontage separates creative grammar (`renderer_family`) from technical
+Balamonis Studio separates creative grammar (`renderer_family`) from technical
 engine (`render_runtime`). Both are locked at proposal and carried through
 `edit_decisions` unchanged. Silent runtime swaps at compose time are a
 contract violation.

@@ -59,7 +59,7 @@ For a **3-minute explainer video** (scale proportionally for other lengths):
 
 ## Anti-Subjective Rule
 
-> Hooks, beats, and section descriptions in OpenMontage scripts must describe the **visual cause** of the emotion, not the emotion itself. The CMU/Harvard CHAI study showed that subjective phrasing varies wildly across annotators and across model interpretations — so it does not constrain pixels and it doesn't reliably guide downstream generation tools.
+> Hooks, beats, and section descriptions in Balamonis Studio scripts must describe the **visual cause** of the emotion, not the emotion itself. The CMU/Harvard CHAI study showed that subjective phrasing varies wildly across annotators and across model interpretations — so it does not constrain pixels and it doesn't reliably guide downstream generation tools.
 >
 > | Avoid | Use instead |
 > |---|---|
@@ -175,7 +175,7 @@ These are the most relevant research-backed rules from cognitive science:
 4. **Coherence** — Remove interesting-but-irrelevant content. "Seductive details" reduce learning by 20-30% on transfer tests.
 5. **Modality** — Use narration (audio) + visuals (animation), NOT on-screen text + visuals. Spoken words + pictures outperform written words + pictures.
 
-## Applying to OpenMontage
+## Applying to Balamonis Studio
 
 When writing a **script artifact** for the animated-explainer pipeline:
 

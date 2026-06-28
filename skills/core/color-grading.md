@@ -147,7 +147,7 @@ When generating graphics, overlays, or diagrams that accompany graded video, use
 
 **Practical rule:** After color grading, any text overlays or subtitles burned into the video must still meet 4.5:1 contrast against the graded background. Test with a contrast checker on a representative frame.
 
-## Applying to OpenMontage
+## Applying to Balamonis Studio
 
 When using the `color_grade` tool:
 

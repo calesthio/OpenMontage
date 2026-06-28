@@ -1,4 +1,4 @@
-# Diagram Generation Usage for OpenMontage
+# Diagram Generation Usage for Balamonis Studio
 
 > Sources: Mermaid.js documentation, existing Layer 3 skill at `.agents/skills/beautiful-mermaid/`,
 > Mermaid-Sonar complexity analysis research, Mermaid GitHub issues #651 (scaling), #3029 (animation)
@@ -97,7 +97,7 @@ Generate one PNG per step with different `classDef` assignments, then sequence t
 - **Left-right (LR):** Best for timelines, sequences, pipelines
 - Avoid bottom-up (BT) — counterintuitive for most viewers
 
-## Applying to OpenMontage
+## Applying to Balamonis Studio
 
 When using the `diagram_gen` tool:
 

@@ -21,20 +21,20 @@ The 12 HyperFrames-family skills under `.agents/skills/` are vendored from the u
 
 **Newly vendored (strategic additions in 0.5–0.7):**
 
-| Skill | Why we want it in OpenMontage |
+| Skill | Why we want it in Balamonis Studio |
 |---|---|
 | `hyperframes-core` | The composition contract — `data-*` timing, tracks, sub-compositions. The split-out core of what was in `hyperframes` 0.4. |
 | `hyperframes-creative` | Non-animation creative direction — palette, type, narration, beat planning. |
 | `hyperframes-media` | Audio + media assets — TTS, BGM, SFX, transcription, captions, background removal. |
 | `hyperframes-animation` | All animation knowledge (rules, blueprints, transitions, techniques, 7 runtime adapters). Replaces ad-hoc motion guidance previously scattered in `hyperframes`. |
-| `media-use` | Agent Media OS — one `resolve` verb resolves BGM/SFX/image/icon needs into local files via project/global cache + HeyGen catalog. Strategic for OpenMontage asset stages. |
+| `media-use` | Agent Media OS — one `resolve` verb resolves BGM/SFX/image/icon needs into local files via project/global cache + HeyGen catalog. Strategic for Balamonis Studio asset stages. |
 | `motion-graphics` | Short design-led motion graphic patterns (kinetic typography, stat reveals, logo stings, lower-thirds). |
-| `remotion-to-hyperframes` | Migration guidance — directly relevant given OpenMontage runs BOTH runtimes. |
+| `remotion-to-hyperframes` | Migration guidance — directly relevant given Balamonis Studio runs BOTH runtimes. |
 | `music-to-video` | Beat-synced music-driven video workflow using `hyperframes beats`. |
 
 ## Intentionally NOT vendored
 
-These upstream skills are HF-workflow-specific and would compete with or duplicate OpenMontage's own pipeline routing. Re-evaluate per pipeline need:
+These upstream skills are HF-workflow-specific and would compete with or duplicate Balamonis Studio's own pipeline routing. Re-evaluate per pipeline need:
 
 `embedded-captions`, `faceless-explainer`, `general-video`, `pr-to-video`, `product-launch-video`, `slideshow`, `talking-head-recut`.
 
@@ -45,7 +45,7 @@ To re-vendor from a newer upstream:
 ```bash
 cd C:/Users/ishan/Documents/hyperframes
 git pull --ff-only origin main
-# Then in OpenMontage:
+# Then in Balamonis Studio:
 cd /c/Users/ishan/Documents/OpenMontage
 HF=C:/Users/ishan/Documents/hyperframes
 for d in hyperframes hyperframes-cli hyperframes-registry hyperframes-core \

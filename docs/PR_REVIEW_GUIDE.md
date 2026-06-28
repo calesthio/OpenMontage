@@ -1,11 +1,11 @@
 # Pull Request Review Guide
 
 This guide is for community reviewers, maintainers, and AI assistants reviewing
-OpenMontage pull requests. It is a review framework, not a closed checklist.
+Balamonis Studio pull requests. It is a review framework, not a closed checklist.
 Use it to structure the review, then keep looking for issues that are specific
 to the PR in front of you.
 
-OpenMontage is an agent-orchestrated video production system. Many PRs affect
+Balamonis Studio is an agent-orchestrated video production system. Many PRs affect
 more than the file they edit: a provider change can affect tool discovery,
 selector routing, setup instructions, pipeline decisions, cost reporting, and
 the user-visible production flow. Good reviews protect those contracts.
@@ -14,7 +14,7 @@ the user-visible production flow. Good reviews protect those contracts.
 
 Start with these questions:
 
-- Does this PR move OpenMontage in the right direction?
+- Does this PR move Balamonis Studio in the right direction?
 - Is the scope focused, or is it mixing unrelated changes?
 - Can a user, maintainer, or agent understand the behavior after this lands?
 - Does the PR preserve the agent-first architecture?
@@ -44,7 +44,7 @@ Name the actual severity and explain the impact.
 
 ### Project Direction
 
-Check whether the PR solves a real OpenMontage problem.
+Check whether the PR solves a real Balamonis Studio problem.
 
 - Does it improve video production quality, reliability, speed, portability,
   provider coverage, local execution, docs, tests, or contributor experience?
@@ -108,7 +108,7 @@ Avoid public phrasing like:
 
 ### Performance and Resource Use
 
-OpenMontage works with video, audio, image generation, and local models. Small
+Balamonis Studio works with video, audio, image generation, and local models. Small
 code changes can create large runtime costs.
 
 - Does the PR add repeated model loads instead of reusing state?
@@ -118,11 +118,11 @@ code changes can create large runtime costs.
   in a way that could slow common paths?
 - Are resource profiles and cost estimates realistic?
 
-## OpenMontage Architecture Checks
+## Balamonis Studio Architecture Checks
 
 ### Agent-First Architecture
 
-OpenMontage's control plane is the agent following markdown skills and YAML
+Balamonis Studio's control plane is the agent following markdown skills and YAML
 manifests. Python should provide tools and persistence, not hidden orchestration.
 
 Flag PRs that:
@@ -243,7 +243,7 @@ PR proves otherwise.
 
 ### Checkpoints and Review Policy
 
-OpenMontage uses checkpoints for resume, human approval, audit trails, and
+Balamonis Studio uses checkpoints for resume, human approval, audit trails, and
 stage gating.
 
 Check:
@@ -260,7 +260,7 @@ mechanical validator.
 
 ### Composition Runtimes
 
-OpenMontage can compose with Remotion, HyperFrames, or FFmpeg. Runtime choices
+Balamonis Studio can compose with Remotion, HyperFrames, or FFmpeg. Runtime choices
 are user-visible production decisions.
 
 For render/composition PRs, check:
@@ -279,7 +279,7 @@ findings, not harmless implementation details.
 
 ### Cost, Budget, and Paid Providers
 
-OpenMontage should not silently spend money or imply a paid provider is free.
+Balamonis Studio should not silently spend money or imply a paid provider is free.
 
 Check:
 
@@ -309,10 +309,10 @@ Check:
 
 Ask:
 
-- Is this provider useful for OpenMontage workflows?
+- Is this provider useful for Balamonis Studio workflows?
 - Does it add real coverage or just duplicate an existing provider?
 - Is the provider internationally known, nationally or regionally important,
-  or otherwise clearly valuable to OpenMontage users?
+  or otherwise clearly valuable to Balamonis Studio users?
 - Is the tool discoverable through the registry?
 - Does the matching selector discover and route to it?
 - Are provider inputs compatible with selector inputs?
@@ -330,7 +330,7 @@ Minimum expected coverage:
 - Selector/routing test if it joins a selector-backed capability
 - Docs update for user-visible providers
 
-Provider viability matters. OpenMontage should not become a grab bag of
+Provider viability matters. Balamonis Studio should not become a grab bag of
 unmaintained or one-off integrations. A provider does not need to be globally
 dominant, but it should have a clear reason to belong here.
 

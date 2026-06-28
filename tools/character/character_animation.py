@@ -639,7 +639,7 @@ class CharacterRigRenderer(BaseTool):
         )
         (workspace_path / "DESIGN.md").write_text(
             "# DESIGN\n\n"
-            "Generated for OpenMontage character animation.\n\n"
+            "Generated for Balamonis Studio character animation.\n\n"
             "- Background: `#9bd7ff` sky and `#75c878` ground\n"
             "- Foreground: `#202632` ink outlines\n"
             "- Accent: saturated cartoon body colors\n"

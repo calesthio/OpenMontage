@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a reproducible problem with OpenMontage
+description: Report a reproducible problem with Balamonis Studio
 labels: ["bug"]
 body:
   - type: markdown

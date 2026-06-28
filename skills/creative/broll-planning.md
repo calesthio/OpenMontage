@@ -1,4 +1,4 @@
-# B-Roll Planning for OpenMontage
+# B-Roll Planning for Balamonis Studio
 
 > How to plan B-roll needs from a script, decide between stock and generated footage,
 > construct effective search queries, and evaluate footage quality.

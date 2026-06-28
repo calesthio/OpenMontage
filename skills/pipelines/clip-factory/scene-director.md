@@ -25,7 +25,7 @@ Use:
 - `1:1` when speaker plus context both matter,
 - `16:9` when slides, demos, or multi-speaker width are essential.
 
-OpenMontage does not yet have first-class auto-reframe. If a vertical crop is weak, plan a safer aspect ratio instead of pretending the crop will work.
+Balamonis Studio does not yet have first-class auto-reframe. If a vertical crop is weak, plan a safer aspect ratio instead of pretending the crop will work.
 
 ### 2. Plan First-Second Composition
 

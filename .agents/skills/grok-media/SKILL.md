@@ -2,14 +2,14 @@
 name: grok-media
 description: xAI Grok image and video generation guide covering authentication, endpoints, prompt structure, image editing, reference-image video, and async polling.
 metadata:
-  author: OpenMontage
+  author: Balamonis Studio
   version: "1.0.0"
   tags: xai, grok, image-generation, video-generation, media
 ---
 
 # Grok Media
 
-Use this skill when working with xAI media models in OpenMontage.
+Use this skill when working with xAI media models in Balamonis Studio.
 
 ## Models
 

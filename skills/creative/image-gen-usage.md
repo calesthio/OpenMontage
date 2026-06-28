@@ -1,4 +1,4 @@
-# Image Generation Usage for OpenMontage
+# Image Generation Usage for Balamonis Studio
 
 > Sources: OpenAI DALL-E 3 documentation, FLUX/BFL API documentation, existing Layer 3 skills
 > at `.agents/skills/flux-best-practices/` and `.agents/skills/bfl-api/`
@@ -155,7 +155,7 @@ optimized for image/video generation providers.
 4. **Over-prompting** — Long, complex prompts produce unpredictable results. Keep to 2-3 sentences
 5. **Over-unifying prompts** — Forcing the exact same style phrase into every prompt makes scenes look samey. Keep the visual system consistent, but let each scene express its own subject, shot, and emotional beat.
 
-## Applying to OpenMontage
+## Applying to Balamonis Studio
 
 When using the `image_selector` tool in the asset stage:
 

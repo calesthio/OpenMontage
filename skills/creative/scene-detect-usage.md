@@ -1,4 +1,4 @@
-# Scene Detection Usage for OpenMontage
+# Scene Detection Usage for Balamonis Studio
 
 > Sources: PySceneDetect documentation, FFmpeg scenedetect filter docs, PySceneDetect
 > GitHub issues #187 (threshold tuning) and #226 (adaptive discussion)
@@ -39,7 +39,7 @@ MIXED CONTENT:    Use adaptive detector
 
 - Multiplier on rolling average (default 3.0)
 - Better than ContentDetector when there's fast camera motion causing false positives
-- Good default for OpenMontage explainers where Manim segments are static but live-action may have motion
+- Good default for Balamonis Studio explainers where Manim segments are static but live-action may have motion
 
 ### ThresholdDetector
 
@@ -95,7 +95,7 @@ After detection, clean up the scene list:
 | Fast-paced montage | content | 40 | 0.5s |
 | Documentary with fades | threshold | 12 | 2.0s |
 
-## Applying to OpenMontage
+## Applying to Balamonis Studio
 
 When using the `scene_detect` tool:
 

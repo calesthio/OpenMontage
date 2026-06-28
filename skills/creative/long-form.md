@@ -37,7 +37,7 @@ END SCREEN:       Last 20 seconds (YouTube end screen cards)
 
 - AI-generated video shows **70% lower retention** vs human-fronted content
 - AI narration triggers **35% viewer drop-off** within the first 45 seconds vs human narration
-- **Implication for OpenMontage:** Prioritize natural-sounding TTS (ElevenLabs over Piper), and avoid detectable AI visual artifacts. The processing chain in `sound-design.md` is essential.
+- **Implication for Balamonis Studio:** Prioritize natural-sounding TTS (ElevenLabs over Piper), and avoid detectable AI visual artifacts. The processing chain in `sound-design.md` is essential.
 
 ## Retention Curve Management
 
@@ -199,7 +199,7 @@ Chapters improve navigation and can boost retention by letting viewers skip to r
 - Max 1 card per 2 minutes — too many feels spammy
 - Best placement: when you reference a concept covered in another video
 
-## Applying to OpenMontage
+## Applying to Balamonis Studio
 
 When building long-form content:
 

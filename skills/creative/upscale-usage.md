@@ -1,4 +1,4 @@
-# Upscaling Usage for OpenMontage
+# Upscaling Usage for Balamonis Studio
 
 > Sources: Real-ESRGAN documentation, GFPGAN face enhancement docs, Real-ESRGAN paper
 > (Wang et al., 2021), practical upscaling benchmarks
@@ -117,7 +117,7 @@ Do not exceed 0.8 — higher values destroy legitimate detail.
 - [ ] No hallucinated details in flat color areas
 - [ ] File size is reasonable (4x upscale = ~16x file size)
 
-## Applying to OpenMontage
+## Applying to Balamonis Studio
 
 When using the `upscale` tool in the asset stage:
 

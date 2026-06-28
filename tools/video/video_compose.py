@@ -1157,7 +1157,10 @@ class VideoCompose(BaseTool):
         Checks:
         1. Delivery promise violation: motion-required brief with >70% still cuts → BLOCK
         2. Slideshow risk score "fail" (average ≥ 4.0) → BLOCK
-        3. Missing renderer_family → WARN (log only, don't block)
+        3. Scene-type collapse: animation scenes rendered as text_card → BLOCK (≥50%) or WARN
+        4. Orientation mismatch: short-form platform + landscape output → WARN
+        5. Capability envelope: blocked envelope → BLOCK, degraded → WARN
+        6. Missing renderer_family → BLOCK (log only, don't block)
 
         Returns a failed ToolResult if render should be blocked, None if OK to proceed.
         """
@@ -1223,7 +1226,75 @@ class VideoCompose(BaseTool):
             except Exception as e:
                 log.warning("Could not compute slideshow risk: %s", e)
 
-        # --- 3. Missing renderer_family (BLOCK — must be set at proposal) ---
+        # --- 3. Scene-type collapse check ---
+        if scene_plan and resolved_cuts:
+            try:
+                from lib.scene_type_collapse import detect_scene_type_collapse
+                collapse = detect_scene_type_collapse(scene_plan, resolved_cuts)
+                if collapse["verdict"] == "collapsed":
+                    blocks.append(
+                        f"Scene-type collapse detected: {collapse['collapse_ratio']:.0%} of planned scenes "
+                        f"were downgraded (e.g., animation → text_card). "
+                        f"{collapse['collapse_count']}/{collapse['total_scenes']} scenes changed to "
+                        f"a simpler type. The pipeline treated 'render text describing the scene' "
+                        f"as equivalent to 'render the scene' — this is a delivery-promise failure. "
+                        f"Review scene plan vs rendered cuts before proceeding."
+                    )
+                elif collapse["verdict"] == "degraded":
+                    warnings.append(
+                        f"Scene-type partial collapse: {collapse['collapse_count']} of "
+                        f"{collapse['total_scenes']} scenes changed to a simpler type. "
+                        f"Review whether this downgrade is acceptable."
+                    )
+            except Exception as e:
+                log.warning("Could not check scene-type collapse: %s", e)
+
+        # --- 4. Orientation / aspect ratio guard ---
+        _SHORT_FORM_PLATFORMS = frozenset({
+            "tiktok", "youtube_shorts", "instagram_reels",
+            "shorts", "reels",
+        })
+        meta = edit_decisions.get("metadata") or {}
+        target_platform = (meta.get("target_platform") or "").strip().lower()
+        target_resolution = meta.get("target_resolution")
+
+        if target_platform in _SHORT_FORM_PLATFORMS:
+            if isinstance(target_resolution, dict):
+                w = target_resolution.get("width", 1920)
+                h = target_resolution.get("height", 1080)
+            else:
+                # No target_resolution → will default to 1920×1080 landscape
+                w, h = 1920, 1080
+
+            if w > h:  # Landscape for a short-form target
+                warnings.append(
+                    f"Orientation mismatch: target platform '{target_platform}' expects "
+                    f"portrait/vertical video (e.g., 1080×1920), but the resolved output "
+                    f"dimensions are {w}×{h} (landscape). Set a portrait profile "
+                    f"(e.g., 'youtube_shorts', 'tiktok', 'instagram_reels') or add "
+                    f"target_resolution to edit_decisions.metadata."
+                )
+
+        # --- 5. Capability envelope degradation ---
+        envelope_data = meta.get("capability_envelope")
+        if isinstance(envelope_data, dict):
+            env_status = envelope_data.get("status", "")
+            if env_status == "blocked":
+                blocks.append(
+                    f"Capability envelope is BLOCKED: "
+                    f"{envelope_data.get('degradation_summary', 'critical capabilities missing')}. "
+                    f"The pipeline cannot produce its delivery promise with the current provider "
+                    f"configuration. Set up required providers before proceeding."
+                )
+            elif env_status == "degraded":
+                warnings.append(
+                    f"Capability envelope is DEGRADED: "
+                    f"{envelope_data.get('degradation_summary', 'some capabilities missing')}. "
+                    f"Output quality will be significantly below the pipeline's delivery promise. "
+                    f"Recommendation: {envelope_data.get('recommendation', 'proceed_as_draft')}."
+                )
+
+        # --- 6. Missing renderer_family (BLOCK — must be set at proposal) ---
         if not renderer_family:
             blocks.append(
                 "No renderer_family in edit_decisions. "
@@ -2256,13 +2327,29 @@ class VideoCompose(BaseTool):
         )
         issues.extend(transcript_comparison.get("issues", []))
 
-        # --- 7. Determine overall status ---
+        # --- 7. Capability envelope degradation surfacing ---
+        envelope_status = None
+        degradation_summary = None
+        if edit_decisions:
+            envelope_data = (edit_decisions.get("metadata") or {}).get("capability_envelope")
+            if isinstance(envelope_data, dict):
+                envelope_status = envelope_data.get("status")
+                degradation_summary = envelope_data.get("degradation_summary")
+                if envelope_status == "degraded" and degradation_summary:
+                    issues.append(
+                        f"DEGRADED OUTPUT: {degradation_summary} "
+                        f"This output was produced with a degraded capability envelope. "
+                        f"It should be treated as a proof-of-concept, not a publishable deliverable."
+                    )
+
+        # --- 8. Determine overall status ---
         critical_issues = [
             i for i in issues
             if any(kw in i.lower() for kw in [
                 "silent downgrade", "delivery promise violation",
                 "effectively silent", "ffprobe failed", "suspiciously short",
                 "tts punctuation leak",  # reading literal punctuation aloud
+                "degraded output",  # capability envelope degradation
             ])
         ]
 
@@ -2275,6 +2362,13 @@ class VideoCompose(BaseTool):
         else:
             status = "pass"
             recommended_action = "present_to_user"
+
+        # Override to "degraded" when capability envelope is degraded —
+        # this is a new status between pass and fail that clearly
+        # communicates the output is technically valid but not publishable.
+        if envelope_status == "degraded":
+            status = "degraded"
+            recommended_action = "present_as_draft"
 
         if not technical_probe.get("valid_container"):
             status = "fail"
@@ -2295,6 +2389,11 @@ class VideoCompose(BaseTool):
             "issues_found": issues,
             "recommended_action": recommended_action,
         }
+
+        # Surface capability degradation prominently in the review
+        if degradation_summary:
+            final_review["degradation_summary"] = degradation_summary
+            final_review["capability_envelope_status"] = envelope_status
 
         log.info(
             "Final review: status=%s, issues=%d, action=%s",

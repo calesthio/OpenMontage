@@ -473,7 +473,7 @@ class HyperFramesCompose(BaseTool):
                 error="edit_decisions with non-empty cuts[] is required for scaffold_workspace",
             )
 
-        width, height, fps = self._resolve_dimensions(profile_name, inputs.get("fps", 30))
+        width, height, fps = self._resolve_dimensions(profile_name, inputs.get("fps", 30), edit_decisions=edit_decisions)
 
         workspace.mkdir(parents=True, exist_ok=True)
         (workspace / "compositions").mkdir(exist_ok=True)
@@ -700,8 +700,9 @@ class HyperFramesCompose(BaseTool):
             )
 
         # 4. Render.
+        ed = inputs.get("edit_decisions")
         width, height, fps = self._resolve_dimensions(
-            inputs.get("profile"), inputs.get("fps", 30)
+            inputs.get("profile"), inputs.get("fps", 30), edit_decisions=ed
         )
         quality = inputs.get("quality", "standard")
         args = [
@@ -761,9 +762,17 @@ class HyperFramesCompose(BaseTool):
 
     @staticmethod
     def _resolve_dimensions(
-        profile_name: Optional[str], fps_in: int
+        profile_name: Optional[str],
+        fps_in: int,
+        edit_decisions: Optional[dict] = None,
     ) -> tuple[int, int, int]:
-        """Resolve output dimensions from the media profile, with a safe default."""
+        """Resolve output dimensions from profile, edit_decisions metadata, or default.
+
+        Priority order:
+        1. Named media profile (e.g. "youtube_shorts" → 1080×1920)
+        2. edit_decisions.metadata.target_resolution (set at proposal stage)
+        3. Default 1920×1080 landscape
+        """
         if profile_name:
             try:
                 from lib.media_profiles import get_profile  # type: ignore
@@ -771,6 +780,12 @@ class HyperFramesCompose(BaseTool):
                 return int(p.width), int(p.height), int(p.fps)
             except Exception:
                 pass
+        # Check edit_decisions.metadata.target_resolution
+        if edit_decisions:
+            meta = edit_decisions.get("metadata") or {}
+            tr = meta.get("target_resolution")
+            if isinstance(tr, dict) and "width" in tr and "height" in tr:
+                return int(tr["width"]), int(tr["height"]), int(tr.get("fps", fps_in))
         return 1920, 1080, int(fps_in)
 
     @staticmethod

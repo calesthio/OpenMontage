@@ -121,7 +121,7 @@ After writing the artifact, confirm briefly what you produced.
                 messages=messages,
                 tools=TOOL_SCHEMAS,
                 tool_choice="auto",
-                max_tokens=4096,
+                max_tokens=8192,
                 temperature=0.7,
             )
         except Exception as e:
@@ -159,10 +159,30 @@ After writing the artifact, confirm briefly what you produced.
         # Execute each tool call
         for tc in msg.tool_calls:
             tool_name = tc.function.name
+            raw_args = tc.function.arguments or ""
             try:
-                tool_args = json.loads(tc.function.arguments)
+                tool_args = json.loads(raw_args)
+                if not isinstance(tool_args, dict):
+                    tool_args = {}
             except json.JSONDecodeError:
-                tool_args = {}
+                # Arguments were truncated — tell the model exactly what happened
+                _emit(job_id, {
+                    "type": "error",
+                    "stage": stage_name,
+                    "message": f"Tool {tool_name}: arguments JSON truncated ({len(raw_args)} chars). "
+                               "Agent must retry with a shorter/simpler content.",
+                })
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tc.id,
+                    "content": (
+                        f"ERROR: Your function call arguments were truncated and could not be parsed "
+                        f"({len(raw_args)} chars received, likely hit max_tokens). "
+                        "Please retry write_artifact with a more concise 'content' object — "
+                        "keep each field value under 500 characters, omit verbose descriptions."
+                    ),
+                })
+                continue
 
             _emit(job_id, {
                 "type": "tool_call",
@@ -171,12 +191,20 @@ After writing the artifact, confirm briefly what you produced.
                 "summary": f"{tool_name}({list(tool_args.keys())})",
             })
 
-            result = execute_tool(
-                tool_name,
-                tool_args,
-                project_dir,
-                emit_event=lambda ev: _emit(job_id, ev),
-            )
+            try:
+                result = execute_tool(
+                    tool_name,
+                    tool_args,
+                    project_dir,
+                    emit_event=lambda ev: _emit(job_id, ev),
+                )
+            except Exception as exc:
+                result = f"ERROR: Tool execution failed: {exc}"
+                _emit(job_id, {
+                    "type": "error",
+                    "stage": stage_name,
+                    "message": f"Tool {tool_name} error: {exc}",
+                })
 
             messages.append({
                 "role": "tool",
@@ -221,13 +249,14 @@ async def run_pipeline_job(job_id: str, data: dict) -> None:
         # Load director skill
         skill_text = skill_path.read_text(encoding="utf-8") if skill_path.exists() else f"# {stage_name} director\nExecute the {stage_name} stage."
 
-        # Run stage (with reviewer retry loop)
+        # Run stage in thread pool (blocking sync LLM calls must not block event loop)
         success = False
         feedback = ""
         for _round in range(MAX_ROUNDS + 1):
-            success = _run_agent_stage(
+            success = await asyncio.to_thread(
+                _run_agent_stage,
                 job_id, stage_name, skill_text, project_dir,
-                brand_info, options, feedback
+                brand_info, options, feedback,
             )
             if success:
                 break

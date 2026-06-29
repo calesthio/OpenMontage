@@ -46,17 +46,22 @@ TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "write_artifact",
-            "description": "Write a pipeline artifact JSON to the project artifacts directory.",
+            "description": (
+                "Write a pipeline artifact JSON to the project artifacts directory. "
+                "IMPORTANT: Keep 'content' compact — each field value under 300 chars, "
+                "use arrays of short strings rather than long prose. "
+                "Large content causes token truncation and will fail."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
                     "artifact_name": {
                         "type": "string",
-                        "description": "e.g. 'script', 'proposal_packet', 'scene_plan'"
+                        "description": "e.g. 'research', 'proposal_packet', 'script', 'scene_plan'"
                     },
                     "content": {
                         "type": "object",
-                        "description": "Artifact content as JSON object"
+                        "description": "Compact JSON artifact. Keep each string value under 300 chars."
                     }
                 },
                 "required": ["artifact_name", "content"]
@@ -109,8 +114,12 @@ def execute_tool(
         return content
 
     elif name == "write_artifact":
-        artifact_name = args["artifact_name"]
-        content = args["content"]
+        artifact_name = args.get("artifact_name")
+        content = args.get("content")
+        if not artifact_name:
+            return "ERROR: write_artifact requires 'artifact_name' parameter"
+        if content is None:
+            return "ERROR: write_artifact requires 'content' parameter"
         artifacts_dir = project_dir / "artifacts"
         artifacts_dir.mkdir(parents=True, exist_ok=True)
         out = artifacts_dir / f"{artifact_name}.json"

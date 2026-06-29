@@ -73,6 +73,19 @@ def _load_artifacts(project_dir: Path) -> dict[str, Any]:
     return artifacts
 
 
+def _load_brand_kit(kit_id: str | None) -> dict:
+    """Load a brand kit from brand_kits/<kit_id>/kit.json, or empty dict."""
+    if not kit_id:
+        return {}
+    p = OM_ROOT / "brand_kits" / kit_id / "kit.json"
+    if p.exists():
+        try:
+            return json.loads(p.read_text())
+        except Exception:
+            pass
+    return {}
+
+
 def _run_agent_stage(
     job_id: str,
     stage_name: str,
@@ -89,6 +102,15 @@ def _run_agent_stage(
         {k: "(present)" for k in artifacts}, ensure_ascii=False
     )
 
+    # Brand Kit injection — if a kit_id is in options, load and merge
+    brand_kit = _load_brand_kit(options.get("brand_kit_id"))
+    brand_section = ""
+    if brand_kit:
+        brand_section = f"""
+## Brand Kit (use these to ensure visual/tonal consistency)
+{json.dumps(brand_kit, ensure_ascii=False, indent=2)[:2000]}
+"""
+
     user_msg = f"""You are the {stage_name}-director for an OpenMontage cinematic pipeline run.
 
 ## Director Skill
@@ -98,7 +120,7 @@ def _run_agent_stage(
 - Brand: {json.dumps(brand_info, ensure_ascii=False)}
 - Options: {json.dumps(options, ensure_ascii=False)}
 - Available artifacts from previous stages: {artifacts_summary}
-
+{brand_section}
 ## Prior Artifacts (content)
 {json.dumps(artifacts, ensure_ascii=False, indent=2)[:6000]}
 

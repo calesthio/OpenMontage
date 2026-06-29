@@ -34,6 +34,14 @@ async def create_job(req: CreateJobRequest, bg: BackgroundTasks):
     return {"job_id": job_id, "status": "queued"}
 
 
+@router.get("")
+async def list_jobs():
+    """Return all jobs, newest first."""
+    jobs = list(job_store.all().values())
+    jobs.sort(key=lambda j: j.get("created_at", 0), reverse=True)
+    return {"jobs": jobs}
+
+
 @router.get("/{job_id}")
 async def get_job(job_id: str):
     job = job_store.get(job_id)

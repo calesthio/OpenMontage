@@ -1,19 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+
+const SERVER = process.env.NEXT_PUBLIC_SERVER_URL ?? "http://localhost:8000";
 
 const CONTENT_TYPES = [
   {
     id: "marketing_film",
     label: "营销宣传片",
-    description: "品牌故事 · 产品发布 · 30-60 秒情感向短片",
+    description: "品牌故事 · 产品发布 · 15-60 秒情感向短片",
     pipeline: "cinematic",
     available: true,
   },
@@ -23,28 +25,46 @@ const CONTENT_TYPES = [
   { id: "short",       label: "短视频批量", description: "长视频 → 多条竖屏短片",      pipeline: "clip-factory",      available: false },
 ];
 
+type BrandKit = { kit_id: string; brand_name: string; slogan: string };
 type Step = "type" | "wizard";
 
 export default function NewProjectPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>("type");
   const [selectedType, setSelectedType] = useState<typeof CONTENT_TYPES[0] | null>(null);
+  const [brandKits, setBrandKits] = useState<BrandKit[]>([]);
   const [form, setForm] = useState({
     projectName: "",
     brandName: "",
     slogan: "",
     duration: "30",
-    narration: true,
     notes: "",
+    brandKitId: "",
   });
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetch(`${SERVER}/brands`)
+      .then((r) => r.json())
+      .then((d) => setBrandKits(d.brand_kits ?? []))
+      .catch(() => {});
+  }, []);
+
+  function applyKit(kit: BrandKit) {
+    setForm((f) => ({
+      ...f,
+      brandKitId: kit.kit_id,
+      brandName: kit.brand_name,
+      slogan: kit.slogan,
+    }));
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedType) return;
     setLoading(true);
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL ?? "http://localhost:8000"}/jobs`, {
+    const res = await fetch(`${SERVER}/jobs`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -58,10 +78,10 @@ export default function NewProjectPage() {
         },
         options: {
           duration_seconds: parseInt(form.duration),
-          narration: form.narration,
           video_model: "h100/ltx-2.3",
           image_model: "h100/flux2",
           tts_model: "qwen3-tts-flash",
+          ...(form.brandKitId ? { brand_kit_id: form.brandKitId } : {}),
         },
       }),
     });
@@ -79,8 +99,7 @@ export default function NewProjectPage() {
     return (
       <div className="p-8 max-w-3xl">
         <h1 className="text-2xl font-bold tracking-tight mb-2">选择视频类型</h1>
-        <p className="text-muted-foreground text-sm mb-8">选择你要制作的视频类型，AI 会自动选择最合适的生产流程。</p>
-
+        <p className="text-muted-foreground text-sm mb-8">选择要制作的视频类型，AI 会自动选择最合适的生产流程。</p>
         <div className="grid grid-cols-1 gap-3">
           {CONTENT_TYPES.map((ct) => (
             <button
@@ -123,6 +142,40 @@ export default function NewProjectPage() {
       <p className="text-muted-foreground text-sm mb-8">{selectedType?.description}</p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Brand Kit selector */}
+        {brandKits.length > 0 && (
+          <div className="space-y-2">
+            <h2 className="text-sm font-semibold text-foreground/70 uppercase tracking-wider">快速套用品牌 Kit</h2>
+            <div className="flex gap-2 flex-wrap">
+              {brandKits.map((kit) => (
+                <button
+                  key={kit.kit_id}
+                  type="button"
+                  onClick={() => applyKit(kit)}
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                    form.brandKitId === kit.kit_id
+                      ? "bg-foreground text-background border-foreground"
+                      : "border-border hover:border-foreground/40"
+                  }`}
+                >
+                  {kit.brand_name}
+                </button>
+              ))}
+              {form.brandKitId && (
+                <button
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, brandKitId: "" }))}
+                  className="text-xs px-3 py-1.5 text-muted-foreground hover:text-foreground"
+                >
+                  × 清除
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {brandKits.length > 0 && <Separator />}
+
         <div className="space-y-4">
           <h2 className="text-sm font-semibold text-foreground/70 uppercase tracking-wider">品牌信息</h2>
           <div className="space-y-3">

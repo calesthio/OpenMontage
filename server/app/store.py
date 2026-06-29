@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
+import time
 from typing import Any
 
 
@@ -25,10 +26,15 @@ class JobStore:
                 "current_stage": None,
                 "stages": [],
                 "cost_cny": 0.0,
+                "created_at": time.time(),
                 **data,
             }
             self._events[job_id] = []
             self._approval_events[job_id] = asyncio.Event()
+
+    def all(self) -> dict[str, dict]:
+        with self._lock:
+            return dict(self._jobs)
 
     def get(self, job_id: str) -> dict | None:
         with self._lock:

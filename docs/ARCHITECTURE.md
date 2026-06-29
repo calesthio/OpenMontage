@@ -70,6 +70,7 @@ OpenMontage/
 ├── .agents/skills/         # Layer 3: external technology skills (FFmpeg, HyperFrames, GSAP, etc.)
 ├── styles/                 # Visual style playbooks (YAML) + loader
 ├── remotion-composer/      # Node.js/React — Remotion video composition renderer
+├── scripts/video/          # montage_lib.py — pure FFmpeg recipe library for thin per-video drivers (SOP: docs/video-production-pipeline.md)
 ├── tests/                  # Contract tests, QA integration tests, eval harness
 ├── docs/                   # Best-practices guides, session handoffs, audits
 └── config.yaml             # Global runtime configuration

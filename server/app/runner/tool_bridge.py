@@ -1,0 +1,177 @@
+"""Tool Bridge: exposes OpenMontage BaseTool registry to the headless agent.
+
+The agent is given three capabilities:
+  read_file         — read any file under the OpenMontage root
+  write_artifact    — persist an artifact JSON to the project dir
+  run_openmontage_tool — call any registered BaseTool by name
+
+Tool schemas are returned in OpenAI function-call format so they work with
+both the OpenAI SDK (pointing at MaaS) and Anthropic SDK.
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+from typing import Any
+
+# Add OpenMontage root to path so we can import tools/lib
+OM_ROOT = Path(__file__).parent.parent.parent.parent
+sys.path.insert(0, str(OM_ROOT))
+
+TOOL_SCHEMAS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "read_file",
+            "description": (
+                "Read a file from the OpenMontage filesystem. "
+                "Use for skills (skills/), pipeline manifests (pipeline_defs/), "
+                "schemas (schemas/), and project artifacts."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {
+                        "type": "string",
+                        "description": "Path relative to OpenMontage root"
+                    }
+                },
+                "required": ["path"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "write_artifact",
+            "description": "Write a pipeline artifact JSON to the project artifacts directory.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "artifact_name": {
+                        "type": "string",
+                        "description": "e.g. 'script', 'proposal_packet', 'scene_plan'"
+                    },
+                    "content": {
+                        "type": "object",
+                        "description": "Artifact content as JSON object"
+                    }
+                },
+                "required": ["artifact_name", "content"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "run_openmontage_tool",
+            "description": (
+                "Run a tool from the OpenMontage tool registry. "
+                "Available capabilities: video_generation, image_generation, tts, "
+                "music_search, subtitle, enhancement, analysis."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "tool_name": {
+                        "type": "string",
+                        "description": "Registered tool name, e.g. 'maas_video', 'maas_image', 'maas_tts'"
+                    },
+                    "inputs": {
+                        "type": "object",
+                        "description": "Tool inputs per the tool's input_schema"
+                    }
+                },
+                "required": ["tool_name", "inputs"]
+            }
+        }
+    }
+]
+
+
+def execute_tool(
+    name: str,
+    args: dict[str, Any],
+    project_dir: Path,
+    emit_event: Any = None,   # callable(event_dict) for SSE
+) -> str:
+    """Execute a tool call and return a string result for the agent."""
+
+    if name == "read_file":
+        path = OM_ROOT / args["path"]
+        if not path.exists():
+            return f"ERROR: File not found: {args['path']}"
+        content = path.read_text(encoding="utf-8")
+        if len(content) > 12000:
+            content = content[:12000] + f"\n\n[truncated — {len(content)} total chars]"
+        return content
+
+    elif name == "write_artifact":
+        artifact_name = args["artifact_name"]
+        content = args["content"]
+        artifacts_dir = project_dir / "artifacts"
+        artifacts_dir.mkdir(parents=True, exist_ok=True)
+        out = artifacts_dir / f"{artifact_name}.json"
+        out.write_text(json.dumps(content, ensure_ascii=False, indent=2))
+        if emit_event:
+            emit_event({
+                "type": "artifact_written",
+                "artifact": artifact_name,
+                "path": str(out.relative_to(OM_ROOT)),
+            })
+        return f"Written to {out}"
+
+    elif name == "run_openmontage_tool":
+        tool_name = args["tool_name"]
+        inputs = args.get("inputs", {})
+
+        if emit_event:
+            emit_event({
+                "type": "tool_call",
+                "tool": tool_name,
+                "summary": f"调用工具 {tool_name}",
+                "inputs_preview": {k: str(v)[:80] for k, v in inputs.items()},
+            })
+
+        from tools.tool_registry import registry
+        registry.discover()
+        tool = registry.get(tool_name)
+        if not tool:
+            return f"ERROR: Tool '{tool_name}' not found in registry"
+
+        # Set output path inside project assets if not specified
+        if "output_path" not in inputs:
+            ext_map = {
+                "video_generation": "mp4",
+                "image_generation": "png",
+                "tts": "mp3",
+            }
+            ext = ext_map.get(tool.capability, "bin")
+            inputs = {**inputs, "output_path": str(
+                project_dir / "assets" / tool.capability / f"{tool_name}_output.{ext}"
+            )}
+            (project_dir / "assets" / tool.capability).mkdir(parents=True, exist_ok=True)
+
+        result = tool.execute(inputs)
+
+        if result.success:
+            if emit_event and result.artifacts:
+                for artifact_path in result.artifacts:
+                    emit_event({
+                        "type": "asset_ready",
+                        "tool": tool_name,
+                        "path": artifact_path,
+                        "kind": tool.capability,
+                    })
+            return json.dumps({
+                "success": True,
+                "data": result.data,
+                "artifacts": result.artifacts,
+                "cost_usd": result.cost_usd,
+            })
+        else:
+            return json.dumps({"success": False, "error": result.error})
+
+    return f"ERROR: Unknown tool: {name}"

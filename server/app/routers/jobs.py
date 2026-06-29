@@ -1,7 +1,9 @@
 """Job API: create, query, approve pipeline jobs."""
 
 import asyncio
+import json
 import uuid
+from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
@@ -9,6 +11,8 @@ from pydantic import BaseModel
 
 from app.store import job_store
 from app.runner.stage_runner import run_pipeline_job
+
+OM_ROOT = Path(__file__).parent.parent.parent.parent
 
 router = APIRouter()
 
@@ -24,6 +28,11 @@ class CreateJobRequest(BaseModel):
 class ApproveStageRequest(BaseModel):
     action: str               # "approve" | "reject"
     feedback: str = ""
+
+
+class SaveArtifactRequest(BaseModel):
+    stage: str
+    content: dict[str, Any]
 
 
 @router.post("", status_code=201)
@@ -56,3 +65,17 @@ async def approve_stage(job_id: str, req: ApproveStageRequest):
     if not ok:
         raise HTTPException(404, "Job not found or not awaiting approval")
     return {"job_id": job_id, "action": req.action}
+
+
+@router.post("/{job_id}/artifact")
+async def save_artifact(job_id: str, req: SaveArtifactRequest):
+    """Overwrite a stage artifact (used by inline edit in the UI)."""
+    job = job_store.get(job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+    project_name = job.get("project_name", job_id)
+    artifacts_dir = OM_ROOT / "projects" / project_name / "artifacts"
+    artifacts_dir.mkdir(parents=True, exist_ok=True)
+    out = artifacts_dir / f"{req.stage}.json"
+    out.write_text(json.dumps(req.content, ensure_ascii=False, indent=2))
+    return {"saved": req.stage, "path": str(out)}

@@ -32,6 +32,7 @@ function resolveAsset(src: string): string {
     }
     return `file:///${posix}`;
   }
+  // Relative paths live under public/.
   return staticFile(clean);
 }
 import { TextCard } from "./components/TextCard";

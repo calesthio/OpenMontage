@@ -55,7 +55,8 @@ class HunyuanVideo(BaseTool):
         "properties": {
             "prompt": {"type": "string"},
             "operation": {"type": "string", "enum": ["text_to_video", "image_to_video"], "default": "text_to_video"},
-            "model_variant": {"type": "string", "enum": ["hunyuan-1.5"], "default": "hunyuan-1.5"},
+            "model_variant": {"type": "string", "enum": ["hunyuan-1.5", "hunyuan-1.5-distilled"], "default": "hunyuan-1.5"},
+            "offload_mode": {"type": "string", "enum": ["model", "sequential"], "default": "model"},
             "reference_image_url": {"type": "string"},
             "reference_image_path": {"type": "string"},
             "width": {"type": "integer"},

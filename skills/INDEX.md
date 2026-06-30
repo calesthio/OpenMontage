@@ -276,6 +276,7 @@ Cross-cutting skills that apply to all pipelines:
 
 | Skill | File | Purpose |
 |-------|------|---------|
+| Intent Analyst | `meta/intent-analyst.md` | Decompose a new request into explicit + implicit sub-intents; route to pipeline(s) before pipeline selection (Rule Zero step 1) |
 | Onboarding | `meta/onboarding.md` | First-interaction greeting, capability discovery, starter prompts |
 | Reviewer | `meta/reviewer.md` | Self-review protocol after every stage |
 | Checkpoint Protocol | `meta/checkpoint-protocol.md` | When/how to checkpoint and request human approval |

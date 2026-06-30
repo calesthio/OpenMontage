@@ -108,6 +108,13 @@ The analyst's report MUST break down the reference video into the **five aspects
 
 See `skills/creative/video-gen-prompting.md` for primitive definitions and the canonical vocabulary used at every aspect.
 
+### Handoff to intent-analyst
+
+The VideoAnalysisBrief is rich routing input. Hand it to `skills/meta/intent-analyst.md`
+(Rule Zero step 1) to produce the `intent_map`: the brief already supplies tone, structure,
+pacing, and motion type, so intent-analyst can route confidently without re-asking. Do not
+re-derive intent that the brief already captured.
+
 ### Step 2: Capability Audit
 
 Run standard preflight:

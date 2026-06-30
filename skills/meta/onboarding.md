@@ -4,7 +4,9 @@
 
 On the **very first interaction** with a user in a new session when the user has not yet specified a concrete production request — or when their request is vague ("make me a video", "what can you do?", "help me create something").
 
-Skip this skill when the user arrives with a specific, actionable request like "Make a 60-second explainer about black holes." In that case, go directly to Rule Zero (identify pipeline → preflight → execute). The user already knows what they want.
+Skip this skill when the user arrives with a specific, actionable request like "Make a 60-second explainer about black holes." In that case, go directly to Rule Zero — which starts by running `skills/meta/intent-analyst.md` to route the request — then preflight and execute. The user already knows what they want.
+
+**Handoff:** the moment an exploratory session turns into an actionable production request, stop orienting and run `intent-analyst` (Rule Zero step 1). Onboarding orients; intent-analyst routes.
 
 **This skill transforms the agent from a passive executor into a creative partner.** Most users don't know what's possible. Your job is to show them — fast, clearly, and with copy-paste prompts they can try right now.
 

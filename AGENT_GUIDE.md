@@ -52,11 +52,12 @@ If a model misses this distinction, it will often fall back to plain search + gu
 
 When the user asks to make, create, produce, or generate any video content — a trailer, explainer, clip, animation, or any other video — the agent must:
 
-1. **Identify the pipeline.** Match the request to one of the pipelines in `pipeline_defs/`. If unclear, ask the user.
-2. **Read the pipeline manifest.** `pipeline_defs/<pipeline>.yaml` — know the stages, tools, and quality gates.
-3. **Run preflight.** Discover available tools via the registry. Present the capability menu.
-4. **Execute stage by stage.** For EACH stage, read the stage director skill (`skills/pipelines/<pipeline>/<stage>-director.md`) BEFORE doing any work in that stage.
-5. **Read Layer 3 skills before calling tools.** Before using any tool with an `agent_skills` field, read the referenced skill in `.agents/skills/`. These contain provider-specific prompting guidance, parameter optimization, and quality techniques that dramatically improve output.
+1. **Analyze intent.** Read `skills/meta/intent-analyst.md` and produce an `intent_map` (explicit + implicit sub-intents → routed pipeline(s) + provisional capability needs). This routes the request before you commit to a pipeline. Skip only for refinement requests inside an already-running pipeline.
+2. **Identify the pipeline.** Using the `intent_map`, match the request to one of the pipelines in `pipeline_defs/`. If `routed_pipelines` is empty or confidence is low, confirm with the user.
+3. **Read the pipeline manifest.** `pipeline_defs/<pipeline>.yaml` — know the stages, tools, and quality gates.
+4. **Run preflight.** Discover available tools via the registry. Present the capability menu. This is the authoritative capability check — the `intent_map`'s capability needs are provisional until verified here.
+5. **Execute stage by stage.** For EACH stage, read the stage director skill (`skills/pipelines/<pipeline>/<stage>-director.md`) BEFORE doing any work in that stage.
+6. **Read Layer 3 skills before calling tools.** Before using any tool with an `agent_skills` field, read the referenced skill in `.agents/skills/`. These contain provider-specific prompting guidance, parameter optimization, and quality techniques that dramatically improve output.
 
 **Do NOT:**
 - Write ad-hoc Python scripts to call tools directly

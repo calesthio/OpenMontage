@@ -3,6 +3,14 @@
 Before the research stage, gather user intent through targeted questions.
 Do NOT start production on a vague brief.
 
+## Input: intent_map
+
+By the time you run, `intent-analyst` (Rule Zero step 1) has usually already produced an
+`intent_map` with `explicit_intents`, `implicit_intents`, routed pipeline(s), and a list of
+`open_ambiguities`. **Consume it:** treat `open_ambiguities` as your question list, and do
+NOT re-decompose the request or re-derive intents that are already captured. Your job here
+is only to close the gaps intent-analyst flagged — not to repeat the routing analysis.
+
 ## Required Questions (ask conversationally, not as a survey)
 
 1. **Purpose**: What is this video FOR? (educate, sell, inspire, document, entertain)

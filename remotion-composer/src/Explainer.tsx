@@ -17,13 +17,19 @@ function resolveAsset(src: string): string {
   if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("data:")) {
     return src;
   }
-  // Strip any file:// prefix
-  const clean = src.replace(/^file:\/\/\/?/, "");
-  // Absolute paths (Unix: /foo, Windows: C:\foo or C:/foo) — convert to file:// URI
-  // staticFile() only accepts relative paths within public/, so absolute paths must bypass it
-  if (clean.startsWith("/") || /^[A-Za-z]:[\\/]/.test(clean)) {
+  // Strip only the file:// scheme, preserving the absolute leading slash.
+  // (A previous version stripped file:/// — including the leading slash — which
+  // turned "file:///abs" into the relative "abs" and "/abs" into "file:////abs".)
+  const clean = src.replace(/^file:\/\//, "");
+  // Unix absolute (/foo): file:// + /foo = file:///foo (three slashes).
+  if (clean.startsWith("/")) {
+    return `file://${clean}`;
+  }
+  // Windows absolute (C:\foo or C:/foo): file:/// + C:/foo.
+  if (/^[A-Za-z]:[\\/]/.test(clean)) {
     return `file:///${clean.replace(/\\/g, "/")}`;
   }
+  // Relative paths live under public/.
   return staticFile(clean);
 }
 import { TextCard } from "./components/TextCard";

@@ -37,10 +37,11 @@ class PiperTTS(BaseTool):
     install_instructions = (
         "Install Piper TTS:\n"
         "  pip install piper-tts\n"
-        "Or download from https://github.com/rhasspy/piper/releases\n"
-        "Then download a voice model:\n"
-        "  piper --download-dir ~/.piper/models --model en_US-lessac-medium"
+        "Then download at least one voice model (required — Piper ships none):\n"
+        "  python -m piper.download_voices en_US-lessac-medium\n"
+        "The model resolves from the current directory or PIPER_VOICE_DIR."
     )
+    default_voice = "en_US-lessac-medium"
     agent_skills = ["text-to-speech"]
 
     capabilities = [
@@ -95,17 +96,53 @@ class PiperTTS(BaseTool):
     side_effects = ["writes audio file to output_path"]
     user_visible_verification = ["Listen to generated audio for intelligibility"]
 
+    @staticmethod
+    def _voice_search_dirs() -> list[Path]:
+        import os
+
+        dirs = [Path.cwd()]
+        env_dir = os.environ.get("PIPER_VOICE_DIR")
+        if env_dir:
+            dirs.append(Path(env_dir).expanduser())
+        dirs += [Path.home() / ".local/share/piper", Path.home() / ".piper/models"]
+        return dirs
+
+    def _has_voice_model(self) -> bool:
+        """True if any Piper voice model (.onnx + .onnx.json) is discoverable."""
+        for d in self._voice_search_dirs():
+            if d.is_dir():
+                for onnx in d.glob("*.onnx"):
+                    if onnx.with_suffix(".onnx.json").is_file():
+                        return True
+        return False
+
     def get_status(self) -> ToolStatus:
-        if shutil.which("piper"):
-            return ToolStatus.AVAILABLE
-        return ToolStatus.UNAVAILABLE
+        installed = shutil.which("piper") is not None
+        if not installed:
+            try:
+                import piper  # noqa: F401
+                installed = True
+            except ImportError:
+                return ToolStatus.UNAVAILABLE
+        # Installed but unusable until a voice model is downloaded — report
+        # DEGRADED so preflight doesn't claim TTS is ready when it will fail.
+        return ToolStatus.AVAILABLE if self._has_voice_model() else ToolStatus.DEGRADED
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         return 0.0
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
-        if self.get_status() != ToolStatus.AVAILABLE:
-            return ToolResult(success=False, error="Piper TTS not available. " + self.install_instructions)
+        status = self.get_status()
+        if status == ToolStatus.UNAVAILABLE:
+            return ToolResult(success=False, error="Piper TTS not installed. " + self.install_instructions)
+        if status == ToolStatus.DEGRADED:
+            return ToolResult(
+                success=False,
+                error=(
+                    "Piper is installed but no voice model was found. Download one:\n"
+                    f"  python -m piper.download_voices {self.default_voice}"
+                ),
+            )
 
         start = time.time()
         try:
@@ -123,7 +160,7 @@ class PiperTTS(BaseTool):
         proc = subprocess.run(
             [
                 "piper",
-                "--model", inputs.get("model", "en_US-lessac-medium"),
+                "--model", inputs.get("model", self.default_voice),
                 "--speaker", str(inputs.get("speaker_id", 0)),
                 "--length-scale", str(inputs.get("length_scale", 1.0)),
                 "--sentence-silence", str(inputs.get("sentence_silence", 0.3)),
@@ -144,12 +181,12 @@ class PiperTTS(BaseTool):
             success=True,
             data={
                 "provider": self.provider,
-                "model": inputs.get("model", "en_US-lessac-medium"),
+                "model": inputs.get("model", self.default_voice),
                 "speaker_id": inputs.get("speaker_id", 0),
                 "text_length": len(inputs["text"]),
                 "output": str(output_path),
                 "format": "wav",
             },
             artifacts=[str(output_path)],
-            model=inputs.get("model", "en_US-lessac-medium"),
+            model=inputs.get("model", self.default_voice),
         )

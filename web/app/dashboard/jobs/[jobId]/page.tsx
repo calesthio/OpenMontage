@@ -29,6 +29,7 @@ type SseEvent = {
   preview?: unknown;
   render_url?: string;
   message?: string;
+  cost_cny?: number;
 };
 
 export default function JobDetailPage() {
@@ -39,6 +40,7 @@ export default function JobDetailPage() {
   const [awaitingStage, setAwaitingStage] = useState<string | null>(null);
   const [preview, setPreview] = useState<Record<string, unknown> | null>(null);
   const [renderUrl, setRenderUrl] = useState<string | null>(null);
+  const [costCny, setCostCny] = useState<number>(0);
 
   // Approval state
   const [feedback, setFeedback] = useState("");
@@ -77,6 +79,9 @@ export default function JobDetailPage() {
           setAwaitingStage(null);
           setStatus("running");
           setEditMode(false);
+        }
+        if (ev.type === "cost_updated" && ev.cost_cny != null) {
+          setCostCny(ev.cost_cny);
         }
         if (ev.type === "job_completed") {
           setStatus("completed");
@@ -152,7 +157,14 @@ export default function JobDetailPage() {
           <h1 className="text-xl font-bold tracking-tight">{jobId}</h1>
           <p className="text-muted-foreground text-sm mt-0.5">Job ID: {jobId}</p>
         </div>
-        <StatusBadge status={status} />
+        <div className="flex items-center gap-3">
+          {costCny > 0 && (
+            <span className="text-xs font-mono text-muted-foreground border border-border px-2 py-0.5 rounded-full">
+              ¥{costCny.toFixed(4)} 工具调用成本
+            </span>
+          )}
+          <StatusBadge status={status} />
+        </div>
       </div>
 
       {/* Stage Stepper */}

@@ -101,6 +101,7 @@ def execute_tool(
     args: dict[str, Any],
     project_dir: Path,
     emit_event: Any = None,   # callable(event_dict) for SSE
+    cost_accumulator: list | None = None,  # mutable list[float] for cost_usd accumulation
 ) -> str:
     """Execute a tool call and return a string result for the agent."""
 
@@ -166,6 +167,8 @@ def execute_tool(
         result = tool.execute(inputs)
 
         if result.success:
+            if cost_accumulator is not None and result.cost_usd:
+                cost_accumulator.append(float(result.cost_usd))
             if emit_event and result.artifacts:
                 for artifact_path in result.artifacts:
                     emit_event({

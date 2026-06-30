@@ -94,6 +94,7 @@ def _run_agent_stage(
     brand_info: dict,
     options: dict,
     feedback: str = "",
+    cost_accumulator: list | None = None,
 ) -> bool:
     """Run a single stage. Returns True on success, False on failure."""
 
@@ -219,6 +220,7 @@ After writing the artifact, confirm briefly what you produced.
                     tool_args,
                     project_dir,
                     emit_event=lambda ev: _emit(job_id, ev),
+                    cost_accumulator=cost_accumulator,
                 )
             except Exception as exc:
                 result = f"ERROR: Tool execution failed: {exc}"
@@ -257,6 +259,10 @@ async def run_pipeline_job(job_id: str, data: dict) -> None:
     (project_dir / "assets").mkdir(exist_ok=True)
     (project_dir / "renders").mkdir(exist_ok=True)
 
+    # USD→CNY exchange rate (approximate, good enough for cost display)
+    USD_TO_CNY = 7.25
+    cost_accumulator: list[float] = []  # list of cost_usd floats from tool calls
+
     job_store.update(job_id, status="running", project_dir=str(project_dir))
     _emit(job_id, {"type": "job_started", "pipeline": pipeline_name, "stages": [s["name"] for s in stages]})
 
@@ -278,8 +284,12 @@ async def run_pipeline_job(job_id: str, data: dict) -> None:
             success = await asyncio.to_thread(
                 _run_agent_stage,
                 job_id, stage_name, skill_text, project_dir,
-                brand_info, options, feedback,
+                brand_info, options, feedback, cost_accumulator,
             )
+            # Update cost after each stage
+            cost_cny = round(sum(cost_accumulator) * USD_TO_CNY, 4)
+            job_store.update(job_id, cost_cny=cost_cny)
+            _emit(job_id, {"type": "cost_updated", "cost_cny": cost_cny, "stage": stage_name})
             if success:
                 break
             _emit(job_id, {"type": "stage_retry", "stage": stage_name, "round": _round + 1})

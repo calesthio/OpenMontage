@@ -22,5 +22,8 @@
   "devDependencies": {
     "@types/react": "^18.2.0",
     "typescript": "^5.3.0"
+  },
+  "overrides": {
+    "loader-utils": "2.0.4"
   }
 }

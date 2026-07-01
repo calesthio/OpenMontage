@@ -1694,19 +1694,42 @@ class VideoCompose(BaseTool):
             digest = hashlib.md5(str(local.resolve()).encode()).hexdigest()[:12]
             dest_name = f"{digest}{local.suffix}"
             dest = staged_dir / dest_name
-            if not dest.exists():
+            # Refresh the staged copy when the source changes. The filename keys
+            # on the source path, so a regenerated asset written to the same path
+            # would otherwise leave the previous render's bytes in place and be
+            # served stale. copy2 preserves mtime, so size+mtime identify a match.
+            src_stat = local.stat()
+            if (
+                not dest.exists()
+                or dest.stat().st_size != src_stat.st_size
+                or dest.stat().st_mtime_ns != src_stat.st_mtime_ns
+            ):
                 shutil.copy2(local, dest)
             return f"_om_assets/{dest_name}"  # resolved by staticFile() in the composer
 
-        for cut in props.get("cuts", []):
-            cut["source"] = _stage_asset(cut.get("source", ""))
+        def _stage_audio_layer(container: dict, key: str) -> None:
+            entry = container.get(key)
+            if isinstance(entry, dict) and entry.get("src"):
+                entry["src"] = _stage_asset(entry["src"])
 
+        # Explainer-style visual cuts and Cinematic-style scenes both carry a
+        # local source path that must be staged under public/.
+        for cut in props.get("cuts", []):
+            if isinstance(cut, dict) and cut.get("source"):
+                cut["source"] = _stage_asset(cut["source"])
+        for scene in props.get("scenes", []):
+            if isinstance(scene, dict) and scene.get("src"):
+                scene["src"] = _stage_asset(scene["src"])
+
+        # Audio layers differ by composition:
+        #   Explainer     → audio.narration.src, audio.music.src (nested)
+        #   Cinematic     → soundtrack.src, music.src (top-level)
         audio = props.get("audio")
         if isinstance(audio, dict):
             for layer in ("narration", "music"):
-                entry = audio.get(layer)
-                if isinstance(entry, dict) and entry.get("src"):
-                    entry["src"] = _stage_asset(entry["src"])
+                _stage_audio_layer(audio, layer)
+        for layer in ("soundtrack", "music"):
+            _stage_audio_layer(props, layer)
 
         # Build a custom themeConfig from the playbook's actual colors.
         # This ensures every video gets a unique visual identity derived

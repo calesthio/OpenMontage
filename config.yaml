@@ -62,6 +62,12 @@ wavespeed:
       text_to_video:
         model_id: "bytedance/seedance-2.0/text-to-video"
         params: {}
+      text_to_audio:
+        model_id: ""
+        params: {}
+      digital_human:
+        model_id: ""
+        params: {}
 
     fast:
       description: "Fast iteration profile."
@@ -73,6 +79,12 @@ wavespeed:
         params: {}
       text_to_video:
         model_id: "bytedance/seedance-2.0-fast/text-to-video"
+        params: {}
+      text_to_audio:
+        model_id: ""
+        params: {}
+      digital_human:
+        model_id: ""
         params: {}
 
     quality:
@@ -86,3 +98,9 @@ wavespeed:
       text_to_video:
         model_id: "bytedance/seedance-2.0/text-to-video"
         params: {}
+      text_to_audio:
+        model_id: "elevenlabs/multilingual-v2"
+        params: {language: "en", voice_stability: 0.75}
+      digital_human:
+        model_id: "heygen/avatar-v/digital-twin"
+        params: {quality: "high"}

@@ -465,10 +465,11 @@ Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to
 </details>
 
 <details>
-<summary><strong>Text-to-Speech — 4 providers</strong></summary>
+<summary><strong>Text-to-Speech — 5 providers</strong></summary>
 
 | Provider | Type | Notes |
 |----------|------|-------|
+| **WaveSpeed** | Cloud API | Gateway path for text-to-audio (TTS/music) models set via `config.yaml` profiles |
 | **ElevenLabs** | Cloud API | Premium voice quality |
 | **Google TTS** | Cloud API | 700+ voices, 50+ languages — best for localization |
 | **OpenAI TTS** | Cloud API | Fast, affordable |

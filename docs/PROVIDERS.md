@@ -11,7 +11,7 @@ Everything you need to know about every provider in OpenMontage — setup instru
 | Step | Cost | What to set up | What it unlocks |
 |------|------|----------------|-----------------|
 | 1 | **$0** | Pexels + Pixabay | Stock photos and videos — enough to produce basic videos |
-| 2 | **pay-as-you-go** | WaveSpeed API key | AI image and video generation via prepaid credits or usage-based billing (configure models in `config.yaml`) |
+| 2 | **pay-as-you-go** | WaveSpeed API key | AI image, video, audio, and digital human generation via prepaid credits or usage-based billing (configure models in `config.yaml`) |
 | 3 | **$0** | Google API key | TTS with 700+ voices (1M chars/month free) + $300 new account credit |
 | 4 | **$0** | ElevenLabs | Premium TTS + music + SFX (10K chars/month free) |
 | 5 | **$0** | Piper (local install) | Fully offline TTS — no API key, no cost, no network |
@@ -29,7 +29,7 @@ Everything you need to know about every provider in OpenMontage — setup instru
 ```bash
 # .env — add your keys here
 
-# IMAGE/VIDEO GATEWAY
+# IMAGE/VIDEO/AUDIO/DIGITAL HUMAN GATEWAY
 WAVESPEED_API_KEY=           # WaveSpeed auth only; models come from config.yaml profiles
 
 # FREE (no cost, ever)
@@ -65,12 +65,14 @@ VIDEO_GEN_LOCAL_MODEL=       # wan2.1-1.3b, wan2.1-14b, hunyuan-1.5, ltx2-local,
 
 ### WaveSpeed — Multi-Model AI Generation
 
-> **Multi-model gateway with profile-based model selection.** One key reaches image and video models; unlike per-call providers, you pick the model per task type in `config.yaml`.
+> **Multi-model gateway with profile-based model selection.** One key reaches image, video, audio, and digital-human models; unlike per-call providers, you pick the model per task type in `config.yaml`.
 
 **Tools unlocked:** 
 - `wavespeed_text_to_image`
 - `wavespeed_image_to_video`
 - `wavespeed_text_to_video`
+- `wavespeed_text_to_audio` (TTS/music; capability `tts`, routed via `tts_selector`)
+- `wavespeed_digital_human` (avatar/talking-head; capability `avatar`)
 
 **Env var:** `WAVESPEED_API_KEY` (auth only; models come from config.yaml)
 

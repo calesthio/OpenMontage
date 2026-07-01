@@ -14,6 +14,8 @@ SUPPORTED_TASK_TYPES = {
     "text_to_image",
     "image_to_video",
     "text_to_video",
+    "text_to_audio",
+    "digital_human",
 }
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.yaml"
 

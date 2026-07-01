@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: setup install install-dev install-gpu test test-contracts lint clean preflight demo demo-list hyperframes-doctor hyperframes-warm
+.PHONY: setup install install-dev install-gpu test test-contracts lint clean preflight demo demo-list hyperframes-doctor hyperframes-warm wavespeed-doctor
 
 # ---- One-command setup ----
 
@@ -62,6 +62,10 @@ hyperframes-warm:
 	@echo "    Uses --prefer-online so npx picks up new releases since your last run."
 	npx --yes --prefer-online hyperframes --version
 	@echo "==> Cache warm complete."
+
+wavespeed-doctor:
+	@echo "==> Checking WaveSpeed setup (no paid generation)..."
+	$(PYTHON) -m tools.wavespeed_doctor
 
 demo:
 	@echo "==> Rendering zero-key demo videos (no API keys needed)..."

@@ -32,6 +32,25 @@
           "subtype": { "type": "string", "description": "Sub-classification (e.g. 'background', 'stock', 'generated')" },
           "generation_summary": { "type": "string", "description": "Brief summary of how the asset was generated or sourced" },
           "provider": { "type": "string", "description": "Provider name (e.g. pixabay, google_imagen)" },
+          "task_type": {
+            "type": "string",
+            "enum": ["text_to_image", "image_to_video", "text_to_video"],
+            "description": "AI generation task type when applicable"
+          },
+          "model_id": { "type": "string", "description": "Provider model id used for generation" },
+          "task_id": { "type": "string", "description": "Provider task/prediction id" },
+          "profile": { "type": "string", "description": "Provider profile used for model selection" },
+          "outputs": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Remote output URLs returned by the provider"
+          },
+          "local_paths": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Local files downloaded from provider outputs"
+          },
+          "metadata_path": { "type": "string", "description": "Path to provider metadata sidecar JSON" },
           "license": { "type": "string", "description": "License type (e.g. Pixabay License, CC0)" },
           "original_url": { "type": "string", "description": "Source URL if downloaded from a stock service" },
           "voice_performance": {

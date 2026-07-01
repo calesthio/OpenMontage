@@ -11,22 +11,26 @@ Everything you need to know about every provider in OpenMontage — setup instru
 | Step | Cost | What to set up | What it unlocks |
 |------|------|----------------|-----------------|
 | 1 | **$0** | Pexels + Pixabay | Stock photos and videos — enough to produce basic videos |
-| 2 | **$0** | Google API key | TTS with 700+ voices (1M chars/month free) + $300 new account credit |
-| 3 | **$0** | ElevenLabs | Premium TTS + music + SFX (10K chars/month free) |
-| 4 | **$0** | Piper (local install) | Fully offline TTS — no API key, no cost, no network |
-| 5 | **~$0.03/image** | fal.ai | FLUX images + Kling/Veo/MiniMax video + Recraft — broad single-key image + video coverage |
-| 6 | **~$0.04/image** | OpenAI | DALL-E 3 images + OpenAI TTS |
-| 7 | **~$0.04/image** | Google Imagen | Imagen 4 images (shares the Google API key) |
-| 8 | **$12/month** | Runway | Gen-4 video — highest quality AI video |
-| 9 | **pay-as-you-go** | HeyGen | Avatar videos, multi-model video gateway |
-| 10 | **pay-as-you-go** | Suno | Full song generation with vocals and lyrics |
-| 11 | **$0 + GPU** | Local video gen | WAN 2.1, Hunyuan, CogVideo, LTX — free, offline |
-| 12 | **$0 + GPU** | Local Diffusion | Stable Diffusion images — free, offline |
+| 2 | **pay-as-you-go** | WaveSpeed API key | AI image and video generation via prepaid credits or usage-based billing (configure models in `config.yaml`) |
+| 3 | **$0** | Google API key | TTS with 700+ voices (1M chars/month free) + $300 new account credit |
+| 4 | **$0** | ElevenLabs | Premium TTS + music + SFX (10K chars/month free) |
+| 5 | **$0** | Piper (local install) | Fully offline TTS — no API key, no cost, no network |
+| 6 | **~$0.03/image** | fal.ai | FLUX images + Kling/Veo/MiniMax video + Recraft — broad single-key image + video coverage |
+| 7 | **~$0.04/image** | OpenAI | DALL-E 3 images + OpenAI TTS |
+| 8 | **~$0.04/image** | Google Imagen | Imagen 4 images (shares the Google API key) |
+| 9 | **$12/month** | Runway | Gen-4 video — highest quality AI video |
+| 10 | **pay-as-you-go** | HeyGen | Avatar videos, multi-model video gateway |
+| 11 | **pay-as-you-go** | Suno | Full song generation with vocals and lyrics |
+| 12 | **$0 + GPU** | Local video gen | WAN 2.1, Hunyuan, CogVideo, LTX — free, offline |
+| 13 | **$0 + GPU** | Local Diffusion | Stable Diffusion images — free, offline |
 
 ### Environment Variable Summary
 
 ```bash
 # .env — add your keys here
+
+# IMAGE/VIDEO GATEWAY
+WAVESPEED_API_KEY=           # WaveSpeed auth only; models come from config.yaml profiles
 
 # FREE (no cost, ever)
 PEXELS_API_KEY=              # Stock photos + videos
@@ -58,6 +62,33 @@ VIDEO_GEN_LOCAL_MODEL=       # wan2.1-1.3b, wan2.1-14b, hunyuan-1.5, ltx2-local,
 ---
 
 ## Cloud Providers
+
+### WaveSpeed — Multi-Model AI Generation
+
+> **Multi-model gateway with profile-based model selection.** One key reaches image and video models; unlike per-call providers, you pick the model per task type in `config.yaml`.
+
+**Tools unlocked:** 
+- `wavespeed_text_to_image`
+- `wavespeed_image_to_video`
+- `wavespeed_text_to_video`
+
+**Env var:** `WAVESPEED_API_KEY` (auth only; models come from config.yaml)
+
+Model IDs and task-type preferences are configured in `config.yaml` under `wavespeed.profiles`. `WAVESPEED_API_KEY` is only for authentication and must not be used as a model-selection mechanism.
+
+#### Pricing
+
+WaveSpeed is not free. It is a pay-as-you-go gateway: you fund the account with credits or are billed based on the models and workloads you invoke through the gateway.
+
+Because WaveSpeed routes to multiple upstream models, pricing depends on the selected model and task type rather than a single flat OpenMontage-side rate. Treat it as usage-based spend and verify current model pricing in your WaveSpeed dashboard before large runs.
+
+Run a no-network setup check:
+
+```bash
+make wavespeed-doctor
+```
+
+See [`docs/WAVESPEED.md`](WAVESPEED.md) for setup, profile selection, command examples, and smoke-test boundaries.
 
 ### xAI — Grok Image + Video
 

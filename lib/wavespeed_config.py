@@ -33,7 +33,6 @@ class WaveSpeedConfigError(ValueError):
 class WaveSpeedTaskConfig:
     """Resolved WaveSpeed config for one generation task."""
 
-    mode: str
     profile: str
     task_type: str
     model_id: str
@@ -166,7 +165,6 @@ def resolve_wavespeed_task(
         merged_params.update(explicit_params)
 
     return WaveSpeedTaskConfig(
-        mode=str(wavespeed.get("mode") or "wavespeed_only"),
         profile=profile_name,
         task_type=task_type,
         model_id=model_id,

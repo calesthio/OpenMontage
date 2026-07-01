@@ -578,6 +578,27 @@ def test_lip_sync_requires_audio_after_image(tmp_path):
     assert "requires audio" in (result.error or "").lower()
 
 
+def test_image_selector_selects_wavespeed_when_preferred(monkeypatch):
+    """End-to-end routing: with the key set, an explicit wavespeed preference
+    resolves to a WaveSpeed provider through the selector's real selection path."""
+    monkeypatch.setenv("WAVESPEED_API_KEY", "test-key")
+    from tools.tool_registry import registry
+    from tools.graphics.image_selector import ImageSelector
+
+    registry.discover()
+    sel = ImageSelector()
+    candidates = sel._providers()
+    assert any(t.provider == "wavespeed" for t in candidates), "wavespeed not in image pool"
+
+    tool, _score = sel._select_best_tool(
+        {"prompt": "a calico cat", "preferred_provider": "wavespeed"},
+        candidates,
+        sel._prepare_task_context({"prompt": "a calico cat"}),
+    )
+    assert tool is not None
+    assert tool.provider == "wavespeed"
+
+
 def test_text_to_audio_maps_text_alias_to_prompt(monkeypatch):
     """tts_selector routes with `text`; the tool must normalize it to `prompt`."""
     from tools.audio.wavespeed_text_to_audio import WaveSpeedTextToAudio

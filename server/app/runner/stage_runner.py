@@ -27,7 +27,7 @@ load_dotenv(OM_ROOT / ".env")
 from openai import OpenAI
 
 from app.store import job_store
-from app.runner.tool_bridge import TOOL_SCHEMAS, execute_tool
+from app.runner.tool_bridge import TOOL_SCHEMAS, execute_tool, BudgetExceededError
 
 try:
     from tools.cost_tracker import CostTracker
@@ -106,8 +106,14 @@ def _run_agent_stage(
     feedback: str = "",
     cost_accumulator: list | None = None,
     cost_tracker: Any = None,
+    budget_cny: float | None = None,
+    base_cost: float = 0.0,
 ) -> bool:
-    """Run a single stage. Returns True on success, False on failure."""
+    """Run a single stage. Returns True on success, False on failure.
+
+    May raise BudgetExceededError if a paid tool call would cross budget_cny —
+    the caller catches it to drive the human budget gate.
+    """
 
     artifacts = _load_artifacts(project_dir)
     artifacts_summary = json.dumps(
@@ -237,7 +243,13 @@ After writing the artifact, confirm briefly what you produced.
                     emit_event=lambda ev: _emit(job_id, ev),
                     cost_accumulator=cost_accumulator,
                     cost_tracker=cost_tracker,
+                    budget_cny=budget_cny,
+                    base_cost=base_cost,
                 )
+            except BudgetExceededError:
+                # Hard budget stop — unwind the stage so the runner's event loop
+                # can pause for the human budget decision.
+                raise
             except Exception as exc:
                 result = f"ERROR: Tool execution failed: {exc}"
                 _emit(job_id, {
@@ -339,13 +351,17 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
             "stage": stage_name,
         })
 
-    async def _budget_gate() -> bool:
-        """Pause for approval if over budget. Returns True to continue, False to abort."""
+    async def _budget_gate(force: bool = False) -> bool:
+        """Pause for approval if over budget. Returns True to continue, False to abort.
+
+        force=True pauses even when spent is still within budget — used when a
+        pre-call check blocked the *next* paid call that would have crossed it.
+        """
         nonlocal budget_overridden
         if not budget_cny or budget_overridden:
             return True
         spent = round(base_cost + sum(cost_accumulator), 4)
-        if spent <= budget_cny:
+        if spent <= budget_cny and not force:
             return True
         job_store.update(job_id, status="awaiting_approval")
         _emit(job_id, {
@@ -392,19 +408,31 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
         # Load director skill
         skill_text = skill_path.read_text(encoding="utf-8") if skill_path.exists() else f"# {stage_name} director\nExecute the {stage_name} stage."
 
-        # Run stage in thread pool (blocking sync LLM calls must not block event loop)
+        # Run stage in thread pool (blocking sync LLM calls must not block event loop).
+        # A pre-call budget block raises BudgetExceededError out of the thread —
+        # pause for the human decision, and on approval re-run the stage (the
+        # pre-call check is disabled once overridden).
         success = False
         feedback = ""
-        for _round in range(MAX_ROUNDS + 1):
-            success = await asyncio.to_thread(
-                _run_agent_stage,
-                job_id, stage_name, skill_text, project_dir,
-                brand_info, options, feedback, cost_accumulator, cost_tracker,
-            )
+        _round = 0
+        while _round <= MAX_ROUNDS:
+            try:
+                success = await asyncio.to_thread(
+                    _run_agent_stage,
+                    job_id, stage_name, skill_text, project_dir,
+                    brand_info, options, feedback, cost_accumulator, cost_tracker,
+                    (None if budget_overridden else budget_cny), base_cost,
+                )
+            except BudgetExceededError:
+                _sync_cost(stage_name)
+                if not await _budget_gate(force=True):
+                    return
+                continue   # approved overspend → re-run this stage, gate disabled
             _sync_cost(stage_name)
             if success:
                 break
             _emit(job_id, {"type": "stage_retry", "stage": stage_name, "round": _round + 1})
+            _round += 1
 
         if not success:
             job_store.update(job_id, status="failed", current_stage=stage_name)

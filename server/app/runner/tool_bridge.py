@@ -20,6 +20,14 @@ from typing import Any
 OM_ROOT = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(OM_ROOT))
 
+# Authoritative budget-exceeded type shared with the runner (fall back to a
+# local class if the cost_tracker module isn't importable).
+try:
+    from tools.cost_tracker import BudgetExceededError
+except Exception:  # pragma: no cover
+    class BudgetExceededError(Exception):
+        pass
+
 TOOL_SCHEMAS = [
     {
         "type": "function",
@@ -103,6 +111,8 @@ def execute_tool(
     emit_event: Any = None,   # callable(event_dict) for SSE
     cost_accumulator: list | None = None,  # mutable list[float] for cost accumulation
     cost_tracker: Any = None,  # optional tools.cost_tracker.CostTracker ledger
+    budget_cny: float | None = None,  # per-job CNY ceiling (None = no gate)
+    base_cost: float = 0.0,           # cost already spent before this run (retries)
 ) -> str:
     """Execute a tool call and return a string result for the agent."""
 
@@ -179,6 +189,27 @@ def execute_tool(
                 out_dir = project_dir / "assets" / tool.capability
                 out_dir.mkdir(parents=True, exist_ok=True)
                 inputs = {**inputs, "output_path": str(out_dir / f"{tool_name}_output.{ext}")}
+
+        # Hard budget ceiling — pre-call check. Bounds total spend to <= budget
+        # by refusing a paid call that would cross it, instead of letting a
+        # single stage (e.g. assets) generate many clips past the ceiling before
+        # the between-stages gate ever fires. Raises so _run_agent_stage unwinds
+        # and the runner's event loop can own the human pause.
+        est_cost = float(tool.estimate_cost(inputs) or 0.0)
+        if budget_cny is not None and est_cost > 0:
+            projected = base_cost + (sum(cost_accumulator) if cost_accumulator else 0.0) + est_cost
+            if projected > budget_cny:
+                if emit_event:
+                    emit_event({
+                        "type": "budget_precall_block",
+                        "tool": tool_name,
+                        "projected_cny": round(projected, 4),
+                        "budget_cny": budget_cny,
+                    })
+                raise BudgetExceededError(
+                    f"Paid call to {tool_name} (est ¥{est_cost:.2f}) would bring spend to "
+                    f"¥{projected:.2f}, over budget ¥{budget_cny:.2f}"
+                )
 
         # Ledger: estimate before, reconcile after (real CostTracker usage →
         # persists an itemized cost_log.json for budget governance/audit).

@@ -107,40 +107,63 @@ class PiperTTS(BaseTool):
         dirs += [Path.home() / ".local/share/piper", Path.home() / ".piper/models"]
         return dirs
 
-    def _has_voice_model(self) -> bool:
-        """True if any Piper voice model (.onnx + .onnx.json) is discoverable."""
+    @staticmethod
+    def _piper_installed() -> bool:
+        if shutil.which("piper") is not None:
+            return True
+        try:
+            import piper  # noqa: F401
+            return True
+        except ImportError:
+            return False
+
+    def _find_voice(self, name: str) -> Path | None:
+        """Locate a Piper voice model (.onnx + .onnx.json) by name or path.
+
+        Accepts a direct path to an .onnx file or a bare model name resolved
+        against the voice search dirs. Returns the .onnx path if found.
+        """
+        direct = Path(name).expanduser()
+        if direct.suffix == ".onnx" and direct.is_file():
+            return direct
         for d in self._voice_search_dirs():
             if d.is_dir():
-                for onnx in d.glob("*.onnx"):
-                    if onnx.with_suffix(".onnx.json").is_file():
-                        return True
-        return False
+                cand = d / f"{name}.onnx"
+                if cand.is_file() and cand.with_suffix(".onnx.json").is_file():
+                    return cand
+        return None
 
     def get_status(self) -> ToolStatus:
-        installed = shutil.which("piper") is not None
-        if not installed:
-            try:
-                import piper  # noqa: F401
-                installed = True
-            except ImportError:
-                return ToolStatus.UNAVAILABLE
-        # Installed but unusable until a voice model is downloaded — report
-        # DEGRADED so preflight doesn't claim TTS is ready when it will fail.
-        return ToolStatus.AVAILABLE if self._has_voice_model() else ToolStatus.DEGRADED
+        if not self._piper_installed():
+            return ToolStatus.UNAVAILABLE
+        # Installed, but preflight is only truthful if the default voice — the
+        # one execute() uses when no model is specified — is actually present.
+        # Report DEGRADED when it is missing so preflight doesn't claim TTS is
+        # ready when the default execute path will fail. Callers may still run
+        # execute() with an explicitly-provided voice that is installed.
+        return (
+            ToolStatus.AVAILABLE
+            if self._find_voice(self.default_voice)
+            else ToolStatus.DEGRADED
+        )
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         return 0.0
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
-        status = self.get_status()
-        if status == ToolStatus.UNAVAILABLE:
+        if not self._piper_installed():
             return ToolResult(success=False, error="Piper TTS not installed. " + self.install_instructions)
-        if status == ToolStatus.DEGRADED:
+        # Gate on the specific voice this call will use, not the coarse status —
+        # a caller may request an installed voice even when the default is absent.
+        model = inputs.get("model", self.default_voice)
+        if self._find_voice(model) is None:
+            searched = ", ".join(str(d) for d in self._voice_search_dirs())
             return ToolResult(
                 success=False,
                 error=(
-                    "Piper is installed but no voice model was found. Download one:\n"
-                    f"  python -m piper.download_voices {self.default_voice}"
+                    f"Piper is installed but voice model '{model}' was not found "
+                    f"(searched: {searched}). Download it:\n"
+                    f"  python -m piper.download_voices {model}"
                 ),
             )
 

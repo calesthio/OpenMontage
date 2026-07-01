@@ -16,9 +16,9 @@ from tools.audio.piper_tts import PiperTTS
 from tools.base_tool import ToolStatus
 
 
-def _install_fake_voice(d: Path) -> None:
-    (d / "en_US-lessac-medium.onnx").write_bytes(b"\x00")
-    (d / "en_US-lessac-medium.onnx.json").write_text("{}")
+def _install_fake_voice(d: Path, name: str = "en_US-lessac-medium") -> None:
+    (d / f"{name}.onnx").write_bytes(b"\x00")
+    (d / f"{name}.onnx.json").write_text("{}")
 
 
 def test_unavailable_when_not_installed(monkeypatch):
@@ -49,9 +49,32 @@ def test_available_when_voice_present(monkeypatch, tmp_path):
     assert PiperTTS().get_status() == ToolStatus.AVAILABLE
 
 
+def test_degraded_when_only_nondefault_voice_present(monkeypatch, tmp_path):
+    # A non-default voice is installed, but the default en_US-lessac-medium is
+    # not — preflight must not claim AVAILABLE since the default execute path
+    # would fail.
+    monkeypatch.setattr("shutil.which", lambda _: "/usr/bin/piper")
+    _install_fake_voice(tmp_path, name="en_GB-alba-medium")
+    monkeypatch.setattr(PiperTTS, "_voice_search_dirs", staticmethod(lambda: [tmp_path]))
+    assert PiperTTS().get_status() == ToolStatus.DEGRADED
+
+
 def test_execute_degraded_gives_actionable_error(monkeypatch, tmp_path):
     monkeypatch.setattr("shutil.which", lambda _: "/usr/bin/piper")
     monkeypatch.setattr(PiperTTS, "_voice_search_dirs", staticmethod(lambda: [tmp_path]))
     r = PiperTTS().execute({"text": "hello", "output_path": str(tmp_path / "o.wav")})
     assert r.success is False
     assert "download_voices" in (r.error or "")
+
+
+def test_execute_names_the_missing_requested_model(monkeypatch, tmp_path):
+    # The default voice is present, but the caller requests a different, absent
+    # model — the error must name the requested model, not the default.
+    monkeypatch.setattr("shutil.which", lambda _: "/usr/bin/piper")
+    _install_fake_voice(tmp_path)  # default present
+    monkeypatch.setattr(PiperTTS, "_voice_search_dirs", staticmethod(lambda: [tmp_path]))
+    r = PiperTTS().execute(
+        {"text": "hi", "model": "en_US-ryan-high", "output_path": str(tmp_path / "o.wav")}
+    )
+    assert r.success is False
+    assert "en_US-ryan-high" in (r.error or "")

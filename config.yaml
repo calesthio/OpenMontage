@@ -31,3 +31,121 @@ paths:
   styles_dir: styles
   skills_dir: skills
   output_dir: output
+
+# =============================================================================
+# WAVESPEED CONFIGURATION
+# 
+# WaveSpeed is one of multiple AI generation providers.
+# 
+# active_profile:
+#   - null (default): All profiles compete by score; best wins. Other providers
+#     (FAL, OpenAI, Google, etc.) also compete. Multi-provider mode.
+#   - "default" or other: Explicitly use that profile's models. WaveSpeed + others
+#     compete. Deterministic within WaveSpeed.
+#   - Set WAVESPEED_MODEL_PROFILE env var to override at runtime.
+#
+# See README.md for detailed setup.
+# =============================================================================
+
+wavespeed:
+  active_profile: default
+
+  profiles:
+    default:
+      description: "Balanced default profile for WaveSpeed-based generation."
+      text_to_image:
+        model_id: "google/nano-banana-2/text-to-image"
+        params: {}
+      image_to_video:
+        model_id: "bytedance/seedance-2.0/image-to-video"
+        params: {}
+      text_to_video:
+        model_id: "bytedance/seedance-2.0/text-to-video"
+        params: {}
+      text_to_audio:
+        model_id: ""
+        params: {}
+      digital_human:
+        model_id: ""
+        params: {}
+      image_edit:
+        model_id: "google/nano-banana-2/edit"
+        params: {}
+      image_upscale:
+        model_id: "wavespeed-ai/real-esrgan"
+        params: {}
+      text_to_music:
+        model_id: "wavespeed-ai/ace-step-1.5"
+        params: {}
+      background_removal:
+        model_id: "bria/remove-background"
+        params: {}
+      lip_sync:
+        model_id: "wavespeed-ai/ltx-2.3/lipsync"
+        params: {}
+
+    fast:
+      description: "Fast iteration profile."
+      text_to_image:
+        model_id: "google/nano-banana-2/text-to-image"
+        params: {}
+      image_to_video:
+        model_id: "bytedance/seedance-2.0/image-to-video-turbo"
+        params: {}
+      text_to_video:
+        model_id: "bytedance/seedance-2.0-fast/text-to-video"
+        params: {}
+      text_to_audio:
+        model_id: ""
+        params: {}
+      digital_human:
+        model_id: ""
+        params: {}
+      image_edit:
+        model_id: "google/nano-banana-2/edit"
+        params: {}
+      image_upscale:
+        model_id: "wavespeed-ai/real-esrgan"
+        params: {}
+      text_to_music:
+        model_id: "wavespeed-ai/ace-step-1.5"
+        params: {}
+      background_removal:
+        model_id: "bria/remove-background"
+        params: {}
+      lip_sync:
+        model_id: "wavespeed-ai/ltx-2.3/lipsync"
+        params: {}
+
+    quality:
+      description: "Higher-quality profile for final clips or hero shots."
+      text_to_image:
+        model_id: "openai/gpt-image-2/text-to-image"
+        params: {}
+      image_to_video:
+        model_id: "kwaivgi/kling-v3.0-std/image-to-video"
+        params: {}
+      text_to_video:
+        model_id: "bytedance/seedance-2.0/text-to-video"
+        params: {}
+      text_to_audio:
+        model_id: "elevenlabs/multilingual-v2"
+        params: {language: "en", voice_stability: 0.75}
+      digital_human:
+        model_id: "heygen/avatar-v/digital-twin"
+        params: {quality: "high"}
+      image_edit:
+        model_id: "bytedance/seedream-v4.5/edit"
+        params: {}
+      image_upscale:
+        model_id: "wavespeed-ai/seedvr2/image"
+        params: {}
+      text_to_music:
+        model_id: "google/lyria-3-pro/music"
+        params: {}
+      background_removal:
+        model_id: "bria/remove-background"
+        params: {}
+      lip_sync:
+        model_id: "sync/lipsync-2-pro"
+        params: {}

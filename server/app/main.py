@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.routers import jobs, events, health, brands
+from app.routers import jobs, events, health, brands, system
 
 OM_ROOT = Path(__file__).parent.parent.parent
 
@@ -24,6 +24,7 @@ app.include_router(health.router)
 app.include_router(jobs.router, prefix="/jobs")
 app.include_router(events.router, prefix="/jobs")
 app.include_router(brands.router, prefix="/brands")
+app.include_router(system.router, prefix="/system")
 
 # Serve generated project files (videos, images, audio) at /media/
 projects_dir = OM_ROOT / "projects"

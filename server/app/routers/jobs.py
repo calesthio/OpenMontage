@@ -6,11 +6,12 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from app.store import job_store
 from app.runner.stage_runner import run_pipeline_job
+from app.interfaces import get_job_queue
 
 OM_ROOT = Path(__file__).parent.parent.parent.parent
 
@@ -36,10 +37,10 @@ class SaveArtifactRequest(BaseModel):
 
 
 @router.post("", status_code=201)
-async def create_job(req: CreateJobRequest, bg: BackgroundTasks):
+async def create_job(req: CreateJobRequest):
     job_id = str(uuid.uuid4())
     job_store.create(job_id, req.model_dump())
-    bg.add_task(run_pipeline_job, job_id, req.model_dump())
+    get_job_queue().enqueue(run_pipeline_job, job_id, req.model_dump())
     return {"job_id": job_id, "status": "queued"}
 
 
@@ -82,15 +83,15 @@ async def save_artifact(job_id: str, req: SaveArtifactRequest):
 
 
 @router.post("/{job_id}/retry")
-async def retry_job(job_id: str, bg: BackgroundTasks):
-    """Re-run a failed (or stuck) job from the current stage."""
+async def retry_job(job_id: str):
+    """Re-run a failed (or stuck) job — resumes from completed_stages."""
     job = job_store.get(job_id)
     if not job:
         raise HTTPException(404, "Job not found")
     if job.get("status") not in ("failed", "running"):
         raise HTTPException(400, "Only failed or stuck jobs can be retried")
     job_store.update(job_id, status="queued")
-    bg.add_task(run_pipeline_job, job_id, {
+    get_job_queue().enqueue(run_pipeline_job, job_id, {
         "project_name": job.get("project_name", job_id),
         "content_type": job.get("content_type", "marketing_film"),
         "pipeline": job.get("pipeline", "cinematic"),

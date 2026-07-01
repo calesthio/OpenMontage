@@ -475,4 +475,10 @@ def _discover_render_url(project_dir: Path, project_name: str) -> str | None:
     if candidate is None:
         return None
     rel = candidate.relative_to(project_dir).as_posix()
-    return f"/media/{project_name}/{rel}"
+    # Route through the storage seam so swapping to object storage later yields
+    # signed URLs without touching this call site.
+    try:
+        from app.interfaces import get_storage
+        return get_storage().url_for(project_name, rel)
+    except Exception:
+        return f"/media/{project_name}/{rel}"

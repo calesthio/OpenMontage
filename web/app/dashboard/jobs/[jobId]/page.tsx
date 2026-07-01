@@ -14,7 +14,7 @@ const STAGES = ["research", "proposal", "script", "scene_plan", "assets", "edit"
 const STAGE_LABELS: Record<string, string> = {
   research: "调研", proposal: "提案", script: "脚本",
   scene_plan: "分镜", assets: "素材", edit: "剪辑",
-  compose: "合成", publish: "发布",
+  compose: "合成", publish: "发布", budget: "预算",
 };
 
 type SseEvent = {
@@ -30,6 +30,8 @@ type SseEvent = {
   render_url?: string;
   message?: string;
   cost_cny?: number;
+  budget_cny?: number | null;
+  gate?: string;
 };
 
 export default function JobDetailPage() {
@@ -41,6 +43,7 @@ export default function JobDetailPage() {
   const [preview, setPreview] = useState<Record<string, unknown> | null>(null);
   const [renderUrl, setRenderUrl] = useState<string | null>(null);
   const [costCny, setCostCny] = useState<number>(0);
+  const [budgetCny, setBudgetCny] = useState<number | null>(null);
 
   // Approval state
   const [feedback, setFeedback] = useState("");
@@ -86,6 +89,7 @@ export default function JobDetailPage() {
         }
         if (ev.type === "cost_updated" && ev.cost_cny != null) {
           setCostCny(ev.cost_cny);
+          if (ev.budget_cny != null) setBudgetCny(ev.budget_cny);
         }
         if (ev.type === "job_completed") {
           setStatus("completed");
@@ -157,6 +161,7 @@ export default function JobDetailPage() {
 
   const stageIndex = currentStage ? STAGES.indexOf(currentStage) : -1;
   const progress = stageIndex >= 0 ? Math.round(((stageIndex + 1) / STAGES.length) * 100) : 0;
+  const isBudgetGate = awaitingStage === "budget";
 
   return (
     <div className="p-8 max-w-4xl space-y-6">
@@ -167,9 +172,17 @@ export default function JobDetailPage() {
           <p className="text-muted-foreground text-sm mt-0.5">Job ID: {jobId}</p>
         </div>
         <div className="flex items-center gap-3">
-          {costCny > 0 && (
-            <span className="text-xs font-mono text-muted-foreground border border-border px-2 py-0.5 rounded-full">
-              ¥{costCny.toFixed(4)} 工具调用成本
+          {(costCny > 0 || budgetCny != null) && (
+            <span
+              className={`text-xs font-mono border px-2 py-0.5 rounded-full ${
+                budgetCny != null && costCny > budgetCny
+                  ? "text-red-400 border-red-500/40 bg-red-500/10"
+                  : "text-muted-foreground border-border"
+              }`}
+              title="工具调用累计成本(CNY)"
+            >
+              ¥{costCny.toFixed(4)}
+              {budgetCny != null && ` / ¥${budgetCny.toFixed(2)} 预算`}
             </span>
           )}
           <StatusBadge status={status} />
@@ -227,9 +240,11 @@ export default function JobDetailPage() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
                 <span className="text-yellow-400">⏸</span>
-                {STAGE_LABELS[awaitingStage]} — 等待你的审批
+                {isBudgetGate
+                  ? "预算超支 — 需要你确认是否继续"
+                  : `${STAGE_LABELS[awaitingStage]} — 等待你的审批`}
               </CardTitle>
-              {preview && (
+              {preview && !isBudgetGate && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -267,8 +282,8 @@ export default function JobDetailPage() {
               </div>
             )}
 
-            {/* Feedback textarea */}
-            {!editMode && (
+            {/* Feedback textarea — not shown for the budget gate */}
+            {!editMode && !isBudgetGate && (
               <Textarea
                 placeholder="（可选）写下反馈，让 AI 修改后重来…"
                 rows={2}
@@ -281,15 +296,15 @@ export default function JobDetailPage() {
             {!editMode && (
               <div className="flex gap-3">
                 <Button onClick={() => handleApproval("approve")} disabled={approving} className="flex-1">
-                  ✓ 批准，继续生产
+                  {isBudgetGate ? "✓ 批准超支，继续生产" : "✓ 批准，继续生产"}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => handleApproval("reject")}
-                  disabled={approving || !feedback}
+                  disabled={approving || (!isBudgetGate && !feedback)}
                   className="flex-1"
                 >
-                  ↩ 打回重做
+                  {isBudgetGate ? "⛔ 终止任务" : "↩ 打回重做"}
                 </Button>
               </div>
             )}

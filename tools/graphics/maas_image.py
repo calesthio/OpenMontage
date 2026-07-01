@@ -230,7 +230,7 @@ class MaasImage(BaseTool):
                 "seed": data.get("seed") or first.get("seed"),
             },
             artifacts=[str(output_path)],
-            cost_usd=0.0,
+            cost_usd=self.estimate_cost(inputs),   # 0.0 for free MaaS image gen
             duration_seconds=round(time.time() - start, 2),
             seed=data.get("seed") or first.get("seed"),
             model=model,

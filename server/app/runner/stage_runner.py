@@ -29,6 +29,15 @@ from openai import OpenAI
 from app.store import job_store
 from app.runner.tool_bridge import TOOL_SCHEMAS, execute_tool
 
+try:
+    from tools.cost_tracker import CostTracker
+    from lib.config_model import BudgetMode
+    _COST_TRACKER_AVAILABLE = True
+except Exception:  # pragma: no cover - cost ledger is optional
+    CostTracker = None  # type: ignore
+    BudgetMode = None   # type: ignore
+    _COST_TRACKER_AVAILABLE = False
+
 # ── MaaS LLM client ───────────────────────────────────────────────────────────
 MAAS_KEY  = os.environ.get("MAAS_API_KEY", "")
 MAAS_BASE = os.environ.get("MAAS_API_BASE", "https://api.aiapbot.com")
@@ -95,6 +104,7 @@ def _run_agent_stage(
     options: dict,
     feedback: str = "",
     cost_accumulator: list | None = None,
+    cost_tracker: Any = None,
 ) -> bool:
     """Run a single stage. Returns True on success, False on failure."""
 
@@ -221,6 +231,7 @@ After writing the artifact, confirm briefly what you produced.
                     project_dir,
                     emit_event=lambda ev: _emit(job_id, ev),
                     cost_accumulator=cost_accumulator,
+                    cost_tracker=cost_tracker,
                 )
             except Exception as exc:
                 result = f"ERROR: Tool execution failed: {exc}"
@@ -282,10 +293,68 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
     base_cost = float(job.get("cost_cny", 0.0) or 0.0)          # preserve across retries
     completed_stages: set[str] = set(job.get("completed_stages", []))
 
+    # Optional CNY budget ceiling (opt-in via options.budget_cny). When set, the
+    # pipeline pauses for human approval once cumulative cost crosses it.
+    try:
+        budget_cny = float(options["budget_cny"]) if options.get("budget_cny") not in (None, "") else None
+    except (TypeError, ValueError):
+        budget_cny = None
+    budget_overridden = False
+
+    # CostTracker as the itemized ledger (persists projects/<name>/cost_log.json).
+    # Values are CNY here; we run it in OBSERVE mode and own the human gate in
+    # this runner, so its USD-oriented thresholds are neutralized.
+    cost_tracker = None
+    if _COST_TRACKER_AVAILABLE:
+        try:
+            cost_tracker = CostTracker(
+                budget_total_usd=(budget_cny if budget_cny else 1e12),
+                reserve_pct=0.0,
+                single_action_approval_usd=1e12,
+                require_approval_for_new_paid_tool=False,
+                mode=BudgetMode.OBSERVE,
+                cost_log_path=project_dir / "cost_log.json",
+            )
+        except Exception:
+            cost_tracker = None
+
     def _sync_cost(stage_name: str) -> None:
         cost_cny = round(base_cost + sum(cost_accumulator), 4)
         job_store.update(job_id, cost_cny=cost_cny)
-        _emit(job_id, {"type": "cost_updated", "cost_cny": cost_cny, "stage": stage_name})
+        _emit(job_id, {
+            "type": "cost_updated",
+            "cost_cny": cost_cny,
+            "budget_cny": budget_cny,
+            "stage": stage_name,
+        })
+
+    async def _budget_gate() -> bool:
+        """Pause for approval if over budget. Returns True to continue, False to abort."""
+        nonlocal budget_overridden
+        if not budget_cny or budget_overridden:
+            return True
+        spent = round(base_cost + sum(cost_accumulator), 4)
+        if spent <= budget_cny:
+            return True
+        job_store.update(job_id, status="awaiting_approval")
+        _emit(job_id, {
+            "type": "awaiting_approval",
+            "stage": "budget",
+            "gate": "budget",
+            "preview": {"spent_cny": spent, "budget_cny": budget_cny,
+                        "over_by_cny": round(spent - budget_cny, 4)},
+        })
+        _emit(job_id, {"type": "budget_exceeded", "spent_cny": spent, "budget_cny": budget_cny})
+        approval = await job_store.wait_for_approval(job_id, timeout=3600.0)
+        if approval["action"] == "reject":
+            job_store.update(job_id, status="failed")
+            _emit(job_id, {"type": "job_failed", "stage": "budget",
+                           "message": f"Budget ¥{budget_cny} exceeded (spent ¥{spent}); aborted by user"})
+            return False
+        budget_overridden = True   # user approved overspend — don't re-prompt this run
+        job_store.update(job_id, status="running")
+        _emit(job_id, {"type": "stage_approved", "stage": "budget"})
+        return True
 
     job_store.update(job_id, status="running", project_dir=str(project_dir))
     _emit(job_id, {
@@ -319,7 +388,7 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
             success = await asyncio.to_thread(
                 _run_agent_stage,
                 job_id, stage_name, skill_text, project_dir,
-                brand_info, options, feedback, cost_accumulator,
+                brand_info, options, feedback, cost_accumulator, cost_tracker,
             )
             _sync_cost(stage_name)
             if success:
@@ -355,7 +424,7 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
                 success = await asyncio.to_thread(
                     _run_agent_stage,
                     job_id, stage_name, skill_text, project_dir,
-                    brand_info, options, feedback, cost_accumulator,
+                    brand_info, options, feedback, cost_accumulator, cost_tracker,
                 )
                 _sync_cost(stage_name)
                 if not success:
@@ -373,6 +442,10 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
         # Mark done so a later retry resumes after this stage.
         completed_stages.add(stage_name)
         job_store.update(job_id, completed_stages=sorted(completed_stages))
+
+        # Budget gate — pause for approval if cumulative cost crossed the ceiling.
+        if not await _budget_gate():
+            return
 
     # All stages complete — locate the final deliverable robustly.
     # Prefer renders/, but fall back to any mp4 under assets/ (or a misnamed

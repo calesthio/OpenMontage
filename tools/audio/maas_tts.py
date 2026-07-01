@@ -231,7 +231,7 @@ class MaasTTS(BaseTool):
                 "output_path": str(output_path),
             },
             artifacts=[str(output_path)],
-            cost_usd=0.0,
+            cost_usd=self.estimate_cost(inputs),   # 0.0 for free MaaS TTS models
             duration_seconds=round(time.time() - start, 2),
             model=model,
         )

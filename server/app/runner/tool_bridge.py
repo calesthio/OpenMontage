@@ -101,7 +101,8 @@ def execute_tool(
     args: dict[str, Any],
     project_dir: Path,
     emit_event: Any = None,   # callable(event_dict) for SSE
-    cost_accumulator: list | None = None,  # mutable list[float] for cost_usd accumulation
+    cost_accumulator: list | None = None,  # mutable list[float] for cost accumulation
+    cost_tracker: Any = None,  # optional tools.cost_tracker.CostTracker ledger
 ) -> str:
     """Execute a tool call and return a string result for the agent."""
 
@@ -179,10 +180,35 @@ def execute_tool(
                 out_dir.mkdir(parents=True, exist_ok=True)
                 inputs = {**inputs, "output_path": str(out_dir / f"{tool_name}_output.{ext}")}
 
+        # Ledger: estimate before, reconcile after (real CostTracker usage →
+        # persists an itemized cost_log.json for budget governance/audit).
+        entry_id = None
+        if cost_tracker is not None:
+            try:
+                entry_id = cost_tracker.estimate(
+                    tool_name,
+                    inputs.get("operation", "run"),
+                    float(tool.estimate_cost(inputs) or 0.0),
+                )
+                cost_tracker.approve_tool(tool_name)
+                cost_tracker.reserve(entry_id)   # OBSERVE mode never raises
+            except Exception:
+                entry_id = None
+
         result = tool.execute(inputs)
 
+        if cost_tracker is not None and entry_id is not None:
+            try:
+                cost_tracker.reconcile(
+                    entry_id, float(result.cost_usd or 0.0), success=result.success
+                )
+            except Exception:
+                pass
+
         if result.success:
-            if cost_accumulator is not None and result.cost_usd:
+            # Record every completed paid call (append even 0.0 so the tally
+            # reflects call count; the sum is what drives the CNY display).
+            if cost_accumulator is not None and result.cost_usd is not None:
                 cost_accumulator.append(float(result.cost_usd))
             if emit_event and result.artifacts:
                 for artifact_path in result.artifacts:

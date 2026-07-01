@@ -324,7 +324,9 @@ class MaasVideo(BaseTool):
                 **probed,
             },
             artifacts=[str(output_path)],
-            cost_usd=0.0,
+            # MaaS bills in CNY per second of generated video; report the
+            # resolution/duration-based charge so cost tracking is meaningful.
+            cost_usd=self.estimate_cost(inputs),
             duration_seconds=round(time.time() - start, 2),
             model=model,
         )

@@ -40,6 +40,7 @@ export default function NewProjectPage() {
     duration: "30",
     notes: "",
     brandKitId: "",
+    budgetCny: "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -82,6 +83,9 @@ export default function NewProjectPage() {
           image_model: "h100/flux2",
           tts_model: "qwen3-tts-flash",
           ...(form.brandKitId ? { brand_kit_id: form.brandKitId } : {}),
+          ...(form.budgetCny && Number(form.budgetCny) > 0
+            ? { budget_cny: Number(form.budgetCny) }
+            : {}),
         },
       }),
     });
@@ -230,6 +234,20 @@ export default function NewProjectPage() {
                   </button>
                 ))}
               </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1.5">预算上限 ¥（选填）</label>
+              <Input
+                type="number"
+                min="0"
+                step="0.5"
+                placeholder="例如 50 — 累计成本超过后暂停等待确认"
+                value={form.budgetCny}
+                onChange={(e) => setForm(f => ({ ...f, budgetCny: e.target.value }))}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                MaaS 按 CNY 计费。留空则不设预算门。
+              </p>
             </div>
             <div>
               <label className="text-sm font-medium block mb-1.5">补充说明（选填）</label>

@@ -258,7 +258,12 @@ class MaasVideo(BaseTool):
             )
 
         # ── Step 2: Poll for completion ───────────────────────────────────────
+        # The job is already submitted and will be billed regardless, so tolerate
+        # transient poll blips (502/504/reset/timeout) instead of abandoning a
+        # paid generation on the first one.
         deadline = start + _POLL_TIMEOUT
+        poll_errors = 0
+        _MAX_POLL_ERRORS = 5
         while time.time() < deadline:
             time.sleep(_POLL_INTERVAL)
             try:
@@ -269,7 +274,14 @@ class MaasVideo(BaseTool):
                 )
                 poll_resp.raise_for_status()
             except Exception as e:
-                return ToolResult(success=False, error=f"MaaS poll failed: {e}")
+                poll_errors += 1
+                if poll_errors >= _MAX_POLL_ERRORS:
+                    return ToolResult(
+                        success=False,
+                        error=f"MaaS poll failed {poll_errors}x (last: {e}); job_id={job_id}",
+                    )
+                continue  # transient — retry on the next interval
+            poll_errors = 0
 
             status_data = poll_resp.json()
             status = status_data.get("status", "unknown")

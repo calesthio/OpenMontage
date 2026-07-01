@@ -171,6 +171,9 @@ class MaasImage(BaseTool):
         if data.get("object") == "task":
             job_id = data.get("id")  # requestId set by the gateway controller
             deadline = start + 300  # 5-minute timeout for image jobs
+            # Job is already submitted/billed — tolerate transient poll blips.
+            poll_errors = 0
+            _MAX_POLL_ERRORS = 5
             while time.time() < deadline:
                 time.sleep(3)
                 try:
@@ -181,7 +184,14 @@ class MaasImage(BaseTool):
                     )
                     poll.raise_for_status()
                 except Exception as e:
-                    return ToolResult(success=False, error=f"MaaS image poll failed: {e}")
+                    poll_errors += 1
+                    if poll_errors >= _MAX_POLL_ERRORS:
+                        return ToolResult(
+                            success=False,
+                            error=f"MaaS image poll failed {poll_errors}x (last: {e}); job_id={job_id}",
+                        )
+                    continue  # transient — retry on the next interval
+                poll_errors = 0
                 poll_data = poll.json()
                 status = poll_data.get("status", "unknown")
                 if status in ("succeeded", "completed"):

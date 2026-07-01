@@ -515,6 +515,42 @@ def test_audio_and_avatar_tools_discoverable_by_capability():
     assert "wavespeed_digital_human" in avatar_names
 
 
+def test_additional_type_tools_discoverable_by_capability():
+    """image_edit, image_upscale, text_to_music must map to real project capabilities."""
+    from tools.tool_registry import registry
+    from tools.graphics.wavespeed_image_edit import WaveSpeedImageEdit
+    from tools.enhancement.wavespeed_image_upscale import WaveSpeedImageUpscale
+    from tools.audio.wavespeed_text_to_music import WaveSpeedTextToMusic
+
+    assert (WaveSpeedImageEdit.capability, WaveSpeedImageEdit.provider) == (
+        "image_generation",
+        "wavespeed",
+    )
+    assert (WaveSpeedImageUpscale.capability, WaveSpeedImageUpscale.provider) == (
+        "enhancement",
+        "wavespeed",
+    )
+    assert (WaveSpeedTextToMusic.capability, WaveSpeedTextToMusic.provider) == (
+        "music_generation",
+        "wavespeed",
+    )
+
+    registry.discover()
+    assert "wavespeed_image_edit" in {t.name for t in registry.get_by_capability("image_generation")}
+    assert "wavespeed_image_upscale" in {t.name for t in registry.get_by_capability("enhancement")}
+    assert "wavespeed_text_to_music" in {t.name for t in registry.get_by_capability("music_generation")}
+
+
+def test_image_upscale_prompt_optional_but_image_required(tmp_path):
+    """Upscale needs no prompt but does need a source image (helper generalization)."""
+    from tools.enhancement.wavespeed_image_upscale import WaveSpeedImageUpscale
+
+    result = WaveSpeedImageUpscale().execute({"output_dir": str(tmp_path)})
+    assert not result.success
+    # Fails on missing image, NOT on missing prompt.
+    assert "requires image" in (result.error or "").lower()
+
+
 def test_text_to_audio_maps_text_alias_to_prompt(monkeypatch):
     """tts_selector routes with `text`; the tool must normalize it to `prompt`."""
     from tools.audio.wavespeed_text_to_audio import WaveSpeedTextToAudio

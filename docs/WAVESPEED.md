@@ -17,6 +17,9 @@ It supports image generation, video generation, audio/TTS, and digital human (av
 - `text_to_video`: Generate video directly from text prompt
 - `text_to_audio`: Text-to-speech (TTS) and music generation
 - `digital_human`: Digital human/avatar video generation
+- `image_edit`: Edit / image-to-image from a source image + instruction
+- `image_upscale`: Super-resolution / upscaling of a source image
+- `text_to_music`: Music generation from a text prompt
 
 Each task type has model IDs configured in the active WaveSpeed profile.
 
@@ -70,6 +73,15 @@ wavespeed:
       digital_human:
         model_id: "..."
         params: {}
+      image_edit:
+        model_id: "..."
+        params: {}
+      image_upscale:
+        model_id: "..."
+        params: {}
+      text_to_music:
+        model_id: "..."
+        params: {}
 ```
 
 ### Profile Selection
@@ -85,7 +97,7 @@ They still compete with other providers (FAL, OpenAI, etc.) by score, but WaveSp
 
 For every WaveSpeed generation task:
 
-1. **Identify task type:** `text_to_image`, `image_to_video`, `text_to_video`, `text_to_audio`, or `digital_human`.
+1. **Identify task type:** `text_to_image`, `image_to_video`, `text_to_video`, `text_to_audio`, `digital_human`, `image_edit`, `image_upscale`, or `text_to_music`.
 2. **Load active profile:** Determined by `wavespeed.active_profile` in config.yaml.
 3. **Resolve model_id:**
    - Explicit `--model-id` argument (one-task override) → use it
@@ -107,6 +119,11 @@ Registry-discovered tools (auto-discoverable from Python):
 **Audio + Digital Human:**
 - `wavespeed_text_to_audio`: Text → Audio, TTS/music (capability `tts`; discovered by `tts_selector`)
 - `wavespeed_digital_human`: Text → Digital human video (capability `avatar`)
+
+**Editing / Enhancement / Music:**
+- `wavespeed_image_edit`: Image + instruction → edited Image (capability `image_generation`)
+- `wavespeed_image_upscale`: Image → upscaled Image (capability `enhancement`)
+- `wavespeed_text_to_music`: Text → Music (capability `music_generation`)
 
 All tools:
 - Read active profile from `config.yaml`
@@ -256,6 +273,9 @@ SUPPORTED_TASK_TYPES = {
     "text_to_video",
     "text_to_audio",
     "digital_human",
+    "image_edit",
+    "image_upscale",
+    "text_to_music",
     "new_task_type",  # ← Add here
 }
 ```

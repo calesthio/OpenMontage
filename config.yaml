@@ -68,6 +68,15 @@ wavespeed:
       digital_human:
         model_id: ""
         params: {}
+      image_edit:
+        model_id: "google/nano-banana-2/edit"
+        params: {}
+      image_upscale:
+        model_id: "wavespeed-ai/real-esrgan"
+        params: {}
+      text_to_music:
+        model_id: "wavespeed-ai/ace-step-1.5"
+        params: {}
 
     fast:
       description: "Fast iteration profile."
@@ -85,6 +94,15 @@ wavespeed:
         params: {}
       digital_human:
         model_id: ""
+        params: {}
+      image_edit:
+        model_id: "google/nano-banana-2/edit"
+        params: {}
+      image_upscale:
+        model_id: "wavespeed-ai/real-esrgan"
+        params: {}
+      text_to_music:
+        model_id: "wavespeed-ai/ace-step-1.5"
         params: {}
 
     quality:
@@ -104,3 +122,12 @@ wavespeed:
       digital_human:
         model_id: "heygen/avatar-v/digital-twin"
         params: {quality: "high"}
+      image_edit:
+        model_id: "bytedance/seedream-v4.5/edit"
+        params: {}
+      image_upscale:
+        model_id: "wavespeed-ai/seedvr2/image"
+        params: {}
+      text_to_music:
+        model_id: "google/lyria-3-pro/music"
+        params: {}

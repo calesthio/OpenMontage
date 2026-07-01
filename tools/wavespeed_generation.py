@@ -80,6 +80,17 @@ def build_explicit_params(inputs: dict[str, Any]) -> dict[str, Any]:
     return params
 
 
+# Task types that consume a source image (resolved into payload["image"]).
+IMAGE_INPUT_TASKS = {
+    "image_to_video",
+    "image_edit",
+    "image_upscale",
+    "background_removal",
+}
+# Task types that operate on a source asset and do not require a text prompt.
+PROMPT_OPTIONAL_TASKS = {"image_upscale", "background_removal"}
+
+
 def run_wavespeed_generation(
     *,
     task_type: str,
@@ -107,7 +118,7 @@ def run_wavespeed_generation(
     metadata["metadata_path"] = str(metadata_path)
 
     try:
-        if not prompt:
+        if not prompt and task_type not in PROMPT_OPTIONAL_TASKS:
             raise ValueError("prompt is required.")
         explicit_params = build_explicit_params(inputs)
         resolved = resolve_wavespeed_task(
@@ -125,17 +136,18 @@ def run_wavespeed_generation(
         )
 
         payload = dict(resolved.params)
-        payload["prompt"] = prompt
+        if prompt:
+            payload["prompt"] = prompt
 
         input_reference = (
-            _resolve_input_reference(inputs) if task_type == "image_to_video" else None
+            _resolve_input_reference(inputs) if task_type in IMAGE_INPUT_TASKS else None
         )
         if input_reference:
             payload.setdefault("image", input_reference["payload_value"])
             metadata["input_reference"] = input_reference["metadata"]
-        elif task_type == "image_to_video":
+        elif task_type in IMAGE_INPUT_TASKS:
             raise ValueError(
-                "image_to_video requires image_url, image_path, reference_image_url, or reference_image_path."
+                f"{task_type} requires image_url, image_path, reference_image_url, or reference_image_path."
             )
 
         active_client = client or WaveSpeedClient()

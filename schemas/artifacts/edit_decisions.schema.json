@@ -59,8 +59,33 @@
           },
           "reason": { "type": "string" }
         },
-        "additionalProperties": false
+        "additionalProperties": true
       }
+    },
+    "captions": {
+      "type": "array",
+      "description": "Remotion word-level caption items passed through to the Explainer composition.",
+      "items": {
+        "type": "object",
+        "required": ["word", "startMs", "endMs"],
+        "properties": {
+          "word": { "type": "string" },
+          "startMs": { "type": "number", "minimum": 0 },
+          "endMs": { "type": "number", "minimum": 0 },
+          "confidence": { "type": ["number", "null"] }
+        },
+        "additionalProperties": true
+      }
+    },
+    "captionWordsPerPage": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Optional Remotion CaptionOverlay page size override."
+    },
+    "captionFontSize": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Optional Remotion CaptionOverlay font size override."
     },
     "overlays": {
       "type": "array",

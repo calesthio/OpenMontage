@@ -30,6 +30,13 @@ Agent reads pipeline manifest (YAML) → reads stage director skill (MD)
 - **Meta skills:** `skills/meta/*.md` (reviewer, checkpoint-protocol, skill-creator)
 - **Architecture deep-dive:** `docs/ARCHITECTURE.md`
 
+## Local Environment Convention
+
+- **Python virtual environment:** managed with `uv` in `.venv`
+- **Standard bootstrap:** `uv venv .venv --python 3.11 --seed` then `source .venv/bin/activate`
+- **Make targets:** run them from the active repo `.venv`
+- **Manual installs:** prefer `uv pip ...`; do not assume an unseeded virtual environment already has `pip`
+
 ## Knowledge Architecture (3 Layers)
 
 ```

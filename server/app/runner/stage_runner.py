@@ -333,9 +333,32 @@ async def run_pipeline_job(job_id: str, data: dict) -> None:
                 job_store.update(job_id, status="running")
                 _emit(job_id, {"type": "stage_approved", "stage": stage_name})
 
-    # All stages complete
-    renders = list((project_dir / "renders").glob("*.mp4"))
-    render_url = f"/media/{project_name}/renders/{renders[0].name}" if renders else None
+    # All stages complete — locate the final deliverable robustly.
+    # Prefer renders/, but fall back to any mp4 under assets/ (or a misnamed
+    # .bin the compose tool may have produced) so the player still works.
+    render_url = _discover_render_url(project_dir, project_name)
 
     job_store.update(job_id, status="completed", render_url=render_url)
     _emit(job_id, {"type": "job_completed", "render_url": render_url})
+
+
+def _discover_render_url(project_dir: Path, project_name: str) -> str | None:
+    """Find the final rendered video and return a browser-servable /media URL."""
+    def _newest(paths: list[Path]) -> Path | None:
+        existing = [p for p in paths if p.is_file()]
+        if not existing:
+            return None
+        return max(existing, key=lambda p: p.stat().st_mtime)
+
+    candidate = _newest(list((project_dir / "renders").glob("*.mp4")))
+    if candidate is None:
+        # Fallback: any mp4 the compose stage may have written under assets/
+        candidate = _newest(list(project_dir.glob("assets/**/*.mp4")))
+    if candidate is None:
+        # Last resort: a misnamed compose output (.bin) that is really an mp4
+        candidate = _newest(list(project_dir.glob("assets/**/*compose*output*")))
+
+    if candidate is None:
+        return None
+    rel = candidate.relative_to(project_dir).as_posix()
+    return f"/media/{project_name}/{rel}"

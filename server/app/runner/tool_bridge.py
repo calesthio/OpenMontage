@@ -151,18 +151,33 @@ def execute_tool(
         if not tool:
             return f"ERROR: Tool '{tool_name}' not found in registry"
 
-        # Set output path inside project assets if not specified
+        # Set output path if not specified.
         if "output_path" not in inputs:
             ext_map = {
                 "video_generation": "mp4",
                 "image_generation": "png",
                 "tts": "mp3",
+                "music_generation": "mp3",
+                "audio_processing": "mp3",
+                "video_post": "mp4",
             }
             ext = ext_map.get(tool.capability, "bin")
-            inputs = {**inputs, "output_path": str(
-                project_dir / "assets" / tool.capability / f"{tool_name}_output.{ext}"
-            )}
-            (project_dir / "assets" / tool.capability).mkdir(parents=True, exist_ok=True)
+
+            # The final composed video is the pipeline deliverable — it must land
+            # in renders/ so the runner and /media serving can find and play it.
+            # Any other video_post op (trim, stitch) stays in assets/.
+            is_final_compose = (
+                tool.capability == "video_post"
+                and inputs.get("operation", "compose") == "compose"
+            )
+            if is_final_compose:
+                renders_dir = project_dir / "renders"
+                renders_dir.mkdir(parents=True, exist_ok=True)
+                inputs = {**inputs, "output_path": str(renders_dir / "final.mp4")}
+            else:
+                out_dir = project_dir / "assets" / tool.capability
+                out_dir.mkdir(parents=True, exist_ok=True)
+                inputs = {**inputs, "output_path": str(out_dir / f"{tool_name}_output.{ext}")}
 
         result = tool.execute(inputs)
 

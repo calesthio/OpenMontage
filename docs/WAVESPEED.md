@@ -20,6 +20,8 @@ It supports image generation, video generation, audio/TTS, and digital human (av
 - `image_edit`: Edit / image-to-image from a source image + instruction
 - `image_upscale`: Super-resolution / upscaling of a source image
 - `text_to_music`: Music generation from a text prompt
+- `background_removal`: Background/object removal from a source image
+- `lip_sync`: Lip-sync a portrait image to an audio track
 
 Each task type has model IDs configured in the active WaveSpeed profile.
 
@@ -82,6 +84,12 @@ wavespeed:
       text_to_music:
         model_id: "..."
         params: {}
+      background_removal:
+        model_id: "..."
+        params: {}
+      lip_sync:
+        model_id: "..."
+        params: {}
 ```
 
 ### Profile Selection
@@ -97,7 +105,7 @@ They still compete with other providers (FAL, OpenAI, etc.) by score, but WaveSp
 
 For every WaveSpeed generation task:
 
-1. **Identify task type:** `text_to_image`, `image_to_video`, `text_to_video`, `text_to_audio`, `digital_human`, `image_edit`, `image_upscale`, or `text_to_music`.
+1. **Identify task type:** `text_to_image`, `image_to_video`, `text_to_video`, `text_to_audio`, `digital_human`, `image_edit`, `image_upscale`, `text_to_music`, `background_removal`, or `lip_sync`.
 2. **Load active profile:** Determined by `wavespeed.active_profile` in config.yaml.
 3. **Resolve model_id:**
    - Explicit `--model-id` argument (one-task override) → use it
@@ -119,10 +127,12 @@ Registry-discovered tools (auto-discoverable from Python):
 **Audio + Digital Human:**
 - `wavespeed_text_to_audio`: Text → Audio, TTS/music (capability `tts`; discovered by `tts_selector`)
 - `wavespeed_digital_human`: Text → Digital human video (capability `avatar`)
+- `wavespeed_lip_sync`: Image + audio → talking video (capability `avatar`)
 
 **Editing / Enhancement / Music:**
 - `wavespeed_image_edit`: Image + instruction → edited Image (capability `image_generation`)
 - `wavespeed_image_upscale`: Image → upscaled Image (capability `enhancement`)
+- `wavespeed_background_removal`: Image → cutout Image (capability `enhancement`)
 - `wavespeed_text_to_music`: Text → Music (capability `music_generation`)
 
 All tools:
@@ -276,6 +286,8 @@ SUPPORTED_TASK_TYPES = {
     "image_edit",
     "image_upscale",
     "text_to_music",
+    "background_removal",
+    "lip_sync",
     "new_task_type",  # ← Add here
 }
 ```

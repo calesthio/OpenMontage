@@ -77,6 +77,12 @@ wavespeed:
       text_to_music:
         model_id: "wavespeed-ai/ace-step-1.5"
         params: {}
+      background_removal:
+        model_id: "bria/remove-background"
+        params: {}
+      lip_sync:
+        model_id: "wavespeed-ai/ltx-2.3/lipsync"
+        params: {}
 
     fast:
       description: "Fast iteration profile."
@@ -104,6 +110,12 @@ wavespeed:
       text_to_music:
         model_id: "wavespeed-ai/ace-step-1.5"
         params: {}
+      background_removal:
+        model_id: "bria/remove-background"
+        params: {}
+      lip_sync:
+        model_id: "wavespeed-ai/ltx-2.3/lipsync"
+        params: {}
 
     quality:
       description: "Higher-quality profile for final clips or hero shots."
@@ -130,4 +142,10 @@ wavespeed:
         params: {}
       text_to_music:
         model_id: "google/lyria-3-pro/music"
+        params: {}
+      background_removal:
+        model_id: "bria/remove-background"
+        params: {}
+      lip_sync:
+        model_id: "sync/lipsync-2-pro"
         params: {}

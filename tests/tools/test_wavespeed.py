@@ -551,6 +551,33 @@ def test_image_upscale_prompt_optional_but_image_required(tmp_path):
     assert "requires image" in (result.error or "").lower()
 
 
+def test_background_removal_and_lipsync_discoverable_by_capability():
+    from tools.tool_registry import registry
+    from tools.enhancement.wavespeed_background_removal import WaveSpeedBackgroundRemoval
+    from tools.avatar.wavespeed_lip_sync import WaveSpeedLipSync
+
+    assert (WaveSpeedBackgroundRemoval.capability, WaveSpeedBackgroundRemoval.provider) == (
+        "enhancement",
+        "wavespeed",
+    )
+    assert (WaveSpeedLipSync.capability, WaveSpeedLipSync.provider) == ("avatar", "wavespeed")
+
+    registry.discover()
+    assert "wavespeed_background_removal" in {t.name for t in registry.get_by_capability("enhancement")}
+    assert "wavespeed_lip_sync" in {t.name for t in registry.get_by_capability("avatar")}
+
+
+def test_lip_sync_requires_audio_after_image(tmp_path):
+    """lip_sync needs both image and audio; with image present it must ask for audio."""
+    from tools.avatar.wavespeed_lip_sync import WaveSpeedLipSync
+
+    result = WaveSpeedLipSync().execute(
+        {"image_url": "https://example.com/face.png", "output_dir": str(tmp_path)}
+    )
+    assert not result.success
+    assert "requires audio" in (result.error or "").lower()
+
+
 def test_text_to_audio_maps_text_alias_to_prompt(monkeypatch):
     """tts_selector routes with `text`; the tool must normalize it to `prompt`."""
     from tools.audio.wavespeed_text_to_audio import WaveSpeedTextToAudio

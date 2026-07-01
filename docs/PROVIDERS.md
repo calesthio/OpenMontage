@@ -65,7 +65,7 @@ VIDEO_GEN_LOCAL_MODEL=       # wan2.1-1.3b, wan2.1-14b, hunyuan-1.5, ltx2-local,
 
 ### WaveSpeed — Multi-Model AI Generation
 
-> **Multi-model gateway with profile-based model selection.** One key reaches image, video, audio, digital-human, image-editing, upscaling, and music models; unlike per-call providers, you pick the model per task type in `config.yaml`.
+> **Multi-model gateway with profile-based model selection.** One key reaches image, video, audio, digital-human, image-editing, upscaling, background-removal, music, and lip-sync models; unlike per-call providers, you pick the model per task type in `config.yaml`.
 
 **Tools unlocked:** 
 - `wavespeed_text_to_image`
@@ -75,7 +75,9 @@ VIDEO_GEN_LOCAL_MODEL=       # wan2.1-1.3b, wan2.1-14b, hunyuan-1.5, ltx2-local,
 - `wavespeed_digital_human` (avatar/talking-head; capability `avatar`)
 - `wavespeed_image_edit` (image-to-image/editing; capability `image_generation`)
 - `wavespeed_image_upscale` (super-resolution; capability `enhancement`)
+- `wavespeed_background_removal` (background/object removal; capability `enhancement`)
 - `wavespeed_text_to_music` (music generation; capability `music_generation`)
+- `wavespeed_lip_sync` (audio-driven talking video; capability `avatar`)
 
 **Env var:** `WAVESPEED_API_KEY` (auth only; models come from config.yaml)
 

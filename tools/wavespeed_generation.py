@@ -86,9 +86,12 @@ IMAGE_INPUT_TASKS = {
     "image_edit",
     "image_upscale",
     "background_removal",
+    "lip_sync",
 }
+# Task types that consume a source audio track (resolved into payload["audio"]).
+AUDIO_INPUT_TASKS = {"lip_sync"}
 # Task types that operate on a source asset and do not require a text prompt.
-PROMPT_OPTIONAL_TASKS = {"image_upscale", "background_removal"}
+PROMPT_OPTIONAL_TASKS = {"image_upscale", "background_removal", "lip_sync"}
 
 
 def run_wavespeed_generation(
@@ -149,6 +152,15 @@ def run_wavespeed_generation(
             raise ValueError(
                 f"{task_type} requires image_url, image_path, reference_image_url, or reference_image_path."
             )
+
+        audio_reference = (
+            _resolve_audio_reference(inputs) if task_type in AUDIO_INPUT_TASKS else None
+        )
+        if audio_reference:
+            payload.setdefault("audio", audio_reference["payload_value"])
+            metadata["audio_reference"] = audio_reference["metadata"]
+        elif task_type in AUDIO_INPUT_TASKS:
+            raise ValueError(f"{task_type} requires audio_url or audio_path.")
 
         active_client = client or WaveSpeedClient()
         prediction = active_client.run_prediction(
@@ -332,6 +344,31 @@ def _resolve_input_reference(inputs: dict[str, Any]) -> dict[str, Any] | None:
         raise ValueError(f"Input image path does not exist: {path}")
 
     mime = mimetypes.guess_type(path.name)[0] or "image/png"
+    data_uri = (
+        f"data:{mime};base64,{base64.b64encode(path.read_bytes()).decode('ascii')}"
+    )
+    return {
+        "payload_value": data_uri,
+        "metadata": {"kind": "path", "value": str(path)},
+    }
+
+
+def _resolve_audio_reference(inputs: dict[str, Any]) -> dict[str, Any] | None:
+    audio_url = inputs.get("audio_url")
+    if audio_url:
+        return {
+            "payload_value": str(audio_url),
+            "metadata": {"kind": "url", "value": str(audio_url)},
+        }
+
+    audio_path = inputs.get("audio_path")
+    if not audio_path:
+        return None
+    path = Path(str(audio_path))
+    if not path.exists():
+        raise ValueError(f"Input audio path does not exist: {path}")
+
+    mime = mimetypes.guess_type(path.name)[0] or "audio/mpeg"
     data_uri = (
         f"data:{mime};base64,{base64.b64encode(path.read_bytes()).decode('ascii')}"
     )

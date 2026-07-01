@@ -158,6 +158,13 @@ cd OpenMontage
 make setup
 ```
 
+> [!WARNING]
+> **Only install OpenMontage from this official repository — `github.com/calesthio/OpenMontage`.**
+> A malicious lookalike (`Open-Montage/OpenMontage`, note the hyphen) distributes a
+> trojanized Windows build that drops malware and establishes persistence.
+> OpenMontage ships **as source only** — it has no prebuilt `.exe`. See
+> [SECURITY.md](SECURITY.md) for details and indicators of compromise.
+
 Open the project in your AI coding assistant and tell it what you want:
 
 ```

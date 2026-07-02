@@ -70,14 +70,39 @@ WAN_VARIANTS = {
 HUNYUAN_VARIANTS = {
     "hunyuan-1.5": {
         "name": "HunyuanVideo 1.5",
-        "hf_id": "tencent/HunyuanVideo-1.5",
-        "pipeline_class": "HunyuanVideoPipeline",
+        # The tencent/HunyuanVideo-1.5 repo is NOT in diffusers layout (no
+        # model_index.json -> 404). Diffusers loads the community-converted
+        # 480p checkpoints. The 1.5 line uses HunyuanVideo15Pipeline, not the
+        # old HunyuanVideoPipeline (that's the original HunyuanVideo).
+        "hf_id": "hunyuanvideo-community/HunyuanVideo-1.5-Diffusers-480p_t2v",
+        "hf_i2v_id": "hunyuanvideo-community/HunyuanVideo-1.5-Diffusers-480p_i2v",
+        "pipeline_class": "HunyuanVideo15Pipeline",
+        "i2v_pipeline_class": "HunyuanVideo15ImageToVideoPipeline",
         "vram_mb": 14000,
         "quality": "high",
         "speed": "medium",
         "t2v": True,
         "i2v": True,
         "license": "Apache-2.0",
+        "default_width": 848,
+        "default_height": 480,
+        "default_num_frames": 121,
+        "fps": 24,
+    },
+    "hunyuan-1.5-distilled": {
+        "name": "HunyuanVideo 1.5 (distilled)",
+        # CFG-distilled: skips the classifier-free-guidance second forward pass
+        # (~2x faster per step), still ~50 steps. Not few-step distilled.
+        "hf_id": "hunyuanvideo-community/HunyuanVideo-1.5-Diffusers-480p_t2v_distilled",
+        "hf_i2v_id": "hunyuanvideo-community/HunyuanVideo-1.5-Diffusers-480p_i2v_distilled",
+        "pipeline_class": "HunyuanVideo15Pipeline",
+        "i2v_pipeline_class": "HunyuanVideo15ImageToVideoPipeline",
+        "vram_mb": 14000,
+        "quality": "high",
+        "speed": "fast",
+        "t2v": True,
+        "i2v": True,
+        "license": "other",
         "default_width": 848,
         "default_height": 480,
         "default_num_frames": 121,
@@ -228,13 +253,15 @@ def estimate_local_runtime(speed: str) -> float:
     return {"fast": 120.0, "medium": 240.0, "slow": 600.0}.get(speed, 240.0)
 
 
-def load_diffusers_pipeline(pipeline_class: str, model_id: str, enable_offload: bool):
+def load_diffusers_pipeline(pipeline_class: str, model_id: str, enable_offload: bool, offload_mode: str = "model"):
     import diffusers
     import torch
 
     pipeline_map = {
         "WanPipeline": "WanPipeline",
         "HunyuanVideoPipeline": "HunyuanVideoPipeline",
+        "HunyuanVideo15Pipeline": "HunyuanVideo15Pipeline",
+        "HunyuanVideo15ImageToVideoPipeline": "HunyuanVideo15ImageToVideoPipeline",
         "LTXPipeline": "LTXPipeline",
         "CogVideoXPipeline": "CogVideoXPipeline",
     }
@@ -255,7 +282,14 @@ def load_diffusers_pipeline(pipeline_class: str, model_id: str, enable_offload: 
 
     if enable_offload:
         if device == "cuda":
-            pipeline.enable_model_cpu_offload()
+            # "sequential" offloads at submodule granularity — fits models whose
+            # largest component (e.g. a 7B text encoder) exceeds VRAM, at the cost
+            # of PCIe shuttling every step (much slower). "model" swaps whole
+            # components and is faster but needs each component to fit in VRAM.
+            if offload_mode == "sequential" and hasattr(pipeline, "enable_sequential_cpu_offload"):
+                pipeline.enable_sequential_cpu_offload()
+            else:
+                pipeline.enable_model_cpu_offload()
         else:
             # enable_model_cpu_offload() is CUDA-only; fall back to direct device placement
             pipeline = pipeline.to(device)
@@ -330,8 +364,13 @@ def generate_local_video(
     height = inputs.get("height", meta["default_height"])
     num_frames = inputs.get("num_frames", meta["default_num_frames"])
     fps = meta["fps"]
-    model_id = meta.get("hf_i2v_id") if operation == "image_to_video" and meta.get("hf_i2v_id") else meta["hf_id"]
-    pipeline = load_diffusers_pipeline(meta["pipeline_class"], model_id, enable_offload)
+    if operation == "image_to_video":
+        model_id = meta.get("hf_i2v_id") or meta["hf_id"]
+        pipeline_class = meta.get("i2v_pipeline_class", meta["pipeline_class"])
+    else:
+        model_id = meta["hf_id"]
+        pipeline_class = meta["pipeline_class"]
+    pipeline = load_diffusers_pipeline(pipeline_class, model_id, enable_offload, inputs.get("offload_mode", "model"))
 
     generation_args: dict[str, Any] = {
         "prompt": prompt,

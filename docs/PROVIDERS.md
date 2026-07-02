@@ -41,6 +41,7 @@ OPENAI_API_KEY=              # OpenAI TTS + GPT Image 2 images
 XAI_API_KEY=                 # xAI Grok image generation/editing + Grok video generation
 DOUBAO_SPEECH_API_KEY=       # Volcengine Doubao Speech TTS (strong Mandarin narration)
 DOUBAO_SPEECH_VOICE_TYPE=    # Default Doubao speaker/voice type
+DASHSCOPE_API_KEY=           # Alibaba DashScope (Qwen image gen, TTS, ASR with word timestamps)
 
 # MULTI-MODEL GATEWAY (one key, 6+ tools)
 FAL_KEY=                     # FLUX, Recraft, Kling, Veo, MiniMax video
@@ -91,6 +92,43 @@ Current xAI docs pricing for the Grok media models:
 | `grok-imagine-video` input images | $0.002 per input image |
 
 OpenMontage now uses those published rates in the Grok tool estimators.
+
+---
+
+### Alibaba DashScope — Qwen Image + TTS + ASR
+
+> **Best for Chinese-language production.** One key unlocks Qwen-Image generation, Qwen-TTS Mandarin narration, and Qwen-ASR with word-level timestamps — the only DashScope path that provides word-level granularity for subtitle alignment.
+
+**Tools unlocked:** `dashscope_image`, `dashscope_tts`, `dashscope_asr`
+**Env var:** `DASHSCOPE_API_KEY`
+
+#### Setup
+
+1. Go to [dashscope.aliyun.com](https://dashscope.aliyun.com/)
+2. Create an Alibaba Cloud account if you don't have one
+3. Generate an API key in the DashScope console
+4. Add to `.env`: `DASHSCOPE_API_KEY=sk-...`
+
+#### What it's best for
+
+- Chinese-language image generation with strong prompt understanding (Qwen-Image)
+- Natural Mandarin narration (Qwen-TTS, Cherry voice)
+- Word-level timestamp transcription for subtitle alignment (Qwen-ASR filetrans)
+- Replacing the broken `whisperx` slot for ASR
+
+#### API notes
+
+DashScope's `/compatible-mode/v1/` only supports `/chat/completions` and `/embeddings`. Image gen, TTS, and ASR all use DashScope-native endpoints with nested `{model, input, parameters}` request shape — not OpenAI-compatible paths.
+
+The ASR tool (`qwen3-asr-flash-filetrans`) uses an async submit-poll pattern. Audio must be at a publicly accessible URL (local files are not supported). Word timestamps are in milliseconds, normalized to seconds by the tool.
+
+#### Pricing
+
+| Model | Price |
+|------|-------|
+| `qwen-image-2.0-pro` | ~$0.02 per image (check console for current rates) |
+| `qwen3-tts-flash` | ~$0.000015 per character |
+| `qwen3-asr-flash-filetrans` | Per-minute billing (check console) |
 
 ---
 

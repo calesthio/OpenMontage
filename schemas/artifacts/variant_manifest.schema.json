@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/variant_manifest",
+  "title": "Variant Manifest",
+  "description": "Structured registry of project deliverable variants, their lineage, current channels, source inputs, outputs, and review status.",
+  "type": "object",
+  "required": ["version", "project_id", "current", "variants"],
+  "properties": {
+    "version": { "type": "string", "const": "1.0" },
+    "project_id": { "type": "string", "minLength": 1 },
+    "current": {
+      "type": "object",
+      "description": "Named delivery channels mapped to the active variant id, e.g. handoff_intro or standalone_teaser.",
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "variants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "status", "purpose", "created_at", "inputs", "outputs"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" },
+          "name": { "type": "string", "minLength": 1 },
+          "status": {
+            "type": "string",
+            "enum": ["draft", "candidate", "approved", "rejected", "archived", "published"]
+          },
+          "purpose": {
+            "type": "string",
+            "description": "Intended use case, e.g. handoff_intro, standalone_teaser, vertical_short."
+          },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "lineage": {
+            "type": "object",
+            "properties": {
+              "parent": { "type": ["string", "null"] },
+              "change_summary": { "type": "string" }
+            },
+            "additionalProperties": false
+          },
+          "inputs": {
+            "type": "object",
+            "description": "Paths to source artifacts used to produce the variant.",
+            "properties": {
+              "brief": { "type": "string" },
+              "script": { "type": "string" },
+              "scene_plan": { "type": "string" },
+              "asset_manifest": { "type": "string" },
+              "edit_decisions": { "type": "string" },
+              "audio": { "type": "string" },
+              "captions": { "type": "string" },
+              "render_props": { "type": "string" }
+            },
+            "additionalProperties": { "type": "string" }
+          },
+          "outputs": {
+            "type": "object",
+            "description": "Rendered deliverables and output metadata.",
+            "properties": {
+              "video": { "type": "string" },
+              "thumbnail": { "type": "string" },
+              "render_report": { "type": "string" },
+              "final_review": { "type": "string" },
+              "duration_seconds": { "type": "number", "minimum": 0 },
+              "profile": { "type": "string" },
+              "speed": { "type": "number", "minimum": 0 }
+            },
+            "additionalProperties": {
+              "oneOf": [
+                { "type": "string" },
+                { "type": "number" },
+                { "type": "boolean" },
+                { "type": "null" }
+              ]
+            }
+          },
+          "review": {
+            "type": "object",
+            "properties": {
+              "decision": { "type": "string" },
+              "notes": { "type": "string" },
+              "known_issues": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            },
+            "additionalProperties": false
+          },
+          "tags": {
+            "type": "array",
+            "items": { "type": "string" },
+            "uniqueItems": true
+          },
+          "metadata": { "type": "object" },
+          "archived_at": { "type": "string", "format": "date-time" },
+          "archive_reason": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "metadata": { "type": "object" }
+  },
+  "additionalProperties": false
+}

@@ -339,3 +339,34 @@ def get_next_stage(
         if stage not in completed:
             return stage
     return None
+
+
+def get_project_cost_tracker(
+    pipeline_dir: Path,
+    project_id: str,
+    config: Any = None,
+) -> Any:
+    """Create or reload a CostTracker bound to a project's cost_log.json.
+
+    Always writes to <pipeline_dir>/<project_id>/cost_log.json so that
+    every paid operation — including failed attempts — is persisted in the
+    project-local cost ledger rather than inferred from asset_manifest.json.
+
+    Existing cost_log.json entries are reloaded automatically, making the
+    tracker safe to call across multiple pipeline stages or agent turns.
+    """
+    from tools.cost_tracker import CostTracker, BudgetMode as _BudgetMode
+
+    if config is None:
+        from lib.config_model import OpenMontageConfig
+        config = OpenMontageConfig.load()
+
+    cost_log_path = pipeline_dir / project_id / "cost_log.json"
+    return CostTracker(
+        budget_total_usd=config.budget.total_usd,
+        reserve_pct=config.budget.reserve_pct,
+        single_action_approval_usd=config.budget.single_action_approval_usd,
+        require_approval_for_new_paid_tool=config.budget.require_approval_for_new_paid_tool,
+        mode=_BudgetMode(config.budget.mode.value),
+        cost_log_path=cost_log_path,
+    )

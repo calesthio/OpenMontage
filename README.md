@@ -54,8 +54,11 @@ Turn your AI coding assistant into a full video production studio. Describe what
   <video src="https://github.com/user-attachments/assets/8daca07f-cdf8-4bec-89c3-9dc2176363fa" width="100%" controls></video>
 </div>
 
-> **"THE LAST BANANA"** — a 60-second Pixar-style animated short about a lonely banana who finds friendship with a kiwi. 6 Kling v3-generated motion clips (via fal.ai), Google Chirp3-HD narration, royalty-free piano music, TikTok-style word-level captions, and Remotion composition. Total cost: **$1.33**.
-
+> **Yar Usman Bhai Is garmi mein bijli ke bill ne to kam hi tamam kar diya. Har mahine aamdan se zyadah raqam bill ki mad mein chali jati hai. Ghar ka kharch chalana mushkil ho gaya hai.
+Ji Bhai, aap pareshaan mat hon. Halat ka roona rone se kuch hasil nahi hoga. Is masa'el ka hal mojood hai.
+Aisa kya hal hai? Bataiye, main bhi janoon.
+ Aap ab solar energy ki taraf aayein. Is se bijli ke bill mein    numayan kami aayegi aur aap sukhibhi rahenge.main Solar system ka intikhab kaise karoon?
+ Power Tech Solutions ke pas jaen. Wo aapko behtarin mashvara denge aur munasib qimat par aapke ghar ke mutabiq solar system aur inverted install karva denge. Is se aapka bijli ka bill har mahine nihayat kam ho jaega, aur aapki pareshani khatam ho jaegi.
 <div align="center">
   <video src="https://github.com/user-attachments/assets/e03b5d1f-1199-4093-9f31-a43aa9da2c68" width="100%" controls></video>
 </div>

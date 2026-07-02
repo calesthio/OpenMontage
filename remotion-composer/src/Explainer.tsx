@@ -22,7 +22,11 @@ function resolveAsset(src: string): string {
   // Absolute paths (Unix: /foo, Windows: C:\foo or C:/foo) — convert to file:// URI
   // staticFile() only accepts relative paths within public/, so absolute paths must bypass it
   if (clean.startsWith("/") || /^[A-Za-z]:[\\/]/.test(clean)) {
-    return `file:///${clean.replace(/\\/g, "/")}`;
+    // ponytail: Unix paths already start with /, so file:// + /path = file:///path (3 slashes, correct)
+    // Windows paths (C:\...) need the extra slash: file:/// + C:/... = file:///C:/...
+    return clean.startsWith("/")
+      ? `file://${clean}`
+      : `file:///${clean.replace(/\\/g, "/")}`;
   }
   return staticFile(clean);
 }

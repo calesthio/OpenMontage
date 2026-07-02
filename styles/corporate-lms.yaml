@@ -1,0 +1,111 @@
+identity:
+  name: "Corporate LMS"
+  category: motion-graphics
+  mood: professional, instructional, accessible, brand-respectful
+  pace: deliberate
+  best_for: "Internal training videos for corporate Learning Management Systems (LMS): onboarding, compliance, policy, process, soft-skill, and culture modules destined for employee audiences inside regulated or publicly-traded companies"
+
+visual_language:
+  color_palette:
+    primary: ["#1F3A68", "#0F2540"]
+    accent: ["#3F7CAC", "#7FA9C9"]
+    background: "#FFFFFF"
+    text: "#111827"
+    muted: "#4B5563"
+  composition: "centered, generous whitespace, captions safe-zone reserved at bottom 18% of frame"
+  texture: "flat, no grain, no decorative gradients"
+
+typography:
+  headings:
+    font: "Inter"
+    weight: 600
+    tracking: "0em"
+  body:
+    font: "Inter"
+    weight: 400
+    line_height: 1.7
+  code:
+    font: "JetBrains Mono"
+    weight: 400
+  stat_card:
+    font: "Inter"
+    weight: 700
+    size_multiplier: 2.4
+  scale_system: "major_second"
+  weight_matrix:
+    title: 700
+    heading: 600
+    body: 400
+    caption: 500
+
+motion:
+  transitions: [fade, dissolve]
+  animation_style: "minimal, ease-in-out, no bounce, no parallax, no kinetic typography"
+  pacing_rules:
+    min_scene_hold_seconds: 4.0
+    max_scene_hold_seconds: 15
+    text_card_hold_seconds: 5.0
+    stat_card_hold_seconds: 5.0
+    transition_duration_seconds: 0.5
+  entrance: "fade-in, no scale, no slide"
+  exit: "fade-out"
+
+audio:
+  voice_style: "calm, clear, instructional, brand-locked, moderate pace, neutral accent unless otherwise specified by brand kit"
+  music_mood: "subtle ambient, optional; mute entirely if it competes with narration"
+  music_volume: 0.04
+  sfx_style: "none by default; optional soft chime on section breaks only"
+  ducking_threshold_db: -6
+  voice_variation_allowed: false
+
+asset_generation:
+  image_prompt_prefix: "professional corporate illustration, flat vector style, neutral office or workplace context, inclusive workforce representation, white background, "
+  image_negative_prompt: "photorealistic, 3d render, dramatic lighting, dark, grungy, cluttered, marketing-stock-photo aesthetic, exaggerated emotion, cartoonish humor, brand logos other than the supplied brand kit"
+  diagram_style: "clean lines, labeled nodes, neutral colors, accessible at 720p"
+  consistency_anchors:
+    - "Navy primary (#1F3A68) reserved for brand-equivalent role; substitute with supplied brand-kit primary if provided"
+    - "White / light-neutral backgrounds throughout"
+    - "Inclusive representation of workforce: varied age, race, gender, ability, region"
+    - "No logos, mascots, or third-party brand marks unless explicitly supplied"
+    - "Captions safe-zone preserved (bottom 18% of frame must stay text-free)"
+
+overlays:
+  stat_card:
+    bg: "#F4F6FA"
+    border: "#1F3A68"
+    radius: 6
+    shadow: "0 1px 4px rgba(0,0,0,0.06)"
+  key_term:
+    bg: "#EAF1F8"
+    text: "#0F2540"
+    radius: 4
+
+quality_rules:
+  - "Learning objective on screen and narrated within the first 7 seconds, in Bloom-verb form"
+  - "No marketing CTA at the close; end with recap of learning objective and next-module pointer"
+  - "Verbatim transcript artifact must accompany every render (transcript.txt or transcript.vtt)"
+  - "Closed captions enabled: burned-in or sidecar VTT, WCAG 2.1 AA compliant"
+  - "Minimum text contrast ratio 4.5:1 (WCAG AA); 7:1 preferred for body text"
+  - "Captions safe-zone: bottom 18% of frame stays clear of overlays and key visuals"
+  - "Minimum scene hold 4 seconds; LMS players often disable scrubbing and speed control"
+  - "No rapid cuts — minimum 4 seconds between transitions"
+  - "No more than 3 colors on screen at once (excluding background)"
+  - "Every factual or policy claim must cite source document and revision date in speaker notes"
+  - "No humor that depends on personality, regional idioms, or cultural references that do not translate"
+  - "Brand voice and palette must match supplied brand kit; if no brand kit supplied, ask the user before production"
+  - "Inclusive representation in all generated imagery (age, race, gender, ability, region)"
+  - "If mandatory training, add legal/HR review checkpoint before publishing"
+  - "If audience spans regions, localization plan (subtitle vs dub vs English-only) must be locked at brief stage"
+
+chart_palette:
+  - "#1F3A68"
+  - "#3F7CAC"
+  - "#7FA9C9"
+  - "#4B5563"
+  - "#9CA3AF"
+  - "#0F2540"
+
+color_rules:
+  harmony_type: "analogous"
+  contrast_validation: true
+  colorblind_safe: true

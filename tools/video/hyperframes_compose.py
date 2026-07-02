@@ -2,10 +2,10 @@
 
 Sibling to `video_compose` (FFmpeg + Remotion). This tool owns the HyperFrames
 runtime end-to-end: workspace materialization, `hyperframes lint`,
-`hyperframes validate`, and `hyperframes render`. It is invoked by
+`hyperframes validate`, visual QA helpers, and `hyperframes render`. It is invoked by
 `video_compose` when `edit_decisions.render_runtime == "hyperframes"`, and
 can also be called directly by pipelines that want HyperFrames-specific
-operations (lint-only, validate-only, scaffold-only).
+operations (lint-only, validate-only, inspect-only, snapshot-only, scaffold-only).
 
 This tool deliberately does NOT attempt parity with every Remotion scene
 component. See `skills/core/hyperframes.md` for what is in scope in Phase 1
@@ -81,6 +81,8 @@ class HyperFramesCompose(BaseTool):
         "hyperframes_render",
         "hyperframes_lint",
         "hyperframes_validate",
+        "hyperframes_inspect",
+        "hyperframes_snapshot",
         "hyperframes_doctor",
         "scaffold_workspace",
         "add_block",
@@ -109,6 +111,8 @@ class HyperFramesCompose(BaseTool):
                     "render",
                     "lint",
                     "validate",
+                    "inspect",
+                    "snapshot",
                     "doctor",
                     "scaffold_workspace",
                     "add_block",
@@ -117,6 +121,8 @@ class HyperFramesCompose(BaseTool):
                     "render: materialize workspace + lint + validate + render to MP4. "
                     "lint: run `hyperframes lint` on an existing workspace. "
                     "validate: run `hyperframes validate` (browser-based). "
+                    "inspect: run `hyperframes inspect` for layout overflow QA. "
+                    "snapshot: run `hyperframes snapshot` to capture keyframes. "
                     "doctor: run `hyperframes doctor` to check environment. "
                     "scaffold_workspace: materialize HTML/CSS/assets but do not render. "
                     "add_block: run `hyperframes add <name>` to install a registry "
@@ -195,6 +201,36 @@ class HyperFramesCompose(BaseTool):
                     "while iterating; forbidden for final delivery."
                 ),
             },
+            "samples": {
+                "type": "integer",
+                "default": 9,
+                "description": "Number of timeline samples for operation='inspect'.",
+            },
+            "timestamps": {
+                "type": "array",
+                "items": {"type": "number"},
+                "description": "Specific timestamps for inspect or snapshot operations.",
+            },
+            "overflow_tolerance_px": {
+                "type": "number",
+                "default": 2,
+                "description": "Allowed pixel overflow for operation='inspect'.",
+            },
+            "max_issues": {
+                "type": "integer",
+                "default": 80,
+                "description": "Maximum issues returned by operation='inspect'.",
+            },
+            "collapse_static": {
+                "type": "boolean",
+                "default": True,
+                "description": "Collapse repeated static inspect issues across samples.",
+            },
+            "snapshot_frames": {
+                "type": "integer",
+                "default": 5,
+                "description": "Number of evenly spaced keyframes for operation='snapshot'.",
+            },
         },
     }
 
@@ -208,6 +244,7 @@ class HyperFramesCompose(BaseTool):
         "writes HTML/CSS/JS files into workspace_path",
         "copies asset files into workspace_path/assets/",
         "writes MP4 to output_path",
+        "writes PNG screenshots in snapshot mode",
     ]
     user_visible_verification = [
         "Play the rendered MP4 and verify scene pacing, typography, and audio",
@@ -399,6 +436,10 @@ class HyperFramesCompose(BaseTool):
                 result = self._lint(inputs)
             elif operation == "validate":
                 result = self._validate(inputs)
+            elif operation == "inspect":
+                result = self._inspect(inputs)
+            elif operation == "snapshot":
+                result = self._snapshot(inputs)
             elif operation == "render":
                 result = self._render(inputs)
             elif operation == "add_block":
@@ -590,6 +631,78 @@ class HyperFramesCompose(BaseTool):
             success=ok,
             data=data,
             error=None if ok else f"hyperframes validate exit {proc.returncode}",
+        )
+
+    def _inspect(self, inputs: dict[str, Any]) -> ToolResult:
+        """Run HyperFrames layout inspection for overflow and container issues."""
+        workspace = self._require_workspace(inputs)
+        if not (workspace / "index.html").exists():
+            return ToolResult(
+                success=False,
+                error=f"No index.html in {workspace}. Run scaffold_workspace first.",
+            )
+        args = [
+            "inspect",
+            "--json",
+            f"--samples={int(inputs.get('samples', 9))}",
+            f"--tolerance={inputs.get('overflow_tolerance_px', 2)}",
+            f"--timeout={int(inputs.get('timeout_ms', 5000))}",
+            f"--max-issues={int(inputs.get('max_issues', 80))}",
+        ]
+        timestamps = self._timestamp_arg(inputs.get("timestamps"))
+        if timestamps:
+            args.extend(["--at", timestamps])
+        if inputs.get("collapse_static", True) is False:
+            args.append("--no-collapse-static")
+        if inputs.get("strict"):
+            args.append("--strict")
+
+        proc = self._run_hf(args, cwd=workspace, timeout=300, check=False)
+        data = self._command_result_data(proc)
+        data["operation"] = "inspect"
+        ok = proc.returncode == 0
+        return ToolResult(
+            success=ok,
+            data=data,
+            error=None if ok else f"hyperframes inspect exit {proc.returncode}",
+        )
+
+    def _snapshot(self, inputs: dict[str, Any]) -> ToolResult:
+        """Capture keyframes from a HyperFrames workspace for visual QA."""
+        workspace = self._require_workspace(inputs)
+        if not (workspace / "index.html").exists():
+            return ToolResult(
+                success=False,
+                error=f"No index.html in {workspace}. Run scaffold_workspace first.",
+            )
+        before = self._png_files(workspace)
+        args = [
+            "snapshot",
+            f"--frames={int(inputs.get('snapshot_frames', 5))}",
+            f"--timeout={int(inputs.get('timeout_ms', 5000))}",
+        ]
+        timestamps = self._timestamp_arg(inputs.get("timestamps"))
+        if timestamps:
+            args.extend(["--at", timestamps])
+
+        proc = self._run_hf(args, cwd=workspace, timeout=300, check=False)
+        data = self._command_result_data(proc)
+        after = self._png_files(workspace)
+        new_files = [str(path) for path in after if path not in before]
+        data.update(
+            {
+                "operation": "snapshot",
+                "workspace": str(workspace),
+                "snapshot_count": len(new_files),
+                "snapshots": new_files,
+            }
+        )
+        ok = proc.returncode == 0
+        return ToolResult(
+            success=ok,
+            data=data,
+            artifacts=new_files,
+            error=None if ok else f"hyperframes snapshot exit {proc.returncode}",
         )
 
     def _add_block(self, inputs: dict[str, Any]) -> ToolResult:
@@ -1167,6 +1280,32 @@ class HyperFramesCompose(BaseTool):
             return json.loads(stdout[start : end + 1])
         except json.JSONDecodeError:
             return None
+
+    def _command_result_data(self, proc: subprocess.CompletedProcess) -> dict[str, Any]:
+        data: dict[str, Any] = {"exit_code": proc.returncode}
+        payload = self._parse_json_output(proc.stdout)
+        if payload is not None:
+            data["report"] = payload
+        else:
+            data["stdout_tail"] = (proc.stdout or "")[-4000:]
+        data["stderr_tail"] = (proc.stderr or "")[-2000:]
+        return data
+
+    @staticmethod
+    def _timestamp_arg(raw: Any) -> str:
+        if not raw:
+            return ""
+        if isinstance(raw, str):
+            return raw
+        if isinstance(raw, (int, float)):
+            return str(raw)
+        if isinstance(raw, list):
+            return ",".join(str(float(item)).rstrip("0").rstrip(".") for item in raw)
+        return ""
+
+    @staticmethod
+    def _png_files(workspace: Path) -> set[Path]:
+        return {path.resolve() for path in workspace.rglob("*.png") if path.is_file()}
 
     @staticmethod
     def _f(v: float) -> str:

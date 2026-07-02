@@ -353,6 +353,81 @@ def test_hyperframes_render_requires_workspace():
     assert ("workspace" in err) or ("runtime" in err) or ("hyperframes" in err)
 
 
+def test_hyperframes_inspect_invokes_cli_with_layout_options(monkeypatch, tmp_path):
+    workspace = tmp_path / "hyperframes"
+    workspace.mkdir()
+    (workspace / "index.html").write_text("<html></html>", encoding="utf-8")
+    calls = []
+
+    def fake_run_hf(self, args, *, cwd, timeout, check):
+        calls.append({"args": args, "cwd": cwd, "timeout": timeout, "check": check})
+        return __import__("subprocess").CompletedProcess(
+            args=args,
+            returncode=0,
+            stdout=json.dumps({"ok": True, "issues": []}),
+            stderr="",
+        )
+
+    monkeypatch.setattr(HyperFramesCompose, "_run_hf", fake_run_hf)
+    result = HyperFramesCompose().execute(
+        {
+            "operation": "inspect",
+            "workspace_path": str(workspace),
+            "samples": 4,
+            "timestamps": [1.5, 3],
+            "overflow_tolerance_px": 3,
+            "max_issues": 12,
+            "collapse_static": False,
+            "strict": True,
+        }
+    )
+
+    assert result.success
+    assert result.data["report"]["ok"] is True
+    args = calls[0]["args"]
+    assert args[:2] == ["inspect", "--json"]
+    assert "--samples=4" in args
+    assert "--tolerance=3" in args
+    assert "--max-issues=12" in args
+    assert "--no-collapse-static" in args
+    assert "--strict" in args
+    assert "--at" in args
+    assert args[args.index("--at") + 1] == "1.5,3"
+
+
+def test_hyperframes_snapshot_collects_new_png_artifacts(monkeypatch, tmp_path):
+    workspace = tmp_path / "hyperframes"
+    workspace.mkdir()
+    (workspace / "index.html").write_text("<html></html>", encoding="utf-8")
+    before = workspace / "existing.png"
+    before.write_bytes(b"before")
+
+    def fake_run_hf(self, args, *, cwd, timeout, check):
+        (workspace / "snapshots").mkdir(exist_ok=True)
+        (workspace / "snapshots" / "frame-0001.png").write_bytes(b"after")
+        return __import__("subprocess").CompletedProcess(
+            args=args,
+            returncode=0,
+            stdout="Captured 1 frame",
+            stderr="",
+        )
+
+    monkeypatch.setattr(HyperFramesCompose, "_run_hf", fake_run_hf)
+    result = HyperFramesCompose().execute(
+        {
+            "operation": "snapshot",
+            "workspace_path": str(workspace),
+            "snapshot_frames": 1,
+            "timestamps": [2],
+        }
+    )
+
+    assert result.success
+    assert result.data["snapshot_count"] == 1
+    assert result.artifacts == result.data["snapshots"]
+    assert result.artifacts[0].endswith("frame-0001.png")
+
+
 # ------------------------------------------------------------------
 # video_compose runtime routing
 # ------------------------------------------------------------------

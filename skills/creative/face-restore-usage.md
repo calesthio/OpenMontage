@@ -1,4 +1,4 @@
-# Face Restoration Usage for OpenMontage
+# Face Restoration Usage for Balamonis Studio
 
 > Sources: CodeFormer paper (Zhou et al. 2022), GFPGAN documentation, Real-ESRGAN upsampling docs,
 > existing Layer 2 skill at `skills/creative/enhancement-strategy.md`
@@ -83,7 +83,7 @@ Before accepting face_restore output, verify:
 - [ ] Skin texture looks natural, not plastic/over-smoothed
 - [ ] Consistent across frames (for video) — no flickering between restored/unrestored quality
 
-## Applying to OpenMontage
+## Applying to Balamonis Studio
 
 When using the `face_restore` tool:
 

@@ -1,6 +1,6 @@
-# Lip Sync Usage for OpenMontage
+# Lip Sync Usage for Balamonis Studio
 
-> Sources: Wav2Lip paper (Prajwal et al. 2020), Wav2Lip-GAN documentation, OpenMontage
+> Sources: Wav2Lip paper (Prajwal et al. 2020), Wav2Lip-GAN documentation, Balamonis Studio
 > `tools/lip_sync.py` implementation
 
 ## Quick Reference Card
@@ -120,7 +120,7 @@ Before moving to the compose stage, verify each lip_sync output:
 - [ ] **No temporal flickering between frames** -- smooth frame-to-frame transitions
 - [ ] **Audio-visual sync is tight** -- no perceptible delay between mouth movement and sound
 
-## Applying to OpenMontage
+## Applying to Balamonis Studio
 
 When using the `lip_sync` tool in post-production:
 

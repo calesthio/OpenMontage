@@ -14,7 +14,7 @@ need so that what you build is correct, and distinct.
 
 ## When to use this skill (authoring mode is a proposal decision)
 
-OpenMontage separates three orthogonal axes, all locked at proposal:
+Balamonis Studio separates three orthogonal axes, all locked at proposal:
 
 - `renderer_family` — creative grammar
 - `render_runtime` — technical engine (remotion / hyperframes / ffmpeg)

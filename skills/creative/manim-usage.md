@@ -1,4 +1,4 @@
-# ManimCE Usage for OpenMontage
+# ManimCE Usage for Balamonis Studio
 
 > Sources: ManimCE documentation, 3Blue1Brown FAQ/conventions, Theorem of Beethoven tutorials,
 > existing Layer 3 skill at `.agents/skills/manimce-best-practices/`
@@ -16,7 +16,7 @@ WAIT AFTER:       1.0-2.0s (longer for complex equations)
 2D vs 3D:         Default to 2D. 3D only when spatial relationship IS the concept.
 ```
 
-## Render Settings for OpenMontage
+## Render Settings for Balamonis Studio
 
 | Flag | Resolution | FPS | Use Case |
 |------|-----------|-----|----------|
@@ -26,7 +26,7 @@ WAIT AFTER:       1.0-2.0s (longer for complex equations)
 | `-qp` | 2560x1440 | 60 | High-quality export |
 | `-qk` | 3840x2160 | 60 | 4K archival/premium |
 
-For OpenMontage's YouTube landscape profile (1920x1080/30fps), render at `-qh` and transcode to 30fps, or set custom config:
+For Balamonis Studio's YouTube landscape profile (1920x1080/30fps), render at `-qh` and transcode to 30fps, or set custom config:
 
 ```ini
 [CLI]
@@ -87,7 +87,7 @@ frame_rate = 30
 
 **Background:** Always use dark backgrounds (`BLACK` or `#1a1a2e`) for video output.
 
-## Applying to OpenMontage
+## Applying to Balamonis Studio
 
 When using the `math_animate` tool:
 

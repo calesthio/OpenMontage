@@ -760,7 +760,7 @@ class VideoCompose(BaseTool):
 
         # Remotion's bundler resolves `remotion` and friends by walking up from the
         # entry file to find node_modules — so the entry must live under
-        # remotion-composer/ at render time. But OpenMontage's project convention is
+        # remotion-composer/ at render time. But Balamonis Studio's project convention is
         # repo-root projects/<slug>/, where artifacts/assets/renders/ already live.
         # Resolution: keep the source of truth under projects/<slug>/ and auto-stage
         # a directory junction (Windows) / symlink (Unix) at

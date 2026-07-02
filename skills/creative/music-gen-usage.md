@@ -1,4 +1,4 @@
-# Music Generation Usage for OpenMontage
+# Music Generation Usage for Balamonis Studio
 
 > Sources: ElevenLabs Music API documentation, ElevenLabs best practices guide, Artlist BPM
 > guide, existing Layer 3 skills at `.agents/skills/music/` and `.agents/skills/elevenlabs/`
@@ -120,7 +120,7 @@ For cleaner ducking control, generate isolated stems:
 - `"soft ambient pad in C major, 80 BPM"` — synth pad only
 - Layer stems in FFmpeg during composition for precise ducking control
 
-## Applying to OpenMontage
+## Applying to Balamonis Studio
 
 When using the `music_gen` tool:
 

@@ -1,0 +1,4 @@
+# Intentionally empty: the Vercel landing-page function (api/index.py) uses
+# only the Python standard library. This scoped file keeps Vercel from
+# installing the full Balamonis Studio toolkit (numpy, pydantic, Pillow, …),
+# which the deployment does not need.

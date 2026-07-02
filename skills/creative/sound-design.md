@@ -127,7 +127,7 @@ TARGET LUFS:    -14 LUFS (YouTube/TikTok/IG) | -16 LUFS (podcasts)
 - Cut 2-4 kHz on the music bed to clear the "intelligibility band" for voice
 - Always test on phone speakers — if voice disappears, boost 2-4 kHz more aggressively
 
-## Applying to OpenMontage
+## Applying to Balamonis Studio
 
 When the **audio_mixer** tool is used in the compose stage:
 

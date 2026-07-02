@@ -1,4 +1,4 @@
-# Talking Head Generation Usage for OpenMontage
+# Talking Head Generation Usage for Balamonis Studio
 
 > Sources: SadTalker paper (Zhang et al. 2023), MuseTalk documentation, existing Layer 2 skills
 > at `skills/creative/face-restore-usage.md` and `skills/creative/enhancement-strategy.md`
@@ -123,7 +123,7 @@ Before accepting talking_head output, verify:
 - [ ] Output resolution is acceptable for the target platform
 - [ ] Expression intensity matches the tone of the narration
 
-## Applying to OpenMontage
+## Applying to Balamonis Studio
 
 When using the `talking_head` tool:
 

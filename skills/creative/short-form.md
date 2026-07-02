@@ -190,7 +190,7 @@ MAX SIZE:    500 MB (desktop), 287.6 MB (iOS), 72 MB (Android)
 [55-60s] CTA + LOOP: End connects back to start for replay
 ```
 
-## Applying to OpenMontage
+## Applying to Balamonis Studio
 
 When building short-form content:
 

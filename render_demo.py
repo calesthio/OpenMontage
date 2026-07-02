@@ -110,7 +110,7 @@ def render_demo(name: str, props_path: Path, npx_cmd: str) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Render zero-key OpenMontage demo videos from checked-in Remotion props."
+        description="Render zero-key Balamonis Studio demo videos from checked-in Remotion props."
     )
     parser.add_argument("demo", nargs="?", help="Render one named demo instead of all demos.")
     parser.add_argument("--list", action="store_true", help="List available demo fixtures and exit.")

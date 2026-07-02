@@ -5,7 +5,7 @@ import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } fr
  *
  * Each "step" is either:
  *   { kind: "cmd", text: "git clone ...", typeSpeed?: number }  — typed char-by-char with prompt
- *   { kind: "out", text: "cloning into 'OpenMontage'..." }       — reveals instantly
+ *   { kind: "out", text: "cloning into 'Balamonis Studio'..." }       — reveals instantly
  *   { kind: "pause", seconds: number }                            — silent dwell
  *   { kind: "pill", text: "Piper TTS installed", color?: string } — floating badge
  *

@@ -39,7 +39,7 @@ When listing multiple subjects or events:
 
 Prior work (CMU/Harvard, "Building a Precise Video Language with Human-AI Oversight") shows VLMs reliably describe subject + scene but fail on motion, spatial, and camera. **Forcing prompts to fill all five slots is the highest-leverage change.**
 
-The OpenMontage canonical 5-aspect skeleton:
+The Balamonis Studio canonical 5-aspect skeleton:
 
 ```
 [Subject]        type + key visual attributes + how to disambiguate when multiple

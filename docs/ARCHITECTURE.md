@@ -1,8 +1,8 @@
-# OpenMontage Architecture
+# Balamonis Studio Architecture
 
 > Last updated: 2026-03-28 | Derived from code exploration, not prior documentation.
 
-OpenMontage is an **agent-orchestrated video production platform**. An LLM coding assistant (Claude Code, Cursor, Copilot, etc.) acts as the orchestrator — reading pipeline manifests, following skill instructions, calling Python tools, and checkpointing state. There is no runtime Python orchestrator; the agent _is_ the control plane.
+Balamonis Studio is an **agent-orchestrated video production platform**. An LLM coding assistant (Claude Code, Cursor, Copilot, etc.) acts as the orchestrator — reading pipeline manifests, following skill instructions, calling Python tools, and checkpointing state. There is no runtime Python orchestrator; the agent _is_ the control plane.
 
 ---
 
@@ -61,7 +61,7 @@ OpenMontage/
 │   ├── styles/             # Style playbook schema
 │   └── tools/              # Tool-specific schemas
 │
-├── skills/                 # Layer 2: OpenMontage-specific agent instructions
+├── skills/                 # Layer 2: Balamonis Studio-specific agent instructions
 │   ├── core/               # FFmpeg, Remotion, WhisperX, color grading skills
 │   ├── creative/           # Video editing, enhancement, data viz, prompt engineering
 │   ├── meta/               # reviewer, checkpoint-protocol, skill-creator
@@ -91,7 +91,7 @@ Python provides **tools and persistence only**. All intelligence lives in skill 
 
 ### 2. No LLM API Key in Runtime
 
-OpenMontage does not call LLM APIs at runtime. The coding assistant running in the user's IDE _is_ the LLM. Tools that need generation (images, video, TTS) call domain-specific APIs directly (ElevenLabs, fal.ai, HeyGen, etc.), not general-purpose LLM endpoints.
+Balamonis Studio does not call LLM APIs at runtime. The coding assistant running in the user's IDE _is_ the LLM. Tools that need generation (images, video, TTS) call domain-specific APIs directly (ElevenLabs, fal.ai, HeyGen, etc.), not general-purpose LLM endpoints.
 
 ### 3. Dual-Provider Support
 
@@ -325,7 +325,7 @@ Layer 3: .agents/skills/          External technology knowledge (47 skills)
               ^
               | agent_skills[] references
               |
-Layer 2: skills/                  OpenMontage conventions
+Layer 2: skills/                  Balamonis Studio conventions
          "How this project uses the tech"  Pipeline integration, quality checklists, artifact mappings
               ^
               | stage skill references
@@ -431,7 +431,7 @@ Each profile specifies codec, audio codec, CRF, pixel format, max file size, max
 
 ## Composition Runtimes
 
-OpenMontage has a multi-runtime composition layer. Three engines live behind `video_compose`, chosen at proposal and locked in `edit_decisions.render_runtime`:
+Balamonis Studio has a multi-runtime composition layer. Three engines live behind `video_compose`, chosen at proposal and locked in `edit_decisions.render_runtime`:
 
 ### Remotion (React-based)
 

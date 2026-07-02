@@ -74,7 +74,7 @@ the jacket from <IMAGE_2>. Soft studio lighting, premium fashion campaign, confi
 - Combining too many style labels with too little scene information.
 - Using vague edit prompts like "make it better" instead of naming the change.
 
-## OpenMontage Guidance
+## Balamonis Studio Guidance
 
 - For image edits or compositing, prefer `grok_image` over the selector's default workhorse tools.
 - For reference-conditioned video, prefer `grok_video` when the brief depends on carrying people, clothing, or products from input images into motion.

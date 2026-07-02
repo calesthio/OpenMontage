@@ -1,4 +1,4 @@
-# GSAP Skills in OpenMontage
+# GSAP Skills in Balamonis Studio
 
 > **Scope:** This directory has no `SKILL.md` — it is **not** a loadable skill. This file is a navigation map for the eight loadable `gsap-*` skills that live in sibling directories (`gsap-core`, `gsap-timeline`, …). Read it to find the right `gsap-*` skill; the agent loads those, not this README.
 
@@ -6,10 +6,10 @@ Eight Layer 3 skills teaching the agent correct GSAP (GreenSock Animation Platfo
 
 ## Why GSAP is in this repo
 
-OpenMontage doesn't use GSAP directly today — Remotion compositions are driven by `useCurrentFrame()` + `interpolate()` + `spring()`. GSAP becomes relevant in two concrete scenarios:
+Balamonis Studio doesn't use GSAP directly today — Remotion compositions are driven by `useCurrentFrame()` + `interpolate()` + `spring()`. GSAP becomes relevant in two concrete scenarios:
 
 1. **Advanced text / SVG / motion-path animation inside a Remotion component.** GSAP's plugin family (SplitText, MorphSVG, DrawSVG, MotionPath, CustomEase) solves problems that are painful to hand-roll with primitive `interpolate()` calls. When you need per-character reveals, curved camera paths over SVG, or morphing between two arbitrary shapes — reach for GSAP.
-2. **HyperFrames composition.** HyperFrames is a production composition runtime in OpenMontage (rendered via `hyperframes_compose`; see `skills/core/hyperframes.md` and `AGENT_GUIDE.md`). GSAP is its native animation runtime via the Frame Adapter pattern — timelines are paused and registered on `window.__timelines`, and the engine seeks them frame-by-frame. GSAP timeline authoring is a day-1 skill for HyperFrames scenes.
+2. **HyperFrames composition.** HyperFrames is a production composition runtime in Balamonis Studio (rendered via `hyperframes_compose`; see `skills/core/hyperframes.md` and `AGENT_GUIDE.md`). GSAP is its native animation runtime via the Frame Adapter pattern — timelines are paused and registered on `window.__timelines`, and the engine seeks them frame-by-frame. GSAP timeline authoring is a day-1 skill for HyperFrames scenes.
 
 ## When to read which
 

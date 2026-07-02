@@ -84,7 +84,7 @@ Walter Murch's editing priorities (in order of importance):
 5. **2D plane** — screen geography (180-degree rule)
 6. **3D space** — spatial continuity
 
-For OpenMontage explainers using cinematic style: prioritize rhythm and story over spatial concerns (since we're often cutting between generated images, not continuous footage).
+For Balamonis Studio explainers using cinematic style: prioritize rhythm and story over spatial concerns (since we're often cutting between generated images, not continuous footage).
 
 ## Audio Layering
 
@@ -130,7 +130,7 @@ Add a subtle ambient layer to fill silence and create depth:
 - Consistency across all clips — one LUT/profile for the entire video
 - **If a beat is described as "moody," rewrite as the lighting + grade + shot-duration combination that produces moodiness.** Don't pass mood adjectives to the asset/edit stages.
 
-## Applying to OpenMontage
+## Applying to Balamonis Studio
 
 When building cinematic-style content:
 

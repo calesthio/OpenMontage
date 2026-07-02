@@ -80,7 +80,7 @@ Present a **short, friendly capability summary**. Do NOT dump the raw provider m
 
 ---
 
-**Welcome to OpenMontage!** I'm your video production agent. Here's what I can do with your current setup:
+**Welcome to Balamonis Studio!** I'm your video production agent. Here's what I can do with your current setup:
 
 **Ready to go:**
 - [List 2-4 key capabilities in plain language, e.g., "Generate narration with free offline TTS (Piper)", "Create animated videos with spring transitions, captions, and charts (Remotion)", "Stock footage and images from Pexels"]

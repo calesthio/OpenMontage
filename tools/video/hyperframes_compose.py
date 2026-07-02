@@ -1000,7 +1000,7 @@ class HyperFramesCompose(BaseTool):
       {vars_css}
     }}
     body {{ margin: 0; background: var(--color-bg); color: var(--color-fg); font-family: var(--font-body); }}
-    [data-composition-id="root"] {{
+    #root {{
       position: relative;
       width: {width}px;
       height: {height}px;
@@ -1015,7 +1015,7 @@ class HyperFramesCompose(BaseTool):
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
 </head>
 <body>
-  <div data-composition-id="root" data-start="0" data-duration="{self._f(total_duration)}" data-width="{width}" data-height="{height}">
+  <div id="root" data-composition-id="root" data-start="0" data-duration="{self._f(total_duration)}" data-width="{width}" data-height="{height}">
     {"".join(clip_html)}
     {"".join(audio_html)}
     <script>

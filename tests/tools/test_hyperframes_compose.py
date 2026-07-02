@@ -539,6 +539,40 @@ def test_runtime_swap_detected_stays_false_when_proposal_matches(tmp_path):
     assert "ok" in pp["runtime_swap_check"]
 
 
+def test_final_review_does_not_mark_music_only_audio_as_narration(tmp_path):
+    import subprocess
+
+    mp4 = tmp_path / "music_only.mp4"
+    subprocess.run(
+        [
+            "ffmpeg", "-y",
+            "-f", "lavfi", "-i", "color=c=blue:s=320x240:d=2",
+            "-f", "lavfi", "-i", "sine=frequency=440:duration=2",
+            "-c:v", "libx264", "-pix_fmt", "yuv420p",
+            "-c:a", "aac",
+            "-shortest", str(mp4),
+        ],
+        capture_output=True, check=True, timeout=30,
+    )
+
+    review = VideoCompose()._run_final_review(
+        mp4,
+        edit_decisions={
+            "version": "1.0",
+            "render_runtime": "remotion",
+            "renderer_family": "animation-first",
+            "cuts": [{"id": "c1", "source": "x", "in_seconds": 0, "out_seconds": 2}],
+            "audio": {
+                "music": {"asset_id": "music_1", "volume": 1.0},
+            },
+        },
+    )
+
+    audio = review["checks"]["audio_spotcheck"]
+    assert audio["music_present"] is True
+    assert audio["narration_present"] is False
+
+
 def test_both_runtimes_visible_in_render_engines_when_available():
     """Regression for the 'silently picks Remotion' failure mode.
 

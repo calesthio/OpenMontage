@@ -93,10 +93,13 @@ class GoogleTTS(BaseTool):
                 "default": "en-US-Chirp3-HD-Orus",
                 "description": "Voice name. Default tier is Chirp 3 HD (2024, most natural). Examples: en-US-Chirp3-HD-Orus (male, rich/cinematic), en-US-Chirp3-HD-Aoede (female, warm). Legacy tiers: en-US-Studio-O, en-US-Neural2-D, en-US-Journey-D.",
             },
+            "voice_id": {
+                "type": "string",
+                "description": "Alias for 'voice' — accepted so tts_selector's provider-agnostic voice_id passes through. 'voice' wins when both are set.",
+            },
             "language_code": {
                 "type": "string",
-                "default": "en-US",
-                "description": "BCP-47 language code (e.g. en-US, es-ES, ja-JP, fr-FR)",
+                "description": "BCP-47 language code (e.g. en-US, es-ES, ja-JP, fr-FR). Defaults to the locale prefix of the voice name (e.g. ja-JP for ja-JP-Chirp3-HD-Kore), falling back to en-US.",
             },
             "speaking_rate": {
                 "type": "number",
@@ -132,6 +135,7 @@ class GoogleTTS(BaseTool):
         "text",
         "input_type",
         "voice",
+        "voice_id",
         "language_code",
         "speaking_rate",
         "pitch",
@@ -165,10 +169,18 @@ class GoogleTTS(BaseTool):
         """Check if voice requires the v1beta1 endpoint."""
         return any(prefix in voice for prefix in self._BETA_VOICE_PREFIXES)
 
+    @staticmethod
+    def _locale_from_voice(voice_name: str) -> str:
+        """Derive the BCP-47 locale from a voice name like ja-JP-Chirp3-HD-Kore."""
+        import re
+
+        match = re.match(r"^([a-z]{2,3}-[A-Z]{2})-", voice_name)
+        return match.group(1) if match else "en-US"
+
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         text = inputs.get("text", "")
         char_count = len(text)
-        voice = inputs.get("voice", "en-US-Chirp3-HD-Orus")
+        voice = inputs.get("voice") or inputs.get("voice_id") or "en-US-Chirp3-HD-Orus"
         # Pricing per million characters (approximate)
         if "Chirp3-HD" in voice:
             rate_per_char = 0.000030  # $30/1M chars
@@ -220,8 +232,8 @@ class GoogleTTS(BaseTool):
 
         text = inputs["text"]
         input_type = inputs.get("input_type", "text")
-        voice_name = inputs.get("voice", "en-US-Chirp3-HD-Orus")
-        language_code = inputs.get("language_code", "en-US")
+        voice_name = inputs.get("voice") or inputs.get("voice_id") or "en-US-Chirp3-HD-Orus"
+        language_code = inputs.get("language_code") or self._locale_from_voice(voice_name)
         speaking_rate = inputs.get("speaking_rate", 1.0)
         pitch = inputs.get("pitch", 0.0)
         audio_encoding = inputs.get("audio_encoding", "MP3")

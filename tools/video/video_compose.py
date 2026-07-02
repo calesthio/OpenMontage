@@ -1674,15 +1674,62 @@ class VideoCompose(BaseTool):
         # Deep-copy props so we don't mutate the original
         props = json.loads(json.dumps(composition_data))
 
-        # Convert absolute file paths to file:// URIs for Remotion's
-        # Img and OffthreadVideo components
+        # Stage local asset files into the composer's public/ directory and
+        # reference them via staticFile-relative paths. Remotion's renderer only
+        # downloads http(s) URLs or files served from public/ — file:// URIs are
+        # rejected at render time — so local images, video, narration, and music
+        # must be copied under public/ for both cuts and audio layers to resolve.
+        import hashlib
+
+        composer_dir = Path(__file__).resolve().parent.parent.parent / "remotion-composer"
+        staged_dir = composer_dir / "public" / "_om_assets"
+
+        def _stage_asset(value: str) -> str:
+            if not value or value.startswith(("http://", "https://", "data:")):
+                return value
+            local = Path(value.replace("file://", "", 1)).expanduser()
+            if not local.exists():
+                return value
+            staged_dir.mkdir(parents=True, exist_ok=True)
+            digest = hashlib.md5(str(local.resolve()).encode()).hexdigest()[:12]
+            dest_name = f"{digest}{local.suffix}"
+            dest = staged_dir / dest_name
+            # Refresh the staged copy when the source changes. The filename keys
+            # on the source path, so a regenerated asset written to the same path
+            # would otherwise leave the previous render's bytes in place and be
+            # served stale. copy2 preserves mtime, so size+mtime identify a match.
+            src_stat = local.stat()
+            if (
+                not dest.exists()
+                or dest.stat().st_size != src_stat.st_size
+                or dest.stat().st_mtime_ns != src_stat.st_mtime_ns
+            ):
+                shutil.copy2(local, dest)
+            return f"_om_assets/{dest_name}"  # resolved by staticFile() in the composer
+
+        def _stage_audio_layer(container: dict, key: str) -> None:
+            entry = container.get(key)
+            if isinstance(entry, dict) and entry.get("src"):
+                entry["src"] = _stage_asset(entry["src"])
+
+        # Explainer-style visual cuts and Cinematic-style scenes both carry a
+        # local source path that must be staged under public/.
         for cut in props.get("cuts", []):
-            source = cut.get("source", "")
-            if source and not source.startswith(("http://", "https://", "file://")):
-                resolved = Path(source).resolve()
-                if resolved.exists():
-                    posix = resolved.as_posix()
-                    cut["source"] = f"file:///{posix}" if not posix.startswith("/") else f"file://{posix}"
+            if isinstance(cut, dict) and cut.get("source"):
+                cut["source"] = _stage_asset(cut["source"])
+        for scene in props.get("scenes", []):
+            if isinstance(scene, dict) and scene.get("src"):
+                scene["src"] = _stage_asset(scene["src"])
+
+        # Audio layers differ by composition:
+        #   Explainer     → audio.narration.src, audio.music.src (nested)
+        #   Cinematic     → soundtrack.src, music.src (top-level)
+        audio = props.get("audio")
+        if isinstance(audio, dict):
+            for layer in ("narration", "music"):
+                _stage_audio_layer(audio, layer)
+        for layer in ("soundtrack", "music"):
+            _stage_audio_layer(props, layer)
 
         # Build a custom themeConfig from the playbook's actual colors.
         # This ensures every video gets a unique visual identity derived

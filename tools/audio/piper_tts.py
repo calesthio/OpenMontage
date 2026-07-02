@@ -37,10 +37,11 @@ class PiperTTS(BaseTool):
     install_instructions = (
         "Install Piper TTS:\n"
         "  pip install piper-tts\n"
-        "Or download from https://github.com/rhasspy/piper/releases\n"
-        "Then download a voice model:\n"
-        "  piper --download-dir ~/.piper/models --model en_US-lessac-medium"
+        "Then download at least one voice model (required — Piper ships none):\n"
+        "  python -m piper.download_voices en_US-lessac-medium\n"
+        "The model resolves from the current directory or PIPER_VOICE_DIR."
     )
+    default_voice = "en_US-lessac-medium"
     agent_skills = ["text-to-speech"]
 
     capabilities = [
@@ -95,21 +96,76 @@ class PiperTTS(BaseTool):
     side_effects = ["writes audio file to output_path"]
     user_visible_verification = ["Listen to generated audio for intelligibility"]
 
-    def get_status(self) -> ToolStatus:
-        if shutil.which("piper"):
-            return ToolStatus.AVAILABLE
+    @staticmethod
+    def _voice_search_dirs() -> list[Path]:
+        import os
+
+        dirs = [Path.cwd()]
+        env_dir = os.environ.get("PIPER_VOICE_DIR")
+        if env_dir:
+            dirs.append(Path(env_dir).expanduser())
+        dirs += [Path.home() / ".local/share/piper", Path.home() / ".piper/models"]
+        return dirs
+
+    @staticmethod
+    def _piper_installed() -> bool:
+        if shutil.which("piper") is not None:
+            return True
         try:
             import piper  # noqa: F401
-            return ToolStatus.AVAILABLE
+            return True
         except ImportError:
+            return False
+
+    def _find_voice(self, name: str) -> Path | None:
+        """Locate a Piper voice model (.onnx + .onnx.json) by name or path.
+
+        Accepts a direct path to an .onnx file or a bare model name resolved
+        against the voice search dirs. Returns the .onnx path if found.
+        """
+        direct = Path(name).expanduser()
+        if direct.suffix == ".onnx" and direct.is_file():
+            return direct
+        for d in self._voice_search_dirs():
+            if d.is_dir():
+                cand = d / f"{name}.onnx"
+                if cand.is_file() and cand.with_suffix(".onnx.json").is_file():
+                    return cand
+        return None
+
+    def get_status(self) -> ToolStatus:
+        if not self._piper_installed():
             return ToolStatus.UNAVAILABLE
+        # Installed, but preflight is only truthful if the default voice — the
+        # one execute() uses when no model is specified — is actually present.
+        # Report DEGRADED when it is missing so preflight doesn't claim TTS is
+        # ready when the default execute path will fail. Callers may still run
+        # execute() with an explicitly-provided voice that is installed.
+        return (
+            ToolStatus.AVAILABLE
+            if self._find_voice(self.default_voice)
+            else ToolStatus.DEGRADED
+        )
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         return 0.0
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
-        if self.get_status() != ToolStatus.AVAILABLE:
-            return ToolResult(success=False, error="Piper TTS not available. " + self.install_instructions)
+        if not self._piper_installed():
+            return ToolResult(success=False, error="Piper TTS not installed. " + self.install_instructions)
+        # Gate on the specific voice this call will use, not the coarse status —
+        # a caller may request an installed voice even when the default is absent.
+        model = inputs.get("model", self.default_voice)
+        if self._find_voice(model) is None:
+            searched = ", ".join(str(d) for d in self._voice_search_dirs())
+            return ToolResult(
+                success=False,
+                error=(
+                    f"Piper is installed but voice model '{model}' was not found "
+                    f"(searched: {searched}). Download it:\n"
+                    f"  python -m piper.download_voices {model}"
+                ),
+            )
 
         start = time.time()
         try:
@@ -127,7 +183,7 @@ class PiperTTS(BaseTool):
         proc = subprocess.run(
             [
                 "piper",
-                "--model", inputs.get("model", "en_US-lessac-medium"),
+                "--model", inputs.get("model", self.default_voice),
                 "--speaker", str(inputs.get("speaker_id", 0)),
                 "--length-scale", str(inputs.get("length_scale", 1.0)),
                 "--sentence-silence", str(inputs.get("sentence_silence", 0.3)),
@@ -148,12 +204,12 @@ class PiperTTS(BaseTool):
             success=True,
             data={
                 "provider": self.provider,
-                "model": inputs.get("model", "en_US-lessac-medium"),
+                "model": inputs.get("model", self.default_voice),
                 "speaker_id": inputs.get("speaker_id", 0),
                 "text_length": len(inputs["text"]),
                 "output": str(output_path),
                 "format": "wav",
             },
             artifacts=[str(output_path)],
-            model=inputs.get("model", "en_US-lessac-medium"),
+            model=inputs.get("model", self.default_voice),
         )

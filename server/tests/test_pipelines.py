@@ -1,0 +1,114 @@
+"""Dynamic pipeline resolution + the /pipelines catalogue endpoint."""
+
+from __future__ import annotations
+
+from fastapi.testclient import TestClient
+
+from app import main
+from app.runner.stage_runner import _resolve_stages, CINEMATIC_STAGES, PIPELINE_MAP
+
+
+client = TestClient(main.app)
+
+
+def test_override_wins_over_manifest():
+    # cinematic/marketing_film are explicit overrides → the hardcoded stages
+    names = [s["name"] for s in _resolve_stages("cinematic")]
+    assert names == [s["name"] for s in CINEMATIC_STAGES]
+    assert _resolve_stages("marketing_film") is PIPELINE_MAP["marketing_film"]
+
+
+def test_dynamic_manifest_load():
+    stages = _resolve_stages("animated-explainer")
+    names = [s["name"] for s in stages]
+    assert "research" in names and "compose" in names
+    # skill paths are normalized to skills/....md
+    assert all(s["skill"].startswith("skills/") and s["skill"].endswith(".md")
+               for s in stages if s["skill"])
+    # manifest-declared approval gates survive
+    assert any(s["approval"] for s in stages)
+
+
+def test_unknown_pipeline_falls_back_to_cinematic():
+    names = [s["name"] for s in _resolve_stages("no-such-pipeline-xyz")]
+    assert names == [s["name"] for s in CINEMATIC_STAGES]
+
+
+def test_pipelines_list_endpoint():
+    r = client.get("/pipelines")
+    assert r.status_code == 200
+    pipes = r.json()["pipelines"]
+    assert len(pipes) >= 5
+    names = {p["name"] for p in pipes}
+    assert "cinematic" in names and "animated-explainer" in names
+    sample = next(p for p in pipes if p["name"] == "cinematic")
+    for key in ("description", "category", "stability", "stages", "approval_stages"):
+        assert key in sample
+    assert isinstance(sample["stages"], list) and sample["stages"]
+
+
+def test_all_manifests_listed_even_with_schema_drift():
+    # screen-demo / documentary-montage fail strict schema validation; the
+    # lenient loader must still surface them (previously silently dropped, and
+    # selecting them fell back to cinematic).
+    from app.pipeline_catalog import list_manifest_names
+    listed = {p["name"] for p in client.get("/pipelines").json()["pipelines"]}
+    assert listed == set(list_manifest_names())
+    assert {"screen-demo", "documentary-montage"} <= listed
+
+
+def test_drifted_pipeline_resolves_own_stages():
+    sd = [s["name"] for s in _resolve_stages("screen-demo")]
+    assert sd and sd != [s["name"] for s in CINEMATIC_STAGES]
+
+
+def test_pipeline_detail_endpoint_and_404():
+    ok = client.get("/pipelines/cinematic")
+    assert ok.status_code == 200
+    body = ok.json()
+    assert body["name"] == "cinematic"
+    assert all("name" in s and "approval" in s for s in body["stages"])
+    # a schema-drifted manifest still returns detail (not 400)
+    assert client.get("/pipelines/screen-demo").status_code == 200
+    assert client.get("/pipelines/definitely-not-real").status_code == 404
+
+
+# ── security/robustness regressions found by the follow-up audit ────────────
+
+def test_skill_less_stage_resolves_none_not_directory():
+    # framework-smoke's research/script stages declare no `skill` key. Before
+    # the fix this resolved to "" and Path(OM_ROOT) / "" == OM_ROOT (a real,
+    # existing directory), defeating the missing-skill fallback and crashing
+    # read_text() with IsADirectoryError on the very first stage.
+    stages = _resolve_stages("framework-smoke")
+    assert stages, "framework-smoke should resolve real stages, not fall back"
+    skill_less = [s for s in stages if s["skill"] is None]
+    assert skill_less, "expected at least one skill-less stage in framework-smoke"
+
+
+def test_pipeline_name_traversal_is_blocked():
+    from app.pipeline_catalog import load_manifest
+    import pytest
+    for bad in ("../config", "../../etc/passwd", "../../../../etc/passwd", "not-a-real-pipeline"):
+        with pytest.raises(FileNotFoundError):
+            load_manifest(bad)
+
+
+def test_traversal_via_detail_endpoint_returns_404():
+    # Not a route-level slash — "../config" has no literal "/", so FastAPI's
+    # plain {name} path param matches it; only load_manifest's allowlist stops it.
+    assert client.get("/pipelines/../config").status_code in (404, 307, 308)
+
+
+def test_load_manifest_never_returns_none(tmp_path, monkeypatch):
+    import app.pipeline_catalog as pc
+    import lib.pipeline_loader as pl
+
+    (tmp_path / "empty.yaml").write_text("")
+    monkeypatch.setattr(pc, "PIPELINE_DEFS_DIR", tmp_path)
+    # Simulate strict validation failing (schema drift) so the lenient
+    # yaml.safe_load fallback runs — on an empty file that returns None.
+    monkeypatch.setattr(pl, "load_pipeline",
+                        lambda name, defs_dir=None: (_ for _ in ()).throw(ValueError("drift")))
+    result = pc.load_manifest("empty")
+    assert result == {}

@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   validate:
-    name: Validate Python
+    name: Validate Python (engine)
     runs-on: ubuntu-latest
 
     steps:
@@ -44,3 +44,63 @@ jobs:
 
       - name: Run test suite
         run: make test
+
+  server-tests:
+    name: Server (pytest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            server/requirements-dev.txt
+
+      - name: Install dependencies
+        # Engine deps (so tools/ and lib/ import) + server test deps.
+        run: |
+          pip install -r requirements.txt
+          pip install -r server/requirements-dev.txt
+
+      - name: Run server test suite
+        working-directory: server
+        run: python -m pytest
+
+  web:
+    name: Web (lint · types · tests · build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build

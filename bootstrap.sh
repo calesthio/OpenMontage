@@ -14,6 +14,10 @@
 #                         (`libnspr4.so: cannot open shared object file`).
 #   4. Piper voice      — `make setup` installs the piper-tts engine but downloads no voice,
 #                         so the offline $0 TTS path has nothing to speak with.
+#   5. Node.js + make   — Node 18+ is a listed prereq (`make setup` npm-installs
+#                         remotion-composer, and HyperFrames wants 22+ per the engines
+#                         table), but like FFmpeg nothing installs it; and a truly bare
+#                         server has no `make` either.
 #
 # Idempotent / re-runnable. Exits 0 = ready, non-zero = names exactly what failed.
 #
@@ -35,17 +39,19 @@ cd "$OM_DIR"
 # ---- 0. detect package manager ----
 if   command -v apt-get >/dev/null 2>&1; then PKG=apt
 elif command -v brew    >/dev/null 2>&1; then PKG=brew
-else die "no apt-get or brew found — install FFmpeg, python3-venv, and (Linux) Chromium libs manually, then re-run."; fi
+else die "no apt-get or brew found — install FFmpeg, Node 18+, python3-venv, and (Linux) Chromium libs manually, then re-run."; fi
 SUDO=""; [ "$(id -u)" -ne 0 ] && command -v sudo >/dev/null 2>&1 && SUDO=sudo
 
 apt_install() { DEBIAN_FRONTEND=noninteractive $SUDO apt-get install -y --no-install-recommends "$@"; }
 
-# ---- 1. FFmpeg + python3-venv (gaps #1, #2) ----
+# ---- 1. FFmpeg + python3-venv + node + make (gaps #1, #2, #5) ----
 say "System prerequisites"
 if [ "$PKG" = apt ]; then
   $SUDO apt-get update -qq
-  apt_install ffmpeg python3 python3-venv python3-pip
-  ok "ffmpeg + python3-venv installed"
+  apt_install ffmpeg python3 python3-venv python3-pip make
+  command -v node >/dev/null 2>&1 || apt_install nodejs
+  command -v npm  >/dev/null 2>&1 || apt_install npm   # separate package on Debian (only "suggested" by nodejs); provides npx
+  ok "ffmpeg + python3-venv + make present; node $(node -v 2>/dev/null || echo missing), npm $(npm -v 2>/dev/null || echo missing)"
 
   # ---- 2. Chromium headless libraries (gap #3) ----
   say "Chromium headless libraries (undocumented Remotion dependency)"
@@ -57,7 +63,22 @@ if [ "$PKG" = apt ]; then
   ok "chromium libs installed"
 else
   brew list ffmpeg >/dev/null 2>&1 || brew install ffmpeg
-  ok "ffmpeg installed (macOS ships the Chromium libs Remotion needs, no extra step)"
+  brew list node   >/dev/null 2>&1 || brew install node   # brew's node includes npm/npx
+  ok "ffmpeg + node installed (macOS ships the Chromium libs Remotion needs, no extra step)"
+fi
+
+# sanity gate before make setup — die with the exact gap, don't let make setup fail confusingly
+command -v make >/dev/null 2>&1 || die "make not found — Debian/Ubuntu: apt-get install make; macOS: xcode-select --install"
+command -v npx  >/dev/null 2>&1 || die "npx not found — Debian/Ubuntu: apt-get install npm; then re-run."
+NODE_VER="$(node -v 2>/dev/null || echo none)"
+NODE_MAJOR="${NODE_VER#v}"; NODE_MAJOR="${NODE_MAJOR%%.*}"
+case "$NODE_MAJOR" in *[!0-9]*|"") NODE_MAJOR=0;; esac
+if   [ "$NODE_MAJOR" -lt 18 ]; then
+  die "node 18+ required (README prereq) but found $NODE_VER — old distro repos ship ancient node (Ubuntu 22.04 apt = v12); install from nodejs.org or NodeSource, then re-run."
+elif [ "$NODE_MAJOR" -lt 22 ]; then
+  warn "node $NODE_VER is fine for Remotion; the HyperFrames runtime wants 22+ (README engines table) — upgrade if you use it"
+else
+  ok "node $NODE_VER"
 fi
 
 # ---- 3. the standard install path ----

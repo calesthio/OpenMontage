@@ -128,6 +128,8 @@ cd OpenMontage
 make setup
 ```
 
+> **Headless server / fresh VPS?** Run `./bootstrap.sh` instead of `make setup` — it installs the system dependencies a bare server is missing (FFmpeg, Node, Chromium libs for Remotion), downloads a Piper voice, runs `make setup`, and proves the stack with a zero-key demo render.
+
 Open the project in your AI coding assistant and tell it what you want:
 
 ```

@@ -93,6 +93,13 @@ The `subtitle_gen` tool groups words respecting `max_words_per_cue` and
 `max_chars_per_line`. When word timestamps are unavailable, it falls back
 to segment-level timing with even distribution.
 
+When using `remotion_caption_burn` with Chinese TTS providers that may emit
+character-level timestamps, pass `protected_terms` for product names, skill
+names, acronyms, and other phrases that should stay intact. The Remotion caption
+burner also protects common terms and Chinese phrases found inside `「...」` or
+`『...』` in the source segment text, so names such as `系统提交发布助手` are not
+split across caption tokens.
+
 ## Quality Checklist
 
 - [ ] Every spoken word appears in a subtitle cue

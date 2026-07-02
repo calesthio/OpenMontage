@@ -308,6 +308,8 @@ export interface ExplainerProps {
   overlays?: Overlay[];
   captions?: WordCaption[];
   audio?: AudioConfig;
+  captionWordsPerPage?: number;
+  captionFontSize?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -813,8 +815,8 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
       {captions && captions.length > 0 && (
         <CaptionOverlay
           words={captions}
-          wordsPerPage={6}
-          fontSize={42}
+          wordsPerPage={props.captionWordsPerPage ?? 6}
+          fontSize={props.captionFontSize ?? 42}
           highlightColor={theme.captionHighlightColor}
           backgroundColor={theme.captionBackgroundColor}
         />

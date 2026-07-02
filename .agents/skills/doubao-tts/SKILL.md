@@ -41,6 +41,8 @@ result = TTSSelector().execute({
     "voice_id": "zh_female_vv_uranus_bigtts",
     "output_path": "projects/my-video/assets/audio/narration.mp3",
     "speech_rate": 0,
+    "emotion": "neutral",
+    "emotion_scale": 1,
     "enable_timestamp": True,
 })
 ```
@@ -76,14 +78,40 @@ The provider writes:
 
 - `voice_id`: Doubao `speaker` / voice type. Defaults to `DOUBAO_SPEECH_VOICE_TYPE`.
 - `resource_id`: use `seed-tts-2.0` for Doubao Speech 2.0 voices.
+- `model`: optional `req_params.model` for compatible voices, such as `seed-tts-2.0-expressive` or `seed-tts-2.0-standard`.
 - `speech_rate`: `0` is normal, `100` is 2x, `-50` is 0.5x.
+- `emotion`: optional emotion/style value. Common values include `neutral`, `happy`, `sad`, `angry`, `surprised`, `excited`, `coldness`, `tender`, `storytelling`, `news`, and `advertising`; support depends on the selected voice.
+- `emotion_scale`: optional emotion intensity from `1` to `5`; use `1` for restrained narration.
+- `loudness_rate`: optional loudness from `-50` to `100`.
+- `post_process_pitch`: optional pitch shift from `-12` to `12`.
 - `sample_rate`: default `24000`.
+- `bit_rate`: optional MP3 bit rate.
 - `enable_timestamp`: default `true`.
 - `return_usage`: default `true`, requests usage metadata when available.
+- `explicit_language`: optional language hint such as `zh-cn`, `en`, or `crosslingual`. Leave unset unless needed.
+- `context_texts`: optional list of context/style strings, when supported by the endpoint and voice.
+- `silence_duration`: optional trailing silence in milliseconds.
+- `enable_language_detector`, `disable_emoji_filter`, `max_length_to_filter_parenthesis`, `unsupported_char_ratio_thresh`: optional provider additions.
+- `mute_cut_threshold` and `mute_cut_remain_ms`: optional mute-cut controls.
+- `extra_audio_params` and `extra_additions`: advanced escape hatches for newly documented Doubao fields. Use these only when the field is in the current Volcengine docs.
 
 Do not pass `additions.explicit_language` by default. Some endpoint/key combinations reject `zh-cn` with `unsupported additions explicit language zh-cn`.
 
 For calm Mandarin explainers, start with `speech_rate: 0`. If the result is too long for the approved format, make a short comparison sample with `speech_rate: 25` or `50` before regenerating the full narration. Do not speed up only to match a previous provider's duration if the user prefers Doubao's natural pace.
+
+For production narration where Doubao sounds too theatrical, keep the line in the script and adjust controls before rewriting:
+
+```python
+result = DoubaoTTS().execute({
+    "text": "大家好，我是 Ray 的 AI 助理。有一天，Ray 发来一段很长的安装指令。",
+    "voice_id": "zh_female_vv_uranus_bigtts",
+    "speech_rate": 8,
+    "emotion": "neutral",
+    "emotion_scale": 1,
+    "post_process_pitch": 2,
+    "output_path": "projects/my-video/assets/audio/tone_test.mp3",
+})
+```
 
 ## Troubleshooting
 

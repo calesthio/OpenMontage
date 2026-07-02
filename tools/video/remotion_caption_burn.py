@@ -120,6 +120,14 @@ class RemotionCaptionBurn(BaseTool):
                     "correct replacement. Example: {\"cloud\": \"Claude\"}."
                 ),
             },
+            "protected_terms": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": (
+                    "Terms that must not be split across generated caption tokens. "
+                    "Useful for Chinese TTS timestamps that may arrive character by character."
+                ),
+            },
             "overlays": {
                 "type": "array",
                 "description": (
@@ -180,7 +188,10 @@ class RemotionCaptionBurn(BaseTool):
     # ------------------------------------------------------------------ #
 
     def _segments_to_word_captions(
-        self, segments: list[dict], corrections: dict[str, str] | None = None
+        self,
+        segments: list[dict],
+        corrections: dict[str, str] | None = None,
+        protected_terms: list[str] | None = None,
     ) -> list[dict]:
         """Convert transcriber segments to [{word, startMs, endMs}, ...]."""
         captions: list[dict] = []
@@ -214,10 +225,13 @@ class RemotionCaptionBurn(BaseTool):
                         "startMs": int((seg["start"] + i * per_word) * 1000),
                         "endMs": int((seg["start"] + (i + 1) * per_word) * 1000),
                     })
-        return captions
+        return self._protect_caption_terms(captions, protected_terms)
 
     def _srt_to_word_captions(
-        self, srt_path: str, corrections: dict[str, str] | None = None
+        self,
+        srt_path: str,
+        corrections: dict[str, str] | None = None,
+        protected_terms: list[str] | None = None,
     ) -> list[dict]:
         """Parse SRT file into word captions."""
         content = Path(srt_path).read_text(encoding="utf-8")
@@ -258,7 +272,71 @@ class RemotionCaptionBurn(BaseTool):
                     "startMs": int(start_ms + i * per_word),
                     "endMs": int(start_ms + (i + 1) * per_word),
                 })
-        return captions
+        return self._protect_caption_terms(captions, protected_terms)
+
+    @classmethod
+    def _protect_caption_terms(cls, captions: list[dict], protected_terms: list[str] | None = None) -> list[dict]:
+        """Merge adjacent caption tokens when they form a protected term."""
+        terms = cls._normalized_protected_terms(protected_terms)
+        if not terms or not captions:
+            return captions
+        merged: list[dict] = []
+        index = 0
+        max_term_len = max(len(term) for term in terms)
+        while index < len(captions):
+            best_end = None
+            best_text = ""
+            collected = ""
+            end_limit = min(len(captions), index + max_term_len)
+            for end in range(index, end_limit):
+                collected += cls._caption_match_text(str(captions[end].get("word", "")))
+                if collected in terms:
+                    best_end = end
+                    best_text = collected
+            if best_end is not None and best_end > index:
+                merged.append(
+                    {
+                        **captions[index],
+                        "word": best_text,
+                        "endMs": captions[best_end]["endMs"],
+                    }
+                )
+                index = best_end + 1
+            else:
+                merged.append(captions[index])
+                index += 1
+        return merged
+
+    @classmethod
+    def _caption_protected_terms(cls, segments: list[dict] | None, explicit_terms: list[str] | None) -> list[str]:
+        terms = list(explicit_terms or [])
+        for seg in segments or []:
+            text = str(seg.get("text") or "")
+            terms.extend(re.findall(r"「([^」]{2,30})」", text))
+            terms.extend(re.findall(r"『([^』]{2,30})』", text))
+        return cls._normalized_protected_terms(terms)
+
+    @staticmethod
+    def _normalized_protected_terms(terms: list[str] | None) -> list[str]:
+        normalized = []
+        defaults = [
+            "AI ToB",
+            "JoyCode",
+            "Graylog",
+            "traceId",
+            "系统提交发布助手",
+            "系统问题分析助手",
+        ]
+        for term in [*defaults, *(terms or [])]:
+            clean = re.sub(r"\s+", "", str(term or "").strip())
+            if len(clean) >= 2 and clean not in normalized:
+                normalized.append(clean)
+        normalized.sort(key=len, reverse=True)
+        return normalized
+
+    @staticmethod
+    def _caption_match_text(text: str) -> str:
+        return re.sub(r"[\s，。！？、,.!?;:：；“”\"'‘’（）()【】\[\]<>《》]+", "", text)
 
     # ------------------------------------------------------------------ #
     #  Remotion render
@@ -458,11 +536,12 @@ class RemotionCaptionBurn(BaseTool):
         # Build word captions from segments or SRT
         segments = inputs.get("segments")
         srt_path = inputs.get("srt_path")
+        protected_terms = self._caption_protected_terms(segments, inputs.get("protected_terms"))
 
         if segments:
-            captions = self._segments_to_word_captions(segments, corrections)
+            captions = self._segments_to_word_captions(segments, corrections, protected_terms)
         elif srt_path:
-            captions = self._srt_to_word_captions(srt_path, corrections)
+            captions = self._srt_to_word_captions(srt_path, corrections, protected_terms)
         else:
             return ToolResult(
                 success=False,
@@ -485,4 +564,7 @@ class RemotionCaptionBurn(BaseTool):
             result = self._render_ffmpeg(input_path, output_path, captions)
 
         result.duration_seconds = round(time.time() - start, 2)
+        if result.success:
+            result.data = result.data or {}
+            result.data["protected_terms_count"] = len(protected_terms)
         return result

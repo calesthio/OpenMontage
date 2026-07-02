@@ -56,13 +56,20 @@ def check_scene_variation(scenes: list[dict[str, Any]]) -> dict[str, Any]:
             suggestions.append("Mix wide establishing shots with close-ups for visual rhythm.")
 
     # --- Check 2: Consecutive same-size shots ---
-    consecutive_same = 0
+    # Track the longest actual run of identical shot sizes. Summing every equal
+    # adjacent pair across the whole plan would count non-consecutive groups
+    # (e.g. wide,wide,cu,cu,med,med -> 3 pairs) as a single "3 consecutive" run.
+    longest_run = 1 if shot_sizes else 0
+    current_run = 1
     for i in range(1, len(shot_sizes)):
         if shot_sizes[i] == shot_sizes[i-1] and shot_sizes[i] != "unspecified":
-            consecutive_same += 1
-    if consecutive_same >= 3:
+            current_run += 1
+            longest_run = max(longest_run, current_run)
+        else:
+            current_run = 1
+    if longest_run >= 3:
         violations.append(
-            f"{consecutive_same} consecutive same-size shots. "
+            f"{longest_run} consecutive same-size shots. "
             f"Vary shot sizes between scenes for editorial rhythm."
         )
 

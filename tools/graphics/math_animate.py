@@ -45,12 +45,20 @@ _BLOCKED_IMPORTS = frozenset({
     "importlib", "builtins", "multiprocessing", "threading", "pty", "glob",
     "resource", "signal", "tempfile", "webbrowser", "pathlib",
 })
-_BLOCKED_CALLS = frozenset({
+# Dangerous identifiers blocked wherever they appear as a bare name — not just
+# as a direct call. This catches indirection like `__builtins__['open']`,
+# `f = open`, or `getattr(x, '__class__')` that a call-target-only or
+# attribute-only check would miss.
+_BLOCKED_NAMES = frozenset({
     "eval", "exec", "compile", "__import__", "open", "input", "breakpoint",
+    "__builtins__", "__loader__", "globals", "locals", "vars",
+    "getattr", "setattr", "delattr",
 })
+# Sandbox-escape / reflection dunders blocked as attribute access.
 _BLOCKED_ATTRS = frozenset({
-    "__globals__", "__builtins__", "__subclasses__", "__bases__", "__mro__",
-    "__code__",
+    "__globals__", "__builtins__", "__subclasses__", "__bases__", "__base__",
+    "__mro__", "__code__", "__class__", "__dict__", "__getattribute__",
+    "__closure__", "__reduce__", "__reduce_ex__", "__subclasshook__",
 })
 
 
@@ -230,10 +238,11 @@ class MathAnimate(BaseTool):
                 root = (node.module or "").split(".")[0]
                 if root in _BLOCKED_IMPORTS:
                     violations.append(f"from '{node.module}' import ...")
-            elif isinstance(node, ast.Call):
-                fn = node.func
-                if isinstance(fn, ast.Name) and fn.id in _BLOCKED_CALLS:
-                    violations.append(f"call to '{fn.id}()'")
+            elif isinstance(node, ast.Name):
+                # Blocks direct calls (eval(...)) and indirection alike:
+                # `__builtins__['open']`, `f = open`, `getattr(o, '__class__')`.
+                if node.id in _BLOCKED_NAMES:
+                    violations.append(f"use of '{node.id}'")
             elif isinstance(node, ast.Attribute):
                 if node.attr in _BLOCKED_ATTRS:
                     violations.append(f"attribute access '.{node.attr}'")

@@ -54,7 +54,45 @@ def test_blocks_dangerous_calls(call):
         "    def construct(self):\n"
         f"        {call}('x')\n"
     )
-    assert f"call to '{call}()'" in MathAnimate._scan_scene_code(code)
+    assert f"use of '{call}'" in MathAnimate._scan_scene_code(code)
+
+
+def test_blocks_no_import_builtins_secret_read():
+    # Regression for the reported bypass: no dangerous import, secret read via
+    # __builtins__ indexing. The whole expression roots on the bare __builtins__
+    # name (the 'open' inside [] is a string literal), so blocking that name
+    # blocks the payload.
+    code = (
+        "from manim import *\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        __builtins__['open']('.env').read()\n"
+    )
+    assert "use of '__builtins__'" in MathAnimate._scan_scene_code(code)
+
+
+def test_blocks_getattr_reflection_bypass():
+    # getattr-based attribute reflection is a classic denylist evasion; blocking
+    # the getattr name removes the primitive.
+    code = (
+        "from manim import *\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        cls = getattr(object(), '__class__')\n"
+    )
+    assert "use of 'getattr'" in MathAnimate._scan_scene_code(code)
+
+
+def test_blocks_aliased_dangerous_builtin():
+    # Binding a blocked builtin to another name must still trip on the name use.
+    code = (
+        "from manim import *\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        f = open\n"
+        "        f('.env')\n"
+    )
+    assert "use of 'open'" in MathAnimate._scan_scene_code(code)
 
 
 def test_blocks_sandbox_escape_dunders():

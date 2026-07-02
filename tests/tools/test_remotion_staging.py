@@ -28,10 +28,20 @@ def _capture_props(tool):
     """
     captured = {}
 
+    def _props_path(cmd):
+        # Remotion accepts both `--props <path>` and `--props=<path>`; the
+        # composer uses the equals form (cross-platform safe). Handle both.
+        for i, arg in enumerate(cmd):
+            s = str(arg)
+            if s == "--props":
+                return Path(cmd[i + 1])
+            if s.startswith("--props="):
+                return Path(s.split("=", 1)[1])
+        raise AssertionError(f"no --props argument in cmd: {cmd}")
+
     def fake_run_command(cmd, *a, **k):
-        # cmd = ["npx","remotion","render", index, comp_id, out_path, "--props", props_path]
-        props_path = Path(cmd[cmd.index("--props") + 1])
-        captured["props"] = json.loads(props_path.read_text())
+        # cmd = ["npx","remotion","render", index, comp_id, out_path, "--props=..."]
+        captured["props"] = json.loads(_props_path(cmd).read_text())
         Path(cmd[5]).write_bytes(b"\x00")  # create output so exists() -> True
         return None
 

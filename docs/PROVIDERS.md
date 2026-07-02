@@ -44,6 +44,7 @@ DOUBAO_SPEECH_VOICE_TYPE=    # Default Doubao speaker/voice type
 
 # MULTI-MODEL GATEWAY (one key, 6+ tools)
 FAL_KEY=                     # FLUX, Recraft, Kling, Veo, MiniMax video
+CLIPIA_API_KEY=              # Clipia aggregator: 50+ video+image models (Kling, Veo, Seedance, Wan, Sora, Nano Banana, FLUX); RU-friendly billing
 
 # VIDEO
 HEYGEN_API_KEY=              # HeyGen avatar video gateway
@@ -130,6 +131,81 @@ No subscription — pure pay-as-you-go, no minimum spend.
 | WAN 2.5 | $0.05/sec | 20 seconds |
 
 **Free tier:** None — but $0 to start, you only pay for what you use.
+
+---
+
+### Clipia" section below into the "## Cloud Providers"
+   chapter, right after the "### fal.ai — Multi-Model Gateway" section
+   (Clipia is the same kind of multi-model gateway, so they read well
+   side by side).
+2. Apply the three small edits listed at the bottom of this file
+   (env summary block, provider-to-tool mapping table, capability table).
+-->
+
+### Clipia — Multi-Model Aggregator (RU-Friendly)
+
+> **One key, 50+ image and video models, payable in rubles.** Clipia is a generation aggregator: a single API key unlocks Kling, Veo, Seedance, Wan, Sora, Nano Banana, FLUX, GPT-Image and more behind one fal.ai-shaped queue API. Includes a sandbox mode (`clipia_test_` keys) that returns instant mock results with zero spend — you can test the whole integration before paying anything.
+
+**Tools unlocked:** `clipia_video`, `clipia_image`
+**Env var:** `CLIPIA_API_KEY`
+
+#### Setup
+
+1. Go to [clipia.ai](https://clipia.ai) and create an account
+2. Open the Developer console: [clipia.ai/ru/developer](https://clipia.ai/ru/developer) (Settings → API keys redirects there)
+3. On the **API keys** tab, click **Create key** — the full key is shown **once**, copy it immediately
+   - Toggle the environment switch to **Test** to get a `clipia_test_…` sandbox key instead
+4. Add to `.env`: `CLIPIA_API_KEY=clipia_live_...`
+
+The key is a server-side secret; auth header is `Authorization: Key <key>` (`Bearer` and `X-Api-Key` are also accepted).
+
+#### Pricing
+
+Billing is in **credits** attached to a subscription plan. Every API call has a fixed, deterministic price known at submit time (`cost` in the submit response); failed generations are refunded in full.
+
+**Plans (monthly credits):**
+
+| Plan | Price | Credits/month |
+|------|-------|---------------|
+| Basic | 799 ₽ / $15/mo | 240 |
+| Standard | 1 499 ₽ / $29/mo | 480 |
+| Pro | 2 990 ₽ / $49/mo | 960 |
+| Ultima | 8 990 ₽ / $149/mo | 2 900 |
+
+Annual billing is ~10% cheaper. A 7-day trial (199 ₽ / $2.99, 55 credits) is available. 1 credit ≈ **$0.04–0.06** depending on plan; OpenMontage's estimators use $0.04.
+
+**Per-generation reference prices (2026-07, default/720p tiers):**
+
+| Model (slug) | Unit | Credits | ≈ USD |
+|--------------|------|---------|-------|
+| `seedance-2-fast-t2v` / `-i2v` | 5 s @ 720p | 47 | $1.88 |
+| `kling-3` | 5 s @ 720p | 36 | $1.44 |
+| `wan-2-7` | 5 s @ 720p | 24 | $0.96 |
+| `sora-2` | per clip | 17 | $0.68 |
+| `nano-banana-2` | per image (1K/2K) | 4 | $0.16 |
+| `nano-banana-pro` | per image | 5 | $0.20 |
+| `flux-2-pro` | per image | 3 | $0.12 |
+| `gpt-image-2` | per image | 3–7 (by resolution) | $0.12–0.28 |
+
+The exact price for any parameter set: `POST /v1/models/{slug}/estimate` (returns credits without queueing). Live catalog with per-model pricing: `GET /v1/models`.
+
+**Free tier:** None — subscription-based credits. Sandbox keys (`clipia_test_`) cost nothing but return fixed sample assets, not real generations.
+
+**Caveat:** API generation requires an active subscription; with credits but no active plan the API returns `402 subscription_required`.
+
+#### Why add it when fal.ai is already configured?
+
+- **Region coverage:** billing in RUB with Russian bank cards (USD/EUR plans too) — a working route to premium video models for RU/CIS users who cannot pay Western providers directly.
+- **Model breadth on one key:** video (Kling, Veo, Seedance, Wan, Sora, …) *and* image (Nano Banana, FLUX, GPT-Image, …) without juggling per-provider accounts.
+- **Sandbox mode:** `clipia_test_` keys make CI/integration tests spend-safe — submit returns a deterministic mock `COMPLETED` instantly, webhooks are still delivered and signed.
+
+#### Rate limits
+
+120 requests/minute and 10 concurrent generations per key by default (`RateLimit-*` response headers, `429` + `Retry-After` on excess).
+
+#### MCP alternative
+
+Clipia also runs a remote MCP server at `https://mcp.clipia.ai/mcp` (Streamable HTTP, same API key as Bearer token) with generate/wait/list-models tools — useful for agents that speak MCP instead of REST. The OpenMontage tools use the REST API and do not require MCP.
 
 ---
 
@@ -725,6 +801,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **Google** | `GOOGLE_API_KEY` | `google_tts`, `google_imagen` | Free tier + paid |
 | **ElevenLabs** | `ELEVENLABS_API_KEY` | `elevenlabs_tts`, `music_gen` | Free tier + paid |
 | **fal.ai** | `FAL_KEY` | `flux_image`, `recraft_image`, `kling_video`, `veo_video`, `minimax_video` | Pay-as-you-go |
+| **Clipia** | `CLIPIA_API_KEY` | `clipia_video`, `clipia_image` | Subscription (credits) + sandbox test keys |
 | **OpenAI** | `OPENAI_API_KEY` | `openai_tts`, `openai_image` | Paid only |
 | **xAI** | `XAI_API_KEY` | `grok_image`, `grok_video` | Paid only |
 | **Runway** | `RUNWAY_API_KEY` | `runway_video` | Free trial + paid |
@@ -743,8 +820,8 @@ How many providers cover each capability:
 
 | Capability | Cloud Providers | Local Providers | Free Options |
 |-----------|----------------|-----------------|--------------|
-| **Image Generation** | FLUX, Grok, Google Imagen, DALL-E 3, Recraft | Local Diffusion | Pexels, Pixabay (stock) |
-| **Video Generation** | Grok, Kling, Runway, Veo, Higgsfield, MiniMax, HeyGen | WAN, Hunyuan, CogVideo, LTX | Pexels, Pixabay (stock) |
+| **Image Generation** | FLUX, Grok, Google Imagen, DALL-E 3, Recraft, Clipia (Nano Banana, FLUX, GPT-Image) | Local Diffusion | Pexels, Pixabay (stock) |
+| **Video Generation** | Grok, Kling, Runway, Veo, Higgsfield, MiniMax, HeyGen, Clipia (Kling, Veo, Seedance, Wan, Sora) | WAN, Hunyuan, CogVideo, LTX | Pexels, Pixabay (stock) |
 | **Text-to-Speech** | ElevenLabs, Google TTS, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier |
 | **Music Generation** | ElevenLabs, Suno | — | ElevenLabs free tier |
 | **Post-Production** | — | FFmpeg (compose, stitch, trim, mix, enhance, grade) | All free |

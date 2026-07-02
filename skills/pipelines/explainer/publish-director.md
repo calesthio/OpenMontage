@@ -85,23 +85,37 @@ Each chapter maps to a script section's `start_seconds`.
 
 ### Step 5: Package Export
 
-Create the export directory structure:
+Use the `export_bundle` tool (capability `publish`) to do the packaging
+deterministically — pass it the final `video_path` (from `render_report`), the
+`title`, and the metadata you prepared (`description`, `tags`, `hashtags`,
+`chapters`, optional `subtitles_path` and `thumbnail_path`/`thumbnail_concept`).
+It lays out the export directory, writes the metadata files, and returns a
+schema-valid `publish_log` (`status: "exported"`) in `data["publish_log"]` that
+you persist as the stage artifact.
+
+It produces this structure:
 
 ```
 exports/
   <project_name>/
     video/
-      output.mp4            # Final rendered video
+      output.mp4            # Final rendered video (subtitles.srt alongside if provided)
     metadata/
       metadata.json         # All SEO metadata
       chapters.txt          # Chapter markers
-      description.txt       # Ready-to-paste description
+      description.txt       # Ready-to-paste description (+ chapters)
       tags.txt              # One tag per line
     thumbnails/
-      concept.json          # Thumbnail concept (or generated image)
+      concept.json          # Thumbnail concept (or the copied thumbnail image)
 ```
 
+`export_bundle` is a local, offline packager — it does not upload. A networked
+publisher (e.g. a YouTube uploader) would be a separate `publish`-capability
+provider.
+
 ### Step 6: Build Publish Log
+
+`export_bundle` already returns a schema-valid `publish_log` in `data["publish_log"]` — persist that directly rather than hand-building one. Do **not** add extra entry fields (the schema sets `additionalProperties: false`; only `platform`, `status`, `url`, `video_id`, `visibility`, `export_path`, `timestamp`, `metadata_used`, `error` are allowed). The shape it returns:
 
 ```json
 {
@@ -109,17 +123,15 @@ exports/
   "entries": [
     {
       "platform": "youtube",
-      "status": "draft",
-      "timestamp": "2024-01-15T10:30:00Z",
-      "metadata": {
+      "status": "exported",
+      "export_path": "projects/vector-db-explainer/exports",
+      "timestamp": "2026-01-15T10:30:00+00:00",
+      "metadata_used": {
         "title": "Vector Databases Explained in 60 Seconds",
-        "description_length": 450,
-        "tags_count": 8,
-        "chapters_count": 6,
-        "thumbnail_ready": false
-      },
-      "export_path": "exports/vector-db-explainer/",
-      "video_path": "renders/output.mp4"
+        "description": "What vector databases are and when to use them.",
+        "hashtags": ["#ai", "#vectordb"],
+        "chapters": [{ "start_seconds": 0, "title": "Introduction" }]
+      }
     }
   ]
 }

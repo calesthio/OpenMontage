@@ -47,14 +47,14 @@ llm = OpenAI(api_key=MAAS_KEY, base_url=f"{MAAS_BASE}/v1")
 
 # ── Cinematic pipeline stage definitions ─────────────────────────────────────
 CINEMATIC_STAGES = [
-    {"name": "research",    "skill": "skills/pipelines/cinematic/research-director.md",   "approval": False, "produces": ["research_brief"]},
-    {"name": "proposal",    "skill": "skills/pipelines/cinematic/proposal-director.md",   "approval": True,  "produces": ["proposal_packet", "decision_log"]},
-    {"name": "script",      "skill": "skills/pipelines/cinematic/script-director.md",     "approval": True,  "produces": ["script"]},
-    {"name": "scene_plan",  "skill": "skills/pipelines/cinematic/scene-director.md",      "approval": False, "produces": ["scene_plan"]},
-    {"name": "assets",      "skill": "skills/pipelines/cinematic/asset-director.md",      "approval": False, "produces": ["asset_manifest"]},
-    {"name": "edit",        "skill": "skills/pipelines/cinematic/edit-director.md",       "approval": False, "produces": ["edit_decisions"]},
-    {"name": "compose",     "skill": "skills/pipelines/cinematic/compose-director.md",    "approval": False, "produces": ["render_report", "final_review"]},
-    {"name": "publish",     "skill": "skills/pipelines/cinematic/publish-director.md",    "approval": False, "produces": ["publish_log"]},
+    {"name": "research",    "skill": "skills/pipelines/cinematic/research-director.md",   "approval": False, "produces": ["research_brief"], "required_artifacts_in": []},
+    {"name": "proposal",    "skill": "skills/pipelines/cinematic/proposal-director.md",   "approval": True,  "produces": ["proposal_packet", "decision_log"], "required_artifacts_in": ["research_brief"]},
+    {"name": "script",      "skill": "skills/pipelines/cinematic/script-director.md",     "approval": True,  "produces": ["script"], "required_artifacts_in": ["proposal_packet"]},
+    {"name": "scene_plan",  "skill": "skills/pipelines/cinematic/scene-director.md",      "approval": False, "produces": ["scene_plan"], "required_artifacts_in": ["script"]},
+    {"name": "assets",      "skill": "skills/pipelines/cinematic/asset-director.md",      "approval": False, "produces": ["asset_manifest"], "required_artifacts_in": ["scene_plan"]},
+    {"name": "edit",        "skill": "skills/pipelines/cinematic/edit-director.md",       "approval": False, "produces": ["edit_decisions"], "required_artifacts_in": ["scene_plan", "asset_manifest"]},
+    {"name": "compose",     "skill": "skills/pipelines/cinematic/compose-director.md",    "approval": False, "produces": ["render_report", "final_review"], "required_artifacts_in": ["edit_decisions", "asset_manifest"]},
+    {"name": "publish",     "skill": "skills/pipelines/cinematic/publish-director.md",    "approval": False, "produces": ["publish_log"], "required_artifacts_in": ["render_report", "final_review"]},
 ]
 
 # Explicit overrides / aliases. Anything NOT here is resolved dynamically from
@@ -96,6 +96,12 @@ def _resolve_stages(pipeline_name: str) -> list[dict]:
                 # "publish_log"). Used to tell the agent what to write_artifact
                 # as, and to find the right file for the approval preview.
                 "produces": s.get("produces") or [],
+                # Upstream artifacts (by produces-name) this stage needs before
+                # it can run meaningfully — checked as a preflight so a broken
+                # resume/retry or a naming drift fails fast with a clear
+                # message instead of silently prompting the agent on an
+                # incomplete "Available artifacts" summary.
+                "required_artifacts_in": s.get("required_artifacts_in") or [],
             })
         if stages:
             return stages
@@ -467,6 +473,28 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
 
         job_store.update(job_id, current_stage=stage_name, status="running")
         _emit(job_id, {"type": "stage_started", "stage": stage_name})
+
+        # Preflight: fail fast with a clear diagnostic if an upstream artifact
+        # this stage requires is missing, rather than silently launching the
+        # LLM call on an incomplete "Available artifacts" summary (it would
+        # likely improvise something plausible-looking instead of surfacing
+        # the real problem — e.g. a broken resume, a naming mismatch, or a
+        # skipped stage from a hand-edited job).
+        required = stage_def.get("required_artifacts_in") or []
+        if required:
+            have = set(_load_artifacts(project_dir))
+            missing = [name for name in required if name not in have]
+            if missing:
+                job_store.update(job_id, status="failed", current_stage=stage_name)
+                _emit(job_id, {
+                    "type": "job_failed",
+                    "stage": stage_name,
+                    "message": (
+                        f"Stage '{stage_name}' requires artifact(s) {missing} "
+                        f"which were not found in {project_dir / 'artifacts'}"
+                    ),
+                })
+                return
 
         # Load director skill. Some manifest stages (e.g. sub_stages-only or
         # deliberately instruction-free stages) declare no skill at all —

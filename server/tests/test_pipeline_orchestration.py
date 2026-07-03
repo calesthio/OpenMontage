@@ -92,6 +92,50 @@ async def test_unhandled_error_marks_failed(runner, monkeypatch):
     assert failed and "Unhandled pipeline error" in failed[0].get("message", "")
 
 
+async def test_required_artifact_missing_fails_fast(runner, monkeypatch):
+    # A stage requiring an upstream artifact that was never produced must fail
+    # immediately with a clear diagnostic, not silently launch the LLM call.
+    called = []
+    monkeypatch.setattr(stage_runner, "_run_agent_stage",
+                        lambda *a, **k: called.append(a[1]) or True)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "research", "skill": None, "approval": False, "produces": ["research_brief"]},
+        {"name": "script", "skill": None, "approval": False,
+         "required_artifacts_in": ["research_brief"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    # research's stub never actually wrote research_brief.json, so script's
+    # preflight must catch the gap and fail before ever calling _run_agent_stage
+    # for "script".
+    assert called == ["research"]
+    job = runner.get("j")
+    assert job["status"] == "failed"
+    failed = [e for e in runner.get_events("j", after_seq=-1) if e["type"] == "job_failed"]
+    assert failed and "research_brief" in failed[0]["message"]
+
+
+async def test_required_artifact_present_proceeds(runner, monkeypatch, tmp_path):
+    def write_then_succeed(job_id, stage_name, skill_text, project_dir, *a, **k):
+        if stage_name == "research":
+            (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+            (project_dir / "artifacts" / "research_brief.json").write_text("{}")
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", write_then_succeed)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "research", "skill": None, "approval": False, "produces": ["research_brief"]},
+        {"name": "script", "skill": None, "approval": False,
+         "required_artifacts_in": ["research_brief"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    assert runner.get("j")["status"] == "completed"
+
+
 async def test_approval_preview_uses_produces_name_not_stage_name(runner, monkeypatch):
     # Regression: many pipelines name a stage differently from what it
     # produces (e.g. stage "idea" → artifact "brief"). The old preview lookup

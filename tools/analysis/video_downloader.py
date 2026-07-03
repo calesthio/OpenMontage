@@ -88,6 +88,14 @@ class VideoDownloader(BaseTool):
                 "default": 600,
                 "description": "Reject videos longer than this (safety limit)",
             },
+            "cookies_file": {
+                "type": "string",
+                "description": (
+                    "Path to a Netscape-format cookies.txt file passed to yt-dlp. "
+                    "Needed when the site blocks anonymous requests (e.g. YouTube "
+                    "bot-checks on datacenter IPs)."
+                ),
+            },
         },
     }
 
@@ -150,13 +158,25 @@ class VideoDownloader(BaseTool):
             return "twitter"
         return "other_url"
 
-    def _extract_metadata(self, url: str) -> dict:
+    def _common_ydl_opts(self, cookies_file: str | None) -> dict:
+        """Options shared by every yt-dlp invocation."""
+        opts = {
+            "quiet": True,
+            "no_warnings": True,
+            # Enable whichever JS runtime is installed; unsupported entries are
+            # dropped by yt-dlp with a warning.
+            "js_runtimes": {"deno": {}, "node": {}},
+        }
+        if cookies_file:
+            opts["cookiefile"] = cookies_file
+        return opts
+
+    def _extract_metadata(self, url: str, cookies_file: str | None = None) -> dict:
         """Extract metadata without downloading."""
         import yt_dlp
 
         ydl_opts = {
-            "quiet": True,
-            "no_warnings": True,
+            **self._common_ydl_opts(cookies_file),
             "skip_download": True,
         }
         try:
@@ -184,13 +204,14 @@ class VideoDownloader(BaseTool):
         dl_format = inputs.get("format", "video")
         max_res = inputs.get("max_resolution", "720p")
         max_duration = inputs.get("max_duration_seconds", 600)
+        cookies_file = inputs.get("cookies_file")
 
         output_dir.mkdir(parents=True, exist_ok=True)
         platform = self._detect_platform(url)
         start = time.time()
 
         # Step 1: Always get metadata first
-        metadata = self._extract_metadata(url)
+        metadata = self._extract_metadata(url, cookies_file)
 
         # Check duration limit
         duration = metadata.get("duration", 0)
@@ -224,12 +245,12 @@ class VideoDownloader(BaseTool):
         try:
             if dl_format == "video":
                 video_path, audio_path = self._download_video(
-                    url, output_dir, max_res
+                    url, output_dir, max_res, cookies_file
                 )
             elif dl_format == "audio_only":
-                audio_path = self._download_audio(url, output_dir)
+                audio_path = self._download_audio(url, output_dir, cookies_file)
             elif dl_format == "subtitles_only":
-                subtitle_path = self._download_subtitles(url, output_dir)
+                subtitle_path = self._download_subtitles(url, output_dir, cookies_file)
         except Exception as e:
             elapsed = time.time() - start
             return ToolResult(
@@ -256,7 +277,7 @@ class VideoDownloader(BaseTool):
         )
 
     def _download_video(
-        self, url: str, output_dir: Path, max_res: str
+        self, url: str, output_dir: Path, max_res: str, cookies_file: str | None = None
     ) -> tuple[str | None, str | None]:
         """Download video + extract audio track."""
         import yt_dlp
@@ -265,12 +286,11 @@ class VideoDownloader(BaseTool):
         video_out = str(output_dir / "reference_video.%(ext)s")
 
         ydl_opts = {
+            **self._common_ydl_opts(cookies_file),
             "format": f"bestvideo[height<={height}]+bestaudio/best[height<={height}]/best",
             "merge_output_format": "mp4",
             "outtmpl": video_out,
             "noplaylist": True,
-            "quiet": True,
-            "no_warnings": True,
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
@@ -300,12 +320,15 @@ class VideoDownloader(BaseTool):
 
         return video_path, audio_path
 
-    def _download_audio(self, url: str, output_dir: Path) -> str | None:
+    def _download_audio(
+        self, url: str, output_dir: Path, cookies_file: str | None = None
+    ) -> str | None:
         """Download audio only."""
         import yt_dlp
 
         audio_out = str(output_dir / "reference_audio.%(ext)s")
         ydl_opts = {
+            **self._common_ydl_opts(cookies_file),
             "format": "bestaudio/best",
             "postprocessors": [{
                 "key": "FFmpegExtractAudio",
@@ -314,19 +337,20 @@ class VideoDownloader(BaseTool):
             }],
             "outtmpl": audio_out,
             "noplaylist": True,
-            "quiet": True,
-            "no_warnings": True,
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
         return self._find_downloaded(output_dir, "reference_audio", ["wav", "mp3", "m4a", "opus"])
 
-    def _download_subtitles(self, url: str, output_dir: Path) -> str | None:
+    def _download_subtitles(
+        self, url: str, output_dir: Path, cookies_file: str | None = None
+    ) -> str | None:
         """Download subtitles only."""
         import yt_dlp
 
         sub_out = str(output_dir / "reference_subs.%(ext)s")
         ydl_opts = {
+            **self._common_ydl_opts(cookies_file),
             "writesubtitles": True,
             "writeautomaticsub": True,
             "subtitleslangs": ["en"],
@@ -334,8 +358,6 @@ class VideoDownloader(BaseTool):
             "skip_download": True,
             "outtmpl": sub_out,
             "noplaylist": True,
-            "quiet": True,
-            "no_warnings": True,
         }
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:

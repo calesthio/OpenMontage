@@ -67,6 +67,35 @@ def test_execute_degraded_gives_actionable_error(monkeypatch, tmp_path):
     assert "download_voices" in (r.error or "")
 
 
+def test_execute_passes_resolved_onnx_path_for_voice_outside_cwd(monkeypatch, tmp_path):
+    # A voice installed in a search dir (not cwd) must be passed to piper as its
+    # resolved .onnx path, otherwise piper looks only in cwd and fails to load
+    # despite passing the availability gate.
+    voice_dir = tmp_path / "voices"
+    voice_dir.mkdir()
+    _install_fake_voice(voice_dir)  # default voice, outside cwd
+    monkeypatch.setattr("shutil.which", lambda _: "/usr/bin/piper")
+    monkeypatch.setattr(PiperTTS, "_voice_search_dirs", staticmethod(lambda: [voice_dir]))
+
+    captured = {}
+
+    class FakeProc:
+        returncode = 0
+        stderr = ""
+
+    def fake_run(cmd, *a, **k):
+        captured["cmd"] = cmd
+        Path(cmd[cmd.index("--output_file") + 1]).write_bytes(b"\x00")  # create output
+        return FakeProc()
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    r = PiperTTS().execute({"text": "hi", "output_path": str(tmp_path / "o.wav")})
+    assert r.success is True, r.error
+    model_arg = captured["cmd"][captured["cmd"].index("--model") + 1]
+    assert model_arg == str(voice_dir / "en_US-lessac-medium.onnx")
+
+
 def test_execute_names_the_missing_requested_model(monkeypatch, tmp_path):
     # The default voice is present, but the caller requests a different, absent
     # model — the error must name the requested model, not the default.

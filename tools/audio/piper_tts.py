@@ -156,7 +156,8 @@ class PiperTTS(BaseTool):
         # Gate on the specific voice this call will use, not the coarse status —
         # a caller may request an installed voice even when the default is absent.
         model = inputs.get("model", self.default_voice)
-        if self._find_voice(model) is None:
+        voice_path = self._find_voice(model)
+        if voice_path is None:
             searched = ", ".join(str(d) for d in self._voice_search_dirs())
             return ToolResult(
                 success=False,
@@ -169,21 +170,26 @@ class PiperTTS(BaseTool):
 
         start = time.time()
         try:
-            result = self._generate(inputs)
+            result = self._generate(inputs, str(voice_path))
         except Exception as exc:
             return ToolResult(success=False, error=f"Local TTS generation failed: {exc}")
 
         result.duration_seconds = round(time.time() - start, 2)
         return result
 
-    def _generate(self, inputs: dict[str, Any]) -> ToolResult:
+    def _generate(self, inputs: dict[str, Any], model_path: str) -> ToolResult:
+        # model_path is the resolved .onnx file located by _find_voice(). Piper
+        # only searches the current directory for a bare model name, so passing
+        # the resolved path is required when the voice lives in PIPER_VOICE_DIR
+        # or ~/.piper — otherwise a voice that passed the availability gate would
+        # still fail to load at run time from a different cwd.
         output_path = Path(inputs.get("output_path", "tts_output.wav"))
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         proc = subprocess.run(
             [
                 "piper",
-                "--model", inputs.get("model", self.default_voice),
+                "--model", model_path,
                 "--speaker", str(inputs.get("speaker_id", 0)),
                 "--length-scale", str(inputs.get("length_scale", 1.0)),
                 "--sentence-silence", str(inputs.get("sentence_silence", 0.3)),
@@ -204,12 +210,12 @@ class PiperTTS(BaseTool):
             success=True,
             data={
                 "provider": self.provider,
-                "model": inputs.get("model", self.default_voice),
+                "model": model_path,
                 "speaker_id": inputs.get("speaker_id", 0),
                 "text_length": len(inputs["text"]),
                 "output": str(output_path),
                 "format": "wav",
             },
             artifacts=[str(output_path)],
-            model=inputs.get("model", self.default_voice),
+            model=model_path,
         )

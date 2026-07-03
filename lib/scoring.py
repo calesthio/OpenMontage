@@ -147,7 +147,10 @@ _SYNONYM_CLUSTERS: list[set[str]] = [
     {"music", "soundtrack", "background-music", "score", "ambient"},
 ]
 
-_TOKEN_RE = re.compile(r"[a-z0-9][a-z0-9+._-]*")
+# Allow internal +._- so model-name-like tokens survive (gpt-4.1, film-noir,
+# multi_shot), but require the token to END on an alphanumeric so trailing
+# punctuation is not swallowed ("cinematic." -> "cinematic", not "cinematic.").
+_TOKEN_RE = re.compile(r"[a-z0-9](?:[a-z0-9+._-]*[a-z0-9])?")
 _GENERATED_VISUAL_TERMS = {
     "animated",
     "animation",
@@ -498,7 +501,11 @@ def score_provider(tool, task_context: dict[str, Any]) -> ProviderScore:
     # lip-sync from quoted dialogue. This is what makes Seedance 2.0 (and
     # peer premium APIs) meaningfully better than generic clip providers.
     if asset_type == "video":
-        intent_words = _expand_synonyms(set(intent.lower().split())) | set(style_keywords)
+        # Use the shared tokenizer (strips punctuation) like every other call
+        # site — a raw str.split() keeps trailing punctuation, so an intent that
+        # ends on a signal word (e.g. "make it cinematic.") yields "cinematic."
+        # and silently misses the cinematic-signal set and synonym clusters.
+        intent_words = _expand_synonyms(set(_tokenize_text(intent))) | set(style_keywords)
         cinematic_signal = bool(
             intent_words & {"cinematic", "film", "movie", "trailer", "teaser", "dramatic", "epic", "premium"}
         )

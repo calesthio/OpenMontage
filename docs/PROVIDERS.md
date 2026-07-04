@@ -95,6 +95,45 @@ OpenMontage now uses those published rates in the Grok tool estimators.
 
 ---
 
+### MiniMax Token Plan — Direct Hailuo Video API
+
+> **Direct MiniMax API, not FAL.** For users with a MiniMax Token Plan subscription, this provider calls the official `api.minimaxi.com` (CN) or `api.minimax.io` (global) endpoint directly, consuming your own quota instead of FAL credits. This makes the cost route explicit — `minimax_tokenplan_video` vs `minimax_video` (FAL-backed).
+
+**Tools unlocked:** `minimax_tokenplan_video`
+**Env var:** `MINIMAX_TOKEN_PLAN_API_KEY` (preferred) or `MINIMAX_API_KEY`; optionally `MINIMAX_REGION=global` for the international endpoint
+
+#### Setup
+
+1. Go to [platform.minimax.io](https://platform.minimax.io/user-center/basic-information/interface-key)
+2. Create a MiniMax account and subscribe to a Token Plan
+3. Generate an API key in the API Keys section
+4. Add to `.env`: `MINIMAX_TOKEN_PLAN_API_KEY=...` (or `MINIMAX_API_KEY=...`)
+5. (Optional) Set `MINIMAX_REGION=global` if your account is on the international endpoint
+
+#### What it's best for
+
+- Direct MiniMax Token Plan quota usage — no FAL credits consumed
+- Hailuo 2.3 text-to-video and image-to-video
+- Auditable cost route — calls the official MiniMax API, not a proxy
+- Watermark control via `aigc_watermark` parameter
+
+#### API notes
+
+The tool uses the async submit-poll-download pattern: `POST /v1/video_generation` returns a `task_id`, poll `GET /v1/query/video_generation` until `status == "Success"`, then `GET /v1/files/retrieve` to get the download URL.
+
+`MiniMax-Hailuo-2.3` supports both text-to-video and image-to-video. `MiniMax-Hailuo-2.3-Fast` is faster but only supports image-to-video (the tool rejects text-to-video with this model). Resolution defaults to `768P` (the Token Plan default); `720P` and `1080P` are also available.
+
+This tool is distinct from `minimax_video` (which routes through `FAL_KEY`). Both share `provider="minimax"` but have different tool names and cost routes.
+
+#### Pricing
+
+| Model | Price |
+|------|-------|
+| `MiniMax-Hailuo-2.3` | ~$0.05/sec (Token Plan quota, check console for actual rate) |
+| `MiniMax-Hailuo-2.3-Fast` | ~$0.05/sec (Token Plan quota) |
+
+---
+
 ### Alibaba DashScope — Qwen Image + TTS + ASR
 
 > **Best for Chinese-language production.** One key unlocks Qwen-Image generation, Qwen-TTS Mandarin narration, and Qwen-ASR with word-level timestamps — the only DashScope path that provides word-level granularity for subtitle alignment.

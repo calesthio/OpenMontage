@@ -64,7 +64,7 @@
         },
         "additionalProperties": false
       },
-      "minItems": 1
+      "minItems": 0
     },
     "summary": {
       "type": "string",

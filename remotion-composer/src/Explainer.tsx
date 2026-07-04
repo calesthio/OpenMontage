@@ -17,13 +17,19 @@ function resolveAsset(src: string): string {
   if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("data:")) {
     return src;
   }
-  // Strip any file:// prefix
-  const clean = src.replace(/^file:\/\/\/?/, "");
-  // Absolute paths (Unix: /foo, Windows: C:\foo or C:/foo) — convert to file:// URI
-  // staticFile() only accepts relative paths within public/, so absolute paths must bypass it
-  if (clean.startsWith("/") || /^[A-Za-z]:[\\/]/.test(clean)) {
+
+  // Strip scheme only; keep leading slash so absolute Unix paths stay absolute.
+  const clean = src.startsWith("file://") ? src.slice("file://".length) : src;
+
+  // staticFile() only accepts relative paths within public/, so absolute paths
+  // must stay as file:// URIs for Remotion to load them directly.
+  if (/^[A-Za-z]:[\\/]/.test(clean)) {
     return `file:///${clean.replace(/\\/g, "/")}`;
   }
+  if (clean.startsWith("/")) {
+    return `file://${clean.replace(/\\/g, "/")}`;
+  }
+
   return staticFile(clean);
 }
 import { TextCard } from "./components/TextCard";

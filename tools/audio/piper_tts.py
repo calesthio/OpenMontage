@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import time
@@ -39,7 +40,7 @@ class PiperTTS(BaseTool):
         "  pip install piper-tts\n"
         "Or download from https://github.com/rhasspy/piper/releases\n"
         "Then download a voice model:\n"
-        "  piper --download-dir ~/.piper/models --model en_US-lessac-medium"
+        "  python -m piper.download_voices en_US-lessac-medium"
     )
     agent_skills = ["text-to-speech"]
 
@@ -96,17 +97,75 @@ class PiperTTS(BaseTool):
     user_visible_verification = ["Listen to generated audio for intelligibility"]
 
     def get_status(self) -> ToolStatus:
-        if shutil.which("piper"):
+        if not shutil.which("piper"):
+            return ToolStatus.UNAVAILABLE
+        if self._resolve_model_arg(self.input_schema["properties"]["model"]["default"]):
             return ToolStatus.AVAILABLE
-        return ToolStatus.UNAVAILABLE
+        return ToolStatus.DEGRADED
+
+    def _candidate_model_paths(self, model: str) -> list[Path]:
+        raw = Path(model).expanduser()
+        candidates = [raw]
+        if raw.suffix != ".onnx":
+            candidates.append(raw.with_suffix(".onnx"))
+
+        voice_roots = [
+            Path.home() / ".piper" / "models",
+            Path.home() / ".local" / "share" / "piper" / "voices",
+            Path.home() / ".cache" / "piper" / "voices",
+            Path.cwd(),
+        ]
+        if "APPDATA" in os.environ:
+            voice_roots.append(Path(os.environ["APPDATA"]) / "piper" / "voices")
+
+        for root in voice_roots:
+            candidates.append(root / raw.name)
+            if raw.suffix != ".onnx":
+                candidates.append(root / f"{model}.onnx")
+                candidates.append(root / model / f"{model}.onnx")
+
+        # Preserve order, drop duplicates.
+        seen: set[str] = set()
+        unique: list[Path] = []
+        for candidate in candidates:
+            key = str(candidate)
+            if key not in seen:
+                seen.add(key)
+                unique.append(candidate)
+        return unique
+
+    def _resolve_model_arg(self, model: str) -> str | None:
+        for candidate in self._candidate_model_paths(model):
+            if candidate.exists():
+                return str(candidate)
+        return None
+
+    def _missing_model_error(self, model: str) -> str:
+        return (
+            f"Piper executable found, but voice model {model!r} is not installed. "
+            f"Download it with `python -m piper.download_voices {model}` or pass "
+            "an explicit local `.onnx` model path."
+        )
+
+    def _status_error(self, model: str) -> str:
+        status = self.get_status()
+        if status == ToolStatus.UNAVAILABLE:
+            return "Piper TTS not available. " + self.install_instructions
+        if self._resolve_model_arg(model):
+            return ""
+        return self._missing_model_error(model)
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         return 0.0
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
-        if self.get_status() != ToolStatus.AVAILABLE:
-            return ToolResult(success=False, error="Piper TTS not available. " + self.install_instructions)
+        model = inputs.get("model", "en_US-lessac-medium")
+        status_error = self._status_error(model)
+        if status_error:
+            return ToolResult(success=False, error=status_error)
 
+        inputs = dict(inputs)
+        inputs["model"] = self._resolve_model_arg(model) or model
         start = time.time()
         try:
             result = self._generate(inputs)

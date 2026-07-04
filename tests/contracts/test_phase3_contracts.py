@@ -91,6 +91,21 @@ class TestPiperTTS:
 
         assert PiperTTS().get_status() == ToolStatus.UNAVAILABLE
 
+    def test_status_is_degraded_without_default_voice_model(self, monkeypatch):
+        monkeypatch.setattr(shutil, "which", lambda cmd: "/usr/bin/piper" if cmd == "piper" else None)
+        monkeypatch.setattr(PiperTTS, "_resolve_model_arg", lambda self, model: None)
+
+        assert PiperTTS().get_status() == ToolStatus.DEGRADED
+
+    def test_execute_surfaces_actionable_voice_download_hint(self, monkeypatch):
+        monkeypatch.setattr(shutil, "which", lambda cmd: "/usr/bin/piper" if cmd == "piper" else None)
+        monkeypatch.setattr(PiperTTS, "_resolve_model_arg", lambda self, model: None)
+
+        result = PiperTTS().execute({"text": "hello"})
+
+        assert result.success is False
+        assert "python -m piper.download_voices en_US-lessac-medium" in result.error
+
 
 class TestMusicGen:
     def test_identity(self):

@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import subprocess
 import time
 from pathlib import Path
@@ -1693,15 +1694,28 @@ class VideoCompose(BaseTool):
         # Deep-copy props so we don't mutate the original
         props = json.loads(json.dumps(composition_data))
 
-        # Convert absolute file paths to file:// URIs for Remotion's
-        # Img and OffthreadVideo components
+        def normalize_local_asset(src: str) -> str:
+            if not src or src.startswith(("http://", "https://", "data:", "file://")):
+                return src
+            if re.match(r"^[A-Za-z]:[\\/]", src):
+                return f"file:///{src.replace('\\', '/')}"
+            if src.startswith("/"):
+                return f"file://{src}"
+            candidate = Path(src)
+            if candidate.is_absolute():
+                return f"file://{candidate.as_posix()}"
+            return src
+
+        # Convert absolute local file paths to file:// URIs for Remotion's
+        # Img, OffthreadVideo, and Audio components.
         for cut in props.get("cuts", []):
             source = cut.get("source", "")
-            if source and not source.startswith(("http://", "https://", "file://")):
-                resolved = Path(source).resolve()
-                if resolved.exists():
-                    posix = resolved.as_posix()
-                    cut["source"] = f"file:///{posix}" if not posix.startswith("/") else f"file://{posix}"
+            cut["source"] = normalize_local_asset(source)
+        for key in ("narration", "music"):
+            audio = (props.get("audio") or {}).get(key) or {}
+            src = audio.get("src")
+            if src:
+                audio["src"] = normalize_local_asset(src)
 
         # Build a custom themeConfig from the playbook's actual colors.
         # This ensures every video gets a unique visual identity derived

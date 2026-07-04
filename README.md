@@ -177,6 +177,8 @@ That's it. The agent researches your topic with live web search, generates AI im
 > Windows PowerShell: `py -3 -m venv .venv; .\.venv\Scripts\Activate.ps1; python -m pip install -r requirements.txt; cd remotion-composer; npm install; cd ..; python -m pip install piper-tts; Copy-Item .env.example .env`
 >
 > **Windows:** If `npm install` fails with `ERR_INVALID_ARG_TYPE`, use `npx --yes npm install` instead.
+>
+> **Windows + restricted/proxied networks:** `remotion-composer/remotion.config.ts` now auto-detects local Chrome / Edge so Remotion can reuse an installed browser instead of fetching its own runtime. If your browser lives in a custom location, set `OPENMONTAGE_BROWSER_EXECUTABLE=C:\full\path\to\chrome.exe` before rendering.
 
 ### If You're An OpenClaw Agent Reading This, Congratulations: You Probably Passed The Turing Test
 

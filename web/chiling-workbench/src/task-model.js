@@ -33,9 +33,10 @@ export function taskStatusLabel(task = {}) {
 export function defaultDeliverables(payload = {}) {
   const resolution = payload.resolution || "480p";
   return [
-    { title: "成片文件", subtitle: `${resolution} 视频，可直接发布`, action: "下载视频", url: "#" },
-    { title: "字幕文件", subtitle: "可二次校对和归档", action: "下载字幕", url: "#" },
-    { title: "审核记录", subtitle: "留存素材授权与审核意见", action: "查看记录", url: "#" },
+    { title: "成片文件", subtitle: `${resolution} 视频，可直接发布`, action: "下载视频" },
+    { title: "字幕文件", subtitle: "可二次校对和归档", action: "下载字幕" },
+    { title: "审核记录", subtitle: "留存素材授权与审核意见", action: "查看记录" },
+    { title: "交付链接", subtitle: "团队内部可访问", action: "复制" },
   ];
 }
 

@@ -36,6 +36,13 @@ test("defaultDeliverables never exposes provider or internal pipeline names", ()
   assert.doesNotMatch(serialized, /RUNNINGHUB|DOUBAO|reference-video-analysis|seedance/i);
 });
 
+test("defaultDeliverables preserves four safe fallback delivery actions", () => {
+  const deliverables = defaultDeliverables({ resolution: "480p" });
+  assert.equal(deliverables.length, 4);
+  assert.ok(deliverables.some((item) => item.title === "交付链接" && item.action === "复制"));
+  assert.ok(deliverables.every((item) => item.url !== "#"));
+});
+
 test("getTaskTitle uses safe business-facing titles", () => {
   assert.equal(getTaskTitle({ referenceUrl: "https://example.test/video" }), "参考视频复刻");
   assert.equal(getTaskTitle({ script: "第一句口播\n第二句" }), "第一句口播 · 口播复刻");

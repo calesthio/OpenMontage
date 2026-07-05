@@ -1319,10 +1319,10 @@ function deliveryItem(title, subtitle, action, url = "") {
     <div class="delivery-item">
       <i class="status-dot status-dot--green"></i>
       <div>
-        <strong>${title}</strong>
-        <span>${subtitle}</span>
+        <strong>${escapeHtml(title)}</strong>
+        <span>${escapeHtml(subtitle)}</span>
       </div>
-      <button class="button button--small" data-delivery-action="${action}" data-delivery-url="${escapeHtml(url)}">${action}</button>
+      <button class="button button--small" data-delivery-action="${escapeHtml(action)}" data-delivery-url="${escapeHtml(url)}">${escapeHtml(action)}</button>
     </div>
   `;
 }

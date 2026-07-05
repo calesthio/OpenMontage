@@ -18,7 +18,7 @@ export function lineBreaks(value) {
 export function normalizeSubtitleText(text) {
   return String(text || "")
     .split("\n")
-    .map((line) => line.trim().replace(/[，。！？、,.!?]+$/u, ""))
+    .map((line) => line.trim().replace(/[，。,.！？!?；;：:、]+$/u, ""))
     .filter(Boolean)
     .join("\n");
 }

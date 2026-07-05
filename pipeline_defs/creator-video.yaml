@@ -1,0 +1,249 @@
+name: creator-video
+version: "0.1"
+description: >
+  Creator-focused short-video pipeline for topic research, scriptwriting, scene planning,
+  user-supplied asset import, Seedance 2.0 video generation, timeline editing, and final
+  composition. Reference-video v1 intentionally excludes custom digital-human API
+  integration; that capability will be added in a later version.
+category: custom
+stability: beta
+default_checkpoint_policy: guided
+
+reference_input:
+  supported: true
+  analysis_depth: standard
+  analysis_tools:
+    - video_analyzer
+    - transcript_fetcher
+    - video_downloader
+    - scene_detect
+    - frame_sampler
+
+extensions:
+  custom_scripts: true
+  custom_playbooks: true
+  custom_skills: true
+  custom_tools: true
+
+required_skills:
+  - pipelines/creator-video/executive-producer
+  - pipelines/creator-video/research-director
+  - pipelines/creator-video/proposal-director
+  - pipelines/creator-video/script-director
+  - pipelines/creator-video/scene-director
+  - pipelines/creator-video/asset-director
+  - pipelines/creator-video/edit-director
+  - pipelines/creator-video/compose-director
+  - pipelines/creator-video/publish-director
+  - meta/reviewer
+  - meta/checkpoint-protocol
+
+orchestration:
+  mode: executive-producer
+  skill: pipelines/creator-video/executive-producer
+  budget_default_usd: 5.00
+  max_revisions_per_stage: 3
+  max_send_backs: 3
+  max_wall_time_minutes: 20
+
+compatible_playbooks:
+  recommended:
+    - clean-professional
+    - flat-motion-graphics
+  also_works:
+    - minimalist-diagram
+    - anime-ghibli
+  custom_allowed: true
+
+stages:
+  - name: research
+    skill: pipelines/creator-video/research-director
+    produces:
+      - research_brief
+    tools_available: []
+    checkpoint_required: false
+    human_approval_default: false
+    review_focus:
+      - Topic angle is specific to the target platform and audience
+      - Evidence and claims are sourced when factual
+      - At least 3 hook angles are compared
+    success_criteria:
+      - Schema-valid research_brief
+      - Clear target audience and platform assumptions
+
+  - name: proposal
+    skill: pipelines/creator-video/proposal-director
+    required_artifacts_in:
+      - research_brief
+    produces:
+      - proposal_packet
+      - decision_log
+    tools_available:
+      - video_selector
+      - runninghub_seedance_video
+      - seedance_video
+      - seedance_replicate
+      - custom_asset_import
+      - tts_selector
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Custom asset policy is explicit
+      - Seedance 2.0 generation path is compared against fallbacks
+      - render_runtime_selection presents Remotion and HyperFrames when available
+      - Digital-human API remains out of scope for reference-video v1
+    success_criteria:
+      - Schema-valid proposal_packet
+      - production_plan includes asset_source_policy
+      - production_plan locks render_runtime and composition_mode
+      - approval.status is approved or approved_with_changes
+
+  - name: script
+    skill: pipelines/creator-video/script-director
+    required_artifacts_in:
+      - proposal_packet
+    optional_artifacts_in:
+      - research_brief
+    produces:
+      - script
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Hook lands in the first 3 seconds for short-form output
+      - Narration is scene-addressable
+      - On-screen text is short enough for mobile
+    success_criteria:
+      - Schema-valid script
+      - Sections map cleanly to scene_plan scenes
+
+  - name: scene_plan
+    skill: pipelines/creator-video/scene-director
+    required_artifacts_in:
+      - script
+    optional_artifacts_in:
+      - proposal_packet
+    produces:
+      - scene_plan
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Each scene declares required_assets with source provided/generate/source/record
+      - Seedance scenes include camera and motion intent
+      - User-provided assets are preferred when they satisfy the scene
+    success_criteria:
+      - Schema-valid scene_plan
+      - Every scene has a feasible asset path
+
+  - name: assets
+    skill: pipelines/creator-video/asset-director
+    required_artifacts_in:
+      - scene_plan
+      - script
+    optional_artifacts_in:
+      - proposal_packet
+    produces:
+      - asset_manifest
+    required_tools:
+      - custom_asset_import
+    optional_tools:
+      - video_selector
+      - runninghub_seedance_video
+      - seedance_video
+      - seedance_replicate
+      - image_selector
+      - tts_selector
+      - subtitle_gen
+      - music_library
+      - music_gen
+    tools_available:
+      - custom_asset_import
+      - video_selector
+      - runninghub_seedance_video
+      - seedance_video
+      - seedance_replicate
+      - image_selector
+      - tts_selector
+      - subtitle_gen
+      - music_library
+      - music_gen
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Imported user assets are copied into the project workspace
+      - Seedance generations use approved scene prompts and model variant
+      - Every paid/API generation is announced before execution
+      - No digital-human provider is invoked in reference-video v1
+    success_criteria:
+      - Schema-valid asset_manifest
+      - All asset files exist on disk
+      - Seedance outputs record provider, model, prompt, and cost
+
+  - name: edit
+    skill: pipelines/creator-video/edit-director
+    required_artifacts_in:
+      - scene_plan
+      - asset_manifest
+    optional_artifacts_in:
+      - script
+    produces:
+      - edit_decisions
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Timeline uses user assets and Seedance clips as approved
+      - Vertical pacing and subtitles support short-form viewing
+      - render_runtime is carried forward unchanged from proposal
+    success_criteria:
+      - Schema-valid edit_decisions
+      - Cuts cover all planned scenes
+
+  - name: compose
+    skill: pipelines/creator-video/compose-director
+    required_artifacts_in:
+      - edit_decisions
+      - asset_manifest
+    optional_artifacts_in:
+      - scene_plan
+      - script
+      - proposal_packet
+    produces:
+      - render_report
+      - final_review
+    required_tools:
+      - video_compose
+    optional_tools:
+      - video_stitch
+      - audio_mixer
+      - hyperframes_compose
+    tools_available:
+      - video_compose
+      - video_stitch
+      - audio_mixer
+      - hyperframes_compose
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - render_runtime matches the proposal decision
+      - Audio, subtitles, and clip timing are synchronized
+      - Final render meets the target platform profile
+    success_criteria:
+      - Schema-valid render_report
+      - final_review confirms playable output
+
+  - name: publish
+    skill: pipelines/creator-video/publish-director
+    required_artifacts_in:
+      - render_report
+    produces:
+      - publish_log
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Deliverable paths and platform notes are clear
+      - Custom asset and generated-provider provenance is preserved
+    success_criteria:
+      - Schema-valid publish_log

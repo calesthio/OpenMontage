@@ -592,9 +592,7 @@ class VideoCompose(BaseTool):
 
             if subtitle_path and Path(subtitle_path).exists():
                 style = inputs.get("subtitle_style", {})
-                ass_style = self._build_subtitle_style(style)
-                sub_escaped = str(Path(subtitle_path).resolve()).replace("\\", "/").replace(":", "\\:")
-                vfilters.append(f"subtitles='{sub_escaped}':force_style='{ass_style}'")
+                vfilters.append(self._build_subtitle_filter(Path(subtitle_path), style))
 
             cmd = ["ffmpeg", "-y", "-i", str(final_input)]
 
@@ -2349,16 +2347,16 @@ class VideoCompose(BaseTool):
             return ToolResult(success=False, error=f"Subtitle file not found: {subtitle_path}")
 
         style = inputs.get("subtitle_style", {})
-        ass_style = self._build_subtitle_style(style)
-        sub_escaped = str(subtitle_path.resolve()).replace("\\", "/").replace(":", "\\:")
+        subtitle_filter = self._build_subtitle_filter(subtitle_path, style)
         codec = inputs.get("codec", "libx264")
         crf = inputs.get("crf", 23)
+        preset = inputs.get("preset", "medium")
 
         cmd = [
             "ffmpeg", "-y",
             "-i", str(input_path),
-            "-vf", f"subtitles='{sub_escaped}':force_style='{ass_style}'",
-            "-c:v", codec, "-crf", str(crf),
+            "-vf", subtitle_filter,
+            "-c:v", codec, "-crf", str(crf), "-preset", str(preset),
             "-c:a", "copy",
             str(output_path),
         ]
@@ -2559,6 +2557,19 @@ class VideoCompose(BaseTool):
         parts.append(f"MarginV={style.get('margin_v', 40)}")
         parts.append(f"Alignment={style.get('alignment', 2)}")
         return ",".join(parts)
+
+    @classmethod
+    def _build_subtitle_filter(cls, subtitle_path: Path, style: dict) -> str:
+        """Build FFmpeg subtitles filter with optional font directory."""
+        ass_style = cls._build_subtitle_style(style)
+        sub_escaped = str(subtitle_path.resolve()).replace("\\", "/").replace(":", "\\:")
+        parts = [f"subtitles='{sub_escaped}'"]
+        fontsdir = style.get("fontsdir") or style.get("font_dir")
+        if fontsdir:
+            fontsdir_escaped = str(Path(fontsdir).expanduser().resolve()).replace("\\", "/").replace(":", "\\:")
+            parts.append(f"fontsdir='{fontsdir_escaped}'")
+        parts.append(f"force_style='{ass_style}'")
+        return ":".join(parts)
 
     @staticmethod
     def _build_atempo(factor: float) -> str:

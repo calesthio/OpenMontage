@@ -89,3 +89,38 @@ def test_compose_target_override_cover(tmp_path):
     )
     assert r.success, r.error
     assert _dims(out) == (720, 1280)
+
+
+def test_burn_subtitles_passes_fontsdir_to_ffmpeg(tmp_path, monkeypatch):
+    src = tmp_path / "in.mp4"
+    sub = tmp_path / "subtitles.srt"
+    out = tmp_path / "out.mp4"
+    src.write_bytes(b"fake mp4")
+    sub.write_text("1\n00:00:00,000 --> 00:00:01,000\n中文测试\n", encoding="utf-8")
+    commands: list[list[str]] = []
+
+    def fake_run_command(self, cmd: list[str]):
+        commands.append(cmd)
+
+    monkeypatch.setattr(VideoCompose, "run_command", fake_run_command)
+
+    result = VideoCompose().execute(
+        {
+            "operation": "burn_subtitles",
+            "input_path": str(src),
+            "subtitle_path": str(sub),
+            "output_path": str(out),
+            "subtitle_style": {
+                "font": "Hiragino Sans GB",
+                "font_size": 20,
+                "fontsdir": "/System/Library/Fonts",
+            },
+            "preset": "slow",
+        }
+    )
+
+    assert result.success, result.error
+    subtitle_filter = commands[0][commands[0].index("-vf") + 1]
+    assert "fontsdir='/System/Library/Fonts'" in subtitle_filter
+    assert "FontName=Hiragino Sans GB" in subtitle_filter
+    assert commands[0][commands[0].index("-preset") + 1] == "slow"

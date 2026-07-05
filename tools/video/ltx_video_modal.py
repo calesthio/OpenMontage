@@ -87,7 +87,11 @@ class LTXVideoModal(BaseTool):
         return ToolStatus.AVAILABLE if os.environ.get("MODAL_LTX2_ENDPOINT_URL") else ToolStatus.UNAVAILABLE
 
     def estimate_cost(self, inputs: dict[str, object]) -> float:
-        return 0.25
+        # Self-hosted on a Modal L40S (~$1.95/hr serverless): a ~75s warm render of a
+        # 5s LTX clip ≈ $0.04 — an order of magnitude under premium video APIs (~$0.30/clip),
+        # which is what lets the quality_tier 'draft' lane route bulk video here.
+        # ponytail: flat estimate; scale by frames/GPU if you need tighter budgeting.
+        return 0.04
 
     def estimate_runtime(self, inputs: dict[str, object]) -> float:
         return 180.0

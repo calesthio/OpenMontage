@@ -5,6 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 APP_PATH = ROOT / "web" / "chiling-workbench" / "app.js"
+STATE_PATH = ROOT / "web" / "chiling-workbench" / "src" / "state.js"
 API_CLIENT_PATH = ROOT / "web" / "chiling-workbench" / "api-client.js"
 STYLE_PATH = ROOT / "web" / "chiling-workbench" / "styles.css"
 README_PATH = ROOT / "web" / "chiling-workbench" / "README.md"
@@ -14,6 +15,7 @@ DESIGN_QA_PATH = ROOT / "design-qa.md"
 def test_chiling_frontend_exposes_production_queue_contract():
     api_client = API_CLIENT_PATH.read_text(encoding="utf-8")
     app = APP_PATH.read_text(encoding="utf-8")
+    frontend_state = app + "\n" + STATE_PATH.read_text(encoding="utf-8")
     styles = STYLE_PATH.read_text(encoding="utf-8")
 
     assert "async function listQueue()" in api_client
@@ -67,17 +69,17 @@ def test_chiling_frontend_exposes_production_queue_contract():
     assert 'const deliveryReady = task.deliveryBackfill?.status === "delivered"' in api_client
     assert "Math.min(99" in api_client
     assert 'completed ? "completed"' not in api_client
-    assert "queueEntries: []" in app
-    assert "productionRequests: []" in app
-    assert "productionServiceStatus: null" in app
-    assert "productionServiceConfiguration: null" in app
-    assert "productionAuditLog: null" in app
-    assert "taskDetail: null" in app
-    assert "detailDrawerOpen: false" in app
-    assert "operationPanel: null" in app
-    assert "reviewDraft: null" in app
-    assert "productionPrep: null" in app
-    assert "productionRequestPhrase" in app
+    assert "queueEntries: []" in frontend_state
+    assert "productionRequests: []" in frontend_state
+    assert "productionServiceStatus: null" in frontend_state
+    assert "productionServiceConfiguration: null" in frontend_state
+    assert "productionAuditLog: null" in frontend_state
+    assert "taskDetail: null" in frontend_state
+    assert "detailDrawerOpen: false" in frontend_state
+    assert "operationPanel: null" in frontend_state
+    assert "reviewDraft: null" in frontend_state
+    assert "productionPrep: null" in frontend_state
+    assert "productionRequestPhrase" in frontend_state
     assert "refreshQueue" in app
     assert "refreshProductionRequests" in app
     assert "refreshProductionServiceStatus" in app

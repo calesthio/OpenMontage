@@ -43,6 +43,17 @@ class VideoSelector(BaseTool):
         "required": ["prompt"],
         "properties": {
             "prompt": {"type": "string"},
+            "quality_tier": {
+                "type": "string",
+                "enum": ["hero", "draft", ""],
+                "default": "",
+                "description": (
+                    "Cost/quality routing lane. 'hero' = quality-first (premium "
+                    "providers win, cost ignored); 'draft'/'bulk' = cost+speed-first "
+                    "(cheap self-hosted/local models win); '' = balanced default. "
+                    "See COST_OPTIMIZATION_RESEARCH.md."
+                ),
+            },
             "preferred_provider": {
                 "type": "string",
                 "description": "Provider name or 'auto'. Valid values are discovered at runtime from the registry.",
@@ -291,6 +302,7 @@ class VideoSelector(BaseTool):
             prompt=str(inputs.get("prompt", "")),
             capability=self.capability,
             operation=str(inputs.get("operation", "text_to_video")),
+            quality_tier=str(inputs.get("quality_tier", "")),
         )
 
     @staticmethod

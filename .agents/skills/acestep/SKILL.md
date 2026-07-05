@@ -5,8 +5,19 @@ description: AI music generation with ACE-Step 1.5 — background music, vocal t
 
 # ACE-Step 1.5 Music Generation
 
-Open-source music generation (MIT license) via `tools/music_gen.py`. Runs on RunPod serverless.
-Requires `RUNPOD_API_KEY` and `RUNPOD_ACESTEP_ENDPOINT_ID` in `.env` (run `--setup` to create endpoint).
+Open-source music generation (MIT license) via the `acestep_music` tool
+(`tools/audio/acestep_music.py`), a BaseTool with `capability="music_generation"`.
+Route to it for **bulk / background / instrumental** music — it is near-free versus
+the paid music APIs (ElevenLabs `music_gen`, Suno `suno_music`), which you reserve
+for hero tracks. Runs on a RunPod serverless ACE-Step endpoint.
+Requires `RUNPOD_API_KEY` and `RUNPOD_ACESTEP_ENDPOINT_ID` in `.env`.
+
+> The tool is invoked through the registry
+> (`registry.get_by_capability("music_generation")` → `.execute({...})`), not a CLI.
+> The `python tools/music_gen.py --flag …` snippets below are kept as a **parameter
+> reference**: `--prompt`→`prompt`, `--duration`→`duration_seconds`, `--bpm`→`bpm`,
+> `--key`→`key`, `--lyrics`→`lyrics`, `--seed`→`seed`. Preset rows map to prompt+bpm+key
+> values you pass directly.
 
 ## Quick Reference
 

@@ -102,6 +102,17 @@ class TTSSelector(BaseTool):
                 "type": "string",
                 "description": "Audio output format (e.g. mp3_44100_128). Passed through to provider.",
             },
+            "quality_tier": {
+                "type": "string",
+                "enum": ["hero", "draft", ""],
+                "default": "",
+                "description": (
+                    "Cost/quality routing lane. 'hero' = quality-first (premium "
+                    "providers win, cost ignored); 'draft'/'bulk' = cost+speed-first "
+                    "(cheap self-hosted/local models win); '' = balanced default. "
+                    "See COST_OPTIMIZATION_RESEARCH.md."
+                ),
+            },
             "preferred_provider": {
                 "type": "string",
                 "description": "Provider name or 'auto'. Valid values are discovered at runtime from the registry.",
@@ -231,6 +242,7 @@ class TTSSelector(BaseTool):
             prompt=inputs.get("text", ""),
             capability=self.capability,
             operation=inputs.get("operation", "generate"),
+            quality_tier=inputs.get("quality_tier", ""),
         )
 
     @staticmethod

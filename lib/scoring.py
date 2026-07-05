@@ -18,6 +18,32 @@ from typing import Any
 # Provider Score
 # ---------------------------------------------------------------------------
 
+# Weight vectors by quality tier. Each sums to 1.0. The tier changes the
+# *philosophy* of selection, not any hardcoded provider name:
+#   ""      standard/balanced — the historical default weights
+#   "hero"  output quality dominates, cost all but ignored (premium APIs win)
+#   "draft" cost + speed dominate (cheap self-hosted / local models win)
+# This is what routes bulk/draft work to open models and hero shots to premium
+# APIs — see COST_OPTIMIZATION_RESEARCH.md.
+_TIER_WEIGHTS: dict[str, dict[str, float]] = {
+    "": {
+        "task_fit": 0.30, "output_quality": 0.20, "control": 0.15,
+        "reliability": 0.15, "cost_efficiency": 0.10, "latency": 0.05,
+        "continuity": 0.05,
+    },
+    "hero": {
+        "task_fit": 0.25, "output_quality": 0.35, "control": 0.15,
+        "reliability": 0.13, "cost_efficiency": 0.02, "latency": 0.02,
+        "continuity": 0.08,
+    },
+    "draft": {
+        "task_fit": 0.20, "output_quality": 0.08, "control": 0.05,
+        "reliability": 0.12, "cost_efficiency": 0.35, "latency": 0.17,
+        "continuity": 0.03,
+    },
+}
+
+
 @dataclass
 class ProviderScore:
     """Scored evaluation of a provider against a specific task context."""
@@ -31,17 +57,23 @@ class ProviderScore:
     cost_efficiency: float = 0.0  # 0-1: quality per dollar
     latency: float = 0.0        # 0-1: acceptable turnaround
     continuity: float = 0.0     # 0-1: fits already locked decisions
+    quality_tier: str = ""      # "" | "hero" | "draft" — selects the weight vector
+
+    @property
+    def _weights(self) -> dict[str, float]:
+        return _TIER_WEIGHTS.get(self.quality_tier, _TIER_WEIGHTS[""])
 
     @property
     def weighted_score(self) -> float:
+        w = self._weights
         return (
-            self.task_fit * 0.30
-            + self.output_quality * 0.20
-            + self.control * 0.15
-            + self.reliability * 0.15
-            + self.cost_efficiency * 0.10
-            + self.latency * 0.05
-            + self.continuity * 0.05
+            self.task_fit * w["task_fit"]
+            + self.output_quality * w["output_quality"]
+            + self.control * w["control"]
+            + self.reliability * w["reliability"]
+            + self.cost_efficiency * w["cost_efficiency"]
+            + self.latency * w["latency"]
+            + self.continuity * w["continuity"]
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -51,16 +83,18 @@ class ProviderScore:
 
     def explain(self) -> str:
         """Human-readable explanation of this score."""
-        parts = [f"{self.tool_name} ({self.provider}): {self.weighted_score:.2f}"]
+        tier_note = f" tier={self.quality_tier}" if self.quality_tier else ""
+        parts = [f"{self.tool_name} ({self.provider}): {self.weighted_score:.2f}{tier_note}"]
+        w = self._weights
         top = sorted(
             [
-                ("task_fit", self.task_fit, 0.30),
-                ("output_quality", self.output_quality, 0.20),
-                ("control", self.control, 0.15),
-                ("reliability", self.reliability, 0.15),
-                ("cost_efficiency", self.cost_efficiency, 0.10),
-                ("latency", self.latency, 0.05),
-                ("continuity", self.continuity, 0.05),
+                ("task_fit", self.task_fit, w["task_fit"]),
+                ("output_quality", self.output_quality, w["output_quality"]),
+                ("control", self.control, w["control"]),
+                ("reliability", self.reliability, w["reliability"]),
+                ("cost_efficiency", self.cost_efficiency, w["cost_efficiency"]),
+                ("latency", self.latency, w["latency"]),
+                ("continuity", self.continuity, w["continuity"]),
             ],
             key=lambda x: x[1] * x[2],
             reverse=True,
@@ -294,15 +328,33 @@ def _compute_continuity(
     return 0.4  # Different provider = possible style break
 
 
+def _normalize_quality_tier(value: str) -> str:
+    """Collapse loose tier synonyms to the canonical "" | "hero" | "draft"."""
+    v = (value or "").strip().lower()
+    if v in {"hero", "final", "premium", "high", "master", "showcase"}:
+        return "hero"
+    if v in {"draft", "bulk", "preview", "low", "cheap", "iteration", "batch"}:
+        return "draft"
+    return ""  # standard / balanced / unknown
+
+
 def normalize_task_context(
     task_context: dict[str, Any] | None,
     *,
     prompt: str = "",
     capability: str = "",
     operation: str = "",
+    quality_tier: str = "",
 ) -> dict[str, Any]:
     """Normalize loose task context into the scorer's expected shape."""
     context = dict(task_context or {})
+
+    # Quality tier: explicit kwarg wins, else an existing context key. Idempotent
+    # under the double-normalize that score_provider performs (canonical values
+    # map to themselves), so passing it once at the selector survives re-scoring.
+    context["quality_tier"] = _normalize_quality_tier(
+        quality_tier or context.get("quality_tier", "")
+    )
 
     needs = context.get("needs") or []
     if isinstance(needs, str):
@@ -527,6 +579,7 @@ def score_provider(tool, task_context: dict[str, Any]) -> ProviderScore:
         cost_efficiency=cost_efficiency,
         latency=latency,
         continuity=continuity,
+        quality_tier=task_context.get("quality_tier", ""),
     )
 
 

@@ -79,6 +79,17 @@ class ImageSelector(BaseTool):
                 "items": {"type": "string"},
                 "description": "Multiple local source image paths for compositing edits.",
             },
+            "quality_tier": {
+                "type": "string",
+                "enum": ["hero", "draft", ""],
+                "default": "",
+                "description": (
+                    "Cost/quality routing lane. 'hero' = quality-first (premium "
+                    "providers win, cost ignored); 'draft'/'bulk' = cost+speed-first "
+                    "(cheap self-hosted/local models win); '' = balanced default. "
+                    "See COST_OPTIMIZATION_RESEARCH.md."
+                ),
+            },
             "preferred_provider": {
                 "type": "string",
                 "description": "Provider name or 'auto'. Valid values are discovered at runtime from the registry.",
@@ -286,6 +297,7 @@ class ImageSelector(BaseTool):
             prompt=inputs.get("prompt", ""),
             capability=self.capability,
             operation=inputs.get("generation_mode", inputs.get("operation", "generate")),
+            quality_tier=inputs.get("quality_tier", ""),
         )
 
     @staticmethod

@@ -30,6 +30,8 @@ def test_chiling_workbench_keeps_user_safe_frontend_boundaries():
         WORKBENCH / "src" / "task-model.js",
         WORKBENCH / "src" / "state.js",
         WORKBENCH / "src" / "dom.js",
+        WORKBENCH / "src" / "actions.js",
+        WORKBENCH / "src" / "polling.js",
         WORKBENCH / "src" / "components" / "ui.js",
         WORKBENCH / "src" / "components" / "topbar.js",
         *sorted((WORKBENCH / "src" / "views").glob("*.js")),
@@ -95,3 +97,15 @@ def test_chiling_workbench_workflow_view_modules_exist():
     assert 'from "./src/views/delivery.js"' in app
     assert 'from "./src/views/admin.js"' in app
     assert 'from "./src/views/detail-drawer.js"' in app
+
+
+def test_chiling_workbench_action_and_polling_modules_exist():
+    app = read(WORKBENCH / "app.js")
+    actions = read(WORKBENCH / "src" / "actions.js")
+    polling = read(WORKBENCH / "src" / "polling.js")
+
+    assert 'from "./src/actions.js"' in app
+    assert 'from "./src/polling.js"' in app
+    assert "export function createActions" in actions
+    assert "export function createPollingController" in polling
+    assert "window.ChilingTaskApi" not in polling

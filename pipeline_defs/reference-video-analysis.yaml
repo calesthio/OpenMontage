@@ -1,0 +1,155 @@
+name: reference-video-analysis
+version: "0.1"
+description: >
+  Analysis-only reference video pipeline. Takes a Douyin URL or local video,
+  extracts transcript, scene structure, keyframes, pacing, and production
+  strategy, then stops for human review before any face replacement or remake.
+category: custom
+stability: beta
+default_checkpoint_policy: guided
+
+reference_input:
+  supported: true
+  analysis_depth: standard
+  analysis_tools:
+    - video_downloader
+    - custom_asset_import
+    - video_analyzer
+    - scene_detect
+    - frame_sampler
+    - transcriber
+
+required_skills:
+  - pipelines/reference-video-analysis/ingest-director
+  - pipelines/reference-video-analysis/analyze-director
+  - pipelines/reference-video-analysis/transcribe-director
+  - pipelines/reference-video-analysis/package-director
+  - pipelines/reference-video-analysis/review-director
+  - meta/reviewer
+  - meta/checkpoint-protocol
+
+orchestration:
+  mode: guided-analysis
+  skill: pipelines/reference-video-analysis/ingest-director
+  budget_default_usd: 0.00
+  max_revisions_per_stage: 3
+  max_send_backs: 3
+  max_wall_time_minutes: 15
+
+stages:
+  - name: ingest
+    skill: pipelines/reference-video-analysis/ingest-director
+    produces:
+      - reference_source
+    required_tools:
+      - video_downloader
+      - custom_asset_import
+    tools_available:
+      - video_downloader
+      - custom_asset_import
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Douyin link download falls back cleanly to local file input
+      - Source URL or local path provenance is preserved
+      - No platform access restrictions are bypassed
+    success_criteria:
+      - reference_source includes local_video_path or structured fallback_reason
+
+  - name: analyze
+    skill: pipelines/reference-video-analysis/analyze-director
+    required_artifacts_in:
+      - reference_source
+    produces:
+      - reference_analysis
+    required_tools:
+      - scene_detect
+      - frame_sampler
+    optional_tools:
+      - video_analyzer
+    tools_available:
+      - scene_detect
+      - frame_sampler
+      - video_analyzer
+    checkpoint_required: false
+    human_approval_default: false
+    review_focus:
+      - Scene timings are usable for human review
+      - Keyframes exist for representative moments
+      - Visual analysis handles no-audio videos
+    success_criteria:
+      - reference_analysis includes metadata, scenes, and keyframes
+
+  - name: transcribe
+    skill: pipelines/reference-video-analysis/transcribe-director
+    required_artifacts_in:
+      - reference_source
+    produces:
+      - reference_transcript
+    required_tools:
+      - transcriber
+    tools_available:
+      - transcriber
+    checkpoint_required: false
+    human_approval_default: false
+    review_focus:
+      - Transcript text is marked raw and human-editable
+      - Missing or unavailable transcription is surfaced as pending_transcription
+    success_criteria:
+      - reference_transcript includes raw_text or status pending_transcription
+
+  - name: package
+    skill: pipelines/reference-video-analysis/package-director
+    required_artifacts_in:
+      - reference_source
+      - reference_analysis
+      - reference_transcript
+    produces:
+      - replication_package
+    required_tools:
+      - reference_video_package
+    tools_available:
+      - reference_video_package
+      - reference_prompt_reverse
+      - reference_text_edit
+      - reference_asset_binding
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - JSON package is machine-readable
+      - Markdown review file is easy to edit
+      - Vision-model prompt reverse can enrich scene prompts before approval
+      - Script text and Seedance prompts can be edited before approval
+      - User-uploaded assets can be bound to scene production inputs before review
+      - Production mode recommendation is explicit
+    success_criteria:
+      - replication_package JSON and Markdown artifacts exist
+      - approval.status is pending_human_review
+
+  - name: review
+    skill: pipelines/reference-video-analysis/review-director
+    required_artifacts_in:
+      - replication_package
+    produces:
+      - reference_review_decision
+      - approved_replication_package
+      - production_plan
+      - seedance_batch_preview
+    tools_available:
+      - reference_review_approval
+      - reference_production_plan
+      - seedance_batch
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Human edits copy and confirms Seedance-only v1 production mode
+      - Team-authorized face or presenter requirement is acknowledged
+      - Edited packages are approved through an explicit human phrase before handoff
+      - Approved edits can be converted into a production_plan without starting paid generation
+      - Seedance batch preview lists tasks without calling paid APIs
+      - No downstream production starts before approval
+    success_criteria:
+      - reference_review_decision is approved or approved_with_changes
+      - approved_replication_package is written before production_plan
+      - production_plan is ready_for_production only after approval
+      - seedance_batch_preview dry_run is true before paid generation

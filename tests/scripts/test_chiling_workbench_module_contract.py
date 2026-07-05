@@ -77,3 +77,18 @@ def test_chiling_workbench_primary_view_modules_exist():
         assert path.is_file(), module_name
         assert f'from "./src/views/{module_name}.js"' in app
         assert "export function render" in read(path)
+
+
+def test_chiling_workbench_workflow_view_modules_exist():
+    app = read(WORKBENCH / "app.js")
+
+    for module_name in ["review", "generating", "delivery", "admin", "detail-drawer"]:
+        path = WORKBENCH / "src" / "views" / f"{module_name}.js"
+        assert path.is_file(), module_name
+        assert "export function render" in read(path)
+
+    assert 'from "./src/views/review.js"' in app
+    assert 'from "./src/views/generating.js"' in app
+    assert 'from "./src/views/delivery.js"' in app
+    assert 'from "./src/views/admin.js"' in app
+    assert 'from "./src/views/detail-drawer.js"' in app

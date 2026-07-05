@@ -4,21 +4,57 @@ import assert from "node:assert/strict";
 import { render as renderLoginView } from "../src/views/login.js";
 import { render as renderDashboardView } from "../src/views/dashboard.js";
 import { render as renderCreateView } from "../src/views/create.js";
+import { render as renderReviewView } from "../src/views/review.js";
+import { render as renderGeneratingView } from "../src/views/generating.js";
+import { render as renderDeliveryView } from "../src/views/delivery.js";
+import { render as renderAdminView } from "../src/views/admin.js";
+import { render as renderTaskDetailDrawerView } from "../src/views/detail-drawer.js";
 
 function createState(overrides = {}) {
+  const formDefaults = {
+    referenceUrl: "",
+    referenceName: "reference.mp4",
+    portraitName: "portrait.png",
+    referencePreview: "./assets/reference-frame.png",
+    portraitPreview: "./assets/portrait.png",
+    duration: 15,
+    count: 1,
+    resolution: "480p",
+    subtitleStyle: "short",
+    analysisSummary: "默认摘要",
+    script: "默认文案",
+  };
+  const formKeys = new Set(Object.keys(formDefaults));
+  const rootOverrides = { ...overrides };
+  const formOverrides = { ...(overrides.form || {}) };
+
+  formKeys.forEach((key) => {
+    if (key in rootOverrides) {
+      formOverrides[key] = rootOverrides[key];
+      delete rootOverrides[key];
+    }
+  });
+  delete rootOverrides.form;
+
   return {
-    form: {
-      referenceUrl: "",
-      referenceName: "reference.mp4",
-      portraitName: "portrait.png",
-      referencePreview: "./assets/reference-frame.png",
-      duration: 15,
-      count: 1,
-      resolution: "480p",
-      subtitleStyle: "short",
-      script: "默认文案",
-      ...overrides,
-    },
+    progress: 0,
+    currentTask: null,
+    deliverables: [],
+    tasks: [],
+    queueEntries: [],
+    productionRequests: [],
+    productionServiceStatus: null,
+    productionServiceConfiguration: null,
+    productionAuditLog: null,
+    taskDetail: null,
+    detailDrawerOpen: false,
+    operationPanel: null,
+    reviewDraft: null,
+    productionPrep: null,
+    generationPhrase: "",
+    productionRequestPhrase: "",
+    ...rootOverrides,
+    form: { ...formDefaults, ...formOverrides },
   };
 }
 
@@ -64,4 +100,196 @@ test("renderCreateView escapes form values and preserves create hooks", () => {
   assert.match(html, /data-to-review/);
   assert.match(html, /type="file" accept="video\/\*" data-file-input="reference"/);
   assert.match(html, /type="file" accept="image\/\*" data-file-input="portrait"/);
+});
+
+test("renderReviewView preserves workflow hooks and escapes queue fields", () => {
+  const state = createState({
+    script: '<script>alert(1)</script>',
+    analysisSummary: '<img src=x onerror="alert(1)">',
+    queueEntries: [
+      {
+        taskId: 'task"><script>alert(2)</script>',
+        title: 'Queue <script>alert(3)</script>',
+        statusLabel: 'Status "<script>alert(4)</script>',
+        sourceState: '<img src=x>',
+        nextAction: "Next <script>",
+        blockingNote: 'Blocked "now"',
+        route: 'generating" onmouseover="alert(5)',
+      },
+    ],
+    productionRequests: [
+      {
+        taskId: 'prod"><script>alert(6)</script>',
+        title: "Request <script>",
+        statusLabel: "<img src=x>",
+        nextAction: 'Run "manual"',
+        executionStarted: true,
+      },
+    ],
+    productionServiceStatus: {
+      status: "ready",
+      ready: true,
+      executionAllowed: true,
+      summary: "Summary <script>",
+      nextAction: '<img src=x onerror="alert(7)">',
+      checks: [{ state: "blocked", label: "Check <script>", message: "<img src=x>" }],
+    },
+    reviewDraft: {
+      operatorHint: "Hint <script>",
+      subtitleRule: '<img src=x onerror="alert(8)">',
+    },
+  });
+  const html = renderReviewView({ state });
+
+  assert.match(html, /data-refresh-queue/);
+  assert.match(html, /data-save-review/);
+  assert.match(html, /data-start-generation/);
+  assert.match(html, /Queue &lt;script&gt;alert\(3\)&lt;\/script&gt;/);
+  assert.match(html, /data-open-task-detail="task&quot;&gt;&lt;script&gt;alert\(2\)&lt;\/script&gt;"/);
+  assert.doesNotMatch(html, /<script>alert/);
+  assert.doesNotMatch(html, /<img src=x/);
+});
+
+test("renderGeneratingView preserves production hooks and escapes task data", () => {
+  const state = createState({
+    progress: 44,
+    generationPhrase: '确认"><script>alert(1)</script>',
+    productionRequestPhrase: '提交"><script>alert(2)</script>',
+    currentTask: {
+      id: 'task"><script>alert(3)</script>',
+      status: "processing",
+      progress: 44,
+      payload: { count: '2<script>', duration: '15<script>', resolution: '720p<script>' },
+      review: { status: "approved" },
+      stages: [{ name: "Stage <script>", detail: '<img src=x onerror="alert(4)">', state: 'active"><script>' }],
+    },
+    operationPanel: {
+      operatorHint: 'Hint <script>alert(5)</script>',
+      steps: [
+        {
+          id: 'op"><script>alert(6)</script>',
+          title: "Step <script>",
+          state: "ready",
+          stateLabel: '<img src=x>',
+          actionLabel: 'Run "now"',
+          description: "Description <script>",
+          canExecute: true,
+        },
+      ],
+    },
+    productionPrep: {
+      status: "ready",
+      operatorHint: "Prep <script>",
+      constraints: { batchCount: "2<script>", durationSeconds: "15<script>", resolution: "720p<script>" },
+      assets: { referenceName: "ref <script>", portraitName: "<img src=x>" },
+      review: { scriptLines: ["line <script>"] },
+    },
+  });
+  const html = renderGeneratingView({ state });
+
+  assert.match(html, /data-progress-ring/);
+  assert.match(html, /data-generation-phrase/);
+  assert.match(html, /data-submit-production-request/);
+  assert.match(html, /task&quot;&gt;&lt;script&gt;alert\(3\)&lt;\/script&gt;/);
+  assert.match(html, /Stage &lt;script&gt;/);
+  assert.doesNotMatch(html, /<script>alert/);
+  assert.doesNotMatch(html, /<img src=x/);
+});
+
+test("renderDeliveryView preserves delivery hooks and escapes deliverables", () => {
+  const state = createState({
+    currentTask: {
+      id: 'delivery"><script>alert(1)</script>',
+      title: "Title <script>",
+      payload: { resolution: "720p" },
+    },
+    deliverables: [
+      {
+        title: "File <script>",
+        subtitle: '<img src=x onerror="alert(2)">',
+        action: 'Copy "now"',
+        url: 'https://example.test/"><script>alert(3)</script>',
+      },
+    ],
+  });
+  const html = renderDeliveryView({ state });
+
+  assert.match(html, /data-delivery-action="Copy &quot;now&quot;"/);
+  assert.match(html, /Title &lt;script&gt;/);
+  assert.match(html, /https:\/\/example\.test\/&quot;&gt;&lt;script&gt;alert\(3\)&lt;\/script&gt;/);
+  assert.doesNotMatch(html, /<script>alert/);
+  assert.doesNotMatch(html, /<img src=x/);
+});
+
+test("renderAdminView renders admin pages and escapes task, audit, and config fields", () => {
+  const state = createState({
+    tasks: [
+      {
+        id: 'work"><script>alert(1)</script>',
+        title: "Work <script>",
+        status: "completed",
+        progress: 100,
+        createdAt: Date.now(),
+      },
+    ],
+    productionServiceConfiguration: {
+      status: { status: "ready" },
+      items: [{ state: "blocked", label: "Config <script>", description: '<img src=x onerror="alert(2)">' }],
+      adminChecklist: ["Todo <script>"],
+      guardrails: ['Guard "rail" <script>'],
+    },
+    productionAuditLog: {
+      events: [
+        {
+          state: "blocked",
+          label: "Audit <script>",
+          title: '<img src=x onerror="alert(3)">',
+          detail: "Detail <script>",
+          actor: 'Actor "name"',
+          at: Date.now(),
+        },
+      ],
+    },
+  });
+  const worksHtml = renderAdminView({ state, page: "works", referenceFrame: "./ref.png", portraitFrame: "./portrait.png" });
+  const libraryHtml = renderAdminView({ state, page: "library", referenceFrame: './ref"><script>.png', portraitFrame: "./portrait.png" });
+  const dataHtml = renderAdminView({ state, page: "data", referenceFrame: "./ref.png", portraitFrame: "./portrait.png" });
+  const combined = `${worksHtml}${libraryHtml}${dataHtml}`;
+
+  assert.match(worksHtml, /data-open-task-detail="work&quot;&gt;&lt;script&gt;alert\(1\)&lt;\/script&gt;"/);
+  assert.match(libraryHtml, /src="\.\/ref&quot;&gt;&lt;script&gt;\.png"/);
+  assert.match(dataHtml, /data-refresh-production-service-configuration/);
+  assert.match(dataHtml, /data-refresh-production-audit-log/);
+  assert.match(dataHtml, /Config &lt;script&gt;/);
+  assert.match(dataHtml, /Audit &lt;script&gt;/);
+  assert.doesNotMatch(combined, /<script>alert/);
+  assert.doesNotMatch(combined, /<img src=x/);
+});
+
+test("renderTaskDetailDrawerView returns empty when closed and escapes drawer fields", () => {
+  assert.equal(renderTaskDetailDrawerView({ state: createState() }), "");
+
+  const html = renderTaskDetailDrawerView({
+    state: createState({
+      detailDrawerOpen: true,
+      taskDetail: {
+        title: 'Drawer"><script>alert(1)</script>',
+        statusLabel: "<img src=x>",
+        progress: '50"><script>',
+        sections: [
+          {
+            title: "Section <script>",
+            state: "ready",
+            items: [{ state: "blocked", label: "Label <script>", value: '<img src=x onerror="alert(2)">' }],
+          },
+        ],
+      },
+    }),
+  });
+
+  assert.match(html, /data-close-task-detail/);
+  assert.match(html, /Drawer&quot;&gt;&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
+  assert.match(html, /Section &lt;script&gt;/);
+  assert.doesNotMatch(html, /<script>alert/);
+  assert.doesNotMatch(html, /<img src=x/);
 });

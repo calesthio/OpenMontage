@@ -62,3 +62,13 @@ def test_chiling_workbench_dom_helper_module_exists():
     assert "export function find" in dom
     assert "export function findAll" in dom
     assert "export function bindDelegatedClick" in dom
+
+
+def test_chiling_workbench_primary_view_modules_exist():
+    app = read(WORKBENCH / "app.js")
+
+    for module_name in ["login", "dashboard", "create"]:
+        path = WORKBENCH / "src" / "views" / f"{module_name}.js"
+        assert path.is_file(), module_name
+        assert f'from "./src/views/{module_name}.js"' in app
+        assert "export function render" in read(path)

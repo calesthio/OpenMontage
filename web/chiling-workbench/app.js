@@ -13,6 +13,9 @@ import { createInitialState } from "./src/state.js";
 import { phonePreview } from "./src/components/ui.js";
 import { renderTopbar } from "./src/components/topbar.js";
 import { bindDelegatedClick, find, findAll } from "./src/dom.js";
+import { render as renderLoginView } from "./src/views/login.js";
+import { render as renderDashboardView } from "./src/views/dashboard.js";
+import { render as renderCreateView } from "./src/views/create.js";
 
 const appRoot = document.querySelector("#app");
 const toastRoot = document.querySelector("#toast-root");
@@ -516,276 +519,15 @@ function shell(content, activePage = state.page) {
 }
 
 function renderLogin() {
-  return `
-    <main class="page page--login">
-      <header class="login-header">
-        <div class="login-brand">
-          <strong>赤灵AI运营工作台</strong>
-          <span>企业内容生产入口</span>
-        </div>
-        <button class="button button--small" type="button" data-login>进入演示</button>
-      </header>
-
-      <section class="login-grid">
-        <div class="panel panel--login panel--solid">
-          <span class="pill">团队授权访问</span>
-          <h1 class="hero-title" style="margin-top: 28px;">把参考视频变成可审核、可交付的运营素材。</h1>
-          <p class="lede">粘贴视频链接，上传指定肖像，先由人工确认文案、字幕和素材授权，再进入批量生产。</p>
-
-          <form class="form" data-login-form>
-            <div class="field">
-              <label for="account">账号</label>
-              <div class="input-wrap">
-                <input id="account" name="account" autocomplete="username" value="team@chiling.ai" />
-              </div>
-            </div>
-            <div class="field">
-              <label for="password">密码</label>
-              <div class="input-wrap">
-                <input id="password" name="password" type="password" autocomplete="current-password" value="chiling-demo" />
-                <button class="text-link field-action" type="button" data-toast-title="验证码已发送" data-toast-message="演示环境已模拟发送。">验证码登录</button>
-              </div>
-            </div>
-            <div class="form-row">
-              <label class="check">
-                <input type="checkbox" checked />
-                <span>记住本设备</span>
-              </label>
-              <button class="text-link" type="button" data-toast-title="已切换入口" data-toast-message="企业验证码登录已准备。">企业验证码</button>
-            </div>
-            <button class="button button--primary button--wide" type="submit">登录工作台</button>
-            <p class="fine-print">仅展示用户需要操作的流程信息，内部技术与接口不在前台暴露。</p>
-          </form>
-        </div>
-
-        <aside class="panel panel--overview">
-          <span class="pill pill--red">今日待处理 8</span>
-          <h2 class="section-title section-title--large" style="margin-top: 30px;">从导入到交付，一条线完成。</h2>
-          <p class="lede">团队成员可以在这里查看生产状态、审核文案、管理素材与下载交付包。</p>
-
-          <div class="summary-card">
-            <span class="pill pill--green">安全状态正常</span>
-            <div class="metric-row">
-              <div class="metric-card">
-                <span class="metric-card__label">今日生成</span>
-                <strong class="metric-card__value">24</strong>
-                <i class="status-dot status-dot--green"></i>
-              </div>
-              <div class="metric-card">
-                <span class="metric-card__label">待审核</span>
-                <strong class="metric-card__value">6</strong>
-                <i class="status-dot status-dot--amber"></i>
-              </div>
-            </div>
-            <div class="status-row">
-              <i class="status-dot status-dot--green"></i>
-              <div>
-                <strong>素材与肖像授权已纳入审核</strong>
-                <span>每次生产前都需要人工确认。</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="safe-note">
-            <strong>面向运营人员设计</strong>
-            <span>页面只说“要做什么、怎么做”，不展示任何底层模型或供应商信息。</span>
-          </div>
-        </aside>
-      </section>
-    </main>
-  `;
+  return renderLoginView({ state });
 }
 
 function renderDashboard() {
-  return shell(
-    `
-      <section class="page-head">
-        <div>
-          <h1 class="hero-title hero-title--compact">生产台</h1>
-          <p class="lede">导入参考视频，查看当前任务，把待审核内容快速推进到交付。</p>
-        </div>
-        <button class="button button--primary" data-route="create">新建作品</button>
-      </section>
-
-      <section class="quick-grid">
-        <div>
-          <div class="quick-card">
-            <span class="pill pill--blue">快速导入</span>
-            <h2 class="section-title" style="margin-top: 22px;">粘贴视频链接，开始准备复刻素材。</h2>
-            <form class="quick-form" data-quick-import>
-              <div class="input-wrap">
-                <input name="referenceUrl" placeholder="粘贴抖音/短视频链接，或先输入项目说明" value="${escapeHtml(state.form.referenceUrl)}" />
-              </div>
-              <button class="button button--primary" type="submit">开始</button>
-            </form>
-          </div>
-
-          <div class="dashboard-metrics">
-            <div class="metric-card">
-              <span class="metric-card__label">今日成片</span>
-              <strong class="metric-card__value">24</strong>
-              <span class="metric-card__helper">较昨日 +18%</span>
-            </div>
-            <div class="metric-card">
-              <span class="metric-card__label">审核中</span>
-              <strong class="metric-card__value">6</strong>
-              <span class="metric-card__helper">平均 3 分钟</span>
-            </div>
-            <div class="metric-card">
-              <span class="metric-card__label">素材库</span>
-              <strong class="metric-card__value">128</strong>
-              <span class="metric-card__helper">已授权素材</span>
-            </div>
-          </div>
-
-          <div class="recent-card">
-            <div class="page-head" style="margin-bottom: 0;">
-              <div>
-                <h2 class="section-title">最近作品</h2>
-                <p class="lede">点击作品可以继续查看审核或交付状态。</p>
-              </div>
-              <button class="action-link" data-route="works">查看全部</button>
-            </div>
-            <div class="recent-grid">
-              ${["律师口播复刻", "门店探访短片", "品牌种草素材"]
-                .map(
-                  (title, index) => `
-                    <button class="work-row" type="button" data-route="${index === 0 ? "delivery" : "review"}">
-                      <i class="status-dot ${index === 0 ? "status-dot--green" : "status-dot--amber"}"></i>
-                      <span>
-                        <strong>${title}</strong>
-                        <span>${index === 0 ? "已交付" : "待人工确认"}</span>
-                      </span>
-                    </button>
-                  `,
-                )
-                .join("")}
-            </div>
-          </div>
-        </div>
-
-        <aside class="task-card">
-          <span class="pill pill--amber">当前任务</span>
-          <div class="task-card__body">
-            <div>
-              <h2 class="section-title" style="margin-top: 22px;">律师口播素材</h2>
-              <p class="lede">已完成参考解析，等待团队确认文案与字幕规则。</p>
-              <div class="stage-list" style="margin-top: 34px;">
-                ${stageList("review")}
-              </div>
-              <button class="button button--primary" style="margin-top: 34px;" data-route="review">继续审核</button>
-            </div>
-            ${phonePreview(referenceFrame, "参考画面", "")}
-          </div>
-        </aside>
-      </section>
-    `,
-    "dashboard",
-  );
+  return shell(renderDashboardView({ state, referenceFrame }), "dashboard");
 }
 
 function renderCreate() {
-  return shell(
-    `
-      <section class="page-head">
-        <div>
-          <h1 class="hero-title hero-title--compact">创建作品</h1>
-          <p class="lede">上传参考视频和指定肖像，设置生产参数，再交给团队人工确认。</p>
-        </div>
-        <button class="button" data-route="dashboard">返回生产台</button>
-      </section>
-
-      <section class="create-layout">
-        <div class="create-card">
-          <div class="steps">
-            <span class="step-pill is-active">1 导入素材</span>
-            <span class="step-pill">2 人工审核</span>
-            <span class="step-pill">3 生成交付</span>
-          </div>
-
-          <section class="section-block">
-            <h2 class="section-title">参考内容</h2>
-            <p class="lede">支持粘贴视频链接，也可以先选择本地视频文件。文案、图片和提示说明都可以人工修改。</p>
-            <div class="quick-form">
-              <div class="input-wrap">
-                <input data-field="referenceUrl" placeholder="粘贴参考视频链接" value="${escapeHtml(state.form.referenceUrl)}" />
-              </div>
-              <button class="button" data-save-form>保存</button>
-            </div>
-            <div class="upload-grid">
-              ${uploadCard("reference", "参考视频", state.form.referenceName, "用于分析结构、节奏、文案和镜头风格。", "is-red", "选择视频")}
-              ${uploadCard("portrait", "指定肖像", state.form.portraitName, "用于后续替换为团队授权的脸部肖像。", "is-amber", "选择图片")}
-            </div>
-          </section>
-
-          <section class="section-block">
-            <h2 class="section-title">生产参数</h2>
-            <div class="settings-grid">
-              <label class="setting">
-                <span>单条时长</span>
-                <input data-field="duration" type="number" min="1" max="15" value="${state.form.duration}" />
-                <small>最长 15 秒，15 秒内可自定义。</small>
-              </label>
-              <label class="setting">
-                <span>生成条数</span>
-                <input data-field="count" type="number" min="1" max="5" value="${state.form.count}" />
-                <small>单批最多 5 条，默认 1 条。</small>
-              </label>
-              <label class="setting">
-                <span>清晰度</span>
-                <select data-field="resolution">
-                  <option value="480p" ${state.form.resolution === "480p" ? "selected" : ""}>标准 480p</option>
-                  <option value="720p" ${state.form.resolution === "720p" ? "selected" : ""}>高清 720p</option>
-                </select>
-                <small>默认标准清晰度，便于快速批量。</small>
-              </label>
-              <label class="setting">
-                <span>字幕呈现</span>
-                <select data-field="subtitleStyle">
-                  <option value="short" ${state.form.subtitleStyle === "short" ? "selected" : ""}>口播短句</option>
-                  <option value="compact" ${state.form.subtitleStyle === "compact" ? "selected" : ""}>紧凑双行</option>
-                </select>
-                <small>句尾标点会自动清理。</small>
-              </label>
-            </div>
-          </section>
-
-          <section class="section-block">
-            <h2 class="section-title">文案与提示说明</h2>
-            <textarea class="review-script" data-field="script" style="min-height: 138px;">${escapeHtml(state.form.script)}</textarea>
-            <div class="chip-row">
-              <span class="pill pill--blue">可人工修改</span>
-              <span class="pill pill--green">图片可替换</span>
-              <span class="pill pill--amber">先审后产出</span>
-            </div>
-          </section>
-
-          <div class="form-actions">
-            <button class="button" data-route="dashboard">保存草稿</button>
-            <button class="button button--primary" data-to-review>下一步：人工审核</button>
-          </div>
-        </div>
-
-        <aside class="side-card">
-          <span class="pill">实时预览</span>
-          <h2 class="section-title" style="margin-top: 24px;">素材会在这里预览。</h2>
-          <p class="lede">当前默认展示参考画面，上传图片后会同步更新肖像状态。</p>
-          ${phonePreview(state.form.referencePreview, "参考画面", "phone--large")}
-          <div class="status-row">
-            <i class="status-dot status-dot--green"></i>
-            <div>
-              <strong>${state.form.duration}s · ${state.form.resolution} · ${state.form.count}条</strong>
-              <span>参数已限制在当前版本可生产范围内。</span>
-            </div>
-          </div>
-        </aside>
-      </section>
-
-      <input hidden type="file" accept="video/*" data-file-input="reference" />
-      <input hidden type="file" accept="image/*" data-file-input="portrait" />
-    `,
-    "dashboard",
-  );
+  return shell(renderCreateView({ state }), "dashboard");
 }
 
 function renderReview() {
@@ -1190,29 +932,6 @@ function configurationItem(item) {
         <span>${escapeHtml(stateLabelMap[item.state] || "待确认")} · ${escapeHtml(item.description || "等待管理员配置")}</span>
       </div>
     </div>
-  `;
-}
-
-function uploadCard(kind, title, fileName, description, tone, action) {
-  return `
-    <div class="upload-card ${tone}">
-      <i class="upload-icon"></i>
-      <div>
-        <strong>${title}</strong>
-        <p class="muted" style="margin: 6px 0 0; font-size: 13px;">${description}</p>
-        <span class="muted" style="display: block; margin-top: 8px; font-size: 12px;">${escapeHtml(fileName)}</span>
-      </div>
-      <button class="button button--small" data-upload="${kind}">${action}</button>
-    </div>
-  `;
-}
-
-function stageList(active) {
-  return `
-    ${stage("导入素材", "参考视频和肖像已准备", "done")}
-    ${stage("整理文案", "可人工修改", active === "script" ? "active" : "done")}
-    ${stage("人工审核", "等待确认", active === "review" ? "active" : "")}
-    ${stage("生产交付", "审核后开始", "")}
   `;
 }
 

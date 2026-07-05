@@ -44,10 +44,28 @@ The two authoritative blind arenas name **different** winners — pick by what t
 - **Action:** hero video → **Seedance** for controlled/narrative/consistent shots, **Kling** for
   motion-showcase shots. Both already wired via `video_selector`.
 
-### 🗣️ Voice · 🎵 Music — `[gap]`
-No verified evidence survived for either. **Do not** hardcode a "best" voice/music model from this pass —
-it needs a dedicated research run against a voice/speech arena and a music benchmark. (ElevenLabs and Suno
-remain reasonable hero defaults until then.)
+### 🗣️ Voice — the default is *not* #1 `[verified]`
+On the Artificial Analysis blind **Speech Arena** (2026), ElevenLabs is **outside the top 5**. The top
+cluster is a near-tie: **Gemini 3.1 Flash TTS (~1215) #1** and **Cartesia Sonic 3.5 (~1209) #2** (±16 Elo).
+- **But** the arena measures only *short-sample naturalness* — **not** voice-cloning fidelity or long-form
+  stability, where ElevenLabs stays strong; and >58% of listeners can't tell top synthetic voices from real,
+  so the naturalness gap is largely closed.
+- **Action (additive):** add **Gemini 3.1 Flash TTS** as the hero-naturalness voice (shipped: `gemini_tts`,
+  reuses your Google key). Keep **ElevenLabs** for cloning / brand voice / long-form / emotion-tags, and
+  **Kokoro** for bulk. Cartesia Sonic 3.5 is the runner-up (and the latency king, ~82ms).
+
+### 🎵 Music — the default is validated `[verified]`
+On the AA blind **Instrumental Music Arena**, **Suno V5.5 is #1 (~1193)** and holds three of the top five.
+**Keep Suno as the hero-music default — no change needed.**
+- **Runner-up:** **Google Lyria 3 Pro** — best *song structure* (definable sections) and "safe", Content-ID-clear,
+  licensed-data output for branded/background/loop music. Prefer it when you need structural control or
+  guaranteed commercial/Content-ID safety over raw acoustic depth.
+- **Licensing:** Suno commercial rights require a **paid plan** (not retroactive). **Avoid Udio** — post-UMG
+  settlement it became a stream-only walled garden (no download/export), a poor fit for a video product.
+
+**Unverified gaps:** no API-availability or per-unit **cost** data survived for the voice/music winners —
+confirm pricing/quotas before high-volume hero use. The Gemini TTS model id and audio schema are marked
+calibration knobs in `gemini_tts` (confirm against the live API on first run).
 
 ---
 

@@ -12,6 +12,7 @@ import {
 import { createInitialState } from "./src/state.js";
 import { phonePreview } from "./src/components/ui.js";
 import { renderTopbar } from "./src/components/topbar.js";
+import { bindDelegatedClick, find, findAll } from "./src/dom.js";
 
 const appRoot = document.querySelector("#app");
 const toastRoot = document.querySelector("#toast-root");
@@ -1753,19 +1754,19 @@ function cleanSubtitlePunctuation() {
 }
 
 function bindEvents() {
-  document.querySelectorAll("[data-route]").forEach((button) => {
+  findAll(document, "[data-route]").forEach((button) => {
     button.addEventListener("click", () => {
       saveFormValues();
       navigate(button.dataset.route);
     });
   });
 
-  document.querySelectorAll("[data-field]").forEach((field) => {
+  findAll(document, "[data-field]").forEach((field) => {
     field.addEventListener("input", saveFormValues);
     field.addEventListener("change", saveFormValues);
   });
 
-  const loginForm = document.querySelector("[data-login-form]");
+  const loginForm = find(document, "[data-login-form]");
   if (loginForm) {
     loginForm.addEventListener("submit", (event) => {
       event.preventDefault();
@@ -1773,11 +1774,11 @@ function bindEvents() {
     });
   }
 
-  document.querySelectorAll("[data-login]").forEach((button) => {
+  findAll(document, "[data-login]").forEach((button) => {
     button.addEventListener("click", login);
   });
 
-  const quickImport = document.querySelector("[data-quick-import]");
+  const quickImport = find(document, "[data-quick-import]");
   if (quickImport) {
     quickImport.addEventListener("submit", (event) => {
       event.preventDefault();
@@ -1788,14 +1789,14 @@ function bindEvents() {
     });
   }
 
-  document.querySelectorAll("[data-upload]").forEach((button) => {
+  findAll(document, "[data-upload]").forEach((button) => {
     button.addEventListener("click", () => {
-      const input = document.querySelector(`[data-file-input="${button.dataset.upload}"]`);
+      const input = find(document, `[data-file-input="${button.dataset.upload}"]`);
       input?.click();
     });
   });
 
-  document.querySelectorAll("[data-file-input]").forEach((input) => {
+  findAll(document, "[data-file-input]").forEach((input) => {
     input.addEventListener("change", () => {
       const file = input.files?.[0];
       if (!file) return;
@@ -1817,14 +1818,14 @@ function bindEvents() {
     });
   });
 
-  document.querySelectorAll("[data-save-form]").forEach((button) => {
+  findAll(document, "[data-save-form]").forEach((button) => {
     button.addEventListener("click", () => {
       saveFormValues();
       showToast("草稿已保存", "参数、文案和素材状态已记录。");
     });
   });
 
-  document.querySelectorAll("[data-to-review]").forEach((button) => {
+  findAll(document, "[data-to-review]").forEach((button) => {
     button.addEventListener("click", () => {
       saveFormValues();
       navigate("review");
@@ -1832,30 +1833,30 @@ function bindEvents() {
     });
   });
 
-  document.querySelectorAll("[data-clean-subtitles]").forEach((button) => {
+  findAll(document, "[data-clean-subtitles]").forEach((button) => {
     button.addEventListener("click", cleanSubtitlePunctuation);
   });
 
-  document.querySelectorAll("[data-save-review]").forEach((button) => {
+  findAll(document, "[data-save-review]").forEach((button) => {
     button.addEventListener("click", () => {
       saveReviewDecision(false);
     });
   });
 
-  document.querySelectorAll("[data-approve-review]").forEach((button) => {
+  findAll(document, "[data-approve-review]").forEach((button) => {
     button.addEventListener("click", () => {
       saveReviewDecision(true);
     });
   });
 
-  document.querySelectorAll("[data-start-generation]").forEach((button) => {
+  findAll(document, "[data-start-generation]").forEach((button) => {
     button.addEventListener("click", () => {
       saveFormValues();
       startGeneration();
     });
   });
 
-  document.querySelectorAll("[data-open-task]").forEach((button) => {
+  findAll(document, "[data-open-task]").forEach((button) => {
     button.addEventListener("click", async () => {
       state.currentTaskId = button.dataset.openTask;
       window.localStorage.setItem("chiling-workbench.current-task-id", state.currentTaskId);
@@ -1874,17 +1875,17 @@ function bindEvents() {
     });
   });
 
-  document.querySelectorAll("[data-open-task-detail]").forEach((button) => {
+  findAll(document, "[data-open-task-detail]").forEach((button) => {
     button.addEventListener("click", () => {
       openTaskDetail(button.dataset.openTaskDetail);
     });
   });
 
-  document.querySelectorAll("[data-close-task-detail]").forEach((button) => {
+  findAll(document, "[data-close-task-detail]").forEach((button) => {
     button.addEventListener("click", closeTaskDetail);
   });
 
-  document.querySelectorAll("[data-refresh-queue]").forEach((button) => {
+  findAll(document, "[data-refresh-queue]").forEach((button) => {
     button.addEventListener("click", async () => {
       try {
         await refreshQueue();
@@ -1896,7 +1897,7 @@ function bindEvents() {
     });
   });
 
-  document.querySelectorAll("[data-refresh-production-requests]").forEach((button) => {
+  findAll(document, "[data-refresh-production-requests]").forEach((button) => {
     button.addEventListener("click", async () => {
       try {
         await refreshProductionRequests();
@@ -1908,7 +1909,7 @@ function bindEvents() {
     });
   });
 
-  document.querySelectorAll("[data-refresh-production-service-status]").forEach((button) => {
+  findAll(document, "[data-refresh-production-service-status]").forEach((button) => {
     button.addEventListener("click", async () => {
       try {
         await refreshProductionServiceStatus();
@@ -1920,7 +1921,7 @@ function bindEvents() {
     });
   });
 
-  document.querySelectorAll("[data-refresh-production-service-configuration]").forEach((button) => {
+  findAll(document, "[data-refresh-production-service-configuration]").forEach((button) => {
     button.addEventListener("click", async () => {
       try {
         await refreshProductionServiceConfiguration();
@@ -1932,7 +1933,7 @@ function bindEvents() {
     });
   });
 
-  document.querySelectorAll("[data-refresh-production-audit-log]").forEach((button) => {
+  findAll(document, "[data-refresh-production-audit-log]").forEach((button) => {
     button.addEventListener("click", async () => {
       try {
         await refreshProductionAuditLog();
@@ -1944,25 +1945,25 @@ function bindEvents() {
     });
   });
 
-  document.querySelectorAll("[data-claim-production-request]").forEach((button) => {
+  findAll(document, "[data-claim-production-request]").forEach((button) => {
     button.addEventListener("click", () => {
       claimProductionRequest(button.dataset.claimProductionRequest);
     });
   });
 
-  document.querySelectorAll("[data-complete-production-request]").forEach((button) => {
+  findAll(document, "[data-complete-production-request]").forEach((button) => {
     button.addEventListener("click", () => {
       completeProductionRequest(button.dataset.completeProductionRequest);
     });
   });
 
-  document.querySelectorAll("[data-execute-production-adapter]").forEach((button) => {
+  findAll(document, "[data-execute-production-adapter]").forEach((button) => {
     button.addEventListener("click", () => {
       executeProductionAdapter(button.dataset.executeProductionAdapter);
     });
   });
 
-  document.querySelectorAll("[data-refresh-operations]").forEach((button) => {
+  findAll(document, "[data-refresh-operations]").forEach((button) => {
     button.addEventListener("click", async () => {
       try {
         await refreshOperations();
@@ -1974,7 +1975,7 @@ function bindEvents() {
     });
   });
 
-  document.querySelectorAll("[data-refresh-review-draft]").forEach((button) => {
+  findAll(document, "[data-refresh-review-draft]").forEach((button) => {
     button.addEventListener("click", async () => {
       try {
         saveFormValues();
@@ -1987,7 +1988,7 @@ function bindEvents() {
     });
   });
 
-  document.querySelectorAll("[data-refresh-production-prep]").forEach((button) => {
+  findAll(document, "[data-refresh-production-prep]").forEach((button) => {
     button.addEventListener("click", async () => {
       try {
         await refreshProductionPrep();
@@ -1999,39 +2000,39 @@ function bindEvents() {
     });
   });
 
-  document.querySelectorAll("[data-run-operation]").forEach((button) => {
+  findAll(document, "[data-run-operation]").forEach((button) => {
     button.addEventListener("click", () => {
       runOperationAction(button.dataset.runOperation);
     });
   });
 
-  const generationPhraseInput = document.querySelector("[data-generation-phrase]");
+  const generationPhraseInput = find(document, "[data-generation-phrase]");
   if (generationPhraseInput) {
     generationPhraseInput.addEventListener("input", () => {
       state.generationPhrase = generationPhraseInput.value;
     });
   }
 
-  const productionRequestPhraseInput = document.querySelector("[data-production-request-phrase]");
+  const productionRequestPhraseInput = find(document, "[data-production-request-phrase]");
   if (productionRequestPhraseInput) {
     productionRequestPhraseInput.addEventListener("input", () => {
       state.productionRequestPhrase = productionRequestPhraseInput.value;
     });
   }
 
-  document.querySelectorAll("[data-approve-generation]").forEach((button) => {
+  findAll(document, "[data-approve-generation]").forEach((button) => {
     button.addEventListener("click", () => {
       approveGenerationGate();
     });
   });
 
-  document.querySelectorAll("[data-submit-production-request]").forEach((button) => {
+  findAll(document, "[data-submit-production-request]").forEach((button) => {
     button.addEventListener("click", () => {
       submitProductionRequest();
     });
   });
 
-  document.querySelectorAll("[data-delivery-action]").forEach((button) => {
+  findAll(document, "[data-delivery-action]").forEach((button) => {
     button.addEventListener("click", async () => {
       const action = button.dataset.deliveryAction;
       const url = button.dataset.deliveryUrl;
@@ -2057,7 +2058,7 @@ function bindEvents() {
     });
   });
 
-  document.querySelectorAll("[data-toast-title]").forEach((button) => {
+  findAll(document, "[data-toast-title]").forEach((button) => {
     button.addEventListener("click", () => {
       showToast(button.dataset.toastTitle, button.dataset.toastMessage || "操作已完成。");
     });

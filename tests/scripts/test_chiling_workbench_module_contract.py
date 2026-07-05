@@ -52,3 +52,13 @@ def test_chiling_workbench_has_shared_component_modules():
     assert "export function metric" in ui
     assert "export function pill" in ui
     assert "export function renderTopbar" in topbar
+
+
+def test_chiling_workbench_dom_helper_module_exists():
+    app = read(WORKBENCH / "app.js")
+    dom = read(WORKBENCH / "src" / "dom.js")
+
+    assert 'from "./src/dom.js"' in app
+    assert "export function find" in dom
+    assert "export function findAll" in dom
+    assert "export function bindDelegatedClick" in dom

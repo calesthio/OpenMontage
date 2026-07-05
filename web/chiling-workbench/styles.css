@@ -1,3 +1,4 @@
+/* 1. Design tokens */
 :root {
   color-scheme: light;
   --bg: #f5f5f7;
@@ -25,6 +26,7 @@
   --radius-sm: 18px;
 }
 
+/* 2. Base */
 * {
   box-sizing: border-box;
 }
@@ -56,6 +58,7 @@ button {
   cursor: pointer;
 }
 
+/* 3. Layout */
 .app-shell {
   min-height: 100vh;
   padding: 32px 42px 48px;
@@ -174,6 +177,7 @@ button {
   grid-template-columns: 312px minmax(390px, 410px) minmax(390px, 452px);
 }
 
+/* 4. Components */
 .panel {
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
@@ -521,6 +525,7 @@ button {
   margin-bottom: 8px;
 }
 
+/* 5. Pages */
 .page-head {
   display: flex;
   align-items: flex-start;
@@ -1203,6 +1208,7 @@ button {
   }
 }
 
+/* 6. Responsive */
 @media (max-width: 1180px) {
   body {
     min-width: 0;
@@ -1266,5 +1272,152 @@ button {
 
   .phone--large {
     margin: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    padding: 16px;
+  }
+
+  .page {
+    padding: 28px 0 0;
+  }
+
+  .topbar {
+    gap: 14px;
+    padding: 18px;
+    border-radius: 24px;
+  }
+
+  .topbar__spacer {
+    display: none;
+  }
+
+  .brand,
+  .login-brand {
+    min-width: 0;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .nav {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .nav__item,
+  .button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .hero-title,
+  .section-title--large {
+    font-size: 34px;
+    line-height: 1.12;
+  }
+
+  .section-title {
+    font-size: 24px;
+  }
+
+  .panel,
+  .panel--login,
+  .panel--overview,
+  .quick-card,
+  .task-card,
+  .recent-card,
+  .create-card,
+  .side-card,
+  .review-card,
+  .generation-main,
+  .generation-side,
+  .delivery-card {
+    border-radius: 24px;
+    padding: 28px;
+  }
+
+  .summary-card,
+  .safe-note,
+  .status-row,
+  .delivery-item,
+  .upload-card,
+  .review-note {
+    padding: 20px;
+  }
+
+  .quick-form,
+  .task-card__body,
+  .generation-body,
+  .delivery-item,
+  .upload-card,
+  .check-row,
+  .task-detail-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .delivery-card,
+  .generation-layout,
+  .create-layout {
+    gap: 28px;
+  }
+
+  .steps {
+    gap: 12px;
+  }
+
+  .step-pill,
+  button,
+  input,
+  textarea,
+  select,
+  .button,
+  .nav__item,
+  .pill,
+  .metric-card,
+  .work-row,
+  .delivery-item {
+    min-width: 0;
+  }
+
+  .work-row,
+  .delivery-card,
+  .delivery-item,
+  .task-detail-summary,
+  .task-detail-section {
+    overflow-wrap: anywhere;
+  }
+
+  .metric-card__helper {
+    position: static;
+    display: block;
+    margin-top: 8px;
+  }
+
+  .phone,
+  .phone--large {
+    width: min(100%, 214px);
+    height: auto;
+    aspect-ratio: 9 / 19;
+  }
+
+  .toast-root {
+    top: 90px;
+    right: 16px;
+    left: 16px;
+  }
+
+  .toast {
+    min-width: 0;
+  }
+
+  .task-detail-drawer__panel {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    border-radius: 0;
+    padding: 24px 20px;
   }
 }

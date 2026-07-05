@@ -109,3 +109,22 @@ def test_chiling_workbench_action_and_polling_modules_exist():
     assert "export function createActions" in actions
     assert "export function createPollingController" in polling
     assert "window.ChilingTaskApi" not in polling
+
+
+def test_chiling_workbench_css_has_a_plus_sections_and_responsive_rules():
+    styles = read(WORKBENCH / "styles.css")
+
+    for marker in [
+        "/* 1. Design tokens */",
+        "/* 2. Base */",
+        "/* 3. Layout */",
+        "/* 4. Components */",
+        "/* 5. Pages */",
+        "/* 6. Responsive */",
+    ]:
+        assert marker in styles
+
+    assert "@media (max-width: 1180px)" in styles
+    assert "@media (max-width: 760px)" in styles
+    assert "min-width: 0" in styles
+    assert "overflow-wrap: anywhere" in styles

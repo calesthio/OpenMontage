@@ -26,6 +26,15 @@ from tools.base_tool import (
 )
 
 
+def _format_runtime_error(exc: Exception) -> str:
+    message = str(exc).strip()
+    if not message:
+        return exc.__class__.__name__
+    if exc.__class__.__name__ in message:
+        return message
+    return f"{exc.__class__.__name__}: {message}"
+
+
 class Transcriber(BaseTool):
     name = "transcriber"
     version = "0.1.0"
@@ -144,41 +153,52 @@ class Transcriber(BaseTool):
             device = "cpu"
             compute_type = "int8"
 
-        model = WhisperModel(model_size, device=device, compute_type=compute_type)
+        try:
+            model = WhisperModel(model_size, device=device, compute_type=compute_type)
+        except Exception as exc:
+            return ToolResult(
+                success=False,
+                error=f"Failed to load transcription model: {_format_runtime_error(exc)}",
+            )
 
-        # Transcribe
-        segments_iter, info = model.transcribe(
-            str(input_path),
-            language=language,
-            word_timestamps=True,
-            vad_filter=True,
-        )
+        try:
+            segments_iter, info = model.transcribe(
+                str(input_path),
+                language=language,
+                word_timestamps=True,
+                vad_filter=True,
+            )
 
-        segments = []
-        word_timestamps = []
+            segments = []
+            word_timestamps = []
 
-        for seg in segments_iter:
-            seg_data = {
-                "id": seg.id,
-                "start": round(seg.start, 3),
-                "end": round(seg.end, 3),
-                "text": seg.text.strip(),
-            }
+            for seg in segments_iter:
+                seg_data = {
+                    "id": seg.id,
+                    "start": round(seg.start, 3),
+                    "end": round(seg.end, 3),
+                    "text": seg.text.strip(),
+                }
 
-            if seg.words:
-                words = []
-                for w in seg.words:
-                    word_entry = {
-                        "word": w.word,
-                        "start": round(w.start, 3),
-                        "end": round(w.end, 3),
-                        "probability": round(w.probability, 3),
-                    }
-                    words.append(word_entry)
-                    word_timestamps.append(word_entry)
-                seg_data["words"] = words
+                if seg.words:
+                    words = []
+                    for w in seg.words:
+                        word_entry = {
+                            "word": w.word,
+                            "start": round(w.start, 3),
+                            "end": round(w.end, 3),
+                            "probability": round(w.probability, 3),
+                        }
+                        words.append(word_entry)
+                        word_timestamps.append(word_entry)
+                    seg_data["words"] = words
 
-            segments.append(seg_data)
+                segments.append(seg_data)
+        except Exception as exc:
+            return ToolResult(
+                success=False,
+                error=f"Failed to transcribe media: {_format_runtime_error(exc)}",
+            )
 
         detected_language = language or info.language
         duration = info.duration

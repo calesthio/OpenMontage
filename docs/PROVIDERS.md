@@ -41,13 +41,18 @@ OPENAI_API_KEY=              # OpenAI TTS + GPT Image 2 images
 XAI_API_KEY=                 # xAI Grok image generation/editing + Grok video generation
 DOUBAO_SPEECH_API_KEY=       # Volcengine Doubao Speech TTS (strong Mandarin narration)
 DOUBAO_SPEECH_VOICE_TYPE=    # Default Doubao speaker/voice type
+DOUBAO_VISION_API_KEY=       # Volcengine Ark/Doubao vision understanding for prompt reverse
+DOUBAO_VISION_MODEL=         # Doubao vision endpoint/model id configured in Ark
+DOUBAO_VISION_BASE_URL=      # Optional; default https://ark.cn-beijing.volces.com/api/v3
 
 # MULTI-MODEL GATEWAY (one key, 6+ tools)
-FAL_KEY=                     # FLUX, Recraft, Kling, Veo, MiniMax video
+FAL_KEY=                     # FLUX, Recraft, Seedance 2.0, Kling, Veo, MiniMax video
 
 # VIDEO
+RUNNINGHUB_API_KEY=          # RunningHub standard model API key for runninghub_seedance_video
 HEYGEN_API_KEY=              # HeyGen avatar video gateway
 RUNWAY_API_KEY=              # Runway Gen-4 video (direct)
+REPLICATE_API_TOKEN=         # Replicate-hosted Seedance 2.0 fallback
 SUNO_API_KEY=                # Suno music generation
 
 # LOCAL (no keys needed — just GPU + install)
@@ -98,7 +103,7 @@ OpenMontage now uses those published rates in the Grok tool estimators.
 
 > **Broad single-key coverage.** One API key unlocks image and video providers across multiple models.
 
-**Tools unlocked:** `flux_image`, `recraft_image`, `kling_video`, `veo_video`, `minimax_video`
+**Tools unlocked:** `flux_image`, `recraft_image`, `seedance_video`, `kling_video`, `veo_video`, `minimax_video`
 **Env var:** `FAL_KEY`
 
 #### Setup
@@ -130,6 +135,47 @@ No subscription — pure pay-as-you-go, no minimum spend.
 | WAN 2.5 | $0.05/sec | 20 seconds |
 
 **Free tier:** None — but $0 to start, you only pay for what you use.
+
+---
+
+### Seedance 2.0 — Creator Video Generation
+
+> **Preferred premium path for creator-video scenes.** Seedance 2.0 is best when the approved scene needs real generated motion, camera direction, reference-conditioned continuity, or model-generated synced audio.
+
+**Tools unlocked:** `runninghub_seedance_video`, `seedance_video`, `seedance_replicate`
+**Env vars:** `RUNNINGHUB_API_KEY` for RunningHub, `FAL_KEY` for fal.ai, or `REPLICATE_API_TOKEN` for Replicate
+
+#### Setup
+
+For RunningHub:
+
+1. Use a RunningHub enterprise/shared standard-model API key.
+2. Add to `.env.local` (recommended, gitignored) or `.env`: `RUNNINGHUB_API_KEY=your-key-here`
+3. The tool submits to RunningHub's `sparkvideo-2.0-mini/multimodal-video` endpoint, polls `/openapi/v2/query`, and immediately downloads the returned video URL because RunningHub result links expire.
+
+OpenMontage limits Seedance-compatible generation to at most `15` seconds per generated clip. Users can choose any supported duration from `4` to `15` seconds. Resolution is selectable between `480p` and `720p`, with `480p` as the default. Batch planners must cap a single Seedance batch at `5` generated clips.
+
+For fal.ai:
+
+1. Create a fal.ai API key at [fal.ai/dashboard/keys](https://fal.ai/dashboard/keys)
+2. Add to `.env`: `FAL_KEY=your-key-here`
+
+For Replicate:
+
+1. Create a Replicate API token at [replicate.com/account/api-tokens](https://replicate.com/account/api-tokens)
+2. Add to `.env`: `REPLICATE_API_TOKEN=your-token-here`
+
+#### What it is best for
+
+- Seedance-led scenes in the `creator-video` pipeline
+- RunningHub-hosted creator workflows where the user has non-official Seedance-compatible access
+- Text-to-video, image-to-video, and reference-conditioned video through the fal.ai path
+- Cinematic creator clips where camera movement and subject continuity matter
+- Dialogue-style prompts when the model should generate synchronized audio
+
+#### Pricing
+
+OpenMontage estimates Seedance cost from the selected gateway, variant, and selected clip duration at runtime. The current tool estimates are roughly `$0.24/sec` for fast mode and `$0.30/sec` for standard mode; check the provider dashboard before large batch runs.
 
 ---
 
@@ -204,6 +250,30 @@ Start with `speech_rate: 0` for natural Mandarin delivery. If the approved forma
 #### Pricing
 
 Doubao Speech 2.0 is billed by character package or usage in Volcengine. OpenMontage estimates cost from text length and prefers provider-returned usage metadata when available.
+
+---
+
+### Doubao Vision — Reference Prompt Reverse
+
+> **Best for Chinese short-video reference analysis.** Doubao Vision reads extracted keyframes plus transcript text and reverses each scene into editable Seedance prompts.
+
+**Tools unlocked:** `doubao_vision_understand`, `reference_prompt_reverse`
+**Env vars:** `DOUBAO_VISION_API_KEY` or `ARK_API_KEY`, plus `DOUBAO_VISION_MODEL`
+
+#### Setup
+
+1. Enable a Doubao visual understanding model or endpoint in Volcengine Ark.
+2. Add credentials to `.env.local`:
+   ```bash
+   DOUBAO_VISION_API_KEY=your-api-key
+   DOUBAO_VISION_MODEL=your-doubao-vision-endpoint-or-model-id
+   # Optional if not using the default Ark-compatible endpoint:
+   DOUBAO_VISION_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
+   ```
+
+OpenMontage calls the configured endpoint through Volcengine Ark's `/responses` API with local keyframes encoded as image data URIs. The response is required to be JSON so the package can update `visual_summary`, `camera_motion`, `pacing`, and `production_inputs.seedance_prompt`.
+
+This is an analysis step, not production approval. Review and edit the reversed prompts before Seedance generation.
 
 ---
 
@@ -716,6 +786,392 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **Video Understand** | `pip install transformers torch` | CLIP/BLIP-2 visual analysis |
 | **Talking Head** | Clone [SadTalker](https://github.com/OpenTalker/SadTalker) | Avatar animation from photo + audio |
 | **Lip Sync** | Clone [Wav2Lip](https://github.com/Rudrabha/Wav2Lip) | Audio-driven lip synchronization |
+
+`faster-whisper` also needs the selected Whisper model cached locally on first real run. If the machine is offline before that cache exists, OpenMontage now keeps the reference-analysis pipeline running and marks the transcript as `pending_transcription` with reason `transcriber_model_download_required`.
+
+### Reference Video Analysis Package
+
+**Tools:** `reference_video_package`, `reference_prompt_reverse`, `reference_text_edit`, `reference_asset_binding`, `reference_review_approval`, `reference_production_plan`, `seedance_batch`, `video_stitch`
+**Pipeline:** `reference-video-analysis`
+**Runtime:** Local, analysis-only
+
+Use this workflow when a creator provides a Douyin link or local video as a reference. The MVP produces a human-editable replication package with transcript, rewrite draft, scene table, keyframes, pacing notes, and a Seedance-only v1 downstream mode. Each scene also exposes editable production inputs for script text, Seedance prompt drafts, and user-uploaded asset slots.
+
+The pipeline tries URL ingestion first when a supported downloader can access the link. If Douyin blocks download because of login, region, watermark handling, or platform protection, it stops cleanly and asks for a local file path. It must not bypass platform access controls.
+
+Start by analyzing either a video URL or a local video file:
+
+```bash
+.venv/bin/python scripts/analyze_reference_video.py \
+  "https://v.douyin.com/<share-id>/" \
+  --project-dir projects/<project>
+```
+
+```bash
+.venv/bin/python scripts/analyze_reference_video.py \
+  /path/to/reference-video.mp4 \
+  --project-dir projects/<project>
+```
+
+If URL ingestion is blocked, the command exits with code `3` and prints a structured fallback payload with `fallback_required: "local_video_file"`. Download the team-authorized video manually, then rerun the local-file command above.
+
+For the safest one-command preview, use the wrapper below. By default it analyzes the source, writes the editable package, prints the next commands, and stops before any paid or downstream generation:
+
+```bash
+.venv/bin/python scripts/reference_preview_pipeline.py \
+  "https://v.douyin.com/<share-id>/" \
+  --project-dir projects/<project>
+```
+
+Add `--reverse-prompts` only when you explicitly want to call the configured vision provider, such as Doubao, to enrich Seedance prompts from keyframes:
+
+```bash
+.venv/bin/python scripts/reference_preview_pipeline.py \
+  /path/to/reference-video.mp4 \
+  --project-dir projects/<project> \
+  --reverse-prompts \
+  --provider doubao
+```
+
+For an end-to-end local demo handoff, use the one-command runner. It runs reference analysis, optionally reverses prompts, writes the guided demo report, and stops at the human-edit gate. By default it does not call Doubao or any paid video-generation provider:
+
+```bash
+.venv/bin/python scripts/run_reference_local_demo.py \
+  /path/to/reference-video.mp4 \
+  --project-dir projects/<project>
+```
+
+Before a live demo or first real sample, you can run the same readiness check by itself. It validates the local source path, output directory, FFmpeg/FFprobe, and whether optional Doubao/Seedance keys are configured. It reports only env var names and never prints secret values:
+
+```bash
+.venv/bin/python scripts/reference_demo_preflight.py \
+  /path/to/reference-video.mp4 \
+  --project-dir projects/<project>
+```
+
+Use `--reverse-prompts --provider doubao` only when you want the configured Doubao Vision API to enrich editable Seedance prompts. The runner still does not approve production, call Seedance, or export a final video:
+
+```bash
+.venv/bin/python scripts/run_reference_local_demo.py \
+  /path/to/reference-video.mp4 \
+  --project-dir projects/<project> \
+  --reverse-prompts \
+  --provider doubao
+```
+
+To resume a half-finished reference project, inspect the project directory. This command is local-only and prints the current artifact, approval state, and safest next command:
+
+```bash
+.venv/bin/python scripts/reference_project_status.py \
+  projects/<project>
+```
+
+For a web dashboard or desktop client, use the snapshot command instead of parsing individual artifact files. It returns a stable JSON envelope with phase, status, latest artifact paths, media paths, delivery info, next actions, UI action metadata, and safety flags. It never prints API key values:
+
+```bash
+.venv/bin/python scripts/reference_project_snapshot.py \
+  projects/<project>
+```
+
+The local console exposes the same safe contract over HTTP. It can create a reference project and import an existing local video file before analysis:
+
+- `POST /api/reference/projects/create` with `project_name`
+- `POST /api/reference/projects/import-source` with `project_dir` and `source_path`
+- `GET /api/reference/state?project_dir=...` for the current phase and safe UI actions
+- `POST /api/reference/actions/prepare` for confirmation-gated command preparation
+- `POST /api/reference/actions/execute` for safe local-only actions such as analysis or dry-run preparation
+- `GET /api/reference/jobs/status?project_dir=...&job_id=...` for tracked job status and log paths
+- `GET /api/reference/jobs/list?project_dir=...` for recent project jobs; the console refreshes this list and polls running jobs after execution
+
+Use `ui_actions[]` to render buttons safely. Each action includes `risk`, `paid_generation`, `requires_confirmation`, `can_execute`, `execution_mode`, `disabled_reason`, `execution_note`, `operator_guidance`, and `confirmation_phrase`; frontends should render `operator_guidance.summary`, `operator_guidance.next_step`, and the provided button labels instead of inferring copy from raw risk names. Require the exact phrase before enabling paid generation, approval, or delivery export actions. A successful prepare response may include a raw shell `command`; show it only after confirmation and offer copy/download helpers for manual terminal execution. The execute endpoint refuses paid generation, final delivery export, production approval, and manual-review actions with a machine-readable `blocked_reason`; those remain prepare-only or manual-review only.
+
+To smoke-test that contract locally without opening a browser or calling paid providers, run:
+
+```bash
+.venv/bin/python scripts/reference_console_smoke.py \
+  /path/to/reference-video.mp4 \
+  --project-name reference-console-smoke
+```
+
+The smoke script calls the same local API router for health, console HTML loading, project creation, source import, safe action execution, job polling, and job listing. It checks that the console page includes the guidance renderer plus copy/download helpers for prepared commands, only executes `can_execute` local actions, and strips raw shell commands from its JSON output. The result includes machine-readable `steps[]`, `failure_stage`, and `recommended_action` fields so CI or a web client can show exactly where setup failed.
+
+To exercise the real loopback HTTP server instead of the in-process router, add `--server-mode http`; this binds a local port and may require local-network permission on locked-down systems:
+
+```bash
+.venv/bin/python scripts/reference_console_smoke.py \
+  /path/to/reference-video.mp4 \
+  --project-name reference-console-smoke \
+  --server-mode http \
+  --port 0
+```
+
+When a package has edited copy/prompts or bound team assets, the status command recommends `preview_reference_approval.py` before `approve_reference_package.py`. This keeps the final review local-only until the package has valid script text, Seedance prompts, authorized selected assets, at least one selected team-authorized face/presenter reference when likeness replacement is required, and locked Seedance defaults (`15s`, `480p`, batch size `1`). Once a final-edit plan is `ready_for_compose`, the status command recommends a dry-run first, then a formal compose command with `--burn-subtitles`; it also adds `--mix-audio` automatically when the plan declares valid local `compose_handoff.audio_tracks`. After a rendered report and final MP4 exist, the status becomes `final_render_ready` and prompts human playback review before distribution.
+
+For a guided local review loop, use the wizard. Without an edit sheet it exports the current package's editable JSON template; with `--edit-sheet` it validates the sheet, applies local text/asset edits, and previews approval readiness. It never writes an approved package and never calls paid generation:
+
+```bash
+.venv/bin/python scripts/reference_review_wizard.py \
+  projects/<project>
+```
+
+```bash
+.venv/bin/python scripts/reference_review_wizard.py \
+  projects/<project> \
+  --edit-sheet projects/<project>/artifacts/reference-edit-sheets/<reference>-edit-sheet.json \
+  --duration 15 \
+  --resolution 480p \
+  --batch-size 1
+```
+
+For stakeholder demos, generate a readable local report from the current project state. If the package is not approved, the report exports/links the edit sheet and marks Seedance dry-run as blocked until approval. If the package is approved, it also writes a local Seedance production plan, dry-run task list, and final-edit missing-clip report. It still never calls paid providers:
+
+```bash
+.venv/bin/python scripts/reference_demo_report.py \
+  projects/<project> \
+  --duration 15 \
+  --resolution 480p \
+  --batch-size 1 \
+  --provider runninghub
+```
+
+For batch human edits, export a local JSON edit-sheet template from the current pending package:
+
+```bash
+.venv/bin/python scripts/export_reference_edit_sheet.py \
+  projects/<project>/artifacts/reference-prompts/<reference>-prompts-reversed-package.json \
+  --project-dir projects/<project>
+```
+
+The exported sheet includes current global copy, per-scene script/prompt fields, and asset placeholders. Your team can edit that JSON directly. The editable format accepts any combination of global copy, per-scene script/prompt edits, and team-authorized assets:
+
+```json
+{
+  "rewrite_text": "人工确认后的复刻文案",
+  "scene_edits": [
+    {
+      "scene_id": "s1",
+      "script_text": "前三秒提出痛点，然后给出解决方案。",
+      "seedance_prompt": "竖屏近景口播，干净背景，轻微推近。"
+    }
+  ],
+  "assets": [
+    {
+      "path": "/path/to/team-face.png",
+      "scene_id": "s1",
+      "id": "face-ref",
+      "role": "subject_or_face_reference",
+      "authorized": true
+    }
+  ]
+}
+```
+
+After editing, validate the sheet before applying it. This local preflight checks scene IDs, asset paths, and `authorized: true` without writing artifacts:
+
+```bash
+.venv/bin/python scripts/apply_reference_edit_sheet.py \
+  projects/<project>/artifacts/reference-prompts/<reference>-prompts-reversed-package.json \
+  --project-dir projects/<project> \
+  --edit-sheet /path/to/edit-sheet.json \
+  --validate-only
+```
+
+Then apply the edit sheet in one local command. This still does not approve production or call paid providers:
+
+```bash
+.venv/bin/python scripts/apply_reference_edit_sheet.py \
+  projects/<project>/artifacts/reference-prompts/<reference>-prompts-reversed-package.json \
+  --project-dir projects/<project> \
+  --edit-sheet /path/to/edit-sheet.json
+```
+
+If Doubao Vision is configured, reverse-engineer editable Seedance prompts from keyframes before manual edits:
+
+```bash
+.venv/bin/python scripts/reverse_reference_prompts.py \
+  projects/<project>/artifacts/<reference>-replication-package.json \
+  --project-dir projects/<project> \
+  --provider doubao
+```
+
+Before approval, edit replicated copy and generated Seedance prompts without manually changing JSON. Repeat `--scene-edit` for multiple scenes; the tuple is `SCENE_ID SCRIPT_TEXT SEEDANCE_PROMPT`:
+
+```bash
+.venv/bin/python scripts/edit_reference_package.py \
+  projects/<project>/artifacts/reference-prompts/<reference>-prompts-reversed-package.json \
+  --project-dir projects/<project> \
+  --rewrite-text "人工修改后的复刻文案" \
+  --scene-edit s1 "人工确认后的场景脚本" "竖屏产品口播，人物面向镜头，干净背景"
+```
+
+Then bind any team-owned reference images or product assets into the edited package. Repeat `--asset` for multiple files; the tuple is `PATH SCENE_ID ROLE ASSET_ID`:
+
+```bash
+.venv/bin/python scripts/bind_reference_assets.py \
+  projects/<project>/artifacts/reference-edits/<reference>-text-edited-package.json \
+  --project-dir projects/<project> \
+  --asset /path/to/team-face.png s1 subject_or_face_reference face-ref \
+  --authorized
+```
+
+Before approval, preview the approval readiness summary. This is local-only and does not write an approved package:
+
+```bash
+.venv/bin/python scripts/preview_reference_approval.py \
+  projects/<project>/artifacts/reference-assets/<reference>-assets-bound-package.json \
+  --project-dir projects/<project> \
+  --target-mode seedance \
+  --duration 15 \
+  --resolution 480p \
+  --batch-size 1
+```
+
+After a human edits the JSON package and binds any needed assets, approve a copied handoff package with an explicit review phrase. This does not start paid generation:
+
+```bash
+.venv/bin/python scripts/approve_reference_package.py \
+  projects/<project>/artifacts/reference-assets/<reference>-assets-bound-package.json \
+  --project-dir projects/<project> \
+  --target-mode seedance \
+  --reviewer operator \
+  --approval-phrase "APPROVE REFERENCE PACKAGE"
+```
+
+Then prepare a local production handoff from the approved package:
+
+```bash
+.venv/bin/python scripts/prepare_reference_production.py \
+  projects/<project>/artifacts/reference-review/<reference>-seedance-approved-package.json \
+  --project-dir projects/<project> \
+  --duration 15 \
+  --resolution 480p \
+  --batch-size 1
+```
+
+This workflow does not replace faces, call digital-human APIs, run paid Seedance generation, or publish outputs during analysis/review. Reference-video v1 downstream production is Seedance-only, requires human review, and requires at least one selected team-authorized face/presenter asset when the package declares `requires_team_authorized_face_or_avatar: true`. The production handoff enforces Seedance constraints: `4`-`15` seconds per clip, `480p` or `720p`, and maximum batch size `5`.
+
+To prepare both the production handoff and Seedance dry-run preview in one local step:
+
+```bash
+.venv/bin/python scripts/preview_reference_seedance.py \
+  projects/<project>/artifacts/reference-review/<reference>-seedance-approved-package.json \
+  --project-dir projects/<project> \
+  --duration 15 \
+  --resolution 480p \
+  --batch-size 1 \
+  --provider runninghub
+```
+
+This preview command still does not call any paid provider. It only writes a production plan JSON and a Seedance dry-run task-list JSON.
+
+If the production handoff already exists, generate only the dry-run Seedance task list:
+
+```bash
+.venv/bin/python scripts/plan_seedance_batch.py \
+  projects/<project>/artifacts/<reference>-seedance-production-plan.json \
+  --project-dir projects/<project> \
+  --provider runninghub
+```
+
+The dry-run task list records provider tool, prompt, duration, resolution, reference image paths, and output paths for the first batch only. It does not call RunningHub, fal.ai, Replicate, or any paid video-generation API.
+
+Before spending on generation, preview the final-edit readiness plan from the dry-run task list. This writes a timeline, expected clip paths, subtitle text handoff, and a missing-clip checklist. It does not render the final video:
+
+```bash
+.venv/bin/python scripts/preview_reference_final_edit.py \
+  projects/<project>/artifacts/<reference>-seedance-batch-dry-run.json \
+  --project-dir projects/<project>
+```
+
+Before burning subtitles, optionally create a reviewable subtitle-polish plan. The default path is a dry run: it uses the local口播字幕 planner, writes `artifacts/reference-subtitles/<reference>-subtitle-polish-plan.json`, includes the exact Doubao prompt that would be sent, and does not call Doubao or any paid API:
+
+```bash
+.venv/bin/python scripts/polish_reference_subtitles.py \
+  projects/<project>/artifacts/reference-final-edit/<reference>-final-edit-plan.json \
+  --project-dir projects/<project>
+```
+
+Only after explicitly approving a paid Doubao/Ark subtitle-polish call, run live mode with both switches. Doubao returns cue text only; OpenMontage still allocates timestamps locally before SRT/render:
+
+```bash
+.venv/bin/python scripts/polish_reference_subtitles.py \
+  projects/<project>/artifacts/reference-final-edit/<reference>-final-edit-plan.json \
+  --project-dir projects/<project> \
+  --live \
+  --allow-paid-api
+```
+
+Once the final-edit plan status is `ready_for_compose`, run a local compose dry-run first. This writes a render report under `artifacts/reference-render/`, creates an SRT sidecar from `timeline[].subtitle_text`, validates any declared `compose_handoff.audio_tracks`, records the encoding quality profile, and does not create the final MP4. The default quality is `high` (`CRF 18`) so subtitle burn-in and mux steps keep more upload headroom than the legacy `standard` profile (`CRF 23`):
+
+```bash
+.venv/bin/python scripts/compose_reference_final.py \
+  projects/<project>/artifacts/reference-final-edit/<reference>-final-edit-plan.json \
+  --project-dir projects/<project> \
+  --dry-run
+```
+
+If a subtitle-polish plan has been reviewed, pass it into compose so the SRT uses the polished cue list instead of raw `timeline[].subtitle_text`:
+
+```bash
+.venv/bin/python scripts/compose_reference_final.py \
+  projects/<project>/artifacts/reference-final-edit/<reference>-final-edit-plan.json \
+  --project-dir projects/<project> \
+  --subtitle-polish-plan artifacts/reference-subtitles/<reference>-subtitle-polish-plan.json \
+  --dry-run
+```
+
+After confirming the report, compose the ready clips locally with FFmpeg-backed `video_stitch`. Add `--burn-subtitles` to burn the generated SRT into the final MP4. Add `--mix-audio` when `compose_handoff.audio_tracks` contains validated narration/music/SFX paths; OpenMontage will run `audio_mixer` first, then mux the mixed audio into the final video:
+
+```bash
+.venv/bin/python scripts/compose_reference_final.py \
+  projects/<project>/artifacts/reference-final-edit/<reference>-final-edit-plan.json \
+  --project-dir projects/<project> \
+  --burn-subtitles
+```
+
+Use `--quality standard` only for small draft files. Use `--quality master` (`CRF 16`) for archival exports when larger files are acceptable:
+
+```bash
+.venv/bin/python scripts/compose_reference_final.py \
+  projects/<project>/artifacts/reference-final-edit/<reference>-final-edit-plan.json \
+  --project-dir projects/<project> \
+  --burn-subtitles \
+  --quality master
+```
+
+```bash
+.venv/bin/python scripts/compose_reference_final.py \
+  projects/<project>/artifacts/reference-final-edit/<reference>-final-edit-plan.json \
+  --project-dir projects/<project> \
+  --burn-subtitles \
+  --mix-audio
+```
+
+After playing the final MP4 and confirming business approval, export a local delivery package. This copies the final video, render report, final-edit plan, subtitles, and optional mixed audio into `deliveries/<final-video-name>/`, then writes `delivery-manifest.json` and `README.md` for upload/archive handoff:
+
+```bash
+.venv/bin/python scripts/export_reference_delivery.py \
+  projects/<project> \
+  --render-report projects/<project>/artifacts/reference-render/<reference>-render-report.json \
+  --reviewer operator \
+  --approval-phrase "APPROVE FINAL DELIVERY"
+```
+
+The delivery export is local-only and does not call paid providers. The explicit approval phrase is required so a rendered draft is not accidentally treated as distributable.
+
+To run exactly one paid sample after reviewing the dry-run task list, use both approval flags and the confirmation phrase:
+
+```bash
+.venv/bin/python scripts/plan_seedance_batch.py \
+  projects/<project>/artifacts/<reference>-seedance-production-plan.json \
+  --project-dir projects/<project> \
+  --provider runninghub \
+  --execute \
+  --allow-paid-generation \
+  --approval-phrase "RUN SEEDANCE SAMPLE"
+```
+
+This sample path executes only the first planned Seedance task. Review the generated clip before approving any remaining batch items.
 
 ---
 

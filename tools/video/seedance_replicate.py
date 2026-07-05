@@ -28,6 +28,18 @@ from tools.base_tool import (
     ToolStatus,
     ToolTier,
 )
+from tools.video.seedance_constraints import (
+    ALLOWED_RESOLUTIONS,
+    ALLOWED_DURATIONS,
+    DEFAULT_DURATION,
+    DEFAULT_RESOLUTION,
+    MAX_GENERATIONS_PER_BATCH,
+    MAX_DURATION_SECONDS,
+    seedance_duration,
+    seedance_duration_seconds,
+    seedance_resolution,
+    validate_seedance_constraints,
+)
 
 
 class SeedanceReplicate(BaseTool):
@@ -60,6 +72,10 @@ class SeedanceReplicate(BaseTool):
         "multi_shot": True,
         "aspect_ratio": True,
         "seed": True,
+        "max_duration_seconds": MAX_DURATION_SECONDS,
+        "duration_seconds": [int(value) for value in ALLOWED_DURATIONS],
+        "resolutions": list(ALLOWED_RESOLUTIONS),
+        "max_generations_per_batch": MAX_GENERATIONS_PER_BATCH,
     }
     best_for = [
         "preferred premium video gen when REPLICATE_API_TOKEN is available",
@@ -90,8 +106,8 @@ class SeedanceReplicate(BaseTool):
             },
             "duration": {
                 "type": "string",
-                "enum": ["auto", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"],
-                "default": "5",
+                "enum": list(ALLOWED_DURATIONS),
+                "default": DEFAULT_DURATION,
             },
             "aspect_ratio": {
                 "type": "string",
@@ -100,8 +116,14 @@ class SeedanceReplicate(BaseTool):
             },
             "resolution": {
                 "type": "string",
-                "enum": ["480p", "720p"],
-                "default": "720p",
+                "enum": list(ALLOWED_RESOLUTIONS),
+                "default": DEFAULT_RESOLUTION,
+            },
+            "batch_size": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": MAX_GENERATIONS_PER_BATCH,
+                "default": 1,
             },
             "generate_audio": {
                 "type": "boolean",
@@ -134,11 +156,9 @@ class SeedanceReplicate(BaseTool):
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         variant = inputs.get("model_variant", "standard")
-        duration = inputs.get("duration", "5")
-        secs = 5 if duration == "auto" else int(duration)
         # Replicate bills per-second at roughly the same rate as fal.ai for this model family.
         rate = 0.24 if variant == "fast" else 0.30
-        return round(rate * secs, 2)
+        return round(rate * seedance_duration_seconds(inputs), 2)
 
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         return 60.0 if inputs.get("model_variant") == "fast" else 120.0
@@ -158,14 +178,15 @@ class SeedanceReplicate(BaseTool):
         model_slug = (
             "bytedance/seedance-2.0-fast" if variant == "fast" else "bytedance/seedance-2.0"
         )
+        constraint_error = validate_seedance_constraints(inputs)
+        if constraint_error:
+            return ToolResult(success=False, error=constraint_error)
 
         payload_input: dict[str, Any] = {"prompt": inputs["prompt"]}
-        if inputs.get("duration") and inputs["duration"] != "auto":
-            payload_input["duration"] = int(inputs["duration"])
+        payload_input["duration"] = seedance_duration_seconds(inputs)
         if inputs.get("aspect_ratio") and inputs["aspect_ratio"] != "auto":
             payload_input["aspect_ratio"] = inputs["aspect_ratio"]
-        if inputs.get("resolution"):
-            payload_input["resolution"] = inputs["resolution"]
+        payload_input["resolution"] = seedance_resolution(inputs)
         if "generate_audio" in inputs:
             payload_input["generate_audio"] = inputs["generate_audio"]
         if inputs.get("seed") is not None:
@@ -238,7 +259,8 @@ class SeedanceReplicate(BaseTool):
                 "prompt": inputs["prompt"],
                 "variant": variant,
                 "aspect_ratio": inputs.get("aspect_ratio", "16:9"),
-                "resolution": inputs.get("resolution", "720p"),
+                "resolution": seedance_resolution(inputs),
+                "duration": seedance_duration(inputs),
                 "generate_audio": inputs.get("generate_audio", True),
                 "seed": pred.get("input", {}).get("seed"),
                 "output": str(output_path),

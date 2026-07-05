@@ -13,6 +13,7 @@ from types import ModuleType
 from typing import Any, Optional
 
 from tools.base_tool import BaseTool, ToolStatus, ToolTier, ToolStability
+from tools.env_loader import load_dotenv_files
 
 
 # Unicode punctuation that breaks on Windows cp1252 stdout. Map each to an
@@ -85,35 +86,8 @@ class ToolRegistry:
 
     @staticmethod
     def _load_dotenv() -> None:
-        """Load .env file into os.environ if present, so tools can find API keys."""
-        from pathlib import Path
-        import os
-        env_path = Path(__file__).resolve().parent.parent / ".env"
-        if not env_path.is_file():
-            return
-        import re
-        with open(env_path, encoding="utf-8", errors="ignore") as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith("#") or "=" not in line:
-                    continue
-                key, _, value = line.partition("=")
-                key = key.strip()
-                value = value.strip()
-                # Quoted value: take the content inside the quotes verbatim.
-                if value[:1] in ("'", '"'):
-                    quote = value[0]
-                    end = value.find(quote, 1)
-                    value = value[1:end] if end != -1 else value[1:]
-                else:
-                    # Strip an inline comment ('#' at line start or after
-                    # whitespace) so "KEY=   # note" yields "" not "# note".
-                    match = re.search(r"(^|\s)#", value)
-                    if match:
-                        value = value[: match.start()]
-                    value = value.strip()
-                if key and key not in os.environ:
-                    os.environ[key] = value
+        """Load .env files so tools can find API keys."""
+        load_dotenv_files()
 
     def discover(self, package_name: str = "tools") -> list[str]:
         """Import a package tree and register any concrete tools it defines."""

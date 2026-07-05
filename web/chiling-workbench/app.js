@@ -1,3 +1,15 @@
+import {
+  clampNumber,
+  escapeHtml,
+  lineBreaks,
+  normalizeSubtitleText,
+  formatRelativeTime,
+} from "./src/format.js";
+import {
+  defaultDeliverables,
+  taskStatusLabel,
+} from "./src/task-model.js";
+
 const appRoot = document.querySelector("#app");
 const toastRoot = document.querySelector("#toast-root");
 
@@ -51,23 +63,6 @@ const state = {
       "在这些案子上面\n我积累了充足的实战经验\n如果你身边刚好缺一位靠谱律师朋友\n不妨留个关注",
   },
 };
-
-function clamp(number, min, max) {
-  return Math.min(Math.max(Number(number) || min, min), max);
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function lineBreaks(value) {
-  return escapeHtml(value).replaceAll("\n", "<br />");
-}
 
 function showToast(title, message) {
   const toast = document.createElement("div");
@@ -1332,15 +1327,6 @@ function deliveryItem(title, subtitle, action, url = "") {
   `;
 }
 
-function defaultDeliverables(payload) {
-  return [
-    { id: "video", title: "成品视频", subtitle: `MP4 · ${payload.resolution || "480p"} · ${payload.duration || 15}s`, action: "下载" },
-    { id: "subtitle", title: "字幕文件", subtitle: "SRT · 句尾标点已清理", action: "下载" },
-    { id: "audit", title: "审核记录", subtitle: "素材授权 · 肖像授权 · 文案确认", action: "查看" },
-    { id: "share", title: "交付链接", subtitle: "团队内部可访问", action: "复制" },
-  ];
-}
-
 function workItem(title, subtitle, route, action) {
   return `
     <div class="delivery-item">
@@ -1775,24 +1761,6 @@ function operationStepItem(step) {
   `;
 }
 
-function taskStatusLabel(task) {
-  if (task.status === "completed") return "已交付";
-  if (task.status === "processing") return "生产中";
-  if (task.status === "queued") return "排队中";
-  return "待处理";
-}
-
-function formatRelativeTime(timestamp) {
-  if (!timestamp) return "刚刚";
-
-  const minutes = Math.max(0, Math.round((Date.now() - timestamp) / 60000));
-  if (minutes <= 0) return "刚刚";
-  if (minutes < 60) return `${minutes} 分钟前`;
-
-  const hours = Math.round(minutes / 60);
-  return `${hours} 小时前`;
-}
-
 function assetCard(image, title, subtitle) {
   return `
     <button class="work-row" type="button" data-toast-title="已选择素材" data-toast-message="${title} 已加入当前草稿。">
@@ -1821,27 +1789,19 @@ function saveFormValues() {
     if (!key) return;
 
     if (key === "duration") {
-      state.form.duration = clamp(field.value, 1, 15);
+      state.form.duration = clampNumber(field.value, 1, 15);
       field.value = state.form.duration;
       return;
     }
 
     if (key === "count") {
-      state.form.count = clamp(field.value, 1, 5);
+      state.form.count = clampNumber(field.value, 1, 5);
       field.value = state.form.count;
       return;
     }
 
     state.form[key] = field.value;
   });
-}
-
-function normalizeSubtitleText(text) {
-  return String(text || "")
-    .split("\n")
-    .map((line) => line.trim().replace(/[，。,.！？!?；;：:、]+$/g, ""))
-    .filter(Boolean)
-    .join("\n");
 }
 
 function cleanSubtitlePunctuation() {

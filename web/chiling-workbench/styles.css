@@ -1364,6 +1364,22 @@ button {
     gap: 28px;
   }
 
+  .login-grid > *,
+  .content-grid > *,
+  .quick-grid > *,
+  .create-layout > *,
+  .review-grid > *,
+  .generation-layout > *,
+  .delivery-card > * {
+    min-width: 0;
+  }
+
+  .page-head,
+  .chip-row,
+  .form-actions {
+    flex-wrap: wrap;
+  }
+
   .steps {
     gap: 12px;
   }
@@ -1385,8 +1401,11 @@ button {
   .work-row,
   .delivery-card,
   .delivery-item,
+  .review-card,
+  .review-script,
   .task-detail-summary,
   .task-detail-section {
+    max-width: 100%;
     overflow-wrap: anywhere;
   }
 

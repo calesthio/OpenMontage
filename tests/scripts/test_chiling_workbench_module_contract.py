@@ -37,3 +37,17 @@ def test_chiling_workbench_keeps_user_safe_frontend_boundaries():
     assert "ARK_API_KEY" not in source
     assert "CHILING_PRODUCTION_SERVICE" not in source
     assert "reference-video-analysis" not in source
+
+
+def test_chiling_workbench_has_shared_component_modules():
+    app = read(WORKBENCH / "app.js")
+    ui = read(WORKBENCH / "src" / "components" / "ui.js")
+    topbar = read(WORKBENCH / "src" / "components" / "topbar.js")
+
+    assert 'from "./src/components/ui.js"' in app
+    assert 'from "./src/components/topbar.js"' in app
+    assert "export function button" in ui
+    assert "export function panel" in ui
+    assert "export function phonePreview" in ui
+    assert "export function metric" in ui
+    assert "export function renderTopbar" in topbar

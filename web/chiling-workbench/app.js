@@ -10,6 +10,8 @@ import {
   taskStatusLabel,
 } from "./src/task-model.js";
 import { createInitialState } from "./src/state.js";
+import { phonePreview } from "./src/components/ui.js";
+import { renderTopbar } from "./src/components/topbar.js";
 
 const appRoot = document.querySelector("#app");
 const toastRoot = document.querySelector("#toast-root");
@@ -507,25 +509,7 @@ function updateProgressOnly() {
 
 function shell(content, activePage = state.page) {
   return `
-    <header class="topbar">
-      <div class="brand">
-        <span class="brand__name">赤灵AI运营工作台</span>
-        <span class="brand__tagline">内容复刻 · 审核 · 交付</span>
-      </div>
-      <nav class="nav" aria-label="主导航">
-        ${pages
-          .map(
-            (page) => `
-              <button class="nav__item ${page.id === activePage ? "is-active" : ""}" data-route="${page.id}">
-                ${page.label}
-              </button>
-            `,
-          )
-          .join("")}
-      </nav>
-      <div class="topbar__spacer"></div>
-      <button class="button button--primary button--small" data-route="create">新建作品</button>
-    </header>
+    ${renderTopbar({ pages, activePage })}
     <main class="page">${content}</main>
   `;
 }
@@ -1204,18 +1188,6 @@ function configurationItem(item) {
         <strong>${escapeHtml(item.label || "配置项")}</strong>
         <span>${escapeHtml(stateLabelMap[item.state] || "待确认")} · ${escapeHtml(item.description || "等待管理员配置")}</span>
       </div>
-    </div>
-  `;
-}
-
-function phonePreview(image, label, modifier) {
-  return `
-    <div class="phone ${modifier || ""}">
-      <div class="phone__screen">
-        <img src="${image}" alt="${escapeHtml(label)}" />
-        <span class="phone__label">${escapeHtml(label)}</span>
-      </div>
-      <div class="phone__progress"><span></span></div>
     </div>
   `;
 }

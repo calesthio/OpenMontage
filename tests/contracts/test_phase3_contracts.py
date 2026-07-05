@@ -166,6 +166,7 @@ class TestCapabilityMetadata:
             "doubao",
             "elevenlabs",
             "google_tts",
+            "kokoro",
             "openai",
             "piper",
         }

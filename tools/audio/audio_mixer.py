@@ -530,10 +530,6 @@ class AudioMixer(BaseTool):
                 f"[ducked_music]volume={music_vol * 3}[music_out]"
             )
 
-            # Duplicate speech for final mix (sidechain consumes it as key)
-            filter_parts.append(
-                f"{speech_out}acopy[speech_dup]" if speech_out.startswith("[a") else ""
-            )
             # Re-mix speech path: we need speech audio in the output too
             # Simpler approach: use amix on original speech and ducked music
             # Reset: use a cleaner approach — amerge the speech mix and ducked music
@@ -541,10 +537,6 @@ class AudioMixer(BaseTool):
             # the key signal but doesn't consume it from the output chain.
             # FFmpeg sidechaincompress: input 0 = audio to compress, input 1 = key signal
             # So music is compressed, speech signal is the key. We need to mix them.
-            # Remove the last filter_part (the acopy that may be empty)
-            if filter_parts and filter_parts[-1] == "":
-                filter_parts.pop()
-
             # Build speech mix for output separately
             if len(speech_tracks) > 1:
                 # speech_mix already exists, make a copy for output

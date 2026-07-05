@@ -49,10 +49,33 @@ write_checkpoint(
 
 The checkpoint utility will:
 - Validate the artifact against its schema
+- Enforce the approval gate (a gated stage cannot be written `completed` without `human_approved=True`)
+- Archive any superseded checkpoint to `projects/<id>/history/` (stage versions and gate transitions are never destroyed)
 - Write the checkpoint JSON to disk
 - Include timestamp and stage metadata
 
-### Step 4: Intra-Stage Checkpointing (Resume Support)
+Canonical location: `projects/<project_id>/checkpoint_<stage>.json` — always
+pass the repo's `projects/` directory as `pipeline_dir` (or use
+`lib.checkpoint.PROJECTS_DIR`). Always pass `pipeline_type` — gate enforcement
+reads the manifest through it.
+
+At pipeline initialization (before any stage), call `init_project()`:
+
+```python
+from lib.checkpoint import init_project
+init_project("my-project", title="My Project", pipeline_type="cinematic")
+```
+
+This creates the canonical directory layout and writes `project.json` — the
+marker the Backlot board needs to show the project before its first
+checkpoint. Then launch the board: `python -m backlot open my-project`
+(non-fatal if unavailable — the board is an observer, never a blocker).
+
+### Step 4: Intra-Stage Checkpointing (Resume Support + Liveness)
+
+**On entering any stage, write an `in_progress` checkpoint first.** This is
+what tells the user (via the Backlot board) that the stage is live rather
+than stalled — certainty matters more than speed.
 
 Long-running stages (like `assets` or `compose` loops) can fail midway due to API errors, rate limits, or session interruptions. To allow resuming from the exact point of failure (e.g., Scene 4):
 
@@ -78,14 +101,23 @@ Long-running stages (like `assets` or `compose` loops) can fail midway due to AP
 
 ### Step 5: Human Approval (If Required)
 
+**The manifest value is binding.** `human_approval_default` in the pipeline
+manifest is the single source of truth for whether a stage gates. This skill
+never overrides it, and neither do you — there is no "this case is different."
+(`lib/checkpoint.py` enforces this: writing `status="completed"` for a gated
+stage without `human_approved=True` raises a `GATE VIOLATION` error.)
+
 When `human_approval_default: true`:
 
-1. **Present a summary** to the human:
+1. **Write the checkpoint with `status="awaiting_human"`** (not `completed`).
+
+2. **Present a summary** to the human:
    ```
-   ## Stage Complete: [stage_name]
+   ## Stage Complete: [stage_name] — awaiting your approval
 
    ### Artifact Summary
    [Key details from the artifact — title, duration, key decisions]
+   [If the Backlot board is running, point to it: the artifact renders there]
 
    ### Review Findings
    [Summary from reviewer: N critical (all fixed), N suggestions]
@@ -97,19 +129,42 @@ When `human_approval_default: true`:
    Please review and approve to continue, or provide feedback for revision.
    ```
 
-2. **Wait for human response:**
-   - **Approved** → update checkpoint status to `"completed"`, proceed to next stage
-   - **Revision requested** → go back to the stage director skill with the human's feedback, produce revised artifacts, re-review, re-checkpoint
+3. **END YOUR TURN.** Performing any further pipeline work in the same
+   response is a gate violation. "Present and continue" is not waiting —
+   the turn must end with the question, and the next pipeline action must
+   be caused by the user's reply.
+
+4. **On the user's response:**
+   - **Approved** → re-write the checkpoint with `status="completed"`,
+     `human_approved=True`, then proceed to the next stage
+   - **Revision requested** → go back to the stage director skill with the
+     human's feedback, produce revised artifacts, re-review, re-checkpoint
+     (the superseded checkpoint is preserved automatically in `history/`)
    - **Abort** → stop the pipeline
 
-3. **Approval stages** (which stages typically need human approval):
-   - `idea` — Always. The creative direction defines everything downstream.
-   - `script` — Always. The words are the foundation.
-   - `scene_plan` — Usually. Visual choices are subjective.
-   - `assets` — Rarely. Automated quality checks are sufficient.
-   - `edit` — Rarely. Technical assembly, not creative.
-   - `compose` — Rarely. But human may want to preview.
-   - `publish` — Always. Human must approve before anything goes public.
+5. **Approval is per-gate.** A prior approval, however broad ("looks great,
+   go ahead and make the whole thing"), never covers a later gate. If the
+   user explicitly pre-authorizes the full run, record that as a
+   `decision_log` entry (`category: "approval_policy"`) at the moment they
+   say it — absent that entry, stop at every gate.
+
+6. **The assets gate reviews the storyboard — before any draft render.**
+   `assets` now gates in every pipeline: present the generated assets
+   scene-by-scene (the Backlot board's filmstrip is the natural review
+   surface), including spend so far and the projected compose cost. A bad
+   asset caught here saves a full re-render.
+
+   **Do not render a draft/full composition to earn this review.** The review
+   surface is the filmstrip populated with per-scene assets — stock picks,
+   generated stills, narration waveforms — *not* a rendered video. For scenes
+   whose "asset" is a bespoke/atelier composition (no thumbnailable file), the
+   agent writes one **per-scene review still** to
+   `projects/<id>/snapshots/<scene_id>.png` (a `remotion still` at a
+   representative frame — see `skills/meta/bespoke-composition.md`); the board
+   shows those on the filmstrip. Refresh `metadata.partial_progress` as stills
+   land, then STOP at the gate. The draft/final render is the **compose**
+   stage — it runs only after the assets gate is approved. Rendering a full
+   draft inside the assets stage jumps the gate the user is meant to hold.
 
 ### Step 6: Determine Next Stage
 

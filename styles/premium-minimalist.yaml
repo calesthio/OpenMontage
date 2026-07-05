@@ -1,0 +1,117 @@
+identity:
+  name: "Premium Minimalist"
+  category: minimalist
+  mood: calm, editorial, precise
+  pace: deliberate
+  best_for: "Investor updates, expert explainers, product narratives, high-trust launch videos"
+
+taste_profile:
+  design_read: "Premium expert explainer: calm authority, high trust, low ornament."
+  visual_variance: 4
+  motion_intensity: 3
+  information_density: 5
+  palette_discipline: "Off-white field, charcoal text, restrained cobalt accent, no decorative gradients."
+  layout_variation: "Alternate editorial split frames, centered evidence frames, and full-bleed product/detail moments."
+  reference_strategy: "Create one reference still for each scene family before batch asset generation."
+  anti_patterns:
+    - "generic corporate-blue template cards"
+    - "decorative gradient backgrounds"
+    - "fast kinetic transitions that reduce comprehension"
+  quality_gates:
+    - "Every frame should feel intentionally sparse, not unfinished."
+    - "Motion should clarify hierarchy instead of decorating it."
+
+visual_language:
+  color_palette:
+    primary: ["#111827", "#374151"]
+    accent: ["#2563EB", "#0F766E"]
+    background: "#F9FAFB"
+    text: "#111827"
+    muted: "#6B7280"
+  composition: asymmetrical editorial grid with large margins, hard alignment, and one focal object per frame
+  texture: flat matte fields, fine divider lines, subtle photographic grain only when source imagery needs cohesion
+
+typography:
+  headings:
+    font: "Inter"
+    weight: 700
+    tracking: "-0.01em"
+  body:
+    font: "Inter"
+    weight: 400
+    line_height: 1.55
+  code:
+    font: "JetBrains Mono"
+    weight: 400
+  stat_card:
+    font: "Inter"
+    weight: 800
+    size_multiplier: 3.2
+  scale_system: "major_third"
+  weight_matrix:
+    title: 800
+    heading: 700
+    body: 400
+    caption: 500
+
+motion:
+  transitions: [fade, dissolve, slide-left]
+  animation_style: "restrained ease-out, precise reveal, no bounce"
+  pacing_rules:
+    min_scene_hold_seconds: 2.75
+    max_scene_hold_seconds: 12
+    text_card_hold_seconds: 3.75
+    stat_card_hold_seconds: 3.25
+    transition_duration_seconds: 0.45
+  entrance: "fade-up 12px with opacity ramp"
+  exit: "soft fade with slight y-offset"
+
+audio:
+  voice_style: "measured, expert, warm, low hype"
+  music_mood: "minimal pulse, clean synth bed, quiet confidence"
+  music_volume: 0.07
+  sfx_style: "small tactile ticks and soft paper-like swishes"
+  ducking_threshold_db: -4
+
+asset_generation:
+  image_prompt_prefix: "premium minimalist editorial frame, restrained palette, precise composition, generous negative space, "
+  image_negative_prompt: "busy, glossy, decorative gradient, neon, cluttered, low contrast, generic corporate template"
+  diagram_style: "thin-line editorial diagram, charcoal text, cobalt highlight, large margins"
+  consistency_anchors:
+    - "Off-white background with charcoal typography"
+    - "Cobalt accent used only for hierarchy or proof points"
+    - "Large margins and hard alignment"
+    - "No decorative shapes unless they carry information"
+
+overlays:
+  stat_card:
+    bg: "#FFFFFF"
+    border: "#D1D5DB"
+    radius: 6
+    shadow: "0 1px 6px rgba(17,24,39,0.08)"
+  key_term:
+    bg: "#EFF6FF"
+    text: "#1D4ED8"
+    radius: 4
+  code_block:
+    bg: "#111827"
+    text: "#F9FAFB"
+    highlight: "#93C5FD"
+
+quality_rules:
+  - "Minimum contrast ratio 4.5:1 for all text"
+  - "No more than 2 accent colors on screen at once"
+  - "Keep one primary focal object or claim per frame"
+  - "Use motion to reveal hierarchy, not to add energy"
+  - "Avoid decorative gradients and oversized floating shapes"
+
+chart_palette:
+  - "#2563EB"
+  - "#0F766E"
+  - "#111827"
+  - "#64748B"
+
+color_rules:
+  harmony_type: "analogous"
+  contrast_validation: true
+  colorblind_safe: true

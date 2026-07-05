@@ -193,7 +193,7 @@ stages:
       - code_snippet
       - music_gen
     checkpoint_required: true
-    human_approval_default: false
+    human_approval_default: true
     review_focus:
       - Asset production path is explicit per scene
       - Reusable motifs and templates are prepared and referenced

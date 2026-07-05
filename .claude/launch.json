@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "backlot",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "backlot", "serve", "--port", "4750"],
+      "port": 4750
+    },
+    {
+      "name": "mockups",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "4788", "--bind", "127.0.0.1"],
+      "port": 4788
+    }
+  ]
+}

@@ -238,3 +238,12 @@ Call `handle_explainer_scene_plan(state, {"scene_plan": scene_plan_json})` to va
 - **Preset thinking**: A scene plan that says "make it flat-motion-graphics" is not enough. The planner must specify what makes THIS video's motion graphics feel distinct.
 - **Static scenes for dynamic concepts**: If the narrator describes a process or transformation, the visual should move. Use animation or progressive reveal, not a static image.
 - **Using `generated` type for CTA/closing screens with exact text**: AI image models hallucinate text — wrong business names, misspelled words, wrong phone numbers. Any scene with verbatim text (CTA, business info, contact details, legal) MUST be `type: "text_card"` so Remotion renders the text exactly. Never plan a `generated` image for a scene where text accuracy matters.
+
+---
+
+## Gate Reminder (Binding)
+
+This stage gates on human approval (`human_approval_default: true`). After review passes:
+checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
+the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
+Approval is per-gate — an earlier "go ahead" does not cover this gate.

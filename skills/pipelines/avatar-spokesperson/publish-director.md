@@ -42,3 +42,12 @@ If the avatar path has limitations such as visible lip-sync risk, retain that no
 - Mixing hero and derivative exports without clear naming.
 - Reusing generic metadata that ignores the spokesperson offer.
 - Dropping risk notes that matter for downstream publishing teams.
+
+---
+
+## Gate Reminder (Binding)
+
+This stage gates on human approval (`human_approval_default: true`). After review passes:
+checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
+the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
+Approval is per-gate — an earlier "go ahead" does not cover this gate.

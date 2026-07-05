@@ -4,7 +4,9 @@ from pathlib import Path
 
 from tools.base_tool import ToolStatus
 from tools.tool_registry import ToolRegistry
+from tools.video.stock_sources import Candidate
 from tools.video.corpus_builder import CorpusBuilder
+from tools.video.direct_clip_search import DirectClipSearch
 from tools.video.video_compose import VideoCompose
 
 
@@ -196,3 +198,196 @@ def test_provider_menu_preserves_tool_discovery_metadata(monkeypatch):
     assert entry["name"] == "corpus_builder"
     assert entry["source_provider_summary"]["configured"] == 1
     assert entry["source_provider_menu"][0]["name"] == "archive_org"
+
+
+def test_direct_clip_search_honors_overall_timeout(monkeypatch, tmp_path):
+    """F-13 regression: direct clip search must stop on its own deadline and
+    return partial progress instead of relying on an external PTY interrupt."""
+    import tools.video.direct_clip_search as direct_clip_search
+    import tools.video.stock_sources as stock_sources
+
+    class SlowSource(_DummySource):
+        def search(self, query: str, filters):
+            return [
+                Candidate(
+                    source=self.name,
+                    source_id="slow-1",
+                    source_url="https://example.test/slow-1",
+                    download_url="https://example.test/slow-1.mp4",
+                    kind="video",
+                )
+            ]
+
+        def download(self, candidate, out_path: Path):
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            out_path.write_bytes(b"0" * 2048)
+            return out_path
+
+    source = SlowSource("slow_source", True)
+    monkeypatch.setattr(stock_sources, "all_sources", lambda: [source])
+    monkeypatch.setattr(stock_sources, "available_sources", lambda: [source])
+    monkeypatch.setattr(
+        stock_sources,
+        "source_summary",
+        lambda: {
+            "configured": 1,
+            "total": 1,
+            "available_source_names": ["slow_source"],
+            "unavailable_source_names": [],
+        },
+    )
+
+    ticks = iter([0.0, 2.0, 2.0, 2.0])
+    monkeypatch.setattr(direct_clip_search.time, "time", lambda: next(ticks, 2.0))
+
+    result = DirectClipSearch().execute(
+        {
+            "output_dir": str(tmp_path / "clips"),
+            "queries": [{"query": "foggy harbor", "slot_id": "sc5"}],
+            "timeout_seconds": 1,
+            "extract_thumbnails": False,
+        }
+    )
+
+    assert not result.success
+    assert "timed out" in (result.error or "").lower()
+    assert result.data["timed_out"] is True
+    assert result.data["phase"] in {"query", "search", "download"}
+    assert result.data["clips"] == []
+
+
+def test_direct_clip_search_times_out_streaming_download(monkeypatch, tmp_path):
+    """F-13 regression: a streaming adapter download must not run past the
+    tool-level deadline just because bytes keep arriving."""
+    import tools.video.direct_clip_search as direct_clip_search
+    import tools.video.stock_sources as stock_sources
+    import requests
+
+    clock = {"now": 0.0}
+
+    class StreamingResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def raise_for_status(self):
+            return None
+
+        def iter_content(self, chunk_size=1024):
+            clock["now"] = 2.0
+            yield b"0" * 2048
+
+    class StreamingSource(_DummySource):
+        def search(self, query: str, filters):
+            return [
+                Candidate(
+                    source=self.name,
+                    source_id="stream-1",
+                    source_url="https://example.test/stream-1",
+                    download_url="https://example.test/stream-1.mp4",
+                    kind="video",
+                )
+            ]
+
+        def download(self, candidate, out_path: Path):
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            with requests.get(candidate.download_url, stream=True, timeout=300) as response:
+                response.raise_for_status()
+                with out_path.open("wb") as f:
+                    for chunk in response.iter_content(chunk_size=1024):
+                        if chunk:
+                            f.write(chunk)
+            return out_path
+
+    source = StreamingSource("streaming_source", True)
+    monkeypatch.setattr(stock_sources, "all_sources", lambda: [source])
+    monkeypatch.setattr(stock_sources, "available_sources", lambda: [source])
+    monkeypatch.setattr(
+        stock_sources,
+        "source_summary",
+        lambda: {
+            "configured": 1,
+            "total": 1,
+            "available_source_names": ["streaming_source"],
+            "unavailable_source_names": [],
+        },
+    )
+    monkeypatch.setattr(direct_clip_search.time, "time", lambda: clock["now"])
+    monkeypatch.setattr(requests, "get", lambda *args, **kwargs: StreamingResponse())
+
+    result = DirectClipSearch().execute(
+        {
+            "output_dir": str(tmp_path / "clips"),
+            "queries": [{"query": "foggy harbor", "slot_id": "sc5"}],
+            "timeout_seconds": 1,
+            "extract_thumbnails": False,
+        }
+    )
+
+    assert not result.success
+    assert result.data["timed_out"] is True
+    assert result.data["phase"] == "download"
+    assert result.data["clips"] == []
+
+
+def test_direct_clip_search_reports_downloaded_clip_when_thumbnail_times_out(
+    monkeypatch, tmp_path
+):
+    """F-13 regression: timeout data should include a clip that was already
+    downloaded and validated before thumbnail extraction hit the deadline."""
+    import tools.video.direct_clip_search as direct_clip_search
+    import tools.video.stock_sources as stock_sources
+
+    clock = {"now": 0.0}
+
+    class SlowThumbnailSource(_DummySource):
+        def search(self, query: str, filters):
+            return [
+                Candidate(
+                    source=self.name,
+                    source_id="thumb-1",
+                    source_url="https://example.test/thumb-1",
+                    download_url="https://example.test/thumb-1.mp4",
+                    kind="video",
+                )
+            ]
+
+        def download(self, candidate, out_path: Path):
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            out_path.write_bytes(b"0" * 2048)
+            clock["now"] = 2.0
+            return out_path
+
+    source = SlowThumbnailSource("thumb_source", True)
+    monkeypatch.setattr(stock_sources, "all_sources", lambda: [source])
+    monkeypatch.setattr(stock_sources, "available_sources", lambda: [source])
+    monkeypatch.setattr(
+        stock_sources,
+        "source_summary",
+        lambda: {
+            "configured": 1,
+            "total": 1,
+            "available_source_names": ["thumb_source"],
+            "unavailable_source_names": [],
+        },
+    )
+    monkeypatch.setattr(direct_clip_search.time, "time", lambda: clock["now"])
+
+    result = DirectClipSearch().execute(
+        {
+            "output_dir": str(tmp_path / "clips"),
+            "queries": [{"query": "foggy harbor", "slot_id": "sc5"}],
+            "timeout_seconds": 1,
+            "extract_thumbnails": True,
+        }
+    )
+
+    assert not result.success
+    assert result.data["timed_out"] is True
+    assert result.data["phase"] == "thumbnail"
+    assert result.data["clips_downloaded"] == 1
+    assert result.data["total_clips"] == 1
+    assert result.data["clips"][0]["clip_id"] == "thumb_source_thumb-1"
+    assert result.data["clips"][0]["thumbnail"] == ""

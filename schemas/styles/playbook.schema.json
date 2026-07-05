@@ -159,6 +159,7 @@
       "items": { "type": "string" },
       "minItems": 1
     },
+    "taste_profile": { "$ref": "#/$defs/taste_profile" },
     "chart_palette": {
       "description": "Ordered array of hex colors for chart data series.",
       "type": "array",
@@ -236,6 +237,46 @@
         "radius": { "type": "number" },
         "shadow": { "type": "string" },
         "highlight": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "taste_profile": {
+      "type": "object",
+      "required": ["design_read", "visual_variance", "motion_intensity", "information_density"],
+      "properties": {
+        "design_read": {
+          "type": "string",
+          "description": "Brief-specific read of what the video should feel like and why."
+        },
+        "visual_variance": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "How much scenes may vary visually while still feeling coherent."
+        },
+        "motion_intensity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "How energetic the motion language should be."
+        },
+        "information_density": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "How much information can be on screen at once."
+        },
+        "palette_discipline": { "type": "string" },
+        "layout_variation": { "type": "string" },
+        "reference_strategy": { "type": "string" },
+        "anti_patterns": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "quality_gates": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
       },
       "additionalProperties": false
     }

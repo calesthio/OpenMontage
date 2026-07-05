@@ -46,6 +46,7 @@ A `render_runtime_selection` decision with only one option considered when both 
 | Tool registry | `support_envelope()` output | What's actually available right now |
 | Cost tracker | `tools/cost_tracker.py` | Cost estimation data |
 | Style playbooks | `styles/*.yaml` | Available visual styles |
+| Meta skill | `skills/meta/taste-direction.md` | Design read, taste dials, reference strategy |
 | User input | Topic, any preferences expressed | Creative direction |
 
 ## Process
@@ -120,6 +121,8 @@ Record all findings. **Do not propose an animation mode that requires tools you 
 ### Step 3: Animation Approach Selection
 
 This is the key differentiator from the explainer proposal. **Present the user with concrete animation approaches, explain what each looks like, what tools/keys they need, and what's already available.**
+
+Before locking animation mode or visual identity, read `skills/meta/taste-direction.md` and write a `production_plan.taste_profile`. The three dials (`visual_variance`, `motion_intensity`, `information_density`) should explain whether the concept needs calm data builds, kinetic typography, dense diagrams, reference stills, or a custom/atelier visual system.
 
 #### Step 3a: Tool Availability Scan
 
@@ -466,3 +469,12 @@ This is especially important for:
 - **Remotion component patterns** — new composition techniques emerge as the framework evolves
 
 Do not rely on stale knowledge. When in doubt, search first.
+
+---
+
+## Gate Reminder (Binding)
+
+This stage gates on human approval (`human_approval_default: true`). After review passes:
+checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
+the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
+Approval is per-gate — an earlier "go ahead" does not cover this gate.

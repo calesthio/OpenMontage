@@ -870,6 +870,45 @@ def test_video_compose_blocks_hyperframes_when_runtime_unavailable(
     assert "blocker" in err or "not available" in err
 
 
+def test_video_compose_honors_hyperframes_runtime_before_atelier_mode(
+    tmp_path, monkeypatch
+):
+    """Regression for F-14: composition_mode='atelier' must not force the
+    Remotion atelier branch when render_runtime='hyperframes' is locked."""
+
+    monkeypatch.setattr(
+        VideoCompose, "_hyperframes_available", lambda self: False, raising=True
+    )
+
+    result = VideoCompose().execute(
+        {
+            "operation": "render",
+            "edit_decisions": {
+                "version": "1.0",
+                "cuts": [
+                    {
+                        "id": "c1",
+                        "source": "a1",
+                        "in_seconds": 0,
+                        "out_seconds": 3,
+                    }
+                ],
+                "render_runtime": "hyperframes",
+                "composition_mode": "atelier",
+                "renderer_family": "animation-first",
+            },
+            "asset_manifest": {"assets": [{"id": "a1", "path": "does-not-matter.png"}]},
+            "output_path": str(tmp_path / "out.mp4"),
+        }
+    )
+
+    assert not result.success
+    err = (result.error or "").lower()
+    assert "hyperframes" in err
+    assert "not available" in err or "blocker" in err
+    assert "remotion entry" not in err
+
+
 # ------------------------------------------------------------------
 # Scaffold / workspace generation (no CLI invocation)
 # ------------------------------------------------------------------

@@ -124,3 +124,12 @@ Record the decision in `brief.metadata.music_strategy` with the chosen source an
 - Assuming generated inserts are available without checking tools.
 - Quietly turning a motion-led brief into a still-led teaser.
 - Planning a trailer shape with no reveal or payoff.
+
+---
+
+## Gate Reminder (Binding)
+
+This stage gates on human approval (`human_approval_default: true`). After review passes:
+checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
+the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
+Approval is per-gate — an earlier "go ahead" does not cover this gate.

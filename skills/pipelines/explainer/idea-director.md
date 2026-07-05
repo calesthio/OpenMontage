@@ -181,3 +181,12 @@ If no existing playbook fits, describe the desired style in `brief.style` and th
 - Angle 1: "HTTPS Explained" — generic, no hook
 - Angle 2: "How HTTPS Works" — same thing, reworded
 - Angle 3: "Understanding HTTPS" — still the same, no structural difference
+
+---
+
+## Gate Reminder (Binding)
+
+This stage gates on human approval (`human_approval_default: true`). After review passes:
+checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
+the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
+Approval is per-gate — an earlier "go ahead" does not cover this gate.

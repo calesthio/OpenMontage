@@ -68,3 +68,12 @@ Every layout should clearly preserve:
 - Planning speaker-centric layouts for audio-only episodes.
 - Turning every clip into the same waveform-plus-logo composition.
 - Using generated graphics to cover weak editorial choices.
+
+---
+
+## Gate Reminder (Binding)
+
+This stage gates on human approval (`human_approval_default: true`). After review passes:
+checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
+the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
+Approval is per-gate — an earlier "go ahead" does not cover this gate.

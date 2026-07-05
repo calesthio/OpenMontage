@@ -5,6 +5,8 @@ stage director skills, meta skills, and the animated-explainer pipeline.
 """
 
 import sys
+import builtins
+import shutil
 from pathlib import Path
 
 import pytest
@@ -23,7 +25,7 @@ from lib.pipeline_loader import (
 from lib.checkpoint import STAGES
 from schemas.artifacts import list_schemas
 from styles.playbook_loader import load_playbook, list_playbooks, validate_playbook
-from tools.base_tool import ToolTier
+from tools.base_tool import ToolTier, ToolStatus
 from tools.audio.music_gen import MusicGen
 from tools.tool_registry import ToolRegistry
 from tools.audio.elevenlabs_tts import ElevenLabsTTS
@@ -72,6 +74,22 @@ class TestPiperTTS:
         tool = PiperTTS()
         assert "text_to_speech" in tool.capabilities
         assert "offline_generation" in tool.capabilities
+
+    def test_status_requires_piper_executable_even_if_python_package_imports(self, monkeypatch):
+        """F-12 regression: Piper generation shells out to `piper`, so importing
+        the Python package is not enough to mark the provider available."""
+        original_import = builtins.__import__
+        original_which = shutil.which
+
+        def fake_import(name, *args, **kwargs):
+            if name == "piper":
+                return object()
+            return original_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(shutil, "which", lambda cmd: None if cmd == "piper" else original_which(cmd))
+        monkeypatch.setattr(builtins, "__import__", fake_import)
+
+        assert PiperTTS().get_status() == ToolStatus.UNAVAILABLE
 
 
 class TestMusicGen:
@@ -143,7 +161,14 @@ class TestCapabilityMetadata:
         catalog = reg.capability_catalog()
         assert "tts" in catalog
         providers = {item["provider"] for item in catalog["tts"] if item["provider"] != "selector"}
-        assert providers == {"doubao", "elevenlabs", "google_tts", "openai", "piper"}
+        assert providers == {
+            "dashscope",
+            "doubao",
+            "elevenlabs",
+            "google_tts",
+            "openai",
+            "piper",
+        }
 
 
 # ---- Animated Explainer Pipeline ----

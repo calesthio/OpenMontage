@@ -33,6 +33,7 @@ No CLIP model. No embeddings. No corpus index. Just files on disk.
 """
 from __future__ import annotations
 
+from contextlib import contextmanager
 import subprocess
 import time
 import urllib.parse
@@ -51,6 +52,10 @@ from tools.base_tool import (
     ToolStatus,
     ToolTier,
 )
+
+
+class _DeadlineExceeded(TimeoutError):
+    """Raised when the direct-clip-search wall-clock deadline is exhausted."""
 
 
 class DirectClipSearch(BaseTool):
@@ -178,6 +183,16 @@ class DirectClipSearch(BaseTool):
                 "default": True,
                 "description": "Skip download if a file with the same clip_id already exists.",
             },
+            "timeout_seconds": {
+                "type": "number",
+                "default": 600,
+                "minimum": 1,
+                "description": (
+                    "Overall wall-clock deadline for search, download, and thumbnail "
+                    "work. Defaults to 10 minutes. On timeout, returns partial progress "
+                    "instead of relying on an external process interrupt."
+                ),
+            },
         },
     }
 
@@ -245,6 +260,8 @@ class DirectClipSearch(BaseTool):
             clips_per_query = int(inputs.get("clips_per_query", 3))
             extract_thumbs = bool(inputs.get("extract_thumbnails", True))
             skip_existing = bool(inputs.get("skip_existing", True))
+            timeout_seconds = float(inputs.get("timeout_seconds", 600))
+            deadline = start + timeout_seconds
 
             clips_dir = output_dir / "clips"
             thumbs_dir = output_dir / "thumbnails"
@@ -295,9 +312,53 @@ class DirectClipSearch(BaseTool):
             errors: list[dict] = []
             skipped = 0
             per_source_counts: dict[str, int] = {s.name: 0 for s in sources}
+            queries_started = 0
+
+            def timeout_result(
+                *,
+                phase: str,
+                query: str = "",
+                source: str = "",
+                clip_id: str = "",
+            ) -> ToolResult:
+                elapsed = time.time() - start
+                return ToolResult(
+                    success=False,
+                    error=(
+                        f"Direct clip search timed out after {timeout_seconds:.1f}s "
+                        f"during {phase}."
+                    ),
+                    data={
+                        "timed_out": True,
+                        "phase": phase,
+                        "query": query,
+                        "source": source,
+                        "clip_id": clip_id,
+                        "output_dir": str(output_dir),
+                        "clips_downloaded": len([d for d in downloaded if not d.get("skipped_existing")]),
+                        "clips_reused": skipped,
+                        "total_clips": len(downloaded),
+                        "per_source_counts": per_source_counts,
+                        "queries_run": queries_started,
+                        "resolved_sources": [s.name for s in sources],
+                        "clips": downloaded,
+                        "errors": errors[:25],
+                        "elapsed_seconds": round(elapsed, 2),
+                        "timeout_seconds": timeout_seconds,
+                    },
+                    cost_usd=0.0,
+                    duration_seconds=round(elapsed, 2),
+                )
+
+            def timed_out() -> bool:
+                return time.time() >= deadline
 
             for q_spec in queries:
+                if timed_out():
+                    return timeout_result(phase="query", query=q_spec.get("query", ""))
+
                 query = q_spec["query"]
+                queries_started += 1
                 slot_id = q_spec.get("slot_id", "")
                 kind = q_spec.get("kind", "video")
                 collected_for_query = 0
@@ -312,11 +373,17 @@ class DirectClipSearch(BaseTool):
                 )
 
                 for src in sources:
+                    if timed_out():
+                        return timeout_result(phase="search", query=query, source=src.name)
+
                     if collected_for_query >= clips_per_query:
                         break
 
                     try:
-                        candidates = src.search(query, filters)
+                        with _requests_deadline(deadline):
+                            candidates = src.search(query, filters)
+                    except _DeadlineExceeded:
+                        return timeout_result(phase="search", query=query, source=src.name)
                     except Exception as e:
                         errors.append({
                             "phase": "search",
@@ -327,6 +394,14 @@ class DirectClipSearch(BaseTool):
                         continue
 
                     for cand in candidates:
+                        if timed_out():
+                            return timeout_result(
+                                phase="download",
+                                query=query,
+                                source=src.name,
+                                clip_id=cand.clip_id,
+                            )
+
                         if collected_for_query >= clips_per_query:
                             break
 
@@ -362,7 +437,15 @@ class DirectClipSearch(BaseTool):
 
                         # Download
                         try:
-                            src.download(cand, clip_path)
+                            with _requests_deadline(deadline):
+                                src.download(cand, clip_path)
+                        except _DeadlineExceeded:
+                            return timeout_result(
+                                phase="download",
+                                query=query,
+                                source=src.name,
+                                clip_id=clip_id,
+                            )
                         except Exception as e:
                             errors.append({
                                 "phase": "download",
@@ -386,21 +469,7 @@ class DirectClipSearch(BaseTool):
                                 pass
                             continue
 
-                        # Extract thumbnail
-                        thumb_path_str = ""
-                        if extract_thumbs and cand.kind == "video":
-                            thumb_path = thumbs_dir / f"{clip_id}.jpg"
-                            try:
-                                _extract_mid_thumbnail(clip_path, thumb_path)
-                                if thumb_path.exists():
-                                    thumb_path_str = str(thumb_path)
-                            except Exception:
-                                pass  # thumbnail failure is non-fatal
-
-                        per_source_counts[src.name] = per_source_counts.get(src.name, 0) + 1
-                        collected_for_query += 1
-
-                        downloaded.append({
+                        downloaded_record = {
                             "clip_id": clip_id,
                             "source": cand.source,
                             "source_id": cand.source_id,
@@ -409,7 +478,7 @@ class DirectClipSearch(BaseTool):
                             "slot_id": slot_id,
                             "kind": cand.kind,
                             "path": str(clip_path),
-                            "thumbnail": thumb_path_str,
+                            "thumbnail": "",
                             "duration": cand.duration,
                             "width": cand.width,
                             "height": cand.height,
@@ -417,7 +486,38 @@ class DirectClipSearch(BaseTool):
                             "license": cand.license,
                             "source_tags": cand.source_tags,
                             "skipped_existing": False,
-                        })
+                        }
+                        downloaded.append(downloaded_record)
+                        per_source_counts[src.name] = per_source_counts.get(src.name, 0) + 1
+                        collected_for_query += 1
+
+                        # Extract thumbnail
+                        if extract_thumbs and cand.kind == "video":
+                            if timed_out():
+                                return timeout_result(
+                                    phase="thumbnail",
+                                    query=query,
+                                    source=src.name,
+                                    clip_id=clip_id,
+                                )
+                            thumb_path = thumbs_dir / f"{clip_id}.jpg"
+                            try:
+                                _extract_mid_thumbnail(
+                                    clip_path,
+                                    thumb_path,
+                                    timeout_seconds=remaining_seconds(deadline),
+                                )
+                                if thumb_path.exists():
+                                    downloaded_record["thumbnail"] = str(thumb_path)
+                            except _DeadlineExceeded:
+                                return timeout_result(
+                                    phase="thumbnail",
+                                    query=query,
+                                    source=src.name,
+                                    clip_id=clip_id,
+                                )
+                            except Exception:
+                                pass  # thumbnail failure is non-fatal
 
             elapsed = time.time() - start
 
@@ -429,7 +529,7 @@ class DirectClipSearch(BaseTool):
                     "clips_reused": skipped,
                     "total_clips": len(downloaded),
                     "per_source_counts": per_source_counts,
-                    "queries_run": len(queries),
+                    "queries_run": queries_started,
                     "resolved_sources": [s.name for s in sources],
                     "clips": downloaded,
                     "errors": errors[:25],
@@ -462,7 +562,64 @@ def _guess_ext(cand) -> str:
     return ".mp4" if cand.kind == "video" else ".jpg"
 
 
-def _extract_mid_thumbnail(video_path: Path, thumb_path: Path) -> None:
+def remaining_seconds(deadline: float) -> float:
+    remaining = deadline - time.time()
+    if remaining <= 0:
+        raise _DeadlineExceeded("direct_clip_search deadline exceeded")
+    return remaining
+
+
+def _clamp_timeout(timeout: Any, remaining: float) -> Any:
+    if timeout is None:
+        return remaining
+    if isinstance(timeout, tuple):
+        return tuple(min(float(part), remaining) for part in timeout)
+    try:
+        return min(float(timeout), remaining)
+    except (TypeError, ValueError):
+        return remaining
+
+
+@contextmanager
+def _requests_deadline(deadline: float):
+    """Clamp adapter requests calls to the direct-search deadline.
+
+    Stock-source adapters are intentionally simple and call `requests.get`
+    directly. Keeping the deadline wrapper here avoids widening every adapter
+    method signature while still preventing streaming downloads from running
+    past the tool-level budget.
+    """
+    import requests
+
+    original_get = requests.get
+
+    def get_with_deadline(*args, **kwargs):
+        remaining = remaining_seconds(deadline)
+        kwargs["timeout"] = _clamp_timeout(kwargs.get("timeout"), remaining)
+        response = original_get(*args, **kwargs)
+        original_iter_content = getattr(response, "iter_content", None)
+        if callable(original_iter_content):
+            def iter_content_with_deadline(*iter_args, **iter_kwargs):
+                for chunk in original_iter_content(*iter_args, **iter_kwargs):
+                    remaining_seconds(deadline)
+                    yield chunk
+
+            response.iter_content = iter_content_with_deadline
+        return response
+
+    requests.get = get_with_deadline
+    try:
+        yield
+    finally:
+        requests.get = original_get
+
+
+def _extract_mid_thumbnail(
+    video_path: Path,
+    thumb_path: Path,
+    *,
+    timeout_seconds: float = 15,
+) -> None:
     """Extract a single frame from the middle of the video via ffmpeg.
 
     This is deliberately simple — one frame, no CLIP, no motion score.
@@ -470,6 +627,7 @@ def _extract_mid_thumbnail(video_path: Path, thumb_path: Path) -> None:
     clip is a good match.
     """
     thumb_path.parent.mkdir(parents=True, exist_ok=True)
+    deadline = time.time() + timeout_seconds
 
     # Probe duration first
     probe_cmd = [
@@ -479,8 +637,9 @@ def _extract_mid_thumbnail(video_path: Path, thumb_path: Path) -> None:
         str(video_path),
     ]
     try:
+        probe_timeout = min(10, remaining_seconds(deadline))
         result = subprocess.run(
-            probe_cmd, capture_output=True, text=True, timeout=10
+            probe_cmd, capture_output=True, text=True, timeout=probe_timeout
         )
         duration = float(result.stdout.strip() or "0")
     except (ValueError, subprocess.TimeoutExpired, FileNotFoundError):
@@ -497,7 +656,8 @@ def _extract_mid_thumbnail(video_path: Path, thumb_path: Path) -> None:
         "-q:v", "3",
         str(thumb_path),
     ]
+    extract_timeout = min(15, remaining_seconds(deadline))
     subprocess.run(
-        extract_cmd, capture_output=True, timeout=15,
+        extract_cmd, capture_output=True, timeout=extract_timeout,
         creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
     )

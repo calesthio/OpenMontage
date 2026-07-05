@@ -58,3 +58,12 @@ Store in `publish_log.metadata`:
 - Publishing the whole batch on the same day.
 - Using one caption everywhere.
 - Losing the rank/order logic after rendering is complete.
+
+---
+
+## Gate Reminder (Binding)
+
+This stage gates on human approval (`human_approval_default: true`). After review passes:
+checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
+the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
+Approval is per-gate — an earlier "go ahead" does not cover this gate.

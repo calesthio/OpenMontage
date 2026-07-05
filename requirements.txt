@@ -7,3 +7,8 @@ Pillow>=10.0
 numpy>=1.24
 requests>=2.31
 google-auth>=2.0       # service-account auth for Google TTS + Imagen (Vertex AI)
+
+# Backlot — the living storyboard (local board server)
+fastapi>=0.110
+uvicorn>=0.29
+watchfiles>=0.21

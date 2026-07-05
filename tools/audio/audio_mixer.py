@@ -492,17 +492,22 @@ class AudioMixer(BaseTool):
         duck_enabled = ducking.get("enabled", True) if isinstance(ducking, dict) else bool(ducking)
 
         if duck_enabled and speech_tracks and music_tracks:
-            # Mix speech tracks together first
+            # Build ONE speech stream, then split it into two independent
+            # branches: one feeds the sidechain compressor as the ducking key,
+            # the other is mixed into the final output. A filtergraph label may
+            # only be consumed once, so reusing the same speech label for both
+            # the sidechain key and the output mix is invalid on stricter ffmpeg
+            # builds (e.g. the Linux ffmpeg on CI). asplit makes the fork explicit.
             speech_indices = list(range(len(speech_tracks)))
             speech_labels = "".join(f"[a{i}]" for i in speech_indices)
 
             if len(speech_tracks) > 1:
                 filter_parts.append(
-                    f"{speech_labels}amix=inputs={len(speech_tracks)}:duration=longest[speech_mix]"
+                    f"{speech_labels}amix=inputs={len(speech_tracks)}:duration=longest[speech_all]"
                 )
-                speech_out = "[speech_mix]"
             else:
-                speech_out = f"[a{speech_indices[0]}]"
+                filter_parts.append(f"[a{speech_indices[0]}]acopy[speech_all]")
+            filter_parts.append("[speech_all]asplit=2[speech_key][speech_out]")
 
             # Mix music tracks together
             music_start = len(speech_tracks)
@@ -517,42 +522,20 @@ class AudioMixer(BaseTool):
             else:
                 music_in = f"[a{music_indices[0]}]"
 
-            # Apply sidechain ducking
+            # Apply sidechain ducking — music is compressed, [speech_key] is the key
             duck_params = ducking if isinstance(ducking, dict) else {}
             attack = duck_params.get("attack_ms", 200) / 1000
             release = duck_params.get("release_ms", 500) / 1000
             music_vol = duck_params.get("music_volume_during_speech", 0.15)
 
             filter_parts.append(
-                f"{music_in}{speech_out}sidechaincompress="
+                f"{music_in}[speech_key]sidechaincompress="
                 f"threshold=0.02:ratio=9:attack={attack}:release={release}:"
                 f"level_sc=1:mix=0.9[ducked_music];"
                 f"[ducked_music]volume={music_vol * 3}[music_out]"
             )
 
-            # Duplicate speech for final mix (sidechain consumes it as key)
-            filter_parts.append(
-                f"{speech_out}acopy[speech_dup]" if speech_out.startswith("[a") else ""
-            )
-            # Re-mix speech path: we need speech audio in the output too
-            # Simpler approach: use amix on original speech and ducked music
-            # Reset: use a cleaner approach — amerge the speech mix and ducked music
-            # Actually, let's rebuild. The sidechain approach above uses speech as
-            # the key signal but doesn't consume it from the output chain.
-            # FFmpeg sidechaincompress: input 0 = audio to compress, input 1 = key signal
-            # So music is compressed, speech signal is the key. We need to mix them.
-            # Remove the last filter_part (the acopy that may be empty)
-            if filter_parts and filter_parts[-1] == "":
-                filter_parts.pop()
-
-            # Build speech mix for output separately
-            if len(speech_tracks) > 1:
-                # speech_mix already exists, make a copy for output
-                filter_parts.append(f"{speech_labels}amix=inputs={len(speech_tracks)}:duration=longest[speech_out]")
-            else:
-                filter_parts.append(f"[a{speech_indices[0]}]acopy[speech_out]")
-
-            # Final mix: speech_out + music_out
+            # Final mix: the other speech branch + ducked music
             mix_label = "[speech_out][music_out]amix=inputs=2:duration=longest[premix]"
 
             # Add SFX if present

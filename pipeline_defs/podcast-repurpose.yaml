@@ -131,7 +131,7 @@ stages:
       - music_gen
       - audio_enhance
     checkpoint_required: true
-    human_approval_default: false
+    human_approval_default: true
     review_focus:
       - Subtitles generated for all clips and full episode
       - Quote card / speaker-card assets match playbook style

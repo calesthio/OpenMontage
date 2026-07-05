@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backlot — Library</title>
+<link rel="stylesheet" href="/ui/board.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="slate">
+    <div class="clapper"></div>
+    <div>
+      <span class="wordmark">Backlot</span>
+      <h1>Library</h1>
+    </div>
+    <span class="chip" id="count"></span>
+    <div class="spacer"></div>
+    <span class="live idle" id="liveBadge"><span class="dot"></span><span id="liveText">IDLE</span></span>
+  </header>
+  <div class="lib-grid" id="grid"></div>
+  <p class="hint" id="empty" style="display:none">No projects yet — run a production and it will appear here.</p>
+</div>
+<script type="module" src="/ui/library.js"></script>
+</body>
+</html>

@@ -6,6 +6,7 @@ using the Manim Community Edition engine. Free, local, no API key required.
 
 from __future__ import annotations
 
+import ast
 import os
 import shutil
 import subprocess
@@ -26,6 +27,48 @@ from tools.base_tool import (
     ToolStatus,
     ToolTier,
 )
+
+
+# --- Safety: caller-supplied scene_code is a local code-execution boundary ---
+# math_animate runs Manim on Python supplied by the caller (often an LLM or
+# prompt-influenced reference material). That is arbitrary local code execution
+# (see issue #219). The static scan below is defense-in-depth: it blocks the
+# constructs an attack needs — reading secrets/SSH material, opening network
+# connections, spawning subprocesses — while leaving genuine math/animation
+# scenes untouched. It is NOT a security sandbox: a determined attacker can
+# evade a static denylist, so it is paired with an explicit `allow_unsafe_code`
+# opt-out and a tool contract that names the boundary. A passing scan is not
+# proof that code is safe to run.
+_BLOCKED_IMPORTS = frozenset({
+    "os", "sys", "subprocess", "socket", "shutil", "requests", "urllib",
+    "http", "ftplib", "smtplib", "telnetlib", "ctypes", "pickle", "marshal",
+    "importlib", "builtins", "multiprocessing", "threading", "pty", "glob",
+    "resource", "signal", "tempfile", "webbrowser", "pathlib",
+})
+# Dangerous identifiers blocked wherever they appear as a bare name — not just
+# as a direct call. This catches indirection like `__builtins__['open']`,
+# `f = open`, or `getattr(x, '__class__')` that a call-target-only or
+# attribute-only check would miss.
+_BLOCKED_NAMES = frozenset({
+    "eval", "exec", "compile", "__import__", "open", "input", "breakpoint",
+    "__builtins__", "__loader__", "globals", "locals", "vars",
+    "getattr", "setattr", "delattr",
+})
+# Reflection via dunder attributes is the general escape hatch: `().__class__`,
+# `print.__self__` (the builtins module), `x.__globals__`, `f.__reduce__`, etc.
+# Enumerating dangerous dunders one by one is whack-a-mole, so block ALL dunder
+# *attribute access* and allow only a tiny set that legitimate scenes use
+# (`super().__init__(...)`, occasional `Type.__name__`). A dunder is any name
+# that starts and ends with double underscores.
+_ALLOWED_DUNDER_ATTRS = frozenset({"__init__", "__name__"})
+
+
+def _is_blocked_dunder(attr: str) -> bool:
+    return (
+        attr.startswith("__")
+        and attr.endswith("__")
+        and attr not in _ALLOWED_DUNDER_ATTRS
+    )
 
 
 # Quality presets mapping to Manim CLI flags
@@ -76,7 +119,20 @@ class MathAnimate(BaseTool):
                 "description": (
                     "Python code defining a Manim scene. Must contain a class "
                     "inheriting from Scene with a construct() method. "
-                    "Import 'from manim import *' is auto-added if missing."
+                    "Import 'from manim import *' is auto-added if missing. "
+                    "SECURITY: this code is EXECUTED on the host by Manim. It is "
+                    "scanned for dangerous constructs (system/network/subprocess "
+                    "access) and rejected by default; treat scene_code as trusted "
+                    "input only."
+                ),
+            },
+            "allow_unsafe_code": {
+                "type": "boolean",
+                "default": False,
+                "description": (
+                    "Bypass the scene_code safety scan. Only set this for code "
+                    "you fully trust — it permits arbitrary local code execution "
+                    "(filesystem, network, subprocess). See issue #219."
                 ),
             },
             "scene_name": {
@@ -117,7 +173,13 @@ class MathAnimate(BaseTool):
     )
     retry_policy = RetryPolicy(max_retries=1, retryable_errors=["timeout"])
     idempotency_key_fields = ["scene_code", "scene_name", "quality"]
-    side_effects = ["writes video/image file to output_path", "creates temp files"]
+    side_effects = [
+        "EXECUTES caller-supplied Python (Manim scene_code) on the host — this "
+        "is a local code-execution boundary; scene_code is scanned and rejected "
+        "by default unless allow_unsafe_code=true (see issue #219)",
+        "writes video/image file to output_path",
+        "creates temp files",
+    ]
     user_visible_verification = [
         "Watch the animation for correctness and visual quality",
         "Verify math formulas render correctly (requires LaTeX)",
@@ -160,6 +222,48 @@ class MathAnimate(BaseTool):
         result.duration_seconds = round(time.time() - start, 2)
         return result
 
+    @staticmethod
+    def _scan_scene_code(code: str) -> list[str]:
+        """Static safety scan of caller-supplied Manim scene code (issue #219).
+
+        Returns a de-duplicated list of disallowed constructs (dangerous
+        imports, builtins, and sandbox-escape dunders). Empty list means the
+        scan found nothing to block — which is NOT a guarantee the code is safe.
+        A syntax error is left for Manim to report, so it returns no violations.
+        """
+        try:
+            tree = ast.parse(code)
+        except SyntaxError:
+            return []
+
+        violations: list[str] = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    root = alias.name.split(".")[0]
+                    if root in _BLOCKED_IMPORTS:
+                        violations.append(f"import '{alias.name}'")
+            elif isinstance(node, ast.ImportFrom):
+                root = (node.module or "").split(".")[0]
+                if root in _BLOCKED_IMPORTS:
+                    violations.append(f"from '{node.module}' import ...")
+            elif isinstance(node, ast.Name):
+                # Blocks direct calls (eval(...)) and indirection alike:
+                # `__builtins__['open']`, `f = open`, `getattr(o, '__class__')`.
+                if node.id in _BLOCKED_NAMES:
+                    violations.append(f"use of '{node.id}'")
+            elif isinstance(node, ast.Attribute):
+                if _is_blocked_dunder(node.attr):
+                    violations.append(f"dunder attribute access '.{node.attr}'")
+
+        seen: set[str] = set()
+        deduped: list[str] = []
+        for v in violations:
+            if v not in seen:
+                seen.add(v)
+                deduped.append(v)
+        return deduped
+
     def _render(self, inputs: dict[str, Any]) -> ToolResult:
         scene_code = inputs["scene_code"]
         scene_name = inputs.get("scene_name")
@@ -173,6 +277,23 @@ class MathAnimate(BaseTool):
         # Ensure import statement
         if "from manim import" not in scene_code:
             scene_code = "from manim import *\n\n" + scene_code
+
+        # Safety gate: scene_code is executed on the host by Manim. Reject
+        # dangerous constructs unless the caller explicitly opts out. (issue #219)
+        if not inputs.get("allow_unsafe_code", False):
+            violations = self._scan_scene_code(scene_code)
+            if violations:
+                return ToolResult(
+                    success=False,
+                    error=(
+                        "scene_code blocked by the math_animate safety scan. This "
+                        "tool executes caller-supplied Python on the host; the "
+                        "following constructs are disallowed by default:\n  - "
+                        + "\n  - ".join(violations)
+                        + "\nIf you fully trust this code and require them, pass "
+                        "allow_unsafe_code=true. See issue #219."
+                    ),
+                )
 
         # Auto-detect scene name if not provided
         if not scene_name:

@@ -111,6 +111,36 @@ Works with **Claude Code, Cursor, Copilot, Windsurf, Codex** — any AI coding a
 
 ---
 
+## Watch It Happen — The Backlot Living Storyboard
+
+Chat tells you what the agent *said*. **Backlot shows you what the production is actually doing** — a local board that fills itself in as the pipeline runs. Stages light up, the script lands as a screenplay page, scene cards shimmer while assets generate, and every provider decision and dollar spent is on the wall.
+
+When a production starts, the agent opens it for you automatically. No setup, no reporting — the board derives everything from the project files the pipeline already writes.
+
+<p align="center"><img src="docs/images/backlot/board-live.png" alt="Backlot live board — assets generating" width="920"></p>
+
+**The storyboard is now a real approval gate.** Asset generation pauses on a scene-by-scene contact sheet — takes, prompts, per-asset cost, quality scores — so you approve the visuals *before* the render, not after it's too late:
+
+<p align="center"><img src="docs/images/backlot/storyboard.png" alt="Backlot storyboard — filmstrip with takes and renders" width="920"></p>
+
+Creative gates hold until you answer. The board shows what's waiting and why; you reply in chat:
+
+<p align="center"><img src="docs/images/backlot/script-gate.png" alt="Backlot script gate — awaiting approval" width="920"></p>
+
+Every production on your machine, live-first, in the library:
+
+<p align="center"><img src="docs/images/backlot/library.png" alt="Backlot library" width="920"></p>
+
+```bash
+python -m backlot open                  # the library — every project on disk
+python -m backlot open <project-id>     # one production's live board
+python scripts/backlot_simulate_run.py  # no production yet? watch a simulated one live
+```
+
+And when a run is done, hit **▶ REPLAY RUN** — the whole production replays from its timestamps, scrubbable end to end. See [`backlot/README.md`](backlot/README.md) for how it works.
+
+---
+
 ## Quick Start
 
 ### Prerequisites
@@ -568,6 +598,7 @@ OpenMontage treats video production like real engineering — with quality gates
 
 ### Quality Gates
 
+- **Human approval gates are enforced, not suggested** — proposal, script, scene plan, generated assets, and publish all pause for your sign-off. The checkpoint writer rejects a "completed" gated stage without recorded approval, and every superseded checkpoint is archived so the audit trail (including gate transitions) survives revisions. Review happens visually on the [Backlot board](#watch-it-happen--the-backlot-living-storyboard).
 - **Pre-compose validation** — blocks render if the delivery promise is violated (e.g. "motion-led" video with 80% still images), slideshow risk score is critical, or renderer family is missing. Catches broken plans before wasting GPU time.
 - **Post-render self-review** — after every render, the runtime runs ffprobe validation, extracts frames at 4 positions to check for black frames and broken overlays, analyzes audio levels for silence and clipping, verifies the delivery promise was honored, and checks subtitle presence. If the review fails, the video is not presented.
 - **Slideshow risk scoring** — 6-dimension analysis (repetition, decorative visuals, weak motion, shot intent, typography overreliance, unsupported cinematic claims) prevents "animated PowerPoint" outputs.

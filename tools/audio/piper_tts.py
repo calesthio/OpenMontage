@@ -98,11 +98,7 @@ class PiperTTS(BaseTool):
     def get_status(self) -> ToolStatus:
         if shutil.which("piper"):
             return ToolStatus.AVAILABLE
-        try:
-            import piper  # noqa: F401
-            return ToolStatus.AVAILABLE
-        except ImportError:
-            return ToolStatus.UNAVAILABLE
+        return ToolStatus.UNAVAILABLE
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         return 0.0

@@ -123,7 +123,7 @@ stages:
       - subtitle_gen
       - audio_enhance
     checkpoint_required: true
-    human_approval_default: false
+    human_approval_default: true
     review_focus:
       - Per-clip subtitles generated with correct time offsets
       - Shared title / hook / branding assets prepared for each clip

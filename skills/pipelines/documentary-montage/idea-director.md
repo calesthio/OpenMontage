@@ -211,3 +211,12 @@ open for the scene director to decide per slot.
   the user explicitly says no.
 - Skipping the end-tag because "the images speak for themselves". They
   don't — the end-tag is the thesis. Propose one every time.
+
+---
+
+## Gate Reminder (Binding)
+
+This stage gates on human approval (`human_approval_default: true`). After review passes:
+checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
+the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
+Approval is per-gate — an earlier "go ahead" does not cover this gate.

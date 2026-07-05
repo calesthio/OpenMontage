@@ -1,16 +1,64 @@
 import { escapeHtml } from "../format.js";
 
-export function button(label, { variant = "secondary", attrs = "" } = {}) {
-  const modifier = variant ? ` button--${escapeHtml(variant)}` : "";
-  return `<button class="button${modifier}" ${attrs}>${escapeHtml(label)}</button>`;
+function dataAttributeName(name) {
+  const kebabName = String(name)
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .toLowerCase();
+
+  if (!/^[a-z0-9-]+$/.test(kebabName) || /^on(?:-|$)/.test(kebabName)) {
+    return "";
+  }
+
+  return kebabName;
 }
 
-export function panel(content, { className = "", title = "" } = {}) {
+export function button(
+  label,
+  {
+    variant = "secondary",
+    type = "button",
+    className = "",
+    disabled = false,
+    ariaLabel = "",
+    data = {},
+  } = {},
+) {
+  const classes = ["button"];
+  if (variant) {
+    classes.push(`button--${variant}`);
+  }
+  if (className) {
+    classes.push(className);
+  }
+
+  const attributeParts = [
+    `class="${escapeHtml(classes.join(" "))}"`,
+    `type="${escapeHtml(type)}"`,
+  ];
+
+  if (disabled) {
+    attributeParts.push("disabled");
+  }
+  if (ariaLabel) {
+    attributeParts.push(`aria-label="${escapeHtml(ariaLabel)}"`);
+  }
+
+  Object.entries(data).forEach(([name, value]) => {
+    const safeName = dataAttributeName(name);
+    if (!safeName) return;
+
+    attributeParts.push(`data-${safeName}="${escapeHtml(value)}"`);
+  });
+
+  return `<button ${attributeParts.join(" ")}>${escapeHtml(label)}</button>`;
+}
+
+export function panel(bodyHtml, { className = "", title = "" } = {}) {
   const titleMarkup = title ? `<h2>${escapeHtml(title)}</h2>` : "";
   return `
     <section class="panel ${escapeHtml(className)}">
       ${titleMarkup}
-      ${content}
+      ${bodyHtml}
     </section>
   `;
 }

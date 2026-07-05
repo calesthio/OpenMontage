@@ -50,4 +50,5 @@ def test_chiling_workbench_has_shared_component_modules():
     assert "export function panel" in ui
     assert "export function phonePreview" in ui
     assert "export function metric" in ui
+    assert "export function pill" in ui
     assert "export function renderTopbar" in topbar

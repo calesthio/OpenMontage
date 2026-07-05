@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>赤灵AI运营工作台 v5 极简交互原型</title>
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --surface: #ffffff;
+      --surface-2: #fbfbfd;
+      --ink: #1d1d1f;
+      --muted: #6e6e73;
+      --line: #e5e5ea;
+      --red: #d73532;
+      --green: #34c759;
+      --amber: #ff9f0a;
+      --blue: #007aff;
+      --radius: 30px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(circle at 12% 0%, rgba(215, 53, 50, .11), transparent 30%),
+        radial-gradient(circle at 92% 2%, rgba(0, 122, 255, .10), transparent 30%),
+        var(--bg);
+    }
+
+    .app { min-height: 100vh; padding: 32px 42px; }
+
+    .nav {
+      height: 66px;
+      display: flex;
+      align-items: center;
+      gap: 34px;
+      padding: 0 34px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: rgba(255,255,255,.86);
+      backdrop-filter: blur(22px);
+    }
+
+    .brand { min-width: 350px; font-size: 24px; font-weight: 700; }
+    .brand small { color: var(--muted); font-size: 13px; font-weight: 400; }
+    .nav a { color: var(--muted); text-decoration: none; font-size: 15px; }
+    .nav .active { color: white; background: var(--ink); padding: 9px 18px; border-radius: 999px; }
+
+    button {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 13px 24px;
+      background: var(--surface-2);
+      color: var(--ink);
+      font: inherit;
+      cursor: pointer;
+      transition: transform .18s ease, background .18s ease, opacity .18s ease;
+    }
+    button:active { transform: scale(.98); }
+    .primary { border-color: var(--ink); background: var(--ink); color: white; font-weight: 700; }
+    .nav .primary { margin-left: auto; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 452px;
+      gap: 50px;
+      padding: 54px 30px 0;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.9);
+      box-shadow: 0 30px 80px rgba(0,0,0,.07);
+    }
+
+    .main { min-height: 730px; padding: 54px 48px; }
+    h1 { margin: 0; font-size: 44px; letter-spacing: -.04em; }
+    .sub { margin: 14px 0 0; color: var(--muted); font-size: 17px; }
+
+    .script-card {
+      width: 400px;
+      margin-top: 54px;
+      padding: 40px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: var(--surface-2);
+    }
+
+    .script-card h2 { margin: 0 0 18px; font-size: 26px; }
+    .script-box {
+      padding: 26px 30px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: white;
+      line-height: 1.78;
+      font-size: 18px;
+    }
+
+    .chips { display: flex; gap: 14px; margin-top: 22px; }
+    .chip { padding: 7px 14px; border-radius: 999px; font-size: 13px; }
+    .blue { color: var(--blue); background: #eef6ff; }
+    .green { color: var(--green); background: #ecfaf0; }
+
+    .actions { display: flex; gap: 18px; margin-top: 44px; }
+
+    .drawer { padding: 46px 44px; }
+    .drawer h2 { margin: 0; font-size: 28px; }
+    .drawer p { color: var(--muted); }
+
+    .list { display: grid; gap: 26px; margin-top: 38px; }
+    .item {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .dot {
+      width: 26px;
+      height: 26px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--green);
+      color: white;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .warn { background: var(--amber); }
+    .active-dot { background: var(--ink); }
+    .waiting { background: #d1d1d6; }
+    .state { color: var(--muted); font-size: 14px; }
+
+    .toast {
+      position: absolute;
+      top: 128px;
+      right: 132px;
+      display: none;
+      min-width: 420px;
+      padding: 17px 26px;
+      border: 1px solid #cfefd7;
+      border-radius: 24px;
+      background: #ecfaf0;
+      color: var(--ink);
+      box-shadow: 0 20px 60px rgba(0,0,0,.08);
+      animation: slide .32s ease;
+    }
+
+    .progress-wrap { display: none; margin: 60px 0 0 160px; }
+    .progress {
+      width: 238px;
+      height: 238px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: conic-gradient(var(--ink) 0 64%, #e5e5ea 64% 100%);
+      animation: breathe 2.4s ease-in-out infinite;
+    }
+    .progress::before {
+      content: "64%\\A 处理中";
+      white-space: pre;
+      width: 198px;
+      height: 198px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: white;
+      text-align: center;
+      font-size: 30px;
+    }
+
+    .generating .toast { display: block; }
+    .generating .script-card { display: none; }
+    .generating .progress-wrap { display: block; }
+    .generating .approve { opacity: .7; pointer-events: none; }
+
+    .loading::before {
+      content: "";
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      margin-right: 9px;
+      border: 2px solid rgba(255,255,255,.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      vertical-align: -2px;
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes slide { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+    @keyframes breathe { 50% { box-shadow: 0 0 0 18px rgba(29,29,31,.045); } }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <nav class="nav">
+      <div class="brand">赤灵AI运营工作台 <small>内容复刻 · 审核 · 交付</small></div>
+      <a>生产台</a>
+      <a>作品</a>
+      <a>素材库</a>
+      <a class="active">团队审核</a>
+      <a>数据</a>
+      <button class="primary">新建</button>
+    </nav>
+
+    <div class="toast">已提交，生产任务已进入队列<br><small>可以离开页面，完成后会在交付区提示。</small></div>
+
+    <main class="layout">
+      <section class="panel main">
+        <h1 id="title">人工审核</h1>
+        <p class="sub" id="subtitle">确认文案、字幕规则与授权状态，审核通过后才会进入生产。</p>
+        <div class="progress-wrap"><div class="progress" aria-label="生成进度"></div></div>
+        <div class="script-card">
+          <h2>文案与字幕</h2>
+          <div class="script-box">
+            在这些案子上面<br />
+            我积累了充足的实战经验<br />
+            如果你身边刚好缺一位靠谱律师朋友<br />
+            不妨留个关注
+          </div>
+          <div class="chips">
+            <span class="chip blue">短句显示</span>
+            <span class="chip green">句尾无标点</span>
+          </div>
+        </div>
+        <div class="actions">
+          <button>退回修改</button>
+          <button class="primary approve" id="approve">确认并生成</button>
+        </div>
+      </section>
+
+      <aside class="panel drawer">
+        <h2 id="drawerTitle">审核详情侧栏</h2>
+        <p id="drawerSub">从列表滑出，不打断主页面。</p>
+        <div class="list" id="checks">
+          <div class="item"><span class="dot">✓</span><b>素材授权</b><span class="state">已确认</span></div>
+          <div class="item"><span class="dot">✓</span><b>肖像授权</b><span class="state">已确认</span></div>
+          <div class="item"><span class="dot">✓</span><b>字幕规则</b><span class="state">已确认</span></div>
+          <div class="item"><span class="dot warn">!</span><b>画面方向</b><span class="state">需确认</span></div>
+        </div>
+        <div class="list" id="steps" hidden>
+          <div class="item"><span class="dot">✓</span><b>解析参考</b><span class="state">完成</span></div>
+          <div class="item"><span class="dot">✓</span><b>整理文案</b><span class="state">完成</span></div>
+          <div class="item"><span class="dot active-dot">•</span><b>生成画面</b><span class="state">64%</span></div>
+          <div class="item"><span class="dot waiting"></span><b>合成字幕</b><span class="state">等待</span></div>
+          <div class="item"><span class="dot waiting"></span><b>质检交付</b><span class="state">预计 6 分钟</span></div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const app = document.getElementById("app");
+    const approve = document.getElementById("approve");
+    approve.addEventListener("click", () => {
+      app.classList.add("generating");
+      approve.innerHTML = '<span class="loading">正在生产</span>';
+      document.getElementById("title").textContent = "生成中";
+      document.getElementById("subtitle").textContent = "系统正在处理画面和字幕，请勿重复提交。";
+      document.getElementById("drawerTitle").textContent = "任务抽屉";
+      document.getElementById("drawerSub").textContent = "用户随时知道现在进行到哪一步。";
+      document.getElementById("checks").hidden = true;
+      document.getElementById("steps").hidden = false;
+    });
+  </script>
+</body>
+</html>

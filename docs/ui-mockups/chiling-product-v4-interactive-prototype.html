@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>赤灵AI运营工作台 v4 交互原型</title>
+  <style>
+    :root {
+      --bg: #070912;
+      --panel: rgba(18, 24, 38, 0.92);
+      --panel-2: #171f31;
+      --line: rgba(255, 255, 255, 0.18);
+      --text: #f8f1ea;
+      --muted: #9aa5ba;
+      --red: #ef3d42;
+      --red-hot: #ff514b;
+      --green: #35d28d;
+      --gold: #f0b35b;
+      --blue: #5aa7ff;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(circle at 12% 4%, rgba(239, 61, 66, 0.32), transparent 28%),
+        radial-gradient(circle at 88% 12%, rgba(140, 108, 255, 0.22), transparent 32%),
+        linear-gradient(140deg, #070912 0%, #0a0e19 48%, #1a0d16 100%);
+      overflow: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: linear-gradient(to bottom, black, transparent 92%);
+      pointer-events: none;
+    }
+
+    .app {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      padding: 34px;
+    }
+
+    .nav {
+      height: 76px;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      padding: 0 28px 0 34px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: rgba(10, 15, 27, .92);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .32);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 360px;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .brand-mark {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 26px rgba(239, 61, 66, .7);
+    }
+
+    .nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 15px;
+    }
+
+    .nav .active {
+      color: #a0181f;
+      padding: 9px 18px;
+      border-radius: 999px;
+      background: #fff5ea;
+      font-weight: 700;
+    }
+
+    .primary {
+      margin-left: auto;
+      border: 0;
+      border-radius: 20px;
+      padding: 13px 24px;
+      background: var(--red);
+      color: white;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 12px 34px rgba(239, 61, 66, .28);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 456px;
+      gap: 44px;
+      height: calc(100vh - 136px);
+      padding: 40px 38px 0;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 38px;
+      background: var(--panel);
+      box-shadow: 0 36px 120px rgba(0,0,0,.36);
+    }
+
+    .main {
+      padding: 52px 48px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 44px;
+      letter-spacing: -0.04em;
+    }
+
+    .sub {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .script-card {
+      margin-top: 42px;
+      padding: 34px;
+      border-radius: 28px;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      max-width: 560px;
+    }
+
+    .script-card h2 {
+      margin: 0 0 18px;
+      font-size: 26px;
+    }
+
+    .script-box {
+      padding: 28px 32px;
+      border-radius: 24px;
+      color: #111827;
+      background: #fff5ea;
+      line-height: 1.8;
+      font-size: 18px;
+    }
+
+    .chips {
+      display: flex;
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+    .chip {
+      padding: 8px 15px;
+      border-radius: 999px;
+      border: 1px solid currentColor;
+      font-size: 14px;
+    }
+
+    .chip.blue { color: var(--blue); background: rgba(90,167,255,.1); }
+    .chip.green { color: var(--green); background: rgba(53,210,141,.1); }
+
+    .actions {
+      display: flex;
+      gap: 18px;
+      margin-top: 44px;
+    }
+
+    .secondary {
+      border: 1px solid #3a455b;
+      border-radius: 18px;
+      padding: 14px 26px;
+      color: var(--text);
+      background: #1a2233;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .phone {
+      width: 228px;
+      height: 492px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 34px;
+      background: #080b12;
+      overflow: hidden;
+    }
+
+    .phone img {
+      width: 100%;
+      height: 386px;
+      object-fit: cover;
+      border-radius: 24px;
+      filter: brightness(.9);
+    }
+
+    .drawer {
+      position: relative;
+      padding: 42px;
+      transform: translateX(0);
+      transition: transform .45s cubic-bezier(.2,.8,.2,1), opacity .45s;
+    }
+
+    .drawer h2 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .checks, .steps {
+      display: grid;
+      gap: 24px;
+      margin-top: 34px;
+    }
+
+    .check, .step {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 16px;
+      align-items: center;
+      color: var(--muted);
+    }
+
+    .dot {
+      width: 26px;
+      height: 26px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: white;
+      font-size: 14px;
+      font-weight: 800;
+      background: var(--green);
+    }
+
+    .warn { background: var(--gold); }
+    .hot { background: var(--red-hot); box-shadow: 0 0 24px rgba(255,81,75,.58); }
+
+    .toast {
+      position: absolute;
+      top: 124px;
+      right: 112px;
+      display: none;
+      width: 438px;
+      padding: 18px 26px;
+      border-radius: 24px;
+      color: white;
+      background: var(--green);
+      box-shadow: 0 22px 60px rgba(53,210,141,.22);
+      z-index: 5;
+      animation: slide-in .42s cubic-bezier(.2,.8,.2,1);
+    }
+
+    .generating .toast { display: block; }
+
+    .progress {
+      display: none;
+      place-items: center;
+      margin: 42px auto 24px;
+      width: 214px;
+      height: 214px;
+      border-radius: 50%;
+      background: conic-gradient(var(--red-hot) 0 64%, rgba(255,255,255,.16) 64% 100%);
+      animation: breathe 1.8s ease-in-out infinite;
+    }
+
+    .progress::before {
+      content: "64%\\A 处理中";
+      white-space: pre;
+      display: grid;
+      place-items: center;
+      width: 172px;
+      height: 172px;
+      border-radius: 50%;
+      color: var(--text);
+      text-align: center;
+      background: #111827;
+      font-size: 28px;
+    }
+
+    .generating .progress { display: grid; }
+    .generating .script-card { display: none; }
+    .generating .approve { opacity: .7; pointer-events: none; }
+
+    .loading-label::before {
+      content: "";
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      margin-right: 10px;
+      border: 2px solid rgba(255,255,255,.35);
+      border-top-color: white;
+      border-radius: 50%;
+      vertical-align: -2px;
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes breathe {
+      50% { box-shadow: 0 0 0 22px rgba(239,61,66,.08), 0 0 70px rgba(239,61,66,.42); }
+    }
+    @keyframes slide-in {
+      from { opacity: 0; transform: translateY(-16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <nav class="nav">
+      <div class="brand"><span class="brand-mark"></span>赤灵AI运营工作台</div>
+      <a>生产台</a>
+      <a>作品</a>
+      <a>素材库</a>
+      <a class="active">团队审核</a>
+      <a>数据</a>
+      <button class="primary">新建作品</button>
+    </nav>
+
+    <div class="toast">已提交，生产任务已进入队列<br><small>可离开页面，完成后会在交付区提示。</small></div>
+
+    <main class="layout">
+      <section class="panel main">
+        <h1 id="title">人工审核</h1>
+        <p class="sub" id="subtitle">确认文案、字幕规则与授权状态，审核通过后才会进入生产。</p>
+        <div class="progress" aria-label="生成进度"></div>
+        <div class="script-card">
+          <h2>文案与字幕</h2>
+          <div class="script-box">
+            在这些案子上面<br>
+            我积累了充足的实战经验<br>
+            如果你身边刚好缺一位靠谱律师朋友<br>
+            不妨留个关注
+          </div>
+          <div class="chips">
+            <span class="chip blue">短句显示</span>
+            <span class="chip green">句尾无标点</span>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="secondary">退回修改</button>
+          <button class="primary approve" id="approve">确认并生成</button>
+        </div>
+      </section>
+
+      <aside class="panel drawer">
+        <h2 id="drawerTitle">审核详情侧栏</h2>
+        <div class="checks" id="checks">
+          <div class="check"><span class="dot">✓</span><b>素材授权</b><span>已确认</span></div>
+          <div class="check"><span class="dot">✓</span><b>肖像授权</b><span>已确认</span></div>
+          <div class="check"><span class="dot">✓</span><b>字幕规则</b><span>已确认</span></div>
+          <div class="check"><span class="dot warn">!</span><b>画面方向</b><span>需确认</span></div>
+        </div>
+        <div class="steps" id="steps" hidden>
+          <div class="step"><span class="dot">✓</span><b>解析参考</b><span>完成</span></div>
+          <div class="step"><span class="dot">✓</span><b>整理文案</b><span>完成</span></div>
+          <div class="step"><span class="dot hot">•</span><b>生成画面</b><span>64%</span></div>
+          <div class="step"><span class="dot"></span><b>合成字幕</b><span>等待</span></div>
+          <div class="step"><span class="dot"></span><b>质检交付</b><span>预计 6 分钟</span></div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const app = document.getElementById("app");
+    const approve = document.getElementById("approve");
+    approve.addEventListener("click", () => {
+      app.classList.add("generating");
+      approve.innerHTML = '<span class="loading-label">正在生产</span>';
+      document.getElementById("title").textContent = "生成中";
+      document.getElementById("subtitle").textContent = "系统正在处理画面和字幕，请勿重复提交。";
+      document.getElementById("drawerTitle").textContent = "任务抽屉";
+      document.getElementById("checks").hidden = true;
+      document.getElementById("steps").hidden = false;
+    });
+  </script>
+</body>
+</html>

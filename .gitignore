@@ -55,6 +55,10 @@ pexels_video_*.mp4
 # Scratch/debug scripts
 scratch/
 
+# Local web prototype runtime state and generated QA captures
+web/chiling-workbench/.worker-data/
+web/chiling-workbench/qa-screenshots/
+
 # Internal docs (strategy, handoffs, playbooks — not shipped)
 internal/
 
@@ -94,3 +98,4 @@ remotion-composer/public/demo-props/caption-burn-*
 
 venv/
 .venv/
+.local-bin/

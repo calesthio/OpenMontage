@@ -108,4 +108,14 @@
 - Screenshot: `web/chiling-workbench/qa-screenshots/task-detail-drawer.png`
 - Result: `关闭` stays on one line, drawer sections are readable, and Worker/static task progress remains capped at 99% until delivery backfill.
 
+## Chiling Workbench A+ QA
+
+- A+ approach keeps the static Web app and Worker/API bridge.
+- Frontend modules now separate helpers, state, actions, polling, components, and views.
+- Static smoke checked login, dashboard, create, review, generating, delivery, and task detail drawer.
+- Paid generation remains gated by review approval, generation confirmation, and production request confirmation phrases.
+- Browser QA compared the app against the v5 mockup set under `docs/ui-mockups/`.
+- Mobile dashboard and review were checked at 390x844; review overflow was fixed by constraining grid children and allowing action rows to wrap.
+- Local QA screenshots were refreshed under `web/chiling-workbench/qa-screenshots/` and remain untracked local artifacts.
+
 final result: passed

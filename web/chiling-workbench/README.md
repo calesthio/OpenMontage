@@ -17,6 +17,19 @@ http://127.0.0.1:5174
 
 静态模式会使用浏览器 `localStorage` 模拟任务。
 
+## A+ frontend structure
+
+The workbench remains buildless. `app.js` bootstraps the app and imports browser-native modules from `src/`.
+
+- `src/format.js` and `src/task-model.js` contain pure helpers.
+- `src/state.js` creates initial state and default form data.
+- `src/actions.js` owns injected frontend action boundaries such as task creation.
+- `src/polling.js` owns task polling without calling the API adapter directly.
+- `src/components/` contains reusable UI renderers.
+- `src/views/` contains page-level renderers.
+- `api-client.js` remains the API/localStorage adapter.
+- `worker.py` remains the local Worker/API bridge.
+
 ## 启动本地 Worker
 
 ```bash

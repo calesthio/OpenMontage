@@ -9,6 +9,7 @@ import { render as renderGeneratingView } from "../src/views/generating.js";
 import { render as renderDeliveryView } from "../src/views/delivery.js";
 import { render as renderAdminView } from "../src/views/admin.js";
 import { render as renderTaskDetailDrawerView } from "../src/views/detail-drawer.js";
+import { normalizeDeliveryUrl } from "../src/action-safety.js";
 
 function createState(overrides = {}) {
   const formDefaults = {
@@ -146,13 +147,15 @@ test("renderReviewView preserves workflow hooks and escapes queue fields", () =>
   assert.match(html, /data-start-generation/);
   assert.match(html, /Queue &lt;script&gt;alert\(3\)&lt;\/script&gt;/);
   assert.match(html, /data-open-task-detail="task&quot;&gt;&lt;script&gt;alert\(2\)&lt;\/script&gt;"/);
+  assert.match(html, /data-open-route="generating"/);
+  assert.doesNotMatch(html, /data-open-route="generating&quot; onmouseover/);
   assert.doesNotMatch(html, /<script>alert/);
   assert.doesNotMatch(html, /<img src=x/);
 });
 
 test("renderGeneratingView preserves production hooks and escapes task data", () => {
   const state = createState({
-    progress: 44,
+    progress: '125"><script>alert(0)</script>',
     generationPhrase: '确认"><script>alert(1)</script>',
     productionRequestPhrase: '提交"><script>alert(2)</script>',
     currentTask: {
@@ -190,6 +193,9 @@ test("renderGeneratingView preserves production hooks and escapes task data", ()
   assert.match(html, /data-progress-ring/);
   assert.match(html, /data-generation-phrase/);
   assert.match(html, /data-submit-production-request/);
+  assert.match(html, /data-progress="100"/);
+  assert.match(html, /style="--progress: 100;"/);
+  assert.doesNotMatch(html, /125&quot;&gt;&lt;script&gt;alert\(0\)&lt;\/script&gt;/);
   assert.match(html, /task&quot;&gt;&lt;script&gt;alert\(3\)&lt;\/script&gt;/);
   assert.match(html, /Stage &lt;script&gt;/);
   assert.doesNotMatch(html, /<script>alert/);
@@ -216,9 +222,41 @@ test("renderDeliveryView preserves delivery hooks and escapes deliverables", () 
 
   assert.match(html, /data-delivery-action="Copy &quot;now&quot;"/);
   assert.match(html, /Title &lt;script&gt;/);
-  assert.match(html, /https:\/\/example\.test\/&quot;&gt;&lt;script&gt;alert\(3\)&lt;\/script&gt;/);
+  assert.match(html, /https:\/\/example\.test\/%22%3E%3Cscript%3Ealert\(3\)%3C\/script%3E/);
   assert.doesNotMatch(html, /<script>alert/);
   assert.doesNotMatch(html, /<img src=x/);
+});
+
+test("renderDeliveryView omits unsafe delivery URLs from action hooks", () => {
+  const state = createState({
+    deliverables: [
+      {
+        title: "Unsafe link",
+        subtitle: "Should not open",
+        action: "复制",
+        url: 'javascript:alert("x")',
+      },
+    ],
+  });
+  const html = renderDeliveryView({ state });
+
+  assert.match(html, /data-delivery-url=""/);
+  assert.doesNotMatch(html, /javascript:alert/);
+});
+
+test("normalizeDeliveryUrl allows only safe delivery URL schemes", () => {
+  const base = "https://workbench.example/base/page";
+
+  assert.equal(normalizeDeliveryUrl("https://cdn.example/file.mp4", base), "https://cdn.example/file.mp4");
+  assert.equal(normalizeDeliveryUrl("http://cdn.example/file.mp4", base), "http://cdn.example/file.mp4");
+  assert.equal(normalizeDeliveryUrl("/deliveries/file.mp4", base), "https://workbench.example/deliveries/file.mp4");
+  assert.equal(normalizeDeliveryUrl("./file.mp4", base), "https://workbench.example/base/file.mp4");
+  assert.equal(normalizeDeliveryUrl("blob:https://workbench.example/object-id", base), "blob:https://workbench.example/object-id");
+  assert.equal(normalizeDeliveryUrl("blob:https://evil.example/object-id", base), "");
+  assert.equal(normalizeDeliveryUrl('javascript:alert("x")', base), "");
+  assert.equal(normalizeDeliveryUrl("data:text/html,evil", base), "");
+  assert.equal(normalizeDeliveryUrl("ftp://example.test/file", base), "");
+  assert.equal(normalizeDeliveryUrl("//evil.example/file.mp4", base), "");
 });
 
 test("renderAdminView renders admin pages and escapes task, audit, and config fields", () => {

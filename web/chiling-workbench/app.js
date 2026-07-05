@@ -3,6 +3,7 @@ import {
   escapeHtml,
   normalizeSubtitleText,
 } from "./src/format.js";
+import { normalizeDeliveryUrl, normalizeProgress } from "./src/action-safety.js";
 import { createInitialState } from "./src/state.js";
 import { renderTopbar } from "./src/components/topbar.js";
 import { bindDelegatedClick, find, findAll } from "./src/dom.js";
@@ -54,6 +55,11 @@ function showToast(title, message) {
 }
 
 function navigate(page) {
+  if (!routeIds.has(page)) {
+    showToast("无法打开页面", "页面路径不可用，请刷新后重试。");
+    return;
+  }
+
   state.page = page;
   if (window.location.hash !== `#${page}`) {
     window.history.replaceState(null, "", `#${page}`);
@@ -497,15 +503,16 @@ async function runOperationAction(operationId) {
 }
 
 function updateProgressOnly() {
+  const progress = normalizeProgress(state.progress);
   const ring = document.querySelector("[data-progress-ring]");
   if (ring) {
-    ring.style.setProperty("--progress", state.progress);
-    ring.dataset.progress = String(state.progress);
+    ring.style.setProperty("--progress", progress);
+    ring.dataset.progress = String(progress);
   }
 
   const stageState = document.querySelector("[data-generation-stage-state]");
   if (stageState) {
-    stageState.textContent = `${state.progress}%`;
+    stageState.textContent = `${progress}%`;
   }
 }
 
@@ -689,20 +696,26 @@ function bindEvents() {
 
   findAll(document, "[data-open-task]").forEach((button) => {
     button.addEventListener("click", async () => {
+      const openRoute = button.dataset.openRoute;
+      if (!routeIds.has(openRoute)) {
+        showToast("无法打开任务", "任务跳转目标不可用，请刷新后重试。");
+        return;
+      }
+
       state.currentTaskId = button.dataset.openTask;
       window.localStorage.setItem("chiling-workbench.current-task-id", state.currentTaskId);
       await refreshCurrentTask();
 
-      if (button.dataset.openRoute === "delivery") {
+      if (openRoute === "delivery") {
         state.deliverables = await window.ChilingTaskApi.listDeliverables(state.currentTaskId);
       }
 
-      if (button.dataset.openRoute === "generating") {
+      if (openRoute === "generating") {
         await refreshOperations(state.currentTaskId);
         startTaskPolling({ navigateOnComplete: true });
       }
 
-      navigate(button.dataset.openRoute);
+      navigate(openRoute);
     });
   });
 
@@ -867,20 +880,25 @@ function bindEvents() {
     button.addEventListener("click", async () => {
       const action = button.dataset.deliveryAction;
       const url = button.dataset.deliveryUrl;
+      const safeUrl = normalizeDeliveryUrl(url, window.location.href);
 
-      if (url && action === "复制") {
-        const absoluteUrl = new URL(url, window.location.origin).href;
+      if (url && !safeUrl) {
+        showToast("交付链接不可用", "交付链接未通过安全校验，请刷新后重试。");
+        return;
+      }
+
+      if (safeUrl && action === "复制") {
         try {
-          await navigator.clipboard.writeText(absoluteUrl);
+          await navigator.clipboard.writeText(safeUrl);
         } catch {
-          window.prompt("复制交付链接", absoluteUrl);
+          window.prompt("复制交付链接", safeUrl);
         }
         showToast("链接已复制", "交付链接已复制到剪贴板。");
         return;
       }
 
-      if (url) {
-        window.open(url, "_blank", "noopener");
+      if (safeUrl) {
+        window.open(safeUrl, "_blank", "noopener");
         showToast(`${action}已打开`, "已打开任务交付文件。");
         return;
       }

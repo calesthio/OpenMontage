@@ -1,5 +1,6 @@
 import { escapeHtml } from "../format.js";
 import { phonePreview } from "../components/ui.js";
+import { normalizeProgress } from "../action-safety.js";
 
 export function render({ state }) {
   const task = state.currentTask;
@@ -8,7 +9,7 @@ export function render({ state }) {
   const taskButtonClass = task ? "button button--primary button--loading" : "button button--primary";
   const bannerTitle = task ? "已提交，生产任务正在进行" : "等待任务提交";
   const bannerSubtitle = task ? "可以离开页面，完成后会在交付区提示。" : "请从创建作品或人工审核页提交任务。";
-  const visibleProgress = task ? state.progress : 0;
+  const visibleProgress = normalizeProgress(task ? state.progress : 0);
 
   return `
     <section class="generation-layout">

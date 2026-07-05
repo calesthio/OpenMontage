@@ -24,6 +24,7 @@ def test_chiling_frontend_exposes_production_queue_contract():
         path.read_text(encoding="utf-8")
         for path in [
             APP_PATH,
+            WORKBENCH / "src" / "action-safety.js",
             STATE_PATH,
             WORKBENCH / "src" / "format.js",
             WORKBENCH / "src" / "task-model.js",

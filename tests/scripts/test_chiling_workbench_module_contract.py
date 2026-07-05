@@ -25,6 +25,7 @@ def test_chiling_workbench_uses_browser_modules_for_app_code():
 def test_chiling_workbench_keeps_user_safe_frontend_boundaries():
     modules = [
         WORKBENCH / "app.js",
+        WORKBENCH / "src" / "action-safety.js",
         WORKBENCH / "src" / "format.js",
         WORKBENCH / "src" / "task-model.js",
         WORKBENCH / "src" / "state.js",

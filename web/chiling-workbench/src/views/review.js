@@ -1,5 +1,6 @@
 import { escapeHtml } from "../format.js";
 import { phonePreview } from "../components/ui.js";
+import { normalizeTaskRoute } from "../action-safety.js";
 
 export function render({ state }) {
   return `
@@ -224,7 +225,7 @@ function productionRequestItem(item) {
 
 function queueItem(item) {
   const dotClass = item.status === "completed" ? "status-dot--green" : item.queueItemReady ? "status-dot--amber" : "status-dot--red";
-  const route = item.route || (item.status === "completed" ? "delivery" : "generating");
+  const route = normalizeTaskRoute(item.route, item.status);
   const action = item.status === "completed" ? "查看交付" : "看进度";
   const note = item.blockingNote ? ` · ${escapeHtml(item.blockingNote)}` : "";
 

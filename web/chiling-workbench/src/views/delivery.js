@@ -1,6 +1,7 @@
 import { escapeHtml } from "../format.js";
 import { phonePreview } from "../components/ui.js";
 import { defaultDeliverables } from "../task-model.js";
+import { normalizeDeliveryUrl } from "../action-safety.js";
 
 export function render({ state }) {
   const task = state.currentTask;
@@ -31,6 +32,8 @@ export function render({ state }) {
 }
 
 function deliveryItem(title, subtitle, action, url = "") {
+  const deliveryUrl = normalizeDeliveryUrl(url);
+
   return `
     <div class="delivery-item">
       <i class="status-dot status-dot--green"></i>
@@ -38,7 +41,7 @@ function deliveryItem(title, subtitle, action, url = "") {
         <strong>${escapeHtml(title)}</strong>
         <span>${escapeHtml(subtitle)}</span>
       </div>
-      <button class="button button--small" data-delivery-action="${escapeHtml(action)}" data-delivery-url="${escapeHtml(url)}">${escapeHtml(action)}</button>
+      <button class="button button--small" data-delivery-action="${escapeHtml(action)}" data-delivery-url="${escapeHtml(deliveryUrl)}">${escapeHtml(action)}</button>
     </div>
   `;
 }

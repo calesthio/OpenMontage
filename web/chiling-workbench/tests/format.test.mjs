@@ -50,6 +50,7 @@ test("deliveryItem escapes user-controlled delivery fields", () => {
   assert.match(deliveryItem, /<strong>\$\{escapeHtml\(title\)\}<\/strong>/);
   assert.match(deliveryItem, /<span>\$\{escapeHtml\(subtitle\)\}<\/span>/);
   assert.match(deliveryItem, /data-delivery-action="\$\{escapeHtml\(action\)\}"/);
-  assert.match(deliveryItem, /data-delivery-url="\$\{escapeHtml\(url\)\}"/);
+  assert.match(deliveryItem, /const deliveryUrl = normalizeDeliveryUrl\(url\);/);
+  assert.match(deliveryItem, /data-delivery-url="\$\{escapeHtml\(deliveryUrl\)\}"/);
   assert.match(deliveryItem, />\$\{escapeHtml\(action\)\}<\/button>/);
 });

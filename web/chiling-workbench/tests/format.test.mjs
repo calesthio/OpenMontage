@@ -42,9 +42,9 @@ test("formatRelativeTime returns stable Chinese labels", () => {
 });
 
 test("deliveryItem escapes user-controlled delivery fields", () => {
-  const source = readFileSync(new URL("../app.js", import.meta.url), "utf8");
+  const source = readFileSync(new URL("../src/views/delivery.js", import.meta.url), "utf8");
   const match = source.match(/function deliveryItem\([\s\S]*?\n}\n/);
-  assert.ok(match, "deliveryItem should exist in app.js while app remains browser-only");
+  assert.ok(match, "deliveryItem should exist in the delivery view module");
 
   const deliveryItem = match[0];
   assert.match(deliveryItem, /<strong>\$\{escapeHtml\(title\)\}<\/strong>/);

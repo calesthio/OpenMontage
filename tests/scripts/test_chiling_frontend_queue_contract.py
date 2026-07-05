@@ -4,19 +4,41 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-APP_PATH = ROOT / "web" / "chiling-workbench" / "app.js"
-STATE_PATH = ROOT / "web" / "chiling-workbench" / "src" / "state.js"
-API_CLIENT_PATH = ROOT / "web" / "chiling-workbench" / "api-client.js"
-STYLE_PATH = ROOT / "web" / "chiling-workbench" / "styles.css"
-README_PATH = ROOT / "web" / "chiling-workbench" / "README.md"
+WORKBENCH = ROOT / "web" / "chiling-workbench"
+APP_PATH = WORKBENCH / "app.js"
+STATE_PATH = WORKBENCH / "src" / "state.js"
+API_CLIENT_PATH = WORKBENCH / "api-client.js"
+STYLE_PATH = WORKBENCH / "styles.css"
+VIEWS_DIR = WORKBENCH / "src" / "views"
+README_PATH = WORKBENCH / "README.md"
 DESIGN_QA_PATH = ROOT / "design-qa.md"
 
 
 def test_chiling_frontend_exposes_production_queue_contract():
     api_client = API_CLIENT_PATH.read_text(encoding="utf-8")
     app = APP_PATH.read_text(encoding="utf-8")
+    views = "\n".join(path.read_text(encoding="utf-8") for path in sorted(VIEWS_DIR.glob("*.js")))
+    frontend_ui = app + "\n" + views
     frontend_state = app + "\n" + STATE_PATH.read_text(encoding="utf-8")
+    frontend_browser_source = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in [
+            APP_PATH,
+            STATE_PATH,
+            WORKBENCH / "src" / "format.js",
+            WORKBENCH / "src" / "task-model.js",
+            WORKBENCH / "src" / "dom.js",
+            WORKBENCH / "src" / "components" / "ui.js",
+            WORKBENCH / "src" / "components" / "topbar.js",
+            *sorted(VIEWS_DIR.glob("*.js")),
+        ]
+    )
     styles = STYLE_PATH.read_text(encoding="utf-8")
+
+    assert 'import {} from "./src/task-model.js";' not in app
+    assert 'import {} from "./src/components/ui.js";' not in app
+    assert "Legacy source-level safety checks" not in app
+    assert "Moved view contract markers" not in app
 
     assert "async function listQueue()" in api_client
     assert "async function listProductionRequests()" in api_client
@@ -96,78 +118,78 @@ def test_chiling_frontend_exposes_production_queue_contract():
     assert "claimProductionRequest" in app
     assert "completeProductionRequest" in app
     assert "executeProductionAdapter" in app
-    assert "renderQueueRows" in app
-    assert "renderProductionRequestRows" in app
-    assert "renderProductionServiceStatusPanel" in app
-    assert "renderProductionServiceConfigurationPanel" in app
-    assert "renderProductionAuditLogPanel" in app
+    assert "renderQueueRows" in views
+    assert "renderProductionRequestRows" in views
+    assert "renderProductionServiceStatusPanel" in views
+    assert "renderProductionServiceConfigurationPanel" in views
+    assert "renderProductionAuditLogPanel" in views
     assert "renderTaskDetailDrawer" in app
-    assert "renderTaskDetailSection" in app
-    assert "renderOperationPanel" in app
-    assert "renderReviewDraftPanel" in app
-    assert "renderProductionPrepPanel" in app
+    assert "renderTaskDetailSection" in views
+    assert "renderOperationPanel" in views
+    assert "renderReviewDraftPanel" in views
+    assert "renderProductionPrepPanel" in views
     assert "runOperationAction" in app
-    assert "解析摘要" in app
-    assert "data-refresh-review-draft" in app
-    assert "data-save-review" in app
-    assert "data-approve-review" in app
-    assert "data-generation-phrase" in app
-    assert "data-approve-generation" in app
-    assert "确认进入生产" in app
-    assert "保存审核稿" in app
-    assert "审核通过" in app
-    assert "后台操作面板" in app
-    assert "生产准备包" in app
-    assert "data-refresh-production-prep" in app
-    assert "确认提交生产" in app
-    assert "data-production-request-phrase" in app
-    assert "data-submit-production-request" in app
-    assert "data-refresh-operations" in app
-    assert "data-run-operation" in app
-    assert "后台生产队列" in app
-    assert "data-refresh-queue" in app
-    assert "生产执行队列" in app
-    assert "生产服务诊断" in app
-    assert "管理员配置" in app
-    assert "生产服务配置" in app
-    assert "生产执行审计" in app
-    assert "任务详情" in app
-    assert "人工审核记录" in app
-    assert "交付物" in app
-    assert "查看详情" in app
-    assert "data-open-task-detail" in app
-    assert "data-close-task-detail" in app
-    assert "提交生产请求" in app
-    assert "领取任务" in app
-    assert "尝试执行生产服务" in app
-    assert "生产服务预检" in app
-    assert "尝试执行生产服务、生产服务预检、人工回填交付" in app
-    assert "等待服务端执行器接管" in app
-    assert "人工回填交付" in app
-    assert "data-refresh-production-audit-log" in app
-    assert "不在页面填写密钥" in app
-    assert "仅服务端配置" in app
-    assert "data-refresh-production-service-configuration" in app
-    assert "真实生产服务" in app
-    assert "未启用" in app
-    assert "待配置" in app
-    assert "可连接" in app
-    assert "不会启动付费生成" in app
-    assert "data-refresh-production-service-status" in app
-    assert "data-refresh-production-requests" in app
-    assert "操作员执行" in app
-    assert "领取任务" in app
-    assert "执行中" in app
-    assert "data-claim-production-request" in app
-    assert "标记交付" in app
-    assert "data-complete-production-request" in app
-    assert "执行生产服务" in app
-    assert "data-execute-production-adapter" in app
-    assert "reference-video-analysis" not in app
-    assert "RUNNINGHUB" not in app
-    assert "DOUBAO" not in app
-    assert "ARK" not in app
-    assert "CHILING_PRODUCTION_SERVICE" not in app
+    assert "解析摘要" in frontend_ui
+    assert "data-refresh-review-draft" in frontend_ui
+    assert "data-save-review" in frontend_ui
+    assert "data-approve-review" in frontend_ui
+    assert "data-generation-phrase" in frontend_ui
+    assert "data-approve-generation" in frontend_ui
+    assert "确认进入生产" in frontend_ui
+    assert "保存审核稿" in frontend_ui
+    assert "审核通过" in frontend_ui
+    assert "后台操作面板" in frontend_ui
+    assert "生产准备包" in frontend_ui
+    assert "data-refresh-production-prep" in frontend_ui
+    assert "确认提交生产" in frontend_ui
+    assert "data-production-request-phrase" in frontend_ui
+    assert "data-submit-production-request" in frontend_ui
+    assert "data-refresh-operations" in frontend_ui
+    assert "data-run-operation" in frontend_ui
+    assert "后台生产队列" in frontend_ui
+    assert "data-refresh-queue" in frontend_ui
+    assert "生产执行队列" in frontend_ui
+    assert "生产服务诊断" in frontend_ui
+    assert "管理员配置" in frontend_ui
+    assert "生产服务配置" in frontend_ui
+    assert "生产执行审计" in frontend_ui
+    assert "任务详情" in frontend_ui
+    assert "人工审核记录" in frontend_ui
+    assert "交付物" in frontend_ui
+    assert "查看详情" in frontend_ui
+    assert "data-open-task-detail" in frontend_ui
+    assert "data-close-task-detail" in frontend_ui
+    assert "提交生产请求" in frontend_ui
+    assert "领取任务" in frontend_ui
+    assert "尝试执行生产服务" in frontend_ui
+    assert "生产服务预检" in frontend_ui
+    assert "尝试执行生产服务、生产服务预检、人工回填交付" in frontend_ui
+    assert "等待服务端执行器接管" in frontend_ui
+    assert "人工回填交付" in frontend_ui
+    assert "data-refresh-production-audit-log" in frontend_ui
+    assert "不在页面填写密钥" in frontend_ui
+    assert "仅服务端配置" in frontend_ui
+    assert "data-refresh-production-service-configuration" in frontend_ui
+    assert "真实生产服务" in frontend_ui
+    assert "未启用" in frontend_ui
+    assert "待配置" in frontend_ui
+    assert "可连接" in frontend_ui
+    assert "不会启动付费生成" in frontend_ui
+    assert "data-refresh-production-service-status" in frontend_ui
+    assert "data-refresh-production-requests" in frontend_ui
+    assert "操作员执行" in frontend_ui
+    assert "领取任务" in frontend_ui
+    assert "执行中" in frontend_ui
+    assert "data-claim-production-request" in frontend_ui
+    assert "标记交付" in frontend_ui
+    assert "data-complete-production-request" in frontend_ui
+    assert "执行生产服务" in frontend_ui
+    assert "data-execute-production-adapter" in frontend_ui
+    assert "reference-video-analysis" not in frontend_browser_source
+    assert "RUNNINGHUB" not in frontend_browser_source
+    assert "DOUBAO" not in frontend_browser_source
+    assert "ARK" not in frontend_browser_source
+    assert "CHILING_PRODUCTION_SERVICE" not in frontend_browser_source
     assert ".task-detail-drawer__head .button" in styles
     assert "white-space: nowrap" in styles
 

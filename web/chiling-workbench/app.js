@@ -3,9 +3,7 @@ import {
   escapeHtml,
   normalizeSubtitleText,
 } from "./src/format.js";
-import {} from "./src/task-model.js";
 import { createInitialState } from "./src/state.js";
-import {} from "./src/components/ui.js";
 import { renderTopbar } from "./src/components/topbar.js";
 import { bindDelegatedClick, find, findAll } from "./src/dom.js";
 import { render as renderLoginView } from "./src/views/login.js";
@@ -557,45 +555,6 @@ function renderData() {
 function renderTaskDetailDrawer() {
   return renderTaskDetailDrawerView({ state });
 }
-
-/*
-Legacy source-level safety checks still look for these escaped helper bodies in app.js.
-The runtime implementations live in src/views/review.js and src/views/delivery.js.
-function renderQueueRows() {}
-function renderProductionRequestRows() {}
-function renderProductionServiceStatusPanel() {}
-function renderProductionServiceConfigurationPanel() {}
-function renderProductionAuditLogPanel() {}
-function renderTaskDetailSection() {}
-function renderOperationPanel() {}
-function renderReviewDraftPanel() {}
-function renderProductionPrepPanel() {}
-function deliveryItem(title, subtitle, action, url = "") {
-  return `
-    <div class="delivery-item">
-      <i class="status-dot status-dot--green"></i>
-      <div>
-        <strong>${escapeHtml(title)}</strong>
-        <span>${escapeHtml(subtitle)}</span>
-      </div>
-      <button class="button button--small" data-delivery-action="${escapeHtml(action)}" data-delivery-url="${escapeHtml(url)}">${escapeHtml(action)}</button>
-    </div>
-  `;
-}
-Moved view contract markers:
-解析摘要 data-refresh-review-draft data-save-review data-approve-review 保存审核稿 审核通过
-data-generation-phrase data-approve-generation 确认进入生产 后台操作面板
-生产准备包 data-refresh-production-prep 确认提交生产 data-production-request-phrase data-submit-production-request
-data-refresh-operations data-run-operation 后台生产队列 data-refresh-queue 生产执行队列
-生产服务诊断 管理员配置 生产服务配置 生产执行审计 任务详情 人工审核记录 交付物
-查看详情 data-open-task-detail data-close-task-detail 提交生产请求 领取任务
-尝试执行生产服务 生产服务预检 尝试执行生产服务、生产服务预检、人工回填交付
-等待服务端执行器接管 人工回填交付 data-refresh-production-audit-log
-不在页面填写密钥 仅服务端配置 data-refresh-production-service-configuration
-真实生产服务 未启用 待配置 可连接 不会启动付费生成 data-refresh-production-service-status
-data-refresh-production-requests 操作员执行 执行中 data-claim-production-request
-标记交付 data-complete-production-request 执行生产服务 data-execute-production-adapter
-*/
 
 function saveFormValues() {
   document.querySelectorAll("[data-field]").forEach((field) => {

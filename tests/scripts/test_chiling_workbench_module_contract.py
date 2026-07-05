@@ -14,10 +14,11 @@ def read(path: Path) -> str:
 def test_chiling_workbench_uses_browser_modules_for_app_code():
     index = read(WORKBENCH / "index.html")
     app = read(WORKBENCH / "app.js")
+    views = "\n".join(read(path) for path in sorted((WORKBENCH / "src" / "views").glob("*.js")))
 
     assert '<script src="./app.js" type="module"></script>' in index
     assert 'from "./src/format.js"' in app
-    assert 'from "./src/task-model.js"' in app
+    assert 'from "../task-model.js"' in views
     assert 'from "./src/state.js"' in app
 
 
@@ -48,8 +49,9 @@ def test_chiling_workbench_has_shared_component_modules():
     app = read(WORKBENCH / "app.js")
     ui = read(WORKBENCH / "src" / "components" / "ui.js")
     topbar = read(WORKBENCH / "src" / "components" / "topbar.js")
+    views = "\n".join(read(path) for path in sorted((WORKBENCH / "src" / "views").glob("*.js")))
 
-    assert 'from "./src/components/ui.js"' in app
+    assert 'from "../components/ui.js"' in views
     assert 'from "./src/components/topbar.js"' in app
     assert "export function button" in ui
     assert "export function panel" in ui

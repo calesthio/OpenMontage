@@ -1,14 +1,15 @@
 ---
 name: mlx-movie-director
-description: Use when routing image generation to the mlx_image provider (Apple-Silicon-native MLX via the sibling mlx-movie-director repo). Covers pipeline choice (zimage / flux2-klein / lens), ControlNet, i2i, LoRA stacks, faceswap, availability gating, and the MLX_MOVIE_DIRECTOR_DIR / MLX_VENV_PYTHON environment contract.
+description: Use when routing image generation to mlx_image OR video generation to mlx_video (Apple-Silicon-native MLX via the sibling mlx-movie-director repo). Covers image pipeline choice (zimage/flux2-klein/lens), ControlNet, i2i, LoRA, faceswap, video LTX-2.3 i2v/t2v/t2i2v, availability gating, and the MLX_MOVIE_DIRECTOR_DIR / MLX_VENV_PYTHON environment contract.
 ---
 
 # MLX Movie Director (run.py) in OpenMontage
 
-Use this skill before calling `mlx_image`, and whenever a brief wants a local,
-`$0` Apple-Silicon path for ControlNet, true image-to-image, LoRA conditioning,
-or BFS face/head swap — the surface no other OpenMontage image provider covers
-fully (only `grok_image`'s edit mode partially overlaps).
+Use this skill before calling `mlx_image` (image) or `mlx_video` (motion), and
+whenever a brief wants a local, `$0` Apple-Silicon path for ControlNet, true
+image-to-image, LoRA conditioning, BFS face/head swap, or native LTX-2.3 i2v/t2v
+— surfaces no other OpenMontage provider covers on Apple Silicon (only
+`grok_image`'s edit mode partially overlaps on the image side).
 
 ## Environment Contract
 
@@ -107,3 +108,49 @@ generation is byte-deterministic for a fixed seed on the same stack.
 - The scorer ranks it highly: it advertises the full `control` surface
   (controlnet/img2img/reference_image/faceswap/lora), so it wins the `control`
   and `cost_efficiency` dimensions decisively.
+
+---
+
+# Video (mlx_video)
+
+`mlx_video` wraps LTX-2.3 22B (`run.py video generate` / `video t2i2v`). It is
+the **Apple-Silicon-native** motion path: OM's other local i2v providers
+(wan/hunyuan/ltx/cogvideo) need CUDA `diffusers` and don't run on MPS.
+
+## Action Routing
+
+| Inputs | run.py action | Mode | Notes |
+|---|---|---|---|
+| prompt only | `video t2i2v` | T2V | The 3-stage ZImage T2I → VLM prompt → LTX-2.3 dasiwa animate pipeline (MLX's headline path). Richer, slower. |
+| `reference_image`/`image_path` present | `video generate` | I2V | Direct LTX-2.3 image-to-video with `--input-image`. Faster. |
+| explicit `action: "generate"` (no image) | `video generate` | T2V | Direct LTX-2.3 text-to-video. |
+| explicit `action: "t2i2v"` + image | `video t2i2v` | I2V | t2i2v with a keyframe; otherwise generates the keyframe from the prompt. |
+
+Frame count must be `8k+1` (25, 33, 41, 49, 57, 65, …, default 97 ≈ 4 s @ 24 fps).
+Dimensions auto-snap to a multiple of 64 (default 704×448).
+
+## Honest Surface — What mlx_video Is NOT
+
+`mlx_video` deliberately does NOT advertise `cinematic_quality`, `lip_sync`,
+`multi_shot`, `native_audio`, or `dialogue_generation`. Those are premium cloud
+flags (seedance / veo / kling / runway). LTX-2.3 local is a **free offline
+default** — the right pick when cost or offline operation matters, NOT a
+replacement for premium cinematic delivery. The `best_for` / `not_good_for`
+fields steer the scorer accordingly.
+
+## Motion-Required Governance
+
+For a `motion_required=true` brief, the locked `render_runtime`
+(FFmpeg / Remotion / HyperFrames) is a **compose-stage** commitment.
+`mlx_video` is a *generation* provider — it produces a clip, it does not
+satisfy or substitute for the compose runtime, and a silent runtime swap
+remains a CRITICAL violation (see `AGENT_GUIDE.md` "Motion-Required Requests").
+`mlx_video`'s `fallback_tools` deliberately excludes `image_selector` so a
+motion-required brief can never silently degrade to a still image.
+
+## When to Pick mlx_video
+
+- An image-led scene needs motion on Apple Silicon without a cloud call.
+- Cost matters (cloud motion providers charge per second; mlx_video is `$0`).
+- Offline / air-gapped motion generation.
+- Preflight draft motion before spending on a premium seedance/veo render.

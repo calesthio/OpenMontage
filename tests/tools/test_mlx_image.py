@@ -118,11 +118,13 @@ def test_status_available_with_full_env(monkeypatch, tmp_path):
         (mlx_dir / "mlx-models" / sub).mkdir(parents=True)
     monkeypatch.setenv("MLX_MOVIE_DIRECTOR_DIR", str(mlx_dir))
     monkeypatch.delenv("MLX_VENV_PYTHON", raising=False)
+    # Mock Apple Silicon so the full available-path (incl. the arch guard in
+    # resolve_mlx_env) runs on ANY CI host, not just native arm64 reviewers.
+    monkeypatch.setattr("tools._mlx.env.platform.machine", lambda: "arm64")
     env = MLXImage._resolve_env()
     assert env["ok"] is True, env.get("reason")
-    # arm64 is required — skip the status assertion on non-Apple-Silicon CI.
-    if env["arm64"]:
-        assert MLXImage().get_status() == ToolStatus.AVAILABLE
+    assert env["arm64"] is True
+    assert MLXImage().get_status() == ToolStatus.AVAILABLE
 
 
 # --------------------------------------------------------------------------

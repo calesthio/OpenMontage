@@ -27,7 +27,6 @@ from __future__ import annotations
 
 import json
 import os
-import platform
 import re
 import shutil
 import subprocess
@@ -48,20 +47,10 @@ from tools.base_tool import (
     ToolStatus,
     ToolTier,
 )
+from tools._mlx.env import resolve_mlx_env
 
-# Where the MLX repo lives. Configured by the OM deployment; the provider is
-# UNAVAILABLE without it (we do not guess a sibling path — explicit config only).
-_MLX_DIR_ENV = "MLX_MOVIE_DIRECTOR_DIR"
-_MLX_PYTHON_ENV = "MLX_VENV_PYTHON"
-
-# Relative layout inside the MLX repo (stable per the MLX repo's CLAUDE.md).
-_RUN_PY_REL = "python/mlx-movie-director/run.py"
-_VENV_PYTHON_REL = "python/venv/bin/python"
-_MODELS_REL = "mlx-models"
-
-# Subdirectories under mlx-models/ whose presence implies at least one usable
-# image-generation model is staged. transformer + vae are the minimum stack.
-_REQUIRED_MODEL_SUBDIRS = ("transformer", "vae")
+# Env constants + resolution live in tools/_mlx/env.py (shared with mlx_video +
+# mlx_caption). Only the JSON-summary marker is local to image generation.
 
 # The stdout marker emitted by `run.py ... --json-summary` (see
 # app/commands/_shared.py:681 — execute_generation prints "JSON_SUMMARY:{...}").
@@ -211,76 +200,12 @@ class MLXImage(BaseTool):
     def _resolve_env() -> dict[str, Any]:
         """Resolve MLX repo dir + venv interpreter + presence flags.
 
-        Returns a dict with: mlx_dir, run_py, venv_python, arm64, ok (bool),
-        reason (str when not ok). Pure filesystem checks — no subprocess spawn,
-        so get_status() stays cheap.
+        Delegates to the shared ``tools/_mlx/env.py`` resolver (need_models=True
+        — image generation needs the mlx-models stack + Apple Silicon). Returns
+        a dict with: mlx_dir, run_py, venv_python, arm64, ok (bool), reason (str
+        when not ok). Pure filesystem checks — no subprocess spawn.
         """
-        mlx_dir = os.environ.get(_MLX_DIR_ENV)
-        arm64 = platform.machine() in ("arm64", "aarch64")
-
-        if not mlx_dir:
-            return {
-                "ok": False,
-                "reason": f"{_MLX_DIR_ENV} is not set (point it at the mlx-movie-director repo root).",
-                "arm64": arm64,
-            }
-        mlx_dir = os.path.expanduser(mlx_dir)
-        run_py = os.path.join(mlx_dir, _RUN_PY_REL)
-        if not os.path.isfile(run_py):
-            return {
-                "ok": False,
-                "reason": f"{_MLX_DIR_ENV}={mlx_dir} has no {_RUN_PY_REL}.",
-                "arm64": arm64,
-                "mlx_dir": mlx_dir,
-            }
-
-        venv_python = os.environ.get(_MLX_PYTHON_ENV) or os.path.join(mlx_dir, _VENV_PYTHON_REL)
-        if not os.path.isfile(venv_python):
-            return {
-                "ok": False,
-                "reason": (
-                    f"MLX venv interpreter not found at {venv_python}. Recreate it: "
-                    f"uv venv {mlx_dir}/python/venv --python 3.12 && "
-                    f"uv pip install -r {mlx_dir}/python/mlx-movie-director/requirements.txt "
-                    f"--python {mlx_dir}/python/venv/bin/python"
-                ),
-                "arm64": arm64,
-                "mlx_dir": mlx_dir,
-                "run_py": run_py,
-            }
-
-        models_dir = os.path.join(mlx_dir, _MODELS_REL)
-        missing_subdirs = [s for s in _REQUIRED_MODEL_SUBDIRS if not os.path.isdir(os.path.join(models_dir, s))]
-        if missing_subdirs:
-            return {
-                "ok": False,
-                "reason": (
-                    f"MLX models incomplete under {models_dir}: missing {missing_subdirs}. "
-                    f"Stage models before use."
-                ),
-                "arm64": arm64,
-                "mlx_dir": mlx_dir,
-                "run_py": run_py,
-                "venv_python": venv_python,
-            }
-
-        if not arm64:
-            return {
-                "ok": False,
-                "reason": f"MLX runs on Apple Silicon only (got {platform.machine()}).",
-                "arm64": False,
-                "mlx_dir": mlx_dir,
-                "run_py": run_py,
-                "venv_python": venv_python,
-            }
-
-        return {
-            "ok": True,
-            "arm64": True,
-            "mlx_dir": mlx_dir,
-            "run_py": run_py,
-            "venv_python": venv_python,
-        }
+        return resolve_mlx_env(need_models=True)
 
     def get_status(self) -> ToolStatus:
         env = self._resolve_env()

@@ -33,7 +33,6 @@ from __future__ import annotations
 
 import json
 import os
-import platform
 import re
 import shutil
 import subprocess
@@ -54,16 +53,11 @@ from tools.base_tool import (
     ToolStatus,
     ToolTier,
 )
+from tools._mlx.env import resolve_mlx_env
 
-# Env contract (mirrors mlx_image; copied rather than imported to keep this a
-# one-file add — no cross-tool graphics↔video coupling. If a third MLX provider
-# appears, factor into tools/_mlx/env.py).
-_MLX_DIR_ENV = "MLX_MOVIE_DIRECTOR_DIR"
-_MLX_PYTHON_ENV = "MLX_VENV_PYTHON"
-_RUN_PY_REL = "python/mlx-movie-director/run.py"
-_VENV_PYTHON_REL = "python/venv/bin/python"
-_MODELS_REL = "mlx-models"
-_REQUIRED_MODEL_SUBDIRS = ("transformer", "vae")
+# Env contract + resolution live in tools/_mlx/env.py (shared with mlx_image +
+# mlx_caption). Only the video-specific frame-count + output-extension
+# constants are local to this file.
 
 # LTX-2.3 output extensions (broader than mlx_image's image set).
 _VIDEO_EXTS = ("*.mp4", "*.mov", "*.webm", "*.gif")
@@ -199,33 +193,9 @@ class MLXVideo(BaseTool):
 
     @staticmethod
     def _resolve_env() -> dict[str, Any]:
-        mlx_dir = os.environ.get(_MLX_DIR_ENV)
-        arm64 = platform.machine() in ("arm64", "aarch64")
-        if not mlx_dir:
-            return {"ok": False, "reason": f"{_MLX_DIR_ENV} is not set (point it at the mlx-movie-director repo root).", "arm64": arm64}
-        mlx_dir = os.path.expanduser(mlx_dir)
-        run_py = os.path.join(mlx_dir, _RUN_PY_REL)
-        if not os.path.isfile(run_py):
-            return {"ok": False, "reason": f"{_MLX_DIR_ENV}={mlx_dir} has no {_RUN_PY_REL}.", "arm64": arm64, "mlx_dir": mlx_dir}
-        venv_python = os.environ.get(_MLX_PYTHON_ENV) or os.path.join(mlx_dir, _VENV_PYTHON_REL)
-        if not os.path.isfile(venv_python):
-            return {
-                "ok": False,
-                "reason": (
-                    f"MLX venv interpreter not found at {venv_python}. Recreate it: "
-                    f"uv venv {mlx_dir}/python/venv --python 3.12 && "
-                    f"uv pip install -r {mlx_dir}/python/mlx-movie-director/requirements.txt "
-                    f"--python {mlx_dir}/python/venv/bin/python"
-                ),
-                "arm64": arm64, "mlx_dir": mlx_dir, "run_py": run_py,
-            }
-        models_dir = os.path.join(mlx_dir, _MODELS_REL)
-        missing = [s for s in _REQUIRED_MODEL_SUBDIRS if not os.path.isdir(os.path.join(models_dir, s))]
-        if missing:
-            return {"ok": False, "reason": f"MLX models incomplete under {models_dir}: missing {missing}.", "arm64": arm64, "mlx_dir": mlx_dir, "run_py": run_py, "venv_python": venv_python}
-        if not arm64:
-            return {"ok": False, "reason": f"MLX runs on Apple Silicon only (got {platform.machine()}).", "arm64": False, "mlx_dir": mlx_dir, "run_py": run_py, "venv_python": venv_python}
-        return {"ok": True, "arm64": True, "mlx_dir": mlx_dir, "run_py": run_py, "venv_python": venv_python}
+        # Delegates to the shared resolver (need_models=True — video generation
+        # needs the mlx-models stack + Apple Silicon). See tools/_mlx/env.py.
+        return resolve_mlx_env(need_models=True)
 
     def get_status(self) -> ToolStatus:
         return ToolStatus.AVAILABLE if self._resolve_env()["ok"] else ToolStatus.UNAVAILABLE

@@ -11,4 +11,4 @@ Source of truth for what's been scripted/produced/posted. The live IG grid outra
 | 2026-07-01 | The silent leak (shrinkage/downtime found late) | LEAK | posted |
 | 2026-07-02 | The one-person spreadsheet / single point of failure | EXCEL | posted |
 | 2026-07-02 | The handoff tax | HANDOFF | posted |
-| 2026-07-06 | The collection gap (late invoices / AR) | CASH | produced · drafted (zernio 6a4bc7086812fd5d33d636cb) |
+| 2026-07-06 | The collection gap (late invoices / AR) | CASH | produced · awaiting review (Drive 7/6/26; zernio draft deleted per review-first directive) |

@@ -91,6 +91,40 @@ def test_completed_job_with_stale_last_event_synthesizes_job_completed(client):
     assert evs[-1]["render_url"] == "/media/j4/renders/final.mp4"
 
 
+def test_old_terminal_event_mid_history_does_not_truncate_the_replay(client):
+    # Found live: a job failed once (job_failed persisted at some seq), was
+    # later retried, and genuinely succeeded — appending MANY more events
+    # including a real job_completed further down the log. The old code
+    # returned as soon as it saw ANY job_completed/job_failed while iterating
+    # a batch, so a full replay (or any reconnect) stopped dead at the FIRST
+    # (old, superseded) job_failed and never delivered the retry's real
+    # outcome — the client stayed stuck reporting the stale old failure
+    # forever. A full replay must deliver every event and only stop at the
+    # LAST one, which is the real, current outcome.
+    c, ts = client
+    ts.create("j5", {})
+    ts.push_event("j5", {"type": "stage_started", "stage": "edit"})
+    ts.push_event("j5", {"type": "job_failed", "stage": "edit", "message": "old failure"})
+    ts.push_event("j5", {"type": "job_started", "resumed": True})
+    ts.push_event("j5", {"type": "stage_skipped", "stage": "edit"})
+    ts.push_event("j5", {"type": "stage_completed", "stage": "compose"})
+    ts.push_event("j5", {"type": "job_completed", "render_url": "/media/j5/renders/final.mp4"})
+    ts.update("j5", status="completed", render_url="/media/j5/renders/final.mp4")
+
+    with c.stream("GET", "/jobs/j5/events") as resp:
+        evs = _read_events(resp)
+
+    types = [e["type"] for e in evs]
+    assert types == [
+        "stage_started", "job_failed", "job_started", "stage_skipped",
+        "stage_completed", "job_completed",
+    ]
+    # The stream delivered ALL of it, including past the old job_failed, and
+    # stopped only at the real (last) terminal event — not synthesized again.
+    assert evs[-1]["render_url"] == "/media/j5/renders/final.mp4"
+    assert len(evs) == 6
+
+
 def test_unknown_job_closes_immediately(client):
     c, _ts = client
     with c.stream("GET", "/jobs/does-not-exist/events") as resp:

@@ -15,23 +15,37 @@ router = APIRouter()
 async def job_events(job_id: str, lastEventId: int = -1):
     async def generator():
         seq = lastEventId
+        last_type = None
         while True:
             events = job_store.get_events(job_id, after_seq=seq)
             for ev in events:
                 seq = ev["seq"]
+                last_type = ev.get("type")
                 data = json.dumps(ev, ensure_ascii=False)
                 yield f"id: {seq}\ndata: {data}\n\n"
-                if ev.get("type") in ("job_completed", "job_failed"):
-                    return
-            # Nothing new this tick: if the job is already terminal we've drained
-            # everything, so close instead of looping forever (a reconnect after
-            # completion would otherwise leak a connection). No second query —
-            # an empty drain IS the "caught up" signal.
+            # Only decide to close AFTER draining the whole batch just
+            # fetched — never mid-batch. A full replay (or any reconnect
+            # spanning more than one retry cycle) can contain an OLD
+            # job_failed/job_completed from an earlier, since-superseded
+            # attempt followed by MANY more events from a later retry that
+            # actually finished differently (even a real job_completed).
+            # Returning as soon as any terminal-type event was seen — instead
+            # of only the LAST one in the batch — silently truncated the
+            # replay right at that old event, so a client resuming from
+            # scratch (or reconnecting after a gap) never saw the job's real,
+            # later outcome and kept reconnecting/misreporting forever.
             if not events:
+                # Nothing new this tick: if the job is already terminal we've
+                # drained everything, so close instead of looping forever (a
+                # reconnect after completion would otherwise leak a
+                # connection). No second query — an empty drain IS the
+                # "caught up" signal.
                 job = job_store.get(job_id)
                 if job is None:
                     return
                 if job.get("status") in TERMINAL_STATUSES:
+                    if last_type in ("job_completed", "job_failed"):
+                        return   # already ended on a real terminal event
                     # The persisted event log may predate the terminal state —
                     # e.g. a job interrupted by a server restart mid-flight is
                     # marked failed without a job_failed event ever being
@@ -53,6 +67,10 @@ async def job_events(job_id: str, lastEventId: int = -1):
                     }
                     yield f"id: {seq}\ndata: {json.dumps(synthetic, ensure_ascii=False)}\n\n"
                     return
+            elif last_type in ("job_completed", "job_failed"):
+                # The batch we just delivered genuinely ends on a real
+                # terminal event (not an old one buried mid-batch) — done.
+                return
             await asyncio.sleep(0.5)
 
     return StreamingResponse(

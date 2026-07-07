@@ -20,8 +20,8 @@
     },
     "color": {
       "type": "string",
-      "pattern": "^(#[0-9a-fA-F]{6}|[a-z][a-z-]*)$",
-      "description": "Display color: a CSS-style named color (e.g. amber) or a 6-digit hex value."
+      "pattern": "^(#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?|[a-z][a-z0-9]*(-[a-z0-9]+)*)$",
+      "description": "Display color: a CSS-style named color (e.g. amber) or a 3- or 6-digit hex value."
     },
     "emoji": {
       "type": "string",

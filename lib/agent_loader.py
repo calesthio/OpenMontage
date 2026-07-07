@@ -11,18 +11,18 @@ from __future__ import annotations
 
 import json
 import re
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional
 
 import jsonschema
 import yaml
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+from lib.paths import REPO_ROOT
+
 AGENTS_DIR = REPO_ROOT / ".claude" / "agents"
 SCHEMA_PATH = REPO_ROOT / "schemas" / "agents" / "agent_definition.schema.json"
 
-# Frontmatter block: an opening --- on the first line, YAML until a closing
-# --- alone on its own line, then the markdown body.
 _FRONTMATTER_RE = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n(.*)\Z", re.DOTALL)
 
 
@@ -30,6 +30,7 @@ class AgentDefinitionError(ValueError):
     """Raised when an agent definition file violates the contract."""
 
 
+@lru_cache(maxsize=1)
 def _load_agent_schema() -> dict:
     with open(SCHEMA_PATH, encoding="utf-8") as f:
         return json.load(f)
@@ -122,6 +123,6 @@ def validate_all_agents(agents_dir: Optional[Path] = None) -> list[dict[str, str
     for path in list_agents(agents_dir):
         try:
             load_agent(path)
-        except AgentDefinitionError as exc:
+        except (AgentDefinitionError, UnicodeDecodeError, FileNotFoundError, OSError) as exc:
             issues.append({"file": str(path), "error": str(exc)})
     return issues

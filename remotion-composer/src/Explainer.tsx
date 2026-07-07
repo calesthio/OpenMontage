@@ -45,6 +45,12 @@ import { TerminalScene } from "./components/TerminalScene";
 import type { TerminalStep } from "./components/TerminalScene";
 import { ScreenshotScene } from "./components/ScreenshotScene";
 import type { ScreenshotStep } from "./components/ScreenshotScene";
+import { ScreencastScene } from "./components/ScreencastScene";
+import type {
+  ScreencastOverlay,
+  CursorKeyframe,
+  ZoomWindow,
+} from "./components/ScreencastScene";
 import { ProviderChip } from "./components/ProviderChip";
 import type { ParticleType } from "./components/ParticleOverlay";
 import { resolveTheme, type ThemeConfig, DEFAULT_THEME } from "./Root";
@@ -268,6 +274,12 @@ interface Cut {
   screenshotSteps?: ScreenshotStep[];
   screenshotSize?: { width: number; height: number };
   cursorStartAt?: [number, number];
+  // Screencast scene props (type: "screencast_scene") — animated overlays over a
+  // MOVING capture (uses `source` + `source_in_seconds`).
+  screencastOverlays?: ScreencastOverlay[];
+  screencastCursor?: CursorKeyframe[];
+  screencastZoom?: ZoomWindow[];
+  screencastSize?: { width: number; height: number };
 }
 
 interface Overlay {
@@ -614,6 +626,20 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
         backgroundImage={cut.backgroundImage}
         backgroundSize={cut.screenshotSize}
         steps={cut.screenshotSteps as ScreenshotStep[]}
+        accentColor={accent}
+        cursorStartAt={cut.cursorStartAt}
+      />
+    );
+  }
+  if (cut.type === "screencast_scene" && cut.source && cut.screencastOverlays) {
+    return (
+      <ScreencastScene
+        source={cut.source}
+        sourceInSeconds={cut.source_in_seconds ?? 0}
+        backgroundSize={cut.screencastSize}
+        overlays={cut.screencastOverlays as ScreencastOverlay[]}
+        cursor={cut.screencastCursor}
+        zoom={cut.screencastZoom}
         accentColor={accent}
         cursorStartAt={cut.cursorStartAt}
       />

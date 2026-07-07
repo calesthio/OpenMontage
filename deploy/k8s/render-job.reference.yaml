@@ -1,0 +1,89 @@
+# REFERENCE ONLY — the render-api generates this Job per request. Kept here so you
+# can read the shape or run one render by hand (fill in REGISTRY, base_url, ids).
+#
+#   kubectl -n tutorial-render create -f render-job.reference.yaml
+#
+# ttsd runs as a native sidecar (initContainer with restartPolicy: Always) so it
+# never blocks Job completion; the worker is the main container.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: render-sales-tour-manual
+  namespace: tutorial-render
+  labels:
+    app: tutorial-render
+    render-id: sales-tour-manual
+spec:
+  ttlSecondsAfterFinished: 3600
+  activeDeadlineSeconds: 1800
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: tutorial-render
+        render-id: sales-tour-manual
+    spec:
+      restartPolicy: Never
+      serviceAccountName: render-api
+      volumes:
+        - name: work
+          emptyDir: {}
+        - name: clips
+          emptyDir: {}   # swap for a RWX PVC to reuse the narration cache across renders
+      initContainers:
+        - name: ttsd
+          image: REGISTRY/circuit-ttsd:latest
+          restartPolicy: Always
+          envFrom:
+            - secretRef:
+                name: ttsd-secret
+          env:
+            - name: TTSD_PORT
+              value: "5557"
+            - name: NARRATION_CLIP_DIR
+              value: "/clips"
+          ports:
+            - containerPort: 5557
+          volumeMounts:
+            - name: clips
+              mountPath: /clips
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5557
+            periodSeconds: 5
+      containers:
+        - name: worker
+          image: REGISTRY/tutorial-worker:latest
+          env:
+            - name: TUTORIAL
+              value: "sales-tour"
+            - name: PROJECT_ID
+              value: "sales-tour-manual"
+            - name: BASE_URL
+              value: "https://DEMO_HOST"
+            - name: NARRATION_URL
+              value: "http://127.0.0.1:5557"
+            - name: RENDER_RUNTIME
+              value: "remotion"
+            - name: RESULT_BUCKET
+              value: "tutorials"
+            - name: OPENMONTAGE_PROJECTS_DIR
+              value: "/work/projects"
+            - name: CLIENT_DIR
+              value: "/app/client"
+          envFrom:
+            - secretRef:
+                name: minio-secret
+          resources:
+            requests:
+              memory: "4Gi"
+              cpu: "1"
+            limits:
+              memory: "8Gi"
+              cpu: "4"
+          volumeMounts:
+            - name: work
+              mountPath: /work
+            - name: clips
+              mountPath: /clips

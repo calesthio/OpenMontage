@@ -1,0 +1,8 @@
+{
+  "narration_url": "http://127.0.0.1:5557",
+  "base_url": "https://backoffice.ddev.site:9010",
+  "client_dir": "../circuitauction-backoffice/client",
+  "render_runtime": "ffmpeg",
+  "projects_dir": "",
+  "lang": "en"
+}

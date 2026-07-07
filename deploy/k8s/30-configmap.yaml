@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: render-api-config
+  namespace: tutorial-render
+data:
+  NAMESPACE: "tutorial-render"
+  SERVICE_ACCOUNT: "render-api"
+  # Set these to the images you pushed to your registry.
+  WORKER_IMAGE: "REGISTRY/tutorial-worker:latest"
+  TTSD_IMAGE: "REGISTRY/circuit-ttsd:latest"
+  SECRET_TTSD_NAME: "ttsd-secret"
+  SECRET_MINIO_NAME: "minio-secret"
+  RESULT_BUCKET: "tutorials"
+  # Render path: "remotion" (animated callouts/zoom via the Explainer composition)
+  # or "ffmpeg" (self-contained assembly). remotion requires the worker image built
+  # with --build-arg INSTALL_REMOTION=true (the default).
+  RENDER_RUNTIME: "remotion"
+  MAX_CONCURRENT: "2"
+  JOB_TTL_SECONDS: "3600"
+  JOB_DEADLINE_SECONDS: "1800"
+  WORKER_MEM_REQUEST: "4Gi"
+  WORKER_MEM_LIMIT: "8Gi"
+  WORKER_CPU_REQUEST: "1"
+  WORKER_CPU_LIMIT: "4"
+  # Optional default git ref for the client tutorial specs (per-request ref wins).
+  CLIENT_REF: ""

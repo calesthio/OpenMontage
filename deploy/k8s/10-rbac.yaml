@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: render-api
+  namespace: tutorial-render
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: render-api
+  namespace: tutorial-render
+rules:
+  - apiGroups: ["batch"]
+    resources: ["jobs", "jobs/status"]
+    verbs: ["create", "get", "list", "watch", "delete"]
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: render-api
+  namespace: tutorial-render
+subjects:
+  - kind: ServiceAccount
+    name: render-api
+    namespace: tutorial-render
+roleRef:
+  kind: Role
+  name: render-api
+  apiGroup: rbac.authorization.k8s.io

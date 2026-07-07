@@ -181,7 +181,14 @@ class AudioMixer(BaseTool):
     ]
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
-        operation = inputs["operation"]
+        # "full_mix" is explicitly documented as "the preferred operation for
+        # the compose-director skill" (see _full_mix's own docstring) — the
+        # only one of five operations with a stated default use case. Same
+        # defect class as video_compose/video_stitch, confirmed live: an
+        # agent driving compose called this tool with mix-shaped params but no
+        # "operation", raising a bare KeyError and burning the stage's entire
+        # turn budget instead of failing on ITS OWN precondition.
+        operation = inputs.get("operation", "full_mix")
         start = time.time()
 
         try:

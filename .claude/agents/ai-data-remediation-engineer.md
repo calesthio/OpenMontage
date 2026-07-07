@@ -173,8 +173,16 @@ def _compile_safe_lambda(lambda_str: str):
         if not isinstance(tree.body, ast.Lambda):
             raise ValueError("Must be a lambda expression")
         
-        # Extract parameter names from lambda signature
+        # Extract all parameter names from lambda signature (positional, keyword-only, varargs, kwargs)
         lambda_params = {arg.arg for arg in tree.body.args.args}
+        if tree.body.args.posonlyargs:
+            lambda_params.update(arg.arg for arg in tree.body.args.posonlyargs)
+        if tree.body.args.kwonlyargs:
+            lambda_params.update(arg.arg for arg in tree.body.args.kwonlyargs)
+        if tree.body.args.vararg:
+            lambda_params.add(tree.body.args.vararg.arg)
+        if tree.body.args.kwarg:
+            lambda_params.add(tree.body.args.kwarg.arg)
         allowed_names = lambda_params | {'str', 'int', 'float', 'len'}
         
         # Whitelist safe expression types only — enforce it

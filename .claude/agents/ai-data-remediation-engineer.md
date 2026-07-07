@@ -174,9 +174,12 @@ def _compile_safe_lambda(lambda_str: str):
             raise ValueError("Must be a lambda expression")
         
         # Whitelist safe expression types only — enforce it
-        safe_types = {ast.Lambda, ast.Name, ast.Constant, ast.Attribute, ast.Call,
+        safe_types = {ast.Expression, ast.Lambda, ast.Name, ast.Constant, ast.Attribute, ast.Call,
                       ast.BinOp, ast.UnaryOp, ast.Compare, ast.BoolOp,
-                      ast.Load, ast.arguments, ast.arg}
+                      ast.Load, ast.arguments, ast.arg,
+                      ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Mod, ast.Pow,
+                      ast.Eq, ast.NotEq, ast.Lt, ast.LtE, ast.Gt, ast.GtE,
+                      ast.And, ast.Or, ast.Not, ast.UAdd, ast.USub}
         
         # Walk AST and enforce whitelist: reject any unlisted node type
         for node in ast.walk(tree):
@@ -219,11 +222,11 @@ def _compile_safe_lambda(lambda_str: str):
                         raise ValueError("String/sequence multiplication with variables not allowed")
         
         # Final safety: test with a small input to detect resource bombs and incompatibility
-        test_fn = eval(lambda_str, {"__builtins__": {"str": str, "int": int, "float": float, "len": len}})
         try:
+            test_fn = eval(lambda_str, {"__builtins__": {"str": str, "int": int, "float": float, "len": len}})
             test_fn("test")  # Quick execution test
         except Exception as exc:
-            raise ValueError(f"Lambda failed test execution: {exc}") from exc
+            raise ValueError(f"Lambda rejected: {exc}") from exc
         return test_fn
     except SyntaxError as e:
         raise ValueError(f"Invalid lambda syntax: {e}")

@@ -173,12 +173,16 @@ def _compile_safe_lambda(lambda_str: str):
         if not isinstance(tree.body, ast.Lambda):
             raise ValueError("Must be a lambda expression")
         
-        # Whitelist safe expression types only
+        # Whitelist safe expression types only — enforce it
         safe_types = {ast.Lambda, ast.Name, ast.Constant, ast.Attribute, ast.Call,
-                      ast.BinOp, ast.UnaryOp, ast.Compare, ast.BoolOp}
+                      ast.BinOp, ast.UnaryOp, ast.Compare, ast.BoolOp,
+                      ast.Load, ast.arguments, ast.arg}
         
-        # Tighter restrictions on expensive operations
+        # Walk AST and enforce whitelist: reject any unlisted node type
         for node in ast.walk(tree):
+            if type(node) not in safe_types:
+                raise ValueError(f"Disallowed expression type: {type(node).__name__}")
+            
             # Reject constructs that can consume unbounded resources
             if isinstance(node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
                 raise ValueError("Comprehensions and generators not allowed")
@@ -214,9 +218,12 @@ def _compile_safe_lambda(lambda_str: str):
                     if isinstance(node.left, ast.Name) or isinstance(node.right, ast.Name):
                         raise ValueError("String/sequence multiplication with variables not allowed")
         
-        # Final safety: test with a small input to detect resource bombs
-        test_fn = eval(lambda_str)
-        _ = test_fn("test")  # Quick execution test
+        # Final safety: test with a small input to detect resource bombs and incompatibility
+        test_fn = eval(lambda_str, {"__builtins__": {"str": str, "int": int, "float": float, "len": len}})
+        try:
+            test_fn("test")  # Quick execution test
+        except Exception as exc:
+            raise ValueError(f"Lambda failed test execution: {exc}") from exc
         return test_fn
     except SyntaxError as e:
         raise ValueError(f"Invalid lambda syntax: {e}")
@@ -265,7 +272,8 @@ def reconciliation_check(source_rows: list[dict], success_rows: list[dict], quar
     # Identity verification (detect duplicates, swaps, corruption)
     def row_hash(row: dict) -> str:
         # Hash on stable primary key + original value to catch modifications
-        pk = row.get('id') or row.get('pk')
+        # Preserve falsy values (0, '') by checking key existence, not truthiness
+        pk = row['id'] if row.get('id') is not None else row.get('pk')
         original = row.get('original_value', '')
         return hashlib.sha256(f"{pk}:{original}".encode()).hexdigest()
     
@@ -273,16 +281,41 @@ def reconciliation_check(source_rows: list[dict], success_rows: list[dict], quar
     success_hashes = {row_hash(r) for r in success_rows}
     quarantine_hashes = {row_hash(r) for r in quarantine_rows}
     
+    # Check for duplicates within each list (set size < list size means duplicates)
+    if len(source_hashes) != len(source_rows):
+        dup_count = len(source_rows) - len(source_hashes)
+        trigger_alert(
+            severity="SEV1",
+            message=f"DATA CORRUPTION DETECTED: {dup_count} duplicate rows in source input"
+        )
+        raise DataLossException(f"Duplicate rows in source: {dup_count} duplicates found")
+    
+    if len(success_hashes) != len(success_rows):
+        dup_count = len(success_rows) - len(success_hashes)
+        trigger_alert(
+            severity="SEV1",
+            message=f"DATA CORRUPTION DETECTED: {dup_count} duplicate rows in success output"
+        )
+        raise DataLossException(f"Duplicate rows in success: {dup_count} duplicates found")
+    
+    if len(quarantine_hashes) != len(quarantine_rows):
+        dup_count = len(quarantine_rows) - len(quarantine_hashes)
+        trigger_alert(
+            severity="SEV1",
+            message=f"DATA CORRUPTION DETECTED: {dup_count} duplicate rows in quarantine output"
+        )
+        raise DataLossException(f"Duplicate rows in quarantine: {dup_count} duplicates found")
+    
     # Every source row must appear in exactly one of success or quarantine
     if source_hashes != (success_hashes | quarantine_hashes):
         missing_hashes = source_hashes - (success_hashes | quarantine_hashes)
-        duplicate_hashes = (success_hashes & quarantine_hashes)
+        overlap_hashes = (success_hashes & quarantine_hashes)
         
         message_parts = []
         if missing_hashes:
             message_parts.append(f"{len(missing_hashes)} row identities missing from output")
-        if duplicate_hashes:
-            message_parts.append(f"{len(duplicate_hashes)} rows duplicated across success/quarantine")
+        if overlap_hashes:
+            message_parts.append(f"{len(overlap_hashes)} rows in both success and quarantine")
         
         trigger_alert(
             severity="SEV1",

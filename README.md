@@ -249,7 +249,7 @@ You don't need paid API keys to make real videos. Out of the box, `make setup` g
 | **Composition (React)** | Remotion | React-based rendering — spring-animated image scenes, text cards, stat cards, charts, TikTok-style word-level captions, TalkingHead |
 | **Composition (HTML/GSAP)** | HyperFrames | HTML/CSS/GSAP rendering — kinetic typography, product promos, launch reels, registry blocks, website-to-video, rigged SVG character animation |
 | **Post-production** | FFmpeg | Encoding, subtitle burn-in, audio mixing, color grading |
-| **Subtitles** | Built-in | Auto-generated captions with word-level timing |
+| **Subtitles** | Built-in + ZapCap | Auto-generated captions with word-level timing; optional styled/animated caption templates (Hormozi, Beast, ...) via ZapCap |
 
 OpenMontage picks between Remotion and HyperFrames at proposal time (locked as `render_runtime`). Remotion is the default for data-driven explainers and anything using the existing React scene stack; HyperFrames is the default for motion-graphics-heavy briefs that express naturally as HTML + GSAP, including the `character-animation` pipeline's SVG/GSAP rig output. See `skills/core/hyperframes.md` for the full decision matrix.
 

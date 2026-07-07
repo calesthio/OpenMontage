@@ -147,15 +147,14 @@ class TestContract:
         tool = cls()
         assert len(tool.user_visible_verification) > 0
 
-    def test_lazy_imports_requests(self, cls):
+    def test_lazy_imports_requests(self, cls, monkeypatch):
         """Tool module must not import requests at top level (registry
         discovery must stay fast)."""
         import importlib
         import sys
         # Remove requests from cache to simulate fresh import
         mod_name = cls.__module__
-        if "requests" in sys.modules:
-            del sys.modules["requests"]
+        monkeypatch.delitem(sys.modules, "requests", raising=False)
         # Re-import the tool module — should not pull in requests
         # (requests is imported inside execute(), not at module level)
         importlib.reload(sys.modules[mod_name])

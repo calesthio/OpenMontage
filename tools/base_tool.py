@@ -304,8 +304,9 @@ class BaseTool(ABC):
     def check_dependencies(self) -> None:
         """Verify all dependencies are installed. Raises DependencyError if not."""
         for dep in self.dependencies:
-            if dep.startswith("cmd:"):
-                cmd_name = dep[4:]
+            if dep.startswith(("cmd:", "binary:")):
+                prefix = "cmd:" if dep.startswith("cmd:") else "binary:"
+                cmd_name = dep[len(prefix):]
                 if shutil.which(cmd_name) is None:
                     raise DependencyError(
                         f"Command {cmd_name!r} not found. {self.install_instructions}"
@@ -424,20 +425,54 @@ class BaseTool(ABC):
             exe = shutil.which(resolved_cmd[0])
             if exe:
                 resolved_cmd[0] = exe
-        return subprocess.run(
-            resolved_cmd,
-            capture_output=True,
-            text=True,
-            # Force UTF-8 decoding. The default uses the OS locale (cp1252 on
-            # Windows), which raises UnicodeDecodeError on a subprocess that
-            # emits Unicode/emoji (e.g. Remotion's progress output), killing the
-            # reader thread and potentially swallowing the real error text.
-            encoding="utf-8",
-            errors="replace",
-            timeout=timeout,
-            cwd=cwd,
-            check=True,
-        )
+        try:
+            return subprocess.run(
+                resolved_cmd,
+                capture_output=True,
+                text=True,
+                # Force UTF-8 decoding. The default uses the OS locale (cp1252 on
+                # Windows), which raises UnicodeDecodeError on a subprocess that
+                # emits Unicode/emoji (e.g. Remotion's progress output), killing the
+                # reader thread and potentially swallowing the real error text.
+                encoding="utf-8",
+                errors="replace",
+                timeout=timeout,
+                cwd=cwd,
+                check=True,
+            )
+        except subprocess.CalledProcessError as exc:
+            stderr = (exc.stderr or "").strip()
+            stdout = (exc.stdout or "").strip()
+            detail = stderr or stdout or str(exc)
+            raise ToolCommandError(
+                exc.returncode,
+                exc.cmd,
+                output=exc.output,
+                stderr=exc.stderr,
+                detail=detail,
+            ) from exc
+
+
+class ToolCommandError(subprocess.CalledProcessError):
+    """CalledProcessError with stderr/stdout surfaced in str(error)."""
+
+    def __init__(
+        self,
+        returncode: int,
+        cmd: list[str],
+        *,
+        output: Optional[str] = None,
+        stderr: Optional[str] = None,
+        detail: str = "",
+    ) -> None:
+        super().__init__(returncode, cmd, output=output, stderr=stderr)
+        self.detail = detail
+
+    def __str__(self) -> str:
+        base = super().__str__()
+        if self.detail:
+            return f"{base}\n{self.detail}"
+        return base
 
 
 class DependencyError(Exception):

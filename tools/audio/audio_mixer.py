@@ -131,6 +131,20 @@ class AudioMixer(BaseTool):
                 },
             },
             "normalize": {"type": "boolean", "default": True},
+            "loudnorm_target": {
+                "type": "number",
+                "default": -16,
+                "minimum": -40,
+                "maximum": 0,
+                "description": (
+                    "Integrated loudness target (LUFS) for the loudnorm filter when "
+                    "normalize=true. Default -16 (Apple Podcasts). Pass -14 for "
+                    "YouTube/TikTok/IG per sound-design.md. Matches the "
+                    "edit_decisions.metadata.loudnorm_target convention — directors "
+                    "should forward that field here so the executed loudness matches "
+                    "the platform the asset targets."
+                ),
+            },
             "video_path": {
                 "type": "string",
                 "description": (
@@ -179,6 +193,25 @@ class AudioMixer(BaseTool):
     user_visible_verification = [
         "Listen to mixed output and verify speech clarity and music ducking",
     ]
+
+    @staticmethod
+    def _loudnorm_filter(inputs: dict[str, Any], in_label: str, out_label: str) -> str:
+        """Build a loudnorm filter graph edge honoring the per-call LUFS target.
+
+        The integrated loudness target (``I=``) was historically hard-coded to
+        -16 (podcast/Apple). sound-design.md targets -14 for YouTube/TikTok/IG,
+        and edit_decisions.metadata.loudnorm_target is the declarative form.
+        Forward that value (or pass loudnorm_target directly) so the executed
+        loudness matches the target platform instead of silently defaulting.
+        """
+        target = inputs.get("loudnorm_target", -16)
+        try:
+            target = float(target)
+        except (TypeError, ValueError):
+            target = -16.0
+        # Clamp to a sane loudness range to avoid malformed ffmpeg args.
+        target = max(-40.0, min(0.0, target))
+        return f"[{in_label}]loudnorm=I={target}:LRA=11:TP=-1.5[{out_label}]"
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         operation = inputs["operation"]
@@ -251,7 +284,7 @@ class AudioMixer(BaseTool):
         )
 
         if normalize:
-            filter_parts.append("[mixed]loudnorm=I=-16:LRA=11:TP=-1.5[out]")
+            filter_parts.append(self._loudnorm_filter(inputs, "mixed", "out"))
             out_label = "[out]"
         else:
             out_label = "[mixed]"
@@ -558,7 +591,7 @@ class AudioMixer(BaseTool):
 
         # Normalize
         if normalize:
-            filter_parts.append("[premix]loudnorm=I=-16:LRA=11:TP=-1.5[out]")
+            filter_parts.append(self._loudnorm_filter(inputs, "premix", "out"))
             out_label = "[out]"
         else:
             out_label = "[premix]"
@@ -653,7 +686,13 @@ class AudioMixer(BaseTool):
             f"volume='{vol_expr}':eval=frame[music_shaped];"
             f"[0:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo[speech];"
             f"[music_shaped]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo[music_fmt];"
-            f"[speech][music_fmt]amix=inputs=2:duration=first:dropout_transition=2[aout]"
+            # normalize=0: amix's default normalize=1 divides every input by the
+            # input count (here x0.5 / -6 dB), which would permanently attenuate
+            # the narration across the whole timeline — including stretches where
+            # the music volume expression is 0. The music is already scaled by the
+            # `volume` expression, so speech must pass at unity. Unlike _mix/
+            # _full_mix, this path has no loudnorm stage to mask the halving.
+            f"[speech][music_fmt]amix=inputs=2:duration=first:dropout_transition=2:normalize=0[aout]"
         )
 
         cmd = [

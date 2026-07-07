@@ -130,7 +130,8 @@ class PixabayVideo(BaseTool):
         params: dict[str, Any] = {
             "key": api_key,
             "q": query,
-            "per_page": inputs.get("per_page", 5),
+            # Pixabay rejects per_page outside 3-200 with HTTP 400
+            "per_page": max(3, min(inputs.get("per_page", 5), 200)),
             "page": inputs.get("page", 1),
             "safesearch": str(inputs.get("safesearch", True)).lower(),
         }

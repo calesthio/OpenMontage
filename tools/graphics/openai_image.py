@@ -91,6 +91,25 @@ class OpenAIImage(BaseTool):
     side_effects = ["writes image file to output_path", "calls OpenAI API"]
     user_visible_verification = ["Inspect generated image for relevance and quality"]
 
+    @staticmethod
+    def _output_paths(output_path: str | None, count: int, extension: str) -> list[Path]:
+        """Derive one output path per generated image.
+
+        With a single image, honor the requested path as-is. With several,
+        suffix each with `_1`, `_2`, … so no image overwrites another.
+        """
+        ext = extension if extension.startswith(".") else f".{extension}"
+        if not output_path:
+            return [Path(f"generated_image_{idx + 1}{ext}") for idx in range(count)]
+
+        path = Path(output_path)
+        suffix = path.suffix or ext
+        if count == 1:
+            return [path if path.suffix else path.with_suffix(suffix)]
+
+        base = path.with_suffix("") if path.suffix else path
+        return [base.parent / f"{base.name}_{idx + 1}{suffix}" for idx in range(count)]
+
     def get_status(self) -> ToolStatus:
         if os.environ.get("OPENAI_API_KEY"):
             return ToolStatus.AVAILABLE
@@ -132,11 +151,17 @@ class OpenAIImage(BaseTool):
                 n=n,
             )
 
-            image_data = base64.b64decode(response.data[0].b64_json)
-            ext = inputs.get("output_format", "png")
-            output_path = Path(inputs.get("output_path", f"generated_image.{ext}"))
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_path.write_bytes(image_data)
+            items = response.data or []
+            if not items:
+                return ToolResult(success=False, error="OpenAI returned no image outputs")
+
+            ext = output_format
+            output_paths = self._output_paths(inputs.get("output_path"), len(items), ext)
+            outputs: list[str] = []
+            for item, out_path in zip(items, output_paths):
+                out_path.parent.mkdir(parents=True, exist_ok=True)
+                out_path.write_bytes(base64.b64decode(item.b64_json))
+                outputs.append(str(out_path))
 
         except Exception as e:
             return ToolResult(success=False, error=f"OpenAI image generation failed: {e}")
@@ -147,9 +172,11 @@ class OpenAIImage(BaseTool):
                 "provider": "openai",
                 "model": model,
                 "prompt": prompt,
-                "output": str(output_path),
+                "output": outputs[0],
+                "outputs": outputs,
+                "images_generated": len(outputs),
             },
-            artifacts=[str(output_path)],
+            artifacts=outputs,
             cost_usd=self.estimate_cost(inputs),
             duration_seconds=round(time.time() - start, 2),
             model=model,

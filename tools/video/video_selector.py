@@ -14,13 +14,19 @@ from tools.base_tool import BaseTool, ToolResult, ToolRuntime, ToolStability, To
 
 class VideoSelector(BaseTool):
     name = "video_selector"
-    version = "0.3.0"
+    version = "0.3.1"
     tier = ToolTier.GENERATE
     capability = "video_generation"
     provider = "selector"
     stability = ToolStability.BETA
     runtime = ToolRuntime.HYBRID
     agent_skills = ["ai-video-gen", "create-video", "ltx2"]
+
+    # Operations that REQUIRE motion: an image-only tool (image_selector) is not
+    # an acceptable last-resort fallback for these, so fallback_tools_for() drops it.
+    MOTION_REQUIRED_OPERATIONS = frozenset({"image_to_video", "reference_to_video"})
+    # Default score gap for the preferred_provider override (see input_schema).
+    PREFERRED_PROVIDER_GAP = 0.15
 
     capabilities = [
         "text_to_video", "image_to_video", "stock_video",
@@ -47,6 +53,19 @@ class VideoSelector(BaseTool):
                 "type": "string",
                 "description": "Provider name or 'auto'. Valid values are discovered at runtime from the registry.",
                 "default": "auto",
+            },
+            "preferred_provider_gap": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0.15,
+                "description": (
+                    "Max weighted-score gap (0-1) within which an explicit preferred_provider "
+                    "overrides the top-ranked provider. If the preferred provider's best score "
+                    "falls more than this far below the overall top, the preference is ignored "
+                    "and the top-ranked provider wins. Default 0.15 — honors a preference unless "
+                    "it would drag selection to a drastically worse provider."
+                ),
             },
             "allowed_providers": {"type": "array", "items": {"type": "string"}},
             "operation": {
@@ -141,8 +160,28 @@ class VideoSelector(BaseTool):
 
     @property
     def fallback_tools(self) -> list[str]:
-        """Dynamically built from discovered providers + image_selector as last resort."""
+        """Static (input-agnostic) fallback list for external consumers / contracts.
+
+        See :meth:`fallback_tools_for` for the input-aware form used during
+        routing, which drops ``image_selector`` for motion-required briefs.
+        """
         return [t.name for t in self._providers()] + ["image_selector"]
+
+    def fallback_tools_for(self, inputs: dict[str, object]) -> list[str]:
+        """Input-aware fallback list used during routing.
+
+        ``image_selector`` is a legitimate degraded last-resort for a still-image
+        brief (text_to_video with no motion requirement), but for motion-required
+        operations (image_to_video / reference_to_video) an image-only fallback
+        silently defeats the brief. Gate it here at the selector layer so a direct
+        caller — with no director skill enforcing the prohibition — still cannot
+        fall back to an image tool when motion was requested.
+        """
+        tools = [t.name for t in self._providers()]
+        operation = inputs.get("operation", "text_to_video")
+        if operation in self.MOTION_REQUIRED_OPERATIONS:
+            return tools
+        return tools + ["image_selector"]
 
     @property
     def provider_matrix(self) -> dict[str, dict[str, str]]:
@@ -228,6 +267,8 @@ class VideoSelector(BaseTool):
                 t.name for t in candidates
                 if t.name != tool.name and t.get_status().value == "available"
             ]
+            # Input-aware fallback list (drops image_selector for motion-required briefs).
+            result.data.setdefault("fallback_tools", self.fallback_tools_for(inputs))
         return result
 
     def _select_best_tool(
@@ -263,23 +304,41 @@ class VideoSelector(BaseTool):
 
         rankings = rank_providers(candidates, task_context)
 
-        # Build tool lookup: provider → tool (first selectable per provider)
-        tool_by_provider: dict[str, BaseTool] = {}
-        for tool in candidates:
-            if tool.provider not in tool_by_provider and self._tool_selectable(tool, inputs):
-                tool_by_provider[tool.provider] = tool
+        # Selectable tools, keyed by NAME (not provider). Keying by provider
+        # string shadowed one of two tools that legitimately share a provider —
+        # e.g. seedance_video (fal) and seedance_replicate both have
+        # provider="seedance", so only the first-registered was ever reachable.
+        # Keying by name keeps every backend selectable; ranking picks the best.
+        selectable_by_name: dict[str, BaseTool] = {
+            tool.name: tool for tool in candidates if self._tool_selectable(tool, inputs)
+        }
 
-        # If a preferred provider is explicitly requested and available,
-        # boost it to the top unless its score is drastically worse.
-        if preferred != "auto":
-            for score in rankings:
-                if score.provider == preferred and score.provider in tool_by_provider:
-                    return tool_by_provider[score.provider], score
+        def _tool_for(score: object) -> BaseTool | None:
+            return selectable_by_name.get(getattr(score, "tool_name", None))
 
-        # Return the highest-scored available provider
+        # If a preferred provider is explicitly requested, honor it ONLY when its
+        # best ranked tool is within a configurable score gap of the overall top.
+        # The prior code returned the preferred provider on the first ranking
+        # match regardless of how far below the top it scored (the comment
+        # claimed "unless drastically worse" but no gate enforced it).
+        if preferred != "auto" and rankings:
+            try:
+                gap = float(inputs.get("preferred_provider_gap", self.PREFERRED_PROVIDER_GAP))
+            except (TypeError, ValueError):
+                gap = self.PREFERRED_PROVIDER_GAP
+            top_score = rankings[0].weighted_score
+            preferred_score = next(
+                (s for s in rankings if s.provider == preferred and _tool_for(s) is not None),
+                None,
+            )
+            if preferred_score is not None and preferred_score.weighted_score >= top_score - gap:
+                return _tool_for(preferred_score), preferred_score
+
+        # Return the highest-scored selectable provider
         for score in rankings:
-            if score.provider in tool_by_provider:
-                return tool_by_provider[score.provider], score
+            tool = _tool_for(score)
+            if tool is not None:
+                return tool, score
 
         return None, None
 

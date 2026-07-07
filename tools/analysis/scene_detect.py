@@ -164,11 +164,26 @@ class SceneDetect(BaseTool):
 
         return scenes
 
+    @staticmethod
+    def _escape_lavfi_movie_path(path: str) -> str:
+        """Escape a path for FFmpeg lavfi movie=... without allowing filter injection."""
+        normalized = path.replace("\\", "/")
+        if "'" in normalized:
+            raise ValueError("FFmpeg lavfi movie paths containing single quotes are unsupported")
+        escaped = []
+        for char in normalized:
+            if char in "\\:,[];":
+                escaped.append("\\" + char)
+            else:
+                escaped.append(char)
+        return "".join(escaped)
+
     def _detect_ffmpeg(self, inputs: dict[str, Any]) -> list[dict]:
         """Fallback: use FFmpeg scene change filter."""
         input_path = str(inputs["input_path"])
         threshold = inputs.get("threshold", 0.3)
         min_scene_len = inputs.get("min_scene_length_seconds", 1.0)
+        escaped_input = self._escape_lavfi_movie_path(input_path)
 
         cmd = [
             "ffprobe",
@@ -176,7 +191,7 @@ class SceneDetect(BaseTool):
             "-show_entries", "frame=pts_time",
             "-of", "json",
             "-f", "lavfi",
-            f"movie='{input_path.replace(chr(92), '/').replace(':', chr(92)+':')}',select='gt(scene,{threshold})'",
+            f"movie='{escaped_input}',select='gt(scene,{threshold})'",
         ]
 
         try:

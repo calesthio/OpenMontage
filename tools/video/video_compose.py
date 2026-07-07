@@ -241,6 +241,12 @@ class VideoCompose(BaseTool):
             return False
         return True
 
+    def _ffmpeg_available(self) -> bool:
+        """Check if the ffmpeg binary is actually resolvable on PATH."""
+        import shutil as _shutil
+
+        return bool(_shutil.which("ffmpeg"))
+
     def _hyperframes_available(self) -> bool:
         """Check if HyperFrames rendering is available.
 
@@ -261,10 +267,11 @@ class VideoCompose(BaseTool):
         fallback between runtimes is forbidden.
         """
         info = super().get_info()
+        ffmpeg_ok = self._ffmpeg_available()
         remotion_ok = self._remotion_available()
         hyperframes_ok = self._hyperframes_available()
         info["render_engines"] = {
-            "ffmpeg": True,
+            "ffmpeg": ffmpeg_ok,
             "remotion": remotion_ok,
             "hyperframes": hyperframes_ok,
         }

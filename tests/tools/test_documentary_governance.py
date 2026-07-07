@@ -112,12 +112,31 @@ def test_documentary_renderer_family_maps_to_remotion():
 
 def test_video_compose_surfaces_all_three_runtimes():
     """Preflight must see remotion, hyperframes, and ffmpeg as separate engines."""
+    import shutil
+
     info = VideoCompose().get_info()
     engines = info["render_engines"]
     assert set(engines.keys()) == {"remotion", "hyperframes", "ffmpeg"}
-    assert engines["ffmpeg"] is True  # always true on this machine
+    assert engines["ffmpeg"] is bool(shutil.which("ffmpeg"))
     assert "hyperframes_note" in info
     assert "runtime_governance" in info
+
+
+def test_video_compose_ffmpeg_engine_reflects_path_availability(monkeypatch):
+    """Regression: `get_info()["render_engines"]["ffmpeg"]` must actually check
+    shutil.which("ffmpeg"), not hardcode True. A machine without ffmpeg on PATH
+    must not have the agent believe render_runtime='ffmpeg' is safe to lock."""
+    import shutil
+
+    monkeypatch.setattr(shutil, "which", lambda name: None)
+    info = VideoCompose().get_info()
+    assert info["render_engines"]["ffmpeg"] is False
+
+    monkeypatch.setattr(
+        shutil, "which", lambda name: "/usr/bin/ffmpeg" if name == "ffmpeg" else None
+    )
+    info = VideoCompose().get_info()
+    assert info["render_engines"]["ffmpeg"] is True
 
 
 def test_video_compose_blocks_silent_hyperframes_swap(tmp_path, monkeypatch):

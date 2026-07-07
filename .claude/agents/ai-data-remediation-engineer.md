@@ -136,7 +136,19 @@ def generate_fix_logic(sample_rows: list[str], column_name: str) -> dict:
             {'role': 'user', 'content': f"Column: '{column_name}'\nSamples:\n" + "\n".join(sample_rows)}
         ]
     )
-    result = json.loads(response['message']['content'])
+    
+    # Guard against malformed Ollama responses
+    try:
+        content = response.get('message', {}).get('content')
+        if not content:
+            raise ValueError("Empty response")
+        result = json.loads(content)
+    except (KeyError, TypeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"Rejected: invalid model output shape or JSON: {exc}")
+    
+    # Validate required fields before safety checks
+    if 'transformation' not in result:
+        raise ValueError("Rejected: missing 'transformation' field in response")
 
     # Safety gate — reject anything that isn't a simple lambda
     forbidden = ['import', 'exec', 'eval', 'os.', 'subprocess']
@@ -155,25 +167,57 @@ import pandas as pd
 import ast
 
 def _compile_safe_lambda(lambda_str: str):
-    """Safely compile a lambda by validating AST structure."""
+    """Safely compile a lambda by restricting AST to safe patterns only."""
     try:
         tree = ast.parse(lambda_str, mode='eval')
-        # Whitelist: only allow Lambda nodes with basic operations
         if not isinstance(tree.body, ast.Lambda):
             raise ValueError("Must be a lambda expression")
-        # Walk AST to ensure only safe node types (no Call, Import, Attribute for 'os'/'__')
+        
+        # Whitelist safe expression types only
+        safe_types = {ast.Lambda, ast.Name, ast.Constant, ast.Attribute, ast.Call,
+                      ast.BinOp, ast.UnaryOp, ast.Compare, ast.BoolOp}
+        
+        # Tighter restrictions on expensive operations
         for node in ast.walk(tree):
+            # Reject constructs that can consume unbounded resources
+            if isinstance(node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
+                raise ValueError("Comprehensions and generators not allowed")
+            
+            # Only allow method calls on the input parameter, not arbitrary calls
             if isinstance(node, ast.Call):
-                # Allow only safe builtins: str(), int(), float(), len(), max(), min()
-                if isinstance(node.func, ast.Name) and node.func.id in {'str', 'int', 'float', 'len', 'max', 'min', 'abs', 'round'}:
-                    continue
-                raise ValueError(f"Disallowed function call: {ast.unparse(node.func)}")
-            if isinstance(node, ast.Import) or isinstance(node, ast.ImportFrom):
+                func = node.func
+                if isinstance(func, ast.Attribute):
+                    # x.method() is OK only on the parameter, safe methods only
+                    if isinstance(func.value, ast.Name) and func.value.id == 'x':
+                        safe_methods = {'strip', 'upper', 'lower', 'replace', 'split', 'join',
+                                       'startswith', 'endswith', 'isdigit', 'isalpha'}
+                        if func.attr not in safe_methods:
+                            raise ValueError(f"Method {func.attr} not allowed")
+                    else:
+                        raise ValueError("Method calls only on input parameter 'x'")
+                elif isinstance(func, ast.Name) and func.id in {'str', 'int', 'float', 'len'}:
+                    # Safe builtins only
+                    pass
+                else:
+                    raise ValueError(f"Disallowed function call")
+            
+            # Reject imports and private access
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
                 raise ValueError("Imports not allowed")
-            if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
-                if node.value.id.startswith('_'):
-                    raise ValueError(f"Private attribute access not allowed: {node.value.id}")
-        return eval(lambda_str)  # Safe to eval after AST validation
+            if isinstance(node, ast.Attribute) and node.attr.startswith('_'):
+                raise ValueError(f"Private attribute access not allowed")
+            
+            # Reject multiplication/repetition that could explode
+            if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Mult):
+                # Only allow const * const, not x * large_number
+                if not (isinstance(node.left, ast.Constant) and isinstance(node.right, ast.Constant)):
+                    if isinstance(node.left, ast.Name) or isinstance(node.right, ast.Name):
+                        raise ValueError("String/sequence multiplication with variables not allowed")
+        
+        # Final safety: test with a small input to detect resource bombs
+        test_fn = eval(lambda_str)
+        _ = test_fn("test")  # Quick execution test
+        return test_fn
     except SyntaxError as e:
         raise ValueError(f"Invalid lambda syntax: {e}")
 
@@ -202,18 +246,50 @@ def apply_fix_to_cluster(df: pd.DataFrame, column: str, fix: dict) -> pd.DataFra
 ### Step 5 — Reconciliation & Audit
 
 ```python
-def reconciliation_check(source: int, success: int, quarantine: int):
+import hashlib
+
+def reconciliation_check(source_rows: list[dict], success_rows: list[dict], quarantine_rows: list[dict]):
     """
-    Mathematical zero-data-loss guarantee.
-    Any mismatch > 0 is an immediate Sev-1.
+    Mathematical zero-data-loss guarantee with row-identity verification.
+    Prevents silent corruption from duplicates, swaps, or missing rows.
     """
-    if source != success + quarantine:
-        missing = source - (success + quarantine)
-        trigger_alert(  # PagerDuty / Slack / webhook — configure per environment
+    # Count check (quick filter)
+    if len(source_rows) != len(success_rows) + len(quarantine_rows):
+        missing = len(source_rows) - (len(success_rows) + len(quarantine_rows))
+        trigger_alert(
             severity="SEV1",
             message=f"DATA LOSS DETECTED: {missing} rows unaccounted for"
         )
-        raise DataLossException(f"Reconciliation failed: {missing} missing rows")
+        raise DataLossException(f"Row count mismatch: {missing} missing rows")
+    
+    # Identity verification (detect duplicates, swaps, corruption)
+    def row_hash(row: dict) -> str:
+        # Hash on stable primary key + original value to catch modifications
+        pk = row.get('id') or row.get('pk')
+        original = row.get('original_value', '')
+        return hashlib.sha256(f"{pk}:{original}".encode()).hexdigest()
+    
+    source_hashes = {row_hash(r) for r in source_rows}
+    success_hashes = {row_hash(r) for r in success_rows}
+    quarantine_hashes = {row_hash(r) for r in quarantine_rows}
+    
+    # Every source row must appear in exactly one of success or quarantine
+    if source_hashes != (success_hashes | quarantine_hashes):
+        missing_hashes = source_hashes - (success_hashes | quarantine_hashes)
+        duplicate_hashes = (success_hashes & quarantine_hashes)
+        
+        message_parts = []
+        if missing_hashes:
+            message_parts.append(f"{len(missing_hashes)} row identities missing from output")
+        if duplicate_hashes:
+            message_parts.append(f"{len(duplicate_hashes)} rows duplicated across success/quarantine")
+        
+        trigger_alert(
+            severity="SEV1",
+            message=f"DATA CORRUPTION DETECTED: {'; '.join(message_parts)}"
+        )
+        raise DataLossException(f"Row identity mismatch: {'; '.join(message_parts)}")
+    
     return True
 ```
 

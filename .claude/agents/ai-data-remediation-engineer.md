@@ -173,6 +173,10 @@ def _compile_safe_lambda(lambda_str: str):
         if not isinstance(tree.body, ast.Lambda):
             raise ValueError("Must be a lambda expression")
         
+        # Extract parameter names from lambda signature
+        lambda_params = {arg.arg for arg in tree.body.args.args}
+        allowed_names = lambda_params | {'str', 'int', 'float', 'len'}
+        
         # Whitelist safe expression types only — enforce it
         safe_types = {ast.Expression, ast.Lambda, ast.Name, ast.Constant, ast.Attribute, ast.Call,
                       ast.BinOp, ast.UnaryOp, ast.Compare, ast.BoolOp,
@@ -185,6 +189,10 @@ def _compile_safe_lambda(lambda_str: str):
         for node in ast.walk(tree):
             if type(node) not in safe_types:
                 raise ValueError(f"Disallowed expression type: {type(node).__name__}")
+            
+            # Reject free variables: all Name nodes must be parameters or allowed builtins
+            if isinstance(node, ast.Name) and node.id not in allowed_names:
+                raise ValueError(f"Free variable '{node.id}' not allowed; only lambda parameters and {allowed_names} permitted")
             
             # Reject constructs that can consume unbounded resources
             if isinstance(node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):

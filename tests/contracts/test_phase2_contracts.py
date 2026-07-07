@@ -1,6 +1,7 @@
 """Phase 2 contract tests — Enhancement Layer tools."""
 
 import json
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -167,17 +168,39 @@ class TestPhase2ErrorHandling:
         r = tool.execute({"input_path": "/nonexistent.mp4"})
         assert not r.success
 
-    def test_image_selector_no_provider(self):
+    def test_image_selector_no_provider(self, monkeypatch):
+        # Force the "no provider available" path deterministically instead
+        # of depending on whatever happens to be in the local .env: with a
+        # real key configured (e.g. MAAS_API_KEY, which needs no other
+        # setup), this test silently made a real network call to a free-
+        # tier image-gen provider on every run — an unwanted side effect
+        # (network dependency, flakiness, repo-root file pollution from the
+        # tool's default output_path) for what's meant to be a unit test of
+        # the no-provider fallback contract, not a live generation smoke test.
+        # Clearing os.environ alone isn't enough: ToolRegistry.discover()
+        # re-reads .env and repopulates any *_API_KEY missing from
+        # os.environ, silently undoing the deletion — so also stop that.
+        from tools.tool_registry import ToolRegistry
+        monkeypatch.setattr(ToolRegistry, "_load_dotenv", staticmethod(lambda: None))
+        for key in list(os.environ):
+            if key.endswith("_API_KEY"):
+                monkeypatch.delenv(key, raising=False)
         tool = ImageSelector()
-        # Will fail if no API key or local model
         r = tool.execute({"prompt": "test"})
-        # Either succeeds (provider available) or fails gracefully
         assert isinstance(r, ToolResult)
+        assert not r.success
 
-    def test_diagram_gen_empty_boxes(self):
+    def test_diagram_gen_empty_boxes(self, tmp_path):
         tool = DiagramGen()
         if tool.get_status() == ToolStatus.AVAILABLE:
-            r = tool.execute({"diagram_type": "boxes", "boxes": []})
+            # Explicit output_path — omitting it defaults to "diagram.png"
+            # relative to cwd, which clobbers the repo-root file of the same
+            # name when the suite runs from the repo root.
+            r = tool.execute({
+                "diagram_type": "boxes",
+                "boxes": [],
+                "output_path": str(tmp_path / "diagram.png"),
+            })
             assert isinstance(r, ToolResult)
 
 

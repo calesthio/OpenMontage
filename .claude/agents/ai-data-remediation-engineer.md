@@ -221,10 +221,10 @@ def _compile_safe_lambda(lambda_str: str):
                     if isinstance(node.left, ast.Name) or isinstance(node.right, ast.Name):
                         raise ValueError("String/sequence multiplication with variables not allowed")
         
-        # Final safety: test with a small input to detect resource bombs and incompatibility
+        # Final safety: compile lambda with restricted builtins
+        # Smoke test is deferred to apply_fix_to_cluster where actual column type is known
         try:
             test_fn = eval(lambda_str, {"__builtins__": {"str": str, "int": int, "float": float, "len": len}})
-            test_fn("test")  # Quick execution test
         except Exception as exc:
             raise ValueError(f"Lambda rejected: {exc}") from exc
         return test_fn

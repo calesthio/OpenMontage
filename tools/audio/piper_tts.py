@@ -109,13 +109,11 @@ class PiperTTS(BaseTool):
 
     @staticmethod
     def _piper_installed() -> bool:
-        if shutil.which("piper") is not None:
-            return True
-        try:
-            import piper  # noqa: F401
-            return True
-        except ImportError:
-            return False
+        # This tool shells out to the `piper` executable, so execution readiness
+        # is gated on the binary being on PATH. The Python `piper` package
+        # importing is NOT sufficient — a package-only install still cannot run
+        # the subprocess, so preflight must report UNAVAILABLE in that state.
+        return shutil.which("piper") is not None
 
     def _find_voice(self, name: str) -> Path | None:
         """Locate a Piper voice model (.onnx + .onnx.json) by name or path.

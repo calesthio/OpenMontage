@@ -5,6 +5,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { withCjkFallback } from "../../fonts";
 
 interface PieDatum {
   label: string;
@@ -32,7 +33,7 @@ export const PieChart: React.FC<PieChartProps> = ({
   data,
   title,
   colors = ["#2563EB", "#F59E0B", "#10B981", "#EC4899", "#06B6D4", "#8B5CF6"],
-  fontFamily = "Inter, system-ui, sans-serif",
+  fontFamily = withCjkFallback("Inter, system-ui, sans-serif"),
   textColor = "#1F2937",
   backgroundColor = "#FFFFFF",
   donut = false,

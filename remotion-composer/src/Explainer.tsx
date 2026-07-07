@@ -48,12 +48,14 @@ import type { ScreenshotStep } from "./components/ScreenshotScene";
 import { ProviderChip } from "./components/ProviderChip";
 import type { ParticleType } from "./components/ParticleOverlay";
 import { resolveTheme, type ThemeConfig, DEFAULT_THEME } from "./Root";
+import { withCjkFallback } from "./fonts";
 
 // Load Space Grotesk font for cinematic typography
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: spaceGrotesk } = loadFont("normal", {
   weights: ["400", "700"],
   subsets: ["latin"],
 });
+const fontFamily = withCjkFallback(spaceGrotesk);
 
 // ---------------------------------------------------------------------------
 // Animated Background — Gradient Mesh + Floating Orbs

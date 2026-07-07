@@ -1,4 +1,5 @@
 import { AbsoluteFill, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { withCjkFallback } from "../fonts";
 
 interface StatCardProps {
   stat: string;
@@ -50,7 +51,7 @@ export const StatCard: React.FC<StatCardProps> = ({
             transform: `scale(${scale})`,
             fontSize: statFontSize,
             color: accentColor,
-            fontFamily: "Inter, system-ui, sans-serif",
+            fontFamily: withCjkFallback("Inter, system-ui, sans-serif"),
             fontWeight: 800,
             lineHeight: 1.1,
           }}
@@ -63,7 +64,7 @@ export const StatCard: React.FC<StatCardProps> = ({
               opacity: subtitleOpacity,
               fontSize: subtitleFontSize,
               color,
-              fontFamily: "Inter, system-ui, sans-serif",
+              fontFamily: withCjkFallback("Inter, system-ui, sans-serif"),
               fontWeight: 400,
               marginTop: 16,
             }}

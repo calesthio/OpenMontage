@@ -5,6 +5,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { withCjkFallback } from "../fonts";
 
 type CalloutType = "info" | "warning" | "tip" | "quote";
 
@@ -40,7 +41,7 @@ export const CalloutBox: React.FC<CalloutBoxProps> = ({
   borderColor,
   backgroundColor,
   textColor = "#1F2937",
-  fontFamily = "Inter, system-ui, sans-serif",
+  fontFamily = withCjkFallback("Inter, system-ui, sans-serif"),
   fontSize = 32,
   titleFontSize = 38,
   containerBackgroundColor = "#FFFFFF",
@@ -195,7 +196,7 @@ export const CalloutBox: React.FC<CalloutBoxProps> = ({
             )}
             <div
               style={{
-                fontFamily: isQuote ? "Georgia, serif" : fontFamily,
+                fontFamily: isQuote ? withCjkFallback("Georgia, serif") : fontFamily,
                 fontWeight: isQuote ? 400 : 400,
                 fontStyle: isQuote ? "italic" : "normal",
                 fontSize,

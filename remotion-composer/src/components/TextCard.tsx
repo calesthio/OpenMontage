@@ -1,4 +1,5 @@
 import { AbsoluteFill, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { withCjkFallback } from "../fonts";
 
 interface TextCardProps {
   text: string;
@@ -39,7 +40,7 @@ export const TextCard: React.FC<TextCardProps> = ({
           transform: `scale(${scale})`,
           fontSize,
           color,
-          fontFamily: "Inter, system-ui, sans-serif",
+          fontFamily: withCjkFallback("Inter, system-ui, sans-serif"),
           fontWeight: 700,
           textAlign: "center",
           maxWidth: "80%",

@@ -5,6 +5,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { withCjkFallback } from "../fonts";
 
 export interface EndTagProps {
   text: string;
@@ -137,8 +138,9 @@ export const EndTag: React.FC<EndTagProps> = ({
         {/* The tag line */}
         <div
           style={{
-            fontFamily:
-              "'Space Grotesk', 'Inter', 'Helvetica Neue', system-ui, sans-serif",
+            fontFamily: withCjkFallback(
+              "'Space Grotesk', 'Inter', 'Helvetica Neue', system-ui, sans-serif"
+            ),
             fontWeight: 900,
             fontSize: 84,
             letterSpacing: "0.12em",

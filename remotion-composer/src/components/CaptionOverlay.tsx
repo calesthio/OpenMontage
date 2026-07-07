@@ -6,6 +6,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { withCjkFallback } from "../fonts";
 
 // Word-level caption for TikTok-style highlight display
 export interface WordCaption {
@@ -124,7 +125,7 @@ export const CaptionOverlay: React.FC<CaptionOverlayProps> = ({
   color = "#F8FAFC",
   highlightColor = "#22D3EE",
   backgroundColor = "rgba(15, 23, 42, 0.75)",
-  fontFamily = "Space Grotesk, Inter, system-ui, sans-serif",
+  fontFamily = withCjkFallback("Space Grotesk, Inter, system-ui, sans-serif"),
 }) => {
   const { fps } = useVideoConfig();
   const pages = buildPages(words, wordsPerPage);

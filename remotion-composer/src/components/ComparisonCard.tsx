@@ -5,6 +5,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { withCjkFallback } from "../fonts";
 
 type ChangeDirection = "up" | "down" | "neutral";
 
@@ -40,7 +41,7 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
   backgroundColor = "#FFFFFF",
   cardBackgroundColor = "#F3F4F6",
   textColor = "#1F2937",
-  fontFamily = "Inter, system-ui, sans-serif",
+  fontFamily = withCjkFallback("Inter, system-ui, sans-serif"),
   titleFontSize = 44,
   labelFontSize = 28,
   valueFontSize = 72,

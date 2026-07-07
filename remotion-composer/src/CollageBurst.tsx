@@ -12,15 +12,18 @@ import {
 } from "remotion";
 import React from "react";
 import { loadFont as loadPlayfair } from "@remotion/google-fonts/PlayfairDisplay";
+import { withCjkFallback } from "./fonts";
 
-const { fontFamily: playfairFamily } = loadPlayfair("normal", {
+const { fontFamily: playfairFamilyBase } = loadPlayfair("normal", {
   weights: ["400", "700"],
   subsets: ["latin"],
 });
-const { fontFamily: playfairItalic } = loadPlayfair("italic", {
+const playfairFamily = withCjkFallback(playfairFamilyBase);
+const { fontFamily: playfairItalicBase } = loadPlayfair("italic", {
   weights: ["400", "700"],
   subsets: ["latin"],
 });
+const playfairItalic = withCjkFallback(playfairItalicBase);
 
 function resolveAsset(src: string): string {
   if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("data:")) return src;

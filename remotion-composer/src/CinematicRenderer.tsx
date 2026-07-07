@@ -25,13 +25,15 @@ function resolveAsset(src: string): string {
 }
 import { CinematicRendererProps, CinematicTone, CinematicVideoScene } from "./cinematic/types";
 import { CaptionOverlay } from "./components/CaptionOverlay";
+import { withCjkFallback } from "./fonts";
 
 const FPS = 30;
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: spaceGrotesk } = loadFont("normal", {
   weights: ["400", "500", "700"],
   subsets: ["latin"],
 });
+const fontFamily = withCjkFallback(spaceGrotesk);
 
 const toneGradient = (tone: CinematicTone) => {
   switch (tone) {

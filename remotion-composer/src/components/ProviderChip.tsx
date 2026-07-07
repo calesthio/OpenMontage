@@ -1,4 +1,5 @@
 import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { withCjkFallback } from "../fonts";
 
 /**
  * ProviderChip — rotating pill of AI video provider names that cycle through.
@@ -70,7 +71,7 @@ export const ProviderChip: React.FC<ProviderChipProps> = ({
           style={{
             fontSize: 16,
             color: "rgba(255,255,255,0.6)",
-            fontFamily: "Inter, sans-serif",
+            fontFamily: withCjkFallback("Inter, sans-serif"),
             fontWeight: 500,
             letterSpacing: 1.5,
             textTransform: "uppercase",
@@ -85,7 +86,7 @@ export const ProviderChip: React.FC<ProviderChipProps> = ({
             border: `2px solid ${accentColor}`,
             borderRadius: 999,
             color: accentColor,
-            fontFamily: "'Space Grotesk', Inter, sans-serif",
+            fontFamily: withCjkFallback("'Space Grotesk', Inter, sans-serif"),
             fontWeight: 700,
             fontSize: 28,
             letterSpacing: 0.3,

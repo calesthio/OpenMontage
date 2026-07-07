@@ -5,6 +5,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { withCjkFallback } from "../fonts";
 
 interface HeroTitleProps {
   title: string;
@@ -33,7 +34,7 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({ title, subtitle }) => {
           style={{
             fontSize: 72,
             fontWeight: 800,
-            fontFamily: "Space Grotesk, Inter, system-ui, sans-serif",
+            fontFamily: withCjkFallback("Space Grotesk, Inter, system-ui, sans-serif"),
             lineHeight: 1.2,
             display: "flex",
             justifyContent: "center",
@@ -80,7 +81,7 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({ title, subtitle }) => {
               fontSize: 28,
               fontWeight: 400,
               color: "#A78BFA",
-              fontFamily: "Space Grotesk, Inter, system-ui, sans-serif",
+              fontFamily: withCjkFallback("Space Grotesk, Inter, system-ui, sans-serif"),
               letterSpacing: "0.1em",
               textTransform: "uppercase",
             }}

@@ -5,6 +5,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { withCjkFallback } from "../fonts";
 
 type ProgressAnimationStyle = "fill" | "pulse" | "step";
 
@@ -42,7 +43,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   segments,
   height = 32,
   borderRadius = 8,
-  fontFamily = "Inter, system-ui, sans-serif",
+  fontFamily = withCjkFallback("Inter, system-ui, sans-serif"),
   textColor = "#1F2937",
   labelFontSize = 36,
   percentageFontSize = 28,

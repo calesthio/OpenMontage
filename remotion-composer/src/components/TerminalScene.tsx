@@ -1,3 +1,4 @@
+import { withCjkFallback } from "../fonts";
 import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 
 /**
@@ -150,7 +151,7 @@ export const TerminalScene: React.FC<TerminalSceneProps> = ({
               textAlign: "center",
               color: "#8E8E93",
               fontSize: 16,
-              fontFamily: "Inter, sans-serif",
+              fontFamily: withCjkFallback("Inter, sans-serif"),
             }}
           >
             {title}
@@ -247,7 +248,7 @@ export const TerminalScene: React.FC<TerminalSceneProps> = ({
                   background: pill.color,
                   color: "#0B0F1A",
                   borderRadius: 999,
-                  fontFamily: "Inter, sans-serif",
+                  fontFamily: withCjkFallback("Inter, sans-serif"),
                   fontWeight: 700,
                   fontSize: 20,
                   letterSpacing: 0.2,

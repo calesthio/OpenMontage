@@ -5,6 +5,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { withCjkFallback } from "../fonts";
 
 interface StatRevealProps {
   stat: string;
@@ -67,7 +68,7 @@ export const StatReveal: React.FC<StatRevealProps> = ({
             fontSize: 96,
             fontWeight: 800,
             color: accentColor,
-            fontFamily: "Space Grotesk, Inter, system-ui, sans-serif",
+            fontFamily: withCjkFallback("Space Grotesk, Inter, system-ui, sans-serif"),
             lineHeight: 1,
             textShadow: `0 0 ${interpolate(glow, [0, 1], [0, 30])}px ${accentColor}66, 0 4px 12px rgba(0,0,0,0.5)`,
           }}
@@ -80,7 +81,7 @@ export const StatReveal: React.FC<StatRevealProps> = ({
               fontSize: 22,
               fontWeight: 500,
               color: "#F8FAFC",
-              fontFamily: "Space Grotesk, Inter, system-ui, sans-serif",
+              fontFamily: withCjkFallback("Space Grotesk, Inter, system-ui, sans-serif"),
               marginTop: 8,
               opacity: spring({
                 frame: frame - 10,

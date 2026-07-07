@@ -8,6 +8,7 @@ import {
   staticFile,
   Easing,
 } from "remotion";
+import { withCjkFallback } from "../fonts";
 
 export interface ProductRevealProps {
   productImage: string;
@@ -222,8 +223,9 @@ export const ProductReveal: React.FC<ProductRevealProps> = ({
                 key={i}
                 style={{
                   display: "inline-block",
-                  fontFamily:
-                    "'SF Pro Display', 'Helvetica Neue', 'Inter', system-ui, sans-serif",
+                  fontFamily: withCjkFallback(
+                    "'SF Pro Display', 'Helvetica Neue', 'Inter', system-ui, sans-serif"
+                  ),
                   fontSize: 52,
                   fontWeight: 600,
                   letterSpacing: "0.02em",
@@ -250,8 +252,9 @@ export const ProductReveal: React.FC<ProductRevealProps> = ({
         >
           <div
             style={{
-              fontFamily:
-                "'SF Pro Display', 'Helvetica Neue', 'Inter', system-ui, sans-serif",
+              fontFamily: withCjkFallback(
+                "'SF Pro Display', 'Helvetica Neue', 'Inter', system-ui, sans-serif"
+              ),
               fontSize: 36,
               fontWeight: 300,
               color: "#FFFFFF",
@@ -285,8 +288,9 @@ export const ProductReveal: React.FC<ProductRevealProps> = ({
         <div
           style={{
             opacity: taglineOpacity,
-            fontFamily:
-              "'SF Pro Display', 'Helvetica Neue', 'Inter', system-ui, sans-serif",
+            fontFamily: withCjkFallback(
+              "'SF Pro Display', 'Helvetica Neue', 'Inter', system-ui, sans-serif"
+            ),
             fontSize: 20,
             fontWeight: 300,
             color: "#777777",
@@ -301,8 +305,9 @@ export const ProductReveal: React.FC<ProductRevealProps> = ({
         <div
           style={{
             opacity: closerOpacity,
-            fontFamily:
-              "'SF Pro Display', 'Helvetica Neue', 'Inter', system-ui, sans-serif",
+            fontFamily: withCjkFallback(
+              "'SF Pro Display', 'Helvetica Neue', 'Inter', system-ui, sans-serif"
+            ),
             fontSize: 26,
             fontWeight: 500,
             color: "#BBBBBB",

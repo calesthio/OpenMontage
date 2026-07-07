@@ -107,6 +107,7 @@ def style_bridge(
         palette = vl.get("color_palette", {}) or {}
         typo = playbook.get("typography", {}) or {}
         identity = playbook.get("identity", {}) or {}
+        motion = playbook.get("motion", {}) or {}
 
         bg = _first(palette.get("background"), css["--color-bg"])
         fg = _first(palette.get("text"), css["--color-fg"])
@@ -116,7 +117,10 @@ def style_bridge(
         surface = _first(palette.get("surface"), css["--color-surface"])
         muted = _first(palette.get("muted_text"), css["--color-muted"])
 
-        duration, ease = _motion_easing(identity.get("pace"))
+        # Pace lives under `identity` in the current schema; older/custom
+        # playbooks placed it under `motion`. Prefer the schema key, fall back
+        # to the legacy location so existing callers keep working.
+        duration, ease = _motion_easing(identity.get("pace") or motion.get("pace"))
 
         css.update(
             {
@@ -127,7 +131,11 @@ def style_bridge(
                 "--color-secondary": secondary,
                 "--color-surface": surface,
                 "--color-muted": muted,
-                "--font-heading": _font(typo, "headings", css["--font-heading"]),
+                # Schema key is `headings` (plural); legacy/custom playbooks used
+                # `heading` (singular). Prefer the schema key, fall back to legacy.
+                "--font-heading": _font(
+                    typo, "headings", _font(typo, "heading", css["--font-heading"])
+                ),
                 "--font-body": _font(typo, "body", css["--font-body"]),
                 "--font-mono": _font(typo, "code", css["--font-mono"]),
                 "--ease-primary": ease,

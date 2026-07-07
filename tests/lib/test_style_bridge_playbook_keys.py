@@ -83,3 +83,31 @@ def test_empty_playbook_still_renders_fallback():
     assert css["--font-heading"] == "Inter"
     assert css["--duration-entrance"] == "0.6s"
     assert "# DESIGN" in design_md
+
+
+def test_legacy_playbook_keys_still_work():
+    # Older/custom playbooks placed heading under `typography.heading` (singular)
+    # and pace under `motion.pace`. These must keep working as a fallback.
+    legacy = {
+        "name": "legacy",
+        "typography": {"heading": {"font": "Space Grotesk"}, "body": {"font": "Inter"}},
+        "motion": {"pace": "fast"},
+    }
+    css, _ = style_bridge(legacy)
+    assert css["--font-heading"] == "Space Grotesk"
+    assert css["--duration-entrance"] == "0.4s"
+
+
+def test_schema_keys_win_over_legacy_keys():
+    # When both shapes are present, the current schema keys take precedence.
+    both = {
+        "typography": {
+            "headings": {"font": "Montserrat"},
+            "heading": {"font": "Space Grotesk"},
+        },
+        "identity": {"pace": "slow"},
+        "motion": {"pace": "fast"},
+    }
+    css, _ = style_bridge(both)
+    assert css["--font-heading"] == "Montserrat"
+    assert css["--duration-entrance"] == "0.9s"  # identity.pace=slow wins

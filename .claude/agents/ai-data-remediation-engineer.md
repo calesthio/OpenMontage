@@ -152,6 +152,30 @@ def generate_fix_logic(sample_rows: list[str], column_name: str) -> dict:
 
 ```python
 import pandas as pd
+import ast
+
+def _compile_safe_lambda(lambda_str: str):
+    """Safely compile a lambda by validating AST structure."""
+    try:
+        tree = ast.parse(lambda_str, mode='eval')
+        # Whitelist: only allow Lambda nodes with basic operations
+        if not isinstance(tree.body, ast.Lambda):
+            raise ValueError("Must be a lambda expression")
+        # Walk AST to ensure only safe node types (no Call, Import, Attribute for 'os'/'__')
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call):
+                # Allow only safe builtins: str(), int(), float(), len(), max(), min()
+                if isinstance(node.func, ast.Name) and node.func.id in {'str', 'int', 'float', 'len', 'max', 'min', 'abs', 'round'}:
+                    continue
+                raise ValueError(f"Disallowed function call: {ast.unparse(node.func)}")
+            if isinstance(node, ast.Import) or isinstance(node, ast.ImportFrom):
+                raise ValueError("Imports not allowed")
+            if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
+                if node.value.id.startswith('_'):
+                    raise ValueError(f"Private attribute access not allowed: {node.value.id}")
+        return eval(lambda_str)  # Safe to eval after AST validation
+    except SyntaxError as e:
+        raise ValueError(f"Invalid lambda syntax: {e}")
 
 def apply_fix_to_cluster(df: pd.DataFrame, column: str, fix: dict) -> pd.DataFrame:
     """Apply AI-generated lambda across entire cluster — vectorized, not looped."""
@@ -161,7 +185,13 @@ def apply_fix_to_cluster(df: pd.DataFrame, column: str, fix: dict) -> pd.DataFra
         df['quarantine_reason'] = f"Low confidence: {fix['confidence_score']}"
         return df
 
-    transform_fn = eval(fix['transformation'])  # safe — evaluated only after strict validation gate (lambda-only, no imports/exec/os)
+    try:
+        transform_fn = _compile_safe_lambda(fix['transformation'])
+    except ValueError as e:
+        df['validation_status'] = 'LAMBDA_REJECTED'
+        df['quarantine_reason'] = f"Lambda validation failed: {e}"
+        return df
+
     df[column] = df[column].map(transform_fn)
     df['validation_status'] = 'AI_FIXED'
     df['ai_reasoning'] = fix['reasoning']

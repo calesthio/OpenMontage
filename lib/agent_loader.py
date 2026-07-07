@@ -23,7 +23,7 @@ from lib.paths import REPO_ROOT
 AGENTS_DIR = REPO_ROOT / ".claude" / "agents"
 SCHEMA_PATH = REPO_ROOT / "schemas" / "agents" / "agent_definition.schema.json"
 
-_FRONTMATTER_RE = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n(.*)\Z", re.DOTALL)
+_FRONTMATTER_RE = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n?(.*)\Z", re.DOTALL)
 
 
 class AgentDefinitionError(ValueError):

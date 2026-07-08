@@ -41,6 +41,7 @@ OPENAI_API_KEY=              # OpenAI TTS + GPT Image 2 images
 XAI_API_KEY=                 # xAI Grok image generation/editing + Grok video generation
 DOUBAO_SPEECH_API_KEY=       # Volcengine Doubao Speech TTS (strong Mandarin narration)
 DOUBAO_SPEECH_VOICE_TYPE=    # Default Doubao speaker/voice type
+MIMO_API_KEY=                # Xiaomi MiMo V2.5 TTS (preset voices + style instructions)
 DASHSCOPE_API_KEY=           # Alibaba DashScope (Qwen image gen, TTS, ASR with word timestamps)
 
 # MULTI-MODEL GATEWAY (one key, 6+ tools)
@@ -242,6 +243,54 @@ Start with `speech_rate: 0` for natural Mandarin delivery. If the approved forma
 #### Pricing
 
 Doubao Speech 2.0 is billed by character package or usage in Volcengine. OpenMontage estimates cost from text length and prefers provider-returned usage metadata when available.
+
+---
+
+### Xiaomi MiMo — TTS
+
+> **Chinese + English preset voices with style control.** Xiaomi MiMo V2.5 uses an OpenAI-compatible chat/completions audio endpoint. OpenMontage exposes built-in preset voices with optional natural-language style instructions.
+
+**Tools unlocked:** `mimo_tts`
+**Env var:** `MIMO_API_KEY`
+
+#### Setup
+
+1. Open the [MiMo API console](https://platform.xiaomimimo.com/#/console/api-keys) and create an API key (`sk-...` or `tp-...`)
+2. Add to `.env`:
+   ```bash
+   MIMO_API_KEY=your-api-key
+   ```
+3. Docs: [MiMo V2.5 speech synthesis](https://mimo.mi.com/docs/en-US/quick-start/usage-guide/audio/speech-synthesis-v2.5)
+
+#### Preset Voices
+
+| Voice ID | Language | Notes |
+|----------|----------|-------|
+| `mimo_default` | cluster-dependent | CN cluster defaults to 冰糖 |
+| `冰糖`, `茉莉`, `苏打`, `白桦` | Chinese | Built-in Mandarin voices |
+| `Mia`, `Chloe`, `Milo`, `Dean` | English | Built-in English voices |
+
+Optional `style_instruction` controls delivery (user-role message). Output is `wav`.
+
+#### API Notes
+
+```text
+POST https://api.xiaomimimo.com/v1/chat/completions
+api-key: ${MIMO_API_KEY}
+model: mimo-v2.5-tts
+```
+
+Synthesis text goes in the `assistant` message. Style instructions go in the optional `user` message.
+
+#### What It Is Best For
+
+- Natural Mandarin narration with promptable speaking style
+- Quick English presets alongside Chinese voices
+- Cost-sensitive Chinese production when MiMo's promotional pricing applies
+
+#### Pricing
+
+MiMo has run promotional free periods for TTS. OpenMontage currently reports `estimate_cost = 0.0` and does not assume a stable paid rate — re-check the MiMo console before large batches.
 
 ---
 
@@ -766,6 +815,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **Piper** | — (install only) | `piper_tts` | Free |
 | **Google** | `GOOGLE_API_KEY` | `google_tts`, `google_imagen` | Free tier + paid |
 | **ElevenLabs** | `ELEVENLABS_API_KEY` | `elevenlabs_tts`, `music_gen` | Free tier + paid |
+| **Xiaomi MiMo** | `MIMO_API_KEY` | `mimo_tts` | Promotional / check console |
 | **fal.ai** | `FAL_KEY` | `flux_image`, `recraft_image`, `kling_video`, `veo_video`, `minimax_video` | Pay-as-you-go |
 | **OpenAI** | `OPENAI_API_KEY` | `openai_tts`, `openai_image` | Paid only |
 | **xAI** | `XAI_API_KEY` | `grok_image`, `grok_video` | Paid only |

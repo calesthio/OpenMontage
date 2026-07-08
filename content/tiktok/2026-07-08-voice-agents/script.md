@@ -11,24 +11,27 @@ call/ops readiness behind a deployed voice agent).
 
 Anyone can build a voice agent now. Almost none of them will work.
 
-No-code voice agent builders dropped everywhere this week. So every business is about to launch one. But a founder who shipped agents for over a hundred companies says ninety percent fail. Not because the AI is bad. Because the operation behind it is. An outdated knowledge base. A CRM that doesn't connect. No plan for the human handoff.
+No-code voice agent builders dropped everywhere this week. Every business wants one. One founder shipped agents to more than a hundred companies. Ninety percent fail. Not the AI. The operation. An outdated knowledge base. A CRM that doesn't connect. No plan for the human handoff.
 
-So before you build, do three things. Write your top ten calls, with the exact answer to each. Connect it to your real system of record. And define the handoff. The moment it stops and gets a person.
+Before you build, three things. Write your top ten calls. Answer every one. Connect your system of record. Define the handoff. The moment it stops for a human.
 
 A voice agent is not an AI project. It is an operations project.
 
 Comment the word voice. I will send you the voice agent playbook.
 
-## Beat map (avatar ≤20%: hook + CTA only; 1 real cutaway; chips/thesis = full-frame opaque MG)
+## Beat map (avatar ≤20%: hook + CTA only; 1 real cutaway; stat stamp + chips + thesis = full-frame opaque MG)
 
 | # | Beat | Line | Full frame |
 |---|------|------|-----------|
 | 1 | Hook | "anyone can build a voice agent now" | avatar + "ANYONE CAN BUILD / A VOICE AGENT" / sub "almost none work" |
-| 2 | Cutaway (real archive) | "no-code builders dropped... every business about to launch one" | call center / headset phone-support footage (graded dark rs_) |
-| 3 | Chips · why 90% fail | "outdated knowledge base / CRM that doesn't connect / no human handoff" | OUTDATED KNOWLEDGE BASE · DISCONNECTED CRM · NO HUMAN HANDOFF |
-| 4 | Chips · before you build (numbered) | "top ten calls / system of record / define the handoff" | 01 TOP 10 CALLS + ANSWERS · 02 CONNECT SYSTEM OF RECORD · 03 DEFINE THE HANDOFF |
-| 5 | Thesis | "not an AI project. an operations project." | two-line, em word "operations" blue |
-| 6 | CTA | "comment the word voice" | avatar + COMMENT [VOICE] + end card |
+| 2 | Cutaway (real archive) | "no-code builders dropped... every business wants one" | call center / headset phone-support footage (graded dark rs_) |
+| 3 | Stat stamp | "one founder... ninety percent fail. not the AI. the operation." | big "90% FAIL" + "100+ COMPANIES" + "not the AI. the operation." |
+| 4 | Chips · why 90% fail | "outdated knowledge base / CRM / no human handoff" | OUTDATED KNOWLEDGE BASE · DISCONNECTED CRM · NO HUMAN HANDOFF |
+| 5 | Chips · before you build (numbered) | "top ten calls / system of record / define the handoff" | 01 TOP 10 CALLS · 02 CONNECT SYSTEM OF RECORD · 03 DEFINE THE HANDOFF |
+| 6 | Thesis | "not an AI project. an operations project." | two-line, em word "operations" blue |
+| 7 | CTA | "comment the word voice" | avatar + COMMENT [VOICE] + end card |
+
+(Reviewer 70→ tightened to ~111 words / ~37s; founder-stat given its own stamp beat so the single cutaway isn't static across two sentences.)
 
 Cutaway search (1 clip, 2 passes; NO reuse vs any prior video either brand): "call center headset customer
 support agent" / "person headset phone office support".

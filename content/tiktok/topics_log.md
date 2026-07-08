@@ -10,3 +10,4 @@
 | 2026-07-06 | Your first boring AI agent | AGENT | scheduled 21:00 UTC |
 | 2026-07-06 | AWS $1B forward-deployed engineers | DEPLOY | produced · awaiting review (Drive 7/6/26; avatar-minimized, 5 cutaways) |
 | 2026-07-07 | Context engineering > prompt engineering | CONTEXT | produced · awaiting review (Drive 7/7/26; avatar 19%, 3 cutaways) |
+| 2026-07-08 | Voice agents went no-code / why 90% fail (ops, not model) | VOICE | scripted |

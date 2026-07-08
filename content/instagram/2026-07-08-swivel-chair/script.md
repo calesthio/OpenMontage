@@ -9,17 +9,17 @@ into disconnected systems).
 
 ## Spoken VO (HeyGen — VO only)
 
-Your team isn't slow. Your systems just don't talk to each other.
+Your team isn't slow. Your systems don't talk to each other.
 
 Watch what happens when one order comes in. Someone types it into accounting. Then the same numbers into inventory. Then again into the CRM. Same data. Three times. By hand.
 
-The average employee spends over nine hours a week just moving data between systems. That is more than twenty eight thousand dollars per person, every year, on typing a computer should do. And half of it comes back wrong.
+The average employee spends over nine hours a week moving data between systems. That's more than twenty eight thousand dollars a year, per person, spent retyping what a computer already knows. And half of it comes back wrong.
 
 We call it swivel chair work. You spin from one screen to the next, retyping what you already know.
 
 So we don't start with software. We audit the operation first. We find every place a number gets entered twice. Then we connect your systems so it flows once.
 
-Comment the word retype, and I'll send you the swivel chair audit.
+Comment the word retype. I'll send you the swivel chair audit.
 
 ## Beat map (avatar ≤20%: only hook ~3s + CTA ~3s)
 

@@ -68,6 +68,11 @@
             "default": false,
             "description": "True if this is the visual peak of the video — deserves extra attention"
           },
+          "sequence_index": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "1-based scene order used by downstream asset generation and prompt-locking logic"
+          },
           "character_actions": {
             "type": "array",
             "description": "Character-specific acting beats for rigged character animation scenes",

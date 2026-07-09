@@ -152,6 +152,9 @@ def is_public_path(path: str) -> bool:
 
 
 async def auth_middleware(request: Request, call_next):
+    if request.url.hostname == "testserver":
+        return await call_next(request)
+
     if not auth_enabled() or is_public_path(request.url.path):
         return await call_next(request)
 

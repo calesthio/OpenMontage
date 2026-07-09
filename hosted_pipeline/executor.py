@@ -31,7 +31,7 @@ from lib.pipeline_loader import (
     load_pipeline,
 )
 from schemas.artifacts import load_schema, validate_artifact
-from tools.base_tool import ToolRuntime
+from tools.base_tool import ToolRuntime, ToolStatus
 from tools.tool_registry import registry
 
 
@@ -249,7 +249,13 @@ class StageExecutor:
         stage_skill = self._read_skill(skill_ref) if skill_ref else ""
         artifact_name = CANONICAL_STAGE_ARTIFACTS[stage]
         available_tool_names = self._allowed_tool_names_for_stage(manifest, stage)
-        web_search_available = "web_search" in available_tool_names and registry.get("web_search") is not None
+        registry.discover()
+        web_search_tool = registry.get("web_search")
+        web_search_available = (
+            "web_search" in available_tool_names
+            and web_search_tool is not None
+            and web_search_tool.get_status() == ToolStatus.AVAILABLE
+        )
         research_mode = (
             "web_search"
             if stage != "research" or web_search_available

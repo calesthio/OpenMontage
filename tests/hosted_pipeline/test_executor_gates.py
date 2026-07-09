@@ -14,9 +14,13 @@ class FakeDirector:
     def __init__(self, responses: list[dict[str, Any]]) -> None:
         self.responses = responses
         self.calls = 0
+        self.messages: list[dict[str, str]] = []
+        self.tools: list[dict[str, Any]] = []
 
     def step(self, messages: list[dict[str, str]], tools: list[dict[str, Any]]) -> dict[str, Any]:
         self.calls += 1
+        self.messages = messages
+        self.tools = tools
         return self.responses.pop(0)
 
 
@@ -98,6 +102,24 @@ def test_final_artifact_is_checkpointed_and_written(tmp_path, monkeypatch):
     assert checkpoint["status"] == "completed"
     assert checkpoint["artifacts"]["research_brief"]["version"] == "1.0"
     assert (tmp_path / "p" / "artifacts" / "research_brief.json").is_file()
+
+
+def test_research_context_uses_registered_web_search(tmp_path, monkeypatch):
+    monkeypatch.setattr(StageExecutor, "_provider_menu_summary", staticmethod(lambda: {}))
+    director = FakeDirector([response_for("research_brief", valid_research_brief())])
+
+    result = executor(tmp_path, director).run_stage(StageRunRequest(
+        project_id="p",
+        title="P",
+        pipeline_type="cinematic",
+        stage="research",
+        brief="Warli saree ad",
+    ))
+
+    assert result.status == "completed"
+    context = json.loads(director.messages[1]["content"])
+    assert context["execution_constraints"]["research_execution_mode"] == "web_search"
+    assert any(tool["name"] == "web_search" for tool in director.tools)
 
 
 def test_budget_blocks_before_director_call_and_writes_failed_checkpoint(tmp_path, monkeypatch):

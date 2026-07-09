@@ -91,10 +91,10 @@ These are now code-enforced, not metadata-only.
    identify a pinned SHA, production execution is blocked with
    `skills_not_pinned`.
 
-Current M1 limitation: the upstream cinematic research director expects a
-general `web_search` tool, but this hosted tool registry does not expose one.
-Research-stage artifacts therefore mark `metadata.research_execution_mode` as
-`recorded_only_no_web_search_tool` unless a real search tool is added later.
+Hosted research now exposes a no-key `web_search` registry tool. The executor
+marks research as `web_search` only when that tool is discovered and available;
+otherwise directors must mark `metadata.research_execution_mode` as
+`recorded_only_no_web_search_tool` and must not claim live searches ran.
 
 ## Failure Policy
 

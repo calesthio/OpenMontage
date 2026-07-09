@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """
-Tools / Video / Alignment Gate Module
--------------------------------------
-Implements a deterministic semantic audio-visual quality gate to ensure narration 
+Alignment Gate Module: 
+
+This right here, implements a deterministic semantic audio-visual quality gate to ensure narration 
 beats are perfectly mapped and aligned with visual timeline intent layouts before 
-rendering. Part of Issue #222.
-"""
+rendering."""
 
 import os
 import json

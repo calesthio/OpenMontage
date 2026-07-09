@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from tools.base_tool import ToolResult
 
 from backlot import jobs
@@ -144,3 +146,21 @@ def test_generate_assets_uses_veo_first_last_frame_chaining(monkeypatch, tmp_pat
     assert FakeVideoSelector.calls[1]["first_frame_path"].endswith("assets/chaining/sc1_last.jpg")
     assert FakeVideoSelector.calls[1]["last_frame_url"] == "https://cdn.example/ref2.png"
     assert manifest["metadata"]["generation_runs"][1]["chaining_mode"] == "first_last_frame_to_video"
+
+
+def test_generate_assets_blocks_before_selector_when_budget_cap_exceeded(monkeypatch, tmp_path):
+    _wire_fakes(monkeypatch, tmp_path)
+    project_dir = init_project("p", title="P", pipeline_type="cinematic", pipeline_dir=tmp_path)
+
+    class FakeCostTool:
+        def estimate_cost(self, inputs: dict[str, Any]) -> float:
+            return 0.12
+
+    monkeypatch.setattr(jobs, "_video_tool", lambda model_config: FakeCostTool())
+    request = _request()
+    request["budget_cap_usd"] = 0.05
+
+    with pytest.raises(jobs.JobError, match="Budget cap would be exceeded"):
+        jobs._generate_assets("p", project_dir, request, _scene_plan(), sample_only=True)
+
+    assert FakeVideoSelector.calls == []

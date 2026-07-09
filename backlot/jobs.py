@@ -142,6 +142,18 @@ def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _coerce_optional_budget_cap(value: Any) -> float | None:
+    if value in (None, ""):
+        return None
+    try:
+        cap = float(value)
+    except (TypeError, ValueError):
+        raise JobError("Budget cap must be a number.")
+    if cap < 0:
+        raise JobError("Budget cap cannot be negative.")
+    return round(cap, 2)
+
+
 def video_model_options() -> list[dict[str, Any]]:
     options = []
     for config in sorted(VIDEO_MODELS.values(), key=lambda item: int(item.get("priority", 50))):
@@ -205,6 +217,7 @@ def create_job(payload: dict[str, Any], user: dict[str, Any] | None = None) -> d
     base_slug = slugify(title)
     project_id = f"{base_slug}-{int(time.time())}"
     project_dir = init_project(project_id, title=title, pipeline_type="cinematic")
+    budget_cap = _coerce_optional_budget_cap(payload.get("budget_cap_usd"))
     request_data = {
         "version": "1.0",
         "project_id": project_id,
@@ -223,6 +236,8 @@ def create_job(payload: dict[str, Any], user: dict[str, Any] | None = None) -> d
         "created_at": now_iso(),
         "created_by": (user or {}).get("sub"),
     }
+    if budget_cap is not None:
+        request_data["budget_cap_usd"] = budget_cap
     _write_json(project_dir / "artifacts" / "job_request.json", request_data)
     return {"project_id": project_id, "url": f"/p/{project_id}", "request": request_data}
 
@@ -358,6 +373,8 @@ def revise_plan(project_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         "max_scene_seconds": model_config["max_scene_seconds"],
         "revised_at": now_iso(),
     })
+    if "budget_cap_usd" in payload:
+        request_data["budget_cap_usd"] = _coerce_optional_budget_cap(payload.get("budget_cap_usd"))
     if isinstance(payload.get("reference_assets"), list):
         request_data["reference_assets"] = payload["reference_assets"]
     _write_json(req_path, request_data)
@@ -421,10 +438,15 @@ def approve_paid_generation(
         proposal_packet = _read_json(proposal_path)
 
         model_config = _video_model_config_from_request(request_data)
+        approved_budget = _budget_cap_from_request(request_data)
         proposal_packet["approval"] = {
             "status": "approved",
             "user_notes": "Approved in hosted Ray board.",
-            "approved_budget_usd": float(proposal_packet.get("cost_estimate", {}).get("total_estimated_usd") or 0),
+            "approved_budget_usd": (
+                approved_budget
+                if approved_budget is not None
+                else float(proposal_packet.get("cost_estimate", {}).get("total_estimated_usd") or 0)
+            ),
             **({"override_no_references": True} if override_no_references else {}),
             **({"confirm_seedance_risk": True} if _requires_explicit_paid_approval(model_config) else {}),
         }
@@ -565,6 +587,7 @@ def approve_asset_review(project_id: str) -> dict[str, Any]:
     generated_scene_ids = {str(asset.get("scene_id")) for asset in asset_manifest.get("assets") or []}
     expected_scene_ids = {str(scene.get("id")) for scene in scene_plan.get("scenes") or []}
     if generated_scene_ids != expected_scene_ids:
+        _assert_budget_allows_remaining_batch(request_data, scene_plan, asset_manifest, generated_scene_ids)
         full_manifest = _generate_assets(project_id, project_dir, request_data, scene_plan, sample_only=False)
         _mark_reference_review_required(full_manifest, request_data, scene_plan, phase="full_batch")
         _write_json(manifest_path, full_manifest)
@@ -652,6 +675,7 @@ def validate_paid_generation_allowed(
             "Seedance is not the Ray default and requires explicit Seedance risk approval before any paid call. "
             "Use Grok Imagine by default, or pass confirm_seedance_risk=true only after the user explicitly chooses Seedance."
         )
+    _assert_budget_allows_paid_approval(request_data, proposal_packet)
     return proposal_packet
 
 
@@ -1233,21 +1257,28 @@ def _estimate_generation_cost(request_data: dict[str, Any], scene_plan: dict[str
         cost = float(tool.estimate_cost(inputs) or 0)
         total += cost
         line_items.append({
+            "scene_id": str(scene.get("id") or f"scene_{idx}"),
             "tool": model_config["tool_name"],
             "operation": f"{operation} scene {scene.get('id')}",
             "quantity": 1,
             "estimated_usd": round(cost, 2),
             "notes": f"{model_config['label']} {duration}s clip. Estimate only; no provider call has run.",
         })
+    initial_estimate = round(line_items[0]["estimated_usd"], 2) if line_items and _reference_conditioning_expected(request_data) and len(reference_image_urls) else round(total, 2)
+    sample_first = bool(line_items and _reference_conditioning_expected(request_data) and len(reference_image_urls))
+    budget_cap = _budget_cap_from_request(request_data)
+    budget_verdict = _budget_verdict(round(total, 2), initial_estimate, sample_first, budget_cap)
     return {
         "total_estimated_usd": round(total, 2),
-        "initial_paid_generation_estimate_usd": round(line_items[0]["estimated_usd"], 2) if line_items and _reference_conditioning_expected(request_data) and len(reference_image_urls) else round(total, 2),
-        "sample_first": bool(line_items and _reference_conditioning_expected(request_data) and len(reference_image_urls)),
+        "initial_paid_generation_estimate_usd": initial_estimate,
+        "sample_first": sample_first,
         "conditioning_mode": conditioning_mode,
         "reference_asset_count": len(reference_image_urls),
         "reference_conditioning_expected": _reference_conditioning_expected(request_data),
         "line_items": line_items,
-        "budget_verdict": "no_budget_set",
+        "budget_cap_usd": budget_cap,
+        "budget_verdict": budget_verdict,
+        "budget_remaining_usd": round(budget_cap - round(total, 2), 2) if budget_cap is not None else None,
         "savings_options": [
             "Shorten the duration.",
             "Use fewer scenes with longer clips where the provider supports it.",
@@ -1258,7 +1289,72 @@ def _estimate_generation_cost(request_data: dict[str, Any], scene_plan: dict[str
 
 def _proposal_cost_snapshot(proposal_packet: dict[str, Any]) -> dict[str, Any]:
     estimate = float(proposal_packet.get("cost_estimate", {}).get("total_estimated_usd") or 0)
-    return {"total_spent_usd": 0, "total_reserved_usd": round(estimate, 2), "budget_remaining_usd": 0}
+    cap = _coerce_optional_budget_cap((proposal_packet.get("cost_estimate") or {}).get("budget_cap_usd"))
+    return {
+        "total_spent_usd": 0,
+        "total_reserved_usd": round(estimate, 2),
+        "budget_remaining_usd": round(cap - estimate, 2) if cap is not None else 0,
+    }
+
+
+def _budget_cap_from_request(request_data: dict[str, Any]) -> float | None:
+    return _coerce_optional_budget_cap(request_data.get("budget_cap_usd"))
+
+
+def _budget_verdict(total: float, initial: float, sample_first: bool, cap: float | None) -> str:
+    if cap is None:
+        return "no_budget_set"
+    if total <= cap:
+        return "within_budget"
+    if sample_first and initial <= cap:
+        return "sample_within_budget_full_batch_exceeds"
+    return "exceeds_budget"
+
+
+def _assert_budget_allows_paid_approval(request_data: dict[str, Any], proposal_packet: dict[str, Any]) -> None:
+    cap = _budget_cap_from_request(request_data)
+    if cap is None:
+        return
+    estimate = proposal_packet.get("cost_estimate") or {}
+    sample_first = estimate.get("sample_first") is True
+    next_spend = float(
+        estimate.get("initial_paid_generation_estimate_usd" if sample_first else "total_estimated_usd")
+        or 0
+    )
+    if next_spend > cap:
+        raise JobError(
+            f"Budget cap would be exceeded before paid generation: next approved spend "
+            f"${next_spend:.2f} > cap ${cap:.2f}."
+        )
+
+
+def _assert_budget_allows_projected_spend(request_data: dict[str, Any], projected_total: float) -> None:
+    cap = _budget_cap_from_request(request_data)
+    if cap is None:
+        return
+    if projected_total > cap:
+        raise JobError(
+            f"Budget cap would be exceeded before provider call: projected spend "
+            f"${projected_total:.2f} > cap ${cap:.2f}."
+        )
+
+
+def _assert_budget_allows_remaining_batch(
+    request_data: dict[str, Any],
+    scene_plan: dict[str, Any],
+    asset_manifest: dict[str, Any],
+    generated_scene_ids: set[str],
+) -> None:
+    cap = _budget_cap_from_request(request_data)
+    if cap is None:
+        return
+    estimate = _estimate_generation_cost(request_data, scene_plan)
+    remaining_estimate = 0.0
+    for item in estimate.get("line_items") or []:
+        if str(item.get("scene_id") or "") not in generated_scene_ids:
+            remaining_estimate += float(item.get("estimated_usd") or 0)
+    spent = float(asset_manifest.get("total_cost_usd") or 0)
+    _assert_budget_allows_projected_spend(request_data, spent + remaining_estimate)
 
 
 def _reference_conditioning_expected(request_data: dict[str, Any]) -> bool:
@@ -1486,6 +1582,8 @@ def _generate_assets(
                 chain_source_for_scene,
                 scene_index=idx,
             )
+            estimated_scene_cost = float(_video_tool(model_config).estimate_cost(generation_inputs) or 0)
+            _assert_budget_allows_projected_spend(request_data, total_cost + estimated_scene_cost)
             result = selector.execute(generation_inputs)
             if not result.success:
                 if _is_no_media_generated(result):

@@ -123,6 +123,11 @@ def tools() -> list[dict[str, Any]]:
                     },
                     "duration_seconds": {"type": "integer", "minimum": 5, "maximum": jobs.MAX_DURATION_SECONDS, "default": 30},
                     "aspect_ratio": {"type": "string", "enum": sorted(jobs.SUPPORTED_ASPECTS), "default": "9:16"},
+                    "budget_cap_usd": {
+                        "type": "number",
+                        "minimum": 0,
+                        "description": "Maximum approved provider spend for this project. Paid calls block before exceeding it.",
+                    },
                     "reference_urls": {
                         "type": "array",
                         "items": {"type": "string", "format": "uri"},
@@ -274,6 +279,11 @@ def tools() -> list[dict[str, Any]]:
                     "duration_seconds": {"type": "integer", "minimum": 5, "maximum": jobs.MAX_DURATION_SECONDS},
                     "aspect_ratio": {"type": "string", "enum": sorted(jobs.SUPPORTED_ASPECTS)},
                     "scene_count": {"type": "integer", "minimum": 1, "maximum": jobs.MAX_SCENE_COUNT},
+                    "budget_cap_usd": {
+                        "type": "number",
+                        "minimum": 0,
+                        "description": "Maximum approved provider spend for this project. Paid calls block before exceeding it.",
+                    },
                     "reference_urls": {"type": "array", "items": {"type": "string", "format": "uri"}},
                     "reference_asset_ids": {"type": "array", "items": {"type": "string"}},
                     "reference_files": {"type": "array", "items": {"type": "object"}},
@@ -421,6 +431,8 @@ async def _create_video_plan(
         "reference_assets": reference_assets,
         "chat_messages": [{"role": "user", "text": prompt, "attachments": reference_assets}],
     }
+    if "budget_cap_usd" in args:
+        payload["budget_cap_usd"] = args.get("budget_cap_usd")
     video_model = _video_model_from_provider(args.get("provider") or args.get("video_model"))
     if video_model:
         payload["video_model"] = video_model

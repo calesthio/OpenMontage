@@ -7,9 +7,11 @@ from hosted_pipeline.executor import (
     StageRunRequest,
     StageRunResult,
 )
+from hosted_pipeline.director_client import ChatCompletionsDirectorClient
 
 __all__ = [
     "BudgetCaps",
+    "ChatCompletionsDirectorClient",
     "LoopLimits",
     "StageExecutor",
     "StageRunRequest",

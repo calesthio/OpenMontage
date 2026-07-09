@@ -1,7 +1,8 @@
 # Ray M1 Hosted Executor Skeleton
 
-Status: design/skeleton accepted for M0 review. This is not yet the production
-director loop, and the checks below are M1 signoff blockers.
+Status: M1 implementation. The executor now enforces the hosted guardrails in
+code and runs planning stages through the loaded pipeline manifest, stage
+director skills, artifact schemas, and checkpoint writer.
 
 ## Goal
 
@@ -21,11 +22,15 @@ No creative planning prompt belongs in the hosted wrapper.
 ## Module Layout
 
 - `hosted_pipeline/executor.py`
-  - `StageExecutor`: pipeline-agnostic stage runner.
+  - `StageExecutor`: pipeline-agnostic stage runner with enforced budgets,
+    failed checkpoints, schema repair loop, final checkpoint writes, and
+    idempotency ledger.
   - `StageRunRequest`: project, pipeline, stage, caps, limits.
   - `LoopLimits`: max LLM iterations, max tool calls, wall-clock timeout.
   - `BudgetCaps`: total, LLM, media, and sample caps.
   - `paid_call_idempotency_key`: `project/stage/scene/attempt/tool/hash`.
+- `hosted_pipeline/director_client.py`
+  - OpenRouter/OpenAI chat-completions adapter for director model calls.
 - `hosted_pipeline/worker.py`
   - Fly worker process entrypoint.
   - Boots provider preflight and stays ready for M1 queue wiring.
@@ -63,14 +68,13 @@ Every paid provider call receives an idempotency key:
 <project_id>:<stage>:<scene_id|stage>:attempt-<n>:<tool_name>:<args_sha>
 ```
 
-M1 implementation must persist those keys before execution, then reconcile
-provider output. A resumed job must reuse the recorded result or block; it must
-not buy the same clip twice.
+M1 persists those keys before paid tool execution, then reconciles provider
+output. A resumed job reuses the recorded result or blocks on unsafe pending /
+failed ledger entries; it does not buy the same clip twice.
 
 ## M1 Signoff Enforcement Gates
 
-These must be code-enforced before M1 signoff. Metadata-only recording is not
-acceptable.
+These are now code-enforced, not metadata-only.
 
 1. Every guard trip writes a `failed` checkpoint. No loop-limit, timeout,
    schema, provider, or runtime failure may escape as an uncaught exception.
@@ -84,8 +88,13 @@ acceptable.
    artifact in a completed or awaiting-human checkpoint according to the
    manifest gate.
 5. Skill files are read from the pinned job SHA. If the hosted runtime cannot
-   materialize that exact SHA, the run must explicitly mark skills as
-   `recorded_only` and block production execution.
+   identify a pinned SHA, production execution is blocked with
+   `skills_not_pinned`.
+
+Current M1 limitation: the upstream cinematic research director expects a
+general `web_search` tool, but this hosted tool registry does not expose one.
+Research-stage artifacts therefore mark `metadata.research_execution_mode` as
+`recorded_only_no_web_search_tool` unless a real search tool is added later.
 
 ## Failure Policy
 

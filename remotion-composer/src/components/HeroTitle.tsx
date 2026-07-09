@@ -9,62 +9,84 @@ import {
 interface HeroTitleProps {
   title: string;
   subtitle?: string;
+  textColor?: string; // non-accent title glyphs
+  accentColor?: string; // first-word accent + underline
+  subtitleColor?: string;
+  veil?: boolean; // dark radial behind the text — for busy media backgrounds
 }
 
-export const HeroTitle: React.FC<HeroTitleProps> = ({ title, subtitle }) => {
+export const HeroTitle: React.FC<HeroTitleProps> = ({
+  title,
+  subtitle,
+  textColor = "#F8FAFC",
+  accentColor = "#22D3EE",
+  subtitleColor = "#94A3B8",
+  veil = true,
+}) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, width, height } = useVideoConfig();
 
-  // Staggered letter-by-letter spring
-  const titleChars = title.split("");
+  // Wrap at WORD boundaries (per-char flex items wrap mid-word); letters
+  // still animate individually inside each word.
+  const words = title.split(" ");
+
+  // Scale down long titles instead of overflowing/wrapping to three lines.
+  const base = height > width ? 60 : 72;
+  const fontSize =
+    title.length > 55 ? Math.round(base * 0.66) : title.length > 35 ? Math.round(base * 0.8) : base;
+
+  let charIndex = 0;
 
   return (
     <AbsoluteFill
       style={{
         justifyContent: "center",
         alignItems: "center",
-        background:
-          "radial-gradient(ellipse at center, rgba(15,23,42,0.35) 0%, rgba(15,23,42,0.55) 100%)",
+        background: veil
+          ? "radial-gradient(ellipse at center, rgba(15,23,42,0.35) 0%, rgba(15,23,42,0.55) 100%)"
+          : undefined,
       }}
     >
       <div style={{ textAlign: "center", maxWidth: "85%" }}>
-        {/* Main title with per-character spring */}
+        {/* Main title: word-wrapped, per-character spring */}
         <div
           style={{
-            fontSize: 72,
+            fontSize,
             fontWeight: 800,
             fontFamily: "Space Grotesk, Inter, system-ui, sans-serif",
             lineHeight: 1.2,
             display: "flex",
             justifyContent: "center",
             flexWrap: "wrap",
-            gap: 0,
+            columnGap: "0.3em",
           }}
         >
-          {titleChars.map((char, i) => {
-            const delay = i * 1.2;
-            const charSpring = spring({
-              frame: frame - delay,
-              fps,
-              config: { damping: 12, stiffness: 150 },
-            });
-
-            return (
-              <span
-                key={i}
-                style={{
-                  display: "inline-block",
-                  opacity: charSpring,
-                  transform: `translateY(${interpolate(charSpring, [0, 1], [30, 0])}px)`,
-                  color: i < 8 ? "#22D3EE" : "#F8FAFC", // Accent first word
-                  whiteSpace: char === " " ? "pre" : undefined,
-                  minWidth: char === " " ? "0.3em" : undefined,
-                }}
-              >
-                {char}
-              </span>
-            );
-          })}
+          {words.map((word, wi) => (
+            <span key={wi} style={{ display: "inline-flex", whiteSpace: "nowrap" }}>
+              {word.split("").map((char) => {
+                const i = charIndex++;
+                const delay = i * 1.2;
+                const charSpring = spring({
+                  frame: frame - delay,
+                  fps,
+                  config: { damping: 12, stiffness: 150 },
+                });
+                return (
+                  <span
+                    key={i}
+                    style={{
+                      display: "inline-block",
+                      opacity: charSpring,
+                      transform: `translateY(${interpolate(charSpring, [0, 1], [30, 0])}px)`,
+                      color: i < 8 ? accentColor : textColor, // Accent first word
+                    }}
+                  >
+                    {char}
+                  </span>
+                );
+              })}
+            </span>
+          ))}
         </div>
 
         {/* Subtitle */}
@@ -73,13 +95,13 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({ title, subtitle }) => {
             style={{
               marginTop: 20,
               opacity: spring({
-                frame: frame - titleChars.length * 1.2 - 5,
+                frame: frame - title.length * 1.2 - 5,
                 fps,
                 config: { damping: 20 },
               }),
               fontSize: 28,
-              fontWeight: 400,
-              color: "#A78BFA",
+              fontWeight: 500,
+              color: subtitleColor,
               fontFamily: "Space Grotesk, Inter, system-ui, sans-serif",
               letterSpacing: "0.1em",
               textTransform: "uppercase",
@@ -94,7 +116,7 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({ title, subtitle }) => {
           style={{
             margin: "24px auto 0",
             height: 3,
-            backgroundColor: "#22D3EE",
+            backgroundColor: accentColor,
             borderRadius: 2,
             width: interpolate(
               spring({

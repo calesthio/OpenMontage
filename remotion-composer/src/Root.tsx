@@ -35,6 +35,7 @@ export interface ThemeConfig {
   springConfig: { damping: number; stiffness: number; mass: number };
   transitionDuration: number;
   captionHighlightColor: string;
+  captionTextColor?: string; // word color; defaults to near-white for dark themes
   captionBackgroundColor: string;
 }
 

@@ -68,6 +68,17 @@ export interface AnimeSceneProps {
    * length so crossfade/camera/lighting calculations use the correct range.
    */
   sceneDurationSeconds?: number;
+  /**
+   * "cover" (default) fills the frame, cropping whatever overflows — fine
+   * when the image and canvas share roughly the same aspect ratio. Portrait
+   * source images (e.g. host avatars, 768x1344) rendered on a landscape
+   * canvas need "contain-blurred" instead: a blurred/darkened cover-fit copy
+   * fills the frame as a backdrop, and the full undistorted image sits on
+   * top letterboxed — otherwise "cover" scales a portrait image ~2.5x to
+   * fill 1920x1080 width, leaving only the middle ~32% of its height
+   * visible, and the camera pan can push a face straight off-frame.
+   */
+  fit?: "cover" | "contain-blurred";
 }
 
 // ---------------------------------------------------------------------------
@@ -158,6 +169,7 @@ export const AnimeScene: React.FC<AnimeSceneProps> = ({
   lightingFrom,
   lightingTo,
   sceneDurationSeconds,
+  fit = "cover",
 }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
@@ -261,17 +273,38 @@ export const AnimeScene: React.FC<AnimeSceneProps> = ({
       {/* Layer 1: Image stack with crossfade + camera motion */}
       {images.map((src, i) => (
         <AbsoluteFill key={i}>
-          <Img
-            src={resolveAsset(src)}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              opacity: getOpacity(i),
-              transform: `scale(${scale}) translate(${translateX}px, ${translateY}px)`,
-              willChange: "transform, opacity",
-            }}
-          />
+          {/* AbsoluteFill is a flex container — two Img siblings would
+              compete for flex space and both shrink/vanish. Each layer
+              gets its own nested AbsoluteFill, matching how the vignette
+              and particle layers below already stack independently. */}
+          {fit === "contain-blurred" && (
+            <AbsoluteFill>
+              <Img
+                src={resolveAsset(src)}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  opacity: getOpacity(i),
+                  filter: "blur(48px) brightness(0.45) saturate(1.1)",
+                  transform: `scale(${scale * 1.15}) translate(${translateX}px, ${translateY}px)`,
+                }}
+              />
+            </AbsoluteFill>
+          )}
+          <AbsoluteFill>
+            <Img
+              src={resolveAsset(src)}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: fit === "contain-blurred" ? "contain" : "cover",
+                opacity: getOpacity(i),
+                transform: `scale(${scale}) translate(${translateX}px, ${translateY}px)`,
+                willChange: "transform, opacity",
+              }}
+            />
+          </AbsoluteFill>
         </AbsoluteFill>
       ))}
 

@@ -45,18 +45,20 @@ export const KPIGrid: React.FC<KPIGridProps> = ({
   animationStyle = "count-up",
 }) => {
   const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
+  const { fps, durationInFrames, width, height } = useVideoConfig();
 
-  const cols = Math.min(columns, metrics.length);
+  // Portrait (e.g. 1080x1920 shorts): stack cards in a single column and
+  // leave extra bottom room for the caption pill.
+  const portrait = height > width;
+  const cols = portrait ? 1 : Math.min(columns, metrics.length);
   const rows = Math.ceil(metrics.length / cols);
 
-  // Grid layout constants (within 1920x1080)
-  const gridPadding = 100;
+  const gridPadding = portrait ? 64 : 100;
   const cardGap = 28;
   const titleHeight = title ? 120 : 0;
   const gridTop = 80 + titleHeight;
-  const gridWidth = 1920 - gridPadding * 2;
-  const gridHeight = 1080 - gridTop - 80;
+  const gridWidth = width - gridPadding * 2;
+  const gridHeight = height - gridTop - (portrait ? 260 : 80);
   const cardWidth = (gridWidth - cardGap * (cols - 1)) / cols;
   const cardHeight = Math.min(
     (gridHeight - cardGap * (rows - 1)) / rows,

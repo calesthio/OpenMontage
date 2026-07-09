@@ -202,6 +202,7 @@ interface Cut {
   subtitle?: string;
   callout_type?: "info" | "warning" | "tip" | "quote";
   title?: string;
+  fit?: "cover" | "contain-blurred"; // anime_scene: letterbox a portrait image on a landscape canvas
   // Video source trim — seek to this point in the source before playback.
   // Defaults to 0 (play from beginning). Use this instead of in_seconds for source trimming.
   source_in_seconds?: number;
@@ -268,6 +269,10 @@ interface Cut {
   screenshotSteps?: ScreenshotStep[];
   screenshotSize?: { width: number; height: number };
   cursorStartAt?: [number, number];
+  // Comparison card theming (type: "comparison")
+  cardBackgroundColor?: string;
+  leftColor?: string;
+  rightColor?: string;
 }
 
 interface Overlay {
@@ -589,12 +594,21 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
         leftLabel={cut.leftLabel} rightLabel={cut.rightLabel}
         leftValue={cut.leftValue} rightValue={cut.rightValue}
         title={cut.title} backgroundColor={bgColor} textColor={textColor}
+        cardBackgroundColor={cut.cardBackgroundColor}
+        leftColor={cut.leftColor} rightColor={cut.rightColor}
       />
     );
   }
   if (cut.type === "hero_title" && cut.text) {
     return maybeWrapWithBg(
-      <HeroTitle title={cut.text} subtitle={cut.heroSubtitle || cut.subtitle} />
+      <HeroTitle
+        title={cut.text}
+        subtitle={cut.heroSubtitle || cut.subtitle}
+        textColor={cut.color || theme.textColor}
+        accentColor={accent}
+        subtitleColor={theme.mutedTextColor}
+        veil={Boolean(cut.backgroundImage || cut.backgroundVideo)}
+      />
     );
   }
   if (cut.type === "terminal_scene" && cut.steps) {
@@ -701,6 +715,7 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
         lightingFrom={cut.lightingFrom}
         lightingTo={cut.lightingTo}
         sceneDurationSeconds={cut.out_seconds - cut.in_seconds}
+        fit={cut.fit as "cover" | "contain-blurred" | undefined}
       />
     );
   }
@@ -817,6 +832,7 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
           fontSize={42}
           highlightColor={theme.captionHighlightColor}
           backgroundColor={theme.captionBackgroundColor}
+          color={theme.captionTextColor}
         />
       )}
 

@@ -46,7 +46,14 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
   valueFontSize = 72,
 }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, width, height } = useVideoConfig();
+
+  // Portrait (e.g. 1080x1920 shorts): stack before above after with a
+  // horizontal divider, and rein in the value size so long phrases fit.
+  const portrait = height > width;
+  const effectiveValueFontSize = portrait
+    ? Math.min(valueFontSize, 56)
+    : valueFontSize;
 
   // Phase 1: Title + left side appears
   const titleOpacity = spring({
@@ -170,7 +177,7 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
         <div
           style={{
             display: "flex",
-            flexDirection: "row",
+            flexDirection: portrait ? "column" : "row",
             alignItems: "stretch",
             width: "100%",
             borderRadius: 16,
@@ -190,7 +197,7 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
               alignItems: "center",
               padding: "48px 32px",
               opacity: leftOpacity,
-              transform: `translateX(${leftSlide}px) scale(${leftScale})`,
+              transform: `translate${portrait ? "Y" : "X"}(${leftSlide}px) scale(${leftScale})`,
               gap: 16,
             }}
           >
@@ -221,7 +228,7 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
               style={{
                 fontFamily,
                 fontWeight: 800,
-                fontSize: valueFontSize,
+                fontSize: effectiveValueFontSize,
                 color: leftColor,
                 lineHeight: 1.1,
               }}
@@ -237,19 +244,30 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              width: 80,
+              width: portrait ? "100%" : 80,
+              height: portrait ? 64 : undefined,
               position: "relative",
             }}
           >
-            {/* Vertical divider line */}
+            {/* Divider line: vertical in landscape, horizontal in portrait */}
             <div
-              style={{
-                width: 2,
-                height: `${dividerDraw * 100}%`,
-                backgroundColor: "#D1D5DB",
-                position: "absolute",
-                top: `${((1 - dividerDraw) / 2) * 100}%`,
-              }}
+              style={
+                portrait
+                  ? {
+                      height: 2,
+                      width: `${dividerDraw * 100}%`,
+                      backgroundColor: "#D1D5DB",
+                      position: "absolute",
+                      left: `${((1 - dividerDraw) / 2) * 100}%`,
+                    }
+                  : {
+                      width: 2,
+                      height: `${dividerDraw * 100}%`,
+                      backgroundColor: "#D1D5DB",
+                      position: "absolute",
+                      top: `${((1 - dividerDraw) / 2) * 100}%`,
+                    }
+              }
             />
 
             {/* Change indicator badge */}
@@ -314,7 +332,7 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
               alignItems: "center",
               padding: "48px 32px",
               opacity: rightOpacity,
-              transform: `translateX(${rightSlide}px) scale(${rightScale})`,
+              transform: `translate${portrait ? "Y" : "X"}(${rightSlide}px) scale(${rightScale})`,
               gap: 16,
             }}
           >
@@ -345,7 +363,7 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
               style={{
                 fontFamily,
                 fontWeight: 800,
-                fontSize: valueFontSize,
+                fontSize: effectiveValueFontSize,
                 color: rightColor,
                 lineHeight: 1.1,
               }}

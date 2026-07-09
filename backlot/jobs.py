@@ -1123,7 +1123,8 @@ def _proposal_from_plan(
             "renderer_family": "cinematic-trailer",
             "render_runtime": "ffmpeg",
             "music_source": {
-                "source_type": "synthetic_ffmpeg_bed",
+                "source_type": "ai_generated",
+                "provider": "local_ffmpeg",
                 "mood_direction": "Sparse drone and subtle pulse generated locally, then loudness-normalized in compose.",
                 "estimated_cost_usd": 0,
             },

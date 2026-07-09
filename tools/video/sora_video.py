@@ -65,7 +65,7 @@ class SoraVideo(BaseTool):
         "4, 8, or 12 second social-video clips that OpenMontage can stitch and compose",
     ]
     not_good_for = ["offline generation", "long continuous scenes", "projects without Sora API access"]
-    fallback_tools = ["veo_video", "seedance_video", "kling_video", "minimax_video"]
+    fallback_tools = ["veo_video", "gemini_omni_video", "seedance_video", "kling_video", "minimax_video"]
 
     input_schema = {
         "type": "object",

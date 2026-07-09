@@ -24,6 +24,7 @@ from tools.google_credentials import (
     get_access_token,
     resolve_project_id,
     service_account_configured,
+    has_google_credentials,
 )
 
 # Aspect ratio to approximate pixel dimensions (for cost/reporting only)
@@ -93,7 +94,10 @@ class GoogleImagen(BaseTool):
         "type": "object",
         "required": ["prompt"],
         "properties": {
-            "prompt": {"type": "string", "description": "Image description (max 480 tokens)"},
+            "prompt": {
+                "type": "string",
+                "description": "Image description (max 480 tokens)",
+            },
             "aspect_ratio": {
                 "type": "string",
                 "enum": ["1:1", "3:4", "4:3", "9:16", "16:9"],
@@ -131,9 +135,14 @@ class GoogleImagen(BaseTool):
     resource_profile = ResourceProfile(
         cpu_cores=1, ram_mb=512, vram_mb=0, disk_mb=100, network_required=True
     )
-    retry_policy = RetryPolicy(max_retries=2, retryable_errors=["rate_limit", "timeout"])
+    retry_policy = RetryPolicy(
+        max_retries=2, retryable_errors=["rate_limit", "timeout"]
+    )
     idempotency_key_fields = ["prompt", "aspect_ratio", "model"]
-    side_effects = ["writes image file to output_path", "calls Google Generative AI API"]
+    side_effects = [
+        "writes image file to output_path",
+        "calls Google Generative AI API",
+    ]
     user_visible_verification = ["Inspect generated image for relevance and quality"]
 
     def _get_api_key(self) -> str | None:
@@ -141,7 +150,7 @@ class GoogleImagen(BaseTool):
 
     def get_status(self) -> ToolStatus:
         # API key -> AI Studio endpoint; service-account JSON -> Vertex AI.
-        if self._get_api_key() or service_account_configured():
+        if has_google_credentials():
             return ToolStatus.AVAILABLE
         return ToolStatus.UNAVAILABLE
 
@@ -188,6 +197,7 @@ class GoogleImagen(BaseTool):
         prompt = inputs["prompt"]
 
         import logging
+
         logger = logging.getLogger(__name__)
 
         # Resolve aspect ratio: explicit > derived from width/height > default
@@ -198,7 +208,8 @@ class GoogleImagen(BaseTool):
             aspect_ratio = _dims_to_aspect_ratio(inputs["width"], inputs["height"])
             logger.info(
                 "google_imagen: remapped %s to nearest supported aspect ratio %s",
-                requested_ratio, aspect_ratio,
+                requested_ratio,
+                aspect_ratio,
             )
         else:
             aspect_ratio = "1:1"
@@ -228,7 +239,7 @@ class GoogleImagen(BaseTool):
             )
             headers = {
                 "Content-Type": "application/json",
-                "x-goog-api-key": api_key,
+                "x-goog-api-key": api_key or "",
             }
 
         try:
@@ -246,11 +257,11 @@ class GoogleImagen(BaseTool):
 
             predictions = data.get("predictions", [])
             if not predictions:
-                return ToolResult(success=False, error="No images returned from Imagen API")
+                return ToolResult(
+                    success=False, error="No images returned from Imagen API"
+                )
 
-            image_bytes = base64.b64decode(
-                predictions[0]["bytesBase64Encoded"]
-            )
+            image_bytes = base64.b64decode(predictions[0]["bytesBase64Encoded"])
 
             output_path = Path(inputs.get("output_path", "generated_image.png"))
             output_path.parent.mkdir(parents=True, exist_ok=True)

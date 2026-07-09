@@ -33,14 +33,30 @@ jobs:
             requirements.txt
             requirements-dev.txt
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: remotion-composer/package-lock.json
+
       - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg fonts-dejavu-core fonts-noto-core
 
       - name: Install dependencies
         run: make install-dev
 
+      - name: Install Remotion dependencies
+        run: cd remotion-composer && npm ci
+
+      - name: Ensure Remotion browser
+        run: cd remotion-composer && npx remotion browser ensure
+
       - name: Run lint smoke checks
         run: make lint
+
+      - name: Run M0 Remotion smoke render
+        run: .venv/bin/python scripts/remotion_smoke_render.py
 
       - name: Run test suite
         run: make test

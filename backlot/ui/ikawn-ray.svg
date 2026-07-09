@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">iKawn Ray</title>
+  <desc id="desc">Amber iKawn Ray video agent mark</desc>
+  <rect width="512" height="512" rx="96" fill="#08090d"/>
+  <rect x="72" y="72" width="368" height="368" rx="76" fill="#111218" stroke="#f0a83c" stroke-width="18"/>
+  <path d="M111 166h290v206c0 17.7-14.3 32-32 32H143c-17.7 0-32-14.3-32-32V166Z" fill="#171922"/>
+  <path d="M112 114c0-17.7 14.3-32 32-32h225c17.7 0 32 14.3 32 32v52H112v-52Z" fill="#20222c"/>
+  <path d="M155 82h64l-73 84H82l73-84Zm121 0h64l-73 84h-64l73-84Zm121 0h34c16.6 0 30 13.4 30 30v11l-37 43h-64l37-84Z" fill="#f0a83c"/>
+  <path d="M178 292c0-49.7 40.3-90 90-90h53c7.7 0 12.3 8.6 8 15l-44 66 44 84c3.5 6.6-1.3 14.6-8.8 14.6h-50.4c-7.5 0-14.4-4.2-17.7-10.9l-28.6-57.6h-5.5V362c0 11-9 20-20 20s-20-9-20-20v-70Zm40-20.2h50c13.2 0 24-10.8 24-24s-10.8-24-24-24h-50v48Z" fill="#f5efe0"/>
+</svg>

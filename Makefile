@@ -6,7 +6,7 @@ PIP = $(RUN_PYTHON) -m pip
 
 .DEFAULT_GOAL := setup
 
-.PHONY: setup install install-dev install-gpu test test-contracts lint clean preflight demo demo-list hyperframes-doctor hyperframes-warm venv ensure-venv
+.PHONY: setup install install-dev install-gpu test test-contracts lint clean preflight demo demo-list m0-smoke hyperframes-doctor hyperframes-warm venv ensure-venv
 
 # ---- Virtual environment ----
 
@@ -118,6 +118,12 @@ demo: ensure-venv
 
 demo-list: ensure-venv
 	$(RUN_PYTHON) render_demo.py --list
+
+m0-smoke: ensure-venv
+	@echo "==> Running M0 750-frame Remotion smoke with watchdog..."
+	cd remotion-composer && npm ci
+	cd remotion-composer && npx remotion browser ensure
+	$(RUN_PYTHON) scripts/remotion_smoke_render.py
 
 lint: ensure-venv
 	$(RUN_PYTHON) -m py_compile tools/base_tool.py

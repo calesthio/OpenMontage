@@ -283,6 +283,29 @@
       "required": ["total_estimated_usd", "line_items", "budget_verdict"],
       "properties": {
         "total_estimated_usd": { "type": "number", "minimum": 0 },
+        "initial_paid_generation_estimate_usd": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Estimated cost of the first paid action after approval. For reference jobs this is the sample clip, not the full batch."
+        },
+        "sample_first": {
+          "type": "boolean",
+          "description": "True when reference-conditioned generation pauses after the first sample clip."
+        },
+        "conditioning_mode": {
+          "type": "string",
+          "enum": ["text_to_video", "image_to_video"],
+          "description": "Whether paid video generation is planned from text only or from reference images."
+        },
+        "reference_asset_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of usable image references that will condition paid generation."
+        },
+        "reference_conditioning_expected": {
+          "type": "boolean",
+          "description": "True when the brief or selected concept requires attached visual references."
+        },
         "line_items": {
           "type": "array",
           "items": {
@@ -322,15 +345,44 @@
       "properties": {
         "status": {
           "type": "string",
-          "enum": ["pending", "approved", "approved_with_changes", "rejected"],
+          "enum": ["pending", "approved", "approved_with_changes", "rejected", "blocked"],
           "description": "User's approval decision"
+        },
+        "reason": { "type": "string", "description": "Machine-readable reason when approval is blocked." },
+        "message": { "type": "string", "description": "Human-readable approval gate message." },
+        "provider_warning": { "type": "string", "description": "Human-readable warning for explicit provider-risk approval." },
+        "requires_explicit_seedance_approval": {
+          "type": "boolean",
+          "description": "True when Seedance is selected and paid generation requires a separate provider-risk confirmation."
+        },
+        "confirm_seedance_risk": {
+          "type": "boolean",
+          "description": "True only after the user explicitly approved Seedance despite known reference-fidelity risk."
+        },
+        "override_no_references": {
+          "type": "boolean",
+          "description": "True only after the user explicitly approved text-only generation for a reference-conditioned brief."
         },
         "user_notes": { "type": "string", "description": "Any feedback or changes requested" },
         "approved_budget_usd": { "type": "number", "minimum": 0, "description": "Budget the user explicitly approved" }
       },
       "additionalProperties": false
     },
-    "metadata": { "type": "object" }
+    "metadata": { "type": "object" },
+    "reference_asset_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of usable image references surfaced before approval."
+    },
+    "conditioning_mode": {
+      "type": "string",
+      "enum": ["text_to_video", "image_to_video"],
+      "description": "The planned paid-generation conditioning mode surfaced before approval."
+    },
+    "reference_conditioning_expected": {
+      "type": "boolean",
+      "description": "True when the proposal must not be approved without references unless explicitly overridden."
+    }
   },
   "$defs": {
     "taste_profile": {

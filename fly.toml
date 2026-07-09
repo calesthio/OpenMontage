@@ -1,0 +1,44 @@
+app = 'ikawn-ray'
+primary_region = 'sin'
+
+[build]
+
+[processes]
+  app = 'bash scripts/fly-start.sh app'
+
+[env]
+  CREATE_DEMO_PROJECT = 'true'
+  NODE_OPTIONS = '--max-old-space-size=4096'
+  OPENMONTAGE_PROJECTS_DIR = '/data/projects'
+  PORT = '8080'
+  RAY_RENDER_CONCURRENCY = '1'
+  RAY_STAGE_MAX_LLM_ITERATIONS = '8'
+  RAY_STAGE_MAX_TOOL_CALLS = '24'
+  RAY_STAGE_WALL_CLOCK_TIMEOUT_SECONDS = '900'
+  REMOTION_BROWSER_EXECUTABLE = '/usr/local/bin/remotion-browser'
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'suspend'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+  [[http_service.checks]]
+    grace_period = '20s'
+    interval = '15s'
+    method = 'GET'
+    path = '/api/health'
+    timeout = '5s'
+
+[[mounts]]
+  source = 'openmontage_data'
+  destination = '/data'
+  processes = ['app']
+
+[[vm]]
+  processes = ['app']
+  memory = '8gb'
+  cpu_kind = 'performance'
+  cpus = 2

@@ -191,6 +191,31 @@ class VeoVideo(BaseTool):
             return self._file_to_data_uri(path_value)
         return None
 
+    @staticmethod
+    def _fal_failure(message: str, response: Any) -> ToolResult:
+        try:
+            payload: Any = response.json()
+        except Exception:
+            payload = {"detail": response.text[:1000]}
+        error_type = None
+        detail = payload.get("detail") if isinstance(payload, dict) else None
+        if isinstance(detail, list) and detail:
+            first = detail[0]
+            if isinstance(first, dict):
+                error_type = first.get("type")
+                message = first.get("msg") or message
+        elif isinstance(detail, str):
+            message = detail
+        return ToolResult(
+            success=False,
+            error=f"Veo fal.ai error{f' ({error_type})' if error_type else ''}: {message}",
+            data={
+                "provider": "fal.ai",
+                "provider_error_type": error_type,
+                "provider_error": payload,
+            },
+        )
+
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         api_key = self._get_api_key()
         if not api_key:
@@ -292,7 +317,8 @@ class VeoVideo(BaseTool):
                 json=payload,
                 timeout=30,
             )
-            submit_resp.raise_for_status()
+            if not submit_resp.ok:
+                return self._fal_failure("Veo video generation submit failed", submit_resp)
             queue_data = submit_resp.json()
             status_url = queue_data["status_url"]
             response_url = queue_data["response_url"]
@@ -302,13 +328,19 @@ class VeoVideo(BaseTool):
                 time.sleep(5)
                 status_resp = requests.get(status_url, headers=headers, timeout=15)
                 status_resp.raise_for_status()
-                status = status_resp.json().get("status", "UNKNOWN")
+                status_data = status_resp.json()
+                status = status_data.get("status", "UNKNOWN")
                 if status == "COMPLETED":
                     break
                 if status in ("FAILED", "CANCELLED"):
                     return ToolResult(
                         success=False,
                         error=f"Veo video generation {status.lower()}",
+                        data={
+                            "provider": "fal.ai",
+                            "provider_error_type": str(status).lower(),
+                            "provider_error": status_data,
+                        },
                     )
 
             # Fetch result

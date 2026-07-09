@@ -14,5 +14,7 @@ setup(
         "Pillow>=10.0",
         "requests>=2.31",
         "openai>=2.44.0",
+        "boto3>=1.34",
+        "python-multipart>=0.0.9",
     ],
 )

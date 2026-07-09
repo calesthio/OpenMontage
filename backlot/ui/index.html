@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Backlot — Library</title>
+<meta name="theme-color" content="#f0a83c">
+<title>iKawn Ray — Video Agent</title>
+<link rel="icon" href="/ui/ikawn-ray.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/ui/board.css">
 </head>
 <body>
@@ -11,16 +13,53 @@
   <header class="slate">
     <div class="clapper"></div>
     <div>
-      <span class="wordmark">Backlot</span>
-      <h1>Library</h1>
+      <span class="wordmark">iKawn Ray</span>
+      <h1>Video Agent</h1>
     </div>
     <span class="chip" id="count"></span>
     <div class="spacer"></div>
+    <a class="top-action" href="#new">New chat</a>
     <span class="live idle" id="liveBadge"><span class="dot"></span><span id="liveText">IDLE</span></span>
   </header>
+  <section class="ray-shell" id="new">
+    <div class="ray-chat-panel">
+      <div class="panel-head">
+        <h2>Ray Chat</h2>
+        <span class="meta" id="configPills"></span>
+      </div>
+      <div class="chat-transcript" id="chatTranscript" aria-live="polite"></div>
+      <div class="quick-row" id="quickRow"></div>
+      <form class="chat-composer" id="chatForm">
+        <label class="attach-action icon" title="Attach reference images or files" aria-label="Attach reference images or files">
+          <input id="messageFiles" type="file" multiple>
+          +
+        </label>
+        <div class="composer-main">
+          <textarea id="chatInput" rows="2" autocomplete="off" placeholder="Describe the video, duration, format, audience, style, and attach references here."></textarea>
+          <div class="composer-attachments" id="composerAttachments"></div>
+        </div>
+        <div class="composer-actions">
+          <button class="primary-action" id="chatSubmit" type="submit">Send</button>
+        </div>
+      </form>
+      <div class="chat-status-row">
+        <span id="briefReady" class="meta" hidden>Draft</span>
+        <span id="jobStatus" class="job-status"></span>
+      </div>
+    </div>
+    <select id="modelVariant" hidden aria-hidden="true">
+      <option value="grok-imagine-video" selected>Grok Imagine</option>
+      <option value="kling-v3">Kling 3</option>
+      <option value="veo3.1">Veo 3.1</option>
+      <option value="veo3.1-fast">Veo 3.1 Fast</option>
+      <option value="seedance-standard">Seedance 2.0 Standard</option>
+      <option value="seedance-fast">Seedance 2.0 Fast</option>
+    </select>
+  </section>
   <div class="lib-grid" id="grid"></div>
   <p class="hint" id="empty" style="display:none">No projects yet — run a production and it will appear here.</p>
 </div>
 <script type="module" src="/ui/library.js"></script>
+<script type="module" src="/ui/job.js"></script>
 </body>
 </html>

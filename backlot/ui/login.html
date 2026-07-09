@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f0a83c">
+<title>iKawn Ray</title>
+<link rel="icon" href="/ui/ikawn-ray.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/ui/board.css">
+</head>
+<body>
+<div class="wrap auth-wrap">
+  <section class="auth-panel">
+    <div class="clapper"></div>
+    <span class="wordmark">iKawn Ray</span>
+    <h1>Sign in</h1>
+    <p>Use your iKawn OS account to access this Ray workspace.</p>
+    <a class="primary-action" id="loginLink" href="/auth/login?start=1">Continue with iKawn OS</a>
+  </section>
+</div>
+<script>
+const params = new URLSearchParams(location.search);
+const next = params.get("next");
+if (next) document.getElementById("loginLink").href = `/auth/login?start=1&next=${encodeURIComponent(next)}`;
+</script>
+</body>
+</html>

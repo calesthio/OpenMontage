@@ -217,6 +217,7 @@ def _build_stage_rail(
 # ---------------------------------------------------------------------------
 
 ARTIFACT_FILES = {
+    "job_request": "job_request.json",
     "research_brief": "research_brief.json",
     "brief": "brief.json",
     "proposal_packet": "proposal_packet.json",

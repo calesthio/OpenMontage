@@ -59,8 +59,8 @@ class GrokVideo(BaseTool):
 
     dependencies = []
     install_instructions = (
-        "Set XAI_API_KEY to your xAI API key.\n"
-        "  Get one from the xAI developer console"
+        "Set FAL_KEY / FAL_AI_API_KEY for fal.ai-hosted xAI Grok Imagine.\n"
+        "XAI_API_KEY is also supported as a direct fallback."
     )
     agent_skills = ["grok-media", "ai-video-gen"]
 
@@ -138,13 +138,21 @@ class GrokVideo(BaseTool):
     )
     retry_policy = RetryPolicy(max_retries=2, retryable_errors=["rate_limit", "timeout"])
     idempotency_key_fields = ["prompt", "operation", "model", "duration", "aspect_ratio", "resolution"]
-    side_effects = ["writes video file to output_path", "calls xAI video API"]
+    side_effects = ["writes video file to output_path", "calls fal.ai or xAI video API"]
     user_visible_verification = ["Watch generated clip for motion quality and prompt fidelity"]
 
     def get_status(self) -> ToolStatus:
-        if os.environ.get("XAI_API_KEY"):
+        if self._fal_api_key() or self._xai_api_key():
             return ToolStatus.AVAILABLE
         return ToolStatus.UNAVAILABLE
+
+    @staticmethod
+    def _fal_api_key() -> str | None:
+        return os.environ.get("FAL_KEY") or os.environ.get("FAL_AI_API_KEY")
+
+    @staticmethod
+    def _xai_api_key() -> str | None:
+        return os.environ.get("XAI_API_KEY")
 
     @staticmethod
     def _normalize_resolution(value: str | None) -> str:
@@ -213,7 +221,175 @@ class GrokVideo(BaseTool):
         return payload
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
-        api_key = os.environ.get("XAI_API_KEY")
+        if self._fal_api_key():
+            return self._execute_fal(inputs)
+        if self._xai_api_key():
+            return self._execute_xai(inputs)
+        return ToolResult(
+            success=False,
+            error="FAL_KEY / FAL_AI_API_KEY or XAI_API_KEY not set. " + self.install_instructions,
+        )
+
+    def _build_fal_payload(self, inputs: dict[str, Any]) -> tuple[str, dict[str, Any]]:
+        operation = inputs.get("operation", "text_to_video")
+        endpoint_map = {
+            "text_to_video": "xai/grok-imagine-video/text-to-video",
+            "image_to_video": "xai/grok-imagine-video/image-to-video",
+            "reference_to_video": "xai/grok-imagine-video/reference-to-video",
+        }
+        endpoint = endpoint_map.get(operation)
+        if not endpoint:
+            raise ValueError(f"Unsupported Grok operation for fal.ai: {operation}")
+
+        payload: dict[str, Any] = {
+            "prompt": inputs["prompt"],
+            "duration": int(inputs.get("duration", 6)),
+            "resolution": self._normalize_resolution(inputs.get("resolution")),
+        }
+        if inputs.get("aspect_ratio"):
+            payload["aspect_ratio"] = inputs["aspect_ratio"]
+
+        if operation == "image_to_video":
+            image_url = inputs.get("image_url")
+            if not image_url and inputs.get("image_path"):
+                image_url = _file_to_data_uri(inputs["image_path"])
+            if not image_url:
+                raise ValueError("image_to_video requires image_url or image_path")
+            payload["image_url"] = image_url
+        elif operation == "reference_to_video":
+            refs = list(inputs.get("reference_image_urls") or [])
+            refs.extend(_file_to_data_uri(path) for path in (inputs.get("reference_image_paths") or []))
+            if not refs:
+                raise ValueError("reference_to_video requires reference_image_urls or reference_image_paths")
+            if len(refs) > 7:
+                raise ValueError(f"Grok Imagine reference_to_video on fal.ai accepts at most 7 images; got {len(refs)}")
+            payload["reference_image_urls"] = refs
+
+        return endpoint, payload
+
+    @staticmethod
+    def _fal_failure(message: str, response: Any) -> ToolResult:
+        try:
+            payload: Any = response.json()
+        except Exception:
+            payload = {"detail": response.text[:1000]}
+        error_type = None
+        detail = payload.get("detail") if isinstance(payload, dict) else None
+        if isinstance(detail, list) and detail:
+            first = detail[0]
+            if isinstance(first, dict):
+                error_type = first.get("type")
+                message = first.get("msg") or message
+        elif isinstance(detail, str):
+            message = detail
+        return ToolResult(
+            success=False,
+            error=f"Grok fal.ai error{f' ({error_type})' if error_type else ''}: {message}",
+            data={
+                "provider": "fal.ai/xai",
+                "provider_error_type": error_type,
+                "provider_error": payload,
+            },
+        )
+
+    def _execute_fal(self, inputs: dict[str, Any]) -> ToolResult:
+        api_key = self._fal_api_key()
+        if not api_key:
+            return ToolResult(
+                success=False,
+                error="FAL_KEY / FAL_AI_API_KEY not set. " + self.install_instructions,
+            )
+
+        import requests
+        from tools.video._shared import probe_output
+
+        start = time.time()
+        headers = {
+            "Authorization": f"Key {api_key}",
+            "Content-Type": "application/json",
+        }
+
+        try:
+            endpoint, payload = self._build_fal_payload(inputs)
+            submit_resp = requests.post(
+                f"https://queue.fal.run/{endpoint}",
+                headers=headers,
+                json=payload,
+                timeout=30,
+            )
+            if not submit_resp.ok:
+                return self._fal_failure("Grok fal.ai submit failed", submit_resp)
+            queue_data = submit_resp.json()
+            status_url = queue_data["status_url"]
+            response_url = queue_data["response_url"]
+            request_id = queue_data.get("request_id")
+
+            timeout_seconds = int(inputs.get("timeout_seconds", 900))
+            poll_interval = int(inputs.get("poll_interval_seconds", 5))
+            deadline = time.time() + timeout_seconds
+
+            while time.time() < deadline:
+                time.sleep(poll_interval)
+                status_resp = requests.get(status_url, headers=headers, timeout=15)
+                status_resp.raise_for_status()
+                status_data = status_resp.json()
+                status = status_data.get("status", "UNKNOWN")
+                if status == "COMPLETED":
+                    break
+                if status in {"FAILED", "CANCELLED"}:
+                    return ToolResult(
+                        success=False,
+                        error=f"Grok fal.ai generation {status.lower()}",
+                        data={
+                            "provider": "fal.ai/xai",
+                            "provider_error_type": str(status).lower(),
+                            "provider_error": status_data,
+                        },
+                    )
+            else:
+                return ToolResult(success=False, error="Grok fal.ai generation timed out")
+
+            result_resp = requests.get(response_url, headers=headers, timeout=30)
+            if not result_resp.ok:
+                return self._fal_failure("Grok fal.ai result fetch failed", result_resp)
+            data = result_resp.json()
+
+            video_url = (data.get("video") or {}).get("url")
+            if not video_url:
+                return ToolResult(success=False, error="Grok fal.ai output missing video.url")
+
+            download = requests.get(video_url, timeout=300)
+            download.raise_for_status()
+            output_path = Path(inputs.get("output_path", "grok_video_output.mp4"))
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_bytes(download.content)
+
+        except Exception as e:
+            return ToolResult(success=False, error=f"Grok fal.ai video generation failed: {e}")
+
+        probed = probe_output(output_path)
+        return ToolResult(
+            success=True,
+            data={
+                "provider": "fal.ai/xai",
+                "model": endpoint,
+                "prompt": inputs["prompt"],
+                "operation": inputs.get("operation", "text_to_video"),
+                "request_id": request_id,
+                "output": str(output_path),
+                "output_path": str(output_path),
+                "format": "mp4",
+                "fal_response": data.get("video", {}),
+                **probed,
+            },
+            artifacts=[str(output_path)],
+            cost_usd=self.estimate_cost(inputs),
+            duration_seconds=round(time.time() - start, 2),
+            model=endpoint,
+        )
+
+    def _execute_xai(self, inputs: dict[str, Any]) -> ToolResult:
+        api_key = self._xai_api_key()
         if not api_key:
             return ToolResult(
                 success=False,

@@ -18,6 +18,23 @@ let activeRender = 0;
 let replay = null;          // {t0, t1, t, playing} — replay mode when non-null
 let firstPaint = true;
 
+const MODEL_LABELS = {
+  "grok-imagine-video": "Grok Imagine",
+  "kling-v3": "Kling 3",
+  "veo3.1": "Veo 3.1",
+  "veo3.1-fast": "Veo 3.1 Fast",
+  "seedance-standard": "Seedance 2.0 Standard",
+  "seedance-fast": "Seedance 2.0 Fast",
+};
+
+function modelLabel(videoModel) {
+  return MODEL_LABELS[videoModel] || videoModel || "selected provider";
+}
+
+function isSeedanceModel(videoModel) {
+  return String(videoModel || "").startsWith("seedance");
+}
+
 // ---------------------------------------------------------------------------
 // header slate
 // ---------------------------------------------------------------------------
@@ -82,7 +99,7 @@ function renderSlate(s) {
 // ---------------------------------------------------------------------------
 
 function stageSub(st) {
-  if (st.status === "awaiting_human") return "awaiting your approval\nreply in chat to continue";
+  if (st.status === "awaiting_human") return "awaiting your approval\nreview controls below";
   if (st.status === "in_progress" && st.stalled) {
     return `stalled? no activity for ${st.stalled_minutes}m\nask the agent for status`;
   }
@@ -580,11 +597,271 @@ function renderNoState(s) {
 function renderAwaitingNotice(s) {
   const awaiting = s.stages.find((x) => x.status === "awaiting_human");
   if (!awaiting) return null;
+  const isProposalGate = awaiting.name === "proposal";
+  const blocker = s.artifacts.asset_manifest?.metadata?.blocker || null;
+  const reviewRequired = s.artifacts.asset_manifest?.metadata?.review_required || null;
+  const isAssetBlocker = awaiting.name === "assets" && blocker;
+  const isAssetReview = awaiting.name === "assets" && reviewRequired;
+  const costEstimate = s.artifacts.proposal_packet?.cost_estimate || {};
+  const estimate = costEstimate.total_estimated_usd;
+  const initialEstimate = costEstimate.initial_paid_generation_estimate_usd;
+  const sampleFirst = costEstimate.sample_first === true;
   return el("div", { class: "notice" },
     el("span", { style: "font-size:calc(16px * var(--fs-scale))" }, "◈"),
     el("span", {},
       el("b", {}, `The ${awaiting.name} stage is waiting for your review. `),
-      "The agent is paused at this gate — reply ", el("b", {}, "in chat"), " to approve or request changes."));
+      isProposalGate
+        ? sampleFirst
+          ? `No paid video generation has run. First approval generates only a reference-fidelity sample: ${fmtMoney(Number(initialEstimate || 0))}. Full estimated batch: ${fmtMoney(Number(estimate || 0))}.`
+          : `No paid video generation has run. Estimated video-generation cost: ${fmtMoney(Number(estimate || 0))}.`
+        : isAssetBlocker
+          ? `${blocker.provider || "The provider"} returned no media for ${blocker.scene_id || "a scene"}. Choose a retry path before spending more.`
+        : isAssetReview
+          ? `${reviewRequired.message || "Review generated clips against the reference images before continuing."}`
+        : "The agent is paused at this gate."),
+    isProposalGate ? el("button", {
+      type: "button",
+      class: "primary-action notice-action",
+      onclick: approvePaidGeneration,
+    }, "Approve paid generation") : null,
+    isAssetBlocker ? el("button", {
+      type: "button",
+      class: "primary-action notice-action",
+      onclick: () => retryPaidGeneration("grok-imagine-video"),
+    }, "Retry with Grok via Fal") : null,
+    isAssetReview ? el("button", {
+      type: "button",
+      class: "primary-action notice-action",
+      onclick: approveAssetReview,
+    }, reviewRequired.phase === "sample" ? "Accept sample and continue" : "Accept clips and compose") : null);
+}
+
+function referenceAssetUrl(asset) {
+  const url = String(asset?.url || asset?.public_url || "");
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  const path = String(asset?.path || "");
+  if (path) return mediaURL(projectId, path);
+  return "";
+}
+
+function isImageReference(asset) {
+  const contentType = String(asset?.content_type || "").toLowerCase();
+  const path = String(asset?.path || asset?.filename || asset?.url || "").toLowerCase();
+  return contentType.startsWith("image/") || /\.(png|jpe?g|webp|gif)$/i.test(path);
+}
+
+function renderCurrentReferences(req) {
+  const refs = Array.isArray(req.reference_assets) ? req.reference_assets : [];
+  if (!refs.length) {
+    return el("div", { class: "reference-empty" }, "No reference files attached.");
+  }
+  return el("div", { class: "reference-grid" }, refs.map((asset, idx) => {
+    const url = referenceAssetUrl(asset);
+    const label = asset.filename || asset.path || `Reference ${idx + 1}`;
+    return el("a", {
+      class: "reference-thumb",
+      href: url || "#",
+      target: url ? "_blank" : null,
+      rel: url ? "noreferrer" : null,
+      title: label,
+    },
+      url && isImageReference(asset)
+        ? el("img", { src: url, loading: "lazy", alt: label })
+        : el("span", { class: "reference-file" }, "FILE"),
+      el("small", {}, label));
+  }));
+}
+
+function renderRevisePlan(s) {
+  const awaiting = s.stages.find((x) => x.status === "awaiting_human");
+  if (!awaiting || awaiting.name !== "proposal") return null;
+  const req = s.artifacts.job_request || {};
+  const model = req.video_model || "grok-imagine-video";
+  const aspect = req.aspect_ratio || "9:16";
+  const option = (value, label) => el("option", {
+    value,
+    selected: value === model ? "selected" : null,
+  }, label);
+  const aspectOption = (value) => el("option", {
+    value,
+    selected: value === aspect ? "selected" : null,
+  }, value);
+  return el("section", { class: "panel revise-panel" },
+    el("div", { class: "panel-head" },
+      el("h2", {}, "Revise Plan"),
+      el("span", { class: "meta" }, "no paid generation")),
+    el("form", { class: "revise-form", onsubmit: submitPlanRevision },
+      el("label", {},
+        el("span", {}, "Duration seconds"),
+        el("input", { name: "duration_seconds", type: "number", min: "5", max: "180", step: "1", value: req.duration_seconds || "" })),
+      el("label", {},
+        el("span", {}, "Scenes"),
+        el("input", { name: "scene_count", type: "number", min: "1", max: "12", step: "1", value: req.scene_count || "" })),
+      el("label", {},
+        el("span", {}, "Format"),
+        el("select", { name: "aspect_ratio" },
+          ["9:16", "16:9", "1:1", "4:3", "3:4"].map(aspectOption))),
+      el("label", {},
+        el("span", {}, "Video model"),
+        el("select", { name: "video_model" },
+          option("grok-imagine-video", "Grok Imagine — via Fal"),
+          option("kling-v3", "Kling 3 — single-ref image-to-video"),
+          option("veo3.1", "Veo 3.1 — higher quality"),
+          option("veo3.1-fast", "Veo 3.1 Fast — lower cost"),
+          option("seedance-standard", "Seedance 2.0 Standard — opt-in only"),
+          option("seedance-fast", "Seedance 2.0 Fast — opt-in only"))),
+      el("label", { class: "wide" },
+        el("span", {}, "Brief"),
+        el("textarea", { name: "prompt", rows: "5" }, req.prompt || "")),
+      el("div", { class: "reference-section wide" },
+        el("span", { class: "reference-title" }, "Current reference files"),
+        renderCurrentReferences(req)),
+      el("label", { class: "wide" },
+        el("span", {}, "Replace reference files"),
+        el("input", { name: "reference_files", type: "file", multiple: "multiple" }),
+        el("small", { class: "model-help" },
+          `${(req.reference_assets || []).length} current reference file${(req.reference_assets || []).length === 1 ? "" : "s"}. Leave empty to keep them.`)),
+      el("div", { class: "revise-actions wide" },
+        el("button", { type: "submit", class: "primary-action" }, "Update plan"),
+        el("span", { class: "job-status" }, "Replans script, scenes, and estimate before approval."))));
+}
+
+async function submitPlanRevision(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const button = form.querySelector("button[type=submit]");
+  const payload = Object.fromEntries(new FormData(form).entries());
+  delete payload.reference_files;
+  payload.duration_seconds = Number(payload.duration_seconds);
+  payload.scene_count = Number(payload.scene_count);
+  button.disabled = true;
+  button.textContent = "Updating";
+  try {
+    const files = form.elements.reference_files?.files || [];
+    if (files.length) {
+      const uploadBody = new FormData();
+      for (const file of files) uploadBody.append("files", file);
+      const uploaded = await fetch(`/api/project/${encodedProjectId}/uploads`, {
+        method: "POST",
+        body: uploadBody,
+      }).then(async (res) => {
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || data.detail || `Upload HTTP ${res.status}`);
+        }
+        return res.json();
+      });
+      payload.reference_assets = uploaded.files || [];
+    }
+    await fetch(`/api/jobs/${encodedProjectId}/revise-plan`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).then(async (res) => {
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || data.detail || `HTTP ${res.status}`);
+      }
+    });
+    await refresh();
+  } catch (err) {
+    window.alert(String(err.message || err));
+  } finally {
+    button.disabled = false;
+    button.textContent = "Update plan";
+  }
+}
+
+async function approvePaidGeneration() {
+  const req = state?.artifacts?.job_request || {};
+  const videoModel = req.video_model || "grok-imagine-video";
+  const body = { confirm_paid_generation: true };
+  const ok = window.confirm(`This starts paid video generation with ${modelLabel(videoModel)}. Continue?`);
+  if (!ok) return;
+  if (isSeedanceModel(videoModel)) {
+    const seedanceOk = window.confirm("Seedance is opt-in only after the failed reference-fidelity run. Confirm you explicitly want to spend credits with Seedance.");
+    if (!seedanceOk) return;
+    body.confirm_seedance_risk = true;
+  }
+  try {
+    await fetch(`/api/jobs/${encodedProjectId}/approve-paid-generation`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).then(async (res) => {
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.detail || data.error || `HTTP ${res.status}`);
+      }
+    });
+    await refresh();
+  } catch (err) {
+    window.alert(String(err.message || err));
+  }
+}
+
+async function approveAssetReview() {
+  const ok = window.confirm("Only continue if the generated clips visibly match the reference product. Continue?");
+  if (!ok) return;
+  try {
+    await fetch(`/api/jobs/${encodedProjectId}/approve-asset-review`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confirm_asset_review_passed: true }),
+    }).then(async (res) => {
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.detail || data.error || `HTTP ${res.status}`);
+      }
+    });
+    await refresh();
+  } catch (err) {
+    window.alert(String(err.message || err));
+  }
+}
+
+function renderFailureNotice(s) {
+  const failed = s.stages.find((x) => x.name === "assets" && x.status === "failed");
+  if (!failed) return null;
+  const blocker = s.artifacts.asset_manifest?.metadata?.blocker || null;
+  const error = blocker?.message || failed.error || "Video generation failed.";
+  return el("div", { class: "notice", style: "border-color:#4a1f1f;background:rgba(120,20,20,.16)" },
+    el("span", { style: "font-size:calc(16px * var(--fs-scale));color:#ff6b5f" }, "×"),
+    el("span", {},
+      el("b", {}, "Assets generation failed. "),
+      String(error).slice(0, 220),
+      " No retry will run unless you approve it."),
+    el("button", {
+      type: "button",
+      class: "primary-action notice-action",
+      onclick: () => retryPaidGeneration("grok-imagine-video"),
+    }, "Retry with Grok via Fal"));
+}
+
+async function retryPaidGeneration(videoModel = "grok-imagine-video") {
+  const body = { confirm_paid_generation: true, video_model: videoModel };
+  const ok = window.confirm(`This starts a new paid generation attempt with ${modelLabel(videoModel)}. Continue?`);
+  if (!ok) return;
+  if (isSeedanceModel(videoModel)) {
+    const seedanceOk = window.confirm("Seedance retry requires explicit provider-risk approval. Continue with Seedance anyway?");
+    if (!seedanceOk) return;
+    body.confirm_seedance_risk = true;
+  }
+  try {
+    await fetch(`/api/jobs/${encodedProjectId}/retry-paid-generation`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).then(async (res) => {
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.detail || data.error || `HTTP ${res.status}`);
+      }
+    });
+    await refresh();
+  } catch (err) {
+    window.alert(String(err.message || err));
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -766,6 +1043,10 @@ function render() {
   if (drawer) app.append(drawer);
   const awaitingNotice = renderAwaitingNotice(s);
   if (awaitingNotice) app.append(awaitingNotice);
+  const revisePlan = renderRevisePlan(s);
+  if (revisePlan) app.append(revisePlan);
+  const failureNotice = renderFailureNotice(s);
+  if (failureNotice) app.append(failureNotice);
   const noState = renderNoState(s);
   if (noState) app.append(noState);
 

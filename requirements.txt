@@ -13,3 +13,5 @@ openai>=2.44.0         # Videos API support for Sora 2
 fastapi>=0.110
 uvicorn>=0.29
 watchfiles>=0.21
+boto3>=1.34
+python-multipart>=0.0.9

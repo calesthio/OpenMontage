@@ -312,6 +312,7 @@
             "type": "object",
             "required": ["tool", "operation", "estimated_usd"],
             "properties": {
+              "scene_id": { "type": "string", "description": "Scene this line item estimates, when applicable" },
               "tool": { "type": "string" },
               "operation": { "type": "string", "description": "What this tool call does" },
               "quantity": { "type": "number", "description": "How many calls, e.g., 6 images, 1 TTS run" },
@@ -326,9 +327,13 @@
           "minimum": 0,
           "description": "User-set budget cap, if any"
         },
+        "budget_remaining_usd": {
+          "type": ["number", "null"],
+          "description": "Estimated remaining budget after the full planned generation, if a cap is set"
+        },
         "budget_verdict": {
           "type": "string",
-          "enum": ["within_budget", "near_limit", "over_budget", "no_budget_set"],
+          "enum": ["within_budget", "near_limit", "over_budget", "exceeds_budget", "sample_within_budget_full_batch_exceeds", "no_budget_set"],
           "description": "How the estimate compares to the budget cap"
         },
         "savings_options": {

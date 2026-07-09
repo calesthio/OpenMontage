@@ -1422,18 +1422,24 @@ def _generate_assets(
     sample_only: bool = False,
 ) -> dict[str, Any]:
     model_config = _video_model_config_from_request(request_data)
-    tool = _video_tool(model_config)
+    from tools.video.video_selector import VideoSelector
+
+    selector = VideoSelector()
     assets: list[dict[str, Any]] = []
     r2_assets: list[dict[str, Any]] = []
+    generation_runs: list[dict[str, Any]] = []
+    chain_frames: list[dict[str, Any]] = []
     total_cost = 0.0
     scenes = scene_plan["scenes"]
     scenes_to_generate = scenes[:1] if sample_only and scenes else scenes
+    reference_image_urls = _reference_image_urls(request_data, limit=_reference_limit(model_config))
+    previous_last_frame_path: Path | None = None
     write_checkpoint(PROJECTS_DIR, project_id, "assets", "in_progress", {}, pipeline_type="cinematic")
     for idx, scene in enumerate(scenes_to_generate, start=1):
         rel = f"assets/video/{scene['id']}.mp4"
         out = project_dir / rel
-        reference_image_urls = _reference_image_urls(request_data, limit=_reference_limit(model_config))
-        operation = _video_operation(model_config, reference_image_urls)
+        chain_source_for_scene = previous_last_frame_path
+        operation = _video_operation_for_scene(model_config, reference_image_urls, chain_source_for_scene, idx)
         duration = _scene_duration_seconds(scene, request_data, len(scenes), model_config)
         prompt = _video_prompt(request_data, scene, model_config, reference_image_urls, scene_index=idx)
         duration_value = _duration_value(model_config, duration)
@@ -1445,6 +1451,7 @@ def _generate_assets(
             video_model=model_config["id"],
             reference_image_urls=reference_image_urls,
         )
+        generation_signature["chain_source_hash"] = _file_sha1(chain_source_for_scene) if chain_source_for_scene else ""
         reused = out.is_file() and out.stat().st_size > 0 and _clip_metadata_matches(out, generation_signature)
         result = None
         reused_cost = _event_cost_for_scene(project_dir, scene["id"]) if reused else 0.0
@@ -1452,6 +1459,8 @@ def _generate_assets(
             generation_inputs = {
                 "prompt": prompt,
                 "operation": operation,
+                "preferred_provider": model_config["provider"],
+                "allowed_providers": [model_config["provider"]],
                 "duration": duration_value,
                 "aspect_ratio": request_data.get("aspect_ratio", "16:9"),
                 "resolution": model_config["resolution"],
@@ -1470,14 +1479,14 @@ def _generate_assets(
                 generation_inputs["model_variant"] = model_config["model_variant"]
             elif model_config["provider"] == "grok":
                 generation_inputs["model"] = model_config["model_variant"]
-            if reference_image_urls:
-                if operation == "image_to_video":
-                    generation_inputs["image_url"] = reference_image_urls[0]
-                else:
-                    generation_inputs["reference_image_urls"] = reference_image_urls
-            result = tool.execute({
-                **generation_inputs,
-            })
+            _apply_reference_and_chain_inputs(
+                generation_inputs,
+                model_config,
+                reference_image_urls,
+                chain_source_for_scene,
+                scene_index=idx,
+            )
+            result = selector.execute(generation_inputs)
             if not result.success:
                 if _is_no_media_generated(result):
                     asset_manifest = _blocked_asset_manifest(
@@ -1511,33 +1520,62 @@ def _generate_assets(
                 "generated_at": now_iso(),
                 **generation_signature,
             })
+        frame_rel = f"assets/chaining/{scene['id']}_last.jpg"
+        frame_path = project_dir / frame_rel
+        if _extract_last_frame(out, frame_path):
+            previous_last_frame_path = frame_path
+            chain_upload = storage.upload_file(frame_path, project_id, frame_rel)
+            chain_frames.append({
+                "scene_id": scene["id"],
+                "path": frame_rel,
+                **chain_upload,
+            })
+        else:
+            previous_last_frame_path = None
         upload = storage.upload_file(out, project_id, rel)
         r2_assets.append({"path": rel, **upload})
         scene_cost = float((result.cost_usd if result else reused_cost) or 0)
         total_cost += scene_cost
         qa_checks = _qa_video_clip(out, duration)
+        result_data = result.data if result is not None and isinstance(result.data, dict) else {}
+        generation_runs.append({
+            "scene_id": scene["id"],
+            "selector": "video_selector",
+            "selected_tool": result_data.get("selected_tool") or model_config["tool_name"],
+            "selected_provider": result_data.get("selected_provider") or model_config["provider"],
+            "operation": operation,
+            "chaining_mode": _chaining_mode_for_scene(model_config, chain_source_for_scene, idx),
+            "chain_source_used": bool(idx > 1 and chain_source_for_scene),
+            "output_path": rel,
+            "cost_usd": scene_cost,
+        })
         assets.append({
             "id": f"vid_{scene['id']}",
             "type": "video",
             "path": rel,
-            "source_tool": model_config["tool_name"],
+            "source_tool": result_data.get("selected_tool") or "video_selector",
             "scene_id": scene["id"],
             "prompt": prompt,
-            "model": (result.model if result else None) or model_config["model_variant"],
+            "model": (result.model if result else None) or result_data.get("model") or model_config["model_variant"],
             "cost_usd": scene_cost,
             "duration_seconds": float((result.data.get("duration_seconds") if result else 0) or duration),
             "resolution": (result.data.get("resolution") if result else None) or model_config["resolution"],
             "format": "mp4",
-            "provider": model_config["provider_label"],
+            "provider": result_data.get("selected_provider") or model_config["provider_label"],
             "quality_score": 0.8,
             "qa_checks": qa_checks,
             "generation_summary": (
                 "Reused an existing generated clip from this Ray run."
                 if reused else
-                f"Generated by hosted Ray UI using {model_config['label']} {operation.replace('_', '-')}."
+                f"Generated through OpenMontage video_selector using {model_config['label']} {operation.replace('_', '-')}."
             ),
         })
-        partial = {"completed_scene_ids": [a["scene_id"] for a in assets], "r2_assets": r2_assets}
+        partial = {
+            "completed_scene_ids": [a["scene_id"] for a in assets],
+            "r2_assets": r2_assets,
+            "chain_frames": chain_frames,
+            "generation_runs": generation_runs,
+        }
         write_checkpoint(
             PROJECTS_DIR,
             project_id,
@@ -1554,6 +1592,9 @@ def _generate_assets(
         "total_cost_usd": round(total_cost, 2),
         "metadata": {
             "r2_assets": r2_assets,
+            "chain_frames": chain_frames,
+            "generation_runs": generation_runs,
+            "generation_adapter": "hosted_pipeline.video_selector_sequence",
             "generated_scene_count": len(assets),
             "total_scene_count": len(scenes),
             "sample_only": bool(sample_only),
@@ -1904,6 +1945,42 @@ def _clip_metadata_matches(video_path: Path, signature: dict[str, Any]) -> bool:
     return all(data.get(key) == value for key, value in signature.items())
 
 
+def _file_sha1(path: Path | None) -> str:
+    if not path or not path.is_file():
+        return ""
+    digest = hashlib.sha1()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _extract_last_frame(video_path: Path, output_path: Path) -> bool:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        proc = subprocess.run(
+            [
+                "ffmpeg",
+                "-y",
+                "-loglevel",
+                "error",
+                "-sseof",
+                "-0.2",
+                "-i",
+                str(video_path),
+                "-frames:v",
+                "1",
+                str(output_path),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except Exception:
+        return False
+    return proc.returncode == 0 and output_path.is_file() and output_path.stat().st_size > 0
+
+
 def _event_cost_for_scene(project_dir: Path, scene_id: str) -> float:
     events_path = project_dir / "events.jsonl"
     if not events_path.is_file():
@@ -1991,6 +2068,63 @@ def _video_operation(model_config: dict[str, Any], reference_image_urls: list[st
     if model_config["provider"] == "kling":
         return "image_to_video"
     return "reference_to_video"
+
+
+def _video_operation_for_scene(
+    model_config: dict[str, Any],
+    reference_image_urls: list[str],
+    previous_last_frame_path: Path | None,
+    scene_index: int,
+) -> str:
+    if scene_index > 1 and previous_last_frame_path and previous_last_frame_path.is_file():
+        if model_config["provider"] == "veo" and reference_image_urls:
+            return "first_last_frame_to_video"
+        return "image_to_video"
+    return _video_operation(model_config, reference_image_urls)
+
+
+def _apply_reference_and_chain_inputs(
+    generation_inputs: dict[str, Any],
+    model_config: dict[str, Any],
+    reference_image_urls: list[str],
+    previous_last_frame_path: Path | None,
+    *,
+    scene_index: int,
+) -> None:
+    if scene_index > 1 and previous_last_frame_path and previous_last_frame_path.is_file():
+        if model_config["provider"] == "veo" and reference_image_urls:
+            generation_inputs["first_frame_path"] = str(previous_last_frame_path)
+            generation_inputs["last_frame_url"] = reference_image_urls[(scene_index - 1) % len(reference_image_urls)]
+            return
+        generation_inputs["reference_image_path"] = str(previous_last_frame_path)
+        generation_inputs["image_path"] = str(previous_last_frame_path)
+        if model_config["provider"] == "seedance" and reference_image_urls:
+            generation_inputs["end_image_url"] = reference_image_urls[(scene_index - 1) % len(reference_image_urls)]
+        return
+
+    if not reference_image_urls:
+        return
+    if generation_inputs.get("operation") == "image_to_video":
+        generation_inputs["image_url"] = reference_image_urls[0]
+        generation_inputs["reference_image_url"] = reference_image_urls[0]
+    else:
+        generation_inputs["reference_image_urls"] = reference_image_urls
+
+
+def _chaining_mode_for_scene(
+    model_config: dict[str, Any],
+    previous_last_frame_path: Path | None,
+    scene_index: int,
+) -> str:
+    if scene_index <= 1:
+        return "none"
+    if not previous_last_frame_path:
+        return "missing_previous_last_frame"
+    if model_config["provider"] == "veo":
+        return "first_last_frame_to_video"
+    if model_config["provider"] == "seedance":
+        return "image_to_video_with_end_image_url"
+    return "image_to_video_from_previous_last_frame"
 
 
 def _duration_value(model_config: dict[str, Any], seconds: int) -> str | int:

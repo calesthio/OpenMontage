@@ -29,6 +29,11 @@
           "resolution": { "type": "string" },
           "format": { "type": "string" },
           "quality_score": { "type": "number", "minimum": 0, "maximum": 1 },
+          "qa_checks": {
+            "type": "object",
+            "description": "Automated QA checks for generated media, such as duration, audio, and visual-edge warnings.",
+            "additionalProperties": true
+          },
           "subtype": { "type": "string", "description": "Sub-classification (e.g. 'background', 'stock', 'generated')" },
           "generation_summary": { "type": "string", "description": "Brief summary of how the asset was generated or sourced" },
           "provider": { "type": "string", "description": "Provider name (e.g. pixabay, google_imagen)" },

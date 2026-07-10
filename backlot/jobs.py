@@ -33,6 +33,8 @@ VISUAL_PROMPT_BANNED_WORDS = ("vignette", "matte", "frame", "border")
 DEFAULT_END_CARD_TAGLINE = "Handcrafted. Heirloom. Yours."
 DEFAULT_END_CARD_CTA = "Enquire now"
 ASPECT_RATIO_TOLERANCE = 0.025
+KLING_REFERENCE_PREPROCESS_VERSION = "kling-start-frame-crop-fill-v2"
+KLING_REFERENCE_PREPROCESS_COMPATIBLE_VERSIONS = {"kling-start-frame-aspect-pad-v1"}
 VIDEO_MODELS: dict[str, dict[str, Any]] = {
     "grok-imagine-video": {
         "id": "grok-imagine-video",
@@ -1604,7 +1606,7 @@ def _prepare_kling_reference_frame(
     aspect_ratio: str,
 ) -> Path:
     try:
-        from PIL import Image, ImageEnhance, ImageFilter, ImageOps
+        from PIL import Image, ImageOps
     except Exception as exc:
         raise JobError(f"Pillow is required to prepare Kling reference frames: {exc}") from exc
 
@@ -1620,15 +1622,7 @@ def _prepare_kling_reference_frame(
         raise JobError(f"Failed to load Kling reference image before paid generation: {exc}") from exc
 
     resampling = getattr(getattr(Image, "Resampling", Image), "LANCZOS")
-    background = ImageOps.fit(image, target, method=resampling)
-    background = background.filter(ImageFilter.GaussianBlur(radius=max(target) / 32))
-    background = ImageEnhance.Brightness(background).enhance(0.92)
-
-    foreground = image.copy()
-    foreground.thumbnail(target, resampling)
-    x = (target[0] - foreground.width) // 2
-    y = (target[1] - foreground.height) // 2
-    background.paste(foreground, (x, y))
+    background = ImageOps.fit(image, target, method=resampling, centering=(0.5, 0.5))
 
     output = project_dir / "assets" / "references" / f"{scene_id}_kling_{str(aspect_ratio).replace(':', 'x')}_start.png"
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -1675,11 +1669,11 @@ def _apply_model_specific_generation_inputs(
         generation_inputs["original_reference_image_url"] = original_url
         generation_inputs["reference_frame_preprocess"] = {
             "provider": "kling",
-            "version": "kling-start-frame-aspect-pad-v1",
+            "version": KLING_REFERENCE_PREPROCESS_VERSION,
             "source_url": original_url,
             "prepared_path": str(prepared.relative_to(project_dir)),
             "target_aspect_ratio": generation_inputs.get("aspect_ratio") or request_data.get("aspect_ratio"),
-            "strategy": "blurred-cover-background-with-contained-reference",
+            "strategy": "crop-to-fill-reference",
         }
         generation_inputs.pop("image_url", None)
         generation_inputs.pop("reference_image_url", None)
@@ -1730,7 +1724,7 @@ def _generate_assets(
             generation_signature["all_reference_hash"] = hashlib.sha1(
                 "\n".join(all_reference_image_urls).encode("utf-8")
             ).hexdigest()
-            generation_signature["reference_frame_preprocess_version"] = "kling-start-frame-aspect-pad-v1"
+            generation_signature["reference_frame_preprocess_version"] = KLING_REFERENCE_PREPROCESS_VERSION
         reused = out.is_file() and out.stat().st_size > 0 and _clip_metadata_matches(out, generation_signature)
         result = None
         generation_inputs: dict[str, Any] = {}
@@ -2317,6 +2311,16 @@ def _clip_metadata_path(video_path: Path) -> Path:
     return video_path.with_suffix(video_path.suffix + ".json")
 
 
+def _clip_metadata_value_matches(key: str, actual: Any, expected: Any) -> bool:
+    if (
+        key == "reference_frame_preprocess_version"
+        and expected == KLING_REFERENCE_PREPROCESS_VERSION
+        and actual in KLING_REFERENCE_PREPROCESS_COMPATIBLE_VERSIONS
+    ):
+        return True
+    return actual == expected
+
+
 def _clip_metadata_matches(video_path: Path, signature: dict[str, Any]) -> bool:
     metadata = _clip_metadata_path(video_path)
     if not metadata.is_file():
@@ -2325,7 +2329,7 @@ def _clip_metadata_matches(video_path: Path, signature: dict[str, Any]) -> bool:
         data = json.loads(metadata.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return False
-    return all(data.get(key) == value for key, value in signature.items())
+    return all(_clip_metadata_value_matches(key, data.get(key), value) for key, value in signature.items())
 
 
 def _file_sha1(path: Path | None) -> str:
@@ -2539,7 +2543,16 @@ def _video_tool(model_config: dict[str, Any]) -> Any:
 def _post_edit_plan(
     video_assets: list[dict[str, Any]],
     planned_duration: float,
+    request_data: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    request_data = request_data or {}
+    compose_requirements = request_data.get("compose_requirements") if isinstance(request_data, dict) else {}
+    first_scene_source_start = 0.0
+    if isinstance(compose_requirements, dict):
+        try:
+            first_scene_source_start = max(0.0, float(compose_requirements.get("trim_first_scene_start_seconds") or 0))
+        except (TypeError, ValueError):
+            first_scene_source_start = 0.0
     actuals = []
     for asset in video_assets:
         actuals.append(max(1.0, float(asset.get("duration_seconds") or 0)))
@@ -2555,12 +2568,15 @@ def _post_edit_plan(
         prompt = str(asset.get("prompt") or "").lower()
         slow = any(term in prompt for term in ("slow-motion", "slow motion", "pallu turn", "graceful turn"))
         playback_rate = 0.5 if slow else 1.0
+        source_start = first_scene_source_start if idx == 1 and actual > first_scene_source_start + 1.0 else 0.0
+        usable_actual = max(1.0, actual - source_start)
         target_output = max(2.25, desired_clip_total * (actual / raw_total) * rhythm[(idx - 1) % len(rhythm)])
-        source_trim = min(actual, target_output * playback_rate)
+        source_trim = min(usable_actual, target_output * playback_rate)
         output_duration = source_trim / playback_rate
         segments.append({
             "asset": asset,
             "source_duration_seconds": round(actual, 3),
+            "source_start_seconds": round(source_start, 3),
             "trim_seconds": round(source_trim, 3),
             "output_duration_seconds": round(output_duration, 3),
             "playback_rate": playback_rate,
@@ -2575,7 +2591,8 @@ def _post_edit_plan(
             share = extra / max(len(flexible), 1)
             new_output = max(2.5, segment["output_duration_seconds"] - share)
             segment["output_duration_seconds"] = round(new_output, 3)
-            segment["trim_seconds"] = round(min(segment["source_duration_seconds"], new_output * segment["playback_rate"]), 3)
+            usable_actual = max(1.0, segment["source_duration_seconds"] - float(segment.get("source_start_seconds") or 0))
+            segment["trim_seconds"] = round(min(usable_actual, new_output * segment["playback_rate"]), 3)
 
     return {
         "segments": segments,
@@ -2689,12 +2706,13 @@ def _render_video_with_crossfades(
     durations: list[float] = []
     for idx, segment in enumerate(segments):
         trim = float(segment["trim_seconds"])
+        source_start = float(segment.get("source_start_seconds") or 0)
         playback_rate = float(segment["playback_rate"])
         output_duration = float(segment["output_duration_seconds"])
         retime_filter = f"setpts=(PTS-STARTPTS)/{playback_rate:.3f}"
         motion_filter = ",minterpolate=fps=24:mi_mode=mci:mc_mode=aobmc:me_mode=bidir" if playback_rate < 1.0 else ""
         filters.append(
-            f"[{idx}:v]trim=start=0:duration={trim:.3f},{retime_filter},fps={FINAL_FPS}{motion_filter},"
+            f"[{idx}:v]trim=start={source_start:.3f}:duration={trim:.3f},{retime_filter},fps={FINAL_FPS}{motion_filter},"
             f"scale={FINAL_WIDTH}:{FINAL_HEIGHT}:force_original_aspect_ratio=increase,"
             f"crop={FINAL_WIDTH}:{FINAL_HEIGHT},setsar=1,format=yuv420p[v{idx}]"
         )
@@ -2846,7 +2864,7 @@ def _compose(
     write_checkpoint(PROJECTS_DIR, project_id, "compose", "in_progress", {}, pipeline_type="cinematic")
     render_dir = project_dir / "renders"
     render_dir.mkdir(parents=True, exist_ok=True)
-    edit_plan = _post_edit_plan(video_assets, planned_duration)
+    edit_plan = _post_edit_plan(video_assets, planned_duration, request_data)
     for segment in edit_plan["segments"]:
         segment["path"] = project_dir / segment["asset"]["path"]
     end_card = _create_end_card_clip(render_dir, request_data, float(edit_plan["end_card_seconds"]))
@@ -2880,8 +2898,8 @@ def _compose(
             {
                 "id": f"cut_{idx}",
                 "source": segment["asset"]["id"],
-                "in_seconds": 0,
-                "out_seconds": float(segment["trim_seconds"]),
+                "in_seconds": float(segment.get("source_start_seconds") or 0),
+                "out_seconds": float(segment.get("source_start_seconds") or 0) + float(segment["trim_seconds"]),
                 "speed": float(segment["playback_rate"]),
                 "transition_out": "crossfade",
                 "transition_duration": TRANSITION_SECONDS,

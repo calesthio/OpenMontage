@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -201,7 +202,43 @@ def test_generate_assets_prepares_kling_reference_frame_to_plan_aspect(monkeypat
     assert call["reference_frame_preprocess"]["source_url"] == "https://cdn.example/ref1.png"
     assert call["cfg_scale"] == 0.75
     assert call["elements"][0]["frontal_image_url"] == "https://cdn.example/ref1.png"
-    assert manifest["metadata"]["generation_runs"][0]["reference_frame_preprocess"]["version"] == "kling-start-frame-aspect-pad-v1"
+    assert manifest["metadata"]["generation_runs"][0]["reference_frame_preprocess"]["version"] == "kling-start-frame-crop-fill-v2"
+    assert manifest["metadata"]["generation_runs"][0]["reference_frame_preprocess"]["strategy"] == "crop-to-fill-reference"
+
+
+def test_kling_reference_preprocess_compatibility_reuses_approved_padded_sample(tmp_path):
+    video = tmp_path / "scene1.mp4"
+    video.write_bytes(b"approved-sample")
+    signature = {
+        "video_model": "kling-v3",
+        "reference_frame_preprocess_version": "kling-start-frame-crop-fill-v2",
+    }
+    video.with_suffix(".mp4.json").write_text(
+        json.dumps({
+            "video_model": "kling-v3",
+            "reference_frame_preprocess_version": "kling-start-frame-aspect-pad-v1",
+        }),
+        encoding="utf-8",
+    )
+
+    assert jobs._clip_metadata_matches(video, signature) is True
+
+
+def test_post_edit_plan_can_trim_padded_first_scene_start():
+    assets = [
+        {"id": "scene1", "type": "video", "duration_seconds": 6, "prompt": "macro textile"},
+        {"id": "scene2", "type": "video", "duration_seconds": 6, "prompt": "motion"},
+    ]
+
+    edit_plan = jobs._post_edit_plan(
+        assets,
+        12,
+        {"compose_requirements": {"trim_first_scene_start_seconds": 1.0}},
+    )
+
+    assert edit_plan["segments"][0]["source_start_seconds"] == 1.0
+    assert edit_plan["segments"][0]["trim_seconds"] <= 5.0
+    assert edit_plan["segments"][1]["source_start_seconds"] == 0.0
 
 
 def test_generate_assets_blocks_dimension_mismatch_before_manifest_acceptance(monkeypatch, tmp_path):

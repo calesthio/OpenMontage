@@ -2456,7 +2456,7 @@ def _build_remotion_cinematic_props(
     video_assets: list[dict[str, Any]],
     edit_plan: dict[str, Any],
     request_data: dict[str, Any],
-    music_path: Path,
+    music_src: str,
 ) -> dict[str, Any]:
     scenes: list[dict[str, Any]] = []
     elapsed = 0.0
@@ -2467,7 +2467,7 @@ def _build_remotion_cinematic_props(
             "kind": "video",
             "startSeconds": round(elapsed, 3),
             "durationSeconds": float(segment["output_duration_seconds"]),
-            "src": str(segment["path"]),
+            "src": str(segment.get("compose_src") or segment["path"]),
             "tone": "neutral",
             "trimBeforeSeconds": float(segment.get("source_start_seconds") or 0),
             "trimAfterSeconds": max(
@@ -2507,7 +2507,7 @@ def _build_remotion_cinematic_props(
         "titleWidth": 940,
         "signalLineCount": 8,
         "music": {
-            "src": str(music_path),
+            "src": music_src,
             "volume": 0.42,
             "fadeInSeconds": 1.0,
             "fadeOutSeconds": 1.5,
@@ -2520,6 +2520,16 @@ def _build_remotion_cinematic_props(
             "renderer_component": "CinematicRenderer",
         },
     }
+
+
+def _manifest_r2_url(asset_manifest: dict[str, Any], rel_path: str | None) -> str | None:
+    if not rel_path:
+        return None
+    metadata = asset_manifest.get("metadata") if isinstance(asset_manifest, dict) else {}
+    for row in (metadata or {}).get("r2_assets") or []:
+        if isinstance(row, dict) and row.get("path") == rel_path and row.get("url"):
+            return str(row["url"])
+    return None
 
 
 def _loudness_normalize_final(input_path: Path, output_path: Path) -> None:
@@ -2581,13 +2591,17 @@ def _compose(
     render_dir.mkdir(parents=True, exist_ok=True)
     edit_plan = _post_edit_plan(video_assets, planned_duration, request_data)
     for segment in edit_plan["segments"]:
-        segment["path"] = project_dir / segment["asset"]["path"]
+        rel_path = str(segment["asset"]["path"])
+        segment["path"] = project_dir / rel_path
+        segment["compose_src"] = _manifest_r2_url(asset_manifest, rel_path) or str(segment["path"])
 
     music_duration = max(planned_duration, sum(float(s["output_duration_seconds"]) for s in edit_plan["segments"]) + float(edit_plan["end_card_seconds"]))
     generated_music, music_source = _generate_music_track(render_dir, music_duration, request_data, scene_plan, asset_manifest)
     normalized_music, audio_mix = _normalize_music_track(render_dir, generated_music)
+    music_upload = storage.upload_file(normalized_music, project_id, "renders/music_normalized.wav")
+    music_src = str(music_upload.get("url") or normalized_music)
 
-    remotion_props = _build_remotion_cinematic_props(video_assets, edit_plan, request_data, normalized_music)
+    remotion_props = _build_remotion_cinematic_props(video_assets, edit_plan, request_data, music_src)
     remotion_path = render_dir / "final_remotion.mp4"
     final_path = render_dir / "final.mp4"
     from tools.video.video_compose import VideoCompose
@@ -2607,7 +2621,6 @@ def _compose(
     render_qa = _render_qa(final_path, planned_duration)
 
     upload = storage.upload_file(final_path, project_id, "renders/final.mp4")
-    music_upload = storage.upload_file(normalized_music, project_id, "renders/music_normalized.wav")
     transition_rows = []
     elapsed = 0.0
     for segment in edit_plan["segments"]:

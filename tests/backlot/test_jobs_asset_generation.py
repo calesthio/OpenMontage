@@ -319,6 +319,12 @@ def test_compose_uses_real_composer_music_and_end_card(monkeypatch, tmp_path):
             {"id": f"vid_scene{idx}", "type": "video", "scene_id": f"scene{idx}", "path": f"assets/video/scene{idx}.mp4", "duration_seconds": 10.0}
             for idx in range(1, 4)
         ],
+        "metadata": {
+            "r2_assets": [
+                {"path": f"assets/video/scene{idx}.mp4", "url": f"https://cdn.example/{project_id}/assets/video/scene{idx}.mp4"}
+                for idx in range(1, 4)
+            ]
+        },
     }
 
     edit_decisions, render_report = jobs._compose(project_id, project_dir, manifest, request, _scene_plan())
@@ -330,6 +336,8 @@ def test_compose_uses_real_composer_music_and_end_card(monkeypatch, tmp_path):
     props = composer_calls[0]["edit_decisions"]
     assert props["render_runtime"] == "remotion"
     assert props["composition_mode"] == "templated"
+    assert props["music"]["src"] == f"https://cdn.example/{project_id}/renders/music_normalized.wav"
+    assert props["scenes"][0]["src"] == f"https://cdn.example/{project_id}/assets/video/scene1.mp4"
     assert props["scenes"][0]["trimBeforeSeconds"] == 1.0
     assert props["scenes"][-1]["id"] == "end_card"
     assert props["scenes"][-1]["kind"] == "title"

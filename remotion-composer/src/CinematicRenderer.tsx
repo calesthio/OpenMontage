@@ -4,6 +4,7 @@ import {
   AbsoluteFill,
   Audio,
   CalculateMetadataFunction,
+  Img,
   OffthreadVideo,
   Sequence,
   interpolate,
@@ -12,6 +13,16 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+
+// Still-image background sources (e.g. an end-card plate with no baked text)
+// must render via <Img>, not <OffthreadVideo> — OffthreadVideo expects a
+// video container and cannot decode a PNG/JPEG. Detected by extension so
+// TitleCard's backgroundSrc can be either a video (previous cinematic
+// passes) or a static image (this pass's end-card background) without the
+// caller having to say which.
+function isImageSrc(src: string): boolean {
+  return /\.(png|jpe?g|webp|gif|bmp)(\?.*)?$/i.test(src);
+}
 
 function resolveAsset(src: string): string {
   if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("data:")) {
@@ -266,18 +277,30 @@ const TitleCard: React.FC<{
               than snapping straight to its resting 0.62 opacity. Reuses the
               `container` spring already computed above for the accent dot. */}
           <AbsoluteFill style={{ transform: `scale(${bgScale})`, opacity: 0.62 * container }}>
-            <OffthreadVideo
-              muted
-              src={resolveAsset(backgroundSrc)}
-              trimBefore={bgTrimBefore}
-              trimAfter={bgTrimAfter}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                filter: "contrast(1.08) saturate(0.55) brightness(0.55) blur(4px)",
-              }}
-            />
+            {isImageSrc(backgroundSrc) ? (
+              <Img
+                src={resolveAsset(backgroundSrc)}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  filter: "contrast(1.08) saturate(0.55) brightness(0.55) blur(4px)",
+                }}
+              />
+            ) : (
+              <OffthreadVideo
+                muted
+                src={resolveAsset(backgroundSrc)}
+                trimBefore={bgTrimBefore}
+                trimAfter={bgTrimAfter}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  filter: "contrast(1.08) saturate(0.55) brightness(0.55) blur(4px)",
+                }}
+              />
+            )}
           </AbsoluteFill>
           <AbsoluteFill
             style={{

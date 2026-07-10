@@ -78,7 +78,7 @@ function renderSlate(s) {
         class: pct > 90 ? "crit" : pct > 75 ? "warn" : "", style: `width:${pct}%`,
       })));
     }
-    cost.append(el("div", { class: "label" }, "generation spend"));
+    cost.append(el("div", { class: "label" }, "job spend"));
   }
 
   return el("header", { class: "slate" },
@@ -149,8 +149,8 @@ function toggleDrawer(stageName) {
 }
 
 const STAGE_ARTIFACTS = {
-  research: ["research_brief"],
-  proposal: ["proposal_packet"],
+  research: ["research_brief", "cost_log"],
+  proposal: ["proposal_packet", "cost_log"],
   idea: ["brief"],
   script: ["script"],
   scene_plan: ["scene_plan"],

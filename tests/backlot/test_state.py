@@ -152,6 +152,57 @@ class TestBoardState:
         idea = next(x for x in s["stages"] if x["name"] == "idea")
         assert idea.get("undeclared") is True
 
+    def test_stage_executor_cost_log_surfaces_as_job_spend(self, projects_root):
+        p = _make_project(projects_root, "costed")
+        _write(p / "artifacts" / "cost_log.json", {
+            "version": "1.0",
+            "budget_total_usd": 5.0,
+            "budget_spent_usd": 0.04,
+            "budget_reserved_usd": 0.0,
+            "entries": [
+                {
+                    "id": "llm-1",
+                    "tool": "director_llm",
+                    "operation": "research",
+                    "status": "completed",
+                    "timestamp": "2026-07-10T00:00:00+00:00",
+                    "estimated_usd": 0.025,
+                    "actual_usd": 0.025,
+                    "details": "{\"category\":\"llm\",\"stage\":\"research\"}",
+                }
+            ],
+        })
+        _write(p / "checkpoint_research.json", {
+            "version": "1.0",
+            "project_id": "costed",
+            "pipeline_type": "cinematic",
+            "stage": "research",
+            "status": "in_progress",
+            "timestamp": "2026-07-10T00:00:00+00:00",
+            "human_approval_required": False,
+            "human_approved": False,
+            "artifacts": {},
+            "cost_snapshot": {
+                "budget_caps": {
+                    "total_budget_cap_usd": 5.0,
+                    "llm_budget_cap_usd": 3.0,
+                    "media_budget_cap_usd": 5.0,
+                    "sample_budget_cap_usd": 1.0,
+                },
+                "spent_usd": 0.025,
+                "reserved_usd": 0.0,
+                "total_active_usd": 0.025,
+                "entries": 1,
+            },
+        })
+
+        s = load_board_state(p)
+
+        assert s["artifacts"]["cost_log"]["budget_spent_usd"] == 0.04
+        assert s["cost"]["total_spent_usd"] == 0.04
+        assert s["cost"]["total_reserved_usd"] == 0.0
+        assert s["cost"]["budget_remaining_usd"] == 4.96
+
 
 class TestLibrary:
     def test_list_projects_sorts_live_first(self, projects_root):

@@ -229,6 +229,7 @@ ARTIFACT_FILES = {
     "final_review": "final_review.json",
     "publish_log": "publish_log.json",
     "decision_log": "decision_log.json",
+    "cost_log": "cost_log.json",
 }
 
 
@@ -253,6 +254,44 @@ def _collect_artifacts(project_dir: Path, checkpoints: dict[str, dict]) -> dict[
                 if resolved is not None:
                     artifacts[name] = resolved
     return artifacts
+
+
+def _normalize_cost_snapshot(cost: Optional[dict]) -> Optional[dict]:
+    """Support both legacy asset spend and StageExecutor orchestration spend."""
+    if not isinstance(cost, dict):
+        return None
+    normalized = dict(cost)
+    spent = normalized.get("total_spent_usd")
+    if spent is None:
+        spent = normalized.get("spent_usd")
+    if spent is None:
+        spent = normalized.get("budget_spent_usd")
+    try:
+        spent_float = float(spent or 0.0)
+    except (TypeError, ValueError):
+        spent_float = 0.0
+    normalized["total_spent_usd"] = round(spent_float, 6)
+
+    if "total_reserved_usd" not in normalized and normalized.get("reserved_usd") is not None:
+        try:
+            normalized["total_reserved_usd"] = round(float(normalized.get("reserved_usd") or 0.0), 6)
+        except (TypeError, ValueError):
+            normalized["total_reserved_usd"] = 0.0
+    if "total_reserved_usd" not in normalized and normalized.get("budget_reserved_usd") is not None:
+        try:
+            normalized["total_reserved_usd"] = round(float(normalized.get("budget_reserved_usd") or 0.0), 6)
+        except (TypeError, ValueError):
+            normalized["total_reserved_usd"] = 0.0
+
+    caps = normalized.get("budget_caps") if isinstance(normalized.get("budget_caps"), dict) else {}
+    total_cap = caps.get("total_budget_cap_usd") or normalized.get("budget_total_usd")
+    if total_cap is not None and "budget_remaining_usd" not in normalized:
+        try:
+            active = float(normalized.get("total_active_usd") or spent_float)
+            normalized["budget_remaining_usd"] = round(max(0.0, float(total_cap) - active), 6)
+        except (TypeError, ValueError):
+            pass
+    return normalized
 
 
 # ---------------------------------------------------------------------------
@@ -601,16 +640,18 @@ def load_board_state(project_dir: Path) -> dict[str, Any]:
 
     stages = _build_stage_rail(pipeline_meta, checkpoints, history)
 
-    # Cost: latest checkpoint snapshot wins; fall back to manifest total.
-    cost = None
+    # Cost: cumulative executor log wins; fall back to latest checkpoint
+    # snapshot, then legacy asset-manifest total.
+    cost = _normalize_cost_snapshot(artifacts.get("cost_log"))
     for cp in sorted(checkpoints.values(), key=lambda c: c.get("_mtime", 0), reverse=True):
-        if cp.get("cost_snapshot"):
+        if cost is None and cp.get("cost_snapshot"):
             cost = cp["cost_snapshot"]
             break
     if cost is None:
         total = (artifacts.get("asset_manifest") or {}).get("total_cost_usd")
         if total is not None:
             cost = {"total_spent_usd": total}
+    cost = _normalize_cost_snapshot(cost)
 
     import time
     last_activity = _last_activity(project_dir)

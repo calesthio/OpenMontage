@@ -461,7 +461,13 @@ class StageExecutor:
         repo_sha: str,
     ) -> tuple[str, Path]:
         artifact_name = CANONICAL_STAGE_ARTIFACTS[stage]
-        artifact = response["artifact"]
+        artifact = self._stamp_artifact_provenance(
+            artifact_name=artifact_name,
+            artifact=response["artifact"],
+            repo_sha=repo_sha,
+            context=context,
+            response=response,
+        )
         artifacts: dict[str, Any] = {artifact_name: artifact}
         supplementary = response.get("supplementary_artifacts") or {}
         if not isinstance(supplementary, dict):
@@ -525,6 +531,31 @@ class StageExecutor:
             self._write_artifact_files(request.project_id, artifacts)
             status = "completed"
         return status, checkpoint_path
+
+    def _stamp_artifact_provenance(
+        self,
+        *,
+        artifact_name: str,
+        artifact: dict[str, Any],
+        repo_sha: str,
+        context: dict[str, Any],
+        response: dict[str, Any],
+    ) -> dict[str, Any]:
+        schema = load_schema(artifact_name)
+        properties = schema.get("properties") if isinstance(schema, dict) else {}
+        if not isinstance(properties, dict) or "metadata" not in properties:
+            return artifact
+        stamped = dict(artifact)
+        metadata = dict(stamped.get("metadata") or {})
+        metadata.update({
+            "repo_sha": repo_sha,
+            "executor": "hosted_stage_executor",
+            "stage_skill_ref": context.get("stage_skill_ref"),
+            "skill_source": context.get("skill_source"),
+            "director_metadata": response.get("metadata") if isinstance(response.get("metadata"), dict) else {},
+        })
+        stamped["metadata"] = metadata
+        return stamped
 
     def _validate_final_response(
         self,

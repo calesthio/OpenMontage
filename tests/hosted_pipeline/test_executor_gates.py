@@ -101,7 +101,9 @@ def test_final_artifact_is_checkpointed_and_written(tmp_path, monkeypatch):
     checkpoint = json.loads((tmp_path / "p" / "checkpoint_research.json").read_text())
     assert checkpoint["status"] == "completed"
     assert checkpoint["artifacts"]["research_brief"]["version"] == "1.0"
-    assert (tmp_path / "p" / "artifacts" / "research_brief.json").is_file()
+    written = json.loads((tmp_path / "p" / "artifacts" / "research_brief.json").read_text())
+    assert written["metadata"]["executor"] == "hosted_stage_executor"
+    assert written["metadata"]["repo_sha"]
 
 
 def test_research_context_uses_registered_web_search(tmp_path, monkeypatch):

@@ -16,6 +16,7 @@ from typing import Any
 import requests
 
 from backlot import storage
+from hosted_pipeline import BudgetCaps, ChatCompletionsDirectorClient, StageExecutor, StageRunRequest
 from lib.checkpoint import PROJECTS_DIR, init_project, write_checkpoint
 
 
@@ -249,49 +250,34 @@ def create_job(payload: dict[str, Any], user: dict[str, Any] | None = None) -> d
 def plan_job(project_id: str, force: bool = False) -> dict[str, Any]:
     project_dir = PROJECTS_DIR / project_id
     request_data = _read_json(project_dir / "artifacts" / "job_request.json")
-    current_stage = "proposal"
+    current_stage = "research"
     try:
         proposal_path = project_dir / "artifacts" / "proposal_packet.json"
         script_path = project_dir / "artifacts" / "script.json"
         scene_plan_path = project_dir / "artifacts" / "scene_plan.json"
-        if not force and proposal_path.is_file() and script_path.is_file() and scene_plan_path.is_file():
+        research_path = project_dir / "artifacts" / "research_brief.json"
+        if (
+            not force
+            and research_path.is_file()
+            and proposal_path.is_file()
+            and script_path.is_file()
+            and scene_plan_path.is_file()
+        ):
             return {"ok": True, "project_id": project_id, "status": "planned"}
 
-        write_checkpoint(
-            PROJECTS_DIR,
-            project_id,
-            "proposal",
-            "in_progress",
-            {},
-            pipeline_type="cinematic",
-            metadata={"source": "hosted_ui", "mode": "safe_plan"},
-        )
-
-        plan = _plan_with_llm(request_data)
-        script, scene_plan = _artifacts_from_plan(request_data, plan)
-        proposal_packet, decision_log = _proposal_from_plan(project_id, request_data, script, scene_plan)
-
-        _write_json(proposal_path, proposal_packet)
-        _write_json(project_dir / "artifacts" / "decision_log.json", decision_log)
-        _write_json(script_path, script)
-        _write_json(scene_plan_path, scene_plan)
-
-        write_checkpoint(
-            PROJECTS_DIR,
-            project_id,
-            "proposal",
-            "awaiting_human",
-            {"proposal_packet": proposal_packet, "decision_log": decision_log},
-            pipeline_type="cinematic",
-            cost_snapshot=_proposal_cost_snapshot(proposal_packet),
-            metadata={
-                "source": "hosted_ui",
-                "mode": "safe_plan",
-                "approval_note": "No provider video generation has run. Approve paid generation to continue.",
-            },
-        )
+        results = _run_stage_executor_planning_bundle(project_id, request_data)
+        proposal_packet = _finalize_executor_planning_artifacts(project_id, request_data)
         status = "blocked_reference_assets" if _is_reference_blocked(proposal_packet) else "awaiting_approval"
-        return {"ok": True, "project_id": project_id, "status": status}
+        return {
+            "ok": True,
+            "project_id": project_id,
+            "status": status,
+            "planning_executor": "hosted_stage_executor",
+            "stages": [
+                {"stage": result.stage, "status": result.status, "repo_sha": result.repo_sha}
+                for result in results
+            ],
+        }
     except Exception as exc:
         _write_json(project_dir / "artifacts" / "job_error.json", {
             "version": "1.0",
@@ -309,6 +295,126 @@ def plan_job(project_id: str, force: bool = False) -> dict[str, Any]:
             metadata={"source": "hosted_ui", "mode": "safe_plan"},
         )
         raise
+
+
+def _run_stage_executor_planning_bundle(project_id: str, request_data: dict[str, Any]) -> list[Any]:
+    executor = StageExecutor(
+        projects_dir=PROJECTS_DIR,
+        model_client=ChatCompletionsDirectorClient.from_env(),
+    )
+    results = []
+    for stage in ("research", "proposal", "script", "scene_plan"):
+        current = executor.run_stage(
+            StageRunRequest(
+                project_id=project_id,
+                title=str(request_data.get("title") or "Untitled Ray Job"),
+                pipeline_type="cinematic",
+                stage=stage,
+                brief=_stage_executor_brief(request_data),
+                budget_caps=_planning_budget_caps(request_data),
+                preapprove_human_gates=stage in {"script", "scene_plan"},
+                approval_note=(
+                    "Hosted planning bundle preapproves downstream planning artifacts only; "
+                    "paid media generation remains blocked behind the proposal approval gate."
+                ),
+            )
+        )
+        results.append(result := current)
+        if result.status == "blocked":
+            raise JobError(f"StageExecutor blocked at {stage}: {result.blocker}")
+    return results
+
+
+def _stage_executor_brief(request_data: dict[str, Any]) -> str:
+    references = request_data.get("reference_assets") or []
+    return "\n".join([
+        str(request_data.get("prompt") or "").strip(),
+        "",
+        "Hosted Ray production constraints:",
+        f"- Target duration: {request_data.get('duration_seconds')} seconds.",
+        f"- Aspect ratio: {request_data.get('aspect_ratio')}.",
+        f"- Scene count target: {request_data.get('scene_count')}.",
+        f"- Selected video model: {request_data.get('video_model_label') or request_data.get('video_model')}.",
+        f"- Reference asset count: {len(references)}.",
+        "- Do not call paid media generation tools during planning.",
+        "- Preserve reference/product fidelity when references are attached.",
+        "- Return schema-valid OpenMontage artifacts only.",
+    ])
+
+
+def _planning_budget_caps(request_data: dict[str, Any]) -> BudgetCaps:
+    cap = _budget_cap_from_request(request_data)
+    total = float(cap if cap is not None else 10.0)
+    total = max(total, 0.01)
+    return BudgetCaps(
+        total_budget_cap_usd=total,
+        llm_budget_cap_usd=max(0.01, min(total, 3.0)),
+        media_budget_cap_usd=max(0.01, total),
+        sample_budget_cap_usd=max(0.01, min(total, 1.0)),
+    )
+
+
+def _finalize_executor_planning_artifacts(project_id: str, request_data: dict[str, Any]) -> dict[str, Any]:
+    project_dir = PROJECTS_DIR / project_id
+    proposal_path = project_dir / "artifacts" / "proposal_packet.json"
+    scene_plan_path = project_dir / "artifacts" / "scene_plan.json"
+    decision_path = project_dir / "artifacts" / "decision_log.json"
+    proposal_packet = _read_json(proposal_path)
+    scene_plan = _read_json(scene_plan_path)
+    if not isinstance(proposal_packet, dict) or not isinstance(scene_plan, dict):
+        raise JobError("StageExecutor planning did not produce proposal_packet and scene_plan artifacts.")
+
+    proposal_packet["cost_estimate"] = _estimate_generation_cost(request_data, scene_plan)
+    proposal_packet.setdefault("approval", {}).setdefault("status", "pending")
+    proposal_packet.setdefault("metadata", {})["planning_executor"] = "hosted_stage_executor"
+    proposal_packet["metadata"]["orchestration_cost_log"] = "artifacts/cost_log.json"
+    _refresh_reference_conditioning(proposal_packet, request_data)
+    _write_json(proposal_path, proposal_packet)
+
+    if not decision_path.is_file():
+        _write_json(decision_path, _minimal_executor_decision_log(project_id, request_data))
+    _sync_proposal_checkpoint_artifact(project_dir, proposal_packet)
+    return proposal_packet
+
+
+def _sync_proposal_checkpoint_artifact(project_dir: Path, proposal_packet: dict[str, Any]) -> None:
+    path = project_dir / "checkpoint_proposal.json"
+    if not path.is_file():
+        return
+    checkpoint = _read_json(path)
+    if not isinstance(checkpoint, dict):
+        return
+    checkpoint.setdefault("artifacts", {})["proposal_packet"] = proposal_packet
+    checkpoint.setdefault("metadata", {})["hosted_adapter_postprocess"] = {
+        "approval_controls_refreshed": True,
+        "cost_estimate_refreshed_from_scene_plan": True,
+    }
+    _write_json(path, checkpoint)
+
+
+def _minimal_executor_decision_log(project_id: str, request_data: dict[str, Any]) -> dict[str, Any]:
+    model_config = _video_model_config_from_request(request_data)
+    return {
+        "version": "1.0",
+        "project_id": project_id,
+        "decisions": [{
+            "decision_id": "executor-provider-selection",
+            "stage": "proposal",
+            "category": "provider_selection",
+            "subject": "Video generation provider preference",
+            "options_considered": [{
+                "option_id": model_config["id"],
+                "label": model_config["label"],
+                "score": 1.0,
+                "reason": "Selected in the hosted Ray request before paid media generation.",
+            }],
+            "selected": model_config["id"],
+            "reason": "Preserved from the hosted request; no paid generation runs before approval.",
+            "user_visible": True,
+            "user_approved": False,
+            "confidence": 0.8,
+        }],
+    }
 
 
 def revise_plan(project_id: str, payload: dict[str, Any]) -> dict[str, Any]:
@@ -389,6 +495,7 @@ def revise_plan(project_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         _write_json(marker_path, marker)
 
     for filename in (
+        "research_brief.json",
         "proposal_packet.json",
         "decision_log.json",
         "script.json",
@@ -402,6 +509,8 @@ def revise_plan(project_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         except FileNotFoundError:
             pass
     for filename in (
+        "checkpoint_research.json",
+        "checkpoint_proposal.json",
         "checkpoint_script.json",
         "checkpoint_scene_plan.json",
         "checkpoint_assets.json",
@@ -778,33 +887,9 @@ def _legacy_run_job(project_id: str) -> None:
             script = _read_json(script_path)
             scene_plan = _read_json(scene_plan_path)
         else:
-            plan = _plan_with_llm(request_data)
-            script, scene_plan = _artifacts_from_plan(request_data, plan)
-
-            _write_json(script_path, script)
-            write_checkpoint(
-                PROJECTS_DIR,
-                project_id,
-                "script",
-                "completed",
-                {"script": script},
-                pipeline_type="cinematic",
-                human_approved=True,
-                metadata={"auto_approved": True, "source": "hosted_ui"},
-            )
-
-            current_stage = "scene_plan"
-            _write_json(scene_plan_path, scene_plan)
-            write_checkpoint(
-                PROJECTS_DIR,
-                project_id,
-                "scene_plan",
-                "completed",
-                {"scene_plan": scene_plan},
-                pipeline_type="cinematic",
-                human_approved=True,
-                metadata={"auto_approved": True, "source": "hosted_ui"},
-            )
+            plan_job(project_id, force=True)
+            script = _read_json(script_path)
+            scene_plan = _read_json(scene_plan_path)
 
         current_stage = "assets"
         asset_manifest = _generate_assets(project_id, project_dir, request_data, scene_plan)
@@ -859,375 +944,6 @@ def _legacy_run_job(project_id: str) -> None:
             error=str(exc),
             metadata={"source": "hosted_ui"},
         )
-
-
-def _plan_with_llm(request_data: dict[str, Any]) -> dict[str, Any]:
-    if os.environ.get("OPENROUTER_API_KEY"):
-        return _chat_json(
-            "https://openrouter.ai/api/v1/chat/completions",
-            os.environ["OPENROUTER_API_KEY"],
-            os.environ.get("OPENROUTER_MODEL", "openai/gpt-4o-mini"),
-            request_data,
-            extra_headers={
-                "HTTP-Referer": os.environ.get("RAY_PUBLIC_URL", "https://ikawn-ray.fly.dev"),
-                "X-Title": "iKawn Ray",
-            },
-        )
-    if os.environ.get("OPENAI_API_KEY"):
-        return _chat_json(
-            "https://api.openai.com/v1/chat/completions",
-            os.environ["OPENAI_API_KEY"],
-            os.environ.get("OPENAI_MODEL", "gpt-4o-mini"),
-            request_data,
-        )
-    raise JobError("No LLM key configured. Set OPENROUTER_API_KEY or OPENAI_API_KEY.")
-
-
-def _chat_json(url: str, api_key: str, model: str, request_data: dict[str, Any], extra_headers: dict[str, str] | None = None) -> dict[str, Any]:
-    scene_count = request_data["scene_count"]
-    duration = request_data["duration_seconds"]
-    model_config = _video_model_config_from_request(request_data)
-    prompt = (
-        "Return only JSON for a short cinematic video plan. "
-        "Schema: {title:string, scenes:[{id:string,narration:string,visual_prompt:string,description:string,start_seconds:number,end_seconds:number}]}. "
-        f"Create exactly {scene_count} scenes covering {duration} seconds. "
-        f"Each scene may be up to {model_config['max_scene_seconds']} seconds. Prefer fewer longer scenes over many unrelated clips. "
-        "Each scene must be one single continuous shot with one framing intent: no internal cuts, no montage inside a clip, no reframing drift. "
-        "For product ads, scene 1 must open on the strongest product-detail hook, usually a macro fabric/detail shot, not a wide establishing shot. "
-        "Do not use these visual words in any prompt: vignette, matte, frame, border. If you need softness, say shallow depth of field and edges softly falling out of focus. "
-        "If slow motion is desired, describe graceful movement only; retiming happens in compose, not in the video-generation prompt. "
-        "If reference_assets are present, plan a continuous reference-conditioned video: keep the same product, wardrobe, character/model, fabric, color palette, and brand world across every scene. "
-        f"Each visual_prompt should be provider-ready for {model_config['label']} video generation, cinematic, concrete, and safe for commercial use. "
-        "Do not include markdown."
-    )
-    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    if extra_headers:
-        headers.update(extra_headers)
-    response = requests.post(
-        url,
-        headers=headers,
-        json={
-            "model": model,
-            "messages": [
-                {"role": "system", "content": prompt},
-                {"role": "user", "content": json.dumps(request_data, ensure_ascii=True)},
-            ],
-            "temperature": 0.7,
-        },
-        timeout=90,
-    )
-    response.raise_for_status()
-    content = response.json()["choices"][0]["message"]["content"]
-    start = content.find("{")
-    end = content.rfind("}")
-    if start < 0 or end < start:
-        raise JobError("LLM response did not contain JSON.")
-    data = json.loads(content[start:end + 1])
-    if not isinstance(data.get("scenes"), list) or not data["scenes"]:
-        raise JobError("LLM plan did not include scenes.")
-    return data
-
-
-def _artifacts_from_plan(request_data: dict[str, Any], plan: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
-    scenes = []
-    sections = []
-    for idx, scene in enumerate(plan["scenes"], start=1):
-        sid = str(scene.get("id") or f"sc{idx}")
-        start = float(scene.get("start_seconds", (idx - 1) * 5))
-        end = float(scene.get("end_seconds", start + 5))
-        narration = str(scene.get("narration") or scene.get("description") or "").strip()
-        visual = _sanitize_visual_prompt(str(scene.get("visual_prompt") or scene.get("description") or request_data["prompt"]).strip())
-        description = _sanitize_visual_prompt(str(scene.get("description") or visual))
-        sections.append({
-            "id": f"s{idx}",
-            "label": f"Scene {idx}",
-            "text": narration or visual,
-            "start_seconds": start,
-            "end_seconds": end,
-        })
-        scenes.append({
-            "id": sid,
-            "type": "generated",
-            "description": description,
-            "start_seconds": start,
-            "end_seconds": end,
-            "script_section_id": f"s{idx}",
-            "required_assets": [{"type": "video", "description": visual, "source": "generate"}],
-            "shot_intent": narration or visual,
-            "narrative_role": "deliver_payload",
-            "hero_moment": idx == min(len(plan["scenes"]), 2),
-            "sequence_index": idx,
-        })
-    total = max(section["end_seconds"] for section in sections)
-    return (
-        {
-            "version": "1.0",
-            "title": str(plan.get("title") or request_data["title"]),
-            "total_duration_seconds": total,
-            "sections": sections,
-            "metadata": {"source": "hosted_ui_llm"},
-        },
-        {
-            "version": "1.0",
-            "style_playbook": "clean-professional",
-            "scenes": scenes,
-            "metadata": {"source": "hosted_ui_llm"},
-        },
-    )
-
-
-def _proposal_from_plan(
-    project_id: str,
-    request_data: dict[str, Any],
-    script: dict[str, Any],
-    scene_plan: dict[str, Any],
-) -> tuple[dict[str, Any], dict[str, Any]]:
-    model_config = _video_model_config_from_request(request_data)
-    estimate = _estimate_generation_cost(request_data, scene_plan)
-    title = request_data["title"]
-    duration = float(script.get("total_duration_seconds") or request_data["duration_seconds"])
-    platform = "instagram" if request_data.get("aspect_ratio") == "9:16" else "youtube"
-    refs_expected = _reference_conditioning_expected(request_data)
-    reference_count = _reference_asset_count(request_data)
-    conditioning_mode = _conditioning_mode(request_data)
-    concept_grounding = ["hosted user brief", "uploaded references"] if refs_expected else ["hosted user brief"]
-    visual_approach = (
-        "Reference-conditioned cinematic product film with fewer, longer clips and stable visual anchors."
-        if refs_expected
-        else "Cinematic product film from the written brief with fewer, longer clips and stable visual direction."
-    )
-    key_reference_point = (
-        "Use uploaded references as the visual source of truth."
-        if refs_expected
-        else "Use the approved written brief as the visual source of truth."
-    )
-    concepts = [
-        {
-            "id": "c1",
-            "title": title,
-            "hook": _short_hook(request_data["prompt"]),
-            "narrative_structure": "story",
-            "visual_approach": visual_approach,
-            "suggested_playbook": "clean-professional",
-            "target_audience": "Client-ready social and YouTube viewers",
-            "target_platform": platform,
-            "target_duration_seconds": duration,
-            "key_points": [
-                key_reference_point,
-                "Keep the same product, character, wardrobe, and brand world across scenes.",
-            ],
-            "core_message": "A polished video should preserve the supplied visual identity instead of drifting scene by scene.",
-            "cta": "Use as a reviewed campaign draft after asset approval.",
-            "tone": "premium, coherent, cinematic",
-            "grounded_in": concept_grounding,
-            "why_this_works": "It minimizes clip count and treats references as production anchors, reducing the chance of disconnected generations.",
-        },
-        {
-            "id": "c2",
-            "title": f"{title} - direct product cut",
-            "hook": "Show the product clearly before adding mood.",
-            "narrative_structure": "problem_solution",
-            "visual_approach": "Direct ad structure: establish product, show detail, show use context, land on CTA.",
-            "suggested_playbook": "premium-minimalist",
-            "target_audience": "Prospects evaluating the product visually",
-            "target_platform": platform,
-            "target_duration_seconds": duration,
-            "key_points": ["Lead with clarity.", "Use references as consistency anchors."],
-            "core_message": "The product remains the hero throughout the video.",
-            "cta": "Review the generated clips before final compose.",
-            "tone": "clear, controlled, commercial",
-            "grounded_in": ["hosted user brief"],
-            "why_this_works": "It favors product legibility and reduces creative randomness.",
-        },
-        {
-            "id": "c3",
-            "title": f"{title} - cinematic mood cut",
-            "hook": "Make the brand feel premium before making the offer.",
-            "narrative_structure": "journey",
-            "visual_approach": "Mood-led sequence with slow camera movement, tactile details, and a restrained closing beat.",
-            "suggested_playbook": "clean-professional",
-            "target_audience": "Brand-conscious social viewers",
-            "target_platform": platform,
-            "target_duration_seconds": duration,
-            "key_points": ["Build mood through motion.", "Keep references consistent across shots."],
-            "core_message": "The brand feels cohesive and premium.",
-            "cta": "Approve only after reviewing the storyboard and cost.",
-            "tone": "cinematic, elegant, polished",
-            "grounded_in": ["hosted user brief"],
-            "why_this_works": "It can look more premium, but it needs careful clip review to avoid style drift.",
-        },
-    ]
-    proposal_packet = {
-        "version": "1.0",
-        "concept_options": concepts,
-        "selected_concept": {
-            "concept_id": "c1",
-            "rationale": "Best fit for uploaded-reference jobs where identity and product consistency matter more than raw prompt variety.",
-        },
-        "production_plan": {
-            "pipeline": "cinematic",
-            "playbook": "clean-professional",
-            "stages": [
-                {
-                    "stage": "proposal",
-                    "tools": [],
-                    "approach": "Generate a safe plan, cost estimate, and approval gate before any provider video call.",
-                },
-                {
-                    "stage": "script",
-                    "tools": [{"tool_name": "openrouter_chat", "role": "Draft timed sections", "provider": "openrouter", "available": bool(os.environ.get("OPENROUTER_API_KEY")), "estimated_cost_usd": 0.0, "why_this_provider": "Already configured for planning."}],
-                    "approach": "Create a timestamped script from the user brief.",
-                },
-                {
-                    "stage": "scene_plan",
-                    "tools": [{"tool_name": "openrouter_chat", "role": "Draft scene plan", "provider": "openrouter", "available": bool(os.environ.get("OPENROUTER_API_KEY")), "estimated_cost_usd": 0.0, "why_this_provider": "Used only for planning, not video generation."}],
-                    "approach": "Create a storyboard with one generated video asset request per scene.",
-                },
-                {
-                    "stage": "assets",
-                    "tools": [{
-                        "tool_name": model_config["tool_name"],
-                        "role": "Generate reference-conditioned video clips after explicit approval",
-                        "provider": model_config["provider_label"],
-                        "available": _has_any_env(model_config["requires_any_env"]),
-                        "estimated_cost_usd": estimate["total_estimated_usd"],
-                        "why_this_provider": "Selected by the user or hosted default; actual generation waits for approval.",
-                    }],
-                    "approach": "Generate clips only after the user approves the plan and budget.",
-                    "fallback_if_unavailable": "Stop and ask for a different provider or missing API key.",
-                },
-                {
-                    "stage": "compose",
-                    "tools": [{"tool_name": "ffmpeg", "role": "Post-compose approved clips with crossfades, music bed, end card, loudness normalization, and 1080x1920 output", "provider": "local", "available": True, "estimated_cost_usd": 0.0, "why_this_provider": "Local post composition does not spend API credits."}],
-                    "approach": "Finish generated clips locally with real post-production and upload final output to R2.",
-                },
-            ],
-            "quality_tradeoffs": [
-                {
-                    "tradeoff": "Fewer longer clips reduce API calls and improve continuity, but each generated clip still needs human review.",
-                    "recommendation": "Approve only if the storyboard and budget look acceptable.",
-                    "quality_impact": "Lower risk of fragmented videos than many short clips.",
-                }
-            ],
-            "alternative_paths": [
-                {"description": "Grok Imagine reference-conditioned clips via fal.ai", "total_cost_usd": round(duration * 0.07, 2), "quality_level": "standard", "what_changes": "Uses the configured Fal key for xAI Grok Imagine endpoints."},
-                {"description": "Kling 3 via Fal", "total_cost_usd": round((duration / 5) * 0.10, 2), "quality_level": "standard", "what_changes": "Uses single-image image-to-video when references exist; not multi-reference conditioning."},
-                {"description": "Veo 3.1 reference-conditioned clips", "total_cost_usd": estimate["total_estimated_usd"], "quality_level": "standard", "what_changes": "Uses existing Fal setup with explicit approval gate."},
-                {"description": "Plan only", "total_cost_usd": 0.0, "quality_level": "free", "what_changes": "No video clips are generated."},
-                {"description": "Seedance 2.0 opt-in only", "total_cost_usd": estimate["total_estimated_usd"], "quality_level": "standard", "what_changes": "Requires separate Seedance risk approval before any paid call."},
-            ],
-            "delivery_promise": {
-                "promise_type": "motion_led",
-                "motion_required": True,
-                "source_required": refs_expected,
-                "tone_mode": "cinematic commercial",
-                "quality_floor": "presentable",
-                "approved_fallback": None,
-            },
-            "renderer_family": "cinematic-trailer",
-            "render_runtime": "ffmpeg",
-            "music_source": {
-                "source_type": "ai_generated",
-                "provider": "local_ffmpeg",
-                "mood_direction": "Sparse drone and subtle pulse generated locally, then loudness-normalized in compose.",
-                "estimated_cost_usd": 0,
-            },
-        },
-        "cost_estimate": estimate,
-        "approval": {"status": "pending"},
-        "metadata": {
-            "source": "hosted_ray_safe_plan",
-            "video_model": request_data.get("video_model"),
-            "fal_spend_before_approval_usd": 0,
-            "reference_conditioning_expected": refs_expected,
-            "reference_asset_count": reference_count,
-            "conditioning_mode": conditioning_mode,
-        },
-    }
-    _refresh_reference_conditioning(proposal_packet, request_data)
-    decision_log = _decision_log_from_request(project_id, request_data, model_config, estimate)
-    return proposal_packet, decision_log
-
-
-def _decision_log_from_request(
-    project_id: str,
-    request_data: dict[str, Any],
-    model_config: dict[str, Any],
-    estimate: dict[str, Any],
-) -> dict[str, Any]:
-    selected = model_config["id"]
-    options = []
-    for config in sorted(VIDEO_MODELS.values(), key=lambda item: int(item.get("priority", 50))):
-        selected_config = config["id"] == selected
-        seedance_ack = bool(config.get("requires_explicit_paid_approval"))
-        options.append({
-            "option_id": config["id"],
-            "label": config["label"],
-            "score": 0.9 if selected_config else max(0.45, 0.8 - (int(config.get("priority", 50)) * 0.04)),
-            "reason": (
-                "Selected for this run; this is Ray's hosted default."
-                if selected_config and config["id"] == DEFAULT_VIDEO_MODEL
-                else "Selected for this run."
-                if selected_config
-                else "Available as an alternate provider preference."
-            ),
-            **(
-                {"rejected_because": "Required API key is not configured."}
-                if not _has_any_env(config["requires_any_env"])
-                else {"rejected_because": "Seedance requires explicit provider-risk approval before paid generation."}
-                if seedance_ack and not selected_config
-                else {}
-            ),
-        })
-    return {
-        "version": "1.0",
-        "project_id": project_id,
-        "decisions": [
-            {
-                "decision_id": "d-001",
-                "stage": "proposal",
-                "category": "provider_selection",
-                "subject": "Video generation provider preference",
-                "options_considered": options,
-                "selected": selected,
-                "reason": f"{model_config['label']} is the selected provider preference; no paid calls run before approval.",
-                "user_visible": True,
-                "user_approved": False,
-                "confidence": 0.8,
-            },
-            {
-                "decision_id": "d-002",
-                "stage": "proposal",
-                "category": "budget_tradeoff",
-                "subject": "Paid generation approval gate",
-                "options_considered": [
-                    {"option_id": "safe_plan", "label": "Plan only", "score": 1.0, "reason": "Costs no Fal credits before approval."},
-                    {"option_id": "paid_generation", "label": "Generate clips now", "score": 0.2, "reason": "Would spend provider credits before review.", "rejected_because": "Requires explicit user approval."},
-                ],
-                "selected": "safe_plan",
-                "reason": f"Estimated video generation cost is {estimate['total_estimated_usd']:.2f} USD, so the hosted app pauses first.",
-                "user_visible": True,
-                "user_approved": False,
-                "confidence": 1.0,
-            },
-            {
-                "decision_id": "d-003",
-                "stage": "proposal",
-                "category": "render_runtime_selection",
-                "subject": "Initial hosted composition runtime",
-                "options_considered": [
-                    {"option_id": "ffmpeg", "label": "FFmpeg post-compose", "score": 0.82, "reason": "Local, no API spend, supports clip trims, crossfades, synthetic music, end card, and 1080x1920 output."},
-                    {"option_id": "remotion", "label": "Remotion", "score": 0.6, "reason": "Better composition path, pending adapter integration."},
-                    {"option_id": "hyperframes", "label": "HyperFrames", "score": 0.55, "reason": "Good for bespoke motion, pending adapter integration."},
-                ],
-                "selected": "ffmpeg",
-                "reason": "This hosted path spends only on explicitly approved generation while still doing real local post-production.",
-                "user_visible": True,
-                "user_approved": False,
-                "confidence": 0.65,
-            },
-        ],
-    }
 
 
 def _estimate_generation_cost(request_data: dict[str, Any], scene_plan: dict[str, Any]) -> dict[str, Any]:
@@ -1439,11 +1155,6 @@ def _is_reference_blocked(proposal_packet: dict[str, Any]) -> bool:
 
 def _requires_explicit_paid_approval(model_config: dict[str, Any]) -> bool:
     return bool(model_config.get("requires_explicit_paid_approval"))
-
-
-def _short_hook(prompt: str) -> str:
-    first = re.sub(r"\s+", " ", prompt).strip().splitlines()[0]
-    return first[:96] or "A concise visual story built from the supplied brief."
 
 
 def _provider_error_type(result: Any) -> str | None:

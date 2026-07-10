@@ -125,7 +125,11 @@ class MaasVideo(BaseTool):
         "happyhorse-1.0-r2v":                    {"ops": ["r2v"],        "price_720p": 1.17, "price_1080p": 2.08},
         "happyhorse-1.0-video-edit":             {"ops": ["video_edit"], "price_720p": 1.17, "price_1080p": 2.08},
         # ── H100 Self-hosted GPU Cluster ─────────────────────────────────────
-        "leapfast/ltx-2.3":                          {"ops": ["t2v"],        "price_480p": 0.50, "price_720p": 0.70},
+        # i2v confirmed live 2026-07-10 (submit -> succeeded, output correctly
+        # conditioned on the reference frame) — the "t2v only" note from
+        # 2026-06-28 undersold this route; see image_strength/image_frame_idx
+        # in input_schema for the params this operation accepts.
+        "leapfast/ltx-2.3":                          {"ops": ["t2v", "i2v"], "price_480p": 0.50, "price_720p": 0.70},
         # Lighter/faster than LTX-2.3, same H100 cluster. No audio track —
         # route to leapfast/ltx-2.3 instead if the caller needs sound.
         "leapfast/wan2.2":                           {"ops": ["t2v", "i2v"], "price_720p": 0.35},
@@ -170,6 +174,7 @@ class MaasVideo(BaseTool):
                     "wanx2.1-t2v-plus, wanx2.1-t2v-turbo, happyhorse-1.0-t2v, leapfast/ltx-2.3, "
                     "leapfast/wan2.2 (no audio track — use leapfast/ltx-2.3 if sound is needed)\n"
                     "I2V: wan2.7-i2v, wanx2.1-i2v-plus, happyhorse-1.0-i2v, leapfast/wan2.2, "
+                    "leapfast/ltx-2.3 (confirmed live 2026-07-10), "
                     "volcengine/doubao-seedance-2.0 (and other seedance variants — routed via "
                     "native passthrough, see image_url)\n"
                     "R2V: happyhorse-1.0-r2v\n"
@@ -356,7 +361,7 @@ class MaasVideo(BaseTool):
 
         # Each model declares which ops it actually supports (MODELS[model]
         # ["ops"]). Without this check, requesting image_to_video/
-        # reference_to_video against a t2v-only model (e.g. leapfast/ltx-2.3)
+        # reference_to_video against a t2v-only model (e.g. happyhorse-1.0-t2v)
         # silently drops the image_url from the payload below and returns a
         # normal-looking text-to-video clip — the caller has no way to tell
         # the reference was ignored short of comparing pixels across shots.

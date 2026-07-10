@@ -16,15 +16,15 @@ model `leapfast/ltx-2.3` (billed in CNY through the internal MaaS gateway,
 that way uses `MaasVideo.execute({...})`, not the `tools/ltx2.py` CLI shown
 below — but the model behavior does carry over: the **Prompting Guide**,
 **Known Limitations**, and CJK note further down all apply regardless of
-which path you're calling through. One real difference: as of this writing
-`leapfast/ltx-2.3`'s gateway entry only declares `"ops": ["t2v"]` (see
-`MaasVideo.MODELS`) — i.e. **no `image_url`/reference conditioning** through
-that route, even though the model supports image-to-video via the direct
-Modal deployment (`--input` below). `maas_video.execute()` validates this and
-fails immediately (before spending money) if you request `image_to_video` or
-`reference_to_video` against a model whose declared `ops` don't include it —
-don't route around that check by guessing the gateway secretly supports more
-than it declares.
+which path you're calling through. `image_to_video` **is** supported through
+this route (confirmed live 2026-07-10 — submit → succeeded, output correctly
+conditioned on the reference frame; `MaasVideo.MODELS["leapfast/ltx-2.3"]
+["ops"]` includes `"i2v"`) — pass `image_url`/`image_base64` plus
+`image_strength` as usual. `maas_video.execute()` still validates operation
+against each model's declared `ops` before spending money on any model where
+that assumption doesn't hold — don't route around that check by guessing a
+model secretly supports more than it declares; if you find another gap, fix
+the declaration once you've confirmed it live, the way this one was.
 
 ## Quick Reference
 

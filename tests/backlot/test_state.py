@@ -223,9 +223,12 @@ class TestBoardState:
             "cost_snapshot": {"total_spent_usd": 0.6, "total_reserved_usd": 0},
         })
         events = [
-            {"event": "finish", "success": True, "tool": "kling_video", "cost_usd": 0.2},
-            {"event": "finish", "success": True, "tool": "kling_video", "cost_usd": 0.2},
-            {"event": "finish", "success": True, "tool": "kling_video", "cost_usd": 0.2},
+            {"event": "finish", "success": True, "tool": "kling_video", "scene_id": "scene1", "output_path": "assets/video/scene1.mp4", "cost_usd": 0.2},
+            {"event": "finish", "success": True, "tool": "video_selector", "scene_id": "scene1", "output_path": "assets/video/scene1.mp4", "cost_usd": 0.2},
+            {"event": "finish", "success": True, "tool": "kling_video", "scene_id": "scene2", "output_path": "assets/video/scene2.mp4", "cost_usd": 0.2},
+            {"event": "finish", "success": True, "tool": "video_selector", "scene_id": "scene2", "output_path": "assets/video/scene2.mp4", "cost_usd": 0.2},
+            {"event": "finish", "success": True, "tool": "kling_video", "scene_id": "scene3", "output_path": "assets/video/scene3.mp4", "cost_usd": 0.2},
+            {"event": "finish", "success": True, "tool": "video_selector", "scene_id": "scene3", "output_path": "assets/video/scene3.mp4", "cost_usd": 0.2},
             {"event": "finish", "success": True, "tool": "music_gen", "cost_usd": 0.0503},
             {"event": "finish", "success": False, "tool": "video_compose", "cost_usd": 0.9},
         ]

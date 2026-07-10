@@ -294,8 +294,12 @@ def _normalize_cost_snapshot(cost: Optional[dict]) -> Optional[dict]:
     return normalized
 
 
+WRAPPER_COST_TOOLS = {"video_selector"}
+
+
 def _cost_snapshot_from_events(events: list[dict[str, Any]]) -> Optional[dict[str, Any]]:
     """Fallback spend from durable tool events when no cost_log exists."""
+    billable: list[tuple[dict[str, Any], float]] = []
     total = 0.0
     entries = 0
     for event in events:
@@ -308,6 +312,21 @@ def _cost_snapshot_from_events(events: list[dict[str, Any]]) -> Optional[dict[st
         except (TypeError, ValueError):
             continue
         if cost <= 0:
+            continue
+        billable.append((event, cost))
+
+    provider_outputs = {
+        (event.get("scene_id"), event.get("output_path"))
+        for event, _cost in billable
+        if event.get("tool") not in WRAPPER_COST_TOOLS and event.get("output_path")
+    }
+
+    for event, cost in billable:
+        if (
+            event.get("tool") in WRAPPER_COST_TOOLS
+            and event.get("output_path")
+            and (event.get("scene_id"), event.get("output_path")) in provider_outputs
+        ):
             continue
         total += cost
         entries += 1

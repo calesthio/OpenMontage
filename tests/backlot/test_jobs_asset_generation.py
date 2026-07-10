@@ -329,16 +329,75 @@ def test_compose_uses_real_composer_music_and_end_card(monkeypatch, tmp_path):
     assert composer_calls[0]["profile"] == "youtube_shorts"
     props = composer_calls[0]["edit_decisions"]
     assert props["render_runtime"] == "remotion"
+    assert props["composition_mode"] == "templated"
     assert props["scenes"][0]["trimBeforeSeconds"] == 1.0
     assert props["scenes"][-1]["id"] == "end_card"
     assert props["scenes"][-1]["kind"] == "title"
     assert edit_decisions["render_runtime"] == "remotion"
+    assert edit_decisions["composition_mode"] == "templated"
     assert edit_decisions["metadata"]["composer_tool"] == "video_compose"
+    assert edit_decisions["metadata"]["renderer_component"] == "CinematicRenderer"
     assert edit_decisions["metadata"]["native_clip_audio"] == "replaced_by_continuous_music_bed"
     assert render_report["metadata"]["composer_tool"] == "video_compose"
     assert render_report["metadata"]["post_pipeline"]["loudness_target_lufs"] == -14
     assert (project_id, "renders/final.mp4") in uploads
     assert (project_id, "renders/music_normalized.wav") in uploads
+
+
+def test_approve_asset_review_retries_compose_after_provider_failure(monkeypatch, tmp_path):
+    project_id = "approved-compose-retry"
+    project_dir = init_project(project_id, title="Retry", pipeline_type="cinematic", pipeline_dir=tmp_path)
+    monkeypatch.setattr(jobs, "PROJECTS_DIR", tmp_path)
+
+    request = _request("kling-v3")
+    request["project_id"] = project_id
+    scene_plan = _scene_plan()
+    manifest = {
+        "version": "1.0",
+        "total_cost_usd": 0.24,
+        "assets": [
+            {"id": "vid_sc1", "type": "video", "scene_id": "sc1", "path": "assets/video/sc1.mp4", "duration_seconds": 6.0},
+            {"id": "vid_sc2", "type": "video", "scene_id": "sc2", "path": "assets/video/sc2.mp4", "duration_seconds": 6.0},
+        ],
+        "metadata": {
+            "reference_fidelity_review": {
+                "status": "approved",
+                "approved_at": "2026-07-10T00:00:00+00:00",
+            },
+        },
+    }
+    jobs._write_json(project_dir / "artifacts" / "job_request.json", request)
+    jobs._write_json(project_dir / "artifacts" / "scene_plan.json", scene_plan)
+    jobs._write_json(project_dir / "artifacts" / "asset_manifest.json", manifest)
+
+    compose_calls: list[tuple[str, Path]] = []
+
+    def fake_compose(pid: str, pdir: Path, asset_manifest: dict[str, Any], request_data: dict[str, Any], plan: dict[str, Any]):
+        compose_calls.append((pid, pdir))
+        return (
+            {
+                "version": "1.0",
+                "render_runtime": "remotion",
+                "cuts": [{"id": "cut_1", "source": "vid_sc1", "in_seconds": 0, "out_seconds": 6}],
+            },
+            {
+                "version": "1.0",
+                "outputs": [{
+                    "path": "renders/final.mp4",
+                    "format": "mp4",
+                    "resolution": "1080x1920",
+                    "duration_seconds": 12.0,
+                }],
+            },
+        )
+
+    monkeypatch.setattr(jobs, "_compose", fake_compose)
+
+    result = jobs.approve_asset_review(project_id)
+
+    assert result == {"ok": True, "project_id": project_id, "status": "completed"}
+    assert compose_calls == [(project_id, project_dir)]
+    assert (project_dir / "artifacts" / "render_report.json").is_file()
 
 
 def test_generate_assets_blocks_dimension_mismatch_before_manifest_acceptance(monkeypatch, tmp_path):

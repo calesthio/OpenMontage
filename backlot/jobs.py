@@ -693,8 +693,14 @@ def approve_asset_review(project_id: str) -> dict[str, Any]:
     if not manifest_path.is_file():
         raise JobError("No asset manifest is available for review.")
     asset_manifest = _read_json(manifest_path)
-    review_required = (asset_manifest.get("metadata") or {}).get("review_required") or {}
-    if review_required.get("type") != "reference_fidelity_review":
+    metadata = asset_manifest.setdefault("metadata", {})
+    review_required = metadata.get("review_required") or {}
+    review_already_approved = (metadata.get("reference_fidelity_review") or {}).get("status") == "approved"
+    render_report_path = project_dir / "artifacts" / "render_report.json"
+    if (
+        review_required.get("type") != "reference_fidelity_review"
+        and not (review_already_approved and not render_report_path.is_file())
+    ):
         raise JobError("This project is not waiting for reference-fidelity asset review.")
 
     generated_scene_ids = {str(asset.get("scene_id")) for asset in asset_manifest.get("assets") or []}
@@ -723,23 +729,24 @@ def approve_asset_review(project_id: str) -> dict[str, Any]:
         )
         return {"ok": True, "project_id": project_id, "status": "full_batch_review_required"}
 
-    asset_manifest.setdefault("metadata", {})["reference_fidelity_review"] = {
-        "status": "approved",
-        "approved_at": now_iso(),
-    }
-    asset_manifest["metadata"].pop("review_required", None)
-    _write_json(manifest_path, asset_manifest)
-    write_checkpoint(
-        PROJECTS_DIR,
-        project_id,
-        "assets",
-        "completed",
-        {"asset_manifest": asset_manifest},
-        pipeline_type="cinematic",
-        human_approved=True,
-        cost_snapshot=_cost_snapshot(asset_manifest),
-        metadata={"source": "hosted_ui", "approval": "reference_fidelity_review_passed"},
-    )
+    if not review_already_approved:
+        metadata["reference_fidelity_review"] = {
+            "status": "approved",
+            "approved_at": now_iso(),
+        }
+        metadata.pop("review_required", None)
+        _write_json(manifest_path, asset_manifest)
+        write_checkpoint(
+            PROJECTS_DIR,
+            project_id,
+            "assets",
+            "completed",
+            {"asset_manifest": asset_manifest},
+            pipeline_type="cinematic",
+            human_approved=True,
+            cost_snapshot=_cost_snapshot(asset_manifest),
+            metadata={"source": "hosted_ui", "approval": "reference_fidelity_review_passed"},
+        )
     edit_decisions, render_report = _compose(project_id, project_dir, asset_manifest, request_data, scene_plan)
     _write_json(project_dir / "artifacts" / "edit_decisions.json", edit_decisions)
     write_checkpoint(
@@ -2494,7 +2501,7 @@ def _build_remotion_cinematic_props(
     return {
         "renderer_family": "cinematic-trailer",
         "render_runtime": "remotion",
-        "composition_mode": "cinematic_renderer",
+        "composition_mode": "templated",
         "playbook": "clean-professional",
         "titleFontSize": 62,
         "titleWidth": 940,
@@ -2510,6 +2517,7 @@ def _build_remotion_cinematic_props(
             "compose_target": {"width": FINAL_WIDTH, "height": FINAL_HEIGHT, "fit": "cover"},
             "end_card": {"duration_seconds": edit_plan["end_card_seconds"], **card},
             "native_clip_audio": "replaced",
+            "renderer_component": "CinematicRenderer",
         },
     }
 
@@ -2613,7 +2621,7 @@ def _compose(
         "version": "1.0",
         "render_runtime": "remotion",
         "renderer_family": "cinematic-trailer",
-        "composition_mode": "cinematic_renderer",
+        "composition_mode": "templated",
         "cuts": [
             {
                 "id": f"cut_{idx}",
@@ -2639,6 +2647,7 @@ def _compose(
         "metadata": {
             "post_pipeline": "video_compose_remotion",
             "composer_tool": "video_compose",
+            "renderer_component": "CinematicRenderer",
             "composer_result": compose_result.data or {},
             "music_source": {**music_source, "path": "renders/music_generated.mp3"},
             "audio_mix": audio_mix,

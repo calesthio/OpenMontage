@@ -19,6 +19,10 @@ const SEAM_LABELS: Record<keyof Backends, { title: string; desc: string }> = {
 export default function SettingsPage() {
   const [info, setInfo] = useState<SystemInfo | null>(null);
   const [backends, setBackends] = useState<Backends | null>(null);
+  // No hardcoded fallback string here on purpose — a stale literal is
+  // exactly the bug this fixes (MAAS_LLM_MODEL can override the default,
+  // and the page should never claim a model isn't the one actually running).
+  const [llmModel, setLlmModel] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -36,14 +40,17 @@ export default function SettingsPage() {
       if (caps.status === "fulfilled" && caps.value?.backends) {
         setBackends(caps.value.backends as Backends);
       }
+      if (caps.status === "fulfilled" && caps.value?.llm_model) {
+        setLlmModel(caps.value.llm_model as string);
+      }
     }
     load();
   }, []);
 
   const env = {
-    "LLM 模型": "anthropic/claude-sonnet-4.6",
-    "视频生成": "MaaS · LTX-2.3 / Seedance (CNY 计费)",
-    "图像生成": "MaaS · Flux2",
+    "LLM 模型": llmModel ?? "加载中…",
+    "视频生成": "MaaS · LTX-2.3 / Wan2.2 / Seedance (CNY 计费)",
+    "图像生成": "MaaS · Flux2 / NanoBanana",
     "语音合成": "MaaS · qwen3-tts-flash / IndexTTS",
     "成本追踪": "cost_tracker 原账本 (cost_log.json)",
   };

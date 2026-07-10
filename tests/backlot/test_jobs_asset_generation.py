@@ -241,6 +241,106 @@ def test_post_edit_plan_can_trim_padded_first_scene_start():
     assert edit_plan["segments"][1]["source_start_seconds"] == 0.0
 
 
+def test_compose_uses_real_composer_music_and_end_card(monkeypatch, tmp_path):
+    from tools.audio import audio_mixer, music_gen
+    from tools.video import video_compose
+
+    project_id = "compose-p"
+    project_dir = tmp_path / project_id
+    (project_dir / "assets" / "video").mkdir(parents=True)
+    for idx in range(1, 4):
+        (project_dir / "assets" / "video" / f"scene{idx}.mp4").write_bytes(b"video")
+
+    music_calls: list[dict[str, Any]] = []
+    mixer_calls: list[dict[str, Any]] = []
+    composer_calls: list[dict[str, Any]] = []
+
+    class FakeMusicGen:
+        def estimate_cost(self, inputs: dict[str, Any]) -> float:
+            return 0.05
+
+        def execute(self, inputs: dict[str, Any]) -> ToolResult:
+            music_calls.append(inputs)
+            path = Path(inputs["output_path"])
+            path.write_bytes(b"music")
+            return ToolResult(success=True, data={"output": str(path)}, artifacts=[str(path)], cost_usd=0.05)
+
+    class FakeAudioMixer:
+        def execute(self, inputs: dict[str, Any]) -> ToolResult:
+            mixer_calls.append(inputs)
+            path = Path(inputs["output_path"])
+            path.write_bytes(b"normalized")
+            return ToolResult(success=True, data={"output": str(path)}, artifacts=[str(path)])
+
+    class FakeVideoCompose:
+        def execute(self, inputs: dict[str, Any]) -> ToolResult:
+            composer_calls.append(inputs)
+            path = Path(inputs["output_path"])
+            path.write_bytes(b"rendered")
+            return ToolResult(success=True, data={"operation": "remotion_render", "output": str(path)}, artifacts=[str(path)])
+
+    monkeypatch.setattr(jobs, "PROJECTS_DIR", tmp_path)
+    monkeypatch.setattr(music_gen, "MusicGen", FakeMusicGen)
+    monkeypatch.setattr(audio_mixer, "AudioMixer", FakeAudioMixer)
+    monkeypatch.setattr(video_compose, "VideoCompose", FakeVideoCompose)
+    monkeypatch.setattr(jobs, "_loudness_normalize_final", lambda src, dst: Path(dst).write_bytes(Path(src).read_bytes()))
+    monkeypatch.setattr(
+        jobs,
+        "_render_qa",
+        lambda final, planned: {
+            "duration_seconds": float(planned),
+            "planned_duration_seconds": float(planned),
+            "audio": {"effectively_silent": False},
+            "warnings": [],
+        },
+    )
+    uploads: list[tuple[str, str]] = []
+    monkeypatch.setattr(
+        jobs.storage,
+        "upload_file",
+        lambda path, pid, rel: uploads.append((pid, rel)) or {
+            "bucket": "ikawn-v1",
+            "key": f"{pid}/{rel}",
+            "url": f"https://cdn.example/{pid}/{rel}",
+        },
+    )
+
+    request = _request("kling-v3")
+    request.update({
+        "project_id": project_id,
+        "duration_seconds": 30,
+        "budget_cap_usd": 5.0,
+        "compose_requirements": {"trim_first_scene_start_seconds": 1.0},
+    })
+    manifest = {
+        "version": "1.0",
+        "total_cost_usd": 0.6,
+        "assets": [
+            {"id": f"vid_scene{idx}", "type": "video", "scene_id": f"scene{idx}", "path": f"assets/video/scene{idx}.mp4", "duration_seconds": 10.0}
+            for idx in range(1, 4)
+        ],
+    }
+
+    edit_decisions, render_report = jobs._compose(project_id, project_dir, manifest, request, _scene_plan())
+
+    assert music_calls and music_calls[0]["duration_seconds"] >= 30
+    assert mixer_calls and mixer_calls[0]["operation"] == "mix"
+    assert composer_calls and composer_calls[0]["operation"] == "remotion_render"
+    assert composer_calls[0]["profile"] == "youtube_shorts"
+    props = composer_calls[0]["edit_decisions"]
+    assert props["render_runtime"] == "remotion"
+    assert props["scenes"][0]["trimBeforeSeconds"] == 1.0
+    assert props["scenes"][-1]["id"] == "end_card"
+    assert props["scenes"][-1]["kind"] == "title"
+    assert edit_decisions["render_runtime"] == "remotion"
+    assert edit_decisions["metadata"]["composer_tool"] == "video_compose"
+    assert edit_decisions["metadata"]["native_clip_audio"] == "replaced_by_continuous_music_bed"
+    assert render_report["metadata"]["composer_tool"] == "video_compose"
+    assert render_report["metadata"]["post_pipeline"]["loudness_target_lufs"] == -14
+    assert (project_id, "renders/final.mp4") in uploads
+    assert (project_id, "renders/music_normalized.wav") in uploads
+
+
 def test_generate_assets_blocks_dimension_mismatch_before_manifest_acceptance(monkeypatch, tmp_path):
     _wire_fakes(monkeypatch, tmp_path)
     project_dir = init_project("p", title="P", pipeline_type="cinematic", pipeline_dir=tmp_path)

@@ -2321,213 +2321,209 @@ def _end_card_text(request_data: dict[str, Any] | None) -> dict[str, str]:
     return {"brand": brand, "tagline": tagline, "cta": cta}
 
 
-def _load_font(size: int):
+def _compose_profile(request_data: dict[str, Any] | None) -> str:
+    aspect = str((request_data or {}).get("aspect_ratio") or "16:9")
+    if aspect == "9:16":
+        return "youtube_shorts"
+    if aspect == "1:1":
+        return "instagram_feed"
+    return "youtube_landscape"
+
+
+def _music_prompt(request_data: dict[str, Any] | None, scene_plan: dict[str, Any] | None) -> str:
+    request_data = request_data or {}
+    scene_plan = scene_plan or {}
+    scene_notes = "; ".join(
+        str(scene.get("shot_intent") or scene.get("description") or "")
+        for scene in (scene_plan.get("scenes") or [])[:4]
+        if isinstance(scene, dict)
+    )
+    base = str(request_data.get("music_prompt") or "").strip()
+    if not base:
+        base = (
+            "Instrumental premium Indian textile commercial bed, sparse tanpura drone, "
+            "soft hand percussion, warm cinematic pulse, elegant and restrained, no vocals."
+        )
+    if scene_notes:
+        base = f"{base} Story beats: {scene_notes}"
+    return base[:900]
+
+
+def _assert_budget_allows_music(request_data: dict[str, Any], asset_manifest: dict[str, Any], estimated_cost: float) -> None:
+    cap = _coerce_optional_budget_cap(request_data.get("budget_cap_usd"))
+    if cap is None:
+        return
+    current = float(asset_manifest.get("total_cost_usd") or 0.0)
+    if current + estimated_cost > cap + 1e-9:
+        raise JobError(
+            f"Music generation would exceed the ${cap:.2f} project budget cap "
+            f"(current ${current:.2f} + music ${estimated_cost:.2f})."
+        )
+
+
+def _generate_music_track(
+    render_dir: Path,
+    duration: float,
+    request_data: dict[str, Any],
+    scene_plan: dict[str, Any] | None,
+    asset_manifest: dict[str, Any],
+) -> tuple[Path, dict[str, Any]]:
+    prompt = _music_prompt(request_data, scene_plan)
+    output_path = render_dir / "music_generated.mp3"
+    errors: list[str] = []
+
     try:
-        from PIL import ImageFont
+        from tools.audio.music_gen import MusicGen
 
-        for candidate in (
-            "/System/Library/Fonts/Supplemental/Georgia Bold.ttf",
-            "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf",
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-        ):
-            if Path(candidate).is_file():
-                return ImageFont.truetype(candidate, size=size)
-        return ImageFont.load_default()
-    except Exception:
-        return None
-
-
-def _create_end_card_clip(render_dir: Path, request_data: dict[str, Any] | None, duration: float) -> Path:
-    try:
-        from PIL import Image, ImageDraw
+        music_tool = MusicGen()
+        estimate = float(music_tool.estimate_cost({"prompt": prompt, "duration_seconds": duration}))
+        _assert_budget_allows_music(request_data, asset_manifest, estimate)
+        result = music_tool.execute({
+            "prompt": prompt,
+            "duration_seconds": duration,
+            "output_path": str(output_path),
+        })
+        if result.success and output_path.is_file():
+            return output_path, {
+                "tool": "music_gen",
+                "provider": "elevenlabs",
+                "prompt": prompt,
+                "duration_seconds": duration,
+                "estimated_cost_usd": estimate,
+                "actual_cost_usd": result.cost_usd,
+            }
+        errors.append(f"music_gen: {result.error or 'no output'}")
     except Exception as exc:
-        raise JobError(f"Pillow is required for end-card rendering: {exc}")
+        errors.append(f"music_gen: {exc}")
+
+    try:
+        from tools.audio.suno_music import SunoMusic
+
+        suno_path = render_dir / "music_generated_suno.mp3"
+        suno_tool = SunoMusic()
+        estimate = float(suno_tool.estimate_cost({"prompt": prompt, "instrumental": True}))
+        _assert_budget_allows_music(request_data, asset_manifest, estimate)
+        result = suno_tool.execute({
+            "prompt": prompt,
+            "instrumental": True,
+            "output_path": str(suno_path),
+            "model": "V4",
+        })
+        if result.success and suno_path.is_file():
+            return suno_path, {
+                "tool": "suno_music",
+                "provider": "suno",
+                "prompt": prompt,
+                "duration_seconds": result.data.get("duration_seconds") if isinstance(result.data, dict) else None,
+                "estimated_cost_usd": estimate,
+                "actual_cost_usd": result.cost_usd,
+            }
+        errors.append(f"suno_music: {result.error or 'no output'}")
+    except Exception as exc:
+        errors.append(f"suno_music: {exc}")
+
+    raise JobError("Real music generation is unavailable; " + " | ".join(errors))
+
+
+def _normalize_music_track(render_dir: Path, music_path: Path) -> tuple[Path, dict[str, Any]]:
+    from tools.audio.audio_mixer import AudioMixer
+
+    output_path = render_dir / "music_normalized.wav"
+    result = AudioMixer().execute({
+        "operation": "mix",
+        "tracks": [{"path": str(music_path), "role": "music", "volume": 1.0}],
+        "normalize": True,
+        "output_path": str(output_path),
+    })
+    if not result.success or not output_path.is_file():
+        raise JobError(f"audio_mixer failed to normalize generated music: {result.error or 'no output'}")
+    return output_path, {
+        "tool": "audio_mixer",
+        "operation": "mix",
+        "normalized": True,
+        "output": "renders/music_normalized.wav",
+    }
+
+
+def _build_remotion_cinematic_props(
+    video_assets: list[dict[str, Any]],
+    edit_plan: dict[str, Any],
+    request_data: dict[str, Any],
+    music_path: Path,
+) -> dict[str, Any]:
+    scenes: list[dict[str, Any]] = []
+    elapsed = 0.0
+    for idx, segment in enumerate(edit_plan["segments"], start=1):
+        asset = segment["asset"]
+        scenes.append({
+            "id": f"scene{idx}",
+            "kind": "video",
+            "startSeconds": round(elapsed, 3),
+            "durationSeconds": float(segment["output_duration_seconds"]),
+            "src": str(segment["path"]),
+            "tone": "neutral",
+            "trimBeforeSeconds": float(segment.get("source_start_seconds") or 0),
+            "trimAfterSeconds": max(
+                0.0,
+                float(segment.get("source_start_seconds") or 0) + float(segment["trim_seconds"]),
+            ),
+            "fadeInFrames": 0 if idx == 1 else 8,
+            "fadeOutFrames": 8,
+            "filter": "contrast(1.03) saturate(0.96) brightness(0.98)",
+            "assetId": asset.get("id"),
+        })
+        elapsed += float(segment["output_duration_seconds"])
 
     card = _end_card_text(request_data)
-    image_path = render_dir / "end_card.png"
-    video_path = render_dir / "end_card.mp4"
-    image = Image.new("RGB", (FINAL_WIDTH, FINAL_HEIGHT), "#171411")
-    draw = ImageDraw.Draw(image)
-    cream = "#f2e9d5"
-    amber = "#f0a83c"
-    muted = "#b8aa91"
-    title_font = _load_font(68)
-    brand_font = _load_font(46)
-    cta_font = _load_font(34)
-
-    y = FINAL_HEIGHT // 2 - 170
+    end_text = card["tagline"]
+    if card["cta"]:
+        end_text = f"{end_text}\n{card['cta']}"
     if card["brand"]:
-        brand_text = card["brand"].upper()
-        bbox = draw.textbbox((0, 0), brand_text, font=brand_font)
-        draw.text(((FINAL_WIDTH - (bbox[2] - bbox[0])) / 2, y), brand_text, fill=amber, font=brand_font)
-        y += 96
-    tagline = card["tagline"]
-    bbox = draw.textbbox((0, 0), tagline, font=title_font)
-    draw.text(((FINAL_WIDTH - (bbox[2] - bbox[0])) / 2, y), tagline, fill=cream, font=title_font)
-    y += 120
-    cta = card["cta"]
-    if cta:
-        bbox = draw.textbbox((0, 0), cta, font=cta_font)
-        draw.text(((FINAL_WIDTH - (bbox[2] - bbox[0])) / 2, y), cta, fill=muted, font=cta_font)
-    draw.line((FINAL_WIDTH * 0.35, y + 88, FINAL_WIDTH * 0.65, y + 88), fill=amber, width=3)
-    image.save(image_path)
+        end_text = f"{card['brand']}\n{end_text}"
+    scenes.append({
+        "id": "end_card",
+        "kind": "title",
+        "startSeconds": round(elapsed, 3),
+        "durationSeconds": float(edit_plan["end_card_seconds"]),
+        "text": end_text,
+        "accent": "#f0a83c",
+        "intensity": 0.72,
+        "variant": "plate",
+    })
 
-    cmd = [
-        "ffmpeg",
-        "-y",
-        "-loop",
-        "1",
-        "-framerate",
-        str(FINAL_FPS),
-        "-t",
-        f"{duration:.3f}",
-        "-i",
-        str(image_path),
-        "-vf",
-        f"fade=t=in:st=0:d=0.35,fade=t=out:st={max(0, duration - 0.45):.3f}:d=0.45,format=yuv420p",
-        "-c:v",
-        "libx264",
-        "-preset",
-        "medium",
-        "-crf",
-        "18",
-        "-r",
-        str(FINAL_FPS),
-        str(video_path),
-    ]
-    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
-    if proc.returncode != 0:
-        raise JobError(f"End-card render failed: {proc.stderr[-500:]}")
-    return video_path
+    return {
+        "renderer_family": "cinematic-trailer",
+        "render_runtime": "remotion",
+        "composition_mode": "cinematic_renderer",
+        "playbook": "clean-professional",
+        "titleFontSize": 62,
+        "titleWidth": 940,
+        "signalLineCount": 8,
+        "music": {
+            "src": str(music_path),
+            "volume": 0.42,
+            "fadeInSeconds": 1.0,
+            "fadeOutSeconds": 1.5,
+        },
+        "scenes": scenes,
+        "metadata": {
+            "compose_target": {"width": FINAL_WIDTH, "height": FINAL_HEIGHT, "fit": "cover"},
+            "end_card": {"duration_seconds": edit_plan["end_card_seconds"], **card},
+            "native_clip_audio": "replaced",
+        },
+    }
 
 
-def _render_video_with_crossfades(
-    segments: list[dict[str, Any]],
-    end_card_path: Path,
-    end_card_seconds: float,
-    output_path: Path,
-) -> float:
-    segment_count = len(segments) + 1
-    inputs: list[str] = []
-    for segment in segments:
-        inputs.extend(["-i", str(segment["path"])])
-    inputs.extend(["-i", str(end_card_path)])
-
-    filters: list[str] = []
-    durations: list[float] = []
-    for idx, segment in enumerate(segments):
-        trim = float(segment["trim_seconds"])
-        source_start = float(segment.get("source_start_seconds") or 0)
-        playback_rate = float(segment["playback_rate"])
-        output_duration = float(segment["output_duration_seconds"])
-        retime_filter = f"setpts=(PTS-STARTPTS)/{playback_rate:.3f}"
-        motion_filter = ",minterpolate=fps=24:mi_mode=mci:mc_mode=aobmc:me_mode=bidir" if playback_rate < 1.0 else ""
-        filters.append(
-            f"[{idx}:v]trim=start={source_start:.3f}:duration={trim:.3f},{retime_filter},fps={FINAL_FPS}{motion_filter},"
-            f"scale={FINAL_WIDTH}:{FINAL_HEIGHT}:force_original_aspect_ratio=increase,"
-            f"crop={FINAL_WIDTH}:{FINAL_HEIGHT},setsar=1,format=yuv420p[v{idx}]"
-        )
-        durations.append(output_duration)
-    end_idx = segment_count - 1
-    filters.append(
-        f"[{end_idx}:v]trim=start=0:duration={end_card_seconds:.3f},setpts=PTS-STARTPTS,"
-        f"fps={FINAL_FPS},scale={FINAL_WIDTH}:{FINAL_HEIGHT}:force_original_aspect_ratio=increase,"
-        f"crop={FINAL_WIDTH}:{FINAL_HEIGHT},setsar=1,format=yuv420p[v{end_idx}]"
-    )
-    durations.append(end_card_seconds)
-
-    current = "[v0]"
-    elapsed = durations[0]
-    for idx in range(1, segment_count):
-        out_label = f"[x{idx}]"
-        offset = max(0.1, elapsed - TRANSITION_SECONDS)
-        filters.append(
-            f"{current}[v{idx}]xfade=transition=fade:duration={TRANSITION_SECONDS:.3f}:offset={offset:.3f}{out_label}"
-        )
-        current = out_label
-        elapsed += durations[idx] - TRANSITION_SECONDS
-
-    cmd = [
-        "ffmpeg",
-        "-y",
-        *inputs,
-        "-filter_complex",
-        ";".join(filters),
-        "-map",
-        current,
-        "-an",
-        "-c:v",
-        "libx264",
-        "-preset",
-        "medium",
-        "-crf",
-        "18",
-        "-r",
-        str(FINAL_FPS),
-        "-pix_fmt",
-        "yuv420p",
-        str(output_path),
-    ]
-    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=1200)
-    if proc.returncode != 0:
-        raise JobError(f"FFmpeg post compose failed: {proc.stderr[-800:]}")
-    return _probe_duration_seconds(output_path)
-
-
-def _create_music_bed(render_dir: Path, duration: float) -> Path:
-    music_path = render_dir / "music_bed.wav"
-    out_fade_start = max(0, duration - 1.5)
-    pulse_start = max(0, duration - END_CARD_SECONDS)
-    filter_complex = (
-        "[0:a]volume=0.12[a0];"
-        "[1:a]volume=0.045,tremolo=f=5:d=0.18[a1];"
-        f"[2:a]volume=0.026,afade=t=in:st={pulse_start:.3f}:d={END_CARD_SECONDS:.3f}[a2];"
-        f"[a0][a1][a2]amix=inputs=3:duration=longest,lowpass=f=2600,"
-        f"afade=t=in:st=0:d=1,afade=t=out:st={out_fade_start:.3f}:d=1.5[a]"
-    )
-    cmd = [
-        "ffmpeg",
-        "-y",
-        "-f",
-        "lavfi",
-        "-i",
-        f"sine=frequency=146.83:sample_rate=48000:duration={duration:.3f}",
-        "-f",
-        "lavfi",
-        "-i",
-        f"sine=frequency=220:sample_rate=48000:duration={duration:.3f}",
-        "-f",
-        "lavfi",
-        "-i",
-        f"sine=frequency=58:sample_rate=48000:duration={duration:.3f}",
-        "-filter_complex",
-        filter_complex,
-        "-map",
-        "[a]",
-        "-c:a",
-        "pcm_s16le",
-        str(music_path),
-    ]
-    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
-    if proc.returncode != 0:
-        raise JobError(f"Music bed generation failed: {proc.stderr[-500:]}")
-    return music_path
-
-
-def _mux_music(video_path: Path, music_path: Path, final_path: Path, duration: float) -> None:
-    out_fade_start = max(0, duration - 1.5)
-    audio_filter = f"loudnorm=I=-14:TP=-1.5:LRA=11,afade=t=out:st={out_fade_start:.3f}:d=1.5"
+def _loudness_normalize_final(input_path: Path, output_path: Path) -> None:
     cmd = [
         "ffmpeg",
         "-y",
         "-i",
-        str(video_path),
-        "-i",
-        str(music_path),
+        str(input_path),
         "-map",
         "0:v:0",
         "-map",
-        "1:a:0",
+        "0:a:0",
         "-c:v",
         "copy",
         "-c:a",
@@ -2535,13 +2531,13 @@ def _mux_music(video_path: Path, music_path: Path, final_path: Path, duration: f
         "-b:a",
         "192k",
         "-af",
-        audio_filter,
+        "loudnorm=I=-14:TP=-1.5:LRA=11",
         "-shortest",
-        str(final_path),
+        str(output_path),
     ]
     proc = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
     if proc.returncode != 0:
-        raise JobError(f"Audio mix failed: {proc.stderr[-500:]}")
+        raise JobError(f"Final loudness normalization failed: {proc.stderr[-800:]}")
 
 
 def _render_qa(final_path: Path, planned_duration: float) -> dict[str, Any]:
@@ -2578,33 +2574,46 @@ def _compose(
     edit_plan = _post_edit_plan(video_assets, planned_duration, request_data)
     for segment in edit_plan["segments"]:
         segment["path"] = project_dir / segment["asset"]["path"]
-    end_card = _create_end_card_clip(render_dir, request_data, float(edit_plan["end_card_seconds"]))
-    silent_path = render_dir / "post_composed_silent.mp4"
-    silent_duration = _render_video_with_crossfades(
-        edit_plan["segments"],
-        end_card,
-        float(edit_plan["end_card_seconds"]),
-        silent_path,
-    )
-    music_bed = _create_music_bed(render_dir, silent_duration)
-    final_path = project_dir / "renders" / "final.mp4"
-    _mux_music(silent_path, music_bed, final_path, silent_duration)
+
+    music_duration = max(planned_duration, sum(float(s["output_duration_seconds"]) for s in edit_plan["segments"]) + float(edit_plan["end_card_seconds"]))
+    generated_music, music_source = _generate_music_track(render_dir, music_duration, request_data, scene_plan, asset_manifest)
+    normalized_music, audio_mix = _normalize_music_track(render_dir, generated_music)
+
+    remotion_props = _build_remotion_cinematic_props(video_assets, edit_plan, request_data, normalized_music)
+    remotion_path = render_dir / "final_remotion.mp4"
+    final_path = render_dir / "final.mp4"
+    from tools.video.video_compose import VideoCompose
+
+    render_started = time.time()
+    compose_result = VideoCompose().execute({
+        "operation": "remotion_render",
+        "edit_decisions": remotion_props,
+        "output_path": str(remotion_path),
+        "profile": _compose_profile(request_data),
+        "remotion_timeout_ms": 240000,
+    })
+    render_time_seconds = round(time.time() - render_started, 2)
+    if not compose_result.success or not remotion_path.is_file():
+        raise JobError(f"video_compose Remotion render failed: {compose_result.error or 'no output'}")
+    _loudness_normalize_final(remotion_path, final_path)
     render_qa = _render_qa(final_path, planned_duration)
 
     upload = storage.upload_file(final_path, project_id, "renders/final.mp4")
+    music_upload = storage.upload_file(normalized_music, project_id, "renders/music_normalized.wav")
     transition_rows = []
     elapsed = 0.0
     for segment in edit_plan["segments"]:
         elapsed += float(segment["output_duration_seconds"])
         transition_rows.append({
-            "type": "crossfade",
-            "at_seconds": round(max(0, elapsed - TRANSITION_SECONDS), 3),
-            "duration_seconds": TRANSITION_SECONDS,
+            "type": "composer_fade",
+            "at_seconds": round(elapsed, 3),
+            "duration_seconds": 8 / 30,
         })
-        elapsed -= TRANSITION_SECONDS
     edit_decisions = {
         "version": "1.0",
-        "render_runtime": "ffmpeg",
+        "render_runtime": "remotion",
+        "renderer_family": "cinematic-trailer",
+        "composition_mode": "cinematic_renderer",
         "cuts": [
             {
                 "id": f"cut_{idx}",
@@ -2612,26 +2621,32 @@ def _compose(
                 "in_seconds": float(segment.get("source_start_seconds") or 0),
                 "out_seconds": float(segment.get("source_start_seconds") or 0) + float(segment["trim_seconds"]),
                 "speed": float(segment["playback_rate"]),
-                "transition_out": "crossfade",
-                "transition_duration": TRANSITION_SECONDS,
-                "reason": "Hosted Ray UI generated scene clip, trimmed for post rhythm.",
+                "transition_out": "composer_fade",
+                "transition_duration": 8 / 30,
+                "reason": "Approved generated scene clip, trimmed for post rhythm and rendered by video_compose.",
             }
             for idx, segment in enumerate(edit_plan["segments"], start=1)
         ],
         "transitions": transition_rows,
         "audio": {
             "music": {
-                "asset_id": "renders/music_bed.wav",
-                "volume": 1.0,
+                "asset_id": "renders/music_normalized.wav",
+                "volume": 0.42,
                 "fade_in_seconds": 1.0,
                 "fade_out_seconds": 1.5,
             }
         },
         "metadata": {
-            "post_pipeline": "ffmpeg_post_compose",
-            "music_source": {"source": "synthetic_ffmpeg_bed", "target_lufs": -14, "path": "renders/music_bed.wav"},
+            "post_pipeline": "video_compose_remotion",
+            "composer_tool": "video_compose",
+            "composer_result": compose_result.data or {},
+            "music_source": {**music_source, "path": "renders/music_generated.mp3"},
+            "audio_mix": audio_mix,
             "end_card": {"duration_seconds": edit_plan["end_card_seconds"], **_end_card_text(request_data)},
-            "upscale": {"width": FINAL_WIDTH, "height": FINAL_HEIGHT, "method": "ffmpeg_scale_crop"},
+            "upscale": {"width": FINAL_WIDTH, "height": FINAL_HEIGHT, "method": "video_compose_profile_youtube_shorts"},
+            "loudness_normalization": {"target_lufs": -14, "true_peak_db": -1.5, "lra": 11},
+            "native_clip_audio": "replaced_by_continuous_music_bed",
+            "remotion_props": remotion_props,
             "retimed_cuts": [
                 {"source": segment["asset"]["id"], "playback_rate": segment["playback_rate"]}
                 for segment in edit_plan["segments"]
@@ -2651,18 +2666,22 @@ def _compose(
             "file_size_bytes": final_path.stat().st_size,
             "platform_target": "youtube",
         }],
-        "render_time_seconds": 0,
+        "render_time_seconds": render_time_seconds,
         "verification_notes": [
-            "Generated clips post-composed with FFmpeg crossfades.",
-            "Synthetic music bed mixed and loudness-normalized toward -14 LUFS.",
-            "End card rendered in post, not by the video model.",
-            "Final output scaled/cropped to 1080x1920.",
+            "Generated clips composed through tools/video/video_compose.py using Remotion CinematicRenderer.",
+            "Continuous generated music bed normalized through tools/audio/audio_mixer.py and final loudness-normalized toward -14 LUFS.",
+            "Native clip audio replaced by one continuous music bed.",
+            "End card rendered by the composer, not by the video model.",
+            "Final output rendered at 1080x1920.",
         ],
         "metadata": {
             "r2_output": upload,
+            "r2_music": music_upload,
+            "render_runtime": "remotion",
+            "composer_tool": "video_compose",
             "post_pipeline": {
-                "crossfades": True,
-                "music_bed": True,
+                "composer_fades": True,
+                "music_bed": "music_gen_or_suno",
                 "loudness_target_lufs": -14,
                 "end_card": True,
                 "upscaled_to": [FINAL_WIDTH, FINAL_HEIGHT],

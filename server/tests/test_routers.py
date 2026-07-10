@@ -136,3 +136,60 @@ def test_brand_kit_missing(client):
     assert client.get("/brands/ghost").status_code == 404
     assert client.patch("/brands/ghost", json={"slogan": "x"}).status_code == 404
     assert client.delete("/brands/ghost").status_code == 404
+
+
+def _tiny_png_bytes(mode="RGB", size=(4000, 3000)) -> bytes:
+    import io as _io
+    from PIL import Image
+    buf = _io.BytesIO()
+    Image.new(mode, size, (10, 20, 30) if mode == "RGB" else (10, 20, 30, 128)).save(buf, format="PNG")
+    return buf.getvalue()
+
+
+def test_reference_image_upload_resizes_and_records_path(client, tmp_path):
+    kid = client.post("/brands", json={"brand_name": "Rabbit TV"}).json()["kit_id"]
+
+    resp = client.post(
+        f"/brands/{kid}/reference-image",
+        files={"file": ("ref.png", _tiny_png_bytes(), "image/png")},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["reference_image_path"] == "reference.png"
+    assert body["reference_image_url"] == f"/brand-media/{kid}/reference.png"
+    # Uploaded 4000x3000 — must come back under the cap on both axes.
+    assert body["width"] <= 768 and body["height"] <= 768
+
+    kit = client.get(f"/brands/{kid}").json()
+    assert kit["reference_image_path"] == "reference.png"
+
+    saved = tmp_path / "brand_kits" / kid / "reference.png"
+    assert saved.exists()
+
+
+def test_reference_image_upload_flattens_transparency_onto_white(client, tmp_path):
+    kid = client.post("/brands", json={"brand_name": "Rabbit TV"}).json()["kit_id"]
+    client.post(
+        f"/brands/{kid}/reference-image",
+        files={"file": ("logo.png", _tiny_png_bytes(mode="RGBA", size=(100, 100)), "image/png")},
+    )
+    from PIL import Image
+    saved = Image.open(tmp_path / "brand_kits" / kid / "reference.png")
+    assert saved.mode == "RGB"  # no alpha channel left to silently mishandle downstream
+
+
+def test_reference_image_upload_rejects_non_image(client):
+    kid = client.post("/brands", json={"brand_name": "Rabbit TV"}).json()["kit_id"]
+    resp = client.post(
+        f"/brands/{kid}/reference-image",
+        files={"file": ("not-an-image.txt", b"hello world", "text/plain")},
+    )
+    assert resp.status_code == 400
+
+
+def test_reference_image_upload_missing_kit(client):
+    resp = client.post(
+        "/brands/ghost/reference-image",
+        files={"file": ("ref.png", _tiny_png_bytes(), "image/png")},
+    )
+    assert resp.status_code == 404

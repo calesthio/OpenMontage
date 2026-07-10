@@ -31,3 +31,14 @@ app.include_router(pipelines.router, prefix="/pipelines")
 projects_dir = OM_ROOT / "projects"
 projects_dir.mkdir(exist_ok=True)
 app.mount("/media", StaticFiles(directory=str(projects_dir)), name="media")
+
+# Serve brand kit assets (currently just reference images) at /brand-media/ —
+# kept separate from /media rather than folded into projects/, since brand
+# kits are reused across many jobs and aren't per-run output. This mount is
+# for the web UI to preview what was uploaded; the agent itself never fetches
+# this URL (stage_runner.py embeds the file's bytes as a base64 data URI in
+# the prompt instead, since MAAS_API_BASE is a remote gateway that can't
+# reach back into this box's localhost to fetch it).
+brand_kits_dir = OM_ROOT / "brand_kits"
+brand_kits_dir.mkdir(exist_ok=True)
+app.mount("/brand-media", StaticFiles(directory=str(brand_kits_dir)), name="brand_media")

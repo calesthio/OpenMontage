@@ -294,6 +294,33 @@ def _normalize_cost_snapshot(cost: Optional[dict]) -> Optional[dict]:
     return normalized
 
 
+def _cost_snapshot_from_events(events: list[dict[str, Any]]) -> Optional[dict[str, Any]]:
+    """Fallback spend from durable tool events when no cost_log exists."""
+    total = 0.0
+    entries = 0
+    for event in events:
+        if not isinstance(event, dict):
+            continue
+        if event.get("event") != "finish" or event.get("success") is not True:
+            continue
+        try:
+            cost = float(event.get("cost_usd") or 0.0)
+        except (TypeError, ValueError):
+            continue
+        if cost <= 0:
+            continue
+        total += cost
+        entries += 1
+    if entries == 0:
+        return None
+    return {
+        "total_spent_usd": round(total, 6),
+        "total_reserved_usd": 0.0,
+        "entries": entries,
+        "source": "events",
+    }
+
+
 # ---------------------------------------------------------------------------
 # Storyboard join
 # ---------------------------------------------------------------------------
@@ -647,6 +674,15 @@ def load_board_state(project_dir: Path) -> dict[str, Any]:
         if cost is None and cp.get("cost_snapshot"):
             cost = cp["cost_snapshot"]
             break
+    event_cost = _cost_snapshot_from_events(events)
+    if cost is None:
+        cost = event_cost
+    elif event_cost is not None:
+        try:
+            if float(event_cost.get("total_spent_usd") or 0) > float(cost.get("total_spent_usd") or cost.get("spent_usd") or 0):
+                cost = event_cost
+        except (TypeError, ValueError):
+            pass
     if cost is None:
         total = (artifacts.get("asset_manifest") or {}).get("total_cost_usd")
         if total is not None:

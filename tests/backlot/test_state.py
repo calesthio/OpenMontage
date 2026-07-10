@@ -203,6 +203,40 @@ class TestBoardState:
         assert s["cost"]["total_reserved_usd"] == 0.0
         assert s["cost"]["budget_remaining_usd"] == 4.96
 
+    def test_tool_event_spend_updates_stale_checkpoint_cost(self, projects_root):
+        p = _make_project(projects_root, "event-costed")
+        _write(p / "artifacts" / "asset_manifest.json", {
+            "version": "1.0",
+            "assets": [],
+            "total_cost_usd": 0.6,
+        })
+        _write(p / "checkpoint_assets.json", {
+            "version": "1.0",
+            "project_id": "event-costed",
+            "pipeline_type": "cinematic",
+            "stage": "assets",
+            "status": "completed",
+            "timestamp": "2026-07-10T00:00:00+00:00",
+            "human_approval_required": False,
+            "human_approved": True,
+            "artifacts": {},
+            "cost_snapshot": {"total_spent_usd": 0.6, "total_reserved_usd": 0},
+        })
+        events = [
+            {"event": "finish", "success": True, "tool": "kling_video", "cost_usd": 0.2},
+            {"event": "finish", "success": True, "tool": "kling_video", "cost_usd": 0.2},
+            {"event": "finish", "success": True, "tool": "kling_video", "cost_usd": 0.2},
+            {"event": "finish", "success": True, "tool": "music_gen", "cost_usd": 0.0503},
+            {"event": "finish", "success": False, "tool": "video_compose", "cost_usd": 0.9},
+        ]
+        (p / "events.jsonl").write_text("\n".join(json.dumps(e) for e in events), encoding="utf-8")
+
+        s = load_board_state(p)
+
+        assert s["cost"]["total_spent_usd"] == 0.6503
+        assert s["cost"]["source"] == "events"
+        assert s["cost"]["entries"] == 4
+
 
 class TestLibrary:
     def test_list_projects_sorts_live_first(self, projects_root):

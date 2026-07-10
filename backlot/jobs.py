@@ -9,6 +9,7 @@ import re
 import subprocess
 import time
 from datetime import datetime, timezone
+from io import BytesIO
 from pathlib import Path
 from typing import Any
 
@@ -31,6 +32,7 @@ END_CARD_SECONDS = 3.5
 VISUAL_PROMPT_BANNED_WORDS = ("vignette", "matte", "frame", "border")
 DEFAULT_END_CARD_TAGLINE = "Handcrafted. Heirloom. Yours."
 DEFAULT_END_CARD_CTA = "Enquire now"
+ASPECT_RATIO_TOLERANCE = 0.025
 VIDEO_MODELS: dict[str, dict[str, Any]] = {
     "grok-imagine-video": {
         "id": "grok-imagine-video",
@@ -60,7 +62,7 @@ VIDEO_MODELS: dict[str, dict[str, Any]] = {
         "requires_any_env": ("FAL_KEY", "FAL_AI_API_KEY"),
         "resolution": "720p",
         "priority": 0,
-        "reference_mode_note": "Single-image image_to_video only in this hosted adapter.",
+        "reference_mode_note": "Prepared start-frame image_to_video with optional element references in this hosted adapter.",
     },
     "veo3.1": {
         "id": "veo3.1",
@@ -1510,6 +1512,179 @@ def _blocked_asset_manifest(
     }
 
 
+def _blocked_asset_manifest_from_qa(
+    request_data: dict[str, Any],
+    model_config: dict[str, Any],
+    scene: dict[str, Any],
+    prompt: str,
+    qa_checks: dict[str, Any],
+    result: Any,
+    generation_inputs: dict[str, Any],
+    assets: list[dict[str, Any]],
+    r2_assets: list[dict[str, Any]],
+    total_cost: float,
+) -> dict[str, Any]:
+    result_data = getattr(result, "data", None)
+    return {
+        "version": "1.0",
+        "assets": assets,
+        "total_cost_usd": round(total_cost, 2),
+        "metadata": {
+            "r2_assets": r2_assets,
+            "blocked": True,
+            "blocker": {
+                "type": "asset_qa_dimension_mismatch",
+                "stage": "assets",
+                "scene_id": scene["id"],
+                "provider": model_config["provider_label"],
+                "model": model_config["model_variant"],
+                "video_model": request_data.get("video_model"),
+                "message": (
+                    "Generated clip dimensions do not match the planned aspect ratio. "
+                    "The clip was not accepted into the asset manifest."
+                ),
+                "qa_checks": qa_checks,
+                "prompt": prompt,
+                "generation_inputs": {
+                    key: generation_inputs.get(key)
+                    for key in (
+                        "operation",
+                        "preferred_provider",
+                        "duration",
+                        "aspect_ratio",
+                        "resolution",
+                        "reference_frame_preprocess",
+                        "original_reference_image_url",
+                    )
+                    if generation_inputs.get(key) is not None
+                },
+                "result": result_data if isinstance(result_data, dict) else {},
+                "recommendation": (
+                    "Regenerate after fixing start-frame aspect handling, or switch to a provider that preserves "
+                    "the required vertical output for this product."
+                ),
+            },
+        },
+    }
+
+
+def _aspect_ratio_value(aspect_ratio: Any) -> float | None:
+    match = re.match(r"^\s*(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)\s*$", str(aspect_ratio or ""))
+    if not match:
+        return None
+    width = float(match.group(1))
+    height = float(match.group(2))
+    if width <= 0 or height <= 0:
+        return None
+    return width / height
+
+
+def _target_dimensions_for_aspect(aspect_ratio: Any) -> tuple[int, int] | None:
+    value = str(aspect_ratio or "").strip()
+    presets = {
+        "16:9": (1920, 1080),
+        "9:16": (1080, 1920),
+        "1:1": (1080, 1080),
+        "4:3": (1440, 1080),
+        "3:4": (1080, 1440),
+    }
+    if value in presets:
+        return presets[value]
+    ratio = _aspect_ratio_value(value)
+    if not ratio:
+        return None
+    height = 1080
+    return max(1, round(height * ratio)), height
+
+
+def _prepare_kling_reference_frame(
+    project_dir: Path,
+    scene_id: str,
+    image_url: str,
+    aspect_ratio: str,
+) -> Path:
+    try:
+        from PIL import Image, ImageEnhance, ImageFilter, ImageOps
+    except Exception as exc:
+        raise JobError(f"Pillow is required to prepare Kling reference frames: {exc}") from exc
+
+    target = _target_dimensions_for_aspect(aspect_ratio)
+    if not target:
+        raise JobError(f"Cannot prepare Kling reference frame for unsupported aspect ratio: {aspect_ratio}")
+
+    try:
+        response = requests.get(image_url, timeout=60)
+        response.raise_for_status()
+        image = Image.open(BytesIO(response.content)).convert("RGB")
+    except Exception as exc:
+        raise JobError(f"Failed to load Kling reference image before paid generation: {exc}") from exc
+
+    resampling = getattr(getattr(Image, "Resampling", Image), "LANCZOS")
+    background = ImageOps.fit(image, target, method=resampling)
+    background = background.filter(ImageFilter.GaussianBlur(radius=max(target) / 32))
+    background = ImageEnhance.Brightness(background).enhance(0.92)
+
+    foreground = image.copy()
+    foreground.thumbnail(target, resampling)
+    x = (target[0] - foreground.width) // 2
+    y = (target[1] - foreground.height) // 2
+    background.paste(foreground, (x, y))
+
+    output = project_dir / "assets" / "references" / f"{scene_id}_kling_{str(aspect_ratio).replace(':', 'x')}_start.png"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    background.save(output, "PNG", optimize=True)
+    return output
+
+
+def _apply_model_specific_generation_inputs(
+    generation_inputs: dict[str, Any],
+    model_config: dict[str, Any],
+    request_data: dict[str, Any],
+    project_dir: Path,
+    scene_id: str,
+    all_reference_image_urls: list[str],
+    previous_last_frame_path: Path | None,
+) -> None:
+    if model_config["provider"] != "kling":
+        return
+
+    generation_inputs["negative_prompt"] = (
+        "generic floral print, plain fabric, changed saree, changed blouse, redesigned motifs, "
+        "watercolor smudge, blurry print, low detail, text, logo, caption, extra person"
+    )
+    generation_inputs["cfg_scale"] = 0.75
+    if all_reference_image_urls:
+        generation_inputs["elements"] = [{
+            "frontal_image_url": all_reference_image_urls[0],
+            "reference_image_urls": all_reference_image_urls[1:4],
+        }]
+
+    if (
+        generation_inputs.get("operation") == "image_to_video"
+        and generation_inputs.get("image_url")
+        and not previous_last_frame_path
+    ):
+        original_url = str(generation_inputs["image_url"])
+        prepared = _prepare_kling_reference_frame(
+            project_dir,
+            scene_id,
+            original_url,
+            str(generation_inputs.get("aspect_ratio") or request_data.get("aspect_ratio") or "16:9"),
+        )
+        generation_inputs["reference_image_path"] = str(prepared)
+        generation_inputs["original_reference_image_url"] = original_url
+        generation_inputs["reference_frame_preprocess"] = {
+            "provider": "kling",
+            "version": "kling-start-frame-aspect-pad-v1",
+            "source_url": original_url,
+            "prepared_path": str(prepared.relative_to(project_dir)),
+            "target_aspect_ratio": generation_inputs.get("aspect_ratio") or request_data.get("aspect_ratio"),
+            "strategy": "blurred-cover-background-with-contained-reference",
+        }
+        generation_inputs.pop("image_url", None)
+        generation_inputs.pop("reference_image_url", None)
+
+
 def _generate_assets(
     project_id: str,
     project_dir: Path,
@@ -1529,7 +1704,9 @@ def _generate_assets(
     total_cost = 0.0
     scenes = scene_plan["scenes"]
     scenes_to_generate = scenes[:1] if sample_only and scenes else scenes
-    reference_image_urls = _reference_image_urls(request_data, limit=_reference_limit(model_config))
+    reference_limit = _reference_limit(model_config)
+    all_reference_image_urls = _reference_image_urls(request_data, limit=max(7, reference_limit))
+    reference_image_urls = all_reference_image_urls[:reference_limit]
     previous_last_frame_path: Path | None = None
     write_checkpoint(PROJECTS_DIR, project_id, "assets", "in_progress", {}, pipeline_type="cinematic")
     for idx, scene in enumerate(scenes_to_generate, start=1):
@@ -1549,8 +1726,14 @@ def _generate_assets(
             reference_image_urls=reference_image_urls,
         )
         generation_signature["chain_source_hash"] = _file_sha1(chain_source_for_scene) if chain_source_for_scene else ""
+        if model_config["provider"] == "kling":
+            generation_signature["all_reference_hash"] = hashlib.sha1(
+                "\n".join(all_reference_image_urls).encode("utf-8")
+            ).hexdigest()
+            generation_signature["reference_frame_preprocess_version"] = "kling-start-frame-aspect-pad-v1"
         reused = out.is_file() and out.stat().st_size > 0 and _clip_metadata_matches(out, generation_signature)
         result = None
+        generation_inputs: dict[str, Any] = {}
         reused_cost = _event_cost_for_scene(project_dir, scene["id"]) if reused else 0.0
         if not reused:
             generation_inputs = {
@@ -1585,6 +1768,15 @@ def _generate_assets(
             )
             estimated_scene_cost = float(_video_tool(model_config).estimate_cost(generation_inputs) or 0)
             _assert_budget_allows_projected_spend(request_data, total_cost + estimated_scene_cost)
+            _apply_model_specific_generation_inputs(
+                generation_inputs,
+                model_config,
+                request_data,
+                project_dir,
+                scene["id"],
+                all_reference_image_urls,
+                chain_source_for_scene,
+            )
             result = selector.execute(generation_inputs)
             if not result.success:
                 if _is_no_media_generated(result):
@@ -1619,6 +1811,41 @@ def _generate_assets(
                 "generated_at": now_iso(),
                 **generation_signature,
             })
+        scene_cost = float((result.cost_usd if result else reused_cost) or 0)
+        qa_checks = _qa_video_clip(
+            out,
+            duration,
+            expected_aspect_ratio=request_data.get("aspect_ratio", "16:9"),
+        )
+        if not qa_checks.get("dimensions_ok", True):
+            asset_manifest = _blocked_asset_manifest_from_qa(
+                request_data,
+                model_config,
+                scene,
+                prompt,
+                qa_checks,
+                result,
+                generation_inputs,
+                assets,
+                r2_assets,
+                total_cost + scene_cost,
+            )
+            _write_json(project_dir / "artifacts" / "asset_manifest.json", asset_manifest)
+            write_checkpoint(
+                PROJECTS_DIR,
+                project_id,
+                "assets",
+                "awaiting_human",
+                {"asset_manifest": asset_manifest},
+                pipeline_type="cinematic",
+                cost_snapshot=_cost_snapshot(asset_manifest),
+                error=f"Generated clip dimensions do not match planned aspect ratio for {scene['id']}",
+                metadata={"source": "hosted_ui", "blocker": "asset_qa_dimension_mismatch"},
+            )
+            raise JobAwaitingHuman(
+                f"Generated clip dimensions do not match planned aspect ratio for {scene['id']}; "
+                "asset manifest acceptance is blocked."
+            )
         frame_rel = f"assets/chaining/{scene['id']}_last.jpg"
         frame_path = project_dir / frame_rel
         if _extract_last_frame(out, frame_path):
@@ -1633,9 +1860,7 @@ def _generate_assets(
             previous_last_frame_path = None
         upload = storage.upload_file(out, project_id, rel)
         r2_assets.append({"path": rel, **upload})
-        scene_cost = float((result.cost_usd if result else reused_cost) or 0)
         total_cost += scene_cost
-        qa_checks = _qa_video_clip(out, duration)
         result_data = result.data if result is not None and isinstance(result.data, dict) else {}
         generation_runs.append({
             "scene_id": scene["id"],
@@ -1647,6 +1872,12 @@ def _generate_assets(
             "chain_source_used": bool(idx > 1 and chain_source_for_scene),
             "output_path": rel,
             "cost_usd": scene_cost,
+            "qa_checks": qa_checks,
+            **(
+                {"reference_frame_preprocess": generation_inputs.get("reference_frame_preprocess")}
+                if generation_inputs.get("reference_frame_preprocess")
+                else {}
+            ),
         })
         assets.append({
             "id": f"vid_{scene['id']}",
@@ -1805,6 +2036,32 @@ def _probe_duration_seconds(path: Path) -> float:
         return 0.0
 
 
+def _probe_video_dimensions(path: Path) -> tuple[int, int] | None:
+    proc = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-show_entries",
+            "stream=width,height",
+            "-of",
+            "csv=p=0:s=x",
+            str(path),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    if proc.returncode != 0:
+        return None
+    match = re.search(r"(\d+)x(\d+)", proc.stdout.strip())
+    if not match:
+        return None
+    return int(match.group(1)), int(match.group(2))
+
+
 def _volumedetect(path: Path) -> dict[str, Any]:
     proc = subprocess.run(
         ["ffmpeg", "-hide_banner", "-nostats", "-i", str(path), "-af", "volumedetect", "-f", "null", "-"],
@@ -1879,14 +2136,33 @@ def _black_edge_warning(video_path: Path) -> dict[str, Any]:
             pass
 
 
-def _qa_video_clip(video_path: Path, expected_duration: float) -> dict[str, Any]:
+def _qa_video_clip(
+    video_path: Path,
+    expected_duration: float,
+    *,
+    expected_aspect_ratio: str | None = None,
+) -> dict[str, Any]:
     actual_duration = _probe_duration_seconds(video_path)
     duration_delta = actual_duration - float(expected_duration or 0)
+    dimensions = _probe_video_dimensions(video_path)
+    expected_ratio = _aspect_ratio_value(expected_aspect_ratio)
+    actual_ratio = None
+    aspect_ratio_delta = None
+    dimensions_ok = True
+    if dimensions:
+        actual_ratio = dimensions[0] / dimensions[1] if dimensions[1] else None
+    if expected_ratio and actual_ratio:
+        aspect_ratio_delta = actual_ratio - expected_ratio
+        dimensions_ok = abs(aspect_ratio_delta) <= ASPECT_RATIO_TOLERANCE
+    elif expected_ratio:
+        dimensions_ok = False
     audio = _volumedetect(video_path)
     edge = _black_edge_warning(video_path)
     warnings = []
     if expected_duration and abs(duration_delta) > 1.0:
         warnings.append("duration_vs_plan_mismatch")
+    if not dimensions_ok:
+        warnings.append("dimensions_vs_plan_mismatch")
     if edge.get("warning"):
         warnings.append("possible_black_vignette_or_matte")
     if audio.get("effectively_silent"):
@@ -1896,6 +2172,12 @@ def _qa_video_clip(video_path: Path, expected_duration: float) -> dict[str, Any]
         "expected_duration_seconds": float(expected_duration or 0),
         "duration_delta_seconds": round(duration_delta, 3),
         "duration_ok": not expected_duration or abs(duration_delta) <= 1.0,
+        "width": dimensions[0] if dimensions else None,
+        "height": dimensions[1] if dimensions else None,
+        "expected_aspect_ratio": expected_aspect_ratio,
+        "actual_aspect_ratio": round(actual_ratio, 6) if actual_ratio else None,
+        "aspect_ratio_delta": round(aspect_ratio_delta, 6) if aspect_ratio_delta is not None else None,
+        "dimensions_ok": dimensions_ok,
         "audio": audio,
         "black_edge": edge,
         "warnings": warnings,
@@ -1953,7 +2235,9 @@ def _video_prompt(
             ref_note = (
                 " A single reference image is supplied to Kling image-to-video. Treat it as the first-frame visual anchor: "
                 "preserve the same product, garment, fabric texture, color palette, styling, and brand feel. "
-                "Keep motion simple, with slow camera movement and no wardrobe/product redesign."
+                "Preserve exact textile motif geometry and block-print details; Warli figures, temples, suns, borders, "
+                "and linework must not wash out into generic florals. Keep motion simple, with slow camera movement "
+                "and no wardrobe/product redesign."
             )
         else:
             ref_note = (

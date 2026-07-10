@@ -84,6 +84,21 @@ class KlingVideo(BaseTool):
                 "default": "16:9",
             },
             "image_url": {"type": "string", "description": "Reference image URL for image_to_video"},
+            "start_image_url": {
+                "type": "string",
+                "description": "Fal Kling v3 start image URL for image_to_video",
+            },
+            "end_image_url": {
+                "type": "string",
+                "description": "Optional Fal Kling v3 end image URL for image_to_video",
+            },
+            "elements": {
+                "type": "array",
+                "description": "Optional Fal Kling v3 custom elements for subject/product consistency",
+            },
+            "negative_prompt": {"type": "string"},
+            "cfg_scale": {"type": "number", "minimum": 0, "maximum": 1},
+            "generate_audio": {"type": "boolean", "default": True},
             "output_path": {"type": "string"},
         },
     }
@@ -92,7 +107,18 @@ class KlingVideo(BaseTool):
         cpu_cores=1, ram_mb=512, vram_mb=0, disk_mb=500, network_required=True
     )
     retry_policy = RetryPolicy(max_retries=2, retryable_errors=["rate_limit", "timeout"])
-    idempotency_key_fields = ["prompt", "model_variant", "operation", "duration"]
+    idempotency_key_fields = [
+        "prompt",
+        "model_variant",
+        "operation",
+        "duration",
+        "aspect_ratio",
+        "image_url",
+        "start_image_url",
+        "end_image_url",
+        "negative_prompt",
+        "cfg_scale",
+    ]
     side_effects = ["writes video file to output_path", "calls fal.ai API"]
     user_visible_verification = ["Watch generated clip for motion coherence and visual quality"]
 
@@ -136,10 +162,26 @@ class KlingVideo(BaseTool):
         payload: dict[str, Any] = {"prompt": inputs["prompt"]}
         if inputs.get("duration"):
             payload["duration"] = inputs["duration"]
-        if inputs.get("aspect_ratio"):
+        if "generate_audio" in inputs:
+            payload["generate_audio"] = bool(inputs["generate_audio"])
+        if inputs.get("negative_prompt"):
+            payload["negative_prompt"] = inputs["negative_prompt"]
+        if inputs.get("cfg_scale") is not None:
+            payload["cfg_scale"] = inputs["cfg_scale"]
+        if operation != "image_to_video" and inputs.get("aspect_ratio"):
             payload["aspect_ratio"] = inputs["aspect_ratio"]
-        if operation == "image_to_video" and inputs.get("image_url"):
-            payload["image_url"] = inputs["image_url"]
+        if operation == "image_to_video":
+            start_image_url = (
+                inputs.get("start_image_url")
+                or inputs.get("image_url")
+                or inputs.get("reference_image_url")
+            )
+            if start_image_url:
+                payload["start_image_url"] = start_image_url
+            if inputs.get("end_image_url"):
+                payload["end_image_url"] = inputs["end_image_url"]
+            if inputs.get("elements"):
+                payload["elements"] = inputs["elements"]
 
         headers = {
             "Authorization": f"Key {api_key}",
@@ -200,6 +242,8 @@ class KlingVideo(BaseTool):
                 "prompt": inputs["prompt"],
                 "operation": operation,
                 "aspect_ratio": inputs.get("aspect_ratio", "16:9"),
+                "requested_aspect_ratio": inputs.get("aspect_ratio", "16:9"),
+                "start_image_url": payload.get("start_image_url"),
                 "output": str(output_path),
                 "output_path": str(output_path),
                 "format": "mp4",

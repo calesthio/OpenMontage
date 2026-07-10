@@ -505,8 +505,10 @@ a.backlink:hover { color: var(--text-2); }
 }
 
 /* render section */
-.render-hero { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: #000; }
-.render-hero video { width: 100%; display: block; max-height: 560px; }
+.render-hero { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: #000; display: flex; justify-content: center; }
+/* natural width up to the container: a 9:16 render shows as a centered
+   portrait frame instead of stretching into a letterboxed landscape box */
+.render-hero video { display: block; width: auto; max-width: 100%; max-height: 560px; }
 .render-meta { font-family: var(--mono); font-size: calc(10.5px * var(--fs-scale)); color: var(--text-3); padding: 8px 2px; display: flex; gap: 14px; flex-wrap: wrap; }
 .render-meta .v { color: var(--text-2); cursor: pointer; }
 .render-meta .v.active { color: var(--amber); }

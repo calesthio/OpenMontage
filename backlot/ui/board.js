@@ -528,7 +528,10 @@ function renderRenders(s) {
   // watch: carry playback position/state over to the recreated element.
   const prev = document.querySelector(".render-hero video");
   const src = mediaURL(s.project_id, current.path);
-  const video = el("video", { src, controls: "", preload: "none" });
+  // preload="metadata" gives the element its intrinsic aspect ratio (and a
+  // poster frame) before playback — without it a portrait 9:16 render sits
+  // in a letterboxed 100%-wide black box that reads as landscape.
+  const video = el("video", { src, controls: "", preload: "metadata" });
   // Click the frame to start playback (controls handle pause/scrub) — the
   // big player was inert to a click on the picture itself.
   video.addEventListener("click", () => { if (video.paused) video.play().catch(() => {}); });
@@ -778,16 +781,22 @@ function render() {
   if (decisions) aside.append(decisions);
   if (activity) aside.append(activity);
 
-  if (script || decisions || activity) {
-    app.append(el("div", { class: "board" }, main, aside));
-  }
-
+  // Media sections live INSIDE the main column so a tall decisions rail
+  // never pushes them below the fold — the column flows beside the rail.
   const storyboard = renderStoryboard(s);
-  if (storyboard) app.append(storyboard);
   const found = renderFoundMedia(s);
-  if (found) app.append(found);
   const renders = renderRenders(s);
-  if (renders) app.append(renders);
+
+  if (script || decisions || activity) {
+    for (const section of [storyboard, found, renders]) {
+      if (section) main.append(section);
+    }
+    app.append(el("div", { class: "board" }, main, aside));
+  } else {
+    for (const section of [storyboard, found, renders]) {
+      if (section) app.append(section);
+    }
+  }
 }
 
 // Defensive normalization (F-02): the server contract guarantees these

@@ -1,4 +1,4 @@
-# Stock Sourcing Usage for OpenMontage
+# Stock Sourcing Usage for Balamonis Studio
 
 > How to use the stock image and video tools effectively — query construction,
 > provider selection, license awareness, and integration with the asset pipeline.
@@ -124,4 +124,4 @@ The Edit Director and Compose Director treat stock assets identically to generat
 | Pexels | Yes, free | Not required (appreciated) | Cannot sell unaltered; cannot imply endorsement |
 | Pixabay | Yes, free | Not required | Cannot sell unaltered; cannot create competing stock service |
 
-Both are safe for all OpenMontage use cases. No licensing fees, no per-use royalties, no attribution obligations.
+Both are safe for all Balamonis Studio use cases. No licensing fees, no per-use royalties, no attribution obligations.

@@ -15,6 +15,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from lib.web_runtime import GSAP_CDN_FALLBACK, stage_gsap
 from schemas.artifacts import validate_artifact
 from tools.base_tool import (
     BaseTool,
@@ -555,13 +556,16 @@ class CharacterRigRenderer(BaseTool):
         <path class=\"arm arm-right outline\" d=\"M385 360 C440 330 465 290 475 240\" fill=\"none\" />
       </g>"""
             )
+        # Vendor GSAP next to the preview so it animates offline / behind a
+        # restricted-egress proxy, falling back to the CDN if unavailable.
+        preview_gsap = stage_gsap(output_path.parent) or GSAP_CDN_FALLBACK
         html = f"""<!doctype html>
 <html lang=\"en\">
 <head>
   <meta charset=\"utf-8\" />
   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
   <title>Character Animation Preview</title>
-  <script src=\"https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js\"></script>
+  <script src=\"{preview_gsap}\"></script>
   <style>
     body {{ margin: 0; overflow: hidden; background: #9bd7ff; font-family: system-ui, sans-serif; }}
     #stage {{ width: 100vw; height: 100vh; display: grid; place-items: center; background: linear-gradient(#9bd7ff 0 65%, #75c878 65%); }}
@@ -635,7 +639,7 @@ class CharacterRigRenderer(BaseTool):
         )
         (workspace_path / "DESIGN.md").write_text(
             "# DESIGN\n\n"
-            "Generated for OpenMontage character animation.\n\n"
+            "Generated for Balamonis Studio character animation.\n\n"
             "- Background: `#9bd7ff` sky and `#75c878` ground\n"
             "- Foreground: `#202632` ink outlines\n"
             "- Accent: saturated cartoon body colors\n"
@@ -644,6 +648,11 @@ class CharacterRigRenderer(BaseTool):
         )
         finite_bounce_repeats = max(0, int(total_duration / 0.9) - 1)
         finite_acting_repeats = max(0, int(total_duration / 2.1) - 1)
+        # Vendor GSAP into the workspace so the composition validates and
+        # renders offline. character-scene.html lives in compositions/, so it
+        # references the workspace-level vendor copy one level up.
+        scene_gsap_name = stage_gsap(workspace_path / "vendor")
+        scene_gsap = f"../vendor/{scene_gsap_name}" if scene_gsap_name else GSAP_CDN_FALLBACK
         composition_html = f"""<template id=\"character-scene-template\">
   <div data-composition-id=\"character-scene\" data-start=\"0\" data-duration=\"{total_duration:.3f}\" data-width=\"1280\" data-height=\"720\">
     <style>
@@ -654,7 +663,7 @@ class CharacterRigRenderer(BaseTool):
     <svg viewBox=\"0 0 640 640\" role=\"img\" aria-label=\"Character animation scene\">
 {''.join(character_svgs)}
     </svg>
-    <script src=\"https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js\"></script>
+    <script src=\"{scene_gsap}\"></script>
     <script>
       window.__timelines = window.__timelines || {{}};
       const tl = gsap.timeline({{ paused: true }});

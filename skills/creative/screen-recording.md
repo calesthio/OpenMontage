@@ -107,7 +107,7 @@ FONT SIZE (IDE):  18-22px minimum for readability at 1080p delivery
 - Compress at 3:1 to even out speaking volume
 - Target -16 LUFS for screen recording content (slightly quieter than -14, more comfortable for long viewing)
 
-## Applying to OpenMontage
+## Applying to Balamonis Studio
 
 When processing screen recordings in the talking-head pipeline:
 

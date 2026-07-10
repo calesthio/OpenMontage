@@ -1,4 +1,4 @@
-# OpenMontage - Development Dependencies
+# Balamonis Studio - Development Dependencies
 -r requirements.txt
 pytest>=8.0
 pytest-asyncio>=0.23

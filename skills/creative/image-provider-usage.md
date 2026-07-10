@@ -1,4 +1,4 @@
-# Image Provider Usage for OpenMontage
+# Image Provider Usage for Balamonis Studio
 
 > How to choose between image generation and stock providers, and how to use each effectively.
 > Supplements the existing `image-gen-usage.md` (which covers FLUX prompting in depth).

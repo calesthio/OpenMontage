@@ -1,6 +1,6 @@
 # Apple Silicon (MPS) Support
 
-OpenMontage supports Apple Silicon Macs (M1/M2/M3/M4/M5) via PyTorch's
+Balamonis Studio supports Apple Silicon Macs (M1/M2/M3/M4/M5) via PyTorch's
 Metal Performance Shaders (MPS) backend. Local GPU tools — video generation,
 upscaling, and face restoration — automatically detect and use MPS when
 available.

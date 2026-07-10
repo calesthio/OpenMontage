@@ -6,7 +6,7 @@
 
 ## Runtime Choice — Remotion vs HyperFrames
 
-Animation work in OpenMontage runs on one of two composition runtimes. Both
+Animation work in Balamonis Studio runs on one of two composition runtimes. Both
 are first-class; the choice is creative, not a fallback:
 
 - **Remotion (React-based)** — when the scene is a React component, uses the
@@ -41,11 +41,11 @@ EXPORT:           H.264 CRF 18-20 for web, ProRes 422 for editing
 | Style | FPS | When to Use |
 |-------|-----|-------------|
 | **Cinematic animation** | 24 | Film-like feel, character animation, organic motion |
-| **Web/explainer standard** | 30 | Default for YouTube/web video. OpenMontage default. |
+| **Web/explainer standard** | 30 | Default for YouTube/web video. Balamonis Studio default. |
 | **Smooth UI animation** | 60 | Software demos, UI transitions, scrolling |
 | **Stylized/limited** | 12-15 on 2s/3s | Deliberately choppy, artistic choice |
 
-**OpenMontage default:** 30fps. Render Manim at 60fps and transcode to 30fps for smoother motion at delivery frame rate.
+**Balamonis Studio default:** 30fps. Render Manim at 60fps and transcode to 30fps for smoother motion at delivery frame rate.
 
 ## Timing Principles (Applied to Motion Graphics)
 
@@ -131,11 +131,11 @@ When multiple elements enter:
 | Transparent overlay | ProRes 4444 | When compositing over other footage |
 | GIF preview | GIF | 480px wide, 15fps, 256 colors |
 
-## Applying to OpenMontage
+## Applying to Balamonis Studio
 
 When building animation/motion graphics content:
 
-1. **Render at 30fps** (OpenMontage default) — Manim at 60fps, transcode down
+1. **Render at 30fps** (Balamonis Studio default) — Manim at 60fps, transcode down
 2. **Never use linear easing** — default to `easeInOutCubic` for all motion
 3. **Stagger multi-element entrances** by 100-200ms — don't reveal everything at once
 4. **Hold key frames** for 1.0-2.0s after reveals (synced to narration)

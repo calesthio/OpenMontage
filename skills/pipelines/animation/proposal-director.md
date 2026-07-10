@@ -206,7 +206,7 @@ Estimated cost for 30s video: pull from each provider's `estimate_cost` on the
   actual clip plan — per-clip costs range widely between providers and change
   often. Do NOT hardcode.
 
-Note: This approach is not yet proven in the OpenMontage pipeline.
+Note: This approach is not yet proven in the Balamonis Studio pipeline.
       Consistency across clips is the #1 challenge.
 ```
 

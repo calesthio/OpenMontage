@@ -5,7 +5,7 @@
 
 ## When to pick Seedance 2.0
 
-Seedance 2.0 (ByteDance Seed team, released Feb 2026) is OpenMontage's **preferred premium default for cinematic, trailer, teaser, hype-edit, and motion-led clip work** whenever a paid gateway is configured (`FAL_KEY` via `seedance_video`, or HeyGen Video Agent / Avatar Shots). It is the only model in the fleet that delivers all of:
+Seedance 2.0 (ByteDance Seed team, released Feb 2026) is Balamonis Studio's **preferred premium default for cinematic, trailer, teaser, hype-edit, and motion-led clip work** whenever a paid gateway is configured (`FAL_KEY` via `seedance_video`, or HeyGen Video Agent / Avatar Shots). It is the only model in the fleet that delivers all of:
 
 - single-pass native synchronized audio (speech + SFX + ambience together, not post-sync),
 - multi-shot generation inside a single prompt,

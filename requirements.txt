@@ -1,4 +1,4 @@
-# OpenMontage - Core Dependencies
+# Balamonis Studio - Core Dependencies
 pyyaml>=6.0
 pydantic>=2.0
 jsonschema>=4.20

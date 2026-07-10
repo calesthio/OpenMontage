@@ -1,7 +1,7 @@
-# Background Removal Usage for OpenMontage
+# Background Removal Usage for Balamonis Studio
 
 > Sources: rembg library documentation, U2Net paper (Qin et al. 2020), IS-Net paper
-> (Qin et al. 2022), OpenMontage `tools/bg_remove.py` implementation
+> (Qin et al. 2022), Balamonis Studio `tools/bg_remove.py` implementation
 
 ## Quick Reference Card
 
@@ -101,7 +101,7 @@ Before moving to the compose stage, verify each bg_remove output:
 - [ ] **Subject integrity** -- no parts of the subject were incorrectly removed
 - [ ] **Compositing test** -- when layered over the target background, the subject blends naturally
 
-## Applying to OpenMontage
+## Applying to Balamonis Studio
 
 When using the `bg_remove` tool in asset preparation:
 

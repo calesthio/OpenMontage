@@ -1,7 +1,7 @@
 # HyperFrames Skill (Layer 2)
 
-This is the **OpenMontage-specific** guide to HyperFrames. It explains when
-OpenMontage pipelines should choose HyperFrames over Remotion, how OpenMontage
+This is the **Balamonis Studio-specific** guide to HyperFrames. It explains when
+Balamonis Studio pipelines should choose HyperFrames over Remotion, how Balamonis Studio
 artifacts map to HyperFrames project files, and how the compose stage drives
 the HyperFrames CLI.
 
@@ -26,9 +26,9 @@ This file teaches the bridge between the two.
 
 ---
 
-## When OpenMontage should pick HyperFrames (vs Remotion vs FFmpeg)
+## When Balamonis Studio should pick HyperFrames (vs Remotion vs FFmpeg)
 
-OpenMontage separates two concepts:
+Balamonis Studio separates two concepts:
 
 - **`renderer_family`** — the creative grammar (`explainer-data`,
   `cinematic-trailer`, `product-reveal`, etc.). Chosen at proposal.
@@ -50,7 +50,7 @@ logged in `decision_log`. Silent runtime swaps are a contract violation.
 | Product promo / launch reel / marketing title card | **HyperFrames** | CSS/GSAP composition grammar matches how designers already think about these. Templates (`kinetic-type`, `product-promo`, `swiss-grid`) give a strong starting point. |
 | Website-to-video / UI-driven composition | **HyperFrames** | The `website-to-video` workflow exists for exactly this. |
 | Registry block needed (data chart, grain overlay, shimmer sweep, shader transition) | **HyperFrames** | The registry is HyperFrames-only. Remotion does not have `hyperframes add`. |
-| Synthetic UI / fake terminal / fake browser demo | Either — depends on existing coverage | OpenMontage already ships Remotion `TerminalScene` (see `synthetic-screen-recording` Layer 3). For UI chrome beyond terminal, HyperFrames HTML is easier. |
+| Synthetic UI / fake terminal / fake browser demo | Either — depends on existing coverage | Balamonis Studio already ships Remotion `TerminalScene` (see `synthetic-screen-recording` Layer 3). For UI chrome beyond terminal, HyperFrames HTML is easier. |
 | Pure concat / trim of source clips, no composition | **FFmpeg** | Neither Remotion nor HyperFrames add value here. |
 | Remotion is not installed on this machine | **HyperFrames** (if available) or **FFmpeg** | Do not silently fall back. Tell the user before downgrading. |
 
@@ -143,9 +143,9 @@ and gitignored along with the rest of `projects/`.
 ## Artifact → HyperFrames mapping
 
 When `render_runtime = "hyperframes"`, the compose stage translates
-OpenMontage artifacts into HyperFrames project files:
+Balamonis Studio artifacts into HyperFrames project files:
 
-| OpenMontage artifact field | HyperFrames target |
+| Balamonis Studio artifact field | HyperFrames target |
 |---|---|
 | `edit_decisions.cuts[]` (sequence of scenes) | `index.html` timeline, one `<div data-composition-id data-composition-src>` per cut |
 | `edit_decisions.cuts[i].in_seconds / out_seconds` | `data-start` / `data-duration` on the clip element |
@@ -164,7 +164,7 @@ with the path to the generated MP4. See `tools/video/hyperframes_compose.py`.
 ### Workspace-local authoring artifacts
 
 Upstream's `website-to-video` skill uses `DESIGN.md`, `SCRIPT.md`, and
-`STORYBOARD.md` as step-by-step workspace files. OpenMontage does **not**
+`STORYBOARD.md` as step-by-step workspace files. Balamonis Studio does **not**
 replace its canonical artifact contracts with these — `brief`, `script`,
 `scene_plan`, `edit_decisions`, etc. remain the source of truth under
 `projects/<p>/artifacts/`. Treat the upstream files as **convenience copies**
@@ -262,7 +262,7 @@ cannot.
 
 ## Style bridge (playbook → CSS)
 
-OpenMontage playbooks currently translate into Remotion `themeConfig`
+Balamonis Studio playbooks currently translate into Remotion `themeConfig`
 objects. For HyperFrames, the equivalent translation produces:
 
 - A block of CSS custom properties on `:root` (`--color-bg`, `--color-fg`,
@@ -420,7 +420,7 @@ the `deterministicFonts.ts` mapping table. Safe bets: `Outfit`,
   carries colors, typography, and motion.
 - ❌ Writing HyperFrames compositions that reference `remotion-composer/public/`
   — the HyperFrames workspace is separate and self-contained.
-- ❌ Running `hyperframes init` from the OpenMontage orchestrator. `init`
+- ❌ Running `hyperframes init` from the Balamonis Studio orchestrator. `init`
   creates its own project semantics and installs agent skills — it's meant
   for humans bootstrapping a project, not for the pipeline. `hyperframes_compose`
   generates the project files directly.

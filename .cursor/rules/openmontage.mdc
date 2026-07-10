@@ -1,10 +1,10 @@
 ---
-description: OpenMontage project rules
+description: Balamonis Studio project rules
 globs: ["**/*"]
 alwaysApply: true
 ---
 
-# OpenMontage
+# Balamonis Studio
 
 MANDATORY: Read `AGENT_GUIDE.md` before responding to ANY user message.
 

@@ -26,7 +26,7 @@ proposal unless a `render_runtime_selection` decision explicitly changed it.
 4. Render final video through `video_compose` using the renderer handoff or the
    approved Remotion/HyperFrames package. The deliverable path is
    `projects/<project-name>/renders/final.mp4`, matching the standard
-   OpenMontage project convention.
+   Balamonis Studio project convention.
 5. Run standard `final_review`: ffprobe, frame sampling, visual spotcheck, audio
    spotcheck, promise preservation.
 

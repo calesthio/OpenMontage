@@ -277,6 +277,18 @@ def create_app() -> FastAPI:
     if UI_DIR.is_dir():
         app.mount("/ui", StaticFiles(directory=UI_DIR), name="ui")
 
+    # The board is a long-lived SPA: a tab keeps running whatever board.js it
+    # loaded, and browsers heuristically cache /ui assets. no-cache forces a
+    # conditional revalidation (cheap 304 via ETag) on every load so UI fixes
+    # show up on a plain refresh. Media/thumb responses keep normal caching.
+    @app.middleware("http")
+    async def ui_no_cache(request, call_next):
+        response = await call_next(request)
+        path = request.url.path
+        if path == "/" or path.startswith("/ui") or path.startswith("/p/"):
+            response.headers["Cache-Control"] = "no-cache"
+        return response
+
     return app
 
 

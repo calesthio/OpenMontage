@@ -13,4 +13,4 @@ Source of truth for what's been scripted/produced/posted. The live IG grid outra
 | 2026-07-02 | The handoff tax | HANDOFF | posted |
 | 2026-07-06 | The collection gap (late invoices / AR) | CASH | produced · awaiting review (Drive 7/6/26; zernio draft deleted per review-first directive) |
 | 2026-07-07 | Dead stock / dead capital (frozen inventory) | STOCK | produced · awaiting review (Drive 7/7/26) |
-| 2026-07-09 | The thirteenth month (owner admin burden, ICP direct) | MONTH | produced · awaiting review (Drive 7/9/26; real Mixkit b-roll, avatar 14%) |
+| 2026-07-09 | The thirteenth month (owner admin burden, ICP direct) | MONTH | produced · awaiting review (Drive 7/11/26; real Mixkit b-roll, avatar 14%) |

@@ -32,8 +32,8 @@ Everything you need to know about every provider in OpenMontage — setup instru
 PEXELS_API_KEY=              # Stock photos + videos
 PIXABAY_API_KEY=             # Stock photos + videos
 
-# GOOGLE (one key, two tools, generous free tier)
-GOOGLE_API_KEY=              # Google TTS + Google Imagen
+# GOOGLE (one key, multiple tools, generous TTS free tier)
+GOOGLE_API_KEY=              # Google TTS + Imagen + Lyria music + Gemini Omni/Veo video
 
 # VOICE + MUSIC
 ELEVENLABS_API_KEY=          # TTS, music, sound effects (10K chars/month free)
@@ -245,12 +245,12 @@ Doubao Speech 2.0 is billed by character package or usage in Volcengine. OpenMon
 
 ---
 
-### Google — TTS + Imagen (Shared Key)
+### Google — TTS + Imagen + Music + Video (Shared Key)
 
-> **One key, two tools.** Google Cloud TTS has 700+ voices in 50+ languages — the strongest localization option. Imagen 4 generates high-quality images.
+> **One key, five tools.** Google Cloud TTS has 700+ voices in 50+ languages — the strongest localization option. Imagen 4 generates high-quality images. Google Lyria generates high-quality background music. Gemini Omni Flash supports conversational video editing, and direct Veo generation covers premium short video clips.
 
-**Tools unlocked:** `google_tts`, `google_imagen`
-**Env var:** `GOOGLE_API_KEY`
+**Tools unlocked:** `google_tts`, `google_imagen`, `google_music`, `gemini_omni_video`, `veo_video`
+**Env var:** `GOOGLE_API_KEY` (or `GEMINI_API_KEY` — either works; `GEMINI_API_KEY` takes precedence)
 
 #### Setup
 
@@ -258,14 +258,14 @@ Doubao Speech 2.0 is billed by character package or usage in Volcengine. OpenMon
 2. Navigate to [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
 3. Click **Create API Key**, select a Google Cloud project
 4. Copy the key
-5. Add to `.env`: `GOOGLE_API_KEY=AIza...`
+5. Add to `.env`: `GOOGLE_API_KEY=AIza...` (or `GEMINI_API_KEY=AIza...`)
 
 **For TTS specifically**, you also need to enable the Text-to-Speech API:
 1. Visit [console.cloud.google.com/apis/library/texttospeech.googleapis.com](https://console.cloud.google.com/apis/library/texttospeech.googleapis.com)
 2. Click **Enable**
 3. Make sure your API key's restrictions allow the Text-to-Speech API
 
-**For Imagen**, enable the Generative Language API:
+**For Imagen, Lyria Music, Gemini Omni video, and direct Veo video**, enable the Generative Language API:
 1. Visit [console.cloud.google.com/apis/library/generativelanguage.googleapis.com](https://console.cloud.google.com/apis/library/generativelanguage.googleapis.com)
 2. Click **Enable**
 
@@ -291,7 +291,23 @@ The free tiers apply *independently* — you get 1M Standard AND 1M WaveNet AND 
 
 **Free tier for Imagen:** None. Paid tier only.
 
-**New account bonus:** Google Cloud offers **$300 in free credits** for new accounts (90-day trial), applicable to both TTS and Imagen.
+#### Gemini Omni Video Pricing
+
+| Model | Price | Notes |
+|-------|-------|-------|
+| `gemini-omni-flash-preview` | ~$0.10 per second of video | Billed as 5,792 output tokens/sec of 720p video at $17.50/1M tokens |
+
+Generates 3–10 second clips at 720p/24fps with synthesized audio, plus stateful conversational editing (`edit_video` via `previous_interaction_id`). **Paid tier only — no free tier.** A typical 8-second clip costs ~$0.80; each edit turn generates a new clip and bills again.
+
+#### Google Music (Lyria) Pricing
+
+| Model | Price per generation request |
+|-------|-----------------------------|
+| `lyria-3-pro-preview` | $0.08 (flat rate, up to 184s duration) |
+
+**Free tier for Music:** None. Paid tier only.
+
+**New account bonus:** Google Cloud offers **$300 in free credits** for new accounts (90-day trial), applicable to TTS, Imagen, Music, Gemini Omni video, and direct Veo video.
 
 #### Google TTS Voice Types
 
@@ -764,7 +780,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **Pexels** | `PEXELS_API_KEY` | `pexels_image`, `pexels_video` | Free |
 | **Pixabay** | `PIXABAY_API_KEY` | `pixabay_image`, `pixabay_video` | Free |
 | **Piper** | — (install only) | `piper_tts` | Free |
-| **Google** | `GOOGLE_API_KEY` | `google_tts`, `google_imagen` | Free tier + paid |
+| **Google** | `GOOGLE_API_KEY` (or `GEMINI_API_KEY`) | `google_tts`, `google_imagen`, `google_music`, `gemini_omni_video`, `veo_video` | Free tier (TTS) + paid |
 | **ElevenLabs** | `ELEVENLABS_API_KEY` | `elevenlabs_tts`, `music_gen` | Free tier + paid |
 | **fal.ai** | `FAL_KEY` | `flux_image`, `recraft_image`, `kling_video`, `veo_video`, `minimax_video` | Pay-as-you-go |
 | **OpenAI** | `OPENAI_API_KEY` | `openai_tts`, `openai_image` | Paid only |
@@ -786,9 +802,9 @@ How many providers cover each capability:
 | Capability | Cloud Providers | Local Providers | Free Options |
 |-----------|----------------|-----------------|--------------|
 | **Image Generation** | FLUX, Grok, Google Imagen, GPT Image 2, Recraft | Local Diffusion | Pexels, Pixabay (stock) |
-| **Video Generation** | Grok, Kling, Runway, Veo, Higgsfield, MiniMax, HeyGen | WAN, Hunyuan, CogVideo, LTX | Pexels, Pixabay (stock) |
+| **Video Generation** | Grok, Kling, Runway, Veo, Gemini Omni, Higgsfield, MiniMax, HeyGen | WAN, Hunyuan, CogVideo, LTX | Pexels, Pixabay (stock) |
 | **Text-to-Speech** | ElevenLabs, Google TTS, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier |
-| **Music Generation** | ElevenLabs, Suno | — | ElevenLabs free tier |
+| **Music Generation** | ElevenLabs, Suno, Google Lyria | — | ElevenLabs free tier |
 | **Post-Production** | — | FFmpeg (compose, stitch, trim, mix, enhance, grade) | All free |
 | **Analysis** | — | WhisperX, Scene Detect, Frame Sampler, CLIP/BLIP-2 | All free |
 | **Enhancement** | — | Upscale, BG Remove, Face Enhance, Face Restore | All free |

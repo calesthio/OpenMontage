@@ -1,7 +1,7 @@
 ---
 name: ai-video-gen
 description: |
-  Generate AI videos from text prompts using multiple provider gateways. Use when: (1) Generating videos from text descriptions, (2) Creating AI-generated video clips for content production, (3) Image-to-video generation with a reference image, (4) Choosing between video generation providers (VEO, Kling, Sora, Runway, Seedance, MiniMax). Supports two gateways: HeyGen API and fal.ai API.
+  Generate AI videos from text prompts using multiple provider gateways. Use when: (1) Generating videos from text descriptions, (2) Creating AI-generated video clips for content production, (3) Image-to-video generation with a reference image, (4) Choosing between video generation providers (VEO, Kling, Sora, Runway, Seedance, MiniMax, Gemini Omni). Supports gateways: HeyGen API, fal.ai API, and the Gemini API (Gemini Omni Flash).
 allowed-tools: mcp__heygen__*
 metadata:
   openclaw:
@@ -9,6 +9,8 @@ metadata:
       env_any:
         - HEYGEN_API_KEY
         - FAL_KEY
+        - GEMINI_API_KEY
+        - GOOGLE_API_KEY
 ---
 
 # Video Generation (Multi-Gateway)
@@ -19,6 +21,9 @@ Generate AI videos from text prompts. Supports multiple providers via two API ga
 |---------|-------------|-----------|------|
 | **fal.ai** | `FAL_KEY` | **Seedance 2.0** (standard + fast), Kling v3/v2.1, MiniMax, VEO | `seedance_video`, `kling_video`, `minimax_video`, `veo_video` |
 | **HeyGen** | `HEYGEN_API_KEY` | VEO 3.1, Kling Pro, Sora v2, Runway Gen-4, Seedance Pro / Lite (1.x) | `heygen_video` |
+| **Gemini API** | `GEMINI_API_KEY` / `GOOGLE_API_KEY` | Gemini Omni Flash (generation + conversational editing) | `gemini_omni_video` |
+
+**Iterative editing — Gemini Omni.** When the brief calls for *refining an existing clip* (add/remove objects, restyle, change lighting or on-screen text) rather than regenerating, Gemini Omni Flash is the only provider in the fleet with stateful multi-turn editing. See Layer 3 `gemini-omni` for the authoritative prompting guide (reference-image tags, timecode syntax, edit-prompt rules) before writing any prompt for it.
 
 **Preferred premium default — Seedance 2.0.** When any premium gateway is configured (`FAL_KEY` → `seedance_video`, or HeyGen's Video Agent / Avatar Shots path), Seedance 2.0 is the preferred default for cinematic, trailer, and high-fidelity clip work. It is the only model in the fleet with **single-pass native synchronized audio, multi-shot generation, director-level camera control, and lip-sync from quoted dialogue**, and it ranks #1 on Artificial Analysis Elo as of early 2026. Switch off it only when the user has a specific reason (budget, provider preference, stylistic fit like VEO for photoreal landscape or Kling for specific anime look). See Layer 3 `seedance-2-0` for the authoritative prompting and parameter guide.
 

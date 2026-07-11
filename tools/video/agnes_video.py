@@ -348,7 +348,7 @@ class AgnesVideo(BaseTool):
                 status = poll_data.get("status", "queued")
 
                 if status == "completed":
-                    video_url = poll_data.get("remixed_from_video_id")
+                    video_url = poll_data.get("remixed_from_video_id") or poll_data.get("url")
                     if not video_url:
                         return ToolResult(
                             success=False,

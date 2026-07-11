@@ -775,19 +775,20 @@ def _compose_output(
 ) -> dict[str, Any]:
     render_report = artifacts.get("render_report") or {}
     media = []
-    for output in render_report.get("outputs") or []:
-        if not isinstance(output, dict):
-            continue
-        path = str(output.get("path") or "")
-        url, source = _public_or_media_url(project_id, base_url, path, r2_urls) if path else (None, None)
-        media.append({**output, "url": url, "url_source": source, "thumbnail_url": _thumb_url(project_id, base_url, path) if path else None})
-    known_paths = {item.get("path") for item in media}
-    for render in ((state.get("media") or {}).get("renders") or []):
-        path = str(render.get("path") or "")
-        if not path or path in known_paths:
-            continue
-        url, source = _public_or_media_url(project_id, base_url, path, r2_urls)
-        media.append({**render, "url": url, "url_source": source, "thumbnail_url": _thumb_url(project_id, base_url, path)})
+    if _render_report_passed_qa(render_report):
+        for output in render_report.get("outputs") or []:
+            if not isinstance(output, dict):
+                continue
+            path = str(output.get("path") or "")
+            url, source = _public_or_media_url(project_id, base_url, path, r2_urls) if path else (None, None)
+            media.append({**output, "url": url, "url_source": source, "thumbnail_url": _thumb_url(project_id, base_url, path) if path else None})
+        known_paths = {item.get("path") for item in media}
+        for render in ((state.get("media") or {}).get("renders") or []):
+            path = str(render.get("path") or "")
+            if not path or path in known_paths:
+                continue
+            url, source = _public_or_media_url(project_id, base_url, path, r2_urls)
+            media.append({**render, "url": url, "url_source": source, "thumbnail_url": _thumb_url(project_id, base_url, path)})
     return {
         "artifact_key": "render_report",
         "artifact_available": bool(render_report),
@@ -800,6 +801,10 @@ def _compose_output(
         },
         "media": media,
     }
+
+
+def _render_report_passed_qa(render_report: dict[str, Any]) -> bool:
+    return bool(render_report) and (render_report.get("metadata") or {}).get("qa_gate_status") == "passed"
 
 
 def _publish_output(artifacts: dict[str, Any]) -> dict[str, Any]:
@@ -837,6 +842,8 @@ def _final_render(
     r2_urls: dict[str, dict[str, Any]],
 ) -> dict[str, Any] | None:
     render_report = artifacts.get("render_report") or {}
+    if not _render_report_passed_qa(render_report):
+        return None
     outputs = render_report.get("outputs") or []
     if outputs:
         output = outputs[0]

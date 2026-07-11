@@ -7,7 +7,7 @@ primary_region = 'sin'
   app = 'bash scripts/fly-start.sh app'
 
 [env]
-  CREATE_DEMO_PROJECT = 'true'
+  CREATE_DEMO_PROJECT = 'false'
   NODE_OPTIONS = '--max-old-space-size=4096'
   OPENMONTAGE_PROJECTS_DIR = '/data/projects'
   PORT = '8080'
@@ -15,6 +15,7 @@ primary_region = 'sin'
   RAY_STAGE_MAX_LLM_ITERATIONS = '8'
   RAY_STAGE_MAX_TOOL_CALLS = '24'
   RAY_STAGE_WALL_CLOCK_TIMEOUT_SECONDS = '900'
+  RAY_WORKER_IDLE_AUTOSTOP_SECONDS = '300'
   REMOTION_BROWSER_EXECUTABLE = '/usr/local/bin/remotion-browser'
 
 [http_service]
@@ -22,7 +23,7 @@ primary_region = 'sin'
   force_https = true
   auto_stop_machines = 'suspend'
   auto_start_machines = true
-  min_machines_running = 1
+  min_machines_running = 0
   processes = ['app']
 
   [[http_service.checks]]

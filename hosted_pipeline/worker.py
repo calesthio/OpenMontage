@@ -43,7 +43,15 @@ def main() -> int:
     except Exception as exc:  # pragma: no cover - boot diagnostic only
         print(f"[worker] preflight failed: {exc}", flush=True)
 
+    try:
+        idle_autostop_seconds = max(0, int(os.environ.get("RAY_WORKER_IDLE_AUTOSTOP_SECONDS", "300")))
+    except ValueError:
+        idle_autostop_seconds = 300
+    started = time.time()
     while not stop:
+        if idle_autostop_seconds and time.time() - started >= idle_autostop_seconds:
+            print(f"[worker] idle autostop after {idle_autostop_seconds}s", flush=True)
+            break
         time.sleep(5)
     print("[worker] stopping", flush=True)
     return 0

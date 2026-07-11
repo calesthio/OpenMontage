@@ -1,0 +1,62 @@
+name: hosted-lite
+version: "1.0"
+description: >
+  Explicit degraded hosted Ray mode. This manifest exists only so any legacy
+  or demo path that skips the real StageExecutor planning flow cannot write
+  artifacts while claiming to be the production cinematic pipeline.
+category: custom
+stability: beta
+default_checkpoint_policy: guided
+metadata:
+  degraded_mode: true
+  label: hosted-lite
+  warning: "Not the real OpenMontage cinematic pipeline."
+stages:
+  - name: proposal
+    skill: pipelines/hosted-lite/proposal-director
+    produces:
+      - proposal_packet
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Confirm the user explicitly accepted hosted-lite degraded mode.
+      - Confirm render_runtime_selection is visible and not silently defaulted.
+    success_criteria:
+      - Any proposal packet clearly says pipeline_type is hosted-lite.
+      - Any proposal packet clearly says this is not the production cinematic pipeline.
+  - name: assets
+    produces:
+      - asset_manifest
+    tools_available:
+      - video_selector
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Confirm this run is explicitly allowed to use hosted-lite mode.
+      - Confirm all outputs are labeled as degraded hosted-lite artifacts.
+    success_criteria:
+      - Schema-valid asset_manifest artifact with hosted-lite metadata.
+  - name: edit
+    produces:
+      - edit_decisions
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Confirm edit decisions are labeled hosted-lite.
+    success_criteria:
+      - Schema-valid edit_decisions artifact.
+  - name: compose
+    skill: pipelines/hosted-lite/compose-director
+    produces:
+      - render_report
+      - final_review
+    tools_available:
+      - video_compose
+      - audio_mixer
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Confirm render report labels hosted-lite mode.
+      - Confirm automated QA gates passed before presenting output.
+    success_criteria:
+      - Schema-valid render_report artifact.

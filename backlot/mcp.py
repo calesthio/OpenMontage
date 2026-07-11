@@ -794,6 +794,9 @@ def _compose_output(
         "summary": {
             "render_count": len(media),
             "verification_notes": render_report.get("verification_notes") or [],
+            "qa_gate_status": ((render_report.get("metadata") or {}).get("qa_gate_status")),
+            "qa": ((render_report.get("metadata") or {}).get("qa")),
+            "final_review_ref": render_report.get("final_review_ref"),
         },
         "media": media,
     }

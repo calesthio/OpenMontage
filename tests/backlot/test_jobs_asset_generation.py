@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -105,6 +106,35 @@ def _wire_fakes(monkeypatch, tmp_path):
         return True
 
     monkeypatch.setattr(jobs, "_extract_last_frame", fake_extract)
+
+
+def _make_test_video(
+    path: Path,
+    *,
+    width: int = 1080,
+    height: int = 1920,
+    duration: float = 2.0,
+    color: str = "blue",
+    audio: bool = True,
+) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    cmd = [
+        "ffmpeg",
+        "-y",
+        "-loglevel",
+        "error",
+        "-f",
+        "lavfi",
+        "-i",
+        f"color=c={color}:s={width}x{height}:d={duration}:r=30",
+    ]
+    if audio:
+        cmd.extend(["-f", "lavfi", "-i", f"sine=frequency=440:duration={duration}"])
+        cmd.extend(["-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest"])
+    else:
+        cmd.extend(["-c:v", "libx264", "-pix_fmt", "yuv420p"])
+    cmd.append(str(path))
+    subprocess.run(cmd, check=True)
 
 
 def test_generate_assets_routes_through_video_selector_and_chains_last_frame(monkeypatch, tmp_path):
@@ -287,10 +317,20 @@ def test_compose_uses_real_composer_music_and_end_card(monkeypatch, tmp_path):
     monkeypatch.setattr(
         jobs,
         "_render_qa",
-        lambda final, planned: {
+        lambda final, planned, **kwargs: {
             "duration_seconds": float(planned),
             "planned_duration_seconds": float(planned),
             "audio": {"effectively_silent": False},
+            "media": {"valid_container": True, "duration_seconds": float(planned), "resolution": "1080x1920", "fps": 30, "has_audio": True, "video_codec": "h264", "file_size_bytes": 8},
+            "checks": {
+                "audio_presence": {"passed": True},
+                "dimensions": {"passed": True},
+                "duration_vs_plan": {"passed": True},
+                "black_edge": {"passed": True, "samples": [{}, {}, {}, {}]},
+                "ssim_cut_continuity": {"passed": True, "pairs": []},
+            },
+            "failures": [],
+            "passed": True,
             "warnings": [],
         },
     )
@@ -348,6 +388,11 @@ def test_compose_uses_real_composer_music_and_end_card(monkeypatch, tmp_path):
     assert edit_decisions["metadata"]["native_clip_audio"] == "replaced_by_continuous_music_bed"
     assert render_report["metadata"]["composer_tool"] == "video_compose"
     assert render_report["metadata"]["post_pipeline"]["loudness_target_lufs"] == -14
+    assert render_report["metadata"]["qa_gate_status"] == "passed"
+    assert render_report["final_review_ref"] == "artifacts/final_review.json"
+    final_review = jobs._read_json(project_dir / "artifacts" / "final_review.json")
+    validate_artifact("final_review", final_review)
+    assert final_review["status"] == "pass"
     assert (project_id, "renders/final.mp4") in uploads
     assert (project_id, "renders/music_normalized.wav") in uploads
 
@@ -406,6 +451,143 @@ def test_approve_asset_review_retries_compose_after_provider_failure(monkeypatch
     assert result == {"ok": True, "project_id": project_id, "status": "completed"}
     assert compose_calls == [(project_id, project_dir)]
     assert (project_dir / "artifacts" / "render_report.json").is_file()
+
+
+def test_render_qa_blocks_missing_audio_and_dimension_mismatch(tmp_path):
+    final = tmp_path / "final.mp4"
+    _make_test_video(final, width=720, height=1280, duration=2, audio=False)
+
+    qa = jobs._render_qa(final, 2, expected_width=1080, expected_height=1920)
+
+    assert qa["passed"] is False
+    assert "audio_presence" in qa["failures"]
+    assert "dimensions" in qa["failures"]
+    assert "audio_missing_or_effectively_silent" in qa["warnings"]
+    assert "dimensions_mismatch" in qa["warnings"]
+
+
+def test_black_edge_metrics_flags_hard_border(tmp_path):
+    from PIL import Image, ImageDraw
+
+    frame = tmp_path / "border.png"
+    image = Image.new("RGB", (360, 640), "white")
+    draw = ImageDraw.Draw(image)
+    draw.rectangle((0, 0, 359, 639), outline="black", width=70)
+    image.save(frame)
+
+    metrics = jobs._black_edge_metrics_for_image(frame)
+
+    assert metrics["checked"] is True
+    assert metrics["warning"] is True
+
+
+def test_ssim_cut_continuity_fails_unrelated_adjacent_clips(tmp_path):
+    project_dir = tmp_path / "p"
+    _make_test_video(project_dir / "assets" / "video" / "scene1.mp4", color="black")
+    _make_test_video(project_dir / "assets" / "video" / "scene2.mp4", color="white")
+    assets = [
+        {"scene_id": "scene1", "path": "assets/video/scene1.mp4"},
+        {"scene_id": "scene2", "path": "assets/video/scene2.mp4"},
+    ]
+
+    continuity = jobs._ssim_cut_continuity(assets, project_dir)
+
+    assert continuity["checked"] is True
+    assert continuity["passed"] is False
+    assert continuity["pairs"][0]["ssim"] is not None
+
+
+def test_compose_qa_failure_writes_failed_checkpoint(monkeypatch, tmp_path):
+    from tools.audio import audio_mixer, music_gen
+    from tools.video import video_compose
+
+    project_id = "qa-block"
+    project_dir = tmp_path / project_id
+    (project_dir / "assets" / "video").mkdir(parents=True)
+    (project_dir / "assets" / "video" / "scene1.mp4").write_bytes(b"video")
+    monkeypatch.setattr(jobs, "PROJECTS_DIR", tmp_path)
+
+    class FakeMusicGen:
+        def estimate_cost(self, inputs: dict[str, Any]) -> float:
+            return 0.01
+
+        def execute(self, inputs: dict[str, Any]) -> ToolResult:
+            path = Path(inputs["output_path"])
+            path.write_bytes(b"music")
+            return ToolResult(success=True, data={"output": str(path)}, artifacts=[str(path)], cost_usd=0.01)
+
+    class FakeAudioMixer:
+        def execute(self, inputs: dict[str, Any]) -> ToolResult:
+            path = Path(inputs["output_path"])
+            path.write_bytes(b"normalized")
+            return ToolResult(success=True, data={"output": str(path)}, artifacts=[str(path)])
+
+    class FakeVideoCompose:
+        def execute(self, inputs: dict[str, Any]) -> ToolResult:
+            path = Path(inputs["output_path"])
+            path.write_bytes(b"rendered")
+            return ToolResult(success=True, data={"operation": "remotion_render", "output": str(path)}, artifacts=[str(path)])
+
+    monkeypatch.setattr(music_gen, "MusicGen", FakeMusicGen)
+    monkeypatch.setattr(audio_mixer, "AudioMixer", FakeAudioMixer)
+    monkeypatch.setattr(video_compose, "VideoCompose", FakeVideoCompose)
+    monkeypatch.setattr(jobs, "_loudness_normalize_final", lambda src, dst: Path(dst).write_bytes(Path(src).read_bytes()))
+    monkeypatch.setattr(
+        jobs,
+        "_render_qa",
+        lambda final, planned, **kwargs: {
+            "duration_seconds": float(planned),
+            "planned_duration_seconds": float(planned),
+            "audio": {"effectively_silent": True},
+            "media": {"valid_container": True, "duration_seconds": float(planned), "resolution": "1080x1920", "fps": 30, "has_audio": False, "video_codec": "h264", "file_size_bytes": 8},
+            "checks": {
+                "audio_presence": {"passed": False},
+                "dimensions": {"passed": True},
+                "duration_vs_plan": {"passed": True},
+                "black_edge": {"passed": True, "samples": [{}, {}, {}, {}]},
+                "ssim_cut_continuity": {"passed": True, "pairs": []},
+            },
+            "failures": ["audio_presence"],
+            "passed": False,
+            "warnings": ["audio_missing_or_effectively_silent"],
+        },
+    )
+    monkeypatch.setattr(
+        jobs.storage,
+        "upload_file",
+        lambda path, pid, rel: {"key": f"{pid}/{rel}", "url": f"https://cdn.example/{pid}/{rel}"},
+    )
+    manifest = {
+        "version": "1.0",
+        "total_cost_usd": 0.1,
+        "assets": [{"id": "vid_scene1", "type": "video", "scene_id": "scene1", "path": "assets/video/scene1.mp4", "duration_seconds": 6.0}],
+    }
+    request = _request("kling-v3")
+    request["project_id"] = project_id
+
+    with pytest.raises(jobs.JobAwaitingHuman, match="Final render QA failed"):
+        jobs._compose(project_id, project_dir, manifest, request, _scene_plan())
+
+    render_report = jobs._read_json(project_dir / "artifacts" / "render_report.json")
+    final_review = jobs._read_json(project_dir / "artifacts" / "final_review.json")
+    checkpoint = jobs._read_json(project_dir / "checkpoint_compose.json")
+    validate_artifact("render_report", render_report)
+    validate_artifact("final_review", final_review)
+    assert render_report["metadata"]["qa_gate_status"] == "failed"
+    assert final_review["status"] == "fail"
+    assert checkpoint["status"] == "failed"
+    assert checkpoint["metadata"]["blocker"] == "render_qa_failed"
+
+
+def test_hosted_lite_legacy_runner_is_disabled_by_default(monkeypatch, tmp_path):
+    project_id = "legacy-disabled"
+    project_dir = init_project(project_id, title="Legacy", pipeline_type="cinematic", pipeline_dir=tmp_path)
+    monkeypatch.setattr(jobs, "PROJECTS_DIR", tmp_path)
+    jobs._write_json(project_dir / "artifacts" / "job_request.json", _request("kling-v3"))
+    monkeypatch.delenv("RAY_ALLOW_HOSTED_LITE", raising=False)
+
+    with pytest.raises(jobs.JobError, match="hosted-lite legacy runner is disabled"):
+        jobs._legacy_run_job(project_id)
 
 
 def test_generate_assets_blocks_dimension_mismatch_before_manifest_acceptance(monkeypatch, tmp_path):

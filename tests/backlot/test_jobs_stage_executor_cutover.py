@@ -7,6 +7,7 @@ from typing import Any
 from backlot import jobs
 from hosted_pipeline.executor import StageRunResult
 from lib.checkpoint import init_project, write_checkpoint
+from schemas.artifacts import validate_artifact
 
 
 PROJECT_ID = "stage-executor-cutover"
@@ -278,6 +279,24 @@ def test_plan_job_uses_stage_executor_bundle(monkeypatch, tmp_path):
     assert proposal_checkpoint["artifacts"]["proposal_packet"]["conditioning_mode"] == "image_to_video"
     assert proposal_checkpoint["artifacts"]["proposal_packet"]["reference_asset_count"] == 2
     assert (tmp_path / PROJECT_ID / "artifacts" / "cost_log.json").is_file()
+
+
+def test_reference_conditioning_normalizes_partial_delivery_promise():
+    proposal = _proposal_packet()
+    proposal["production_plan"]["delivery_promise"] = {"source_required": False}
+
+    jobs._refresh_reference_conditioning(proposal, _job_request())
+
+    promise = proposal["production_plan"]["delivery_promise"]
+    assert promise == {
+        "promise_type": "source_led",
+        "motion_required": True,
+        "source_required": True,
+        "tone_mode": "cinematic",
+        "quality_floor": "presentable",
+        "approved_fallback": None,
+    }
+    validate_artifact("proposal_packet", proposal)
 
 
 def test_legacy_prompt_planner_symbol_is_absent():

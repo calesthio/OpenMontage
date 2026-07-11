@@ -18,6 +18,7 @@ import requests
 from backlot import storage
 from hosted_pipeline import BudgetCaps, ChatCompletionsDirectorClient, StageExecutor, StageRunRequest
 from lib.checkpoint import PROJECTS_DIR, init_project, write_checkpoint
+from schemas.artifacts import validate_artifact
 
 
 DEFAULT_VIDEO_MODEL = "grok-imagine-video"
@@ -373,6 +374,7 @@ def _finalize_executor_planning_artifacts(project_id: str, request_data: dict[st
     proposal_packet.setdefault("metadata", {})["planning_executor"] = "hosted_stage_executor"
     proposal_packet["metadata"]["orchestration_cost_log"] = "artifacts/cost_log.json"
     _refresh_reference_conditioning(proposal_packet, request_data)
+    validate_artifact("proposal_packet", proposal_packet)
     _write_json(proposal_path, proposal_packet)
 
     if not decision_path.is_file():
@@ -1149,7 +1151,7 @@ def _refresh_reference_conditioning(proposal_packet: dict[str, Any], request_dat
     proposal_packet["metadata"]["reference_conditioning_expected"] = expected
     proposal_packet["metadata"]["default_video_model"] = DEFAULT_VIDEO_MODEL
     proposal_packet["metadata"]["requires_explicit_seedance_approval"] = seedance_requires_ack
-    proposal_packet.setdefault("production_plan", {}).setdefault("delivery_promise", {})["source_required"] = expected
+    _normalize_delivery_promise(proposal_packet, source_required=expected)
     cost_estimate = proposal_packet.setdefault("cost_estimate", {})
     cost_estimate["reference_asset_count"] = count
     cost_estimate["conditioning_mode"] = mode
@@ -1175,6 +1177,42 @@ def _refresh_reference_conditioning(proposal_packet: dict[str, Any], request_dat
         approval["status"] = "pending"
         approval.pop("reason", None)
         approval.pop("message", None)
+
+
+def _normalize_delivery_promise(proposal_packet: dict[str, Any], *, source_required: bool) -> None:
+    plan = proposal_packet.setdefault("production_plan", {})
+    raw = plan.get("delivery_promise")
+    promise = raw if isinstance(raw, dict) else {}
+    allowed = {
+        "promise_type",
+        "motion_required",
+        "source_required",
+        "tone_mode",
+        "quality_floor",
+        "approved_fallback",
+    }
+    promise = {key: value for key, value in promise.items() if key in allowed}
+    valid_promise_types = {
+        "motion_led",
+        "source_led",
+        "data_explainer",
+        "teacher_explainer",
+        "screen_demo",
+        "avatar_presenter",
+        "hybrid",
+        "localization",
+    }
+    if promise.get("promise_type") not in valid_promise_types:
+        promise["promise_type"] = "source_led" if source_required else "motion_led"
+    if not isinstance(promise.get("motion_required"), bool):
+        promise["motion_required"] = True
+    promise["source_required"] = bool(source_required)
+    if not isinstance(promise.get("tone_mode"), str) or not promise["tone_mode"].strip():
+        promise["tone_mode"] = "cinematic"
+    if promise.get("quality_floor") not in {"draft", "presentable", "broadcast"}:
+        promise["quality_floor"] = "presentable"
+    promise.setdefault("approved_fallback", None)
+    plan["delivery_promise"] = promise
 
 
 def _is_reference_blocked(proposal_packet: dict[str, Any]) -> bool:

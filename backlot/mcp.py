@@ -1019,19 +1019,48 @@ async def _approve_paid_generation(args: dict[str, Any], base_url: str, publish_
 
 async def _approve_asset_review(args: dict[str, Any], base_url: str, publish_project: PublishHook | None) -> dict[str, Any]:
     project_id = str(args.get("project_id") or "")
-    _safe_project_dir(project_id)
+    project_dir = _safe_project_dir(project_id)
     if args.get("confirm_asset_review_passed") is not True:
         raise ValueError("confirm_asset_review_passed=true is required")
-    result = await asyncio.to_thread(jobs.approve_asset_review, project_id)
-    if publish_project:
-        publish_project(project_id)
-    result["board_url"] = f"{base_url}/p/{project_id}"
-    result["monitor_tool"] = "ray_get_project_outputs"
-    result["monitor_arguments"] = {"project_id": project_id}
-    result["workflow"] = _mcp_workflow(project_id, load_board_state(_safe_project_dir(project_id)), base_url, include_events=True)
-    result["final_render"] = result["workflow"].get("final_render")
-    result["final_render_url"] = (result["workflow"].get("final_render") or {}).get("url")
-    return result
+    state = load_board_state(project_dir)
+    active_stage = _active_asset_review_stage(state)
+    if active_stage:
+        return _asset_review_progress_response(project_id, base_url, project_dir, f"{active_stage}_already_in_progress")
+
+    async def run_and_publish() -> None:
+        try:
+            await asyncio.to_thread(jobs.approve_asset_review, project_id)
+        finally:
+            if publish_project:
+                publish_project(project_id)
+
+    asyncio.create_task(run_and_publish())
+    return _asset_review_progress_response(project_id, base_url, project_dir, "asset_review_queued")
+
+
+def _active_asset_review_stage(state: dict[str, Any]) -> str | None:
+    for stage in state.get("stages") or []:
+        if not isinstance(stage, dict):
+            continue
+        name = str(stage.get("name") or "")
+        if name in {"assets", "edit", "compose"} and stage.get("status") == "in_progress":
+            return name
+    return None
+
+
+def _asset_review_progress_response(project_id: str, base_url: str, project_dir: Path, status: str) -> dict[str, Any]:
+    workflow = _mcp_workflow(project_id, load_board_state(project_dir), base_url, include_events=True)
+    return {
+        "ok": True,
+        "project_id": project_id,
+        "status": status,
+        "board_url": f"{base_url}/p/{project_id}",
+        "monitor_tool": "ray_get_project_outputs",
+        "monitor_arguments": {"project_id": project_id},
+        "workflow": workflow,
+        "final_render": workflow.get("final_render"),
+        "final_render_url": (workflow.get("final_render") or {}).get("url"),
+    }
 
 
 def _request_reference_upload(args: dict[str, Any], base_url: str) -> dict[str, Any]:

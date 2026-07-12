@@ -1,0 +1,32 @@
+{
+  "version": "1.0",
+  "outputs": [
+    {
+      "path": "renders/photosynthesis-explainer.mp4",
+      "format": "mp4",
+      "codec": "h264",
+      "audio_codec": "aac",
+      "resolution": "1920x1080",
+      "fps": 30,
+      "duration_seconds": 30.19,
+      "file_size_bytes": 6268671,
+      "platform_target": "youtube_landscape"
+    }
+  ],
+  "render_time_seconds": 361.5,
+  "warnings": [
+    "ffprobe not on PATH — technical validation used `npx remotion ffmpeg` instead",
+    "Frame sampling skipped (ffmpeg not on PATH)"
+  ],
+  "verification_notes": [
+    "Remotion CaptionOverlay word-level subtitles burned in composition",
+    "Narration + music embedded via Remotion Audio components",
+    "Runtime: remotion / explainer-teacher as locked at proposal"
+  ],
+  "render_grammar": "explainer-teacher",
+  "decision_log_ref": "projects/photosynthesis-explainer/artifacts/decision_log.json",
+  "final_review_ref": "projects/photosynthesis-explainer/artifacts/final_review.json",
+  "metadata": {
+    "composition_path": "artifacts/composition.json"
+  }
+}

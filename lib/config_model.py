@@ -1,6 +1,15 @@
 """Runtime configuration model for OpenMontage.
 
-Loads config.yaml, merges with env overrides, and provides typed access.
+Loads config.yaml and provides typed access via pydantic models.
+
+NOTE — test-fixture only: outside of ``BudgetMode`` (consumed by
+``tools/cost_tracker.py`` and ``server/app/runner/stage_runner.py``), nothing
+in this module or in config.yaml is read by production code. The
+orchestration state machine (pipeline manifests + stage director skills) does
+not merge in ``OpenMontageConfig``'s budget/checkpoint/output/paths knobs;
+editing config.yaml today only affects the contract tests that exercise
+``OpenMontageConfig.load()``. Treat this as a fixture/spec for a config
+surface that hasn't been wired into the runner, not a live control panel.
 """
 
 from __future__ import annotations
@@ -10,7 +19,7 @@ from pathlib import Path
 from typing import Optional
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class BudgetMode(str, Enum):
@@ -20,12 +29,23 @@ class BudgetMode(str, Enum):
 
 
 class CheckpointPolicy(str, Enum):
+    """Declared checkpoint-gating strategies.
+
+    Not currently read by any gating code (``lib/checkpoint.py`` and the
+    Backlot board both key off each pipeline stage's own
+    ``human_approval_default``). ``CheckpointConfig.policy`` and manifests'
+    ``default_checkpoint_policy`` field carry this value but nothing consumes
+    it yet — it does not control real gating behavior.
+    """
+
     GUIDED = "guided"
     MANUAL_ALL = "manual_all"
     AUTO_NONCREATIVE = "auto_noncreative"
 
 
 class LLMConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     provider: str = "anthropic"
     model: Optional[str] = None
     temperature: float = 0.7
@@ -33,6 +53,20 @@ class LLMConfig(BaseModel):
 
 
 class BudgetConfig(BaseModel):
+    """Budget defaults.
+
+    NOTE — not the only copy of these numbers: ``tools/cost_tracker.py``'s
+    ``CostTracker.__init__`` re-literals this same set of defaults instead of
+    building them from this model, and ``server/app/runner/stage_runner.py``
+    separately hardcodes its own effectively-unlimited (1e12) sentinels. All
+    three can drift independently. Collapsing ``CostTracker``'s defaults onto
+    ``BudgetConfig.model_fields`` (or accepting a ``BudgetConfig`` instance)
+    would fix this but requires editing tools/cost_tracker.py, which is
+    outside this module's scope — flagged here as recommended follow-up.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
     mode: BudgetMode = BudgetMode.WARN
     total_usd: float = 10.0
     reserve_pct: float = 0.10
@@ -41,11 +75,15 @@ class BudgetConfig(BaseModel):
 
 
 class CheckpointConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     policy: CheckpointPolicy = CheckpointPolicy.GUIDED
     storage_dir: str = "pipeline"
 
 
 class OutputConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     default_format: str = "mp4"
     default_codec: str = "libx264"
     default_audio_codec: str = "aac"
@@ -55,6 +93,8 @@ class OutputConfig(BaseModel):
 
 
 class PathsConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     pipeline_dir: str = "pipeline"
     library_dir: str = "library"
     styles_dir: str = "styles"
@@ -63,7 +103,13 @@ class PathsConfig(BaseModel):
 
 
 class OpenMontageConfig(BaseModel):
-    """Top-level runtime configuration."""
+    """Top-level runtime configuration.
+
+    See module docstring: this is currently a test-fixture surface, not a
+    live production config loaded by the runner.
+    """
+
+    model_config = ConfigDict(extra="forbid")
 
     llm: LLMConfig = Field(default_factory=LLMConfig)
     budget: BudgetConfig = Field(default_factory=BudgetConfig)

@@ -5,6 +5,7 @@ Loads and validates pipeline YAML manifests from pipeline_defs/.
 
 from __future__ import annotations
 
+import copy
 import json
 from pathlib import Path
 from typing import Any, Optional
@@ -37,13 +38,16 @@ def _load_pipeline_cached(name: str, defs_dir_key: str) -> dict[str, Any]:
 
 
 def load_pipeline_readonly(name: str, defs_dir: Optional[Path] = None) -> dict[str, Any]:
-    """Load a manifest through a cache. The result MUST NOT be mutated.
+    """Load a manifest through a cache. The result is a fresh deep copy.
 
     Manifests are immutable within a run; hot paths (gate checks on every
     checkpoint write, board state derivation) should use this instead of
-    re-parsing YAML + re-validating the schema each call.
+    re-parsing YAML + re-validating the schema each call. The cached dict
+    itself is never handed out directly — each call returns its own deep
+    copy so a caller that mutates its result can't poison the shared cache
+    for every other caller.
     """
-    return _load_pipeline_cached(name, str(defs_dir) if defs_dir else "")
+    return copy.deepcopy(_load_pipeline_cached(name, str(defs_dir) if defs_dir else ""))
 
 
 def load_pipeline(name: str, defs_dir: Optional[Path] = None) -> dict[str, Any]:
@@ -127,12 +131,21 @@ def get_stage_order(
     *,
     include_sub_stages: bool = False,
     context: Optional[dict[str, Any]] = None,
+    all_sub_stages: bool = False,
 ) -> list[str]:
     """Extract the ordered list of stage names from a manifest.
 
     ``include_sub_stages=True`` exposes declarative sample/preview units to the
     agent without turning them into mandatory checkpoint stages. Sub-stages are
     emitted as ``<stage>.<sub_stage>``.
+
+    Whether inactive sub-stages are included is controlled explicitly by
+    ``all_sub_stages`` — it does not infer that from whether ``context`` is
+    ``None`` vs ``{}``, which would silently yield different results for two
+    callers that both mean "no context available yet". Pass
+    ``all_sub_stages=True`` to enumerate the full declared workflow shape
+    regardless of ``context``; leave it ``False`` (default) to filter down to
+    sub-stages that are active given ``context``.
     """
     order: list[str] = []
     for stage in manifest["stages"]:
@@ -143,18 +156,25 @@ def get_stage_order(
             manifest,
             stage["name"],
             context=context,
-            include_inactive=context is None,
+            include_inactive=all_sub_stages,
         ):
             order.append(f"{stage['name']}.{sub_stage['name']}")
     return order
 
 
 def get_required_tools(manifest: dict) -> set[str]:
-    """Collect tools across stages, sub-stages, and reference-input analysis."""
+    """Collect tools across stages, sub-stages, and reference-input analysis.
+
+    Reads the schema's real ``required_tools``/``optional_tools`` fields
+    directly (plus ``tools_available``, which is documented as their union
+    but occasionally drifts out of sync in a manifest). ``preferred_tools``/
+    ``fallback_tools`` are unused legacy schema fields — no manifest sets
+    them — so they are intentionally not read here.
+    """
     tools: set[str] = set()
     for stage in manifest["stages"]:
-        tools.update(stage.get("preferred_tools", []))
-        tools.update(stage.get("fallback_tools", []))
+        tools.update(stage.get("required_tools", []))
+        tools.update(stage.get("optional_tools", []))
         tools.update(stage.get("tools_available", []))
         for sub_stage in stage.get("sub_stages", []):
             tools.update(sub_stage.get("tools_available", []))
@@ -173,8 +193,12 @@ def get_stage_skill(manifest: dict, stage_name: str) -> Optional[str]:
 def get_stage_human_approval_default(manifest: dict, stage_name: str) -> Optional[bool]:
     """Whether a stage gates on human approval. None if the stage isn't declared.
 
-    This is the single lookup used by gate enforcement (lib/checkpoint.py)
-    and the Backlot board — keep them reading the same field the same way.
+    This is meant to be the single lookup used by gate enforcement
+    (lib/checkpoint.py) and the Backlot board, so they read the same field
+    the same way. In practice ``backlot/state.py`` currently inlines its own
+    copy of this same one-liner (``s.get("human_approval_default", False)``)
+    instead of calling this function — that duplication should be collapsed
+    onto this function if/when backlot/ is touched.
     """
     for stage in manifest["stages"]:
         if stage["name"] == stage_name:
@@ -192,6 +216,13 @@ def get_stage_review_focus(manifest: dict, stage_name: str) -> list[str]:
 
 # ---------------------------------------------------------------------------
 # Capability-Extension Enforcement
+#
+# NOTE — currently unwired: nothing in server/ or tools/ (e.g. tool_bridge.py)
+# calls check_extension_permitted, even though every manifest declares
+# extensions.custom_tools: false. Until a caller enforces it at the point
+# custom tools/scripts/playbooks/skills are actually invoked, this is
+# validation logic without an enforcement point — a manifest setting these
+# flags to false does not currently block anything at runtime.
 # ---------------------------------------------------------------------------
 
 class ExtensionNotPermitted(PermissionError):

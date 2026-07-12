@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
+import yaml
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -28,6 +29,7 @@ from lib.checkpoint import (
 )
 from lib.media_profiles import get_profile, ffmpeg_output_args, ALL_PROFILES
 from lib.pipeline_loader import (
+    PIPELINE_DEFS_DIR,
     get_required_tools,
     get_stage_order,
     get_stage_skill,
@@ -35,6 +37,7 @@ from lib.pipeline_loader import (
     get_stage_review_focus,
     list_pipelines,
     load_pipeline,
+    load_pipeline_readonly,
     pipeline_supports_reference_input,
 )
 from tools.base_tool import BaseTool, ToolResult, ToolTier, ToolStatus
@@ -263,6 +266,14 @@ class TestConfig:
         config = OpenMontageConfig.load()
         assert config.budget.total_usd == 10.0
 
+    def test_unknown_top_level_key_rejected(self):
+        with pytest.raises(Exception):
+            OpenMontageConfig.model_validate({"budgett": {"total_usd": 5.0}})
+
+    def test_unknown_nested_key_rejected(self):
+        with pytest.raises(Exception):
+            OpenMontageConfig.model_validate({"budget": {"toatl_usd": 5.0}})
+
 
 # ---- Schemas ----
 
@@ -371,7 +382,7 @@ class TestPipelineManifests:
         assert pipeline_supports_reference_input(manifest) is True
         assert "video_analyzer" in get_required_tools(manifest)
 
-        all_units = get_stage_order(manifest, include_sub_stages=True)
+        all_units = get_stage_order(manifest, include_sub_stages=True, all_sub_stages=True)
         assert "proposal.sample" in all_units
 
         active_sub_stages = get_stage_sub_stages(
@@ -381,6 +392,45 @@ class TestPipelineManifests:
             include_inactive=False,
         )
         assert any(s["name"] == "sample" for s in active_sub_stages)
+
+    def test_get_stage_order_all_sub_stages_is_explicit_not_context_shaped(self):
+        """context=None and context={} must behave the same unless all_sub_stages says otherwise."""
+        manifest = load_pipeline("animated-explainer")
+
+        filtered_no_context = get_stage_order(manifest, include_sub_stages=True, context=None)
+        filtered_empty_context = get_stage_order(manifest, include_sub_stages=True, context={})
+        assert filtered_no_context == filtered_empty_context
+        assert "proposal.sample" not in filtered_no_context
+
+        all_no_context = get_stage_order(
+            manifest, include_sub_stages=True, context=None, all_sub_stages=True
+        )
+        all_empty_context = get_stage_order(
+            manifest, include_sub_stages=True, context={}, all_sub_stages=True
+        )
+        assert all_no_context == all_empty_context
+        assert "proposal.sample" in all_no_context
+
+    def test_get_required_tools_reads_optional_tools_not_mirrored_in_tools_available(self):
+        """Regression for screen-demo.yaml's script stage: optional_tools has
+        audio_enhance but tools_available omits it — get_required_tools must
+        still surface it instead of only reading tools_available.
+
+        Reads the raw YAML (not load_pipeline) so this test isn't coupled to
+        schema validation of the rest of the manifest.
+        """
+        with open(PIPELINE_DEFS_DIR / "screen-demo.yaml") as f:
+            manifest = yaml.safe_load(f)
+        assert "audio_enhance" in get_required_tools(manifest)
+
+    def test_load_pipeline_readonly_mutation_does_not_poison_cache(self):
+        manifest = load_pipeline_readonly("framework-smoke")
+        manifest["stages"].append({"name": "injected"})
+        manifest["name"] = "tampered"
+
+        fresh = load_pipeline_readonly("framework-smoke")
+        assert fresh["name"] == "framework-smoke"
+        assert {"name": "injected"} not in fresh["stages"]
 
 
 # ---- BaseTool ----
@@ -429,7 +479,7 @@ class TestToolRegistry:
         assert reg.get("dummy") is not None
         assert "dummy" in reg.list_all()
         assert len(reg.get_by_tier(ToolTier.CORE)) == 1
-        assert len(reg.find_by_capability("test")) == 1
+        assert len(reg.find_by_capabilities("test")) == 1
 
     def test_support_envelope(self):
         reg = ToolRegistry()
@@ -469,7 +519,7 @@ class TestToolRegistry:
 
         assert discovered == ["discovered"]
         assert reg.get("discovered") is not None
-        assert reg.find_by_capability("discover")[0].name == "discovered"
+        assert reg.find_by_capabilities("discover")[0].name == "discovered"
 
 
 # ---- CostTracker ----

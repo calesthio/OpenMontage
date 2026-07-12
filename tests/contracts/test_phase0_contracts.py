@@ -172,6 +172,7 @@ def sample_artifact(name: str) -> dict:
     if name == "edit_decisions":
         return {
             "version": "1.0",
+            "render_runtime": "remotion",
             "cuts": [
                 {
                     "id": "cut-1",

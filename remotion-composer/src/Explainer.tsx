@@ -17,12 +17,19 @@ function resolveAsset(src: string): string {
   if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("data:")) {
     return src;
   }
-  // Strip any file:// prefix
-  const clean = src.replace(/^file:\/\/\/?/, "");
+  // Strip any file:// prefix (but leave the 3rd slash for Unix absolute paths)
+  const clean = src.replace(/^file:\/\//, "");
   // Absolute paths (Unix: /foo, Windows: C:\foo or C:/foo) — convert to file:// URI
   // staticFile() only accepts relative paths within public/, so absolute paths must bypass it
   if (clean.startsWith("/") || /^[A-Za-z]:[\\/]/.test(clean)) {
-    return `file:///${clean.replace(/\\/g, "/")}`;
+    // Unix absolute paths already start with "/" — file:// + /path = file:///path (3 slashes).
+    // Windows paths like C:/foo need the extra slash: file:/// + C:/foo = file:///C:/foo.
+    let normalized = clean.replace(/\\/g, "/");
+    if (normalized.startsWith("/")) {
+      normalized = normalized.replace(/^\/+/, "/");
+      return `file://${normalized}`;
+    }
+    return `file:///${normalized}`;
   }
   return staticFile(clean);
 }

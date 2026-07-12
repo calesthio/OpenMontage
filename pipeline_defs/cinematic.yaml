@@ -227,6 +227,7 @@ stages:
       - video_compose
       - audio_mixer
     optional_tools:
+      - hyperframes_compose
       - video_stitch
       - video_trimmer
       - color_grade

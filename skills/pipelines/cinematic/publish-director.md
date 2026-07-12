@@ -9,7 +9,7 @@ Package the cinematic piece and any cutdowns so the hero version stays clear and
 | Layer | Resource | Purpose |
 |-------|----------|---------|
 | Schema | `schemas/artifacts/publish_log.schema.json` | Artifact validation |
-| Prior artifacts | `state.artifacts["compose"]["render_report"]`, `state.artifacts["proposal"]["proposal_packet"]`, `state.artifacts["research"]["research_brief"]`, `state.artifacts["script"]["script"]` | Final outputs and beat map |
+| Prior artifacts | `state.artifacts["render_report"]`, `state.artifacts["proposal_packet"]`, `state.artifacts["research_brief"]`, `state.artifacts["script"]` | Final outputs and beat map |
 | Playbook | Active style playbook | Tone and naming consistency |
 
 ## Process

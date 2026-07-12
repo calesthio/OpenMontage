@@ -14,7 +14,7 @@ Unlike explainer research (which focuses on facts, data, and content gaps), cine
 |-------|----------|---------|
 | Schema | `schemas/artifacts/research_brief.schema.json` | Artifact validation |
 | User input | Subject, mood hints, footage situation, references | Research scope |
-| Tools | Web search, web fetch | Research execution |
+| Tools | Web search | Research execution |
 
 ## Process
 

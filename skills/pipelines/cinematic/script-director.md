@@ -9,7 +9,7 @@ This stage builds the beat map, selected lines, title-card copy, and reveal stru
 | Layer | Resource | Purpose |
 |-------|----------|---------|
 | Schema | `schemas/artifacts/script.schema.json` | Artifact validation |
-| Prior artifact | `state.artifacts["proposal"]["proposal_packet"]` | Emotional arc and source truth |
+| Prior artifact | `state.artifacts["proposal_packet"]` | Emotional arc and source truth |
 | Tools | `transcriber`, `scene_detect` | Optional dialogue mining and source review |
 
 ## Process

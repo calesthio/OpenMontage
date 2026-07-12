@@ -9,7 +9,7 @@ You are deciding how each cinematic beat will look and transition. This is where
 | Layer | Resource | Purpose |
 |-------|----------|---------|
 | Schema | `schemas/artifacts/scene_plan.schema.json` | Artifact validation |
-| Prior artifacts | `state.artifacts["script"]["script"]`, `state.artifacts["proposal"]["proposal_packet"]` | Beat map and source truth |
+| Prior artifacts | `state.artifacts["script"]`, `state.artifacts["proposal_packet"]` | Beat map and source truth |
 | Tools | `frame_sampler`, `scene_detect` | Source inspection and reframing checks |
 | Playbook | Active style playbook | Color and typography consistency |
 

@@ -21,8 +21,8 @@ Read `edit_decisions.render_runtime`. Cinematic work routes to:
 | Layer | Resource | Purpose |
 |-------|----------|---------|
 | Schema | `schemas/artifacts/render_report.schema.json` | Artifact validation |
-| Prior artifacts | `state.artifacts["edit"]["edit_decisions"]`, `state.artifacts["assets"]["asset_manifest"]` | Edit plan and media assets |
-| Tools | `video_compose`, `audio_mixer`, `video_stitch`, `video_trimmer`, `color_grade`, `audio_enhance` | Render and finishing |
+| Prior artifacts | `state.artifacts["edit_decisions"]`, `state.artifacts["asset_manifest"]` | Edit plan and media assets |
+| Tools | `video_compose`, `hyperframes_compose`, `audio_mixer`, `video_stitch`, `video_trimmer`, `color_grade`, `audio_enhance` | Render and finishing — `hyperframes_compose` is the delegate `video_compose` routes to (and can be called directly for `doctor`/lint checks) when `render_runtime="hyperframes"` |
 | Playbook | Active style playbook | Finish consistency |
 
 ## Process

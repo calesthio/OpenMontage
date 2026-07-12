@@ -57,6 +57,29 @@ def test_all_manifests_listed_even_with_schema_drift():
     assert {"screen-demo", "documentary-montage"} <= listed
 
 
+def test_broken_manifest_is_logged_not_silently_dropped(monkeypatch, caplog):
+    # Regression: list_pipelines_endpoint's `except Exception: continue`
+    # dropped a broken manifest with zero trace — a genuinely bad manifest
+    # (not just schema drift, which the lenient loader already handles) would
+    # vanish from /pipelines with nothing in the logs to explain why.
+    import app.pipeline_catalog as pc
+    real_load_manifest = pc.load_manifest
+
+    def flaky(name):
+        if name == "cinematic":
+            raise ValueError("boom")
+        return real_load_manifest(name)
+
+    monkeypatch.setattr(pc, "load_manifest", flaky)
+    with caplog.at_level("WARNING"):
+        r = client.get("/pipelines")
+    assert r.status_code == 200
+    names = {p["name"] for p in r.json()["pipelines"]}
+    assert "cinematic" not in names
+    assert "animated-explainer" in names   # everything else still listed
+    assert any("cinematic" in rec.getMessage() for rec in caplog.records)
+
+
 def test_drifted_pipeline_resolves_own_stages():
     sd = [s["name"] for s in _resolve_stages("screen-demo")]
     assert sd and sd != [s["name"] for s in CINEMATIC_STAGES]
@@ -116,6 +139,32 @@ def test_cinematic_hardcoded_approval_matches_manifest():
         assert stage["approval"] == expected, (
             f"CINEMATIC_STAGES['{stage['name']}'].approval={stage['approval']} "
             f"but pipeline_defs/cinematic.yaml declares human_approval_default={expected}"
+        )
+
+
+def test_cinematic_hardcoded_stage_shape_matches_manifest():
+    # Companion to test_cinematic_hardcoded_approval_matches_manifest above,
+    # which only guards the `approval` flag. CINEMATIC_STAGES is still a
+    # hand-maintained copy of pipeline_defs/cinematic.yaml's stage list, so
+    # names/order, `produces`, and `required_artifacts_in` can drift the same
+    # way the approval flags did. Assert those stay in sync too.
+    from app.pipeline_catalog import load_manifest
+    manifest = load_manifest("cinematic")
+    manifest_stages = {s["name"]: s for s in manifest["stages"]}
+
+    assert [s["name"] for s in CINEMATIC_STAGES] == list(manifest_stages), (
+        "CINEMATIC_STAGES stage names/order drifted from pipeline_defs/cinematic.yaml"
+    )
+    for stage in CINEMATIC_STAGES:
+        manifest_stage = manifest_stages[stage["name"]]
+        assert stage["produces"] == (manifest_stage.get("produces") or []), (
+            f"CINEMATIC_STAGES['{stage['name']}'].produces={stage['produces']} "
+            f"but pipeline_defs/cinematic.yaml declares produces={manifest_stage.get('produces')}"
+        )
+        assert stage["required_artifacts_in"] == (manifest_stage.get("required_artifacts_in") or []), (
+            f"CINEMATIC_STAGES['{stage['name']}'].required_artifacts_in={stage['required_artifacts_in']} "
+            f"but pipeline_defs/cinematic.yaml declares "
+            f"required_artifacts_in={manifest_stage.get('required_artifacts_in')}"
         )
 
 

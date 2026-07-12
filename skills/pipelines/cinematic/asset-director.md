@@ -26,7 +26,7 @@ Before authoring title cards, name plates, or SVG overlays, read **`skills/meta/
 | Layer | Resource | Purpose |
 |-------|----------|---------|
 | Schema | `schemas/artifacts/asset_manifest.schema.json` | Artifact validation |
-| Prior artifacts | `state.artifacts["scene_plan"]["scene_plan"]`, `state.artifacts["script"]["script"]`, `state.artifacts["proposal"]["proposal_packet"]` | Scene intent and beat plan |
+| Prior artifacts | `state.artifacts["scene_plan"]`, `state.artifacts["script"]`, `state.artifacts["proposal_packet"]` | Scene intent and beat plan |
 | Tools | `subtitle_gen`, `audio_enhance`, `image_selector`, `video_selector`, `pixabay_music` (free, default), `freesound_music` (free), `music_gen` (ElevenLabs, paid) — selectors auto-discover all available providers from the registry. **Default to `pixabay_music` before reaching for `music_gen`.** | Optional support asset creation |
 | Playbook | Active style playbook | Brand and typography consistency |
 

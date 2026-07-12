@@ -9,7 +9,7 @@ This stage turns the beat map into a paced cinematic timeline. Rhythm and restra
 | Layer | Resource | Purpose |
 |-------|----------|---------|
 | Schema | `schemas/artifacts/edit_decisions.schema.json` | Artifact validation |
-| Prior artifacts | `state.artifacts["assets"]["asset_manifest"]`, `state.artifacts["scene_plan"]["scene_plan"]`, `state.artifacts["script"]["script"]` | Assets, hero frames, beat map |
+| Prior artifacts | `state.artifacts["asset_manifest"]`, `state.artifacts["scene_plan"]`, `state.artifacts["script"]` | Assets, hero frames, beat map |
 | Playbook | Active style playbook | Typography and transition consistency |
 
 ## Process

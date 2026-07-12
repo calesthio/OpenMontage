@@ -1,0 +1,449 @@
+{
+  "version": "1.0",
+  "project_id": "photosynthesis-explainer",
+  "pipeline_type": "animated-explainer",
+  "stage": "proposal",
+  "status": "awaiting_human",
+  "timestamp": "2026-07-12T08:43:27.800620+00:00",
+  "checkpoint_policy": "guided",
+  "human_approval_required": true,
+  "human_approved": false,
+  "artifacts": {
+    "proposal_packet": {
+      "version": "1.0",
+      "concept_options": [
+        {
+          "id": "c1",
+          "title": "Your Salad Ate the Air",
+          "hook": "A tree's weight mostly came from invisible gas \u2014 not dirt.",
+          "narrative_structure": "myth_busting",
+          "visual_approach": "Split-screen: soil pile shrinking vs CO\u2082 molecules flowing into a leaf; ends on mass-from-air punchline with animated stat",
+          "suggested_playbook": "flat-motion-graphics",
+          "target_audience": "Curious adults and students who still think plants eat soil",
+          "target_platform": "tiktok",
+          "target_duration_seconds": 30,
+          "key_points": [
+            "Plant dry mass is mostly carbon fixed from atmospheric CO\u2082",
+            "Water and minerals are essential but not the bulk carbon source",
+            "Photosynthesis is the gateway process that wires sunlight into that carbon capture"
+          ],
+          "core_message": "Plants build themselves from air, powered by sunlight.",
+          "cta": "Next time you see a tree, remember: most of its mass rode in as invisible gas.",
+          "tone": "playful, myth-busting, confident",
+          "grounded_in": [
+            "Mass-from-soil misconception",
+            "Underserved 30s myth-bust gap"
+          ],
+          "why_this_works": "Research shows mass-from-soil is the most persistent documented misconception; short-form rarely targets it with motion graphics."
+        },
+        {
+          "id": "c2",
+          "title": "Sunlight In, Life Out",
+          "hook": "In 30 seconds: sunlight, water, and CO\u2082 become the oxygen you breathe.",
+          "narrative_structure": "journey",
+          "visual_approach": "Kinetic equation build: icons for sun, H\u2082O, CO\u2082 slide in; animated arrows through a stylized chloroplast; O\u2082 and glucose pop out with spring motion",
+          "suggested_playbook": "flat-motion-graphics",
+          "target_audience": "General audience wanting a clean mental model in one watch",
+          "target_platform": "generic",
+          "target_duration_seconds": 30,
+          "key_points": [
+            "Chlorophyll in chloroplasts captures light energy",
+            "Water splits to release O\u2082; CO\u2082 is fixed into sugars",
+            "The overall equation: 6CO\u2082 + 6H\u2082O + light \u2192 C\u2086H\u2081\u2082O\u2086 + 6O\u2082"
+          ],
+          "core_message": "Photosynthesis turns light, water, and air into food and oxygen.",
+          "cta": "Every breath you take connects back to a leaf doing this right now.",
+          "tone": "energetic, clear, educational",
+          "grounded_in": [
+            "Equation-first gap vs long lectures",
+            "Standard stage progression for 30s explainers"
+          ],
+          "why_this_works": "Best fit for exactly 30 seconds: one equation, four inputs/outputs, no time for Calvin-cycle depth."
+        },
+        {
+          "id": "c3",
+          "title": "Earth's Lungs Just Got Upgraded",
+          "hook": "Scientists recalculated the planet's photosynthesis \u2014 it's 31% higher than we thought.",
+          "narrative_structure": "data_narrative",
+          "visual_approach": "Bold stat_card reveal (157 PgC/yr), animated globe with tropical rainforest pulse, quick cut to leaf close-up",
+          "suggested_playbook": "flat-motion-graphics",
+          "target_audience": "Science-curious viewers who respond to fresh research hooks",
+          "target_platform": "youtube",
+          "target_duration_seconds": 30,
+          "key_points": [
+            "2024 Nature study raised global gross primary production estimates by ~31%",
+            "Tropical rainforests may be more productive carbon sinks than satellite models suggested",
+            "Photosynthesis remains the largest carbon flux in Earth's biosphere"
+          ],
+          "core_message": "We underestimated how hard plants work as planetary carbon engines.",
+          "cta": "Follow for more science that updates what you learned in school.",
+          "tone": "newsy, awe-driven, credible",
+          "grounded_in": [
+            "157 PgC/yr Nature 2024 finding",
+            "Data-driven angle from research"
+          ],
+          "why_this_works": "Timely credible hook differentiates from decade-old classroom animations."
+        },
+        {
+          "id": "c4",
+          "title": "Why Plants Wear Green",
+          "hook": "Plants are green because they throw away the color they don't need.",
+          "narrative_structure": "analogy",
+          "visual_approach": "Spectrum bar with red/blue absorbed and green reflected; simple leaf character 'rejecting' green light waves",
+          "suggested_playbook": "flat-motion-graphics",
+          "target_audience": "Kids and parents; universal 'why is grass green?' question",
+          "target_platform": "instagram",
+          "target_duration_seconds": 30,
+          "key_points": [
+            "Chlorophyll absorbs red and blue light most strongly",
+            "Green wavelengths are reflected \u2014 that's the color we see",
+            "Absorbed light powers the chemistry that builds sugars"
+          ],
+          "core_message": "Green is the color plants don't use \u2014 not the color they love.",
+          "cta": "Look at any leaf differently: you're seeing rejected sunlight.",
+          "tone": "wonder-filled, simple, visual",
+          "grounded_in": [
+            "Why are plants green \u2014 common question",
+            "Chlorophyll absorption data point"
+          ],
+          "why_this_works": "Single visual metaphor carries a full 30s piece without molecular overload."
+        }
+      ],
+      "selected_concept": {
+        "concept_id": "c2",
+        "rationale": "Agent recommendation pending your approval: 'Sunlight In, Life Out' maps cleanly to 30 seconds \u2014 one kinetic equation, four beats, no Calvin-cycle detour. Strongest match for animated explainer at this duration.",
+        "modifications": []
+      },
+      "production_plan": {
+        "pipeline": "animated-explainer",
+        "playbook": "flat-motion-graphics",
+        "renderer_family": "explainer-teacher",
+        "render_runtime": "remotion",
+        "composition_mode": "templated",
+        "delivery_promise": {
+          "promise_type": "data_explainer",
+          "motion_required": true,
+          "source_required": false,
+          "tone_mode": "educational",
+          "quality_floor": "presentable",
+          "approved_fallback": null
+        },
+        "music_source": {
+          "source_type": "bring_your_own",
+          "mood_direction": "Light, curious, upbeat educational \u2014 soft synth or acoustic; no vocals",
+          "provider": "pixabay_music",
+          "estimated_cost_usd": 0
+        },
+        "voice_selection": {
+          "provider": "openai_tts",
+          "voice_id": "ash",
+          "rationale": "Warm, clear educational delivery; lowest-friction setup with a single OPENAI_API_KEY",
+          "estimated_cost_usd": 0.05,
+          "delivery_style": "Friendly science teacher \u2014 crisp, slightly upbeat",
+          "pacing_policy": "~75 words in 30s; micro-pauses after equation reveal",
+          "sample_approval_required": true
+        },
+        "stages": [
+          {
+            "stage": "script",
+            "tools": [],
+            "approach": "~75-word narration across 4 beats: hook \u2192 inputs \u2192 process \u2192 punchline"
+          },
+          {
+            "stage": "scene_plan",
+            "tools": [],
+            "approach": "4 Remotion scenes: hero_title, text_card (inputs), diagram or comparison (process), stat_card (O\u2082 out)"
+          },
+          {
+            "stage": "assets",
+            "tools": [
+              {
+                "tool_name": "openai_tts",
+                "role": "Narration",
+                "provider": "openai",
+                "available": false,
+                "estimated_cost_usd": 0.05,
+                "why_this_provider": "Recommended once OPENAI_API_KEY is set"
+              },
+              {
+                "tool_name": "flux_image",
+                "role": "Stylized leaf/chloroplast hero stills",
+                "provider": "flux",
+                "available": false,
+                "estimated_cost_usd": 0.12,
+                "why_this_provider": "Optional \u2014 FAL_KEY unlocks 3-4 consistent illustrations"
+              },
+              {
+                "tool_name": "diagram_gen",
+                "role": "Photosynthesis flow diagram (SVG)",
+                "provider": "mermaid",
+                "available": true,
+                "estimated_cost_usd": 0,
+                "why_this_provider": "Free local diagrams \u2014 works now"
+              },
+              {
+                "tool_name": "pixabay_music",
+                "role": "Royalty-free background bed",
+                "provider": "pixabay_music",
+                "available": true,
+                "estimated_cost_usd": 0,
+                "why_this_provider": "Free search \u2014 works now"
+              }
+            ],
+            "approach": "TTS narration + mermaid diagram + optional FLUX accents; music from Pixabay search",
+            "fallback_if_unavailable": "Without API keys: text-only Remotion kinetic typography (no voiceover) using diagram_gen visuals"
+          },
+          {
+            "stage": "compose",
+            "tools": [
+              {
+                "tool_name": "video_compose",
+                "role": "Remotion render",
+                "provider": "remotion",
+                "available": true,
+                "estimated_cost_usd": 0,
+                "why_this_provider": "Only composition runtime available on this machine"
+              },
+              {
+                "tool_name": "audio_mixer",
+                "role": "Narration + music ducking",
+                "provider": "ffmpeg",
+                "available": false,
+                "estimated_cost_usd": 0,
+                "why_this_provider": "Requires FFmpeg on PATH \u2014 currently missing"
+              }
+            ],
+            "approach": "Remotion templated explainer with flat-motion-graphics playbook tokens",
+            "fallback_if_unavailable": "BLOCKER: FFmpeg must be installed before final mux \u2014 `winget install ffmpeg` or download from ffmpeg.org"
+          }
+        ],
+        "quality_tradeoffs": [
+          {
+            "tradeoff": "OpenAI TTS ($0.05) vs text-only (free)",
+            "recommendation": "Use OpenAI TTS once OPENAI_API_KEY is set \u2014 narration is essential for an explainer",
+            "quality_impact": "Without TTS the piece becomes a silent kinetic typography clip"
+          },
+          {
+            "tradeoff": "Mermaid diagrams (free) vs FLUX illustrations ($0.12 for 3 images)",
+            "recommendation": "Start with mermaid + Remotion motion; add FLUX if you want richer hero visuals",
+            "quality_impact": "Diagrams are cleaner for process; FLUX adds warmth and social-stop power"
+          },
+          {
+            "tradeoff": "Templated Remotion scenes vs atelier hand-authored",
+            "recommendation": "Templated for this 30s edu piece \u2014 fast, reliable, fits duration",
+            "quality_impact": "Atelier would cost more iteration for marginal gain at 30 seconds"
+          }
+        ],
+        "alternative_paths": [
+          {
+            "description": "Minimum viable (after FFmpeg install): mermaid diagrams + Remotion text motion, no API keys, no narration",
+            "total_cost_usd": 0,
+            "quality_level": "budget",
+            "what_changes": "Silent kinetic typography with on-screen text only"
+          },
+          {
+            "description": "Recommended: OPENAI_API_KEY for TTS + mermaid + Remotion + Pixabay music",
+            "total_cost_usd": 0.05,
+            "quality_level": "standard",
+            "what_changes": "Full narrated explainer with diagram visuals"
+          },
+          {
+            "description": "Premium: OPENAI_API_KEY + FAL_KEY (FLUX images) + ElevenLabs-quality optional upgrade",
+            "total_cost_usd": 0.35,
+            "quality_level": "premium",
+            "what_changes": "Custom illustrated leaf/chloroplast scenes plus narration"
+          }
+        ],
+        "decision_log_ref": "projects\\photosynthesis-explainer\\decision_log.json"
+      },
+      "cost_estimate": {
+        "total_estimated_usd": 0.05,
+        "line_items": [
+          {
+            "tool": "openai_tts",
+            "operation": "30s narration (~75 words)",
+            "quantity": 1,
+            "estimated_usd": 0.05,
+            "notes": "Requires OPENAI_API_KEY"
+          },
+          {
+            "tool": "diagram_gen",
+            "operation": "Photosynthesis flow SVG",
+            "quantity": 1,
+            "estimated_usd": 0,
+            "notes": "Available now"
+          },
+          {
+            "tool": "pixabay_music",
+            "operation": "Background track search + download",
+            "quantity": 1,
+            "estimated_usd": 0,
+            "notes": "Available now"
+          },
+          {
+            "tool": "video_compose",
+            "operation": "Remotion render 1080x1920 30s",
+            "quantity": 1,
+            "estimated_usd": 0,
+            "notes": "Remotion available; FFmpeg required for audio mux"
+          }
+        ],
+        "budget_cap_usd": 2.0,
+        "budget_verdict": "within_budget",
+        "savings_options": [
+          "Skip FLUX images \u2014 use free mermaid diagrams only",
+          "Use Piper local TTS (free) instead of OpenAI if you install piper-tts"
+        ]
+      },
+      "approval": {
+        "status": "pending"
+      }
+    },
+    "decision_log": {
+      "version": "1.0",
+      "project_id": "photosynthesis-explainer",
+      "decisions": [
+        {
+          "decision_id": "d-001",
+          "stage": "proposal",
+          "category": "pipeline_selection",
+          "subject": "Production pipeline",
+          "options_considered": [
+            {
+              "option_id": "animated-explainer",
+              "label": "animated-explainer",
+              "score": 1.0,
+              "reason": "AI-generated 30s educational explainer from topic"
+            },
+            {
+              "option_id": "animation",
+              "label": "animation",
+              "score": 0.6,
+              "reason": "Possible but optimized for longer motion-graphics pieces"
+            },
+            {
+              "option_id": "cinematic",
+              "label": "cinematic",
+              "score": 0.2,
+              "reason": "Wrong grammar for a science explainer"
+            }
+          ],
+          "selected": "animated-explainer",
+          "reason": "User requested a 30-second animated explainer about photosynthesis \u2014 matches generated explainer pipeline."
+        },
+        {
+          "decision_id": "d-002",
+          "stage": "proposal",
+          "category": "render_runtime_selection",
+          "subject": "Composition render runtime",
+          "options_considered": [
+            {
+              "option_id": "remotion",
+              "label": "Remotion (React scene stack)",
+              "score": 1.0,
+              "reason": "Available on machine \u2014 text_card, stat_card, hero_title, diagram overlays, word-level captions"
+            },
+            {
+              "option_id": "hyperframes",
+              "label": "HyperFrames (HTML/CSS/GSAP)",
+              "score": 0.0,
+              "reason": "Rejected \u2014 FFmpeg not on PATH; hyperframes doctor would fail"
+            },
+            {
+              "option_id": "ffmpeg",
+              "label": "FFmpeg-only concat",
+              "score": 0.0,
+              "reason": "Rejected \u2014 ffmpeg binary not on PATH; insufficient for animated explainer grammar"
+            }
+          ],
+          "selected": "remotion",
+          "reason": "Only Remotion is available. Recommended for this brief: existing React scene types (text_card, hero_title, stat_card) fit equation-led 30s edu motion. HyperFrames unavailable until FFmpeg is installed."
+        },
+        {
+          "decision_id": "d-003",
+          "stage": "proposal",
+          "category": "composition_mode",
+          "subject": "Composition authoring mode",
+          "options_considered": [
+            {
+              "option_id": "templated",
+              "label": "Templated (stock cut.type scenes)",
+              "score": 0.9,
+              "reason": "Fast, reliable for 30s equation explainer"
+            },
+            {
+              "option_id": "atelier",
+              "label": "Atelier (hand-authored)",
+              "score": 0.5,
+              "reason": "Higher craft but overkill for 30s standard edu brief"
+            }
+          ],
+          "selected": "templated",
+          "reason": "30-second educational equation walkthrough fits templated Remotion scenes; atelier reserved for hero/brand work."
+        },
+        {
+          "decision_id": "d-004",
+          "stage": "proposal",
+          "category": "playbook_selection",
+          "subject": "Visual style playbook",
+          "options_considered": [
+            {
+              "option_id": "flat-motion-graphics",
+              "label": "flat-motion-graphics",
+              "score": 0.95,
+              "reason": "Bold icons, fast pace, social-native \u2014 pipeline recommended"
+            },
+            {
+              "option_id": "minimalist-diagram",
+              "label": "minimalist-diagram",
+              "score": 0.75,
+              "reason": "Clean but slower feel for 30s"
+            },
+            {
+              "option_id": "clean-professional",
+              "label": "clean-professional",
+              "score": 0.5,
+              "reason": "Better for corporate 60s+ pieces"
+            }
+          ],
+          "selected": "flat-motion-graphics",
+          "reason": "Energetic motion graphics with purple/teal palette fits photosynthesis inputs/outputs animation."
+        },
+        {
+          "decision_id": "d-005",
+          "stage": "proposal",
+          "category": "music_source",
+          "subject": "Background music plan",
+          "options_considered": [
+            {
+              "option_id": "pixabay",
+              "label": "Pixabay royalty-free search",
+              "score": 0.9,
+              "reason": "Available now, free"
+            },
+            {
+              "option_id": "user_library",
+              "label": "music_library/ folder",
+              "score": 0.3,
+              "reason": "Folder empty / not configured"
+            },
+            {
+              "option_id": "ai_generated",
+              "label": "ElevenLabs / Suno generation",
+              "score": 0.0,
+              "reason": "No music generation API keys configured"
+            },
+            {
+              "option_id": "none",
+              "label": "No music",
+              "score": 0.4,
+              "reason": "Valid fallback but weaker engagement"
+            }
+          ],
+          "selected": "pixabay",
+          "reason": "Pixabay music search is the only music path available without new API keys."
+        }
+      ]
+    }
+  }
+}

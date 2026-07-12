@@ -1,0 +1,239 @@
+{
+  "version": "1.0",
+  "topic": "How photosynthesis works",
+  "research_date": "2026-07-12",
+  "research_summary": "Photosynthesis explainers are saturated with 5–13 minute classroom walkthroughs, but a tight 30-second piece can win by myth-busting one persistent misconception—plants don't eat soil—and anchoring the process with a single memorable equation: sunlight + water + CO₂ → sugar + oxygen. Fresh 2024–2025 science (31% higher global CO₂ uptake; quantum energy routing in Photosystem II) gives hooks that feel current without overwhelming a half-minute runtime.",
+  "landscape": {
+    "existing_content": [
+      {
+        "title": "Photosynthesis (UPDATED)",
+        "url": "https://www.youtube.com/watch?v=CMiPYHNNg28",
+        "source": "youtube",
+        "angle": "Full classroom explainer with light-dependent vs Calvin cycle",
+        "what_it_covers": "Chloroplast anatomy, pigments, both reaction stages, equation comparison to respiration",
+        "what_it_misses": "Too long for social; buries the hook in 8 minutes",
+        "engagement_signal": "5.9M views, Amoeba Sisters"
+      },
+      {
+        "title": "Photosynthesis: Crash Course Biology #8",
+        "url": "https://www.youtube.com/watch?v=sQK3Yr4Sc_k",
+        "source": "youtube",
+        "angle": "Energetic deep-dive with Hank Green humor",
+        "what_it_covers": "Thylakoid, stroma, electron transport, Calvin cycle chemistry",
+        "what_it_misses": "Assumes 13-minute attention span; no myth-busting focus",
+        "engagement_signal": "9.2M views"
+      },
+      {
+        "title": "What Is Photosynthesis? | FuseSchool",
+        "url": "https://www.youtube.com/watch?v=CL9A8YhwUps",
+        "source": "youtube",
+        "angle": "Beginner-friendly equation-first explainer",
+        "what_it_covers": "Chlorophyll, stomata, roots/water, basic equation",
+        "what_it_misses": "Static visuals; doesn't address common student misconceptions",
+        "engagement_signal": "Education channel staple"
+      },
+      {
+        "title": "Photosynthesis - How it works! (Animation)",
+        "url": "https://www.youtube.com/watch?v=gz5L1GUaaXA",
+        "source": "youtube",
+        "angle": "Leaf cross-section animation",
+        "what_it_covers": "Epidermis, mesophyll, PS I/II, Calvin cycle in stroma",
+        "what_it_misses": "Dense molecular detail for a short social cut",
+        "engagement_signal": "110K views, Thomas Schwenke"
+      }
+    ],
+    "saturated_angles": [
+      "Full light-dependent + Calvin cycle lecture in one video",
+      "Chloroplast labeled diagram tour",
+      "Photosynthesis vs cellular respiration equation comparison",
+      "Generic 'plants make food from sunlight' without addressing misconceptions"
+    ],
+    "underserved_gaps": [
+      "30-second myth-bust: plants gain mass from air (CO₂), not soil",
+      "Single-screen animated equation with motion showing inputs → outputs",
+      "Fresh science hook: plants absorb more CO₂ than satellite models assumed",
+      "Why plants are green (chlorophyll reflects green; absorbs red/blue) in one punchy beat"
+    ]
+  },
+  "trending": {
+    "recent_developments": [
+      {
+        "headline": "Plants absorb 31% more CO₂ than previously estimated",
+        "url": "https://www.nature.com/articles/s41586-024-08050-3",
+        "date": "2024-10-16",
+        "relevance": "Counterintuitive scale stat for a hook or stat_card without needing deep chemistry"
+      },
+      {
+        "headline": "Berkeley Lab maps wandering energy paths inside Photosystem II",
+        "url": "https://newscenter.lbl.gov/2025/07/08/how-plants-manage-light-new-insights-into-natures-oxygen-making-machinery/",
+        "date": "2025-07-08",
+        "relevance": "Supports a 'plants are solar engineers' visual metaphor for motion graphics"
+      }
+    ],
+    "active_discussions": [
+      {
+        "platform": "education research",
+        "topic_or_url": "Student misconceptions about photosynthesis and respiration",
+        "sentiment": "Persistent confusion — teachers repeatedly report the same myths across decades",
+        "key_quotes": [
+          "Students believe plants do not respire at all",
+          "Many think plants get mass from soil nutrients rather than CO₂"
+        ]
+      }
+    ],
+    "timeliness_window": "evergreen"
+  },
+  "data_points": [
+    {
+      "claim": "Global gross primary production is ~157 petagrams of carbon per year — about 31% higher than many satellite-based estimates (~120 PgC/yr)",
+      "source_url": "https://www.nature.com/articles/s41586-024-08050-3",
+      "source_name": "Nature (Lai et al., 2024)",
+      "credibility": "primary_source",
+      "surprise_factor": "counterintuitive",
+      "usable_as": "hook"
+    },
+    {
+      "claim": "Up to 99 of 100 photons entering a plant's light-harvesting antenna can be converted to usable chemical energy under optimal conditions",
+      "source_url": "https://physicstoday.aip.org/quick-study/natures-search-for-a-quiet-place",
+      "source_name": "Physics Today",
+      "credibility": "secondary_source",
+      "surprise_factor": "surprising",
+      "usable_as": "stat_card"
+    },
+    {
+      "claim": "Chlorophyll absorbs red and blue light strongly but reflects green — which is why most land plants appear green",
+      "source_url": "https://luminouslearner.com/science/biology/biology-tool/photosynthesis-stage-explorer/",
+      "source_name": "Luminous Learner / standard plant physiology",
+      "credibility": "secondary_source",
+      "surprise_factor": "notable",
+      "usable_as": "script_anchor"
+    },
+    {
+      "claim": "The Calvin cycle (light-independent reactions) typically runs during daylight because it depends on ATP and NADPH from the light reactions — not because it requires darkness",
+      "source_url": "https://www.saps.org.uk/teaching-resources/resources/1223/photosynthesis-quiz-test-your-knowledge/",
+      "source_name": "Science & Plants for Schools",
+      "credibility": "secondary_source",
+      "surprise_factor": "counterintuitive",
+      "usable_as": "closing_punch"
+    },
+    {
+      "claim": "Photosynthesis in chloroplasts splits water to release O₂ while fixing CO₂ into sugars — the reverse of what many students assume about 'plant breathing'",
+      "source_url": "https://europepmc.org/backend/ptpmcrender.fcgi?accid=PMC3292062&blobtype=pdf",
+      "source_name": "CBE Life Sciences Education review",
+      "credibility": "primary_source",
+      "surprise_factor": "expected",
+      "usable_as": "script_anchor"
+    }
+  ],
+  "audience_insights": {
+    "common_questions": [
+      "Where does a plant actually get its mass — soil, water, or air?",
+      "Do plants only photosynthesize during the day and only respire at night?",
+      "What is the difference between the 'light' and 'dark' reactions?",
+      "Why are plants green if they use sunlight?"
+    ],
+    "misconceptions": [
+      {
+        "myth": "Plants get their food/mass mainly from soil and water",
+        "reality": "Most plant dry mass comes from CO₂ fixed from the air; water and minerals are essential but are not the bulk carbon source",
+        "source": "SAPS photosynthesis misconception quiz; CBE Life Sciences Education"
+      },
+      {
+        "myth": "Photosynthesis is just how plants breathe — the opposite of respiration",
+        "reality": "Photosynthesis builds sugars using light energy; respiration breaks them down for usable ATP — plants do both",
+        "source": "Academic reviews of student misconceptions (Amir & Tamir; Köse)"
+      },
+      {
+        "myth": "The 'dark reactions' only happen in the dark",
+        "reality": "The Calvin cycle is light-independent but usually runs in daylight because it consumes ATP/NADPH from the light reactions",
+        "source": "SAPS teaching resources"
+      }
+    ],
+    "knowledge_level": "General audience / middle-school biology: knows plants need sun and water, but often confuses gas exchange, mass source, and the two reaction stages",
+    "pain_points": [
+      "Existing explainers are too long for a quick social watch",
+      "Diagram-heavy videos feel like homework, not entertainment",
+      "Students memorize the equation without understanding what each arrow means"
+    ]
+  },
+  "angles_discovered": [
+    {
+      "name": "Your Salad Ate the Air",
+      "hook": "A tree's weight mostly came from invisible gas — not dirt.",
+      "type": "contrarian",
+      "why_now": "Mass-from-soil is the #1 documented misconception; a 30s myth-bust is underserved in short-form",
+      "grounded_in": ["Plants gain mass from CO₂ not soil", "Underserved gap: 30-second myth-bust"]
+    },
+    {
+      "name": "Sunlight In, Life Out",
+      "hook": "In 30 seconds: sunlight, water, and CO₂ become the oxygen you breathe.",
+      "type": "evergreen",
+      "why_now": "Equation-first explainers work when motion shows each reactant entering and products leaving — gap vs long lecture videos",
+      "grounded_in": ["Photosynthesis equation anchor", "Saturated full-cycle lectures"]
+    },
+    {
+      "name": "Plants Absorb More Than We Thought",
+      "hook": "Scientists just recalculated Earth's lungs — they're 31% hungrier for CO₂.",
+      "type": "data_driven",
+      "why_now": "2024 Nature paper gives a fresh, credible stat hook rare in classroom animations",
+      "grounded_in": ["157 PgC/yr GPP estimate", "Recent Nature development"]
+    },
+    {
+      "name": "Why Green? The Color of Waste Light",
+      "hook": "Plants are green because they throw away the color they don't need.",
+      "type": "narrative",
+      "why_now": "Chlorophyll absorption/reflection is a single visual beat that answers a universal kid question",
+      "grounded_in": ["Chlorophyll reflects green light", "Why are plants green question"]
+    }
+  ],
+  "visual_references": [
+    {
+      "description": "Kurzgesagt-style flat motion graphics with bold icons for inputs/outputs",
+      "url": "https://www.youtube.com/watch?v=CMiPYHNNg28",
+      "what_works": "High contrast, labeled arrows, one idea per scene"
+    },
+    {
+      "description": "Cross-section leaf diagram with chloroplast zoom",
+      "url": "https://www.youtube.com/watch?v=gz5L1GUaaXA",
+      "what_works": "Spatial context before molecular detail"
+    }
+  ],
+  "sources": [
+    {
+      "url": "https://www.youtube.com/watch?v=CMiPYHNNg28",
+      "title": "Photosynthesis (UPDATED) — Amoeba Sisters",
+      "used_for": "landscape — dominant explainer format",
+      "reliability": "secondary"
+    },
+    {
+      "url": "https://www.nature.com/articles/s41586-024-08050-3",
+      "title": "Terrestrial photosynthesis inferred from plant carbonyl sulfide uptake",
+      "used_for": "data_points — 31% higher CO₂ uptake",
+      "reliability": "primary"
+    },
+    {
+      "url": "https://europepmc.org/backend/ptpmcrender.fcgi?accid=PMC3292062&blobtype=pdf",
+      "title": "Misconceptions about Photosynthesis — CBE Life Sciences Education",
+      "used_for": "audience_insights — documented student myths",
+      "reliability": "primary"
+    },
+    {
+      "url": "https://www.saps.org.uk/teaching-resources/resources/1223/photosynthesis-quiz-test-your-knowledge/",
+      "title": "Photosynthesis Quiz — Science & Plants for Schools",
+      "used_for": "misconceptions — dark reactions timing",
+      "reliability": "secondary"
+    },
+    {
+      "url": "https://newscenter.lbl.gov/2025/07/08/how-plants-manage-light-new-insights-into-natures-oxygen-making-machinery/",
+      "title": "New Insights Into Nature's Oxygen-Making Machinery — Berkeley Lab",
+      "used_for": "trending — Photosystem II energy routing",
+      "reliability": "primary"
+    },
+    {
+      "url": "https://physicstoday.aip.org/quick-study/natures-search-for-a-quiet-place",
+      "title": "Nature's search for a quiet place — Physics Today",
+      "used_for": "data_points — photon conversion efficiency",
+      "reliability": "secondary"
+    }
+  ]
+}

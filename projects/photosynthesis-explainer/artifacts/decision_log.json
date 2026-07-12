@@ -117,6 +117,18 @@
       ],
       "selected": "approved",
       "reason": "User approved scene plan via message: 继续."
+    },
+    {
+      "decision_id": "d-010",
+      "stage": "assets",
+      "category": "voice_selection",
+      "subject": "Narration TTS provider",
+      "options_considered": [
+        {"option_id": "openai_tts", "label": "OpenAI TTS (ash)", "score": 0.0, "reason": "Rejected — OPENAI_API_KEY not configured"},
+        {"option_id": "piper_tts", "label": "Piper local (en_US-lessac-medium)", "score": 1.0, "reason": "User installed Piper at C:/piper after TTS blocker"}
+      ],
+      "selected": "piper_tts",
+      "reason": "User installed Piper and said continue; batch narration generated locally at zero cost."
     }
   ]
 }

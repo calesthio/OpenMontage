@@ -4,21 +4,10 @@
   "pipeline_type": "animated-explainer",
   "stage": "assets",
   "status": "awaiting_human",
-  "timestamp": "2026-07-12T10:40:00+00:00",
+  "timestamp": "2026-07-12T11:04:22.181746+00:00",
   "checkpoint_policy": "guided",
   "human_approval_required": true,
   "human_approved": false,
-  "error": "Narration generation blocked: OPENAI_API_KEY not configured. Diagram and music assets generated; TTS pending user setup.",
-  "review": {
-    "summary": "Partial asset pass: 1 chloroplast diagram + 1 Pixabay music track (119s). Narration blocked until OPENAI_API_KEY is set.",
-    "assets_ready": 2,
-    "assets_blocked": 5
-  },
-  "cost_snapshot": {
-    "total_spent_usd": 0,
-    "total_reserved_usd": 0.05,
-    "budget_remaining_usd": 1.95
-  },
   "artifacts": {
     "asset_manifest": {
       "version": "1.0",
@@ -29,7 +18,7 @@
           "path": "assets/images/scene-2-chloroplast-diagram.png",
           "source_tool": "diagram_gen",
           "scene_id": "scene-2",
-          "prompt": "flowchart LR: Sunlight → Chlorophyll → Light Energy inside Chloroplast; purple/teal flat-motion-graphics palette",
+          "prompt": "flowchart LR: Sunlight \u2192 Chlorophyll \u2192 Light Energy inside Chloroplast; purple/teal flat-motion-graphics palette",
           "cost_usd": 0,
           "format": "png",
           "generation_summary": "Mermaid-style flowchart rendered via diagram_gen (Pillow fallback; mmdc not on PATH)",
@@ -48,43 +37,189 @@
           "generation_summary": "Pixabay royalty-free search: upbeat educational soft synth",
           "provider": "pixabay_music",
           "license": "Pixabay License"
+        },
+        {
+          "id": "narration-s1",
+          "type": "narration",
+          "path": "assets/audio/s1.wav",
+          "source_tool": "piper_tts",
+          "scene_id": "scene-1",
+          "model": "en_US-lessac-medium",
+          "cost_usd": 0,
+          "duration_seconds": 5.27,
+          "format": "wav",
+          "provider": "piper",
+          "generation_summary": "Piper local TTS; SSML breaks stripped; length_scale=0.95",
+          "voice_performance": {
+            "source_section_id": "s1",
+            "delivery_cues_applied": true,
+            "provider_text_used": true,
+            "provider_settings": {
+              "length_scale": 0.95,
+              "sentence_silence": 0.35
+            },
+            "sample_approved": true,
+            "sample_path": "assets/audio/s1-sample.wav"
+          }
+        },
+        {
+          "id": "narration-s2",
+          "type": "narration",
+          "path": "assets/audio/s2.wav",
+          "source_tool": "piper_tts",
+          "scene_id": "scene-2",
+          "model": "en_US-lessac-medium",
+          "cost_usd": 0,
+          "duration_seconds": 5.34,
+          "format": "wav",
+          "provider": "piper",
+          "generation_summary": "Piper local TTS; length_scale=0.95",
+          "voice_performance": {
+            "source_section_id": "s2",
+            "delivery_cues_applied": true,
+            "provider_text_used": true,
+            "provider_settings": {
+              "length_scale": 0.95,
+              "sentence_silence": 0.35
+            },
+            "sample_approved": true,
+            "sample_path": "assets/audio/s1-sample.wav"
+          }
+        },
+        {
+          "id": "narration-s3",
+          "type": "narration",
+          "path": "assets/audio/s3.wav",
+          "source_tool": "piper_tts",
+          "scene_id": "scene-3",
+          "model": "en_US-lessac-medium",
+          "cost_usd": 0,
+          "duration_seconds": 6.09,
+          "format": "wav",
+          "provider": "piper",
+          "generation_summary": "Piper local TTS; length_scale=1.55 to match 7s scene timing",
+          "voice_performance": {
+            "source_section_id": "s3",
+            "delivery_cues_applied": true,
+            "provider_text_used": true,
+            "provider_settings": {
+              "length_scale": 1.55,
+              "sentence_silence": 0.4
+            },
+            "sample_approved": true,
+            "sample_path": "assets/audio/s1-sample.wav"
+          }
+        },
+        {
+          "id": "narration-s4",
+          "type": "narration",
+          "path": "assets/audio/s4.wav",
+          "source_tool": "piper_tts",
+          "scene_id": "scene-5",
+          "model": "en_US-lessac-medium",
+          "cost_usd": 0,
+          "duration_seconds": 6.53,
+          "format": "wav",
+          "provider": "piper",
+          "generation_summary": "Piper local TTS; length_scale=1.42 to match 7s scene timing",
+          "voice_performance": {
+            "source_section_id": "s4",
+            "delivery_cues_applied": true,
+            "provider_text_used": true,
+            "provider_settings": {
+              "length_scale": 1.42,
+              "sentence_silence": 0.4
+            },
+            "sample_approved": true,
+            "sample_path": "assets/audio/s1-sample.wav"
+          }
+        },
+        {
+          "id": "narration-s5",
+          "type": "narration",
+          "path": "assets/audio/s5.wav",
+          "source_tool": "piper_tts",
+          "scene_id": "scene-7",
+          "model": "en_US-lessac-medium",
+          "cost_usd": 0,
+          "duration_seconds": 5.9,
+          "format": "wav",
+          "provider": "piper",
+          "generation_summary": "Piper local TTS; length_scale=0.95",
+          "voice_performance": {
+            "source_section_id": "s5",
+            "delivery_cues_applied": true,
+            "provider_text_used": true,
+            "provider_settings": {
+              "length_scale": 0.95,
+              "sentence_silence": 0.35
+            },
+            "sample_approved": true,
+            "sample_path": "assets/audio/s1-sample.wav"
+          }
         }
       ],
       "total_cost_usd": 0,
       "metadata": {
         "generation_summary": {
-          "narration_sections": 0,
+          "narration_sections": 5,
           "images_generated": 0,
           "diagrams_generated": 1,
           "music_tracks": 1
         },
-        "blockers": [
-          {
-            "asset": "narration",
-            "tool": "openai_tts",
-            "status": "blocked",
-            "reason": "OPENAI_API_KEY is not set in environment or .env",
-            "impact": "Cannot generate 30s voiceover for approved explainer path",
-            "options": [
-              {
-                "id": "set_openai_key",
-                "label": "Add OPENAI_API_KEY to .env (recommended, ~$0.05)",
-                "recommended": true
-              },
-              {
-                "id": "install_piper",
-                "label": "Install Piper local TTS (free, requires setup)",
-                "recommended": false
-              }
-            ]
-          }
-        ],
-        "pending_assets": [
-          "narration-s1 through narration-s5 (OpenAI TTS, voice ash)",
-          "TTS sample for script section s1 (sample_approval_required)"
-        ],
-        "music_status": "available"
+        "music_status": "available",
+        "narration_provider": "piper_tts",
+        "narration_model": "en_US-lessac-medium",
+        "narration_total_seconds": 29.13,
+        "tts_sample_path": "assets/audio/s1-sample.wav",
+        "timing_notes": "All narration sections within \u00b115% of script section targets after s3/s4 length_scale tuning."
       }
+    },
+    "decision_log": {
+      "version": "1.0",
+      "project_id": "photosynthesis-explainer",
+      "decisions": [
+        {
+          "decision_id": "d-010",
+          "stage": "assets",
+          "category": "voice_selection",
+          "subject": "Narration TTS provider",
+          "options_considered": [
+            {
+              "option_id": "openai_tts",
+              "label": "OpenAI TTS (ash)",
+              "score": 0.0,
+              "reason": "Rejected \u2014 OPENAI_API_KEY not configured"
+            },
+            {
+              "option_id": "piper_tts",
+              "label": "Piper local (en_US-lessac-medium)",
+              "score": 1.0,
+              "reason": "User installed Piper at C:/piper after TTS blocker"
+            }
+          ],
+          "selected": "piper_tts",
+          "reason": "User installed Piper and said continue; batch narration generated locally at zero cost."
+        }
+      ]
     }
+  },
+  "style_playbook": "flat-motion-graphics",
+  "review": {
+    "summary": "Assets complete: 5 Piper narration WAVs (29.1s total), 1 chloroplast diagram, 1 Pixabay music track (119s). Total cost .",
+    "assets_ready": 7,
+    "assets_blocked": 0,
+    "self_eval": {
+      "completeness": 5,
+      "audio_quality": 4,
+      "visual_consistency": 5,
+      "budget_adherence": 5,
+      "playbook_fidelity": 5
+    }
+  },
+  "cost_snapshot": {
+    "total_spent_usd": 0,
+    "total_reserved_usd": 0,
+    "budget_remaining_usd": 2.0
   }
 }

@@ -12,11 +12,36 @@ const app = document.getElementById("app");
 const modal = document.getElementById("modal");
 const player = document.getElementById("player");
 
+const THEME_KEY = "backlot.theme";
+let currentTheme = localStorage.getItem(THEME_KEY) === "light" ? "light" : "dark";
 let state = null;
 let selectedStage = null;   // stage drawer open for this stage name
 let activeRender = 0;
 let replay = null;          // {t0, t1, t, playing} — replay mode when non-null
 let firstPaint = true;
+
+function applyTheme(theme) {
+  currentTheme = theme === "light" ? "light" : "dark";
+  document.documentElement.dataset.theme = currentTheme;
+  localStorage.setItem(THEME_KEY, currentTheme);
+}
+
+function renderThemeToggle() {
+  const next = currentTheme === "light" ? "dark" : "light";
+  return el("button", {
+    class: "theme-toggle",
+    type: "button",
+    title: `Switch to ${next} theme`,
+    "aria-label": `Switch to ${next} theme`,
+    "aria-pressed": currentTheme === "light" ? "true" : "false",
+    onclick: () => {
+      applyTheme(next);
+      render();
+    },
+  }, el("span", { class: "theme-toggle-icon", "aria-hidden": "true" }, currentTheme === "light" ? "☾" : "☀"));
+}
+
+applyTheme(currentTheme);
 
 // ---------------------------------------------------------------------------
 // header slate
@@ -72,6 +97,7 @@ function renderSlate(s) {
     ),
     ...chips,
     el("div", { class: "spacer" }),
+    renderThemeToggle(),
     liveEl,
     cost,
   );
@@ -219,7 +245,7 @@ function renderScriptCard(s) {
   const scriptStage = s.stages.find((x) => x.name === "script");
   const approved = scriptStage && scriptStage.status === "completed";
 
-  const card = el("div", { class: "script-card", title: "Click to expand full script", onclick: openScriptModal },
+  const card = el("div", { class: "script-card script-preview", title: "Click to expand full script", onclick: openScriptModal },
     approved ? el("span", { class: "script-approved" }, "APPROVED") : null,
     el("div", { class: "sp-title" }, script.title || s.title),
     el("div", { class: "sp-meta" },
@@ -528,7 +554,10 @@ function renderRenders(s) {
   // watch: carry playback position/state over to the recreated element.
   const prev = document.querySelector(".render-hero video");
   const src = mediaURL(s.project_id, current.path);
-  const video = el("video", { src, controls: "", preload: "none" });
+  // preload="metadata" gives the element its intrinsic aspect ratio (and a
+  // poster frame) before playback — without it a portrait 9:16 render sits
+  // in a letterboxed 100%-wide black box that reads as landscape.
+  const video = el("video", { src, controls: "", preload: "metadata" });
   // Click the frame to start playback (controls handle pause/scrub) — the
   // big player was inert to a click on the picture itself.
   video.addEventListener("click", () => { if (video.paused) video.play().catch(() => {}); });
@@ -778,16 +807,22 @@ function render() {
   if (decisions) aside.append(decisions);
   if (activity) aside.append(activity);
 
-  if (script || decisions || activity) {
-    app.append(el("div", { class: "board" }, main, aside));
-  }
-
+  // Media sections live INSIDE the main column so a tall decisions rail
+  // never pushes them below the fold — the column flows beside the rail.
   const storyboard = renderStoryboard(s);
-  if (storyboard) app.append(storyboard);
   const found = renderFoundMedia(s);
-  if (found) app.append(found);
   const renders = renderRenders(s);
-  if (renders) app.append(renders);
+
+  if (script || decisions || activity) {
+    for (const section of [storyboard, found, renders]) {
+      if (section) main.append(section);
+    }
+    app.append(el("div", { class: "board" }, main, aside));
+  } else {
+    for (const section of [storyboard, found, renders]) {
+      if (section) app.append(section);
+    }
+  }
 }
 
 // Defensive normalization (F-02): the server contract guarantees these

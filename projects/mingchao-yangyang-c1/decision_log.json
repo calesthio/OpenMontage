@@ -37,6 +37,14 @@
       "decision": "export_bundle tiktok",
       "rationale": "User requested Publish stage; hero 30s vertical montage packaged for hand-off.",
       "made_by": "user"
+    },
+    {
+      "id": "d-005",
+      "timestamp": "2026-07-12T13:46:00+00:00",
+      "type": "gate_approval",
+      "decision": "publish approved",
+      "rationale": "User continued — export bundle accepted, pipeline complete.",
+      "made_by": "user"
     }
   ]
 }

@@ -3,11 +3,11 @@
   "project_id": "mingchao-yangyang-c1",
   "pipeline_type": "cinematic",
   "stage": "publish",
-  "status": "awaiting_human",
-  "timestamp": "2026-07-12T13:07:45.200352+00:00",
+  "status": "completed",
+  "timestamp": "2026-07-12T13:46:00+00:00",
   "checkpoint_policy": "guided",
   "human_approval_required": true,
-  "human_approved": false,
+  "human_approved": true,
   "artifacts": {
     "publish_log": {
       "version": "1.0",

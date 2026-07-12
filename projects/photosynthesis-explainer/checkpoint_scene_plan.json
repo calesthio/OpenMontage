@@ -3,11 +3,9 @@
   "project_id": "photosynthesis-explainer",
   "pipeline_type": "animated-explainer",
   "stage": "scene_plan",
-  "status": "awaiting_human",
-  "timestamp": "2026-07-12T10:32:00+00:00",
-  "checkpoint_policy": "guided",
-  "human_approval_required": true,
-  "human_approved": false,
+  "status": "completed",
+  "timestamp": "2026-07-12T10:35:00+00:00",
+  "human_approved": true,
   "style_playbook": "flat-motion-graphics",
   "review": {
     "scores": {

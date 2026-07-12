@@ -106,6 +106,17 @@
       ],
       "selected": "openai_tts",
       "reason": "Locked by approved recommended plan: OpenAI TTS voice ash for friendly science-teacher delivery."
+    },
+    {
+      "decision_id": "d-009",
+      "stage": "scene_plan",
+      "category": "approval_policy",
+      "subject": "Scene plan approval",
+      "options_considered": [
+        {"option_id": "approved", "label": "7-scene Remotion plan", "score": 1.0, "reason": "User said 继续 to proceed"}
+      ],
+      "selected": "approved",
+      "reason": "User approved scene plan via message: 继续."
     }
   ]
 }

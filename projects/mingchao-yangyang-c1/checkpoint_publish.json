@@ -1,0 +1,74 @@
+{
+  "version": "1.0",
+  "project_id": "mingchao-yangyang-c1",
+  "pipeline_type": "cinematic",
+  "stage": "publish",
+  "status": "awaiting_human",
+  "timestamp": "2026-07-12T13:07:45.200352+00:00",
+  "checkpoint_policy": "guided",
+  "human_approval_required": true,
+  "human_approved": false,
+  "artifacts": {
+    "publish_log": {
+      "version": "1.0",
+      "entries": [
+        {
+          "platform": "tiktok",
+          "status": "exported",
+          "export_path": "C:\\Users\\\u6728\u767d\\OpenMontage\\projects\\mingchao-yangyang-c1\\exports",
+          "timestamp": "2026-07-12T13:07:45.155586+00:00",
+          "metadata_used": {
+            "title": "\u9713\u88f3\u5165\u68a6\uff5c\u9e23\u6f6e\u79e7\u79e7\u00b7\u7384\u7fce",
+            "description": "\u9713\u88f3\u4e00\u66f2\u5343\u5cf0\u4e0a\u2014\u2014\u7384\u7fce\u5165\u68a6\uff0c\u5c3d\u65e5\u6b22\u5a31\u3002\n\n30 \u79d2\u7ad6\u5c4f\u8bd7\u610f\u6df7\u526a\uff0c\u65e0\u65c1\u767d\u2014\u2014\u53e4\u8bd7\u91d1\u53e5 \u00d7 \u673a\u6838\u5b9e\u673a \u00d7 \u9752\u91d1\u8c03\u8272\u3002\n\u79e7\u79e7\u00b7\u7384\u7fce\u7fbd\u53d1\u4e0e\u98ce\u7c92\u5b50\u4e3a\u89c6\u89c9\u951a\uff0cBGM \u6162\u8d77\u540e\u5728\u6280\u80fd\u9ad8\u6f6e\u5904\u63a8\u9ad8\u3002\n\n0:00 - \u9713\u88f3\u4e00\u66f2\u5343\u5cf0\u4e0a\n0:03 - \u96fe\u9762\u5927\u666f\n0:08 - \u5c3d\u65e5\u6b22\u5a31\u5fd8\u5c81\u5e74\n0:11 - \u79e7\u79e7\u00b7\u7384\u7fce\u7279\u5199\n0:17 - \u5927\u62db\u91d1\u9752\u7c92\u5b50\n0:23 - #\u9e23\u6f6e\u79e7\u79e7\u7384\u7fce\n0:26 - \u7384\u7fce\u4e0a\u7ebf\n\n#\u9e23\u6f6e\u79e7\u79e7\u7384\u7fce \u00b7 \u7384\u7fce\u4e0a\u7ebf\n\n\u7d20\u6750\u6765\u6e90\uff1a\u673a\u6838\u6f14\u793a\u5b9e\u673a\uff08\u9e23\u6f6e\u79e7\u79e7\u00b7\u7384\u7fce\uff09",
+            "hashtags": [
+              "#\u9e23\u6f6e\u79e7\u79e7\u7384\u7fce",
+              "#\u9e23\u6f6e",
+              "#\u79e7\u79e7",
+              "#\u7384\u7fce",
+              "#\u6e38\u620f\u6df7\u526a",
+              "#\u4e8c\u6b21\u5143"
+            ],
+            "chapters": [
+              {
+                "start_seconds": 0,
+                "title": "\u9713\u88f3\u4e00\u66f2\u5343\u5cf0\u4e0a"
+              },
+              {
+                "start_seconds": 3,
+                "title": "\u96fe\u9762\u5927\u666f"
+              },
+              {
+                "start_seconds": 8,
+                "title": "\u5c3d\u65e5\u6b22\u5a31\u5fd8\u5c81\u5e74"
+              },
+              {
+                "start_seconds": 11,
+                "title": "\u79e7\u79e7\u00b7\u7384\u7fce\u7279\u5199"
+              },
+              {
+                "start_seconds": 17,
+                "title": "\u5927\u62db\u91d1\u9752\u7c92\u5b50"
+              },
+              {
+                "start_seconds": 23,
+                "title": "#\u9e23\u6f6e\u79e7\u79e7\u7384\u7fce"
+              },
+              {
+                "start_seconds": 26,
+                "title": "\u7384\u7fce\u4e0a\u7ebf"
+              }
+            ]
+          },
+          "visibility": "public"
+        }
+      ],
+      "metadata": {
+        "hero_output": "exports/video/output.mp4",
+        "derivative_outputs": [],
+        "poster_frame_notes": "\u6df1\u9752\u9ed1 (#0A1628) \u7ad6\u5c4f\u5e95\uff0c\u4e2d\u592e\u79e7\u79e7\u00b7\u7384\u7fce\u534a\u8eab\u526a\u5f71\u5e26\u91d1\u9752\u7fbd\u53d1\u5149\uff1b\u9876\u90e8\u7ec6\u5b8b\u4f53\u91d1\u53e5\u300c\u9713\u88f3\u4e00\u66f2\u5343\u5cf0\u4e0a\u300d\uff0c\u5e95\u90e8\u5c0f\u5b57\u300c\u7384\u7fce\u4e0a\u7ebf\u300d\u3002",
+        "distribution_notes": "Hero 30s vertical montage for Douyin/TikTok. No VO; paste description.txt and hashtags from metadata/. Poster frame from thumbnails/concept.json if needed."
+      }
+    }
+  },
+  "style_playbook": "cinematic"
+}

@@ -14,7 +14,11 @@
       "timestamp": "2026-07-12T12:35:00+00:00",
       "type": "render_runtime_selection",
       "decision": "remotion",
-      "options_considered": ["remotion", "hyperframes", "ffmpeg"],
+      "options_considered": [
+        "remotion",
+        "hyperframes",
+        "ffmpeg"
+      ],
       "rationale": "源片主导竖屏混剪，OffthreadVideo + 字幕层；Remotion 现有 cinematic 栈最省事",
       "made_by": "agent"
     },
@@ -25,6 +29,14 @@
       "decision": "Bilibili BV12BJg6dEzf 作为 primary source",
       "rationale": "浏览器检索最高播放官方实机；已下载 1080p",
       "made_by": "agent"
+    },
+    {
+      "id": "d-004",
+      "timestamp": "2026-07-12T13:07:45.144926+00:00",
+      "type": "publish_approval",
+      "decision": "export_bundle tiktok",
+      "rationale": "User requested Publish stage; hero 30s vertical montage packaged for hand-off.",
+      "made_by": "user"
     }
   ]
 }

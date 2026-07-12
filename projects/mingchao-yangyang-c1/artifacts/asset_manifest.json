@@ -1,0 +1,50 @@
+{
+  "version": "1.0",
+  "assets": [
+    {
+      "id": "source-gameplay",
+      "type": "video",
+      "path": "assets/source/jiguan_xuanling_demo.mp4",
+      "source_tool": "video_downloader",
+      "scene_id": "scene-2",
+      "duration_seconds": 60.3,
+      "cost_usd": 0,
+      "format": "mp4",
+      "provider": "bilibili",
+      "license": "Official demo — fan edit; attribution 机核GCORES",
+      "generation_summary": "Downloaded BV12BJg6dEzf 1080p via yt-dlp"
+    },
+    {
+      "id": "music-bg",
+      "type": "music",
+      "path": "assets/music/background_music.mp3",
+      "source_tool": "pixabay_music",
+      "scene_id": "scene-1",
+      "duration_seconds": 117,
+      "cost_usd": 0,
+      "format": "mp3",
+      "subtype": "background",
+      "provider": "pixabay_music",
+      "license": "Pixabay License",
+      "generation_summary": "Query: cinematic piano chinese ambient — Kulakovka Cinematic Ambient"
+    }
+  ],
+  "total_cost_usd": 0,
+  "metadata": {
+    "source_selects": [
+      {"scene_id": "scene-2", "trim": [22, 27], "note": "establishing wide"},
+      {"scene_id": "scene-4", "trim": [0.5, 6.5], "note": "CU reveal"},
+      {"scene_id": "scene-5", "trim": [34, 40], "note": "ultimate peak"},
+      {"scene_id": "scene-6", "trim": [34, 37], "note": "tag bg"}
+    ],
+    "music_plan": {
+      "track_id": "music-bg",
+      "volume": 0.38,
+      "fade_in_seconds": 1.5,
+      "fade_out_seconds": 2.5,
+      "trim_before_seconds": 0,
+      "use_seconds": 35
+    },
+    "title_assets": "CinematicRenderer TitleCard plates — no separate PNGs"
+  }
+}

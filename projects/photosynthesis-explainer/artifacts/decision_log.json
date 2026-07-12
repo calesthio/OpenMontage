@@ -129,6 +129,17 @@
       ],
       "selected": "piper_tts",
       "reason": "User installed Piper and said continue; batch narration generated locally at zero cost."
+    },
+    {
+      "decision_id": "d-011",
+      "stage": "assets",
+      "category": "approval_policy",
+      "subject": "Assets stage approval",
+      "options_considered": [
+        {"option_id": "approved", "label": "Approve 7 assets", "score": 1.0, "reason": "User explicit approval"}
+      ],
+      "selected": "approved",
+      "reason": "User approved assets and requested Edit stage."
     }
   ]
 }

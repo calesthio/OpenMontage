@@ -1,0 +1,210 @@
+{
+  "version": "1.0",
+  "renderer_family": "explainer-teacher",
+  "render_runtime": "remotion",
+  "composition_mode": "templated",
+  "cuts": [
+    {
+      "id": "cut-scene-1",
+      "source": "",
+      "in_seconds": 0,
+      "out_seconds": 5.27,
+      "layer": "primary",
+      "transition_in": "zoom-in",
+      "transition_out": "wipe-left",
+      "transition_duration": 0.3,
+      "reason": "scene-1 hero_title — narration-s1"
+    },
+    {
+      "id": "cut-scene-2",
+      "source": "diagram-scene-2",
+      "in_seconds": 5.27,
+      "out_seconds": 10.61,
+      "layer": "primary",
+      "transform": {"animation": "ken-burns"},
+      "transition_in": "wipe-left",
+      "transition_out": "morph",
+      "transition_duration": 0.3,
+      "reason": "scene-2 chloroplast diagram — narration-s2"
+    },
+    {
+      "id": "cut-scene-3",
+      "source": "",
+      "in_seconds": 10.61,
+      "out_seconds": 14.09,
+      "layer": "primary",
+      "transition_in": "morph",
+      "transition_out": "cut",
+      "transition_duration": 0.3,
+      "reason": "scene-3 comparison H2O→O2 — narration-s3 (first half)"
+    },
+    {
+      "id": "cut-scene-4",
+      "source": "",
+      "in_seconds": 14.09,
+      "out_seconds": 16.7,
+      "layer": "primary",
+      "transition_in": "cut",
+      "transition_out": "wipe-left",
+      "transition_duration": 0.3,
+      "reason": "scene-4 stat_card O2 payoff — narration-s3 (second half)"
+    },
+    {
+      "id": "cut-scene-5",
+      "source": "",
+      "in_seconds": 16.7,
+      "out_seconds": 20.43,
+      "layer": "primary",
+      "transition_in": "wipe-left",
+      "transition_out": "morph",
+      "transition_duration": 0.3,
+      "reason": "scene-5 text_card CO2→sugar — narration-s4 (first half)"
+    },
+    {
+      "id": "cut-scene-6",
+      "source": "",
+      "in_seconds": 20.43,
+      "out_seconds": 23.23,
+      "layer": "primary",
+      "transition_in": "morph",
+      "transition_out": "zoom-in",
+      "transition_duration": 0.3,
+      "reason": "scene-6 inputs recap — narration-s4 (second half)"
+    },
+    {
+      "id": "cut-scene-7",
+      "source": "",
+      "in_seconds": 23.23,
+      "out_seconds": 29.13,
+      "layer": "primary",
+      "transition_in": "zoom-in",
+      "transition_out": "cut",
+      "transition_duration": 0.3,
+      "reason": "scene-7 equation landing hero — narration-s5"
+    }
+  ],
+  "audio": {
+    "narration": {
+      "segments": [
+        {"asset_id": "narration-s1", "start_seconds": 0, "end_seconds": 5.27},
+        {"asset_id": "narration-s2", "start_seconds": 5.27, "end_seconds": 10.61},
+        {"asset_id": "narration-s3", "start_seconds": 10.61, "end_seconds": 16.7},
+        {"asset_id": "narration-s4", "start_seconds": 16.7, "end_seconds": 23.23},
+        {"asset_id": "narration-s5", "start_seconds": 23.23, "end_seconds": 29.13}
+      ]
+    },
+    "music": {
+      "asset_id": "music-bg",
+      "volume": 0.12,
+      "fade_in_seconds": 2,
+      "fade_out_seconds": 3,
+      "ducking": {
+        "enabled": true,
+        "threshold_db": -4,
+        "reduction_db": -8,
+        "attack_ms": 200,
+        "release_ms": 500
+      }
+    },
+    "sfx": []
+  },
+  "subtitles": {
+    "enabled": true,
+    "style": "word-by-word",
+    "font": "Space Grotesk",
+    "font_size": 48,
+    "color": "#F8FAFC",
+    "background": "#0F172A88",
+    "position": "bottom-center",
+    "max_words_per_line": 8
+  },
+  "metadata": {
+    "total_duration_seconds": 29.13,
+    "timeline_basis": "narration_actual_durations",
+    "playbook": "flat-motion-graphics",
+    "scene_count": 7,
+    "pacing_notes": "Visual cuts retimed to Piper WAV lengths; s3/s4 split 4:3 across paired scenes.",
+    "remotion_props": {
+      "theme": "flat-motion-graphics",
+      "cuts": [
+        {
+          "id": "cut-scene-1",
+          "source": "",
+          "type": "hero_title",
+          "in_seconds": 0,
+          "out_seconds": 5.27,
+          "text": "Photosynthesis in 30 Seconds",
+          "heroSubtitle": "Sunlight In, Life Out",
+          "backgroundColor": "#0F172A"
+        },
+        {
+          "id": "cut-scene-2",
+          "source": "diagram-scene-2",
+          "in_seconds": 5.27,
+          "out_seconds": 10.61,
+          "animation": "ken-burns",
+          "backgroundColor": "#0F172A"
+        },
+        {
+          "id": "cut-scene-3",
+          "source": "",
+          "type": "comparison",
+          "in_seconds": 10.61,
+          "out_seconds": 14.09,
+          "title": "Light splits water",
+          "leftLabel": "H₂O",
+          "leftValue": "Water in",
+          "rightLabel": "O₂",
+          "rightValue": "Oxygen out",
+          "accentColor": "#06B6D4",
+          "backgroundColor": "#0F172A",
+          "color": "#F8FAFC"
+        },
+        {
+          "id": "cut-scene-4",
+          "source": "",
+          "type": "stat_card",
+          "in_seconds": 14.09,
+          "out_seconds": 16.7,
+          "stat": "O₂",
+          "subtitle": "Released into the air you breathe",
+          "accentColor": "#06B6D4",
+          "backgroundColor": "#0F172A"
+        },
+        {
+          "id": "cut-scene-5",
+          "source": "",
+          "type": "text_card",
+          "in_seconds": 16.7,
+          "out_seconds": 20.43,
+          "text": "CO₂ stitches into sugar — plant fuel",
+          "accentColor": "#EC4899",
+          "backgroundColor": "#0F172A",
+          "color": "#F8FAFC"
+        },
+        {
+          "id": "cut-scene-6",
+          "source": "",
+          "type": "text_card",
+          "in_seconds": 20.43,
+          "out_seconds": 23.23,
+          "text": "Inputs: Sunlight · Water · CO₂",
+          "accentColor": "#7C3AED",
+          "backgroundColor": "#0F172A",
+          "color": "#F8FAFC"
+        },
+        {
+          "id": "cut-scene-7",
+          "source": "",
+          "type": "stat_card",
+          "in_seconds": 23.23,
+          "out_seconds": 29.13,
+          "stat": "6CO₂ + 6H₂O + light → C₆H₁₂O₆ + 6O₂",
+          "subtitle": "Life's solar engine",
+          "accentColor": "#7C3AED",
+          "backgroundColor": "#0F172A"
+        }
+      ]
+    }
+  }
+}

@@ -3,11 +3,11 @@
   "project_id": "photosynthesis-explainer",
   "pipeline_type": "animated-explainer",
   "stage": "assets",
-  "status": "awaiting_human",
-  "timestamp": "2026-07-12T11:04:22.181746+00:00",
+  "status": "completed",
+  "timestamp": "2026-07-12T11:14:19.139418+00:00",
   "checkpoint_policy": "guided",
   "human_approval_required": true,
-  "human_approved": false,
+  "human_approved": true,
   "artifacts": {
     "asset_manifest": {
       "version": "1.0",
@@ -174,52 +174,14 @@
         "tts_sample_path": "assets/audio/s1-sample.wav",
         "timing_notes": "All narration sections within \u00b115% of script section targets after s3/s4 length_scale tuning."
       }
-    },
-    "decision_log": {
-      "version": "1.0",
-      "project_id": "photosynthesis-explainer",
-      "decisions": [
-        {
-          "decision_id": "d-010",
-          "stage": "assets",
-          "category": "voice_selection",
-          "subject": "Narration TTS provider",
-          "options_considered": [
-            {
-              "option_id": "openai_tts",
-              "label": "OpenAI TTS (ash)",
-              "score": 0.0,
-              "reason": "Rejected \u2014 OPENAI_API_KEY not configured"
-            },
-            {
-              "option_id": "piper_tts",
-              "label": "Piper local (en_US-lessac-medium)",
-              "score": 1.0,
-              "reason": "User installed Piper at C:/piper after TTS blocker"
-            }
-          ],
-          "selected": "piper_tts",
-          "reason": "User installed Piper and said continue; batch narration generated locally at zero cost."
-        }
-      ]
     }
   },
   "style_playbook": "flat-motion-graphics",
   "review": {
-    "summary": "Assets complete: 5 Piper narration WAVs (29.1s total), 1 chloroplast diagram, 1 Pixabay music track (119s). Total cost .",
-    "assets_ready": 7,
-    "assets_blocked": 0,
-    "self_eval": {
-      "completeness": 5,
-      "audio_quality": 4,
-      "visual_consistency": 5,
-      "budget_adherence": 5,
-      "playbook_fidelity": 5
-    }
+    "summary": "User approved assets stage (Piper narration + diagram + music)."
   },
   "cost_snapshot": {
     "total_spent_usd": 0,
-    "total_reserved_usd": 0,
     "budget_remaining_usd": 2.0
   }
 }

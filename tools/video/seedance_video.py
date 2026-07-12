@@ -146,6 +146,7 @@ class SeedanceVideo(BaseTool):
                 "description": "Optional seed for reproducibility",
             },
             "output_path": {"type": "string"},
+            "timeout_seconds": {"type": "integer", "minimum": 30, "default": 900},
         },
     }
 
@@ -266,8 +267,16 @@ class SeedanceVideo(BaseTool):
             queue_data = submit_resp.json()
             status_url = queue_data["status_url"]
             response_url = queue_data["response_url"]
+            timeout_seconds = int(inputs.get("timeout_seconds", 900))
+            deadline = time.time() + timeout_seconds
 
             while True:
+                if time.time() >= deadline:
+                    return ToolResult(
+                        success=False,
+                        error="Seedance 2.0 video generation timed out",
+                        data={"provider": "fal.ai", "provider_error_type": "timeout"},
+                    )
                 time.sleep(5)
                 status_resp = requests.get(status_url, headers=headers, timeout=15)
                 status_resp.raise_for_status()

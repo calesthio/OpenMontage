@@ -17,7 +17,7 @@ from backlot.state import PROJECTS_DIR, load_board_state, summarize_project
 
 PROTOCOL_VERSION = "2025-11-25"
 SERVER_NAME = "ikawn-ray"
-SERVER_VERSION = "0.7.1"
+SERVER_VERSION = "0.8.0"
 BRAND_NAME = "iKawn Ray"
 BRAND_COLOR = "#f0a83c"
 BRAND_BACKGROUND_COLOR = "#08090d"
@@ -95,7 +95,8 @@ def initialize_result() -> dict[str, Any]:
             "video-generation credits. Paid generation requires an explicit "
             "ray_approve_paid_generation call with confirm_paid_generation=true. "
             "Grok Imagine is the hosted default. Seedance requires confirm_seedance_risk=true. "
-            "Use ray_get_project_outputs to inspect every stage output, pending approval, progress, and final CDN MP4 URL."
+            "Use ray_get_project_outputs to inspect every stage output, pending approval, spend, progress, and final CDN MP4 URL. "
+            "Use ray_cancel_project to stop before the next provider or composer call."
         ),
     }
 
@@ -192,6 +193,24 @@ def tools() -> list[dict[str, Any]]:
                     },
                 },
             },
+        },
+        {
+            "name": "ray_cancel_project",
+            "title": "Cancel Ray project",
+            "description": (
+                "Request cancellation for a Ray project. This stops before the next provider/composer call "
+                "and marks the active checkpoint cancelled; already in-flight external provider calls are best-effort."
+            ),
+            "inputSchema": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["project_id"],
+                "properties": {
+                    "project_id": {"type": "string"},
+                    "reason": {"type": "string", "description": "Optional user-visible reason for cancellation."},
+                },
+            },
+            "annotations": {"destructiveHint": True, "openWorldHint": False},
         },
         {
             "name": "ray_request_reference_upload",
@@ -390,6 +409,8 @@ async def call_tool(
         data = await asyncio.to_thread(_get_project_state, str(arguments.get("project_id") or ""), base_url)
     elif name == "ray_get_project_outputs":
         data = await asyncio.to_thread(_get_project_outputs, arguments, base_url)
+    elif name == "ray_cancel_project":
+        data = await asyncio.to_thread(_cancel_project, arguments, base_url, publish_project)
     elif name == "ray_request_reference_upload":
         data = await asyncio.to_thread(_request_reference_upload, arguments, base_url)
     elif name == "ray_confirm_reference":
@@ -494,6 +515,8 @@ def _get_project_state(project_id: str, base_url: str) -> dict[str, Any]:
         "summary": summarize_project(project_dir),
         "stages": state.get("stages") or [],
         "workflow": workflow,
+        "status_message": workflow.get("status_message"),
+        "spend_summary": workflow.get("spend_summary"),
         "pending_approval": workflow.get("pending_approval"),
         "final_render_url": (workflow.get("final_render") or {}).get("url"),
         "job_request": artifacts.get("job_request"),
@@ -515,6 +538,8 @@ def _get_project_outputs(args: dict[str, Any], base_url: str) -> dict[str, Any]:
         "board_url": f"{base_url}/p/{project_id}",
         "summary": summarize_project(project_dir),
         "workflow": workflow,
+        "status_message": workflow.get("status_message"),
+        "spend_summary": workflow.get("spend_summary"),
         "stages": workflow["stages"],
         "pending_approval": workflow.get("pending_approval"),
         "final_render": workflow.get("final_render"),
@@ -526,6 +551,22 @@ def _get_project_outputs(args: dict[str, Any], base_url: str) -> dict[str, Any]:
     if include_raw:
         result["raw_artifacts"] = state.get("artifacts") or {}
     return result
+
+
+def _cancel_project(args: dict[str, Any], base_url: str, publish_project: PublishHook | None) -> dict[str, Any]:
+    project_id = str(args.get("project_id") or "")
+    _safe_project_dir(project_id)
+    result = jobs.cancel_project(project_id, str(args.get("reason") or "Cancelled from MCP"))
+    if publish_project:
+        publish_project(project_id)
+    workflow = _mcp_workflow(project_id, load_board_state(_safe_project_dir(project_id)), base_url, include_events=True)
+    return {
+        **result,
+        "board_url": f"{base_url}/p/{project_id}",
+        "monitor_tool": "ray_get_project_outputs",
+        "monitor_arguments": {"project_id": project_id},
+        "workflow": workflow,
+    }
 
 
 def _mcp_workflow(project_id: str, state: dict[str, Any], base_url: str, *, include_events: bool) -> dict[str, Any]:
@@ -569,14 +610,25 @@ def _mcp_workflow(project_id: str, state: dict[str, Any], base_url: str, *, incl
         else actionable["status"] if actionable
         else "planning"
     )
+    spend_summary = _spend_summary(state, artifacts)
+    status_message = _status_message(
+        status=status,
+        actionable=actionable,
+        pending_approval=pending_approval,
+        final_render=final_render,
+        stage_outputs=stage_outputs,
+        spend_summary=spend_summary,
+    )
     return {
         "status": status,
+        "status_message": status_message,
         "current_stage": actionable["name"] if actionable else None,
         "progress": {
             "completed_stages": completed,
             "total_stages": len(stage_rows),
             "percent": round((completed / len(stage_rows)) * 100, 1) if stage_rows else 0,
         },
+        "spend_summary": spend_summary,
         "stages": stage_rows,
         "stage_outputs": stage_outputs,
         "media_outputs": {
@@ -589,6 +641,91 @@ def _mcp_workflow(project_id: str, state: dict[str, Any], base_url: str, *, incl
         "next_actions": _next_actions(project_id, status, pending_approval, final_render),
         **({"events": _recent_events(state)} if include_events else {}),
     }
+
+
+def _as_float(value: Any) -> float | None:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _finish_event_costs(events: list[dict[str, Any]], tools: set[str]) -> float:
+    total = 0.0
+    for event in events:
+        if not isinstance(event, dict) or event.get("event") != "finish" or event.get("success") is not True:
+            continue
+        if str(event.get("tool") or "") not in tools:
+            continue
+        cost = _as_float(event.get("cost_usd"))
+        if cost is not None:
+            total += cost
+    return total
+
+
+def _spend_summary(state: dict[str, Any], artifacts: dict[str, Any]) -> dict[str, Any]:
+    request = artifacts.get("job_request") or {}
+    cost_log = artifacts.get("cost_log") or {}
+    asset_manifest = artifacts.get("asset_manifest") or {}
+    events = state.get("events") or []
+    orchestration = _as_float(cost_log.get("budget_spent_usd")) or 0.0
+    media_generation = _as_float(asset_manifest.get("total_cost_usd")) or 0.0
+    post = _finish_event_costs(events, {"music_gen", "suno_music", "audio_mixer", "video_compose"})
+    computed_total = orchestration + media_generation + post
+    board_total = _as_float((state.get("cost") or {}).get("total_spent_usd")) or 0.0
+    total = max(computed_total, board_total)
+    cap = _as_float(request.get("budget_cap_usd") or cost_log.get("budget_total_usd"))
+    return {
+        "budget_cap_usd": round(cap, 4) if cap is not None else None,
+        "orchestration_llm_usd": round(orchestration, 4),
+        "media_generation_usd": round(media_generation, 4),
+        "post_production_usd": round(post, 4),
+        "total_observed_usd": round(total, 4),
+        "budget_remaining_usd": round(cap - total, 4) if cap is not None else None,
+        "source": "cost_log+asset_manifest+events",
+    }
+
+
+def _status_message(
+    *,
+    status: str,
+    actionable: dict[str, Any] | None,
+    pending_approval: dict[str, Any] | None,
+    final_render: dict[str, Any] | None,
+    stage_outputs: dict[str, dict[str, Any]],
+    spend_summary: dict[str, Any],
+) -> str:
+    if final_render and final_render.get("url"):
+        return f"Final render MP4 is ready: {final_render['url']}"
+    if pending_approval:
+        stage = pending_approval.get("stage")
+        if pending_approval.get("blocked"):
+            return f"{stage} is blocked: {pending_approval.get('message') or pending_approval.get('reason')}"
+        if stage == "proposal":
+            cost = (stage_outputs.get("proposal") or {}).get("summary", {}).get("initial_paid_generation_estimate_usd")
+            return f"Proposal is ready for paid-generation approval. Next approved spend is ${cost or 0}."
+        if stage == "assets":
+            reason = pending_approval.get("reason") or "asset review"
+            return f"Generated clips are ready for human review before continuing: {reason}."
+        return f"{stage} is awaiting human review."
+    if actionable:
+        stage = actionable.get("name")
+        if actionable.get("status") == "failed":
+            return f"{stage} failed: {actionable.get('error') or 'see project outputs'}"
+        if stage == "assets":
+            progress = actionable.get("progress") or {}
+            done = len(progress.get("completed_scene_ids") or [])
+            total = ((stage_outputs.get("scene_plan") or {}).get("summary") or {}).get("scene_count") or "?"
+            return (
+                f"Generating assets: {done}/{total} clips complete. "
+                f"Observed spend is ${spend_summary.get('total_observed_usd')}; provider calls can take several minutes."
+            )
+        if stage == "compose":
+            return "Composing the final render with the real video_compose runtime."
+        return f"{stage} is {actionable.get('status')}."
+    if status == "planning":
+        return "Planning is queued or running through the StageExecutor. No paid video generation has started."
+    return status.replace("_", " ")
 
 
 def _r2_url_map(artifacts: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -745,6 +882,9 @@ def _assets_output(
             "sample_only": metadata.get("sample_only"),
             "generated_scene_count": metadata.get("generated_scene_count"),
             "total_scene_count": metadata.get("total_scene_count"),
+            "generation_runs": metadata.get("generation_runs") or [],
+            "chain_frames": metadata.get("chain_frames") or [],
+            "qa_summary": metadata.get("qa_summary"),
             "review_required": metadata.get("review_required"),
             "blocker": metadata.get("blocker"),
         },
@@ -936,8 +1076,12 @@ def _next_actions(
             })
         if pending_approval.get("required_before_approval"):
             actions.append({"type": "blocked", "message": pending_approval["required_before_approval"]})
+        actions.append({"type": "cancel", "tool": "ray_cancel_project", "arguments": {"project_id": project_id}})
         return actions
-    return [{"type": "poll", "tool": "ray_get_project_outputs", "arguments": {"project_id": project_id}, "status": status}]
+    actions = [{"type": "poll", "tool": "ray_get_project_outputs", "arguments": {"project_id": project_id}, "status": status}]
+    if status not in {"completed", "failed"}:
+        actions.append({"type": "cancel", "tool": "ray_cancel_project", "arguments": {"project_id": project_id}})
+    return actions
 
 
 def _recent_events(state: dict[str, Any]) -> list[dict[str, Any]]:
@@ -1065,6 +1209,8 @@ def _asset_review_progress_response(project_id: str, base_url: str, project_dir:
         "monitor_tool": "ray_get_project_outputs",
         "monitor_arguments": {"project_id": project_id},
         "workflow": workflow,
+        "status_message": workflow.get("status_message"),
+        "spend_summary": workflow.get("spend_summary"),
         "final_render": workflow.get("final_render"),
         "final_render_url": (workflow.get("final_render") or {}).get("url"),
     }

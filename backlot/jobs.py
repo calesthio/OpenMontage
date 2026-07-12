@@ -8,6 +8,7 @@ import os
 import re
 import subprocess
 import time
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
@@ -41,6 +42,8 @@ RENDER_SSIM_MIN = 0.14
 HOSTED_LITE_PIPELINE_TYPE = "hosted-lite"
 KLING_REFERENCE_PREPROCESS_VERSION = "kling-start-frame-crop-fill-v2"
 KLING_REFERENCE_PREPROCESS_COMPATIBLE_VERSIONS = {"kling-start-frame-aspect-pad-v1"}
+DEFAULT_PROVIDER_TIMEOUT_SECONDS = 20 * 60
+CANCEL_REQUEST_ARTIFACT = "cancel_request.json"
 VIDEO_MODELS: dict[str, dict[str, Any]] = {
     "grok-imagine-video": {
         "id": "grok-imagine-video",
@@ -141,6 +144,10 @@ class JobAwaitingHuman(JobError):
     pass
 
 
+class ProviderCallTimeout(JobError):
+    pass
+
+
 def slugify(value: str) -> str:
     value = value.lower().strip()
     value = re.sub(r"[^a-z0-9]+", "-", value)
@@ -150,6 +157,124 @@ def slugify(value: str) -> str:
 
 def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _provider_timeout_seconds() -> int:
+    raw = os.environ.get("RAY_PROVIDER_TIMEOUT_SECONDS")
+    try:
+        value = int(raw) if raw else DEFAULT_PROVIDER_TIMEOUT_SECONDS
+    except (TypeError, ValueError):
+        value = DEFAULT_PROVIDER_TIMEOUT_SECONDS
+    return max(30, value)
+
+
+def _cancel_request_path(project_dir: Path) -> Path:
+    return project_dir / "artifacts" / CANCEL_REQUEST_ARTIFACT
+
+
+def _cancel_request(project_dir: Path) -> dict[str, Any] | None:
+    path = _cancel_request_path(project_dir)
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {"status": "requested", "reason": "cancel request exists but could not be parsed"}
+    if data.get("status") == "cleared":
+        return None
+    return data
+
+
+def _active_checkpoint(project_dir: Path) -> tuple[str, dict[str, Any]] | None:
+    active: list[tuple[float, str, dict[str, Any]]] = []
+    for path in project_dir.glob("checkpoint_*.json"):
+        stage = path.stem.removeprefix("checkpoint_")
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if data.get("status") in {"in_progress", "awaiting_human"}:
+            try:
+                mtime = path.stat().st_mtime
+            except OSError:
+                mtime = 0.0
+            active.append((mtime, stage, data))
+    if not active:
+        return None
+    _, stage, data = max(active, key=lambda item: item[0])
+    return stage, data
+
+
+def _write_cancelled_checkpoint(
+    project_id: str,
+    project_dir: Path,
+    stage: str,
+    pipeline_type: str,
+    reason: str,
+    *,
+    metadata: dict[str, Any] | None = None,
+) -> None:
+    write_checkpoint(
+        PROJECTS_DIR,
+        project_id,
+        stage,
+        "failed",
+        {},
+        pipeline_type=pipeline_type,
+        error=f"Cancelled: {reason}",
+        metadata={
+            "source": "hosted_mcp",
+            "blocker": "cancelled_by_user",
+            "cancel_request": _cancel_request(project_dir) or {},
+            **(metadata or {}),
+        },
+    )
+
+
+def cancel_project(project_id: str, reason: str | None = None) -> dict[str, Any]:
+    project_dir = PROJECTS_DIR / project_id
+    if not project_dir.is_dir():
+        raise JobError(f"Unknown project: {project_id}")
+    reason_text = (reason or "Cancelled from MCP").strip()[:500] or "Cancelled from MCP"
+    cancel_request = {
+        "version": "1.0",
+        "project_id": project_id,
+        "status": "requested",
+        "reason": reason_text,
+        "requested_at": now_iso(),
+    }
+    _write_json(_cancel_request_path(project_dir), cancel_request)
+    active = _active_checkpoint(project_dir)
+    active_stage = None
+    if active:
+        active_stage, checkpoint = active
+        _write_cancelled_checkpoint(
+            project_id,
+            project_dir,
+            active_stage,
+            str(checkpoint.get("pipeline_type") or "cinematic"),
+            reason_text,
+        )
+    return {
+        "ok": True,
+        "project_id": project_id,
+        "status": "cancel_requested",
+        "active_stage": active_stage,
+        "cancel_request": cancel_request,
+        "message": (
+            "Cancellation is durable. In-flight external provider calls cannot be force-killed, "
+            "but Ray will stop before accepting results or starting the next paid step."
+        ),
+    }
+
+
+def _assert_not_cancelled(project_id: str, project_dir: Path, stage: str, pipeline_type: str) -> None:
+    cancel_request = _cancel_request(project_dir)
+    if not cancel_request:
+        return
+    reason = str(cancel_request.get("reason") or "Cancelled from MCP")
+    _write_cancelled_checkpoint(project_id, project_dir, stage, pipeline_type, reason)
+    raise JobError(f"Project cancelled before {stage}: {reason}")
 
 
 def _coerce_optional_budget_cap(value: Any) -> float | None:
@@ -303,12 +428,14 @@ def plan_job(project_id: str, force: bool = False) -> dict[str, Any]:
 
 
 def _run_stage_executor_planning_bundle(project_id: str, request_data: dict[str, Any]) -> list[Any]:
+    project_dir = PROJECTS_DIR / project_id
     executor = StageExecutor(
         projects_dir=PROJECTS_DIR,
         model_client=ChatCompletionsDirectorClient.from_env(),
     )
     results = []
     for stage in ("research", "proposal", "script", "scene_plan"):
+        _assert_not_cancelled(project_id, project_dir, stage, "cinematic")
         current = executor.run_stage(
             StageRunRequest(
                 project_id=project_id,
@@ -327,6 +454,7 @@ def _run_stage_executor_planning_bundle(project_id: str, request_data: dict[str,
         results.append(result := current)
         if result.status == "blocked":
             raise JobError(f"StageExecutor blocked at {stage}: {result.blocker}")
+        _assert_not_cancelled(project_id, project_dir, stage, "cinematic")
     return results
 
 
@@ -648,6 +776,7 @@ def approve_paid_generation(
         )
 
         current_stage = "compose"
+        _assert_not_cancelled(project_id, project_dir, "compose", "cinematic")
         edit_decisions, render_report = _compose(project_id, project_dir, asset_manifest, request_data, scene_plan)
         _write_json(project_dir / "artifacts" / "edit_decisions.json", edit_decisions)
         write_checkpoint(
@@ -712,6 +841,7 @@ def approve_asset_review(project_id: str) -> dict[str, Any]:
     generated_scene_ids = {str(asset.get("scene_id")) for asset in asset_manifest.get("assets") or []}
     expected_scene_ids = {str(scene.get("id")) for scene in scene_plan.get("scenes") or []}
     if generated_scene_ids != expected_scene_ids:
+        _assert_not_cancelled(project_id, project_dir, "assets", "cinematic")
         _assert_budget_allows_remaining_batch(request_data, scene_plan, asset_manifest, generated_scene_ids)
         full_manifest = _generate_assets(project_id, project_dir, request_data, scene_plan, sample_only=False)
         _mark_reference_review_required(full_manifest, request_data, scene_plan, phase="full_batch")
@@ -754,6 +884,7 @@ def approve_asset_review(project_id: str) -> dict[str, Any]:
             metadata={"source": "hosted_ui", "approval": "reference_fidelity_review_passed"},
         )
     try:
+        _assert_not_cancelled(project_id, project_dir, "compose", "cinematic")
         edit_decisions, render_report = _compose(project_id, project_dir, asset_manifest, request_data, scene_plan)
     except JobAwaitingHuman as exc:
         return {"ok": False, "project_id": project_id, "status": "blocked", "error": str(exc)}
@@ -1348,6 +1479,70 @@ def _blocked_asset_manifest_from_qa(
     }
 
 
+def _blocked_asset_manifest_from_provider_failure(
+    request_data: dict[str, Any],
+    model_config: dict[str, Any],
+    scene: dict[str, Any],
+    prompt: str,
+    failure_type: str,
+    message: str,
+    generation_inputs: dict[str, Any],
+    assets: list[dict[str, Any]],
+    r2_assets: list[dict[str, Any]],
+    total_cost: float,
+) -> dict[str, Any]:
+    return {
+        "version": "1.0",
+        "assets": assets,
+        "total_cost_usd": round(total_cost, 2),
+        "metadata": {
+            "r2_assets": r2_assets,
+            "blocked": True,
+            "blocker": {
+                "type": failure_type,
+                "stage": "assets",
+                "scene_id": scene["id"],
+                "provider": model_config["provider_label"],
+                "model": model_config["model_variant"],
+                "video_model": request_data.get("video_model"),
+                "message": message,
+                "prompt": prompt,
+                "generation_inputs": {
+                    key: generation_inputs.get(key)
+                    for key in (
+                        "operation",
+                        "preferred_provider",
+                        "duration",
+                        "aspect_ratio",
+                        "resolution",
+                        "timeout_seconds",
+                        "reference_frame_preprocess",
+                        "original_reference_image_url",
+                    )
+                    if generation_inputs.get(key) is not None
+                },
+                "recommendation": (
+                    "Inspect the provider state, then retry the same scene or switch provider before approving more spend."
+                ),
+            },
+        },
+    }
+
+
+def _run_video_selector_with_watchdog(selector: Any, generation_inputs: dict[str, Any], timeout_seconds: int) -> Any:
+    executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="ray-provider")
+    future = executor.submit(selector.execute, generation_inputs)
+    try:
+        return future.result(timeout=timeout_seconds)
+    except FutureTimeoutError as exc:
+        future.cancel()
+        raise ProviderCallTimeout(
+            f"Video provider call timed out after {timeout_seconds}s for {generation_inputs.get('scene_id')}"
+        ) from exc
+    finally:
+        executor.shutdown(wait=False, cancel_futures=True)
+
+
 def _aspect_ratio_value(aspect_ratio: Any) -> float | None:
     match = re.match(r"^\s*(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)\s*$", str(aspect_ratio or ""))
     if not match:
@@ -1481,8 +1676,11 @@ def _generate_assets(
     reference_image_urls = all_reference_image_urls[:reference_limit]
     previous_last_frame_path: Path | None = None
     pipeline_type = str(request_data.get("pipeline_type") or "cinematic")
+    provider_timeout = _provider_timeout_seconds()
+    _assert_not_cancelled(project_id, project_dir, "assets", pipeline_type)
     write_checkpoint(PROJECTS_DIR, project_id, "assets", "in_progress", {}, pipeline_type=pipeline_type)
     for idx, scene in enumerate(scenes_to_generate, start=1):
+        _assert_not_cancelled(project_id, project_dir, "assets", pipeline_type)
         rel = f"assets/video/{scene['id']}.mp4"
         out = project_dir / rel
         chain_source_for_scene = previous_last_frame_path
@@ -1521,6 +1719,7 @@ def _generate_assets(
                 "output_path": str(out),
                 "project_dir": str(project_dir),
                 "scene_id": scene["id"],
+                "timeout_seconds": provider_timeout,
             }
             if model_config["provider"] == "seedance":
                 generation_inputs["model_variant"] = model_config["model_variant"]
@@ -1550,7 +1749,62 @@ def _generate_assets(
                 all_reference_image_urls,
                 chain_source_for_scene,
             )
-            result = selector.execute(generation_inputs)
+            try:
+                result = _run_video_selector_with_watchdog(selector, generation_inputs, provider_timeout)
+            except ProviderCallTimeout as exc:
+                asset_manifest = _blocked_asset_manifest_from_provider_failure(
+                    request_data,
+                    model_config,
+                    scene,
+                    prompt,
+                    "provider_timeout",
+                    str(exc),
+                    generation_inputs,
+                    assets,
+                    r2_assets,
+                    total_cost,
+                )
+                _write_json(project_dir / "artifacts" / "asset_manifest.json", asset_manifest)
+                write_checkpoint(
+                    PROJECTS_DIR,
+                    project_id,
+                    "assets",
+                    "awaiting_human",
+                    {"asset_manifest": asset_manifest},
+                    pipeline_type=pipeline_type,
+                    cost_snapshot=_cost_snapshot(asset_manifest),
+                    error=str(exc),
+                    metadata={"source": "hosted_ui", "blocker": "provider_timeout"},
+                )
+                raise JobAwaitingHuman(str(exc)) from exc
+            except Exception as exc:
+                message = f"Video provider call failed for {scene['id']}: {exc}"
+                asset_manifest = _blocked_asset_manifest_from_provider_failure(
+                    request_data,
+                    model_config,
+                    scene,
+                    prompt,
+                    "provider_exception",
+                    message,
+                    generation_inputs,
+                    assets,
+                    r2_assets,
+                    total_cost,
+                )
+                _write_json(project_dir / "artifacts" / "asset_manifest.json", asset_manifest)
+                write_checkpoint(
+                    PROJECTS_DIR,
+                    project_id,
+                    "assets",
+                    "failed",
+                    {"asset_manifest": asset_manifest},
+                    pipeline_type=pipeline_type,
+                    cost_snapshot=_cost_snapshot(asset_manifest),
+                    error=message,
+                    metadata={"source": "hosted_ui", "blocker": "provider_exception"},
+                )
+                raise JobError(message) from exc
+            _assert_not_cancelled(project_id, project_dir, "assets", pipeline_type)
             if not result.success:
                 if _is_no_media_generated(result):
                     asset_manifest = _blocked_asset_manifest(

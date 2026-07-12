@@ -1,6 +1,33 @@
 import { el, fmtAgo, getJSON, subscribe, thumbURL } from "/ui/lib.js";
 
 const grid = document.getElementById("grid");
+const THEME_KEY = "backlot.theme";
+let currentTheme = localStorage.getItem(THEME_KEY) === "light" ? "light" : "dark";
+
+function applyTheme(theme) {
+  currentTheme = theme === "light" ? "light" : "dark";
+  document.documentElement.dataset.theme = currentTheme;
+  localStorage.setItem(THEME_KEY, currentTheme);
+}
+
+function renderThemeToggle() {
+  const next = currentTheme === "light" ? "dark" : "light";
+  return el("button", {
+    class: "theme-toggle",
+    type: "button",
+    title: `Switch to ${next} theme`,
+    "aria-label": `Switch to ${next} theme`,
+    "aria-pressed": currentTheme === "light" ? "true" : "false",
+    onclick: () => {
+      applyTheme(next);
+      const replacement = renderThemeToggle();
+      document.querySelector(".theme-toggle").replaceWith(replacement);
+    },
+  }, el("span", { class: "theme-toggle-icon", "aria-hidden": "true" }, currentTheme === "light" ? "☾" : "☀"));
+}
+
+applyTheme(currentTheme);
+document.getElementById("liveBadge").before(renderThemeToggle());
 
 function miniRail(states) {
   const rail = el("div", { class: "mini-rail" });

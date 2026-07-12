@@ -20,7 +20,7 @@ class VideoSelector(BaseTool):
     provider = "selector"
     stability = ToolStability.BETA
     runtime = ToolRuntime.HYBRID
-    agent_skills = ["ai-video-gen", "create-video", "ltx2"]
+    agent_skills = ["ai-video-gen", "create-video", "ltx2", "gemini-omni"]
 
     # Operations that REQUIRE motion: an image-only tool (image_selector) is not
     # an acceptable last-resort fallback for these, so fallback_tools_for() drops it.

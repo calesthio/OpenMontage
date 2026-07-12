@@ -3,11 +3,11 @@
   "project_id": "photosynthesis-explainer",
   "pipeline_type": "animated-explainer",
   "stage": "proposal",
-  "status": "awaiting_human",
-  "timestamp": "2026-07-12T08:43:27.800620+00:00",
+  "status": "completed",
+  "timestamp": "2026-07-12T10:25:00+00:00",
   "checkpoint_policy": "guided",
   "human_approval_required": true,
-  "human_approved": false,
+  "human_approved": true,
   "artifacts": {
     "proposal_packet": {
       "version": "1.0",
@@ -111,7 +111,7 @@
       ],
       "selected_concept": {
         "concept_id": "c2",
-        "rationale": "Agent recommendation pending your approval: 'Sunlight In, Life Out' maps cleanly to 30 seconds \u2014 one kinetic equation, four beats, no Calvin-cycle detour. Strongest match for animated explainer at this duration.",
+        "rationale": "User approved c2: 'Sunlight In, Life Out' maps cleanly to 30 seconds — one kinetic equation, four beats, no Calvin-cycle detour. Strongest match for animated explainer at this duration.",
         "modifications": []
       },
       "production_plan": {
@@ -296,7 +296,9 @@
         ]
       },
       "approval": {
-        "status": "pending"
+        "status": "approved",
+        "user_notes": "User approved concept c2 and recommended production plan (OpenAI TTS + mermaid + Remotion + Pixabay).",
+        "approved_budget_usd": 0.05
       }
     },
     "decision_log": {

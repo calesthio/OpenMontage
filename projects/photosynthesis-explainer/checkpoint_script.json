@@ -1,0 +1,165 @@
+{
+  "version": "1.0",
+  "project_id": "photosynthesis-explainer",
+  "pipeline_type": "animated-explainer",
+  "stage": "script",
+  "status": "awaiting_human",
+  "timestamp": "2026-07-12T10:25:00+00:00",
+  "checkpoint_policy": "guided",
+  "human_approval_required": true,
+  "human_approved": false,
+  "review": {
+    "scores": {
+      "hook_power": 4,
+      "word_count_accuracy": 5,
+      "narrative_flow": 4,
+      "enhancement_density": 5,
+      "voice_performance": 5,
+      "climax_payoff": 4
+    },
+    "summary": "69-word script across 5 beats; covers chlorophyll capture, O2 release, CO2 fixation, and equation landing."
+  },
+  "artifacts": {
+    "script": {
+      "version": "1.0",
+      "title": "Sunlight In, Life Out",
+      "total_duration_seconds": 30,
+      "voice_performance": {
+        "performance_intent": "Friendly science teacher—curious hook, clear middle, confident landing.",
+        "pacing_profile": "energetic",
+        "energy_curve": "bright hook, steady explanatory middle, punchy equation close",
+        "pause_policy": "Micro-pause after hook; brief beat before the equation landing.",
+        "sample_section_id": "s1",
+        "provider_notes": {
+          "openai": "Voice ash. Instructions: warm educational narrator, upbeat but clear, emphasize 'oxygen' and 'photosynthesis' on the close."
+        }
+      },
+      "sections": [
+        {
+          "id": "s1",
+          "label": "Hook",
+          "text": "Every breath you take started inside a leaf. Thirty seconds—here's photosynthesis.",
+          "start_seconds": 0,
+          "end_seconds": 5,
+          "speaker_directions": "Bright and inviting; slight lift on 'every breath'. Crisp pivot into the promise.",
+          "delivery_cues": {
+            "pace": "brisk",
+            "energy": "curious",
+            "emphasis_words": ["every", "breath", "photosynthesis"],
+            "pause_after_seconds": 0.4,
+            "delivery_note": "Hook should feel like a dare, not a lecture intro.",
+            "provider_text": "Every breath you take started inside a leaf. <break time=\"0.4s\"/> Thirty seconds—here's photosynthesis."
+          },
+          "enhancement_cues": [
+            {
+              "type": "animation",
+              "description": "hero_title: 'Photosynthesis in 30 Seconds' with leaf icon pulse",
+              "timestamp_seconds": 0
+            }
+          ],
+          "pronunciation_guides": []
+        },
+        {
+          "id": "s2",
+          "label": "Setup",
+          "text": "In chloroplasts, chlorophyll traps sunlight—the spark that powers the whole process.",
+          "start_seconds": 5,
+          "end_seconds": 10,
+          "speaker_directions": "Explanatory warmth; emphasize 'chlorophyll' and 'sunlight' slightly.",
+          "delivery_cues": {
+            "pace": "conversational",
+            "energy": "warm",
+            "emphasis_words": ["chlorophyll", "sunlight", "spark"],
+            "delivery_note": "Zoom-in energy—smaller scale, bigger wonder.",
+            "provider_text": "In chloroplasts, chlorophyll traps sunlight—the spark that powers the whole process."
+          },
+          "enhancement_cues": [
+            {
+              "type": "diagram",
+              "description": "Stylized chloroplast cross-section with sun rays hitting chlorophyll",
+              "timestamp_seconds": 5
+            }
+          ],
+          "pronunciation_guides": [
+            {"word": "chlorophyll", "phonetic": "KLOR-uh-fill"},
+            {"word": "chloroplasts", "phonetic": "KLOR-uh-plasts"}
+          ],
+          "source_ref": "Chlorophyll absorbs light energy in chloroplasts"
+        },
+        {
+          "id": "s3",
+          "label": "Build — Light reactions",
+          "text": "That light splits water apart, releasing the oxygen we breathe right now.",
+          "start_seconds": 10,
+          "end_seconds": 17,
+          "speaker_directions": "Matter-of-fact wonder; hit 'oxygen' with gentle emphasis.",
+          "delivery_cues": {
+            "pace": "conversational",
+            "energy": "clear",
+            "emphasis_words": ["splits", "oxygen", "right now"],
+            "delivery_note": "Connect abstract chemistry to the listener's body.",
+            "provider_text": "That light splits water apart, releasing the oxygen we breathe right now."
+          },
+          "enhancement_cues": [
+            {
+              "type": "animation",
+              "description": "H2O icon splits; O2 molecules float upward with glow",
+              "timestamp_seconds": 10
+            }
+          ],
+          "pronunciation_guides": [],
+          "source_ref": "Water splits to release O2 during light-dependent reactions"
+        },
+        {
+          "id": "s4",
+          "label": "Build — Carbon fixation",
+          "text": "At the same time, carbon dioxide from the air is stitched into sugar—plant fuel.",
+          "start_seconds": 17,
+          "end_seconds": 24,
+          "speaker_directions": "Slightly slower on 'carbon dioxide' and 'sugar'; keep momentum.",
+          "delivery_cues": {
+            "pace": "conversational",
+            "energy": "building",
+            "emphasis_words": ["carbon dioxide", "sugar", "fuel"],
+            "delivery_note": "Second half of the equation—make the invisible gas tangible.",
+            "provider_text": "At the same time, carbon dioxide from the air is stitched into sugar—plant fuel."
+          },
+          "enhancement_cues": [
+            {
+              "type": "animation",
+              "description": "CO2 molecules flow into leaf; glucose hexagon assembles",
+              "timestamp_seconds": 17
+            }
+          ],
+          "pronunciation_guides": [],
+          "source_ref": "CO2 fixed into sugars in Calvin cycle"
+        },
+        {
+          "id": "s5",
+          "label": "Landing",
+          "text": "Sunlight, water, and CO₂ in; oxygen and sugar out. Life's solar engine.",
+          "start_seconds": 24,
+          "end_seconds": 30,
+          "speaker_directions": "Confident recap; punch 'solar engine' as the mic-drop line.",
+          "delivery_cues": {
+            "pace": "measured",
+            "energy": "decisive",
+            "emphasis_words": ["Sunlight", "oxygen", "solar engine"],
+            "pause_before_seconds": 0.3,
+            "delivery_note": "Equation rhythm: in/out pairs, then the name of the process.",
+            "provider_text": "<break time=\"0.3s\"/> Sunlight, water, and CO₂ in; oxygen and sugar out. Life's solar engine."
+          },
+          "enhancement_cues": [
+            {
+              "type": "stat_card",
+              "description": "Equation summary card: 6CO₂ + 6H₂O + light → C₆H₁₂O₆ + 6O₂",
+              "timestamp_seconds": 24
+            }
+          ],
+          "pronunciation_guides": [],
+          "source_ref": "Overall photosynthesis equation"
+        }
+      ]
+    }
+  }
+}

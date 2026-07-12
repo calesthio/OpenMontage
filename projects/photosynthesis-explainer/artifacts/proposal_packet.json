@@ -88,7 +88,7 @@
   ],
   "selected_concept": {
     "concept_id": "c2",
-    "rationale": "Agent recommendation pending your approval: 'Sunlight In, Life Out' maps cleanly to 30 seconds — one kinetic equation, four beats, no Calvin-cycle detour. Strongest match for animated explainer at this duration.",
+    "rationale": "User approved c2: 'Sunlight In, Life Out' maps cleanly to 30 seconds — one kinetic equation, four beats, no Calvin-cycle detour. Strongest match for animated explainer at this duration.",
     "modifications": []
   },
   "production_plan": {
@@ -207,6 +207,8 @@
     ]
   },
   "approval": {
-    "status": "pending"
+    "status": "approved",
+    "user_notes": "User approved concept c2 and recommended production plan (OpenAI TTS + mermaid + Remotion + Pixabay).",
+    "approved_budget_usd": 0.05
   }
 }

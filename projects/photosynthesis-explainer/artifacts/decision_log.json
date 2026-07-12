@@ -66,6 +66,46 @@
       ],
       "selected": "pixabay",
       "reason": "Pixabay music search is the only music path available without new API keys."
+    },
+    {
+      "decision_id": "d-006",
+      "stage": "proposal",
+      "category": "concept_selection",
+      "subject": "Creative concept",
+      "options_considered": [
+        {"option_id": "c1", "label": "Your Salad Ate the Air", "score": 0.85, "reason": "Strong myth-bust hook but narrower audience"},
+        {"option_id": "c2", "label": "Sunlight In, Life Out", "score": 0.95, "reason": "Best 30s equation journey — agent recommended"},
+        {"option_id": "c3", "label": "Earth's Lungs Just Got Upgraded", "score": 0.75, "reason": "Timely data hook but heavier sourcing for 30s"},
+        {"option_id": "c4", "label": "Why Plants Wear Green", "score": 0.7, "reason": "Great single metaphor but less complete process model"}
+      ],
+      "selected": "c2",
+      "reason": "User approved concept c2 per message: '批准 c2，按推荐方案做'."
+    },
+    {
+      "decision_id": "d-007",
+      "stage": "proposal",
+      "category": "approval_policy",
+      "subject": "Production plan approval",
+      "options_considered": [
+        {"option_id": "recommended", "label": "OpenAI TTS + mermaid + Remotion + Pixabay ($0.05)", "score": 1.0, "reason": "Agent recommended standard path"},
+        {"option_id": "budget", "label": "Silent kinetic typography only ($0)", "score": 0.4, "reason": "No narration — weaker explainer"},
+        {"option_id": "premium", "label": "TTS + FLUX illustrations ($0.35)", "score": 0.7, "reason": "Higher visual warmth, optional upgrade"}
+      ],
+      "selected": "recommended",
+      "reason": "User approved recommended production plan alongside c2."
+    },
+    {
+      "decision_id": "d-008",
+      "stage": "proposal",
+      "category": "voice_selection",
+      "subject": "Narration TTS provider",
+      "options_considered": [
+        {"option_id": "openai_tts", "label": "OpenAI TTS (ash)", "score": 1.0, "reason": "Recommended — requires OPENAI_API_KEY"},
+        {"option_id": "piper", "label": "Piper local TTS", "score": 0.5, "reason": "Free but not installed"},
+        {"option_id": "none", "label": "No narration", "score": 0.2, "reason": "Rejected for explainer format"}
+      ],
+      "selected": "openai_tts",
+      "reason": "Locked by approved recommended plan: OpenAI TTS voice ash for friendly science-teacher delivery."
     }
   ]
 }

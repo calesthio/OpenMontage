@@ -179,6 +179,38 @@
       ],
       "selected": "approved",
       "reason": "User message: approve assets and enter Edit stage"
+    },
+    {
+      "decision_id": "d-012",
+      "stage": "compose",
+      "category": "approval_policy",
+      "subject": "Compose stage approval",
+      "options_considered": [
+        {
+          "option_id": "approved",
+          "label": "Approve 1080p Remotion render",
+          "score": 1.0,
+          "reason": "User explicit approval"
+        }
+      ],
+      "selected": "approved",
+      "reason": "User approved compose and requested Publish stage."
+    },
+    {
+      "decision_id": "d-013",
+      "stage": "publish",
+      "category": "approval_policy",
+      "subject": "Publish stage approval",
+      "options_considered": [
+        {
+          "option_id": "approved",
+          "label": "Approve export bundle and metadata",
+          "score": 1.0,
+          "reason": "User explicit approval"
+        }
+      ],
+      "selected": "approved",
+      "reason": "User approved publish package via message: \u901a\u8fc7."
     }
   ]
 }

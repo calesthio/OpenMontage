@@ -13,3 +13,4 @@ Source of truth for what's been scripted/produced/posted. The live IG grid outra
 | 2026-07-02 | The handoff tax | HANDOFF | posted |
 | 2026-07-06 | The collection gap (late invoices / AR) | CASH | produced · awaiting review (Drive 7/6/26; zernio draft deleted per review-first directive) |
 | 2026-07-07 | Dead stock / dead capital (frozen inventory) | STOCK | produced · awaiting review (Drive 7/7/26) |
+| 2026-07-12 | The fourth ring (missed calls, restaurants ICP) | RING | scheduled 22:00 UTC 7/12 (IG+FB via Zernio post 6a53fda5; ink cover; Drive 7/12/26) |

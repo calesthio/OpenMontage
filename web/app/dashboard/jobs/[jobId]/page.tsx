@@ -24,6 +24,13 @@ export default function JobDetailPage() {
   const [stages, setStages] = useState<string[]>([]);
   const [status, setStatus] = useState<string>("queued");
   const [awaitingStage, setAwaitingStage] = useState<string | null>(null);
+  // Distinguishes which kind of gate is pending: undefined/"stage" for the
+  // ordinary end-of-stage artifact review, "budget" for an overspend
+  // ceiling, "sample_preview" for a mid-stage checkpoint (e.g.
+  // asset-director.md's "generate one sample, confirm before batching").
+  // Each renders differently below — the same `awaiting_approval` event
+  // type carries a differently-shaped `preview` depending on this field.
+  const [awaitingGate, setAwaitingGate] = useState<string | null>(null);
   const [preview, setPreview] = useState<Record<string, unknown> | null>(null);
   const [renderUrl, setRenderUrl] = useState<string | null>(null);
   // Interim preview: the compose stage's own render, playable as soon as it's
@@ -97,6 +104,7 @@ export default function JobDetailPage() {
         if (ev.type === "awaiting_approval") {
           setStatus("awaiting_approval");
           setAwaitingStage(ev.stage ?? null);
+          setAwaitingGate(ev.gate ?? null);
           const p = ev.preview as Record<string, unknown> | null;
           setPreview(p ?? null);
           setEditJson(p ? JSON.stringify(p, null, 2) : "");
@@ -105,6 +113,7 @@ export default function JobDetailPage() {
         }
         if (ev.type === "stage_approved" || ev.type === "stage_rejected") {
           setAwaitingStage(null);
+          setAwaitingGate(null);
           setStatus("running");
           setEditMode(false);
         }
@@ -121,7 +130,17 @@ export default function JobDetailPage() {
           setRenderUrl(ev.render_url ?? null);
           setRenderUrls(ev.render_urls ?? null);
         }
-        if (ev.type === "job_failed") { setStatus("failed"); }
+        if (ev.type === "job_failed") {
+          // Confirmed live: the budget gate's reject/timeout path (and any
+          // other gate) jumps straight to job_failed with no intervening
+          // stage_approved/stage_rejected — without this, the approval
+          // panel stayed on screen showing dead Approve/Reject buttons
+          // (POSTing to them 404s once the job is no longer
+          // awaiting_approval) side-by-side with the failed/retry card.
+          setStatus("failed");
+          setAwaitingStage(null);
+          setAwaitingGate(null);
+        }
       };
       es.onerror = () => {
         es.close();
@@ -222,7 +241,11 @@ export default function JobDetailPage() {
   const progress = stageIndex >= 0 && stages.length > 0
     ? Math.round(((stageIndex + 1) / stages.length) * 100)
     : 0;
-  const isBudgetGate = awaitingStage === "budget";
+  const isBudgetGate = awaitingGate === "budget";
+  const isSamplePreviewGate = awaitingGate === "sample_preview";
+  const samplePreview = isSamplePreviewGate
+    ? (preview as { text?: string; iteration?: number; max_iterations?: number } | null)
+    : null;
 
   return (
     <div className="p-8 max-w-4xl space-y-6">
@@ -259,7 +282,13 @@ export default function JobDetailPage() {
           ) : (
           <div className="flex gap-1">
             {stages.map((s, i) => {
-              const done = i < stageIndex;
+              // job_completed carries no `stage` field (there's no single
+              // "last" stage to attribute it to), so currentStage never
+              // advances past the final real stage's own stage_completed
+              // event — i < stageIndex alone would leave the last node
+              // stuck rendering as "active" (its ordinal number) forever,
+              // even once the job has genuinely finished.
+              const done = i < stageIndex || (status === "completed" && i === stageIndex);
               const active = s === currentStage;
               const waiting = status === "awaiting_approval" && s === awaitingStage;
               return (
@@ -318,9 +347,11 @@ export default function JobDetailPage() {
                 <span className="text-yellow-400">⏸</span>
                 {isBudgetGate
                   ? "预算超支 — 需要你确认是否继续"
+                  : isSamplePreviewGate
+                  ? `${stageLabel(awaitingStage)} — AI 请求确认样品${samplePreview?.max_iterations ? `（第 ${samplePreview.iteration}/${samplePreview.max_iterations} 轮）` : ""}`
                   : `${stageLabel(awaitingStage)} — 等待你的审批`}
               </CardTitle>
-              {preview && !isBudgetGate && (
+              {preview && !isBudgetGate && !isSamplePreviewGate && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -333,8 +364,16 @@ export default function JobDetailPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Preview / editor */}
-            {preview && !editMode && (
+            {/* Sample-preview gate: the agent's own message, not a raw
+                artifact JSON — there's nothing to inline-edit yet, the
+                stage hasn't produced its artifact. */}
+            {isSamplePreviewGate && samplePreview?.text && (
+              <p className="text-sm text-foreground/90 bg-muted/50 rounded p-3 whitespace-pre-wrap">
+                {samplePreview.text}
+              </p>
+            )}
+            {/* Preview / editor (ordinary stage-boundary gate only) */}
+            {preview && !editMode && !isSamplePreviewGate && (
               <pre className="text-xs bg-muted/50 rounded p-3 overflow-auto max-h-64 whitespace-pre-wrap">
                 {JSON.stringify(preview, null, 2)}
               </pre>

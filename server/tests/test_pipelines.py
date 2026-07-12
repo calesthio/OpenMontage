@@ -100,6 +100,25 @@ def test_traversal_via_detail_endpoint_returns_404():
     assert client.get("/pipelines/../config").status_code in (404, 307, 308)
 
 
+def test_cinematic_hardcoded_approval_matches_manifest():
+    # Regression: CINEMATIC_STAGES is a hand-maintained copy of
+    # pipeline_defs/cinematic.yaml's stage list — it drifted false for
+    # scene_plan/assets/publish while the manifest (and each stage's own
+    # "Gate Reminder (Binding)" skill text) required a checkpoint, silently
+    # skipping the asset-generation cost gate for every job run through the
+    # web platform's hardcoded-override path. Every stage's `approval` flag
+    # here must match the manifest's human_approval_default exactly.
+    from app.pipeline_catalog import load_manifest
+    from lib.pipeline_loader import get_stage_human_approval_default
+    manifest = load_manifest("cinematic")
+    for stage in CINEMATIC_STAGES:
+        expected = get_stage_human_approval_default(manifest, stage["name"])
+        assert stage["approval"] == expected, (
+            f"CINEMATIC_STAGES['{stage['name']}'].approval={stage['approval']} "
+            f"but pipeline_defs/cinematic.yaml declares human_approval_default={expected}"
+        )
+
+
 def test_load_manifest_never_returns_none(tmp_path, monkeypatch):
     import app.pipeline_catalog as pc
     import lib.pipeline_loader as pl

@@ -55,11 +55,17 @@ CINEMATIC_STAGES = [
     {"name": "research",    "skill": "skills/pipelines/cinematic/research-director.md",   "approval": False, "produces": ["research_brief"], "required_artifacts_in": []},
     {"name": "proposal",    "skill": "skills/pipelines/cinematic/proposal-director.md",   "approval": True,  "produces": ["proposal_packet", "decision_log"], "required_artifacts_in": ["research_brief"]},
     {"name": "script",      "skill": "skills/pipelines/cinematic/script-director.md",     "approval": True,  "produces": ["script"], "required_artifacts_in": ["proposal_packet"]},
-    {"name": "scene_plan",  "skill": "skills/pipelines/cinematic/scene-director.md",      "approval": False, "produces": ["scene_plan"], "required_artifacts_in": ["script"]},
-    {"name": "assets",      "skill": "skills/pipelines/cinematic/asset-director.md",      "approval": False, "produces": ["asset_manifest"], "required_artifacts_in": ["scene_plan"]},
+    # scene_plan/assets/publish must mirror pipeline_defs/cinematic.yaml's
+    # human_approval_default exactly — this hardcoded list drifted false for
+    # all three (confirmed via a deep code review) while the manifest and
+    # every one of these stages' own director skills ("Gate Reminder
+    # (Binding)") were updated to require a checkpoint, silently skipping the
+    # asset-generation cost gate for every job run through this runner.
+    {"name": "scene_plan",  "skill": "skills/pipelines/cinematic/scene-director.md",      "approval": True,  "produces": ["scene_plan"], "required_artifacts_in": ["script"]},
+    {"name": "assets",      "skill": "skills/pipelines/cinematic/asset-director.md",      "approval": True,  "produces": ["asset_manifest"], "required_artifacts_in": ["scene_plan"]},
     {"name": "edit",        "skill": "skills/pipelines/cinematic/edit-director.md",       "approval": False, "produces": ["edit_decisions"], "required_artifacts_in": ["scene_plan", "asset_manifest"]},
     {"name": "compose",     "skill": "skills/pipelines/cinematic/compose-director.md",    "approval": False, "produces": ["render_report", "final_review"], "required_artifacts_in": ["edit_decisions", "asset_manifest"]},
-    {"name": "publish",     "skill": "skills/pipelines/cinematic/publish-director.md",    "approval": False, "produces": ["publish_log"], "required_artifacts_in": ["render_report", "final_review"]},
+    {"name": "publish",     "skill": "skills/pipelines/cinematic/publish-director.md",    "approval": True,  "produces": ["publish_log"], "required_artifacts_in": ["render_report", "final_review"]},
 ]
 
 # Explicit overrides / aliases. Anything NOT here is resolved dynamically from
@@ -115,17 +121,40 @@ def _resolve_stages(pipeline_name: str) -> list[dict]:
     return CINEMATIC_STAGES
 
 MAX_TURNS  = 20
-# How many times _run_agent_stage will nudge an agent that stops mid-stage
-# (text-only turn, no tool_calls) before its declared artifact exists. Some
-# director skills explicitly instruct a check-in before proceeding (e.g.
-# asset-director.md's "Sample Preview" step asks the user to confirm before
-# batch-generating) — reasonable for an interactive session, but this
-# pipeline runs unattended and a job retry starts a brand-new conversation
-# from scratch, so it can't ever deliver that confirmation; without a nudge
-# the stage (and the paid samples it already generated) would just be
-# discarded and regenerated identically on every retry. Bounded so a truly
-# stuck agent still fails within a small, predictable number of extra turns.
-MAX_AUTONOMY_NUDGES = 2
+# How many pause→resume round-trips a single stage run allows for its
+# mid-stage sample-preview checkpoint (see SamplePreviewNeeded below) before
+# giving up. Mirrors asset-director.md's own "max 3 iterations" policy for a
+# rejected sample.
+MAX_SAMPLE_ITERATIONS = 3
+
+
+class SamplePreviewNeeded(Exception):
+    """Raised out of _run_agent_stage when the agent stops mid-stage (a
+    text-only turn, no tool_calls) before its declared artifact exists —
+    e.g. asset-director.md's "Sample Preview (Prevents Wasted Spend)" step,
+    which explicitly requires generating one sample and waiting for the
+    user to confirm before batch-generating the rest.
+
+    This used to be handled by silently injecting a "no human is available,
+    proceed autonomously" message and continuing the same turn loop. That
+    made the pipeline resilient (a stage could never get permanently stuck),
+    but it also meant the skill's own "prevents wasted spend" checkpoint was
+    unconditionally defeated — paid generation always proceeded on the
+    agent's own unconfirmed judgment, even when a real user was watching
+    live via SSE. This tool is used by a single local operator (not a
+    synchronous multi-second wait — they may check back minutes later), so a
+    real async pause is the right fit: unwind out of the thread, surface the
+    agent's message as a genuine approval gate (reusing the exact same
+    awaiting_approval/wait_for_approval primitive as the stage-boundary and
+    budget gates), and resume the SAME conversation — not a fresh one — once
+    the user responds.
+    """
+
+    def __init__(self, messages: list[dict], preview_text: str, sample_iteration: int):
+        super().__init__(preview_text)
+        self.messages = messages
+        self.preview_text = preview_text
+        self.sample_iteration = sample_iteration
 MAX_ROUNDS = 2   # reviewer sends back at most twice per stage
 TOOL_RESULT_CHAR_CAP = 8000   # cap each tool result appended to history
 
@@ -173,6 +202,25 @@ def _missing_produces(project_dir: Path, stage_def: dict) -> list[str] | None:
     have = set(_load_artifacts(project_dir))
     missing = [name for name in produces if name not in have]
     return missing or None
+
+
+def _artifact_mtimes(project_dir: Path, names: list[str]) -> dict[str, float]:
+    """mtime (or -1.0 if absent) of each declared artifact — used to detect a
+    reject-regenerate round that didn't actually rewrite anything. File
+    *presence* alone (what _missing_produces checks) can't tell "freshly
+    written this round" apart from "leftover from the just-rejected round":
+    by construction, every declared artifact already exists on disk before a
+    regenerate call even starts (reaching the approval gate at all requires
+    having passed _missing_produces once already), so a text-only first turn
+    after rejection — a real, previously-confirmed occurrence, not just a
+    hypothetical — would otherwise be silently treated as "nothing missing"
+    and the stale, rejected content would be re-presented as if regenerated."""
+    artifacts_dir = project_dir / "artifacts"
+    result = {}
+    for name in names:
+        p = artifacts_dir / f"{name}.json"
+        result[name] = p.stat().st_mtime if p.exists() else -1.0
+    return result
 
 
 def _load_brand_kit(kit_id: str | None) -> dict:
@@ -246,8 +294,14 @@ def _run_agent_stage(
     budget_cny: float | None = None,
     base_cost: float = 0.0,
     produces: list[str] | None = None,
+    resume_messages: list[dict] | None = None,
+    sample_iteration: int = 0,
 ) -> bool:
     """Run a single stage. Returns True on success, False on failure.
+
+    resume_messages/sample_iteration resume a conversation that previously
+    paused via SamplePreviewNeeded — when given, the stage's initial prompt
+    is NOT rebuilt; the agent picks up exactly where it left off.
 
     May raise BudgetExceededError if a paid tool call would cross budget_cny —
     the caller catches it to drive the human budget gate.
@@ -369,8 +423,16 @@ Use `write_artifact` to persist your output artifact when the stage is complete.
 After writing the artifact, confirm briefly what you produced.
 """
 
-    messages = [{"role": "user", "content": user_msg}]
-    nudges_used = 0
+    # Resuming a paused sample-preview conversation: the agent already has
+    # the full context (skill, prior artifacts, etc.) from before the pause —
+    # rebuilding user_msg and starting over would throw away everything it
+    # already did (including any samples it already generated) and re-ask
+    # the same opening question.
+    # A shallow copy, not an alias — this function appends to `messages` on
+    # every turn, and mutating the caller's own resume_messages list in place
+    # would be a surprising side effect for any caller still holding a
+    # reference to it.
+    messages = list(resume_messages) if resume_messages is not None else [{"role": "user", "content": user_msg}]
 
     for turn in range(MAX_TURNS):
         try:
@@ -412,38 +474,29 @@ After writing the artifact, confirm briefly what you produced.
             # (confirmed live: asset-director's own "Sample Preview" step
             # explicitly tells it to generate one sample of each asset type
             # and confirm with the user before batch-generating the rest).
-            # There is no synchronous human to answer that here, and a job
-            # retry starts a brand-new conversation from scratch — so ending
-            # the stage here would just discard the samples already paid for
-            # and regenerate identical ones on every retry, forever. Nudge it
-            # to proceed autonomously instead, bounded so a genuinely stuck
-            # agent still fails within a small, predictable number of turns.
-            if produces and _missing_produces(project_dir, {"produces": produces}) and nudges_used < MAX_AUTONOMY_NUDGES:
-                nudges_used += 1
-                messages.append({
-                    "role": "assistant",
-                    "content": msg.content or "",
-                })
-                messages.append({
-                    "role": "user",
-                    "content": (
-                        "This pipeline runs unattended — no human is available to answer "
-                        "a mid-stage question or confirm a sample before you continue. "
-                        "Make the best decision yourself using what you already have, "
-                        "proceed to generate the remaining assets, and call "
-                        f"write_artifact with artifact_name=\"{produces[0]}\" once the "
-                        "stage is genuinely complete. Do not stop again to ask."
-                    ),
-                })
-                continue
+            # Pause for a real approval instead of silently forcing it
+            # forward — bounded so a genuinely stuck agent still fails within
+            # a small, predictable number of pause/resume round-trips.
+            if produces and _missing_produces(project_dir, {"produces": produces}):
+                if sample_iteration < MAX_SAMPLE_ITERATIONS:
+                    messages.append({"role": "assistant", "content": msg.content or ""})
+                    raise SamplePreviewNeeded(
+                        messages=messages,
+                        preview_text=msg.content or "",
+                        sample_iteration=sample_iteration,
+                    )
+                # Iteration budget exhausted — fall through to `return True`;
+                # the caller's own _missing_produces check (run right after
+                # this function returns) will catch the still-missing
+                # artifact and fail the stage with a clear message.
             # No tools to run and either the artifact exists, there's no
-            # produces to check, or the nudge budget is spent → the agent is
-            # done with this stage (or as done as it's going to get). Do NOT
-            # gate on finish_reason: OpenAI-compatible gateways (aiapbot
-            # proxies Anthropic/DashScope/etc.) may report finish_reason==
-            # "stop" even when the message carries tool_calls; gating on
-            # "stop" would drop those calls and mark the stage complete
-            # without running them.
+            # produces to check, or the sample-iteration budget is spent →
+            # the agent is done with this stage (or as done as it's going to
+            # get). Do NOT gate on finish_reason: OpenAI-compatible gateways
+            # (aiapbot proxies Anthropic/DashScope/etc.) may report
+            # finish_reason=="stop" even when the message carries tool_calls;
+            # gating on "stop" would drop those calls and mark the stage
+            # complete without running them.
             return True
 
         # Append assistant message
@@ -706,6 +759,36 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
         _emit(job_id, {"type": "stage_approved", "stage": "budget"})
         return True
 
+    async def _sample_preview_gate(stage_name: str, spn: SamplePreviewNeeded) -> list[dict]:
+        """Pause for a real approval on a mid-stage sample-preview checkpoint
+        and return the resume_messages to feed back into _run_agent_stage.
+
+        Reuses the exact same awaiting_approval/wait_for_approval primitive
+        as the stage-boundary and budget gates — this is a genuine pause,
+        the SAME conversation resumes afterward, not a fresh one.
+        """
+        job_store.update(job_id, status="awaiting_approval")
+        _emit(job_id, {
+            "type": "awaiting_approval",
+            "stage": stage_name,
+            "gate": "sample_preview",
+            "preview": {
+                "text": spn.preview_text,
+                "iteration": spn.sample_iteration + 1,
+                "max_iterations": MAX_SAMPLE_ITERATIONS,
+            },
+        })
+        approval = await job_store.wait_for_approval(job_id, timeout=3600.0)
+        job_store.update(job_id, status="running")
+        if approval["action"] == "reject":
+            fb = approval.get("feedback") or "Not approved as-is — reconsider your approach."
+            _emit(job_id, {"type": "stage_rejected", "stage": stage_name, "gate": "sample_preview", "feedback": fb})
+            resume_text = f"Rejected: {fb}. Adjust your approach and try again."
+        else:
+            _emit(job_id, {"type": "stage_approved", "stage": stage_name, "gate": "sample_preview"})
+            resume_text = "Approved — proceed to complete the stage."
+        return spn.messages + [{"role": "user", "content": resume_text}]
+
     job_store.update(job_id, status="running", project_dir=str(project_dir))
     _emit(job_id, {
         "type": "job_started",
@@ -764,9 +847,14 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
         # Run stage in thread pool (blocking sync LLM calls must not block event loop).
         # A pre-call budget block raises BudgetExceededError out of the thread —
         # pause for the human decision, and on approval re-run the stage (the
-        # pre-call check is disabled once overridden).
+        # pre-call check is disabled once overridden). A mid-stage
+        # SamplePreviewNeeded pauses the same way but resumes the SAME
+        # conversation (resume_messages) rather than re-running from scratch —
+        # it doesn't consume a retry round.
         success = False
         feedback = ""
+        resume_messages: list[dict] | None = None
+        sample_iteration = 0
         _round = 0
         while _round <= MAX_ROUNDS:
             try:
@@ -776,17 +864,25 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
                     brand_info, options, feedback, cost_accumulator, cost_tracker,
                     (None if budget_overridden else budget_cny), base_cost,
                     stage_def.get("produces"),
+                    resume_messages, sample_iteration,
                 )
+                resume_messages = None
             except BudgetExceededError:
                 _sync_cost(stage_name)
                 if not await _budget_gate(force=True):
                     return
                 continue   # approved overspend → re-run this stage, gate disabled
+            except SamplePreviewNeeded as spn:
+                _sync_cost(stage_name)
+                resume_messages = await _sample_preview_gate(stage_name, spn)
+                sample_iteration = spn.sample_iteration + 1
+                continue   # resume the same conversation, doesn't consume a retry round
             _sync_cost(stage_name)
             if success:
                 break
             _emit(job_id, {"type": "stage_retry", "stage": stage_name, "round": _round + 1})
             _round += 1
+            sample_iteration = 0   # a genuine retry starts a fresh conversation
 
         if not success:
             job_store.update(job_id, status="failed", current_stage=stage_name)
@@ -878,28 +974,70 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
                 feedback = approval.get("feedback", "")
                 job_store.update(job_id, status="running")
                 _emit(job_id, {"type": "stage_rejected", "stage": stage_name, "feedback": feedback})
+                # Snapshot before regenerating — see _artifact_mtimes' docstring
+                # for why file *presence* alone can't detect a no-op round.
+                mtimes_before = _artifact_mtimes(project_dir, stage_def.get("produces") or [])
                 # Re-run with feedback in a thread (never block the loop) and keep
                 # accumulating cost. Same budget gate + produces hint as the
                 # first run — previously this call dropped budget_cny/base_cost
                 # entirely, letting a reject-regenerate loop bypass the
                 # pre-call budget ceiling.
-                try:
-                    success = await asyncio.to_thread(
-                        _run_agent_stage,
-                        job_id, stage_name, skill_text, project_dir,
-                        brand_info, options, feedback, cost_accumulator, cost_tracker,
-                        (None if budget_overridden else budget_cny), base_cost,
-                        stage_def.get("produces"),
-                    )
-                except BudgetExceededError:
-                    _sync_cost(stage_name)
-                    if not await _budget_gate(force=True):
-                        return
-                    continue   # approved overspend → re-present the same approval round
+                resume_messages = None
+                sample_iteration = 0
+                while True:
+                    try:
+                        success = await asyncio.to_thread(
+                            _run_agent_stage,
+                            job_id, stage_name, skill_text, project_dir,
+                            brand_info, options, feedback, cost_accumulator, cost_tracker,
+                            (None if budget_overridden else budget_cny), base_cost,
+                            stage_def.get("produces"),
+                            resume_messages, sample_iteration,
+                        )
+                        resume_messages = None
+                        break
+                    except BudgetExceededError:
+                        _sync_cost(stage_name)
+                        if not await _budget_gate(force=True):
+                            return
+                        continue   # approved overspend → re-present the same approval round
+                    except SamplePreviewNeeded as spn:
+                        _sync_cost(stage_name)
+                        resume_messages = await _sample_preview_gate(stage_name, spn)
+                        sample_iteration = spn.sample_iteration + 1
+                        continue   # resume the same conversation
                 _sync_cost(stage_name)
                 if not success:
                     job_store.update(job_id, status="failed")
                     _emit(job_id, {"type": "job_failed", "stage": stage_name})
+                    return
+                # A regenerate round can go the same way the very first run
+                # can (line ~857 above): the agent's turn loop can end
+                # (success=True) without ever calling write_artifact again —
+                # e.g. a text-only first turn after rejection. Checking mere
+                # file *presence* isn't enough here: by construction, every
+                # declared artifact already exists on disk (left over from
+                # the just-rejected round) before this call even starts, so
+                # _missing_produces alone would report "nothing missing"
+                # regardless of whether anything was actually rewritten.
+                # Compare mtimes against the pre-regenerate snapshot instead —
+                # if nothing changed, the round was a no-op and the user's
+                # feedback was silently ignored rather than acted on.
+                still_missing = _missing_produces(project_dir, stage_def)
+                mtimes_after = _artifact_mtimes(project_dir, stage_def.get("produces") or [])
+                untouched = [n for n in mtimes_before if mtimes_after.get(n) == mtimes_before[n]]
+                if still_missing is not None or untouched:
+                    job_store.update(job_id, status="failed", current_stage=stage_name)
+                    _emit(job_id, {
+                        "type": "job_failed",
+                        "stage": stage_name,
+                        "message": (
+                            f"Stage '{stage_name}' was rejected, but the regenerated run "
+                            "finished without actually rewriting its required "
+                            f"artifact(s) {still_missing or untouched} — the agent may have "
+                            "stopped without acting on your feedback. Retry will re-run this stage."
+                        ),
+                    })
                     return
                 _emit(job_id, {"type": "stage_completed", "stage": stage_name})
                 job_store.update(job_id, status="awaiting_approval")

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from app.runner import stage_runner
 from app.runner.stage_runner import (
     _discover_render_url, _discover_render_urls, _load_artifacts, _load_brand_kit,
@@ -211,25 +213,49 @@ def test_no_tool_calls_ends_stage(tmp_path, monkeypatch):
 
 # ── mid-stage stall nudging (agent stops to ask, artifact not written) ──────
 
-def test_nudge_agent_to_continue_when_artifact_missing(tmp_path, monkeypatch):
+def test_sample_preview_pauses_instead_of_auto_continuing(tmp_path, monkeypatch):
     # Regression: confirmed live — asset-director.md's own "Sample Preview"
     # step tells the agent to generate one sample of each asset type and
-    # confirm with the user before batch-generating the rest. In an
-    # unattended pipeline run there's no human to answer, and a retry starts
-    # a brand-new conversation from scratch — so ending the stage here would
-    # discard the (paid-for) samples and regenerate identical ones forever.
+    # confirm with the user before batch-generating the rest. This used to
+    # be silently overridden with a "no human is available, proceed
+    # autonomously" nudge, which defeated the skill's own wasted-spend
+    # safeguard. It must now pause for a REAL approval instead.
     turn1 = _resp(
         "Here are samples of each asset — please confirm before I continue.",
         None, "stop",
     )
-    turn2 = _resp(
+    monkeypatch.setattr(stage_runner.llm.chat.completions, "create", lambda **kw: turn1)
+
+    with pytest.raises(stage_runner.SamplePreviewNeeded) as exc_info:
+        stage_runner._run_agent_stage(
+            "job-nudge1", "assets", "skill", tmp_path, {}, {}, produces=["asset_manifest"],
+        )
+    spn = exc_info.value
+    assert spn.sample_iteration == 0
+    assert "please confirm" in spn.preview_text.lower()
+    # The paused conversation carries the agent's own message so a resume
+    # doesn't have to re-explain itself.
+    assert spn.messages[-1]["role"] == "assistant"
+    assert not (tmp_path / "artifacts" / "asset_manifest.json").exists()
+
+
+def test_sample_preview_resume_continues_the_same_conversation(tmp_path, monkeypatch):
+    # After approval, _run_agent_stage must pick up with the resumed
+    # conversation (not rebuild the initial prompt from scratch) and be able
+    # to complete normally from there.
+    resume = [
+        {"role": "user", "content": "## Director Skill\noriginal prompt"},
+        {"role": "assistant", "content": "Here's a sample — please confirm."},
+        {"role": "user", "content": "Approved — proceed to complete the stage."},
+    ]
+    turn = _resp(
         "writing",
         [_tool_call("c1", "write_artifact",
                     '{"artifact_name": "asset_manifest", "content": {"ok": true}}')],
         "stop",
     )
-    turn3 = _resp("done", None, "stop")
-    responses = iter([turn1, turn2, turn3])
+    turn2 = _resp("done", None, "stop")
+    responses = iter([turn, turn2])
     captured = {}
     def fake_create(**kw):
         captured["messages"] = kw["messages"]
@@ -237,13 +263,14 @@ def test_nudge_agent_to_continue_when_artifact_missing(tmp_path, monkeypatch):
     monkeypatch.setattr(stage_runner.llm.chat.completions, "create", fake_create)
 
     ok = stage_runner._run_agent_stage(
-        "job-nudge1", "assets", "skill", tmp_path, {}, {}, produces=["asset_manifest"],
+        "job-resume1", "assets", "skill", tmp_path, {}, {}, produces=["asset_manifest"],
+        resume_messages=resume, sample_iteration=1,
     )
     assert ok is True
     assert (tmp_path / "artifacts" / "asset_manifest.json").exists()
-    nudge_msgs = [m["content"] for m in captured["messages"] if m.get("role") == "user"][1:]
-    assert nudge_msgs
-    assert "no human is available" in nudge_msgs[0].lower()
+    # The original prompt was NOT rebuilt — the resumed history is exactly
+    # what was passed in, with the new turn's messages appended after it.
+    assert captured["messages"][:3] == resume
 
 
 def test_no_nudge_when_artifact_already_written(tmp_path, monkeypatch):
@@ -268,24 +295,20 @@ def test_no_nudge_when_artifact_already_written(tmp_path, monkeypatch):
     assert len(user_msgs) == 1
 
 
-def test_nudge_budget_exhausted_still_ends_stage(tmp_path, monkeypatch):
-    # A genuinely stuck agent (never writes the artifact even after being
-    # nudged) must still stop within a small, bounded number of extra turns —
-    # not loop for the entire MAX_TURNS budget.
+def test_sample_preview_iteration_budget_exhausted_ends_stage(tmp_path, monkeypatch):
+    # A genuinely stuck agent (still hasn't written the artifact after
+    # exhausting its pause/resume budget) must stop rather than pause again —
+    # the caller's own _missing_produces check catches the still-missing
+    # artifact and fails the stage from there.
     stall = _resp("Still need confirmation before I continue.", None, "stop")
-    call_count = {"n": 0}
-    def fake_create(**kw):
-        call_count["n"] += 1
-        return stall
-    monkeypatch.setattr(stage_runner.llm.chat.completions, "create", fake_create)
+    monkeypatch.setattr(stage_runner.llm.chat.completions, "create", lambda **kw: stall)
 
     ok = stage_runner._run_agent_stage(
         "job-nudge3", "assets", "skill", tmp_path, {}, {}, produces=["asset_manifest"],
+        sample_iteration=stage_runner.MAX_SAMPLE_ITERATIONS,
     )
     assert ok is True
     assert not (tmp_path / "artifacts").exists()
-    # One initial call + MAX_AUTONOMY_NUDGES retries, no more.
-    assert call_count["n"] == stage_runner.MAX_AUTONOMY_NUDGES + 1
 
 
 # ── truncated tool-call arguments: finish_reason-aware diagnosis ────────────
@@ -481,10 +504,15 @@ def test_prompt_tells_agent_the_produces_name(tmp_path, monkeypatch):
         return resp
     monkeypatch.setattr(stage_runner.llm.chat.completions, "create", fake_create)
 
-    stage_runner._run_agent_stage(
-        "job-z", "idea", "skill", tmp_path, {}, {},
-        produces=["brief", "decision_log"],
-    )
+    # A text-only turn with neither artifact written now pauses for a real
+    # sample-preview approval (see SamplePreviewNeeded) rather than
+    # returning — this test only cares about the prompt content, which is
+    # captured before that pause fires.
+    with pytest.raises(stage_runner.SamplePreviewNeeded):
+        stage_runner._run_agent_stage(
+            "job-z", "idea", "skill", tmp_path, {}, {},
+            produces=["brief", "decision_log"],
+        )
     user_msg = captured["messages"][0]["content"]
     assert "Expected Artifact Name" in user_msg
     assert 'artifact_name="brief"' in user_msg

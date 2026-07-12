@@ -408,3 +408,101 @@ async def test_budget_gate_aborts_on_reject(runner, monkeypatch):
     await rejecter_task
 
     assert runner.get("j")["status"] == "failed"
+
+
+# ── mid-stage sample-preview gate: real async pause, not auto-continue ──────
+
+async def test_sample_preview_gate_pauses_then_resumes_same_conversation(runner, monkeypatch, tmp_path):
+    # A stage that stops mid-task (SamplePreviewNeeded) must genuinely pause
+    # — emit awaiting_approval with gate="sample_preview", wait for a real
+    # approval — and then resume with the EXACT conversation it paused with,
+    # not restart from scratch.
+    (tmp_path / "projects" / "p" / "renders").mkdir(parents=True)
+    (tmp_path / "projects" / "p" / "renders" / "final.mp4").write_bytes(b"x")
+
+    paused_messages = [{"role": "user", "content": "original prompt"},
+                        {"role": "assistant", "content": "here's a sample, please confirm"}]
+    resumed_with = []
+
+    def flaky_research(*a, **k):
+        resume_messages = a[12]
+        if resume_messages is None:
+            raise stage_runner.SamplePreviewNeeded(
+                messages=paused_messages, preview_text="here's a sample, please confirm",
+                sample_iteration=0,
+            )
+        resumed_with.append(resume_messages)
+        return True
+
+    def compose_ok(*a, **k):
+        return True
+
+    def dispatch(*a, **k):
+        stage_name = a[1]
+        return (flaky_research if stage_name == "research" else compose_ok)(*a, **k)
+
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", dispatch)
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    async def approver():
+        for _ in range(200):
+            await asyncio.sleep(0.01)
+            if runner.get("j")["status"] == "awaiting_approval":
+                runner.set_approval("j", "approve", "")
+                return
+    approver_task = asyncio.create_task(approver())
+
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+    await approver_task
+
+    evs = runner.get_events("j", after_seq=-1)
+    gate_event = next(e for e in evs if e["type"] == "awaiting_approval" and e.get("gate") == "sample_preview")
+    assert gate_event["preview"]["text"] == "here's a sample, please confirm"
+    assert gate_event["preview"]["iteration"] == 1
+    approved_event = next(e for e in evs if e["type"] == "stage_approved" and e.get("gate") == "sample_preview")
+    assert approved_event
+    assert runner.get("j")["status"] == "completed"
+    # Resumed with the paused conversation plus the approval turn appended —
+    # not a freshly rebuilt prompt.
+    assert resumed_with
+    assert resumed_with[0][:2] == paused_messages
+    assert resumed_with[0][-1]["content"] == "Approved — proceed to complete the stage."
+
+
+async def test_sample_preview_gate_reject_carries_feedback_into_resume(runner, monkeypatch, tmp_path):
+    (tmp_path / "projects" / "p" / "renders").mkdir(parents=True)
+    (tmp_path / "projects" / "p" / "renders" / "final.mp4").write_bytes(b"x")
+
+    resumed_with = []
+
+    def flaky_research(*a, **k):
+        resume_messages = a[12]
+        if resume_messages is None:
+            raise stage_runner.SamplePreviewNeeded(
+                messages=[{"role": "user", "content": "orig"}], preview_text="sample",
+                sample_iteration=0,
+            )
+        resumed_with.append(resume_messages)
+        return True
+
+    def dispatch(*a, **k):
+        stage_name = a[1]
+        return (flaky_research if stage_name == "research" else (lambda *a, **k: True))(*a, **k)
+
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", dispatch)
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    async def rejecter():
+        for _ in range(200):
+            await asyncio.sleep(0.01)
+            if runner.get("j")["status"] == "awaiting_approval":
+                runner.set_approval("j", "reject", "wrong tone, make it warmer")
+                return
+    rejecter_task = asyncio.create_task(rejecter())
+
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+    await rejecter_task
+
+    assert resumed_with
+    assert "wrong tone, make it warmer" in resumed_with[0][-1]["content"]
+    assert runner.get("j")["status"] == "completed"

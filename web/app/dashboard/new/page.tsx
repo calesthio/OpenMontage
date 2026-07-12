@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +41,7 @@ export default function NewProjectPage() {
   const [selectedType, setSelectedType] = useState<PipelineOption | null>(null);
   const [brandKits, setBrandKits] = useState<BrandKit[]>([]);
   const [pipelines, setPipelines] = useState<PipelineInfo[]>([]);
+  const [pipelinesLoadFailed, setPipelinesLoadFailed] = useState(false);
   const [form, setForm] = useState({
     projectName: "",
     brandName: "",
@@ -50,6 +52,7 @@ export default function NewProjectPage() {
     budgetCny: "",
   });
   const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const [modelCatalog, setModelCatalog] = useState<ModelCatalog>(FALLBACK_MODEL_CATALOG);
   const [videoModel, setVideoModel] = useState<string>(DEFAULT_VIDEO_MODEL);
@@ -76,7 +79,7 @@ export default function NewProjectPage() {
     fetch(`${SERVER}/pipelines`)
       .then((r) => r.json())
       .then((d) => setPipelines(d.pipelines ?? []))
-      .catch(() => {});
+      .catch(() => setPipelinesLoadFailed(true));
     // Live model catalog — falls back to FALLBACK_MODEL_CATALOG (already the
     // initial state) if this hasn't resolved yet or fails, same pattern as
     // isPipelineAvailable's "show everything before /pipelines loads".
@@ -104,6 +107,7 @@ export default function NewProjectPage() {
     e.preventDefault();
     if (!selectedType) return;
     setLoading(true);
+    setSubmitError("");
 
     try {
       const res = await fetch(`${SERVER}/jobs`, {
@@ -127,8 +131,15 @@ export default function NewProjectPage() {
             ...(ttsModel === "leapfast/indextts" ? {
               tts_emotion: {
                 emo_alpha: emoAlpha,
-                use_emo_text: useEmoText,
-                ...(useEmoText && emoText ? { emo_text: emoText } : {}),
+                // Only ask the backend for emotion-text-guided synthesis when
+                // there's actually guiding text — sending use_emo_text: true
+                // with no emo_text would ask maas_tts for emotion-text
+                // guidance it has nothing to work from. If the checkbox is
+                // checked but the field was left empty, this simply doesn't
+                // enable it (mirrors the checkbox's own emptiness rather than
+                // blocking submission for a non-required, secondary field).
+                use_emo_text: useEmoText && emoText.trim().length > 0,
+                ...(useEmoText && emoText.trim() ? { emo_text: emoText } : {}),
                 interval_silence: intervalSilence,
               },
             } : {}),
@@ -144,11 +155,11 @@ export default function NewProjectPage() {
       if (res.ok && data.job_id) {
         router.push(`/dashboard/jobs/${data.job_id}`);
       } else {
-        alert("创建失败: " + JSON.stringify(data));
+        setSubmitError(data.detail ?? `创建失败 (HTTP ${res.status}): ${JSON.stringify(data)}`);
         setLoading(false);
       }
     } catch {
-      alert("创建失败: 网络错误，请检查后端是否可访问");
+      setSubmitError("创建失败：网络错误，请检查后端是否可访问");
       setLoading(false);
     }
   }
@@ -158,11 +169,18 @@ export default function NewProjectPage() {
       <div className="p-8 max-w-3xl">
         <h1 className="text-2xl font-bold tracking-tight mb-2">选择视频类型</h1>
         <p className="text-muted-foreground text-sm mb-8">选择要制作的视频类型，AI 会自动选择最合适的生产流程。</p>
+        {pipelinesLoadFailed && (
+          <p className="text-sm text-destructive border border-destructive/40 bg-destructive/10 rounded-md px-3 py-2 mb-6">
+            无法加载可用流水线列表，请检查后端连接。
+          </p>
+        )}
         <div className="grid grid-cols-1 gap-3">
           {CONTENT_TYPES.map((ct) => {
             // Available once the engine reports the mapped pipeline (or before
             // /pipelines has loaded, so the UI isn't empty on first paint).
-            const available = isPipelineAvailable(availableNames, ct.pipeline);
+            // Once the fetch has genuinely failed, fail closed instead of
+            // pretending the backend is reachable.
+            const available = isPipelineAvailable(availableNames, ct.pipeline, pipelinesLoadFailed);
             return (
               <button
                 key={ct.id}
@@ -482,6 +500,11 @@ export default function NewProjectPage() {
                       value={emoText}
                       onChange={(e) => setEmoText(e.target.value)}
                     />
+                    {!emoText.trim() && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        留空则不会启用情绪文字引导（需要填写文字才能生效）。
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -541,6 +564,9 @@ export default function NewProjectPage() {
               <p className="text-xs text-muted-foreground mt-1">
                 MaaS 按 CNY 计费。留空则不设预算门。
               </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                视频类流水线通常涉及多次视频/图像模型调用，成本较高；预算设得过低（如个位数）可能在生产刚开始就触发预算门，并不代表出了问题。建议预算不低于 ¥50 起步，运行中可按需批准超支。
+              </p>
             </div>
             <div>
               <label className="text-sm font-medium block mb-1.5">补充说明（选填）</label>
@@ -557,6 +583,19 @@ export default function NewProjectPage() {
         <Button type="submit" className="w-full" disabled={loading || !form.brandName}>
           {loading ? "提交中..." : "开始 AI 生产 →"}
         </Button>
+
+        {/* Same red border/bg/text treatment as the job detail page's
+            actionError card (approve/retry/save failures) — a failed job
+            creation used to surface as a raw browser alert(), which is
+            jarring and inconsistent with how the rest of the app reports
+            request failures. */}
+        {submitError && (
+          <Card className="border-red-500/40 bg-red-500/5">
+            <CardContent className="pt-4 pb-4">
+              <p className="text-sm text-red-400">{submitError}</p>
+            </CardContent>
+          </Card>
+        )}
       </form>
     </div>
   );

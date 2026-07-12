@@ -19,6 +19,22 @@ describe("isPipelineAvailable", () => {
     expect(isPipelineAvailable(names, "cinematic")).toBe(true);
     expect(isPipelineAvailable(names, "screen-demo")).toBe(false);
   });
+
+  it("fails open on an empty set while still loading (loadFailed=false, the default)", () => {
+    expect(isPipelineAvailable(new Set(), "cinematic", false)).toBe(true);
+    expect(isPipelineAvailable(new Set(), "cinematic")).toBe(true);
+  });
+
+  it("fails closed on an empty set once the load has genuinely failed", () => {
+    expect(isPipelineAvailable(new Set(), "cinematic", true)).toBe(false);
+    expect(isPipelineAvailable(new Set(), "anything-at-all", true)).toBe(false);
+  });
+
+  it("ignores loadFailed once real names are known (membership wins)", () => {
+    const names = new Set(["cinematic"]);
+    expect(isPipelineAvailable(names, "cinematic", true)).toBe(true);
+    expect(isPipelineAvailable(names, "screen-demo", true)).toBe(false);
+  });
 });
 
 describe("computeMorePipelines", () => {

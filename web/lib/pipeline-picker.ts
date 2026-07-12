@@ -28,11 +28,21 @@ export const CONTENT_TYPES: PipelineOption[] = [
 
 /**
  * A curated card is enabled once the engine reports its mapped pipeline.
- * Before /pipelines has loaded (availableNames is empty), everything is
- * enabled so the UI isn't all-disabled on first paint.
+ * Before /pipelines has loaded (availableNames is empty and the fetch is
+ * still in flight), everything is enabled so the UI isn't all-disabled on
+ * first paint. But an empty set can also mean the /pipelines fetch
+ * genuinely failed (backend unreachable) -- that's a different state and
+ * should NOT be presented as "everything works". Callers that track fetch
+ * failure should pass `loadFailed: true` once it's known to fail closed
+ * instead of fail open.
  */
-export function isPipelineAvailable(availableNames: Set<string>, pipeline: string): boolean {
-  return availableNames.size === 0 || availableNames.has(pipeline);
+export function isPipelineAvailable(
+  availableNames: Set<string>,
+  pipeline: string,
+  loadFailed = false
+): boolean {
+  if (availableNames.size > 0) return availableNames.has(pipeline);
+  return !loadFailed;
 }
 
 /** Engine pipelines with no curated Chinese card — offered directly. */

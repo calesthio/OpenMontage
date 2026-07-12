@@ -235,6 +235,7 @@ UNSPLASH_ACCESS_KEY=your-key   # Free stock images
 
 # Music:
 SUNO_API_KEY=your-key          # Full songs, instrumentals, any genre
+SONILO_API_KEY=your-key        # Original track generated from the assembled cut (licensed)
 
 # Voice & images:
 ELEVENLABS_API_KEY=your-key    # Premium TTS, AI music, sound effects
@@ -435,7 +436,7 @@ Final video output -- only if self-review passes
 OpenMontage/
 ├── tools/              # 48 Python tools (the agent's hands)
 │   ├── video/          # 13 video gen tools + compose, stitch, trim
-│   ├── audio/          # 4 TTS providers + Suno/ElevenLabs music, mixing, enhancement
+│   ├── audio/          # 4 TTS providers + Suno/ElevenLabs/Sonilo music, mixing, enhancement
 │   ├── graphics/       # 9 image/graphics generation tools + diagrams, code snippets, math
 │   ├── enhancement/    # Upscale, bg remove, face enhance, color grade
 │   ├── analysis/       # Transcription, scene detect, frame sampling
@@ -537,6 +538,7 @@ Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to
 | **Suno AI** | Cloud API | Full song generation with vocals, lyrics, any genre. Up to 8 minutes. |
 | **ElevenLabs Music** | Cloud API | AI music generation |
 | **ElevenLabs SFX** | Cloud API | Sound effect generation |
+| **Sonilo** | Cloud API | Original track generated from the assembled cut — duration matches the video natively. Licensed, safe for commercial use (terms apply). |
 
 **Post-Production (always available, always free):**
 

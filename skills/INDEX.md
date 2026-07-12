@@ -60,7 +60,7 @@ Key capability families to look for in the output:
 | `analysis` | — | Mixed providers |
 | `character_animation` | — | Local character specs, SVG rigs, pose libraries, action timelines, previews, and QA |
 | `graphics` | — | Local rendering tools |
-| `music_generation` | — | Single-provider |
+| `music_generation` | — | ElevenLabs, Suno, Google Lyria, Sonilo |
 | `subtitle` | — | Pure Python |
 | `avatar` | — | Local GPU models |
 | `video_post` | — | FFmpeg-based local tools |

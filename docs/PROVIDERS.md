@@ -23,6 +23,7 @@ Everything you need to know about every provider in OpenMontage — setup instru
 | 11 | **pay-as-you-go** | Suno | Full song generation with vocals and lyrics |
 | 12 | **$0 + GPU** | Local video gen | WAN 2.1, Hunyuan, CogVideo, LTX — free, offline |
 | 13 | **$0 + GPU** | Local Diffusion | Stable Diffusion images — free, offline |
+| 14 | **credit plans** | Sonilo | Original track generated from the assembled cut — duration matches the video natively |
 
 ### Environment Variable Summary
 
@@ -59,6 +60,7 @@ KLING_API_BASE_URL=          # Optional; default https://api-singapore.klingai.c
 HEYGEN_API_KEY=              # HeyGen avatar video gateway
 RUNWAY_API_KEY=              # Runway Gen-4 video (direct)
 SUNO_API_KEY=                # Suno music generation
+SONILO_API_KEY=              # Sonilo video-to-music (track generated from the assembled cut)
 
 # LOCAL (no keys needed — just GPU + install)
 VIDEO_GEN_LOCAL_ENABLED=     # Set to "true" for local video gen
@@ -610,6 +612,34 @@ Google TTS offers 700+ voices across 50+ languages. Voice names follow the patte
 
 ---
 
+### Sonilo — Music From the Assembled Cut
+
+> **Original track generated from the video itself.** Hand the rendered cut to the API and get back
+> a track matched to it — the model sees the timeline, so duration matches natively.
+> Tracks are licensed and safe for commercial use (terms apply).
+
+**Tools unlocked:** `sonilo_music`
+**Env var:** `SONILO_API_KEY`
+
+#### Setup
+
+1. Go to [sonilo.com](https://sonilo.com) and create an account
+2. Create an API key at [platform.sonilo.com/dashboard/api-keys](https://platform.sonilo.com/dashboard/api-keys)
+3. Add to `.env`: `SONILO_API_KEY=your-key-here`
+
+#### Usage Notes
+
+- Input is the assembled cut — a local video file (multipart upload) or an HTTP(S) `video_url` the backend fetches directly. Render the visual timeline first (`video_compose`), generate the track from the render, then mix with `audio_mixer`.
+- `prompt` is an optional style hint (mood, genre, instruments); the video drives structure and duration.
+- The API accepts videos up to 6 minutes.
+- Output is `.m4a` (AAC).
+
+#### Pricing
+
+Credit-based plans with a free tier; Pro $14.99/mo, Premium $29.99/mo. See [sonilo.com/pricing](https://sonilo.com/pricing).
+
+---
+
 ### Pexels — Free Stock Media
 
 > **Completely free.** No cost, no attribution required, commercial use allowed.
@@ -889,6 +919,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **Higgsfield** | `HIGGSFIELD_API_KEY` + `HIGGSFIELD_API_SECRET` | `higgsfield_video` | Subscription ($15-84/mo) |
 | **HeyGen** | `HEYGEN_API_KEY` | `heygen_video` | Pay-as-you-go |
 | **Suno** | `SUNO_API_KEY` | `suno_music` | Pay-as-you-go |
+| **Sonilo** | `SONILO_API_KEY` | `sonilo_music` | Free tier + paid |
 | **Local GPU** | `VIDEO_GEN_LOCAL_ENABLED` | `wan_video`, `hunyuan_video`, `cogvideo_video`, `ltx_video_local` | Free (GPU required) |
 | **Local Diffusion** | — (install only) | `local_diffusion` | Free (GPU required) |
 | **Modal** | `MODAL_LTX2_ENDPOINT_URL` | `ltx_video_modal` | Self-hosted cloud |
@@ -904,7 +935,7 @@ How many providers cover each capability:
 | **Image Generation** | FLUX, Kling Official, Grok, Google Imagen, GPT Image 2, Recraft | Local Diffusion | Pexels, Pixabay (stock) |
 | **Video Generation** | Grok, Kling Official, Kling via fal.ai, Runway, Veo, Gemini Omni, Higgsfield, MiniMax, HeyGen | WAN, Hunyuan, CogVideo, LTX | Pexels, Pixabay (stock) |
 | **Text-to-Speech** | ElevenLabs, Google TTS, Kling Official, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier |
-| **Music Generation** | ElevenLabs, Suno, Google Lyria | — | ElevenLabs free tier |
+| **Music Generation** | ElevenLabs, Suno, Google Lyria, Sonilo | — | ElevenLabs free tier |
 | **Post-Production** | — | FFmpeg (compose, stitch, trim, mix, enhance, grade) | All free |
 | **Analysis** | — | WhisperX, Scene Detect, Frame Sampler, CLIP/BLIP-2 | All free |
 | **Enhancement** | — | Upscale, BG Remove, Face Enhance, Face Restore | All free |

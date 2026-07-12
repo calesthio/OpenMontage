@@ -120,6 +120,25 @@ For cleaner ducking control, generate isolated stems:
 - `"soft ambient pad in C major, 80 BPM"` — synth pad only
 - Layer stems in FFmpeg during composition for precise ducking control
 
+## Generating From the Assembled Cut (Sonilo)
+
+The prompt-first providers above describe the music in text, then fit the
+result to the edit. `sonilo_music` runs the other way around: it takes the
+rendered cut (local file or HTTP(S) URL) and returns an original track
+generated from the video itself.
+
+- **Duration matches the cut natively** — no `offsetSeconds` window selection
+  or trimming pass afterwards.
+- **Use at the compose stage**: render the visual timeline first
+  (`video_compose`), generate the track from the render, then mix with
+  `audio_mixer` (the 18-20 dB ducking and EQ rules above still apply).
+- **`prompt` is an optional style hint** (mood, genre, instruments) — the
+  BPM/key tables above help phrase it, but the video drives structure and
+  duration.
+- **Requires `SONILO_API_KEY`.** Tracks are licensed and safe for commercial
+  use (terms apply).
+- **Limits**: input videos up to 6 minutes; output is `.m4a` (AAC).
+
 ## Applying to OpenMontage
 
 When using the `music_gen` tool:

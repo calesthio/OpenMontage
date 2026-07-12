@@ -525,6 +525,19 @@ class TestToolRegistry:
 # ---- CostTracker ----
 
 class TestCostTracker:
+    def test_defaults_derive_from_budget_config_not_duplicated_literals(self):
+        # Regression: CostTracker.__init__ used to re-literal the exact same
+        # default numbers BudgetConfig declares, so the two could silently
+        # drift if one was edited without the other.
+        from lib.config_model import BudgetConfig
+        defaults = BudgetConfig()
+        tracker = CostTracker()
+        assert tracker.budget_total_usd == defaults.total_usd
+        assert tracker.reserve_pct == defaults.reserve_pct
+        assert tracker.single_action_approval_usd == defaults.single_action_approval_usd
+        assert tracker.require_approval_for_new_paid_tool == defaults.require_approval_for_new_paid_tool
+        assert tracker.mode == defaults.mode
+
     def test_estimate_reserve_reconcile(self):
         tracker = CostTracker(budget_total_usd=10.0, mode=BudgetMode.OBSERVE)
         entry_id = tracker.estimate("image_selector", "generate", 0.05)

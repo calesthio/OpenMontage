@@ -55,14 +55,13 @@ class LLMConfig(BaseModel):
 class BudgetConfig(BaseModel):
     """Budget defaults.
 
-    NOTE — not the only copy of these numbers: ``tools/cost_tracker.py``'s
-    ``CostTracker.__init__`` re-literals this same set of defaults instead of
-    building them from this model, and ``server/app/runner/stage_runner.py``
-    separately hardcodes its own effectively-unlimited (1e12) sentinels. All
-    three can drift independently. Collapsing ``CostTracker``'s defaults onto
-    ``BudgetConfig.model_fields`` (or accepting a ``BudgetConfig`` instance)
-    would fix this but requires editing tools/cost_tracker.py, which is
-    outside this module's scope — flagged here as recommended follow-up.
+    ``tools/cost_tracker.py``'s ``CostTracker.__init__`` derives its own
+    parameter defaults from this model (``BudgetConfig().total_usd`` etc.)
+    rather than re-literaling the same numbers, so the two can't drift.
+    ``server/app/runner/stage_runner.py`` separately hardcodes its own
+    effectively-unlimited (1e12) sentinels for the live pipeline run — a
+    deliberate choice (OBSERVE mode; the per-job CNY ceiling is the real gate
+    there), not the same kind of accidental duplication.
     """
 
     model_config = ConfigDict(extra="forbid")

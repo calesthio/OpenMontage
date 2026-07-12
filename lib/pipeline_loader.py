@@ -193,12 +193,9 @@ def get_stage_skill(manifest: dict, stage_name: str) -> Optional[str]:
 def get_stage_human_approval_default(manifest: dict, stage_name: str) -> Optional[bool]:
     """Whether a stage gates on human approval. None if the stage isn't declared.
 
-    This is meant to be the single lookup used by gate enforcement
-    (lib/checkpoint.py) and the Backlot board, so they read the same field
-    the same way. In practice ``backlot/state.py`` currently inlines its own
-    copy of this same one-liner (``s.get("human_approval_default", False)``)
-    instead of calling this function — that duplication should be collapsed
-    onto this function if/when backlot/ is touched.
+    The single lookup used by gate enforcement (lib/checkpoint.py) and the
+    Backlot board (backlot/state.py's _load_pipeline_meta), so they read the
+    same field the same way.
     """
     for stage in manifest["stages"]:
         if stage["name"] == stage_name:

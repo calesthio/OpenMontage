@@ -63,12 +63,12 @@ def _load_pipeline_meta(pipeline_type: Optional[str]) -> dict[str, Any]:
     """Stage order + gate flags from the manifest; graceful fallback."""
     if pipeline_type and pipeline_type != "unknown":
         try:
-            from lib.pipeline_loader import load_pipeline
+            from lib.pipeline_loader import load_pipeline, get_stage_human_approval_default
             manifest = load_pipeline(pipeline_type)
             stages = [
                 {
                     "name": s["name"],
-                    "gated": bool(s.get("human_approval_default", False)),
+                    "gated": bool(get_stage_human_approval_default(manifest, s["name"])),
                 }
                 for s in manifest.get("stages", [])
                 if isinstance(s, dict) and s.get("name")

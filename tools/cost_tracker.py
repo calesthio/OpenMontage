@@ -16,7 +16,16 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
 
-from lib.config_model import BudgetMode
+from lib.config_model import BudgetConfig, BudgetMode
+
+# CostTracker's own defaults derive from BudgetConfig's field defaults instead
+# of re-literaling the same numbers, so the two can't silently drift the way
+# they used to (confirmed by the deep quality review). server/app/runner/
+# stage_runner.py separately hardcodes its own effectively-unlimited (1e12)
+# sentinels for the live pipeline run — that's a deliberate, documented
+# choice (OBSERVE mode, per-job CNY ceiling is the real gate there), not the
+# same kind of accidental drift, and is out of this module's scope.
+_BUDGET_DEFAULTS = BudgetConfig()
 
 
 class EntryStatus(str, Enum):
@@ -42,11 +51,11 @@ class CostTracker:
 
     def __init__(
         self,
-        budget_total_usd: float = 10.0,
-        reserve_pct: float = 0.10,
-        single_action_approval_usd: float = 0.50,
-        require_approval_for_new_paid_tool: bool = True,
-        mode: BudgetMode = BudgetMode.WARN,
+        budget_total_usd: float = _BUDGET_DEFAULTS.total_usd,
+        reserve_pct: float = _BUDGET_DEFAULTS.reserve_pct,
+        single_action_approval_usd: float = _BUDGET_DEFAULTS.single_action_approval_usd,
+        require_approval_for_new_paid_tool: bool = _BUDGET_DEFAULTS.require_approval_for_new_paid_tool,
+        mode: BudgetMode = _BUDGET_DEFAULTS.mode,
         cost_log_path: Optional[Path] = None,
     ) -> None:
         self.budget_total_usd = budget_total_usd

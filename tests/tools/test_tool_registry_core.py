@@ -2,8 +2,8 @@
 contract behavior: per-instance mutable defaults, loud failure on a malformed
 dependency declaration, the tool-name collision guard, the get_by_capability
 vs find_by_capabilities distinction, the DEGRADED provider_menu() bucket, the
-name-agnostic composition-runtime discovery in provider_menu_summary(), and
-the music line-item cost default.
+name-agnostic composition-runtime discovery in provider_menu_summary(), the
+music line-item cost default, and discover()'s per-module fault isolation.
 """
 
 import sys
@@ -195,3 +195,44 @@ def test_estimate_from_reference_music_line_item_defaults_to_nonzero_cost():
     music_item = next(item for item in result["line_items"] if item["category"] == "music")
     assert music_item["unit_cost_usd"] > 0
     assert music_item["total_usd"] > 0
+
+
+def test_discover_skips_broken_module_but_registers_the_rest(tmp_path, monkeypatch, caplog):
+    """Regression: discover() used to have no try/except around importing or
+    registering each discovered module, so one tool module that raises at
+    import time or __init__ time took down the ENTIRE registry scan -- not
+    just the one broken tool. It must now log a warning naming the broken
+    module and keep discovering the rest."""
+    pkg_dir = tmp_path / "fault_iso_pkg"
+    pkg_dir.mkdir()
+    (pkg_dir / "__init__.py").write_text("")
+    (pkg_dir / "good_tool.py").write_text(
+        "from tools.base_tool import BaseTool, ToolResult\n"
+        "\n"
+        "class GoodTool(BaseTool):\n"
+        "    name = 'fault_iso_good_tool'\n"
+        "\n"
+        "    def execute(self, inputs):\n"
+        "        return ToolResult(success=True)\n"
+    )
+    (pkg_dir / "broken_tool.py").write_text(
+        "raise RuntimeError('boom: simulated import-time failure')\n"
+    )
+
+    monkeypatch.syspath_prepend(str(tmp_path))
+    for mod_name in (
+        "fault_iso_pkg",
+        "fault_iso_pkg.good_tool",
+        "fault_iso_pkg.broken_tool",
+    ):
+        monkeypatch.delitem(sys.modules, mod_name, raising=False)
+
+    reg = ToolRegistry()
+    with caplog.at_level("WARNING"):
+        discovered = reg.discover(package_name="fault_iso_pkg")
+
+    assert "fault_iso_good_tool" in discovered
+    assert reg.get("fault_iso_good_tool") is not None
+    assert any(
+        "fault_iso_pkg.broken_tool" in record.message for record in caplog.records
+    )

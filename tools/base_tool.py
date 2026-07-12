@@ -11,6 +11,7 @@ import functools
 import hashlib
 import inspect
 import json
+import logging
 import os
 import platform
 import subprocess
@@ -21,6 +22,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Optional
+
+logger = logging.getLogger(__name__)
 
 
 def _load_dotenv() -> None:
@@ -417,6 +420,21 @@ class BaseTool(ABC):
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         """Estimate cost in USD for the given inputs. Override for paid tools."""
+        # Safety net: a runtime=API tool (declared as calling a paid external
+        # API -- see ToolRuntime.API) that never overrides this default $0.00
+        # would otherwise sail through both budget-approval gates in
+        # cost_tracker.reserve() silently (they only fire when
+        # estimated > 0 / > threshold). This can't distinguish a subclass
+        # that legitimately overrides estimate_cost() and then calls
+        # super().estimate_cost() as part of its own logic, but that's a rare
+        # and harmless false positive next to the silent-footgun default.
+        if type(self).estimate_cost is BaseTool.estimate_cost and self.runtime == ToolRuntime.API:
+            logger.warning(
+                "%s is runtime=API (a paid tool) but does not override "
+                "estimate_cost(); defaulting to $0.00 silently bypasses "
+                "cost_tracker.reserve()'s budget-approval gates.",
+                self.name or type(self).__name__,
+            )
         return 0.0
 
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
@@ -428,7 +446,9 @@ class BaseTool(ABC):
     def idempotency_key(self, inputs: dict[str, Any]) -> str:
         """Compute a cache key from idempotency fields."""
         key_data = {k: inputs.get(k) for k in self.idempotency_key_fields}
-        raw = json.dumps(key_data, sort_keys=True)
+        # default=str: a Path/datetime/etc. value in idempotency_key_fields
+        # would otherwise raise TypeError instead of producing a cache key.
+        raw = json.dumps(key_data, sort_keys=True, default=str)
         return hashlib.sha256(raw.encode()).hexdigest()[:16]
 
     # ---- Execution ----

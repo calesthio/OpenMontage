@@ -8,11 +8,14 @@ from __future__ import annotations
 
 import importlib
 import inspect
+import logging
 import pkgutil
 from types import ModuleType
 from typing import Any, Optional
 
 from tools.base_tool import BaseTool, ToolStatus, ToolTier, ToolStability
+
+logger = logging.getLogger(__name__)
 
 
 # Unicode punctuation that breaks on Windows cp1252 stdout. Map each to an
@@ -124,8 +127,21 @@ class ToolRegistry:
         for module_info in pkgutil.walk_packages(package_paths, f"{package.__name__}."):
             if module_info.name.endswith(".base_tool") or module_info.name.endswith(".tool_registry"):
                 continue
-            module = importlib.import_module(module_info.name)
-            discovered.extend(self.register_module(module))
+            # One broken tool module (raises at import time, or at __init__
+            # time inside register_module()'s `cls()`) must not take down the
+            # entire registry scan -- support_envelope(), capability_catalog(),
+            # and provider_menu() all depend on discover() completing. Degrade
+            # gracefully instead, matching the per-tool AVAILABLE/UNAVAILABLE
+            # status pattern used elsewhere in this module.
+            try:
+                module = importlib.import_module(module_info.name)
+                discovered.extend(self.register_module(module))
+            except Exception as exc:
+                logger.warning(
+                    "Skipping tool module %r: failed to import or register (%s: %s)",
+                    module_info.name, type(exc).__name__, exc,
+                )
+                continue
 
         self._discovered_packages.add(package_name)
         return discovered

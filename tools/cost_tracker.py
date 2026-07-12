@@ -10,6 +10,8 @@ Implements the budget governance rules from the spec:
 from __future__ import annotations
 
 import json
+import logging
+import threading
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
@@ -17,6 +19,8 @@ from pathlib import Path
 from typing import Any, Optional
 
 from lib.config_model import BudgetConfig, BudgetMode
+
+logger = logging.getLogger(__name__)
 
 # CostTracker's own defaults derive from BudgetConfig's field defaults instead
 # of re-literaling the same numbers, so the two can't silently drift the way
@@ -58,6 +62,22 @@ class CostTracker:
         mode: BudgetMode = _BUDGET_DEFAULTS.mode,
         cost_log_path: Optional[Path] = None,
     ) -> None:
+        # 0 is a legitimate, deliberately-used value (see
+        # server/app/runner/stage_runner.py, which passes reserve_pct=0.0 to
+        # neutralize the holdback because it owns its own human budget gate
+        # separately) -- it holds back nothing, which triggers neither of the
+        # two failure modes below. Only genuinely out-of-range values (> 1,
+        # which forces usable_budget_usd to permanently clamp to 0; or < 0,
+        # which inflates usable_budget_usd past the real cap) are rejected.
+        if not (0 <= reserve_pct <= 1):
+            raise ValueError(f"reserve_pct must be in [0, 1], got {reserve_pct!r}")
+        if budget_total_usd < 0:
+            raise ValueError(f"budget_total_usd must be >= 0, got {budget_total_usd!r}")
+        if single_action_approval_usd < 0:
+            raise ValueError(
+                f"single_action_approval_usd must be >= 0, got {single_action_approval_usd!r}"
+            )
+
         self.budget_total_usd = budget_total_usd
         self.reserve_pct = reserve_pct
         self.single_action_approval_usd = single_action_approval_usd
@@ -66,6 +86,13 @@ class CostTracker:
         self.cost_log_path = cost_log_path
         self.entries: list[dict[str, Any]] = []
         self._approved_tools: set[str] = set()
+        # Guards the check-then-commit sequence in reserve() (and the other
+        # methods that mutate self.entries / _approved_tools) against a
+        # concurrent-thread double-spend: tool execution can run in parallel
+        # threads (see base_tool.py's _EXECUTE_DEPTH thread-local), so two
+        # concurrent reserve() calls could otherwise both read
+        # pre-reservation headroom, both pass the CAP check, and both commit.
+        self._lock = threading.Lock()
 
         if cost_log_path and cost_log_path.exists():
             self._load()
@@ -109,18 +136,21 @@ class CostTracker:
 
     def estimate(self, tool: str, operation: str, estimated_usd: float) -> str:
         """Record an estimate. Returns entry ID."""
+        if estimated_usd < 0:
+            raise ValueError(f"estimated_usd must be >= 0, got {estimated_usd!r}")
         entry_id = self._new_id()
-        self.entries.append({
-            "id": entry_id,
-            "tool": tool,
-            "operation": operation,
-            "status": EntryStatus.ESTIMATED.value,
-            "estimated_usd": round(estimated_usd, 4),
-            "reserved_usd": 0.0,
-            "actual_usd": 0.0,
-            "timestamp": self._now(),
-        })
-        self._save()
+        with self._lock:
+            self.entries.append({
+                "id": entry_id,
+                "tool": tool,
+                "operation": operation,
+                "status": EntryStatus.ESTIMATED.value,
+                "estimated_usd": round(estimated_usd, 4),
+                "reserved_usd": 0.0,
+                "actual_usd": 0.0,
+                "timestamp": self._now(),
+            })
+            self._save()
         return entry_id
 
     def reserve(self, entry_id: str) -> None:
@@ -128,59 +158,82 @@ class CostTracker:
 
         Raises BudgetExceededError in cap mode, or ApprovalRequiredError
         when the action exceeds the single-action approval threshold.
-        """
-        entry = self._find(entry_id)
-        estimated = entry["estimated_usd"]
 
-        # Check single-action approval threshold
-        if estimated > self.single_action_approval_usd:
-            if self.mode != BudgetMode.OBSERVE:
-                raise ApprovalRequiredError(
-                    f"Action costs ${estimated:.2f}, exceeds "
-                    f"single-action threshold ${self.single_action_approval_usd:.2f}"
+        The full check-then-commit sequence runs under a lock so concurrent
+        reserve() calls (tool execution can run across parallel threads)
+        can't both observe pre-reservation headroom and jointly overspend.
+        """
+        with self._lock:
+            entry = self._find(entry_id)
+            estimated = entry["estimated_usd"]
+            if estimated < 0:
+                raise ValueError(
+                    f"Cannot reserve a negative estimated_usd ({estimated!r}) "
+                    f"for entry {entry_id!r}"
                 )
 
-        # Check new paid tool approval
-        if self.require_approval_for_new_paid_tool and estimated > 0:
-            if entry["tool"] not in self._approved_tools:
+            # Check single-action approval threshold
+            if estimated > self.single_action_approval_usd:
                 if self.mode != BudgetMode.OBSERVE:
                     raise ApprovalRequiredError(
-                        f"First paid use of tool {entry['tool']!r} requires approval"
+                        f"Action costs ${estimated:.2f}, exceeds "
+                        f"single-action threshold ${self.single_action_approval_usd:.2f}"
                     )
 
-        # Check budget
-        if estimated > self.usable_budget_usd:
-            if self.mode == BudgetMode.CAP:
-                raise BudgetExceededError(
-                    f"Reservation of ${estimated:.2f} exceeds usable budget "
-                    f"${self.usable_budget_usd:.2f}"
-                )
+            # Check new paid tool approval
+            if self.require_approval_for_new_paid_tool and estimated > 0:
+                if entry["tool"] not in self._approved_tools:
+                    if self.mode != BudgetMode.OBSERVE:
+                        raise ApprovalRequiredError(
+                            f"First paid use of tool {entry['tool']!r} requires approval"
+                        )
 
-        entry["status"] = EntryStatus.RESERVED.value
-        entry["reserved_usd"] = estimated
-        entry["timestamp"] = self._now()
-        self._save()
+            # Check budget
+            if estimated > self.usable_budget_usd:
+                if self.mode == BudgetMode.CAP:
+                    raise BudgetExceededError(
+                        f"Reservation of ${estimated:.2f} exceeds usable budget "
+                        f"${self.usable_budget_usd:.2f}"
+                    )
+                elif self.mode == BudgetMode.WARN:
+                    # WARN mode's whole point is to alert rather than block --
+                    # previously it silently behaved like OBSERVE here with no
+                    # distinguishing signal at all.
+                    logger.warning(
+                        "Budget overage allowed in WARN mode: reservation of "
+                        "$%.2f for tool %r (%s) exceeds usable budget $%.2f",
+                        estimated, entry["tool"], entry["operation"],
+                        self.usable_budget_usd,
+                    )
+
+            entry["status"] = EntryStatus.RESERVED.value
+            entry["reserved_usd"] = estimated
+            entry["timestamp"] = self._now()
+            self._save()
 
     def approve_tool(self, tool: str) -> None:
         """Mark a tool as approved for paid operations."""
-        self._approved_tools.add(tool)
+        with self._lock:
+            self._approved_tools.add(tool)
 
     def reconcile(self, entry_id: str, actual_usd: float, success: bool = True) -> None:
         """Reconcile actual spend after tool execution."""
-        entry = self._find(entry_id)
-        entry["status"] = EntryStatus.COMPLETED.value if success else EntryStatus.FAILED.value
-        entry["actual_usd"] = round(actual_usd, 4)
-        entry["reserved_usd"] = 0.0
-        entry["timestamp"] = self._now()
-        self._save()
+        with self._lock:
+            entry = self._find(entry_id)
+            entry["status"] = EntryStatus.COMPLETED.value if success else EntryStatus.FAILED.value
+            entry["actual_usd"] = round(actual_usd, 4)
+            entry["reserved_usd"] = 0.0
+            entry["timestamp"] = self._now()
+            self._save()
 
     def refund(self, entry_id: str) -> None:
         """Cancel a reservation without executing."""
-        entry = self._find(entry_id)
-        entry["status"] = EntryStatus.REFUNDED.value
-        entry["reserved_usd"] = 0.0
-        entry["timestamp"] = self._now()
-        self._save()
+        with self._lock:
+            entry = self._find(entry_id)
+            entry["status"] = EntryStatus.REFUNDED.value
+            entry["reserved_usd"] = 0.0
+            entry["timestamp"] = self._now()
+            self._save()
 
     # ---- Reference-driven estimation ----
 
@@ -265,7 +318,11 @@ class CostTracker:
         # A 60s video with motion needs enough clips to COVER the duration,
         # not just 1 per scene.
         vid_plan = tool_plan.get("video_generation", {})
-        clip_duration = vid_plan.get("clip_duration_seconds", 5) if vid_plan else 5
+        # `.get(..., 5)` only falls back when the key is absent -- an explicit
+        # clip_duration_seconds=0 (or any other falsy value) must fall back
+        # the same way, or `motion_seconds / clip_duration` below raises
+        # ZeroDivisionError.
+        clip_duration = (vid_plan.get("clip_duration_seconds") or 5) if vid_plan else 5
         motion_seconds = target_duration_seconds * motion_ratio
         clips_needed_for_coverage = max(
             estimated_motion_scenes,

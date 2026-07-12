@@ -177,11 +177,10 @@ class TestPhase2ErrorHandling:
         # (network dependency, flakiness, repo-root file pollution from the
         # tool's default output_path) for what's meant to be a unit test of
         # the no-provider fallback contract, not a live generation smoke test.
-        # Clearing os.environ alone isn't enough: ToolRegistry.discover()
-        # re-reads .env and repopulates any *_API_KEY missing from
-        # os.environ, silently undoing the deletion — so also stop that.
-        from tools.tool_registry import ToolRegistry
-        monkeypatch.setattr(ToolRegistry, "_load_dotenv", staticmethod(lambda: None))
+        # .env is loaded exactly once, at tools.base_tool import time, so
+        # clearing os.environ here is sufficient -- nothing later in the
+        # call chain (e.g. ToolRegistry.discover()) re-reads .env and
+        # silently repopulates a deleted *_API_KEY.
         for key in list(os.environ):
             if key.endswith("_API_KEY"):
                 monkeypatch.delenv(key, raising=False)

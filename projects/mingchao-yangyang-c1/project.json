@@ -1,0 +1,24 @@
+{
+  "version": "1.0",
+  "created_at": "2026-07-12T12:30:00+00:00",
+  "project_id": "mingchao-yangyang-c1",
+  "title": "霓裳入梦 · 鸣潮秧秧玄翎",
+  "pipeline_type": "cinematic",
+  "profile": "tiktok",
+  "delivery": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "target_duration_seconds": 30
+  },
+  "reference": {
+    "primary_url": "https://v.douyin.com/VO-L3VKu_0Y/",
+    "douyin_video_id": "7660619322873057764",
+    "author": "良阿公",
+    "download_status": "blocked_cookies"
+  },
+  "source_footage": {
+    "primary": "assets/source/jiguan_xuanling_demo.mp4",
+    "source_url": "https://www.bilibili.com/video/BV12BJg6dEzf/"
+  }
+}

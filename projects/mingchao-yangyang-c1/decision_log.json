@@ -1,0 +1,30 @@
+{
+  "version": "1.0",
+  "decisions": [
+    {
+      "id": "d-001",
+      "timestamp": "2026-07-12T12:35:00+00:00",
+      "type": "concept_selection",
+      "decision": "c1 霓裳入梦",
+      "rationale": "用户确认；最接近抖音参考诗意结构",
+      "made_by": "user"
+    },
+    {
+      "id": "d-002",
+      "timestamp": "2026-07-12T12:35:00+00:00",
+      "type": "render_runtime_selection",
+      "decision": "remotion",
+      "options_considered": ["remotion", "hyperframes", "ffmpeg"],
+      "rationale": "源片主导竖屏混剪，OffthreadVideo + 字幕层；Remotion 现有 cinematic 栈最省事",
+      "made_by": "agent"
+    },
+    {
+      "id": "d-003",
+      "timestamp": "2026-07-12T12:35:00+00:00",
+      "type": "source_acquisition",
+      "decision": "Bilibili BV12BJg6dEzf 作为 primary source",
+      "rationale": "浏览器检索最高播放官方实机；已下载 1080p",
+      "made_by": "agent"
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "version": "1.0",
+  "concept_options": [
+    {
+      "id": "c1",
+      "title": "霓裳入梦",
+      "hook": "霓裳一曲千峰上——玄翎入梦，尽日欢娱。",
+      "narrative_structure": "story",
+      "visual_approach": "竖屏 30s：黑场金句→雾面大景→秧秧 CU/水中光晕→大招金青粒子→「玄翎上线」落版；机核实机 + 青金 LUT + 古诗细字",
+      "suggested_playbook": "cinematic",
+      "target_audience": "鸣潮玩家、抖音二次元手游用户",
+      "target_platform": "tiktok",
+      "target_duration_seconds": 30,
+      "key_points": [
+        "开场两句古诗定调，无旁白",
+        "秧秧·玄翎羽发发光与风粒子为视觉锚点",
+        "BGM 慢起→鼓点高潮卡点"
+      ],
+      "core_message": "玄翎不仅是新皮肤，是一场诗意的重逢。",
+      "cta": "#鸣潮秧秧玄翎 · 玄翎上线",
+      "tone": "poetic, cinematic, restrained",
+      "grounded_in": ["良阿公参考结构", "机核演示关键帧", "上线时间窗口"],
+      "why_this_works": "参考片 17.8 万赞验证古诗 hook；机核源提供 1080p 可裁竖屏高光，与 saturated 攻略片差异化。"
+    },
+    {
+      "id": "c2",
+      "title": "千峰玄翎",
+      "hook": "千峰之上，只留玄翎一人。",
+      "narrative_structure": "journey",
+      "visual_approach": "航拍式拉远建立→峰顶 MS→环境占 60% 画幅；冷青灰史诗调色",
+      "suggested_playbook": "cinematic",
+      "target_audience": "偏好大景氛围的鸣潮玩家",
+      "target_platform": "tiktok",
+      "target_duration_seconds": 30,
+      "key_points": ["大景广场对称构图", "角色占比小、环境叙事", "弱纣王隐喻"],
+      "core_message": "玄方地界的尺度，托起玄翎的孤独与升华。",
+      "cta": "探索玄方地界",
+      "tone": "epic, spacious",
+      "grounded_in": ["frame_006 大景", "标题千峰意象"],
+      "why_this_works": "演示片含浮空门户史诗镜头，可做出与参考不同的宏观情绪。"
+    },
+    {
+      "id": "c3",
+      "title": "最后一舞",
+      "hook": "鼓点落下，剑光成片。",
+      "narrative_structure": "timeline",
+      "visual_approach": "黑场 1s → 鼓点硬切连招 montage；1.5–2s 一镜；结尾强字卡",
+      "suggested_playbook": "cinematic",
+      "target_audience": "快节奏混剪受众",
+      "target_platform": "tiktok",
+      "target_duration_seconds": 25,
+      "key_points": ["快切连招", "大招粒子作 climax", "强转化落版"],
+      "core_message": "玄翎上线，现在开抽。",
+      "cta": "秧秧·玄翎 现已上线",
+      "tone": "hype, kinetic",
+      "grounded_in": ["BV1YNk2B9EGf 卡点先例", "金青粒子镜头"],
+      "why_this_works": "适合冲转化，但诗意弱于参考，作对照方案保留。"
+    }
+  ],
+  "selected_concept": {
+    "concept_id": "c1",
+    "rationale": "用户确认 c1「霓裳入梦」；最接近参考气质且可用机核源片做差异化诗意混剪。",
+    "modifications": [
+      "素材浏览器检索 + 下载机核演示为源片",
+      "抖音参考因 Cookie 限制暂用元数据 brief，成片分析待用户补投 reference/"
+    ]
+  },
+  "production_plan": {
+    "pipeline": "cinematic",
+    "playbook": "cinematic",
+    "render_runtime": "remotion",
+    "renderer_family": "cinematic-trailer",
+    "profile": "tiktok",
+    "stages": [
+      {
+        "stage": "script",
+        "tools": [{"tool_name": "manual", "role": "字幕 beat 文案", "available": true}],
+        "approach": "六段字幕 beat：霓裳一曲千峰上 / 尽日欢娱忘岁年 / 无字 reveal / 高潮无字 / 细节 CU / 玄翎上线"
+      },
+      {
+        "stage": "assets",
+        "tools": [
+          {"tool_name": "video_downloader", "role": "源片获取", "available": true},
+          {"tool_name": "pixabay_music_search", "role": "古风/钢琴 BGM", "available": true}
+        ],
+        "approach": "机核 MP4 已下载；BGM 无歌词器乐；竖屏裁切预设"
+      },
+      {
+        "stage": "edit",
+        "tools": [{"tool_name": "remotion_composer", "role": "竖屏混剪 EDL", "available": true}],
+        "approach": "OffthreadVideo 裁切 9:16，fade/dissolve，字幕层"
+      },
+      {
+        "stage": "compose",
+        "tools": [{"tool_name": "video_compose", "role": "1080x1920 渲染", "available": true}],
+        "approach": "Remotion CinematicRenderer 输出 H.264"
+      }
+    ]
+  },
+  "cost_estimate": {
+    "total_usd": 0,
+    "breakdown": [
+      {"item": "源片下载/本地剪辑", "cost_usd": 0},
+      {"item": "Pixabay BGM", "cost_usd": 0},
+      {"item": "Remotion 本地渲染", "cost_usd": 0}
+    ],
+    "notes": "零 API 成本项目；源片为官方演示二创，需注意平台版权与署名规范。"
+  },
+  "approval": {
+    "status": "approved",
+    "approved_at": "2026-07-12T12:35:00+00:00",
+    "approved_by": "user",
+    "notes": "用户选择 c1，素材浏览器搜索并下载参考"
+  },
+  "scene_plan_preview": [
+    {"id": "S1", "start_s": 0, "end_s": 3, "caption": "霓裳一曲千峰上", "visual": "黑场金句渐显"},
+    {"id": "S2", "start_s": 3, "end_s": 8, "caption": "尽日欢娱忘岁年", "visual": "雾面大景 establishing"},
+    {"id": "S3", "start_s": 8, "end_s": 14, "caption": "", "visual": "秧秧玄翎 CU/羽发光晕"},
+    {"id": "S4", "start_s": 14, "end_s": 20, "caption": "#鸣潮秧秧玄翎", "visual": "连招/对视 情绪峰"},
+    {"id": "S5", "start_s": 20, "end_s": 25, "caption": "", "visual": "眼部/羽发/剑招细节"},
+    {"id": "S6", "start_s": 25, "end_s": 30, "caption": "玄翎上线", "visual": "落版+logo 区"}
+  ]
+}

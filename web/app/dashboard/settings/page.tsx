@@ -60,7 +60,14 @@ export default function SettingsPage() {
         setModelCatalog(caps.value.model_catalog as ModelCatalog);
       }
     }
+    // Async fetch: setState happens after await, not synchronously in the effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
+    // Re-poll periodically so the online/offline badge (and job/brand counts)
+    // recover on their own if the backend was down at mount time or goes
+    // down/up later, mirroring the dashboard job list's 8s polling pattern.
+    const id = setInterval(load, 30000);
+    return () => clearInterval(id);
   }, []);
 
   const env = {

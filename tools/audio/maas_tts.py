@@ -32,13 +32,11 @@ IndexTTS V3 emotion params (leapfast/indextts only — see input_schema):
 
 from __future__ import annotations
 
-import os
 import time
 from pathlib import Path
 from typing import Any
 
 from tools.base_tool import (
-    BaseTool,
     Determinism,
     ExecutionMode,
     ResourceProfile,
@@ -46,12 +44,12 @@ from tools.base_tool import (
     ToolResult,
     ToolRuntime,
     ToolStability,
-    ToolStatus,
     ToolTier,
 )
+from tools.maas_base import MaasBaseTool
 
 
-class MaasTTS(BaseTool):
+class MaasTTS(MaasBaseTool):
     name = "maas_tts"
     version = "0.1.0"
     tier = ToolTier.VOICE
@@ -174,22 +172,28 @@ class MaasTTS(BaseTool):
     resource_profile = ResourceProfile(
         cpu_cores=1, ram_mb=128, vram_mb=0, disk_mb=20, network_required=True
     )
+    # Declarative only — execute() doesn't wrap the submit call with retries
+    # honoring this policy; it hand-rolls its own poll-retry tolerance instead
+    # (see _MAX_POLL_ERRORS below). Same is true of every other API tool in
+    # this codebase today.
     retry_policy = RetryPolicy(max_retries=2, retryable_errors=["timeout", "rate_limit"])
     idempotency_key_fields = ["text", "model", "voice", "format"]
     side_effects = ["writes audio file to output_path", "calls MaaS gateway API"]
     user_visible_verification = ["Listen to generated audio for clarity and tone"]
 
-    def _api_key(self) -> str | None:
-        return os.environ.get("MAAS_API_KEY")
-
-    def _base_url(self) -> str:
-        return os.environ.get("MAAS_API_BASE", "https://api.aiapbot.com").rstrip("/")
-
-    def get_status(self) -> ToolStatus:
-        return ToolStatus.AVAILABLE if self._api_key() else ToolStatus.UNAVAILABLE
-
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
-        # leapfast/indextts and cosyvoice are free; qwen3-tts-flash is token-priced in CNY
+        """Return estimated cost in CNY (not USD — MaaS bills internally in CNY).
+
+        leapfast/indextts and cosyvoice-v3.5-flash are free. qwen3-tts-flash
+        is priced at ¥1.60/M tokens per docs/multimodal-call-guide-v4.md;
+        there's no tokenizer available here, so approximate token count from
+        the input text's character length (the same rough char-based
+        heuristic estimate_runtime already uses below).
+        """
+        model = inputs.get("model", self.DEFAULT_MODEL)
+        if model == "qwen3-tts-flash":
+            tokens = len(inputs.get("text", ""))
+            return round(tokens / 1_000_000 * 1.60, 6)
         return 0.0
 
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
@@ -202,6 +206,13 @@ class MaasTTS(BaseTool):
         voice = inputs.get("voice", self.DEFAULT_VOICE)
         fmt = inputs.get("format", "mp3")
         text = inputs["text"]
+
+        # OpenAI-style voice names are only meaningful as IndexTTS native
+        # voice IDs (see VOICE_MAP above) — .get() falls back to the raw
+        # value unchanged, so a caller passing an already-native voice ID
+        # (or a voice name for a different model) still works.
+        if model == "leapfast/indextts":
+            voice = self.VOICE_MAP.get(voice, voice)
 
         # leapfast/indextts native format is WAV; honour caller's preference otherwise
         if model == "leapfast/indextts" and fmt == "mp3":
@@ -224,7 +235,10 @@ class MaasTTS(BaseTool):
             # asking for a flat reading would silently get the default instead.
             if inputs.get("emo_alpha") is not None:
                 payload["emo_alpha"] = inputs["emo_alpha"]
-            if inputs.get("use_emo_text"):
+            # A caller who sets emo_text without also setting use_emo_text is
+            # clearly asking for emotion-guided synthesis — auto-enable it
+            # rather than silently dropping their emo_text.
+            if inputs.get("use_emo_text") or inputs.get("emo_text"):
                 payload["use_emo_text"] = True
                 if inputs.get("emo_text"):
                     payload["emo_text"] = inputs["emo_text"]
@@ -276,6 +290,11 @@ class MaasTTS(BaseTool):
                 )
 
             deadline = start + 60
+            # Job is already submitted/billed — tolerate transient poll blips,
+            # but cap them so a persistently broken poll endpoint fails fast
+            # instead of spinning until the deadline (mirrors maas_video.py).
+            poll_errors = 0
+            _MAX_POLL_ERRORS = 5
             while time.time() < deadline:
                 time.sleep(2)
                 try:
@@ -285,8 +304,15 @@ class MaasTTS(BaseTool):
                         timeout=15,
                     )
                     poll.raise_for_status()
-                except Exception:
+                except Exception as e:
+                    poll_errors += 1
+                    if poll_errors >= _MAX_POLL_ERRORS:
+                        return ToolResult(
+                            success=False,
+                            error=f"MaaS TTS poll failed {poll_errors}x (last: {e}); job_id={job_id}",
+                        )
                     continue  # transient — retry on the next interval
+                poll_errors = 0
                 status = poll.json().get("status", "unknown")
                 if status == "succeeded":
                     break
@@ -345,7 +371,7 @@ class MaasTTS(BaseTool):
                 "output_path": str(output_path),
             },
             artifacts=[str(output_path)],
-            cost_usd=self.estimate_cost(inputs),   # 0.0 for free MaaS TTS models
+            cost_usd=self.estimate_cost(inputs),   # CNY; 0.0 for the free MaaS TTS models
             duration_seconds=round(time.time() - start, 2),
             model=model,
         )

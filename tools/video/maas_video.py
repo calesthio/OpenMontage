@@ -26,13 +26,11 @@ than it looks:
 
 from __future__ import annotations
 
-import os
 import time
 from pathlib import Path
 from typing import Any
 
 from tools.base_tool import (
-    BaseTool,
     Determinism,
     ExecutionMode,
     ResourceProfile,
@@ -40,9 +38,9 @@ from tools.base_tool import (
     ToolResult,
     ToolRuntime,
     ToolStability,
-    ToolStatus,
     ToolTier,
 )
+from tools.maas_base import MaasBaseTool
 
 
 # Default poll interval recommended by the gateway (seconds)
@@ -51,7 +49,7 @@ _POLL_INTERVAL = 5
 _POLL_TIMEOUT = 600
 
 
-class MaasVideo(BaseTool):
+class MaasVideo(MaasBaseTool):
     name = "maas_video"
     version = "0.1.0"
     tier = ToolTier.GENERATE
@@ -175,8 +173,10 @@ class MaasVideo(BaseTool):
                     "leapfast/wan2.2 (no audio track — use leapfast/ltx-2.3 if sound is needed)\n"
                     "I2V: wan2.7-i2v, wanx2.1-i2v-plus, happyhorse-1.0-i2v, leapfast/wan2.2, "
                     "leapfast/ltx-2.3 (confirmed live 2026-07-10), "
-                    "volcengine/doubao-seedance-2.0 (and other seedance variants — routed via "
-                    "native passthrough, see image_url)\n"
+                    "volcengine/doubao-seedance-2.0, volcengine/doubao-seedance-2.0-fast, "
+                    "volcengine/doubao-seedance-1.5-pro, volcengine/doubao-seedance-1.0-pro, "
+                    "fanya/seedance2.0 (these seedance variants routed via native passthrough, "
+                    "see image_url; volcengine/doubao-seedance-1.0-pro-fast is t2v-only)\n"
                     "R2V: happyhorse-1.0-r2v\n"
                     "Edit: wan2.7-videoedit, happyhorse-1.0-video-edit"
                 ),
@@ -238,23 +238,16 @@ class MaasVideo(BaseTool):
     resource_profile = ResourceProfile(
         cpu_cores=1, ram_mb=256, vram_mb=0, disk_mb=500, network_required=True
     )
+    # Declarative only — execute() doesn't wrap the submit call with retries
+    # honoring this policy; it hand-rolls its own poll-retry tolerance instead
+    # (see _MAX_POLL_ERRORS below). Same is true of every other API tool in
+    # this codebase today.
     retry_policy = RetryPolicy(max_retries=2, retryable_errors=["timeout", "rate_limit"])
     idempotency_key_fields = ["prompt", "model", "duration_seconds", "resolution"]
     side_effects = ["writes video file to output_path", "calls MaaS gateway API"]
     user_visible_verification = [
         "Watch generated clip for motion coherence and visual quality"
     ]
-
-    def _api_key(self) -> str | None:
-        return os.environ.get("MAAS_API_KEY")
-
-    def _base_url(self) -> str:
-        return os.environ.get("MAAS_API_BASE", "https://api.aiapbot.com").rstrip("/")
-
-    def get_status(self) -> ToolStatus:
-        if self._api_key():
-            return ToolStatus.AVAILABLE
-        return ToolStatus.UNAVAILABLE
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         """Return estimated cost in CNY (not USD — MaaS bills internally in CNY)."""
@@ -290,7 +283,9 @@ class MaasVideo(BaseTool):
             # No standard-DTO image field is documented for this family —
             # only native passthrough. duration_seconds is deliberately
             # omitted: Volcengine's own API rejects it on i2v/r2v with a 400
-            # InvalidParameter error.
+            # InvalidParameter error. The `audio` flag is dropped for the same
+            # reason (no equivalent field in this content array) — execute()
+            # surfaces that as a ToolResult warning when a caller asks for it.
             content: list[dict[str, Any]] = [{"type": "text", "text": prompt}]
             ref = image_b64 or image_url
             if ref:
@@ -388,8 +383,42 @@ class MaasVideo(BaseTool):
                 ),
             )
 
+        # image_to_video/reference_to_video with no reference image supplied
+        # isn't a client error the gateway itself would catch — for Seedance's
+        # native-passthrough path (see _build_payload) it silently degrades to
+        # a plain t2v request that still succeeds and still bills as if it
+        # used a reference. Reject it here, before the paid API call.
+        if operation in ("image_to_video", "reference_to_video") and not (
+            inputs.get("image_url") or inputs.get("image_base64")
+        ):
+            return ToolResult(
+                success=False,
+                error=f"{operation} requires image_url or image_base64",
+            )
+
         payload, extra_headers = self._build_payload(model, operation, inputs)
         headers.update(extra_headers)
+
+        if model == "leapfast/wan2.2":
+            # This model ignores the resolution enum entirely and substitutes
+            # its own fixed size grid (see _build_payload) — report what was
+            # actually sent, not the requested value it silently overrode.
+            resolution = payload.get("size", resolution)
+
+        warnings: list[str] = []
+        if (
+            model in self._SEEDANCE_MODELS
+            and operation in ("image_to_video", "reference_to_video")
+            and "audio" in inputs
+        ):
+            # Seedance's native-passthrough content array (see _build_payload)
+            # has no audio field at all — the caller's audio choice can't be
+            # honored for this model+operation combination.
+            warnings.append(
+                f"audio={inputs['audio']!r} was requested but is not supported by "
+                f"{model!r}'s native-passthrough payload for {operation!r} — the "
+                "model's own default audio behavior applies instead."
+            )
 
         start = time.time()
 
@@ -489,6 +518,7 @@ class MaasVideo(BaseTool):
                 "output": str(output_path),
                 "output_path": str(output_path),
                 "format": "mp4",
+                "warnings": warnings,
                 **probed,
             },
             artifacts=[str(output_path)],

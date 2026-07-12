@@ -120,3 +120,57 @@ def test_unknown_model_rejected():
     })
     assert result.success is False
     assert "Unknown model" in result.error
+
+
+def _assert_no_network_call(monkeypatch):
+    """Stub requests.post to fail loudly if called — proves the validation
+    under test rejects before any network call, not just that it eventually
+    returns success=False after paying for a submit."""
+    import requests
+
+    def _fail(*args, **kwargs):
+        raise AssertionError("must not make a network call before validation passes")
+
+    monkeypatch.setattr(requests, "post", _fail)
+
+
+def test_image_to_video_rejected_when_no_image_given(monkeypatch):
+    # Seedance's native-passthrough payload has no dedicated image field to
+    # validate upstream — with neither image_url nor image_base64, it just
+    # silently degrades to a plain t2v request that still succeeds and bills
+    # as if it used a reference. Must be rejected before submit.
+    _assert_no_network_call(monkeypatch)
+    tool = MaasVideo()
+    result = tool.execute({
+        "prompt": "a robot vacuum",
+        "model": "volcengine/doubao-seedance-2.0",
+        "operation": "image_to_video",
+    })
+    assert result.success is False
+    assert "image_url" in result.error
+    assert "image_base64" in result.error
+
+
+def test_reference_to_video_rejected_when_no_image_given(monkeypatch):
+    _assert_no_network_call(monkeypatch)
+    tool = MaasVideo()
+    result = tool.execute({
+        "prompt": "a robot vacuum",
+        "model": "happyhorse-1.0-r2v",
+        "operation": "reference_to_video",
+    })
+    assert result.success is False
+    assert "image_url" in result.error
+    assert "image_base64" in result.error
+
+
+def test_image_to_video_still_allowed_with_image_base64_only(_no_network):
+    # image_base64 alone (no image_url) must still satisfy the requirement.
+    tool = MaasVideo()
+    result = tool.execute({
+        "prompt": "a robot vacuum",
+        "model": "leapfast/ltx-2.3",
+        "operation": "image_to_video",
+        "image_base64": "data:image/png;base64,AAAA",
+    })
+    assert "requires image_url or image_base64" not in (result.error or "")

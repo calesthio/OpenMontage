@@ -17,13 +17,11 @@ Auth:            Authorization: Bearer <MAAS_API_KEY>
 from __future__ import annotations
 
 import base64
-import os
 import time
 from pathlib import Path
 from typing import Any
 
 from tools.base_tool import (
-    BaseTool,
     Determinism,
     ExecutionMode,
     ResourceProfile,
@@ -31,12 +29,12 @@ from tools.base_tool import (
     ToolResult,
     ToolRuntime,
     ToolStability,
-    ToolStatus,
     ToolTier,
 )
+from tools.maas_base import MaasBaseTool
 
 
-class MaasImage(BaseTool):
+class MaasImage(MaasBaseTool):
     name = "maas_image"
     version = "0.1.0"
     tier = ToolTier.GENERATE
@@ -137,21 +135,14 @@ class MaasImage(BaseTool):
     resource_profile = ResourceProfile(
         cpu_cores=1, ram_mb=256, vram_mb=0, disk_mb=20, network_required=True
     )
+    # Declarative only — execute() doesn't wrap the submit call with retries
+    # honoring this policy; it hand-rolls its own poll-retry tolerance instead
+    # (see _MAX_POLL_ERRORS below). Same is true of every other API tool in
+    # this codebase today.
     retry_policy = RetryPolicy(max_retries=2, retryable_errors=["timeout", "rate_limit"])
     idempotency_key_fields = ["prompt", "model", "size", "seed"]
     side_effects = ["writes image file to output_path", "calls MaaS gateway API"]
     user_visible_verification = ["Inspect generated image for quality and prompt adherence"]
-
-    def _api_key(self) -> str | None:
-        return os.environ.get("MAAS_API_KEY")
-
-    def _base_url(self) -> str:
-        return os.environ.get("MAAS_API_BASE", "https://api.aiapbot.com").rstrip("/")
-
-    def get_status(self) -> ToolStatus:
-        if self._api_key():
-            return ToolStatus.AVAILABLE
-        return ToolStatus.UNAVAILABLE
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         # MaaS bills internally in CNY; report 0 USD external cost.
@@ -280,8 +271,7 @@ class MaasImage(BaseTool):
         if first.get("b64_json"):
             output_path.write_bytes(base64.b64decode(first["b64_json"]))
         elif first.get("url"):
-            import requests as _r
-            img_bytes = _r.get(first["url"], timeout=60)
+            img_bytes = requests.get(first["url"], timeout=60)
             img_bytes.raise_for_status()
             output_path.write_bytes(img_bytes.content)
         else:

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 import sys
 import time
@@ -27,7 +28,9 @@ load_dotenv(OM_ROOT / ".env")
 from openai import OpenAI
 
 from app.store import job_store
-from app.runner.tool_bridge import TOOL_SCHEMAS, execute_tool, BudgetExceededError
+from app.runner.tool_bridge import TOOL_SCHEMAS, execute_tool, BudgetExceededError, variant_slug
+
+logger = logging.getLogger(__name__)
 
 try:
     from tools.cost_tracker import CostTracker
@@ -48,7 +51,15 @@ MAAS_BASE = os.environ.get("MAAS_API_BASE", "https://api.aiapbot.com")
 # a silent default change.
 LLM_MODEL = os.environ.get("MAAS_LLM_MODEL", "anthropic/claude-sonnet-4.6")
 
-llm = OpenAI(api_key=MAAS_KEY, base_url=f"{MAAS_BASE}/v1")
+# Explicit request timeout for every call this client makes. The openai-python
+# default (no timeout set here previously) left a hung gateway free to block
+# the asyncio.to_thread worker running a stage indefinitely — no error event,
+# no stage_retry, the job just sits at "running" forever with no user-visible
+# failure. 120s comfortably covers a normal completion (even one filling the
+# max_tokens=16384 cap below) while still bounding a genuine hang.
+LLM_REQUEST_TIMEOUT_SECONDS = 120.0
+
+llm = OpenAI(api_key=MAAS_KEY, base_url=f"{MAAS_BASE}/v1", timeout=LLM_REQUEST_TIMEOUT_SECONDS)
 
 # ── Cinematic pipeline stage definitions ─────────────────────────────────────
 CINEMATIC_STAGES = [
@@ -748,7 +759,6 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
         budget_cny = float(options["budget_cny"]) if options.get("budget_cny") not in (None, "") else None
     except (TypeError, ValueError):
         budget_cny = None
-    budget_overridden = False
 
     # CostTracker as the itemized ledger (persists projects/<name>/cost_log.json).
     # Values are CNY here; we run it in OBSERVE mode and own the human gate in
@@ -783,8 +793,8 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
         force=True pauses even when spent is still within budget — used when a
         pre-call check blocked the *next* paid call that would have crossed it.
         """
-        nonlocal budget_overridden
-        if not budget_cny or budget_overridden:
+        nonlocal budget_cny
+        if not budget_cny:
             return True
         spent = round(base_cost + sum(cost_accumulator), 4)
         if spent <= budget_cny and not force:
@@ -804,9 +814,27 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
             _emit(job_id, {"type": "job_failed", "stage": "budget",
                            "message": f"Budget ¥{budget_cny} exceeded (spent ¥{spent}); aborted by user"})
             return False
-        budget_overridden = True   # user approved overspend — don't re-prompt this run
+        # Re-arm at a new, higher ceiling instead of permanently disabling
+        # budget protection for the rest of the job (the previous
+        # `budget_overridden` flag did that — approving one small overage
+        # early silently waived every later stage's check too, no matter how
+        # much more expensive). 20% headroom over the actual current spend
+        # lets the stage that triggered this approval proceed without an
+        # immediate re-prompt for the exact same overage, while still gating
+        # again if a LATER stage blows through this new ceiling.
+        old_budget_cny = budget_cny
+        budget_cny = round(spent * 1.2, 4)
+        if cost_tracker is not None:
+            # Keep the ledger's recorded ceiling in sync for anything
+            # inspecting cost_log.json. A direct in-memory attribute bump —
+            # not a new CostTracker method or any other change to
+            # tools/cost_tracker.py — to stay clear of that file entirely.
+            cost_tracker.budget_total_usd = budget_cny
         job_store.update(job_id, status="running")
-        _emit(job_id, {"type": "stage_approved", "stage": "budget"})
+        _emit(job_id, {
+            "type": "stage_approved", "stage": "budget",
+            "budget_cny": budget_cny, "previous_budget_cny": old_budget_cny,
+        })
         return True
 
     async def _sample_preview_gate(stage_name: str, spn: SamplePreviewNeeded) -> list[dict]:
@@ -896,11 +924,11 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
 
         # Run stage in thread pool (blocking sync LLM calls must not block event loop).
         # A pre-call budget block raises BudgetExceededError out of the thread —
-        # pause for the human decision, and on approval re-run the stage (the
-        # pre-call check is disabled once overridden). A mid-stage
-        # SamplePreviewNeeded pauses the same way but resumes the SAME
-        # conversation (resume_messages) rather than re-running from scratch —
-        # it doesn't consume a retry round.
+        # pause for the human decision, and on approval re-run the stage at the
+        # gate's newly re-armed (raised) ceiling, never with the check fully
+        # disabled. A mid-stage SamplePreviewNeeded pauses the same way but
+        # resumes the SAME conversation (resume_messages) rather than
+        # re-running from scratch — it doesn't consume a retry round.
         success = False
         feedback = ""
         resume_messages: list[dict] | None = None
@@ -912,7 +940,7 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
                     _run_agent_stage,
                     job_id, stage_name, skill_text, project_dir,
                     brand_info, options, feedback, cost_accumulator, cost_tracker,
-                    (None if budget_overridden else budget_cny), base_cost,
+                    budget_cny, base_cost,
                     stage_def.get("produces"),
                     resume_messages, sample_iteration,
                     max_turns=stage_def.get("max_turns", MAX_TURNS),
@@ -923,7 +951,7 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
                 _sync_cost(stage_name)
                 if not await _budget_gate(force=True):
                     return
-                continue   # approved overspend → re-run this stage, gate disabled
+                continue   # approved overspend → re-run this stage at the raised ceiling
             except SamplePreviewNeeded as spn:
                 _sync_cost(stage_name)
                 resume_messages = await _sample_preview_gate(stage_name, spn)
@@ -944,7 +972,19 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
 
         if not success:
             job_store.update(job_id, status="failed", current_stage=stage_name)
-            _emit(job_id, {"type": "job_failed", "stage": stage_name})
+            # Reuse the same "what actually went wrong" diagnostic the
+            # missing-produces failure right below already includes — this
+            # emit used to carry no message field at all, leaving operators
+            # with nothing actionable for a max-turns/retries-exhausted
+            # failure specifically.
+            _emit(job_id, {
+                "type": "job_failed",
+                "stage": stage_name,
+                "message": (
+                    _last_failure_message(job_id, stage_name)
+                    or f"Stage '{stage_name}' failed after exhausting its retries."
+                ),
+            })
             return
 
         missing = _missing_produces(project_dir, stage_def)
@@ -985,6 +1025,32 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
                 ),
             })
             return
+
+        # The check above only requires ANY render file to exist — in a
+        # multi-variant A/B job (options.video_model_variants declares more
+        # than one model) that passes even when some declared variants never
+        # actually rendered (e.g. 2 of 3 succeeded, the 3rd's generation
+        # call failed). Silently completing with partial output would hide
+        # that a whole variant is missing. Require every declared variant to
+        # have its own render file before treating this stage as genuinely
+        # complete.
+        if stage_name == "compose":
+            missing_variants = _missing_variants(project_dir, options)
+            if missing_variants:
+                job_store.update(job_id, status="failed", current_stage=stage_name)
+                total_variants = len(options.get("video_model_variants") or [])
+                _emit(job_id, {
+                    "type": "job_failed",
+                    "stage": stage_name,
+                    "message": (
+                        f"Stage 'compose' is an A/B variants job ({total_variants} "
+                        f"declared), but {len(missing_variants)} variant(s) never "
+                        f"produced a render file: {missing_variants}. Refusing to mark "
+                        "a multi-variant compose stage complete with partial output. "
+                        "Retry will re-run this stage."
+                    ),
+                })
+                return
 
         _emit(job_id, {"type": "stage_completed", "stage": stage_name})
 
@@ -1048,7 +1114,7 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
                             _run_agent_stage,
                             job_id, stage_name, skill_text, project_dir,
                             brand_info, options, feedback, cost_accumulator, cost_tracker,
-                            (None if budget_overridden else budget_cny), base_cost,
+                            budget_cny, base_cost,
                             stage_def.get("produces"),
                             resume_messages, sample_iteration,
                             max_turns=stage_def.get("max_turns", MAX_TURNS),
@@ -1069,7 +1135,17 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
                 _sync_cost(stage_name)
                 if not success:
                     job_store.update(job_id, status="failed")
-                    _emit(job_id, {"type": "job_failed", "stage": stage_name})
+                    # Same gap as the initial-run failure path above: reuse
+                    # the last recorded error as an actionable diagnostic
+                    # instead of an emit with no message field.
+                    _emit(job_id, {
+                        "type": "job_failed",
+                        "stage": stage_name,
+                        "message": (
+                            _last_failure_message(job_id, stage_name)
+                            or f"Stage '{stage_name}' failed after exhausting its retries."
+                        ),
+                    })
                     return
                 # A regenerate round can go the same way the very first run
                 # can (line ~857 above): the agent's turn loop can end
@@ -1121,6 +1197,35 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
     render_url = _discover_render_url(project_dir, project_name)
     render_urls = _discover_render_urls(project_dir, project_name)
 
+    # Second line of defense against the same fabrication scenario the
+    # per-stage `stage_name == "compose"` check above already guards
+    # against, but independent of that literal stage name. Every current
+    # pipeline_defs/*.yaml manifest happens to name its render-producing
+    # stage "compose" (declaring produces=["render_report", ...]) — but
+    # that's a convention this runner doesn't enforce anywhere else. If a
+    # future manifest names that stage something else, the per-stage guard
+    # above silently never fires, and without this check the job would still
+    # complete right here with a None render_url. Key off the stage's
+    # declared `produces` contract (the canonical compose output per
+    # AGENT_GUIDE.md's Stage Agents table is "render_report"), not its name,
+    # so this holds regardless of what the stage is called. A pipeline that
+    # genuinely never declares a render-producing stage (e.g. the
+    # framework-smoke test pipeline) is unaffected — expects_render is False
+    # for it, matching its actual, non-video deliverable.
+    expects_render = any("render_report" in (s.get("produces") or []) for s in stages)
+    if expects_render and not render_url:
+        job_store.update(job_id, status="failed")
+        _emit(job_id, {
+            "type": "job_failed",
+            "message": (
+                "All stages reported complete but no render file was discovered "
+                f"under {project_dir / 'renders'}, even though this pipeline "
+                "declares a render-producing stage — refusing to mark the job "
+                "completed without a real deliverable."
+            ),
+        })
+        return
+
     update_kwargs: dict[str, Any] = {"status": "completed", "render_url": render_url}
     if render_urls:
         update_kwargs["render_urls"] = render_urls
@@ -1130,6 +1235,20 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
         "render_url": render_url,
         **({"render_urls": render_urls} if render_urls else {}),
     })
+
+
+# Tool names (registry `name`, from tools/tool_registry.py) capable of
+# producing the FINAL composed video — the whole-film render, not a per-clip
+# editing op. tool_bridge.py names every non-final-compose video_post output
+# "{tool_name}{variant_tag}_{unique}.mp4" and writes it under assets/video_post/
+# (only a call whose `operation` resolves to "compose" is treated as final and
+# routed to renders/ instead — see tool_bridge.py's is_final_compose). A call
+# using one of these SAME tool names but a different operation (e.g.
+# operation="render"/"remotion_render", which still legitimately produces the
+# whole film via Remotion/HyperFrames) also lands in assets/video_post/, so
+# this is deliberately a whitelist of compose-capable tool names, not a check
+# on the operation string itself.
+_COMPOSE_FAMILY_TOOL_PREFIXES = ("video_compose_", "hyperframes_compose_")
 
 
 def _discover_render_url(project_dir: Path, project_name: str) -> str | None:
@@ -1142,17 +1261,25 @@ def _discover_render_url(project_dir: Path, project_name: str) -> str | None:
 
     candidate = _newest(list((project_dir / "renders").glob("*.mp4")))
     if candidate is None:
-        # Fallback: a compose-family tool (video_compose/trimmer/stitch, all
+        # Fallback: a compose-family tool (video_compose/hyperframes_compose,
         # capability="video_post") wrote its output under assets/ instead of
-        # renders/. Scoped to video_post specifically — NOT assets/**/*.mp4 —
-        # because that glob also matches assets/video_generation/*.mp4, the
-        # RAW per-scene clips from maas_video. Confirmed live: a compose stage
-        # that never actually composed anything (all generation blocked,
-        # render_report honestly documented the failure) still left raw scene
-        # clips sitting in assets/video_generation/ from an earlier stage —
-        # the broad glob picked the newest one and presented a random 3s clip
-        # as if it were the finished film.
-        candidate = _newest(list(project_dir.glob("assets/video_post/*.mp4")))
+        # renders/ — e.g. operation="render"/"remotion_render" is a legitimate
+        # final render but isn't routed to renders/ by tool_bridge.py (only
+        # operation="compose" is). Scoped to those two tool names specifically
+        # — NOT every assets/video_post/*.mp4 — because trim/stitch/etc. calls
+        # (video_trimmer, video_stitch, ...) write their INTERMEDIATE,
+        # non-final clips to this same folder using the same naming scheme.
+        # Without this scoping, a trim/stitch call that ran earlier in this
+        # stage's conversation, followed by a final compose call that then
+        # FAILED, would leave that intermediate clip sitting here as the
+        # newest assets/video_post/*.mp4 — and the old unscoped glob picked
+        # exactly that up and presented it as the finished render (the same
+        # bug class already fixed once below for assets/video_generation/*.mp4
+        # raw scene clips).
+        candidate = _newest([
+            p for p in project_dir.glob("assets/video_post/*.mp4")
+            if p.name.startswith(_COMPOSE_FAMILY_TOOL_PREFIXES)
+        ])
     if candidate is None:
         # Last resort: a misnamed compose output (.bin) that is really an mp4
         candidate = _newest(list(project_dir.glob("assets/video_post/*compose*output*")))
@@ -1162,14 +1289,53 @@ def _discover_render_url(project_dir: Path, project_name: str) -> str | None:
     return _url_for_render(project_dir, project_name, candidate)
 
 
+def _missing_variants(project_dir: Path, options: dict) -> list[str] | None:
+    """For a multi-variant compose job, return the declared A/B model strings
+    that have NO corresponding rendered file — or None if this isn't a
+    multi-variant job, or every declared variant rendered.
+
+    The compose anti-fabrication check (in _run_pipeline_impl, right after
+    _discover_render_url) only requires ANY render file to exist. In a
+    3-variant job where 2 variants render and the 3rd fails, that check alone
+    still passes (a render DID happen) and the stage proceeds as genuinely
+    complete with no signal that a whole variant never rendered. Each
+    variant is expected to land at renders/final_<variant_slug(model)>.mp4 per
+    tool_bridge.py's per-call output-path tagging — the "A/B Variants" prompt
+    section in _run_agent_stage instructs the agent to pass `inputs.variant`
+    as the exact declared model string on every compose call.
+    """
+    variants = [m for m in (options.get("video_model_variants") or []) if m]
+    if len(variants) <= 1:
+        return None
+    renders_dir = project_dir / "renders"
+    missing = [m for m in variants if not (renders_dir / f"final_{variant_slug(m)}.mp4").is_file()]
+    return missing or None
+
+
 def _url_for_render(project_dir: Path, project_name: str, candidate: Path) -> str:
     rel = candidate.relative_to(project_dir).as_posix()
     # Route through the storage seam so swapping to object storage later yields
     # signed URLs without touching this call site.
     try:
         from app.interfaces import get_storage
+    except ImportError:
+        # The storage seam module itself isn't importable in this process —
+        # genuinely "no real storage backend available" (e.g. a stripped
+        # module path), not a bug in a configured backend.
+        return f"/media/{project_name}/{rel}"
+    try:
         return get_storage().url_for(project_name, rel)
-    except Exception:
+    except Exception as exc:
+        # A genuinely configured (non-local) storage backend raising here is a
+        # real bug (bad credentials, unreachable bucket, ...) that silently
+        # falling back to the local /media/ path would mask — the returned
+        # URL would just 404 with no diagnostic anywhere. Log it so it's
+        # visible, but still fall back so render discovery doesn't hard-fail
+        # the whole job over a URL-formatting problem.
+        logger.warning(
+            "get_storage().url_for(%r, %r) raised %r; falling back to local media path",
+            project_name, rel, exc,
+        )
         return f"/media/{project_name}/{rel}"
 
 

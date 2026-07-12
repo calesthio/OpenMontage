@@ -358,6 +358,12 @@ async def test_reject_retry_still_receives_budget_ceiling(runner, monkeypatch):
 
 async def test_budget_gate_pauses_then_resumes_on_approve(runner, monkeypatch, tmp_path):
     # Each stage "spends" 5 CNY against a 1 CNY budget → gate must pause.
+    # TWO_STAGES has two stages (research, compose), and the gate now
+    # re-arms at a raised ceiling on each approval instead of disabling
+    # itself forever (see test_budget_gate_rearms_at_higher_ceiling_instead_of_disabling)
+    # — so the SECOND stage's spend can legitimately blow through the newly
+    # raised ceiling too and prompt again. The approver below approves every
+    # prompt it sees, rather than exactly once, to match that.
     (tmp_path / "projects" / "p" / "renders").mkdir(parents=True)
     (tmp_path / "projects" / "p" / "renders" / "final.mp4").write_bytes(b"x")
     def spend(*a, **k):
@@ -369,21 +375,25 @@ async def test_budget_gate_pauses_then_resumes_on_approve(runner, monkeypatch, t
     runner.create("j", {"project_name": "p", "pipeline": "cinematic", "options": {"budget_cny": 1}})
 
     async def approver():
-        # Wait for the gate to open, then approve the overspend once.
-        for _ in range(200):
+        # Wait for the gate to open, then approve the overspend — every time
+        # it opens, since more than one stage in this job can trigger it.
+        for _ in range(500):
             await asyncio.sleep(0.01)
             if runner.get("j")["status"] == "awaiting_approval":
                 runner.set_approval("j", "approve", "")
-                return
     approver_task = asyncio.create_task(approver())
 
     await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic",
                                               "options": {"budget_cny": 1}})
-    await approver_task
+    approver_task.cancel()
+    try:
+        await approver_task
+    except asyncio.CancelledError:
+        pass
 
     evs = _events(runner, "j")
     assert "budget_exceeded" in evs
-    assert runner.get("j")["status"] == "completed"      # overspend approved → finished
+    assert runner.get("j")["status"] == "completed"      # overspend(s) approved → finished
 
 
 async def test_budget_gate_aborts_on_reject(runner, monkeypatch):
@@ -540,3 +550,202 @@ async def test_automatic_retry_folds_last_failure_into_feedback(runner, monkeypa
     assert len(feedback_seen) == 2
     assert feedback_seen[0] == ""             # first attempt: no prior failure
     assert "malformed tool call: xyz" in feedback_seen[1]   # retry: knows what broke
+
+
+# ── job_failed emits must carry an actionable diagnostic message ────────────
+
+async def test_job_failed_after_max_rounds_includes_diagnostic_message(runner, monkeypatch):
+    # Regression: the "ran out of retries" job_failed emit had no `message`
+    # field at all, unlike the missing-produces failure emitted right below
+    # it in the source — operators got zero actionable diagnostic for this
+    # failure mode specifically.
+    def always_fails(*a, **k):
+        stage_runner._emit(a[0], {"type": "error", "stage": a[1], "message": "gateway timed out"})
+        return False
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", always_fails)
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    job = runner.get("j")
+    assert job["status"] == "failed"
+    failed = [e for e in runner.get_events("j", after_seq=-1) if e["type"] == "job_failed"]
+    assert failed
+    assert "gateway timed out" in failed[-1].get("message", "")
+
+
+async def test_job_failed_after_reject_regenerate_failure_includes_diagnostic_message(runner, monkeypatch):
+    # Same gap in the human-reject-then-regenerate loop: a regenerate attempt
+    # that fails outright must also surface the last recorded error rather
+    # than an empty message.
+    calls = []
+
+    def stub(job_id, stage_name, skill_text, project_dir, *a, **k):
+        if stage_name != "research":
+            return True
+        calls.append(1)
+        if len(calls) == 1:
+            (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+            (project_dir / "artifacts" / "research.json").write_text("{}")
+            return True
+        stage_runner._emit(job_id, {"type": "error", "stage": stage_name, "message": "regen blew up"})
+        return False
+
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", stub)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "research", "skill": None, "approval": True, "produces": ["research"]},
+        {"name": "compose", "skill": None, "approval": False},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    async def rejecter():
+        for _ in range(200):
+            await asyncio.sleep(0.01)
+            if runner.get("j")["status"] == "awaiting_approval":
+                runner.set_approval("j", "reject", "try again")
+                return
+    rejecter_task = asyncio.create_task(rejecter())
+
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+    await rejecter_task
+
+    job = runner.get("j")
+    assert job["status"] == "failed"
+    failed = [e for e in runner.get_events("j", after_seq=-1) if e["type"] == "job_failed"]
+    assert failed
+    assert "regen blew up" in failed[-1].get("message", "")
+
+
+# ── job-completion render check must not depend on the literal "compose" name
+
+async def test_job_completion_refuses_without_render_file_even_if_stage_not_named_compose(
+    runner, monkeypatch,
+):
+    # Regression: the per-stage anti-fabrication check (right after a stage
+    # finishes) is keyed on the literal stage name "compose" — a manifest
+    # whose render-producing stage is named something else entirely bypasses
+    # it. The job-completion block itself must independently refuse to mark
+    # the job "completed" without a real discovered render file, keyed off
+    # the stage's declared `produces` (canonical compose output
+    # "render_report" per AGENT_GUIDE.md's Stage Agents table), not its name.
+    def write_report_no_video(job_id, stage_name, skill_text, project_dir, *a, **k):
+        if stage_name == "final_render":
+            (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+            (project_dir / "artifacts" / "render_report.json").write_text("{}")
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", write_report_no_video)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "research", "skill": None, "approval": False},
+        {"name": "final_render", "skill": None, "approval": False, "produces": ["render_report"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    job = runner.get("j")
+    assert job["status"] == "failed"
+    failed = [e for e in runner.get_events("j", after_seq=-1) if e["type"] == "job_failed"]
+    assert failed and "no render file was discovered" in failed[-1]["message"]
+
+
+async def test_job_completion_allows_pipelines_with_no_render_producing_stage(runner, monkeypatch):
+    # A pipeline that genuinely never declares a render-producing stage (e.g.
+    # the framework-smoke test pipeline, which stops at "script") must NOT be
+    # forced to have a render file — the completion-block fallback is a no-op
+    # for it.
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", lambda *a, **k: True)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "research", "skill": None, "approval": False},
+        {"name": "script", "skill": None, "approval": False},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    assert runner.get("j")["status"] == "completed"
+
+
+# ── compose must not silently complete with a missing A/B variant ──────────
+
+async def test_compose_fails_when_a_declared_variant_never_rendered(runner, monkeypatch, tmp_path):
+    # 2 of 3 declared A/B variants render; the job must not silently complete
+    # with the 3rd variant's failure hidden — the plain "does ANY render file
+    # exist" check alone would pass here.
+    renders = tmp_path / "projects" / "p" / "renders"
+    renders.mkdir(parents=True)
+    (renders / "final_ltx2.mp4").write_bytes(b"x")
+    (renders / "final_wan2-2.mp4").write_bytes(b"y")
+    # no final_kling-1.mp4 — this variant's generation failed
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", lambda *a, **k: True)
+    data = {
+        "project_name": "p", "pipeline": "cinematic",
+        "options": {"video_model_variants": ["ltx2", "wan2.2", "kling-1"]},
+    }
+    runner.create("j", data)
+
+    await stage_runner.run_pipeline_job("j", data)
+
+    job = runner.get("j")
+    assert job["status"] == "failed"
+    assert "compose" not in job["completed_stages"]
+    failed = [e for e in runner.get_events("j", after_seq=-1) if e["type"] == "job_failed"]
+    assert failed and "kling-1" in failed[-1]["message"]
+
+
+# ── budget re-arm: approving an overspend must not waive checks forever ────
+
+async def test_budget_gate_rearms_at_higher_ceiling_instead_of_disabling(runner, monkeypatch, tmp_path):
+    # Regression: approving one overspend used to permanently disable BOTH
+    # the pre-call and between-stage budget checks for every remaining stage
+    # of the job (a `budget_overridden` flag passed None instead of
+    # budget_cny to every subsequent _run_agent_stage call). A user approving
+    # a small overage early must not unknowingly waive protection for a far
+    # more expensive stage later — the ceiling must instead be re-armed
+    # higher after each approval, so a later stage that blows through the
+    # NEW ceiling still triggers a fresh approval.
+    (tmp_path / "projects" / "p" / "renders").mkdir(parents=True)
+    (tmp_path / "projects" / "p" / "renders" / "final.mp4").write_bytes(b"x")
+
+    seen_budget = []
+
+    def spend(*a, **k):
+        seen_budget.append(a[9])   # budget_cny positional arg, as of THIS stage's start
+        acc = a[7]                 # cost_accumulator positional arg
+        if acc is not None:
+            acc.append(5.0)        # every stage "spends" another 5 CNY
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", spend)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "research", "skill": None, "approval": False},
+        {"name": "proposal", "skill": None, "approval": False},
+        {"name": "compose", "skill": None, "approval": False},
+    ])
+    data = {"project_name": "p", "pipeline": "cinematic", "options": {"budget_cny": 1}}
+    runner.create("j", data)
+
+    async def approver():
+        # Approve every overspend prompt that comes up (there should be one
+        # after each of the 3 stages, since each re-armed ceiling is blown
+        # through by the next stage's spend too).
+        for _ in range(500):
+            await asyncio.sleep(0.01)
+            if runner.get("j")["status"] == "awaiting_approval":
+                runner.set_approval("j", "approve", "")
+
+    approver_task = asyncio.create_task(approver())
+    await stage_runner.run_pipeline_job("j", data)
+    approver_task.cancel()
+    try:
+        await approver_task
+    except asyncio.CancelledError:
+        pass
+
+    evs = _events(runner, "j")
+    assert evs.count("budget_exceeded") >= 2   # gated again after the ceiling was raised
+    assert runner.get("j")["status"] == "completed"
+    # Every stage still saw a real (non-None) ceiling — never disabled.
+    assert all(b is not None for b in seen_budget)
+    # Each re-arm strictly raises the ceiling (never resets back down or
+    # stays flat) as spend grows.
+    assert seen_budget == sorted(seen_budget)
+    assert len(set(seen_budget)) > 1

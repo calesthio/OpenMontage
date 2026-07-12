@@ -10,7 +10,8 @@ from app.runner import stage_runner
 from app.runner.stage_runner import (
     _discover_render_url, _discover_render_urls, _load_artifacts, _load_brand_kit,
     _brand_reference_image_data_uri, _MAX_REFERENCE_DATA_URI_CHARS,
-    _truncate_json_for_prompt, _last_failure_message,
+    _truncate_json_for_prompt, _last_failure_message, _missing_variants,
+    _url_for_render,
 )
 
 
@@ -24,11 +25,40 @@ def test_discover_prefers_renders(tmp_path):
 
 
 def test_discover_falls_back_to_assets_video_post_mp4(tmp_path):
+    # The realistic filename a compose-family tool call actually produces
+    # here (tool_bridge.py names non-final-compose outputs
+    # "{tool_name}{variant_tag}_{unique}.{ext}") — not an arbitrary "clip.mp4"
+    # a real run would never write.
     proj = tmp_path / "p"
     (proj / "renders").mkdir(parents=True)
     (proj / "assets" / "video_post").mkdir(parents=True)
-    (proj / "assets" / "video_post" / "clip.mp4").write_bytes(b"x")
-    assert _discover_render_url(proj, "p") == "/media/p/assets/video_post/clip.mp4"
+    (proj / "assets" / "video_post" / "video_compose_abc123.mp4").write_bytes(b"x")
+    assert _discover_render_url(proj, "p") == "/media/p/assets/video_post/video_compose_abc123.mp4"
+
+
+def test_discover_falls_back_to_hyperframes_compose_output(tmp_path):
+    proj = tmp_path / "p"
+    (proj / "renders").mkdir(parents=True)
+    (proj / "assets" / "video_post").mkdir(parents=True)
+    (proj / "assets" / "video_post" / "hyperframes_compose_xyz.mp4").write_bytes(b"x")
+    assert _discover_render_url(proj, "p") == "/media/p/assets/video_post/hyperframes_compose_xyz.mp4"
+
+
+def test_discover_ignores_non_final_trim_stitch_clips(tmp_path):
+    # Regression: the assets/video_post/ fallback used to accept ANY .mp4 in
+    # that folder — broad enough to pick up an INTERMEDIATE trim/stitch clip
+    # (tool_bridge.py writes video_trimmer_*/video_stitch_* outputs to this
+    # same folder for any non-final video_post call) if one ran earlier in
+    # the same stage's conversation, before a final compose call that then
+    # failed. Only a compose-family tool's own output is a legitimate
+    # stand-in for the finished render — trim/stitch clips must not be
+    # picked up, even when they're the newest file in the folder.
+    proj = tmp_path / "p"
+    (proj / "renders").mkdir(parents=True)
+    (proj / "assets" / "video_post").mkdir(parents=True)
+    (proj / "assets" / "video_post" / "video_trimmer_abc123.mp4").write_bytes(b"x")
+    (proj / "assets" / "video_post" / "video_stitch_def456.mp4").write_bytes(b"y")
+    assert _discover_render_url(proj, "p") is None
 
 
 def test_discover_ignores_raw_generation_clips(tmp_path):
@@ -105,6 +135,71 @@ def test_discover_render_urls_bare_final_gets_default_slug_alongside_variant(tmp
         "default": "/media/p/renders/final.mp4",
         "wan2-2": "/media/p/renders/final_wan2-2.mp4",
     }
+
+
+# ── _missing_variants (A/B partial-render fabrication guard) ────────────────
+
+def test_missing_variants_none_when_not_a_variant_job(tmp_path):
+    assert _missing_variants(tmp_path, {}) is None
+    assert _missing_variants(tmp_path, {"video_model_variants": ["only-one"]}) is None
+
+
+def test_missing_variants_none_when_every_variant_rendered(tmp_path):
+    (tmp_path / "renders").mkdir(parents=True)
+    (tmp_path / "renders" / "final_ltx2.mp4").write_bytes(b"x")
+    (tmp_path / "renders" / "final_wan2-2.mp4").write_bytes(b"y")
+    options = {"video_model_variants": ["ltx2", "wan2.2"]}
+    assert _missing_variants(tmp_path, options) is None
+
+
+def test_missing_variants_flags_the_one_that_never_rendered(tmp_path):
+    # Regression: the compose anti-fabrication check only required ANY render
+    # file to exist — a 3-variant job where 2 of 3 render and the 3rd fails
+    # would still "pass" that check and complete silently. Each declared
+    # variant must have its own render file.
+    (tmp_path / "renders").mkdir(parents=True)
+    (tmp_path / "renders" / "final_ltx2.mp4").write_bytes(b"x")
+    (tmp_path / "renders" / "final_wan2-2.mp4").write_bytes(b"y")
+    # no final_kling-1.mp4 — this variant's generation failed
+    options = {"video_model_variants": ["ltx2", "wan2.2", "kling-1"]}
+    assert _missing_variants(tmp_path, options) == ["kling-1"]
+
+
+# ── _url_for_render (storage-backend fallback narrowing) ─────────────────────
+
+def test_url_for_render_uses_local_storage_by_default(tmp_path):
+    proj = tmp_path / "p"
+    (proj / "renders").mkdir(parents=True)
+    candidate = proj / "renders" / "final.mp4"
+    candidate.write_bytes(b"x")
+    assert _url_for_render(proj, "p", candidate) == "/media/p/renders/final.mp4"
+
+
+def test_url_for_render_logs_and_falls_back_when_backend_raises(tmp_path, monkeypatch, caplog):
+    # Regression: a bare `except Exception` around get_storage().url_for(...)
+    # silently masked ANY failure, including a genuine bug in a real
+    # (non-local) configured backend — the returned URL would just 404 with
+    # no diagnostic anywhere. A broken backend must still fall back (so
+    # render discovery doesn't hard-fail the job), but it must log the real
+    # exception instead of swallowing it.
+    import app.interfaces as interfaces_module
+
+    class BrokenStorage:
+        def url_for(self, project, rel):
+            raise RuntimeError("bucket unreachable")
+
+    monkeypatch.setattr(interfaces_module, "get_storage", lambda: BrokenStorage())
+    proj = tmp_path / "p"
+    (proj / "renders").mkdir(parents=True)
+    candidate = proj / "renders" / "final.mp4"
+    candidate.write_bytes(b"x")
+
+    import logging
+    with caplog.at_level(logging.WARNING):
+        url = _url_for_render(proj, "p", candidate)
+
+    assert url == "/media/p/renders/final.mp4"
+    assert any("bucket unreachable" in r.getMessage() for r in caplog.records)
 
 
 # ── _brand_reference_image_data_uri ──────────────────────────────────────────
@@ -377,6 +472,15 @@ def test_llm_call_uses_generous_max_tokens(tmp_path, monkeypatch):
 
     stage_runner._run_agent_stage("job-budget", "scene_plan", "skill", tmp_path, {}, {})
     assert captured["max_tokens"] >= 16384
+
+
+def test_llm_client_has_an_explicit_request_timeout():
+    # Regression: the OpenAI client had no explicit timeout — a hung gateway
+    # blocked the asyncio.to_thread worker running a stage indefinitely, with
+    # no error event and no user-visible failure. Must be an explicit,
+    # positive, finite value, not the SDK's own NOT_GIVEN default.
+    assert stage_runner.llm.timeout == stage_runner.LLM_REQUEST_TIMEOUT_SECONDS
+    assert 0 < stage_runner.LLM_REQUEST_TIMEOUT_SECONDS < float("inf")
 
 
 def test_tool_keyerror_reports_missing_parameter_not_bare_repr(tmp_path, monkeypatch):

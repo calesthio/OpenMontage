@@ -3,11 +3,11 @@
   "project_id": "photosynthesis-explainer",
   "pipeline_type": "animated-explainer",
   "stage": "script",
-  "status": "awaiting_human",
-  "timestamp": "2026-07-12T10:25:00+00:00",
+  "status": "completed",
+  "timestamp": "2026-07-12T10:30:00+00:00",
   "checkpoint_policy": "guided",
   "human_approval_required": true,
-  "human_approved": false,
+  "human_approved": true,
   "review": {
     "scores": {
       "hook_power": 4,

@@ -15,6 +15,13 @@
         "properties": {
           "id": { "type": "string" },
           "source": { "type": "string", "description": "Source file path or asset-manifest ID" },
+          "grid_sources": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 2,
+            "maxItems": 3,
+            "description": "Source file paths or asset-manifest IDs of 2-3 clips shown side by side, full height, for this cut's time slot (portrait footage in a landscape frame). Every cell plays the cut's in/out window. Rendered as a grid scene by CinematicRenderer; set `source` to the first cell so renderers without grid support fall back to it."
+          },
           "in_seconds": { "type": "number", "minimum": 0 },
           "out_seconds": { "type": "number", "minimum": 0 },
           "speed": { "type": "number", "minimum": 0.1, "default": 1.0 },

@@ -12,7 +12,12 @@ import {
   useVideoConfig,
 } from "remotion";
 
-import { CinematicRendererProps, CinematicTone, CinematicVideoScene } from "./cinematic/types";
+import {
+  CinematicGridScene,
+  CinematicRendererProps,
+  CinematicTone,
+  CinematicVideoScene,
+} from "./cinematic/types";
 import { CaptionOverlay } from "./components/CaptionOverlay";
 import { resolveAsset } from "./lib/resolveAsset";
 
@@ -34,7 +39,11 @@ const toneGradient = (tone: CinematicTone) => {
   }
 };
 
-const SceneVideo: React.FC<{ scene: CinematicVideoScene }> = ({ scene }) => {
+const useSceneFade = (scene: {
+  durationSeconds: number;
+  fadeInFrames?: number;
+  fadeOutFrames?: number;
+}) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const durationInFrames = Math.max(1, Math.round(scene.durationSeconds * fps));
@@ -55,7 +64,11 @@ const SceneVideo: React.FC<{ scene: CinematicVideoScene }> = ({ scene }) => {
           extrapolateLeft: "clamp",
           extrapolateRight: "clamp",
         });
-  const opacity = Math.min(fadeInOpacity, fadeOutOpacity);
+  return { frame, fps, durationInFrames, opacity: Math.min(fadeInOpacity, fadeOutOpacity) };
+};
+
+const SceneVideo: React.FC<{ scene: CinematicVideoScene }> = ({ scene }) => {
+  const { frame, fps, durationInFrames, opacity } = useSceneFade(scene);
 
   const scale = interpolate(frame, [0, durationInFrames], [1.015, 1], {
     extrapolateLeft: "clamp",
@@ -82,7 +95,7 @@ const SceneVideo: React.FC<{ scene: CinematicVideoScene }> = ({ scene }) => {
         style={{
           width: "100%",
           height: "100%",
-          objectFit: "cover",
+          objectFit: scene.fit ?? "cover",
           transform: `scale(${scale})`,
           filter:
             scene.filter ?? "contrast(1.06) saturate(0.88) brightness(0.92)",
@@ -107,6 +120,51 @@ const SceneVideo: React.FC<{ scene: CinematicVideoScene }> = ({ scene }) => {
           opacity: 0.6,
         }}
       />
+    </AbsoluteFill>
+  );
+};
+
+const GridScene: React.FC<{ scene: CinematicGridScene }> = ({ scene }) => {
+  const { fps, opacity } = useSceneFade(scene);
+  const gap = scene.gapPx ?? 6;
+  const n = scene.cells.length;
+
+  return (
+    <AbsoluteFill style={{ backgroundColor: "#020407", opacity }}>
+      <AbsoluteFill style={{ flexDirection: "row", padding: gap, gap }}>
+        {scene.cells.map((cell, i) => (
+          <div
+            key={i}
+            style={{
+              position: "relative",
+              width: `${100 / n}%`,
+              height: "100%",
+              overflow: "hidden",
+            }}
+          >
+            <OffthreadVideo
+              muted
+              src={resolveAsset(cell.src)}
+              trimBefore={
+                cell.trimBeforeSeconds !== undefined
+                  ? Math.round(cell.trimBeforeSeconds * fps)
+                  : undefined
+              }
+              trimAfter={
+                cell.trimAfterSeconds !== undefined
+                  ? Math.round(cell.trimAfterSeconds * fps)
+                  : undefined
+              }
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
+                ...(cell.filter ? { filter: cell.filter } : {}),
+              }}
+            />
+          </div>
+        ))}
+      </AbsoluteFill>
     </AbsoluteFill>
   );
 };
@@ -496,6 +554,8 @@ export const CinematicRenderer: React.FC<CinematicRendererProps> = ({
         >
           {scene.kind === "video" ? (
             <SceneVideo scene={scene} />
+          ) : scene.kind === "grid" ? (
+            <GridScene scene={scene} />
           ) : (
             <TitleCard
               text={scene.text}

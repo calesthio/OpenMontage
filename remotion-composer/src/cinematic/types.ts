@@ -16,6 +16,10 @@ export interface CinematicVideoScene extends CinematicBaseScene {
   filter?: string;
   fadeInFrames?: number;
   fadeOutFrames?: number;
+  /** "cover" (default) fills the frame and crops overflow. "contain" fits
+   * the whole source without cropping, pillarboxed/letterboxed against the
+   * scene background — use for portrait-sourced clips in a landscape canvas. */
+  fit?: "cover" | "contain";
 }
 
 export interface CinematicTitleScene extends CinematicBaseScene {
@@ -29,7 +33,26 @@ export interface CinematicTitleScene extends CinematicBaseScene {
   variant?: "plate" | "overlay";
 }
 
-export type CinematicScene = CinematicVideoScene | CinematicTitleScene;
+export interface CinematicGridCell {
+  src: string;
+  trimBeforeSeconds?: number;
+  trimAfterSeconds?: number;
+  filter?: string;
+}
+
+export interface CinematicGridScene extends CinematicBaseScene {
+  kind: "grid";
+  /** 2 or 3 clips played simultaneously side by side, full height each —
+   * for portrait-sourced clips that would otherwise sit in a lot of empty
+   * pillarbox space alone. */
+  cells: CinematicGridCell[];
+  /** Pixel gap between cells (and outer margin). Default 6. */
+  gapPx?: number;
+  fadeInFrames?: number;
+  fadeOutFrames?: number;
+}
+
+export type CinematicScene = CinematicVideoScene | CinematicTitleScene | CinematicGridScene;
 
 export interface CinematicSoundtrack {
   src: string;

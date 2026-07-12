@@ -806,6 +806,21 @@ class VideoCompose(BaseTool):
                     scene["backgroundSrc"] = source
                     scene["backgroundTrimBeforeSeconds"] = source_in
                     scene["backgroundTrimAfterSeconds"] = source_out
+            elif len(grid_sources := [str(g) for g in cut.get("grid_sources") or [] if g]) >= 2:
+                # Portrait clips side by side for the same time slot. Every
+                # cell plays the cut's in/out window of its own source.
+                scene = {
+                    **common,
+                    "kind": "grid",
+                    "cells": [
+                        {
+                            "src": cell_src,
+                            "trimBeforeSeconds": source_in,
+                            "trimAfterSeconds": source_out,
+                        }
+                        for cell_src in grid_sources
+                    ],
+                }
             else:
                 scene = {
                     **common,
@@ -815,6 +830,7 @@ class VideoCompose(BaseTool):
                     "trimAfterSeconds": source_out,
                     "playbackRate": speed,
                 }
+            if scene["kind"] != "title":
                 if str(cut.get("transition_in") or "").lower() in hard_transitions:
                     scene["fadeInFrames"] = 0
                 if str(cut.get("transition_out") or "").lower() in hard_transitions:
@@ -1626,6 +1642,11 @@ class VideoCompose(BaseTool):
             resolved_cut = dict(cut)
             if source_id in asset_lookup:
                 resolved_cut["source"] = asset_lookup[source_id]["path"]
+            if cut.get("grid_sources"):
+                resolved_cut["grid_sources"] = [
+                    asset_lookup[g]["path"] if g in asset_lookup else g
+                    for g in cut["grid_sources"]
+                ]
             resolved_cuts.append(resolved_cut)
 
         # --- Pre-compose validation gate ---

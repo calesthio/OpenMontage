@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 
 import pytest
 
@@ -83,6 +84,63 @@ def test_completed_job_not_marked_interrupted(tmp_path):
     s2 = JobStore(persist_dir=d)
     assert s2.get("done")["status"] == "completed"
     assert s2.get("done").get("interrupted") is not True
+
+
+def test_persist_job_failure_is_logged_not_swallowed(tmp_path, caplog):
+    # Regression: _persist_job used to catch OSError and do nothing, so a
+    # disk failure here was completely invisible.
+    s = JobStore(persist_dir=tmp_path / "js")
+    s.create("j", {})
+    s._persist_dir = tmp_path / "does-not-exist"   # forces write_text to raise
+    caplog.clear()
+    with caplog.at_level("WARNING"):
+        s.update("j", status="running")
+    assert any("j" in r.getMessage() and "persist" in r.getMessage().lower()
+               for r in caplog.records)
+
+
+def test_append_event_failure_is_logged_not_swallowed(tmp_path, caplog):
+    # Regression: _append_event_to_disk used to catch OSError and do nothing.
+    s = JobStore(persist_dir=tmp_path / "js")
+    s.create("j", {})
+    s._persist_dir = tmp_path / "does-not-exist"   # forces the append to raise
+    caplog.clear()
+    with caplog.at_level("WARNING"):
+        s.push_event("j", {"type": "x"})
+    assert any("j" in r.getMessage() and "event" in r.getMessage().lower()
+               for r in caplog.records)
+
+
+async def test_writes_are_offloaded_but_still_land_when_a_loop_is_running(tmp_path):
+    # create()/update()/push_event() used to always write synchronously,
+    # blocking whatever event loop called them (every route handler and the
+    # pipeline runner). This test runs with a real running loop, so the
+    # actual disk write is now handed to a background thread instead — give
+    # it a moment to land, then confirm it did.
+    s = JobStore(persist_dir=tmp_path / "js")
+    s.create("j", {"project_name": "demo"})
+    s.update("j", status="running")
+    s.push_event("j", {"type": "x"})
+    await asyncio.sleep(0.2)
+    assert json.loads((tmp_path / "js" / "j.json").read_text())["status"] == "running"
+    assert len((tmp_path / "js" / "j.events.jsonl").read_text().splitlines()) == 1
+
+
+def test_delete_removes_job_and_persisted_files(tmp_path):
+    d = tmp_path / "js"
+    s = JobStore(persist_dir=d)
+    s.create("j", {})
+    s.push_event("j", {"type": "x"})
+    assert (d / "j.json").exists()
+    assert (d / "j.events.jsonl").exists()
+
+    assert s.delete("j") is True
+    assert s.get("j") is None
+    assert s.get_events("j", after_seq=-1) == []
+    assert not (d / "j.json").exists()
+    assert not (d / "j.events.jsonl").exists()
+
+    assert s.delete("missing") is False
 
 
 async def test_approval_approve(store):

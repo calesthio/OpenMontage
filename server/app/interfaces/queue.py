@@ -9,8 +9,11 @@ call-site changes (see interfaces/__init__.get_job_queue).
 from __future__ import annotations
 
 import asyncio
+import logging
 from abc import ABC, abstractmethod
 from typing import Any, Awaitable, Callable
+
+logger = logging.getLogger(__name__)
 
 
 class JobQueue(ABC):
@@ -43,4 +46,17 @@ class AsyncioJobQueue(JobQueue):
         loop = asyncio.get_event_loop()
         task = loop.create_task(coro_fn(*args, **kwargs))
         self._tasks.add(task)
-        task.add_done_callback(self._tasks.discard)
+        task.add_done_callback(self._on_task_done)
+
+    def _on_task_done(self, task: asyncio.Task) -> None:
+        self._tasks.discard(task)
+        # run_pipeline_job is currently the only caller and already catches
+        # everything internally, but that safety net lives entirely in that
+        # one call site — a future second caller of enqueue() whose coroutine
+        # raises would otherwise fail silently (asyncio only logs an
+        # unretrieved-exception warning if the Task is GC'd, not reliably).
+        if task.cancelled():
+            return
+        exc = task.exception()
+        if exc is not None:
+            logger.error("Unhandled exception in queued job", exc_info=exc)

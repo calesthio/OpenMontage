@@ -12,12 +12,15 @@ sites. Selection is centralized here so the rest of the app stays impl-agnostic.
 
 from __future__ import annotations
 
+import logging
 import os
 from functools import lru_cache
 
 from app.interfaces.auth import AuthProvider, PassphraseAuth
 from app.interfaces.queue import AsyncioJobQueue, JobQueue
 from app.interfaces.storage import LocalStorage, StorageBackend
+
+logger = logging.getLogger(__name__)
 
 # Registries — extend by adding an adapter class here.
 _STORAGE = {"local": LocalStorage}
@@ -32,18 +35,24 @@ _AUTH_ROADMAP = ["oauth", "sso"]
 @lru_cache(maxsize=1)
 def get_storage() -> StorageBackend:
     key = os.environ.get("OM_STORAGE_BACKEND", "local").lower()
+    if key not in _STORAGE:
+        logger.warning("Unknown OM_STORAGE_BACKEND=%r; falling back to 'local'", key)
     return _STORAGE.get(key, LocalStorage)()
 
 
 @lru_cache(maxsize=1)
 def get_job_queue() -> JobQueue:
     key = os.environ.get("OM_JOB_QUEUE", "asyncio").lower()
+    if key not in _QUEUES:
+        logger.warning("Unknown OM_JOB_QUEUE=%r; falling back to 'asyncio'", key)
     return _QUEUES.get(key, AsyncioJobQueue)()
 
 
 @lru_cache(maxsize=1)
 def get_auth_provider() -> AuthProvider:
     key = os.environ.get("OM_AUTH_PROVIDER", "passphrase").lower()
+    if key not in _AUTH:
+        logger.warning("Unknown OM_AUTH_PROVIDER=%r; falling back to 'passphrase'", key)
     return _AUTH.get(key, PassphraseAuth)()
 
 

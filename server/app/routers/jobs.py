@@ -10,8 +10,9 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, field_validator
 
-from app.store import job_store
-from app.runner.stage_runner import run_pipeline_job
+from app.store import job_store, TERMINAL_STATUSES
+from app.pipeline_catalog import list_manifest_names
+from app.runner.stage_runner import run_pipeline_job, _resolve_stages, PIPELINE_MAP
 from app.interfaces import get_job_queue
 
 OM_ROOT = Path(__file__).parent.parent.parent.parent
@@ -71,6 +72,14 @@ class SaveArtifactRequest(BaseModel):
 
 @router.post("", status_code=201)
 async def create_job(req: CreateJobRequest):
+    # Without this, an unknown pipeline name silently fell back to cinematic's
+    # stages deep inside _resolve_stages — the job would run, just not the
+    # pipeline the caller asked for, with no error until someone noticed the
+    # wrong stages in the output. PIPELINE_MAP contributes aliases like
+    # "marketing_film" that aren't manifest files but are still valid.
+    valid_pipelines = set(list_manifest_names()) | set(PIPELINE_MAP)
+    if req.pipeline not in valid_pipelines:
+        raise HTTPException(400, f"Unknown pipeline: {req.pipeline!r}")
     job_id = str(uuid.uuid4())
     job_store.create(job_id, req.model_dump())
     get_job_queue().enqueue(run_pipeline_job, job_id, req.model_dump())
@@ -107,6 +116,13 @@ async def save_artifact(job_id: str, req: SaveArtifactRequest):
     job = job_store.get(job_id)
     if not job:
         raise HTTPException(404, "Job not found")
+    # req.stage is already confirmed to be a safe filesystem identifier (see
+    # _validate_stage above) — this checks it's also a REAL stage of the
+    # job's own pipeline, not just any safe-looking string, so a typo'd or
+    # made-up stage name doesn't get silently written and 200'd.
+    valid_stages = {s["name"] for s in _resolve_stages(job.get("pipeline", "cinematic"))}
+    if req.stage not in valid_stages:
+        raise HTTPException(400, f"{req.stage!r} is not a stage of this job's pipeline")
     project_name = job.get("project_name", job_id)
     artifacts_dir = OM_ROOT / "projects" / project_name / "artifacts"
     artifacts_dir.mkdir(parents=True, exist_ok=True)
@@ -142,3 +158,20 @@ async def retry_job(job_id: str):
         "options": job.get("options", {}),
     })
     return {"job_id": job_id, "status": "queued"}
+
+
+@router.delete("/{job_id}", status_code=204)
+async def delete_job(job_id: str):
+    """Remove a finished job's record — mirrors brands' delete pattern.
+
+    Restricted to terminal jobs (completed/failed) so a job's state can never
+    be ripped out from under the task that's still actively updating it —
+    same reasoning as retry_job's status guard above.
+    """
+    job = job_store.get(job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+    if job.get("status") not in TERMINAL_STATUSES:
+        raise HTTPException(400, "Only completed or failed jobs can be deleted")
+    job_store.delete(job_id)
+    return None

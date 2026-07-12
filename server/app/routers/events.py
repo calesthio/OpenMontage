@@ -3,7 +3,7 @@
 import asyncio
 import json
 import time
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
 from app.store import job_store, TERMINAL_STATUSES
@@ -13,6 +13,12 @@ router = APIRouter()
 
 @router.get("/{job_id}/events")
 async def job_events(job_id: str, lastEventId: int = -1):
+    # GET /jobs/{id} 404s for an unknown job; this endpoint silently opened an
+    # empty 200 stream for the same case instead — check up front so the two
+    # stay consistent for a client that doesn't yet know whether job_id is real.
+    if job_store.get(job_id) is None:
+        raise HTTPException(404, "Job not found")
+
     async def generator():
         seq = lastEventId
         last_type = None

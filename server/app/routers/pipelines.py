@@ -1,8 +1,12 @@
 """Pipeline catalogue — lists the engine's runnable pipelines for the UI."""
 
+import logging
+
 from fastapi import APIRouter, HTTPException
 
 router = APIRouter()
+
+logger = logging.getLogger(__name__)
 
 
 @router.get("")
@@ -15,6 +19,7 @@ async def list_pipelines_endpoint():
         try:
             m = load_manifest(name)
         except Exception:
+            logger.warning("Failed to load pipeline manifest %r", name, exc_info=True)
             continue
         stages = m.get("stages", [])
         out.append({

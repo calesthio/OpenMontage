@@ -78,6 +78,21 @@ def test_job_create_list_get(client):
     assert client.get("/jobs/does-not-exist").status_code == 404
 
 
+def test_create_job_rejects_unknown_pipeline(client):
+    # Regression: any pipeline string was accepted at creation time and
+    # silently fell back to cinematic's stages deep inside _resolve_stages —
+    # the job ran, just not the pipeline the caller asked for.
+    r = client.post("/jobs", json=_new_job_body(pipeline="not-a-real-pipeline"))
+    assert r.status_code == 400
+
+
+def test_create_job_accepts_pipeline_map_alias(client):
+    # "marketing_film" is a real alias (app.runner.stage_runner.PIPELINE_MAP)
+    # but not a pipeline_defs/*.yaml manifest — validation must accept it too.
+    r = client.post("/jobs", json=_new_job_body(pipeline="marketing_film"))
+    assert r.status_code == 201
+
+
 def test_retry_requires_failed(client):
     jid = client.post("/jobs", json=_new_job_body()).json()["job_id"]
     # freshly queued → cannot retry
@@ -115,6 +130,26 @@ def test_save_artifact_writes_file(client, tmp_path):
     written = tmp_path / "projects" / "p1" / "artifacts" / "script.json"
     assert written.exists()
     assert client.post("/jobs/nope/artifact", json={"stage": "s", "content": {}}).status_code == 404
+
+
+def test_save_artifact_rejects_stage_not_in_jobs_pipeline(client):
+    # Regression: any safe-looking identifier was accepted as `stage` and
+    # silently written + 200'd, even if it wasn't a real stage of the job's
+    # own pipeline (e.g. a typo, or a stage name from a different pipeline).
+    jid = client.post("/jobs", json=_new_job_body(project_name="p1b", pipeline="cinematic")).json()["job_id"]
+    r = client.post(f"/jobs/{jid}/artifact", json={"stage": "not_a_real_stage", "content": {}})
+    assert r.status_code == 400
+
+
+def test_delete_job_requires_terminal_status(client):
+    jid = client.post("/jobs", json=_new_job_body()).json()["job_id"]
+    # freshly queued → not terminal, cannot delete
+    assert client.delete(f"/jobs/{jid}").status_code == 400
+    jobs.job_store.update(jid, status="completed")
+    r = client.delete(f"/jobs/{jid}")
+    assert r.status_code == 204
+    assert client.get(f"/jobs/{jid}").status_code == 404
+    assert client.delete("/jobs/nope").status_code == 404
 
 
 # ── security: path traversal via project_name / stage ────────────────────────
@@ -188,6 +223,24 @@ def test_reference_image_upload_resizes_and_records_path(client, tmp_path):
 
     saved = tmp_path / "brand_kits" / kid / "reference.png"
     assert saved.exists()
+
+
+def test_delete_brand_kit_removes_entire_directory(client, tmp_path):
+    # Regression: DELETE only unlinked kit.json, leaving reference.png (and
+    # the kit directory itself) on disk forever — and still publicly
+    # servable via the /brand-media static mount, which has no existence
+    # check tied to kit.json.
+    kid = client.post("/brands", json={"brand_name": "Rabbit TV"}).json()["kit_id"]
+    client.post(
+        f"/brands/{kid}/reference-image",
+        files={"file": ("ref.png", _tiny_png_bytes(), "image/png")},
+    )
+    kit_dir = tmp_path / "brand_kits" / kid
+    assert kit_dir.exists()
+    assert (kit_dir / "reference.png").exists()
+
+    assert client.delete(f"/brands/{kid}").status_code == 204
+    assert not kit_dir.exists()
 
 
 def test_reference_image_upload_flattens_transparency_onto_white(client, tmp_path):

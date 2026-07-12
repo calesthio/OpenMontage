@@ -5,6 +5,7 @@ from __future__ import annotations
 import io
 import json
 import re
+import shutil
 import time
 import uuid
 from pathlib import Path
@@ -138,7 +139,11 @@ async def delete_brand_kit(kit_id: str):
     p = _kit_path(kit_id)
     if not p.exists():
         raise HTTPException(404, "Brand kit not found")
-    p.unlink()
+    # Remove the whole kit directory, not just kit.json — reference.png (and
+    # anything else written under it) would otherwise stay on disk forever
+    # AND stay publicly servable via the /brand-media mount, which has no
+    # existence check tied to kit.json.
+    shutil.rmtree(p.parent)
     return None
 
 

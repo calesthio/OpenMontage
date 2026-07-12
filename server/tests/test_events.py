@@ -125,8 +125,12 @@ def test_old_terminal_event_mid_history_does_not_truncate_the_replay(client):
     assert len(evs) == 6
 
 
-def test_unknown_job_closes_immediately(client):
+def test_unknown_job_returns_404_instead_of_an_empty_stream(client):
+    # Regression: this endpoint used to open a 200 empty SSE stream for a
+    # nonexistent job_id, inconsistent with GET /jobs/{id} which 404s for the
+    # same case.
     c, _ts = client
     with c.stream("GET", "/jobs/does-not-exist/events") as resp:
         evs = _read_events(resp)
+    assert resp.status_code == 404
     assert evs == []

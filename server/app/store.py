@@ -11,11 +11,15 @@ from __future__ import annotations
 
 import asyncio
 import bisect
+import concurrent.futures
 import json
+import logging
 import threading
 import time
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 # Cap the retained per-job in-memory event ring so a long-running job can't grow
 # the buffer without bound. Reconnecting clients still get recent events; the
@@ -43,6 +47,16 @@ class JobStore:
         self._lock = threading.RLock()
         self._persist_dir = persist_dir or _PERSIST_DIR
         self._persist_dir.mkdir(parents=True, exist_ok=True)
+        # Disk writes triggered from create()/update()/push_event() would
+        # otherwise block whatever event loop called them (every route handler
+        # and the pipeline runner are async). A single worker keeps writes to
+        # the same job's files in submission order — the actual write only
+        # ever runs here when a loop is running (see _run_io); outside a loop
+        # (direct/script/test usage) there's nothing to block, so it runs
+        # inline and stays exactly as durable as before.
+        self._io_executor = concurrent.futures.ThreadPoolExecutor(
+            max_workers=1, thread_name_prefix="jobstore-io"
+        )
         self._load_all()
 
     # ---- Persistence helpers ----
@@ -53,24 +67,51 @@ class JobStore:
     def _events_path(self, job_id: str) -> Path:
         return self._persist_dir / f"{job_id}.events.jsonl"
 
+    def _run_io(self, fn, *args: Any) -> None:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            fn(*args)
+        else:
+            loop.run_in_executor(self._io_executor, fn, *args)
+
+    def _write_job_file(self, job_id: str, payload: str) -> None:
+        path = self._job_path(job_id)
+        tmp = path.with_suffix(".json.tmp")
+        try:
+            tmp.write_text(payload)
+            tmp.replace(path)   # atomic on POSIX
+        except OSError:
+            # Persistence is best-effort; never crash a job over disk I/O —
+            # but a silent failure here is exactly why a restart previously
+            # lost jobs mid-flight, so at least make it discoverable.
+            logger.warning("Failed to persist job %s to %s", job_id, path, exc_info=True)
+
     def _persist_job(self, job_id: str) -> None:
         job = self._jobs.get(job_id)
         if job is None:
             return
-        path = self._job_path(job_id)
-        tmp = path.with_suffix(".json.tmp")
+        payload = json.dumps(job, ensure_ascii=False, indent=2)
+        self._run_io(self._write_job_file, job_id, payload)
+
+    def _write_event_line(self, job_id: str, line: str) -> None:
+        path = self._events_path(job_id)
         try:
-            tmp.write_text(json.dumps(job, ensure_ascii=False, indent=2))
-            tmp.replace(path)   # atomic on POSIX
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(line)
         except OSError:
-            pass  # persistence is best-effort; never crash a job over disk I/O
+            logger.warning("Failed to append event for job %s to %s", job_id, path, exc_info=True)
 
     def _append_event_to_disk(self, job_id: str, event: dict) -> None:
+        line = json.dumps(event, ensure_ascii=False) + "\n"
+        self._run_io(self._write_event_line, job_id, line)
+
+    def _truncate_events_file(self, job_id: str) -> None:
+        path = self._events_path(job_id)
         try:
-            with open(self._events_path(job_id), "a", encoding="utf-8") as f:
-                f.write(json.dumps(event, ensure_ascii=False) + "\n")
+            path.write_text("")
         except OSError:
-            pass
+            logger.warning("Failed to reset events log for job %s at %s", job_id, path, exc_info=True)
 
     def _load_all(self) -> None:
         for job_file in sorted(self._persist_dir.glob("*.json")):
@@ -124,10 +165,7 @@ class JobStore:
             self._event_seq[job_id] = 0
             self._approval_events[job_id] = asyncio.Event()
             # Start a fresh events log for this job.
-            try:
-                self._events_path(job_id).write_text("")
-            except OSError:
-                pass
+            self._run_io(self._truncate_events_file, job_id)
             self._persist_job(job_id)
 
     def all(self) -> dict[str, dict]:
@@ -143,6 +181,25 @@ class JobStore:
             if job_id in self._jobs:
                 self._jobs[job_id].update(kwargs)
                 self._persist_job(job_id)
+
+    def delete(self, job_id: str) -> bool:
+        """Remove a job's in-memory state and its persisted files. Returns
+        False if the job doesn't exist so callers can 404 without a redundant
+        get() first."""
+        with self._lock:
+            if job_id not in self._jobs:
+                return False
+            del self._jobs[job_id]
+            self._events.pop(job_id, None)
+            self._event_seq.pop(job_id, None)
+            self._approval_events.pop(job_id, None)
+            self._approval_results.pop(job_id, None)
+        for path in (self._job_path(job_id), self._events_path(job_id)):
+            try:
+                path.unlink(missing_ok=True)
+            except OSError:
+                logger.warning("Failed to remove persisted file %s for job %s", path, job_id, exc_info=True)
+        return True
 
     # ---- Events ----
 

@@ -13,3 +13,6 @@ Source of truth for what's been scripted/produced/posted. The live IG grid outra
 | 2026-07-02 | The handoff tax | HANDOFF | posted |
 | 2026-07-06 | The collection gap (late invoices / AR) | CASH | produced · awaiting review (Drive 7/6/26; zernio draft deleted per review-first directive) |
 | 2026-07-07 | Dead stock / dead capital (frozen inventory) | STOCK | produced · awaiting review (Drive 7/7/26) |
+| 2026-07-11 | The thirteenth month (admin burn / unpaid time) | MONTH | posted IG+FB (reel 10) |
+| 2026-07-12 | The fourth ring (missed restaurant calls) | RING | posted IG+FB (reel 11) |
+| 2026-07-13 | The empty chair (appointment no-shows / $150k-yr) | CHAIR | posted IG+FB (reel 12) |

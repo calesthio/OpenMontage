@@ -17,11 +17,12 @@ Everything you need to know about every provider in OpenMontage — setup instru
 | 5 | **~$0.03/image** | fal.ai | FLUX images + Kling/Veo/MiniMax video + Recraft — broad single-key image + video coverage |
 | 6 | **~$0.05/image** | OpenAI | GPT Image 2 images + OpenAI TTS |
 | 7 | **~$0.04/image** | Google Imagen | Imagen 4 images (shares the Google API key) |
-| 8 | **$12/month** | Runway | Gen-4 video — highest quality AI video |
-| 9 | **pay-as-you-go** | HeyGen | Avatar videos, multi-model video gateway |
-| 10 | **pay-as-you-go** | Suno | Full song generation with vocals and lyrics |
-| 11 | **$0 + GPU** | Local video gen | WAN 2.1, Hunyuan, CogVideo, LTX — free, offline |
-| 12 | **$0 + GPU** | Local Diffusion | Stable Diffusion images — free, offline |
+| 8 | **pay-as-you-go** | Kling Official | Official direct Kling video, image, TTS, avatar, and lip-sync API, separate from fal.ai Kling |
+| 9 | **$12/month** | Runway | Gen-4 video — highest quality AI video |
+| 10 | **pay-as-you-go** | HeyGen | Avatar videos, multi-model video gateway |
+| 11 | **pay-as-you-go** | Suno | Full song generation with vocals and lyrics |
+| 12 | **$0 + GPU** | Local video gen | WAN 2.1, Hunyuan, CogVideo, LTX — free, offline |
+| 13 | **$0 + GPU** | Local Diffusion | Stable Diffusion images — free, offline |
 
 ### Environment Variable Summary
 
@@ -44,8 +45,16 @@ DOUBAO_SPEECH_VOICE_TYPE=    # Default Doubao speaker/voice type
 MIMO_API_KEY=                # Xiaomi MiMo V2.5 TTS (preset voices + style instructions)
 DASHSCOPE_API_KEY=           # Alibaba DashScope (Qwen image gen, TTS, ASR with word timestamps)
 
+# SPEECH-TO-TEXT (optional cloud transcription; local whisper is the default)
+AZURE_SPEECH_KEY=            # Azure AI Speech — Fast Transcription (word-level timestamps)
+AZURE_SPEECH_REGION=         # Speech resource region, e.g. eastus
+
 # MULTI-MODEL GATEWAY (one key, 6+ tools)
 FAL_KEY=                     # FLUX, Recraft, Kling, Veo, MiniMax video
+
+# KLING OFFICIAL DIRECT API
+KLING_API_KEY=               # Official Kling video, image, TTS, avatar, lip sync
+KLING_API_BASE_URL=          # Optional; default https://api-singapore.klingai.com
 
 # VIDEO
 HEYGEN_API_KEY=              # HeyGen avatar video gateway
@@ -172,6 +181,48 @@ No subscription — pure pay-as-you-go, no minimum spend.
 
 ---
 
+### Kling Official — Direct API
+
+> **Official Kling path.** This is separate from `kling_video` via fal.ai: it uses Kling's official `Authorization: Bearer <KLING_API_KEY>` API, provider name `kling_official`, and direct Classic/Turbo/Omni task protocols.
+
+**Tools unlocked:** `kling_official_video`, `kling_official_image`, `kling_tts`, `kling_avatar`, `kling_lip_sync`
+**Env vars:** `KLING_API_KEY`, optional `KLING_API_BASE_URL`
+
+#### Setup
+
+1. Create or open a Kling AI Open Platform account.
+2. Generate an official API key in the Kling API console.
+3. Add to `.env`:
+   ```bash
+   KLING_API_KEY=your-key-here
+   # Optional, defaults to Singapore:
+   KLING_API_BASE_URL=https://api-singapore.klingai.com
+   ```
+
+#### What It Is Best For
+
+- Direct official Kling API provenance rather than fal.ai gateway routing
+- Text-to-video, image-to-video, and deep Video Omni reference workflows via `kling_official_video`
+- Text-to-image, image edit/reference, and Image Omni multi-reference or series workflows via `kling_official_image`
+- Text-to-speech via `kling_tts` when you already know the official Kling `voice_id`
+- Cloud avatar presenter clips via `kling_avatar`, without replacing local `talking_head`
+- Cloud lip-sync via `kling_lip_sync`, with explicit face selection for multi-person videos
+- Accounts that need to use official Kling model permissions, resource packs, or regional endpoints
+
+#### Notes
+
+- `provider="kling_official"` is intentionally different from fal.ai's `provider="kling"`.
+- Official Kling is a paid remote API. OpenMontage uses conservative cost estimates and includes high-cost factors such as Omni references, series output, 4k mode, and native sound.
+- Local image paths are sent as raw base64 for supported Classic/image-generation fields. Turbo image-to-video requires a URL and will not silently upload through fal.ai.
+- Video Omni and Image Omni can pass official `element_id` references through `element_list`; Elements remain an internal Kling Official helper, not a standalone OpenMontage capability.
+- Account Usage is available as a low-frequency diagnostic helper under `tools/_kling/account.py`; it is not a selector or pipeline tool.
+- `callback_url` is passed through and recorded when supplied, but OpenMontage still polls tasks by default.
+- `kling_tts` requires an explicit `voice_id`; OpenMontage does not guess a default official voice.
+- `kling_avatar` and `kling_lip_sync` register under the existing `avatar` capability and coexist with local SadTalker/Wav2Lip tools. Current avatar pipelines must opt into them explicitly; registry discovery alone does not replace local tools.
+- Official Kling audio effects and video effects are documented but intentionally not registered as OpenMontage tools yet, because current pipelines do not have a stable sound-effects or video-effects capability slot for them.
+
+---
+
 ### ElevenLabs — Voice, Music, Sound Effects
 
 > **Premium voice quality.** Best TTS for narration-heavy videos. Also generates music and sound effects.
@@ -291,6 +342,54 @@ Synthesis text goes in the `assistant` message. Style instructions go in the opt
 #### Pricing
 
 MiMo has run promotional free periods for TTS. OpenMontage currently reports `estimate_cost = 0.0` and does not assume a stable paid rate — re-check the MiMo console before large batches.
+
+---
+
+### Azure AI Speech — Speech-to-Text
+
+> **Cloud transcription.** Azure AI Speech Fast Transcription turns local audio into text with word-level timestamps, speaker diarization, and multi-language identification — no GPU required. Optional: the local faster-whisper `transcriber` remains the default offline STT path. When `AZURE_SPEECH_KEY` is set, the agent prefers `azure_stt` for cloud transcription.
+
+**Tools unlocked:** `azure_stt`
+**Env vars:** `AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION` (or `AZURE_SPEECH_ENDPOINT`)
+
+#### Setup
+
+1. In the [Azure portal](https://portal.azure.com), create a **Speech** resource (Azure AI services → Speech service).
+2. Open the resource's **Keys and Endpoint** page.
+3. Copy **KEY 1** and the **Location/Region** (e.g. `eastus`).
+4. Add to `.env`:
+   ```bash
+   AZURE_SPEECH_KEY=your-speech-resource-key
+   AZURE_SPEECH_REGION=eastus
+   # AZURE_SPEECH_ENDPOINT=https://<custom>...  # optional, overrides region
+   ```
+
+#### API Notes
+
+OpenMontage uses the **Fast Transcription** REST endpoint, which accepts a local
+audio file directly (multipart upload) and returns a synchronous result — no
+Azure Blob storage, SAS URLs, or async job polling:
+
+```text
+POST https://{region}.api.cognitive.microsoft.com/speechtotext/transcriptions:transcribe?api-version=2024-11-15
+Ocp-Apim-Subscription-Key: ${AZURE_SPEECH_KEY}
+```
+
+For files longer than ~2 hours or bulk jobs, use Azure Batch Transcription instead (not wired into OpenMontage).
+
+#### What It Is Best For
+
+- Cloud transcription with word-level timestamps and no local GPU
+- Multi-language auto-detection across a candidate locale set
+- Speaker diarization without a HuggingFace token
+- Subtitle timing metadata that flows straight into `subtitle_gen`
+
+#### Pricing
+
+Azure AI Speech Standard (S0) bills speech-to-text by audio-hour (roughly
+$1.00/audio-hour at time of writing; a free F0 tier includes a limited monthly
+allowance). OpenMontage estimates cost from the transcribed audio duration. See
+[Azure AI Speech pricing](https://azure.microsoft.com/pricing/details/cognitive-services/speech-services/) for current rates.
 
 ---
 
@@ -833,6 +932,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **ElevenLabs** | `ELEVENLABS_API_KEY` | `elevenlabs_tts`, `music_gen` | Free tier + paid |
 | **Xiaomi MiMo** | `MIMO_API_KEY` | `mimo_tts` | Promotional / check console |
 | **fal.ai** | `FAL_KEY` | `flux_image`, `recraft_image`, `kling_video`, `veo_video`, `minimax_video` | Pay-as-you-go |
+| **Kling Official** | `KLING_API_KEY` | `kling_official_video`, `kling_official_image`, `kling_tts`, `kling_avatar`, `kling_lip_sync` | Pay-as-you-go |
 | **OpenAI** | `OPENAI_API_KEY` | `openai_tts`, `openai_image` | Paid only |
 | **xAI** | `XAI_API_KEY` | `grok_image`, `grok_video` | Paid only |
 | **Runway** | `RUNWAY_API_KEY` | `runway_video` | Free trial + paid |
@@ -851,14 +951,14 @@ How many providers cover each capability:
 
 | Capability | Cloud Providers | Local Providers | Free Options |
 |-----------|----------------|-----------------|--------------|
-| **Image Generation** | FLUX, Grok, Google Imagen, GPT Image 2, Recraft | Local Diffusion | Pexels, Pixabay (stock) |
-| **Video Generation** | Grok, Kling, Runway, Veo, Gemini Omni, Higgsfield, MiniMax, HeyGen | WAN, Hunyuan, CogVideo, LTX | Pexels, Pixabay (stock) |
-| **Text-to-Speech** | ElevenLabs, Google TTS, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier |
+| **Image Generation** | FLUX, Kling Official, Grok, Google Imagen, GPT Image 2, Recraft | Local Diffusion | Pexels, Pixabay (stock) |
+| **Video Generation** | Grok, Kling Official, Kling via fal.ai, Runway, Veo, Gemini Omni, Higgsfield, MiniMax, HeyGen | WAN, Hunyuan, CogVideo, LTX | Pexels, Pixabay (stock) |
+| **Text-to-Speech** | ElevenLabs, Google TTS, Kling Official, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier |
 | **Music Generation** | ElevenLabs, Suno, Google Lyria | — | ElevenLabs free tier |
 | **Post-Production** | — | FFmpeg (compose, stitch, trim, mix, enhance, grade) | All free |
 | **Analysis** | — | WhisperX, Scene Detect, Frame Sampler, CLIP/BLIP-2 | All free |
 | **Enhancement** | — | Upscale, BG Remove, Face Enhance, Face Restore | All free |
-| **Avatar** | — | SadTalker, Wav2Lip | All free |
+| **Avatar** | Kling Official | SadTalker, Wav2Lip | Local tools are free |
 
 ---
 

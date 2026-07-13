@@ -107,6 +107,38 @@ class VideoSelector(BaseTool):
                 "items": {"type": "string"},
                 "description": "Local reference image paths for providers that support reference-conditioned video.",
             },
+            "reference_video_url": {
+                "type": "string",
+                "description": "Reference video URL for providers that support video-conditioned generation.",
+            },
+            "reference_video_path": {
+                "type": "string",
+                "description": "Local reference video path. Providers that require URLs should reject this clearly.",
+            },
+            "image_list": {
+                "type": "array",
+                "description": "Provider-specific list of image references, e.g. Kling Official Video Omni.",
+            },
+            "video_list": {
+                "type": "array",
+                "description": "Provider-specific list of video references, e.g. Kling Official Video Omni.",
+            },
+            "element_list": {
+                "type": "array",
+                "description": "Provider-specific element references, e.g. Kling Official element_id objects.",
+            },
+            "multi_shot": {
+                "type": "boolean",
+                "description": "Provider-specific multi-shot mode.",
+            },
+            "shot_type": {
+                "type": "string",
+                "description": "Provider-specific multi-shot type.",
+            },
+            "multi_prompt": {
+                "type": "array",
+                "description": "Structured multi-shot prompts; not inferred from prose.",
+            },
             "image_url": {
                 "type": "string",
                 "description": "Alias for reference_image_url (used by some providers like Kling via fal.ai).",
@@ -114,6 +146,34 @@ class VideoSelector(BaseTool):
             "resolution": {
                 "type": "string",
                 "description": "Resolution hint for providers that support named output resolutions.",
+            },
+            "api_family": {
+                "type": "string",
+                "description": "Provider-specific API family hint passed through when supported, e.g. classic/turbo/omni.",
+            },
+            "model_name": {
+                "type": "string",
+                "description": "Provider-specific model name passed through when supported.",
+            },
+            "mode": {
+                "type": "string",
+                "description": "Provider-specific quality mode passed through when supported.",
+            },
+            "sound": {
+                "type": "string",
+                "description": "Provider-specific native audio toggle passed through when supported.",
+            },
+            "watermark": {
+                "type": "boolean",
+                "description": "Provider-specific watermark toggle passed through when supported.",
+            },
+            "callback_url": {
+                "type": "string",
+                "description": "Provider-specific callback URL. Current OpenMontage providers still poll by default.",
+            },
+            "external_task_id": {
+                "type": "string",
+                "description": "Provider-specific idempotency/provenance task id.",
             },
             "workflow_json": {
                 "type": "string",

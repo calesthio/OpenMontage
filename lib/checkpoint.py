@@ -106,8 +106,17 @@ def _validate_artifacts_for_stage(
     status: str,
     artifacts: dict[str, Any],
 ) -> None:
-    required_artifact = CANONICAL_STAGE_ARTIFACTS[stage]
-    if status in {"completed", "awaiting_human"} and required_artifact not in artifacts:
+    # Valid stages come from the pipeline manifest (get_pipeline_stages), which
+    # can declare stages beyond the 9 canonical ones (e.g. character-animation's
+    # `character_design`/`rig_plan`, screen-demo's `real_capture`). Those have no
+    # canonical artifact, so look it up defensively — a missing entry means the
+    # stage simply has no required artifact, not a crash.
+    required_artifact = CANONICAL_STAGE_ARTIFACTS.get(stage)
+    if (
+        required_artifact is not None
+        and status in {"completed", "awaiting_human"}
+        and required_artifact not in artifacts
+    ):
         raise CheckpointValidationError(
             f"Stage {stage!r} with status {status!r} must include "
             f"canonical artifact {required_artifact!r}"

@@ -1,7 +1,7 @@
 ---
 name: ai-video-gen
 description: |
-  Generate AI videos from text prompts using multiple provider gateways. Use when: (1) Generating videos from text descriptions, (2) Creating AI-generated video clips for content production, (3) Image-to-video generation with a reference image, (4) Choosing between video generation providers (VEO, Kling, Sora, Runway, Seedance, MiniMax, Gemini Omni). Supports gateways: HeyGen API, fal.ai API, and the Gemini API (Gemini Omni Flash).
+  Generate AI videos from text prompts using multiple provider gateways. Use when: (1) Generating videos from text descriptions, (2) Creating AI-generated video clips for content production, (3) Image-to-video generation with a reference image, (4) Choosing between video generation providers (VEO, Kling, Sora, Runway, Seedance, MiniMax, Gemini Omni). Supports gateways: HeyGen API, fal.ai API, Kling official direct API, and the Gemini API (Gemini Omni Flash).
 allowed-tools: mcp__heygen__*
 metadata:
   openclaw:
@@ -9,18 +9,20 @@ metadata:
       env_any:
         - HEYGEN_API_KEY
         - FAL_KEY
+        - KLING_API_KEY
         - GEMINI_API_KEY
         - GOOGLE_API_KEY
 ---
 
 # Video Generation (Multi-Gateway)
 
-Generate AI videos from text prompts. Supports multiple providers via two API gateways:
+Generate AI videos from text prompts. Supports multiple providers via four API paths:
 
 | Gateway | Env Variable | Providers | Tool |
 |---------|-------------|-----------|------|
 | **fal.ai** | `FAL_KEY` | **Seedance 2.0** (standard + fast), Kling v3/v2.1, MiniMax, VEO | `seedance_video`, `kling_video`, `minimax_video`, `veo_video` |
 | **HeyGen** | `HEYGEN_API_KEY` | VEO 3.1, Kling Pro, Sora v2, Runway Gen-4, Seedance Pro / Lite (1.x) | `heygen_video` |
+| **Kling Official** | `KLING_API_KEY` | Kling official Classic, Turbo, and basic Omni video | `kling_official_video` |
 | **Gemini API** | `GEMINI_API_KEY` / `GOOGLE_API_KEY` | Gemini Omni Flash (generation + conversational editing) | `gemini_omni_video` |
 
 **Iterative editing — Gemini Omni.** When the brief calls for *refining an existing clip* (add/remove objects, restyle, change lighting or on-screen text) rather than regenerating, Gemini Omni Flash is the only provider in the fleet with stateful multi-turn editing. See Layer 3 `gemini-omni` for the authoritative prompting guide (reference-image tags, timecode syntax, edit-prompt rules) before writing any prompt for it.
@@ -35,8 +37,12 @@ Use whichever configured gateway best matches the user's available providers and
 
 - **HeyGen:** Set `HEYGEN_API_KEY` to access the multi-model gateway.
 - **fal.ai:** Set `FAL_KEY` to access Kling, MiniMax, and Veo through fal.ai.
+- **Kling Official:** Set `KLING_API_KEY` to access Kling's official direct API via `provider="kling_official"`.
+- **Gemini API:** Set `GEMINI_API_KEY` or `GOOGLE_API_KEY` to access Gemini Omni video generation and conversational editing.
 
-Do not describe either gateway as the default or top choice without checking the registry and current task fit first.
+Do not describe any gateway as the default or top choice without checking the registry and current task fit first.
+
+fal.ai Kling (`kling_video`, `provider="kling"`) and Kling Official (`kling_official_video`, `provider="kling_official"`) are different paths. Do not reuse fal.ai queue URLs, `FAL_KEY`, or image upload behavior when the official provider is selected.
 
 ```bash
 curl -X POST "https://api.heygen.com/v1/workflows/executions" \

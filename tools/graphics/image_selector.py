@@ -61,6 +61,14 @@ class ImageSelector(BaseTool):
                 "type": "string",
                 "description": "Resolution tier for providers that support named resolutions.",
             },
+            "api_family": {
+                "type": "string",
+                "description": "Provider-specific API family hint passed through when supported.",
+            },
+            "model_name": {
+                "type": "string",
+                "description": "Provider-specific model name passed through when supported.",
+            },
             "generation_mode": {
                 "type": "string",
                 "enum": ["generate", "edit"],
@@ -78,6 +86,46 @@ class ImageSelector(BaseTool):
                 "type": "array",
                 "items": {"type": "string"},
                 "description": "Multiple local source image paths for compositing edits.",
+            },
+            "image_list": {
+                "type": "array",
+                "description": "Provider-specific image reference list, e.g. Kling Official Image Omni.",
+            },
+            "element_list": {
+                "type": "array",
+                "description": "Provider-specific element references, e.g. Kling Official element_id objects.",
+            },
+            "image_reference": {
+                "type": "string",
+                "description": "Provider-specific reference type, e.g. subject or face.",
+            },
+            "image_fidelity": {
+                "type": "number",
+                "description": "Provider-specific reference image fidelity hint.",
+            },
+            "human_fidelity": {
+                "type": "number",
+                "description": "Provider-specific human or face fidelity hint.",
+            },
+            "result_type": {
+                "type": "string",
+                "description": "Provider-specific result type, e.g. single or series.",
+            },
+            "series_amount": {
+                "type": "string",
+                "description": "Provider-specific series amount for image series generation.",
+            },
+            "watermark": {
+                "type": "boolean",
+                "description": "Provider-specific watermark toggle passed through when supported.",
+            },
+            "callback_url": {
+                "type": "string",
+                "description": "Provider-specific callback URL. Current OpenMontage providers still poll by default.",
+            },
+            "external_task_id": {
+                "type": "string",
+                "description": "Provider-specific idempotency/provenance task id.",
             },
             "preferred_provider": {
                 "type": "string",
@@ -216,6 +264,18 @@ class ImageSelector(BaseTool):
                 "image_path",
                 "image_urls",
                 "image_paths",
+                "image_list",
+                "element_list",
+                "api_family",
+                "model_name",
+                "image_reference",
+                "image_fidelity",
+                "human_fidelity",
+                "result_type",
+                "series_amount",
+                "watermark",
+                "callback_url",
+                "external_task_id",
                 "workflow_json",
                 "workflow_path",
                 "output_node",

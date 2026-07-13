@@ -19,7 +19,15 @@ function resolveAsset(src: string): string {
   }
   const clean = src.replace(/^file:\/\/\/?/, "");
   if (clean.startsWith("/") || /^[A-Za-z]:[/\\]/.test(clean)) {
-    return `file:///${clean.replace(/\\/g, "/")}`;
+    const posix = clean.replace(/\\/g, "/");
+    // POSIX absolute paths already have a leading "/" — file:// + posix
+    // gives exactly three slashes. Windows drive paths (C:/...) need the
+    // extra slash added explicitly. Do not merge these branches — adding
+    // "file:///" unconditionally double-slashes POSIX paths (file:////...).
+    if (posix.startsWith("/")) {
+      return `file://${posix}`;
+    }
+    return `file:///${posix}`;
   }
   return staticFile(clean);
 }

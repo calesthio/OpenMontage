@@ -1,6 +1,16 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { StatusBadge, EventRow, eventLabel, stageLabel, mediaUrl, type SseEvent } from "@/components/job-status";
+import {
+  StatusBadge, EventRow, eventLabel, stageLabel, mediaUrl,
+  EVENT_COLOR, EVENT_TYPE_LABELS, type SseEvent,
+} from "@/components/job-status";
+// The canonical backend event-type list, shared with the server suite —
+// server/tests/test_event_types.py asserts this fixture matches the actual
+// emit-site literals in stage_runner.py / tool_bridge.py / events.py, and
+// the test below asserts the frontend maps cover it. Together they make
+// backend↔frontend event-type drift a CI failure instead of a silent
+// muted-gray row (this drift recurred twice: commit 33a0273, then "warning").
+import eventsFixture from "../../schemas/events.json";
 
 function ev(partial: Partial<SseEvent>): SseEvent {
   return { seq: 0, type: "stage_started", ts: 0, ...partial };
@@ -80,6 +90,60 @@ describe("eventLabel precedence", () => {
 
     // Neither field present (e.g. a non-billed/local tool) — no dangling " · ".
     expect(eventLabel(ev({ type: "asset_ready", tool: "music_search" }))).toBe("素材生成完成: music_search");
+  });
+});
+
+describe("backend event-type contract (schemas/events.json)", () => {
+  it("maps every backend event type in EVENT_COLOR unless deliberately allowlisted as muted", () => {
+    // Regression: unmapped types render muted-gray with no Chinese label,
+    // indistinguishable from chatter — "warning" shipped that way, which
+    // defeated its purpose as a warning.
+    const mutedOk = new Set(eventsFixture.muted_ok);
+    const unmapped = eventsFixture.event_types.filter(
+      (t) => !(t in EVENT_COLOR) && !mutedOk.has(t)
+    );
+    expect(
+      unmapped,
+      "Backend event types with no EVENT_COLOR entry and not in muted_ok — " +
+        "either add them to EVENT_COLOR (and EVENT_TYPE_LABELS if they can " +
+        "arrive without a text field) in web/components/job-status.tsx, or " +
+        "add them to muted_ok in schemas/events.json if muted rendering is intentional"
+    ).toEqual([]);
+  });
+
+  it("keeps muted_ok honest — every entry genuinely has no EVENT_COLOR entry", () => {
+    // Without this, the allowlist could rot into covering types that are in
+    // fact mapped, silently weakening the assertion above.
+    const stale = eventsFixture.muted_ok.filter((t) => t in EVENT_COLOR);
+    expect(
+      stale,
+      "muted_ok entries that DO have an EVENT_COLOR entry — remove them from " +
+        "muted_ok in schemas/events.json"
+    ).toEqual([]);
+  });
+
+  it("gives every EVENT_TYPE_LABELS entry a colour too — a labelled type is never muted", () => {
+    // EVENT_TYPE_LABELS exists precisely for types that carry no text field;
+    // such a type showing up muted-gray is the exact defect this contract
+    // guards against, so a label without a colour is always a mistake.
+    const uncoloured = Object.keys(EVENT_TYPE_LABELS).filter((t) => !(t in EVENT_COLOR));
+    expect(uncoloured).toEqual([]);
+  });
+});
+
+describe("warning events", () => {
+  // Regression: the "warning" type (stage_runner.py's render_report
+  // path-divergence check) was unmapped — muted-gray, no Chinese label.
+  it("renders orange like the other attention-but-not-failure types", () => {
+    render(<EventRow ev={ev({ type: "warning", stage: "compose", message: "路径不一致" })} />);
+    expect(screen.getByText("[compose]").className).toContain("text-orange-400");
+  });
+
+  it("shows the backend message when present, and the Chinese label when not", () => {
+    // The current emit site always carries a message; the label is the
+    // safety net for any future no-message warning.
+    expect(eventLabel(ev({ type: "warning", message: "路径不一致" }))).toBe("路径不一致");
+    expect(eventLabel(ev({ type: "warning" }))).toBe("警告");
   });
 });
 

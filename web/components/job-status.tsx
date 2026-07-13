@@ -65,7 +65,12 @@ const STATUS_MAP: Record<string, { label: string; cls: string }> = {
 // accidentally change what an unknown status looks like.
 const NEUTRAL_STATUS_CLS = "bg-muted text-muted-foreground border-border";
 
-const EVENT_COLOR: Record<string, string> = {
+// Exported (along with EVENT_TYPE_LABELS below) so the contract test in
+// web/__tests__/job-status.test.tsx can assert every backend event type in
+// schemas/events.json is either mapped here or deliberately allowlisted as
+// muted — this drift class recurred twice (commit 33a0273 fixed 7 unmapped
+// types; "warning" was unmapped again after that).
+export const EVENT_COLOR: Record<string, string> = {
   stage_started: "text-blue-400", stage_completed: "text-green-400",
   tool_call: "text-purple-400", artifact_written: "text-cyan-400",
   asset_ready: "text-emerald-400", awaiting_approval: "text-yellow-400",
@@ -75,17 +80,26 @@ const EVENT_COLOR: Record<string, string> = {
   stage_retry: "text-orange-400", cost_updated: "text-slate-400",
   preview_ready: "text-emerald-400", job_cancelled: "text-slate-400",
   budget_exceeded: "text-red-400", budget_precall_block: "text-orange-400",
+  // warning: non-fatal anomaly (e.g. stage_runner.py's render_report
+  // path-divergence check) — orange like the other "attention but not
+  // failure" types (stage_retry, budget_precall_block), so it's visually
+  // distinct from muted chatter.
+  warning: "text-orange-400",
 };
 
 // Chinese labels for event types that never carry a summary/text/artifact/
 // message field from the backend (see server/app/runner/stage_runner.py and
 // tool_bridge.py) — without this, eventLabel's fallback chain bottoms out on
 // the raw English `type` string.
-const EVENT_TYPE_LABELS: Record<string, string> = {
+export const EVENT_TYPE_LABELS: Record<string, string> = {
   job_started: "任务开始", stage_skipped: "跳过阶段", stage_retry: "阶段重试",
   cost_updated: "费用更新", preview_ready: "预览就绪",
   budget_exceeded: "预算超限", budget_precall_block: "预算预检拦截",
   asset_ready: "素材生成完成", job_cancelled: "任务已取消",
+  // The only current "warning" emit site (stage_runner.py's render_report
+  // path-divergence check) always carries a message, so eventLabel shows
+  // that; this label is the safety net for any future no-message warning.
+  warning: "警告",
 };
 
 /** " · model · ¥cost" suffix, omitting whichever half is missing. Shared by

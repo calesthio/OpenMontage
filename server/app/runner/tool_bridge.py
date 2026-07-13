@@ -31,6 +31,14 @@ sys.path.insert(0, str(OM_ROOT))
 # separator at all.
 _SAFE_ARTIFACT_NAME = re.compile(r"^[A-Za-z0-9_-]+$")
 
+# read_file's per-result truncation cap. stage_runner.py derives its own
+# TOOL_RESULT_CHAR_CAP from this (READ_FILE_CHAR_CAP + headroom) — the outer
+# cap MUST stay strictly larger, or a near-cap file gets truncated twice and
+# the "[truncated — N total chars]" marker itself gets garbled mid-sentence.
+# Keeping the relationship in code (not prose) is the whole point of this
+# constant existing.
+READ_FILE_CHAR_CAP = 12000
+
 
 def _safe_relative_path(base: Path, relative: str) -> Path | None:
     """Resolve `relative` under `base`, returning it only if it actually stays
@@ -355,8 +363,8 @@ def execute_tool(
         if not path.exists():
             return f"ERROR: File not found: {args['path']}"
         content = path.read_text(encoding="utf-8")
-        if len(content) > 12000:
-            content = content[:12000] + f"\n\n[truncated — {len(content)} total chars]"
+        if len(content) > READ_FILE_CHAR_CAP:
+            content = content[:READ_FILE_CHAR_CAP] + f"\n\n[truncated — {len(content)} total chars]"
         return content
 
     elif name == "write_artifact":
@@ -526,7 +534,11 @@ def execute_tool(
                 entry_id = cost_tracker.estimate(
                     tool_name,
                     inputs.get("operation", "run"),
-                    float(tool.estimate_cost(inputs) or 0.0),
+                    # Reuse the budget gate's est_cost above rather than
+                    # re-calling estimate_cost — an estimator that isn't
+                    # perfectly pure would otherwise let the gate and the
+                    # ledger record two different numbers for the same call.
+                    est_cost,
                 )
                 cost_tracker.approve_tool(tool_name)
                 cost_tracker.reserve(entry_id)   # OBSERVE mode never raises

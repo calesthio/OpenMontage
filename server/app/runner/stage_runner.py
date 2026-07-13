@@ -28,7 +28,9 @@ load_dotenv(OM_ROOT / ".env")
 from openai import OpenAI
 
 from app.store import job_store
-from app.runner.tool_bridge import TOOL_SCHEMAS, execute_tool, BudgetExceededError, variant_slug
+from app.runner.tool_bridge import (
+    TOOL_SCHEMAS, execute_tool, BudgetExceededError, variant_slug, READ_FILE_CHAR_CAP,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -141,7 +143,15 @@ def _resolve_stages(pipeline_name: str) -> list[dict]:
         if stages:
             return stages
     except Exception:
-        pass
+        # Falling back to cinematic's stages here means the job RUNS, just
+        # not the pipeline the caller asked for — a corrupted/malformed
+        # manifest must at least be diagnosable from the logs. (The
+        # unknown-name case never reaches here; jobs.py validates the
+        # pipeline name at creation time.)
+        logger.warning(
+            "Failed to load pipeline manifest %r; falling back to cinematic stages",
+            pipeline_name, exc_info=True,
+        )
     return CINEMATIC_STAGES
 
 MAX_TURNS  = 20
@@ -232,12 +242,13 @@ class JobCancelled(Exception):
     every raise site below just signals "stop", it never sets status itself.
     """
 MAX_ROUNDS = 2   # bounded auto-retry when _run_agent_stage returns False (not the human reject loop, a separate mechanism below)
-# Cap each tool result appended to history. Must exceed tool_bridge.py's own
-# read_file cap (12000 chars) — otherwise a file near that size gets
-# truncated twice: once by read_file with a clean "[truncated — N total
+# Cap each tool result appended to history. Derived from tool_bridge's own
+# read_file cap so the strictly-greater relationship can't silently drift:
+# if this cap were <= READ_FILE_CHAR_CAP, a file near that size would get
+# truncated twice — once by read_file with a clean "[truncated — N total
 # chars]" marker, then re-sliced here mid-marker, producing a garbled nested
 # truncation notice instead of one clean one.
-TOOL_RESULT_CHAR_CAP = 13000
+TOOL_RESULT_CHAR_CAP = READ_FILE_CHAR_CAP + 1000
 
 
 def _emit(job_id: str, event: dict) -> None:

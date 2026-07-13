@@ -44,8 +44,8 @@ DOUBAO_SPEECH_API_KEY=       # Volcengine Doubao Speech TTS (strong Mandarin nar
 DOUBAO_SPEECH_VOICE_TYPE=    # Default Doubao speaker/voice type
 DASHSCOPE_API_KEY=           # Alibaba DashScope (Qwen image gen, TTS, ASR with word timestamps)
 
-# SPEECH-TO-TEXT (optional cloud transcription; local whisper is the default)
-AZURE_SPEECH_KEY=            # Azure AI Speech — Fast Transcription (word-level timestamps)
+# AZURE AI SPEECH (optional cloud STT + TTS; one key unlocks both directions)
+AZURE_SPEECH_KEY=            # Azure AI Speech — azure_stt (Fast Transcription) + azure_tts (neural narration)
 AZURE_SPEECH_REGION=         # Speech resource region, e.g. eastus
 
 # MULTI-MODEL GATEWAY (one key, 6+ tools)
@@ -340,6 +340,64 @@ For files longer than ~2 hours or bulk jobs, use Azure Batch Transcription inste
 Azure AI Speech Standard (S0) bills speech-to-text by audio-hour (roughly
 $1.00/audio-hour at time of writing; a free F0 tier includes a limited monthly
 allowance). OpenMontage estimates cost from the transcribed audio duration. See
+[Azure AI Speech pricing](https://azure.microsoft.com/pricing/details/cognitive-services/speech-services/) for current rates.
+
+---
+
+### Azure AI Speech — Text-to-Speech
+
+> **Cloud neural narration.** Azure neural TTS delivers high-quality multilingual voices with SSML prosody control and express-as styles — same Speech resource as `azure_stt`, so one key/region unlocks both directions. Optional: the local `piper_tts` remains the default offline TTS path. When `AZURE_SPEECH_KEY` is set, the agent may prefer `azure_tts` for cloud narration.
+
+**Tools unlocked:** `azure_tts`
+**Env vars:** `AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION` (or `AZURE_TTS_ENDPOINT`)
+
+#### Setup
+
+Identical to the STT setup above — the same Speech resource key and region work
+for both. If you already configured `azure_stt`, `azure_tts` is available now.
+
+```bash
+AZURE_SPEECH_KEY=your-speech-resource-key
+AZURE_SPEECH_REGION=eastus
+# AZURE_TTS_ENDPOINT=https://<region>.tts.speech.microsoft.com  # optional, overrides region
+```
+
+Note: the TTS host (`<region>.tts.speech.microsoft.com`) differs from the STT
+endpoint, so the optional override var is `AZURE_TTS_ENDPOINT`, not
+`AZURE_SPEECH_ENDPOINT`.
+
+#### API Notes
+
+OpenMontage uses the synchronous REST v1 endpoint with an SSML body — no token
+exchange, Blob storage, or job polling:
+
+```text
+POST https://{region}.tts.speech.microsoft.com/cognitiveservices/v1
+Ocp-Apim-Subscription-Key: ${AZURE_SPEECH_KEY}
+Content-Type: application/ssml+xml
+X-Microsoft-OutputFormat: audio-48khz-192kbitrate-mono-mp3
+```
+
+Voice shortlist aliases: `andrew` (default — warm, confident), `brandon`
+(deeper), `ava` (bright female), `guy` (authoritative), `jenny` (friendly). Any
+Azure voice short name is accepted verbatim. See the `azure-text-to-speech`
+skill for SSML `rate`/`pitch`/`style` guidance.
+
+#### What It Is Best For
+
+- High-quality neural narration on existing Azure credentials
+- Calm, confident explainer / founder-register delivery
+- Multilingual narration via the *Multilingual* voice family
+- Deterministic re-renders (fixed voice + SSML → identical audio)
+
+Not for: fully offline production (use `piper_tts`) or voice cloning (use
+`elevenlabs_tts`).
+
+#### Pricing
+
+Azure neural TTS Standard (S0) bills roughly **$16 per 1M characters** (a free
+F0 tier includes a limited monthly allowance). A 150-word narration segment
+costs about $0.015. OpenMontage estimates cost from character count. See
 [Azure AI Speech pricing](https://azure.microsoft.com/pricing/details/cognitive-services/speech-services/) for current rates.
 
 ---
@@ -879,6 +937,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **Pexels** | `PEXELS_API_KEY` | `pexels_image`, `pexels_video` | Free |
 | **Pixabay** | `PIXABAY_API_KEY` | `pixabay_image`, `pixabay_video` | Free |
 | **Piper** | — (install only) | `piper_tts` | Free |
+| **Azure AI Speech** | `AZURE_SPEECH_KEY` + `AZURE_SPEECH_REGION` | `azure_stt`, `azure_tts` | Free tier + paid |
 | **Google** | `GOOGLE_API_KEY` (or `GEMINI_API_KEY`) | `google_tts`, `google_imagen`, `google_music`, `gemini_omni_video`, `veo_video` | Free tier (TTS) + paid |
 | **ElevenLabs** | `ELEVENLABS_API_KEY` | `elevenlabs_tts`, `music_gen` | Free tier + paid |
 | **fal.ai** | `FAL_KEY` | `flux_image`, `recraft_image`, `kling_video`, `veo_video`, `minimax_video` | Pay-as-you-go |
@@ -903,7 +962,7 @@ How many providers cover each capability:
 |-----------|----------------|-----------------|--------------|
 | **Image Generation** | FLUX, Kling Official, Grok, Google Imagen, GPT Image 2, Recraft | Local Diffusion | Pexels, Pixabay (stock) |
 | **Video Generation** | Grok, Kling Official, Kling via fal.ai, Runway, Veo, Gemini Omni, Higgsfield, MiniMax, HeyGen | WAN, Hunyuan, CogVideo, LTX | Pexels, Pixabay (stock) |
-| **Text-to-Speech** | ElevenLabs, Google TTS, Kling Official, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier |
+| **Text-to-Speech** | Azure AI Speech, ElevenLabs, Google TTS, Kling Official, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier, Azure free tier |
 | **Music Generation** | ElevenLabs, Suno, Google Lyria | — | ElevenLabs free tier |
 | **Post-Production** | — | FFmpeg (compose, stitch, trim, mix, enhance, grade) | All free |
 | **Analysis** | — | WhisperX, Scene Detect, Frame Sampler, CLIP/BLIP-2 | All free |

@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
-import pytest
-
 from lib.remotion_asset_staging import (
+    _parse_file_uri,
     derive_staging_slug,
     stage_local_assets_for_remotion,
 )
@@ -95,7 +93,12 @@ def test_stage_leaves_existing_public_relative_paths(tmp_path):
     assert all(s["reason"] == "not_local_or_missing" for s in report["skipped"])
 
 
-def test_stage_file_uri_paths(tmp_path):
+def test_stage_file_uri_naive_concat(tmp_path):
+    """Regression: f'file://{path}' on Windows produces file://C:\\... .
+
+    The old strip-and-prepend-/ logic treated that as a POSIX-rooted path and
+    skipped staging. This is the failure CI hit on Windows.
+    """
     public = tmp_path / "public"
     audio = tmp_path / "voice.mp3"
     audio.write_bytes(b"ID3")
@@ -112,6 +115,64 @@ def test_stage_file_uri_paths(tmp_path):
 
     assert props["audio"]["narration"]["src"] == "uri-project/voice.mp3"
     assert (public / "uri-project" / "voice.mp3").exists()
+
+
+def test_stage_file_uri_pathlib_as_uri(tmp_path):
+    """Path.as_uri() produces file:///... on POSIX and file:///C:/... on Windows."""
+    public = tmp_path / "public"
+    audio = tmp_path / "voice.mp3"
+    audio.write_bytes(b"ID3")
+
+    props = {
+        "audio": {"narration": {"src": audio.resolve().as_uri()}},
+    }
+
+    stage_local_assets_for_remotion(
+        props,
+        public_dir=public,
+        project_slug="uri-project",
+    )
+
+    assert props["audio"]["narration"]["src"] == "uri-project/voice.mp3"
+    assert (public / "uri-project" / "voice.mp3").exists()
+
+
+def test_parse_file_uri_posix_form():
+    parsed = _parse_file_uri("file:///Users/me/projects/voice.mp3")
+    assert parsed is not None
+    assert parsed.name == "voice.mp3"
+
+
+def test_parse_file_uri_windows_drive_triple_slash():
+    """file:///C:/Users/me/voice.mp3 — RFC-style Windows drive URI."""
+    parsed = _parse_file_uri("file:///C:/Users/me/voice.mp3")
+    assert parsed is not None
+    assert parsed.name == "voice.mp3"
+    text = str(parsed)
+    assert text.startswith("C:")
+    assert "Users" in parsed.parts
+    # Must NOT stay POSIX-rooted /C:/...
+    assert not text.startswith("/C:")
+
+
+def test_parse_file_uri_windows_drive_as_authority():
+    """file://C:/Users/me/voice.mp3 — drive letter in netloc."""
+    parsed = _parse_file_uri("file://C:/Users/me/voice.mp3")
+    assert parsed is not None
+    assert parsed.name == "voice.mp3"
+    assert str(parsed).startswith("C:")
+
+
+def test_parse_file_uri_windows_naive_backslashes():
+    """file://C:\\Users\\me\\voice.mp3 — produced by f'file://{Path}' on Windows."""
+    parsed = _parse_file_uri(r"file://C:\Users\me\voice.mp3")
+    assert parsed is not None
+    assert parsed.name == "voice.mp3"
+    text = str(parsed)
+    assert text.startswith("C:")
+    # Must NOT be POSIX-rooted /C:\...
+    assert not text.startswith("/C:")
+    assert not text.startswith("/C:\\")
 
 
 def test_stage_disambiguates_basename_collision(tmp_path):

@@ -11,8 +11,10 @@ from __future__ import annotations
 import hashlib
 import re
 import shutil
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Any
+from urllib.parse import unquote, urlparse
+from urllib.request import url2pathname
 
 _REMOTE_PREFIXES = ("http://", "https://", "data:")
 
@@ -45,18 +47,100 @@ def _is_remote_asset(src: str) -> bool:
     return src.startswith(_REMOTE_PREFIXES)
 
 
+def _looks_like_windows_drive(path_text: str) -> bool:
+    """True for ``C:\\...``, ``C:/...``, or ``/C:/...`` drive paths."""
+    text = path_text.replace("\\", "/")
+    if text.startswith("/") and len(text) >= 3 and text[1].isalpha() and text[2] == ":":
+        text = text[1:]
+    return len(text) >= 2 and text[0].isalpha() and text[1] == ":"
+
+
+def _as_filesystem_path(path_text: str) -> Path:
+    """Build a ``Path`` from URI-derived text, normalizing Windows drive forms."""
+    if _looks_like_windows_drive(path_text):
+        # PureWindowsPath keeps drive + separators; as_posix() makes .name
+        # correct on POSIX hosts (where ``\\`` is not a separator).
+        text = path_text.replace("\\", "/")
+        if text.startswith("/") and len(text) >= 3 and text[1].isalpha() and text[2] == ":":
+            text = text[1:]
+        return Path(PureWindowsPath(text).as_posix())
+    return Path(path_text)
+
+
+def _parse_file_uri(uri: str) -> Path | None:
+    """Parse a ``file:`` URI into a filesystem ``Path`` (no existence check).
+
+    Handles common forms agents and tooling produce:
+
+    - POSIX: ``file:///Users/me/voice.mp3``
+    - Windows drive (RFC-ish): ``file:///C:/Users/me/voice.mp3``
+    - Windows drive as authority: ``file://C:/Users/me/voice.mp3``
+    - Windows drive (naive ``f"file://{path}"``): ``file://C:\\Users\\me\\voice.mp3``
+
+    Previously, stripping ``file://`` and prepending ``/`` turned
+    ``file://C:\\...`` into a POSIX-rooted ``/C:\\...`` path that never
+    existed on Windows — so staging silently skipped the asset.
+    """
+    if not uri.lower().startswith("file:"):
+        return None
+
+    parsed = urlparse(uri)
+    if parsed.scheme.lower() != "file":
+        return None
+
+    netloc = unquote(parsed.netloc or "")
+    path_part = unquote(parsed.path or "")
+
+    if netloc and netloc.lower() not in ("localhost",):
+        # Naive Windows URI file://C:\Users\... — urlparse (esp. on POSIX)
+        # may stuff the entire path into netloc with an empty path.
+        if not path_part and ("\\" in netloc or (len(netloc) >= 2 and netloc[1] in ":|")):
+            drive_path = (
+                netloc.replace("|", ":", 1)
+                if len(netloc) >= 2 and netloc[1] == "|"
+                else netloc
+            )
+            if _looks_like_windows_drive(drive_path):
+                return _as_filesystem_path(drive_path)
+
+        # Windows drive as authority: netloc="C:", path="/Users/..." or "\Users\..."
+        if len(netloc) == 2 and netloc[1] == ":":
+            return _as_filesystem_path(netloc + path_part)
+        if len(netloc) == 2 and netloc[1] == "|":
+            # Rare file://C|/path form
+            return _as_filesystem_path(netloc[0] + ":" + path_part)
+        # UNC / host form — uncommon for Remotion staging
+        return Path(f"//{netloc}{path_part}")
+
+    # file:///C:/Users/... → path="/C:/Users/..."
+    # file:///Users/...   → path="/Users/..."
+    if not path_part:
+        return None
+    try:
+        converted = url2pathname(path_part)
+    except (OSError, ValueError):
+        converted = path_part
+    return _as_filesystem_path(converted)
+
+
+def _file_uri_to_path(uri: str) -> Path | None:
+    """Convert a ``file://`` URI to an existing filesystem path, or None."""
+    candidate = _parse_file_uri(uri)
+    if candidate is None:
+        return None
+    try:
+        return candidate.resolve() if candidate.exists() else None
+    except OSError:
+        return None
+
+
 def _resolve_local_path(src: str) -> Path | None:
     """Return a filesystem path when *src* refers to local media."""
     if not src or _is_remote_asset(src):
         return None
 
-    if src.startswith("file://"):
-        raw = src[len("file://") :]
-        if raw.startswith("/"):
-            candidate = Path(raw)
-        else:
-            candidate = Path("/" + raw)
-        return candidate.resolve() if candidate.exists() else None
+    if src.lower().startswith("file:"):
+        return _file_uri_to_path(src)
 
     path = Path(src)
     if path.is_absolute():

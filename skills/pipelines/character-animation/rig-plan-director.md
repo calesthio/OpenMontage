@@ -1,3 +1,22 @@
+---
+name: rig-plan-director
+version: "1.0"
+inputs:
+  character_design:
+    type: string
+    required: true
+outputs:
+  rig_plan: string
+  pose_library: string
+steps:
+  - id: draft_rig
+    tool: svg_rig_builder
+    inputs: { character_design: "${inputs.character_design}" }
+  - id: draft_poses
+    tool: pose_library_builder
+    inputs: { character_design: "${inputs.character_design}" }
+---
+
 # Rig Plan Director - Character Animation Pipeline
 
 ## Goal

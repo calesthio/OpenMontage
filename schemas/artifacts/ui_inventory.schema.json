@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/ui_inventory",
+  "title": "UI Inventory",
+  "description": "Catalog of the screens and components found in a product's source-code repository. Supplementary artifact of the repo_analysis stage (alongside design_system). Ensures the agent inspects the actual UI code instead of planning around assumptions — the same inspected-not-assumed contract as source_media_review.",
+  "type": "object",
+  "required": ["version", "repo_path", "screens", "summary", "planning_implications"],
+  "properties": {
+    "version": { "type": "string", "const": "1.0" },
+    "repo_path": { "type": "string", "description": "Path of the analyzed repository" },
+    "screens": {
+      "type": "array",
+      "description": "Screens/pages found in the repo. Each must have been actually read, not guessed from file names.",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "source_files", "purpose", "reviewed"],
+        "properties": {
+          "id": { "type": "string", "description": "Stable slug used by scene_plan scenes to reference this screen (e.g. 'dashboard', 'signup-form')" },
+          "name": { "type": "string" },
+          "route": { "type": "string", "description": "URL route when derivable (e.g. '/settings/billing')" },
+          "source_files": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1,
+            "description": "Repo-relative paths of the files that implement this screen"
+          },
+          "purpose": { "type": "string", "description": "What the screen does for the user, stated from the code that was read" },
+          "ui_elements": {
+            "type": "array",
+            "description": "Notable elements on the screen — these become the assembling pieces in the animation",
+            "items": {
+              "type": "object",
+              "required": ["type", "label"],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["form", "input", "button", "table", "card", "nav", "chart", "modal", "list", "badge", "avatar", "toggle", "tabs", "other"]
+                },
+                "label": { "type": "string", "description": "The element's actual visible text/label from the source, when present" },
+                "source_file": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          },
+          "flagship_notes": { "type": "string", "description": "Why this screen is (or isn't) a hero surface for the video" },
+          "reviewed": {
+            "type": "boolean",
+            "const": true,
+            "description": "Must be true — the source was actually read, not assumed"
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "components": {
+      "type": "array",
+      "description": "Shared/reusable components worth replicating individually",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "source_file"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "source_file": { "type": "string" },
+          "kind": { "type": "string", "description": "e.g. 'form field', 'stat card', 'nav item'" },
+          "used_by_screens": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": false
+      }
+    },
+    "flagship_recommendations": {
+      "type": "array",
+      "description": "Which screens the video should feature, with reasoning — presented to the user at the repo_analysis gate",
+      "items": {
+        "type": "object",
+        "required": ["screen_id", "why"],
+        "properties": {
+          "screen_id": { "type": "string" },
+          "why": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "summary": {
+      "type": "string",
+      "description": "What the product's UI actually consists of — specific, from observation ('a 3-panel dashboard with a usage chart, an invoices table, and a team settings form'), not generic"
+    },
+    "planning_implications": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Concrete constraints or opportunities that must affect proposal/script/scene planning. Each item should be actionable.",
+      "minItems": 1
+    },
+    "metadata": { "type": "object" }
+  },
+  "additionalProperties": false
+}

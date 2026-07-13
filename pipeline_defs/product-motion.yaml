@@ -1,0 +1,251 @@
+name: product-motion
+version: "1.0"
+description: >
+  Repo-grounded product screen animations. Point the pipeline at a product's
+  source repository (web frontends: React/Next/Vue/Tailwind); it extracts the
+  real design system and UI inventory with per-token provenance
+  (repo_design_extractor + the repo-design-extraction skill), then re-authors
+  faithful replicas of the product's actual screens as a hand-authored
+  (atelier) composition — glassmorphic staging, forms and UI elements
+  assembling piece-by-piece with spring motion, and frame-accurate sound
+  effects (glass-ui-motion skill + sfx_gen). Truthfulness is enforced by a
+  provenance chain: design_system tokens cite repo file+line, ui_inventory
+  screens cite source files, replica assets carry provenance.source_files,
+  and the assets gate reviews per-scene snapshot stills against the sources.
+  Composition mode is atelier by default (per-product replicas are inherently
+  bespoke); runtime is chosen at proposal — Remotion for React/Next repos
+  (replicas are near-1:1 JSX ports), HyperFrames as the genuine alternative
+  for Vue/Nuxt or Tailwind-heavy markup.
+category: custom
+stability: beta
+default_checkpoint_policy: guided
+
+orchestration:
+  mode: executive-producer
+  skill: pipelines/product-motion/executive-producer
+  budget_default_usd: 2.00
+  max_revisions_per_stage: 3
+  max_send_backs: 3
+  max_wall_time_minutes: 30
+
+extensions:
+  custom_scripts: true
+  custom_playbooks: true
+  custom_skills: true
+  custom_tools: false
+
+required_skills:
+  - pipelines/product-motion/executive-producer
+  - pipelines/product-motion/repo-director
+  - pipelines/product-motion/proposal-director
+  - pipelines/product-motion/script-director
+  - pipelines/product-motion/scene-director
+  - pipelines/product-motion/asset-director
+  - pipelines/product-motion/edit-director
+  - pipelines/product-motion/compose-director
+  - pipelines/product-motion/publish-director
+  - meta/reviewer
+  - meta/checkpoint-protocol
+  - meta/bespoke-composition
+  - meta/taste-direction
+
+compatible_playbooks:
+  recommended: []
+  also_works: []
+  custom_allowed: true
+
+stages:
+  - name: repo_analysis
+    skill: pipelines/product-motion/repo-director
+    produces:
+      - design_system
+      - ui_inventory
+      - decision_log
+    required_tools:
+      - repo_design_extractor
+    tools_available:
+      - repo_design_extractor
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Every design_system token carries provenance (file, and line/key where possible)
+      - Spot-check 3 tokens against their cited repo files — values must match verbatim
+      - gaps[] honestly lists every derived/inferred value (glass spec, missing scales)
+      - Every ui_inventory screen has reviewed=true and source_files that exist in the repo
+      - ui_elements labels are the actual visible text from the source, not paraphrases
+      - flagship_recommendations give the user a real choice with reasoning
+    success_criteria:
+      - Schema-valid design_system artifact
+      - Schema-valid ui_inventory artifact
+      - User approved the flagship screens and the design read
+
+  - name: proposal
+    skill: pipelines/product-motion/proposal-director
+    required_artifacts_in:
+      - design_system
+      - ui_inventory
+    produces:
+      - proposal_packet
+      - decision_log
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Concepts feature the approved flagship screens, not invented surfaces
+      - Both composition runtimes presented with per-runtime tradeoffs (HARD RULE)
+      - composition_mode decision logged (atelier default, with cost/effort disclosure)
+      - Music and SFX plan surfaced with provider status and costs
+      - Itemized cost estimate covers TTS, music, SFX, and render
+    success_criteria:
+      - Schema-valid proposal_packet artifact
+      - decision_log has render_runtime_selection and composition_mode entries with options_considered
+
+  - name: script
+    skill: pipelines/product-motion/script-director
+    required_artifacts_in:
+      - proposal_packet
+    optional_artifacts_in:
+      - design_system
+      - ui_inventory
+    produces:
+      - script
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Narration beats map 1:1 to screens/moments from the approved concept
+      - Assembly moments (form building, cards arriving) are explicit script beats
+      - Claims about the product are supported by what the repo actually shows
+    success_criteria:
+      - Schema-valid script artifact
+      - Every section names the screen_id it narrates over
+
+  - name: scene_plan
+    skill: pipelines/product-motion/scene-director
+    required_artifacts_in:
+      - script
+    optional_artifacts_in:
+      - design_system
+      - ui_inventory
+    produces:
+      - scene_plan
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - One scene per flagship surface; every scene references a ui_inventory screen_id
+      - Element build order is semantic (container -> chrome -> fields -> content -> focus)
+      - Assembly beats fit inside their narration beat with a hold before each cut
+      - SFX intents follow the cue taxonomy and density cap
+    success_criteria:
+      - Schema-valid scene_plan artifact
+      - Every scene's required assets list the repo source files to replicate
+
+  - name: assets
+    skill: pipelines/product-motion/asset-director
+    required_artifacts_in:
+      - scene_plan
+      - design_system
+      - ui_inventory
+    optional_artifacts_in:
+      - script
+    produces:
+      - asset_manifest
+    required_tools:
+      - tts_selector
+    optional_tools:
+      - music_gen
+      - sfx_gen
+      - image_selector
+      - subtitle_gen
+    tools_available:
+      - tts_selector
+      - music_gen
+      - sfx_gen
+      - image_selector
+      - subtitle_gen
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - This is the FIDELITY GATE — per-scene snapshot stills reviewed against the repo sources
+      - Every replica snapshot asset carries provenance.source_files and provenance.design_tokens
+      - No hex/size literal in authored scenes that is not a design_system token (grep-audit)
+      - Replica structure matches the source (field order, labels, button copy)
+      - Narration sample approved before batch; SFX auditioned before cue wiring
+    success_criteria:
+      - Schema-valid asset_manifest artifact
+      - All referenced asset files exist on disk
+      - User approved the replica snapshots scene-by-scene
+
+  - name: edit
+    skill: pipelines/product-motion/edit-director
+    required_artifacts_in:
+      - scene_plan
+      - asset_manifest
+    optional_artifacts_in:
+      - script
+    produces:
+      - edit_decisions
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Scene order and timings match narration segment durations
+      - SFX cue sheet lands on computed settle frames and respects the density cap
+      - edit_decisions.bespoke block is complete (entry, composition_id, props_path, art_direction)
+      - render_runtime carried unchanged from proposal_packet
+    success_criteria:
+      - Schema-valid edit_decisions artifact
+      - Cue sheet references only asset_manifest sfx asset ids
+
+  - name: compose
+    skill: pipelines/product-motion/compose-director
+    required_artifacts_in:
+      - edit_decisions
+      - asset_manifest
+    optional_artifacts_in:
+      - scene_plan
+      - design_system
+    produces:
+      - render_report
+      - final_review
+    required_tools:
+      - video_compose
+      - audio_mixer
+    optional_tools:
+      - hyperframes_compose
+    tools_available:
+      - video_compose
+      - hyperframes_compose
+      - audio_mixer
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Output video is playable and crisp at target resolution (ffprobe verified)
+      - "render_runtime in edit_decisions matches proposal_packet — silent swap is a CRITICAL governance violation"
+      - Provenance spot-check — one token per scene verified against its cited repo file in the final frames
+      - SFX land on element-settle frames; narration/music mix is ducked and normalized
+      - Nothing is still moving at any scene cut
+    success_criteria:
+      - Schema-valid render_report artifact
+      - Output file exists and passes ffprobe validation
+      - final_review recorded before presenting to the user
+
+  - name: publish
+    skill: pipelines/product-motion/publish-director
+    required_artifacts_in:
+      - render_report
+      - final_review
+    optional_artifacts_in:
+      - proposal_packet
+    produces:
+      - publish_log
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Metadata names the product and its core promise accurately
+      - Export package is complete (video, metadata, thumbnail concept)
+    success_criteria:
+      - Schema-valid publish_log artifact
+      - Export directory contains video, metadata, and thumbnail concept

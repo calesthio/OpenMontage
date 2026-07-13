@@ -248,6 +248,7 @@ If the folder has tracks, the proposal and asset stages should present them as o
 | `animated-explainer` | Topic to fully generated explainer | production |
 | `talking-head` | Footage-led speaker videos | beta |
 | `screen-demo` | Screen recordings and walkthroughs | production |
+| `product-motion` | Repo-grounded product UI animations — glass surfaces, real forms/elements assembling with SFX | beta |
 | `clip-factory` | Many clips from one long source | beta |
 | `podcast-repurpose` | Podcast highlights and derivatives | beta |
 | `cinematic` | Trailer, teaser, and mood-led edits | production |
@@ -681,6 +682,7 @@ The `.agents/skills/` directory is large. When you're not coming in through a to
 | **Speech-to-text** | `speech-to-text` (whisper `transcriber` — default, offline), `azure-speech-to-text` (optional cloud STT — tool `azure_stt`, preferred when `AZURE_SPEECH_KEY` is set) |
 | **Avatar / lip-sync** | `avatar-video`, `heygen`, `create-video`, `faceswap`, `video-translate`, `agents` |
 | **Capture** | `playwright-recording` (browser flows), `ffmpeg` (post) |
+| **Product/repo grounding** | `repo-design-extraction` (design_system + ui_inventory from a source repo — tool `repo_design_extractor`), `glass-ui-motion` (truthful UI replicas, glass staging, assembly choreography, SFX cues — tool `sfx_gen`) |
 | **Visualization** | `beautiful-mermaid`, `d3-viz`, `manim-composer`, `manimce-best-practices`, `manimgl-best-practices` |
 | **Media editing** | `video-edit`, `video-download`, `video-understand`, `video-toolkit`, `visual-style` |
 

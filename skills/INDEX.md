@@ -177,6 +177,20 @@ Stage director skills teach the agent HOW to execute each pipeline stage. Each s
 | Compose Director | `pipelines/screen-demo/compose-director.md` | `compose` | Legibility-first render, crisp screen output, verification |
 | Publish Director | `pipelines/screen-demo/publish-director.md` | `publish` | Searchable metadata, chapter packaging, thumbnail concepts |
 
+### Product Motion Pipeline (`pipelines/product-motion/`) — v1.0
+
+| Skill | File | Stage | Key Capabilities |
+|-------|------|-------|-----------------|
+| **Executive Producer** | `pipelines/product-motion/executive-producer.md` | `all` | **8-stage orchestration, fidelity-first quality bar, provenance-chain enforcement** |
+| Repo Director | `pipelines/product-motion/repo-director.md` | `repo_analysis` | Repo scan, design_system + ui_inventory authoring, flagship recommendations |
+| Proposal Director | `pipelines/product-motion/proposal-director.md` | `proposal` | Concepts from real screens, both-runtimes presentation, atelier mode, music/SFX plan |
+| Script Director | `pipelines/product-motion/script-director.md` | `script` | Screen-mapped narration, assembly moments as beats, truthful claims |
+| Scene Director | `pipelines/product-motion/scene-director.md` | `scene_plan` | Element build order, assembly beats, SFX intents, glass staging plan |
+| Asset Director | `pipelines/product-motion/asset-director.md` | `assets` | Truthful replicas from source, tokens.ts, snapshot fidelity gate, SFX generation |
+| Edit Director | `pipelines/product-motion/edit-director.md` | `edit` | Timing map, settle-frame SFX cue sheet, bespoke render block |
+| Compose Director | `pipelines/product-motion/compose-director.md` | `compose` | Runtime-routed atelier render, provenance spot-check, post-mix |
+| Publish Director | `pipelines/product-motion/publish-director.md` | `publish` | Accurate product metadata, chapters, license trail |
+
 ### Clip Factory Pipeline (`pipelines/clip-factory/`) — v2.0
 
 | Skill | File | Stage | Key Capabilities |
@@ -314,6 +328,7 @@ Claude Code accesses them via symlinks in `.claude/skills/`.
 | **Diagrams** | `beautiful-mermaid`, `d3-viz` | `intellectronica/agent-skills`, `davila7/claude-code-templates` |
 | **Animation** | `framer-motion`, `lottie-bodymovin` | `pproenca/dot-skills`, `dylantarre/animation-principles` |
 | **Design** | `tailwind-design-system`, `web-design-guidelines`, `vercel-react-best-practices`, `vercel-composition-patterns` | `wshobson/agents`, `vercel-labs/agent-skills` |
+| **Product/Repo Grounding** | `repo-design-extraction` (design_system + ui_inventory from a source repo; tool `repo_design_extractor`), `glass-ui-motion` (truthful UI replicas, glass staging, assembly choreography, SFX cues; tool `sfx_gen`) | Local OpenMontage skills |
 | **AI Video (HeyGen)** | `heygen`, `avatar-video`, `create-video`, `faceswap`, `ai-video-gen`, `video-download`, `video-edit`, `video-translate`, `video-understand`, `visual-style` | `heygen-com/skills` |
 | **AI Video/Image/TTS/Avatar (Kling Official)** | `kling-official` - official direct API auth, Classic/Turbo/Omni task protocols, multi-reference Omni syntax, internal Elements/Account Usage helpers, callback notes, TTS voice parameters, avatar/lip-sync face selection, error handling, and cost governance for `kling_official_video` / `kling_official_image` / `kling_tts` / `kling_avatar` / `kling_lip_sync` | Local OpenMontage skill |
 | **AI Video (Premium)** | `seedance-2-0` — preferred premium default (cinematic, trailer, multi-shot, lip-sync, synced audio); accessed via `seedance_video` (fal.ai) or `heygen_video` Avatar Shots | Local OpenMontage skill |

@@ -126,6 +126,32 @@ async def test_writes_are_offloaded_but_still_land_when_a_loop_is_running(tmp_pa
     assert len((tmp_path / "js" / "j.events.jsonl").read_text().splitlines()) == 1
 
 
+def test_reset_events_log_truncates_disk_file_but_keeps_job(tmp_path):
+    # Regression: create() truncates events.jsonl once, but nothing reset it
+    # on retry, so every retry kept appending to the SAME on-disk file from
+    # the very first attempt onward with no cap.
+    d = tmp_path / "js"
+    s = JobStore(persist_dir=d)
+    s.create("j", {})
+    s.push_event("j", {"type": "a"})
+    s.push_event("j", {"type": "b"})
+    events_path = d / "j.events.jsonl"
+    assert len(events_path.read_text().splitlines()) == 2
+
+    s.reset_events_log("j")
+    assert events_path.read_text() == ""
+    # the job record itself is untouched
+    assert s.get("j") is not None
+
+
+def test_terminal_statuses_include_cancelled():
+    # Regression: "cancelled" is a new terminal status (added alongside the
+    # cancel endpoint) — anywhere completed/failed are checked together as
+    # terminal must recognize it too.
+    from app.store import TERMINAL_STATUSES
+    assert TERMINAL_STATUSES == {"completed", "failed", "cancelled"}
+
+
 def test_delete_removes_job_and_persisted_files(tmp_path):
     d = tmp_path / "js"
     s = JobStore(persist_dir=d)

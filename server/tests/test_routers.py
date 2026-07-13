@@ -164,6 +164,119 @@ def test_save_artifact_rejects_stage_not_in_jobs_pipeline(client):
     assert r.status_code == 400
 
 
+def test_create_job_rejects_duplicate_project_name_while_inflight(client):
+    # Regression: project_dir is keyed only by project_name with no
+    # uniqueness check — two in-flight jobs sharing the same project_name
+    # would concurrently write into the same artifacts/renders/ directory,
+    # corrupting whichever wrote last.
+    r1 = client.post("/jobs", json=_new_job_body(project_name="shared"))
+    assert r1.status_code == 201
+    first_id = r1.json()["job_id"]
+
+    r2 = client.post("/jobs", json=_new_job_body(project_name="shared"))
+    assert r2.status_code == 409
+    detail = r2.json()["detail"]
+    assert first_id in detail
+    assert "project name" in detail.lower()
+
+
+def test_create_job_allows_same_project_name_once_prior_job_terminal(client):
+    jid = client.post("/jobs", json=_new_job_body(project_name="reused")).json()["job_id"]
+    jobs.job_store.update(jid, status="completed")
+    r = client.post("/jobs", json=_new_job_body(project_name="reused"))
+    assert r.status_code == 201
+
+
+def test_create_job_allows_different_project_names_while_both_inflight(client):
+    r1 = client.post("/jobs", json=_new_job_body(project_name="p-a"))
+    r2 = client.post("/jobs", json=_new_job_body(project_name="p-b"))
+    assert r1.status_code == 201
+    assert r2.status_code == 201
+
+
+# ── cancel ───────────────────────────────────────────────────────────────────
+
+def test_cancel_not_found(client):
+    assert client.post("/jobs/nope/cancel").status_code == 404
+
+
+def test_cancel_queued_job_sets_flag_status_unchanged(client):
+    jid = client.post("/jobs", json=_new_job_body()).json()["job_id"]
+    r = client.post(f"/jobs/{jid}/cancel")
+    assert r.status_code == 200
+    assert r.json() == {"job_id": jid, "status": "queued"}
+    assert jobs.job_store.get(jid)["cancel_requested"] is True
+    # the actual terminal flip is the runner's job, not this endpoint's
+    assert jobs.job_store.get(jid)["status"] == "queued"
+
+
+def test_cancel_running_job_sets_flag_status_unchanged(client):
+    jid = client.post("/jobs", json=_new_job_body()).json()["job_id"]
+    jobs.job_store.update(jid, status="running")
+    r = client.post(f"/jobs/{jid}/cancel")
+    assert r.status_code == 200
+    assert r.json() == {"job_id": jid, "status": "running"}
+    assert jobs.job_store.get(jid)["cancel_requested"] is True
+
+
+def test_cancel_awaiting_approval_job_rejects_and_marks_cancelled(client):
+    # Reuses the existing reject plumbing (set_approval) verbatim, then sets
+    # the new terminal "cancelled" status directly so the caller gets a
+    # deterministic answer without waiting on the background runner.
+    jid = client.post("/jobs", json=_new_job_body()).json()["job_id"]
+    jobs.job_store.update(jid, status="awaiting_approval")
+    r = client.post(f"/jobs/{jid}/cancel")
+    assert r.status_code == 200
+    assert r.json() == {"job_id": jid, "status": "cancelled"}
+    assert jobs.job_store.get(jid)["status"] == "cancelled"
+
+
+def test_cancel_already_cancelled_job_returns_400(client):
+    jid = client.post("/jobs", json=_new_job_body()).json()["job_id"]
+    jobs.job_store.update(jid, status="cancelled")
+    assert client.post(f"/jobs/{jid}/cancel").status_code == 400
+
+
+def test_cancel_completed_or_failed_job_returns_400(client):
+    jid = client.post("/jobs", json=_new_job_body()).json()["job_id"]
+    jobs.job_store.update(jid, status="completed")
+    assert client.post(f"/jobs/{jid}/cancel").status_code == 400
+
+    jid2 = client.post("/jobs", json=_new_job_body(project_name="demo2")).json()["job_id"]
+    jobs.job_store.update(jid2, status="failed")
+    assert client.post(f"/jobs/{jid2}/cancel").status_code == 400
+
+
+def test_cancel_awaiting_approval_double_submit_gets_409(client):
+    # Mirrors test_approve_double_submit_gets_409_not_silently_dropped: a
+    # concurrent approve/reject call that already resolved the gate must not
+    # let cancel silently clobber it or look like a plain 404.
+    jid = client.post("/jobs", json=_new_job_body()).json()["job_id"]
+    jobs.job_store.update(jid, status="awaiting_approval")
+    assert jobs.job_store.set_approval(jid, "approve", "") is True
+
+    r = client.post(f"/jobs/{jid}/cancel")
+    assert r.status_code == 409
+
+
+# ── retry: on-disk events log ────────────────────────────────────────────────
+
+def test_retry_truncates_on_disk_events_log(client, tmp_path):
+    # Regression: create() truncates events.jsonl once, but retry_job never
+    # did, so every retry kept appending to the SAME file from the very
+    # first attempt onward with no cap on disk.
+    jid = client.post("/jobs", json=_new_job_body()).json()["job_id"]
+    jobs.job_store.push_event(jid, {"type": "stage_started"})
+    jobs.job_store.push_event(jid, {"type": "stage_completed"})
+    events_path = tmp_path / "js" / f"{jid}.events.jsonl"
+    assert len(events_path.read_text().splitlines()) == 2
+
+    jobs.job_store.update(jid, status="failed")
+    r = client.post(f"/jobs/{jid}/retry")
+    assert r.status_code == 200
+    assert events_path.read_text() == ""
+
+
 def test_delete_job_requires_terminal_status(client):
     jid = client.post("/jobs", json=_new_job_body()).json()["job_id"]
     # freshly queued → not terminal, cannot delete

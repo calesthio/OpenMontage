@@ -26,8 +26,11 @@ logger = logging.getLogger(__name__)
 # full history remains on disk in the JSONL log.
 MAX_EVENTS_PER_JOB = 5000
 
-TERMINAL_STATUSES = {"completed", "failed"}
-_INFLIGHT_STATUSES = {"queued", "running", "awaiting_approval"}
+TERMINAL_STATUSES = {"completed", "failed", "cancelled"}
+# Public (no leading underscore): reused by routers/jobs.py to detect an
+# in-flight job sharing a project_name with a new job request (see
+# create_job's uniqueness check).
+INFLIGHT_STATUSES = {"queued", "running", "awaiting_approval"}
 
 # Repo-root .jobstore/ — deliberately NOT under projects/, which is exposed via
 # the /media StaticFiles mount (persisting job records there would leak
@@ -113,6 +116,16 @@ class JobStore:
         except OSError:
             logger.warning("Failed to reset events log for job %s at %s", job_id, path, exc_info=True)
 
+    def reset_events_log(self, job_id: str) -> None:
+        """Truncate a job's on-disk events.jsonl so a fresh run starts clean.
+
+        Used by create() below and by routers/jobs.py's retry_job — a retry
+        is semantically a new run, so without this every retry kept
+        appending to the SAME on-disk file from the very first attempt
+        onward with no cap (only the in-memory ring buffer is capped).
+        """
+        self._run_io(self._truncate_events_file, job_id)
+
     def _load_all(self) -> None:
         for job_file in sorted(self._persist_dir.glob("*.json")):
             if job_file.name.endswith(".json.tmp"):
@@ -125,7 +138,7 @@ class JobStore:
             # A job left mid-flight when the process died is orphaned — no worker
             # is driving it anymore. Mark it failed so the UI offers retry (which
             # resumes from completed_stages).
-            if job.get("status") in _INFLIGHT_STATUSES:
+            if job.get("status") in INFLIGHT_STATUSES:
                 job["status"] = "failed"
                 job["interrupted"] = True
             self._jobs[job_id] = job
@@ -165,7 +178,7 @@ class JobStore:
             self._event_seq[job_id] = 0
             self._approval_events[job_id] = asyncio.Event()
             # Start a fresh events log for this job.
-            self._run_io(self._truncate_events_file, job_id)
+            self.reset_events_log(job_id)
             self._persist_job(job_id)
 
     def all(self) -> dict[str, dict]:

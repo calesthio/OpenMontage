@@ -10,7 +10,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, field_validator
 
-from app.store import job_store, TERMINAL_STATUSES
+from app.store import job_store, TERMINAL_STATUSES, INFLIGHT_STATUSES
 from app.pipeline_catalog import list_manifest_names
 from app.runner.stage_runner import run_pipeline_job, _resolve_stages, PIPELINE_MAP
 from app.interfaces import get_job_queue
@@ -80,6 +80,18 @@ async def create_job(req: CreateJobRequest):
     valid_pipelines = set(list_manifest_names()) | set(PIPELINE_MAP)
     if req.pipeline not in valid_pipelines:
         raise HTTPException(400, f"Unknown pipeline: {req.pipeline!r}")
+    # project_dir is keyed only by project_name (see save_artifact and
+    # stage_runner.py's project_dir) — two in-flight jobs sharing the same
+    # project_name would concurrently write into the same artifacts/renders/
+    # directory, corrupting whichever wrote last. Reject the second one at
+    # creation time instead.
+    for other_id, other in job_store.all().items():
+        if other.get("project_name") == req.project_name and other.get("status") in INFLIGHT_STATUSES:
+            raise HTTPException(
+                409,
+                f"another job is already using this project name (job {other_id}, "
+                f"status {other.get('status')}); pick a different name or wait for it to finish",
+            )
     job_id = str(uuid.uuid4())
     job_store.create(job_id, req.model_dump())
     get_job_queue().enqueue(run_pipeline_job, job_id, req.model_dump())
@@ -117,6 +129,39 @@ async def approve_stage(job_id: str, req: ApproveStageRequest):
             raise HTTPException(409, "This job's approval gate was already resolved by another request")
         raise HTTPException(404, "Job not found or not awaiting approval")
     return {"job_id": job_id, "action": req.action}
+
+
+@router.post("/{job_id}/cancel")
+async def cancel_job(job_id: str):
+    """Cancel a queued/running/awaiting_approval job. Returns 200 immediately.
+
+    - awaiting_approval: reuses the existing reject plumbing (set_approval)
+      verbatim to unblock the pipeline's wait_for_approval() call, then sets
+      status to the new terminal "cancelled" status directly so the caller
+      gets a deterministic answer without waiting on the background runner.
+    - queued/running: only flips a cancel_requested flag; the runner
+      (stage_runner.py) is responsible for noticing the flag and performing
+      the actual async flip to "cancelled" — status is returned unchanged.
+    - already terminal (completed/failed/cancelled): 400.
+    """
+    job = job_store.get(job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+    status = job.get("status")
+    if status in TERMINAL_STATUSES:
+        raise HTTPException(400, f"Job is already {status} and cannot be cancelled")
+    if status == "awaiting_approval":
+        ok = job_store.set_approval(job_id, "reject", "Cancelled by user")
+        if not ok:
+            # Lost a race with a concurrent approve/reject/cancel call that
+            # already resolved this job's approval gate.
+            raise HTTPException(409, "This job's approval gate was already resolved by another request")
+        job_store.update(job_id, status="cancelled", cancel_requested=True)
+        return {"job_id": job_id, "status": "cancelled"}
+    # queued or running: the terminal flip happens asynchronously once the
+    # runner notices cancel_requested.
+    job_store.update(job_id, cancel_requested=True)
+    return {"job_id": job_id, "status": status}
 
 
 @router.post("/{job_id}/artifact")
@@ -158,6 +203,10 @@ async def retry_job(job_id: str):
         raise HTTPException(404, "Job not found")
     if job.get("status") != "failed":
         raise HTTPException(400, "Only failed jobs can be retried")
+    # A retry is semantically a new run — start its on-disk event log fresh,
+    # same as create() does, so retrying repeatedly doesn't keep appending
+    # to the SAME events.jsonl from the very first attempt onward forever.
+    job_store.reset_events_log(job_id)
     job_store.update(job_id, status="queued")
     get_job_queue().enqueue(run_pipeline_job, job_id, {
         "project_name": job.get("project_name", job_id),
@@ -173,14 +222,14 @@ async def retry_job(job_id: str):
 async def delete_job(job_id: str):
     """Remove a finished job's record — mirrors brands' delete pattern.
 
-    Restricted to terminal jobs (completed/failed) so a job's state can never
-    be ripped out from under the task that's still actively updating it —
-    same reasoning as retry_job's status guard above.
+    Restricted to terminal jobs (completed/failed/cancelled) so a job's state
+    can never be ripped out from under the task that's still actively
+    updating it — same reasoning as retry_job's status guard above.
     """
     job = job_store.get(job_id)
     if not job:
         raise HTTPException(404, "Job not found")
     if job.get("status") not in TERMINAL_STATUSES:
-        raise HTTPException(400, "Only completed or failed jobs can be deleted")
+        raise HTTPException(400, "Only completed, failed, or cancelled jobs can be deleted")
     job_store.delete(job_id)
     return None

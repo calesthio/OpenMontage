@@ -2,6 +2,8 @@
 // logic (status → label/style, event → colour/label) is unit-testable without
 // the SSE-driven page shell.
 
+import { Button } from "@/components/ui/button";
+
 export type SseEvent = {
   seq: number;
   type: string;
@@ -137,6 +139,62 @@ export function mediaUrl(serverBase: string, path: string | null | undefined): s
   if (/^https?:\/\//i.test(path) || path.startsWith("//")) return path;   // already absolute
   const base = serverBase.endsWith("/") ? serverBase.slice(0, -1) : serverBase;
   return `${base}${path.startsWith("/") ? "" : "/"}${path}`;
+}
+
+/**
+ * Renders a job's render/preview video(s) — unifying what used to be two
+ * parallel code paths on the job detail page (one for the interim
+ * compose-stage preview, one for the final completed render), each hand-
+ * duplicating the singular-vs-A/B-variants branch. `urls` (the A/B variants
+ * dict, keyed by model-derived slug — see SseEvent.render_urls above) takes
+ * precedence when non-empty; `url` (the singular field) is the source of
+ * truth otherwise. `withDownload` gates the per-video download button, shown
+ * only for the final render, never the interim preview.
+ */
+export function VideoGallery({
+  serverBase,
+  url,
+  urls,
+  withDownload = false,
+}: {
+  serverBase: string;
+  url: string | null;
+  urls?: Record<string, string> | null;
+  withDownload?: boolean;
+}) {
+  // Matches the two call sites' previous inline spacing: the final-render
+  // grid item (video + label + download button) used space-y-2; the
+  // interim-preview grid item (video + label only) used space-y-1.
+  const itemSpacing = withDownload ? "space-y-2" : "space-y-1";
+
+  if (urls && Object.keys(urls).length > 0) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {Object.entries(urls).map(([slug, u]) => (
+          <div key={slug} className={itemSpacing}>
+            <video src={mediaUrl(serverBase, u) ?? undefined} controls className="w-full rounded-lg bg-black aspect-video" />
+            <span className="text-xs text-muted-foreground block">版本: {slug}</span>
+            {withDownload && (
+              <a href={mediaUrl(serverBase, u) ?? undefined} download>
+                <Button variant="outline" className="w-full">下载 MP4</Button>
+              </a>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <video src={mediaUrl(serverBase, url) ?? undefined} controls className="w-full rounded-lg bg-black aspect-video" />
+      {withDownload && (
+        <a href={mediaUrl(serverBase, url) ?? undefined} download>
+          <Button variant="outline" className="w-full">下载 MP4</Button>
+        </a>
+      )}
+    </>
+  );
 }
 
 export function StatusBadge({ status }: { status: string }) {

@@ -41,8 +41,28 @@ class EntryStatus(str, Enum):
 
 
 class BudgetExceededError(Exception):
-    """Raised when an operation would exceed the budget in cap mode."""
-    pass
+    """Raised when an operation would exceed the budget in cap mode.
+
+    Carries structured fields (tool_name, est_cost, projected_cny) in
+    addition to the message, so a catching caller — e.g.
+    server/app/runner/stage_runner.py's pre-call budget block — can build a
+    structured pause/resume payload instead of re-parsing the message
+    string. All three extras are optional keyword args so every existing
+    call site that only passes a message (e.g. CostTracker.reserve() below)
+    keeps working unchanged, and str(exc) still returns exactly `message`.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        tool_name: Optional[str] = None,
+        est_cost: Optional[float] = None,
+        projected_cny: Optional[float] = None,
+    ) -> None:
+        super().__init__(message)
+        self.tool_name = tool_name
+        self.est_cost = est_cost
+        self.projected_cny = projected_cny
 
 
 class ApprovalRequiredError(Exception):

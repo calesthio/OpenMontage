@@ -35,6 +35,22 @@ class FakeTool:
         return _FakeResult(cost_usd=self._cost, artifacts=[inputs.get("output_path", "")])
 
 
+class FakeToolWithSchema(FakeTool):
+    """FakeTool variant that declares an input_schema with a required field —
+    used to test the generic required-field guardrail. FakeTool itself has no
+    input_schema at all (by design), so it exercises the no-op path instead."""
+    input_schema = {"type": "object", "required": ["operation"]}
+
+
+class FakeMultiArtifactTool(FakeTool):
+    """FakeTool variant whose execute() returns multiple artifacts, like a
+    TTS tool emitting both an audio file and a metadata file."""
+
+    def execute(self, inputs):
+        self.executed_with = inputs
+        return _FakeResult(cost_usd=self._cost, artifacts=["audio.mp3", "metadata.json"])
+
+
 def _run_tool(project_dir, tool, monkeypatch, **kw):
     from tools import tool_registry
     monkeypatch.setattr(tool_registry.registry, "ensure_discovered", lambda *a, **k: None)
@@ -478,3 +494,149 @@ def test_cost_tracker_ledger_records(tmp_path, monkeypatch):
     _run_tool(tmp_path, tool, monkeypatch, cost_accumulator=[], cost_tracker=ct)
     assert ct.cost_snapshot()["total_spent_usd"] == 5.0
     assert (tmp_path / "cost_log.json").exists()
+
+
+def test_tool_call_and_asset_ready_events_carry_model_and_cost(tmp_path, monkeypatch):
+    # Regression: the live event log only ever showed "调用工具 maas_video" with
+    # no indication of which model or how much a call actually cost — an
+    # operator watching a real (paid) run had no way to tell what was
+    # generating without digging through inputs_preview's 80-char-truncated
+    # dump. tool_call's model is the agent's raw request (captured before
+    # _enforce_model_choice's autofill); asset_ready's model is the fully
+    # resolved one, alongside the real per-call cost.
+    events = []
+    from tools import tool_registry
+    monkeypatch.setattr(tool_registry.registry, "ensure_discovered", lambda *a, **k: None)
+    tool = FakeTool(capability="video_generation", cost=0.35)
+    monkeypatch.setattr(tool_registry.registry, "get", lambda name: tool)
+    args = {"tool_name": "maas_video", "inputs": {"prompt": "x", "operation": "t2v", "model": "leapfast/ltx-2.3"}}
+    execute_tool("run_openmontage_tool", args, tmp_path, emit_event=events.append)
+
+    tool_call = next(e for e in events if e["type"] == "tool_call")
+    assert tool_call["model"] == "leapfast/ltx-2.3"
+
+    asset_ready = next(e for e in events if e["type"] == "asset_ready")
+    assert asset_ready["model"] == "leapfast/ltx-2.3"
+    assert asset_ready["cost_cny"] == 0.35
+
+
+# ── compose variant tag: membership check (not just truthiness) ────────────
+
+def test_compose_rejects_invalid_variant_not_in_declared_list(tmp_path, monkeypatch):
+    # Regression: a typo'd/invented variant tag used to pass enforcement
+    # (only inputs.get("variant") truthiness was checked), run an expensive
+    # render, and only fail later in stage_runner's _missing_variants check —
+    # after money was already spent. Must now be rejected up front, mirroring
+    # _enforce_model_choice's membership check.
+    tool = FakeTool(capability="video_post")
+    from tools import tool_registry
+    monkeypatch.setattr(tool_registry.registry, "ensure_discovered", lambda *a, **k: None)
+    monkeypatch.setattr(tool_registry.registry, "get", lambda name: tool)
+    out = execute_tool(
+        "run_openmontage_tool",
+        {"tool_name": "video_compose", "inputs": {"operation": "compose", "variant": "leapfast/typo-model"}},
+        tmp_path,
+        options={"video_model_variants": ["leapfast/ltx-2.3", "leapfast/wan2.2"]},
+    )
+    assert "ERROR" in out
+    assert "leapfast/typo-model" in out
+    assert "leapfast/ltx-2.3" in out and "leapfast/wan2.2" in out
+    assert tool.executed_with is None  # rejected before the (paid) render
+
+
+# ── generic required-field validation ───────────────────────────────────────
+
+def test_missing_required_field_rejected_before_execute(tmp_path, monkeypatch):
+    # Confirmed exploitable live: a real agent call to video_compose omitted
+    # the tool's one schema-required field ("operation") twice, and nothing
+    # rejected it before tool.execute(inputs) was reached.
+    tool = FakeToolWithSchema(capability="video_post")
+    from tools import tool_registry
+    monkeypatch.setattr(tool_registry.registry, "ensure_discovered", lambda *a, **k: None)
+    monkeypatch.setattr(tool_registry.registry, "get", lambda name: tool)
+    out = execute_tool(
+        "run_openmontage_tool",
+        {"tool_name": "video_compose", "inputs": {}},
+        tmp_path,
+    )
+    assert out.startswith("ERROR:")
+    assert "missing required field" in out
+    assert "operation" in out
+    assert tool.executed_with is None
+
+
+def test_required_field_present_is_allowed(tmp_path, monkeypatch):
+    tool = FakeToolWithSchema(capability="video_post")
+    from tools import tool_registry
+    monkeypatch.setattr(tool_registry.registry, "ensure_discovered", lambda *a, **k: None)
+    monkeypatch.setattr(tool_registry.registry, "get", lambda name: tool)
+    out = execute_tool(
+        "run_openmontage_tool",
+        {"tool_name": "video_compose", "inputs": {"operation": "compose"}},
+        tmp_path,
+    )
+    assert json.loads(out)["success"] is True
+    assert tool.executed_with is not None
+
+
+def test_fake_tool_without_input_schema_is_unaffected_by_required_field_check(tmp_path, monkeypatch):
+    # FakeTool (used across most of this suite) never declares input_schema —
+    # getattr(tool, "input_schema", None) or {} must evaluate to {} for it, so
+    # the new guardrail is a complete no-op and every existing FakeTool-based
+    # test keeps passing unmodified.
+    tool = FakeTool(capability="video_generation")
+    from tools import tool_registry
+    monkeypatch.setattr(tool_registry.registry, "ensure_discovered", lambda *a, **k: None)
+    monkeypatch.setattr(tool_registry.registry, "get", lambda name: tool)
+    assert not hasattr(FakeTool, "input_schema")
+    out = execute_tool(
+        "run_openmontage_tool",
+        {"tool_name": "maas_video", "inputs": {}},
+        tmp_path,
+    )
+    assert json.loads(out)["success"] is True
+
+
+# ── asset_ready cost_cny: only on the last artifact of a multi-artifact call ─
+
+def test_asset_ready_cost_cny_only_on_last_artifact(tmp_path, monkeypatch):
+    # Regression: the whole call's cost_cny used to repeat identically on
+    # EVERY artifact_ready event for a multi-artifact call (e.g. a TTS tool
+    # emitting both an audio file and a metadata file). The underlying cost
+    # ledger accumulates correctly (once per call) — only the live
+    # per-artifact display misleadingly read as if the same money was spent
+    # once per artifact.
+    events = []
+    tool = FakeMultiArtifactTool(capability="tts", cost=1.25)
+    from tools import tool_registry
+    monkeypatch.setattr(tool_registry.registry, "ensure_discovered", lambda *a, **k: None)
+    monkeypatch.setattr(tool_registry.registry, "get", lambda name: tool)
+    execute_tool(
+        "run_openmontage_tool",
+        {"tool_name": "maas_tts", "inputs": {"text": "hi"}},
+        tmp_path,
+        emit_event=events.append,
+    )
+    asset_events = [e for e in events if e["type"] == "asset_ready"]
+    assert len(asset_events) == 2
+    assert "cost_cny" not in asset_events[0]
+    assert asset_events[1]["cost_cny"] == 1.25
+
+
+# ── BudgetExceededError: structured fields for cross-file contract ─────────
+
+def test_budget_exceeded_error_carries_structured_fields(tmp_path, monkeypatch):
+    # stage_runner.py's pre-call budget block needs tool_name/est_cost/
+    # projected_cny as structured attributes (not just baked into the message
+    # string) to build a structured pause/resume payload.
+    tool = FakeTool(capability="video_generation", cost=5.0)
+    acc = []
+    with pytest.raises(BudgetExceededError) as excinfo:
+        _run_tool(tmp_path, tool, monkeypatch, cost_accumulator=acc, budget_cny=10.0, base_cost=8.0)
+    exc = excinfo.value
+    assert exc.tool_name == "maas_video"
+    assert exc.est_cost == 5.0
+    assert exc.projected_cny == 13.0
+    # str(exc) must keep working for any existing caller that only cares
+    # about the message text.
+    assert "over budget" in str(exc)

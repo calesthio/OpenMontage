@@ -74,7 +74,15 @@ class VideoCompose(BaseTool):
 
     input_schema = {
         "type": "object",
-        "required": ["operation"],
+        # "operation" is NOT required here even though it's the schema's one
+        # semantically-obvious field: execute() below deliberately defaults it
+        # to "compose" (see the comment there for why). Listing it as required
+        # would make tool_bridge's generic required-field pre-validation
+        # reject the exact calls this tool is designed to accept without an
+        # explicit operation — reintroducing the KeyError-style bug that
+        # default was added to fix. Keep this empty/absent unless a genuinely
+        # non-defaulted field becomes required.
+        "required": [],
         "properties": {
             "operation": {
                 "type": "string",

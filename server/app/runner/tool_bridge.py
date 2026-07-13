@@ -52,7 +52,21 @@ try:
     from tools.cost_tracker import BudgetExceededError
 except Exception:  # pragma: no cover
     class BudgetExceededError(Exception):
-        pass
+        """Fallback mirroring tools.cost_tracker.BudgetExceededError's shape
+        (message + optional tool_name/est_cost/projected_cny) so callers don't
+        have to special-case which BudgetExceededError they caught."""
+
+        def __init__(
+            self,
+            message: str,
+            tool_name: str | None = None,
+            est_cost: float | None = None,
+            projected_cny: float | None = None,
+        ) -> None:
+            super().__init__(message)
+            self.tool_name = tool_name
+            self.est_cost = est_cost
+            self.projected_cny = projected_cny
 
 TOOL_SCHEMAS = [
     {
@@ -233,6 +247,13 @@ def _enforce_compose_variant_tag(
     actually a compose (not trim/stitch/etc.) — a single-variant (or
     non-A/B) job has nothing to collide with, so the existing permissive
     default-tag behavior is preserved there.
+
+    Also mirrors _enforce_model_choice's MEMBERSHIP check: a truthy
+    inputs["variant"] is not enough on its own — it must exactly match one
+    of the declared video_model_variants. Without this, a typo'd or
+    invented variant tag passed enforcement, ran an expensive render, and
+    only surfaced as a problem later (stage_runner.py's `_missing_variants`
+    check) after money was already spent.
     """
     if not options or tool is None:
         return None
@@ -246,8 +267,16 @@ def _enforce_compose_variant_tag(
     if not allowed or len(allowed) <= 1:
         return None
 
-    if inputs.get("variant"):
-        return None
+    requested = inputs.get("variant")
+    if requested:
+        if requested in allowed:
+            return None
+        return (
+            f"ERROR: variant {requested!r} is not one of this job's declared "
+            f"video_model_variants ({allowed}). An invalid variant tag would still "
+            "run an expensive render before failing later — retry with inputs.variant "
+            "set to one of the exact declared strings."
+        )
 
     return (
         f"ERROR: this job declares {len(allowed)} video_model_variants ({allowed}) — "
@@ -364,6 +393,11 @@ def execute_tool(
                 "tool": tool_name,
                 "summary": f"调用工具 {tool_name}",
                 "inputs_preview": {k: str(v)[:80] for k, v in inputs.items()},
+                # Surfaced separately from inputs_preview (which truncates to 80
+                # chars and isn't reliably keyed by the frontend) so the live log
+                # can show which model a generation call is actually using
+                # without the operator having to hunt through inputs_preview.
+                "model": inputs.get("model"),
             })
 
         from tools.tool_registry import registry
@@ -376,6 +410,23 @@ def execute_tool(
         tool = registry.get(tool_name)
         if not tool:
             return f"ERROR: Tool '{tool_name}' not found in registry"
+
+        # Generic required-field guardrail — confirmed exploitable live: a
+        # real agent call to video_compose omitted the tool's one
+        # schema-required field ("operation") twice, and nothing rejected it
+        # before tool.execute(inputs) was reached. Cheap check against the
+        # tool's own declared input_schema, before any paid call is made.
+        # `getattr(..., None) or {}` makes this a no-op for tools/test doubles
+        # that don't define input_schema at all (e.g. FakeTool in
+        # test_tool_bridge.py).
+        required = (getattr(tool, "input_schema", None) or {}).get("required") or []
+        missing = [f for f in required if f not in inputs]
+        if missing:
+            return (
+                f"ERROR: {tool_name} call is missing required field(s): {missing}. "
+                f"Required fields per input_schema: {required}. Re-check the "
+                "tool's real input_schema before retrying — do not guess field names."
+            )
 
         enforcement_error = _enforce_model_choice(tool_name, inputs, options)
         if enforcement_error:
@@ -461,7 +512,10 @@ def execute_tool(
                     })
                 raise BudgetExceededError(
                     f"Paid call to {tool_name} (est ¥{est_cost:.2f}) would bring spend to "
-                    f"¥{projected:.2f}, over budget ¥{budget_cny:.2f}"
+                    f"¥{projected:.2f}, over budget ¥{budget_cny:.2f}",
+                    tool_name=tool_name,
+                    est_cost=est_cost,
+                    projected_cny=projected,
                 )
 
         # Ledger: estimate before, reconcile after (real CostTracker usage →
@@ -497,13 +551,34 @@ def execute_tool(
             if cost_accumulator is not None and result.cost_usd is not None:
                 cost_accumulator.append(float(result.cost_usd))
             if emit_event and result.artifacts:
-                for artifact_path in result.artifacts:
-                    emit_event({
+                last_artifact_idx = len(result.artifacts) - 1
+                for idx, artifact_path in enumerate(result.artifacts):
+                    event = {
                         "type": "asset_ready",
                         "tool": tool_name,
                         "path": artifact_path,
                         "kind": tool.capability,
-                    })
+                        # inputs["model"] reflects the FULLY RESOLVED model (after
+                        # _enforce_model_choice's autofill, if any ran) — more
+                        # trustworthy than the tool_call event's pre-enforcement
+                        # value for "what actually generated this asset". Despite
+                        # the field's name, cost_usd is already CNY for every MaaS
+                        # tool (see maas_video.py's estimate_cost docstring) — no
+                        # conversion needed, matching how cost_accumulator/
+                        # job.cost_cny already treat it.
+                        "model": inputs.get("model"),
+                    }
+                    # The whole call's cost is charged once, not once per
+                    # artifact — the ledger (cost_accumulator/CostTracker)
+                    # already accumulates it correctly exactly once above.
+                    # Repeating cost_cny identically on every artifact_ready
+                    # event (e.g. a TTS call returning both an audio file and
+                    # a metadata file) misleadingly read as if the same money
+                    # was spent once per artifact. Only the LAST artifact for
+                    # this call carries cost_cny.
+                    if idx == last_artifact_idx:
+                        event["cost_cny"] = result.cost_usd
+                    emit_event(event)
             return json.dumps({
                 "success": True,
                 "data": result.data,

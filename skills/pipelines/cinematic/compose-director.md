@@ -16,6 +16,42 @@ Read `edit_decisions.render_runtime`. Cinematic work routes to:
 
 **Pass `proposal_packet` to `video_compose.execute()`** so the tool's `runtime_swap_detected` check compares directly against `proposal_packet.production_plan.render_runtime`. Without it the swap check is skipped in-tool and only the reviewer skill catches the drift.
 
+### Example `video_compose` call
+
+`operation` is the one field the tool actually requires (`input_schema.required = ["operation"]`) — everything else is validated inside each operation handler, so a missing `edit_decisions` or `asset_manifest` fails late with a confusing error instead of a clean schema rejection. Use `operation="render"` for compose-director: per the tool's own schema description, `render` is "high-level — resolves asset IDs, auto-routes to Remotion for images/animations or FFmpeg for video-only. Preferred for compose-director." (`operation="compose"` is the low-level concat-only path — call it directly only for pure video pipelines like talking-head.)
+
+This is the real call shape — `edit_decisions`, `asset_manifest`, and `proposal_packet` are the tool's actual fields, passed as full objects, not the invented `project_name`/`duration_seconds`/`scene_specifications` shape a prior run fabricated:
+
+```json
+{
+  "tool": "video_compose",
+  "inputs": {
+    "operation": "render",
+    "output_path": "renders/trailer_v1.mp4",
+    "edit_decisions": {
+      "render_runtime": "remotion",
+      "cuts": [
+        { "source": "asset_001", "start_seconds": 0, "end_seconds": 4.5 },
+        { "source": "asset_002", "start_seconds": 0, "end_seconds": 3.0 }
+      ],
+      "subtitles": { "source": "renders/subs.ass" }
+    },
+    "asset_manifest": {
+      "assets": [
+        { "id": "asset_001", "path": "assets/video/hook_shot.mp4" },
+        { "id": "asset_002", "path": "assets/video/reveal_shot.mp4" }
+      ]
+    },
+    "proposal_packet": {
+      "production_plan": { "render_runtime": "remotion" }
+    },
+    "profile": "youtube_landscape"
+  }
+}
+```
+
+`edit_decisions.render_runtime` here must match `proposal_packet.production_plan.render_runtime` (both `"remotion"` above) — that agreement is exactly what the tool's `runtime_swap_detected` check verifies.
+
 ## Prerequisites
 
 | Layer | Resource | Purpose |

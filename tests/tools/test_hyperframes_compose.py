@@ -910,6 +910,243 @@ def test_video_compose_honors_hyperframes_runtime_before_atelier_mode(
 
 
 # ------------------------------------------------------------------
+# Runtime-availability governance (issue #359):
+# locked-but-unavailable runtime → structured blocker, no silent swap,
+# and a user-approved runtime_availability_override as the only downgrade path.
+# ------------------------------------------------------------------
+
+
+def _hyperframes_render_inputs(tmp_path, *, edit_decisions_extra=None):
+    edit_decisions = {
+        "version": "1.0",
+        "cuts": [
+            {"id": "c1", "source": "a1", "in_seconds": 0, "out_seconds": 3, "type": "image"}
+        ],
+        "render_runtime": "hyperframes",
+        "renderer_family": "animation-first",
+    }
+    if edit_decisions_extra:
+        edit_decisions.update(edit_decisions_extra)
+    return {
+        "operation": "render",
+        "edit_decisions": edit_decisions,
+        "asset_manifest": {"assets": [{"id": "a1", "path": "does-not-matter.png"}]},
+        "output_path": str(tmp_path / "out.mp4"),
+    }
+
+
+def test_hyperframes_unavailable_returns_structured_blocker(tmp_path, monkeypatch):
+    """The blocker must be machine-readable: it carries what was locked, what is
+    available, the specific missing pieces, why it matters, and the three
+    options the issue requires (install / downgrade / abort)."""
+    monkeypatch.setattr(VideoCompose, "_hyperframes_available", lambda self: False)
+
+    result = VideoCompose().execute(_hyperframes_render_inputs(tmp_path))
+
+    assert not result.success
+    data = result.data or {}
+    assert data.get("blocker") == "runtime_unavailable"
+    assert data.get("locked_runtime") == "hyperframes"
+    # Availability map + missing requirements surfaced (not a generic message).
+    assert set(data["available_runtimes"].keys()) == {"ffmpeg", "remotion", "hyperframes"}
+    assert isinstance(data["missing_requirements"], list)
+    assert "why_it_matters" in data
+    # Exactly the three options the issue mandates.
+    option_ids = {o["id"] for o in data["options"]}
+    assert option_ids == {"install_runtime", "downgrade_runtime", "abort"}
+    downgrade = next(o for o in data["options"] if o["id"] == "downgrade_runtime")
+    assert downgrade["requires_user_approval"] is True
+    # And instructions for the governed override channel.
+    hric = data["how_to_record_override"]
+    assert hric["decision_log_category"] == "runtime_availability_override"
+    assert hric["edit_decisions_field"] == "runtime_availability_override"
+
+
+def test_override_without_explicit_approval_still_blocks(tmp_path, monkeypatch):
+    """Approval cannot be implied: user_approved missing/false → hard blocker."""
+    monkeypatch.setattr(VideoCompose, "_hyperframes_available", lambda self: False)
+    monkeypatch.setattr(VideoCompose, "_remotion_available", lambda self: True)
+
+    inputs = _hyperframes_render_inputs(
+        tmp_path,
+        edit_decisions_extra={
+            "runtime_availability_override": {
+                "locked_runtime": "hyperframes",
+                "accepted_runtime": "remotion",
+                "user_approved": False,  # not approved
+            }
+        },
+    )
+    result = VideoCompose().execute(inputs)
+    assert not result.success
+    assert (result.data or {}).get("blocker") == "runtime_unavailable"
+
+
+def test_override_with_mismatched_locked_runtime_blocks(tmp_path, monkeypatch):
+    monkeypatch.setattr(VideoCompose, "_hyperframes_available", lambda self: False)
+    monkeypatch.setattr(VideoCompose, "_remotion_available", lambda self: True)
+    inputs = _hyperframes_render_inputs(
+        tmp_path,
+        edit_decisions_extra={
+            "runtime_availability_override": {
+                "locked_runtime": "ffmpeg",  # doesn't match the locked hyperframes
+                "accepted_runtime": "remotion",
+                "user_approved": True,
+            }
+        },
+    )
+    result = VideoCompose().execute(inputs)
+    assert not result.success
+    assert (result.data or {}).get("blocker") == "runtime_unavailable"
+
+
+def test_override_rejects_unavailable_accepted_runtime(tmp_path, monkeypatch):
+    """Cannot downgrade to a second unavailable engine."""
+    monkeypatch.setattr(VideoCompose, "_hyperframes_available", lambda self: False)
+    monkeypatch.setattr(VideoCompose, "_remotion_available", lambda self: False)
+    monkeypatch.setattr(VideoCompose, "_ffmpeg_available", lambda self: False)
+    inputs = _hyperframes_render_inputs(
+        tmp_path,
+        edit_decisions_extra={
+            "runtime_availability_override": {
+                "locked_runtime": "hyperframes",
+                "accepted_runtime": "remotion",  # also unavailable here
+                "user_approved": True,
+            }
+        },
+    )
+    result = VideoCompose().execute(inputs)
+    assert not result.success
+    assert (result.data or {}).get("blocker") == "runtime_unavailable"
+
+
+def test_approved_override_performs_governed_downgrade(tmp_path, monkeypatch):
+    """With a valid user-approved override, compose proceeds to the ACCEPTED
+    runtime (not a tool default), records the audit block + a ready decision_log
+    entry, and preserves the originally-locked runtime for swap detection."""
+    monkeypatch.setattr(VideoCompose, "_hyperframes_available", lambda self: False)
+    monkeypatch.setattr(VideoCompose, "_remotion_available", lambda self: True)
+    monkeypatch.setattr(VideoCompose, "_needs_remotion", lambda self, cuts: True)
+    monkeypatch.setattr(
+        VideoCompose, "_run_final_review", lambda self, *a, **k: {"status": "pass", "issues_found": []}
+    )
+
+    from tools.base_tool import ToolResult
+
+    captured = {}
+
+    def fake_remotion_render(self, remotion_inputs):
+        captured["edit_decisions"] = remotion_inputs["edit_decisions"]
+        out = Path(remotion_inputs["output_path"])
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_bytes(b"\x00\x00\x00\x18ftypmp42")  # stub mp4 header
+        return ToolResult(success=True, data={"engine": "remotion"})
+
+    monkeypatch.setattr(VideoCompose, "_remotion_render", fake_remotion_render)
+
+    inputs = _hyperframes_render_inputs(
+        tmp_path,
+        edit_decisions_extra={
+            "runtime_availability_override": {
+                "locked_runtime": "hyperframes",
+                "accepted_runtime": "remotion",
+                "user_approved": True,
+                "reason": "deadline; will re-render on HyperFrames later",
+                "acknowledged_losses": ["GSAP kinetic typography"],
+                "decision_id": "d-042",
+            }
+        },
+    )
+    result = VideoCompose().execute(inputs)
+
+    assert result.success, result.error
+    # Routed to the accepted runtime, with the locked runtime preserved.
+    assert captured["edit_decisions"]["render_runtime"] == "remotion"
+    assert captured["edit_decisions"]["metadata"]["proposal_render_runtime"] == "hyperframes"
+
+    audit = result.data["runtime_availability_override"]
+    assert audit["locked_runtime"] == "hyperframes"
+    assert audit["accepted_runtime"] == "remotion"
+    assert audit["user_approved"] is True
+    assert audit["acknowledged_losses"] == ["GSAP kinetic typography"]
+
+    # A schema-valid decision_log entry is offered for the caller to append.
+    entry = result.data["suggested_decision_log_entry"]
+    assert entry["category"] == "runtime_availability_override"
+    assert entry["selected"] == "remotion"
+    assert entry["user_approved"] is True
+    assert entry["decision_id"] == "d-042"
+
+
+def test_hyperframes_available_happy_path_no_blocker(tmp_path, monkeypatch):
+    """Regression guard: when HyperFrames IS available, compose routes straight
+    to the HyperFrames path — no blocker, no override prompt, no superfluous
+    friction on the happy path."""
+    monkeypatch.setattr(VideoCompose, "_hyperframes_available", lambda self: True)
+
+    from tools.base_tool import ToolResult
+
+    sentinel = ToolResult(success=True, data={"engine": "hyperframes-stub"})
+    called = {"n": 0}
+
+    def fake_hf(self, **kwargs):
+        called["n"] += 1
+        return sentinel
+
+    monkeypatch.setattr(VideoCompose, "_render_via_hyperframes", fake_hf)
+
+    result = VideoCompose().execute(_hyperframes_render_inputs(tmp_path))
+    assert result.success
+    assert result.data == {"engine": "hyperframes-stub"}
+    assert called["n"] == 1
+    # No blocker or override artifacts leaked onto the happy path.
+    assert "blocker" not in (result.data or {})
+    assert "runtime_availability_override" not in (result.data or {})
+
+
+def test_decision_log_schema_has_runtime_availability_override_category():
+    schema_path = (
+        Path(__file__).resolve().parent.parent.parent
+        / "schemas" / "artifacts" / "decision_log.schema.json"
+    )
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    enum = schema["properties"]["decisions"]["items"]["properties"]["category"]["enum"]
+    assert "runtime_availability_override" in enum
+
+
+def test_edit_decisions_schema_accepts_runtime_availability_override():
+    schema_path = (
+        Path(__file__).resolve().parent.parent.parent
+        / "schemas" / "artifacts" / "edit_decisions.schema.json"
+    )
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    prop = schema["properties"]["runtime_availability_override"]
+    assert set(prop["required"]) == {"locked_runtime", "accepted_runtime", "user_approved"}
+    assert prop["additionalProperties"] is False
+
+
+def test_decision_log_validates_runtime_availability_override_entry():
+    try:
+        import jsonschema
+    except ImportError:  # pragma: no cover
+        pytest.skip("jsonschema not installed")
+
+    root = Path(__file__).resolve().parent.parent.parent
+    schema = json.loads(
+        (root / "schemas" / "artifacts" / "decision_log.schema.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    entry = VideoCompose._runtime_override_decision_scaffold(
+        "hyperframes",
+        "remotion",
+        {"reason": "deadline", "decision_id": "d-1"},
+    )
+    log = {"version": "1.0", "project_id": "p-test", "decisions": [entry]}
+    jsonschema.validate(log, schema)  # no raise = valid
+
+
+# ------------------------------------------------------------------
 # Scaffold / workspace generation (no CLI invocation)
 # ------------------------------------------------------------------
 

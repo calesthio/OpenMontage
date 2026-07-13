@@ -29,6 +29,7 @@
               "provider_selection",
               "renderer_family_selection",
               "render_runtime_selection",
+              "runtime_availability_override",
               "composition_mode",
               "playbook_selection",
               "fallback_decision",

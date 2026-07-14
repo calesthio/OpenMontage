@@ -22,7 +22,7 @@ function resolveAsset(src: string): string {
   const clean = src
     .replace(/^file:\/\//, "")
     .replace(/^\/(?=[A-Za-z]:[\\/])/, "");
-  if (clean.startsWith("/") || /^[A-Za-z]:[/\\]/.test(clean)) {
+  if (clean.startsWith("/") || /^[A-Za-z]:[\\/]/.test(clean)) {
     const posix = clean.replace(/\\/g, "/");
     // POSIX absolute paths already have a leading "/" — file:// + posix
     // gives exactly three slashes. Windows drive paths (C:/...) need the

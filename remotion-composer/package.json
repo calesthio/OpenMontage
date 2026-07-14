@@ -5,7 +5,8 @@
   "scripts": {
     "start": "npx remotion studio",
     "build": "npx remotion render src/index.tsx Explainer out/video.mp4",
-    "upgrade": "npx remotion upgrade"
+    "upgrade": "npx remotion upgrade",
+    "test:resolve-asset": "node scripts/test-resolve-asset.mjs"
   },
   "dependencies": {
     "@remotion/captions": "^4.0.484",

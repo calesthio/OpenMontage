@@ -16,3 +16,4 @@ Source of truth for what's been scripted/produced/posted. The live IG grid outra
 | 2026-07-11 | The thirteenth month (admin burn / unpaid time) | MONTH | posted IG+FB (reel 10) |
 | 2026-07-12 | The fourth ring (missed restaurant calls) | RING | posted IG+FB (reel 11) |
 | 2026-07-13 | The empty chair (appointment no-shows / $150k-yr) | CHAIR | posted IG+FB (reel 12) |
+| 2026-07-14 | The five-minute window (contractor speed-to-lead / 78% first) | SPEED | posted 7/14 23:06 UTC (IG+FB reel 13, zernio 6a56c0e3; ink cover; SPEED DM automation live IG 6a56c141 + FB 6a56c144) |

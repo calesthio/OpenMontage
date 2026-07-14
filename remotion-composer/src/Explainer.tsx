@@ -43,6 +43,7 @@ import { AnimeScene } from "./components/AnimeScene";
 import type { CameraMotion } from "./components/AnimeScene";
 import { TerminalScene } from "./components/TerminalScene";
 import type { TerminalStep } from "./components/TerminalScene";
+import { Clock } from "./components/Clock";
 import { ScreenshotScene } from "./components/ScreenshotScene";
 import type { ScreenshotStep } from "./components/ScreenshotScene";
 import { ProviderChip } from "./components/ProviderChip";
@@ -268,6 +269,13 @@ interface Cut {
   screenshotSteps?: ScreenshotStep[];
   screenshotSize?: { width: number; height: number };
   cursorStartAt?: [number, number];
+  // Clock scene props (type: "clock")
+  tickSound?: string;
+  tickVolume?: number;
+  secondsPerStep?: number;
+  startSecond?: number;
+  clockLabel?: string;
+  clockSize?: number;
 }
 
 interface Overlay {
@@ -289,6 +297,22 @@ interface AudioLayer {
   volume?: number;
 }
 
+/** A one-shot sound effect placed at an absolute timestamp on the timeline.
+ *  Because both the cue's start frame and every frame-driven visual derive
+ *  from the same `useCurrentFrame()` counter, a cue placed at a scene's
+ *  action frame stays locked to it — no drift between sound and picture.
+ *  This is the primitive for "whoosh on a transition", "click on a button
+ *  reveal", or a tick landing exactly on a clock-hand step. */
+interface SfxCue {
+  src: string;
+  /** Absolute time on the composition timeline where the effect fires. */
+  atSeconds: number;
+  volume?: number;
+  /** Optional hard cap on how long the cue is allowed to play. Defaults to
+   *  the effect's natural length. Useful for trimming a long ambience clip. */
+  durationSeconds?: number;
+}
+
 interface AudioConfig {
   narration?: AudioLayer;
   music?: AudioLayer & {
@@ -300,6 +324,9 @@ interface AudioConfig {
     /** Loop the music if it's shorter than the video duration. */
     loop?: boolean;
   };
+  /** One-shot sound effects placed at absolute timestamps. Each plays its
+   *  natural length (or `durationSeconds` if capped) starting at `atSeconds`. */
+  sfx?: SfxCue[];
 }
 
 export interface ExplainerProps {
@@ -608,6 +635,22 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
       />
     );
   }
+  if (cut.type === "clock") {
+    return maybeWrapWithBg(
+      <Clock
+        durationSeconds={cut.out_seconds - cut.in_seconds}
+        tickSound={cut.tickSound}
+        tickVolume={cut.tickVolume}
+        secondsPerStep={cut.secondsPerStep}
+        startSecond={cut.startSecond}
+        accentColor={accent}
+        handColor={textColor}
+        backgroundColor={bgColor}
+        label={cut.clockLabel}
+        size={cut.clockSize}
+      />
+    );
+  }
   if (cut.type === "screenshot_scene" && cut.backgroundImage && cut.screenshotSteps) {
     return (
       <ScreenshotScene
@@ -621,12 +664,18 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
   }
 
   // --- Chart types — use theme.chartColors as default palette ---
+  // fontFamily/textColor/gridColor are threaded from theme here because each chart
+  // component's own prop defaults (Inter, #1F2937, white) are a standalone light-mode
+  // fallback, not theme-aware — without this they silently render as a generic light
+  // corporate chart regardless of which style_playbook was selected.
+  const chartGridColor = `${theme.mutedTextColor}33`;
   if (cut.type === "bar_chart" && cut.chartData) {
     return maybeWrapWithBg(
       <BarChart
         data={cut.chartData} title={cut.title} colors={cut.chartColors || theme.chartColors}
         animationStyle={(cut.chartAnimation as any) || "grow-up"}
         showGrid={cut.showGrid} showValues={cut.showValues} backgroundColor={bgColor}
+        fontFamily={theme.bodyFont} textColor={textColor} gridColor={chartGridColor}
       />
     );
   }
@@ -637,6 +686,7 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
         animationStyle={(cut.chartAnimation as any) || "draw"}
         showGrid={cut.showGrid} showMarkers={cut.showMarkers} showLegend={cut.showLegend}
         xLabel={cut.xLabel} yLabel={cut.yLabel} backgroundColor={bgColor}
+        fontFamily={theme.bodyFont} textColor={textColor} gridColor={chartGridColor}
       />
     );
   }
@@ -647,6 +697,7 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
         animationStyle={(cut.chartAnimation as any) || "expand"}
         donut={cut.donut} centerLabel={cut.centerLabel} centerValue={cut.centerValue}
         showLegend={cut.showLegend} backgroundColor={bgColor}
+        fontFamily={theme.bodyFont} textColor={textColor}
       />
     );
   }
@@ -656,6 +707,8 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
         metrics={cut.chartData} title={cut.title} columns={cut.columns}
         colors={cut.chartColors || theme.chartColors} animationStyle={(cut.chartAnimation as any) || "count-up"}
         backgroundColor={bgColor}
+        fontFamily={theme.bodyFont} textColor={textColor}
+        cardBackgroundColor={`${theme.mutedTextColor}26`}
       />
     );
   }
@@ -813,7 +866,7 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
       {captions && captions.length > 0 && (
         <CaptionOverlay
           words={captions}
-          wordsPerPage={6}
+          wordsPerPage={(props.captionWordsPerPage as number) || 6}
           fontSize={42}
           highlightColor={theme.captionHighlightColor}
           backgroundColor={theme.captionBackgroundColor}
@@ -854,6 +907,22 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
           }}
         />
       )}
+
+      {/* Layer 4: Audio — one-shot SFX cues at absolute timestamps.
+          Each is wrapped in a Sequence starting at atSeconds so it fires on
+          the exact frame; frame-locked to any visual driven by the same fps. */}
+      {audio?.sfx?.map((cue, i) => {
+        const from = Math.max(0, Math.round(cue.atSeconds * fps));
+        const seqProps =
+          cue.durationSeconds !== undefined
+            ? { durationInFrames: Math.max(1, Math.round(cue.durationSeconds * fps)) }
+            : {};
+        return (
+          <Sequence key={`sfx-${i}`} from={from} {...seqProps}>
+            <Audio src={resolveAsset(cue.src)} volume={cue.volume ?? 1} />
+          </Sequence>
+        );
+      })}
     </AbsoluteFill>
   );
 };

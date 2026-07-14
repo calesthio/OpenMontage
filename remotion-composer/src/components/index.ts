@@ -11,6 +11,7 @@ export { HeroTitle } from "./HeroTitle";
 export { ParticleOverlay } from "./ParticleOverlay";
 export { AnimeScene } from "./AnimeScene";
 export { TerminalScene } from "./TerminalScene";
+export { Clock } from "./Clock";
 export { ScreenshotScene } from "./ScreenshotScene";
 export { ProviderChip } from "./ProviderChip";
 export type { ParticleType } from "./ParticleOverlay";

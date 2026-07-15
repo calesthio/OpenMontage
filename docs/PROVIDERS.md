@@ -23,6 +23,7 @@ Everything you need to know about every provider in OpenMontage — setup instru
 | 11 | **pay-as-you-go** | Suno | Full song generation with vocals and lyrics |
 | 12 | **$0 + GPU** | Local video gen | WAN 2.1, Hunyuan, CogVideo, LTX — free, offline |
 | 13 | **$0 + GPU** | Local Diffusion | Stable Diffusion images — free, offline |
+| 14 | **$0 + Apple Silicon** | MLX-Audio TTS | In-process local TTS with configurable model and voice |
 
 ### Environment Variable Summary
 
@@ -872,6 +873,69 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 
 ---
 
+### MLX-Audio TTS — Local Apple Silicon Models
+
+> **Free local inference with configurable model and voice selection.** The `mlx_audio` provider runs the MLX-Audio Python API in-process on Apple Silicon. It does not start a server, listen on a port, or invoke a CLI.
+
+- **Tool:** `mlx_audio_tts`
+- **Provider:** `mlx_audio`
+- **Runtime:** Local GPU (Apple Silicon unified memory)
+- **Env vars:** `MLX_AUDIO_ENABLED`, optional `MLX_AUDIO_MODEL_ID`, optional `MLX_AUDIO_VOICE_ID`
+
+#### Setup
+
+```bash
+make install-mlx-audio
+
+# .env
+MLX_AUDIO_ENABLED=true
+# MLX_AUDIO_MODEL_ID=mlx-community/Qwen3-TTS-12Hz-1.7B-CustomVoice-6bit
+# MLX_AUDIO_VOICE_ID=Ryan
+```
+
+This target supports only macOS arm64 and installs `mlx-audio[tts]>=0.4.5,<0.5`. It does not install the MLX-Audio server extra. FFmpeg's `ffprobe` binary is also required because every generated WAV must pass mandatory audio-stream and positive-duration validation before OpenMontage publishes it. Install FFmpeg with `brew install ffmpeg` if needed. The first use of an uncached Hugging Face model may download weights, so allow network access and model-dependent disk space for that initial load; cached snapshots and local model paths do not require a provider endpoint.
+
+#### Required inputs
+
+| Field | Purpose |
+|-------|---------|
+| `text` | Non-empty text to synthesize |
+| `output_path` | Explicit `.wav` path under the project workspace |
+
+The built-in default is `mlx-community/Qwen3-TTS-12Hz-1.7B-CustomVoice-6bit` with the `Ryan` voice. A request-level `model_id` or `voice_id` overrides the corresponding environment value; an environment value overrides the built-in default. The built-in `Ryan` fallback is applied only with the built-in default model. Other models may require a different voice, instructions, or reference audio.
+
+#### Selector usage
+
+```python
+from tools.audio.tts_selector import TTSSelector
+
+result = TTSSelector().execute({
+    "preferred_provider": "mlx_audio",
+    "allowed_providers": ["mlx_audio"],
+    "text": "Welcome to the final review.",
+    "language": "English",
+    "output_path": "projects/my-video/assets/audio/narration.wav",
+})
+```
+
+OpenMontage maps the public inputs to MLX-Audio as follows: `model_id` to `load_model()`, `voice_id` to `voice`, `language` to `lang_code`, `instructions` to `instruct`, `reference_audio_path` to `ref_audio`, and `reference_text` to `ref_text`. `model_id` and `voice_id` remain optional request parameters for overriding configuration. `generation_options` is reserved for additional model-specific `model.generate()` keyword arguments and cannot override those common fields.
+
+#### Qwen3-TTS validation examples
+
+Qwen3-TTS is a model family used for end-to-end validation, not a separate provider:
+
+| Model example | OpenMontage inputs |
+|---------------|--------------------|
+| `mlx-community/Qwen3-TTS-12Hz-1.7B-CustomVoice-6bit` | Built-in default; `Ryan` is the default voice. Other documented voices include `Vivian`, `Serena`, `Uncle_Fu`, `Dylan`, `Eric`, `Aiden`, `Ono_Anna`, and `Sohee` |
+| `mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-6bit` | Set `instructions` describing the intended voice and delivery |
+| `mlx-community/Qwen3-TTS-12Hz-1.7B-Base-6bit` | Set an authorized `reference_audio_path` plus its matching `reference_text` for cloning |
+
+The provider accepts other MLX-Audio-compatible Hugging Face IDs and local model paths without a whitelist. If the chosen model or parameter set fails, generation fails explicitly; OpenMontage does not substitute another model or provider.
+
+**Cost:** $0 per generated request. Local compute, storage, and any initial model download still apply.
+
+---
+
 ## Provider-to-Tool Mapping
 
 | Provider | Env Var | Tools Unlocked | Cost |
@@ -892,6 +956,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **Local GPU** | `VIDEO_GEN_LOCAL_ENABLED` | `wan_video`, `hunyuan_video`, `cogvideo_video`, `ltx_video_local` | Free (GPU required) |
 | **Local Diffusion** | — (install only) | `local_diffusion` | Free (GPU required) |
 | **Modal** | `MODAL_LTX2_ENDPOINT_URL` | `ltx_video_modal` | Self-hosted cloud |
+| **MLX-Audio** | `MLX_AUDIO_ENABLED` (Apple Silicon install) | `mlx_audio_tts` | Free |
 
 ---
 
@@ -903,7 +968,7 @@ How many providers cover each capability:
 |-----------|----------------|-----------------|--------------|
 | **Image Generation** | FLUX, Kling Official, Grok, Google Imagen, GPT Image 2, Recraft | Local Diffusion | Pexels, Pixabay (stock) |
 | **Video Generation** | Grok, Kling Official, Kling via fal.ai, Runway, Veo, Gemini Omni, Higgsfield, MiniMax, HeyGen | WAN, Hunyuan, CogVideo, LTX | Pexels, Pixabay (stock) |
-| **Text-to-Speech** | ElevenLabs, Google TTS, Kling Official, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier |
+| **Text-to-Speech** | ElevenLabs, Google TTS, Kling Official, OpenAI | Piper, MLX-Audio | Piper, Google free tier, ElevenLabs free tier, MLX-Audio |
 | **Music Generation** | ElevenLabs, Suno, Google Lyria | — | ElevenLabs free tier |
 | **Post-Production** | — | FFmpeg (compose, stitch, trim, mix, enhance, grade) | All free |
 | **Analysis** | — | WhisperX, Scene Detect, Frame Sampler, CLIP/BLIP-2 | All free |
@@ -927,7 +992,7 @@ A: fal.ai (`FAL_KEY`) is one pay-as-you-go option with broad single-key coverage
 A: Set `VIDEO_GEN_LOCAL_ENABLED=true` and install `diffusers`. You get WAN 2.1, Hunyuan, CogVideo, and LTX video generation plus Stable Diffusion image generation — all free, all offline.
 
 **Q: Which TTS provider should I use?**
-A: For quality → ElevenLabs. For localization (50+ languages) → Google TTS. For budget → Google free tier (1M chars/month). For offline → Piper.
+A: For quality → ElevenLabs. For localization (50+ languages) → Google TTS. For budget → Google free tier (1M chars/month). For offline → Piper. For configurable local models on Apple Silicon → MLX-Audio.
 
 **Q: Do I need all these providers?**
 A: No. Start with what you have. The selector pattern auto-routes to whatever's available. Missing a provider? The system falls through to the next one automatically.

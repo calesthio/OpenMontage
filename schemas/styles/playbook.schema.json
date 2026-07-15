@@ -13,12 +13,12 @@
         "name": { "type": "string" },
         "category": {
           "type": "string",
-          "enum": ["motion-graphics", "whiteboard", "cinematic", "minimalist", "retro", "custom"]
+          "enum": ["motion-graphics", "whiteboard", "cinematic", "minimalist", "retro", "anime-illustration", "custom"]
         },
         "mood": { "type": "string" },
         "pace": {
           "type": "string",
-          "enum": ["slow", "deliberate", "moderate", "fast", "rapid"]
+          "enum": ["slow", "gentle", "deliberate", "moderate", "fast", "rapid"]
         },
         "best_for": { "type": "string" }
       },
@@ -38,7 +38,10 @@
             "text": { "type": "string" },
             "muted": { "type": "string" }
           },
-          "additionalProperties": false
+          "additionalProperties": {
+            "type": "string",
+            "description": "Playbooks may name extra palette colors (e.g. anime-ghibli's golden_hour) as plain color strings"
+          }
         },
         "composition": { "type": "string" },
         "texture": { "type": "string" }
@@ -143,7 +146,7 @@
           "minItems": 1
         }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "overlays": {
       "type": "object",
@@ -152,7 +155,7 @@
         "key_term": { "$ref": "#/$defs/overlay_style" },
         "code_block": { "$ref": "#/$defs/overlay_style" }
       },
-      "additionalProperties": false
+      "additionalProperties": { "$ref": "#/$defs/overlay_style" }
     },
     "quality_rules": {
       "type": "array",
@@ -236,7 +239,8 @@
         "text": { "type": "string" },
         "radius": { "type": "number" },
         "shadow": { "type": "string" },
-        "highlight": { "type": "string" }
+        "highlight": { "type": "string" },
+        "accent": { "type": "string" }
       },
       "additionalProperties": false
     },

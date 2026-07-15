@@ -229,6 +229,55 @@ class JobStore:
                 del buf[: len(buf) - MAX_EVENTS_PER_JOB]
             self._append_event_to_disk(job_id, stored)
 
+    # Event types that legitimately end a job's stream. Kept here (next to the
+    # status set) so routers/events.py and ensure_terminal_event can't drift
+    # apart on what counts as terminal — the cancelled case was exactly such a
+    # drift: "cancelled" entered TERMINAL_STATUSES but the SSE endpoint's
+    # terminal-event tuple never learned about job_cancelled, so every
+    # cancellation was followed by a spurious synthetic job_failed.
+    TERMINAL_EVENT_TYPES = ("job_completed", "job_failed", "job_cancelled")
+    _TERMINAL_EVENT_BY_STATUS = {
+        "completed": "job_completed",
+        "failed": "job_failed",
+        "cancelled": "job_cancelled",
+    }
+
+    def ensure_terminal_event(self, job_id: str) -> None:
+        """Append the missing terminal event for a job already in a terminal status.
+
+        A job interrupted by a server restart is marked failed by _load_all
+        without a job_failed event ever being pushed (no live SSE client
+        exists at startup). Appending the terminal event HERE — as a real,
+        stored, seq-numbered event — instead of synthesizing one inside each
+        SSE generator keeps sequence numbers authoritative: the old
+        stream-local synthetic minted seq=max+1 without storing it, so the
+        next real event after a retry reused the same seq and a client
+        resuming from the synthetic id silently skipped it (job_started,
+        which carries the stage list, was the usual casualty).
+
+        Idempotent under the store lock: no-op when the log already ends on a
+        terminal event, and concurrent SSE generators can't both append one.
+        """
+        with self._lock:
+            job = self._jobs.get(job_id)
+            if not job or job.get("status") not in TERMINAL_STATUSES:
+                return
+            events = self._events.get(job_id, [])
+            if events and events[-1].get("type") in self.TERMINAL_EVENT_TYPES:
+                return
+            self.push_event(job_id, {
+                "type": self._TERMINAL_EVENT_BY_STATUS[job["status"]],
+                "ts": time.time(),
+                "render_url": job.get("render_url"),
+                # Only present on a multi-variant (A/B) job — mirrors the real
+                # job_completed/preview_ready events emitted by stage_runner.py.
+                **({"render_urls": job["render_urls"]} if job.get("render_urls") else {}),
+                "message": (
+                    "Job was interrupted (e.g. a server restart) before completion"
+                    if job.get("interrupted") else None
+                ),
+            })
+
     def get_events(self, job_id: str, after_seq: int = -1) -> list[dict]:
         with self._lock:
             events = self._events.get(job_id, [])

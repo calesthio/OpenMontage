@@ -125,6 +125,76 @@ def test_old_terminal_event_mid_history_does_not_truncate_the_replay(client):
     assert len(evs) == 6
 
 
+def test_cancelled_job_stream_does_not_append_spurious_job_failed(client):
+    # Regression (audit 2026-07-15, BUG-4): "cancelled" entered
+    # TERMINAL_STATUSES but the terminal-event tuples here only listed
+    # job_completed/job_failed, so after the real job_cancelled was delivered
+    # the next empty drain synthesized a job_failed on top of it — the UI
+    # flipped 已取消 → 失败 and rendered a retry button whose POST then 400s.
+    c, ts = client
+    ts.create("j6", {})
+    ts.push_event("j6", {"type": "job_started"})
+    ts.update("j6", status="cancelled")
+    ts.push_event("j6", {"type": "job_cancelled"})
+
+    with c.stream("GET", "/jobs/j6/events") as resp:
+        evs = _read_events(resp)
+    assert [e["type"] for e in evs] == ["job_started", "job_cancelled"]
+
+
+def test_cancelled_job_with_stale_last_event_synthesizes_job_cancelled(client):
+    # The synthetic branch must map status="cancelled" to job_cancelled,
+    # never job_failed.
+    c, ts = client
+    ts.create("j7", {})
+    ts.push_event("j7", {"type": "stage_started", "stage": "script"})
+    ts.update("j7", status="cancelled")
+
+    with c.stream("GET", "/jobs/j7/events") as resp:
+        evs = _read_events(resp)
+    assert evs[-1]["type"] == "job_cancelled"
+
+
+def test_synthesized_terminal_event_does_not_collide_with_retry_seq(client):
+    # Regression (audit 2026-07-15, BUG-5): the old stream-local synthetic
+    # minted seq=max+1 WITHOUT storing it, so the next real event pushed after
+    # a retry reused the exact same seq — a client resuming with
+    # lastEventId=<synthetic seq> silently skipped the retry's job_started
+    # (the event that carries the pipeline's stage list). The terminal event
+    # is now stored through push_event, so it owns its seq.
+    c, ts = client
+    ts.create("j8", {})
+    ts.push_event("j8", {"type": "awaiting_approval", "stage": "script"})
+    ts.update("j8", status="failed", interrupted=True)
+
+    with c.stream("GET", "/jobs/j8/events") as resp:
+        evs = _read_events(resp)
+    assert evs[-1]["type"] == "job_failed"
+    synthetic_seq = evs[-1]["seq"]
+
+    # Retry: status back to queued, runner pushes job_started.
+    ts.update("j8", status="queued")
+    ts.push_event("j8", {"type": "job_started", "stages": ["script", "compose"]})
+    ts.update("j8", status="running")
+
+    # Resume from the synthesized terminal event's id — the retry's
+    # job_started must NOT be skipped.
+    assert [e["type"] for e in ts.get_events("j8", after_seq=synthetic_seq)] == ["job_started"]
+
+
+def test_ensure_terminal_event_is_idempotent(client):
+    # Two SSE generators racing on the same terminal job must not append two
+    # terminal events.
+    _c, ts = client
+    ts.create("j9", {})
+    ts.push_event("j9", {"type": "stage_started", "stage": "script"})
+    ts.update("j9", status="failed")
+    ts.ensure_terminal_event("j9")
+    ts.ensure_terminal_event("j9")
+    types = [e["type"] for e in ts.get_events("j9")]
+    assert types == ["stage_started", "job_failed"]
+
+
 def test_unknown_job_returns_404_instead_of_an_empty_stream(client):
     # Regression: this endpoint used to open a 200 empty SSE stream for a
     # nonexistent job_id, inconsistent with GET /jobs/{id} which 404s for the

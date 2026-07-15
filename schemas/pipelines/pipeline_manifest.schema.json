@@ -11,7 +11,7 @@
     "description": { "type": "string" },
     "category": {
       "type": "string",
-      "enum": ["talking_head", "generated", "hybrid", "screen_recording", "animation", "cinematic", "custom"]
+      "enum": ["talking_head", "generated", "hybrid", "screen_recording", "animation", "cinematic", "documentary", "custom"]
     },
     "stability": {
       "type": "string",
@@ -132,6 +132,11 @@
       }
     },
     "metadata": { "type": "object" },
+    "production_modes": {
+      "type": "array",
+      "description": "Agent-facing catalog of alternative production modes a pipeline supports (e.g. screen-demo's real_capture vs synthetic_terminal). Free-form documentation read by the idea director; not consumed by code.",
+      "items": { "type": "object" }
+    },
     "orchestration": {
       "type": "object",
       "description": "Executive Producer orchestration config",

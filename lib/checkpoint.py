@@ -101,13 +101,38 @@ def _load_checkpoint_schema() -> dict[str, Any]:
         return json.load(f)
 
 
+def _canonical_artifact_for_stage(stage: str, pipeline_type: Optional[str]) -> Optional[str]:
+    """Resolve the stage's canonical artifact name.
+
+    The pipeline manifest is the source of truth: a stage's first `produces`
+    entry is its canonical artifact (pipeline-specific stages like
+    character-animation's `character_design`/`rig_plan` exist only there).
+    CANONICAL_STAGE_ARTIFACTS covers the no-manifest fallback. Returns None
+    when neither source declares one — such a stage has no canonical
+    artifact to require.
+    """
+    if pipeline_type and pipeline_type != "unknown":
+        try:
+            from lib.pipeline_loader import load_pipeline_readonly
+            manifest = load_pipeline_readonly(pipeline_type)
+            for stage_def in manifest.get("stages", []):
+                if stage_def.get("name") == stage:
+                    produces = stage_def.get("produces") or []
+                    return produces[0] if produces else None
+        except Exception:
+            pass
+    return CANONICAL_STAGE_ARTIFACTS.get(stage)
+
+
 def _validate_artifacts_for_stage(
     stage: str,
     status: str,
     artifacts: dict[str, Any],
+    pipeline_type: Optional[str] = None,
 ) -> None:
-    required_artifact = CANONICAL_STAGE_ARTIFACTS[stage]
-    if status in {"completed", "awaiting_human"} and required_artifact not in artifacts:
+    # None → the stage declares no canonical artifact; nothing to require.
+    required_artifact = _canonical_artifact_for_stage(stage, pipeline_type)
+    if required_artifact and status in {"completed", "awaiting_human"} and required_artifact not in artifacts:
         raise CheckpointValidationError(
             f"Stage {stage!r} with status {status!r} must include "
             f"canonical artifact {required_artifact!r}"
@@ -154,7 +179,7 @@ def validate_checkpoint(checkpoint: dict[str, Any]) -> None:
     if not isinstance(artifacts, dict):
         raise CheckpointValidationError("Checkpoint artifacts must be a dictionary")
 
-    _validate_artifacts_for_stage(stage, status, artifacts)
+    _validate_artifacts_for_stage(stage, status, artifacts, pipeline_type)
 
     try:
         jsonschema.validate(instance=checkpoint, schema=_load_checkpoint_schema())
@@ -343,8 +368,12 @@ def write_checkpoint(
 ) -> Path:
     """Write a checkpoint file for a pipeline stage."""
     # Backfill a missing pipeline_type from the project marker so that
-    # omitting the kwarg doesn't quietly bypass gate enforcement.
-    if not pipeline_type:
+    # omitting the kwarg doesn't quietly bypass gate enforcement. "unknown"
+    # counts as missing: checkpoints written without a type are PERSISTED as
+    # pipeline_type="unknown", so an agent echoing that field back into the
+    # next write would otherwise disable gating (_stage_requires_approval
+    # exempts "unknown") even though the project marker knows the real type.
+    if not pipeline_type or pipeline_type == "unknown":
         marker = None
         marker_path = pipeline_dir / project_id / PROJECT_MARKER_FILENAME
         if marker_path.exists():

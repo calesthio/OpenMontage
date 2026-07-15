@@ -59,7 +59,7 @@ async def job_events(job_id: str, lastEventId: int = -1):
                 if job is None:
                     return
                 if job.get("status") in TERMINAL_STATUSES:
-                    if last_type in ("job_completed", "job_failed"):
+                    if last_type in job_store.TERMINAL_EVENT_TYPES:
                         return   # already ended on a real terminal event
                     # The persisted event log may predate the terminal state —
                     # e.g. a job interrupted by a server restart mid-flight is
@@ -68,27 +68,20 @@ async def job_events(job_id: str, lastEventId: int = -1):
                     # to at startup time). Without this, a (re)connecting client
                     # sees the stream close with no terminal event, its local
                     # `status` stays stuck at the last real event (e.g.
-                    # "awaiting_approval"), and it reconnects forever. Synthesize
-                    # the terminal event here so every client — live or
-                    # reconnecting — always observes one.
-                    seq += 1
-                    ev_type = "job_completed" if job["status"] == "completed" else "job_failed"
-                    synthetic = {
-                        "seq": seq,
-                        "type": ev_type,
-                        "ts": time.time(),
-                        "render_url": job.get("render_url"),
-                        # Only present on a multi-variant (A/B) job — mirrors
-                        # the real job_completed/preview_ready events emitted
-                        # by stage_runner.py, so a client resuming mid-flight
-                        # (or after a server restart) sees the same shape a
-                        # live client would have.
-                        **({"render_urls": job["render_urls"]} if job.get("render_urls") else {}),
-                        "message": "Job was interrupted (e.g. a server restart) before completion" if job.get("interrupted") else None,
-                    }
-                    yield f"id: {seq}\ndata: {json.dumps(synthetic, ensure_ascii=False)}\n\n"
-                    return
-            elif last_type in ("job_completed", "job_failed"):
+                    # "awaiting_approval"), and it reconnects forever. Ask the
+                    # store to append the missing terminal event as a REAL,
+                    # seq-numbered event (idempotent), then drain it like any
+                    # other — a stream-local synthetic with an invented seq
+                    # collided with the next real event after a retry, making
+                    # resuming clients skip it.
+                    job_store.ensure_terminal_event(job_id)
+                    if not job_store.get_events(job_id, after_seq=seq):
+                        # Nothing more will ever arrive for a terminal job
+                        # (e.g. this client's lastEventId is already past the
+                        # end of the log) — close instead of looping.
+                        return
+                    continue
+            elif last_type in job_store.TERMINAL_EVENT_TYPES:
                 # The batch we just delivered genuinely ends on a real
                 # terminal event (not an old one buried mid-batch) — done.
                 return

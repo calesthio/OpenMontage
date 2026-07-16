@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 import subprocess
 import time
@@ -873,7 +874,11 @@ class VideoCompose(BaseTool):
         output_path = Path(inputs.get("output_path", "renders/output.mp4")).resolve()
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        cmd = ["npx", "remotion", "render", str(effective_entry), str(comp_id), str(output_path)]
+        cmd = [
+            "npx", "remotion", "render", str(effective_entry), str(comp_id), str(output_path),
+            # bt709 like every other path in this tool — see _remotion_render.
+            "--color-space=bt709",
+        ]
 
         props_path = bespoke.get("props_path")
         if props_path:
@@ -1820,15 +1825,26 @@ class VideoCompose(BaseTool):
         # Deep-copy props so we don't mutate the original
         props = json.loads(json.dumps(composition_data))
 
-        # Convert absolute file paths to file:// URIs for Remotion's
-        # Img and OffthreadVideo components
-        for cut in props.get("cuts", []):
-            source = cut.get("source", "")
-            if source and not source.startswith(("http://", "https://", "file://")):
-                resolved = Path(source).resolve()
-                if resolved.exists():
-                    posix = resolved.as_posix()
-                    cut["source"] = f"file:///{posix}" if not posix.startswith("/") else f"file://{posix}"
+        # Stage every local asset into a public dir and rewrite props to
+        # public-relative paths (resolved by staticFile() in the composer).
+        #
+        # This replaces a file:// URI conversion that NEVER WORKED — verified
+        # empirically 2026-07-17 by rendering real project assets:
+        #   <Img>            → Chrome: "Not allowed to load local resource"
+        #   <OffthreadVideo> → its /proxy endpoint calls @remotion/renderer's
+        #                      readFile(), which throws "Can only download URLs
+        #                      starting with http:// or https://"
+        # Neither 3- nor 4-slash form helps: Remotion has no file:// support at
+        # all. Local assets MUST be served over http from the public dir, which
+        # is exactly what the one working Remotion project (小兔子电视) did by
+        # hand — its scenes[].src are public-relative paths, while the
+        # absolute-path cuts[] this function rewrote went unused. The templated
+        # cut path was dead on arrival for every local asset.
+        public_dir, staged = self._stage_public_assets(props)
+        if staged:
+            logging.getLogger("video_compose").info(
+                "Staged %d asset(s) into public dir %s", staged, public_dir
+            )
 
         # Build a custom themeConfig from the playbook's actual colors.
         # This ensures every video gets a unique visual identity derived
@@ -1872,6 +1888,12 @@ class VideoCompose(BaseTool):
             # with "neither valid JSON nor a file path". The equals form is the
             # API Remotion recommends for file paths and is cross-platform safe.
             f"--props={props_path}",
+            # Remotion v4 defaults to bt601 ("default"), so its deliverable was
+            # tagged bt470bg while EVERY ffmpeg path in this tool tags bt709 —
+            # the same mixed-metadata inconsistency the encode-finishing pass
+            # fixed on the ffmpeg side (verified by ffprobe on a real render).
+            # Since 4.0.83 this performs a real conversion, not just tagging.
+            "--color-space=bt709",
         ]
 
         # Apply media profile dimensions
@@ -2568,6 +2590,90 @@ class VideoCompose(BaseTool):
         )
 
         return final_review
+
+    # Prop paths that reference a local media asset, as (container, key)
+    # traversal rules. Kept explicit rather than "rewrite any string that
+    # looks like a path" so a caption word or a title can never be mangled.
+    _ASSET_CUT_KEYS = ("source", "backgroundImage", "backgroundVideo", "backgroundSrc")
+
+    def _stage_public_assets(self, props: dict[str, Any]) -> tuple[Path, int]:
+        """Symlink every local asset into a per-render public dir, rewriting
+        props in place to public-relative paths.
+
+        Returns (public_dir, staged_count). Remotion serves the public dir over
+        http, and staticFile(relative) — which resolveAsset already produces for
+        relative inputs — resolves against it.
+
+        HARD links, not symlinks: Remotion bundles by COPYING public/ into a
+        webpack temp dir, and that copy does not follow symlinks (verified —
+        the staged names 404'd from inside the bundle). A hard link is
+        indistinguishable from a regular file to any copy routine and still
+        costs no space; projects/ and remotion-composer/ live on one
+        filesystem. Falls back to symlink, then copy, for the cross-device and
+        Windows-without-dev-mode cases.
+
+        Names are content-addressed by absolute path hash to avoid collisions
+        between same-named assets from different scene folders, while staying
+        stable across re-renders (so Remotion's file map can cache).
+        """
+        import hashlib
+
+        composer_dir = Path(__file__).resolve().parent.parent.parent / "remotion-composer"
+        public_dir = composer_dir / "public" / "om-staged"
+        public_dir.mkdir(parents=True, exist_ok=True)
+
+        staged = 0
+
+        def stage(value: str) -> str:
+            nonlocal staged
+            if not value or value.startswith(("http://", "https://", "data:")):
+                return value
+            raw = value[7:] if value.startswith("file://") else value
+            src = Path(raw)
+            if not src.is_absolute():
+                # Already public-relative (the working convention) — leave it.
+                return value
+            if not src.exists():
+                return value
+            digest = hashlib.sha1(str(src.resolve()).encode()).hexdigest()[:12]
+            link = public_dir / f"{digest}{src.suffix.lower()}"
+            if not link.exists():
+                real = src.resolve()
+                try:
+                    os.link(real, link)
+                except OSError:
+                    try:
+                        link.symlink_to(real)
+                    except OSError:
+                        import shutil
+                        shutil.copy2(real, link)
+            staged += 1
+            return f"om-staged/{link.name}"
+
+        for cut in props.get("cuts", []) or []:
+            for key in self._ASSET_CUT_KEYS:
+                if isinstance(cut.get(key), str):
+                    cut[key] = stage(cut[key])
+            if isinstance(cut.get("images"), list):
+                cut["images"] = [
+                    stage(i) if isinstance(i, str) else i for i in cut["images"]
+                ]
+        for scene in props.get("scenes", []) or []:
+            for key in ("src", "videoSrc", "backgroundSrc", "imageSrc"):
+                if isinstance(scene.get(key), str):
+                    scene[key] = stage(scene[key])
+        audio = props.get("audio") or {}
+        for layer in ("narration", "music"):
+            entry = audio.get(layer)
+            if isinstance(entry, dict) and isinstance(entry.get("src"), str):
+                entry["src"] = stage(entry["src"])
+        music = props.get("music")
+        if isinstance(music, dict) and isinstance(music.get("src"), str):
+            music["src"] = stage(music["src"])
+        if isinstance(props.get("videoSrc"), str):
+            props["videoSrc"] = stage(props["videoSrc"])
+
+        return public_dir, staged
 
     def _encode_kenburns_segment(
         self,

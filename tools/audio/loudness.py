@@ -96,7 +96,14 @@ def normalize_media_loudness(
     af = f"{loudnorm_filter(measured)},aresample={OUTPUT_SAMPLE_RATE}"
     cmd = ["ffmpeg", "-y", "-hide_banner", "-i", str(input_path), "-af", af]
     if video_copy:
-        cmd += ["-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart"]
+        cmd += [
+            "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart",
+            # Color metadata is writable even on a stream copy. Remotion tags
+            # colorspace (via --color-space=bt709) but leaves primaries/trc
+            # unset; every ffmpeg encode path in video_compose tags all three,
+            # so complete them here rather than ship a half-tagged deliverable.
+            "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709",
+        ]
     else:
         cmd += ["-ar", str(OUTPUT_SAMPLE_RATE)]
     cmd.append(str(output_path))

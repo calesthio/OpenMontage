@@ -54,13 +54,16 @@ export const LineChart: React.FC<LineChartProps> = ({
   strokeWidth = 3,
 }) => {
   const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
+  const { fps, durationInFrames, width: W, height: H } = useVideoConfig();
 
-  // Chart layout
-  const chartLeft = 160;
-  const chartRight = 1760;
-  const chartTop = title ? 160 : 100;
-  const chartBottom = showLegend ? 880 : 940;
+  // Layout derived from the composition size (Wave 3 item 14 — hardcoded
+  // 1920×1080 constants broke vertical 9:16); type scale follows the
+  // smaller dimension (item 19 — 18px axis labels were illegible).
+  const fs = (n: number) => Math.round((n * Math.min(W, H)) / 1080);
+  const chartLeft = Math.round(W * 0.083);
+  const chartRight = W - Math.round(W * 0.083);
+  const chartTop = title ? Math.round(H * 0.148) : Math.round(H * 0.093);
+  const chartBottom = showLegend ? H - Math.round(H * 0.185) : H - Math.round(H * 0.13);
   const chartWidth = chartRight - chartLeft;
   const chartHeight = chartBottom - chartTop;
 
@@ -109,19 +112,34 @@ export const LineChart: React.FC<LineChartProps> = ({
       }}
     >
       <svg
-        viewBox="0 0 1920 1080"
+        viewBox={`0 0 ${W} ${H}`}
         style={{ width: "100%", height: "100%" }}
       >
+        {/* Area fill gradients — one per series color (item 19: the naked
+            polyline read as "engineering plot"; line + soft area is the
+            Flourish-grade baseline). */}
+        <defs>
+          {series.map((s, i) => {
+            const c = s.color || colors[i % colors.length];
+            return (
+              <linearGradient key={i} id={`line-area-${i}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={c} stopOpacity={0.28} />
+                <stop offset="100%" stopColor={c} stopOpacity={0.02} />
+              </linearGradient>
+            );
+          })}
+        </defs>
+
         {/* Title */}
         {title && (
           <text
-            x={960}
-            y={80}
+            x={W / 2}
+            y={Math.round(H * 0.074)}
             textAnchor="middle"
             fill={textColor}
             fontFamily={fontFamily}
             fontWeight={700}
-            fontSize={48}
+            fontSize={fs(48)}
             opacity={spring({ frame, fps, config: { damping: 20 } })}
           >
             {title}
@@ -152,7 +170,7 @@ export const LineChart: React.FC<LineChartProps> = ({
                   textAnchor="end"
                   fill={textColor}
                   fontFamily={fontFamily}
-                  fontSize={18}
+                  fontSize={fs(26)}
                   fontWeight={400}
                 >
                   {formatNumber(line.value)}
@@ -172,11 +190,11 @@ export const LineChart: React.FC<LineChartProps> = ({
                 />
                 <text
                   x={line.x}
-                  y={chartBottom + 36}
+                  y={chartBottom + fs(38)}
                   textAnchor="middle"
                   fill={textColor}
                   fontFamily={fontFamily}
-                  fontSize={18}
+                  fontSize={fs(26)}
                   fontWeight={400}
                 >
                   {formatNumber(line.value)}
@@ -214,11 +232,11 @@ export const LineChart: React.FC<LineChartProps> = ({
         {xLabel && (
           <text
             x={chartLeft + chartWidth / 2}
-            y={chartBottom + 70}
+            y={chartBottom + fs(74)}
             textAnchor="middle"
             fill={textColor}
             fontFamily={fontFamily}
-            fontSize={22}
+            fontSize={fs(28)}
             fontWeight={500}
             opacity={interpolate(frame, [5, 15], [0, 1], {
               extrapolateLeft: "clamp",
@@ -230,14 +248,14 @@ export const LineChart: React.FC<LineChartProps> = ({
         )}
         {yLabel && (
           <text
-            x={40}
+            x={fs(44)}
             y={chartTop + chartHeight / 2}
             textAnchor="middle"
             fill={textColor}
             fontFamily={fontFamily}
-            fontSize={22}
+            fontSize={fs(28)}
             fontWeight={500}
-            transform={`rotate(-90, 40, ${chartTop + chartHeight / 2})`}
+            transform={`rotate(-90, ${fs(44)}, ${chartTop + chartHeight / 2})`}
             opacity={interpolate(frame, [5, 15], [0, 1], {
               extrapolateLeft: "clamp",
               extrapolateRight: "clamp",
@@ -253,21 +271,22 @@ export const LineChart: React.FC<LineChartProps> = ({
           const sorted = [...s.data].sort((a, b) => a.x - b.x);
           if (sorted.length < 2) return null;
 
-          const pathD = sorted
-            .map((p, i) => {
-              const sx = toSvgX(p.x);
-              const sy = toSvgY(p.y);
-              return i === 0 ? `M ${sx} ${sy}` : `L ${sx} ${sy}`;
-            })
-            .join(" ");
+          const svgPoints = sorted.map((p) => ({ x: toSvgX(p.x), y: toSvgY(p.y) }));
+          // Monotone cubic spline — smooth without overshooting the data
+          // (a plain Catmull-Rom bulges past extremes, which misreads in a
+          // data chart; Fritsch–Carlson stays inside the data envelope).
+          const pathD = monotonePath(svgPoints);
+          const areaD = `${pathD} L ${svgPoints[svgPoints.length - 1].x} ${chartBottom} L ${svgPoints[0].x} ${chartBottom} Z`;
 
-          // Approximate path length for dash animation
+          // Approximate path length for dash animation (chord length ×1.05
+          // headroom for spline curvature).
           let pathLength = 0;
-          for (let i = 1; i < sorted.length; i++) {
-            const dx = toSvgX(sorted[i].x) - toSvgX(sorted[i - 1].x);
-            const dy = toSvgY(sorted[i].y) - toSvgY(sorted[i - 1].y);
+          for (let i = 1; i < svgPoints.length; i++) {
+            const dx = svgPoints[i].x - svgPoints[i - 1].x;
+            const dy = svgPoints[i].y - svgPoints[i - 1].y;
             pathLength += Math.sqrt(dx * dx + dy * dy);
           }
+          pathLength *= 1.05;
 
           const staggerDelay = seriesIdx * 8;
 
@@ -300,6 +319,13 @@ export const LineChart: React.FC<LineChartProps> = ({
 
           return (
             <g key={s.label} opacity={fadeOut}>
+              {/* Area fill under the line — revealed with the draw */}
+              <path
+                d={areaD}
+                fill={`url(#line-area-${seriesIdx})`}
+                stroke="none"
+                opacity={lineOpacity * drawProgress}
+              />
               {/* Line */}
               <path
                 d={pathD}
@@ -327,7 +353,7 @@ export const LineChart: React.FC<LineChartProps> = ({
                       key={`${s.label}-p-${pIdx}`}
                       cx={toSvgX(p.x)}
                       cy={toSvgY(p.y)}
-                      r={5}
+                      r={fs(6)}
                       fill={backgroundColor}
                       stroke={color}
                       strokeWidth={2.5}
@@ -349,23 +375,23 @@ export const LineChart: React.FC<LineChartProps> = ({
           >
             {series.map((s, i) => {
               const color = s.color || colors[i % colors.length];
-              const legendX = 960 - (series.length * 160) / 2 + i * 160;
+              const legendX = W / 2 - (series.length * fs(200)) / 2 + i * fs(200);
               return (
                 <g key={`legend-${i}`}>
                   <rect
                     x={legendX}
-                    y={960}
+                    y={chartBottom + fs(90)}
                     width={24}
                     height={4}
                     rx={2}
                     fill={color}
                   />
                   <text
-                    x={legendX + 32}
-                    y={966}
+                    x={legendX + fs(32)}
+                    y={chartBottom + fs(96)}
                     fill={textColor}
                     fontFamily={fontFamily}
-                    fontSize={20}
+                    fontSize={fs(26)}
                     fontWeight={500}
                   >
                     {s.label}
@@ -385,4 +411,47 @@ function formatNumber(n: number): string {
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   if (Number.isInteger(n)) return String(n);
   return n.toFixed(1);
+}
+
+/** Fritsch–Carlson monotone cubic interpolation → SVG cubic-bezier path.
+ *  Smooth between points, never overshooting the data envelope. */
+function monotonePath(pts: { x: number; y: number }[]): string {
+  const n = pts.length;
+  if (n < 2) return "";
+  const dx: number[] = [];
+  const slope: number[] = [];
+  for (let i = 0; i < n - 1; i++) {
+    const h = pts[i + 1].x - pts[i].x;
+    dx.push(h);
+    slope.push((pts[i + 1].y - pts[i].y) / (h || 1e-9));
+  }
+  const tangent: number[] = [slope[0]];
+  for (let i = 1; i < n - 1; i++) {
+    tangent.push(slope[i - 1] * slope[i] <= 0 ? 0 : (slope[i - 1] + slope[i]) / 2);
+  }
+  tangent.push(slope[n - 2]);
+  for (let i = 0; i < n - 1; i++) {
+    if (slope[i] === 0) {
+      tangent[i] = 0;
+      tangent[i + 1] = 0;
+      continue;
+    }
+    const a = tangent[i] / slope[i];
+    const b = tangent[i + 1] / slope[i];
+    const s = a * a + b * b;
+    if (s > 9) {
+      const tau = 3 / Math.sqrt(s);
+      tangent[i] = tau * a * slope[i];
+      tangent[i + 1] = tau * b * slope[i];
+    }
+  }
+  let d = `M ${pts[0].x} ${pts[0].y}`;
+  for (let i = 0; i < n - 1; i++) {
+    const h = dx[i];
+    d +=
+      ` C ${pts[i].x + h / 3} ${pts[i].y + (tangent[i] * h) / 3}` +
+      ` ${pts[i + 1].x - h / 3} ${pts[i + 1].y - (tangent[i + 1] * h) / 3}` +
+      ` ${pts[i + 1].x} ${pts[i + 1].y}`;
+  }
+  return d;
 }

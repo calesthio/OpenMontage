@@ -43,14 +43,19 @@ export const PieChart: React.FC<PieChartProps> = ({
   animationStyle = "expand",
 }) => {
   const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
+  const { fps, durationInFrames, width: W, height: H } = useVideoConfig();
+  // Responsive layout + type scale (Wave 3 item 14) — the hardcoded
+  // 1920×1080 constants broke vertical 9:16.
+  const fs = (n: number) => Math.round((n * Math.min(W, H)) / 1080);
+  const horizontal = W > H;
 
   const total = data.reduce((sum, d) => sum + d.value, 0) || 1;
 
   // Layout
-  const cx = showLegend ? 760 : 960;
-  const cy = title ? 540 : 500;
-  const outerRadius = 300;
+  // Horizontal: pie left, legend right. Vertical: pie upper, legend below.
+  const cx = showLegend && horizontal ? Math.round(W * 0.396) : Math.round(W / 2);
+  const cy = showLegend && !horizontal ? Math.round(H * 0.38) : Math.round(H * (title ? 0.5 : 0.46));
+  const outerRadius = Math.round(Math.min(W, H) * 0.28);
   const innerRadius = donut ? outerRadius * 0.55 : 0;
 
   // Build slice angles
@@ -99,19 +104,19 @@ export const PieChart: React.FC<PieChartProps> = ({
       }}
     >
       <svg
-        viewBox="0 0 1920 1080"
+        viewBox={`0 0 ${W} ${H}`}
         style={{ width: "100%", height: "100%" }}
       >
         {/* Title */}
         {title && (
           <text
-            x={960}
-            y={80}
+            x={W / 2}
+            y={Math.round(H * 0.074)}
             textAnchor="middle"
             fill={textColor}
             fontFamily={fontFamily}
             fontWeight={700}
-            fontSize={48}
+            fontSize={fs(48)}
             opacity={spring({ frame, fps, config: { damping: 20 } })}
           >
             {title}
@@ -224,7 +229,7 @@ export const PieChart: React.FC<PieChartProps> = ({
                   fill={textColor}
                   fontFamily={fontFamily}
                   fontWeight={800}
-                  fontSize={56}
+                  fontSize={fs(56)}
                 >
                   {centerValue}
                 </text>
@@ -238,7 +243,7 @@ export const PieChart: React.FC<PieChartProps> = ({
                   fill={textColor}
                   fontFamily={fontFamily}
                   fontWeight={400}
-                  fontSize={24}
+                  fontSize={fs(26)}
                   opacity={0.7}
                 >
                   {centerLabel}
@@ -252,8 +257,11 @@ export const PieChart: React.FC<PieChartProps> = ({
         {showLegend && (
           <g opacity={fadeOut}>
             {slices.map((slice, i) => {
-              const legendY = cy - (slices.length * 44) / 2 + i * 44;
-              const legendX = showLegend ? 1200 : cx + outerRadius + 80;
+              const legendRow = fs(46);
+              const legendY = horizontal
+                ? cy - (slices.length * legendRow) / 2 + i * legendRow
+                : cy + outerRadius + fs(70) + i * legendRow;
+              const legendX = horizontal ? Math.round(W * 0.625) : Math.round(W * 0.2);
               const legendOpacity = spring({
                 frame: frame - 15 - i * 3,
                 fps,
@@ -274,7 +282,7 @@ export const PieChart: React.FC<PieChartProps> = ({
                     y={legendY + 6}
                     fill={textColor}
                     fontFamily={fontFamily}
-                    fontSize={22}
+                    fontSize={fs(26)}
                     fontWeight={500}
                   >
                     {slice.datum.label}
@@ -284,11 +292,11 @@ export const PieChart: React.FC<PieChartProps> = ({
                     y={legendY + 6}
                     fill={textColor}
                     fontFamily={fontFamily}
-                    fontSize={22}
+                    fontSize={fs(26)}
                     fontWeight={400}
                     opacity={0.6}
                     textAnchor="end"
-                    dx={280}
+                    dx={fs(300)}
                   >
                     {slice.percentage.toFixed(1)}%
                   </text>

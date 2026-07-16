@@ -49,7 +49,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   percentageFontSize = 28,
 }) => {
   const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
+  const { fps, durationInFrames, width: W } = useVideoConfig();
 
   const clampedProgress = Math.max(0, Math.min(100, progress));
 
@@ -123,8 +123,8 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   const isSegmented = segments && segments.length > 0;
 
   // Bar track dimensions (centered, 70% canvas width)
-  const trackWidth = 1344; // 70% of 1920
-  const trackLeft = (1920 - trackWidth) / 2;
+  const trackWidth = Math.round(W * 0.7);
+  const trackLeft = (W - trackWidth) / 2;
   const trackTop = label ? 520 : 500;
 
   return (
@@ -169,7 +169,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
         {/* Track */}
         <div
           style={{
-            width: `${(trackWidth / 1920) * 100}%`,
+            width: `${(trackWidth / W) * 100}%`,
             position: "relative",
           }}
         >

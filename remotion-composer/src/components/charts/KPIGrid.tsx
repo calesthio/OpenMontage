@@ -46,22 +46,23 @@ export const KPIGrid: React.FC<KPIGridProps> = ({
   animationStyle = "count-up",
 }) => {
   const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
+  const { fps, durationInFrames, width: W, height: H } = useVideoConfig();
+  // Responsive layout (Wave 3 item 14).
+  const fs = (n: number) => Math.round((n * Math.min(W, H)) / 1080);
 
   const cols = Math.min(columns, metrics.length);
   const rows = Math.ceil(metrics.length / cols);
 
-  // Grid layout constants (within 1920x1080)
-  const gridPadding = 100;
-  const cardGap = 28;
-  const titleHeight = title ? 120 : 0;
-  const gridTop = 80 + titleHeight;
-  const gridWidth = 1920 - gridPadding * 2;
-  const gridHeight = 1080 - gridTop - 80;
+  const gridPadding = Math.round(W * 0.052);
+  const cardGap = fs(28);
+  const titleHeight = title ? Math.round(H * 0.111) : 0;
+  const gridTop = Math.round(H * 0.074) + titleHeight;
+  const gridWidth = W - gridPadding * 2;
+  const gridHeight = H - gridTop - Math.round(H * 0.074);
   const cardWidth = (gridWidth - cardGap * (cols - 1)) / cols;
   const cardHeight = Math.min(
     (gridHeight - cardGap * (rows - 1)) / rows,
-    320
+    fs(320)
   );
 
   // Center grid vertically

@@ -56,6 +56,28 @@ export const Root: React.FC = () => {
         }}
         calculateMetadata={calculateMetadata}
       />
+      {/* Vertical 9:16 registration (Wave 3, item 14): the actual customer
+          projects (抖音/B站) deliver vertical, and were previously forced off
+          Remotion because every chart hardcoded a 1920×1080 canvas. Same
+          component — all scene/chart layouts now derive from
+          useVideoConfig(). video_compose selects it via a vertical profile's
+          --width/--height override; this id exists so Studio can preview
+          9:16 directly. */}
+      <Composition
+        id="ExplainerVertical"
+        component={Explainer}
+        durationInFrames={30 * 60}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          cuts: [],
+          overlays: [],
+          captions: [],
+          audio: {},
+        }}
+        calculateMetadata={calculateMetadata}
+      />
       <Composition
         id="CinematicRenderer"
         component={CinematicRenderer}

@@ -42,23 +42,30 @@ export const BarChart: React.FC<BarChartProps> = ({
   barGap = 12,
 }) => {
   const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
+  const { fps, durationInFrames, width: W, height: H } = useVideoConfig();
 
   const maxValue = Math.max(...data.map((d) => d.value), 1);
 
-  // Chart layout constants (within 1920x1080 canvas)
-  const chartLeft = 140;
-  const chartRight = 1780;
-  const chartTop = title ? 160 : 80;
-  const chartBottom = 920;
+  // Layout derived from the actual composition size (audit 2026-07-16,
+  // Wave 3 item 14) — the old hardcoded 1920×1080 constants letterboxed or
+  // clipped in the vertical 9:16 compositions real customer projects use.
+  const chartLeft = Math.round(W * 0.073);
+  const chartRight = W - Math.round(W * 0.073);
+  const chartTop = title ? Math.round(H * 0.148) : Math.round(H * 0.074);
+  const chartBottom = H - Math.round(H * 0.148);
   const chartWidth = chartRight - chartLeft;
   const chartHeight = chartBottom - chartTop;
+
+  // Type scale follows the smaller dimension so vertical 9:16 keeps the
+  // same optical size (item 19: the old 20-22px labels were illegibly
+  // small on a 1080p+ frame).
+  const fs = (n: number) => Math.round((n * Math.min(W, H)) / 1080);
 
   const barCount = data.length;
   const totalGap = barGap * (barCount + 1);
   const barWidth = Math.min(
     (chartWidth - totalGap) / barCount,
-    120
+    Math.round(W * 0.0625)
   );
   const actualTotalWidth = barCount * barWidth + (barCount + 1) * barGap;
   const offsetX = chartLeft + (chartWidth - actualTotalWidth) / 2;
@@ -81,19 +88,30 @@ export const BarChart: React.FC<BarChartProps> = ({
       }}
     >
       <svg
-        viewBox="0 0 1920 1080"
+        viewBox={`0 0 ${W} ${H}`}
         style={{ width: "100%", height: "100%" }}
       >
+        {/* Subtle vertical sheen per bar color — flat single-color rects
+            read as "spreadsheet", the gradient reads as "designed". */}
+        <defs>
+          {colors.map((c, i) => (
+            <linearGradient key={i} id={`bar-grad-${i}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={c} stopOpacity={1} />
+              <stop offset="100%" stopColor={c} stopOpacity={0.78} />
+            </linearGradient>
+          ))}
+        </defs>
+
         {/* Title */}
         {title && (
           <text
-            x={960}
-            y={80}
+            x={W / 2}
+            y={Math.round(H * 0.074)}
             textAnchor="middle"
             fill={textColor}
             fontFamily={fontFamily}
             fontWeight={700}
-            fontSize={48}
+            fontSize={fs(48)}
             opacity={spring({ frame, fps, config: { damping: 20 } })}
           >
             {title}
@@ -127,7 +145,7 @@ export const BarChart: React.FC<BarChartProps> = ({
                   fill={textColor}
                   fontFamily={fontFamily}
                   fontWeight={400}
-                  fontSize={20}
+                  fontSize={fs(28)}
                   opacity={gridOpacity}
                 >
                   {formatNumber(line.value)}
@@ -230,41 +248,42 @@ export const BarChart: React.FC<BarChartProps> = ({
                 y={barY}
                 width={barWidth}
                 height={Math.max(animatedHeight, 0)}
-                fill={color}
+                fill={`url(#bar-grad-${i % colors.length})`}
                 rx={4}
                 opacity={barOpacity}
               />
 
-              {/* Value label */}
+              {/* Value label — counts up with the bar growth (item 19),
+                  landing on the exact formatted value. */}
               {showValues && (
                 <text
                   x={barX + barWidth / 2}
-                  y={barY - 12}
+                  y={barY - fs(14)}
                   textAnchor="middle"
                   fill={textColor}
                   fontFamily={fontFamily}
                   fontWeight={600}
-                  fontSize={22}
+                  fontSize={fs(30)}
                   opacity={interpolate(
                     barProgress,
-                    [0.7, 1],
+                    [0.4, 1],
                     [0, 1],
                     { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
                   )}
                 >
-                  {formatNumber(datum.value)}
+                  {formatNumber(datum.value * Math.min(1, Math.max(0, barProgress)))}
                 </text>
               )}
 
               {/* Label */}
               <text
                 x={barX + barWidth / 2}
-                y={chartBottom + 40}
+                y={chartBottom + fs(44)}
                 textAnchor="middle"
                 fill={textColor}
                 fontFamily={fontFamily}
                 fontWeight={500}
-                fontSize={20}
+                fontSize={fs(28)}
                 opacity={barOpacity}
               >
                 {datum.label}

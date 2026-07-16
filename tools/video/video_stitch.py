@@ -56,6 +56,19 @@ class VideoStitch(BaseTool):
         "spatial_picture_in_picture",
     ]
 
+    # Explicit encode settings for every filter-graph re-encode. The xfade
+    # paths previously passed NO codec/crf/color flags at all, falling to
+    # ffmpeg defaults (CRF 23, untagged color) for the DELIVERABLE — mixed
+    # provider sources need unambiguous bt709 tagging, and +faststart makes
+    # web playback start immediately (audit 2026-07-16, Wave 1 ⑥; mirrors
+    # VideoCompose._COLOR_TAG_FLAGS/_FASTSTART_FLAGS).
+    _FINISH_ENCODE_FLAGS = [
+        "-c:v", "libx264", "-crf", "18", "-preset", "medium",
+        "-pix_fmt", "yuv420p",
+        "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709",
+        "-movflags", "+faststart",
+    ]
+
     input_schema = {
         "type": "object",
         "required": ["operation"],
@@ -466,6 +479,9 @@ class VideoStitch(BaseTool):
             "-c:v", video_codec, "-crf", str(crf), "-preset", preset,
             "-c:a", audio_codec, "-ar", "44100", "-ac", "2",
             "-pix_fmt", "yuv420p",
+            # Tag at normalize time — the later concat is stream-copy, so
+            # whatever color metadata the segments carry IS the deliverable's.
+            "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709",
             str(output_path),
         ]
         self.run_command(cmd)
@@ -631,6 +647,7 @@ class VideoStitch(BaseTool):
                 f"[0:v][1:v]xfade=transition=fade:duration={duration}:offset={self._get_xfade_offset(probes, 0, duration)}[v];"
                 f"[0:a][1:a]acrossfade=d={duration}[a]",
                 "-map", "[v]", "-map", "[a]",
+                *self._FINISH_ENCODE_FLAGS,
                 str(output_path),
             ]
             self.run_command(cmd)
@@ -656,6 +673,7 @@ class VideoStitch(BaseTool):
                 f"[0:v][1:v]xfade=transition=fadeblack:duration={duration}:offset={self._get_xfade_offset(probes, 0, duration)}[v];"
                 f"[0:a][1:a]acrossfade=d={duration}[a]",
                 "-map", "[v]", "-map", "[a]",
+                *self._FINISH_ENCODE_FLAGS,
                 str(output_path),
             ]
             self.run_command(cmd)
@@ -738,6 +756,7 @@ class VideoStitch(BaseTool):
         cmd.extend(input_args)
         cmd.extend(["-filter_complex", filter_complex])
         cmd.extend(["-map", "[vout]", "-map", "[aout]"])
+        cmd.extend(self._FINISH_ENCODE_FLAGS)
         cmd.append(str(output_path))
         self.run_command(cmd)
 

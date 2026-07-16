@@ -127,10 +127,17 @@ class AudioMixer(BaseTool):
                         "type": "number", "minimum": 0, "maximum": 1.0, "default": 0.15,
                     },
                     "attack_ms": {"type": "number", "default": 200},
-                    "release_ms": {"type": "number", "default": 500},
+                    "release_ms": {"type": "number", "default": 800},
                 },
             },
-            "normalize": {"type": "boolean", "default": True},
+            "normalize": {
+                "type": "boolean",
+                "default": True,
+                "description": (
+                    "Two-pass EBU R128 normalization to -14 LUFS / -1.5 dBTP "
+                    "(YouTube target; see tools/audio/loudness.py)."
+                ),
+            },
             "video_path": {
                 "type": "string",
                 "description": (
@@ -210,6 +217,66 @@ class AudioMixer(BaseTool):
         result.duration_seconds = round(time.time() - start, 2)
         return result
 
+    # ------------------------------------------------------------------
+    # Shared helpers (audit 2026-07-16, Wave 1 ① — audio chain quality)
+    # ------------------------------------------------------------------
+
+    def _probe_duration(self, path: str) -> float | None:
+        """Duration of an audio file in seconds, or None if unprobeable."""
+        try:
+            proc = self.run_command([
+                "ffprobe", "-v", "error", "-show_entries", "format=duration",
+                "-of", "csv=p=0", str(path),
+            ], timeout=60)
+            return float(proc.stdout.strip().splitlines()[0])
+        except Exception:
+            return None
+
+    @staticmethod
+    def _duck_envelope_expr(
+        intervals: list[tuple[float, float]],
+        duck_gain: float,
+        attack_s: float,
+        release_s: float,
+    ) -> str:
+        """Volume expression that ducks music DURING speech intervals and
+        returns it to full bed level in the gaps.
+
+        This replaces the old sidechaincompress + static `volume=x*3`
+        compensation, which applied a constant post-gain to the whole track —
+        the music never recovered between narration segments and the
+        advertised music_volume_during_speech semantics were fiction. With
+        known speech intervals (we schedule narration ourselves via
+        start_seconds), a deterministic gain envelope is both more accurate
+        and reproducible than a compressor: gain ramps from 1.0 down to
+        `duck_gain` over `attack_s` at speech start and back up over
+        `release_s` after speech end — the Premiere/Descript ducking model.
+        """
+        attack = max(attack_s, 0.01)
+        release = max(release_s, 0.01)
+        envs = []
+        for start, end in intervals:
+            s, e = round(start, 3), round(end, 3)
+            envs.append(
+                f"if(lt(t,{s}),0,"
+                f"if(lt(t,{s + attack}),(t-{s})/{attack},"
+                f"if(lt(t,{e}),1,"
+                f"if(lt(t,{e + release}),1-(t-{e})/{release},0))))"
+            )
+        env_sum = "+".join(f"({e})" for e in envs) if envs else "0"
+        return f"1-{1 - duck_gain}*min(1,{env_sum})"
+
+    def _normalize_output(self, premix_path: Path, output_path: Path) -> bool:
+        """Two-pass -14 LUFS normalization from a premix file. Best-effort:
+        on failure the premix is promoted to the output unchanged."""
+        from tools.audio.loudness import normalize_media_loudness
+
+        if normalize_media_loudness(premix_path, output_path):
+            premix_path.unlink(missing_ok=True)
+            return True
+        premix_path.replace(output_path)
+        return False
+
     def _mix(self, inputs: dict[str, Any]) -> ToolResult:
         """Mix multiple audio tracks into one output."""
         tracks = inputs.get("tracks", [])
@@ -251,26 +318,33 @@ class AudioMixer(BaseTool):
             else:
                 filter_parts.append(f"[{i}:a]acopy[a{i}]")
 
-        # Amix all processed streams
+        # Amix all processed streams. normalize=0: ffmpeg's amix default
+        # scales every input by 1/n, so a narration+music mix used to arrive
+        # ~6 dB down before loudnorm dragged it back up — audible pumping.
+        # Track gains are OUR job (the per-track volume filters above);
+        # amix must just sum.
         mix_inputs = "".join(f"[a{i}]" for i in range(len(tracks)))
         filter_parts.append(
-            f"{mix_inputs}amix=inputs={len(tracks)}:duration=longest:dropout_transition=2[mixed]"
+            f"{mix_inputs}amix=inputs={len(tracks)}:duration=longest:"
+            f"dropout_transition=2:normalize=0[mixed]"
         )
-
-        if normalize:
-            filter_parts.append("[mixed]loudnorm=I=-16:LRA=11:TP=-1.5[out]")
-            out_label = "[out]"
-        else:
-            out_label = "[mixed]"
 
         filter_complex = ";".join(filter_parts)
 
+        # Render the premix at 48 kHz, then two-pass normalize to -14 LUFS.
+        # The old in-graph single-pass loudnorm ran in dynamic mode (audible
+        # gain pumping) at -16, and silently resampled the output to 192 kHz.
+        premix_path = output_path.with_name(output_path.stem + ".premix.wav") if normalize else output_path
         cmd = ["ffmpeg", "-y"]
         cmd.extend(input_args)
         cmd.extend(["-filter_complex", filter_complex])
-        cmd.extend(["-map", out_label, str(output_path)])
+        cmd.extend(["-map", "[mixed]", "-ar", "48000", str(premix_path)])
 
         self.run_command(cmd)
+
+        normalized = False
+        if normalize:
+            normalized = self._normalize_output(premix_path, output_path)
 
         return ToolResult(
             success=True,
@@ -278,7 +352,8 @@ class AudioMixer(BaseTool):
                 "operation": "mix",
                 "track_count": len(tracks),
                 "output": str(output_path),
-                "normalized": normalize,
+                "normalized": normalized,
+                "loudness_target_lufs": -14 if normalized else None,
             },
             artifacts=[str(output_path)],
         )
@@ -354,19 +429,38 @@ class AudioMixer(BaseTool):
                 ),
             )
 
-        # Use FFmpeg sidechaincompress for ducking
         music_vol = ducking.get("music_volume_during_speech", 0.15)
         attack = ducking.get("attack_ms", 200) / 1000
-        release = ducking.get("release_ms", 500) / 1000
+        release = ducking.get("release_ms", 800) / 1000
 
-        # Sidechain compress: use speech as the key signal to duck music
-        filter_complex = (
-            f"[1:a]sidechaincompress="
-            f"threshold=0.02:ratio=9:attack={attack}:release={release}:"
-            f"level_sc=1:mix=0.9[ducked];"
-            f"[ducked]volume={music_vol * 3}[music_out];"  # compensate sidechain level
-            f"[0:a][music_out]amix=inputs=2:duration=longest[out]"
-        )
+        # Deterministic envelope duck (see _duck_envelope_expr): music dips to
+        # music_vol for the speech track's duration and recovers afterward.
+        # Falls back to sidechaincompress only when the speech file can't be
+        # probed — WITHOUT the old static `volume=x*3` "compensation", which
+        # was a constant post-gain that defeated the duck's recovery.
+        speech_dur = self._probe_duration(speech_path)
+        if speech_dur is not None:
+            expr = self._duck_envelope_expr([(0.0, speech_dur)], music_vol, attack, release)
+            music_chain = f"[1:a]volume='{expr}':eval=frame[music_out]"
+        else:
+            music_chain = (
+                f"[1:a]sidechaincompress="
+                f"threshold=0.02:ratio=9:attack={attack}:release={release}:"
+                f"level_sc=1[music_out]"
+            )
+        # A label can only be consumed once — the sidechain fallback needs the
+        # speech twice (key + mix), so fork it explicitly.
+        if speech_dur is not None:
+            filter_complex = (
+                f"{music_chain};"
+                f"[0:a][music_out]amix=inputs=2:duration=longest:normalize=0[out]"
+            )
+        else:
+            filter_complex = (
+                f"[0:a]asplit=2[speech_key][speech_mix];"
+                f"{music_chain.replace('[1:a]', '[1:a][speech_key]')};"
+                f"[speech_mix][music_out]amix=inputs=2:duration=longest:normalize=0[out]"
+            )
 
         cmd = [
             "ffmpeg", "-y",
@@ -374,6 +468,7 @@ class AudioMixer(BaseTool):
             "-i", music_path,
             "-filter_complex", filter_complex,
             "-map", "[out]",
+            "-ar", "48000",
             str(output_path),
         ]
 
@@ -498,23 +593,20 @@ class AudioMixer(BaseTool):
         # If ducking is enabled and we have both speech and music, apply sidechain
         duck_enabled = ducking.get("enabled", True) if isinstance(ducking, dict) else bool(ducking)
 
+        duck_mode = "none"
         if duck_enabled and speech_tracks and music_tracks:
-            # Build ONE speech stream, then split it into two independent
-            # branches: one feeds the sidechain compressor as the ducking key,
-            # the other is mixed into the final output. A filtergraph label may
-            # only be consumed once, so reusing the same speech label for both
-            # the sidechain key and the output mix is invalid on stricter ffmpeg
-            # builds (e.g. the Linux ffmpeg on CI). asplit makes the fork explicit.
+            # Combine speech tracks (they're time-offset narration segments —
+            # normalize=0 so amix doesn't scale each by 1/n).
             speech_indices = list(range(len(speech_tracks)))
             speech_labels = "".join(f"[a{i}]" for i in speech_indices)
 
             if len(speech_tracks) > 1:
                 filter_parts.append(
-                    f"{speech_labels}amix=inputs={len(speech_tracks)}:duration=longest[speech_all]"
+                    f"{speech_labels}amix=inputs={len(speech_tracks)}:"
+                    f"duration=longest:normalize=0[speech_out]"
                 )
             else:
-                filter_parts.append(f"[a{speech_indices[0]}]acopy[speech_all]")
-            filter_parts.append("[speech_all]asplit=2[speech_key][speech_out]")
+                filter_parts.append(f"[a{speech_indices[0]}]acopy[speech_out]")
 
             # Mix music tracks together
             music_start = len(speech_tracks)
@@ -523,27 +615,53 @@ class AudioMixer(BaseTool):
 
             if len(music_tracks) > 1:
                 filter_parts.append(
-                    f"{music_labels}amix=inputs={len(music_tracks)}:duration=longest[music_mix]"
+                    f"{music_labels}amix=inputs={len(music_tracks)}:"
+                    f"duration=longest:normalize=0[music_mix]"
                 )
                 music_in = "[music_mix]"
             else:
                 music_in = f"[a{music_indices[0]}]"
 
-            # Apply sidechain ducking — music is compressed, [speech_key] is the key
             duck_params = ducking if isinstance(ducking, dict) else {}
             attack = duck_params.get("attack_ms", 200) / 1000
-            release = duck_params.get("release_ms", 500) / 1000
+            release = duck_params.get("release_ms", 800) / 1000
             music_vol = duck_params.get("music_volume_during_speech", 0.15)
 
-            filter_parts.append(
-                f"{music_in}[speech_key]sidechaincompress="
-                f"threshold=0.02:ratio=9:attack={attack}:release={release}:"
-                f"level_sc=1:mix=0.9[ducked_music];"
-                f"[ducked_music]volume={music_vol * 3}[music_out]"
-            )
+            # Deterministic envelope duck: we SCHEDULE the narration segments
+            # ourselves (start_seconds + probed duration), so the exact speech
+            # intervals are known — a gain envelope dips music to music_vol
+            # during them and lets it genuinely recover in the gaps. The old
+            # sidechaincompress chain ended in a static `volume=x*3`
+            # compensation gain, so the music level never came back up between
+            # segments and music_volume_during_speech was a constant scaler,
+            # not a duck depth (audit 2026-07-16, Wave 1 ①).
+            intervals: list[tuple[float, float]] = []
+            for t in speech_tracks:
+                dur = self._probe_duration(t["path"])
+                if dur is None:
+                    intervals = []
+                    break
+                start = float(t.get("start_seconds", 0))
+                intervals.append((start, start + dur))
 
-            # Final mix: the other speech branch + ducked music
-            mix_label = "[speech_out][music_out]amix=inputs=2:duration=longest[premix]"
+            if intervals:
+                duck_mode = "envelope"
+                expr = self._duck_envelope_expr(intervals, music_vol, attack, release)
+                filter_parts.append(f"{music_in}volume='{expr}':eval=frame[music_out]")
+            else:
+                # Probe failed → compressor fallback, without the old static
+                # post-gain. Needs the speech twice (key + mix): fork it.
+                duck_mode = "sidechain"
+                filter_parts[-1] = filter_parts[-1].replace("[speech_out]", "[speech_all]")
+                filter_parts.append("[speech_all]asplit=2[speech_key][speech_out]")
+                filter_parts.append(
+                    f"{music_in}[speech_key]sidechaincompress="
+                    f"threshold=0.02:ratio=9:attack={attack}:release={release}:"
+                    f"level_sc=1[music_out]"
+                )
+
+            # Final mix: speech + ducked music
+            mix_label = "[speech_out][music_out]amix=inputs=2:duration=longest:normalize=0[premix]"
 
             # Add SFX if present
             sfx_start = len(speech_tracks) + len(music_tracks)
@@ -551,7 +669,8 @@ class AudioMixer(BaseTool):
                 sfx_labels = "".join(f"[a{i}]" for i in range(sfx_start, sfx_start + len(sfx_tracks)))
                 filter_parts.append(mix_label.replace("[premix]", "[pressfx]"))
                 filter_parts.append(
-                    f"[pressfx]{sfx_labels}amix=inputs={1 + len(sfx_tracks)}:duration=longest[premix]"
+                    f"[pressfx]{sfx_labels}amix=inputs={1 + len(sfx_tracks)}:"
+                    f"duration=longest:normalize=0[premix]"
                 )
             else:
                 filter_parts.append(mix_label)
@@ -560,24 +679,25 @@ class AudioMixer(BaseTool):
             # No ducking: simple amix of all tracks
             all_labels = "".join(f"[a{i}]" for i in range(len(all_tracks)))
             filter_parts.append(
-                f"{all_labels}amix=inputs={len(all_tracks)}:duration=longest:dropout_transition=2[premix]"
+                f"{all_labels}amix=inputs={len(all_tracks)}:duration=longest:"
+                f"dropout_transition=2:normalize=0[premix]"
             )
-
-        # Normalize
-        if normalize:
-            filter_parts.append("[premix]loudnorm=I=-16:LRA=11:TP=-1.5[out]")
-            out_label = "[out]"
-        else:
-            out_label = "[premix]"
 
         filter_complex = ";".join(p for p in filter_parts if p)
 
+        # Render the premix at 48 kHz, then two-pass normalize to -14 LUFS
+        # (see _mix for why the old in-graph single-pass loudnorm was wrong).
+        premix_path = output_path.with_name(output_path.stem + ".premix.wav") if normalize else output_path
         cmd = ["ffmpeg", "-y"]
         cmd.extend(input_args)
         cmd.extend(["-filter_complex", filter_complex])
-        cmd.extend(["-map", out_label, str(output_path)])
+        cmd.extend(["-map", "[premix]", "-ar", "48000", str(premix_path)])
 
         self.run_command(cmd)
+
+        normalized = False
+        if normalize:
+            normalized = self._normalize_output(premix_path, output_path)
 
         return ToolResult(
             success=True,
@@ -587,7 +707,9 @@ class AudioMixer(BaseTool):
                 "music_tracks": len(music_tracks),
                 "sfx_tracks": len(sfx_tracks),
                 "ducking_enabled": duck_enabled,
-                "normalized": normalize,
+                "duck_mode": duck_mode,
+                "normalized": normalized,
+                "loudness_target_lufs": -14 if normalized else None,
                 "output": str(output_path),
             },
             artifacts=[str(output_path)],
@@ -660,7 +782,9 @@ class AudioMixer(BaseTool):
             f"volume='{vol_expr}':eval=frame[music_shaped];"
             f"[0:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo[speech];"
             f"[music_shaped]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo[music_fmt];"
-            f"[speech][music_fmt]amix=inputs=2:duration=first:dropout_transition=2[aout]"
+            # normalize=0 — amix's default 1/n scaling would drop the video's
+            # own speech 6 dB the moment music is mixed in.
+            f"[speech][music_fmt]amix=inputs=2:duration=first:dropout_transition=2:normalize=0[aout]"
         )
 
         cmd = [

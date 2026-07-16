@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import subprocess
 import time
 from pathlib import Path
@@ -344,6 +345,18 @@ class VideoCompose(BaseTool):
         try:
             if operation == "compose":
                 result = self._compose(inputs)
+                # The direct compose operation is tool_bridge's DEFAULT and
+                # its output is routed as the official renders/final.mp4 —
+                # yet it previously bypassed the mandatory final self-review
+                # entirely (only _render's engine paths ran it), so a silent
+                # or broken deliverable shipped unreviewed (audit 2026-07-16,
+                # Wave 1 ⑦). Gate it exactly like _render does.
+                result = self._review_and_gate(
+                    result,
+                    Path(inputs.get("output_path", "composed_output.mp4")),
+                    inputs.get("edit_decisions") or {},
+                    inputs,
+                )
             elif operation == "render":
                 result = self._render(inputs)
             elif operation == "remotion_render":
@@ -363,6 +376,23 @@ class VideoCompose(BaseTool):
         return result
 
     _IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif", ".webp"}
+
+    # Broadcast-standard HD color tagging for every libx264 encode. Mixed
+    # provider sources (Seedance/Kling/Pexels) arrive with inconsistent or
+    # missing color metadata; without explicit bt709 tags players guess —
+    # concat output could shift/wash colors depending on the player (audit
+    # 2026-07-16, Wave 1 ⑥). Tagging at encode time makes the deliverable
+    # unambiguous.
+    _COLOR_TAG_FLAGS = [
+        "-colorspace", "bt709",
+        "-color_primaries", "bt709",
+        "-color_trc", "bt709",
+    ]
+
+    # +faststart moves the moov atom to the file head so web players start
+    # progressive playback immediately. Pure mux-time flag — works with
+    # -c copy too.
+    _FASTSTART_FLAGS = ["-movflags", "+faststart"]
 
     @staticmethod
     def _is_image(path: Path) -> bool:
@@ -414,6 +444,20 @@ class VideoCompose(BaseTool):
         crf = inputs.get("crf", 23)
         preset = inputs.get("preset", "medium")
         profile_name = inputs.get("profile")
+        # A named profile's codec/CRF are binding unless explicitly
+        # overridden. media_profiles.py declares per-platform CRF 16-20, but
+        # this method previously read only the profile's width/height/fps —
+        # every profiled render silently fell back to CRF 23.
+        if profile_name:
+            try:
+                from lib.media_profiles import get_profile
+                _p = get_profile(profile_name)
+                if "codec" not in inputs:
+                    codec = _p.codec
+                if "crf" not in inputs:
+                    crf = _p.crf
+            except (ImportError, ValueError):
+                pass
 
         # Resolve target resolution + fit mode. Priority: explicit `profile`
         # arg > edit_decisions.metadata.compose_target > default (landscape HD).
@@ -548,6 +592,7 @@ class VideoCompose(BaseTool):
                         "-crf", str(crf),
                         "-preset", preset,
                         "-pix_fmt", "yuv420p",
+                        *self._COLOR_TAG_FLAGS,
                         "-r", "30",
                     ])
 
@@ -583,6 +628,7 @@ class VideoCompose(BaseTool):
                             "-crf", str(crf),
                             "-preset", preset,
                             "-pix_fmt", "yuv420p",
+                            *self._COLOR_TAG_FLAGS,
                             "-r", "30",
                             "-c:a", "aac",
                             "-b:a", "192k",
@@ -644,7 +690,12 @@ class VideoCompose(BaseTool):
             if needs_reencode:
                 if vfilters:
                     cmd.extend(["-vf", ",".join(vfilters)])
-                cmd.extend(["-c:v", codec, "-crf", str(crf), "-preset", preset])
+                # This is the SECOND lossy generation (segments were already
+                # encoded at `crf`) — finish at least one notch finer so the
+                # subtitle-burn pass doesn't stack visible loss on top.
+                finishing_crf = min(crf, 18)
+                cmd.extend(["-c:v", codec, "-crf", str(finishing_crf), "-preset", preset])
+                cmd.extend(self._COLOR_TAG_FLAGS)
                 cmd.extend(profile_flags)
             else:
                 cmd.extend(["-c:v", "copy"])
@@ -657,6 +708,8 @@ class VideoCompose(BaseTool):
             else:
                 cmd.extend(["-c:a", "copy"])
 
+            # Deliverable mux polish — works on the copy path too.
+            cmd.extend(self._FASTSTART_FLAGS)
             cmd.append(str(output_path))
             self.run_command(cmd)
 
@@ -1088,7 +1141,10 @@ class VideoCompose(BaseTool):
             bg = palette.get("background", "#FFFFFF")
             text = palette.get("text", "#1F2937")
             surface = palette.get("surface", bg)
-            muted = palette.get("muted_text", "#6B7280")
+            # Schema key is `muted` — the old `muted_text` lookup never
+            # matched any playbook, so the muted color silently stayed at
+            # the default for every render (audit 2026-07-16, Wave 1 ⑤).
+            muted = palette.get("muted") or palette.get("muted_text", "#6B7280")
 
             # Build chart colors from all palette entries
             chart_colors = []
@@ -1106,7 +1162,11 @@ class VideoCompose(BaseTool):
                 "surfaceColor": surface,
                 "textColor": text,
                 "mutedTextColor": muted,
-                "headingFont": typo.get("heading", {}).get("font", "Inter"),
+                # Schema key is `headings` (plural, see playbook.schema.json's
+                # typography block) — the old singular `heading` lookup never
+                # matched, so headingFont fell back to Inter for EVERY
+                # playbook and theme typography was fiction.
+                "headingFont": (typo.get("headings") or typo.get("heading") or {}).get("font", "Inter"),
                 "bodyFont": typo.get("body", {}).get("font", "Inter"),
                 "monoFont": typo.get("code", {}).get("font", "JetBrains Mono"),
                 "chartColors": chart_colors[:6],
@@ -1122,13 +1182,19 @@ class VideoCompose(BaseTool):
                 else f"rgba(15, 23, 42, 0.75)"
             )
 
-            # Motion style from playbook
-            motion = playbook.get("motion", {})
-            pace = motion.get("pace", "moderate")
-            if pace == "fast":
+            # Motion style from the playbook's pace. The schema puts pace
+            # under identity.pace (slow/gentle/deliberate/moderate/fast/
+            # rapid) — the old `motion.pace` lookup matched nothing, so this
+            # branch never fired for any playbook.
+            pace = (
+                playbook.get("identity", {}).get("pace")
+                or playbook.get("motion", {}).get("pace")
+                or "moderate"
+            )
+            if pace in ("fast", "rapid"):
                 theme["springConfig"] = {"damping": 12, "stiffness": 80, "mass": 1}
                 theme["transitionDuration"] = 0.3
-            elif pace == "slow":
+            elif pace in ("slow", "gentle", "deliberate"):
                 theme["springConfig"] = {"damping": 25, "stiffness": 150, "mass": 1}
                 theme["transitionDuration"] = 0.6
 
@@ -1469,34 +1535,51 @@ class VideoCompose(BaseTool):
             render_result = self._compose(compose_inputs)
 
         # --- Post-render: mandatory final self-review ---
-        if render_result.success and output_path.exists():
-            final_review = self._run_final_review(
-                output_path,
-                edit_decisions,
-                inputs.get("proposal_packet"),
-                narration_transcript_path=inputs.get("narration_transcript_path"),
-                script_text=inputs.get("script_text") or self._read_text_file(
-                    inputs.get("script_path")
+        return self._review_and_gate(render_result, output_path, edit_decisions, inputs)
+
+    def _review_and_gate(
+        self,
+        render_result: ToolResult,
+        output_path: Path,
+        edit_decisions: dict[str, Any],
+        inputs: dict[str, Any],
+    ) -> ToolResult:
+        """Run the mandatory final self-review and gate the ToolResult on it.
+
+        Shared by _render (all engine paths) and the direct `compose`
+        operation — the latter is tool_bridge's default and produces the
+        official final.mp4, yet previously shipped with ZERO review.
+        """
+        if not (render_result.success and output_path.exists()):
+            return render_result
+
+        final_review = self._run_final_review(
+            output_path,
+            edit_decisions,
+            inputs.get("proposal_packet"),
+            narration_transcript_path=inputs.get("narration_transcript_path"),
+            script_text=inputs.get("script_text") or self._read_text_file(
+                inputs.get("script_path")
+            ),
+        )
+
+        # Attach final_review to the ToolResult data so the compose-director
+        # skill can include it in the checkpoint alongside the render_report.
+        if render_result.data is None:
+            render_result.data = {}
+        render_result.data["final_review"] = final_review
+        render_result.data["final_review_status"] = final_review["status"]
+
+        # If the self-review says fail, downgrade the ToolResult
+        if final_review["status"] == "fail":
+            return ToolResult(
+                success=False,
+                error=(
+                    "Post-render self-review FAILED. The output is not presentable.\n"
+                    + "\n".join(f"  • {i}" for i in final_review.get("issues_found", []))
                 ),
+                data=render_result.data,
             )
-
-            # Attach final_review to the ToolResult data so the compose-director
-            # skill can include it in the checkpoint alongside the render_report.
-            if render_result.data is None:
-                render_result.data = {}
-            render_result.data["final_review"] = final_review
-            render_result.data["final_review_status"] = final_review["status"]
-
-            # If the self-review says fail, downgrade the ToolResult
-            if final_review["status"] == "fail":
-                return ToolResult(
-                    success=False,
-                    error=(
-                        "Post-render self-review FAILED. The output is not presentable.\n"
-                        + "\n".join(f"  • {i}" for i in final_review.get("issues_found", []))
-                    ),
-                    data=render_result.data,
-                )
 
         return render_result
 
@@ -1823,12 +1906,34 @@ class VideoCompose(BaseTool):
                 error=f"Remotion render completed but output file missing: {output_path}",
             )
 
+        # Post-render loudness normalization (audit 2026-07-16, Wave 1 ①).
+        # The Remotion path muxes narration/music at whatever level the TTS
+        # provider delivered — the ONLY audio processing the deliverable would
+        # ever get. Two-pass loudnorm to -14 LUFS with -c:v copy is an
+        # audio-only remux (cheap even for long renders). Best-effort: a
+        # normalization failure never fails a render that already exists.
+        loudness_normalized = False
+        try:
+            from tools.audio.loudness import normalize_media_loudness
+            norm_path = output_path.with_name(output_path.stem + ".loudnorm.mp4")
+            if normalize_media_loudness(output_path, norm_path, video_copy=True):
+                norm_path.replace(output_path)
+                loudness_normalized = True
+            else:
+                norm_path.unlink(missing_ok=True)
+        except Exception:
+            logging.getLogger("video_compose").warning(
+                "Loudness normalization failed for %s", output_path, exc_info=True
+            )
+
         return ToolResult(
             success=True,
             data={
                 "operation": "remotion_render",
                 "output": str(output_path),
                 "profile": profile_name,
+                "loudness_normalized": loudness_normalized,
+                "loudness_target_lufs": -14 if loudness_normalized else None,
             },
             artifacts=[str(output_path)],
         )
@@ -2366,6 +2471,24 @@ class VideoCompose(BaseTool):
             status = "pass"
             recommended_action = "present_to_user"
 
+        # Objectively-unusable deliverables are a hard FAIL, not a "revise"
+        # suggestion. A video whose audio track is effectively silent used to
+        # sail through as success=True with a note in data that nothing was
+        # obliged to read (audit 2026-07-16, Wave 1 ⑦). Silence only counts
+        # as unusable when the edit actually ASKED for audio — _compose
+        # injects a silent track for soundless sources, so a deliberately
+        # audio-free composition (video-only cuts, no narration/music) is a
+        # legitimate silent deliverable, not a defect.
+        audio_expected = any(
+            (edit_decisions or {}).get(k) for k in ("audio", "music", "narration")
+        )
+        _fail_keywords = ["ffprobe failed"]
+        if audio_expected:
+            _fail_keywords += ["effectively silent", "no audio stream"]
+        if any(any(kw in i.lower() for kw in _fail_keywords) for i in issues):
+            status = "fail"
+            recommended_action = "re_render"
+
         if not technical_probe.get("valid_container"):
             status = "fail"
             recommended_action = "re_render"
@@ -2426,7 +2549,9 @@ class VideoCompose(BaseTool):
             "-i", str(input_path),
             "-vf", f"subtitles='{sub_escaped}':force_style='{ass_style}'",
             "-c:v", codec, "-crf", str(crf),
+            *self._COLOR_TAG_FLAGS,
             "-c:a", "copy",
+            *self._FASTSTART_FLAGS,
             str(output_path),
         ]
 
@@ -2496,7 +2621,8 @@ class VideoCompose(BaseTool):
         cmd.extend(input_args)
         cmd.extend(["-filter_complex", filter_complex])
         cmd.extend(["-map", f"[{prev_label}]", "-map", "0:a?"])
-        cmd.extend(["-c:v", codec, "-crf", str(crf), "-c:a", "copy"])
+        cmd.extend(["-c:v", codec, "-crf", str(crf), *self._COLOR_TAG_FLAGS, "-c:a", "copy"])
+        cmd.extend(self._FASTSTART_FLAGS)
         cmd.append(str(output_path))
 
         self.run_command(cmd)
@@ -2523,22 +2649,30 @@ class VideoCompose(BaseTool):
         if not input_path.exists():
             return ToolResult(success=False, error=f"Input not found: {input_path}")
 
+        # Profile codec/CRF are binding unless explicitly overridden — this
+        # previously applied only the profile's resolution/fps (see _compose).
+        profile_flags: list[str] = []
+        if profile_name:
+            try:
+                from lib.media_profiles import get_profile
+                profile = get_profile(profile_name)
+                if "codec" not in inputs:
+                    codec = profile.codec
+                if "crf" not in inputs:
+                    crf = profile.crf
+                profile_flags = ["-s", f"{profile.width}x{profile.height}", "-r", str(profile.fps)]
+            except (ImportError, ValueError):
+                pass  # proceed without profile
+
         cmd = [
             "ffmpeg", "-y",
             "-i", str(input_path),
             "-c:v", codec, "-crf", str(crf), "-preset", preset,
+            *self._COLOR_TAG_FLAGS,
             "-c:a", "aac", "-b:a", "192k",
+            *profile_flags,
+            *self._FASTSTART_FLAGS,
         ]
-
-        # Apply media profile if specified
-        if profile_name:
-            try:
-                from lib.media_profiles import get_profile, ffmpeg_output_args
-                profile = get_profile(profile_name)
-                cmd.extend(["-s", f"{profile.width}x{profile.height}"])
-                cmd.extend(["-r", str(profile.fps)])
-            except (ImportError, ValueError):
-                pass  # proceed without profile
 
         cmd.append(str(output_path))
         self.run_command(cmd)
@@ -2581,8 +2715,12 @@ class VideoCompose(BaseTool):
         if playbook:
             typo = playbook.get("typography", {})
             colors = playbook.get("visual_language", {}).get("color_palette", {})
-            if typo.get("body", {}).get("family"):
-                resolved["font"] = typo["body"]["family"]
+            # Schema key is `font` (see playbook.schema.json font_spec) — the
+            # old `family` lookup never matched, so the subtitle font
+            # silently stayed at the default for every playbook.
+            body_font = typo.get("body", {}).get("font") or typo.get("body", {}).get("family")
+            if body_font:
+                resolved["font"] = body_font
             if colors.get("text"):
                 resolved["primary_color"] = colors["text"]
             if colors.get("background"):
@@ -2607,6 +2745,32 @@ class VideoCompose(BaseTool):
         return resolved
 
     @staticmethod
+    def _hex_to_ass_color(color: str, alpha: int = 0) -> str:
+        """Convert a #RRGGBB(AA) hex color to ASS &HAABBGGRR format.
+
+        libass force_style color values MUST be in &HAABBGGRR (alpha 00 =
+        opaque, FF = transparent; channels reversed vs CSS). Raw hex was
+        previously passed straight through, so playbook-derived subtitle
+        colors were misparsed or ignored on every burn — the styles never
+        rendered as designed (audit 2026-07-16, Wave 1 ④). Values already in
+        &H… form pass through; non-hex values (font names would never reach
+        here, but rgba() strings could) fall back unchanged rather than
+        producing garbage.
+        """
+        value = (color or "").strip()
+        if value.upper().startswith("&H"):
+            return value
+        m = re.fullmatch(r"#?([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})?", value)
+        if not m:
+            return value
+        rgb = m.group(1)
+        if m.group(2) is not None:
+            # CSS trailing alpha: FF = opaque → ASS: 00 = opaque.
+            alpha = 255 - int(m.group(2), 16)
+        r, g, b = rgb[0:2], rgb[2:4], rgb[4:6]
+        return f"&H{alpha:02X}{b}{g}{r}".upper()
+
+    @staticmethod
     def _build_subtitle_style(style: dict) -> str:
         """Build ASS force_style string from style dict."""
         parts = []
@@ -2614,11 +2778,14 @@ class VideoCompose(BaseTool):
         parts.append(f"FontSize={style.get('font_size', 28)}")
         parts.append(f"Bold={1 if style.get('bold', True) else 0}")
         if style.get("primary_color"):
-            parts.append(f"PrimaryColour={style['primary_color']}")
+            parts.append(f"PrimaryColour={VideoCompose._hex_to_ass_color(style['primary_color'])}")
         if style.get("outline_color"):
-            parts.append(f"OutlineColour={style['outline_color']}")
+            parts.append(f"OutlineColour={VideoCompose._hex_to_ass_color(style['outline_color'])}")
         if style.get("back_color"):
-            parts.append(f"BackColour={style['back_color']}")
+            # Semi-transparent by default: BackColour is the box fill under
+            # BorderStyle=3 (and the shadow color otherwise) — a fully
+            # opaque box reads heavy over video.
+            parts.append(f"BackColour={VideoCompose._hex_to_ass_color(style['back_color'], alpha=0x60)}")
         border_style = style.get("border_style", 1)
         parts.append(f"BorderStyle={border_style}")
         parts.append(f"Outline={style.get('outline_width', 2)}")

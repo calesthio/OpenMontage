@@ -425,22 +425,27 @@ const ImageScene: React.FC<{ src: string; animation?: string }> = ({
 // Enhanced Video Scene
 // ---------------------------------------------------------------------------
 
-const VideoScene: React.FC<{ src: string; startFrom?: number }> = ({
-  src,
-  startFrom = 0,
-}) => {
+const VideoScene: React.FC<{
+  src: string;
+  startFrom?: number;
+  fadeInEnabled?: boolean;
+  fadeOutEnabled?: boolean;
+  bg?: string;
+}> = ({ src, startFrom = 0, fadeInEnabled = true, fadeOutEnabled = true, bg = "#0F172A" }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
 
-  const fadeIn = spring({ frame, fps, config: { damping: 20 } });
+  const fadeIn = fadeInEnabled ? spring({ frame, fps, config: { damping: 20 } }) : 1;
   const fadeOutStart = durationInFrames - 8;
-  const fadeOut = interpolate(frame, [fadeOutStart, durationInFrames], [1, 0.3], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const fadeOut = fadeOutEnabled
+    ? interpolate(frame, [fadeOutStart, durationInFrames], [1, 0.3], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      })
+    : 1;
 
   return (
-    <AbsoluteFill style={{ background: "#0F172A" }}>
+    <AbsoluteFill style={{ background: bg }}>
       <OffthreadVideo
         src={resolveAsset(src)}
         startFrom={Math.round(startFrom * fps)}
@@ -721,7 +726,15 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
   }
 
   if (cut.source && isVideo(cut.source)) {
-    return maybeWrapWithBg(<VideoScene src={cut.source} startFrom={cut.source_in_seconds ?? 0} />);
+    return maybeWrapWithBg(
+      <VideoScene
+        src={cut.source}
+        startFrom={cut.source_in_seconds ?? 0}
+        fadeInEnabled={cut.transition_in !== "none"}
+        fadeOutEnabled={cut.transition_out !== "none"}
+        bg={cut.backgroundColor || "#0F172A"}
+      />
+    );
   }
 
   // Final fallback — try as image if source exists, otherwise show text_card

@@ -87,7 +87,7 @@ class VideoCompose(BaseTool):
         "properties": {
             "operation": {
                 "type": "string",
-                "enum": ["compose", "render", "remotion_render", "burn_subtitles", "overlay", "encode"],
+                "enum": ["compose", "render", "remotion_render", "burn_subtitles", "overlay", "encode", "extract_poster"],
                 "description": (
                     "compose: low-level concat cuts + audio + subtitles. "
                     "render: high-level — resolves asset IDs, auto-routes to Remotion "
@@ -365,6 +365,8 @@ class VideoCompose(BaseTool):
                 result = self._burn_subtitles(inputs)
             elif operation == "overlay":
                 result = self._overlay(inputs)
+            elif operation == "extract_poster":
+                result = self._extract_poster(inputs)
             elif operation == "encode":
                 result = self._encode(inputs)
             else:
@@ -1346,6 +1348,27 @@ class VideoCompose(BaseTool):
                 "Re-run the proposal stage with a renderer_family selection."
             )
 
+        # --- 4. Timeline integrity + pacing (Wave 2, item 13) ---
+        # Manifests promise "no gaps or overlaps" and playbooks declare
+        # pacing_rules; neither had any enforcement. Inverted cuts and
+        # same-layer overlaps BLOCK (they corrupt the ffmpeg path); gaps and
+        # pacing misses warn.
+        try:
+            from lib.edit_timeline import validate_edit_timeline
+            playbook = None
+            playbook_name = edit_decisions.get("metadata", {}).get("style_playbook")
+            if playbook_name:
+                try:
+                    from styles.playbook_loader import load_playbook
+                    playbook = load_playbook(playbook_name)
+                except Exception:
+                    playbook = None
+            timeline = validate_edit_timeline(edit_decisions, playbook)
+            blocks.extend(timeline["issues"])
+            warnings.extend(timeline["warnings"])
+        except Exception as e:
+            log.warning("Could not validate edit timeline: %s", e)
+
         # Log warnings
         for w in warnings:
             log.warning("[pre-compose] %s", w)
@@ -2170,6 +2193,13 @@ class VideoCompose(BaseTool):
                             f"Duration drift: rendered {duration:.1f}s vs target {target_dur}s "
                             f"({drift_pct:.0%} off). Review pacing or trim."
                         )
+                    elif drift_pct > 0.05:
+                        # Manifests promise ±5%; the old 25%-only check was
+                        # 5× looser than the contract (Wave 2, item 13).
+                        technical_probe["issues"].append(
+                            f"Duration drift {drift_pct:.0%} (rendered {duration:.1f}s "
+                            f"vs target {target_dur}s) exceeds the ±5% manifest promise"
+                        )
                     technical_probe["target_duration"] = target_dur
                     technical_probe["duration_drift_pct"] = round(drift_pct * 100, 1)
                 if width < 320 or height < 240:
@@ -2194,9 +2224,15 @@ class VideoCompose(BaseTool):
             "frames_sampled": 0,
             "frame_paths": [],
             "black_frames_detected": False,
-            "broken_overlays": False,
-            "missing_assets": False,
-            "unreadable_text": False,
+            # Honest reporting (audit 2026-07-16, Wave 2 item 11): these used
+            # to be hardcoded False — "checked and passed" — when no check
+            # existed. None = not checked; the agent-facing review skill must
+            # eyeball the sampled frames for overlays/text legibility until a
+            # VLM check lands.
+            "broken_overlays": None,
+            "missing_assets": None,
+            "unreadable_text": None,
+            "not_checked": ["broken_overlays", "missing_assets", "unreadable_text"],
             "issues": [],
         }
         duration = technical_probe.get("duration_seconds", 0)
@@ -2298,6 +2334,21 @@ class VideoCompose(BaseTool):
                 audio_spotcheck["issues"].append(f"Audio analysis error: {e}")
 
         issues.extend(audio_spotcheck.get("issues", []))
+
+        # --- 3.5 Perceptual scan: full-program black/freeze/silence/loudness ---
+        # Whether the edit actually asked for audio — silence is only a
+        # defect then (_compose injects a silent track for soundless
+        # sources, so a deliberately audio-free composition is legitimate).
+        audio_expected = any(
+            (edit_decisions or {}).get(k) for k in ("audio", "music", "narration")
+        )
+        perceptual_scan = self._perceptual_scan(
+            output_path,
+            duration,
+            audio_expected=audio_expected,
+            has_audio=bool(technical_probe.get("has_audio")),
+        )
+        issues.extend(perceptual_scan.get("issues", []))
 
         # --- 4. Promise preservation ---
         promise_preservation: dict[str, Any] = {
@@ -2475,13 +2526,8 @@ class VideoCompose(BaseTool):
         # suggestion. A video whose audio track is effectively silent used to
         # sail through as success=True with a note in data that nothing was
         # obliged to read (audit 2026-07-16, Wave 1 ⑦). Silence only counts
-        # as unusable when the edit actually ASKED for audio — _compose
-        # injects a silent track for soundless sources, so a deliberately
-        # audio-free composition (video-only cuts, no narration/music) is a
-        # legitimate silent deliverable, not a defect.
-        audio_expected = any(
-            (edit_decisions or {}).get(k) for k in ("audio", "music", "narration")
-        )
+        # as unusable when the edit actually ASKED for audio (audio_expected,
+        # computed at the perceptual scan above).
         _fail_keywords = ["ffprobe failed"]
         if audio_expected:
             _fail_keywords += ["effectively silent", "no audio stream"]
@@ -2501,6 +2547,7 @@ class VideoCompose(BaseTool):
                 "technical_probe": technical_probe,
                 "visual_spotcheck": visual_spotcheck,
                 "audio_spotcheck": audio_spotcheck,
+                "perceptual_scan": perceptual_scan,
                 "promise_preservation": promise_preservation,
                 "subtitle_check": subtitle_check,
                 "transcript_comparison": transcript_comparison,
@@ -2515,6 +2562,160 @@ class VideoCompose(BaseTool):
         )
 
         return final_review
+
+    def _extract_poster(self, inputs: dict[str, Any]) -> ToolResult:
+        """Extract a poster/thumbnail frame from a rendered video.
+
+        The publish stage promises a poster in publish_log but no tool
+        existed to produce one (render_checks.py records a real fabrication
+        incident). Picks the sharpest-looking default timestamp (15% in —
+        past intro fades, before mid-video text density) unless overridden.
+        """
+        input_path = Path(inputs.get("input_path", ""))
+        if not input_path.exists():
+            return ToolResult(success=False, error=f"Input not found: {input_path}")
+        output_path = Path(inputs.get("output_path", str(input_path.with_suffix("")) + "_poster.jpg"))
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        width = int(inputs.get("width", 1280))
+
+        timestamp = inputs.get("timestamp_seconds")
+        if timestamp is None:
+            try:
+                proc = self.run_command([
+                    "ffprobe", "-v", "error", "-show_entries", "format=duration",
+                    "-of", "csv=p=0", str(input_path),
+                ], timeout=30)
+                timestamp = round(float(proc.stdout.strip().splitlines()[0]) * 0.15, 2)
+            except Exception:
+                timestamp = 1.0
+
+        self.run_command([
+            "ffmpeg", "-y", "-ss", str(timestamp), "-i", str(input_path),
+            "-frames:v", "1", "-vf", f"scale={width}:-2", "-q:v", "2",
+            str(output_path),
+        ], timeout=60)
+        if not output_path.exists():
+            # A timestamp past the end produces no frame — retry at 0.
+            self.run_command([
+                "ffmpeg", "-y", "-ss", "0", "-i", str(input_path),
+                "-frames:v", "1", "-vf", f"scale={width}:-2", "-q:v", "2",
+                str(output_path),
+            ], timeout=60)
+        if not output_path.exists():
+            return ToolResult(success=False, error="Poster extraction produced no frame")
+        return ToolResult(
+            success=True,
+            data={
+                "operation": "extract_poster",
+                "input": str(input_path),
+                "output": str(output_path),
+                "timestamp_seconds": timestamp,
+                "width": width,
+            },
+            artifacts=[str(output_path)],
+        )
+
+    def _perceptual_scan(
+        self,
+        output_path: Path,
+        duration: float,
+        *,
+        audio_expected: bool,
+        has_audio: bool,
+    ) -> dict[str, Any]:
+        """Full-program perceptual QA in ONE decode pass (audit 2026-07-16,
+        Wave 2 item 11): blackdetect + freezedetect on video, silencedetect +
+        ebur128 integrated loudness on audio. Replaces the 4-sampled-frames-
+        only coverage that let per-segment black frames, mid-program dead air
+        and loudness misses ship unnoticed.
+
+        Findings are advisory issues (thresholds tuned against legitimate
+        holds/fades); the status/fail policy stays in _run_final_review.
+        """
+        scan: dict[str, Any] = {
+            "ran": False,
+            "black_segments": [],
+            "freeze_segments": [],
+            "silence_gaps": [],
+            "integrated_lufs": None,
+            "issues": [],
+        }
+        if duration <= 0:
+            return scan
+
+        cmd = [
+            "ffmpeg", "-hide_banner", "-nostats", "-i", str(output_path),
+            # d=0.8: shorter dips are usually transitions. pix_th 0.10
+            # tolerates dark-but-alive footage. freezedetect d=5: static
+            # text-card holds are legitimate up to scene length; ≥5s of
+            # bit-identical frames deserves a human look.
+            "-vf", "blackdetect=d=0.8:pix_th=0.10,freezedetect=n=-60dB:d=5",
+        ]
+        if has_audio:
+            # -45dB/1.5s: real dead air, not a breath pause.
+            cmd += ["-af", "silencedetect=n=-45dB:d=1.5,ebur128"]
+        cmd += ["-f", "null", "-"]
+
+        try:
+            proc = subprocess.run(
+                cmd, capture_output=True, text=True,
+                timeout=max(120, int(duration * 3)),
+            )
+        except Exception as e:
+            scan["issues"].append(f"Perceptual scan error: {e}")
+            return scan
+        stderr = proc.stderr or ""
+        scan["ran"] = True
+
+        import re as _re
+
+        for m in _re.finditer(r"black_start:([\d.]+) black_end:([\d.]+)", stderr):
+            start, end = float(m.group(1)), float(m.group(2))
+            scan["black_segments"].append([round(start, 2), round(end, 2)])
+            # Head/tail dips are usually intentional fades — only flag
+            # mid-program blackness.
+            if start > 1.0 and end < duration - 1.5:
+                scan["issues"].append(
+                    f"Black segment {start:.1f}s-{end:.1f}s mid-program — "
+                    f"possible missing asset or failed render segment"
+                )
+
+        freeze_starts = [float(x) for x in _re.findall(r"freeze_start: ([\d.]+)", stderr)]
+        freeze_ends = [float(x) for x in _re.findall(r"freeze_end: ([\d.]+)", stderr)]
+        for i, fs in enumerate(freeze_starts):
+            fe = freeze_ends[i] if i < len(freeze_ends) else duration
+            scan["freeze_segments"].append([round(fs, 2), round(fe, 2)])
+            scan["issues"].append(
+                f"Frozen frame {fs:.1f}s-{fe:.1f}s ({fe - fs:.1f}s of "
+                f"bit-identical frames) — verify this hold is intentional"
+            )
+
+        if has_audio:
+            sil_starts = [float(x) for x in _re.findall(r"silence_start: (-?[\d.]+)", stderr)]
+            sil_ends = [float(x) for x in _re.findall(r"silence_end: (-?[\d.]+)", stderr)]
+            for i, ss in enumerate(sil_starts):
+                se = sil_ends[i] if i < len(sil_ends) else duration
+                scan["silence_gaps"].append([round(ss, 2), round(se, 2)])
+                if audio_expected and ss > 0.5 and se < duration - 0.5:
+                    scan["issues"].append(
+                        f"Dead air {ss:.1f}s-{se:.1f}s ({se - ss:.1f}s of "
+                        f"silence mid-program)"
+                    )
+
+            # ebur128 logs a per-frame "I: … LUFS" during measurement (the
+            # first ones read -70 while the integrator warms up) and the
+            # final summary last — take the LAST match.
+            lufs_matches = _re.findall(r"I:\s*(-?[\d.]+) LUFS", stderr)
+            if lufs_matches:
+                lufs = float(lufs_matches[-1])
+                scan["integrated_lufs"] = lufs
+                if audio_expected and abs(lufs - (-14.0)) > 2.0:
+                    scan["issues"].append(
+                        f"Integrated loudness {lufs:.1f} LUFS is off the -14 "
+                        f"LUFS delivery target — run loudness normalization"
+                    )
+
+        return scan
 
     @staticmethod
     def _parse_probe_fps(fps_str: str) -> float:

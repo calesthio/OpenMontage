@@ -165,10 +165,53 @@ class SubtitleGen(BaseTool):
 
         return result
 
+    @staticmethod
+    def _display_cells(text: str) -> int:
+        """Display width in cells — CJK characters are double-width.
+
+        len() counted a hanzi as 1, so the default 42-char limit allowed 42
+        full-width characters per line — 2.6× the Netflix Simplified-Chinese
+        limit of 16 chars/line (audit 2026-07-16, Wave 2 item 9). With cell
+        counting, max_chars=42 cells ≈ 21 CJK chars; callers targeting strict
+        zh-Hans delivery should pass max_chars_per_line=32.
+        """
+        cells = 0
+        for ch in text:
+            cells += 2 if (
+                "ᄀ" <= ch <= "ᇿ"      # Hangul Jamo
+                or "⺀" <= ch <= "鿿"   # CJK radicals … unified ideographs
+                or "　" <= ch <= "〿"   # CJK punctuation
+                or "가" <= ch <= "힯"   # Hangul syllables
+                or "豈" <= ch <= "﫿"   # CJK compatibility
+                or "＀" <= ch <= "￯"   # full-width forms
+            ) else 1
+        return cells
+
+    @staticmethod
+    def _split_long_text(text: str, max_cells: int) -> list[str]:
+        """Split segment-level text (no word timestamps) into cue-sized
+        chunks at punctuation/space boundaries. Previously a timestampless
+        segment became ONE unbounded cue however long its text was."""
+        import re
+        pieces = [p for p in re.split(r"(?<=[，。！？；、,.!?;: ])", text) if p.strip()]
+        chunks: list[str] = []
+        current = ""
+        for piece in pieces:
+            candidate = current + piece
+            if current and SubtitleGen._display_cells(candidate) > max_cells:
+                chunks.append(current.strip())
+                current = piece
+            else:
+                current = candidate
+        if current.strip():
+            chunks.append(current.strip())
+        return chunks or [text]
+
     def _build_cues(
         self, segments: list[dict], max_words: int, max_chars: int
     ) -> list[dict]:
-        """Group words into display cues respecting max_words and max_chars."""
+        """Group words into display cues respecting max_words and max_chars
+        (chars measured in display cells — CJK counts double)."""
         # Collect all words with timestamps
         all_words = []
         for seg in segments:
@@ -176,12 +219,16 @@ class SubtitleGen(BaseTool):
             if words:
                 all_words.extend(words)
             elif "text" in seg:
-                # Fallback: segment-level only (no word timestamps)
-                all_words.append({
-                    "word": seg["text"],
-                    "start": seg["start"],
-                    "end": seg["end"],
-                })
+                # Fallback: segment-level only (no word timestamps) — split
+                # oversized text into chunks with linearly distributed time.
+                chunks = self._split_long_text(str(seg["text"]), max_chars)
+                seg_start, seg_end = float(seg["start"]), float(seg["end"])
+                total_cells = sum(self._display_cells(c) for c in chunks) or 1
+                t = seg_start
+                for chunk in chunks:
+                    share = (seg_end - seg_start) * self._display_cells(chunk) / total_cells
+                    all_words.append({"word": chunk, "start": t, "end": t + share})
+                    t += share
 
         if not all_words:
             return []
@@ -194,7 +241,7 @@ class SubtitleGen(BaseTool):
             word_text = w["word"].strip()
             candidate = f"{buf_text} {word_text}".strip() if buf_text else word_text
 
-            if buf and (len(buf) >= max_words or len(candidate) > max_chars):
+            if buf and (len(buf) >= max_words or self._display_cells(candidate) > max_chars):
                 cues.append({
                     "index": len(cues) + 1,
                     "start": buf[0]["start"],

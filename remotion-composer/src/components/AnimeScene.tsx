@@ -10,6 +10,7 @@ import {
 import { ParticleOverlay, type ParticleType } from "./ParticleOverlay";
 
 import { resolveAsset } from "../lib/resolveAsset";
+import { EASE_IN_OUT, SPRING_ENTER } from "../lib/motion";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -77,7 +78,9 @@ const AnimeVignette: React.FC = () => (
 function useCameraMotion(animation: CameraMotion, effectiveDuration: number) {
   const frame = useCurrentFrame();
 
+  // Eased camera progress — linear zoompan is the classic slideshow tell.
   const progress = interpolate(frame, [0, effectiveDuration], [0, 1], {
+    easing: EASE_IN_OUT,
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -179,14 +182,12 @@ export const AnimeScene: React.FC<AnimeSceneProps> = ({
     const sceneIn = spring({
       frame,
       fps,
-      config: { damping: 18, stiffness: 80 },
+      config: SPRING_ENTER,
     });
-    const sceneOut = interpolate(
-      frame,
-      [effectiveDuration - 10, effectiveDuration],
-      [1, 0.25],
-      { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
-    );
+    // Hold at full opacity through the end — the old fade-to-0.25 produced a
+    // visible dim-then-pop pulse at every cut boundary (sequences don't
+    // overlap; see ImageScene in Explainer.tsx for the full rationale).
+    const sceneOut = 1;
 
     if (imageCount <= 1) {
       return sceneIn * sceneOut;

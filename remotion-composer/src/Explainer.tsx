@@ -35,7 +35,8 @@ import type { ScreenshotStep } from "./components/ScreenshotScene";
 import { ProviderChip } from "./components/ProviderChip";
 import type { ParticleType } from "./components/ParticleOverlay";
 import { resolveTheme, type ThemeConfig, DEFAULT_THEME } from "./Root";
-import { withCjkFallback } from "./fonts";
+import { withCjkFallback, themeFont } from "./fonts";
+import { EASE_IN_OUT, SPRING_ENTER } from "./lib/motion";
 
 // Load Space Grotesk font for cinematic typography
 const { fontFamily: spaceGrotesk } = loadFont("normal", {
@@ -342,22 +343,22 @@ const ImageScene: React.FC<{ src: string; animation?: string }> = ({
   const { fps, durationInFrames } = useVideoConfig();
 
   // Smooth spring fade-in
-  const fadeIn = spring({ frame, fps, config: { damping: 18, stiffness: 80 } });
+  const fadeIn = spring({ frame, fps, config: SPRING_ENTER });
 
-  // Fade-out for crossfade effect
-  const fadeOutStart = durationInFrames - 8;
-  const fadeOut = interpolate(frame, [fadeOutStart, durationInFrames], [1, 0.3], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  // NO exit dim. The old fade-to-0.3 over the last 8 frames was a defect,
+  // not a style: sequences are butt-joined (no overlap), so every cut
+  // boundary showed dim → background bleed-through → next scene pops — a
+  // visible pulse at every cut, worse than a hard cut. Hold at full opacity;
+  // scene-to-scene softening is the transition system's job.
 
   let scale = 1;
   let translateX = 0;
   let translateY = 0;
   const anim = animation || "zoom-in";
 
-  // Progress with easing — smoother than linear
+  // Eased camera progress — linear zoompan is the classic slideshow tell.
   const progress = interpolate(frame, [0, durationInFrames], [0, 1], {
+    easing: EASE_IN_OUT,
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -392,8 +393,11 @@ const ImageScene: React.FC<{ src: string; animation?: string }> = ({
           width: "100%",
           height: "100%",
           objectFit: "cover",
-          opacity: fadeIn * fadeOut,
-          transform: `scale(${scale}) translate(${translateX}px, ${translateY}px)`,
+          opacity: fadeIn,
+          // translate BEFORE scale: with scale() first, the translation is
+          // applied in scaled space, so pan speed subtly drifts as the zoom
+          // progresses.
+          transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`,
           willChange: "transform, opacity",
         }}
       />
@@ -414,11 +418,7 @@ const VideoScene: React.FC<{ src: string; startFrom?: number }> = ({
   const { fps, durationInFrames } = useVideoConfig();
 
   const fadeIn = spring({ frame, fps, config: { damping: 20 } });
-  const fadeOutStart = durationInFrames - 8;
-  const fadeOut = interpolate(frame, [fadeOutStart, durationInFrames], [1, 0.3], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  // No exit dim — see ImageScene's comment on the fade-to-0.3 defect.
 
   return (
     <AbsoluteFill style={{ background: "#0F172A" }}>
@@ -429,7 +429,7 @@ const VideoScene: React.FC<{ src: string; startFrom?: number }> = ({
           width: "100%",
           height: "100%",
           objectFit: "cover",
-          opacity: fadeIn * fadeOut,
+          opacity: fadeIn,
         }}
         muted
       />
@@ -770,8 +770,13 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
   // Resolve theme from props — playbook name, theme name, or custom themeConfig
   const theme = resolveTheme(props as Record<string, unknown>);
 
+  // themeFont() actually LOADS the theme-declared Google Font (they were
+  // previously named but never loaded — silent system-sans fallback) and
+  // appends the CJK fallback, which the bare theme.headingFont lost.
+  const rootFontFamily = theme.headingFont ? themeFont(theme.headingFont, spaceGrotesk) : fontFamily;
+
   return (
-    <AbsoluteFill style={{ background: theme.backgroundColor, fontFamily: theme.headingFont || fontFamily }}>
+    <AbsoluteFill style={{ background: theme.backgroundColor, fontFamily: rootFontFamily }}>
       {/* Layer 0: Animated gradient background — driven by theme */}
       <AnimatedBackground theme={theme} />
 

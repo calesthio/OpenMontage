@@ -36,3 +36,66 @@ export { notoSansSC };
 export function withCjkFallback(stack: string): string {
   return `${stack}, ${notoSansSC}`;
 }
+
+// ---------------------------------------------------------------------------
+// Theme font registry (audit 2026-07-16, Wave 1)
+//
+// THEMES / playbook-derived ThemeConfigs declare fonts by name ("Inter",
+// "IBM Plex Sans", "Noto Serif JP", …) but nothing ever LOADED them — only
+// Space Grotesk / Playfair / Noto Sans SC had loadFont() calls, so on a
+// render host every other theme font silently fell back to the system sans
+// and theme "typography" was fiction. Components resolve theme font names
+// through themeFont() below, which lazily loads the real Google Font on
+// first use (memoized) and always appends the CJK fallback.
+// ---------------------------------------------------------------------------
+
+import { loadFont as loadInter } from "@remotion/google-fonts/Inter";
+import { loadFont as loadSpaceGrotesk } from "@remotion/google-fonts/SpaceGrotesk";
+import { loadFont as loadIBMPlexSans } from "@remotion/google-fonts/IBMPlexSans";
+import { loadFont as loadIBMPlexMono } from "@remotion/google-fonts/IBMPlexMono";
+import { loadFont as loadJetBrainsMono } from "@remotion/google-fonts/JetBrainsMono";
+import { loadFont as loadFiraCode } from "@remotion/google-fonts/FiraCode";
+import { loadFont as loadNotoSerifJP } from "@remotion/google-fonts/NotoSerifJP";
+import { loadFont as loadNotoSans } from "@remotion/google-fonts/NotoSans";
+import { loadFont as loadPlayfair } from "@remotion/google-fonts/PlayfairDisplay";
+
+// Loader per theme-declarable font name. Importing a font module is cheap
+// (metadata only); the network fetch happens on the loadFont() call, which
+// runs at most once per name via the memo below. Options are inlined per
+// call — each font package types its own weight/subset unions, so a shared
+// options object doesn't typecheck.
+const FONT_LOADERS: Record<string, () => string> = {
+  "Inter": () => loadInter("normal", { weights: ["400", "500", "700"], subsets: ["latin"] }).fontFamily,
+  "Space Grotesk": () => loadSpaceGrotesk("normal", { weights: ["400", "500", "700"], subsets: ["latin"] }).fontFamily,
+  "IBM Plex Sans": () => loadIBMPlexSans("normal", { weights: ["400", "500", "700"], subsets: ["latin"] }).fontFamily,
+  "IBM Plex Mono": () => loadIBMPlexMono("normal", { weights: ["400", "700"], subsets: ["latin"] }).fontFamily,
+  "JetBrains Mono": () => loadJetBrainsMono("normal", { weights: ["400", "700"], subsets: ["latin"] }).fontFamily,
+  "Fira Code": () => loadFiraCode("normal", { weights: ["400", "700"], subsets: ["latin"] }).fontFamily,
+  "Playfair Display": () => loadPlayfair("normal", { weights: ["400", "700", "900"], subsets: ["latin"] }).fontFamily,
+  "Noto Sans": () => loadNotoSans("normal", { weights: ["400", "500", "700"], subsets: ["latin"] }).fontFamily,
+  "Noto Serif JP": () =>
+    loadNotoSerifJP("normal", {
+      weights: ["400", "700"],
+      // The japanese subset is chunked like NotoSansSC — silence the
+      // per-chunk warning, not the loading behavior.
+      ignoreTooManyRequestsWarning: true,
+    }).fontFamily,
+};
+
+const _loadedFonts = new Map<string, string>();
+
+/**
+ * Resolve a theme-declared font name to a genuinely loaded font-family stack
+ * (with CJK fallback appended). Unknown names pass through as-is — they may
+ * be a system font on the render host — still with the CJK fallback.
+ */
+export function themeFont(name: string | undefined | null, fallbackStack: string): string {
+  if (!name) return withCjkFallback(fallbackStack);
+  let family = _loadedFonts.get(name);
+  if (family === undefined) {
+    const loader = FONT_LOADERS[name];
+    family = loader ? loader() : name;
+    _loadedFonts.set(name, family);
+  }
+  return withCjkFallback(family);
+}

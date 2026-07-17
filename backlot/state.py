@@ -63,8 +63,20 @@ def _load_pipeline_meta(pipeline_type: Optional[str]) -> dict[str, Any]:
     """Stage order + gate flags from the manifest; graceful fallback."""
     if pipeline_type and pipeline_type != "unknown":
         try:
-            from lib.pipeline_loader import load_pipeline, get_stage_human_approval_default
-            manifest = load_pipeline(pipeline_type)
+            # readonly = the mtime-cached variant. load_pipeline() re-parses
+            # the YAML *and* re-runs jsonschema.validate (which also re-checks
+            # the schema itself) on EVERY call — and this runs once per
+            # project on a library fetch, so 25 projects paid 25 full
+            # validations: measured 0.82s of a 0.83s summarize pass, ~98%.
+            # load_pipeline_readonly's own docstring names board-state
+            # derivation as its intended caller; this was simply the wrong
+            # import. It returns a deep copy, so the read below can't poison
+            # the shared cache.
+            from lib.pipeline_loader import (
+                load_pipeline_readonly,
+                get_stage_human_approval_default,
+            )
+            manifest = load_pipeline_readonly(pipeline_type)
             stages = [
                 {
                     "name": s["name"],

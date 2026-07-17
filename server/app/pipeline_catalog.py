@@ -37,8 +37,12 @@ def load_manifest(name: str) -> dict[str, Any]:
         raise FileNotFoundError(f"Unknown pipeline: {name!r}")
     path = PIPELINE_DEFS_DIR / f"{name}.yaml"
     try:
-        from lib.pipeline_loader import load_pipeline
-        manifest = load_pipeline(name)
+        # readonly = mtime-cached; the uncached load_pipeline re-parses and
+        # re-validates on every call, and this serves GET /pipelines (see the
+        # same fix in backlot/state.py's _load_pipeline_meta). Returns a deep
+        # copy, so the mutation below can't poison the cache.
+        from lib.pipeline_loader import load_pipeline_readonly
+        manifest = load_pipeline_readonly(name)
     except FileNotFoundError:
         raise
     except Exception:

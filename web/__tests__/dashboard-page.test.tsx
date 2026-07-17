@@ -41,7 +41,10 @@ describe("DashboardPage status badge", () => {
     stubJobsFetch([job({ status: "cancelled" })]);
     render(<DashboardPage />);
 
-    expect(await screen.findByText("已取消")).toBeInTheDocument();
+    // The status-filter <select> also contains an 已取消 <option> now — the
+    // assertion targets the badge specifically.
+    const badges = await screen.findAllByTestId("status-badge");
+    expect(badges.some((b) => b.textContent === "已取消")).toBe(true);
     expect(screen.queryByText("排队中")).not.toBeInTheDocument();
   });
 

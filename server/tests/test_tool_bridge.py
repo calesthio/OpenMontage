@@ -915,3 +915,31 @@ def test_final_compose_archives_previous_render_instead_of_clobbering(tmp_path, 
     assert archived[0].read_bytes() == b"old render"
     # Discovery glob (renders/*.mp4) must not see the archived file.
     assert [p.name for p in renders.glob("*.mp4")] == ["final.mp4"]
+
+
+# ── brand voice default (roadmap 3.2) ────────────────────────────────────────
+
+def test_brand_voice_fills_tts_default(tmp_path, monkeypatch):
+    tool = FakeTool(capability="tts")
+    _run_tool(tmp_path / "projects" / "p", tool, monkeypatch,
+              options={"brand_voice_id": "brand-voice-1"})
+    assert tool.executed_with["voice"] == "brand-voice-1"
+
+
+def test_agent_chosen_voice_wins_over_brand_default(tmp_path, monkeypatch):
+    from tools import tool_registry
+    tool = FakeTool(capability="tts")
+    monkeypatch.setattr(tool_registry.registry, "ensure_discovered", lambda *a, **k: None)
+    monkeypatch.setattr(tool_registry.registry, "get", lambda name: tool)
+    execute_tool("run_openmontage_tool",
+                 {"tool_name": "maas_tts", "inputs": {"text": "x", "voice": "per-line-pick"}},
+                 tmp_path / "projects" / "p",
+                 options={"brand_voice_id": "brand-voice-1"})
+    assert tool.executed_with["voice"] == "per-line-pick"
+
+
+def test_brand_voice_not_applied_to_non_tts(tmp_path, monkeypatch):
+    tool = FakeTool(capability="video_generation")
+    _run_tool(tmp_path / "projects" / "p", tool, monkeypatch,
+              options={"brand_voice_id": "brand-voice-1"})
+    assert "voice" not in tool.executed_with

@@ -73,7 +73,23 @@ export default function NewProjectPage() {
 
   useEffect(() => {
     apiRequest("/brands").then((r) => {
-      if (r.ok) setBrandKits(r.data.brand_kits ?? []);
+      if (r.ok) {
+        const kits = r.data.brand_kits ?? [];
+        setBrandKits(kits);
+        // Brand lock (roadmap 3.2, Synthesia's strongest enforcement
+        // primitive): when the workspace HAS brand kits, a production is
+        // always brand-locked — default to the first kit instead of
+        // offering an unbranded escape hatch. Kit-less workspaces still
+        // proceed unbranded (nothing to lock to).
+        if (kits.length > 0) {
+          setForm((f) => (f.brandKitId ? f : {
+            ...f,
+            brandKitId: kits[0].kit_id,
+            brandName: f.brandName || kits[0].brand_name,
+            slogan: f.slogan || kits[0].slogan,
+          }));
+        }
+      }
     });
     // Only a network-level failure (status 0, backend unreachable) marks the
     // pipeline list as failed-to-load — this mirrors the original `.catch()`
@@ -93,6 +109,24 @@ export default function NewProjectPage() {
 
   const availableNames = new Set(pipelines.map((p) => p.name));
   const morePipelines = computeMorePipelines(pipelines);
+
+  // Live cost estimate for the selected pipeline (roadmap 3.1).
+  type Estimate = {
+    sample_count: number; low_cny: number | null;
+    typical_cny: number | null; high_cny: number | null;
+  };
+  const [estimate, setEstimate] = useState<Estimate | null>(null);
+  const estimatePipeline = selectedType?.pipeline;
+  useEffect(() => {
+    if (!estimatePipeline) return;
+    apiRequest("/system/estimate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pipeline: estimatePipeline }),
+    }).then((r) => {
+      if (r.ok) setEstimate(r.data);
+    });
+  }, [estimatePipeline]);
 
   const selectedKit = brandKits.find((k) => k.kit_id === form.brandKitId);
 
@@ -284,15 +318,8 @@ export default function NewProjectPage() {
                   {kit.brand_name}
                 </button>
               ))}
-              {form.brandKitId && (
-                <button
-                  type="button"
-                  onClick={() => setForm(f => ({ ...f, brandKitId: "" }))}
-                  className="text-xs px-3 py-1.5 text-muted-foreground hover:text-foreground"
-                >
-                  × 清除
-                </button>
-              )}
+              {/* Brand lock (roadmap 3.2): with kits present there is no
+                  "无品牌" escape hatch — switching kits is the only choice. */}
             </div>
 
             {selectedKit?.reference_image_path && (
@@ -533,6 +560,14 @@ export default function NewProjectPage() {
           </div>
         </div>
 
+        {/* Decision-point pricing (roadmap 3.1): the estimated spend sits ON
+            the commit button's doorstep, not discovered after the fact. */}
+        {estimate && estimate.sample_count > 0 && (
+          <p className="text-xs text-muted-foreground text-center" data-testid="estimate-chip">
+            预计花费 ¥{estimate.low_cny}–¥{estimate.high_cny}
+            (基于该流水线 {estimate.sample_count} 次历史运行,中位 ¥{estimate.typical_cny})
+          </p>
+        )}
         <Button type="submit" className="w-full" disabled={loading || !form.brandName}>
           {loading ? "提交中..." : "开始 AI 生产 →"}
         </Button>

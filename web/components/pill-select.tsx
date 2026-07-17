@@ -29,20 +29,26 @@ export function PillSelect({
     <div className="flex gap-2 flex-wrap">
       {options.map((id) => {
         const isDisabled = disabledSet.has(id);
+        const selected = value === id;
         return (
           <button
             key={id}
             type="button"
             disabled={isDisabled}
             onClick={() => onChange(id)}
+            // Selection state must not be color-only (roadmap 3.6 /
+            // WCAG 1.4.1): aria-pressed for assistive tech, a ✓ glyph for
+            // everyone else.
+            aria-pressed={selected}
             className={`px-4 py-1.5 rounded-md text-sm border transition-colors ${
               isDisabled
                 ? "border-border/40 opacity-40 cursor-not-allowed"
-                : value === id
+                : selected
                   ? "bg-foreground text-background border-foreground"
                   : "border-border hover:border-foreground/40"
             }`}
           >
+            {selected && <span aria-hidden>✓ </span>}
             {renderLabel(id)}
           </button>
         );

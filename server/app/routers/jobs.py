@@ -59,6 +59,9 @@ class ApproveStageRequest(BaseModel):
     # listed is kept — and, via content-addressed output naming, costs
     # nothing to keep on the regenerate round.
     rejected_asset_ids: list[str] | None = None
+    # WHO decided (roadmap 3.5): recorded on the stage_approved/rejected
+    # events. Cheap to add now, painful to backfill for audits later.
+    actor: str = ""
     # Budget gate only: the user's NEW absolute budget ceiling (CNY). The
     # gate previously re-armed at spent×1.2 — an unbounded ratchet the user
     # never chose. When provided on an approve, it replaces that heuristic.
@@ -142,6 +145,7 @@ async def approve_stage(job_id: str, req: ApproveStageRequest):
         job_id, req.action, req.feedback,
         new_budget_cny=req.new_budget_cny,
         rejected_asset_ids=req.rejected_asset_ids,
+        actor=req.actor or None,
     )
     if not ok:
         # Distinguish "another request already resolved this gate" (status is

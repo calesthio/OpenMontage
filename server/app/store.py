@@ -315,6 +315,7 @@ class JobStore:
         feedback: str,
         new_budget_cny: float | None = None,
         rejected_asset_ids: list[str] | None = None,
+        actor: str | None = None,
     ) -> bool:
         """Record the human's approve/reject decision for a job's approval gate.
 
@@ -345,6 +346,9 @@ class JobStore:
                 # Assets gate only: per-scene reroll targets — consumed by
                 # the stage runner's reject loop (roadmap 2.3).
                 decision["rejected_asset_ids"] = list(rejected_asset_ids)
+            if actor:
+                # Audit trail (roadmap 3.5): who decided.
+                decision["actor"] = actor
             self._approval_results[job_id] = decision
         ev = self._approval_events.get(job_id)
         if ev:

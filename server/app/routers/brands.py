@@ -83,8 +83,21 @@ class BrandKitCreate(BaseModel):
     industry: str = ""
     tone_keywords: list[str] = []
     color_palette: list[str] = []
+    # Role-tagged colors (roadmap 3.2): {"bg","fg","accent","text"} — a flat
+    # palette list can't tell a renderer WHICH color is the background vs
+    # the accent, so brand colors were decorative, not enforceable.
+    colors: dict[str, str] = {}
+    # Brand voice (roadmap 3.2): the TTS voice id every video of this brand
+    # narrates with — two videos of one brand previously had no guarantee of
+    # the same narrator. Applied as the default `voice` on TTS calls
+    # (tool_bridge) whenever the agent doesn't explicitly pick one.
+    voice_id: str = ""
     target_audience: str = ""
     logo_url: str = ""
+    # Light/dark logo variants (roadmap 3.2) — one logo can't sit on both a
+    # light and a dark scene.
+    logo_light_url: str = ""
+    logo_dark_url: str = ""
     style_notes: str = ""
     # Relative path under brand_kits/<kit_id>/ — set via the reference-image
     # upload endpoint below, not by the client directly (there's nowhere for
@@ -99,8 +112,12 @@ class BrandKitUpdate(BaseModel):
     industry: str | None = None
     tone_keywords: list[str] | None = None
     color_palette: list[str] | None = None
+    colors: dict[str, str] | None = None
+    voice_id: str | None = None
     target_audience: str | None = None
     logo_url: str | None = None
+    logo_light_url: str | None = None
+    logo_dark_url: str | None = None
     style_notes: str | None = None
     reference_image_path: str | None = None
     extra: dict[str, Any] | None = None

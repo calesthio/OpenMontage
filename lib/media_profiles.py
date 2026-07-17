@@ -17,6 +17,7 @@ class AspectRatio(str, Enum):
     SQUARE_1_1 = "1:1"
     CINEMATIC_21_9 = "21:9"
     STANDARD_4_3 = "4:3"
+    PORTRAIT_3_4 = "3:4"
 
 
 @dataclass(frozen=True)
@@ -127,12 +128,35 @@ GENERIC_HD = MediaProfile(
     notes="Generic HD output (no platform-specific constraints)",
 )
 
+# ── China-market platform presets (roadmap 3.4) ─────────────────────────────
+
+DOUYIN_VERTICAL = MediaProfile(
+    name="douyin_vertical",
+    width=1080, height=1920,
+    aspect_ratio=AspectRatio.PORTRAIT_9_16,
+    fps=30, codec="libx264", audio_codec="aac", crf=18,
+    max_duration_seconds=900,
+    caption_format="srt",
+    notes="抖音竖屏 1080×1920@30 (9:16)",
+)
+
+XIAOHONGSHU_PORTRAIT = MediaProfile(
+    name="xiaohongshu_portrait",
+    width=1080, height=1440,
+    aspect_ratio=AspectRatio.PORTRAIT_3_4,
+    fps=30, codec="libx264", audio_codec="aac", crf=18,
+    max_duration_seconds=900,
+    caption_format="srt",
+    notes="小红书 3:4 竖版 1080×1440 — 信息流中 3:4 优于 9:16(占屏更稳、不被裁切)",
+)
+
 
 # ---- Profile registry ----
 
 ALL_PROFILES: dict[str, MediaProfile] = {
     p.name: p for p in [
         YOUTUBE_LANDSCAPE, YOUTUBE_4K, YOUTUBE_SHORTS,
+        DOUYIN_VERTICAL, XIAOHONGSHU_PORTRAIT,
         INSTAGRAM_REELS, INSTAGRAM_FEED,
         TIKTOK, LINKEDIN, CINEMATIC, GENERIC_HD,
     ]

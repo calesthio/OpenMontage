@@ -217,7 +217,11 @@ stages:
       - final_review
     produces:
       - publish_log
-    tools_available: []
+    tools_available:
+      - export_bundle
+      - video_compose
+      - auto_reframe
+      - youtube_upload
     checkpoint_required: true
     human_approval_default: true
     review_focus:

@@ -1762,3 +1762,70 @@ async def test_checkpoint_failure_never_blocks_the_pipeline(runner, monkeypatch,
     runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
     await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
     assert runner.get("j")["status"] == "completed"
+
+
+# ── batch 3: asset-consistency call site + actor audit ───────────────────────
+
+async def test_assets_stage_runs_consistency_check_and_warns(runner, monkeypatch, tmp_path):
+    # Pins the call site for lib/asset_consistency (written for a real
+    # multi-shot drift incident, previously zero production callers).
+    checked = {}
+
+    def fake_check(groups, **kw):
+        checked.update(groups)
+        return {"ran": True, "subjects_checked": list(groups), "threshold": 0.82,
+                "findings": [{"subject": "hero_vacuum", "asset_a": "a.png",
+                              "asset_b": "b.png", "similarity": 0.41, "threshold": 0.82}],
+                "critical": True}
+    import lib.asset_consistency as ac
+    monkeypatch.setattr(ac, "check_asset_consistency", fake_check)
+
+    def writes_manifest(job_id, stage_name, skill_text, project_dir, *a, **k):
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        (project_dir / "assets").mkdir(exist_ok=True)
+        for n in ("a.png", "b.png"):
+            (project_dir / "assets" / n).write_bytes(b"x")
+        (project_dir / "artifacts" / "asset_manifest.json").write_text(json.dumps({
+            "version": "1.0",
+            "assets": [
+                {"id": "a1", "type": "image", "path": "assets/a.png", "subject": "hero_vacuum"},
+                {"id": "a2", "type": "image", "path": "assets/b.png", "subject": "hero_vacuum"},
+            ],
+        }))
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", writes_manifest)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "assets", "skill": None, "approval": False, "produces": ["asset_manifest"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    assert runner.get("j")["status"] == "completed"   # advisory, never blocks
+    assert "hero_vacuum" in checked
+    warnings = [e for e in runner.get_events("j", after_seq=-1) if e["type"] == "warning"]
+    assert any("different designs" in w["message"] for w in warnings)
+
+
+async def test_approval_events_carry_actor(runner, monkeypatch):
+    def writes(job_id, stage_name, skill_text, project_dir, *a, **k):
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        (project_dir / "artifacts" / "brief.json").write_text("{}")
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", writes)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "idea", "skill": None, "approval": True, "produces": ["brief"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+    task = asyncio.create_task(
+        stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+    )
+    for _ in range(500):
+        await asyncio.sleep(0.01)
+        if (runner.get("j") or {}).get("status") == "awaiting_approval":
+            break
+    assert runner.set_approval("j", "approve", "", actor="producer@acme")
+    await task
+
+    approved = [e for e in runner.get_events("j", after_seq=-1) if e["type"] == "stage_approved"]
+    assert approved and approved[0]["actor"] == "producer@acme"

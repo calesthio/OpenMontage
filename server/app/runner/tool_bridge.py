@@ -553,6 +553,13 @@ def execute_tool(
         if tool_name == "maas_tts":
             _apply_tts_emotion_defaults(inputs, options)
 
+        # Brand voice default (roadmap 3.2): any TTS-capability call without
+        # an explicit voice narrates with the brand kit's voice_id — same
+        # gap-filling semantics as _apply_tts_emotion_defaults (a deliberate
+        # per-line voice choice by the agent still wins).
+        if tool.capability == "tts" and (options or {}).get("brand_voice_id") and "voice" not in inputs:
+            inputs["voice"] = options["brand_voice_id"]
+
         # A caller doing an A/B variants run (options[...variants_key] set)
         # tags which branch a call belongs to — either explicitly via
         # inputs["variant"] (the only way compose/video_post calls can say

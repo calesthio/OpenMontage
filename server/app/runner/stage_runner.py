@@ -688,6 +688,56 @@ def _write_stage_checkpoint(
         )
 
 
+def _run_asset_consistency_check(job_id: str, project_dir: Path) -> None:
+    """Multi-shot subject consistency (roadmap 3.3): lib/asset_consistency
+    was written after a real incident (four generated shots of "the same"
+    robot vacuum, four visibly different designs) and then never called.
+    This is its production call site: after the assets stage completes,
+    every group of manifest assets sharing a `subject` tag is checked for
+    pairwise visual similarity; below-threshold pairs surface as a warning
+    event. Advisory — CLIP being uninstalled or a check error never blocks
+    the stage."""
+    try:
+        manifest = _load_artifacts(project_dir).get("asset_manifest") or {}
+        groups: dict[str, list[str]] = {}
+        for a in manifest.get("assets", []) or []:
+            if not isinstance(a, dict):
+                continue
+            subject = a.get("subject") or a.get("subject_tag")
+            path = a.get("path")
+            if not subject or not path or "image" not in str(a.get("type", "")):
+                continue
+            p = Path(path)
+            if not p.is_absolute():
+                p = project_dir / path
+            groups.setdefault(str(subject), []).append(str(p))
+        groups = {s: ps for s, ps in groups.items() if len(ps) >= 2}
+        if not groups:
+            return
+        from lib.asset_consistency import check_asset_consistency
+        result = check_asset_consistency(groups)
+        if result.get("critical"):
+            pairs = "; ".join(
+                f"{f['subject']}: {Path(f['asset_a']).name} vs {Path(f['asset_b']).name} "
+                f"(similarity {f['similarity']})"
+                for f in result.get("findings", [])[:5]
+            )
+            _emit(job_id, {
+                "type": "warning",
+                "stage": "assets",
+                "message": (
+                    "Asset consistency check: the same subject appears as visibly "
+                    f"different designs across shots — {pairs}. Review the assets "
+                    "before compose locks them in (per-scene 换一版 can reroll the "
+                    "outliers)."
+                ),
+            })
+        elif not result.get("ran"):
+            logger.debug("asset consistency check skipped: %s", result.get("reason"))
+    except Exception:
+        logger.debug("asset consistency check errored", exc_info=True)
+
+
 def _load_brand_kit(kit_id: str | None) -> dict:
     """Load a brand kit from brand_kits/<kit_id>/kit.json, or empty dict."""
     if not kit_id:
@@ -1197,6 +1247,14 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
     options = data.get("options", {})
     project_name = data.get("project_name", job_id)
 
+    # Brand voice (roadmap 3.2): a kit's voice_id becomes the default TTS
+    # voice for every narration call of this job (tool_bridge fills it when
+    # the agent didn't explicitly choose one) — two videos of one brand now
+    # share a narrator by mechanism, not by luck.
+    _kit = _load_brand_kit(options.get("brand_kit_id"))
+    if _kit.get("voice_id"):
+        options = {**options, "brand_voice_id": _kit["voice_id"]}
+
     project_dir = OM_ROOT / "projects" / project_name
     project_dir.mkdir(parents=True, exist_ok=True)
     (project_dir / "artifacts").mkdir(exist_ok=True)
@@ -1397,10 +1455,12 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
         job_store.update(job_id, status="running")
         if approval["action"] == "reject":
             fb = approval.get("feedback") or "Not approved as-is — reconsider your approach."
-            _emit(job_id, {"type": "stage_rejected", "stage": stage_name, "gate": "sample_preview", "feedback": fb})
+            _emit(job_id, {"type": "stage_rejected", "stage": stage_name, "gate": "sample_preview", "feedback": fb,
+                            **({"actor": approval["actor"]} if approval.get("actor") else {})})
             resume_text = f"Rejected: {fb}. Adjust your approach and try again."
         else:
-            _emit(job_id, {"type": "stage_approved", "stage": stage_name, "gate": "sample_preview"})
+            _emit(job_id, {"type": "stage_approved", "stage": stage_name, "gate": "sample_preview",
+                            **({"actor": approval["actor"]} if approval.get("actor") else {})})
             resume_text = "Approved — proceed to complete the stage."
         return spn.messages + [{"role": "user", "content": resume_text}]
 
@@ -1682,6 +1742,11 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
                 ))
                 return
 
+        # Multi-shot subject consistency (roadmap 3.3) — advisory warning
+        # BEFORE the approval gate, so the filmstrip review sees it.
+        if "asset_manifest" in (stage_def.get("produces") or []):
+            _run_asset_consistency_check(job_id, project_dir)
+
         _emit(job_id, {"type": "stage_completed", "stage": stage_name})
 
         # Interim preview: the compose stage produces the actual rendered
@@ -1799,7 +1864,8 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
                     )
                     feedback = f"{feedback}\n\n{reroll_instruction}" if feedback else reroll_instruction
                 job_store.update(job_id, status="running")
-                _emit(job_id, {"type": "stage_rejected", "stage": stage_name, "feedback": feedback})
+                _emit(job_id, {"type": "stage_rejected", "stage": stage_name, "feedback": feedback,
+                                **({"actor": approval["actor"]} if approval.get("actor") else {})})
                 # Snapshot before regenerating — see _artifact_mtimes' docstring
                 # for why file *presence* alone can't detect a no-op round.
                 mtimes_before = _artifact_mtimes(project_dir, stage_def.get("produces") or [])
@@ -1867,7 +1933,8 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
                     return
 
             job_store.update(job_id, status="running")
-            _emit(job_id, {"type": "stage_approved", "stage": stage_name})
+            _emit(job_id, {"type": "stage_approved", "stage": stage_name,
+                           **({"actor": approval["actor"]} if approval.get("actor") else {})})
 
         # Mark done so a later retry resumes after this stage.
         completed_stages.add(stage_name)

@@ -1,6 +1,7 @@
 import { Separator } from "@/components/ui/separator";
 import { DashboardNav } from "@/components/layout/dashboard-nav";
 import { AppToastProvider } from "@/components/ui/toast";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -14,6 +15,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
           <Separator />
           <DashboardNav />
+          <div className="mt-auto">
+            <ThemeToggle />
+          </div>
         </aside>
 
         {/* Main */}

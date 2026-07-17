@@ -68,6 +68,40 @@ export default function JobDetailPage() {
     });
   }, [jobId, artifactVersion, state.status]);
 
+  // Timecode review comments (roadmap 3.5, Frame.io's first primitive):
+  // focusing the composer pauses playback; the draft is pre-stamped with
+  // the current playhead; pins seek on click; the whole list can be handed
+  // to the revise flow verbatim ("0:14 音乐不对" is both a comment and a
+  // surgical redo instruction).
+  const videoAreaRef = useRef<HTMLDivElement>(null);
+  const [comments, setComments] = useState<Array<{ t: number; text: string }>>([]);
+  const [commentDraft, setCommentDraft] = useState("");
+  const fmtTimecode = (t: number) =>
+    `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
+  function onCommentFocus() {
+    const videos = videoAreaRef.current?.querySelectorAll("video");
+    videos?.forEach((v) => v.pause());
+    if (!commentDraft) {
+      const v = videoAreaRef.current?.querySelector("video");
+      setCommentDraft(`${fmtTimecode(v?.currentTime ?? 0)} `);
+    }
+  }
+  function addComment() {
+    const text = commentDraft.trim();
+    if (!text) return;
+    const m = text.match(/^(\d+):(\d{2})/);
+    const t = m ? Number(m[1]) * 60 + Number(m[2]) : 0;
+    setComments((prev) => [...prev, { t, text }]);
+    setCommentDraft("");
+  }
+  function seekTo(t: number) {
+    const v = videoAreaRef.current?.querySelector("video");
+    if (v) {
+      v.currentTime = t;
+      v.pause();
+    }
+  }
+
   // Revise (roadmap 2.2): re-open a finished job at a chosen stage.
   const router = useRouter();
   const [reviseStage, setReviseStage] = useState("");
@@ -455,7 +489,57 @@ export default function JobDetailPage() {
             <CardTitle className="text-base text-green-400">🎬 成片已就绪</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <VideoGallery serverBase={SERVER} url={state.renderUrl} urls={state.renderUrls} withDownload />
+            <div ref={videoAreaRef}>
+              <VideoGallery serverBase={SERVER} url={state.renderUrl} urls={state.renderUrls} withDownload />
+            </div>
+            {/* Timecode review (roadmap 3.5) */}
+            <div className="space-y-2 pt-1" data-testid="timecode-review">
+              {comments.length > 0 && (
+                <ul className="space-y-1">
+                  {comments.map((c, i) => (
+                    <li key={i} className="text-sm flex items-baseline gap-2">
+                      <button
+                        type="button"
+                        onClick={() => seekTo(c.t)}
+                        className="text-xs font-mono text-blue-400 hover:underline shrink-0"
+                        title="跳转到该时间点"
+                      >
+                        {fmtTimecode(c.t)}
+                      </button>
+                      <span className="text-foreground/85">{c.text.replace(/^\d+:\d{2}\s*/, "")}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="flex gap-2">
+                <label className="sr-only" htmlFor="timecode-comment">时间码评论</label>
+                <input
+                  id="timecode-comment"
+                  className="flex-1 bg-muted/40 border border-border rounded px-2 py-1.5 text-sm"
+                  placeholder="点击输入即暂停,并自动带上当前时间码…"
+                  value={commentDraft}
+                  onFocus={onCommentFocus}
+                  onChange={(e) => setCommentDraft(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") addComment(); }}
+                />
+                <Button size="sm" variant="outline" onClick={addComment} disabled={!commentDraft.trim()}>
+                  钉住评论
+                </Button>
+                {comments.length > 0 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    title="把全部评论作为修订反馈填入下方的重新打开表单"
+                    onClick={() => {
+                      setReviseFeedback(comments.map((c) => c.text).join(";"));
+                      setReviseStage((s) => s || "edit");
+                    }}
+                  >
+                    填入修订 ↓
+                  </Button>
+                )}
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}

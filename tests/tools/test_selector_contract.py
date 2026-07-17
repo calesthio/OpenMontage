@@ -238,29 +238,26 @@ class TestDocumentedDivergences:
             sel.execute({"prompt": "a red bird"})
             assert a.seen_inputs["query"] == "a red bird", cls.__name__
 
-    def test_d2_estimate_cost_filters_candidates_in_video_only(self, monkeypatch):
-        # video filters candidates inside estimate_cost; tts/image do not.
-        # Pinned as-is: unifying changes the NUMBER the budget gate sees.
-        calls = {"video": 0, "image": 0}
+    def test_d2_estimate_cost_prices_only_selectable_providers(self, monkeypatch):
+        # D2 CONVERGED: every selector now filters candidates before pricing,
+        # so estimate_cost reports what execute() would actually run. image
+        # previously priced over ALL providers — with generation_mode="edit"
+        # it could quote a non-edit-capable provider that could never be
+        # selected, and that number feeds the budget gate.
+        sel = ImageSelector()
+        cheap_no_edit = _FakeProvider("cheap_tool", "alpha",
+                                      schema_props={"prompt": {}}, cost=1.0)
+        cheap_no_edit.supports = {"generate": True}
+        pricey_edit = _FakeProvider("edit_tool", "beta",
+                                    schema_props={"prompt": {}, "image_url": {}}, cost=9.0)
+        pricey_edit.supports = {"generate": True, "image_edit": True}
+        _patch_providers(monkeypatch, sel, [cheap_no_edit, pricey_edit])
 
-        sel_v = VideoSelector()
-        monkeypatch.setattr(
-            VideoSelector, "_filter_candidates",
-            lambda self, inputs, candidates: calls.__setitem__("video", calls["video"] + 1) or candidates,
-        )
-        _patch_providers(monkeypatch, sel_v, [_FakeProvider("a_tool", "alpha", cost=2.5)])
-        assert sel_v.estimate_cost({"prompt": "x"}) == 2.5
-        assert calls["video"] >= 1
-
-        sel_i = ImageSelector()
-        monkeypatch.setattr(
-            ImageSelector, "_filter_candidates",
-            lambda self, inputs, candidates: calls.__setitem__("image", calls["image"] + 1) or candidates,
-        )
-        _patch_providers(monkeypatch, sel_i, [_FakeProvider("b_tool", "beta", cost=3.5)])
-        assert sel_i.estimate_cost({"prompt": "x"}) == 3.5
-        # image's estimate_cost path does NOT filter (only _select_best_tool does)
-        assert calls["image"] == 1
+        # An edit request can only run on the edit-capable provider, so its
+        # price is the honest estimate.
+        assert sel.estimate_cost({"prompt": "x", "generation_mode": "edit"}) == 9.0
+        # A plain generate request still prices across everything.
+        assert sel.estimate_cost({"prompt": "x"}) in (1.0, 9.0)
 
     def test_d6_video_rank_mode_filters_by_target_operation(self, monkeypatch):
         # target_operation reaches _filter_candidates, which drops providers

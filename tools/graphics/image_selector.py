@@ -142,22 +142,6 @@ class ImageSelector(CustomWorkflowSelectorMixin, SelectorBase):
     def _no_provider_error(self) -> str:
         return "No image provider available."
 
-    def estimate_cost(self, inputs: dict[str, Any]) -> float:
-        # Deliberately does NOT filter candidates first, unlike the base (and
-        # video). Preserved verbatim through the SelectorBase extraction so
-        # that convergence lands as its own commit: filtering changes the
-        # NUMBER returned for generation_mode="edit" (today it can price a
-        # provider execute() would never select), and estimates feed the
-        # budget gate — a bisect should point at that decision, not at the
-        # extraction. See test_selector_contract's D2 test.
-        candidates = self._providers()
-        if not candidates:
-            return 0.0
-        tool, _ = self._select_best_tool(
-            inputs, candidates, self._prepare_task_context(inputs)
-        )
-        return tool.estimate_cost(inputs) if tool else 0.0
-
     def _prepare_task_context(self, inputs: dict[str, Any]) -> dict[str, Any]:
         from lib.scoring import normalize_task_context
 

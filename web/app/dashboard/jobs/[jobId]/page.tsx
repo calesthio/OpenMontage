@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useReducer, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -54,15 +54,40 @@ export default function JobDetailPage() {
 
   // On-disk artifacts (roadmap 1.2): refreshed whenever a new artifact is
   // written or a stage completes, so approved artifacts stay inspectable.
+  // stale_stages (roadmap 2.4): completed stages whose outputs predate an
+  // edited upstream input.
   const [artifacts, setArtifacts] = useState<Record<string, unknown>>({});
+  const [staleStages, setStaleStages] = useState<string[]>([]);
   const artifactVersion = state.events.filter(
     (e) => e.type === "artifact_written" || e.type === "stage_completed"
   ).length;
   useEffect(() => {
     apiRequest(`/jobs/${jobId}/artifacts`).then((r) => {
       if (r.ok && r.data?.artifacts) setArtifacts(r.data.artifacts);
+      if (r.ok) setStaleStages(r.data?.stale_stages ?? []);
     });
-  }, [jobId, artifactVersion]);
+  }, [jobId, artifactVersion, state.status]);
+
+  // Revise (roadmap 2.2): re-open a finished job at a chosen stage.
+  const router = useRouter();
+  const [reviseStage, setReviseStage] = useState("");
+  const [reviseFeedback, setReviseFeedback] = useState("");
+  const [revising, setRevising] = useState(false);
+  async function handleRevise(stage: string, mode: "cascade" | "single", feedback = "") {
+    setRevising(true);
+    setActionError("");
+    const res = await apiRequest(`/jobs/${jobId}/revise`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ stage, mode, feedback }),
+    });
+    setRevising(false);
+    if (res.ok) {
+      router.push(`/dashboard/jobs/${res.data.job_id}`);
+    } else {
+      setActionError(res.detail);
+    }
+  }
 
   // Honest elapsed clock (roadmap 1.6): ticks while the job is live.
   const [nowSec, setNowSec] = useState(() => Date.now() / 1000);
@@ -144,6 +169,7 @@ export default function JobDetailPage() {
   // Only offer cancellation while the job is still live / gated — not once
   // it has already reached a terminal state (completed/failed/cancelled).
   const isCancellable = state.status === "queued" || state.status === "running" || state.status === "awaiting_approval";
+  const isTerminal = state.status === "completed" || state.status === "failed" || state.status === "cancelled";
 
   // Honest progress signals (roadmap 1.6).
   const startedTs = state.events.find((e) => e.type === "job_started")?.ts ?? null;
@@ -354,6 +380,70 @@ export default function JobDetailPage() {
           <CardContent className="space-y-1">
             <VideoGallery serverBase={SERVER} url={state.previewRenderUrl} urls={state.previewRenderUrls} />
             <p className="text-xs text-muted-foreground">合成阶段已产出，后续阶段可能还会调整</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Staleness (roadmap 2.4): a completed stage's output predates an
+          edited upstream input — offer targeted re-runs. */}
+      {isTerminal && staleStages.length > 0 && (
+        <Card className="border-orange-500/40 bg-orange-500/5" data-testid="stale-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base text-orange-400">⟳ 有阶段已过期</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              上游产物被修改后,以下阶段的输出已经过期。可只重做该阶段,或连同其后所有阶段一起重做(未变化的素材会自动复用,不重复计费)。
+            </p>
+            {staleStages.map((s) => (
+              <div key={s} className="flex items-center gap-2">
+                <span className="text-sm flex-1">{stageLabel(s)}</span>
+                <Button size="sm" variant="outline" disabled={revising}
+                        onClick={() => handleRevise(s, "single")}>
+                  仅重做此阶段
+                </Button>
+                <Button size="sm" variant="outline" disabled={revising}
+                        onClick={() => handleRevise(s, "cascade")}>
+                  重做此阶段及后续
+                </Button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Revise (roadmap 2.2): success is not a dead end — re-open the run
+          at any stage with feedback; a new generation begins. */}
+      {isTerminal && state.stages.length > 0 && (
+        <Card data-testid="revise-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm text-muted-foreground font-medium">↻ 修订(从某一阶段重新打开)</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col sm:flex-row gap-2">
+            <select
+              className="bg-muted/40 border border-border rounded px-2 py-1.5 text-sm"
+              value={reviseStage}
+              onChange={(e) => setReviseStage(e.target.value)}
+              aria-label="选择要重做的阶段"
+            >
+              <option value="">选择阶段…</option>
+              {state.stages.map((s) => (
+                <option key={s} value={s}>{stageLabel(s)}</option>
+              ))}
+            </select>
+            <input
+              className="flex-1 bg-muted/40 border border-border rounded px-2 py-1.5 text-sm"
+              placeholder="想改什么?例如:0:14 的音乐不对,换更克制的"
+              value={reviseFeedback}
+              onChange={(e) => setReviseFeedback(e.target.value)}
+            />
+            <Button
+              size="sm"
+              disabled={!reviseStage || revising}
+              onClick={() => handleRevise(reviseStage, "cascade", reviseFeedback)}
+            >
+              {revising ? "创建中…" : "重新打开"}
+            </Button>
           </CardContent>
         </Card>
       )}

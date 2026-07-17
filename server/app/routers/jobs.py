@@ -54,6 +54,11 @@ class CreateJobRequest(BaseModel):
 class ApproveStageRequest(BaseModel):
     action: str               # "approve" | "reject"
     feedback: str = ""
+    # Per-scene keep/reroll (roadmap 2.3): on a reject at the assets gate,
+    # the ids of the SPECIFIC manifest assets to regenerate. Everything not
+    # listed is kept — and, via content-addressed output naming, costs
+    # nothing to keep on the regenerate round.
+    rejected_asset_ids: list[str] | None = None
     # Budget gate only: the user's NEW absolute budget ceiling (CNY). The
     # gate previously re-armed at spent×1.2 — an unbounded ratchet the user
     # never chose. When provided on an approve, it replaces that heuristic.
@@ -134,7 +139,9 @@ async def get_job(job_id: str):
 @router.post("/{job_id}/approve")
 async def approve_stage(job_id: str, req: ApproveStageRequest):
     ok = job_store.set_approval(
-        job_id, req.action, req.feedback, new_budget_cny=req.new_budget_cny
+        job_id, req.action, req.feedback,
+        new_budget_cny=req.new_budget_cny,
+        rejected_asset_ids=req.rejected_asset_ids,
     )
     if not ok:
         # Distinguish "another request already resolved this gate" (status is
@@ -233,6 +240,36 @@ async def save_artifact(job_id: str, req: SaveArtifactRequest):
     return {"saved": artifact_name, "path": str(out)}
 
 
+def _stale_stages(job: dict, project_dir: Path) -> list[str]:
+    """Stages whose output artifacts are OLDER than an upstream input they
+    depend on (roadmap 2.4 — the Hex/DAG model): editing an upstream
+    artifact makes every completed downstream stage's output stale.
+
+    Derived purely from artifact file mtimes vs each stage's declared
+    required_artifacts_in — no extra bookkeeping to drift.
+    """
+    stages = _resolve_stages(job.get("pipeline", "cinematic"))
+    artifacts_dir = project_dir / "artifacts"
+    completed = set(job.get("completed_stages") or [])
+
+    def _mtime(name: str) -> float | None:
+        p = artifacts_dir / f"{name}.json"
+        try:
+            return p.stat().st_mtime
+        except OSError:
+            return None
+
+    stale: list[str] = []
+    for s in stages:
+        if s["name"] not in completed:
+            continue
+        produced = [m for m in (_mtime(n) for n in s.get("produces") or []) if m is not None]
+        required = [m for m in (_mtime(n) for n in s.get("required_artifacts_in") or []) if m is not None]
+        if produced and required and min(produced) < max(required):
+            stale.append(s["name"])
+    return stale
+
+
 @router.get("/{job_id}/artifacts")
 async def get_job_artifacts(job_id: str):
     """Read-only view of every stage artifact the pipeline has written.
@@ -241,13 +278,114 @@ async def get_job_artifacts(job_id: str):
     artifact — once a gate resolved, the artifact vanished from the UI
     entirely (roadmap 1.2). This exposes what's already on disk
     (projects/<name>/artifacts/*.json) so the web app can render script /
-    scene_plan / asset_manifest / decision_log at any time.
+    scene_plan / asset_manifest / decision_log at any time. `stale_stages`
+    lists completed stages whose outputs predate an edited upstream input
+    (roadmap 2.4) — the UI offers "仅重做此阶段 / 重做此阶段及后续" there.
     """
     job = job_store.get(job_id)
     if not job:
         raise HTTPException(404, "Job not found")
     project_dir = OM_ROOT / "projects" / job.get("project_name", job_id)
-    return {"artifacts": _load_artifacts(project_dir)}
+    return {
+        "artifacts": _load_artifacts(project_dir),
+        "stale_stages": _stale_stages(job, project_dir),
+    }
+
+
+class ReviseJobRequest(BaseModel):
+    stage: str
+    feedback: str = ""
+    # "cascade": re-run the stage and everything after it (default — the
+    # DAG-honest choice). "single": re-run ONLY this stage; later completed
+    # stages stay completed (their outputs will read as stale until re-run).
+    mode: str = "cascade"
+
+    @field_validator("stage")
+    @classmethod
+    def _validate_stage(cls, v: str) -> str:
+        if not _SAFE_STAGE_NAME.match(v):
+            raise ValueError("stage must contain only letters, numbers, underscores, and hyphens")
+        return v
+
+    @field_validator("mode")
+    @classmethod
+    def _validate_mode(cls, v: str) -> str:
+        if v not in ("cascade", "single"):
+            raise ValueError("mode must be 'cascade' or 'single'")
+        return v
+
+
+@router.post("/{job_id}/revise", status_code=201)
+async def revise_job(job_id: str, req: ReviseJobRequest):
+    """Re-open a finished job at a chosen stage (roadmap 2.2) — success is
+    no longer a dead end (previously the only actions on a completed job
+    were watching it or deleting it; retry accepts only "failed").
+
+    Clones the job (the original stays as an immutable record), rolls
+    completed_stages back per `mode`, records the user's feedback for the
+    re-entered stage, and re-enqueues. The clone shares the project
+    workspace, so unchanged upstream artifacts — and, via content-addressed
+    output naming, unchanged generated assets — are reused rather than
+    regenerated.
+    """
+    job = job_store.get(job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+    if job.get("status") not in TERMINAL_STATUSES:
+        raise HTTPException(400, "Only a finished (completed/failed/cancelled) job can be revised")
+    stages = _resolve_stages(job.get("pipeline", "cinematic"))
+    stage_order = [s["name"] for s in stages]
+    if req.stage not in stage_order:
+        raise HTTPException(400, f"{req.stage!r} is not a stage of this job's pipeline")
+    project_name = job.get("project_name", job_id)
+    for other_id, other in job_store.all().items():
+        if other.get("project_name") == project_name and other.get("status") in INFLIGHT_STATUSES:
+            raise HTTPException(
+                409,
+                f"another job is already running on this project (job {other_id}); "
+                "wait for it to finish before revising",
+            )
+
+    old_completed = set(job.get("completed_stages") or [])
+    target_idx = stage_order.index(req.stage)
+    if req.mode == "single":
+        new_completed = sorted(old_completed - {req.stage})
+    else:
+        new_completed = [s for s in stage_order[:target_idx] if s in old_completed]
+
+    # A new generation begins: archive the current top-level renders so the
+    # re-render can't silently clobber them AND stale variants from the
+    # previous generation can't confuse the renders/*.mp4 discovery glob
+    # into misreading the new run as multi-variant (roadmap 2.5).
+    renders_dir = OM_ROOT / "projects" / project_name / "renders"
+    if renders_dir.is_dir() and "compose" not in new_completed:
+        import time as _time
+        history_dir = renders_dir / "history" / _time.strftime("%Y%m%d-%H%M%S")
+        for f in renders_dir.glob("*.mp4"):
+            try:
+                history_dir.mkdir(parents=True, exist_ok=True)
+                f.replace(history_dir / f.name)
+            except OSError:
+                pass
+
+    new_id = str(uuid.uuid4())
+    payload = {
+        "project_name": project_name,
+        "content_type": job.get("content_type", "marketing_film"),
+        "pipeline": job.get("pipeline", "cinematic"),
+        "brand_info": job.get("brand_info", {}),
+        "options": job.get("options", {}),
+    }
+    job_store.create(new_id, {
+        **payload,
+        "completed_stages": new_completed,
+        "cost_cny": float(job.get("cost_cny", 0.0) or 0.0),
+        "revised_from": job_id,
+        "revise_feedback": {"stage": req.stage, "feedback": req.feedback, "mode": req.mode},
+    })
+    get_job_queue().enqueue(run_pipeline_job, new_id, payload)
+    return {"job_id": new_id, "status": "queued", "revised_from": job_id,
+            "completed_stages": new_completed}
 
 
 @router.post("/{job_id}/retry")

@@ -18,6 +18,7 @@ const JOB_ID = "job123";
 
 vi.mock("next/navigation", () => ({
   useParams: () => ({ jobId: JOB_ID }),
+  useRouter: () => ({ push: vi.fn() }),
 }));
 
 // jsdom has no native EventSource — stand in a minimal, fully-controllable

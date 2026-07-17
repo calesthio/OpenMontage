@@ -627,6 +627,67 @@ def _artifact_mtimes(project_dir: Path, names: list[str]) -> dict[str, float]:
     return result
 
 
+def _canonical_pipeline_type(pipeline_name: str) -> str:
+    """Follow PIPELINE_MAP string aliases to the real manifest name
+    (marketing_film → cinematic). A raw stage-list override (tests) has no
+    manifest — return the name unchanged; checkpoint writes will then fail
+    validation and be skipped (they're best-effort)."""
+    seen: set[str] = set()
+    name = pipeline_name
+    while isinstance(PIPELINE_MAP.get(name), str) and name not in seen:
+        seen.add(name)
+        name = PIPELINE_MAP[name]   # type: ignore[assignment]
+    return name
+
+
+def _write_stage_checkpoint(
+    project_dir: Path,
+    project_name: str,
+    pipeline_type: str,
+    stage_def: dict,
+    status: str,
+    *,
+    approved: bool = False,
+    cost_cny: float | None = None,
+) -> None:
+    """Dual persistence (roadmap 2.5): mirror the web runner's stage state
+    into lib/checkpoint's on-disk protocol — the same files the Backlot
+    board watches. Until this, the web path never imported lib.checkpoint,
+    so 11 of 12 real projects had no checkpoints and the board's entire
+    mechanism (version history, time-scrub replay, gate audit, stall
+    detection) served exactly one hand-run project.
+
+    Strictly best-effort: the board is an observer, never a blocker — any
+    validation failure (e.g. an agent-written artifact that doesn't satisfy
+    its schema, which write_artifact deliberately tolerates) skips the
+    checkpoint with a debug log and the pipeline continues.
+    """
+    try:
+        from lib.checkpoint import write_checkpoint
+        artifacts: dict[str, Any] = {}
+        if status in ("completed", "awaiting_human"):
+            have = _load_artifacts(project_dir)
+            for name in stage_def.get("produces") or []:
+                if name in have:
+                    artifacts[name] = have[name]
+        write_checkpoint(
+            project_dir.parent,
+            project_name,
+            stage_def["name"],
+            status,
+            artifacts,
+            pipeline_type=pipeline_type,
+            human_approval_required=bool(stage_def.get("approval")),
+            human_approved=approved,
+            cost_snapshot={"total_cny": cost_cny} if cost_cny is not None else None,
+        )
+    except Exception:
+        logger.debug(
+            "checkpoint write skipped for %s/%s (%s)",
+            project_name, stage_def.get("name"), status, exc_info=True,
+        )
+
+
 def _load_brand_kit(kit_id: str | None) -> dict:
     """Load a brand kit from brand_kits/<kit_id>/kit.json, or empty dict."""
     if not kit_id:
@@ -1142,6 +1203,19 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
     (project_dir / "assets").mkdir(exist_ok=True)
     (project_dir / "renders").mkdir(exist_ok=True)
 
+    # Dual persistence (roadmap 2.5): initialize the checkpoint-protocol
+    # workspace marker so the Backlot board can identify this run. Best-effort
+    # — the board is an observer, never a blocker.
+    pipeline_type = _canonical_pipeline_type(pipeline_name)
+    try:
+        from lib.checkpoint import init_project
+        init_project(
+            project_name, title=project_name, pipeline_type=pipeline_type,
+            pipeline_dir=project_dir.parent,
+        )
+    except Exception:
+        logger.debug("init_project skipped for %s", project_name, exc_info=True)
+
     # MaaS tools bill in CNY (the user owns the gateway) and their cost_usd field
     # already carries CNY amounts, so accumulate directly — no FX conversion.
     cost_accumulator: list[float] = []
@@ -1435,6 +1509,7 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
 
         job_store.update(job_id, current_stage=stage_name, status="running")
         _emit(job_id, {"type": "stage_started", "stage": stage_name})
+        _write_stage_checkpoint(project_dir, project_name, pipeline_type, stage_def, "in_progress")
 
         # Preflight: fail fast with a clear diagnostic if an upstream artifact
         # this stage requires is missing, rather than silently launching the
@@ -1471,7 +1546,11 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
         # only the bounded auto-retry bookkeeping (MAX_ROUNDS) for genuine
         # failures.
         success = False
-        feedback = ""
+        # A revise clone (POST /jobs/{id}/revise, roadmap 2.2) carries the
+        # user's feedback for the stage being re-entered — thread it into
+        # the stage's very first conversation instead of losing it.
+        _revise = (job_store.get(job_id) or {}).get("revise_feedback") or {}
+        feedback = _revise.get("feedback", "") if _revise.get("stage") == stage_name else ""
         _round = 0
         while _round <= MAX_ROUNDS:
             outcome = await _call_stage(stage_def, stage_name, skill_text, feedback)
@@ -1644,6 +1723,10 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
                 return None, None
 
             preview_value, preview_name = _preview()
+            _write_stage_checkpoint(
+                project_dir, project_name, pipeline_type, stage_def, "awaiting_human",
+                cost_cny=round(base_cost + sum(cost_accumulator), 4),
+            )
             expires_at = _pause_for_approval(
                 job_id, stage_name, preview=preview_value, preview_artifact=preview_name
             )
@@ -1695,6 +1778,26 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
                     return
                 revisions_used += 1
                 feedback = approval.get("feedback", "")
+                # Per-scene keep/reroll (roadmap 2.3): the reject carried the
+                # SPECIFIC manifest asset ids to redo. Everything else is
+                # kept — and re-issuing an identical generation call reuses
+                # the content-addressed file at zero cost, so "选择免费、
+                # 生成计费" holds mechanically, not just as instruction.
+                rejected_ids = approval.get("rejected_asset_ids") or []
+                if rejected_ids:
+                    reroll_instruction = (
+                        "Per-asset reroll request: regenerate ONLY the assets with "
+                        f"these ids from asset_manifest: {rejected_ids}. For each, call "
+                        "the generation tool again with inputs.force_regenerate=true "
+                        "(bypasses the asset cache — without it an identical prompt "
+                        "returns the very file the user just rejected), adjusting the "
+                        "prompt per the user's feedback if any. Keep every OTHER asset "
+                        "exactly as-is: re-issue the identical call WITHOUT "
+                        "force_regenerate and the existing file is reused at zero cost. "
+                        "Rewrite asset_manifest so rerolled entries point at their NEW "
+                        "file paths; keep kept entries byte-identical."
+                    )
+                    feedback = f"{feedback}\n\n{reroll_instruction}" if feedback else reroll_instruction
                 job_store.update(job_id, status="running")
                 _emit(job_id, {"type": "stage_rejected", "stage": stage_name, "feedback": feedback})
                 # Snapshot before regenerating — see _artifact_mtimes' docstring
@@ -1748,6 +1851,10 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
                     return
                 _emit(job_id, {"type": "stage_completed", "stage": stage_name})
                 preview_value, preview_name = _preview()
+                _write_stage_checkpoint(
+                    project_dir, project_name, pipeline_type, stage_def, "awaiting_human",
+                    cost_cny=round(base_cost + sum(cost_accumulator), 4),
+                )
                 expires_at = _pause_for_approval(
                     job_id, stage_name, preview=preview_value, preview_artifact=preview_name
                 )
@@ -1765,6 +1872,11 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
         # Mark done so a later retry resumes after this stage.
         completed_stages.add(stage_name)
         job_store.update(job_id, completed_stages=sorted(completed_stages))
+        _write_stage_checkpoint(
+            project_dir, project_name, pipeline_type, stage_def, "completed",
+            approved=needs_approval,   # gated stages reach here only after approval
+            cost_cny=round(base_cost + sum(cost_accumulator), 4),
+        )
 
         # Budget gate — pause for approval if cumulative cost crossed the ceiling.
         if not await _budget_gate():

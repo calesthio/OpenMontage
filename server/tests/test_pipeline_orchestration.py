@@ -1543,3 +1543,222 @@ async def test_cancel_overrides_stage_boundary_gate_reject_semantics(runner, mon
     assert runner.get("j")["status"] == "cancelled"
     assert regenerate_calls == [1]   # only the initial run — no regenerate round was triggered
     assert any(e["type"] == "job_cancelled" for e in runner.get_events("j", after_seq=-1))
+
+
+# ── batch 2: revise feedback threading + per-scene reroll + checkpoints ─────
+
+async def test_revise_feedback_reaches_the_reentered_stage(runner, monkeypatch):
+    seen_feedback = {}
+
+    def capture(job_id, stage_name, skill_text, project_dir, *a, **k):
+        seen_feedback[stage_name] = k.get("feedback")
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        (project_dir / "artifacts" / f"{stage_name}_art.json").write_text("{}")
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", capture)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "idea", "skill": None, "approval": False, "produces": ["idea_art"]},
+        {"name": "script", "skill": None, "approval": False, "produces": ["script_art"]},
+    ])
+    runner.create("j", {
+        "project_name": "p", "pipeline": "cinematic",
+        "completed_stages": ["idea"],
+        "revise_feedback": {"stage": "script", "feedback": "语气再轻快一点", "mode": "cascade"},
+    })
+
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    assert "idea" not in seen_feedback              # rolled-back-complete stage skipped
+    assert seen_feedback["script"] == "语气再轻快一点"
+    assert runner.get("j")["status"] == "completed"
+
+
+async def test_reject_with_asset_ids_builds_reroll_feedback(runner, monkeypatch):
+    feedbacks = []
+
+    def regenerating_agent(job_id, stage_name, skill_text, project_dir, *a, **k):
+        feedbacks.append(k.get("feedback"))
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        p = project_dir / "artifacts" / "asset_manifest.json"
+        p.write_text(json.dumps({"round": len(feedbacks)}))
+        import os as _os
+        st = p.stat()
+        _os.utime(p, (st.st_atime, st.st_mtime + len(feedbacks)))
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", regenerating_agent)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "assets", "skill": None, "approval": True, "produces": ["asset_manifest"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    task = asyncio.create_task(
+        stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+    )
+    for _ in range(500):
+        await asyncio.sleep(0.01)
+        if (runner.get("j") or {}).get("status") == "awaiting_approval":
+            break
+    assert runner.set_approval("j", "reject", "第二个镜头太暗",
+                               rejected_asset_ids=["a2", "a7"])
+    for _ in range(500):
+        await asyncio.sleep(0.01)
+        job = runner.get("j") or {}
+        if job.get("status") == "awaiting_approval" and len(feedbacks) == 2:
+            break
+    assert runner.set_approval("j", "approve", "")
+    await task
+
+    assert runner.get("j")["status"] == "completed"
+    fb = feedbacks[1]
+    assert "第二个镜头太暗" in fb
+    assert "a2" in fb and "a7" in fb
+    assert "force_regenerate" in fb
+
+
+async def test_web_runner_writes_checkpoints_for_backlot(runner, monkeypatch, tmp_path):
+    # Roadmap 2.5 (dual persistence): the web path must write the
+    # checkpoint-protocol files the Backlot board watches. Uses the REAL
+    # cinematic stage name "research" with a schema-valid research_brief so
+    # write_checkpoint's gate/artifact validation genuinely passes.
+    valid_brief = {
+        "version": "1.0",
+        "topic": "t",
+        "research_date": "2026-07-17",
+        "landscape": {
+            "existing_content": [
+                {
+                    "title": "t0",
+                    "source": "youtube",
+                    "angle": "a",
+                    "what_it_covers": "c"
+                },
+                {
+                    "title": "t1",
+                    "source": "youtube",
+                    "angle": "a",
+                    "what_it_covers": "c"
+                },
+                {
+                    "title": "t2",
+                    "source": "youtube",
+                    "angle": "a",
+                    "what_it_covers": "c"
+                }
+            ],
+            "saturated_angles": [],
+            "underserved_gaps": [
+                "gap"
+            ]
+        },
+        "data_points": [
+            {
+                "claim": "fact 0",
+                "source_url": "https://example.com/0",
+                "credibility": "primary_source"
+            },
+            {
+                "claim": "fact 1",
+                "source_url": "https://example.com/1",
+                "credibility": "primary_source"
+            },
+            {
+                "claim": "fact 2",
+                "source_url": "https://example.com/2",
+                "credibility": "primary_source"
+            }
+        ],
+        "audience_insights": {
+            "common_questions": [
+                "q1",
+                "q2",
+                "q3"
+            ],
+            "misconceptions": [],
+            "knowledge_level": "beginner"
+        },
+        "angles_discovered": [
+            {
+                "name": "angle 0",
+                "hook": "h",
+                "type": "contrarian",
+                "why_now": "w"
+            },
+            {
+                "name": "angle 1",
+                "hook": "h",
+                "type": "contrarian",
+                "why_now": "w"
+            },
+            {
+                "name": "angle 2",
+                "hook": "h",
+                "type": "contrarian",
+                "why_now": "w"
+            }
+        ],
+        "sources": [
+            {
+                "url": "https://example.com/0",
+                "title": "src 0"
+            },
+            {
+                "url": "https://example.com/1",
+                "title": "src 1"
+            },
+            {
+                "url": "https://example.com/2",
+                "title": "src 2"
+            },
+            {
+                "url": "https://example.com/3",
+                "title": "src 3"
+            },
+            {
+                "url": "https://example.com/4",
+                "title": "src 4"
+            }
+        ]
+    }
+
+    def writes_brief(job_id, stage_name, skill_text, project_dir, *a, **k):
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        (project_dir / "artifacts" / "research_brief.json").write_text(json.dumps(valid_brief))
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", writes_brief)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "research", "skill": None, "approval": False, "produces": ["research_brief"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    assert runner.get("j")["status"] == "completed"
+    project = tmp_path / "projects" / "p"
+    assert (project / "project.json").exists(), "init_project marker missing"
+    ckpt_path = project / "checkpoint_research.json"
+    assert ckpt_path.exists(), "stage checkpoint missing"
+    ckpt = json.loads(ckpt_path.read_text())
+    assert ckpt["status"] == "completed"
+    assert ckpt["artifacts"]["research_brief"]["topic"] == "t"
+    assert ckpt["cost_snapshot"]["total_cny"] == 0.0
+    # in_progress → completed within one run is a normal progression:
+    # lib/checkpoint deliberately does NOT archive superseded in_progress
+    # heartbeats (only completed/awaiting versions get history entries).
+    assert not list((project / "history").glob("*.json"))
+
+
+async def test_checkpoint_failure_never_blocks_the_pipeline(runner, monkeypatch, tmp_path):
+    # Best-effort contract: a stage name outside the real manifest (raw test
+    # override) makes write_checkpoint raise internally — the run must
+    # complete anyway.
+    def ok(job_id, stage_name, skill_text, project_dir, *a, **k):
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        (project_dir / "artifacts" / "x.json").write_text("{}")
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", ok)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "not_a_real_stage", "skill": None, "approval": False, "produces": ["x"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+    assert runner.get("j")["status"] == "completed"

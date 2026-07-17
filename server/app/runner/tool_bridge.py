@@ -15,6 +15,7 @@ import json
 import logging
 import re
 import sys
+import time
 import uuid
 from pathlib import Path
 from typing import Any
@@ -561,6 +562,12 @@ def execute_tool(
         variant = inputs.pop("variant", None) or inputs.get("model")
         variant_tag = f"_{variant_slug(variant)}" if variant else ""
 
+        # Per-scene reroll (roadmap 2.3): a routing hint, not a tool param —
+        # when true, the content-addressed cache below is bypassed so an
+        # identical prompt genuinely regenerates (fresh uuid filename)
+        # instead of returning the very asset the user just rejected.
+        force_regenerate = bool(inputs.pop("force_regenerate", False))
+
         # Set output path if not specified.
         if "output_path" not in inputs:
             ext_map = {
@@ -590,22 +597,84 @@ def execute_tool(
                 # otherwise the second call's "final.mp4" silently clobbers
                 # the first's, and only one variant would ever be watchable.
                 filename = f"final{variant_tag}.mp4" if variant_tag else "final.mp4"
-                inputs = {**inputs, "output_path": str(renders_dir / filename)}
+                target = renders_dir / filename
+                # Generations are never silently clobbered (roadmap 2.5): a
+                # re-render of the SAME filename (revise round, reject-loop
+                # round) first moves the existing file into
+                # renders/history/<mtime>_<name> — recoverable, and invisible
+                # to the top-level renders/*.mp4 discovery glob so the newest
+                # generation alone represents the deliverable.
+                if target.is_file():
+                    try:
+                        history_dir = renders_dir / "history"
+                        history_dir.mkdir(exist_ok=True)
+                        stamp = time.strftime(
+                            "%Y%m%d-%H%M%S", time.localtime(target.stat().st_mtime)
+                        )
+                        target.replace(history_dir / f"{stamp}_{filename}")
+                    except OSError:
+                        logger.warning("failed to archive previous render %s", target, exc_info=True)
+                inputs = {**inputs, "output_path": str(target)}
             else:
                 out_dir = project_dir / "assets" / tool.capability
                 out_dir.mkdir(parents=True, exist_ok=True)
-                # A fixed "{tool_name}_output.{ext}" filename meant every call
-                # to the same tool within a job silently overwrote the
-                # previous one's file — confirmed live: an assets-stage run
-                # that generated 6 distinct video clips (without the agent
-                # overriding output_path) left exactly ONE file on disk,
-                # since each call clobbered the last. A short random suffix
-                # gives every call — with or without a distinguishing
-                # prompt/parameter — its own file. The variant tag (when
-                # present) makes the filename tell a human which A/B branch
-                # it belongs to, instead of being opaque.
-                unique = uuid.uuid4().hex[:8]
+                # Content-addressed output naming (roadmap 2.1): the filename
+                # suffix is BaseTool.idempotency_key(inputs) — a hash of the
+                # tool's declared identity fields (prompt/model/duration/…).
+                # Re-running a stage with unchanged inputs therefore lands on
+                # the SAME path, and the cache check below returns the
+                # existing file for free instead of paying for an identical
+                # generation — "重跑一次 ¥50" becomes "¥2" (only what
+                # actually changed regenerates). Falls back to a random
+                # suffix when the tool declares no identity fields, when
+                # none of them are present in this call (an all-None hash
+                # would alias DIFFERENT calls onto one file), or when the
+                # caller forces a reroll.
+                key_fields = getattr(tool, "idempotency_key_fields", None) or []
+                cache_key = None
+                if not force_regenerate and key_fields and any(f in inputs for f in key_fields):
+                    try:
+                        cache_key = tool.idempotency_key(inputs)
+                    except Exception:
+                        cache_key = None
+                unique = cache_key or uuid.uuid4().hex[:8]
                 inputs = {**inputs, "output_path": str(out_dir / f"{tool_name}{variant_tag}_{unique}.{ext}")}
+
+                cached_path = Path(inputs["output_path"])
+                if cache_key and cached_path.is_file() and cached_path.stat().st_size > 0:
+                    # Cache hit: identical inputs already produced this asset
+                    # in a previous run/round. No budget check, no ledger
+                    # entry, no paid call — reuse it verbatim.
+                    if emit_event:
+                        cached_event = {
+                            "type": "asset_ready",
+                            "tool": tool_name,
+                            "path": str(cached_path),
+                            "kind": tool.capability,
+                            "model": inputs.get("model"),
+                            "cached": True,
+                            "cost_cny": 0.0,
+                        }
+                        try:
+                            rel = cached_path.resolve().relative_to(project_dir.resolve())
+                            cached_event["media_url"] = f"/media/{project_dir.name}/{rel.as_posix()}"
+                        except (ValueError, OSError):
+                            pass
+                        emit_event(cached_event)
+                    return json.dumps({
+                        "success": True,
+                        "cached": True,
+                        "data": {
+                            "cached": True,
+                            "note": (
+                                "Reused existing asset (content-addressed: identical "
+                                "inputs already produced this file). No cost incurred. "
+                                "Pass force_regenerate=true to genuinely regenerate."
+                            ),
+                        },
+                        "artifacts": [str(cached_path)],
+                        "cost_usd": 0.0,
+                    })
 
         # Hard budget ceiling — pre-call check. Bounds total spend to <= budget
         # by refusing a paid call that would cross it, instead of letting a

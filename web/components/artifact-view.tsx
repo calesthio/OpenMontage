@@ -83,8 +83,15 @@ function ScenePlanView({ value }: { value: Dict }) {
 // ── asset_manifest ───────────────────────────────────────────────────────────
 
 function AssetManifestView({
-  value, serverBase, projectName,
-}: { value: Dict; serverBase: string; projectName: string | null }) {
+  value, serverBase, projectName, rejectedIds, onToggleReject,
+}: {
+  value: Dict;
+  serverBase: string;
+  projectName: string | null;
+  /** Per-scene keep/reroll (roadmap 2.3): ids marked for regeneration. */
+  rejectedIds?: string[];
+  onToggleReject?: (id: string) => void;
+}) {
   const assets = (value.assets as Dict[]) || [];
   if (!assets.length) return null;
   return (
@@ -95,8 +102,13 @@ function AssetManifestView({
         const type = (a.type as string) || "";
         const isImage = type.includes("image") || /\.(png|jpe?g|webp)$/i.test(path);
         const isVideo = type.includes("video") || /\.(mp4|webm|mov)$/i.test(path);
+        const id = (a.id as string) ?? String(i);
+        const rejected = rejectedIds?.includes(id) ?? false;
         return (
-          <div key={(a.id as string) ?? i} className="bg-muted/40 rounded-md overflow-hidden">
+          <div
+            key={id}
+            className={`bg-muted/40 rounded-md overflow-hidden ${rejected ? "ring-2 ring-orange-500/70" : ""}`}
+          >
             {url && isImage ? (
               <img src={url} alt={(a.prompt as string) || path} title={(a.prompt as string) || ""}
                    className="w-full h-24 object-cover bg-black" loading="lazy" />
@@ -115,6 +127,21 @@ function AssetManifestView({
                 {[a.model as string, typeof a.cost_usd === "number" ? `¥${(a.cost_usd as number).toFixed(2)}` : null]
                   .filter(Boolean).join(" · ")}
               </p>
+              {onToggleReject && (
+                // Midjourney's U/V pair in domain language: 采用 keeps (free
+                // — the cache reuses it), 换一版 marks for paid reroll.
+                <button
+                  type="button"
+                  onClick={() => onToggleReject(id)}
+                  className={`w-full text-[11px] rounded border px-1 py-0.5 mt-0.5 ${
+                    rejected
+                      ? "border-orange-500/70 text-orange-400"
+                      : "border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {rejected ? "↻ 将换一版(点击改为采用)" : "✓ 采用(点击换一版)"}
+                </button>
+              )}
             </div>
           </div>
         );
@@ -189,11 +216,16 @@ export function ArtifactView({
   value,
   serverBase,
   projectName,
+  rejectedIds,
+  onToggleReject,
 }: {
   name: string | null;
   value: unknown;
   serverBase: string;
   projectName: string | null;
+  /** asset_manifest only: per-scene keep/reroll selection (roadmap 2.3). */
+  rejectedIds?: string[];
+  onToggleReject?: (id: string) => void;
 }) {
   if (value == null || typeof value !== "object") return null;
   const v = value as Dict;
@@ -201,7 +233,15 @@ export function ArtifactView({
   if (name === "script") structured = <ScriptView value={v} />;
   else if (name === "scene_plan") structured = <ScenePlanView value={v} />;
   else if (name === "asset_manifest")
-    structured = <AssetManifestView value={v} serverBase={serverBase} projectName={projectName} />;
+    structured = (
+      <AssetManifestView
+        value={v}
+        serverBase={serverBase}
+        projectName={projectName}
+        rejectedIds={rejectedIds}
+        onToggleReject={onToggleReject}
+      />
+    );
   else if (name === "decision_log") structured = <DecisionLogView value={v} />;
   else structured = <KeyValueView value={v} />;
 

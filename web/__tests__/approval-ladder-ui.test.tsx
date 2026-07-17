@@ -13,6 +13,7 @@ const JOB_ID = "job-ladder";
 
 vi.mock("next/navigation", () => ({
   useParams: () => ({ jobId: JOB_ID }),
+  useRouter: () => ({ push: vi.fn() }),
 }));
 
 class FakeEventSource {

@@ -543,3 +543,80 @@ def test_cors_origins_env_override(monkeypatch):
     # pointed elsewhere) had every browser API call rejected by CORS.
     monkeypatch.setenv("OM_CORS_ORIGINS", "https://example.com, https://foo.bar ")
     assert main._cors_origins() == ["https://example.com", "https://foo.bar"]
+
+
+# ── revise: success is no longer a dead end (roadmap 2.2/2.4) ────────────────
+
+def test_revise_clones_and_rolls_back_cascade(client, tmp_path):
+    jid = client.post("/jobs", json=_new_job_body(project_name="rv1")).json()["job_id"]
+    jobs.job_store.update(
+        jid, status="completed", cost_cny=12.5,
+        completed_stages=["research", "proposal", "script", "scene_plan", "assets", "edit", "compose", "publish"],
+    )
+    r = client.post(f"/jobs/{jid}/revise", json={"stage": "scene_plan", "feedback": "分镜太平淡"})
+    assert r.status_code == 201
+    body = r.json()
+    assert body["revised_from"] == jid
+    assert body["completed_stages"] == ["research", "proposal", "script"]
+    clone = jobs.job_store.get(body["job_id"])
+    assert clone["status"] == "queued"
+    assert clone["cost_cny"] == 12.5        # spend carries across generations
+    assert clone["revise_feedback"] == {"stage": "scene_plan", "feedback": "分镜太平淡", "mode": "cascade"}
+    # The original job is untouched — an immutable record.
+    assert jobs.job_store.get(jid)["status"] == "completed"
+
+
+def test_revise_single_mode_keeps_later_stages(client):
+    jid = client.post("/jobs", json=_new_job_body(project_name="rv2")).json()["job_id"]
+    jobs.job_store.update(
+        jid, status="completed",
+        completed_stages=["research", "proposal", "script", "scene_plan"],
+    )
+    r = client.post(f"/jobs/{jid}/revise", json={"stage": "proposal", "mode": "single"})
+    assert r.status_code == 201
+    assert r.json()["completed_stages"] == ["research", "scene_plan", "script"]
+
+
+def test_revise_rejects_live_or_unknown(client):
+    jid = client.post("/jobs", json=_new_job_body(project_name="rv3")).json()["job_id"]
+    # queued (in-flight) → 400
+    assert client.post(f"/jobs/{jid}/revise", json={"stage": "script"}).status_code == 400
+    jobs.job_store.update(jid, status="completed")
+    # unknown stage → 400; unknown job → 404
+    assert client.post(f"/jobs/{jid}/revise", json={"stage": "not_a_stage"}).status_code == 400
+    assert client.post("/jobs/nope/revise", json={"stage": "script"}).status_code == 404
+
+
+def test_revise_archives_previous_renders(client, tmp_path):
+    jid = client.post("/jobs", json=_new_job_body(project_name="rv4")).json()["job_id"]
+    jobs.job_store.update(jid, status="completed",
+                          completed_stages=["research", "compose"])
+    renders = tmp_path / "projects" / "rv4" / "renders"
+    renders.mkdir(parents=True)
+    (renders / "final.mp4").write_bytes(b"gen1")
+    (renders / "final_ltx.mp4").write_bytes(b"gen1-variant")
+    r = client.post(f"/jobs/{jid}/revise", json={"stage": "compose"})
+    assert r.status_code == 201
+    # Top level is clean (no stale-variant glob confusion); both archived.
+    assert list(renders.glob("*.mp4")) == []
+    archived = sorted(p.name for p in (renders / "history").rglob("*.mp4"))
+    assert archived == ["final.mp4", "final_ltx.mp4"]
+
+
+def test_artifacts_endpoint_reports_stale_stages(client, tmp_path):
+    import os as _os, json as _json
+    jid = client.post("/jobs", json=_new_job_body(project_name="st1")).json()["job_id"]
+    jobs.job_store.update(jid, status="completed",
+                          completed_stages=["research", "proposal", "script"])
+    art = tmp_path / "projects" / "st1" / "artifacts"
+    art.mkdir(parents=True)
+    now = 1_700_000_000
+    # proposal consumed research_brief; script consumed proposal_packet.
+    for name, mtime in [("research_brief", now), ("proposal_packet", now + 10), ("script", now + 20)]:
+        p = art / f"{name}.json"
+        p.write_text(_json.dumps({}))
+        _os.utime(p, (mtime, mtime))
+    assert client.get(f"/jobs/{jid}/artifacts").json()["stale_stages"] == []
+    # The user edits the proposal — script's output now predates its input.
+    _os.utime(art / "proposal_packet.json", (now + 30, now + 30))
+    assert client.get(f"/jobs/{jid}/artifacts").json()["stale_stages"] == ["script"]

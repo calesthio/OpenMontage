@@ -785,3 +785,133 @@ def test_selector_result_persists_decision_log_entry(tmp_path, monkeypatch):
     log = _json.loads((project / "artifacts" / "decision_log.json").read_text())
     entries = [d for d in log["decisions"] if d["category"] == "provider_selection"]
     assert [d["selected"] for d in entries] == ["elevenlabs_tts", "google_tts"]
+
+
+# ── content-addressed asset cache (roadmap 2.1) ──────────────────────────────
+
+class IdempotentTool(FakeTool):
+    """FakeTool with declared identity fields, counting real executions."""
+    idempotency_key_fields = ["prompt", "model"]
+
+    def __init__(self, capability="video_generation", cost=5.0):
+        super().__init__(capability, cost)
+        self.executions = 0
+
+    def idempotency_key(self, inputs):
+        import hashlib, json as _j
+        raw = _j.dumps({k: inputs.get(k) for k in self.idempotency_key_fields}, sort_keys=True)
+        return hashlib.sha256(raw.encode()).hexdigest()[:16]
+
+    def execute(self, inputs):
+        self.executions += 1
+        self.executed_with = inputs
+        out = Path(inputs["output_path"])
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_bytes(b"generated-bytes")
+        return _FakeResult(cost_usd=self._cost, artifacts=[str(out)])
+
+
+def _run_idem(project_dir, tool, monkeypatch, inputs, **kw):
+    from tools import tool_registry
+    monkeypatch.setattr(tool_registry.registry, "ensure_discovered", lambda *a, **k: None)
+    monkeypatch.setattr(tool_registry.registry, "get", lambda name: tool)
+    args = {"tool_name": "maas_video", "inputs": dict(inputs)}
+    return execute_tool("run_openmontage_tool", args, project_dir, **kw)
+
+
+def test_identical_inputs_reuse_cached_asset_for_free(tmp_path, monkeypatch):
+    tool = IdempotentTool()
+    project = tmp_path / "projects" / "p"
+    costs: list[float] = []
+    events: list[dict] = []
+    r1 = json.loads(_run_idem(project, tool, monkeypatch,
+                              {"prompt": "a red fox", "model": "m1"},
+                              cost_accumulator=costs, emit_event=events.append))
+    r2 = json.loads(_run_idem(project, tool, monkeypatch,
+                              {"prompt": "a red fox", "model": "m1"},
+                              cost_accumulator=costs, emit_event=events.append))
+    assert tool.executions == 1                      # second call never executed
+    assert r2["cached"] is True
+    assert r2["artifacts"] == r1["artifacts"]        # same content-addressed path
+    assert r2["cost_usd"] == 0.0
+    assert costs == [5.0]                            # paid exactly once
+    cached_events = [e for e in events if e["type"] == "asset_ready" and e.get("cached")]
+    assert len(cached_events) == 1
+    assert cached_events[0]["cost_cny"] == 0.0
+    assert cached_events[0].get("media_url", "").startswith("/media/p/")
+
+
+def test_changed_inputs_generate_a_new_asset(tmp_path, monkeypatch):
+    tool = IdempotentTool()
+    project = tmp_path / "projects" / "p"
+    r1 = json.loads(_run_idem(project, tool, monkeypatch, {"prompt": "a red fox", "model": "m1"}))
+    r2 = json.loads(_run_idem(project, tool, monkeypatch, {"prompt": "a BLUE fox", "model": "m1"}))
+    assert tool.executions == 2
+    assert r1["artifacts"] != r2["artifacts"]
+
+
+def test_force_regenerate_bypasses_cache(tmp_path, monkeypatch):
+    tool = IdempotentTool()
+    project = tmp_path / "projects" / "p"
+    r1 = json.loads(_run_idem(project, tool, monkeypatch, {"prompt": "a red fox", "model": "m1"}))
+    r2 = json.loads(_run_idem(project, tool, monkeypatch,
+                              {"prompt": "a red fox", "model": "m1", "force_regenerate": True}))
+    assert tool.executions == 2
+    assert r2.get("cached") is not True
+    assert r1["artifacts"] != r2["artifacts"]        # fresh uuid path, old file kept
+    assert Path(r1["artifacts"][0]).exists()          # rejected asset remains recoverable
+    # force_regenerate is a routing hint — the tool itself must not see it.
+    assert "force_regenerate" not in tool.executed_with
+
+
+def test_budget_precall_check_skipped_on_cache_hit(tmp_path, monkeypatch):
+    # A cache hit costs nothing — it must not trip the pre-call budget gate.
+    tool = IdempotentTool(cost=100.0)
+    project = tmp_path / "projects" / "p"
+    _run_idem(project, tool, monkeypatch, {"prompt": "x", "model": "m"})   # no budget: generates
+    r2 = json.loads(_run_idem(project, tool, monkeypatch, {"prompt": "x", "model": "m"},
+                              budget_cny=1.0, cost_accumulator=[]))
+    assert r2["cached"] is True
+
+
+def test_tool_without_identity_fields_keeps_random_names(tmp_path, monkeypatch):
+    tool = FakeTool()   # no idempotency_key_fields
+    project = tmp_path / "projects" / "p"
+    r1 = json.loads(_run_tool(project, tool, monkeypatch))
+    r2 = json.loads(_run_tool(project, tool, monkeypatch))
+    assert r1["artifacts"] != r2["artifacts"]
+
+
+# ── final-render generation archive (roadmap 2.5) ────────────────────────────
+
+def test_final_compose_archives_previous_render_instead_of_clobbering(tmp_path, monkeypatch):
+    class ComposeTool(FakeTool):
+        input_schema = {"type": "object"}
+
+        def __init__(self):
+            super().__init__(capability="video_post")
+
+        def execute(self, inputs):
+            out = Path(inputs["output_path"])
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_bytes(b"new render")
+            return _FakeResult(artifacts=[str(out)])
+
+    project = tmp_path / "projects" / "p"
+    renders = project / "renders"
+    renders.mkdir(parents=True)
+    (renders / "final.mp4").write_bytes(b"old render")
+
+    from tools import tool_registry
+    monkeypatch.setattr(tool_registry.registry, "ensure_discovered", lambda *a, **k: None)
+    monkeypatch.setattr(tool_registry.registry, "get", lambda name: ComposeTool())
+    out = execute_tool("run_openmontage_tool",
+                       {"tool_name": "video_compose", "inputs": {"operation": "compose"}},
+                       project)
+    assert json.loads(out)["success"] is True
+    assert (renders / "final.mp4").read_bytes() == b"new render"
+    archived = list((renders / "history").glob("*final.mp4"))
+    assert len(archived) == 1
+    assert archived[0].read_bytes() == b"old render"
+    # Discovery glob (renders/*.mp4) must not see the archived file.
+    assert [p.name for p in renders.glob("*.mp4")] == ["final.mp4"]

@@ -95,10 +95,22 @@ export function ApprovalPanel({
   })();
   const [newBudget, setNewBudget] = useState(suggestedBudget);
 
+  // Per-scene keep/reroll (roadmap 2.3): asset ids marked "换一版" at the
+  // assets gate. Selection is free; only marked assets regenerate.
+  const [rejectedAssetIds, setRejectedAssetIds] = useState<string[]>([]);
+  const isAssetManifestGate = previewArtifact === "asset_manifest";
+  const toggleRejectAsset = (id: string) =>
+    setRejectedAssetIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+
   async function handleApproval(action: "approve" | "reject") {
     setApproving(true);
     onError("");
     const body: Record<string, unknown> = { action, feedback };
+    if (action === "reject" && rejectedAssetIds.length > 0) {
+      body.rejected_asset_ids = rejectedAssetIds;
+    }
     if (isBudgetGate && action === "approve" && newBudget.trim()) {
       const parsed = Number(newBudget);
       if (!Number.isFinite(parsed) || parsed <= 0) {
@@ -251,6 +263,8 @@ export function ApprovalPanel({
             value={currentPreview}
             serverBase={serverBase}
             projectName={projectName}
+            rejectedIds={isAssetManifestGate ? rejectedAssetIds : undefined}
+            onToggleReject={isAssetManifestGate ? toggleRejectAsset : undefined}
           />
         )}
         {editMode && (
@@ -310,10 +324,16 @@ export function ApprovalPanel({
             <Button
               variant="outline"
               onClick={() => handleApproval("reject")}
-              disabled={approving || (!isBudgetGate && !isRevisionsExhaustedGate && !feedback)}
+              disabled={approving || (
+                !isBudgetGate && !isRevisionsExhaustedGate && !feedback && rejectedAssetIds.length === 0
+              )}
               className="flex-1"
             >
-              {isBudgetGate || isRevisionsExhaustedGate ? "⛔ 终止任务" : "↩ 打回重做"}
+              {isBudgetGate || isRevisionsExhaustedGate
+                ? "⛔ 终止任务"
+                : rejectedAssetIds.length > 0
+                ? `↻ 重做选中的 ${rejectedAssetIds.length} 个素材`
+                : "↩ 打回重做"}
             </Button>
           </div>
         )}

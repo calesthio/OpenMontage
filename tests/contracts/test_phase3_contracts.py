@@ -187,8 +187,10 @@ class TestGoogleMusic:
         assert info["capability"] == "music_generation"
         assert info["provider"] == "google"
 
-    def test_duration_validation(self):
+    def test_duration_validation(self, budget_gate_isolated):
         tool = GoogleMusic()
+        # Gate active; approve this paid tool via the gate's real API.
+        budget_gate_isolated.approve_tool("google_music")
         mock_client = MagicMock()
 
         mock_interaction = MagicMock()
@@ -225,8 +227,10 @@ class TestGoogleMusic:
             assert res.error is not None
             assert "maximum duration is 184" in res.error
 
-    def test_execute_success_convenience_extraction(self, tmp_path):
+    def test_execute_success_convenience_extraction(self, tmp_path, budget_gate_isolated):
         tool = GoogleMusic()
+        # Gate active; approve this paid tool via the gate's real API.
+        budget_gate_isolated.approve_tool("google_music")
         mock_client = MagicMock()
 
         mock_interaction = MagicMock()
@@ -254,8 +258,10 @@ class TestGoogleMusic:
             assert res.data["output"] == str(output_file)
             assert output_file.read_bytes() == b"my_fake_google_lyria_audio"
 
-    def test_execute_success_fallback_extraction(self, tmp_path):
+    def test_execute_success_fallback_extraction(self, tmp_path, budget_gate_isolated):
         tool = GoogleMusic()
+        # Gate active; approve this paid tool via the gate's real API.
+        budget_gate_isolated.approve_tool("google_music")
         mock_client = MagicMock()
 
         mock_interaction = MagicMock()
@@ -291,8 +297,10 @@ class TestGoogleMusic:
 
     @patch("os.path.exists")
     @patch("requests.get")
-    def test_multimodal_image(self, mock_get, mock_exists, tmp_path):
+    def test_multimodal_image(self, mock_get, mock_exists, tmp_path, budget_gate_isolated):
         tool = GoogleMusic()
+        # Gate active; approve this paid tool via the gate's real API.
+        budget_gate_isolated.approve_tool("google_music")
         mock_client = MagicMock()
 
         mock_interaction = MagicMock()
@@ -359,10 +367,12 @@ class TestGoogleMusic:
                 b"url_image_bytes"
             ).decode("utf-8")
 
-    def test_minimum_duration_validation(self, caplog):
+    def test_minimum_duration_validation(self, caplog, budget_gate_isolated):
         import logging
 
         tool = GoogleMusic()
+        # Gate active; approve this paid tool via the gate's real API.
+        budget_gate_isolated.approve_tool("google_music")
         mock_client = MagicMock()
 
         mock_interaction = MagicMock()
@@ -411,8 +421,10 @@ class TestGoogleMusic:
             assert res.error is not None
             assert "minimum duration is 5" in res.error
 
-    def test_missing_image_path_error(self, tmp_path):
+    def test_missing_image_path_error(self, tmp_path, budget_gate_isolated):
         tool = GoogleMusic()
+        # Gate active; approve this paid tool via the gate's real API.
+        budget_gate_isolated.approve_tool("google_music")
         with patch.dict(os.environ, {"GEMINI_API_KEY": "test_key"}):
             inputs = {
                 "prompt": "music with missing image",

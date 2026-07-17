@@ -148,6 +148,24 @@ class KlingAvatar(BaseTool):
             base += 0.04
         return round(base, 4)
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Worst-case upper bound on a single call's spend.
+
+        Per-attempt cost is driven only by `mode` (AVATAR_MODES) and whether a
+        local audio path is supplied. Taking the max of estimate_cost() over
+        every valid mode with audio present yields the most expensive single
+        attempt without restating the price constants. The attempt count is
+        1 + retry_policy.max_retries -- the SAME setting execute() passes to
+        KlingClient (below) -- so the bound and the client's real retry loop
+        read one authority; there is no independent x3. -> $1.905 today.
+        """
+        worst_per_attempt = max(
+            self.estimate_cost({"mode": mode, "audio_path": "x"})
+            for mode in AVATAR_MODES
+        )
+        billed_attempts = 1 + self.retry_policy.max_retries
+        return round(worst_per_attempt * billed_attempts, 4)
+
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         return 240.0
 
@@ -171,7 +189,8 @@ class KlingAvatar(BaseTool):
         start = time.time()
         try:
             request = self._build_request(inputs)
-            client = KlingClient()
+            # Same retry setting the bound in max_cost_usd() reserves against.
+            client = KlingClient(max_retries=self.retry_policy.max_retries)
             task_id = client.create_classic_task(request["path"], request["payload"])
             outputs = client.poll_classic(
                 request["path"],

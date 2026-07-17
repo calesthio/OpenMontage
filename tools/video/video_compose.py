@@ -548,6 +548,8 @@ class VideoCompose(BaseTool):
         concat_path: Path | None = None
         concat_out: Path | None = None
 
+        aigc_explicit_burned = False
+
         try:
             for i, cut in enumerate(cuts):
                 source = Path(cut["source"])
@@ -560,6 +562,19 @@ class VideoCompose(BaseTool):
                 duration = out_s - in_s
                 speed = cut.get("speed", 1.0)
 
+                # Explicit AIGC label on the OPENING segment (roadmap 0.1,
+                # 《标识办法》): burned during the segment's own encode pass —
+                # segment 0 is the timeline's start, so no extra generation
+                # loss and no post-pass re-encode. The helper returns a
+                # filtergraph SUFFIX (movie/overlay watermark — concatenated
+                # directly, never comma-joined) or None (already logged) when
+                # no CJK font exists; that gap is surfaced in the result data.
+                aigc_vf = None
+                if i == 0:
+                    from tools.video.aigc_label import opening_label_filter
+                    aigc_vf = opening_label_filter(target_w, target_h, temp_dir)
+                    aigc_explicit_burned = bool(aigc_vf)
+
                 if self._is_image(source):
                     # Eased zoompan Ken Burns segment (Wave 3, M6). The
                     # "degraded FFmpeg render (still images → Ken Burns)"
@@ -571,6 +586,7 @@ class VideoCompose(BaseTool):
                     err = self._encode_kenburns_segment(
                         source, seg_path, duration, cut,
                         target_w, target_h, fit_mode, codec, crf, preset,
+                        extra_vf=aigc_vf,
                     )
                     if err is not None:
                         return err
@@ -625,7 +641,11 @@ class VideoCompose(BaseTool):
                         vf_parts.append(f"setpts={1.0/speed}*PTS")
                         af_parts.append(self._build_atempo(speed))
 
-                    cmd.extend(["-filter:v", ",".join(vf_parts)])
+                    # The aigc suffix is a labeled filtergraph tail
+                    # ("[aigc_base];movie=...") — direct concat, never
+                    # comma-joined (see opening_label_filter).
+                    vf_str = ",".join(vf_parts) + (aigc_vf or "")
+                    cmd.extend(["-filter:v", vf_str])
                     if af_parts:
                         cmd.extend(["-filter:a", ",".join(af_parts)])
 
@@ -659,7 +679,7 @@ class VideoCompose(BaseTool):
                             "-f", "lavfi",
                             "-t", str(duration),
                             "-i", "anullsrc=channel_layout=stereo:sample_rate=48000",
-                            "-filter:v", ",".join(vf_parts),
+                            "-filter:v", vf_str,
                         ]
                         if af_parts:
                             cmd.extend(["-filter:a", ",".join(af_parts)])
@@ -772,6 +792,12 @@ class VideoCompose(BaseTool):
             if self._has_audio_stream(output_path):
                 loudness_normalized = self._normalize_deliverable_loudness(output_path)
 
+            # Implicit AIGC label: provider identity + content ID in the
+            # container metadata, via a lossless remux (roadmap 0.1 —
+            # mandatory compose step; must survive export/download).
+            from tools.video.aigc_label import embed_aigc_metadata
+            aigc_meta = embed_aigc_metadata(output_path, run_command=self.run_command)
+
             return ToolResult(
                 success=True,
                 data={
@@ -783,6 +809,10 @@ class VideoCompose(BaseTool):
                     "has_mixed_audio": audio_path is not None,
                     "profile": profile_name,
                     "output": str(output_path),
+                    "aigc_label": {
+                        "explicit_burned": aigc_explicit_burned,
+                        "metadata": aigc_meta,
+                    },
                 },
                 artifacts=[str(output_path)],
             )
@@ -965,6 +995,16 @@ class VideoCompose(BaseTool):
                 error=f"Atelier render completed but output file missing: {output_path}",
             )
 
+        # AIGC labeling (roadmap 0.1): the atelier entry is hand-authored JSX
+        # that can't be trusted to include the badge the templated
+        # compositions get via withAigcLabel — burn the explicit label in a
+        # post-pass (crf 18, audio copied), then embed the implicit metadata
+        # label. Done BEFORE the final review so the review inspects the file
+        # that actually ships.
+        from tools.video.aigc_label import burn_explicit_label, embed_aigc_metadata
+        aigc_burned = burn_explicit_label(output_path, run_command=self.run_command)
+        aigc_meta = embed_aigc_metadata(output_path, run_command=self.run_command)
+
         # --- Atelier post-render review -------------------------------------
         # The cut-schema paths run _run_final_review (technical/visual/audio
         # probes + transcript-vs-script). Atelier MUST do the same so hero
@@ -1000,6 +1040,10 @@ class VideoCompose(BaseTool):
             "output": str(output_path),
             "final_review": final_review,
             "final_review_status": final_review.get("status"),
+            "aigc_label": {
+                "explicit_burned": aigc_burned,
+                "metadata": aigc_meta,
+            },
         }
 
         if final_review.get("status") == "fail":
@@ -1836,6 +1880,21 @@ class VideoCompose(BaseTool):
             if theme_config:
                 props["themeConfig"] = theme_config
 
+        # Explicit AIGC label (roadmap 0.1, 《标识办法》): every registered
+        # composition is wrapped in withAigcLabel (remotion-composer/src/
+        # Root.tsx), which renders the opening-frame badge whenever this prop
+        # is present. Injected here — not left to the agent's edit_decisions —
+        # so it's on by default for every templated Remotion render; only the
+        # config-level opt-out (aigc_label.enabled=false, loud) removes it.
+        from tools.video.aigc_label import (
+            EXPLICIT_LABEL_SECONDS, EXPLICIT_LABEL_TEXT, labeling_enabled,
+        )
+        if labeling_enabled() and "aigcLabel" not in props:
+            props["aigcLabel"] = {
+                "text": EXPLICIT_LABEL_TEXT,
+                "seconds": EXPLICIT_LABEL_SECONDS,
+            }
+
         # Write props to temp file for Remotion CLI
         props_path = output_path.parent / ".remotion_props.json"
         with open(props_path, "w", encoding="utf-8") as f:
@@ -1943,6 +2002,10 @@ class VideoCompose(BaseTool):
 
         loudness_normalized = self._normalize_deliverable_loudness(output_path)
 
+        # Implicit AIGC label — mandatory metadata step on every render path.
+        from tools.video.aigc_label import embed_aigc_metadata
+        aigc_meta = embed_aigc_metadata(output_path, run_command=self.run_command)
+
         return ToolResult(
             success=True,
             data={
@@ -1951,6 +2014,10 @@ class VideoCompose(BaseTool):
                 "profile": profile_name,
                 "loudness_normalized": loudness_normalized,
                 "loudness_target_lufs": -14 if loudness_normalized else None,
+                "aigc_label": {
+                    "explicit_burned": "aigcLabel" in props,
+                    "metadata": aigc_meta,
+                },
             },
             artifacts=[str(output_path)],
         )
@@ -2128,8 +2195,14 @@ class VideoCompose(BaseTool):
         codec: str,
         crf: int,
         preset: str,
+        extra_vf: str | None = None,
     ) -> ToolResult | None:
         """Encode a still image into an eased Ken Burns video segment.
+
+        extra_vf, when given, is a labeled filtergraph SUFFIX concatenated
+        onto the chain (see aigc_label.opening_label_filter) — used to burn
+        the AIGC explicit label into the opening segment during its own
+        encode pass (no extra generation loss).
 
         Returns None on success, or a failed ToolResult. Progress is
         smoothstep-eased (p²(3-2p)) — linear zoompan is the slideshow tell.
@@ -2177,6 +2250,10 @@ class VideoCompose(BaseTool):
             f":d={frames}:s={target_w}x{target_h}:fps=30,setsar=1,"
             f"{self._SETPARAMS_BT709}"
         )
+        if extra_vf:
+            # Labeled filtergraph tail ("[aigc_base];movie=..." — see
+            # opening_label_filter): direct concat, never comma-joined.
+            vf = f"{vf}{extra_vf}"
 
         cmd = [
             "ffmpeg", "-y",

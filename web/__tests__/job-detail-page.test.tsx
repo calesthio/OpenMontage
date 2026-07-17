@@ -1,6 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import JobDetailPage from "@/app/dashboard/jobs/[jobId]/page";
+import { AppToastProvider } from "@/components/ui/toast";
+
+// The page calls useToastManager (approval-ladder notifications), which
+// requires the provider the dashboard layout normally mounts.
+function renderPage() {
+  return render(
+    <AppToastProvider>
+      <JobDetailPage />
+    </AppToastProvider>
+  );
+}
 
 const SERVER = "http://localhost:8000";
 const JOB_ID = "job123";
@@ -59,7 +70,7 @@ describe("JobDetailPage SSE reconnect backoff", () => {
   });
 
   it("doubles the reconnect delay on each consecutive failure, capped at 30s", async () => {
-    render(<JobDetailPage />);
+    renderPage();
 
     expect(FakeEventSource.instances).toHaveLength(1);
 
@@ -107,7 +118,7 @@ describe("JobDetailPage SSE reconnect backoff", () => {
   });
 
   it("resets the backoff to the base interval once a connection succeeds", async () => {
-    render(<JobDetailPage />);
+    renderPage();
 
     // Grow the delay to 4s (one failure).
     act(() => { FakeEventSource.instances[0].onerror?.(); });
@@ -127,7 +138,7 @@ describe("JobDetailPage SSE reconnect backoff", () => {
   });
 
   it("stops reconnecting once the stream ends on a genuine terminal event", async () => {
-    render(<JobDetailPage />);
+    renderPage();
 
     act(() => {
       FakeEventSource.instances[0].onmessage?.({
@@ -164,7 +175,7 @@ describe("JobDetailPage inline artifact edit error handling", () => {
   });
 
   async function openEditor() {
-    render(<JobDetailPage />);
+    renderPage();
 
     act(() => {
       FakeEventSource.instances[0].onmessage?.({
@@ -219,12 +230,12 @@ describe("JobDetailPage cancel job", () => {
   });
 
   it("shows the cancel button while the job is queued (the default status on mount)", async () => {
-    render(<JobDetailPage />);
+    renderPage();
     expect(await screen.findByRole("button", { name: /取消任务/ })).toBeInTheDocument();
   });
 
   it("shows the cancel button during awaiting_approval", async () => {
-    render(<JobDetailPage />);
+    renderPage();
     act(() => {
       FakeEventSource.instances[0].onmessage?.({
         data: JSON.stringify(
@@ -236,7 +247,7 @@ describe("JobDetailPage cancel job", () => {
   });
 
   it("hides the cancel button once the job reaches a terminal status", async () => {
-    render(<JobDetailPage />);
+    renderPage();
     expect(await screen.findByRole("button", { name: /取消任务/ })).toBeInTheDocument();
 
     act(() => {
@@ -268,7 +279,7 @@ describe("JobDetailPage cancel job", () => {
       })
     );
 
-    render(<JobDetailPage />);
+    renderPage();
     const button = await screen.findByRole("button", { name: /取消任务/ });
     fireEvent.click(button);
 
@@ -296,7 +307,7 @@ describe("JobDetailPage cancel job", () => {
       })
     );
 
-    render(<JobDetailPage />);
+    renderPage();
     act(() => {
       FakeEventSource.instances[0].onmessage?.({
         data: JSON.stringify(
@@ -317,7 +328,7 @@ describe("JobDetailPage cancel job", () => {
   });
 
   it("reflects the eventual cancellation of a queued/running job via the SSE stream", async () => {
-    render(<JobDetailPage />);
+    renderPage();
     const button = await screen.findByRole("button", { name: /取消任务/ });
     fireEvent.click(button);
 
@@ -352,7 +363,7 @@ describe("JobDetailPage cancel job", () => {
       })
     );
 
-    render(<JobDetailPage />);
+    renderPage();
     const button = await screen.findByRole("button", { name: /取消任务/ });
     fireEvent.click(button);
 

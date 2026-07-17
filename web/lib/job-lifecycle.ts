@@ -37,6 +37,11 @@ export type JobLifecycleState = {
   // the same stage/gate string as the previous one — instead of hand-resetting
   // the panel's local edit state from here.
   awaitingGateSeq: number | null;
+  // Hard expiry (unix seconds) of the currently-open approval gate — from
+  // the awaiting_approval event's expires_at (the approval ladder: remind →
+  // escalate → expire, never auto-decide). Drives the countdown chip. Null
+  // whenever no gate is open.
+  approvalExpiresAt: number | null;
   preview: Record<string, unknown> | null;
   renderUrl: string | null;
   // Interim preview: the compose stage's own render, playable as soon as it's
@@ -62,6 +67,7 @@ export const initialJobLifecycleState: JobLifecycleState = {
   awaitingStage: null,
   awaitingGate: null,
   awaitingGateSeq: null,
+  approvalExpiresAt: null,
   preview: null,
   renderUrl: null,
   previewRenderUrl: null,
@@ -125,7 +131,7 @@ export function jobLifecycleReducer(
       // bug was invisible on screen, but the stale awaitingGate lingered in
       // state until the next awaiting_approval/terminal event happened to
       // overwrite it.
-      return { ...state, awaitingStage: null, awaitingGate: null, awaitingGateSeq: null };
+      return { ...state, awaitingStage: null, awaitingGate: null, awaitingGateSeq: null, approvalExpiresAt: null };
 
     case "cancel_resolved": {
       // Contract: a queued/running job comes back with its status
@@ -143,6 +149,7 @@ export function jobLifecycleReducer(
         awaitingStage: stillLive ? state.awaitingStage : null,
         awaitingGate: stillLive ? state.awaitingGate : null,
         awaitingGateSeq: stillLive ? state.awaitingGateSeq : null,
+        approvalExpiresAt: stillLive ? state.approvalExpiresAt : null,
       };
     }
 
@@ -183,6 +190,7 @@ function applySseEvent(state: JobLifecycleState, ev: SseEvent): JobLifecycleStat
       next.awaitingStage = ev.stage ?? null;
       next.awaitingGate = ev.gate ?? null;
       next.awaitingGateSeq = ev.seq;
+      next.approvalExpiresAt = ev.expires_at ?? null;
       next.preview = (ev.preview as Record<string, unknown> | null) ?? null;
       break;
 
@@ -191,6 +199,7 @@ function applySseEvent(state: JobLifecycleState, ev: SseEvent): JobLifecycleStat
       next.awaitingStage = null;
       next.awaitingGate = null;
       next.awaitingGateSeq = null;
+      next.approvalExpiresAt = null;
       next.status = "running";
       break;
 
@@ -223,6 +232,7 @@ function applySseEvent(state: JobLifecycleState, ev: SseEvent): JobLifecycleStat
       next.awaitingStage = null;
       next.awaitingGate = null;
       next.awaitingGateSeq = null;
+      next.approvalExpiresAt = null;
       break;
 
     case "job_cancelled":
@@ -234,6 +244,7 @@ function applySseEvent(state: JobLifecycleState, ev: SseEvent): JobLifecycleStat
       next.awaitingStage = null;
       next.awaitingGate = null;
       next.awaitingGateSeq = null;
+      next.approvalExpiresAt = null;
       break;
   }
   return next;

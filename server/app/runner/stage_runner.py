@@ -197,12 +197,63 @@ def _resolve_stages(pipeline_name: str) -> list[dict]:
         return []
     return _resolve_stages("cinematic")
 
+
+def _resolve_max_revisions(pipeline_name: str) -> int:
+    """The manifest's orchestration.max_revisions_per_stage for this pipeline.
+
+    Every pipeline_defs/*.yaml declares it (universally 3), but until this
+    resolver nothing read ANY of the manifests' orchestration keys — the
+    human reject→regenerate loop was unbounded, each round a fresh paid LLM
+    conversation. Follows PIPELINE_MAP string aliases the same way
+    _resolve_stages does; a raw stage-list override (tests) has no manifest,
+    so it gets the default. Of the other orchestration keys, only this one
+    is enforced by this runner — see the schema
+    (schemas/pipelines/pipeline_manifest.schema.json) for each key's
+    enforcement status.
+    """
+    override = PIPELINE_MAP.get(pipeline_name)
+    if isinstance(override, str):
+        return _resolve_max_revisions(override)
+    if override is not None:
+        return DEFAULT_MAX_REVISIONS_PER_STAGE
+    try:
+        from app.pipeline_catalog import load_manifest
+        manifest = load_manifest(pipeline_name)
+        value = int((manifest.get("orchestration") or {})["max_revisions_per_stage"])
+        if value > 0:
+            return value
+    except Exception:
+        pass
+    return DEFAULT_MAX_REVISIONS_PER_STAGE
+
 MAX_TURNS  = 20
 # How many pause→resume round-trips a single stage run allows for its
 # mid-stage sample-preview checkpoint (see SamplePreviewNeeded below) before
 # giving up. Mirrors asset-director.md's own "max 3 iterations" policy for a
 # rejected sample.
 MAX_SAMPLE_ITERATIONS = 3
+
+# ── Approval-wait ladder (remind → escalate → expire; NEVER auto-decide) ─────
+# The original behavior was a single wait_for_approval(timeout=3600) whose
+# timeout was silently reported as a REJECT — a user who stepped away for an
+# hour came back to a job that had been auto-rejected (stage gates: a paid
+# regenerate they never asked for; budget gate: the job killed) with no
+# countdown and no notification. The ladder instead: emit an
+# "approval_reminder" SSE event every APPROVAL_REMINDER_SECONDS (the UI turns
+# these into toasts / escalating notices), and only after
+# APPROVAL_EXPIRY_SECONDS with no decision at all does the job fail — loudly,
+# with an explicit "approval window expired" message, retryable, and NEVER by
+# fabricating an approve/reject the human didn't make. (Ladder shape follows
+# Cloudflare's approval pattern: remind → escalate → 7-day hard expiry.)
+APPROVAL_REMINDER_SECONDS = float(os.environ.get("OM_APPROVAL_REMINDER_SECONDS", 1800.0))
+APPROVAL_EXPIRY_SECONDS = float(os.environ.get("OM_APPROVAL_EXPIRY_SECONDS", 7 * 24 * 3600.0))
+
+# Bounded human reject→regenerate rounds per stage gate. Every
+# pipeline_defs/*.yaml manifest declares orchestration.max_revisions_per_stage
+# (universally 3) but nothing ever read it — the reject loop was unbounded,
+# each round a fresh paid LLM conversation. This is the fallback when a
+# manifest doesn't declare one; see _resolve_max_revisions.
+DEFAULT_MAX_REVISIONS_PER_STAGE = 3
 
 
 class SamplePreviewNeeded(Exception):
@@ -337,26 +388,93 @@ def _pause_for_approval(
     stage: str,
     gate: str | None = None,
     preview: Any = None,
-) -> None:
+) -> float:
     """Set status=awaiting_approval AND emit the matching awaiting_approval
     event in one call — same status-change-plus-event invariant as _fail_job.
 
-    `gate` distinguishes the mid-run gates (budget / sample_preview) from the
-    ordinary stage-boundary approval, which emits no gate key at all — the
-    key is omitted (not None) there so consumers' event shape is unchanged.
-    `preview` is always included, even when None, matching the historical
-    stage-boundary emit shape.
+    `gate` distinguishes the mid-run gates (budget / sample_preview /
+    revisions_exhausted) from the ordinary stage-boundary approval, which
+    emits no gate key at all — the key is omitted (not None) there so
+    consumers' event shape is unchanged. `preview` is always included, even
+    when None, matching the historical stage-boundary emit shape.
+
+    Returns the gate's hard expiry timestamp (also stamped on the event as
+    `expires_at` and on the job record as `approval_expires_at`, so both a
+    live SSE consumer and a fresh page load can render a countdown) — pass
+    it to _wait_for_decision so the deadline the user sees and the deadline
+    the runner enforces are the same number.
     """
     # Clear any stale decision/event left by a previous gate's timeout race
     # BEFORE the status flip makes new decisions acceptable (see
     # JobStore.begin_approval_gate).
     job_store.begin_approval_gate(job_id)
-    job_store.update(job_id, status="awaiting_approval")
+    expires_at = time.time() + APPROVAL_EXPIRY_SECONDS
+    job_store.update(job_id, status="awaiting_approval", approval_expires_at=expires_at)
     event: dict[str, Any] = {"type": "awaiting_approval", "stage": stage}
     if gate is not None:
         event["gate"] = gate
     event["preview"] = preview
+    event["expires_at"] = expires_at
+    event["reminder_seconds"] = APPROVAL_REMINDER_SECONDS
     _emit(job_id, event)
+    return expires_at
+
+
+async def _wait_for_decision(
+    job_id: str,
+    stage: str,
+    gate: str | None = None,
+    expires_at: float | None = None,
+) -> dict:
+    """wait_for_approval with the reminder→escalate→expire ladder on top.
+
+    Waits in APPROVAL_REMINDER_SECONDS slices; each slice that elapses with
+    no decision emits an "approval_reminder" SSE event (the UI surfaces
+    these as toasts/notifications) and keeps waiting. Only when `expires_at`
+    (default: now + APPROVAL_EXPIRY_SECONDS; normally the value returned by
+    _pause_for_approval) passes with no decision does this return
+    {"action": "timeout"} — the caller must then fail the job EXPLICITLY.
+    Approve/reject are never fabricated on the human's behalf.
+    """
+    started = time.time()
+    deadline = expires_at if expires_at is not None else started + APPROVAL_EXPIRY_SECONDS
+    reminder_index = 0
+    while True:
+        remaining = deadline - time.time()
+        if remaining <= 0:
+            return {"action": "timeout", "feedback": ""}
+        decision = await job_store.wait_for_approval(
+            job_id, timeout=min(APPROVAL_REMINDER_SECONDS, remaining)
+        )
+        if decision.get("action") != "timeout":
+            return decision
+        # A cancel can arrive while the gate is open — surface it promptly
+        # instead of only after the full expiry window.
+        if (job_store.get(job_id) or {}).get("cancel_requested"):
+            raise JobCancelled()
+        if deadline - time.time() <= 0:
+            return {"action": "timeout", "feedback": ""}
+        reminder_index += 1
+        event: dict[str, Any] = {
+            "type": "approval_reminder",
+            "stage": stage,
+            "reminder_index": reminder_index,
+            "waited_seconds": round(time.time() - started),
+            "expires_at": deadline,
+        }
+        if gate is not None:
+            event["gate"] = gate
+        _emit(job_id, event)
+
+
+def _approval_expired_message(stage: str) -> str:
+    days = APPROVAL_EXPIRY_SECONDS / 86400
+    return (
+        f"Approval for stage '{stage}' received no decision within the "
+        f"{days:.0f}-day approval window — the job was stopped without "
+        "auto-approving or auto-rejecting anything. Retry the job to re-open "
+        "this stage."
+    )
 
 
 def _truncate_json_for_prompt(text: str, cap: int) -> str:
@@ -1096,11 +1214,18 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
             budget_exceeded_event["blocked_tool_name"] = blocked_tool_name
             budget_exceeded_event["blocked_est_cost_cny"] = blocked_est_cost
             budget_exceeded_event["projected_cny"] = projected_cny
-        _pause_for_approval(job_id, "budget", gate="budget", preview=preview)
+        expires_at = _pause_for_approval(job_id, "budget", gate="budget", preview=preview)
         _emit(job_id, budget_exceeded_event)
-        approval = await job_store.wait_for_approval(job_id, timeout=3600.0)
+        approval = await _wait_for_decision(job_id, "budget", gate="budget", expires_at=expires_at)
         if (job_store.get(job_id) or {}).get("cancel_requested"):
             raise JobCancelled()
+        if approval["action"] == "timeout":
+            _fail_job(
+                job_id, stage="budget",
+                message=_approval_expired_message("budget"),
+                set_current_stage=False,
+            )
+            return False
         if approval["action"] == "reject":
             # set_current_stage=False: "budget" names the gate in the event,
             # not a pipeline stage — the job record's current_stage must keep
@@ -1152,22 +1277,29 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
         })
         return True
 
-    async def _sample_preview_gate(stage_name: str, spn: SamplePreviewNeeded) -> list[dict]:
+    async def _sample_preview_gate(stage_name: str, spn: SamplePreviewNeeded) -> list[dict] | None:
         """Pause for a real approval on a mid-stage sample-preview checkpoint
-        and return the resume_messages to feed back into _run_agent_stage.
+        and return the resume_messages to feed back into _run_agent_stage —
+        or None when the approval window expired (the job is already marked
+        failed here; the caller just unwinds).
 
         Reuses the exact same awaiting_approval/wait_for_approval primitive
         as the stage-boundary and budget gates — this is a genuine pause,
         the SAME conversation resumes afterward, not a fresh one.
         """
-        _pause_for_approval(job_id, stage_name, gate="sample_preview", preview={
+        expires_at = _pause_for_approval(job_id, stage_name, gate="sample_preview", preview={
             "text": spn.preview_text,
             "iteration": spn.sample_iteration + 1,
             "max_iterations": MAX_SAMPLE_ITERATIONS,
         })
-        approval = await job_store.wait_for_approval(job_id, timeout=3600.0)
+        approval = await _wait_for_decision(
+            job_id, stage_name, gate="sample_preview", expires_at=expires_at
+        )
         if (job_store.get(job_id) or {}).get("cancel_requested"):
             raise JobCancelled()
+        if approval["action"] == "timeout":
+            _fail_job(job_id, stage=stage_name, message=_approval_expired_message(stage_name))
+            return None
         job_store.update(job_id, status="running")
         if approval["action"] == "reject":
             fb = approval.get("feedback") or "Not approved as-is — reconsider your approach."
@@ -1184,8 +1316,9 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
         """Run one _run_agent_stage attempt, owning the gate-handling loop
         around it (previously duplicated verbatim at the initial-run and
         reject-regenerate call sites). Returns the stage's genuine outcome
-        (True/False), or None when the user rejected at the budget gate —
-        the gate already marked the job failed; the caller just returns.
+        (True/False), or None when the job is already marked failed by a
+        gate (user rejected at the budget gate, or an approval window
+        expired) — the caller just returns.
 
         The stage runs in a thread pool (blocking sync LLM calls must not
         block the event loop). A pre-call budget block raises BudgetGateNeeded
@@ -1249,6 +1382,8 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
             except SamplePreviewNeeded as spn:
                 _sync_cost(stage_name)
                 resume_messages = await _sample_preview_gate(stage_name, spn)
+                if resume_messages is None:
+                    return None   # approval window expired — job already marked failed
                 sample_iteration = spn.sample_iteration + 1
                 continue   # resume the same conversation, doesn't consume a retry round
 
@@ -1486,12 +1621,54 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
                         return arts[name]
                 return None
 
-            _pause_for_approval(job_id, stage_name, preview=_preview())
-            approval = await job_store.wait_for_approval(job_id, timeout=3600.0)
+            expires_at = _pause_for_approval(job_id, stage_name, preview=_preview())
+            approval = await _wait_for_decision(job_id, stage_name, expires_at=expires_at)
             if (job_store.get(job_id) or {}).get("cancel_requested"):
                 raise JobCancelled()
+            if approval["action"] == "timeout":
+                _fail_job(job_id, stage=stage_name, message=_approval_expired_message(stage_name))
+                return
 
+            # Bounded reject→regenerate loop: each round is a fresh paid LLM
+            # conversation, and the loop used to be unbounded even though
+            # every manifest declares orchestration.max_revisions_per_stage.
+            # When the budget is spent, pause on a final explicit gate
+            # (gate="revisions_exhausted") instead of regenerating again:
+            # approve = accept the latest artifact as-is and continue; reject
+            # = stop the job. Never auto-approve.
+            max_revisions = _resolve_max_revisions(pipeline_name)
+            revisions_used = 0
             while approval["action"] == "reject":
+                if revisions_used >= max_revisions:
+                    expires_at = _pause_for_approval(
+                        job_id, stage_name, gate="revisions_exhausted", preview={
+                            "revisions_used": revisions_used,
+                            "max_revisions": max_revisions,
+                            "text": (
+                                f"Stage '{stage_name}' has used all {max_revisions} "
+                                "revision rounds. Approve to accept the current "
+                                "artifact as-is and continue, or reject to stop "
+                                "the job."
+                            ),
+                        })
+                    approval = await _wait_for_decision(
+                        job_id, stage_name, gate="revisions_exhausted", expires_at=expires_at
+                    )
+                    if (job_store.get(job_id) or {}).get("cancel_requested"):
+                        raise JobCancelled()
+                    if approval["action"] == "approve":
+                        break   # accept the latest artifact as-is
+                    if approval["action"] == "timeout":
+                        _fail_job(job_id, stage=stage_name,
+                                  message=_approval_expired_message(stage_name))
+                        return
+                    _fail_job(job_id, stage=stage_name, message=(
+                        f"Stage '{stage_name}' exhausted its "
+                        f"{max_revisions} revision rounds and the user chose "
+                        "to stop rather than accept the latest artifact."
+                    ))
+                    return
+                revisions_used += 1
                 feedback = approval.get("feedback", "")
                 job_store.update(job_id, status="running")
                 _emit(job_id, {"type": "stage_rejected", "stage": stage_name, "feedback": feedback})
@@ -1545,10 +1722,14 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
                     ))
                     return
                 _emit(job_id, {"type": "stage_completed", "stage": stage_name})
-                _pause_for_approval(job_id, stage_name, preview=_preview())
-                approval = await job_store.wait_for_approval(job_id, timeout=3600.0)
+                expires_at = _pause_for_approval(job_id, stage_name, preview=_preview())
+                approval = await _wait_for_decision(job_id, stage_name, expires_at=expires_at)
                 if (job_store.get(job_id) or {}).get("cancel_requested"):
                     raise JobCancelled()
+                if approval["action"] == "timeout":
+                    _fail_job(job_id, stage=stage_name,
+                              message=_approval_expired_message(stage_name))
+                    return
 
             job_store.update(job_id, status="running")
             _emit(job_id, {"type": "stage_approved", "stage": stage_name})

@@ -25,6 +25,14 @@ export type SseEvent = {
   budget_cny?: number | null;
   gate?: string;
   stages?: string[];
+  // awaiting_approval / approval_reminder: countdown fields for the approval
+  // ladder (server/app/runner/stage_runner.py — remind → escalate → expire,
+  // never auto-decide). expires_at is the gate's hard expiry (unix seconds);
+  // reminder_seconds the ladder's reminder interval.
+  expires_at?: number;
+  reminder_seconds?: number;
+  reminder_index?: number;
+  waited_seconds?: number;
   // tool_call: best-effort, captured before _enforce_model_choice's autofill
   // may run. asset_ready: the fully-resolved model that actually produced
   // this asset, plus its real per-call cost — see tool_bridge.py.
@@ -87,6 +95,9 @@ export const EVENT_COLOR: Record<string, string> = {
   // failure" types (stage_retry, budget_precall_block), so it's visually
   // distinct from muted chatter.
   warning: "text-orange-400",
+  // approval_reminder: the ladder's periodic "still waiting on you" ping —
+  // yellow to match awaiting_approval, whose question it re-raises.
+  approval_reminder: "text-yellow-400",
 };
 
 // Chinese labels for event types that never carry a summary/text/artifact/
@@ -102,6 +113,7 @@ export const EVENT_TYPE_LABELS: Record<string, string> = {
   // path-divergence check) always carries a message, so eventLabel shows
   // that; this label is the safety net for any future no-message warning.
   warning: "警告",
+  approval_reminder: "审批提醒 — 任务仍在等待你的决定",
 };
 
 /** " · model · ¥cost" suffix, omitting whichever half is missing. Shared by
@@ -113,6 +125,27 @@ function modelCostSuffix(ev: SseEvent): string {
   if (ev.model) parts.push(ev.model);
   if (typeof ev.cost_cny === "number") parts.push(`¥${ev.cost_cny.toFixed(4)}`);
   return parts.length ? ` · ${parts.join(" · ")}` : "";
+}
+
+/** "6天23小时" / "3小时05分" / "24:59" — remaining time for the approval
+ * countdown chip. Negative/zero remaining renders as 已到期. Exported for
+ * unit tests. */
+export function formatRemaining(seconds: number): string {
+  if (seconds <= 0) return "已到期";
+  const s = Math.floor(seconds);
+  if (s >= 86400) {
+    const d = Math.floor(s / 86400);
+    const h = Math.floor((s % 86400) / 3600);
+    return `${d}天${h}小时`;
+  }
+  if (s >= 3600) {
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    return `${h}小时${String(m).padStart(2, "0")}分`;
+  }
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }
 
 /** The human-facing label chosen for an event row (precedence matters). */

@@ -57,15 +57,21 @@ class ApproveStageRequest(BaseModel):
 
 
 class SaveArtifactRequest(BaseModel):
-    stage: str
+    # Either field may identify the target: `artifact_name` is the real
+    # produces-name (e.g. "brief", "scene_plan") and is what the UI should
+    # send; `stage` is kept for backward compatibility and resolves to that
+    # stage's primary produces name (see save_artifact below). At least one
+    # must be provided.
+    stage: str | None = None
+    artifact_name: str | None = None
     content: dict[str, Any]
 
-    @field_validator("stage")
+    @field_validator("stage", "artifact_name")
     @classmethod
-    def _validate_stage(cls, v: str) -> str:
-        if not _SAFE_STAGE_NAME.match(v):
+    def _validate_name(cls, v: str | None) -> str | None:
+        if v is not None and not _SAFE_STAGE_NAME.match(v):
             raise ValueError(
-                "stage must contain only letters, numbers, underscores, and hyphens"
+                "must contain only letters, numbers, underscores, and hyphens"
             )
         return v
 
@@ -166,23 +172,52 @@ async def cancel_job(job_id: str):
 
 @router.post("/{job_id}/artifact")
 async def save_artifact(job_id: str, req: SaveArtifactRequest):
-    """Overwrite a stage artifact (used by inline edit in the UI)."""
+    """Overwrite a stage artifact (used by inline edit in the UI).
+
+    Artifacts are stored under their PRODUCES name (stage "idea" produces
+    "brief" → artifacts/brief.json), which for 6 of 8 cinematic stages
+    differs from the stage name. The original implementation wrote
+    artifacts/<stage>.json unconditionally — the user's edit landed in an
+    orphan file the pipeline never reads, the UI said "saved", and the next
+    stage silently consumed the OLD data. Resolve the real artifact name
+    from the pipeline's produces declarations instead.
+    """
     job = job_store.get(job_id)
     if not job:
         raise HTTPException(404, "Job not found")
-    # req.stage is already confirmed to be a safe filesystem identifier (see
-    # _validate_stage above) — this checks it's also a REAL stage of the
-    # job's own pipeline, not just any safe-looking string, so a typo'd or
-    # made-up stage name doesn't get silently written and 200'd.
-    valid_stages = {s["name"] for s in _resolve_stages(job.get("pipeline", "cinematic"))}
-    if req.stage not in valid_stages:
-        raise HTTPException(400, f"{req.stage!r} is not a stage of this job's pipeline")
+    stages = _resolve_stages(job.get("pipeline", "cinematic"))
+    # Names the pipeline can actually read back: every stage's declared
+    # produces, plus the stage name itself for stages that declare none
+    # (the prompt tells the agent to fall back to the stage name there).
+    valid_artifact_names: set[str] = set()
+    for s in stages:
+        produces = s.get("produces") or []
+        valid_artifact_names.update(produces)
+        if not produces:
+            valid_artifact_names.add(s["name"])
+
+    if req.artifact_name is not None:
+        artifact_name = req.artifact_name
+        if artifact_name not in valid_artifact_names:
+            raise HTTPException(
+                400, f"{artifact_name!r} is not an artifact of this job's pipeline"
+            )
+    elif req.stage is not None:
+        # Backward-compatible path: resolve the stage's primary artifact.
+        stage_def = next((s for s in stages if s["name"] == req.stage), None)
+        if stage_def is None:
+            raise HTTPException(400, f"{req.stage!r} is not a stage of this job's pipeline")
+        produces = stage_def.get("produces") or []
+        artifact_name = produces[0] if produces else req.stage
+    else:
+        raise HTTPException(400, "Provide artifact_name (preferred) or stage")
+
     project_name = job.get("project_name", job_id)
     artifacts_dir = OM_ROOT / "projects" / project_name / "artifacts"
     artifacts_dir.mkdir(parents=True, exist_ok=True)
-    out = artifacts_dir / f"{req.stage}.json"
+    out = artifacts_dir / f"{artifact_name}.json"
     out.write_text(json.dumps(req.content, ensure_ascii=False, indent=2))
-    return {"saved": req.stage, "path": str(out)}
+    return {"saved": artifact_name, "path": str(out)}
 
 
 @router.post("/{job_id}/retry")

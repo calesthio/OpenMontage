@@ -340,6 +340,17 @@ class JobStore:
         return True
 
     async def wait_for_approval(self, job_id: str, timeout: float = 3600.0) -> dict:
+        """Wait up to `timeout` seconds for a human decision.
+
+        Returns the decision dict, or {"action": "timeout"} when none arrived.
+        A timeout is deliberately NOT reported as a reject: the original
+        behavior silently auto-rejected after an hour — at a stage gate that
+        meant a paid regenerate the human never asked for, and at the budget
+        gate it killed the job while the user was away. Deciding what a
+        timeout MEANS (remind and keep waiting, escalate, eventually expire —
+        never auto-approve) is the caller's job; see stage_runner's
+        _wait_for_decision ladder.
+        """
         ev = self._approval_events.get(job_id)
         if not ev:
             return {"action": "reject", "feedback": "Job not found"}
@@ -347,15 +358,16 @@ class JobStore:
             await asyncio.wait_for(ev.wait(), timeout=timeout)
         except asyncio.TimeoutError:
             # A decision that lands in the instant between the timeout firing
-            # and this cleanup belongs to THIS (now rejected-by-timeout) gate.
-            # Without clearing the event and popping the result, they stayed
-            # behind and the job's NEXT gate consumed them immediately —
-            # silently approving a different question than the one the human
-            # answered.
+            # and this cleanup belongs to THIS gate — consume and honor it
+            # rather than discarding it (the human DID answer this question;
+            # dropping it here would both lose their answer and let a stale
+            # set-event leak into the next gate).
             ev.clear()
             with self._lock:
-                self._approval_results.pop(job_id, None)
-            return {"action": "reject", "feedback": "Approval timed out"}
+                pending = self._approval_results.pop(job_id, None)
+            if pending is not None:
+                return pending
+            return {"action": "timeout", "feedback": ""}
         ev.clear()
         with self._lock:
             return self._approval_results.pop(job_id, {"action": "reject", "feedback": ""})

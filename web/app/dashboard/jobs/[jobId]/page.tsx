@@ -6,16 +6,37 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
-import { StatusBadge, EventRow, stageLabel, VideoGallery } from "@/components/job-status";
+import { StatusBadge, EventRow, stageLabel, VideoGallery, formatRemaining } from "@/components/job-status";
 import { SERVER, apiRequest } from "@/lib/api";
 import { jobLifecycleReducer, initialJobLifecycleState } from "@/lib/job-lifecycle";
 import { useJobEvents } from "@/lib/use-job-events";
 import { ApprovalPanel } from "@/components/approval-panel";
+import { useToastManager } from "@/components/ui/toast";
+
+/** Live countdown to the approval gate's hard expiry (the ladder's 7-day
+ * window — see stage_runner's APPROVAL_EXPIRY_SECONDS). Ticks locally;
+ * expiresAt comes from the awaiting_approval event. */
+function ApprovalCountdownChip({ expiresAt }: { expiresAt: number }) {
+  const [now, setNow] = useState(() => Date.now() / 1000);
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now() / 1000), 1000);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <span
+      className="text-xs font-mono border px-2 py-0.5 rounded-full text-yellow-400 border-yellow-500/40 bg-yellow-500/10"
+      title="超过此期限仍无人审批,任务将停止(绝不自动批准)"
+    >
+      ⏳ 审批剩余 {formatRemaining(expiresAt - now)}
+    </span>
+  );
+}
 
 export default function JobDetailPage() {
   const { jobId } = useParams<{ jobId: string }>();
   const [state, dispatch] = useReducer(jobLifecycleReducer, initialJobLifecycleState);
   const { reconnect } = useJobEvents(jobId, dispatch);
+  const toast = useToastManager();
 
   // Action state — retry/cancel/approve share this single actionError card.
   const [retrying, setRetrying] = useState(false);
@@ -23,6 +44,24 @@ export default function JobDetailPage() {
   const [actionError, setActionError] = useState("");
 
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Toast notifications for the approval ladder: one when a gate opens, one
+  // per approval_reminder ping. Only for FRESH events — the SSE stream
+  // replays history on reload, and toasting week-old reminders would bury
+  // the user; ts-recency is the filter (30s covers reconnect jitter).
+  const lastToastedSeq = useRef(-1);
+  useEffect(() => {
+    const ev = state.events[state.events.length - 1];
+    if (!ev || ev.seq <= lastToastedSeq.current) return;
+    if (ev.type !== "awaiting_approval" && ev.type !== "approval_reminder") return;
+    if (Date.now() / 1000 - ev.ts > 30) return;
+    lastToastedSeq.current = ev.seq;
+    toast.add({
+      type: "warning",
+      title: ev.type === "awaiting_approval" ? "任务等待你的审批" : "审批提醒",
+      description: `${stageLabel(ev.stage)}阶段${ev.type === "awaiting_approval" ? "已暂停,等待你的决定" : "仍在等待你的决定"}`,
+    });
+  }, [state.events, toast]);
 
   // Seed real state on mount via REST — the SSE stream alone only carries
   // events from lastEventId onward; the page title (and cost/status on a
@@ -85,6 +124,9 @@ export default function JobDetailPage() {
           <p className="text-muted-foreground text-sm mt-0.5 font-mono">{jobId}</p>
         </div>
         <div className="flex items-center gap-3">
+          {state.status === "awaiting_approval" && state.approvalExpiresAt != null && (
+            <ApprovalCountdownChip expiresAt={state.approvalExpiresAt} />
+          )}
           {(state.costCny > 0 || state.budgetCny != null) && (
             <span
               className={`text-xs font-mono border px-2 py-0.5 rounded-full ${

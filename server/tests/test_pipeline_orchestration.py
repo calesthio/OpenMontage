@@ -931,6 +931,214 @@ async def test_budget_gate_needed_pauses_then_resumes_same_conversation(runner, 
     assert tool_call_ids <= tool_response_ids
 
 
+# ── approval ladder: remind → expire, never auto-decide (roadmap 0.2) ───────
+
+async def _answer_gates(store, jid, actions):
+    """Wait for successive awaiting_approval flips and answer each with the
+    scripted (action, feedback) tuples. Returns when the script is spent."""
+    for action, feedback in actions:
+        for _ in range(500):
+            await asyncio.sleep(0.005)
+            if (store.get(jid) or {}).get("status") == "awaiting_approval":
+                break
+        assert store.get(jid)["status"] == "awaiting_approval", (
+            f"gate never opened for scripted answer {action!r}"
+        )
+        assert store.set_approval(jid, action, feedback)
+        # Let the runner consume the decision before watching for the next flip.
+        for _ in range(500):
+            await asyncio.sleep(0.005)
+            if (store.get(jid) or {}).get("status") != "awaiting_approval":
+                break
+
+
+async def test_approval_reminder_events_then_decision_honored(runner, monkeypatch):
+    monkeypatch.setattr(stage_runner, "APPROVAL_REMINDER_SECONDS", 0.02)
+    monkeypatch.setattr(stage_runner, "APPROVAL_EXPIRY_SECONDS", 30.0)
+
+    def writes_artifact(job_id, stage_name, skill_text, project_dir, *a, **k):
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        (project_dir / "artifacts" / "brief.json").write_text("{}")
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", writes_artifact)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "idea", "skill": None, "approval": True, "produces": ["brief"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    task = asyncio.create_task(
+        stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+    )
+    # Let several reminder slices elapse before answering.
+    await asyncio.sleep(0.1)
+    assert runner.get("j")["status"] == "awaiting_approval"
+    assert runner.set_approval("j", "approve", "")
+    await task
+
+    assert runner.get("j")["status"] == "completed"
+    events = runner.get_events("j", after_seq=-1)
+    reminders = [e for e in events if e["type"] == "approval_reminder"]
+    assert reminders, "reminder ladder never fired"
+    assert all(e["stage"] == "idea" and e["expires_at"] > 0 for e in reminders)
+    # The awaiting_approval event itself must carry the countdown fields.
+    awaiting = [e for e in events if e["type"] == "awaiting_approval"]
+    assert awaiting and awaiting[0]["expires_at"] > time.time()
+
+
+async def test_approval_expiry_fails_loudly_never_auto_decides(runner, monkeypatch):
+    monkeypatch.setattr(stage_runner, "APPROVAL_REMINDER_SECONDS", 0.02)
+    monkeypatch.setattr(stage_runner, "APPROVAL_EXPIRY_SECONDS", 0.06)
+
+    calls = []
+
+    def writes_artifact(job_id, stage_name, skill_text, project_dir, *a, **k):
+        calls.append(stage_name)
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        (project_dir / "artifacts" / "brief.json").write_text("{}")
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", writes_artifact)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "idea", "skill": None, "approval": True, "produces": ["brief"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    job = runner.get("j")
+    assert job["status"] == "failed"
+    # The stage was NOT auto-approved (not in completed_stages) and NOT
+    # auto-rejected (no regenerate ran — exactly one agent call).
+    assert "idea" not in job.get("completed_stages", [])
+    assert calls == ["idea"]
+    events = _events(runner, "j")
+    assert "stage_approved" not in events
+    assert "stage_rejected" not in events
+    failed = [e for e in runner.get_events("j", after_seq=-1) if e["type"] == "job_failed"]
+    assert "approval window" in failed[-1]["message"]
+
+
+# ── max_revisions_per_stage enforcement (roadmap 0.4) ────────────────────────
+
+def _revision_pipeline(monkeypatch, run_counter):
+    def regenerating_agent(job_id, stage_name, skill_text, project_dir, *a, **k):
+        run_counter.append(stage_name)
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        p = project_dir / "artifacts" / "brief.json"
+        p.write_text(json.dumps({"round": len(run_counter)}))
+        # Force a strictly newer mtime so the regenerate-actually-rewrote
+        # check (_artifact_mtimes) sees a genuine rewrite each round.
+        import os as _os
+        st = p.stat()
+        _os.utime(p, (st.st_atime, st.st_mtime + len(run_counter)))
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", regenerating_agent)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "idea", "skill": None, "approval": True, "produces": ["brief"]},
+    ])
+
+
+async def test_reject_loop_is_bounded_and_exhaustion_can_accept_as_is(runner, monkeypatch):
+    runs: list[str] = []
+    _revision_pipeline(monkeypatch, runs)
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    task = asyncio.create_task(
+        stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+    )
+    # 4 rejects: rounds 1-3 regenerate; the 4th must hit the exhaustion gate
+    # instead of paying for another round. Approving there accepts as-is.
+    answers = [("reject", f"no {i}") for i in range(4)] + [("approve", "")]
+    await _answer_gates(runner, "j", answers)
+    await task
+
+    job = runner.get("j")
+    assert job["status"] == "completed"
+    # initial run + exactly 3 regenerates — never a 5th agent call.
+    assert len(runs) == 4
+    gates = [e.get("gate") for e in runner.get_events("j", after_seq=-1)
+             if e["type"] == "awaiting_approval"]
+    assert gates.count("revisions_exhausted") == 1
+
+
+async def test_reject_at_exhaustion_gate_stops_the_job(runner, monkeypatch):
+    runs: list[str] = []
+    _revision_pipeline(monkeypatch, runs)
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    task = asyncio.create_task(
+        stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+    )
+    answers = [("reject", f"no {i}") for i in range(4)] + [("reject", "stop")]
+    await _answer_gates(runner, "j", answers)
+    await task
+
+    job = runner.get("j")
+    assert job["status"] == "failed"
+    assert len(runs) == 4   # the final reject bought no additional round
+    failed = [e for e in runner.get_events("j", after_seq=-1) if e["type"] == "job_failed"]
+    assert "revision" in failed[-1]["message"]
+
+
+# ── inline artifact edit must survive into the next stage ───────────────────
+
+async def test_inline_edit_survives_into_next_stage(runner, monkeypatch, tmp_path):
+    # Regression (silent inline-edit discard): the /artifact endpoint used to
+    # write artifacts/<stage>.json even when the stage's produces name
+    # differed (stage "idea" produces "brief") — an orphan file. The next
+    # stage's required_artifacts_in loaded the ORIGINAL brief.json; the
+    # user's edit was silently ignored while the UI said "saved". This test
+    # drives the REAL router handler against the REAL runner: the edit made
+    # at the approval gate must be exactly what the next stage consumes.
+    from app.routers import jobs as jobs_router
+    from app.routers.jobs import SaveArtifactRequest, save_artifact
+
+    monkeypatch.setattr(jobs_router, "job_store", runner)
+    monkeypatch.setattr(jobs_router, "OM_ROOT", tmp_path)
+
+    seen_by_script_stage = {}
+
+    def fake_agent(job_id, stage_name, skill_text, project_dir, *a, **k):
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        if stage_name == "idea":
+            (project_dir / "artifacts" / "brief.json").write_text(
+                json.dumps({"hook": "original"})
+            )
+        if stage_name == "script":
+            seen_by_script_stage.update(
+                json.loads((project_dir / "artifacts" / "brief.json").read_text())
+            )
+            (project_dir / "artifacts" / "script.json").write_text("{}")
+        return True
+
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", fake_agent)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "idea", "skill": None, "approval": True, "produces": ["brief"]},
+        {"name": "script", "skill": None, "approval": False, "produces": ["script"],
+         "required_artifacts_in": ["brief"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    task = asyncio.create_task(
+        stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+    )
+    for _ in range(200):
+        await asyncio.sleep(0.01)
+        if (runner.get("j") or {}).get("status") == "awaiting_approval":
+            break
+    assert runner.get("j")["status"] == "awaiting_approval"
+
+    # The UI's inline edit: sent with the STAGE name (what approval-panel.tsx
+    # sends today) — must resolve to the produces name "brief".
+    resp = await save_artifact("j", SaveArtifactRequest(stage="idea", content={"hook": "edited"}))
+    assert resp["saved"] == "brief"
+
+    assert runner.set_approval("j", "approve", "")
+    await task
+
+    assert runner.get("j")["status"] == "completed"
+    assert seen_by_script_stage == {"hook": "edited"}
+
+
 # ── publish anti-fabrication (generalized render/export-file check) ─────────
 
 def _publish_log_with_export(export_path: str) -> dict:
@@ -977,6 +1185,79 @@ async def test_publish_stage_fails_on_fabricated_publish_log(runner, monkeypatch
     assert "publish" not in job["completed_stages"]
     failed = [e for e in runner.get_events("j", after_seq=-1) if e["type"] == "job_failed"]
     assert failed and "exports/teaser.mp4" in failed[-1]["message"]
+
+
+async def test_publish_stage_accepts_real_export_bundle_output(runner, monkeypatch, tmp_path):
+    # Cross-module regression: the canonical publish tool
+    # (tools/publishers/export_bundle.py) writes the bundle's ROOT DIRECTORY
+    # as export_path — not a file. The validator's original is_file()-only
+    # check therefore hard-failed every genuine export_bundle run: the
+    # publish happy path was structurally dead. Run the REAL tool and feed
+    # its actual publish_log through the pipeline's validation.
+    from tools.publishers.export_bundle import ExportBundle
+
+    renders = tmp_path / "projects" / "p" / "renders"
+    renders.mkdir(parents=True)
+    (renders / "final.mp4").write_bytes(b"real render bytes")
+
+    def publish_via_real_export_bundle(job_id, stage_name, skill_text, project_dir, *a, **k):
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        if stage_name == "compose":
+            (project_dir / "artifacts" / "render_report.json").write_text("{}")
+        if stage_name == "publish":
+            result = ExportBundle().execute({
+                "video_path": str(project_dir / "renders" / "final.mp4"),
+                "title": "Cross-module regression",
+            })
+            assert result.success, result.error
+            (project_dir / "artifacts" / "publish_log.json").write_text(
+                json.dumps(result.data["publish_log"])
+            )
+        return True
+
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", publish_via_real_export_bundle)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "compose", "skill": None, "approval": False, "produces": ["render_report"]},
+        {"name": "publish", "skill": None, "approval": False, "produces": ["publish_log"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    job = runner.get("j")
+    assert job["status"] == "completed", [
+        e for e in runner.get_events("j", after_seq=-1) if e["type"] == "job_failed"
+    ]
+    assert "publish" in job["completed_stages"]
+
+
+async def test_publish_stage_fails_on_fabricated_export_directory(runner, monkeypatch, tmp_path):
+    # Accepting directories must not reopen the fabrication hole: an
+    # export_path naming an EMPTY directory (mkdir'd but never populated)
+    # still proves nothing was exported and must fail.
+    (tmp_path / "projects" / "p" / "renders").mkdir(parents=True)
+    (tmp_path / "projects" / "p" / "renders" / "final.mp4").write_bytes(b"x")
+
+    def write_empty_dir_publish_log(job_id, stage_name, skill_text, project_dir, *a, **k):
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        if stage_name == "compose":
+            (project_dir / "artifacts" / "render_report.json").write_text("{}")
+        if stage_name == "publish":
+            (project_dir / "exports").mkdir(parents=True, exist_ok=True)
+            (project_dir / "artifacts" / "publish_log.json").write_text(
+                json.dumps(_publish_log_with_export("exports"))
+            )
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", write_empty_dir_publish_log)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "compose", "skill": None, "approval": False, "produces": ["render_report"]},
+        {"name": "publish", "skill": None, "approval": False, "produces": ["publish_log"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    assert runner.get("j")["status"] == "failed"
 
 
 async def test_publish_stage_passes_with_genuine_exports(runner, monkeypatch, tmp_path):

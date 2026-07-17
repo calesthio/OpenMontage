@@ -16,6 +16,26 @@ import { ProductReveal, ProductRevealProps } from "./components/ProductReveal";
 import { CaptionOverlay, WordCaption } from "./components/CaptionOverlay";
 import { CollageBurst, CollageBurstProps } from "./CollageBurst";
 import { LyricOverlay, LyricOverlayProps } from "./LyricOverlay";
+import { withAigcLabel } from "./AigcLabel";
+
+// ---------------------------------------------------------------------------
+// AIGC labeling (《人工智能生成合成内容标识办法》) — every registered
+// composition is wrapped so the opening-frame "AI生成" badge renders whenever
+// the render caller injects the `aigcLabel` prop (video_compose does this by
+// default for every templated render; config.yaml aigc_label.enabled=false
+// is the only — loud — opt-out). New compositions MUST be registered through
+// withAigcLabel too, or their renders ship unlabeled.
+// ---------------------------------------------------------------------------
+const LabeledExplainer = withAigcLabel(Explainer);
+const LabeledCinematicRenderer = withAigcLabel(CinematicRenderer);
+const LabeledTalkingHead = withAigcLabel(TalkingHead);
+const LabeledTitledVideo = withAigcLabel(TitledVideo);
+const LabeledHeroTitle = withAigcLabel(HeroTitle);
+const LabeledProductReveal = withAigcLabel(ProductReveal);
+const LabeledCaptionOverlay = withAigcLabel(CaptionOverlay);
+const LabeledCollageBurst = withAigcLabel(CollageBurst);
+const LabeledLyricOverlay = withAigcLabel(LyricOverlay);
+const LabeledEndTag = withAigcLabel(EndTag);
 
 // ---------------------------------------------------------------------------
 // Theme System — prevents every video from looking like dark fintech.
@@ -43,7 +63,7 @@ export const Root: React.FC = () => {
     <>
       <Composition
         id="Explainer"
-        component={Explainer}
+        component={LabeledExplainer}
         durationInFrames={30 * 60}
         fps={30}
         width={1920}
@@ -65,7 +85,7 @@ export const Root: React.FC = () => {
           9:16 directly. */}
       <Composition
         id="ExplainerVertical"
-        component={Explainer}
+        component={LabeledExplainer}
         durationInFrames={30 * 60}
         fps={30}
         width={1080}
@@ -80,7 +100,7 @@ export const Root: React.FC = () => {
       />
       <Composition
         id="CinematicRenderer"
-        component={CinematicRenderer}
+        component={LabeledCinematicRenderer}
         durationInFrames={30 * 30}
         fps={30}
         width={1920}
@@ -95,7 +115,7 @@ export const Root: React.FC = () => {
       />
       <Composition
         id="SignalFromTomorrowWithMusic"
-        component={CinematicRenderer}
+        component={LabeledCinematicRenderer}
         durationInFrames={30 * 30}
         fps={30}
         width={1920}
@@ -105,7 +125,7 @@ export const Root: React.FC = () => {
       />
       <Composition
         id="TalkingHead"
-        component={TalkingHead}
+        component={LabeledTalkingHead}
         durationInFrames={30 * 300}
         fps={30}
         width={1080}
@@ -121,7 +141,7 @@ export const Root: React.FC = () => {
       />
       <Composition
         id="TitledVideo"
-        component={TitledVideo}
+        component={LabeledTitledVideo}
         durationInFrames={30 * 60}
         fps={30}
         width={1920}
@@ -139,7 +159,7 @@ export const Root: React.FC = () => {
       />
       <Composition
         id="HeroTitle"
-        component={HeroTitle}
+        component={LabeledHeroTitle}
         durationInFrames={30 * 17}
         fps={30}
         width={1920}
@@ -151,7 +171,7 @@ export const Root: React.FC = () => {
       />
       <Composition
         id="ProductReveal"
-        component={ProductReveal}
+        component={LabeledProductReveal}
         durationInFrames={30 * 8}
         fps={30}
         width={1280}
@@ -167,7 +187,7 @@ export const Root: React.FC = () => {
       />
       <Composition
         id="ProductRevealVertical"
-        component={ProductReveal}
+        component={LabeledProductReveal}
         durationInFrames={30 * 8}
         fps={30}
         width={720}
@@ -183,7 +203,7 @@ export const Root: React.FC = () => {
       />
       <Composition
         id="CaptionOverlayOnly"
-        component={CaptionOverlay}
+        component={LabeledCaptionOverlay}
         durationInFrames={30 * 300}
         fps={30}
         width={1920}
@@ -198,7 +218,7 @@ export const Root: React.FC = () => {
       />
       <Composition
         id="CollageBurst"
-        component={CollageBurst}
+        component={LabeledCollageBurst}
         durationInFrames={30 * 30}
         fps={30}
         width={1080}
@@ -213,7 +233,7 @@ export const Root: React.FC = () => {
       />
       <Composition
         id="LyricOverlay"
-        component={LyricOverlay}
+        component={LabeledLyricOverlay}
         durationInFrames={30 * 28}
         fps={30}
         width={1080}
@@ -226,7 +246,7 @@ export const Root: React.FC = () => {
       />
       <Composition
         id="EndTag"
-        component={EndTag}
+        component={LabeledEndTag}
         // 5.5s at 30fps = 165 frames. Render CLI can override via --props.
         durationInFrames={165}
         fps={30}
@@ -242,7 +262,7 @@ export const Root: React.FC = () => {
       />
       <Composition
         id="EndTagOverlay"
-        component={EndTag}
+        component={LabeledEndTag}
         // 8.19s at 30fps = 246 frames. Render CLI can override via --props.
         // Intended to be composited on top of body footage, not concat'd.
         durationInFrames={246}

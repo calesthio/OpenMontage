@@ -201,11 +201,14 @@ def test_set_approval_rejected_when_not_awaiting(store):
     assert store.set_approval("j", "approve", "") is False
 
 
-async def test_approval_timeout_defaults_to_reject(store):
+async def test_approval_timeout_reports_timeout_not_reject(store):
+    # Roadmap 0.2: a timeout is no longer fabricated into a reject — the
+    # runner's ladder (stage_runner._wait_for_decision) owns what a timeout
+    # means (remind → keep waiting → expire loudly).
     store.create("j", {})
     store.update("j", status="awaiting_approval")
     result = await store.wait_for_approval("j", timeout=0.05)
-    assert result["action"] == "reject"
+    assert result["action"] == "timeout"
 
 
 async def test_set_approval_second_racing_call_does_not_clobber_first(store):

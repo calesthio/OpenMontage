@@ -139,14 +139,14 @@
     },
     "orchestration": {
       "type": "object",
-      "description": "Executive Producer orchestration config",
+      "description": "Executive Producer orchestration config. ENFORCEMENT STATUS (audited 2026-07): only max_revisions_per_stage is enforced at runtime (server/app/runner/stage_runner.py::_resolve_max_revisions bounds the human reject-regenerate loop). The other keys are DECLARATIVE ONLY — no code reads them; treat them as documentation of intent for the agent-led path, not as guarantees, until a reader is wired.",
       "properties": {
-        "mode": { "type": "string" },
-        "skill": { "type": "string" },
-        "budget_default_usd": { "type": "number" },
-        "max_revisions_per_stage": { "type": "integer" },
-        "max_send_backs": { "type": "integer" },
-        "max_wall_time_minutes": { "type": "integer" }
+        "mode": { "type": "string", "description": "DECLARATIVE ONLY — no runtime reader." },
+        "skill": { "type": "string", "description": "DECLARATIVE ONLY — no runtime reader." },
+        "budget_default_usd": { "type": "number", "description": "DECLARATIVE ONLY — the web runner's budget gate uses options.budget_cny instead; no code reads this." },
+        "max_revisions_per_stage": { "type": "integer", "description": "ENFORCED: bounds the human reject-regenerate rounds per approval-gated stage (stage_runner reject loop; default 3)." },
+        "max_send_backs": { "type": "integer", "description": "DECLARATIVE ONLY — no runtime reader." },
+        "max_wall_time_minutes": { "type": "integer", "description": "DECLARATIVE ONLY — no runtime reader." }
       },
       "additionalProperties": false
     },

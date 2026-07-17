@@ -733,6 +733,16 @@ class HyperFramesCompose(BaseTool):
                 data={"steps": steps},
             )
 
+        # Implicit AIGC label (roadmap 0.1, 《标识办法》) — the HyperFrames CLI
+        # writes the mp4 itself with no ffmpeg post-pass in this tool, so the
+        # metadata remux must happen here explicitly. (The explicit label is
+        # already in the composition — see _generate_index_html's aigc-label
+        # clip.) Placed here so BOTH invocation routes — direct tool use and
+        # video_compose._render_via_hyperframes delegation — are covered.
+        from tools.video.aigc_label import embed_aigc_metadata, labeling_enabled
+        aigc_meta = embed_aigc_metadata(output_path)
+        aigc_explicit = labeling_enabled()   # matches _generate_index_html's injection
+
         return ToolResult(
             success=True,
             data={
@@ -744,6 +754,7 @@ class HyperFramesCompose(BaseTool):
                 "fps": fps,
                 "quality": quality,
                 "steps": steps,
+                "aigc_label": {"explicit_burned": aigc_explicit, "metadata": aigc_meta},
             },
             artifacts=[str(output_path)],
         )
@@ -964,6 +975,32 @@ class HyperFramesCompose(BaseTool):
             clip_html.append(html)
             if tween:
                 entrance_tweens.append(tween)
+
+        # Explicit AIGC label (《人工智能生成合成内容标识办法》, roadmap 0.1):
+        # a reserved opening-frame clip on its own top track, injected into
+        # EVERY generated composition — regeneration at render time (this
+        # generator runs on each render's scaffold step) means a hand-tweaked
+        # workspace still gets the label. Inline styles override the .clip
+        # class's inset:0 stretch so the label renders as a compact top-right
+        # pill, ~5% of the shorter edge per the practice guide.
+        from tools.video.aigc_label import (
+            EXPLICIT_LABEL_SECONDS, EXPLICIT_LABEL_TEXT,
+            explicit_label_fontsize, labeling_enabled,
+        )
+        if labeling_enabled():
+            label_seconds = min(EXPLICIT_LABEL_SECONDS, max(0.1, total_duration))
+            fontsize = explicit_label_fontsize(width, height)
+            clip_html.append(
+                f'<div id="aigc-label" class="clip" '
+                f'data-start="0" data-duration="{self._f(label_seconds)}" '
+                f'data-track-index="9" '
+                f'style="inset:auto; top:3%; right:3%; width:auto; height:auto; '
+                f'z-index:999; font-family: var(--font-body); '
+                f'font-size:{fontsize}px; line-height:1.2; '
+                f'color:rgba(255,255,255,.92); background:rgba(0,0,0,.4); '
+                f'padding:.25em .6em; border-radius:.4em;">'
+                f'{self._escape_text(EXPLICIT_LABEL_TEXT)}</div>'
+            )
 
         audio_html: list[str] = []
         for j, nar in enumerate(audio_refs.get("narration") or []):

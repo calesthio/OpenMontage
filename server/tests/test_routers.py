@@ -150,9 +150,41 @@ def test_save_artifact_writes_file(client, tmp_path):
     jid = client.post("/jobs", json=_new_job_body(project_name="p1")).json()["job_id"]
     r = client.post(f"/jobs/{jid}/artifact", json={"stage": "script", "content": {"k": 1}})
     assert r.status_code == 200
+    # cinematic's "script" stage produces an artifact that happens to share
+    # its name — the file must land under the produces name.
     written = tmp_path / "projects" / "p1" / "artifacts" / "script.json"
     assert written.exists()
     assert client.post("/jobs/nope/artifact", json={"stage": "s", "content": {}}).status_code == 404
+
+
+def test_save_artifact_by_stage_resolves_to_produces_name(client, tmp_path):
+    # Regression (silent inline-edit discard): 6 of cinematic's 8 stages name
+    # their artifact differently from the stage (stage "proposal" produces
+    # "proposal_packet"). The endpoint used to write artifacts/<stage>.json
+    # verbatim — an orphan file no stage ever reads back — while returning
+    # 200 "saved". The edit must land at the PRODUCES name the pipeline's
+    # _load_artifacts actually consumes.
+    jid = client.post("/jobs", json=_new_job_body(project_name="p2")).json()["job_id"]
+    r = client.post(f"/jobs/{jid}/artifact", json={"stage": "proposal", "content": {"edited": True}})
+    assert r.status_code == 200
+    assert r.json()["saved"] == "proposal_packet"
+    artifacts_dir = tmp_path / "projects" / "p2" / "artifacts"
+    assert (artifacts_dir / "proposal_packet.json").exists()
+    assert not (artifacts_dir / "proposal.json").exists()
+
+
+def test_save_artifact_by_artifact_name_directly(client, tmp_path):
+    jid = client.post("/jobs", json=_new_job_body(project_name="p3")).json()["job_id"]
+    r = client.post(f"/jobs/{jid}/artifact", json={"artifact_name": "scene_plan", "content": {"scenes": []}})
+    assert r.status_code == 200
+    assert r.json()["saved"] == "scene_plan"
+    assert (tmp_path / "projects" / "p3" / "artifacts" / "scene_plan.json").exists()
+    # An artifact name from a different pipeline / a typo is rejected.
+    r2 = client.post(f"/jobs/{jid}/artifact", json={"artifact_name": "not_an_artifact", "content": {}})
+    assert r2.status_code == 400
+    # Neither field at all is rejected.
+    r3 = client.post(f"/jobs/{jid}/artifact", json={"content": {}})
+    assert r3.status_code == 400
 
 
 def test_save_artifact_rejects_stage_not_in_jobs_pipeline(client):

@@ -18,6 +18,7 @@ import { stageLabel } from "@/components/job-status";
 import { apiRequest } from "@/lib/api";
 
 type SamplePreview = { text?: string; iteration?: number; max_iterations?: number };
+type RevisionsExhaustedPreview = { text?: string; revisions_used?: number; max_revisions?: number };
 
 export function ApprovalPanel({
   jobId,
@@ -56,7 +57,15 @@ export function ApprovalPanel({
 
   const isBudgetGate = gate === "budget";
   const isSamplePreviewGate = gate === "sample_preview";
+  // Revision budget exhausted (orchestration.max_revisions_per_stage):
+  // approve = accept the latest artifact as-is; reject = stop the job.
+  // Reject needs no feedback here (nothing will be regenerated), same as
+  // the budget gate.
+  const isRevisionsExhaustedGate = gate === "revisions_exhausted";
   const samplePreview = isSamplePreviewGate ? (currentPreview as SamplePreview | null) : null;
+  const revisionsPreview = isRevisionsExhaustedGate
+    ? (currentPreview as RevisionsExhaustedPreview | null)
+    : null;
 
   async function handleApproval(action: "approve" | "reject") {
     setApproving(true);
@@ -118,9 +127,11 @@ export function ApprovalPanel({
               ? "预算超支 — 需要你确认是否继续"
               : isSamplePreviewGate
               ? `${stageLabel(stage)} — AI 请求确认样品${samplePreview?.max_iterations ? `（第 ${samplePreview.iteration}/${samplePreview.max_iterations} 轮）` : ""}`
+              : isRevisionsExhaustedGate
+              ? `${stageLabel(stage)} — 修订次数已用尽${revisionsPreview?.max_revisions ? `（${revisionsPreview.revisions_used}/${revisionsPreview.max_revisions}）` : ""}`
               : `${stageLabel(stage)} — 等待你的审批`}
           </CardTitle>
-          {currentPreview && !isBudgetGate && !isSamplePreviewGate && (
+          {currentPreview && !isBudgetGate && !isSamplePreviewGate && !isRevisionsExhaustedGate && (
             <Button
               size="sm"
               variant="outline"
@@ -141,8 +152,15 @@ export function ApprovalPanel({
             {samplePreview.text}
           </p>
         )}
+        {/* Revisions-exhausted gate: an explanation, not an artifact — the
+            latest artifact was already reviewed at the previous gate. */}
+        {isRevisionsExhaustedGate && (
+          <p className="text-sm text-foreground/90 bg-muted/50 rounded p-3 whitespace-pre-wrap">
+            该阶段的修订次数已达上限。批准将采用当前版本继续生产;打回将停止整个任务。
+          </p>
+        )}
         {/* Preview / editor (ordinary stage-boundary gate only) */}
-        {currentPreview && !editMode && !isSamplePreviewGate && (
+        {currentPreview && !editMode && !isSamplePreviewGate && !isRevisionsExhaustedGate && (
           <pre className="text-xs bg-muted/50 rounded p-3 overflow-auto max-h-64 whitespace-pre-wrap">
             {JSON.stringify(currentPreview, null, 2)}
           </pre>
@@ -180,8 +198,9 @@ export function ApprovalPanel({
           </div>
         )}
 
-        {/* Feedback textarea — not shown for the budget gate */}
-        {!editMode && !isBudgetGate && (
+        {/* Feedback textarea — not shown for the budget / revisions-
+            exhausted gates (neither path regenerates on reject) */}
+        {!editMode && !isBudgetGate && !isRevisionsExhaustedGate && (
           <Textarea
             placeholder="（可选）写下反馈，让 AI 修改后重来…"
             rows={2}
@@ -194,15 +213,19 @@ export function ApprovalPanel({
         {!editMode && (
           <div className="flex gap-3">
             <Button onClick={() => handleApproval("approve")} disabled={approving} className="flex-1">
-              {isBudgetGate ? "✓ 批准超支，继续生产" : "✓ 批准，继续生产"}
+              {isBudgetGate
+                ? "✓ 批准超支，继续生产"
+                : isRevisionsExhaustedGate
+                ? "✓ 接受当前版本，继续生产"
+                : "✓ 批准，继续生产"}
             </Button>
             <Button
               variant="outline"
               onClick={() => handleApproval("reject")}
-              disabled={approving || (!isBudgetGate && !feedback)}
+              disabled={approving || (!isBudgetGate && !isRevisionsExhaustedGate && !feedback)}
               className="flex-1"
             >
-              {isBudgetGate ? "⛔ 终止任务" : "↩ 打回重做"}
+              {isBudgetGate || isRevisionsExhaustedGate ? "⛔ 终止任务" : "↩ 打回重做"}
             </Button>
           </div>
         )}

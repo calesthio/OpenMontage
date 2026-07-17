@@ -717,3 +717,71 @@ def test_write_artifact_no_schema_for_artifact_name_is_not_a_warning(tmp_path, m
     )
     assert out == f"Written to {tmp_path / 'artifacts' / 'research.json'}"
     assert not [e for e in events if e["type"] == "warning"]
+
+
+# ── asset_ready media_url + selector decision persistence (roadmap 1.1/1.4) ──
+
+def test_asset_ready_carries_media_url_for_project_assets(tmp_path, monkeypatch):
+    events = []
+    tool = FakeTool(capability="image_generation")
+    _run_tool(tmp_path / "projects" / "p", tool, monkeypatch, emit_event=events.append)
+    asset = next(e for e in events if e["type"] == "asset_ready")
+    # Auto-assigned output_path lands under the project dir → servable URL.
+    assert asset["media_url"].startswith("/media/p/assets/image_generation/")
+    assert asset["media_url"].endswith(".png")
+
+
+def test_asset_ready_omits_media_url_outside_project(tmp_path, monkeypatch):
+    class OutsideTool(FakeTool):
+        def execute(self, inputs):
+            return _FakeResult(artifacts=["/somewhere/else/out.mp4"])
+    events = []
+    _run_tool(tmp_path / "projects" / "p", OutsideTool(), monkeypatch, emit_event=events.append)
+    asset = next(e for e in events if e["type"] == "asset_ready")
+    assert "media_url" not in asset
+
+
+def test_selector_result_persists_decision_log_entry(tmp_path, monkeypatch):
+    # Roadmap 1.4: selectors always computed scoring.explain() rationale but
+    # never persisted it — the web-runner path must append it to the
+    # project's decision_log artifact, deduping unchanged repeat picks.
+    import json as _json
+
+    class SelectorLikeTool(FakeTool):
+        def execute(self, inputs):
+            r = _FakeResult(artifacts=[inputs.get("output_path", "")])
+            r.data = {
+                "selected_tool": "elevenlabs_tts",
+                "selected_provider": "elevenlabs",
+                "selection_reason": "elevenlabs_tts (elevenlabs): 0.82\n  task_fit=0.9 (w=0.3)",
+                "provider_score": {"weighted_score": 0.82},
+                "alternatives_considered": ["google_tts", "piper_tts"],
+            }
+            return r
+
+    project = tmp_path / "projects" / "p"
+    tool = SelectorLikeTool(capability="tts")
+    _run_tool(project, tool, monkeypatch)
+    _run_tool(project, tool, monkeypatch)   # identical pick — must not duplicate
+
+    log = _json.loads((project / "artifacts" / "decision_log.json").read_text())
+    entries = [d for d in log["decisions"] if d["category"] == "provider_selection"]
+    assert len(entries) == 1
+    d = entries[0]
+    assert d["selected"] == "elevenlabs_tts"
+    assert "task_fit" in d["reason"]
+    assert d["subject"].startswith("tts provider")
+    ids = [o["option_id"] for o in d["options_considered"]]
+    assert ids == ["elevenlabs_tts", "google_tts", "piper_tts"]
+    assert d["confidence"] == 0.82
+
+    # A CHANGED pick appends a new entry for the same (category, subject).
+    class ChangedPick(SelectorLikeTool):
+        def execute(self, inputs):
+            r = super().execute(inputs)
+            r.data["selected_tool"] = "google_tts"
+            return r
+    _run_tool(project, ChangedPick(capability="tts"), monkeypatch)
+    log = _json.loads((project / "artifacts" / "decision_log.json").read_text())
+    entries = [d for d in log["decisions"] if d["category"] == "provider_selection"]
+    assert [d["selected"] for d in entries] == ["elevenlabs_tts", "google_tts"]

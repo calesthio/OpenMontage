@@ -6,11 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
-import { StatusBadge, EventRow, stageLabel, VideoGallery, formatRemaining } from "@/components/job-status";
+import {
+  StatusBadge, EventRow, stageLabel, VideoGallery, formatRemaining,
+  Filmstrip, groupEventsByStage, aggregateEventRows, stageDurations,
+  formatElapsed, eventLabel, EVENT_COLOR,
+} from "@/components/job-status";
 import { SERVER, apiRequest } from "@/lib/api";
 import { jobLifecycleReducer, initialJobLifecycleState } from "@/lib/job-lifecycle";
 import { useJobEvents } from "@/lib/use-job-events";
 import { ApprovalPanel } from "@/components/approval-panel";
+import { ArtifactView } from "@/components/artifact-view";
 import { useToastManager } from "@/components/ui/toast";
 
 /** Live countdown to the approval gate's hard expiry (the ladder's 7-day
@@ -42,6 +47,31 @@ export default function JobDetailPage() {
   const [retrying, setRetrying] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [actionError, setActionError] = useState("");
+
+  // Two-tier event log controls (roadmap 1.5).
+  const [rawLog, setRawLog] = useState(false);
+  const [stageFilter, setStageFilter] = useState<string | null>(null);
+
+  // On-disk artifacts (roadmap 1.2): refreshed whenever a new artifact is
+  // written or a stage completes, so approved artifacts stay inspectable.
+  const [artifacts, setArtifacts] = useState<Record<string, unknown>>({});
+  const artifactVersion = state.events.filter(
+    (e) => e.type === "artifact_written" || e.type === "stage_completed"
+  ).length;
+  useEffect(() => {
+    apiRequest(`/jobs/${jobId}/artifacts`).then((r) => {
+      if (r.ok && r.data?.artifacts) setArtifacts(r.data.artifacts);
+    });
+  }, [jobId, artifactVersion]);
+
+  // Honest elapsed clock (roadmap 1.6): ticks while the job is live.
+  const [nowSec, setNowSec] = useState(() => Date.now() / 1000);
+  const isLive = state.status === "running" || state.status === "awaiting_approval" || state.status === "queued";
+  useEffect(() => {
+    if (!isLive) return;
+    const t = setInterval(() => setNowSec(Date.now() / 1000), 1000);
+    return () => clearInterval(t);
+  }, [isLive]);
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -115,6 +145,22 @@ export default function JobDetailPage() {
   // it has already reached a terminal state (completed/failed/cancelled).
   const isCancellable = state.status === "queued" || state.status === "running" || state.status === "awaiting_approval";
 
+  // Honest progress signals (roadmap 1.6).
+  const startedTs = state.events.find((e) => e.type === "job_started")?.ts ?? null;
+  const terminalTs = [...state.events].reverse().find(
+    (e) => e.type === "job_completed" || e.type === "job_failed" || e.type === "job_cancelled"
+  )?.ts ?? null;
+  const elapsed = startedTs != null ? (terminalTs ?? nowSec) - startedTs : null;
+  const durations = stageDurations(state.events);
+  // "镜头 4/12" during the assets stage: scene_plan gives the denominator,
+  // visual asset_ready events in this stage the numerator.
+  const scenePlanScenes = ((artifacts.scene_plan as { scenes?: unknown[] } | undefined)?.scenes ?? []).length;
+  const assetsThisStage = state.assets.filter(
+    (a) => a.stage === state.currentStage &&
+      (a.kind === "video_generation" || a.kind === "image_generation")
+  ).length;
+  const showSceneProgress = state.currentStage === "assets" && scenePlanScenes > 0 && state.status === "running";
+
   return (
     <div className="p-8 max-w-4xl space-y-6">
       {/* Header */}
@@ -124,6 +170,14 @@ export default function JobDetailPage() {
           <p className="text-muted-foreground text-sm mt-0.5 font-mono">{jobId}</p>
         </div>
         <div className="flex items-center gap-3">
+          {elapsed != null && (
+            <span
+              className="text-xs font-mono border px-2 py-0.5 rounded-full text-muted-foreground border-border"
+              title={terminalTs ? "任务总耗时" : "已运行时长"}
+            >
+              ⏱ {formatElapsed(elapsed)}
+            </span>
+          )}
           {state.status === "awaiting_approval" && state.approvalExpiresAt != null && (
             <ApprovalCountdownChip expiresAt={state.approvalExpiresAt} />
           )}
@@ -174,7 +228,15 @@ export default function JobDetailPage() {
               const active = s === state.currentStage;
               const waiting = state.status === "awaiting_approval" && s === state.awaitingStage;
               return (
-                <div key={s} className="flex-1 flex flex-col items-center gap-1">
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setStageFilter(stageFilter === s ? null : s)}
+                  title={`点击筛选 ${stageLabel(s)} 阶段的日志`}
+                  className={`flex-1 flex flex-col items-center gap-1 cursor-pointer bg-transparent border-0 p-0 ${
+                    stageFilter === s ? "opacity-100" : stageFilter ? "opacity-50" : ""
+                  }`}
+                >
                   <div className={`w-6 h-6 rounded-full text-xs flex items-center justify-center font-medium border transition-colors ${
                     waiting  ? "bg-yellow-500 border-yellow-500 text-white" :
                     done     ? "bg-foreground border-foreground text-background" :
@@ -186,13 +248,44 @@ export default function JobDetailPage() {
                   <span className={`text-[10px] text-center ${active || waiting ? "text-foreground" : "text-muted-foreground"}`}>
                     {stageLabel(s)}
                   </span>
-                </div>
+                  {/* Completed stages show what they actually took (roadmap 1.6). */}
+                  <span className="text-[9px] text-muted-foreground/70 font-mono h-3">
+                    {durations[s] != null ? formatElapsed(durations[s]) : ""}
+                  </span>
+                </button>
               );
             })}
           </div>
           )}
+          {showSceneProgress && (
+            <p className="text-xs text-muted-foreground text-center mt-2" data-testid="scene-progress">
+              镜头素材 {Math.min(assetsThisStage, scenePlanScenes)}/{scenePlanScenes}
+            </p>
+          )}
         </CardContent>
       </Card>
+
+      {/* The agent's latest narration — a live "正在做什么" line instead of
+          log chatter (roadmap 1.5). */}
+      {state.agentText && isLive && (
+        <p className="text-sm text-muted-foreground italic px-1" data-testid="agent-live-line">
+          🤖 {state.agentText}
+        </p>
+      )}
+
+      {/* Live filmstrip (roadmap 1.1): thumbnails pop in per asset_ready. */}
+      {state.assets.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm text-muted-foreground font-medium">
+              素材胶片条 · {state.assets.length}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Filmstrip serverBase={SERVER} assets={state.assets} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Any failed approve/reject/retry call — surfaced instead of silently
           doing nothing (e.g. the job's real status moved on server-side, such
@@ -241,6 +334,9 @@ export default function JobDetailPage() {
           stage={state.awaitingStage}
           gate={state.awaitingGate}
           preview={state.preview}
+          previewArtifact={state.previewArtifact}
+          serverBase={SERVER}
+          projectName={state.projectName}
           onError={setActionError}
           onApproved={() => dispatch({ type: "approve_succeeded" })}
         />
@@ -274,20 +370,109 @@ export default function JobDetailPage() {
         </Card>
       )}
 
-      {/* Event log */}
+      {/* Artifacts browser (roadmap 1.2): approved artifacts no longer
+          vanish from the UI — everything on disk stays inspectable. */}
+      {Object.keys(artifacts).length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm text-muted-foreground font-medium">已生成产物</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {Object.entries(artifacts).map(([name, value]) => (
+              <details key={name} className="border border-border rounded-md px-3 py-2">
+                <summary className="text-sm cursor-pointer select-none">{name}</summary>
+                <div className="mt-2">
+                  <ArtifactView name={name} value={value} serverBase={SERVER} projectName={state.projectName} />
+                </div>
+              </details>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Two-tier event log (roadmap 1.5): stage sections with one-line
+          summaries; consecutive same-tool events collapse ×N; the raw flat
+          log stays one toggle away. */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm text-muted-foreground font-medium">实时进度</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm text-muted-foreground font-medium">实时进度</CardTitle>
+            <div className="flex items-center gap-3">
+              {stageFilter && (
+                <button
+                  type="button"
+                  className="text-xs text-yellow-400 hover:underline"
+                  onClick={() => setStageFilter(null)}
+                >
+                  筛选: {stageLabel(stageFilter)} ✕
+                </button>
+              )}
+              <label className="text-xs text-muted-foreground flex items-center gap-1 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={rawLog}
+                  onChange={(e) => setRawLog(e.target.checked)}
+                />
+                原始日志
+              </label>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
-          <ScrollArea className="h-72 px-4 pb-4">
-            <div className="space-y-1.5 font-mono text-xs">
-              {state.events.map((ev) => <EventRow key={ev.seq} ev={ev} />)}
-              {state.events.length === 0 && (
-                <p className="text-muted-foreground py-4 text-center">等待任务启动…</p>
-              )}
-              <div ref={bottomRef} />
-            </div>
+          <ScrollArea className="h-96 px-4 pb-4">
+            {rawLog ? (
+              <div className="space-y-1.5 font-mono text-xs">
+                {state.events
+                  .filter((ev) => !stageFilter || ev.stage === stageFilter)
+                  .map((ev) => <EventRow key={ev.seq} ev={ev} />)}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {groupEventsByStage(state.events)
+                  .filter((g) => !stageFilter || g.stage === stageFilter)
+                  .map((g, gi, arr) => (
+                    <details
+                      key={`${g.stage}:${g.events[0]?.seq}`}
+                      open={gi === arr.length - 1}
+                      className="border border-border/60 rounded-md px-3 py-1.5"
+                    >
+                      <summary className="text-xs cursor-pointer select-none flex flex-wrap gap-x-2 items-baseline">
+                        <span className="font-medium text-foreground/90">
+                          {g.stage ? stageLabel(g.stage) : "系统"}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {[
+                            g.toolCalls > 0 ? `${g.toolCalls} 次工具调用` : null,
+                            g.assetCount > 0 ? `${g.assetCount} 个素材` : null,
+                            g.costCny > 0 ? `¥${g.costCny.toFixed(2)}` : null,
+                            g.endTs > g.startTs ? formatElapsed(g.endTs - g.startTs) : null,
+                          ].filter(Boolean).join(" · ")}
+                        </span>
+                      </summary>
+                      <div className="space-y-1 font-mono text-xs mt-1.5 pb-1">
+                        {aggregateEventRows(g.events).map(({ ev, count }) => (
+                          <div key={ev.seq} className="flex gap-2 items-start">
+                            <span className="text-muted-foreground/50 shrink-0">
+                              {new Date(ev.ts * 1000).toLocaleTimeString("zh-CN", { hour12: false })}
+                            </span>
+                            <span className={`shrink-0 ${EVENT_COLOR[ev.type] ?? "text-muted-foreground"}`}>
+                              [{ev.type}]
+                            </span>
+                            <span className="text-foreground/70 break-all">
+                              {eventLabel(ev)}
+                              {count > 1 && <span className="text-muted-foreground"> ×{count}</span>}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  ))}
+              </div>
+            )}
+            {state.events.length === 0 && (
+              <p className="text-muted-foreground py-4 text-center text-xs">等待任务启动…</p>
+            )}
+            <div ref={bottomRef} />
           </ScrollArea>
         </CardContent>
       </Card>

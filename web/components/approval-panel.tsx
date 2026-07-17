@@ -13,18 +13,31 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { stageLabel } from "@/components/job-status";
+import { ArtifactView } from "@/components/artifact-view";
 import { apiRequest } from "@/lib/api";
 
 type SamplePreview = { text?: string; iteration?: number; max_iterations?: number };
 type RevisionsExhaustedPreview = { text?: string; revisions_used?: number; max_revisions?: number };
+type BudgetPreview = {
+  spent_cny?: number;
+  budget_cny?: number;
+  over_by_cny?: number;
+  blocked_tool_name?: string;
+  blocked_est_cost_cny?: number;
+  projected_cny?: number;
+};
 
 export function ApprovalPanel({
   jobId,
   stage,
   gate,
   preview,
+  previewArtifact = null,
+  serverBase = "",
+  projectName = null,
   onError,
   onApproved,
 }: {
@@ -32,6 +45,11 @@ export function ApprovalPanel({
   stage: string;
   gate: string | null;
   preview: Record<string, unknown> | null;
+  /** Produces-name of the artifact `preview` holds (awaiting_approval's
+   * preview_artifact) — picks the structured renderer. */
+  previewArtifact?: string | null;
+  serverBase?: string;
+  projectName?: string | null;
   /** Bubbles an approve/reject/save-edit failure up to the page's shared
    * actionError card (also used by the retry/cancel actions). Pass "" to
    * clear it before a new request, matching the page's previous behavior. */
@@ -66,14 +84,34 @@ export function ApprovalPanel({
   const revisionsPreview = isRevisionsExhaustedGate
     ? (currentPreview as RevisionsExhaustedPreview | null)
     : null;
+  const budgetPreview = isBudgetGate ? (currentPreview as BudgetPreview | null) : null;
+
+  // Budget gate: the user's NEW absolute ceiling (roadmap 1.3 — replaces
+  // the backend's spent×1.2 ratchet). Prefilled with a sensible suggestion:
+  // enough to admit the blocked call (projected) or current spend, +20%.
+  const suggestedBudget = (() => {
+    const base = budgetPreview?.projected_cny ?? budgetPreview?.spent_cny;
+    return base != null ? String(Math.ceil(base * 1.2)) : "";
+  })();
+  const [newBudget, setNewBudget] = useState(suggestedBudget);
 
   async function handleApproval(action: "approve" | "reject") {
     setApproving(true);
     onError("");
+    const body: Record<string, unknown> = { action, feedback };
+    if (isBudgetGate && action === "approve" && newBudget.trim()) {
+      const parsed = Number(newBudget);
+      if (!Number.isFinite(parsed) || parsed <= 0) {
+        onError("新预算必须是正数");
+        setApproving(false);
+        return;
+      }
+      body.new_budget_cny = parsed;
+    }
     const res = await apiRequest(`/jobs/${jobId}/approve`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, feedback }),
+      body: JSON.stringify(body),
     });
     if (!res.ok) {
       // A non-ok here usually means the job's real status moved on
@@ -98,11 +136,18 @@ export function ApprovalPanel({
       return;
     }
     setSaving(true);
-    // Persist edited artifact via the save-artifact endpoint
+    // Persist edited artifact via the save-artifact endpoint. Send the REAL
+    // artifact name when the gate told us which artifact the preview holds
+    // (preview_artifact); `stage` stays as the backward-compatible fallback
+    // the server resolves via the stage's produces declaration.
     const res = await apiRequest(`/jobs/${jobId}/artifact`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ stage, content: parsed }),
+      body: JSON.stringify(
+        previewArtifact
+          ? { artifact_name: previewArtifact, content: parsed }
+          : { stage, content: parsed }
+      ),
     });
     if (res.ok) {
       setCurrentPreview(parsed);
@@ -144,6 +189,45 @@ export function ApprovalPanel({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Budget gate: the structured numbers rendered as sentences a
+            human can act on (roadmap 1.3), plus the new-ceiling input —
+            previously the only alternative to overspending was killing
+            the job. */}
+        {isBudgetGate && budgetPreview && (
+          <div className="space-y-3" data-testid="budget-gate-body">
+            <p className="text-sm text-foreground/90 bg-muted/50 rounded p-3">
+              目前已花费 <span className="font-medium">¥{(budgetPreview.spent_cny ?? 0).toFixed(2)}</span>
+              ,预算上限 <span className="font-medium">¥{(budgetPreview.budget_cny ?? 0).toFixed(2)}</span>。
+              {budgetPreview.blocked_tool_name ? (
+                <>
+                  下一步调用 <span className="font-mono">{budgetPreview.blocked_tool_name}</span>
+                  {budgetPreview.blocked_est_cost_cny != null &&
+                    <>(预计 ¥{budgetPreview.blocked_est_cost_cny.toFixed(2)})</>}
+                  {budgetPreview.projected_cny != null &&
+                    <> 将使总支出达到 ¥{budgetPreview.projected_cny.toFixed(2)},超出预算</>}
+                  ,已被拦截。
+                </>
+              ) : (
+                (budgetPreview.over_by_cny ?? 0) > 0
+                  ? <>已超出预算 ¥{(budgetPreview.over_by_cny ?? 0).toFixed(2)}。</>
+                  : null
+              )}
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground shrink-0">提高预算至 ¥</span>
+              <Input
+                type="number"
+                min="0"
+                step="1"
+                value={newBudget}
+                onChange={(e) => setNewBudget(e.target.value)}
+                className="w-28"
+                aria-label="新预算上限(元)"
+              />
+              <span className="text-xs text-muted-foreground">批准后以此为新的绝对上限</span>
+            </div>
+          </div>
+        )}
         {/* Sample-preview gate: the agent's own message, not a raw
             artifact JSON — there's nothing to inline-edit yet, the
             stage hasn't produced its artifact. */}
@@ -159,11 +243,15 @@ export function ApprovalPanel({
             该阶段的修订次数已达上限。批准将采用当前版本继续生产;打回将停止整个任务。
           </p>
         )}
-        {/* Preview / editor (ordinary stage-boundary gate only) */}
-        {currentPreview && !editMode && !isSamplePreviewGate && !isRevisionsExhaustedGate && (
-          <pre className="text-xs bg-muted/50 rounded p-3 overflow-auto max-h-64 whitespace-pre-wrap">
-            {JSON.stringify(currentPreview, null, 2)}
-          </pre>
+        {/* Preview / editor (ordinary stage-boundary gate only) — structured
+            per artifact type, raw JSON one click away (roadmap 1.2). */}
+        {currentPreview && !editMode && !isSamplePreviewGate && !isRevisionsExhaustedGate && !isBudgetGate && (
+          <ArtifactView
+            name={previewArtifact}
+            value={currentPreview}
+            serverBase={serverBase}
+            projectName={projectName}
+          />
         )}
         {editMode && (
           <div className="space-y-2">

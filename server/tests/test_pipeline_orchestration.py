@@ -397,6 +397,69 @@ async def test_budget_gate_pauses_then_resumes_on_approve(runner, monkeypatch, t
     assert runner.get("j")["status"] == "completed"      # overspend(s) approved → finished
 
 
+async def test_budget_gate_honors_user_chosen_ceiling(runner, monkeypatch, tmp_path):
+    # Roadmap 1.3: an approve carrying new_budget_cny replaces the spent×1.2
+    # ratchet with the user's own absolute cap.
+    (tmp_path / "projects" / "p" / "renders").mkdir(parents=True)
+    (tmp_path / "projects" / "p" / "renders" / "final.mp4").write_bytes(b"x")
+    def spend(*a, **k):
+        acc = k["cost_accumulator"]
+        if acc is not None and not acc:
+            acc.append(5.0)   # only the first stage spends
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", spend)
+    opts = {"budget_cny": 1}
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic", "options": opts})
+
+    async def approver():
+        for _ in range(500):
+            await asyncio.sleep(0.01)
+            if runner.get("j")["status"] == "awaiting_approval":
+                runner.set_approval("j", "approve", "", new_budget_cny=200.0)
+                return
+    approver_task = asyncio.create_task(approver())
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic",
+                                              "options": opts})
+    await approver_task
+
+    approved = [e for e in runner.get_events("j", after_seq=-1)
+                if e["type"] == "stage_approved" and e.get("stage") == "budget"]
+    assert approved and approved[0]["budget_cny"] == 200.0   # not spent×1.2 (=6.0)
+    assert approved[0]["previous_budget_cny"] == 1
+    assert runner.get("j")["status"] == "completed"
+
+
+async def test_budget_gate_clamps_user_ceiling_below_spend(runner, monkeypatch, tmp_path):
+    # A user cap BELOW what's already spent would re-open the gate instantly
+    # forever — clamp to the actual spend floor.
+    (tmp_path / "projects" / "p" / "renders").mkdir(parents=True)
+    (tmp_path / "projects" / "p" / "renders" / "final.mp4").write_bytes(b"x")
+    def spend(*a, **k):
+        acc = k["cost_accumulator"]
+        if acc is not None and not acc:
+            acc.append(5.0)
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", spend)
+    opts = {"budget_cny": 1}
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic", "options": opts})
+
+    async def approver():
+        for _ in range(500):
+            await asyncio.sleep(0.01)
+            if runner.get("j")["status"] == "awaiting_approval":
+                runner.set_approval("j", "approve", "", new_budget_cny=0.5)
+                return
+    approver_task = asyncio.create_task(approver())
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic",
+                                              "options": opts})
+    await approver_task
+
+    approved = [e for e in runner.get_events("j", after_seq=-1)
+                if e["type"] == "stage_approved" and e.get("stage") == "budget"]
+    assert approved and approved[0]["budget_cny"] == 5.0   # clamped to spend
+    assert runner.get("j")["status"] == "completed"
+
+
 async def test_budget_gate_aborts_on_reject(runner, monkeypatch):
     def spend(*a, **k):
         acc = k["cost_accumulator"]

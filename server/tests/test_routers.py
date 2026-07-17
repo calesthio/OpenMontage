@@ -196,6 +196,44 @@ def test_save_artifact_rejects_stage_not_in_jobs_pipeline(client):
     assert r.status_code == 400
 
 
+def test_get_job_artifacts_returns_disk_artifacts(client, tmp_path):
+    # Roadmap 1.2: artifacts must stay inspectable after their approval gate
+    # resolves — this read-only endpoint exposes what's on disk.
+    import json as _json
+    jid = client.post("/jobs", json=_new_job_body(project_name="pa")).json()["job_id"]
+    art_dir = tmp_path / "projects" / "pa" / "artifacts"
+    art_dir.mkdir(parents=True)
+    (art_dir / "brief.json").write_text(_json.dumps({"hook": "h"}))
+    (art_dir / "scene_plan.json").write_text(_json.dumps({"scenes": [1, 2]}))
+    r = client.get(f"/jobs/{jid}/artifacts")
+    assert r.status_code == 200
+    arts = r.json()["artifacts"]
+    assert arts["brief"] == {"hook": "h"}
+    assert arts["scene_plan"]["scenes"] == [1, 2]
+    assert client.get("/jobs/nope/artifacts").status_code == 404
+
+
+def test_approve_carries_new_budget_ceiling(client):
+    # Roadmap 1.3: the budget gate's approve can carry the user's chosen new
+    # absolute ceiling instead of the spent×1.2 ratchet.
+    jid = client.post("/jobs", json=_new_job_body()).json()["job_id"]
+    jobs.job_store.update(jid, status="awaiting_approval")
+    r = client.post(f"/jobs/{jid}/approve",
+                    json={"action": "approve", "new_budget_cny": 80.5})
+    assert r.status_code == 200
+    # 未消费的决策还留在 store 里 — 直接读出验证透传。
+    decision = jobs.job_store._approval_results[jid]
+    assert decision == {"action": "approve", "feedback": "", "new_budget_cny": 80.5}
+
+
+def test_approve_rejects_nonpositive_budget(client):
+    jid = client.post("/jobs", json=_new_job_body()).json()["job_id"]
+    jobs.job_store.update(jid, status="awaiting_approval")
+    r = client.post(f"/jobs/{jid}/approve",
+                    json={"action": "approve", "new_budget_cny": -5})
+    assert r.status_code == 422
+
+
 def test_create_job_rejects_duplicate_project_name_while_inflight(client):
     # Regression: project_dir is keyed only by project_name with no
     # uniqueness check — two in-flight jobs sharing the same project_name

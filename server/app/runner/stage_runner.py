@@ -388,6 +388,7 @@ def _pause_for_approval(
     stage: str,
     gate: str | None = None,
     preview: Any = None,
+    preview_artifact: str | None = None,
 ) -> float:
     """Set status=awaiting_approval AND emit the matching awaiting_approval
     event in one call — same status-change-plus-event invariant as _fail_job.
@@ -414,6 +415,11 @@ def _pause_for_approval(
     if gate is not None:
         event["gate"] = gate
     event["preview"] = preview
+    if preview_artifact is not None:
+        # The produces-name of the artifact `preview` holds — lets the UI
+        # pick the matching structured renderer (script / scene_plan /
+        # asset_manifest / …) instead of a raw JSON box (roadmap 1.2).
+        event["preview_artifact"] = preview_artifact
     event["expires_at"] = expires_at
     event["reminder_seconds"] = APPROVAL_REMINDER_SECONDS
     _emit(job_id, event)
@@ -1003,7 +1009,12 @@ After writing the artifact, confirm briefly what you produced.
                     tool_name,
                     tool_args,
                     project_dir,
-                    emit_event=lambda ev: _emit(job_id, ev),
+                    # Stamp the current stage onto every bridge-emitted event
+                    # (asset_ready/tool_call/artifact_written/...) — the
+                    # filmstrip and the two-tier event log group by stage,
+                    # and tool_bridge itself doesn't know which stage is
+                    # running. An event that sets its own stage still wins.
+                    emit_event=lambda ev: _emit(job_id, {"stage": stage_name, **ev}),
                     cost_accumulator=cost_accumulator,
                     cost_tracker=cost_tracker,
                     budget_cny=budget_cny,
@@ -1240,23 +1251,32 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
         # budget protection for the rest of the job (the previous
         # `budget_overridden` flag did that — approving one small overage
         # early silently waived every later stage's check too, no matter how
-        # much more expensive). 20% headroom over the actual current spend
-        # lets the stage that triggered this approval proceed without an
-        # immediate re-prompt for the exact same overage, while still gating
-        # again if a LATER stage blows through this new ceiling.
+        # much more expensive).
         #
-        # On the force=True pre-call-block path, `spent` does NOT include the
-        # blocked call's own cost (it never ran) — re-arming off spent*1.2
-        # alone can land BELOW what that call actually needs (or even below
-        # the previous ceiling), permanently re-blocking the identical call on
-        # every future approval. Use the blocked call's own projected_cny (the
-        # spend IF it's admitted) as a floor, together with the previous
-        # ceiling, so the new ceiling never drops below either.
+        # The ceiling the user CHOSE wins (roadmap 1.3): the approve request
+        # can carry new_budget_cny, an absolute cap in CNY. Without it, fall
+        # back to the old 20% headroom heuristic — which was an unbounded
+        # ratchet the user never picked (approve, spend to the new ceiling,
+        # be asked again, ×1.2 forever).
+        #
+        # Either way the new ceiling is floored so the just-approved
+        # continuation isn't immediately re-blocked: on the force=True
+        # pre-call-block path `spent` does NOT include the blocked call's own
+        # cost (it never ran) — the blocked call's projected_cny (the spend
+        # IF it's admitted) is the real floor there.
         old_budget_cny = budget_cny
-        if force and projected_cny is not None:
-            budget_cny = round(max(budget_cny, projected_cny) * 1.2, 4)
-        else:
-            budget_cny = round(spent * 1.2, 4)
+        floor = projected_cny if (force and projected_cny is not None) else spent
+        user_budget = approval.get("new_budget_cny")
+        if user_budget is not None:
+            try:
+                budget_cny = round(max(float(user_budget), floor), 4)
+            except (TypeError, ValueError):
+                user_budget = None
+        if user_budget is None:
+            if force and projected_cny is not None:
+                budget_cny = round(max(budget_cny, projected_cny) * 1.2, 4)
+            else:
+                budget_cny = round(spent * 1.2, 4)
         if cost_tracker is not None:
             # Keep the ledger's recorded ceiling in sync for anything
             # inspecting cost_log.json. A direct in-memory attribute bump —
@@ -1607,21 +1627,26 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
         # Human approval gate — loop so repeated rejections each regenerate AND
         # re-present for approval (previously a rejected artifact silently passed).
         if needs_approval:
-            def _preview() -> Any:
+            def _preview() -> tuple[Any, str | None]:
                 # The agent's write_artifact call is instructed to use the
                 # manifest's real produces name (see the prompt hint above),
                 # but fall back to trying the stage name itself first — some
                 # skills/older manifests still name the artifact after the
-                # stage. Return the first file that actually exists.
+                # stage. Return (value, artifact_name) for the first file
+                # that actually exists — the name drives the UI's structured
+                # renderer choice.
                 arts = _load_artifacts(project_dir)
                 if stage_name in arts:
-                    return arts[stage_name]
+                    return arts[stage_name], stage_name
                 for name in stage_def.get("produces") or []:
                     if name in arts:
-                        return arts[name]
-                return None
+                        return arts[name], name
+                return None, None
 
-            expires_at = _pause_for_approval(job_id, stage_name, preview=_preview())
+            preview_value, preview_name = _preview()
+            expires_at = _pause_for_approval(
+                job_id, stage_name, preview=preview_value, preview_artifact=preview_name
+            )
             approval = await _wait_for_decision(job_id, stage_name, expires_at=expires_at)
             if (job_store.get(job_id) or {}).get("cancel_requested"):
                 raise JobCancelled()
@@ -1722,7 +1747,10 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
                     ))
                     return
                 _emit(job_id, {"type": "stage_completed", "stage": stage_name})
-                expires_at = _pause_for_approval(job_id, stage_name, preview=_preview())
+                preview_value, preview_name = _preview()
+                expires_at = _pause_for_approval(
+                    job_id, stage_name, preview=preview_value, preview_artifact=preview_name
+                )
                 approval = await _wait_for_decision(job_id, stage_name, expires_at=expires_at)
                 if (job_store.get(job_id) or {}).get("cancel_requested"):
                     raise JobCancelled()

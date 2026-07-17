@@ -322,6 +322,77 @@ def _apply_tts_emotion_defaults(inputs: dict[str, Any], options: dict[str, Any] 
             inputs[key] = defaults[key]
 
 
+def _append_selector_decision(
+    project_dir: Path,
+    tool_name: str,
+    capability: str,
+    data: dict[str, Any],
+) -> None:
+    """Persist a selector's scored provider pick into the project's
+    decision_log artifact (roadmap 1.4).
+
+    Selectors have always computed a full rationale — selection_reason is
+    ToolScore.explain(), plus provider_score and alternatives_considered —
+    and returned it in result.data, where it reached only the LLM's context
+    window and was never persisted. This appends a schema-valid decision
+    entry so the decision rail (Backlot + web) can show auto-routed provider
+    picks with their actual reasons. Consecutive identical picks for the
+    same (category, subject) pair are not re-appended — a per-scene TTS loop
+    would otherwise write dozens of duplicate rows.
+    """
+    try:
+        selected = data.get("selected_tool")
+        if not selected:
+            return
+        log_path = project_dir / "artifacts" / "decision_log.json"
+        log: dict[str, Any] = {"version": "1.0", "decisions": []}
+        if log_path.exists():
+            try:
+                loaded = json.loads(log_path.read_text())
+                if isinstance(loaded, dict) and isinstance(loaded.get("decisions"), list):
+                    log = loaded
+            except (OSError, json.JSONDecodeError):
+                pass
+        category = "provider_selection"
+        subject = f"{capability} provider (auto-routed via {tool_name})"
+        # Latest entry for this (category, subject) pair — the board renders
+        # the last entry per pair as current, so only append on change.
+        latest = next(
+            (d for d in reversed(log["decisions"])
+             if isinstance(d, dict) and d.get("category") == category and d.get("subject") == subject),
+            None,
+        )
+        if latest is not None and latest.get("selected") == selected:
+            return
+        provider = data.get("selected_provider")
+        score = data.get("provider_score") or {}
+        options: list[dict[str, Any]] = [{
+            "option_id": selected,
+            "label": f"{provider} ({selected})" if provider else selected,
+            **({"score": round(float(score["weighted_score"]), 4)}
+               if isinstance(score.get("weighted_score"), (int, float)) else {}),
+        }]
+        for alt in data.get("alternatives_considered") or []:
+            options.append({"option_id": alt, "label": alt})
+        entry: dict[str, Any] = {
+            "category": category,
+            "subject": subject,
+            "selected": selected,
+            "reason": data.get("selection_reason"),
+            "options_considered": options,
+            "user_visible": True,
+            "user_approved": False,
+        }
+        if isinstance(score.get("weighted_score"), (int, float)):
+            entry["confidence"] = max(0.0, min(1.0, float(score["weighted_score"])))
+        log["decisions"].append(entry)
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        log_path.write_text(json.dumps(log, ensure_ascii=False, indent=2))
+    except Exception:
+        # Never let audit-trail bookkeeping break a successful tool call.
+        logger.warning("failed to append selector decision for %s", tool_name, exc_info=True)
+
+
 def execute_tool(
     name: str,
     args: dict[str, Any],
@@ -596,6 +667,15 @@ def execute_tool(
             # reflects call count; the sum is what drives the CNY display).
             if cost_accumulator is not None and result.cost_usd is not None:
                 cost_accumulator.append(float(result.cost_usd))
+            # Selector calls already compute a full scored rationale
+            # (selection_reason = ToolScore.explain(), provider_score,
+            # alternatives_considered) — but nothing persisted it, so the
+            # decision rail showed nothing for auto-routed provider picks
+            # (roadmap 1.4: "scoring.explain() 从不持久化进 decision_log").
+            # Append it to the project's decision_log artifact here, at the
+            # single choke point every selector-routed call passes through.
+            if "selected_tool" in (result.data or {}) and "selection_reason" in (result.data or {}):
+                _append_selector_decision(project_dir, tool_name, tool.capability, result.data)
             if emit_event and result.artifacts:
                 last_artifact_idx = len(result.artifacts) - 1
                 for idx, artifact_path in enumerate(result.artifacts):
@@ -624,6 +704,15 @@ def execute_tool(
                     # this call carries cost_cny.
                     if idx == last_artifact_idx:
                         event["cost_cny"] = result.cost_usd
+                    # Browser-servable URL for the live filmstrip (roadmap
+                    # 1.1) — only assets inside the project workspace are
+                    # reachable via the /media static mount; anything else
+                    # (absolute temp paths etc.) just omits the field.
+                    try:
+                        rel = Path(artifact_path).resolve().relative_to(project_dir.resolve())
+                        event["media_url"] = f"/media/{project_dir.name}/{rel.as_posix()}"
+                    except (ValueError, OSError):
+                        pass
                     emit_event(event)
             return json.dumps({
                 "success": True,

@@ -9,7 +9,7 @@
 // setState calls that happen to usually be followed by an SSE event that
 // papers over the inconsistency.
 
-import type { SseEvent } from "@/components/job-status";
+import type { JobAsset, SseEvent } from "@/components/job-status";
 
 export type JobLifecycleState = {
   projectName: string | null;
@@ -43,6 +43,9 @@ export type JobLifecycleState = {
   // whenever no gate is open.
   approvalExpiresAt: number | null;
   preview: Record<string, unknown> | null;
+  // Produces-name of the artifact `preview` holds (awaiting_approval's
+  // preview_artifact field) — picks the structured renderer in the panel.
+  previewArtifact: string | null;
   renderUrl: string | null;
   // Interim preview: the compose stage's own render, playable as soon as it's
   // produced — well before publish (packaging/distribution metadata) finishes.
@@ -56,6 +59,12 @@ export type JobLifecycleState = {
   previewRenderUrls: Record<string, string> | null;
   costCny: number;
   budgetCny: number | null;
+  // Live filmstrip (roadmap 1.1): one entry per asset_ready event, in
+  // arrival order — thumbnails pop in as generation happens.
+  assets: JobAsset[];
+  // The agent's latest narration line (agent_text) — surfaced as the page's
+  // "正在做什么" live line instead of being buried in the log (roadmap 1.5).
+  agentText: string | null;
 };
 
 export const initialJobLifecycleState: JobLifecycleState = {
@@ -69,12 +78,15 @@ export const initialJobLifecycleState: JobLifecycleState = {
   awaitingGateSeq: null,
   approvalExpiresAt: null,
   preview: null,
+  previewArtifact: null,
   renderUrl: null,
   previewRenderUrl: null,
   renderUrls: null,
   previewRenderUrls: null,
   costCny: 0,
   budgetCny: null,
+  assets: [],
+  agentText: null,
 };
 
 /** The subset of the GET /jobs/:id response this reducer cares about. */
@@ -192,6 +204,7 @@ function applySseEvent(state: JobLifecycleState, ev: SseEvent): JobLifecycleStat
       next.awaitingGateSeq = ev.seq;
       next.approvalExpiresAt = ev.expires_at ?? null;
       next.preview = (ev.preview as Record<string, unknown> | null) ?? null;
+      next.previewArtifact = ev.preview_artifact ?? null;
       break;
 
     case "stage_approved":
@@ -201,6 +214,23 @@ function applySseEvent(state: JobLifecycleState, ev: SseEvent): JobLifecycleStat
       next.awaitingGateSeq = null;
       next.approvalExpiresAt = null;
       next.status = "running";
+      break;
+
+    case "agent_text":
+      if (ev.text) next.agentText = ev.text;
+      break;
+
+    case "asset_ready":
+      next.assets = [...state.assets, {
+        seq: ev.seq,
+        stage: ev.stage,
+        tool: ev.tool,
+        kind: ev.kind,
+        model: ev.model,
+        mediaUrl: ev.media_url ?? null,
+        path: ev.path,
+        costCny: ev.cost_cny,
+      }];
       break;
 
     case "cost_updated":

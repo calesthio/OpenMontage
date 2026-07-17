@@ -273,9 +273,24 @@ modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); }
 // right rail: decisions, activity
 // ---------------------------------------------------------------------------
 
+// Real runs write the same decision under several field spellings — the
+// schema deliberately accepts `recommendation`/`rationale`/`notes` as
+// additional properties (see schemas/artifacts/decision_log.schema.json),
+// and options_considered entries may be bare strings. The rail previously
+// read ONLY `selected`/`reason`/object-options, so 6 of 7 real projects
+// rendered a blank pick and no rationale. Normalize before rendering.
+function normalizeDecision(d) {
+  const selected = d.selected ?? d.recommendation ?? d.choice ?? "";
+  const reason =
+    d.reason ?? d.recommendation_rationale ?? d.rationale ?? d.notes ?? "";
+  const options = (d.options_considered || []).map((o) =>
+    typeof o === "string" ? { option_id: o, label: o } : o);
+  return { ...d, selected, reason, options_considered: options };
+}
+
 function renderDecisions(s) {
   const log = s.artifacts.decision_log;
-  const decisions = (log && log.decisions) || [];
+  const decisions = ((log && log.decisions) || []).map(normalizeDecision);
   if (!decisions.length) return null;
   const body = el("div", { class: "panel-body" });
   // Collapse by category+subject: a decision that changed mid-run (e.g. voice

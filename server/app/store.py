@@ -308,7 +308,13 @@ class JobStore:
         if ev:
             ev.clear()
 
-    def set_approval(self, job_id: str, action: str, feedback: str) -> bool:
+    def set_approval(
+        self,
+        job_id: str,
+        action: str,
+        feedback: str,
+        new_budget_cny: float | None = None,
+    ) -> bool:
         """Record the human's approve/reject decision for a job's approval gate.
 
         The status check and the result write must happen atomically under
@@ -328,7 +334,13 @@ class JobStore:
                 return False
             if job_id in self._approval_results:
                 return False
-            self._approval_results[job_id] = {"action": action, "feedback": feedback}
+            decision: dict = {"action": action, "feedback": feedback}
+            if new_budget_cny is not None:
+                # Budget gate only: the user's chosen new absolute ceiling —
+                # consumed by stage_runner's _budget_gate in place of its
+                # spent×1.2 re-arm heuristic.
+                decision["new_budget_cny"] = new_budget_cny
+            self._approval_results[job_id] = decision
         ev = self._approval_events.get(job_id)
         if ev:
             # Schedule event set on the loop where it was created

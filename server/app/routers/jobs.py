@@ -12,7 +12,7 @@ from pydantic import BaseModel, field_validator
 
 from app.store import job_store, TERMINAL_STATUSES, INFLIGHT_STATUSES
 from app.pipeline_catalog import list_manifest_names
-from app.runner.stage_runner import run_pipeline_job, _resolve_stages, PIPELINE_MAP
+from app.runner.stage_runner import run_pipeline_job, _resolve_stages, _load_artifacts, PIPELINE_MAP
 from app.interfaces import get_job_queue
 
 OM_ROOT = Path(__file__).parent.parent.parent.parent
@@ -54,6 +54,17 @@ class CreateJobRequest(BaseModel):
 class ApproveStageRequest(BaseModel):
     action: str               # "approve" | "reject"
     feedback: str = ""
+    # Budget gate only: the user's NEW absolute budget ceiling (CNY). The
+    # gate previously re-armed at spent×1.2 — an unbounded ratchet the user
+    # never chose. When provided on an approve, it replaces that heuristic.
+    new_budget_cny: float | None = None
+
+    @field_validator("new_budget_cny")
+    @classmethod
+    def _validate_budget(cls, v: float | None) -> float | None:
+        if v is not None and (v != v or v <= 0):   # NaN or non-positive
+            raise ValueError("new_budget_cny must be a positive number")
+        return v
 
 
 class SaveArtifactRequest(BaseModel):
@@ -122,7 +133,9 @@ async def get_job(job_id: str):
 
 @router.post("/{job_id}/approve")
 async def approve_stage(job_id: str, req: ApproveStageRequest):
-    ok = job_store.set_approval(job_id, req.action, req.feedback)
+    ok = job_store.set_approval(
+        job_id, req.action, req.feedback, new_budget_cny=req.new_budget_cny
+    )
     if not ok:
         # Distinguish "another request already resolved this gate" (status is
         # genuinely awaiting_approval, but JobStore.set_approval's
@@ -218,6 +231,23 @@ async def save_artifact(job_id: str, req: SaveArtifactRequest):
     out = artifacts_dir / f"{artifact_name}.json"
     out.write_text(json.dumps(req.content, ensure_ascii=False, indent=2))
     return {"saved": artifact_name, "path": str(out)}
+
+
+@router.get("/{job_id}/artifacts")
+async def get_job_artifacts(job_id: str):
+    """Read-only view of every stage artifact the pipeline has written.
+
+    The approval panel's preview used to be the ONLY window onto an
+    artifact — once a gate resolved, the artifact vanished from the UI
+    entirely (roadmap 1.2). This exposes what's already on disk
+    (projects/<name>/artifacts/*.json) so the web app can render script /
+    scene_plan / asset_manifest / decision_log at any time.
+    """
+    job = job_store.get(job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+    project_dir = OM_ROOT / "projects" / job.get("project_name", job_id)
+    return {"artifacts": _load_artifacts(project_dir)}
 
 
 @router.post("/{job_id}/retry")

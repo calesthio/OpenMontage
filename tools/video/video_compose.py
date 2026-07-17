@@ -756,10 +756,20 @@ class VideoCompose(BaseTool):
             cmd.append(str(output_path))
             self.run_command(cmd)
 
+            # Same post-render normalization the Remotion path gets — the two
+            # paths produce the same kind of deliverable and must meet the
+            # same -14 LUFS target. Skipped for a genuinely silent
+            # composition (nothing to normalize).
+            loudness_normalized = False
+            if self._has_audio_stream(output_path):
+                loudness_normalized = self._normalize_deliverable_loudness(output_path)
+
             return ToolResult(
                 success=True,
                 data={
                     "operation": "compose",
+                    "loudness_normalized": loudness_normalized,
+                    "loudness_target_lufs": -14 if loudness_normalized else None,
                     "cut_count": len(cuts),
                     "has_subtitles": subtitle_path is not None,
                     "has_mixed_audio": audio_path is not None,
@@ -2050,25 +2060,7 @@ class VideoCompose(BaseTool):
                 error=f"Remotion render completed but output file missing: {output_path}",
             )
 
-        # Post-render loudness normalization (audit 2026-07-16, Wave 1 ①).
-        # The Remotion path muxes narration/music at whatever level the TTS
-        # provider delivered — the ONLY audio processing the deliverable would
-        # ever get. Two-pass loudnorm to -14 LUFS with -c:v copy is an
-        # audio-only remux (cheap even for long renders). Best-effort: a
-        # normalization failure never fails a render that already exists.
-        loudness_normalized = False
-        try:
-            from tools.audio.loudness import normalize_media_loudness
-            norm_path = output_path.with_name(output_path.stem + ".loudnorm.mp4")
-            if normalize_media_loudness(output_path, norm_path, video_copy=True):
-                norm_path.replace(output_path)
-                loudness_normalized = True
-            else:
-                norm_path.unlink(missing_ok=True)
-        except Exception:
-            logging.getLogger("video_compose").warning(
-                "Loudness normalization failed for %s", output_path, exc_info=True
-            )
+        loudness_normalized = self._normalize_deliverable_loudness(output_path)
 
         return ToolResult(
             success=True,
@@ -2767,6 +2759,36 @@ class VideoCompose(BaseTool):
             props["videoSrc"] = stage(props["videoSrc"])
 
         return public_dir, staged
+
+    def _normalize_deliverable_loudness(self, output_path: Path) -> bool:
+        """Two-pass loudnorm the FINISHED file to -14 LUFS. Returns success.
+
+        Runs on every render path that produces a deliverable. Normalizing the
+        mix BEFORE muxing is not equivalent: muxing truncates audio to the
+        video's length (`-shortest`), and integrated loudness is a property of
+        the whole program — a mix normalized over its own 10s measured -11.8
+        LUFS once cut to the 6s that actually ship (verified 2026-07-17).
+        Only the finished file's loudness is the one anyone hears.
+
+        `-c:v copy` makes this an audio-only remux, cheap even for long
+        renders. Best-effort: a normalization failure never fails a render
+        that already exists — the perceptual scan reports the off-target
+        loudness either way.
+        """
+        loudness_normalized = False
+        try:
+            from tools.audio.loudness import normalize_media_loudness
+            norm_path = output_path.with_name(output_path.stem + ".loudnorm.mp4")
+            if normalize_media_loudness(output_path, norm_path, video_copy=True):
+                norm_path.replace(output_path)
+                loudness_normalized = True
+            else:
+                norm_path.unlink(missing_ok=True)
+        except Exception:
+            logging.getLogger("video_compose").warning(
+                "Loudness normalization failed for %s", output_path, exc_info=True
+            )
+        return loudness_normalized
 
     def _encode_kenburns_segment(
         self,

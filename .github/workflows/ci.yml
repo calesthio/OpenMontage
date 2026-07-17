@@ -73,7 +73,7 @@ jobs:
         run: python -m pytest
 
   composer:
-    name: Remotion composer (types)
+    name: Remotion composer (types · tests)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -97,6 +97,9 @@ jobs:
       # (audit 2026-07-15, BUG-8). Keep `npm run typecheck` green.
       - name: Type-check
         run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
 
   web:
     name: Web (lint · types · tests · build)

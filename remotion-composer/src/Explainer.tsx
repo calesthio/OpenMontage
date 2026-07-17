@@ -1,3 +1,4 @@
+import React from "react";
 import {
   AbsoluteFill,
   Audio,
@@ -42,6 +43,7 @@ import type { ParticleType } from "./components/ParticleOverlay";
 import { resolveTheme, type ThemeConfig, DEFAULT_THEME, ThemeContext } from "./lib/theme";
 import { withCjkFallback, themeFont } from "./fonts";
 import { DUR_TRANSITION_S, EASE_IN_OUT, SPRING_ENTER } from "./lib/motion";
+import { validateCuts } from "./lib/validateCut";
 
 // Load Space Grotesk font for cinematic typography
 const { fontFamily: spaceGrotesk } = loadFont("normal", {
@@ -959,6 +961,15 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
   // previously named but never loaded — silent system-sans fallback) and
   // appends the CJK fallback, which the bare theme.headingFont lost.
   const rootFontFamily = theme.headingFont ? themeFont(theme.headingFont, spaceGrotesk) : fontFamily;
+
+  // A cut naming a scene type but missing that type's required field falls
+  // through SceneRenderer's guards and renders as something else, silently
+  // (see lib/validateCut.ts). Surface it in the render log instead.
+  // useMemo: this must warn once per props change, not once per frame.
+  React.useMemo(
+    () => validateCuts(cuts as unknown as Record<string, unknown>[]),
+    [cuts]
+  );
 
   return (
     <ThemeContext.Provider value={theme}>

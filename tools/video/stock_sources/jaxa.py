@@ -21,7 +21,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from .base import Candidate, SearchFilters
+from .base import Candidate, SearchFilters, stream_download
 
 _log = logging.getLogger(__name__)
 
@@ -194,15 +194,4 @@ class JAXASource:
             raise RuntimeError(f"JAXA download failed for {detail_url}: {e}") from e
 
     def _stream_download(self, url: str, out_path: Path) -> Path:
-        import requests
-
-        with requests.get(
-            url, stream=True, timeout=180,
-            headers={"User-Agent": "OpenMontage/1.0"},
-        ) as r:
-            r.raise_for_status()
-            with open(out_path, "wb") as f:
-                for chunk in r.iter_content(chunk_size=1 << 16):
-                    if chunk:
-                        f.write(chunk)
-        return out_path
+        return stream_download(url, out_path)

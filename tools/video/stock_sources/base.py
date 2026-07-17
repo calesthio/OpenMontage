@@ -139,3 +139,45 @@ class StockSource(Protocol):
     def search(self, query: str, filters: SearchFilters) -> list[Candidate]: ...
 
     def download(self, candidate: Candidate, out_path: Path) -> Path: ...
+
+
+# Shared HTTP helpers
+# -------------------
+# Five adapters (dareful, esa, jaxa, mixkit, noaa) each carried a byte-identical
+# private _stream_download, and the copies had already started to drift — mixkit's
+# timeout was 120 where the others said 180, for no reason anyone recorded (audit
+# 2026-07-15, structural item 4). An adapter is meant to be "dumb by design": API
+# shape in, Candidate out. Chunked downloading is not API shape.
+
+DEFAULT_USER_AGENT = "OpenMontage/1.0"
+DOWNLOAD_TIMEOUT_SECONDS = 180
+DOWNLOAD_CHUNK_BYTES = 1 << 16
+
+
+def stream_download(
+    url: str,
+    out_path: Path,
+    *,
+    headers: Optional[dict[str, str]] = None,
+    timeout: int = DOWNLOAD_TIMEOUT_SECONDS,
+) -> Path:
+    """Stream `url` to `out_path` in chunks, creating parent dirs.
+
+    Streaming (not response.content) keeps a multi-hundred-MB clip off the
+    heap. Callers that need extra headers pass them; the User-Agent is always
+    set — some sources 403 without one.
+    """
+    import requests
+
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    merged = {"User-Agent": DEFAULT_USER_AGENT}
+    if headers:
+        merged.update(headers)
+    with requests.get(url, stream=True, timeout=timeout, headers=merged) as r:
+        r.raise_for_status()
+        with open(out_path, "wb") as f:
+            for chunk in r.iter_content(chunk_size=DOWNLOAD_CHUNK_BYTES):
+                if chunk:
+                    f.write(chunk)
+    return out_path

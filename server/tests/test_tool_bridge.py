@@ -115,6 +115,23 @@ def test_agent_supplied_output_path_reanchored_into_job_tree(tmp_path, monkeypat
     assert got.parent.is_dir()
 
 
+def test_music_search_tool_auto_assigned_mp3_extension(tmp_path, monkeypatch):
+    """Regression: pixabay_music/freesound_music (capability="music_search")
+    always download a real MP3 (confirmed live via file(1): "MPEG ADTS,
+    layer III"), but "music_search" was missing from tool_bridge's ext_map,
+    defaulting to ".bin". Every downstream audio consumer that identifies
+    format by extension then failed to recognize it as playable audio — a
+    real render's music track was silent because of this alone."""
+    tool = FakeTool(capability="music_search")
+    from tools import tool_registry
+    monkeypatch.setattr(tool_registry.registry, "ensure_discovered", lambda *a, **k: None)
+    monkeypatch.setattr(tool_registry.registry, "get", lambda name: tool)
+    args = {"tool_name": "pixabay_music", "inputs": {"query": "ambient"}}
+    execute_tool("run_openmontage_tool", args, tmp_path)
+    assert tool.executed_with["output_path"].endswith(".mp3")
+    assert not tool.executed_with["output_path"].endswith(".bin")
+
+
 def test_cost_to_cny_passes_through_cny_declared_tool():
     from app.runner.tool_bridge import _cost_to_cny
     assert _cost_to_cny(FakeTool(cost_currency="CNY"), 1.0) == 1.0

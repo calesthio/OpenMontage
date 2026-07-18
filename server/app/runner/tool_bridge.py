@@ -636,6 +636,15 @@ def execute_tool(
                 "image_generation": "png",
                 "tts": "mp3",
                 "music_generation": "mp3",
+                # pixabay_music / freesound_music (capability="music_search")
+                # both always download an MP3 preview — confirmed live: the
+                # missing entry here defaulted to "bin", so a real MP3 (file(1)
+                # confirmed "MPEG ADTS, layer III") got saved with a .bin
+                # extension. Every downstream audio consumer that identifies
+                # format by extension (ffprobe-by-suffix assumptions, the
+                # compose stage's audio mixer) then failed to recognize it as
+                # playable audio — the render's music track was silent.
+                "music_search": "mp3",
                 "audio_processing": "mp3",
                 "video_post": "mp4",
             }

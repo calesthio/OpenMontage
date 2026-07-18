@@ -113,6 +113,17 @@ class VideoCompose(BaseTool):
                     "edit_decisions.metadata.proposal_render_runtime."
                 ),
             },
+            "decision_log": {
+                "type": "object",
+                "description": (
+                    "Full decision_log artifact. Required when compose proceeds "
+                    "via edit_decisions.runtime_availability_override: the log "
+                    "MUST already contain a revised render_runtime_selection "
+                    "entry (same subject as the proposal-time decision, "
+                    "selected=accepted_runtime, user_approved=true) BEFORE "
+                    "video_compose dispatches to the downgrade engine."
+                ),
+            },
             "narration_transcript_path": {
                 "type": "string",
                 "description": (
@@ -1400,10 +1411,13 @@ class VideoCompose(BaseTool):
             # Locked runtime is unavailable at compose. Governance forbids a
             # silent swap to Remotion/FFmpeg (issue #359). The ONLY sanctioned
             # way forward is a user-approved runtime_availability_override
-            # carried in edit_decisions — and it dictates WHICH engine runs.
-            # Without it, this is a hard blocker.
+            # in edit_decisions PLUS a matching pre-appended decision_log
+            # revision (render_runtime_selection, same subject). Without both,
+            # this is a hard blocker — no post-render "suggested" audit trail.
             override = self._validated_runtime_override(
-                edit_decisions, locked_runtime="hyperframes"
+                edit_decisions,
+                decision_log=inputs.get("decision_log"),
+                locked_runtime="hyperframes",
             )
             if override is None:
                 return self._runtime_unavailable_blocker("hyperframes")
@@ -1520,9 +1534,17 @@ class VideoCompose(BaseTool):
     # from what was approved, with no audit trail. Instead:
     #   1. Detect the mismatch BEFORE rendering.
     #   2. Return a structured blocker with the three required options.
-    #   3. Proceed to a different engine ONLY when edit_decisions carries a
-    #      user-approved runtime_availability_override naming the accepted
-    #      runtime — never a tool-chosen default.
+    #   3. Proceed to a different engine ONLY when BOTH are present BEFORE
+    #      dispatch:
+    #        - edit_decisions.runtime_availability_override naming the
+    #          accepted runtime with user_approved=true
+    #        - a decision_log revision already appended with category
+    #          render_runtime_selection and the SAME subject as the
+    #          proposal-time decision (Re-log Changed Decisions board key)
+    #      Never a tool-chosen default; never a post-render suggested entry.
+
+    _RUNTIME_DECISION_CATEGORY = "render_runtime_selection"
+    _DEFAULT_RUNTIME_DECISION_SUBJECT = "composition runtime"
 
     def _available_runtimes(self) -> dict[str, bool]:
         """Live availability of every composition engine at compose time."""
@@ -1554,13 +1576,84 @@ class VideoCompose(BaseTool):
             return ["ffmpeg binary not found on PATH"]
         return [f"unknown runtime {runtime!r}"]
 
+    @classmethod
+    def _runtime_decision_subject(cls, decision_log: Any) -> str:
+        """Subject of the proposal-time runtime decision (board identity key).
+
+        The board keys current state by (category, subject). A compose-time
+        revision MUST reuse the exact same subject as the original
+        render_runtime_selection entry; otherwise both appear as current.
+        """
+        if isinstance(decision_log, dict):
+            for entry in decision_log.get("decisions") or []:
+                if (
+                    isinstance(entry, dict)
+                    and entry.get("category") == cls._RUNTIME_DECISION_CATEGORY
+                    and isinstance(entry.get("subject"), str)
+                    and entry["subject"].strip()
+                ):
+                    return entry["subject"]
+        return cls._DEFAULT_RUNTIME_DECISION_SUBJECT
+
+    @classmethod
+    def _matching_runtime_revision_entry(
+        cls,
+        decision_log: Any,
+        *,
+        locked: str,
+        accepted: str,
+        decision_id: Optional[str] = None,
+    ) -> Optional[dict[str, Any]]:
+        """Return the latest matching revised render_runtime_selection entry.
+
+        Requires: category=render_runtime_selection, same subject as the
+        original decision, selected=accepted, user_approved=true, and the
+        unavailable locked runtime present in options_considered with a
+        rejected_because. Returns None if evidence is missing or incomplete.
+        """
+        if not isinstance(decision_log, dict):
+            return None
+        subject = cls._runtime_decision_subject(decision_log)
+        latest: Optional[dict[str, Any]] = None
+        for entry in decision_log.get("decisions") or []:
+            if not isinstance(entry, dict):
+                continue
+            if entry.get("category") != cls._RUNTIME_DECISION_CATEGORY:
+                continue
+            if entry.get("subject") != subject:
+                continue
+            latest = entry
+        if latest is None:
+            return None
+        if latest.get("selected") != accepted:
+            return None
+        if latest.get("user_approved") is not True:
+            return None
+        if decision_id and latest.get("decision_id") != decision_id:
+            return None
+        options = latest.get("options_considered") or []
+        locked_opt = next(
+            (o for o in options if isinstance(o, dict) and o.get("option_id") == locked),
+            None,
+        )
+        if locked_opt is None or not locked_opt.get("rejected_because"):
+            return None
+        accepted_opt = next(
+            (o for o in options if isinstance(o, dict) and o.get("option_id") == accepted),
+            None,
+        )
+        if accepted_opt is None:
+            return None
+        return latest
+
     def _runtime_unavailable_blocker(self, locked_runtime: str) -> ToolResult:
         """Structured blocker for a locked-but-unavailable runtime.
 
         Carries the full context the governance contract requires: what was
         locked, what is available now, the specific missing pieces, why it
         matters, and the three explicit options (install / downgrade / abort)
-        plus exactly how to record a user-approved override.
+        plus exactly how to record a user-approved override with a revised
+        render_runtime_selection decision_log entry BEFORE re-calling compose.
         """
         available = self._available_runtimes()
         available_names = [r for r, ok in available.items() if ok]
@@ -1596,12 +1689,16 @@ class VideoCompose(BaseTool):
                 ),
                 "detail": (
                     "Requires EXPLICIT user approval. Preview what is lost (kinetic "
-                    "typography, GSAP timelines, spring physics), then write "
+                    "typography, GSAP timelines, spring physics), then: (1) write "
                     "edit_decisions.runtime_availability_override "
-                    "{locked_runtime, accepted_runtime, user_approved: true} AND "
-                    "append a decision_log entry with "
-                    "category='runtime_availability_override'. Compose then proceeds "
-                    "to the accepted_runtime you named — never a tool-chosen default."
+                    "{locked_runtime, accepted_runtime, user_approved: true}; "
+                    "(2) APPEND a revised decision_log entry with "
+                    "category='render_runtime_selection' and the SAME subject as "
+                    "the proposal-time runtime decision (board key), carrying the "
+                    "unavailable runtime in options_considered/rejected_because and "
+                    "the approved downgrade as selected with user_approved=true; "
+                    "(3) re-call video_compose with BOTH artifacts. Compose will not "
+                    "dispatch until the decision_log evidence is already present."
                 ),
                 "requires_user_approval": True,
                 "available_downgrade_targets": downgrade_targets,
@@ -1621,8 +1718,10 @@ class VideoCompose(BaseTool):
             f"and 'Critical Rule: Motion-Required Requests', this is a hard blocker — "
             f"video_compose will NOT silently fall back to another engine. Missing: "
             f"{'; '.join(missing) or 'unknown'}. Surface data['options'] to the user "
-            f"and wait for an explicit choice; to downgrade, record a user-approved "
-            f"runtime_availability_override (see data['how_to_record_override'])."
+            f"and wait for an explicit choice; to downgrade, record "
+            f"edit_decisions.runtime_availability_override AND append a revised "
+            f"render_runtime_selection decision_log entry BEFORE re-calling compose "
+            f"(see data['how_to_record_override'])."
         )
         return ToolResult(
             success=False,
@@ -1642,23 +1741,40 @@ class VideoCompose(BaseTool):
                         "accepted_runtime",
                         "user_approved",
                     ],
-                    "decision_log_category": "runtime_availability_override",
+                    "decision_log_category": self._RUNTIME_DECISION_CATEGORY,
+                    "decision_log_subject": self._DEFAULT_RUNTIME_DECISION_SUBJECT,
+                    "decision_log_must_be_appended_before_compose": True,
                     "note": (
-                        "user_approved MUST be true and accepted_runtime MUST be one "
-                        "of available_runtime_names. Approval cannot be implied."
+                        "user_approved MUST be true on BOTH the override and the "
+                        "decision_log entry. Append a revised render_runtime_selection "
+                        "with the identical subject as the original runtime decision "
+                        "(Re-log Changed Decisions); do NOT invent a new category. "
+                        "accepted_runtime MUST be one of available_runtime_names. "
+                        "Compose validates the decision_log evidence BEFORE dispatch."
+                    ),
+                    "example_decision_log_entry": self._runtime_override_decision_scaffold(
+                        locked_runtime,
+                        downgrade_targets[0] if downgrade_targets else "remotion",
+                        {"reason": "user-approved compose-time downgrade"},
                     ),
                 },
             },
         )
 
     def _validated_runtime_override(
-        self, edit_decisions: dict[str, Any], *, locked_runtime: str
+        self,
+        edit_decisions: dict[str, Any],
+        *,
+        decision_log: Any,
+        locked_runtime: str,
     ) -> Optional[dict[str, Any]]:
-        """Return the override ONLY if it is a valid, user-approved downgrade.
+        """Return the override ONLY if it is a valid, fully audited downgrade.
 
         Guards against every ungoverned path: implied approval, a mismatched
-        locked_runtime, or downgrading to a runtime that is itself unavailable.
-        Returns None (→ hard blocker) in all of those cases.
+        locked_runtime, downgrading to a runtime that is itself unavailable,
+        OR asserting approval without a matching pre-appended
+        render_runtime_selection decision_log revision. Returns None
+        (→ hard blocker) in all of those cases.
         """
         override = edit_decisions.get("runtime_availability_override")
         if not isinstance(override, dict):
@@ -1675,25 +1791,41 @@ class VideoCompose(BaseTool):
         # Never downgrade to a second unavailable engine.
         if not self._available_runtimes().get(accepted, False):
             return None
+        # Pre-render audit trail is mandatory — suggested post-render entries
+        # are not enough (PR #376 review).
+        if self._matching_runtime_revision_entry(
+            decision_log,
+            locked=locked_runtime,
+            accepted=accepted,
+            decision_id=override.get("decision_id"),
+        ) is None:
+            return None
         return override
 
-    @staticmethod
+    @classmethod
     def _runtime_override_decision_scaffold(
-        locked: str, accepted: str, override: dict[str, Any]
+        cls, locked: str, accepted: str, override: dict[str, Any]
     ) -> dict[str, Any]:
-        """A schema-valid decision_log entry the caller can append verbatim."""
+        """A schema-valid revised render_runtime_selection entry to append.
+
+        Reuses category=render_runtime_selection and subject='composition
+        runtime' so the board treats this as a revision of the original
+        runtime decision (Re-log Changed Decisions), not a forked identity.
+        """
         return {
             "decision_id": override.get("decision_id") or "d-runtime-override",
             "stage": "compose",
-            "category": "runtime_availability_override",
-            "subject": "composition runtime",
+            "category": cls._RUNTIME_DECISION_CATEGORY,
+            "subject": cls._DEFAULT_RUNTIME_DECISION_SUBJECT,
             "options_considered": [
                 {
                     "option_id": locked,
                     "label": f"{locked} (locked at proposal)",
                     "score": 1.0,
                     "reason": "Approved treatment; realizes the locked visual grammar.",
-                    "rejected_because": "Runtime unavailable at compose time.",
+                    "rejected_because": (
+                        "Runtime unavailable at compose time; user approved downgrade."
+                    ),
                 },
                 {
                     "option_id": accepted,
@@ -1719,11 +1851,12 @@ class VideoCompose(BaseTool):
     ) -> ToolResult:
         """Proceed to a user-approved downgrade runtime (the governed path).
 
-        Reached only when the locked runtime is unavailable AND a valid
-        runtime_availability_override is present. Re-routes to the accepted
-        runtime, stamps metadata.proposal_render_runtime with the originally
-        locked runtime so the final self-review's runtime_swap_detected fires,
-        and attaches the audit block + a ready-to-log decision_log entry.
+        Reached only when the locked runtime is unavailable AND both a valid
+        runtime_availability_override and a matching pre-appended
+        render_runtime_selection decision_log revision are present. Re-routes
+        to the accepted runtime, stamps metadata.proposal_render_runtime with
+        the originally locked runtime so the final self-review's
+        runtime_swap_detected fires, and attaches the audit block.
         """
         locked = override["locked_runtime"]
         accepted = override["accepted_runtime"]
@@ -1749,11 +1882,11 @@ class VideoCompose(BaseTool):
             "reason": override.get("reason"),
             "acknowledged_losses": override.get("acknowledged_losses", []),
             "decision_id": override.get("decision_id"),
+            "decision_log_category": self._RUNTIME_DECISION_CATEGORY,
+            "decision_log_subject": self._runtime_decision_subject(
+                inputs.get("decision_log")
+            ),
         }
-        result.data.setdefault(
-            "suggested_decision_log_entry",
-            self._runtime_override_decision_scaffold(locked, accepted, override),
-        )
         return result
 
     def _render_via_hyperframes(

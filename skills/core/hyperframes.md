@@ -215,16 +215,19 @@ artifact wins.
    To take option (2), write a
    **`edit_decisions.runtime_availability_override`** block
    `{locked_runtime, accepted_runtime, user_approved: true}` (only after the
-   user approves, having seen what is lost) AND append a matching
-   `decision_log` entry with **`category: "runtime_availability_override"`**
-   recording what was locked vs. what actually ran. Only then does
-   `video_compose` proceed — to the `accepted_runtime` you named, never a
-   tool-chosen default. Downgrading to a runtime that is itself unavailable, or
-   with `user_approved` anything other than `true`, is rejected (stays a
-   blocker). This is distinct from the proposal-time
-   `render_runtime_selection` decision: that picks a runtime up front; this
-   records a governed *compose-time* override forced by a runtime that became
-   unavailable after it was locked.
+   user approves, having seen what is lost) AND **append a revised**
+   `decision_log` entry with **`category: "render_runtime_selection"`** and
+   the **same subject** as the proposal-time runtime decision (board key —
+   see AGENT_GUIDE.md > "Re-log Changed Decisions"; do not invent a new
+   category). The revision must carry the unavailable runtime in
+   `options_considered`/`rejected_because` and the approved downgrade as
+   `selected` with `user_approved: true`. Pass that `decision_log` into
+   `video_compose`; compose validates the evidence **before** dispatch and
+   proceeds only to the `accepted_runtime` you named — never a tool-chosen
+   default, never a post-render suggested entry. Downgrading to a runtime that
+   is itself unavailable, with `user_approved` anything other than `true`, or
+   without the matching decision_log revision already appended, is rejected
+   (stays a blocker).
 6. **Final review** records `render_runtime_used` and sets
    `runtime_swap_detected = true` if it differs from proposal (a governed
    downgrade preserves the originally-locked runtime in

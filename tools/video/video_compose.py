@@ -330,7 +330,14 @@ class VideoCompose(BaseTool):
         return info
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
-        operation = inputs["operation"]
+        # "compose" is the overwhelmingly common call (assemble the final
+        # render from edit_decisions) and tool_bridge's own output-path
+        # routing already assumes it as the default when unspecified
+        # (server/app/runner/tool_bridge.py). Requiring the agent to always
+        # spell out operation="compose" for the one truly obvious case caused
+        # repeated KeyError('operation') failures — burning through an entire
+        # stage's turn budget before ever calling _compose().
+        operation = inputs.get("operation", "compose")
         start = time.time()
 
         try:

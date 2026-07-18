@@ -1,0 +1,4 @@
+# Dev/test-only dependencies (not needed at runtime).
+-r requirements.txt
+pytest>=8.0
+pytest-asyncio>=0.23

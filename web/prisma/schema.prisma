@@ -1,0 +1,147 @@
+// OpenMontage Web Platform — Prisma Schema
+// DB is metadata/index only. Artifact content lives on disk (projects/).
+//
+// STATUS: scaffolded, not wired in. The running server/web app uses a
+// disk-backed JobStore (server/app/store.py) for all job/event state today —
+// nothing currently reads or writes through this schema. It exists ahead of
+// a future multi-tenant/OAuth milestone (see below) so that migration won't
+// require a schema redesign later. Safe to ignore for local dev; the
+// docker-compose `postgres` service can be removed if you don't plan to wire
+// this up soon.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── Multi-user fields nullable in v1 (passphrase gate, no per-user auth).
+// ── Future: add NextAuth OAuth — zero migration needed.
+
+model Org {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  projects  Project[]
+  brandKits BrandKit[]
+  users     User[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  orgId     String?
+  email     String?  @unique
+  name      String?
+  role      String   @default("member")
+  createdAt DateTime @default(now())
+
+  org       Org?     @relation(fields: [orgId], references: [id])
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  orgId       String?
+  ownerId     String?
+  name        String
+  contentType String
+  pipeline    String
+  status      ProjectStatus @default(DRAFT)
+  dirPath     String
+  brandKitId  String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  org         Org?          @relation(fields: [orgId], references: [id])
+  brandKit    BrandKit?     @relation(fields: [brandKitId], references: [id])
+  jobs        Job[]
+}
+
+enum ProjectStatus {
+  DRAFT
+  RUNNING
+  AWAITING_APPROVAL
+  COMPLETED
+  FAILED
+}
+
+model Job {
+  id           String    @id @default(cuid())
+  projectId    String
+  status       JobStatus @default(QUEUED)
+  currentStage String?
+  costCny      Float     @default(0)
+  renderUrl    String?
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  project      Project   @relation(fields: [projectId], references: [id])
+  stages       Stage[]
+  events       Event[]
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  AWAITING_APPROVAL
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model Stage {
+  id        String      @id @default(cuid())
+  jobId     String
+  name      String
+  status    StageStatus @default(PENDING)
+  artifact  String?
+  feedback  String?
+  rounds    Int         @default(0)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  job       Job         @relation(fields: [jobId], references: [id])
+}
+
+enum StageStatus {
+  PENDING
+  RUNNING
+  AWAITING_APPROVAL
+  APPROVED
+  REJECTED
+  DONE
+  FAILED
+}
+
+model Event {
+  id        String   @id @default(cuid())
+  jobId     String
+  seq       Int
+  type      String
+  payload   Json
+  createdAt DateTime @default(now())
+
+  job       Job      @relation(fields: [jobId], references: [id])
+
+  @@index([jobId, seq])
+}
+
+model BrandKit {
+  id        String   @id @default(cuid())
+  orgId     String?
+  name      String
+  logoPath  String?
+  colors    Json?
+  fonts     Json?
+  slogan    String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  org       Org?     @relation(fields: [orgId], references: [id])
+  projects  Project[]
+}

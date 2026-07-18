@@ -2,6 +2,18 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "server",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd server && PYTHONPATH=$(pwd)/../:$(pwd) python -m uvicorn app.main:app --host 0.0.0.0 --port 8010"],
+      "port": 8010
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd web && NEXT_PUBLIC_SERVER_URL=http://localhost:8010 npm run dev"],
+      "port": 3000
+    },
+    {
       "name": "backlot",
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "backlot", "serve", "--port", "4750"],

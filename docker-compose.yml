@@ -1,0 +1,81 @@
+services:
+
+  # NOT CURRENTLY USED by the server or web app — both run on the disk-backed
+  # JobStore (server/app/store.py) and the Prisma schema (web/prisma/schema.
+  # prisma) it would back. Scaffolded ahead of a future multi-tenant/OAuth
+  # milestone; remove this service if you're not planning that soon.
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-openmontage}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-openmontage}
+      POSTGRES_DB: ${POSTGRES_DB:-openmontage}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-openmontage}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Both the repo root (for tools/lib) and the server dir (for the `app`
+      # package) must be importable — see server/Dockerfile.
+      - PYTHONPATH=/app:/app/server
+    volumes:
+      - ./projects:/app/projects
+      - ./.jobstore:/app/.jobstore
+      - ./brand_kits:/app/brand_kits
+      - ./tools:/app/tools
+      - ./lib:/app/lib
+      - ./skills:/app/skills
+      - ./pipeline_defs:/app/pipeline_defs
+      - ./schemas:/app/schemas
+      - ./styles:/app/styles
+      - ./.env:/app/.env:ro
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      # NEXT_PUBLIC_* vars are inlined into the client bundle at `next build`
+      # time, not read at container start — a runtime `environment:` entry
+      # (the old "SERVER_URL=..." here) has no effect on already-built client
+      # JS, and also didn't match the var name every page actually reads
+      # (NEXT_PUBLIC_SERVER_URL). Value must be reachable from the BROWSER,
+      # not from inside the docker network — every fetch in web/app/**/*.tsx
+      # runs client-side, so "http://server:8000" (only resolvable between
+      # containers) would be wrong here even with the right var name; the
+      # server's port is published to the host, so localhost:8000 is what the
+      # browser can actually reach.
+      args:
+        NEXT_PUBLIC_SERVER_URL: http://localhost:8000
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "3000:3000"
+    depends_on:
+      server:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

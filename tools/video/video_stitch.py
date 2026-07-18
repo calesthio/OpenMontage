@@ -146,7 +146,14 @@ class VideoStitch(BaseTool):
     ]
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
-        operation = inputs["operation"]
+        # "stitch" (join clips with transitions) is the overwhelmingly common
+        # call — the tool's own name and typical inputs (clips, transitions,
+        # output_path) leave little else it could mean. Confirmed live: an
+        # agent that supplied exactly those stitch-shaped params but omitted
+        # "operation" hit a bare KeyError twice across two separate jobs,
+        # burning through the compose stage's entire turn budget before ever
+        # reaching _stitch().
+        operation = inputs.get("operation", "stitch")
         start = time.time()
 
         if inputs.get("dry_run"):

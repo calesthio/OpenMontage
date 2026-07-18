@@ -28,6 +28,12 @@ tests/qa/output/
 # Project workspaces (generated assets, renders — all regenerable)
 projects/
 
+# Brand kit runtime data (created by the API, not source)
+brand_kits/
+
+# Durable job store (server runtime state — job records + event logs)
+.jobstore/
+
 # Corpus directories (downloaded stock clips, thumbnails, embeddings —
 # regenerable from source APIs via corpus_builder). Explicit rule even
 # though most corpora live under projects/ since agents sometimes

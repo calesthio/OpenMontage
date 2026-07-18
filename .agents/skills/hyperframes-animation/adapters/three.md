@@ -118,8 +118,8 @@ If several mixers exist, seek all of them from the same `time`.
 After editing a Three.js composition:
 
 ```bash
-npx hyperframes lint
-npx hyperframes validate
+npx hyperframes lint    # fast static pre-check while iterating
+npx hyperframes check   # the real gate — lint + runtime + layout + motion + contrast
 ```
 
 ## Credits And References

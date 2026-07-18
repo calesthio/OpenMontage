@@ -1,6 +1,6 @@
-# lint, validate, inspect, snapshot
+# lint, check, inspect, snapshot
 
-The correctness pipeline. Run in this order: `lint` (static, fast) → `validate` (runtime, headless Chrome) → `inspect` (layout sweep). `snapshot` is a separate utility for capturing still frames.
+The correctness pipeline. Run in this order: `lint` (static, fast) → `check` (runtime, headless Chrome; supersedes the deprecated `validate`) → `inspect` (layout sweep). `snapshot` is a separate utility for capturing still frames.
 
 ## Discipline (motion-heavy work)
 
@@ -23,7 +23,7 @@ npx hyperframes lint --json           # machine-readable
 
 Lints `index.html` and all files in `compositions/`. Reports errors (must fix), warnings (should fix), and info (with `--verbose`). Catches missing `data-composition-id`, overlapping tracks on the same `data-track-index`, and unregistered timelines.
 
-**Blind spot — media inside a sub-composition (not yet a lint rule).** A `<video>`/`<audio>` inside a `compositions/*.html` `<template>` (or nested in a wrapper `<div>` anywhere) is never seeked/decoded and renders blank/black; `lint`/`validate`/`inspect` all pass. Media must be a direct child of the host root (`index.html`) — see `hyperframes-core` → `variables-and-media.md`. Until a rule exists, check manually before render:
+**Blind spot — media inside a sub-composition (not yet a lint rule).** A `<video>`/`<audio>` inside a `compositions/*.html` `<template>` (or nested in a wrapper `<div>` anywhere) is never seeked/decoded and renders blank/black; `lint`/`check`/`inspect` all pass. Media must be a direct child of the host root (`index.html`) — see `hyperframes-core` → `variables-and-media.md`. Until a rule exists, check manually before render:
 
 ```bash
 grep -nE '<(video|audio)\b' compositions/*.html   # expect NO matches; media belongs in index.html
@@ -31,29 +31,46 @@ grep -nE '<(video|audio)\b' compositions/*.html   # expect NO matches; media bel
 
 A non-empty result is a defect. Then `snapshot` each scene that has a video and confirm the panel actually shows footage (a blank/black panel where a clip should play is a bug, not a placeholder — treat it as render-blocking).
 
-## validate
+## check (use this — `validate` is deprecated)
 
 ```bash
-npx hyperframes validate              # current directory
-npx hyperframes validate ./my-project # specific project
-npx hyperframes validate --json       # agent-readable findings
-npx hyperframes validate --timeout 5000  # ms to wait for scripts (default 3000)
-npx hyperframes validate --no-contrast   # skip WCAG contrast audit while iterating
+npx hyperframes check              # current directory
+npx hyperframes check ./my-project # specific project
+npx hyperframes check --json       # agent-readable findings
+npx hyperframes check --timeout 5000  # ms to wait for scripts (default 3000)
+npx hyperframes check --no-contrast   # skip WCAG contrast audit while iterating
 ```
 
-Static lint is fast but blind to runtime failures. `validate` loads the composition in headless Chrome, plays through it, and reports:
+Static lint is fast but blind to runtime failures. `check` loads the composition in headless Chrome, plays through it, and reports:
 
 - JavaScript console errors and unhandled exceptions
 - Failed network requests (media-file `ERR_ABORTED` filtered out)
 - WCAG AA contrast violations on visible text — sampled at 5 timestamps across the timeline. Disable with `--no-contrast`.
+- Plus the `lint`, layout, and motion passes, all in the same browser session.
+
+### Migrating from `validate`
+
+`hyperframes validate` is deprecated as of v0.7.60. It still runs, but warns on stderr and sets `_meta.deprecated: true` in its report. The flags carry over unchanged (`--json`, `--no-contrast`, `--timeout`), but **the JSON report does not**:
+
+| | `validate` (old) | `check` (new) |
+|---|---|---|
+| Top level | `{ok, errors[], warnings[], contrast[], contrastFailures}` | `{ok, strict, lint{}, runtime{}, layout{}, motion{}, contrast{}, snapshots{}}` |
+| Findings | flat `errors[]` / `warnings[]` | per-section `findings[]` + `errorCount`/`warningCount` |
+| Contrast | `contrast[]` array + `contrastFailures` count | `contrast{}` object; **no** `contrastFailures` |
+
+Three things to know when reading a `check` report:
+
+- **Top-level `ok` and the exit code fold all five passes together.** A lint-only problem fails the whole command. Read the per-section `ok` to learn what actually broke.
+- **A disabled pass reports `enabled: false, ok: true`** (e.g. `contrast` under `--no-contrast`), so a skipped pass never reads as a failure.
+- **A missing local asset is reported under `lint`, with `runtime.ok` still `true`** — `validate` surfaced the same problem as a runtime 404. Don't gate on `runtime` alone and assume missing assets are covered.
 
 **Fixing contrast warnings** — thresholds are 4.5:1 for normal text, 3:1 for large text (24px+, or 19px+ bold):
 
 - On dark backgrounds, brighten the failing color until it clears the threshold; on light backgrounds, darken it.
 - Stay within the palette family — don't invent a new color, adjust the existing one.
-- Re-run `validate` until clean.
+- Re-run `check` until clean.
 
-Run `validate` before `inspect` when an animation has scripts, fetched data, or theming. Combine with `render --strict` in CI.
+Run `check` before `inspect` when an animation has scripts, fetched data, or theming. Combine with `render --strict` in CI.
 
 ## inspect
 
@@ -67,7 +84,7 @@ npx hyperframes inspect --tolerance 4   # allowed overflow in px before reportin
 npx hyperframes inspect --strict        # exit non-zero on warnings too (default: only errors)
 ```
 
-Use this after `lint` and `validate`, especially for compositions with speech bubbles, cards, captions, or tight typography. It reports:
+Use this after `check`, especially for compositions with speech bubbles, cards, captions, or tight typography. It reports:
 
 - Text extending outside the nearest visual container or bubble
 - Text clipped by its own fixed-width/fixed-height box

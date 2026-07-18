@@ -97,8 +97,8 @@ Apply the correct template based on type. See [templates.md](templates.md) for c
 ### Step 4: Validate
 
 ```bash
-hyperframes lint                    # 0 errors required
-hyperframes validate --no-contrast  # 0 console errors required
+hyperframes lint                 # fast static pre-check; 0 errors required
+hyperframes check --no-contrast  # 0 errors required (contrast pass reports enabled: false, ok: true)
 ```
 
 ### Step 5: Preview
@@ -157,7 +157,7 @@ gh pr create --title "feat(registry): {name}" --body "preview: {hyperframes.dev-
 ## Quality Gate
 
 - [ ] `hyperframes lint` → 0 errors
-- [ ] `hyperframes validate` → 0 console errors
+- [ ] `hyperframes check` → 0 errors (top-level `ok` folds all passes; read per-section `ok` to see what failed)
 - [ ] `npx oxfmt --check` passes
 - [ ] `registry/registry.json` updated with new entry
 - [ ] `scripts/generate-catalog-pages.ts` run (docs page generated)

@@ -258,7 +258,7 @@ stages:
       - Audio sync matches the animatic intent
       - Duration within +/-5% of target
       - "render_runtime in edit_decisions matches render_runtime locked in proposal_packet — any swap requires a render_runtime_selection decision in decision_log"
-      - "HyperFrames renders MUST pass `hyperframes lint` and `hyperframes validate` before the render step — never skip validation"
+      - "HyperFrames renders MUST pass `hyperframes check` before the render step — never skip validation"
       - "Post-render self-review MANDATORY: extract keyframes, visually inspect each scene, flag weak frames before presenting to user"
     success_criteria:
       - Schema-valid render_report artifact

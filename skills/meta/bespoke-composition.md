@@ -115,7 +115,7 @@ animation skill, not optional polish.
 
 For HF creative direction (palette/type/narration/beat planning) read `/hyperframes-creative`.
 For HF assets (TTS/BGM/SFX/transcription/background-removal) read `/hyperframes-media` or
-`/media-use`. For HF CLI workflow (init/lint/validate/inspect/snapshot/beats/render) read
+`/media-use`. For HF CLI workflow (init/lint/check/inspect/snapshot/beats/render) read
 `/hyperframes-cli`. The `/hyperframes` router skill maps it all.
 
 ### 4. Get the engine mechanics right — the gotcha codex
@@ -130,8 +130,8 @@ mechanics codex — to learn idioms, never to import or imitate a look.**
 **For HyperFrames**, the composition contract is in `/hyperframes-core` (the `data-*`
 timing attributes — `data-start`, `data-duration`, `data-track-index` — plus the
 mandatory `class="clip"`, `data-composition-id`, `window.__timelines` registration, sub-
-composition mounts). Run `npx hyperframes lint && npx hyperframes validate` after every
-change — they catch missing root attrs, missing clip ids, GSAP-target unresolved, overlapping
+composition mounts). Run `npx hyperframes check` after every change — it folds lint in and
+catches missing root attrs, missing clip ids, GSAP-target unresolved, overlapping
 tweens, and contrast failures before render. Use `npx hyperframes snapshot . --at <times>`
 to spot-check beats visually before committing to a full render.
 
@@ -206,7 +206,7 @@ registry (`src/components`, `src/Explainer`, etc.), and warns if `art_direction`
 - For music-driven pieces, run `npx hyperframes beats .` after dropping the track in
   `assets/` — it emits `beats/<audio>.json` with `{time, strength}` per beat so the agent
   can land scenes on real drops (not guesses).
-- Verify before render: `npx hyperframes lint . && npx hyperframes validate . && npx hyperframes snapshot . --at <times>`.
+- Verify before render: `npx hyperframes check . && npx hyperframes snapshot . --at <times>`.
   Snapshot is HF's native visual-spotcheck (contact-sheet of PNG frames at chosen
   timestamps) — use it the same way an atelier `final_review.visual_spotcheck` would.
 - **Render**: `npx hyperframes render . --output renders/<name>.mp4`.

@@ -139,10 +139,10 @@ Fix any `✗` it reports — a missing or blank frame file means that worker wro
 
 Goal: Verify the assembled video, get user approval, and render the final MP4.
 
-Run the CLI on the **assembled project** — that's the correct unit (the per-frame workers couldn't run it). `lint` checks structure, `validate` runs headless Chrome (catching JS errors and missing assets), `inspect` snapshots frames.
+Run the CLI on the **assembled project** — that's the correct unit (the per-frame workers couldn't run it). `lint` checks structure, `check` runs headless Chrome (catching JS errors and missing assets), `inspect` snapshots frames. Note that `check` reports a missing local asset under its **lint** section, with `runtime.ok` still true.
 
 ```bash
-( cd "$PROJECT_DIR" && npx hyperframes lint . && npx hyperframes validate . && npx hyperframes inspect . )
+( cd "$PROJECT_DIR" && npx hyperframes lint . && npx hyperframes check . && npx hyperframes inspect . )
 ```
 
 Inspect at `t=0`, each frame start, the strongest DROP / SURGE, every `hard_stops[].t`, and the final frame. On failure, make the **cheapest safe fix** yourself: edit the offending `compositions/frames/NN-*.html`. Never change duration or audio timing to hide a sync issue. Once the gates pass, pause for user review, then render only on approval:

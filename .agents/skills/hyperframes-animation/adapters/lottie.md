@@ -100,8 +100,8 @@ HyperFrames seeks them all to the same composition time.
 After editing a Lottie composition:
 
 ```bash
-npx hyperframes lint
-npx hyperframes validate
+npx hyperframes lint    # fast static pre-check while iterating
+npx hyperframes check   # the real gate — lint + runtime + layout + motion + contrast
 ```
 
 ## Credits And References

@@ -83,8 +83,8 @@ document.querySelectorAll(".token").forEach((token, index) => {
 After editing a WAAPI composition:
 
 ```bash
-npx hyperframes lint
-npx hyperframes validate
+npx hyperframes lint    # fast static pre-check while iterating
+npx hyperframes check   # the real gate — lint + runtime + layout + motion + contrast
 ```
 
 ## Credits And References

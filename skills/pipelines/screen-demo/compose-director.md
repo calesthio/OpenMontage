@@ -10,7 +10,7 @@ Read `edit_decisions.render_runtime` first. Screen-demo compositions use three d
 
 - **`render_runtime="remotion"` with `TerminalScene`** — the preferred path for synthetic terminal/CLI/install flows. See `.agents/skills/synthetic-screen-recording/`.
 - **`render_runtime="remotion"`** (other scenes) — for mixed screen-capture + animated overlays.
-- **`render_runtime="hyperframes"`** — for custom synthetic HTML UI demos where CSS + GSAP express the UI naturally. Read `skills/core/hyperframes.md`. `hyperframes lint` and `hyperframes validate` must both pass before render.
+- **`render_runtime="hyperframes"`** — for custom synthetic HTML UI demos where CSS + GSAP express the UI naturally. Read `skills/core/hyperframes.md`. `hyperframes check` must pass before render (it folds lint in).
 - **`render_runtime="ffmpeg"`** — for simple cut/concat of real screen recordings without composition.
 
 Silent swaps between runtimes are CRITICAL governance violations. If the locked runtime is unavailable, escalate per AGENT_GUIDE.md before substituting.

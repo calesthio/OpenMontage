@@ -2,10 +2,17 @@
 
 Sibling to `video_compose` (FFmpeg + Remotion). This tool owns the HyperFrames
 runtime end-to-end: workspace materialization, `hyperframes lint`,
-`hyperframes validate`, and `hyperframes render`. It is invoked by
+`hyperframes check`, and `hyperframes render`. It is invoked by
 `video_compose` when `edit_decisions.render_runtime == "hyperframes"`, and
 can also be called directly by pipelines that want HyperFrames-specific
 operations (lint-only, validate-only, scaffold-only).
+
+The browser-based gate runs `hyperframes check` (v0.7.60+ deprecates the old
+`hyperframes validate` subcommand). `check` is a superset: it folds lint,
+runtime, layout, motion, and WCAG contrast into a single browser session and a
+single exit code. That exit code is deliberately NOT used as the gate — see
+`_CHECK_GATE_SECTIONS` — because collapsing lint into it would silently make
+the `strict` input a no-op and start blocking renders that pass today.
 
 This tool deliberately does NOT attempt parity with every Remotion scene
 component. See `skills/core/hyperframes.md` for what is in scope in Phase 1
@@ -100,6 +107,17 @@ class HyperFramesCompose(BaseTool):
     ]
     fallback_tools = ["video_compose"]
 
+    # `hyperframes check` folds five passes into one exit code. We map the
+    # sections to policy ourselves rather than trusting that exit code:
+    #   - gate: a failure here blocks (matches what `validate` used to catch).
+    #   - advisory: reported and logged, never blocks. `layout`/`motion` are
+    #     new passes `validate` never ran; gating on them would start failing
+    #     compositions that render fine today.
+    # `_render` further downgrades `lint` to advisory unless `strict=True`,
+    # preserving the pre-migration render contract.
+    _CHECK_GATE_SECTIONS = ("lint", "runtime", "contrast")
+    _CHECK_ADVISORY_SECTIONS = ("layout", "motion")
+
     input_schema = {
         "type": "object",
         "required": ["operation"],
@@ -115,9 +133,11 @@ class HyperFramesCompose(BaseTool):
                     "add_block",
                 ],
                 "description": (
-                    "render: materialize workspace + lint + validate + render to MP4. "
+                    "render: materialize workspace + check + render to MP4. "
                     "lint: run `hyperframes lint` on an existing workspace. "
-                    "validate: run `hyperframes validate` (browser-based). "
+                    "validate: run `hyperframes check` (browser-based; lint + "
+                    "runtime + contrast gate the result, layout + motion are "
+                    "reported as advisory). "
                     "doctor: run `hyperframes doctor` to check environment. "
                     "scaffold_workspace: materialize HTML/CSS/assets but do not render. "
                     "add_block: run `hyperframes add <name>` to install a registry "
@@ -184,8 +204,11 @@ class HyperFramesCompose(BaseTool):
                 "type": "boolean",
                 "default": False,
                 "description": (
-                    "If true, fail the render when the lint step reports any "
-                    "error. Non-strict logs lint issues and continues."
+                    "If true, fail the render on any lint error. Lint findings "
+                    "are otherwise logged and the render proceeds. This is the "
+                    "tool's own policy over `hyperframes check`'s lint section "
+                    "— it is NOT the CLI's `--strict` flag (which fails on "
+                    "warnings too and is never passed)."
                 ),
             },
             "best_effort": {
@@ -204,8 +227,10 @@ class HyperFramesCompose(BaseTool):
                 "type": "boolean",
                 "default": False,
                 "description": (
-                    "Skip the WCAG contrast audit during validate. Acceptable "
-                    "while iterating; forbidden for final delivery."
+                    "Skip the WCAG contrast audit (passes `--no-contrast`). "
+                    "Only the contrast pass is skipped — lint and runtime still "
+                    "gate. Acceptable while iterating; forbidden for final "
+                    "delivery."
                 ),
             },
         },
@@ -587,32 +612,107 @@ class HyperFramesCompose(BaseTool):
             else f"hyperframes lint exit {proc.returncode}{self._diagnostics(data)}",
         )
 
+    def _run_check(
+        self, workspace: Path, *, skip_contrast: bool
+    ) -> tuple[subprocess.CompletedProcess, Optional[dict], dict[str, Any]]:
+        """Run `hyperframes check --json` and return (proc, report, data).
+
+        `report` is None when the CLI produced no parseable JSON (crash,
+        timeout, banner-only output) — callers must fall back to the exit code.
+        """
+        args = ["check", "--json"]
+        if skip_contrast:
+            args.append("--no-contrast")
+        proc = self._run_hf(args, cwd=workspace, timeout=300, check=False)
+        data: dict[str, Any] = {"exit_code": proc.returncode}
+        payload = self._parse_json_output(proc.stdout)
+        report = payload if isinstance(payload, dict) else None
+        if report is not None:
+            data["report"] = report
+        else:
+            data["stdout_tail"] = (proc.stdout or "")[-4000:]
+        data["stderr_tail"] = (proc.stderr or "")[-2000:]
+        return proc, report, data
+
+    @classmethod
+    def _check_section_failed(cls, report: dict[str, Any], name: str) -> bool:
+        """True when `check`'s section reports errors.
+
+        A section disabled via `--no-contrast` reports `enabled: false, ok:
+        true`, so a skipped pass never registers as a failure.
+        """
+        section = report.get(name)
+        if not isinstance(section, dict):
+            return False
+        ok = section.get("ok")
+        if isinstance(ok, bool):
+            return not ok
+        return int(section.get("errorCount") or 0) > 0
+
+    @classmethod
+    def _check_messages(cls, report: dict[str, Any], name: str, limit: int = 5) -> list[str]:
+        section = report.get(name)
+        if not isinstance(section, dict):
+            return []
+        findings = section.get("findings")
+        if not isinstance(findings, list):
+            return []
+        return [str(f.get("message", "")) for f in findings[:limit] if isinstance(f, dict)]
+
     def _validate(self, inputs: dict[str, Any]) -> ToolResult:
+        """Browser-based gate. Public operation name stays `validate`.
+
+        Backed by `hyperframes check` since the `validate` subcommand is
+        deprecated. Gated on lint/runtime/contrast only: `check` also runs
+        layout and motion passes that `validate` never did, and letting those
+        block would fail compositions that pass today. They are reported as
+        advisory instead.
+
+        Lint IS part of the gate here because `check` attributes a missing
+        local asset to its lint section and leaves `runtime.ok` true — the
+        opposite of `validate`, which caught it as a runtime 404. Gating on
+        runtime alone would silently pass a composition with missing visuals.
+        """
         workspace = self._require_workspace(inputs)
         if not (workspace / "index.html").exists():
             return ToolResult(
                 success=False,
                 error=f"No index.html in {workspace}. Run scaffold_workspace first.",
             )
-        args = ["validate", "--json"]
-        if inputs.get("skip_contrast"):
-            args.append("--no-contrast")
-        proc = self._run_hf(args, cwd=workspace, timeout=300, check=False)
-        data: dict[str, Any] = {"exit_code": proc.returncode}
-        payload = self._parse_json_output(proc.stdout)
-        if payload is not None:
-            data["report"] = payload
-        else:
-            data["stdout_tail"] = (proc.stdout or "")[-4000:]
-        data["stderr_tail"] = (proc.stderr or "")[-2000:]
-        ok = proc.returncode == 0
-        return ToolResult(
-            success=ok,
-            data=data,
-            error=None
-            if ok
-            else f"hyperframes validate exit {proc.returncode}{self._diagnostics(data)}",
+        proc, report, data = self._run_check(
+            workspace, skip_contrast=bool(inputs.get("skip_contrast"))
         )
+        if report is None:
+            ok = proc.returncode == 0
+            return ToolResult(
+                success=ok,
+                data=data,
+                error=None if ok else f"hyperframes check exit {proc.returncode}",
+            )
+
+        failed = [s for s in self._CHECK_GATE_SECTIONS if self._check_section_failed(report, s)]
+        advisory = [
+            s for s in self._CHECK_ADVISORY_SECTIONS if self._check_section_failed(report, s)
+        ]
+        data["gate_sections"] = list(self._CHECK_GATE_SECTIONS)
+        data["failed_sections"] = failed
+        if advisory:
+            data["advisory_sections"] = {
+                s: self._check_messages(report, s) for s in advisory
+            }
+            log.warning(
+                "hyperframes check: %s reported issues (advisory, not gating)",
+                ", ".join(advisory),
+            )
+        ok = not failed
+        error = None
+        if not ok:
+            detail = "; ".join(
+                f"{s}: {'; '.join(self._check_messages(report, s, 3)) or 'errors reported'}"
+                for s in failed
+            )
+            error = f"hyperframes check failed [{', '.join(failed)}] — {detail}"
+        return ToolResult(success=ok, data=data, error=error)
 
     def _add_block(self, inputs: dict[str, Any]) -> ToolResult:
         """Install a registry block or component via `hyperframes add`.
@@ -693,37 +793,76 @@ class HyperFramesCompose(BaseTool):
                 data={"steps": steps},
             )
 
-        # 2. Lint — static contract checks.
-        lint = self._lint({"workspace_path": str(workspace)})
-        steps["lint"] = lint.data
-        if not lint.success:
-            if inputs.get("strict", False):
+        # 2. Check — lint + runtime + layout + motion + contrast in ONE browser
+        # session (`hyperframes check`, successor to the deprecated `validate`).
+        # We map its sections to policy rather than trusting its single exit
+        # code, which folds in lint and would otherwise make `strict` a no-op.
+        proc, report, check_data = self._run_check(
+            workspace, skip_contrast=inputs.get("skip_contrast", False)
+        )
+        steps["check"] = check_data
+
+        if report is None:
+            # No parseable report — fall back to the exit code, conservatively.
+            if proc.returncode != 0:
                 return ToolResult(
                     success=False,
-                    error=f"Lint failed (strict mode): {lint.error}",
+                    error=(
+                        f"hyperframes check exit {proc.returncode} with no parseable "
+                        f"JSON report. HyperFrames render is blocked — fix the "
+                        f"composition and re-run."
+                    ),
                     data={"steps": steps},
                 )
-            log.warning("hyperframes lint reported issues (non-strict mode, continuing)")
+        else:
+            # Lint stays non-fatal unless strict — the pre-migration contract.
+            if self._check_section_failed(report, "lint"):
+                lint_detail = "; ".join(self._check_messages(report, "lint", 3))
+                if inputs.get("strict", False):
+                    return ToolResult(
+                        success=False,
+                        error=f"Lint failed (strict mode): {lint_detail}",
+                        data={"steps": steps},
+                    )
+                log.warning(
+                    "hyperframes check: lint reported issues (non-strict mode, "
+                    "continuing): %s",
+                    lint_detail,
+                )
 
-        # 3. Validate — browser-based contract + contrast.
-        validate = self._validate(
-            {
-                "workspace_path": str(workspace),
-                "skip_contrast": inputs.get("skip_contrast", False),
-            }
-        )
-        steps["validate"] = validate.data
-        if not validate.success:
-            return ToolResult(
-                success=False,
-                error=(
-                    f"Validate failed: {validate.error}. HyperFrames render "
-                    f"is blocked — fix the composition and re-run."
-                ),
-                data={"steps": steps},
-            )
+            for section in self._CHECK_ADVISORY_SECTIONS:
+                if self._check_section_failed(report, section):
+                    log.warning(
+                        "hyperframes check: %s reported issues (advisory, not "
+                        "blocking the render): %s",
+                        section,
+                        "; ".join(self._check_messages(report, section, 3)),
+                    )
 
-        # 4. Render.
+            # Every other gate section blocks the render, as `validate` did
+            # before. Derived from _CHECK_GATE_SECTIONS so the two can't drift;
+            # lint is excluded because it was already handled under `strict`.
+            blocking = [
+                s
+                for s in self._CHECK_GATE_SECTIONS
+                if s != "lint" and self._check_section_failed(report, s)
+            ]
+            if blocking:
+                detail = "; ".join(
+                    f"{s}: {'; '.join(self._check_messages(report, s, 3)) or 'errors reported'}"
+                    for s in blocking
+                )
+                return ToolResult(
+                    success=False,
+                    error=(
+                        f"Validate failed [{', '.join(blocking)}] — {detail}. "
+                        f"HyperFrames render is blocked — fix the composition "
+                        f"and re-run."
+                    ),
+                    data={"steps": steps},
+                )
+
+        # 3. Render.
         width, height, fps = self._resolve_dimensions(
             inputs.get("profile"), inputs.get("fps", 30)
         )

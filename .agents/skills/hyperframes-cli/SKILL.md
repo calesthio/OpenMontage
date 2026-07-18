@@ -11,8 +11,8 @@ Everything runs through `npx hyperframes` unless project instructions specify a 
 
 1. **Scaffold** — `npx hyperframes init my-video` (or `capture` from a URL). `init` also checks the installed skills against the latest on GitHub and updates the global set if any are out of date. The `--skip-skills` flag is currently neutered (temporary, while the skills.sh registry catches up), so every `init` runs this check and pulls our latest skills regardless.
 2. **Write** — author HTML composition (see the `hyperframes-core` skill)
-3. **Lint** — `npx hyperframes lint`
-4. **Validate** — `npx hyperframes validate` (runtime errors + contrast)
+3. **Lint** — `npx hyperframes lint` (fast, static, no browser)
+4. **Check** — `npx hyperframes check` (lint + runtime + layout + motion + contrast in one browser session). Supersedes `hyperframes validate`, which is deprecated as of v0.7.60.
 5. **Visual inspect** — `npx hyperframes inspect`
 6. **Preview** — `npx hyperframes preview` opens **Studio**, the timeline editor where the user can manually edit anything (not just watch). Review there, then ask before rendering.
 7. **Render** — pick the variant:
@@ -74,15 +74,17 @@ See `references/lambda.md` for prerequisites, all 6 subcommands (`deploy`, `site
 ### Static gates
 
 ```bash
-npx hyperframes lint
-npx hyperframes validate
+npx hyperframes lint    # fast static pre-check while iterating
+npx hyperframes check   # the real gate — lint + runtime + layout + motion + contrast
 ```
 
-Add `inspect` for layout-sensitive work and `render --strict` in CI to fail on lint errors.
+`check` already includes lint, so `check` alone is sufficient as the gate. Add `inspect` for layout-sensitive work and `render --strict` in CI to fail on lint errors.
+
+> **`hyperframes validate` is deprecated** (v0.7.60+) — it warns on stderr and sets `_meta.deprecated: true`. Use `check`. The JSON shapes differ: `validate` returned flat `{ok, errors[], warnings[], contrastFailures}`; `check` returns `{ok, lint{}, runtime{}, layout{}, motion{}, contrast{}, snapshots{}}` with per-section `ok`/`errorCount`/`findings[]`. `check`'s top-level `ok` and exit code fold every pass together, so read the per-section `ok` to learn what actually failed. A disabled pass (e.g. under `--no-contrast`) reports `enabled: false, ok: true`. Gotcha: a missing local asset lands in **lint** with `runtime.ok` still `true` — `validate` reported it as a runtime 404.
 
 ### Visual smoke test — required when the project uses sub-compositions
 
-`lint` / `validate` / `inspect` evaluate each composition **in isolation**. They never load `index.html` and mount sub-compositions via `data-composition-src`, so they cannot catch cross-file mount failures (see `hyperframes-core` → `references/sub-compositions.md`, "Common pitfalls"). The only gate that catches them is one that actually loads `index.html` and seeks the timeline.
+`lint` / `check` / `inspect` evaluate each composition **in isolation**. They never load `index.html` and mount sub-compositions via `data-composition-src`, so they cannot catch cross-file mount failures (see `hyperframes-core` → `references/sub-compositions.md`, "Common pitfalls"). The only gate that catches them is one that actually loads `index.html` and seeks the timeline.
 
 Use `hyperframes snapshot` — it loads the project the same way `render` does (so it exercises the same mount path) but only captures the timestamps you request, so it's seconds instead of a full render:
 

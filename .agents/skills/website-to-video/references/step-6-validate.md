@@ -83,9 +83,9 @@ The pre-fix-era flow took longer specifically because it caught these problems. 
 
 ---
 
-## Lint + Validate + Snapshot
+## Lint + Check + Snapshot
 
-The `hyperframes` skill (which you loaded in Step 5) already covers the mechanics of linting, validating, and snapshotting. Follow those rules — run lint, validate, take snapshots scaled to the video length (formula: `max(beats × 3, ceil(duration_seconds / 2))`). Fix errors. This step adds the **pipeline-specific verification** on top of that.
+The `hyperframes` skill (which you loaded in Step 5) already covers the mechanics of linting, checking, and snapshotting. Follow those rules — run `hyperframes check` (it folds lint in), take snapshots scaled to the video length (formula: `max(beats × 3, ceil(duration_seconds / 2))`). Fix errors. This step adds the **pipeline-specific verification** on top of that.
 
 **Errors:** Fix ALL of them. These are real problems — missing timeline registration, broken scripts, missing assets.
 
@@ -123,7 +123,7 @@ Don't blindly ignore. Don't blindly fix. Verify each.
 
 ## Visual Verification (snapshot)
 
-After lint and validate pass, capture snapshot frames to SEE your own output. **Take many snapshots — as much as you can actually read and view all of them without hitting diminishing returns**. This is your only visual feedback before the user sees the project. You wanna be honored and proud of what you give to the user.
+After `hyperframes check` passes, capture snapshot frames to SEE your own output. **Take many snapshots — as much as you can actually read and view all of them without hitting diminishing returns**. This is your only visual feedback before the user sees the project. You wanna be honored and proud of what you give to the user.
 
 Scale snapshot count to the video — not a fixed number. Formula: `max(beats × 3, ceil(duration_seconds / 2))`. A 3-beat 10s video: max(9, 5) = 9 frames. An 8-beat 60s video: max(24, 30) = 30 frames. Aim for at least 3 frames per beat: entrance, hold, and near-exit.
 

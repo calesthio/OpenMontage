@@ -332,6 +332,165 @@ def test_agent_guide_references_provider_menu_summary():
     )
 
 
+# ------------------------------------------------------------------
+# `hyperframes check` migration (replaces the deprecated `validate`)
+# ------------------------------------------------------------------
+
+# Report shapes captured from the real CLI at v0.7.61. `check` reports one
+# section per pass; a section disabled via --no-contrast reports
+# `enabled: false, ok: true`.
+_CHECK_CLEAN = {
+    "ok": True,
+    "lint": {"ok": True, "errorCount": 0, "findings": []},
+    "runtime": {"ok": True, "errorCount": 0, "findings": []},
+    "layout": {"ok": True, "errorCount": 0, "findings": []},
+    "motion": {"ok": True, "errorCount": 0, "findings": [], "enabled": False},
+    "contrast": {"ok": True, "errorCount": 0, "findings": [], "enabled": True},
+}
+
+
+def _check_report(**sections: Any) -> dict[str, Any]:
+    report = json.loads(json.dumps(_CHECK_CLEAN))
+    for name, patch in sections.items():
+        report[name].update(patch)
+    return report
+
+
+def _failing(message: str) -> dict[str, Any]:
+    return {"ok": False, "errorCount": 1, "findings": [{"message": message}]}
+
+
+def _render_with_report(tmp_path: Path, report: dict[str, Any], **inputs: Any):
+    """Drive _render() past scaffold/runtime with a canned `check` report."""
+    import subprocess
+
+    from tools.base_tool import ToolResult
+
+    tool = HyperFramesCompose()
+    out = tmp_path / "final.mp4"
+    tool._runtime_check = lambda: {"runtime_available": True, "reasons": []}
+    tool._scaffold = lambda i: ToolResult(success=True, data={})
+    tool._run_check = lambda ws, *, skip_contrast: (
+        subprocess.CompletedProcess([], 1, "", ""),
+        report,
+        {"exit_code": 1},
+    )
+
+    def fake_hf(args, **kw):
+        out.write_bytes(b"x" * 9999)
+        return subprocess.CompletedProcess(args, 0, "", "")
+
+    tool._run_hf = fake_hf
+    return tool._render(
+        {"workspace_path": str(tmp_path), "output_path": str(out), **inputs}
+    )
+
+
+def test_check_disabled_section_is_not_a_failure():
+    """`--no-contrast` yields `enabled: false, ok: true`. Reading that as a
+    failure would block every skip_contrast render."""
+    report = _check_report(contrast={"enabled": False})
+    assert HyperFramesCompose._check_section_failed(report, "contrast") is False
+
+
+def test_check_missing_section_is_tolerated():
+    assert HyperFramesCompose._check_section_failed({}, "runtime") is False
+
+
+def test_check_gate_excludes_layout_and_motion():
+    """`check` adds layout+motion passes that the old `validate` never ran.
+    Gating on them would newly fail compositions that render fine today."""
+    assert "layout" not in HyperFramesCompose._CHECK_GATE_SECTIONS
+    assert "motion" not in HyperFramesCompose._CHECK_GATE_SECTIONS
+    assert set(HyperFramesCompose._CHECK_ADVISORY_SECTIONS) == {"layout", "motion"}
+
+
+def test_validate_gate_includes_lint_because_check_reattributes_missing_assets():
+    """Regression guard. `validate` caught a missing local asset as a runtime
+    404; `check` reports it under lint and leaves runtime.ok TRUE (verified
+    against the real CLI at v0.7.61). Gating operation='validate' on runtime
+    alone would therefore silently pass a composition with missing visuals."""
+    assert "lint" in HyperFramesCompose._CHECK_GATE_SECTIONS
+
+    report = _check_report(lint=_failing("<img> references missing assets/hero.png"))
+    failed = [
+        s
+        for s in HyperFramesCompose._CHECK_GATE_SECTIONS
+        if HyperFramesCompose._check_section_failed(report, s)
+    ]
+    assert failed == ["lint"]
+    assert report["runtime"]["ok"] is True, "fixture must mirror the real CLI"
+
+
+def test_render_lint_error_does_not_block_when_not_strict(tmp_path):
+    """THE regression this migration must not introduce. `check` folds lint
+    into its single exit code; gating the render on that exit code would make
+    `strict=False` a no-op and start blocking renders that pass today."""
+    result = _render_with_report(
+        tmp_path, _check_report(lint=_failing("missing_local_asset")), strict=False
+    )
+    assert result.success, (
+        "A lint error with strict=False must NOT block the render — that was "
+        f"the pre-migration contract. Got: {result.error}"
+    )
+
+
+def test_render_lint_error_blocks_when_strict(tmp_path):
+    result = _render_with_report(
+        tmp_path, _check_report(lint=_failing("missing_local_asset")), strict=True
+    )
+    assert not result.success
+    assert "strict mode" in (result.error or "")
+
+
+@pytest.mark.parametrize("strict", [False, True])
+def test_render_runtime_error_always_blocks(tmp_path, strict):
+    result = _render_with_report(
+        tmp_path, _check_report(runtime=_failing("gsap is not defined")), strict=strict
+    )
+    assert not result.success
+    assert "runtime" in (result.error or "")
+
+
+def test_render_layout_error_is_advisory(tmp_path):
+    """layout/motion are new passes. They are reported, never blocking."""
+    result = _render_with_report(
+        tmp_path, _check_report(layout=_failing("clip overflows canvas")), strict=True
+    )
+    assert result.success, (
+        "layout findings must not block the render even in strict mode — "
+        f"strict governs lint only. Got: {result.error}"
+    )
+
+
+def test_render_unparseable_report_falls_back_to_exit_code(tmp_path):
+    """If the CLI crashes and emits no JSON, fail closed rather than render."""
+    import subprocess
+
+    from tools.base_tool import ToolResult
+
+    tool = HyperFramesCompose()
+    out = tmp_path / "final.mp4"
+    tool._runtime_check = lambda: {"runtime_available": True, "reasons": []}
+    tool._scaffold = lambda i: ToolResult(success=True, data={})
+    tool._run_check = lambda ws, *, skip_contrast: (
+        subprocess.CompletedProcess([], 3, "", ""),
+        None,
+        {"exit_code": 3},
+    )
+    result = tool._render({"workspace_path": str(tmp_path), "output_path": str(out)})
+    assert not result.success
+    assert "no parseable" in (result.error or "")
+
+
+def test_validate_operation_name_is_still_public():
+    """The CLI subcommand changed; the tool's operation name is a stable
+    contract for callers and must not follow it."""
+    ops = HyperFramesCompose.input_schema["properties"]["operation"]["enum"]
+    assert "validate" in ops
+    assert "check" not in ops
+
+
 def test_hyperframes_unknown_operation_returns_error():
     result = HyperFramesCompose().execute({"operation": "bogus"})
     assert not result.success

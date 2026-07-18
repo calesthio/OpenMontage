@@ -96,7 +96,7 @@ decision matrix and the list of features that stay Remotion-only in Phase 1.
 | HyperFrames composition structure (data-* timing, tracks, sub-compositions) | HyperFrames | `.agents/skills/hyperframes-core` |
 | HyperFrames creative direction (palette, type, narration, beat planning) | HyperFrames | `.agents/skills/hyperframes-creative` |
 | HyperFrames audio/media (TTS, BGM, SFX, transcription, captions, bg-removal) | HyperFrames | `.agents/skills/hyperframes-media` |
-| HyperFrames composition CLI work (lint/validate/inspect/snapshot/benchmark/render/lambda) | HyperFrames CLI 0.7+ | `.agents/skills/hyperframes-cli` |
+| HyperFrames composition CLI work (lint/check/inspect/snapshot/benchmark/render/lambda) | HyperFrames CLI 0.7+ | `.agents/skills/hyperframes-cli` |
 | HyperFrames registry block install (`hyperframes add ...`) | HyperFrames registry | `.agents/skills/hyperframes-registry` |
 
 ## The "keep it simple" bias

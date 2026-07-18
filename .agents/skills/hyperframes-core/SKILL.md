@@ -70,8 +70,8 @@ Surfaced here; full rationale in the linked reference. Do not violate:
 
 Use `hyperframes-cli` for command details
 
-- [ ] `npx hyperframes lint` passes (0 errors)
-- [ ] `npx hyperframes validate` passes (0 console errors)
+- [ ] `npx hyperframes lint` passes (0 errors) — fast static pre-check; `check` includes it
+- [ ] `npx hyperframes check` passes (lint + runtime + layout + motion + contrast; read per-section `ok` to see what failed)
 - [ ] `npx hyperframes inspect` passes (0 errors)
 - [ ] Projects with sub-compositions: `npx hyperframes snapshot --at <midpoints>` and eyeball each frame
 - [ ] `npx hyperframes preview` for review (the user can edit anything in Studio's timeline)

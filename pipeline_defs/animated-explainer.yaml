@@ -243,7 +243,7 @@ stages:
       - "Duration within +/-5% of target"
       - Audio is clear with proper narration/music balance
       - "render_runtime in edit_decisions matches proposal_packet — silent swap to another runtime is a CRITICAL governance violation"
-      - "If render_runtime='hyperframes': `hyperframes lint` and `hyperframes validate` must pass before render"
+      - "If render_runtime='hyperframes': `hyperframes check` must pass before render"
     success_criteria:
       - Schema-valid render_report with output paths
       - Output file exists and passes ffprobe validation

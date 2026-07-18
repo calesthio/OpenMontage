@@ -104,8 +104,8 @@ v4 + render-mode footguns. Every bullet is a hard rule:
 ## Validation
 
 ```bash
-npx hyperframes lint
-npx hyperframes validate
+npx hyperframes lint    # fast static pre-check while iterating
+npx hyperframes check   # the real gate — lint + runtime + layout + motion + contrast
 npx hyperframes inspect
 
 # Render proof — frame 0 must NOT flash unstyled content. Preview alone can hide this.
@@ -122,4 +122,4 @@ When Tailwind styles don't apply in a render, check in order:
 4. No v3 directives (`@tailwind base/components/utilities`) in the file?
 5. Tokens moved from `tailwind.config.js` to `@theme` (or `@config` reference for v3 migration)?
 6. Every render-critical class appears as a complete static token (no `bg-${color}-500` style assembly)?
-7. Re-run `npx hyperframes validate`, then the render proof above.
+7. Re-run `npx hyperframes check`, then the render proof above.

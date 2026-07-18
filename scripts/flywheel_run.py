@@ -50,6 +50,7 @@ from lib.pipeline_loader import load_pipeline, get_stage_order  # noqa: E402
 from tools.evolution.breed_scorer import BreedScorer  # noqa: E402
 from tools.evolution.breed_mutator import BreedMutator  # noqa: E402
 from tools.evolution.population_store import PopulationStore  # noqa: E402
+from tools.intelligence.seed_miner import SeedMiner  # noqa: E402
 
 # --------------------------------------------------------------------------
 # Config
@@ -75,6 +76,7 @@ class RunConfig:
     watch: bool = True
     no_watch: bool = False
     seed: int = 0
+    intelligence: bool = False  # opt-in: mine novel idea SPACES to seed gen0
 
 
 @dataclass
@@ -216,9 +218,36 @@ def run(cfg: RunConfig) -> dict:
     init_project(cfg.project, title=f"Hermes Flywheel: {cfg.project}",
                  pipeline_type=MANIFEST_NAME, pipeline_dir=project_dir)
     store = PopulationStore()
-    # gen 0 seeds: blank starts
-    seeds = [{"variant": v, "topic": f"seed {v}", "parent_ids": []}
-             for v in range(cfg.population_size)]
+    # ---- opt-in intelligence front: mine NOVEL idea spaces, not random seeds ----
+    intel_path = project_dir / "flywheel" / "intelligence.json"
+    if cfg.intelligence:
+        miner = SeedMiner()
+        spaces = miner.mine(top=cfg.population_size)
+        intel_payload = {
+            "enabled": True,
+            "spaces_mined": len(spaces),
+            "top_spaces": [
+                {"label": s.label, "opportunity_score": round(s.score(), 5),
+                 "novelty": round(s.novelty, 3), "creator_gap": round(s.creator_gap, 3)}
+                for s in spaces
+            ],
+        }
+        intel_path.parent.mkdir(parents=True, exist_ok=True)
+        intel_path.write_text(json.dumps(intel_payload, indent=2))
+        miner.write(project_dir / "flywheel" / "intelligence_full.json")
+        print(f"[flywheel] intelligence: mined {len(spaces)} novel idea spaces")
+    # gen 0 seeds: blank starts (or mined spaces when intelligence is on)
+    if cfg.intelligence and intel_path.exists():
+        data = json.loads(intel_path.read_text())
+        tops = data.get("top_spaces", [])
+        seeds = [
+            {"variant": v, "topic": tops[v]["label"] if v < len(tops) else f"seed {v}",
+             "parent_ids": []}
+            for v in range(cfg.population_size)
+        ]
+    else:
+        seeds = [{"variant": v, "topic": f"seed {v}", "parent_ids": []}
+                 for v in range(cfg.population_size)]
     history = []
     best_overall = 0.0
     for g in range(cfg.generations):
@@ -331,6 +360,8 @@ def parse_args(argv: list[str]) -> RunConfig:
     p.add_argument("--push", action="store_true", help="git push (REQUIRES --branch)")
     p.add_argument("--branch", default=None, help="explicit branch name for push")
     p.add_argument("--no-watch", action="store_true", help="skip live monitoring phase")
+    p.add_argument("--intelligence", action="store_true",
+                   help="mine novel IDEA SPACES to seed gen0 (vs random seeds)")
     return RunConfig(**{k.replace('-', '_'): v for k, v in vars(p.parse_args(argv)).items()})
 
 

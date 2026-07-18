@@ -584,6 +584,7 @@ def _collect_flywheel(project_dir: Path) -> Optional[dict[str, Any]]:
     if not flywheel_dir.is_dir():
         return None
     summary = _read_json(flywheel_dir / "run_summary.json")
+    intel = _read_json(flywheel_dir / "intelligence.json")
     pop_path = flywheel_dir / "population.jsonl"
     individuals: list[dict] = []
     if pop_path.exists():
@@ -610,6 +611,9 @@ def _collect_flywheel(project_dir: Path) -> Optional[dict[str, Any]]:
     best_score = float((summary or {}).get("best_score", 0.0)) if individuals else 0.0
     if not best_score and individuals:
         best_score = max(float(i.get("score", 0.0)) for i in individuals)
+    intel_spaces = []
+    if intel and isinstance(intel.get("top_spaces"), list):
+        intel_spaces = intel["top_spaces"]
     return {
         "active": summary is not None or bool(individuals),
         "best_score": best_score,
@@ -618,6 +622,11 @@ def _collect_flywheel(project_dir: Path) -> Optional[dict[str, Any]]:
         "individual_count": len(individuals),
         "population": individuals,
         "best_individual": (summary or {}).get("best_individual"),
+        "intelligence": {
+            "enabled": bool(intel),
+            "spaces_mined": intel.get("spaces_mined") if intel else None,
+            "top_spaces": intel_spaces,
+        },
     }
 
 

@@ -96,6 +96,43 @@ function renderFlywheel(s) {
       popBody));
 }
 
+// ---------------------------------------------------------------------------
+// Discovery / Knowledge-Graph / Novelty — Opportunity Mining panels
+// Reads s.flywheel.intelligence (mined idea SPACES, not videos).
+// ---------------------------------------------------------------------------
+
+function renderDiscovery(s) {
+  const fw = s.flywheel;
+  if (!fw || !fw.intelligence || !fw.intelligence.enabled) return null;
+
+  const intel = fw.intelligence;
+  const spaces = Array.isArray(intel.top_spaces) ? intel.top_spaces : [];
+
+  const rows = spaces.map((sp) => {
+    const opp = Number(sp.opportunity_score ?? 0);
+    const nov = Number(sp.novelty ?? 0);
+    const gap = Number(sp.creator_gap ?? 0);
+    // saturation heat = 1 - creator_gap (red = crowded, green = open)
+    const sat = 1 - gap;
+    const heat = `hsl(${Math.round((1 - sat) * 130)}, 62%, 46%)`;
+    return el("div", { class: "disc-row" },
+      el("span", { class: "disc-label", title: sp.label }, sp.label),
+      el("span", { class: "disc-bar" },
+        el("i", { style: `width:${Math.round(opp * 100)}%;background:${heat}` })),
+      el("span", { class: "disc-opp" }, opp.toFixed(3)),
+      el("span", { class: "disc-nov", title: "novelty" }, `◈${nov.toFixed(2)}`));
+  });
+
+  return el("div", { class: "panel discovery" },
+    el("div", { class: "panel-head" },
+      el("h2", {}, "Discovery"),
+      el("span", { class: "meta" }, `${intel.spaces_mined ?? spaces.length} idea spaces mined`)),
+    el("div", { class: "panel-body" },
+      el("div", { class: "fw-section-label" }, "OPPORTUNITY RANKING · saturation heatmap"),
+      rows.length ? el("div", { class: "disc-list" }, ...rows)
+                 : el("div", { class: "hint" }, "no novel spaces above floor")));
+}
+
 function renderSlate(s) {
   const board = s.storyboard;
   const chips = [
@@ -849,9 +886,11 @@ function render() {
   const aside = el("aside", {});
   const decisions = renderDecisions(s);
   const activity = renderActivity(s);
+  const discovery = renderDiscovery(s);
   const flywheel = renderFlywheel(s);
   if (decisions) aside.append(decisions);
   if (activity) aside.append(activity);
+  if (discovery) aside.append(discovery);
   if (flywheel) aside.append(flywheel);
 
   if (script || decisions || activity) {

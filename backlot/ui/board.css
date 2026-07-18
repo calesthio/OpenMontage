@@ -645,6 +645,34 @@ body:not(.first) .lib-card, body:not(.first) .drawer { animation: none; }
   box-shadow: inset 0 0 0 1px var(--fly-dim);
 }
 .panel.flywheel .panel-head h2 { color: var(--fly); }
+
+/* Discovery / Opportunity Mining panel */
+.panel.discovery { border-color: rgba(176,107,255,0.22); }
+.panel.discovery .panel-head h2 { color: var(--fly); }
+.disc-list { display: flex; flex-direction: column; gap: 5px; }
+.disc-row {
+  display: grid;
+  grid-template-columns: 1fr 92px 52px 44px;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: calc(10px * var(--fs-scale));
+}
+.disc-label {
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.disc-bar {
+  height: 8px;
+  background: var(--surface-3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.disc-bar i { display: block; height: 100%; border-radius: 3px; }
+.disc-opp { color: var(--text); text-align: right; }
+.disc-nov { color: var(--fly); text-align: right; font-size: calc(9px * var(--fs-scale)); }
 .fw-badge {
   font-family: var(--mono);
   font-size: calc(9.5px * var(--fs-scale));

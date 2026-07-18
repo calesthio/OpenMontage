@@ -573,6 +573,48 @@ def _last_activity(project_dir: Path) -> float:
 # Public API
 # ---------------------------------------------------------------------------
 
+def _collect_flywheel(project_dir: Path) -> Optional[dict[str, Any]]:
+    """Augment the board with Hermes Creative Flywheel state, if present.
+
+    Reads ``flywheel/flywheel_state.json`` and ``flywheel/population.jsonl``.
+    Returns None when no flywheel dir exists. Never raises.
+    """
+    flywheel_dir = project_dir / "flywheel"
+    if not flywheel_dir.is_dir():
+        return None
+    state_path = flywheel_dir / "flywheel_state.json"
+    state = _read_json(state_path)
+    pop_path = flywheel_dir / "population.jsonl"
+    individuals: list[dict] = []
+    if pop_path.exists():
+        for line in pop_path.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                individuals.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    # Compact per-generation view for the board.
+    generations: dict[int, dict[str, Any]] = {}
+    for ind in individuals:
+        gen = int(ind.get("generation", 0))
+        g = generations.setdefault(gen, {"count": 0, "best": 0.0, "topics": []})
+        g["count"] += 1
+        g["best"] = max(g["best"], float(ind.get("score", 0.0)))
+        topic = ind.get("topic") or (ind.get("artifact") or {}).get("topic")
+        if topic and len(g["topics"]) < 5:
+            g["topics"].append(topic)
+    if state is None and not individuals:
+        return None
+    return {
+        "active": state is not None,
+        "state": state,
+        "generations": {str(k): v for k, v in sorted(generations.items())},
+        "individual_count": len(individuals),
+    }
+
+
 def load_board_state(project_dir: Path) -> dict[str, Any]:
     """Full BoardState for one project. Never raises."""
     project_dir = Path(project_dir)
@@ -625,10 +667,15 @@ def load_board_state(project_dir: Path) -> dict[str, Any]:
             stage_entry["stalled"] = True
             stage_entry["stalled_minutes"] = int((now - last_activity) / 60)
 
+    # Hermes Creative Flywheel panel: read flywheel/ only if it exists.
+    # Never raises; degrades to None if absent or malformed.
+    flywheel = _collect_flywheel(project_dir)
+
     state: dict[str, Any] = {
         "project_id": project_id,
         "title": marker.get("title") or meta_json.get("name") or project_id.replace("-", " ").title(),
         "pipeline": pipeline_meta,
+        "flywheel": flywheel,
         "style_playbook": marker.get("style_playbook"),
         "created_at": marker.get("created_at"),
         "has_marker": bool(marker),

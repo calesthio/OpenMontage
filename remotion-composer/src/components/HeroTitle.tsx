@@ -17,6 +17,9 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({ title, subtitle }) => {
 
   // Staggered letter-by-letter spring
   const titleChars = title.split("");
+  // Group characters into words so each word wraps as an unbreakable unit
+  // (per-character flex items would otherwise break mid-word at the line edge).
+  const titleWords = title.split(" ");
 
   return (
     <AbsoluteFill
@@ -38,33 +41,46 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({ title, subtitle }) => {
             display: "flex",
             justifyContent: "center",
             flexWrap: "wrap",
-            gap: 0,
+            columnGap: "0.28em",
+            rowGap: "0.1em",
           }}
         >
-          {titleChars.map((char, i) => {
-            const delay = i * 1.2;
-            const charSpring = spring({
-              frame: frame - delay,
-              fps,
-              config: { damping: 12, stiffness: 150 },
+          {(() => {
+            let charIndex = 0;
+            return titleWords.map((word, wIdx) => {
+              const wordSpan = (
+                <div
+                  key={wIdx}
+                  style={{ display: "inline-flex", whiteSpace: "nowrap" }}
+                >
+                  {word.split("").map((char) => {
+                    const i = charIndex++;
+                    const delay = i * 1.2;
+                    const charSpring = spring({
+                      frame: frame - delay,
+                      fps,
+                      config: { damping: 12, stiffness: 150 },
+                    });
+                    return (
+                      <span
+                        key={i}
+                        style={{
+                          display: "inline-block",
+                          opacity: charSpring,
+                          transform: `translateY(${interpolate(charSpring, [0, 1], [30, 0])}px)`,
+                          color: wIdx === 0 ? "#22D3EE" : "#F8FAFC", // Accent first word
+                        }}
+                      >
+                        {char}
+                      </span>
+                    );
+                  })}
+                </div>
+              );
+              charIndex++; // account for the inter-word space in stagger timing
+              return wordSpan;
             });
-
-            return (
-              <span
-                key={i}
-                style={{
-                  display: "inline-block",
-                  opacity: charSpring,
-                  transform: `translateY(${interpolate(charSpring, [0, 1], [30, 0])}px)`,
-                  color: i < 8 ? "#22D3EE" : "#F8FAFC", // Accent first word
-                  whiteSpace: char === " " ? "pre" : undefined,
-                  minWidth: char === " " ? "0.3em" : undefined,
-                }}
-              >
-                {char}
-              </span>
-            );
-          })}
+          })()}
         </div>
 
         {/* Subtitle */}

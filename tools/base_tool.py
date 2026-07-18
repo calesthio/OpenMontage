@@ -382,6 +382,22 @@ class BaseTool(ABC):
     determinism: Determinism = Determinism.DETERMINISTIC
     runtime: ToolRuntime = ToolRuntime.LOCAL
 
+    # The currency ToolResult.cost_usd is ACTUALLY denominated in for this
+    # tool, despite its literal field name. Defaults to "USD", true for the
+    # large majority of provider tools (ElevenLabs, OpenAI, Google, Kling,
+    # Veo, Runway, Recraft, Suno, ...) whose cost_usd is real US-dollar
+    # pricing from that provider's own API. Override to "CNY" only for a
+    # tool that deliberately reports cost_usd in CNY to avoid a needless FX
+    # round-trip (see tools/maas_base.py's MaasBaseTool — the MaaS gateway
+    # bills internally in CNY). Every caller that treats cost_usd as a
+    # job's CNY spend (server/app/runner/tool_bridge.py's cost ledger and
+    # budget gate) MUST check this field and convert USD-declared tools —
+    # confirmed live: before this field existed, EVERY tool's cost_usd was
+    # summed as if it were CNY unconditionally, so a real $50 of ElevenLabs/
+    # Kling/Veo spend would have shown as "¥50 spent" against a ¥50 budget
+    # cap instead of the ~¥360 it actually was, silently blowing the cap.
+    cost_currency: str = "USD"
+
     # --- Dependencies ---
     # For API tools, add "env:ENVVAR_NAME" to signal required API keys
     dependencies: list[str] = []

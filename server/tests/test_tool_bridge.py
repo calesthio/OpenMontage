@@ -22,10 +22,16 @@ class _FakeResult:
 class FakeTool:
     """Minimal BaseTool stand-in — no network."""
 
-    def __init__(self, capability="video_generation", cost=0.0):
+    def __init__(self, capability="video_generation", cost=0.0, cost_currency=None):
         self.capability = capability
         self._cost = cost
         self.executed_with = None
+        # None (the default) leaves cost_currency UNSET, exercising
+        # tool_bridge's getattr(tool, "cost_currency", "USD") fallback the
+        # same way a real non-BaseTool-subclass stand-in would. Pass "USD" or
+        # "CNY" explicitly to pin it for a specific test.
+        if cost_currency is not None:
+            self.cost_currency = cost_currency
 
     def estimate_cost(self, inputs):
         return self._cost
@@ -107,6 +113,70 @@ def test_agent_supplied_output_path_reanchored_into_job_tree(tmp_path, monkeypat
     assert got.is_absolute()
     # and the parent dir was created so the tool can actually write there
     assert got.parent.is_dir()
+
+
+def test_cost_to_cny_passes_through_cny_declared_tool():
+    from app.runner.tool_bridge import _cost_to_cny
+    assert _cost_to_cny(FakeTool(cost_currency="CNY"), 1.0) == 1.0
+
+
+def test_cost_to_cny_converts_usd_declared_tool():
+    from app.runner.tool_bridge import _cost_to_cny, _USD_TO_CNY_RATE
+    assert _cost_to_cny(FakeTool(cost_currency="USD"), 1.0) == _USD_TO_CNY_RATE
+
+
+def test_cost_to_cny_defaults_undeclared_tool_to_usd():
+    # No cost_currency attribute at all — must default to USD, not silently
+    # treat it as CNY. This is the exact gap that was live: every non-MaaS
+    # tool's real dollar cost was summed into the CNY ledger unconverted.
+    from app.runner.tool_bridge import _cost_to_cny, _USD_TO_CNY_RATE
+    assert _cost_to_cny(FakeTool(), 1.0) == _USD_TO_CNY_RATE
+
+
+def test_usd_declared_tool_cost_converted_in_ledger(tmp_path, monkeypatch):
+    """Regression: a tool whose cost_usd is genuine US dollars (the large
+    majority — ElevenLabs, OpenAI, Kling, Veo, Runway, ...) must have that
+    cost converted to CNY before entering cost_accumulator/job.cost_cny —
+    confirmed live that, before cost_currency existed, EVERY tool's cost_usd
+    was summed as if it were CNY unconditionally, silently letting a
+    non-MaaS job's real spend run ~7x past its intended CNY budget cap."""
+    from app.runner.tool_bridge import _USD_TO_CNY_RATE
+    tool = FakeTool(cost=2.0, cost_currency="USD")
+    accumulator = []
+    _run_tool(tmp_path, tool, monkeypatch, cost_accumulator=accumulator)
+    assert accumulator == [2.0 * _USD_TO_CNY_RATE]
+
+
+def test_cny_declared_tool_cost_unconverted_in_ledger(tmp_path, monkeypatch):
+    tool = FakeTool(cost=2.0, cost_currency="CNY")
+    accumulator = []
+    _run_tool(tmp_path, tool, monkeypatch, cost_accumulator=accumulator)
+    assert accumulator == [2.0]
+
+
+def test_cost_updated_emitted_live_per_call_not_only_at_stage_end(tmp_path, monkeypatch):
+    """Regression: cost_updated used to only fire at stage boundaries
+    (stage_runner._sync_cost), so a multi-call stage (e.g. assets generating
+    several clips) showed a stale "¥0.0000 spent" the entire time it was
+    actually spending — confirmed live across a ~7-minute assets stage.
+    execute_tool must now emit cost_updated itself, per successful paid call,
+    with the correct running total."""
+    from tools import tool_registry
+    tool = FakeTool(cost=1.0, cost_currency="CNY")
+    monkeypatch.setattr(tool_registry.registry, "ensure_discovered", lambda *a, **k: None)
+    monkeypatch.setattr(tool_registry.registry, "get", lambda name: tool)
+    events = []
+    accumulator = []
+    args = {"tool_name": "maas_video", "inputs": {"prompt": "x", "operation": "t2v"}}
+    for _ in range(3):
+        execute_tool(
+            "run_openmontage_tool", args, tmp_path,
+            emit_event=events.append, cost_accumulator=accumulator,
+            base_cost=0.5, budget_cny=50.0,
+        )
+    cost_events = [e for e in events if e.get("type") == "cost_updated"]
+    assert [e["cost_cny"] for e in cost_events] == [1.5, 2.5, 3.5]
+    assert all(e["budget_cny"] == 50.0 for e in cost_events)
 
 
 def test_read_file_missing(tmp_path):
@@ -245,7 +315,9 @@ def test_budget_precheck_blocks_over_budget(tmp_path, monkeypatch):
 
 
 def test_budget_precheck_allows_within_budget(tmp_path, monkeypatch):
-    tool = FakeTool(capability="video_generation", cost=5.0)
+    # cost_currency="CNY": this test simulates a "maas_video" call, which is
+    # genuinely CNY-native — see MaasBaseTool.cost_currency.
+    tool = FakeTool(capability="video_generation", cost=5.0, cost_currency="CNY")
     acc = []
     out = _run_tool(tmp_path, tool, monkeypatch, cost_accumulator=acc, budget_cny=100.0, base_cost=8.0)
     assert json.loads(out)["success"] is True
@@ -254,7 +326,7 @@ def test_budget_precheck_allows_within_budget(tmp_path, monkeypatch):
 
 
 def test_no_budget_runs_freely(tmp_path, monkeypatch):
-    tool = FakeTool(capability="video_generation", cost=5.0)
+    tool = FakeTool(capability="video_generation", cost=5.0, cost_currency="CNY")
     acc = []
     _run_tool(tmp_path, tool, monkeypatch, cost_accumulator=acc, budget_cny=None, base_cost=0.0)
     assert acc == [5.0]
@@ -550,7 +622,7 @@ def test_cost_tracker_ledger_records(tmp_path, monkeypatch):
     ct = CostTracker(budget_total_usd=1e9, reserve_pct=0.0, single_action_approval_usd=1e9,
                      require_approval_for_new_paid_tool=False, mode=BudgetMode.OBSERVE,
                      cost_log_path=tmp_path / "cost_log.json")
-    tool = FakeTool(capability="video_generation", cost=5.0)
+    tool = FakeTool(capability="video_generation", cost=5.0, cost_currency="CNY")
     _run_tool(tmp_path, tool, monkeypatch, cost_accumulator=[], cost_tracker=ct)
     assert ct.cost_snapshot()["total_spent_usd"] == 5.0
     assert (tmp_path / "cost_log.json").exists()
@@ -567,7 +639,7 @@ def test_tool_call_and_asset_ready_events_carry_model_and_cost(tmp_path, monkeyp
     events = []
     from tools import tool_registry
     monkeypatch.setattr(tool_registry.registry, "ensure_discovered", lambda *a, **k: None)
-    tool = FakeTool(capability="video_generation", cost=0.35)
+    tool = FakeTool(capability="video_generation", cost=0.35, cost_currency="CNY")
     monkeypatch.setattr(tool_registry.registry, "get", lambda name: tool)
     args = {"tool_name": "maas_video", "inputs": {"prompt": "x", "operation": "t2v", "model": "leapfast/ltx-2.3"}}
     execute_tool("run_openmontage_tool", args, tmp_path, emit_event=events.append)
@@ -667,7 +739,7 @@ def test_asset_ready_cost_cny_only_on_last_artifact(tmp_path, monkeypatch):
     # per-artifact display misleadingly read as if the same money was spent
     # once per artifact.
     events = []
-    tool = FakeMultiArtifactTool(capability="tts", cost=1.25)
+    tool = FakeMultiArtifactTool(capability="tts", cost=1.25, cost_currency="CNY")
     from tools import tool_registry
     monkeypatch.setattr(tool_registry.registry, "ensure_discovered", lambda *a, **k: None)
     monkeypatch.setattr(tool_registry.registry, "get", lambda name: tool)
@@ -689,7 +761,7 @@ def test_budget_exceeded_error_carries_structured_fields(tmp_path, monkeypatch):
     # stage_runner.py's pre-call budget block needs tool_name/est_cost/
     # projected_cny as structured attributes (not just baked into the message
     # string) to build a structured pause/resume payload.
-    tool = FakeTool(capability="video_generation", cost=5.0)
+    tool = FakeTool(capability="video_generation", cost=5.0, cost_currency="CNY")
     acc = []
     with pytest.raises(BudgetExceededError) as excinfo:
         _run_tool(tmp_path, tool, monkeypatch, cost_accumulator=acc, budget_cny=10.0, base_cost=8.0)
@@ -853,8 +925,10 @@ class IdempotentTool(FakeTool):
     """FakeTool with declared identity fields, counting real executions."""
     idempotency_key_fields = ["prompt", "model"]
 
-    def __init__(self, capability="video_generation", cost=5.0):
-        super().__init__(capability, cost)
+    def __init__(self, capability="video_generation", cost=5.0, cost_currency="CNY"):
+        # Simulates a "maas_video" call (see _run_idem below) — CNY-native,
+        # like the FakeTool instances above.
+        super().__init__(capability, cost, cost_currency=cost_currency)
         self.executions = 0
 
     def idempotency_key(self, inputs):

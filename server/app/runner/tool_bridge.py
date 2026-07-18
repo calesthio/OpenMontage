@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 import sys
 import time
@@ -25,6 +26,26 @@ logger = logging.getLogger(__name__)
 # Add OpenMontage root to path so we can import tools/lib
 OM_ROOT = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(OM_ROOT))
+
+# Every job's ledger (cost_accumulator/job.cost_cny), budget gate, and cost
+# display are all denominated in CNY — but only MaasBaseTool subclasses
+# actually report cost_usd in CNY (see BaseTool.cost_currency). A tool
+# reporting real USD (the large majority — ElevenLabs, OpenAI, Kling, Veo,
+# Runway, ...) needs converting before it enters that ledger, or its dollar
+# spend gets silently treated as an equal yuan amount — confirmed as a real
+# gap, not yet triggered live only because this deployment has no non-MaaS
+# provider configured. A fixed rate is a governance safety margin for the
+# budget gate, not billing-accurate accounting — env-overridable since it
+# will drift.
+_USD_TO_CNY_RATE = float(os.environ.get("USD_TO_CNY_RATE", "7.2"))
+
+
+def _cost_to_cny(tool: Any, raw_cost: float) -> float:
+    """Convert a tool's reported cost_usd/estimate_cost() value to CNY,
+    honoring that tool's declared cost_currency (BaseTool.cost_currency)."""
+    if getattr(tool, "cost_currency", "USD") == "CNY":
+        return raw_cost
+    return raw_cost * _USD_TO_CNY_RATE
 
 # Artifact names are meant to be flat identifiers (e.g. "research_brief"), not
 # paths — reject anything else outright rather than trying to reason about
@@ -730,8 +751,11 @@ def execute_tool(
         # by refusing a paid call that would cross it, instead of letting a
         # single stage (e.g. assets) generate many clips past the ceiling before
         # the between-stages gate ever fires. Raises so _run_agent_stage unwinds
-        # and the runner's event loop can own the human pause.
-        est_cost = float(tool.estimate_cost(inputs) or 0.0)
+        # and the runner's event loop can own the human pause. Converted to
+        # CNY up front (see _cost_to_cny) — everything downstream (the ledger,
+        # cost_accumulator, budget_cny itself) is CNY-denominated, and this is
+        # the one place a non-MaaS tool's real USD cost enters that world.
+        est_cost = _cost_to_cny(tool, float(tool.estimate_cost(inputs) or 0.0))
         if budget_cny is not None and est_cost > 0:
             projected = base_cost + (sum(cost_accumulator) if cost_accumulator else 0.0) + est_cost
             if projected > budget_cny:
@@ -771,11 +795,13 @@ def execute_tool(
                 entry_id = None
 
         result = tool.execute(inputs)
+        # The actual (not estimated) cost, in CNY — see est_cost above for why.
+        actual_cost_cny = _cost_to_cny(tool, float(result.cost_usd or 0.0))
 
         if cost_tracker is not None and entry_id is not None:
             try:
                 cost_tracker.reconcile(
-                    entry_id, float(result.cost_usd or 0.0), success=result.success
+                    entry_id, actual_cost_cny, success=result.success
                 )
             except Exception:
                 logger.warning("CostTracker.reconcile failed for %s (entry %s)", tool_name, entry_id, exc_info=True)
@@ -785,7 +811,23 @@ def execute_tool(
             # Record every completed paid call (append even 0.0 so the tally
             # reflects call count; the sum is what drives the CNY display).
             if cost_accumulator is not None and result.cost_usd is not None:
-                cost_accumulator.append(float(result.cost_usd))
+                cost_accumulator.append(actual_cost_cny)
+                # Live running total (roadmap 1.6-adjacent gap, confirmed live):
+                # without this, cost_updated only fires at stage completion —
+                # a multi-clip assets stage shows "¥0.0000 / ¥50.00 预算" the
+                # entire time it's actually spending, then jumps to the real
+                # total the instant the stage ends. Mirrors stage_runner's own
+                # _sync_cost shape so the frontend needs no new event type.
+                if emit_event:
+                    # No "stage" key here — the caller's emit_event wrapper
+                    # (stage_runner._run_agent_stage) stamps the current stage
+                    # onto every event it receives from this module.
+                    running_total = round(base_cost + sum(cost_accumulator), 4)
+                    emit_event({
+                        "type": "cost_updated",
+                        "cost_cny": running_total,
+                        "budget_cny": budget_cny,
+                    })
             # Selector calls already compute a full scored rationale
             # (selection_reason = ToolScore.explain(), provider_score,
             # alternatives_considered) — but nothing persisted it, so the
@@ -806,11 +848,7 @@ def execute_tool(
                         # inputs["model"] reflects the FULLY RESOLVED model (after
                         # _enforce_model_choice's autofill, if any ran) — more
                         # trustworthy than the tool_call event's pre-enforcement
-                        # value for "what actually generated this asset". Despite
-                        # the field's name, cost_usd is already CNY for every MaaS
-                        # tool (see maas_video.py's estimate_cost docstring) — no
-                        # conversion needed, matching how cost_accumulator/
-                        # job.cost_cny already treat it.
+                        # value for "what actually generated this asset".
                         "model": inputs.get("model"),
                     }
                     # The whole call's cost is charged once, not once per
@@ -820,9 +858,11 @@ def execute_tool(
                     # event (e.g. a TTS call returning both an audio file and
                     # a metadata file) misleadingly read as if the same money
                     # was spent once per artifact. Only the LAST artifact for
-                    # this call carries cost_cny.
+                    # this call carries cost_cny — already converted via
+                    # _cost_to_cny (actual_cost_cny), not the tool's raw,
+                    # possibly-USD cost_usd.
                     if idx == last_artifact_idx:
-                        event["cost_cny"] = result.cost_usd
+                        event["cost_cny"] = actual_cost_cny
                     # Browser-servable URL for the live filmstrip (roadmap
                     # 1.1) — only assets inside the project workspace are
                     # reachable via the /media static mount; anything else

@@ -346,6 +346,17 @@ TOOL_RESULT_CHAR_CAP = READ_FILE_CHAR_CAP + 1000
 
 
 def _emit(job_id: str, event: dict) -> None:
+    # cost_updated is now also emitted per paid tool call (tool_bridge.py,
+    # not just at stage boundaries via _sync_cost below) so the live filmstrip
+    # doesn't sit at "¥0.0000 spent" for the whole length of a multi-call
+    # stage (confirmed live: an assets stage generating 4 clips showed ¥0 the
+    # entire ~7 minutes it was actually spending, then jumped to the real
+    # total the instant the stage ended). Persisting job_store.cost_cny here,
+    # at the single choke point every cost_updated event passes through
+    # regardless of source, keeps a plain REST GET /jobs/{id} (no SSE
+    # connection) equally live instead of only fixing the SSE-driven view.
+    if event.get("type") == "cost_updated" and "cost_cny" in event:
+        job_store.update(job_id, cost_cny=event["cost_cny"])
     job_store.push_event(job_id, {"ts": time.time(), **event})
 
 
@@ -1274,8 +1285,12 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
     except Exception:
         logger.debug("init_project skipped for %s", project_name, exc_info=True)
 
-    # MaaS tools bill in CNY (the user owns the gateway) and their cost_usd field
-    # already carries CNY amounts, so accumulate directly — no FX conversion.
+    # Always CNY by the time a value lands here — tool_bridge.execute_tool
+    # converts every tool's reported cost_usd to CNY via _cost_to_cny before
+    # appending (honoring BaseTool.cost_currency; MaaS tools report cost_usd
+    # already in CNY and pass through unchanged, everything else is a real
+    # USD figure that gets FX-converted). This runner never re-derives or
+    # re-checks currency — it trusts what tool_bridge already normalized.
     cost_accumulator: list[float] = []
     job = job_store.get(job_id) or {}
     base_cost = float(job.get("cost_cny", 0.0) or 0.0)          # preserve across retries
@@ -1306,8 +1321,9 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
             cost_tracker = None
 
     def _sync_cost(stage_name: str) -> None:
+        # job_store.cost_cny is persisted by _emit itself (any cost_updated
+        # event does it, not just this one) — no separate update() needed here.
         cost_cny = round(base_cost + sum(cost_accumulator), 4)
-        job_store.update(job_id, cost_cny=cost_cny)
         _emit(job_id, {
             "type": "cost_updated",
             "cost_cny": cost_cny,

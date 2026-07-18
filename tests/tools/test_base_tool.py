@@ -70,6 +70,16 @@ def test_paid_api_tool_missing_estimate_cost_logs_warning(caplog):
     assert "estimate_cost" in caplog.records[0].message
 
 
+def test_cost_currency_defaults_to_usd():
+    # Regression: confirmed live that every tool's cost_usd was treated as
+    # CNY unconditionally by the job cost ledger — real for the ~40 non-MaaS
+    # provider tools whose cost_usd is genuine US dollars. cost_currency
+    # defaults to "USD" (matching the field's literal name and what's true
+    # for the large majority of tools); only MaasBaseTool overrides it.
+    assert _PaidApiToolWithEstimate.cost_currency == "USD"
+    assert _PaidApiToolWithEstimate().cost_currency == "USD"
+
+
 def test_paid_api_tool_with_override_logs_no_warning(caplog):
     tool = _PaidApiToolWithEstimate()
     with caplog.at_level("WARNING"):

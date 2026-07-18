@@ -62,6 +62,11 @@ class MaasJobFailed(MaasPollError):
 class MaasBaseTool(BaseTool):
     """Common env-based auth/config for DolphinLitePark MaaS gateway tools."""
 
+    # The MaaS gateway bills internally in CNY (see maas_video.py's
+    # estimate_cost docstring) — every subclass's cost_usd is deliberately
+    # already a CNY amount, not a currency-conversion bug. See BaseTool.
+    cost_currency: str = "CNY"
+
     def _api_key(self) -> str | None:
         return os.environ.get("MAAS_API_KEY")
 

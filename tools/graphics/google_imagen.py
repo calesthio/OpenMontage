@@ -145,6 +145,25 @@ class GoogleImagen(BaseTool):
     ]
     user_visible_verification = ["Inspect generated image for relevance and quality"]
 
+    @staticmethod
+    def _output_paths(output_path: str | None, count: int) -> list[Path]:
+        """Derive one output path per generated image.
+
+        With a single image, honor the requested path as-is. With several,
+        suffix each with `_1`, `_2`, … so no image overwrites another.
+        """
+        ext = ".png"
+        if not output_path:
+            return [Path(f"generated_image_{idx + 1}{ext}") for idx in range(count)]
+
+        path = Path(output_path)
+        suffix = path.suffix or ext
+        if count == 1:
+            return [path if path.suffix else path.with_suffix(suffix)]
+
+        base = path.with_suffix("") if path.suffix else path
+        return [base.parent / f"{base.name}_{idx + 1}{suffix}" for idx in range(count)]
+
     def _get_api_key(self) -> str | None:
         return os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
 
@@ -261,11 +280,16 @@ class GoogleImagen(BaseTool):
                     success=False, error="No images returned from Imagen API"
                 )
 
-            image_bytes = base64.b64decode(predictions[0]["bytesBase64Encoded"])
-
-            output_path = Path(inputs.get("output_path", "generated_image.png"))
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_path.write_bytes(image_bytes)
+            output_paths = self._output_paths(
+                inputs.get("output_path"), len(predictions)
+            )
+            outputs: list[str] = []
+            for prediction, out_path in zip(predictions, output_paths):
+                out_path.parent.mkdir(parents=True, exist_ok=True)
+                out_path.write_bytes(
+                    base64.b64decode(prediction["bytesBase64Encoded"])
+                )
+                outputs.append(str(out_path))
 
         except Exception as e:
             return ToolResult(success=False, error=f"Imagen generation failed: {e}")
@@ -277,10 +301,11 @@ class GoogleImagen(BaseTool):
                 "model": model,
                 "prompt": prompt,
                 "aspect_ratio": aspect_ratio,
-                "output": str(output_path),
-                "images_generated": len(predictions),
+                "output": outputs[0],
+                "outputs": outputs,
+                "images_generated": len(outputs),
             },
-            artifacts=[str(output_path)],
+            artifacts=outputs,
             cost_usd=self.estimate_cost(inputs),
             duration_seconds=round(time.time() - start, 2),
             model=model,

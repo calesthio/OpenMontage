@@ -64,6 +64,16 @@ def test_read_file_missing(tmp_path):
     assert out.startswith("ERROR: File not found")
 
 
+def test_read_file_rejects_directory(tmp_path):
+    # Confirmed live: read_file(path="projects") / "pipeline_defs" / "schemas"
+    # / "skills" all raised a raw "[Errno 21] Is a directory" instead of a
+    # message the agent could act on. read_file resolves against OM_ROOT (the
+    # repo root), not project_dir, so this needs a real in-repo directory.
+    out = execute_tool("read_file", {"path": "tools"}, tmp_path)
+    assert out.startswith("ERROR:")
+    assert "directory" in out.lower()
+
+
 def test_write_artifact_and_missing_params(tmp_path):
     ok = execute_tool("write_artifact", {"artifact_name": "research", "content": {"a": 1}}, tmp_path)
     assert "Written to" in ok

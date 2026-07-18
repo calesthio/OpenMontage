@@ -84,6 +84,20 @@ class VideoTrimmer(BaseTool):
     user_visible_verification = ["Play trimmed output and verify cut points"]
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
+        # A bare inputs["operation"] here raises an uninformative KeyError on
+        # a malformed call (confirmed live: 8 consecutive compose-stage calls
+        # missing "operation" all failed identically, burning agent turns
+        # before it thought to re-read the schema). Validate up front and
+        # name the missing field so the agent can self-correct immediately.
+        missing = [f for f in self.input_schema.get("required", []) if f not in inputs]
+        if missing:
+            return ToolResult(
+                success=False,
+                error=(
+                    f"video_trimmer: missing required field(s): {', '.join(missing)}. "
+                    f"'operation' must be one of: cut, speed, concat."
+                ),
+            )
         operation = inputs["operation"]
         start = time.time()
 

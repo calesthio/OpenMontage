@@ -423,6 +423,16 @@ class TestPipelineManifests:
             manifest = yaml.safe_load(f)
         assert "audio_enhance" in get_required_tools(manifest)
 
+    def test_screen_demo_manifest_loads(self):
+        """Regression: screen-demo.yaml's top-level production_modes (real_capture,
+        synthetic_terminal) must validate against the manifest schema instead of
+        raising 'Additional properties are not allowed'.
+        """
+        manifest = load_pipeline("screen-demo")
+        assert manifest["name"] == "screen-demo"
+        mode_names = {mode["name"] for mode in manifest["production_modes"]}
+        assert mode_names == {"real_capture", "synthetic_terminal"}
+
     def test_load_pipeline_readonly_mutation_does_not_poison_cache(self):
         manifest = load_pipeline_readonly("framework-smoke")
         manifest["stages"].append({"name": "injected"})

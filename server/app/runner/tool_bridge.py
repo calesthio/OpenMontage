@@ -434,6 +434,12 @@ def execute_tool(
             return f"ERROR: refusing to read a dotfile/dotdir path: {args['path']!r}"
         if not path.exists():
             return f"ERROR: File not found: {args['path']}"
+        # path.exists() is True for directories too — confirmed live across
+        # projects/, pipeline_defs/, schemas/, and skills/ in one job, each
+        # raising a raw "[Errno 21] Is a directory" instead of a message the
+        # agent can act on (e.g. list the directory instead).
+        if not path.is_file():
+            return f"ERROR: {args['path']!r} is a directory, not a file"
         content = path.read_text(encoding="utf-8")
         if len(content) > READ_FILE_CHAR_CAP:
             content = content[:READ_FILE_CHAR_CAP] + f"\n\n[truncated — {len(content)} total chars]"

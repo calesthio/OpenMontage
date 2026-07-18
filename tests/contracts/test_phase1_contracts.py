@@ -276,6 +276,18 @@ class TestPhase1ErrorHandling:
         })
         assert not result.success
 
+    def test_video_trimmer_missing_operation_returns_clean_error(self):
+        """Confirmed live: a call missing 'operation' must fail with a clear
+        ToolResult error, not a bare KeyError('operation')."""
+        tool = VideoTrimmer()
+        result = tool.execute({
+            "input_path": "/nonexistent/file.mp4",
+            "start_seconds": 0,
+            "end_seconds": 3.5,
+        })
+        assert not result.success
+        assert "operation" in result.error.lower()
+
     def test_frame_sampler_missing_file(self):
         tool = FrameSampler()
         result = tool.execute({

@@ -11,7 +11,8 @@
       "name": "web",
       "runtimeExecutable": "bash",
       "runtimeArgs": ["-c", "cd web && NEXT_PUBLIC_SERVER_URL=http://localhost:8010 npm run dev"],
-      "port": 3000
+      "port": 3000,
+      "autoPort": true
     },
     {
       "name": "backlot",

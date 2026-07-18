@@ -397,6 +397,69 @@ async def test_budget_gate_pauses_then_resumes_on_approve(runner, monkeypatch, t
     assert runner.get("j")["status"] == "completed"      # overspend(s) approved → finished
 
 
+async def test_budget_gate_honors_user_chosen_ceiling(runner, monkeypatch, tmp_path):
+    # Roadmap 1.3: an approve carrying new_budget_cny replaces the spent×1.2
+    # ratchet with the user's own absolute cap.
+    (tmp_path / "projects" / "p" / "renders").mkdir(parents=True)
+    (tmp_path / "projects" / "p" / "renders" / "final.mp4").write_bytes(b"x")
+    def spend(*a, **k):
+        acc = k["cost_accumulator"]
+        if acc is not None and not acc:
+            acc.append(5.0)   # only the first stage spends
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", spend)
+    opts = {"budget_cny": 1}
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic", "options": opts})
+
+    async def approver():
+        for _ in range(500):
+            await asyncio.sleep(0.01)
+            if runner.get("j")["status"] == "awaiting_approval":
+                runner.set_approval("j", "approve", "", new_budget_cny=200.0)
+                return
+    approver_task = asyncio.create_task(approver())
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic",
+                                              "options": opts})
+    await approver_task
+
+    approved = [e for e in runner.get_events("j", after_seq=-1)
+                if e["type"] == "stage_approved" and e.get("stage") == "budget"]
+    assert approved and approved[0]["budget_cny"] == 200.0   # not spent×1.2 (=6.0)
+    assert approved[0]["previous_budget_cny"] == 1
+    assert runner.get("j")["status"] == "completed"
+
+
+async def test_budget_gate_clamps_user_ceiling_below_spend(runner, monkeypatch, tmp_path):
+    # A user cap BELOW what's already spent would re-open the gate instantly
+    # forever — clamp to the actual spend floor.
+    (tmp_path / "projects" / "p" / "renders").mkdir(parents=True)
+    (tmp_path / "projects" / "p" / "renders" / "final.mp4").write_bytes(b"x")
+    def spend(*a, **k):
+        acc = k["cost_accumulator"]
+        if acc is not None and not acc:
+            acc.append(5.0)
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", spend)
+    opts = {"budget_cny": 1}
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic", "options": opts})
+
+    async def approver():
+        for _ in range(500):
+            await asyncio.sleep(0.01)
+            if runner.get("j")["status"] == "awaiting_approval":
+                runner.set_approval("j", "approve", "", new_budget_cny=0.5)
+                return
+    approver_task = asyncio.create_task(approver())
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic",
+                                              "options": opts})
+    await approver_task
+
+    approved = [e for e in runner.get_events("j", after_seq=-1)
+                if e["type"] == "stage_approved" and e.get("stage") == "budget"]
+    assert approved and approved[0]["budget_cny"] == 5.0   # clamped to spend
+    assert runner.get("j")["status"] == "completed"
+
+
 async def test_budget_gate_aborts_on_reject(runner, monkeypatch):
     def spend(*a, **k):
         acc = k["cost_accumulator"]
@@ -931,6 +994,214 @@ async def test_budget_gate_needed_pauses_then_resumes_same_conversation(runner, 
     assert tool_call_ids <= tool_response_ids
 
 
+# ── approval ladder: remind → expire, never auto-decide (roadmap 0.2) ───────
+
+async def _answer_gates(store, jid, actions):
+    """Wait for successive awaiting_approval flips and answer each with the
+    scripted (action, feedback) tuples. Returns when the script is spent."""
+    for action, feedback in actions:
+        for _ in range(500):
+            await asyncio.sleep(0.005)
+            if (store.get(jid) or {}).get("status") == "awaiting_approval":
+                break
+        assert store.get(jid)["status"] == "awaiting_approval", (
+            f"gate never opened for scripted answer {action!r}"
+        )
+        assert store.set_approval(jid, action, feedback)
+        # Let the runner consume the decision before watching for the next flip.
+        for _ in range(500):
+            await asyncio.sleep(0.005)
+            if (store.get(jid) or {}).get("status") != "awaiting_approval":
+                break
+
+
+async def test_approval_reminder_events_then_decision_honored(runner, monkeypatch):
+    monkeypatch.setattr(stage_runner, "APPROVAL_REMINDER_SECONDS", 0.02)
+    monkeypatch.setattr(stage_runner, "APPROVAL_EXPIRY_SECONDS", 30.0)
+
+    def writes_artifact(job_id, stage_name, skill_text, project_dir, *a, **k):
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        (project_dir / "artifacts" / "brief.json").write_text("{}")
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", writes_artifact)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "idea", "skill": None, "approval": True, "produces": ["brief"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    task = asyncio.create_task(
+        stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+    )
+    # Let several reminder slices elapse before answering.
+    await asyncio.sleep(0.1)
+    assert runner.get("j")["status"] == "awaiting_approval"
+    assert runner.set_approval("j", "approve", "")
+    await task
+
+    assert runner.get("j")["status"] == "completed"
+    events = runner.get_events("j", after_seq=-1)
+    reminders = [e for e in events if e["type"] == "approval_reminder"]
+    assert reminders, "reminder ladder never fired"
+    assert all(e["stage"] == "idea" and e["expires_at"] > 0 for e in reminders)
+    # The awaiting_approval event itself must carry the countdown fields.
+    awaiting = [e for e in events if e["type"] == "awaiting_approval"]
+    assert awaiting and awaiting[0]["expires_at"] > time.time()
+
+
+async def test_approval_expiry_fails_loudly_never_auto_decides(runner, monkeypatch):
+    monkeypatch.setattr(stage_runner, "APPROVAL_REMINDER_SECONDS", 0.02)
+    monkeypatch.setattr(stage_runner, "APPROVAL_EXPIRY_SECONDS", 0.06)
+
+    calls = []
+
+    def writes_artifact(job_id, stage_name, skill_text, project_dir, *a, **k):
+        calls.append(stage_name)
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        (project_dir / "artifacts" / "brief.json").write_text("{}")
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", writes_artifact)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "idea", "skill": None, "approval": True, "produces": ["brief"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    job = runner.get("j")
+    assert job["status"] == "failed"
+    # The stage was NOT auto-approved (not in completed_stages) and NOT
+    # auto-rejected (no regenerate ran — exactly one agent call).
+    assert "idea" not in job.get("completed_stages", [])
+    assert calls == ["idea"]
+    events = _events(runner, "j")
+    assert "stage_approved" not in events
+    assert "stage_rejected" not in events
+    failed = [e for e in runner.get_events("j", after_seq=-1) if e["type"] == "job_failed"]
+    assert "approval window" in failed[-1]["message"]
+
+
+# ── max_revisions_per_stage enforcement (roadmap 0.4) ────────────────────────
+
+def _revision_pipeline(monkeypatch, run_counter):
+    def regenerating_agent(job_id, stage_name, skill_text, project_dir, *a, **k):
+        run_counter.append(stage_name)
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        p = project_dir / "artifacts" / "brief.json"
+        p.write_text(json.dumps({"round": len(run_counter)}))
+        # Force a strictly newer mtime so the regenerate-actually-rewrote
+        # check (_artifact_mtimes) sees a genuine rewrite each round.
+        import os as _os
+        st = p.stat()
+        _os.utime(p, (st.st_atime, st.st_mtime + len(run_counter)))
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", regenerating_agent)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "idea", "skill": None, "approval": True, "produces": ["brief"]},
+    ])
+
+
+async def test_reject_loop_is_bounded_and_exhaustion_can_accept_as_is(runner, monkeypatch):
+    runs: list[str] = []
+    _revision_pipeline(monkeypatch, runs)
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    task = asyncio.create_task(
+        stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+    )
+    # 4 rejects: rounds 1-3 regenerate; the 4th must hit the exhaustion gate
+    # instead of paying for another round. Approving there accepts as-is.
+    answers = [("reject", f"no {i}") for i in range(4)] + [("approve", "")]
+    await _answer_gates(runner, "j", answers)
+    await task
+
+    job = runner.get("j")
+    assert job["status"] == "completed"
+    # initial run + exactly 3 regenerates — never a 5th agent call.
+    assert len(runs) == 4
+    gates = [e.get("gate") for e in runner.get_events("j", after_seq=-1)
+             if e["type"] == "awaiting_approval"]
+    assert gates.count("revisions_exhausted") == 1
+
+
+async def test_reject_at_exhaustion_gate_stops_the_job(runner, monkeypatch):
+    runs: list[str] = []
+    _revision_pipeline(monkeypatch, runs)
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    task = asyncio.create_task(
+        stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+    )
+    answers = [("reject", f"no {i}") for i in range(4)] + [("reject", "stop")]
+    await _answer_gates(runner, "j", answers)
+    await task
+
+    job = runner.get("j")
+    assert job["status"] == "failed"
+    assert len(runs) == 4   # the final reject bought no additional round
+    failed = [e for e in runner.get_events("j", after_seq=-1) if e["type"] == "job_failed"]
+    assert "revision" in failed[-1]["message"]
+
+
+# ── inline artifact edit must survive into the next stage ───────────────────
+
+async def test_inline_edit_survives_into_next_stage(runner, monkeypatch, tmp_path):
+    # Regression (silent inline-edit discard): the /artifact endpoint used to
+    # write artifacts/<stage>.json even when the stage's produces name
+    # differed (stage "idea" produces "brief") — an orphan file. The next
+    # stage's required_artifacts_in loaded the ORIGINAL brief.json; the
+    # user's edit was silently ignored while the UI said "saved". This test
+    # drives the REAL router handler against the REAL runner: the edit made
+    # at the approval gate must be exactly what the next stage consumes.
+    from app.routers import jobs as jobs_router
+    from app.routers.jobs import SaveArtifactRequest, save_artifact
+
+    monkeypatch.setattr(jobs_router, "job_store", runner)
+    monkeypatch.setattr(jobs_router, "OM_ROOT", tmp_path)
+
+    seen_by_script_stage = {}
+
+    def fake_agent(job_id, stage_name, skill_text, project_dir, *a, **k):
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        if stage_name == "idea":
+            (project_dir / "artifacts" / "brief.json").write_text(
+                json.dumps({"hook": "original"})
+            )
+        if stage_name == "script":
+            seen_by_script_stage.update(
+                json.loads((project_dir / "artifacts" / "brief.json").read_text())
+            )
+            (project_dir / "artifacts" / "script.json").write_text("{}")
+        return True
+
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", fake_agent)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "idea", "skill": None, "approval": True, "produces": ["brief"]},
+        {"name": "script", "skill": None, "approval": False, "produces": ["script"],
+         "required_artifacts_in": ["brief"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    task = asyncio.create_task(
+        stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+    )
+    for _ in range(200):
+        await asyncio.sleep(0.01)
+        if (runner.get("j") or {}).get("status") == "awaiting_approval":
+            break
+    assert runner.get("j")["status"] == "awaiting_approval"
+
+    # The UI's inline edit: sent with the STAGE name (what approval-panel.tsx
+    # sends today) — must resolve to the produces name "brief".
+    resp = await save_artifact("j", SaveArtifactRequest(stage="idea", content={"hook": "edited"}))
+    assert resp["saved"] == "brief"
+
+    assert runner.set_approval("j", "approve", "")
+    await task
+
+    assert runner.get("j")["status"] == "completed"
+    assert seen_by_script_stage == {"hook": "edited"}
+
+
 # ── publish anti-fabrication (generalized render/export-file check) ─────────
 
 def _publish_log_with_export(export_path: str) -> dict:
@@ -977,6 +1248,79 @@ async def test_publish_stage_fails_on_fabricated_publish_log(runner, monkeypatch
     assert "publish" not in job["completed_stages"]
     failed = [e for e in runner.get_events("j", after_seq=-1) if e["type"] == "job_failed"]
     assert failed and "exports/teaser.mp4" in failed[-1]["message"]
+
+
+async def test_publish_stage_accepts_real_export_bundle_output(runner, monkeypatch, tmp_path):
+    # Cross-module regression: the canonical publish tool
+    # (tools/publishers/export_bundle.py) writes the bundle's ROOT DIRECTORY
+    # as export_path — not a file. The validator's original is_file()-only
+    # check therefore hard-failed every genuine export_bundle run: the
+    # publish happy path was structurally dead. Run the REAL tool and feed
+    # its actual publish_log through the pipeline's validation.
+    from tools.publishers.export_bundle import ExportBundle
+
+    renders = tmp_path / "projects" / "p" / "renders"
+    renders.mkdir(parents=True)
+    (renders / "final.mp4").write_bytes(b"real render bytes")
+
+    def publish_via_real_export_bundle(job_id, stage_name, skill_text, project_dir, *a, **k):
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        if stage_name == "compose":
+            (project_dir / "artifacts" / "render_report.json").write_text("{}")
+        if stage_name == "publish":
+            result = ExportBundle().execute({
+                "video_path": str(project_dir / "renders" / "final.mp4"),
+                "title": "Cross-module regression",
+            })
+            assert result.success, result.error
+            (project_dir / "artifacts" / "publish_log.json").write_text(
+                json.dumps(result.data["publish_log"])
+            )
+        return True
+
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", publish_via_real_export_bundle)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "compose", "skill": None, "approval": False, "produces": ["render_report"]},
+        {"name": "publish", "skill": None, "approval": False, "produces": ["publish_log"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    job = runner.get("j")
+    assert job["status"] == "completed", [
+        e for e in runner.get_events("j", after_seq=-1) if e["type"] == "job_failed"
+    ]
+    assert "publish" in job["completed_stages"]
+
+
+async def test_publish_stage_fails_on_fabricated_export_directory(runner, monkeypatch, tmp_path):
+    # Accepting directories must not reopen the fabrication hole: an
+    # export_path naming an EMPTY directory (mkdir'd but never populated)
+    # still proves nothing was exported and must fail.
+    (tmp_path / "projects" / "p" / "renders").mkdir(parents=True)
+    (tmp_path / "projects" / "p" / "renders" / "final.mp4").write_bytes(b"x")
+
+    def write_empty_dir_publish_log(job_id, stage_name, skill_text, project_dir, *a, **k):
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        if stage_name == "compose":
+            (project_dir / "artifacts" / "render_report.json").write_text("{}")
+        if stage_name == "publish":
+            (project_dir / "exports").mkdir(parents=True, exist_ok=True)
+            (project_dir / "artifacts" / "publish_log.json").write_text(
+                json.dumps(_publish_log_with_export("exports"))
+            )
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", write_empty_dir_publish_log)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "compose", "skill": None, "approval": False, "produces": ["render_report"]},
+        {"name": "publish", "skill": None, "approval": False, "produces": ["publish_log"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    assert runner.get("j")["status"] == "failed"
 
 
 async def test_publish_stage_passes_with_genuine_exports(runner, monkeypatch, tmp_path):
@@ -1199,3 +1543,289 @@ async def test_cancel_overrides_stage_boundary_gate_reject_semantics(runner, mon
     assert runner.get("j")["status"] == "cancelled"
     assert regenerate_calls == [1]   # only the initial run — no regenerate round was triggered
     assert any(e["type"] == "job_cancelled" for e in runner.get_events("j", after_seq=-1))
+
+
+# ── batch 2: revise feedback threading + per-scene reroll + checkpoints ─────
+
+async def test_revise_feedback_reaches_the_reentered_stage(runner, monkeypatch):
+    seen_feedback = {}
+
+    def capture(job_id, stage_name, skill_text, project_dir, *a, **k):
+        seen_feedback[stage_name] = k.get("feedback")
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        (project_dir / "artifacts" / f"{stage_name}_art.json").write_text("{}")
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", capture)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "idea", "skill": None, "approval": False, "produces": ["idea_art"]},
+        {"name": "script", "skill": None, "approval": False, "produces": ["script_art"]},
+    ])
+    runner.create("j", {
+        "project_name": "p", "pipeline": "cinematic",
+        "completed_stages": ["idea"],
+        "revise_feedback": {"stage": "script", "feedback": "语气再轻快一点", "mode": "cascade"},
+    })
+
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    assert "idea" not in seen_feedback              # rolled-back-complete stage skipped
+    assert seen_feedback["script"] == "语气再轻快一点"
+    assert runner.get("j")["status"] == "completed"
+
+
+async def test_reject_with_asset_ids_builds_reroll_feedback(runner, monkeypatch):
+    feedbacks = []
+
+    def regenerating_agent(job_id, stage_name, skill_text, project_dir, *a, **k):
+        feedbacks.append(k.get("feedback"))
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        p = project_dir / "artifacts" / "asset_manifest.json"
+        p.write_text(json.dumps({"round": len(feedbacks)}))
+        import os as _os
+        st = p.stat()
+        _os.utime(p, (st.st_atime, st.st_mtime + len(feedbacks)))
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", regenerating_agent)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "assets", "skill": None, "approval": True, "produces": ["asset_manifest"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    task = asyncio.create_task(
+        stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+    )
+    for _ in range(500):
+        await asyncio.sleep(0.01)
+        if (runner.get("j") or {}).get("status") == "awaiting_approval":
+            break
+    assert runner.set_approval("j", "reject", "第二个镜头太暗",
+                               rejected_asset_ids=["a2", "a7"])
+    for _ in range(500):
+        await asyncio.sleep(0.01)
+        job = runner.get("j") or {}
+        if job.get("status") == "awaiting_approval" and len(feedbacks) == 2:
+            break
+    assert runner.set_approval("j", "approve", "")
+    await task
+
+    assert runner.get("j")["status"] == "completed"
+    fb = feedbacks[1]
+    assert "第二个镜头太暗" in fb
+    assert "a2" in fb and "a7" in fb
+    assert "force_regenerate" in fb
+
+
+async def test_web_runner_writes_checkpoints_for_backlot(runner, monkeypatch, tmp_path):
+    # Roadmap 2.5 (dual persistence): the web path must write the
+    # checkpoint-protocol files the Backlot board watches. Uses the REAL
+    # cinematic stage name "research" with a schema-valid research_brief so
+    # write_checkpoint's gate/artifact validation genuinely passes.
+    valid_brief = {
+        "version": "1.0",
+        "topic": "t",
+        "research_date": "2026-07-17",
+        "landscape": {
+            "existing_content": [
+                {
+                    "title": "t0",
+                    "source": "youtube",
+                    "angle": "a",
+                    "what_it_covers": "c"
+                },
+                {
+                    "title": "t1",
+                    "source": "youtube",
+                    "angle": "a",
+                    "what_it_covers": "c"
+                },
+                {
+                    "title": "t2",
+                    "source": "youtube",
+                    "angle": "a",
+                    "what_it_covers": "c"
+                }
+            ],
+            "saturated_angles": [],
+            "underserved_gaps": [
+                "gap"
+            ]
+        },
+        "data_points": [
+            {
+                "claim": "fact 0",
+                "source_url": "https://example.com/0",
+                "credibility": "primary_source"
+            },
+            {
+                "claim": "fact 1",
+                "source_url": "https://example.com/1",
+                "credibility": "primary_source"
+            },
+            {
+                "claim": "fact 2",
+                "source_url": "https://example.com/2",
+                "credibility": "primary_source"
+            }
+        ],
+        "audience_insights": {
+            "common_questions": [
+                "q1",
+                "q2",
+                "q3"
+            ],
+            "misconceptions": [],
+            "knowledge_level": "beginner"
+        },
+        "angles_discovered": [
+            {
+                "name": "angle 0",
+                "hook": "h",
+                "type": "contrarian",
+                "why_now": "w"
+            },
+            {
+                "name": "angle 1",
+                "hook": "h",
+                "type": "contrarian",
+                "why_now": "w"
+            },
+            {
+                "name": "angle 2",
+                "hook": "h",
+                "type": "contrarian",
+                "why_now": "w"
+            }
+        ],
+        "sources": [
+            {
+                "url": "https://example.com/0",
+                "title": "src 0"
+            },
+            {
+                "url": "https://example.com/1",
+                "title": "src 1"
+            },
+            {
+                "url": "https://example.com/2",
+                "title": "src 2"
+            },
+            {
+                "url": "https://example.com/3",
+                "title": "src 3"
+            },
+            {
+                "url": "https://example.com/4",
+                "title": "src 4"
+            }
+        ]
+    }
+
+    def writes_brief(job_id, stage_name, skill_text, project_dir, *a, **k):
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        (project_dir / "artifacts" / "research_brief.json").write_text(json.dumps(valid_brief))
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", writes_brief)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "research", "skill": None, "approval": False, "produces": ["research_brief"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    assert runner.get("j")["status"] == "completed"
+    project = tmp_path / "projects" / "p"
+    assert (project / "project.json").exists(), "init_project marker missing"
+    ckpt_path = project / "checkpoint_research.json"
+    assert ckpt_path.exists(), "stage checkpoint missing"
+    ckpt = json.loads(ckpt_path.read_text())
+    assert ckpt["status"] == "completed"
+    assert ckpt["artifacts"]["research_brief"]["topic"] == "t"
+    assert ckpt["cost_snapshot"]["total_cny"] == 0.0
+    # in_progress → completed within one run is a normal progression:
+    # lib/checkpoint deliberately does NOT archive superseded in_progress
+    # heartbeats (only completed/awaiting versions get history entries).
+    assert not list((project / "history").glob("*.json"))
+
+
+async def test_checkpoint_failure_never_blocks_the_pipeline(runner, monkeypatch, tmp_path):
+    # Best-effort contract: a stage name outside the real manifest (raw test
+    # override) makes write_checkpoint raise internally — the run must
+    # complete anyway.
+    def ok(job_id, stage_name, skill_text, project_dir, *a, **k):
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        (project_dir / "artifacts" / "x.json").write_text("{}")
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", ok)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "not_a_real_stage", "skill": None, "approval": False, "produces": ["x"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+    assert runner.get("j")["status"] == "completed"
+
+
+# ── batch 3: asset-consistency call site + actor audit ───────────────────────
+
+async def test_assets_stage_runs_consistency_check_and_warns(runner, monkeypatch, tmp_path):
+    # Pins the call site for lib/asset_consistency (written for a real
+    # multi-shot drift incident, previously zero production callers).
+    checked = {}
+
+    def fake_check(groups, **kw):
+        checked.update(groups)
+        return {"ran": True, "subjects_checked": list(groups), "threshold": 0.82,
+                "findings": [{"subject": "hero_vacuum", "asset_a": "a.png",
+                              "asset_b": "b.png", "similarity": 0.41, "threshold": 0.82}],
+                "critical": True}
+    import lib.asset_consistency as ac
+    monkeypatch.setattr(ac, "check_asset_consistency", fake_check)
+
+    def writes_manifest(job_id, stage_name, skill_text, project_dir, *a, **k):
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        (project_dir / "assets").mkdir(exist_ok=True)
+        for n in ("a.png", "b.png"):
+            (project_dir / "assets" / n).write_bytes(b"x")
+        (project_dir / "artifacts" / "asset_manifest.json").write_text(json.dumps({
+            "version": "1.0",
+            "assets": [
+                {"id": "a1", "type": "image", "path": "assets/a.png", "subject": "hero_vacuum"},
+                {"id": "a2", "type": "image", "path": "assets/b.png", "subject": "hero_vacuum"},
+            ],
+        }))
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", writes_manifest)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "assets", "skill": None, "approval": False, "produces": ["asset_manifest"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    await stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+
+    assert runner.get("j")["status"] == "completed"   # advisory, never blocks
+    assert "hero_vacuum" in checked
+    warnings = [e for e in runner.get_events("j", after_seq=-1) if e["type"] == "warning"]
+    assert any("different designs" in w["message"] for w in warnings)
+
+
+async def test_approval_events_carry_actor(runner, monkeypatch):
+    def writes(job_id, stage_name, skill_text, project_dir, *a, **k):
+        (project_dir / "artifacts").mkdir(parents=True, exist_ok=True)
+        (project_dir / "artifacts" / "brief.json").write_text("{}")
+        return True
+    monkeypatch.setattr(stage_runner, "_run_agent_stage", writes)
+    monkeypatch.setitem(stage_runner.PIPELINE_MAP, "cinematic", [
+        {"name": "idea", "skill": None, "approval": True, "produces": ["brief"]},
+    ])
+    runner.create("j", {"project_name": "p", "pipeline": "cinematic"})
+    task = asyncio.create_task(
+        stage_runner.run_pipeline_job("j", {"project_name": "p", "pipeline": "cinematic"})
+    )
+    for _ in range(500):
+        await asyncio.sleep(0.01)
+        if (runner.get("j") or {}).get("status") == "awaiting_approval":
+            break
+    assert runner.set_approval("j", "approve", "", actor="producer@acme")
+    await task
+
+    approved = [e for e in runner.get_events("j", after_seq=-1) if e["type"] == "stage_approved"]
+    assert approved and approved[0]["actor"] == "producer@acme"

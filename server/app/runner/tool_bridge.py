@@ -15,6 +15,7 @@ import json
 import logging
 import re
 import sys
+import time
 import uuid
 from pathlib import Path
 from typing import Any
@@ -322,6 +323,77 @@ def _apply_tts_emotion_defaults(inputs: dict[str, Any], options: dict[str, Any] 
             inputs[key] = defaults[key]
 
 
+def _append_selector_decision(
+    project_dir: Path,
+    tool_name: str,
+    capability: str,
+    data: dict[str, Any],
+) -> None:
+    """Persist a selector's scored provider pick into the project's
+    decision_log artifact (roadmap 1.4).
+
+    Selectors have always computed a full rationale — selection_reason is
+    ToolScore.explain(), plus provider_score and alternatives_considered —
+    and returned it in result.data, where it reached only the LLM's context
+    window and was never persisted. This appends a schema-valid decision
+    entry so the decision rail (Backlot + web) can show auto-routed provider
+    picks with their actual reasons. Consecutive identical picks for the
+    same (category, subject) pair are not re-appended — a per-scene TTS loop
+    would otherwise write dozens of duplicate rows.
+    """
+    try:
+        selected = data.get("selected_tool")
+        if not selected:
+            return
+        log_path = project_dir / "artifacts" / "decision_log.json"
+        log: dict[str, Any] = {"version": "1.0", "decisions": []}
+        if log_path.exists():
+            try:
+                loaded = json.loads(log_path.read_text())
+                if isinstance(loaded, dict) and isinstance(loaded.get("decisions"), list):
+                    log = loaded
+            except (OSError, json.JSONDecodeError):
+                pass
+        category = "provider_selection"
+        subject = f"{capability} provider (auto-routed via {tool_name})"
+        # Latest entry for this (category, subject) pair — the board renders
+        # the last entry per pair as current, so only append on change.
+        latest = next(
+            (d for d in reversed(log["decisions"])
+             if isinstance(d, dict) and d.get("category") == category and d.get("subject") == subject),
+            None,
+        )
+        if latest is not None and latest.get("selected") == selected:
+            return
+        provider = data.get("selected_provider")
+        score = data.get("provider_score") or {}
+        options: list[dict[str, Any]] = [{
+            "option_id": selected,
+            "label": f"{provider} ({selected})" if provider else selected,
+            **({"score": round(float(score["weighted_score"]), 4)}
+               if isinstance(score.get("weighted_score"), (int, float)) else {}),
+        }]
+        for alt in data.get("alternatives_considered") or []:
+            options.append({"option_id": alt, "label": alt})
+        entry: dict[str, Any] = {
+            "category": category,
+            "subject": subject,
+            "selected": selected,
+            "reason": data.get("selection_reason"),
+            "options_considered": options,
+            "user_visible": True,
+            "user_approved": False,
+        }
+        if isinstance(score.get("weighted_score"), (int, float)):
+            entry["confidence"] = max(0.0, min(1.0, float(score["weighted_score"])))
+        log["decisions"].append(entry)
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        log_path.write_text(json.dumps(log, ensure_ascii=False, indent=2))
+    except Exception:
+        # Never let audit-trail bookkeeping break a successful tool call.
+        logger.warning("failed to append selector decision for %s", tool_name, exc_info=True)
+
+
 def execute_tool(
     name: str,
     args: dict[str, Any],
@@ -481,6 +553,13 @@ def execute_tool(
         if tool_name == "maas_tts":
             _apply_tts_emotion_defaults(inputs, options)
 
+        # Brand voice default (roadmap 3.2): any TTS-capability call without
+        # an explicit voice narrates with the brand kit's voice_id — same
+        # gap-filling semantics as _apply_tts_emotion_defaults (a deliberate
+        # per-line voice choice by the agent still wins).
+        if tool.capability == "tts" and (options or {}).get("brand_voice_id") and "voice" not in inputs:
+            inputs["voice"] = options["brand_voice_id"]
+
         # A caller doing an A/B variants run (options[...variants_key] set)
         # tags which branch a call belongs to — either explicitly via
         # inputs["variant"] (the only way compose/video_post calls can say
@@ -489,6 +568,12 @@ def execute_tool(
         # `inputs` — it's a routing hint, not a tool parameter.
         variant = inputs.pop("variant", None) or inputs.get("model")
         variant_tag = f"_{variant_slug(variant)}" if variant else ""
+
+        # Per-scene reroll (roadmap 2.3): a routing hint, not a tool param —
+        # when true, the content-addressed cache below is bypassed so an
+        # identical prompt genuinely regenerates (fresh uuid filename)
+        # instead of returning the very asset the user just rejected.
+        force_regenerate = bool(inputs.pop("force_regenerate", False))
 
         # Set output path if not specified.
         if "output_path" not in inputs:
@@ -519,22 +604,84 @@ def execute_tool(
                 # otherwise the second call's "final.mp4" silently clobbers
                 # the first's, and only one variant would ever be watchable.
                 filename = f"final{variant_tag}.mp4" if variant_tag else "final.mp4"
-                inputs = {**inputs, "output_path": str(renders_dir / filename)}
+                target = renders_dir / filename
+                # Generations are never silently clobbered (roadmap 2.5): a
+                # re-render of the SAME filename (revise round, reject-loop
+                # round) first moves the existing file into
+                # renders/history/<mtime>_<name> — recoverable, and invisible
+                # to the top-level renders/*.mp4 discovery glob so the newest
+                # generation alone represents the deliverable.
+                if target.is_file():
+                    try:
+                        history_dir = renders_dir / "history"
+                        history_dir.mkdir(exist_ok=True)
+                        stamp = time.strftime(
+                            "%Y%m%d-%H%M%S", time.localtime(target.stat().st_mtime)
+                        )
+                        target.replace(history_dir / f"{stamp}_{filename}")
+                    except OSError:
+                        logger.warning("failed to archive previous render %s", target, exc_info=True)
+                inputs = {**inputs, "output_path": str(target)}
             else:
                 out_dir = project_dir / "assets" / tool.capability
                 out_dir.mkdir(parents=True, exist_ok=True)
-                # A fixed "{tool_name}_output.{ext}" filename meant every call
-                # to the same tool within a job silently overwrote the
-                # previous one's file — confirmed live: an assets-stage run
-                # that generated 6 distinct video clips (without the agent
-                # overriding output_path) left exactly ONE file on disk,
-                # since each call clobbered the last. A short random suffix
-                # gives every call — with or without a distinguishing
-                # prompt/parameter — its own file. The variant tag (when
-                # present) makes the filename tell a human which A/B branch
-                # it belongs to, instead of being opaque.
-                unique = uuid.uuid4().hex[:8]
+                # Content-addressed output naming (roadmap 2.1): the filename
+                # suffix is BaseTool.idempotency_key(inputs) — a hash of the
+                # tool's declared identity fields (prompt/model/duration/…).
+                # Re-running a stage with unchanged inputs therefore lands on
+                # the SAME path, and the cache check below returns the
+                # existing file for free instead of paying for an identical
+                # generation — "重跑一次 ¥50" becomes "¥2" (only what
+                # actually changed regenerates). Falls back to a random
+                # suffix when the tool declares no identity fields, when
+                # none of them are present in this call (an all-None hash
+                # would alias DIFFERENT calls onto one file), or when the
+                # caller forces a reroll.
+                key_fields = getattr(tool, "idempotency_key_fields", None) or []
+                cache_key = None
+                if not force_regenerate and key_fields and any(f in inputs for f in key_fields):
+                    try:
+                        cache_key = tool.idempotency_key(inputs)
+                    except Exception:
+                        cache_key = None
+                unique = cache_key or uuid.uuid4().hex[:8]
                 inputs = {**inputs, "output_path": str(out_dir / f"{tool_name}{variant_tag}_{unique}.{ext}")}
+
+                cached_path = Path(inputs["output_path"])
+                if cache_key and cached_path.is_file() and cached_path.stat().st_size > 0:
+                    # Cache hit: identical inputs already produced this asset
+                    # in a previous run/round. No budget check, no ledger
+                    # entry, no paid call — reuse it verbatim.
+                    if emit_event:
+                        cached_event = {
+                            "type": "asset_ready",
+                            "tool": tool_name,
+                            "path": str(cached_path),
+                            "kind": tool.capability,
+                            "model": inputs.get("model"),
+                            "cached": True,
+                            "cost_cny": 0.0,
+                        }
+                        try:
+                            rel = cached_path.resolve().relative_to(project_dir.resolve())
+                            cached_event["media_url"] = f"/media/{project_dir.name}/{rel.as_posix()}"
+                        except (ValueError, OSError):
+                            pass
+                        emit_event(cached_event)
+                    return json.dumps({
+                        "success": True,
+                        "cached": True,
+                        "data": {
+                            "cached": True,
+                            "note": (
+                                "Reused existing asset (content-addressed: identical "
+                                "inputs already produced this file). No cost incurred. "
+                                "Pass force_regenerate=true to genuinely regenerate."
+                            ),
+                        },
+                        "artifacts": [str(cached_path)],
+                        "cost_usd": 0.0,
+                    })
 
         # Hard budget ceiling — pre-call check. Bounds total spend to <= budget
         # by refusing a paid call that would cross it, instead of letting a
@@ -596,6 +743,15 @@ def execute_tool(
             # reflects call count; the sum is what drives the CNY display).
             if cost_accumulator is not None and result.cost_usd is not None:
                 cost_accumulator.append(float(result.cost_usd))
+            # Selector calls already compute a full scored rationale
+            # (selection_reason = ToolScore.explain(), provider_score,
+            # alternatives_considered) — but nothing persisted it, so the
+            # decision rail showed nothing for auto-routed provider picks
+            # (roadmap 1.4: "scoring.explain() 从不持久化进 decision_log").
+            # Append it to the project's decision_log artifact here, at the
+            # single choke point every selector-routed call passes through.
+            if "selected_tool" in (result.data or {}) and "selection_reason" in (result.data or {}):
+                _append_selector_decision(project_dir, tool_name, tool.capability, result.data)
             if emit_event and result.artifacts:
                 last_artifact_idx = len(result.artifacts) - 1
                 for idx, artifact_path in enumerate(result.artifacts):
@@ -624,6 +780,15 @@ def execute_tool(
                     # this call carries cost_cny.
                     if idx == last_artifact_idx:
                         event["cost_cny"] = result.cost_usd
+                    # Browser-servable URL for the live filmstrip (roadmap
+                    # 1.1) — only assets inside the project workspace are
+                    # reachable via the /media static mount; anything else
+                    # (absolute temp paths etc.) just omits the field.
+                    try:
+                        rel = Path(artifact_path).resolve().relative_to(project_dir.resolve())
+                        event["media_url"] = f"/media/{project_dir.name}/{rel.as_posix()}"
+                    except (ValueError, OSError):
+                        pass
                     emit_event(event)
             return json.dumps({
                 "success": True,

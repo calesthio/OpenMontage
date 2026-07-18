@@ -17,6 +17,18 @@ checkpoint:
   policy: guided                 # guided | manual_all | auto_noncreative
   storage_dir: pipeline          # relative to project root
 
+# AI-generated-content labeling (《人工智能生成合成内容标识办法》, in force
+# 2025-09-01). BOTH labels are applied to every final render by default:
+#   - explicit: visible "AI生成" text on the opening frames (all render paths)
+#   - implicit: container metadata (provider name/code + content ID) that
+#     survives export/download (lossless remux; export_bundle copies bytes)
+# Setting enabled: false logs a LOUD warning and shifts the legal labeling
+# burden onto the operator — only do this if labels are applied downstream.
+aigc_label:
+  enabled: true
+  provider_name: OpenMontage     # 服务提供者名称 (embedded in file metadata)
+  provider_code: openmontage     # 服务提供者编码/备案号 (set your registered code)
+
 output:
   default_format: mp4
   default_codec: libx264

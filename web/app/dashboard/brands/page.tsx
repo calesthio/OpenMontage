@@ -24,6 +24,10 @@ type BrandKit = {
   target_audience: string;
   logo_url: string;
   style_notes: string;
+  voice_id?: string;
+  colors?: { bg?: string; fg?: string; accent?: string; text?: string };
+  logo_light_url?: string;
+  logo_dark_url?: string;
   reference_image_path?: string;
   updated_at: number;
 };
@@ -52,6 +56,8 @@ export default function BrandsPage() {
       brand_name: "", slogan: "", industry: "",
       tone_keywords: "", color_palette: "", target_audience: "",
       logo_url: "", style_notes: "",
+      voice_id: "", logo_light_url: "", logo_dark_url: "",
+      color_bg: "", color_fg: "", color_accent: "", color_text: "",
     };
   }
 
@@ -86,6 +92,13 @@ export default function BrandsPage() {
       target_audience: kit.target_audience,
       logo_url: kit.logo_url,
       style_notes: kit.style_notes,
+      voice_id: kit.voice_id ?? "",
+      logo_light_url: kit.logo_light_url ?? "",
+      logo_dark_url: kit.logo_dark_url ?? "",
+      color_bg: kit.colors?.bg ?? "",
+      color_fg: kit.colors?.fg ?? "",
+      color_accent: kit.colors?.accent ?? "",
+      color_text: kit.colors?.text ?? "",
     });
     setEditing(kit);
     setCreating(true);
@@ -122,8 +135,14 @@ export default function BrandsPage() {
     e.preventDefault();
     setSaving(true);
     setSaveError(null);
+    const { color_bg, color_fg, color_accent, color_text, ...rest } = form;
+    const roleColors = Object.fromEntries(
+      Object.entries({ bg: color_bg, fg: color_fg, accent: color_accent, text: color_text })
+        .filter(([, v]) => v.trim())
+    );
     const payload = {
-      ...form,
+      ...rest,
+      colors: roleColors,
       tone_keywords: form.tone_keywords.split(",").map((s) => s.trim()).filter(Boolean),
       color_palette: form.color_palette.split(",").map((s) => s.trim()).filter(Boolean),
     };
@@ -238,8 +257,31 @@ export default function BrandsPage() {
                   <Input value={form.slogan} onChange={(e) => setForm(f => ({ ...f, slogan: e.target.value }))} placeholder="好咖啡，不只属于咖啡馆" />
                 </div>
                 <div>
-                  <label className="text-sm font-medium block mb-1.5">Logo URL</label>
-                  <Input value={form.logo_url} onChange={(e) => setForm(f => ({ ...f, logo_url: e.target.value }))} placeholder="https://…/logo.png" />
+                  <label className="text-sm font-medium block mb-1.5" htmlFor="bk-logo">Logo URL</label>
+                  <Input id="bk-logo" value={form.logo_url} onChange={(e) => setForm(f => ({ ...f, logo_url: e.target.value }))} placeholder="https://…/logo.png" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium block mb-1.5" htmlFor="bk-voice">品牌旁白音色 voice_id</label>
+                  <Input id="bk-voice" value={form.voice_id} onChange={(e) => setForm(f => ({ ...f, voice_id: e.target.value }))} placeholder="例如 qwen3-tts-flash:cherry — 同品牌所有视频用同一旁白" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium block mb-1.5" htmlFor="bk-logo-light">浅色场景 Logo URL</label>
+                  <Input id="bk-logo-light" value={form.logo_light_url} onChange={(e) => setForm(f => ({ ...f, logo_light_url: e.target.value }))} placeholder="深色 logo,用于浅色背景" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium block mb-1.5" htmlFor="bk-logo-dark">深色场景 Logo URL</label>
+                  <Input id="bk-logo-dark" value={form.logo_dark_url} onChange={(e) => setForm(f => ({ ...f, logo_dark_url: e.target.value }))} placeholder="浅色 logo,用于深色背景" />
+                </div>
+                <div className="sm:col-span-2">
+                  <span className="text-sm font-medium block mb-1.5">角色化品牌色(渲染器按角色取用,而非猜测)</span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {([["color_bg", "背景 bg"], ["color_fg", "前景 fg"], ["color_accent", "强调 accent"], ["color_text", "正文 text"]] as const).map(([key, label]) => (
+                      <div key={key}>
+                        <label className="text-xs text-muted-foreground block mb-1" htmlFor={`bk-${key}`}>{label}</label>
+                        <Input id={`bk-${key}`} value={form[key]} onChange={(e) => setForm(f => ({ ...f, [key]: e.target.value }))} placeholder="#RRGGBB" />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">

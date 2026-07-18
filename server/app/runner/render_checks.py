@@ -139,7 +139,14 @@ def _validate_publish_log_exports(project_dir: Path, publish_log: dict) -> list[
         status = entry.get("status")
         export_path = entry.get("export_path")
         if status in ("exported", "draft") and export_path:
-            if not (project_dir / export_path).is_file():
+            # export_path may name a single file OR a bundle directory —
+            # tools/publishers/export_bundle.py (the canonical publish tool)
+            # writes the bundle's ROOT DIRECTORY as export_path, so an
+            # is_file()-only check hard-failed every genuine export_bundle
+            # run. A directory counts as real only when it contains at
+            # least one file — an empty dir proves nothing was exported.
+            p = project_dir / export_path
+            if not (p.is_file() or (p.is_dir() and any(f.is_file() for f in p.rglob("*")))):
                 missing.append(export_path)
     return missing
 

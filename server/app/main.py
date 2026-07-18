@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.interfaces import get_auth_provider
-from app.routers import jobs, events, health, brands, system, pipelines
+from app.routers import jobs, events, health, brands, system, pipelines, library
 
 OM_ROOT = Path(__file__).parent.parent.parent
 
@@ -85,6 +85,7 @@ app.include_router(events.router, prefix="/jobs")
 app.include_router(brands.router, prefix="/brands")
 app.include_router(system.router, prefix="/system")
 app.include_router(pipelines.router, prefix="/pipelines")
+app.include_router(library.router, prefix="/library")
 
 # Serve generated project files (videos, images, audio) at /media/
 projects_dir = OM_ROOT / "projects"

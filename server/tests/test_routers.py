@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app import main
-from app.routers import jobs, events, brands
+from app.routers import jobs, events, brands, system as system_router_mod
 from app.store import JobStore
 
 
@@ -21,6 +21,8 @@ def client(tmp_path, monkeypatch):
     ts = JobStore(persist_dir=tmp_path / "js")
     monkeypatch.setattr(jobs, "job_store", ts)
     monkeypatch.setattr(events, "job_store", ts)
+    monkeypatch.setattr(system_router_mod, "job_store", ts)
+    monkeypatch.setattr(system_router_mod, "OM_ROOT", tmp_path)
     monkeypatch.setattr(jobs, "OM_ROOT", tmp_path)                 # isolate artifact writes
     monkeypatch.setattr(brands, "BRAND_KITS_DIR", tmp_path / "brand_kits")
     monkeypatch.setattr(jobs, "get_job_queue", lambda: _NoQueue())
@@ -150,9 +152,41 @@ def test_save_artifact_writes_file(client, tmp_path):
     jid = client.post("/jobs", json=_new_job_body(project_name="p1")).json()["job_id"]
     r = client.post(f"/jobs/{jid}/artifact", json={"stage": "script", "content": {"k": 1}})
     assert r.status_code == 200
+    # cinematic's "script" stage produces an artifact that happens to share
+    # its name — the file must land under the produces name.
     written = tmp_path / "projects" / "p1" / "artifacts" / "script.json"
     assert written.exists()
     assert client.post("/jobs/nope/artifact", json={"stage": "s", "content": {}}).status_code == 404
+
+
+def test_save_artifact_by_stage_resolves_to_produces_name(client, tmp_path):
+    # Regression (silent inline-edit discard): 6 of cinematic's 8 stages name
+    # their artifact differently from the stage (stage "proposal" produces
+    # "proposal_packet"). The endpoint used to write artifacts/<stage>.json
+    # verbatim — an orphan file no stage ever reads back — while returning
+    # 200 "saved". The edit must land at the PRODUCES name the pipeline's
+    # _load_artifacts actually consumes.
+    jid = client.post("/jobs", json=_new_job_body(project_name="p2")).json()["job_id"]
+    r = client.post(f"/jobs/{jid}/artifact", json={"stage": "proposal", "content": {"edited": True}})
+    assert r.status_code == 200
+    assert r.json()["saved"] == "proposal_packet"
+    artifacts_dir = tmp_path / "projects" / "p2" / "artifacts"
+    assert (artifacts_dir / "proposal_packet.json").exists()
+    assert not (artifacts_dir / "proposal.json").exists()
+
+
+def test_save_artifact_by_artifact_name_directly(client, tmp_path):
+    jid = client.post("/jobs", json=_new_job_body(project_name="p3")).json()["job_id"]
+    r = client.post(f"/jobs/{jid}/artifact", json={"artifact_name": "scene_plan", "content": {"scenes": []}})
+    assert r.status_code == 200
+    assert r.json()["saved"] == "scene_plan"
+    assert (tmp_path / "projects" / "p3" / "artifacts" / "scene_plan.json").exists()
+    # An artifact name from a different pipeline / a typo is rejected.
+    r2 = client.post(f"/jobs/{jid}/artifact", json={"artifact_name": "not_an_artifact", "content": {}})
+    assert r2.status_code == 400
+    # Neither field at all is rejected.
+    r3 = client.post(f"/jobs/{jid}/artifact", json={"content": {}})
+    assert r3.status_code == 400
 
 
 def test_save_artifact_rejects_stage_not_in_jobs_pipeline(client):
@@ -162,6 +196,44 @@ def test_save_artifact_rejects_stage_not_in_jobs_pipeline(client):
     jid = client.post("/jobs", json=_new_job_body(project_name="p1b", pipeline="cinematic")).json()["job_id"]
     r = client.post(f"/jobs/{jid}/artifact", json={"stage": "not_a_real_stage", "content": {}})
     assert r.status_code == 400
+
+
+def test_get_job_artifacts_returns_disk_artifacts(client, tmp_path):
+    # Roadmap 1.2: artifacts must stay inspectable after their approval gate
+    # resolves — this read-only endpoint exposes what's on disk.
+    import json as _json
+    jid = client.post("/jobs", json=_new_job_body(project_name="pa")).json()["job_id"]
+    art_dir = tmp_path / "projects" / "pa" / "artifacts"
+    art_dir.mkdir(parents=True)
+    (art_dir / "brief.json").write_text(_json.dumps({"hook": "h"}))
+    (art_dir / "scene_plan.json").write_text(_json.dumps({"scenes": [1, 2]}))
+    r = client.get(f"/jobs/{jid}/artifacts")
+    assert r.status_code == 200
+    arts = r.json()["artifacts"]
+    assert arts["brief"] == {"hook": "h"}
+    assert arts["scene_plan"]["scenes"] == [1, 2]
+    assert client.get("/jobs/nope/artifacts").status_code == 404
+
+
+def test_approve_carries_new_budget_ceiling(client):
+    # Roadmap 1.3: the budget gate's approve can carry the user's chosen new
+    # absolute ceiling instead of the spent×1.2 ratchet.
+    jid = client.post("/jobs", json=_new_job_body()).json()["job_id"]
+    jobs.job_store.update(jid, status="awaiting_approval")
+    r = client.post(f"/jobs/{jid}/approve",
+                    json={"action": "approve", "new_budget_cny": 80.5})
+    assert r.status_code == 200
+    # 未消费的决策还留在 store 里 — 直接读出验证透传。
+    decision = jobs.job_store._approval_results[jid]
+    assert decision == {"action": "approve", "feedback": "", "new_budget_cny": 80.5}
+
+
+def test_approve_rejects_nonpositive_budget(client):
+    jid = client.post("/jobs", json=_new_job_body()).json()["job_id"]
+    jobs.job_store.update(jid, status="awaiting_approval")
+    r = client.post(f"/jobs/{jid}/approve",
+                    json={"action": "approve", "new_budget_cny": -5})
+    assert r.status_code == 422
 
 
 def test_create_job_rejects_duplicate_project_name_while_inflight(client):
@@ -473,3 +545,201 @@ def test_cors_origins_env_override(monkeypatch):
     # pointed elsewhere) had every browser API call rejected by CORS.
     monkeypatch.setenv("OM_CORS_ORIGINS", "https://example.com, https://foo.bar ")
     assert main._cors_origins() == ["https://example.com", "https://foo.bar"]
+
+
+# ── revise: success is no longer a dead end (roadmap 2.2/2.4) ────────────────
+
+def test_revise_clones_and_rolls_back_cascade(client, tmp_path):
+    jid = client.post("/jobs", json=_new_job_body(project_name="rv1")).json()["job_id"]
+    jobs.job_store.update(
+        jid, status="completed", cost_cny=12.5,
+        completed_stages=["research", "proposal", "script", "scene_plan", "assets", "edit", "compose", "publish"],
+    )
+    r = client.post(f"/jobs/{jid}/revise", json={"stage": "scene_plan", "feedback": "分镜太平淡"})
+    assert r.status_code == 201
+    body = r.json()
+    assert body["revised_from"] == jid
+    assert body["completed_stages"] == ["research", "proposal", "script"]
+    clone = jobs.job_store.get(body["job_id"])
+    assert clone["status"] == "queued"
+    assert clone["cost_cny"] == 12.5        # spend carries across generations
+    assert clone["revise_feedback"] == {"stage": "scene_plan", "feedback": "分镜太平淡", "mode": "cascade"}
+    # The original job is untouched — an immutable record.
+    assert jobs.job_store.get(jid)["status"] == "completed"
+
+
+def test_revise_single_mode_keeps_later_stages(client):
+    jid = client.post("/jobs", json=_new_job_body(project_name="rv2")).json()["job_id"]
+    jobs.job_store.update(
+        jid, status="completed",
+        completed_stages=["research", "proposal", "script", "scene_plan"],
+    )
+    r = client.post(f"/jobs/{jid}/revise", json={"stage": "proposal", "mode": "single"})
+    assert r.status_code == 201
+    assert r.json()["completed_stages"] == ["research", "scene_plan", "script"]
+
+
+def test_revise_rejects_live_or_unknown(client):
+    jid = client.post("/jobs", json=_new_job_body(project_name="rv3")).json()["job_id"]
+    # queued (in-flight) → 400
+    assert client.post(f"/jobs/{jid}/revise", json={"stage": "script"}).status_code == 400
+    jobs.job_store.update(jid, status="completed")
+    # unknown stage → 400; unknown job → 404
+    assert client.post(f"/jobs/{jid}/revise", json={"stage": "not_a_stage"}).status_code == 400
+    assert client.post("/jobs/nope/revise", json={"stage": "script"}).status_code == 404
+
+
+def test_revise_archives_previous_renders(client, tmp_path):
+    jid = client.post("/jobs", json=_new_job_body(project_name="rv4")).json()["job_id"]
+    jobs.job_store.update(jid, status="completed",
+                          completed_stages=["research", "compose"])
+    renders = tmp_path / "projects" / "rv4" / "renders"
+    renders.mkdir(parents=True)
+    (renders / "final.mp4").write_bytes(b"gen1")
+    (renders / "final_ltx.mp4").write_bytes(b"gen1-variant")
+    r = client.post(f"/jobs/{jid}/revise", json={"stage": "compose"})
+    assert r.status_code == 201
+    # Top level is clean (no stale-variant glob confusion); both archived.
+    assert list(renders.glob("*.mp4")) == []
+    archived = sorted(p.name for p in (renders / "history").rglob("*.mp4"))
+    assert archived == ["final.mp4", "final_ltx.mp4"]
+
+
+def test_artifacts_endpoint_reports_stale_stages(client, tmp_path):
+    import os as _os, json as _json
+    jid = client.post("/jobs", json=_new_job_body(project_name="st1")).json()["job_id"]
+    jobs.job_store.update(jid, status="completed",
+                          completed_stages=["research", "proposal", "script"])
+    art = tmp_path / "projects" / "st1" / "artifacts"
+    art.mkdir(parents=True)
+    now = 1_700_000_000
+    # proposal consumed research_brief; script consumed proposal_packet.
+    for name, mtime in [("research_brief", now), ("proposal_packet", now + 10), ("script", now + 20)]:
+        p = art / f"{name}.json"
+        p.write_text(_json.dumps({}))
+        _os.utime(p, (mtime, mtime))
+    assert client.get(f"/jobs/{jid}/artifacts").json()["stale_stages"] == []
+    # The user edits the proposal — script's output now predates its input.
+    _os.utime(art / "proposal_packet.json", (now + 30, now + 30))
+    assert client.get(f"/jobs/{jid}/artifacts").json()["stale_stages"] == ["script"]
+
+
+# ── batch 3: cost transparency / library / brand kit / actor ─────────────────
+
+def test_estimate_history_mode(client):
+    for cost, status in [(10.0, "completed"), (30.0, "completed"), (99.0, "failed")]:
+        jid = client.post("/jobs", json=_new_job_body(project_name=f"e{cost}")).json()["job_id"]
+        jobs.job_store.update(jid, status=status, cost_cny=cost)
+    r = client.post("/system/estimate", json={"pipeline": "cinematic"})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["mode"] == "history"
+    assert body["sample_count"] == 2          # failed job excluded
+    assert body["low_cny"] == 10.0
+    assert body["high_cny"] == 30.0
+    assert body["typical_cny"] == 20.0
+
+
+def test_estimate_reference_mode_wires_estimate_from_reference(client, monkeypatch):
+    # Pins the call site (house failure pattern: 220-line quoting engine,
+    # zero production callers).
+    called = {}
+    from tools.cost_tracker import CostTracker
+    def fake_estimate(self, brief, duration, tool_plan):
+        called.update({"duration": duration})
+        return {"total_usd": 12.3, "line_items": [], "assumptions": ["x"]}
+    monkeypatch.setattr(CostTracker, "estimate_from_reference", fake_estimate)
+    r = client.post("/system/estimate", json={
+        "pipeline": "cinematic",
+        "reference_brief": {"source": {"duration_seconds": 90}},
+        "target_duration_seconds": 60,
+    })
+    assert r.status_code == 200
+    assert r.json()["mode"] == "reference"
+    assert r.json()["quote"]["total_usd"] == 12.3
+    assert called["duration"] == 60
+
+
+def test_usage_rollup(client, tmp_path):
+    import json as _json
+    j1 = client.post("/jobs", json=_new_job_body(project_name="u1")).json()["job_id"]
+    jobs.job_store.update(j1, status="completed", cost_cny=5.0)
+    j2 = client.post("/jobs", json=_new_job_body(project_name="u2", pipeline="animation")).json()["job_id"]
+    jobs.job_store.update(j2, status="failed", cost_cny=2.0)
+    log_dir = tmp_path / "projects" / "u1"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    (log_dir / "cost_log.json").write_text(_json.dumps({
+        "entries": [
+            {"tool": "maas_video", "actual_usd": 3.5, "estimated_usd": 3.0},
+            {"tool": "maas_tts", "actual_usd": 0.0, "estimated_usd": 0.4},
+        ]
+    }))
+    from app.routers import system as system_router
+    import pytest as _pytest
+    mp = _pytest.MonkeyPatch()
+    mp.setattr(system_router, "OM_ROOT", tmp_path)
+    try:
+        r = client.get("/system/usage")
+    finally:
+        mp.undo()
+    assert r.status_code == 200
+    body = r.json()
+    assert body["total_cny"] == 7.0
+    assert body["by_pipeline"]["cinematic"]["cost_cny"] == 5.0
+    assert body["by_project"]["u2"]["jobs"] == 1
+    assert body["by_tool"]["maas_video"]["cost_cny"] == 3.5
+    assert body["by_tool"]["maas_tts"]["cost_cny"] == 0.4   # estimate fallback
+
+
+def test_library_aggregates_and_searches(client, tmp_path, monkeypatch):
+    import json as _json
+    from app.routers import library as library_router
+    monkeypatch.setattr(library_router, "OM_ROOT", tmp_path)
+    for proj, prompt in [("lib-a", "一只机器兔在晨光里"), ("lib-b", "赛博城市夜景")]:
+        d = tmp_path / "projects" / proj / "artifacts"
+        d.mkdir(parents=True)
+        (d / "asset_manifest.json").write_text(_json.dumps({
+            "version": "1.0",
+            "assets": [{"id": f"{proj}-1", "type": "image",
+                        "path": f"assets/images/{proj}.png",
+                        "prompt": prompt, "model": "flux-2", "cost_usd": 0.3}],
+        }, ensure_ascii=False))
+    r = client.get("/library/assets")
+    assert r.status_code == 200
+    assert r.json()["total"] == 2
+    assert set(r.json()["projects"]) == {"lib-a", "lib-b"}
+    a = r.json()["assets"][0]
+    assert a["media_url"].startswith("/media/lib-")
+    # substring search over prompt
+    r2 = client.get("/library/assets", params={"q": "机器兔"})
+    assert r2.json()["total"] == 1
+    assert r2.json()["assets"][0]["project"] == "lib-a"
+    # filter by project
+    r3 = client.get("/library/assets", params={"project": "lib-b"})
+    assert r3.json()["total"] == 1
+
+
+def test_brand_kit_roundtrips_new_fields(client):
+    r = client.post("/brands", json={
+        "brand_name": "Acme",
+        "voice_id": "qwen3-tts-flash:cherry",
+        "colors": {"bg": "#0B0B0F", "fg": "#FFFFFF", "accent": "#00D4FF", "text": "#EAEAEA"},
+        "logo_light_url": "https://cdn/acme-light.png",
+        "logo_dark_url": "https://cdn/acme-dark.png",
+    })
+    assert r.status_code == 201
+    kit = r.json()
+    assert kit["voice_id"] == "qwen3-tts-flash:cherry"
+    assert kit["colors"]["accent"] == "#00D4FF"
+    r2 = client.patch(f"/brands/{kit['kit_id']}", json={"voice_id": "other-voice"})
+    assert r2.json()["voice_id"] == "other-voice"
+    assert r2.json()["colors"]["bg"] == "#0B0B0F"   # untouched fields survive
+
+
+def test_approve_actor_recorded(client):
+    jid = client.post("/jobs", json=_new_job_body(project_name="act1")).json()["job_id"]
+    jobs.job_store.update(jid, status="awaiting_approval")
+    r = client.post(f"/jobs/{jid}/approve",
+                    json={"action": "approve", "actor": "producer@acme"})
+    assert r.status_code == 200
+    assert jobs.job_store._approval_results[jid]["actor"] == "producer@acme"

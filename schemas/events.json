@@ -2,6 +2,7 @@
   "$comment": "Canonical list of every SSE event type the backend emits (the `type` field of events pushed via _emit/emit_event/push_event in server/app/runner/stage_runner.py, server/app/runner/tool_bridge.py, and server/app/routers/events.py — events.py synthesizes job_completed/job_failed on replay). Enforced from BOTH ecosystems: server/tests/test_event_types.py asserts this list matches the emit-site literals in those three files; web/__tests__/job-status.test.tsx asserts every type here is either mapped in EVENT_COLOR (web/components/job-status.tsx) or deliberately allowlisted in muted_ok. Adding a new emit type requires updating this file AND the frontend maps — the tests will tell you.",
   "event_types": [
     "agent_text",
+    "approval_reminder",
     "artifact_written",
     "asset_ready",
     "awaiting_approval",

@@ -197,12 +197,63 @@ def _resolve_stages(pipeline_name: str) -> list[dict]:
         return []
     return _resolve_stages("cinematic")
 
+
+def _resolve_max_revisions(pipeline_name: str) -> int:
+    """The manifest's orchestration.max_revisions_per_stage for this pipeline.
+
+    Every pipeline_defs/*.yaml declares it (universally 3), but until this
+    resolver nothing read ANY of the manifests' orchestration keys — the
+    human reject→regenerate loop was unbounded, each round a fresh paid LLM
+    conversation. Follows PIPELINE_MAP string aliases the same way
+    _resolve_stages does; a raw stage-list override (tests) has no manifest,
+    so it gets the default. Of the other orchestration keys, only this one
+    is enforced by this runner — see the schema
+    (schemas/pipelines/pipeline_manifest.schema.json) for each key's
+    enforcement status.
+    """
+    override = PIPELINE_MAP.get(pipeline_name)
+    if isinstance(override, str):
+        return _resolve_max_revisions(override)
+    if override is not None:
+        return DEFAULT_MAX_REVISIONS_PER_STAGE
+    try:
+        from app.pipeline_catalog import load_manifest
+        manifest = load_manifest(pipeline_name)
+        value = int((manifest.get("orchestration") or {})["max_revisions_per_stage"])
+        if value > 0:
+            return value
+    except Exception:
+        pass
+    return DEFAULT_MAX_REVISIONS_PER_STAGE
+
 MAX_TURNS  = 20
 # How many pause→resume round-trips a single stage run allows for its
 # mid-stage sample-preview checkpoint (see SamplePreviewNeeded below) before
 # giving up. Mirrors asset-director.md's own "max 3 iterations" policy for a
 # rejected sample.
 MAX_SAMPLE_ITERATIONS = 3
+
+# ── Approval-wait ladder (remind → escalate → expire; NEVER auto-decide) ─────
+# The original behavior was a single wait_for_approval(timeout=3600) whose
+# timeout was silently reported as a REJECT — a user who stepped away for an
+# hour came back to a job that had been auto-rejected (stage gates: a paid
+# regenerate they never asked for; budget gate: the job killed) with no
+# countdown and no notification. The ladder instead: emit an
+# "approval_reminder" SSE event every APPROVAL_REMINDER_SECONDS (the UI turns
+# these into toasts / escalating notices), and only after
+# APPROVAL_EXPIRY_SECONDS with no decision at all does the job fail — loudly,
+# with an explicit "approval window expired" message, retryable, and NEVER by
+# fabricating an approve/reject the human didn't make. (Ladder shape follows
+# Cloudflare's approval pattern: remind → escalate → 7-day hard expiry.)
+APPROVAL_REMINDER_SECONDS = float(os.environ.get("OM_APPROVAL_REMINDER_SECONDS", 1800.0))
+APPROVAL_EXPIRY_SECONDS = float(os.environ.get("OM_APPROVAL_EXPIRY_SECONDS", 7 * 24 * 3600.0))
+
+# Bounded human reject→regenerate rounds per stage gate. Every
+# pipeline_defs/*.yaml manifest declares orchestration.max_revisions_per_stage
+# (universally 3) but nothing ever read it — the reject loop was unbounded,
+# each round a fresh paid LLM conversation. This is the fallback when a
+# manifest doesn't declare one; see _resolve_max_revisions.
+DEFAULT_MAX_REVISIONS_PER_STAGE = 3
 
 
 class SamplePreviewNeeded(Exception):
@@ -337,26 +388,99 @@ def _pause_for_approval(
     stage: str,
     gate: str | None = None,
     preview: Any = None,
-) -> None:
+    preview_artifact: str | None = None,
+) -> float:
     """Set status=awaiting_approval AND emit the matching awaiting_approval
     event in one call — same status-change-plus-event invariant as _fail_job.
 
-    `gate` distinguishes the mid-run gates (budget / sample_preview) from the
-    ordinary stage-boundary approval, which emits no gate key at all — the
-    key is omitted (not None) there so consumers' event shape is unchanged.
-    `preview` is always included, even when None, matching the historical
-    stage-boundary emit shape.
+    `gate` distinguishes the mid-run gates (budget / sample_preview /
+    revisions_exhausted) from the ordinary stage-boundary approval, which
+    emits no gate key at all — the key is omitted (not None) there so
+    consumers' event shape is unchanged. `preview` is always included, even
+    when None, matching the historical stage-boundary emit shape.
+
+    Returns the gate's hard expiry timestamp (also stamped on the event as
+    `expires_at` and on the job record as `approval_expires_at`, so both a
+    live SSE consumer and a fresh page load can render a countdown) — pass
+    it to _wait_for_decision so the deadline the user sees and the deadline
+    the runner enforces are the same number.
     """
     # Clear any stale decision/event left by a previous gate's timeout race
     # BEFORE the status flip makes new decisions acceptable (see
     # JobStore.begin_approval_gate).
     job_store.begin_approval_gate(job_id)
-    job_store.update(job_id, status="awaiting_approval")
+    expires_at = time.time() + APPROVAL_EXPIRY_SECONDS
+    job_store.update(job_id, status="awaiting_approval", approval_expires_at=expires_at)
     event: dict[str, Any] = {"type": "awaiting_approval", "stage": stage}
     if gate is not None:
         event["gate"] = gate
     event["preview"] = preview
+    if preview_artifact is not None:
+        # The produces-name of the artifact `preview` holds — lets the UI
+        # pick the matching structured renderer (script / scene_plan /
+        # asset_manifest / …) instead of a raw JSON box (roadmap 1.2).
+        event["preview_artifact"] = preview_artifact
+    event["expires_at"] = expires_at
+    event["reminder_seconds"] = APPROVAL_REMINDER_SECONDS
     _emit(job_id, event)
+    return expires_at
+
+
+async def _wait_for_decision(
+    job_id: str,
+    stage: str,
+    gate: str | None = None,
+    expires_at: float | None = None,
+) -> dict:
+    """wait_for_approval with the reminder→escalate→expire ladder on top.
+
+    Waits in APPROVAL_REMINDER_SECONDS slices; each slice that elapses with
+    no decision emits an "approval_reminder" SSE event (the UI surfaces
+    these as toasts/notifications) and keeps waiting. Only when `expires_at`
+    (default: now + APPROVAL_EXPIRY_SECONDS; normally the value returned by
+    _pause_for_approval) passes with no decision does this return
+    {"action": "timeout"} — the caller must then fail the job EXPLICITLY.
+    Approve/reject are never fabricated on the human's behalf.
+    """
+    started = time.time()
+    deadline = expires_at if expires_at is not None else started + APPROVAL_EXPIRY_SECONDS
+    reminder_index = 0
+    while True:
+        remaining = deadline - time.time()
+        if remaining <= 0:
+            return {"action": "timeout", "feedback": ""}
+        decision = await job_store.wait_for_approval(
+            job_id, timeout=min(APPROVAL_REMINDER_SECONDS, remaining)
+        )
+        if decision.get("action") != "timeout":
+            return decision
+        # A cancel can arrive while the gate is open — surface it promptly
+        # instead of only after the full expiry window.
+        if (job_store.get(job_id) or {}).get("cancel_requested"):
+            raise JobCancelled()
+        if deadline - time.time() <= 0:
+            return {"action": "timeout", "feedback": ""}
+        reminder_index += 1
+        event: dict[str, Any] = {
+            "type": "approval_reminder",
+            "stage": stage,
+            "reminder_index": reminder_index,
+            "waited_seconds": round(time.time() - started),
+            "expires_at": deadline,
+        }
+        if gate is not None:
+            event["gate"] = gate
+        _emit(job_id, event)
+
+
+def _approval_expired_message(stage: str) -> str:
+    days = APPROVAL_EXPIRY_SECONDS / 86400
+    return (
+        f"Approval for stage '{stage}' received no decision within the "
+        f"{days:.0f}-day approval window — the job was stopped without "
+        "auto-approving or auto-rejecting anything. Retry the job to re-open "
+        "this stage."
+    )
 
 
 def _truncate_json_for_prompt(text: str, cap: int) -> str:
@@ -501,6 +625,117 @@ def _artifact_mtimes(project_dir: Path, names: list[str]) -> dict[str, float]:
         p = artifacts_dir / f"{name}.json"
         result[name] = p.stat().st_mtime if p.exists() else -1.0
     return result
+
+
+def _canonical_pipeline_type(pipeline_name: str) -> str:
+    """Follow PIPELINE_MAP string aliases to the real manifest name
+    (marketing_film → cinematic). A raw stage-list override (tests) has no
+    manifest — return the name unchanged; checkpoint writes will then fail
+    validation and be skipped (they're best-effort)."""
+    seen: set[str] = set()
+    name = pipeline_name
+    while isinstance(PIPELINE_MAP.get(name), str) and name not in seen:
+        seen.add(name)
+        name = PIPELINE_MAP[name]   # type: ignore[assignment]
+    return name
+
+
+def _write_stage_checkpoint(
+    project_dir: Path,
+    project_name: str,
+    pipeline_type: str,
+    stage_def: dict,
+    status: str,
+    *,
+    approved: bool = False,
+    cost_cny: float | None = None,
+) -> None:
+    """Dual persistence (roadmap 2.5): mirror the web runner's stage state
+    into lib/checkpoint's on-disk protocol — the same files the Backlot
+    board watches. Until this, the web path never imported lib.checkpoint,
+    so 11 of 12 real projects had no checkpoints and the board's entire
+    mechanism (version history, time-scrub replay, gate audit, stall
+    detection) served exactly one hand-run project.
+
+    Strictly best-effort: the board is an observer, never a blocker — any
+    validation failure (e.g. an agent-written artifact that doesn't satisfy
+    its schema, which write_artifact deliberately tolerates) skips the
+    checkpoint with a debug log and the pipeline continues.
+    """
+    try:
+        from lib.checkpoint import write_checkpoint
+        artifacts: dict[str, Any] = {}
+        if status in ("completed", "awaiting_human"):
+            have = _load_artifacts(project_dir)
+            for name in stage_def.get("produces") or []:
+                if name in have:
+                    artifacts[name] = have[name]
+        write_checkpoint(
+            project_dir.parent,
+            project_name,
+            stage_def["name"],
+            status,
+            artifacts,
+            pipeline_type=pipeline_type,
+            human_approval_required=bool(stage_def.get("approval")),
+            human_approved=approved,
+            cost_snapshot={"total_cny": cost_cny} if cost_cny is not None else None,
+        )
+    except Exception:
+        logger.debug(
+            "checkpoint write skipped for %s/%s (%s)",
+            project_name, stage_def.get("name"), status, exc_info=True,
+        )
+
+
+def _run_asset_consistency_check(job_id: str, project_dir: Path) -> None:
+    """Multi-shot subject consistency (roadmap 3.3): lib/asset_consistency
+    was written after a real incident (four generated shots of "the same"
+    robot vacuum, four visibly different designs) and then never called.
+    This is its production call site: after the assets stage completes,
+    every group of manifest assets sharing a `subject` tag is checked for
+    pairwise visual similarity; below-threshold pairs surface as a warning
+    event. Advisory — CLIP being uninstalled or a check error never blocks
+    the stage."""
+    try:
+        manifest = _load_artifacts(project_dir).get("asset_manifest") or {}
+        groups: dict[str, list[str]] = {}
+        for a in manifest.get("assets", []) or []:
+            if not isinstance(a, dict):
+                continue
+            subject = a.get("subject") or a.get("subject_tag")
+            path = a.get("path")
+            if not subject or not path or "image" not in str(a.get("type", "")):
+                continue
+            p = Path(path)
+            if not p.is_absolute():
+                p = project_dir / path
+            groups.setdefault(str(subject), []).append(str(p))
+        groups = {s: ps for s, ps in groups.items() if len(ps) >= 2}
+        if not groups:
+            return
+        from lib.asset_consistency import check_asset_consistency
+        result = check_asset_consistency(groups)
+        if result.get("critical"):
+            pairs = "; ".join(
+                f"{f['subject']}: {Path(f['asset_a']).name} vs {Path(f['asset_b']).name} "
+                f"(similarity {f['similarity']})"
+                for f in result.get("findings", [])[:5]
+            )
+            _emit(job_id, {
+                "type": "warning",
+                "stage": "assets",
+                "message": (
+                    "Asset consistency check: the same subject appears as visibly "
+                    f"different designs across shots — {pairs}. Review the assets "
+                    "before compose locks them in (per-scene 换一版 can reroll the "
+                    "outliers)."
+                ),
+            })
+        elif not result.get("ran"):
+            logger.debug("asset consistency check skipped: %s", result.get("reason"))
+    except Exception:
+        logger.debug("asset consistency check errored", exc_info=True)
 
 
 def _load_brand_kit(kit_id: str | None) -> dict:
@@ -885,7 +1120,12 @@ After writing the artifact, confirm briefly what you produced.
                     tool_name,
                     tool_args,
                     project_dir,
-                    emit_event=lambda ev: _emit(job_id, ev),
+                    # Stamp the current stage onto every bridge-emitted event
+                    # (asset_ready/tool_call/artifact_written/...) — the
+                    # filmstrip and the two-tier event log group by stage,
+                    # and tool_bridge itself doesn't know which stage is
+                    # running. An event that sets its own stage still wins.
+                    emit_event=lambda ev: _emit(job_id, {"stage": stage_name, **ev}),
                     cost_accumulator=cost_accumulator,
                     cost_tracker=cost_tracker,
                     budget_cny=budget_cny,
@@ -1007,11 +1247,32 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
     options = data.get("options", {})
     project_name = data.get("project_name", job_id)
 
+    # Brand voice (roadmap 3.2): a kit's voice_id becomes the default TTS
+    # voice for every narration call of this job (tool_bridge fills it when
+    # the agent didn't explicitly choose one) — two videos of one brand now
+    # share a narrator by mechanism, not by luck.
+    _kit = _load_brand_kit(options.get("brand_kit_id"))
+    if _kit.get("voice_id"):
+        options = {**options, "brand_voice_id": _kit["voice_id"]}
+
     project_dir = OM_ROOT / "projects" / project_name
     project_dir.mkdir(parents=True, exist_ok=True)
     (project_dir / "artifacts").mkdir(exist_ok=True)
     (project_dir / "assets").mkdir(exist_ok=True)
     (project_dir / "renders").mkdir(exist_ok=True)
+
+    # Dual persistence (roadmap 2.5): initialize the checkpoint-protocol
+    # workspace marker so the Backlot board can identify this run. Best-effort
+    # — the board is an observer, never a blocker.
+    pipeline_type = _canonical_pipeline_type(pipeline_name)
+    try:
+        from lib.checkpoint import init_project
+        init_project(
+            project_name, title=project_name, pipeline_type=pipeline_type,
+            pipeline_dir=project_dir.parent,
+        )
+    except Exception:
+        logger.debug("init_project skipped for %s", project_name, exc_info=True)
 
     # MaaS tools bill in CNY (the user owns the gateway) and their cost_usd field
     # already carries CNY amounts, so accumulate directly — no FX conversion.
@@ -1096,11 +1357,18 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
             budget_exceeded_event["blocked_tool_name"] = blocked_tool_name
             budget_exceeded_event["blocked_est_cost_cny"] = blocked_est_cost
             budget_exceeded_event["projected_cny"] = projected_cny
-        _pause_for_approval(job_id, "budget", gate="budget", preview=preview)
+        expires_at = _pause_for_approval(job_id, "budget", gate="budget", preview=preview)
         _emit(job_id, budget_exceeded_event)
-        approval = await job_store.wait_for_approval(job_id, timeout=3600.0)
+        approval = await _wait_for_decision(job_id, "budget", gate="budget", expires_at=expires_at)
         if (job_store.get(job_id) or {}).get("cancel_requested"):
             raise JobCancelled()
+        if approval["action"] == "timeout":
+            _fail_job(
+                job_id, stage="budget",
+                message=_approval_expired_message("budget"),
+                set_current_stage=False,
+            )
+            return False
         if approval["action"] == "reject":
             # set_current_stage=False: "budget" names the gate in the event,
             # not a pipeline stage — the job record's current_stage must keep
@@ -1115,23 +1383,32 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
         # budget protection for the rest of the job (the previous
         # `budget_overridden` flag did that — approving one small overage
         # early silently waived every later stage's check too, no matter how
-        # much more expensive). 20% headroom over the actual current spend
-        # lets the stage that triggered this approval proceed without an
-        # immediate re-prompt for the exact same overage, while still gating
-        # again if a LATER stage blows through this new ceiling.
+        # much more expensive).
         #
-        # On the force=True pre-call-block path, `spent` does NOT include the
-        # blocked call's own cost (it never ran) — re-arming off spent*1.2
-        # alone can land BELOW what that call actually needs (or even below
-        # the previous ceiling), permanently re-blocking the identical call on
-        # every future approval. Use the blocked call's own projected_cny (the
-        # spend IF it's admitted) as a floor, together with the previous
-        # ceiling, so the new ceiling never drops below either.
+        # The ceiling the user CHOSE wins (roadmap 1.3): the approve request
+        # can carry new_budget_cny, an absolute cap in CNY. Without it, fall
+        # back to the old 20% headroom heuristic — which was an unbounded
+        # ratchet the user never picked (approve, spend to the new ceiling,
+        # be asked again, ×1.2 forever).
+        #
+        # Either way the new ceiling is floored so the just-approved
+        # continuation isn't immediately re-blocked: on the force=True
+        # pre-call-block path `spent` does NOT include the blocked call's own
+        # cost (it never ran) — the blocked call's projected_cny (the spend
+        # IF it's admitted) is the real floor there.
         old_budget_cny = budget_cny
-        if force and projected_cny is not None:
-            budget_cny = round(max(budget_cny, projected_cny) * 1.2, 4)
-        else:
-            budget_cny = round(spent * 1.2, 4)
+        floor = projected_cny if (force and projected_cny is not None) else spent
+        user_budget = approval.get("new_budget_cny")
+        if user_budget is not None:
+            try:
+                budget_cny = round(max(float(user_budget), floor), 4)
+            except (TypeError, ValueError):
+                user_budget = None
+        if user_budget is None:
+            if force and projected_cny is not None:
+                budget_cny = round(max(budget_cny, projected_cny) * 1.2, 4)
+            else:
+                budget_cny = round(spent * 1.2, 4)
         if cost_tracker is not None:
             # Keep the ledger's recorded ceiling in sync for anything
             # inspecting cost_log.json. A direct in-memory attribute bump —
@@ -1152,29 +1429,38 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
         })
         return True
 
-    async def _sample_preview_gate(stage_name: str, spn: SamplePreviewNeeded) -> list[dict]:
+    async def _sample_preview_gate(stage_name: str, spn: SamplePreviewNeeded) -> list[dict] | None:
         """Pause for a real approval on a mid-stage sample-preview checkpoint
-        and return the resume_messages to feed back into _run_agent_stage.
+        and return the resume_messages to feed back into _run_agent_stage —
+        or None when the approval window expired (the job is already marked
+        failed here; the caller just unwinds).
 
         Reuses the exact same awaiting_approval/wait_for_approval primitive
         as the stage-boundary and budget gates — this is a genuine pause,
         the SAME conversation resumes afterward, not a fresh one.
         """
-        _pause_for_approval(job_id, stage_name, gate="sample_preview", preview={
+        expires_at = _pause_for_approval(job_id, stage_name, gate="sample_preview", preview={
             "text": spn.preview_text,
             "iteration": spn.sample_iteration + 1,
             "max_iterations": MAX_SAMPLE_ITERATIONS,
         })
-        approval = await job_store.wait_for_approval(job_id, timeout=3600.0)
+        approval = await _wait_for_decision(
+            job_id, stage_name, gate="sample_preview", expires_at=expires_at
+        )
         if (job_store.get(job_id) or {}).get("cancel_requested"):
             raise JobCancelled()
+        if approval["action"] == "timeout":
+            _fail_job(job_id, stage=stage_name, message=_approval_expired_message(stage_name))
+            return None
         job_store.update(job_id, status="running")
         if approval["action"] == "reject":
             fb = approval.get("feedback") or "Not approved as-is — reconsider your approach."
-            _emit(job_id, {"type": "stage_rejected", "stage": stage_name, "gate": "sample_preview", "feedback": fb})
+            _emit(job_id, {"type": "stage_rejected", "stage": stage_name, "gate": "sample_preview", "feedback": fb,
+                            **({"actor": approval["actor"]} if approval.get("actor") else {})})
             resume_text = f"Rejected: {fb}. Adjust your approach and try again."
         else:
-            _emit(job_id, {"type": "stage_approved", "stage": stage_name, "gate": "sample_preview"})
+            _emit(job_id, {"type": "stage_approved", "stage": stage_name, "gate": "sample_preview",
+                            **({"actor": approval["actor"]} if approval.get("actor") else {})})
             resume_text = "Approved — proceed to complete the stage."
         return spn.messages + [{"role": "user", "content": resume_text}]
 
@@ -1184,8 +1470,9 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
         """Run one _run_agent_stage attempt, owning the gate-handling loop
         around it (previously duplicated verbatim at the initial-run and
         reject-regenerate call sites). Returns the stage's genuine outcome
-        (True/False), or None when the user rejected at the budget gate —
-        the gate already marked the job failed; the caller just returns.
+        (True/False), or None when the job is already marked failed by a
+        gate (user rejected at the budget gate, or an approval window
+        expired) — the caller just returns.
 
         The stage runs in a thread pool (blocking sync LLM calls must not
         block the event loop). A pre-call budget block raises BudgetGateNeeded
@@ -1249,6 +1536,8 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
             except SamplePreviewNeeded as spn:
                 _sync_cost(stage_name)
                 resume_messages = await _sample_preview_gate(stage_name, spn)
+                if resume_messages is None:
+                    return None   # approval window expired — job already marked failed
                 sample_iteration = spn.sample_iteration + 1
                 continue   # resume the same conversation, doesn't consume a retry round
 
@@ -1280,6 +1569,7 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
 
         job_store.update(job_id, current_stage=stage_name, status="running")
         _emit(job_id, {"type": "stage_started", "stage": stage_name})
+        _write_stage_checkpoint(project_dir, project_name, pipeline_type, stage_def, "in_progress")
 
         # Preflight: fail fast with a clear diagnostic if an upstream artifact
         # this stage requires is missing, rather than silently launching the
@@ -1316,7 +1606,11 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
         # only the bounded auto-retry bookkeeping (MAX_ROUNDS) for genuine
         # failures.
         success = False
-        feedback = ""
+        # A revise clone (POST /jobs/{id}/revise, roadmap 2.2) carries the
+        # user's feedback for the stage being re-entered — thread it into
+        # the stage's very first conversation instead of losing it.
+        _revise = (job_store.get(job_id) or {}).get("revise_feedback") or {}
+        feedback = _revise.get("feedback", "") if _revise.get("stage") == stage_name else ""
         _round = 0
         while _round <= MAX_ROUNDS:
             outcome = await _call_stage(stage_def, stage_name, skill_text, feedback)
@@ -1448,6 +1742,11 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
                 ))
                 return
 
+        # Multi-shot subject consistency (roadmap 3.3) — advisory warning
+        # BEFORE the approval gate, so the filmstrip review sees it.
+        if "asset_manifest" in (stage_def.get("produces") or []):
+            _run_asset_consistency_check(job_id, project_dir)
+
         _emit(job_id, {"type": "stage_completed", "stage": stage_name})
 
         # Interim preview: the compose stage produces the actual rendered
@@ -1472,29 +1771,101 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
         # Human approval gate — loop so repeated rejections each regenerate AND
         # re-present for approval (previously a rejected artifact silently passed).
         if needs_approval:
-            def _preview() -> Any:
+            def _preview() -> tuple[Any, str | None]:
                 # The agent's write_artifact call is instructed to use the
                 # manifest's real produces name (see the prompt hint above),
                 # but fall back to trying the stage name itself first — some
                 # skills/older manifests still name the artifact after the
-                # stage. Return the first file that actually exists.
+                # stage. Return (value, artifact_name) for the first file
+                # that actually exists — the name drives the UI's structured
+                # renderer choice.
                 arts = _load_artifacts(project_dir)
                 if stage_name in arts:
-                    return arts[stage_name]
+                    return arts[stage_name], stage_name
                 for name in stage_def.get("produces") or []:
                     if name in arts:
-                        return arts[name]
-                return None
+                        return arts[name], name
+                return None, None
 
-            _pause_for_approval(job_id, stage_name, preview=_preview())
-            approval = await job_store.wait_for_approval(job_id, timeout=3600.0)
+            preview_value, preview_name = _preview()
+            _write_stage_checkpoint(
+                project_dir, project_name, pipeline_type, stage_def, "awaiting_human",
+                cost_cny=round(base_cost + sum(cost_accumulator), 4),
+            )
+            expires_at = _pause_for_approval(
+                job_id, stage_name, preview=preview_value, preview_artifact=preview_name
+            )
+            approval = await _wait_for_decision(job_id, stage_name, expires_at=expires_at)
             if (job_store.get(job_id) or {}).get("cancel_requested"):
                 raise JobCancelled()
+            if approval["action"] == "timeout":
+                _fail_job(job_id, stage=stage_name, message=_approval_expired_message(stage_name))
+                return
 
+            # Bounded reject→regenerate loop: each round is a fresh paid LLM
+            # conversation, and the loop used to be unbounded even though
+            # every manifest declares orchestration.max_revisions_per_stage.
+            # When the budget is spent, pause on a final explicit gate
+            # (gate="revisions_exhausted") instead of regenerating again:
+            # approve = accept the latest artifact as-is and continue; reject
+            # = stop the job. Never auto-approve.
+            max_revisions = _resolve_max_revisions(pipeline_name)
+            revisions_used = 0
             while approval["action"] == "reject":
+                if revisions_used >= max_revisions:
+                    expires_at = _pause_for_approval(
+                        job_id, stage_name, gate="revisions_exhausted", preview={
+                            "revisions_used": revisions_used,
+                            "max_revisions": max_revisions,
+                            "text": (
+                                f"Stage '{stage_name}' has used all {max_revisions} "
+                                "revision rounds. Approve to accept the current "
+                                "artifact as-is and continue, or reject to stop "
+                                "the job."
+                            ),
+                        })
+                    approval = await _wait_for_decision(
+                        job_id, stage_name, gate="revisions_exhausted", expires_at=expires_at
+                    )
+                    if (job_store.get(job_id) or {}).get("cancel_requested"):
+                        raise JobCancelled()
+                    if approval["action"] == "approve":
+                        break   # accept the latest artifact as-is
+                    if approval["action"] == "timeout":
+                        _fail_job(job_id, stage=stage_name,
+                                  message=_approval_expired_message(stage_name))
+                        return
+                    _fail_job(job_id, stage=stage_name, message=(
+                        f"Stage '{stage_name}' exhausted its "
+                        f"{max_revisions} revision rounds and the user chose "
+                        "to stop rather than accept the latest artifact."
+                    ))
+                    return
+                revisions_used += 1
                 feedback = approval.get("feedback", "")
+                # Per-scene keep/reroll (roadmap 2.3): the reject carried the
+                # SPECIFIC manifest asset ids to redo. Everything else is
+                # kept — and re-issuing an identical generation call reuses
+                # the content-addressed file at zero cost, so "选择免费、
+                # 生成计费" holds mechanically, not just as instruction.
+                rejected_ids = approval.get("rejected_asset_ids") or []
+                if rejected_ids:
+                    reroll_instruction = (
+                        "Per-asset reroll request: regenerate ONLY the assets with "
+                        f"these ids from asset_manifest: {rejected_ids}. For each, call "
+                        "the generation tool again with inputs.force_regenerate=true "
+                        "(bypasses the asset cache — without it an identical prompt "
+                        "returns the very file the user just rejected), adjusting the "
+                        "prompt per the user's feedback if any. Keep every OTHER asset "
+                        "exactly as-is: re-issue the identical call WITHOUT "
+                        "force_regenerate and the existing file is reused at zero cost. "
+                        "Rewrite asset_manifest so rerolled entries point at their NEW "
+                        "file paths; keep kept entries byte-identical."
+                    )
+                    feedback = f"{feedback}\n\n{reroll_instruction}" if feedback else reroll_instruction
                 job_store.update(job_id, status="running")
-                _emit(job_id, {"type": "stage_rejected", "stage": stage_name, "feedback": feedback})
+                _emit(job_id, {"type": "stage_rejected", "stage": stage_name, "feedback": feedback,
+                                **({"actor": approval["actor"]} if approval.get("actor") else {})})
                 # Snapshot before regenerating — see _artifact_mtimes' docstring
                 # for why file *presence* alone can't detect a no-op round.
                 mtimes_before = _artifact_mtimes(project_dir, stage_def.get("produces") or [])
@@ -1545,17 +1916,34 @@ async def _run_pipeline_impl(job_id: str, data: dict) -> None:
                     ))
                     return
                 _emit(job_id, {"type": "stage_completed", "stage": stage_name})
-                _pause_for_approval(job_id, stage_name, preview=_preview())
-                approval = await job_store.wait_for_approval(job_id, timeout=3600.0)
+                preview_value, preview_name = _preview()
+                _write_stage_checkpoint(
+                    project_dir, project_name, pipeline_type, stage_def, "awaiting_human",
+                    cost_cny=round(base_cost + sum(cost_accumulator), 4),
+                )
+                expires_at = _pause_for_approval(
+                    job_id, stage_name, preview=preview_value, preview_artifact=preview_name
+                )
+                approval = await _wait_for_decision(job_id, stage_name, expires_at=expires_at)
                 if (job_store.get(job_id) or {}).get("cancel_requested"):
                     raise JobCancelled()
+                if approval["action"] == "timeout":
+                    _fail_job(job_id, stage=stage_name,
+                              message=_approval_expired_message(stage_name))
+                    return
 
             job_store.update(job_id, status="running")
-            _emit(job_id, {"type": "stage_approved", "stage": stage_name})
+            _emit(job_id, {"type": "stage_approved", "stage": stage_name,
+                           **({"actor": approval["actor"]} if approval.get("actor") else {})})
 
         # Mark done so a later retry resumes after this stage.
         completed_stages.add(stage_name)
         job_store.update(job_id, completed_stages=sorted(completed_stages))
+        _write_stage_checkpoint(
+            project_dir, project_name, pipeline_type, stage_def, "completed",
+            approved=needs_approval,   # gated stages reach here only after approval
+            cost_cny=round(base_cost + sum(cost_accumulator), 4),
+        )
 
         # Budget gate — pause for approval if cumulative cost crossed the ceiling.
         if not await _budget_gate():

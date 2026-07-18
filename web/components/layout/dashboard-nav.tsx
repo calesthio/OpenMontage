@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/dashboard", label: "项目" },
+  { href: "/dashboard/library", label: "媒体库" },
+  { href: "/dashboard/usage", label: "用量" },
   { href: "/dashboard/brands", label: "品牌库" },
   { href: "/dashboard/settings", label: "设置" },
 ];

@@ -101,6 +101,20 @@ class PathsConfig(BaseModel):
     output_dir: str = "output"
 
 
+class AigcLabelConfig(BaseModel):
+    """AI-generated-content labeling (《人工智能生成合成内容标识办法》).
+
+    Consumed by tools/video/aigc_label.py. Labeling is a legal requirement
+    and ON by default; enabled=false is a loud, logged operator decision.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+    provider_name: str = "OpenMontage"
+    provider_code: str = "openmontage"
+
+
 class OpenMontageConfig(BaseModel):
     """Top-level runtime configuration.
 
@@ -115,6 +129,7 @@ class OpenMontageConfig(BaseModel):
     checkpoint: CheckpointConfig = Field(default_factory=CheckpointConfig)
     output: OutputConfig = Field(default_factory=OutputConfig)
     paths: PathsConfig = Field(default_factory=PathsConfig)
+    aigc_label: AigcLabelConfig = Field(default_factory=AigcLabelConfig)
 
     @classmethod
     def load(cls, config_path: Optional[Path] = None) -> "OpenMontageConfig":

@@ -55,6 +55,33 @@ def _safe_relative_path(base: Path, relative: str) -> Path | None:
         return None
     return candidate
 
+
+def _anchor_output_path(supplied: str, project_dir: Path, tool: Any) -> Path:
+    """Force an agent-supplied output_path to land inside the job's project_dir.
+
+    When the agent does NOT pass output_path, the bridge auto-assigns one under
+    project_dir (see execute_tool). When it DOES, the path used to be trusted
+    verbatim — and confirmed live, that orphaned every generated asset: the
+    agent passed relative paths (which resolve against the server's CWD, not the
+    repo root) under a self-chosen project slug from its own init_project call,
+    so a $7.70 batch of clips landed in server/projects/<other-slug>/assets/…
+    while the manifest recorded project-relative paths the compose stage
+    resolved against project_dir — and found nothing. The mismatch also broke
+    the filmstrip: media_url is computed relative_to(project_dir) and threw for
+    every out-of-tree file.
+
+    Re-root the path under project_dir, preserving the first 'assets/…' or
+    'renders/…' segment so the manifest's project-relative paths stay
+    consistent. Idempotent for a path already correctly under project_dir.
+    """
+    parts = Path(supplied).parts
+    for anchor in ("renders", "assets"):
+        if anchor in parts:
+            return project_dir / Path(*parts[parts.index(anchor):])
+    # No recognizable structure — drop it under assets/<capability>/<basename>.
+    cap = getattr(tool, "capability", None) or "misc"
+    return project_dir / "assets" / cap / Path(supplied).name
+
 # Authoritative budget-exceeded type shared with the runner (fall back to a
 # local class if the cost_tracker module isn't importable).
 try:
@@ -688,6 +715,16 @@ def execute_tool(
                         "artifacts": [str(cached_path)],
                         "cost_usd": 0.0,
                     })
+        else:
+            # The agent supplied its own output_path — re-root it under this
+            # job's project_dir instead of trusting it verbatim. See
+            # _anchor_output_path: a trusted relative/slug-prefixed path orphans
+            # the asset outside the job tree (resolved against the server CWD),
+            # which is exactly how a completed run produced real clips the
+            # compose stage then couldn't find.
+            anchored = _anchor_output_path(inputs["output_path"], project_dir, tool)
+            anchored.parent.mkdir(parents=True, exist_ok=True)
+            inputs = {**inputs, "output_path": str(anchored)}
 
         # Hard budget ceiling — pre-call check. Bounds total spend to <= budget
         # by refusing a paid call that would cross it, instead of letting a

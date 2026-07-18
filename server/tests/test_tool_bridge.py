@@ -59,6 +59,56 @@ def _run_tool(project_dir, tool, monkeypatch, **kw):
     return execute_tool("run_openmontage_tool", args, project_dir, **kw)
 
 
+def _run_tool_with_output_path(project_dir, tool, monkeypatch, output_path):
+    from tools import tool_registry
+    monkeypatch.setattr(tool_registry.registry, "ensure_discovered", lambda *a, **k: None)
+    monkeypatch.setattr(tool_registry.registry, "get", lambda name: tool)
+    args = {"tool_name": "maas_video", "inputs": {
+        "prompt": "x", "operation": "t2v", "output_path": output_path,
+    }}
+    execute_tool("run_openmontage_tool", args, project_dir)
+    return Path(tool.executed_with["output_path"])
+
+
+def test_anchor_output_path_strips_slug_prefix():
+    """Unit: a slug-prefixed relative path keeps only its assets/… tail,
+    re-rooted under project_dir."""
+    from app.runner.tool_bridge import _anchor_output_path
+    pd = Path("/repo/projects/job-a")
+    got = _anchor_output_path("projects/other-slug/assets/video/sc-01.mp4", pd, FakeTool())
+    assert got == pd / "assets" / "video" / "sc-01.mp4"
+
+
+def test_anchor_output_path_idempotent_when_already_under_project():
+    from app.runner.tool_bridge import _anchor_output_path
+    pd = Path("/repo/projects/job-a")
+    already = str(pd / "assets" / "video" / "x.mp4")
+    assert _anchor_output_path(already, pd, FakeTool()) == pd / "assets" / "video" / "x.mp4"
+
+
+def test_anchor_output_path_no_structure_falls_back_to_capability_dir():
+    from app.runner.tool_bridge import _anchor_output_path
+    pd = Path("/repo/projects/job-a")
+    got = _anchor_output_path("wherever.mp4", pd, FakeTool(capability="video_generation"))
+    assert got == pd / "assets" / "video_generation" / "wherever.mp4"
+
+
+def test_agent_supplied_output_path_reanchored_into_job_tree(tmp_path, monkeypatch):
+    """Regression: the agent used to pass a slug-prefixed relative output_path
+    from its own init_project call, which resolved against the server CWD and
+    wrote the asset to server/projects/<other-slug>/… — outside the job tree,
+    so the compose stage (resolving manifest paths against project_dir) found
+    nothing. The bridge must re-root it under project_dir."""
+    tool = FakeTool(capability="video_generation")
+    got = _run_tool_with_output_path(
+        tmp_path, tool, monkeypatch, "projects/some-other-slug/assets/video/sc-01.mp4"
+    )
+    assert got == tmp_path / "assets" / "video" / "sc-01.mp4"
+    assert got.is_absolute()
+    # and the parent dir was created so the tool can actually write there
+    assert got.parent.is_dir()
+
+
 def test_read_file_missing(tmp_path):
     out = execute_tool("read_file", {"path": "nope/does-not-exist.xyz"}, tmp_path)
     assert out.startswith("ERROR: File not found")

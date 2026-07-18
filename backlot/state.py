@@ -576,14 +576,14 @@ def _last_activity(project_dir: Path) -> float:
 def _collect_flywheel(project_dir: Path) -> Optional[dict[str, Any]]:
     """Augment the board with Hermes Creative Flywheel state, if present.
 
-    Reads ``flywheel/flywheel_state.json`` and ``flywheel/population.jsonl``.
+    Reads ``flywheel/population.jsonl`` (raw individuals) and
+    ``flywheel/run_summary.json`` (best fitness, convergence, best individual).
     Returns None when no flywheel dir exists. Never raises.
     """
     flywheel_dir = project_dir / "flywheel"
     if not flywheel_dir.is_dir():
         return None
-    state_path = flywheel_dir / "flywheel_state.json"
-    state = _read_json(state_path)
+    summary = _read_json(flywheel_dir / "run_summary.json")
     pop_path = flywheel_dir / "population.jsonl"
     individuals: list[dict] = []
     if pop_path.exists():
@@ -605,13 +605,19 @@ def _collect_flywheel(project_dir: Path) -> Optional[dict[str, Any]]:
         topic = ind.get("topic") or (ind.get("artifact") or {}).get("topic")
         if topic and len(g["topics"]) < 5:
             g["topics"].append(topic)
-    if state is None and not individuals:
+    if summary is None and not individuals:
         return None
+    best_score = float((summary or {}).get("best_score", 0.0)) if individuals else 0.0
+    if not best_score and individuals:
+        best_score = max(float(i.get("score", 0.0)) for i in individuals)
     return {
-        "active": state is not None,
-        "state": state,
+        "active": summary is not None or bool(individuals),
+        "best_score": best_score,
+        "converged": bool((summary or {}).get("converged", False)),
         "generations": {str(k): v for k, v in sorted(generations.items())},
         "individual_count": len(individuals),
+        "population": individuals,
+        "best_individual": (summary or {}).get("best_individual"),
     }
 
 

@@ -22,6 +22,80 @@ let firstPaint = true;
 // header slate
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Hermes Creative Flywheel panel — live evolutionary engine state
+// ---------------------------------------------------------------------------
+
+function renderFlywheel(s) {
+  const fw = s.flywheel;
+  if (!fw || !fw.active) return null;
+
+  const gens = Object.entries(fw.generations || {})
+    .map(([g, v]) => ({ g: Number(g), ...v }))
+    .sort((a, b) => a.g - b.g);
+  const best = Number(fw.best_score ?? 0);
+  const converged = !!fw.converged;
+  const pop = Array.isArray(fw.population) ? fw.population : [];
+
+  // Best-fitness sparkline (SVG polyline, normalized 0..1 over seen range).
+  let sparkline = null;
+  if (gens.length >= 1) {
+    const pts = gens.map((x) => Number(x.best ?? 0));
+    const lo = Math.min(...pts), hi = Math.max(...pts);
+    const span = hi - lo || 1;
+    const W = 220, H = 38, pad = 3;
+    const coords = pts.map((p, i) => {
+      const x = pad + (pts.length === 1 ? W / 2 : (i / (pts.length - 1)) * (W - 2 * pad));
+      const y = H - pad - ((p - lo) / span) * (H - 2 * pad);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(" ");
+    sparkline = el("svg", {
+      class: "fw-spark", viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: "none",
+      width: W, height: H,
+    }, el("polyline", { points: coords, fill: "none", stroke: "var(--fly)", "stroke-width": "2" }));
+  }
+
+  const head = el("div", { class: "panel-head" },
+    el("h2", {}, "Hermes Flywheel"),
+    el("span", { class: "meta" }, `generations · ${fw.individual_count ?? pop.length} individuals`),
+    converged ? el("span", { class: "fw-badge conv" }, "✓ CONVERGED") : null,
+    sparkline ? el("span", { class: "fw-spark-wrap" }, sparkline) : null,
+    el("span", { class: "fw-best", title: "best fitness across all generations" },
+      el("b", {}, best.toFixed(3)), " best"));
+
+  // generations table
+  const genBody = el("div", { class: "fw-gens" });
+  for (const gen of gens) {
+    const topics = Array.isArray(gen.topics) ? gen.topics.slice(0, 4) : [];
+    genBody.append(el("div", { class: "fw-gen" },
+      el("span", { class: "fw-gen-n" }, `G${gen.g}`),
+      el("span", { class: "fw-gen-best" }, (Number(gen.best ?? 0)).toFixed(3)),
+      el("span", { class: "fw-gen-topics" }, topics.join(" · ").slice(0, 56)),
+      el("span", { class: "fw-gen-count" }, `${gen.count ?? 0}🜨`)));
+  }
+
+  // population / breed lineage cards
+  const popBody = el("div", { class: "fw-pop" });
+  for (const ind of pop.slice(0, 24)) {
+    const parents = Array.isArray(ind.parent_ids) ? ind.parent_ids : [];
+    popBody.append(el("div", { class: "fw-ind" },
+      el("span", { class: "fw-ind-id", title: ind.id }, (ind.id || "?").slice(0, 6)),
+      el("span", { class: "fw-ind-score" }, (Number(ind.score ?? 0)).toFixed(3)),
+      parents.length
+        ? el("span", { class: "fw-ind-parents", title: `bred from ${parents.join(", ")}` },
+            "↗ " + parents.map((p) => String(p).slice(0, 4)).join(" "))
+        : el("span", { class: "fw-ind-seed" }, "seed")));
+  }
+
+  return el("div", { class: "panel flywheel" },
+    head,
+    el("div", { class: "panel-body" },
+      el("div", { class: "fw-section-label" }, "GENERATIONS"),
+      genBody,
+      el("div", { class: "fw-section-label", style: "margin-top:10px" }, "POPULATION · BREED LINEAGE"),
+      popBody));
+}
+
 function renderSlate(s) {
   const board = s.storyboard;
   const chips = [
@@ -775,8 +849,10 @@ function render() {
   const aside = el("aside", {});
   const decisions = renderDecisions(s);
   const activity = renderActivity(s);
+  const flywheel = renderFlywheel(s);
   if (decisions) aside.append(decisions);
   if (activity) aside.append(activity);
+  if (flywheel) aside.append(flywheel);
 
   if (script || decisions || activity) {
     app.append(el("div", { class: "board" }, main, aside));
@@ -801,6 +877,7 @@ function normalize(s) {
   s.media.snapshots = Array.isArray(s.media.snapshots) ? s.media.snapshots : [];
   s.media.music = Array.isArray(s.media.music) ? s.media.music : [];
   s.events = Array.isArray(s.events) ? s.events : [];
+  s.flywheel = s.flywheel || null;
   if (s.storyboard && Array.isArray(s.storyboard.scenes)) {
     for (const c of s.storyboard.scenes) {
       c.takes = Array.isArray(c.takes) ? c.takes : [];

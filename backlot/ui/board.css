@@ -22,6 +22,8 @@
   --red: #e5544b;
   --red-dim: rgba(229, 84, 75, 0.12);
   --blue: #6aa1ff;
+  --fly: #b06bff;            /* Hermes flywheel accent — distinct from blue/green/amber/red */
+  --fly-dim: rgba(176, 107, 255, 0.14);
   --cream: #f2e9d5;
   --cream-shade: #e5d9be;
   --cream-ink: #29231a;
@@ -632,4 +634,85 @@ body:not(.first) .lib-card, body:not(.first) .drawer { animation: none; }
   .drawer .drawer-head { flex-wrap: wrap; }
   .drawer pre { font-size: calc(10.5px * var(--fs-scale)); }
   .scene-card { max-width: calc(100vw - 42px); }
+}
+
+/* ============================================================
+   HERMES CREATIVE FLYWHEEL — live evolutionary engine panel
+   ============================================================ */
+
+.panel.flywheel {
+  border-color: var(--fly-dim);
+  box-shadow: inset 0 0 0 1px var(--fly-dim);
+}
+.panel.flywheel .panel-head h2 { color: var(--fly); }
+.fw-badge {
+  font-family: var(--mono);
+  font-size: calc(9.5px * var(--fs-scale));
+  letter-spacing: 0.1em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  color: var(--text-3);
+}
+.fw-badge.conv { color: var(--green); border-color: var(--green-dim); background: var(--green-dim); }
+.fw-spark-wrap { margin-left: auto; display: inline-flex; align-items: center; }
+.fw-spark { display: block; }
+.fw-best {
+  font-family: var(--mono);
+  font-size: calc(10.5px * var(--fs-scale));
+  color: var(--text-2);
+  margin-left: 8px;
+}
+.fw-best b { color: var(--fly); font-size: calc(13px * var(--fs-scale)); }
+
+.fw-section-label {
+  font-family: var(--mono);
+  font-size: calc(9px * var(--fs-scale));
+  letter-spacing: 0.16em;
+  color: var(--text-3);
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.fw-gens { display: flex; flex-direction: column; gap: 3px; }
+.fw-gen {
+  display: grid;
+  grid-template-columns: 30px 52px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: calc(10.5px * var(--fs-scale));
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: var(--surface-3);
+}
+.fw-gen-n { color: var(--fly); font-weight: 600; }
+.fw-gen-best { color: var(--text); }
+.fw-gen-topics { color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fw-gen-count { color: var(--text-3); }
+
+.fw-pop {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 5px;
+}
+.fw-ind {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 5px 7px;
+  border-radius: 4px;
+  background: var(--surface-3);
+  border-left: 2px solid var(--fly-dim);
+}
+.fw-ind-id { font-family: var(--mono); font-size: calc(9px * var(--fs-scale)); color: var(--text-3); }
+.fw-ind-score { font-family: var(--mono); font-size: calc(12px * var(--fs-scale)); color: var(--text); font-weight: 600; }
+.fw-ind-parents { font-family: var(--mono); font-size: calc(8.5px * var(--fs-scale)); color: var(--fly); }
+.fw-ind-seed { font-family: var(--mono); font-size: calc(8.5px * var(--fs-scale)); color: var(--text-3); }
+
+/* Live "breed" pulse while the loop is actively running */
+.live .panel.flywheel { animation: fwpulse 2.4s ease-in-out infinite; }
+@keyframes fwpulse {
+  0%, 100% { box-shadow: inset 0 0 0 1px var(--fly-dim); }
+  50% { box-shadow: inset 0 0 0 1px var(--fly); }
 }

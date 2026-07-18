@@ -536,9 +536,45 @@ const BackgroundVideoLayer: React.FC<{
   );
 };
 
+// Per-scene text transition — graceful fade + slide + scale on entry AND exit.
+// Without this, scene text/components pop in and vanish abruptly at cut boundaries.
+// Only the text/component layer animates; background video/image stays steady.
+const SceneTextTransition: React.FC<{ children: React.ReactNode; durationInFrames: number }> = ({
+  children,
+  durationInFrames,
+}) => {
+  const frame = useCurrentFrame();
+  const fadeIn = Math.min(18, Math.max(9, Math.floor(durationInFrames * 0.26)));
+  const outStart = Math.max(fadeIn + 1, durationInFrames - 22);
+  const stops = [0, fadeIn, outStart, durationInFrames];
+  const opacity = interpolate(frame, stops, [0, 1, 1, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const translateY = interpolate(frame, stops, [80, 0, 0, -60], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const scale = interpolate(frame, stops, [0.88, 1, 1, 1.08], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  return (
+    <AbsoluteFill style={{ opacity, transform: `translateY(${translateY}px) scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+};
+
 const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme }) => {
-  // Wrap component with background video or image if specified
+  const { fps } = useVideoConfig();
+  const sceneDuration = Math.round((cut.out_seconds - cut.in_seconds) * fps);
+  // Wrap component with background video or image if specified.
+  // Text/component content gets an enter/exit transition; background stays steady.
   const maybeWrapWithBg = (element: React.ReactElement) => {
+    const content = (
+      <SceneTextTransition durationInFrames={sceneDuration}>{element}</SceneTextTransition>
+    );
     if (cut.backgroundVideo) {
       return (
         <BackgroundVideoLayer
@@ -546,7 +582,7 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
           startFrom={cut.backgroundVideoStart ?? 0}
           overlayOpacity={cut.backgroundOverlay ?? 0.55}
         >
-          {element}
+          {content}
         </BackgroundVideoLayer>
       );
     }
@@ -556,11 +592,11 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
           src={cut.backgroundImage}
           overlayOpacity={cut.backgroundOverlay ?? 0.55}
         >
-          {element}
+          {content}
         </BackgroundImageLayer>
       );
     }
-    return element;
+    return content;
   };
 
   // Resolve the scene element based on cut type, then wrap with backgroundImage if set

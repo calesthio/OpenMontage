@@ -849,6 +849,16 @@ class VideoCompose(BaseTool):
         "animation-first": "Explainer",
     }
 
+    # Root-level prop field each composition actually reads its scene/clip
+    # list from — see each .tsx's Props interface. Used by _remotion_render
+    # to refuse a templated render whose edit_decisions can't possibly
+    # satisfy the target composition (see the fail-loud guard there).
+    _COMPOSITION_REQUIRED_FIELD = {
+        "Explainer": "cuts",
+        "CinematicRenderer": "scenes",
+        "TalkingHead": "videoSrc",
+    }
+
     @classmethod
     def _get_composition_id(cls, renderer_family: str) -> str:
         """Resolve renderer_family to Remotion composition ID.
@@ -1860,17 +1870,68 @@ class VideoCompose(BaseTool):
         """
         import shutil
 
-        if not shutil.which("npx"):
-            return ToolResult(
-                success=False,
-                error="npx not found. Install Node.js to use Remotion rendering.",
-            )
-
         composition_data = inputs.get("edit_decisions") or inputs.get("composition_data")
         if not composition_data:
             return ToolResult(
                 success=False,
                 error="edit_decisions or composition_data required for remotion_render",
+            )
+
+        # Route to the correct Remotion composition based on renderer_family.
+        # This prevents all pipelines from collapsing into the Explainer visual grammar.
+        renderer_family = (composition_data or {}).get("renderer_family", "explainer-data")
+        composition_id = self._get_composition_id(renderer_family)
+
+        # Fail loudly instead of silently rendering background-only output.
+        # Confirmed live (a full paid end-to-end run): this function passes
+        # edit_decisions through as props VERBATIM — there is no
+        # per-composition transform. Each composition reads its clip list
+        # from a different top-level field (Explainer: cuts[], CinematicRenderer:
+        # scenes[], TalkingHead: videoSrc) — see each .tsx's Props interface.
+        # The generic (non-atelier) edit_decisions.schema.json ONLY ever
+        # populates cuts[]; no edit-director skill writes scenes[] or
+        # videoSrc. So routing a templated (non-atelier) render to
+        # CinematicRenderer or TalkingHead silently produces a render with
+        # only the background/theme layer and AIGC label — no clips, images,
+        # or audio — while reporting success. The 30s render this surfaced
+        # was billed real money for real clips that never got composited.
+        # Until a real cuts/overlays -> scenes/videoSrc transform exists,
+        # these renderer_families are atelier-only (hand-authored props in
+        # the composition's real shape) — the code comment a few lines below
+        # already documents this ("the templated cut path was dead on
+        # arrival"); this makes it a hard stop instead of a silent one.
+        # Checked before the npx/Node dependency check below — a malformed
+        # request should fail on its own merits, not on environment setup.
+        # Presence, not truthiness: an empty `cuts: []` is a legitimate (if
+        # useless) Explainer render, not a shape mismatch — only an ABSENT
+        # field means this composition_data was never meant for this
+        # composition at all.
+        required_field = self._COMPOSITION_REQUIRED_FIELD.get(composition_id)
+        if required_field and required_field not in composition_data:
+            explainer_families = sorted(
+                fam for fam, comp in self.RENDERER_FAMILY_MAP.items() if comp == "Explainer"
+            )
+            return ToolResult(
+                success=False,
+                error=(
+                    f"renderer_family={renderer_family!r} routes to Remotion composition "
+                    f"{composition_id!r}, which reads its scene/clip list from "
+                    f"`{required_field}` — edit_decisions has none (only the generic "
+                    f"`cuts[]`, which {composition_id} does not read). The templated "
+                    f"(non-atelier) edit_decisions schema can only ever populate "
+                    f"`cuts[]`, so this renderer_family is not reachable via the "
+                    f"templated path yet. Options: (1) use atelier mode — "
+                    f"composition_mode='atelier' with edit_decisions.bespoke pointing "
+                    f"at a hand-authored entry that sets `{required_field}` directly "
+                    f"in {composition_id}'s real prop shape — or (2) pick an "
+                    f"Explainer-routed renderer_family instead: {explainer_families}."
+                ),
+            )
+
+        if not shutil.which("npx"):
+            return ToolResult(
+                success=False,
+                error="npx not found. Install Node.js to use Remotion rendering.",
             )
 
         output_path = Path(inputs.get("output_path", "renders/remotion_output.mp4"))
@@ -1942,11 +2003,6 @@ class VideoCompose(BaseTool):
                 success=False,
                 error=f"Remotion composer project not found at {composer_dir}",
             )
-
-        # Route to the correct Remotion composition based on renderer_family.
-        # This prevents all pipelines from collapsing into the Explainer visual grammar.
-        renderer_family = (composition_data or {}).get("renderer_family", "explainer-data")
-        composition_id = self._get_composition_id(renderer_family)
 
         cmd = [
             "npx", "remotion", "render",

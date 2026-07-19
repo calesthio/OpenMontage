@@ -410,3 +410,61 @@ def test_direct_clip_search_reports_downloaded_clip_when_thumbnail_times_out(
     assert result.data["total_clips"] == 1
     assert result.data["clips"][0]["clip_id"] == "thumb_source_thumb-1"
     assert result.data["clips"][0]["thumbnail"] == ""
+
+
+def test_cinematic_renderer_cuts_adapter(monkeypatch, tmp_path):
+    import json
+    import subprocess
+    from tools.base_tool import ToolResult
+
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    
+    tool = VideoCompose()
+
+    # Mock Remotion CLI execution
+    def mock_run(*args, **kwargs):
+        # Read the props file that was passed to Remotion
+        props_arg = next(arg for arg in args[0] if arg.startswith("--props="))
+        props_path = props_arg.split("=", 1)[1]
+        with open(props_path, "r") as f:
+            props = json.load(f)
+        
+        # Verify the adapter successfully created scenes from cuts
+        assert "scenes" in props
+        assert len(props["scenes"]) == 2
+        assert props["scenes"][0]["kind"] == "title"
+        assert props["scenes"][1]["kind"] == "video"
+        
+        # Create dummy output file
+        out_path = Path(args[0][5])
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_bytes(b"dummy_video")
+        
+        return subprocess.CompletedProcess(args[0], 0, "", "")
+
+    monkeypatch.setattr(subprocess, "run", mock_run)
+    monkeypatch.setattr(tool, "_get_composition_id", lambda family: "CinematicRenderer")
+    monkeypatch.setattr(tool, "_run_final_review", lambda *args, **kwargs: {"status": "pass", "issues_found": [], "checks": {}})
+    import shutil
+    monkeypatch.setattr(shutil, "which", lambda name: "dummy" if name == "npx" else None)
+
+    result = tool.execute(
+        {
+            "operation": "render",
+            "output_path": str(tmp_path / "renders" / "final.mp4"),
+            "edit_decisions": {
+                "version": "1.0",
+                "renderer_family": "documentary-montage",
+                "render_runtime": "remotion",
+                "cuts": [
+                    {"type": "hero_title", "text": "Hello", "in_seconds": 0, "out_seconds": 2},
+                    {"source": "test.mp4", "in_seconds": 2, "out_seconds": 5},
+                ],
+            },
+            "asset_manifest": {"assets": []},
+        }
+    )
+
+    assert result.success
+

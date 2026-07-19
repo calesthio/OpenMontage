@@ -44,6 +44,7 @@ export const TextCard: React.FC<TextCardProps> = ({
           textAlign: "center",
           maxWidth: "80%",
           lineHeight: 1.3,
+          whiteSpace: "pre-line",
         }}
       >
         {text}

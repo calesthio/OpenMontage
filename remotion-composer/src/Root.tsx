@@ -151,6 +151,21 @@ export const Root: React.FC = () => {
         calculateMetadata={calculateMetadata}
       />
       <Composition
+        id="ExplainerVertical"
+        component={Explainer}
+        durationInFrames={30 * 60}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          cuts: [],
+          overlays: [],
+          captions: [],
+          audio: {},
+        }}
+        calculateMetadata={calculateMetadata}
+      />
+      <Composition
         id="CinematicRenderer"
         component={CinematicRenderer}
         durationInFrames={30 * 30}

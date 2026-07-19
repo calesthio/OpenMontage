@@ -8,16 +8,23 @@
     "upgrade": "npx remotion upgrade"
   },
   "dependencies": {
-    "@remotion/captions": "^4.0.484",
-    "@remotion/cli": "^4.0.484",
-    "@remotion/google-fonts": "^4.0.484",
-    "@remotion/media": "^4.0.484",
-    "@remotion/player": "^4.0.484",
-    "@remotion/transitions": "^4.0.484",
+    "@remotion/animation-utils": "4.0.494",
+    "@remotion/captions": "4.0.494",
+    "@remotion/cli": "4.0.494",
+    "@remotion/google-fonts": "4.0.494",
+    "@remotion/layout-utils": "4.0.494",
+    "@remotion/media": "4.0.494",
+    "@remotion/media-utils": "4.0.494",
+    "@remotion/motion-blur": "4.0.494",
+    "@remotion/noise": "4.0.494",
+    "@remotion/paths": "4.0.494",
+    "@remotion/player": "4.0.494",
+    "@remotion/shapes": "4.0.494",
+    "@remotion/transitions": "4.0.494",
     "d3-geo": "^3.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "remotion": "^4.0.484"
+    "remotion": "4.0.494"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",

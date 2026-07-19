@@ -94,3 +94,6 @@ remotion-composer/public/demo-props/caption-burn-*
 
 venv/
 .venv/
+
+# Local MCP server config (contains secret API tokens)
+.mcp.json

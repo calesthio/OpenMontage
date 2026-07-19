@@ -44,6 +44,8 @@ import type { CameraMotion } from "./components/AnimeScene";
 import { TerminalScene } from "./components/TerminalScene";
 import type { TerminalStep } from "./components/TerminalScene";
 import { ScreenshotScene } from "./components/ScreenshotScene";
+import { AudiogramScene } from "./components/AudiogramScene";
+import { DrawPathScene, DrawPathItem } from "./components/DrawPathScene";
 import type { ScreenshotStep } from "./components/ScreenshotScene";
 import { ProviderChip } from "./components/ProviderChip";
 import type { ParticleType } from "./components/ParticleOverlay";
@@ -268,6 +270,20 @@ interface Cut {
   screenshotSteps?: ScreenshotStep[];
   screenshotSize?: { width: number; height: number };
   cursorStartAt?: [number, number];
+  // Audiogram scene props (type: "audiogram")
+  audioSrc?: string;
+  audiogramStyle?: "bars" | "line" | "circle";
+  numberOfSamples?: number;
+  bars?: number;
+  gain?: number;
+  audioOffsetSeconds?: number;
+  // Draw-path scene props (type: "draw_path")
+  paths?: DrawPathItem[];
+  viewBox?: string;
+  strokeWidth?: number;
+  drawDurationInFrames?: number;
+  staggerFrames?: number;
+  fillFadeInFrames?: number;
 }
 
 interface Overlay {
@@ -355,9 +371,17 @@ const ImageScene: React.FC<{ src: string; animation?: string }> = ({
   // Smooth spring fade-in
   const fadeIn = spring({ frame, fps, config: { damping: 18, stiffness: 80 } });
 
-  // Fade-out for crossfade effect
-  const fadeOutStart = durationInFrames - 8;
-  const fadeOut = interpolate(frame, [fadeOutStart, durationInFrames], [1, 0.3], {
+  // Never let the interpolate input range collapse to zero width — that would
+  // divide by zero and yield NaN scale/translate values (a Remotion render
+  // crash). durationInFrames should already be ≥1 (Sequence layer clamps it),
+  // but guard here too so ImageScene is safe in isolation.
+  const safeDuration = Math.max(1, durationInFrames);
+
+  // Fade-out for crossfade effect. Keep the input range strictly increasing
+  // even for very short clips — clamping fadeOutStart to safeDuration-1 avoids
+  // a collapsed [n, n] range, which Remotion's interpolate() rejects.
+  const fadeOutStart = Math.min(safeDuration - 1, Math.max(0, safeDuration - 8));
+  const fadeOut = interpolate(frame, [fadeOutStart, safeDuration], [1, 0.3], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -368,7 +392,7 @@ const ImageScene: React.FC<{ src: string; animation?: string }> = ({
   const anim = animation || "zoom-in";
 
   // Progress with easing — smoother than linear
-  const progress = interpolate(frame, [0, durationInFrames], [0, 1], {
+  const progress = interpolate(frame, [0, safeDuration], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -619,6 +643,32 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
       />
     );
   }
+  if (cut.type === "audiogram" && cut.audioSrc) {
+    return maybeWrapWithBg(
+      <AudiogramScene
+        audioSrc={resolveAsset(cut.audioSrc)}
+        audiogramStyle={cut.audiogramStyle}
+        color={accent}
+        numberOfSamples={cut.numberOfSamples}
+        bars={cut.bars}
+        gain={cut.gain}
+        audioOffsetSeconds={cut.audioOffsetSeconds}
+      />
+    );
+  }
+  if (cut.type === "draw_path" && cut.paths && cut.paths.length > 0) {
+    return maybeWrapWithBg(
+      <DrawPathScene
+        paths={cut.paths}
+        viewBox={cut.viewBox}
+        color={accent}
+        strokeWidth={cut.strokeWidth}
+        drawDurationInFrames={cut.drawDurationInFrames}
+        staggerFrames={cut.staggerFrames}
+        fillFadeInFrames={cut.fillFadeInFrames}
+      />
+    );
+  }
 
   // --- Chart types — use theme.chartColors as default palette ---
   if (cut.type === "bar_chart" && cut.chartData) {
@@ -786,7 +836,14 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
       {/* Layer 1: Visual scenes */}
       {cuts.map((cut) => {
         const from = Math.round(cut.in_seconds * fps);
-        const duration = Math.round((cut.out_seconds - cut.in_seconds) * fps);
+        // Guard against a zero/negative-frame Sequence. A 0-frame cut (out==in,
+        // or a sub-frame gap that rounds to 0) makes every child scene's
+        // interpolate(frame, [0, durationInFrames], …) divide by zero → NaN
+        // transform → Remotion "NaN animation value" render crash. Clamp ≥1.
+        const duration = Math.max(
+          1,
+          Math.round((cut.out_seconds - cut.in_seconds) * fps)
+        );
 
         return (
           <Sequence key={cut.id} from={from} durationInFrames={duration}>
@@ -798,8 +855,10 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
       {/* Layer 2: Overlays (section titles, stat reveals, hero titles) */}
       {overlays?.map((overlay, i) => {
         const from = Math.round(overlay.in_seconds * fps);
-        const duration = Math.round(
-          (overlay.out_seconds - overlay.in_seconds) * fps
+        // Same zero-frame guard as the cut layer above.
+        const duration = Math.max(
+          1,
+          Math.round((overlay.out_seconds - overlay.in_seconds) * fps)
         );
 
         return (
@@ -838,18 +897,23 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
             const fadeOutDur = (audio.music!.fadeOutSeconds ?? 3) * fps;
             const totalFrames = durationInFrames;
 
-            // Fade in
-            const fadeIn = interpolate(f, [0, fadeInDur], [0, baseVol], {
-              extrapolateLeft: "clamp",
-              extrapolateRight: "clamp",
-            });
-            // Fade out
-            const fadeOut = interpolate(
-              f,
-              [totalFrames - fadeOutDur, totalFrames],
-              [baseVol, 0],
-              { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
-            );
+            // Guard zero-width fade ranges: fadeInSeconds/fadeOutSeconds = 0
+            // would make interpolate() collapse to [0,0] / [n,n] and crash the
+            // render (same NaN-range family as the cut-duration guard above).
+            const fadeIn =
+              fadeInDur > 0
+                ? interpolate(f, [0, fadeInDur], [0, baseVol], {
+                    extrapolateLeft: "clamp",
+                    extrapolateRight: "clamp",
+                  })
+                : baseVol;
+            const fadeOut =
+              fadeOutDur > 0
+                ? interpolate(f, [totalFrames - fadeOutDur, totalFrames], [baseVol, 0], {
+                    extrapolateLeft: "clamp",
+                    extrapolateRight: "clamp",
+                  })
+                : baseVol;
             return Math.min(fadeIn, fadeOut);
           }}
         />

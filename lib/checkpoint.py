@@ -97,7 +97,7 @@ class CheckpointValidationError(ValueError):
 
 @lru_cache(maxsize=1)
 def _load_checkpoint_schema() -> dict[str, Any]:
-    with open(CHECKPOINT_SCHEMA_PATH) as f:
+    with open(CHECKPOINT_SCHEMA_PATH, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -208,7 +208,7 @@ def init_project(
     marker: dict[str, Any] = {}
     if marker_path.exists():
         try:
-            with open(marker_path) as f:
+            with open(marker_path, encoding="utf-8") as f:
                 marker = json.load(f)
         except (json.JSONDecodeError, OSError):
             marker = {}
@@ -221,7 +221,7 @@ def init_project(
     if style_playbook is not None:
         marker["style_playbook"] = style_playbook
 
-    with open(marker_path, "w") as f:
+    with open(marker_path, "w", encoding="utf-8") as f:
         json.dump(marker, f, indent=2)
 
     return project_dir
@@ -275,7 +275,7 @@ def _archive_superseded_checkpoint(path: Path, stage: str) -> None:
     if not path.exists():
         return
     try:
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             existing = json.load(f)
     except (json.JSONDecodeError, OSError):
         existing = {}
@@ -314,7 +314,7 @@ def _merge_decision_log(
     """
     path = _decision_log_path(pipeline_dir, project_id)
     if path.exists():
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             existing = json.load(f)
     else:
         existing = {
@@ -329,7 +329,7 @@ def _merge_decision_log(
             existing["decisions"].append(decision)
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(existing, f, indent=2)
 
 
@@ -358,7 +358,7 @@ def write_checkpoint(
         marker_path = pipeline_dir / project_id / PROJECT_MARKER_FILENAME
         if marker_path.exists():
             try:
-                with open(marker_path) as f:
+                with open(marker_path, encoding="utf-8") as f:
                     marker = json.load(f)
             except (json.JSONDecodeError, OSError):
                 marker = None
@@ -456,7 +456,7 @@ def write_checkpoint(
     # current checkpoint; then archive the superseded file and swap in the
     # new one atomically.
     tmp_path = path.with_suffix(".json.tmp")
-    with open(tmp_path, "w") as f:
+    with open(tmp_path, "w", encoding="utf-8") as f:
         json.dump(checkpoint, f, indent=2)
     # Preserve run history: a superseded completed/awaiting_human checkpoint
     # is copied to history/ (stage versioning, gate audit trail, replay).
@@ -474,7 +474,7 @@ def read_checkpoint(
     path = _checkpoint_path(pipeline_dir, project_id, stage)
     if not path.exists():
         return None
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         checkpoint = json.load(f)
     validate_checkpoint(checkpoint)
     return checkpoint
@@ -496,7 +496,7 @@ def get_latest_checkpoint(
     if not checkpoints:
         return None
 
-    with open(checkpoints[0]) as f:
+    with open(checkpoints[0], encoding="utf-8") as f:
         checkpoint = json.load(f)
     validate_checkpoint(checkpoint)
     return checkpoint

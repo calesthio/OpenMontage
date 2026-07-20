@@ -162,7 +162,7 @@ stages:
       - diagram_gen
       - audio_enhance
     checkpoint_required: true
-    human_approval_default: false
+    human_approval_default: true
     review_focus:
       - Subtitle file exists and matches speech timing
       - Reusable callout overlays (arrows, highlights, masks) are prepared

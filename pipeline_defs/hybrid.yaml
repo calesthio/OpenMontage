@@ -138,7 +138,7 @@ stages:
       - music_gen
       - audio_enhance
     checkpoint_required: true
-    human_approval_default: false
+    human_approval_default: true
     review_focus:
       - Support assets clearly map to real narrative gaps
       - Shared template assets are reused

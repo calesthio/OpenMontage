@@ -78,3 +78,12 @@ For developer or product-demo content, also package:
 - Publishing with generic titles that omit the actual software or task.
 - Using the same caption for YouTube, LinkedIn, and short-form social.
 - Building chapter markers from the script without checking the render.
+
+---
+
+## Gate Reminder (Binding)
+
+This stage gates on human approval (`human_approval_default: true`). After review passes:
+checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
+the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
+Approval is per-gate — an earlier "go ahead" does not cover this gate.

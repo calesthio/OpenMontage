@@ -1,0 +1,86 @@
+[
+  {
+    "name": "climb",
+    "category": "locomotion",
+    "desc": "clambers up",
+    "frames": 180,
+    "source": "CMU 01_02"
+  },
+  {
+    "name": "dance_glide",
+    "category": "dance",
+    "desc": "gliding ballet dance",
+    "frames": 180,
+    "source": "CMU 05_10"
+  },
+  {
+    "name": "dance_spin",
+    "category": "dance",
+    "desc": "expressive dance w/ a pirouette",
+    "frames": 180,
+    "source": "CMU 05_02"
+  },
+  {
+    "name": "jump",
+    "category": "action",
+    "desc": "a forward jump",
+    "frames": 104,
+    "source": "CMU 13_11"
+  },
+  {
+    "name": "kick",
+    "category": "action",
+    "desc": "kicks",
+    "frames": 180,
+    "source": "CMU 10_01"
+  },
+  {
+    "name": "march",
+    "category": "locomotion",
+    "desc": "marches on the spot",
+    "frames": 180,
+    "source": "CMU 15_01"
+  },
+  {
+    "name": "run",
+    "category": "locomotion",
+    "desc": "runs / jogs",
+    "frames": 38,
+    "source": "CMU 09_01"
+  },
+  {
+    "name": "shuffle",
+    "category": "locomotion",
+    "desc": "a slow sneaking creep",
+    "frames": 180,
+    "source": "CMU 77_29"
+  },
+  {
+    "name": "sit",
+    "category": "posture",
+    "desc": "sits then stands",
+    "frames": 180,
+    "source": "CMU 13_01"
+  },
+  {
+    "name": "twist",
+    "category": "dance",
+    "desc": "a twisting dance",
+    "frames": 143,
+    "source": "CMU 141_12"
+  },
+  {
+    "name": "walk",
+    "category": "locomotion",
+    "desc": "walks",
+    "frames": 86,
+    "source": "CMU 02_01"
+  },
+  {
+    "name": "wave",
+    "category": "gesture",
+    "desc": "waves hello",
+    "frames": 75,
+    "source": "CMU 141_16"
+  }
+]

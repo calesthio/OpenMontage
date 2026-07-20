@@ -7,7 +7,7 @@
     pexels_image, pixabay_image). This file is kept for backwards
     compatibility and will be removed in a future release.
 
-Supports cloud API providers (FLUX via fal.ai/Replicate, OpenAI DALL-E)
+Supports cloud API providers (FLUX via fal.ai/Replicate, OpenAI GPT Image)
 and local Stable Diffusion via diffusers. Reports unavailable with
 install instructions when no provider is configured.
 """
@@ -43,12 +43,12 @@ class ImageGen(BaseTool):
     stability = ToolStability.EXPERIMENTAL
     execution_mode = ExecutionMode.SYNC
     determinism = Determinism.SEEDED
-    runtime = ToolRuntime.HYBRID  # API (DALL-E/FLUX) or local (diffusers)
+    runtime = ToolRuntime.HYBRID  # API (GPT Image/FLUX) or local (diffusers)
 
     dependencies = []  # checked dynamically based on provider
     install_instructions = (
         "Set one of these environment variables:\n"
-        "  OPENAI_API_KEY — for DALL-E 3\n"
+        "  OPENAI_API_KEY — for GPT Image 2\n"
         "  FAL_KEY — for FLUX via fal.ai\n"
         "Or install diffusers for local generation:\n"
         "  pip install diffusers transformers accelerate torch"
@@ -121,7 +121,7 @@ class ImageGen(BaseTool):
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         provider = inputs.get("provider") or self._detect_provider()
         if provider == "openai":
-            return 0.04  # DALL-E 3 standard
+            return 0.053  # gpt-image-2 medium at 1024x1024 (call uses auto quality)
         if provider == "flux":
             return 0.03
         return 0.0  # local
@@ -159,14 +159,14 @@ class ImageGen(BaseTool):
         client = OpenAI()
         prompt = inputs["prompt"]
         size = f"{inputs.get('width', 1024)}x{inputs.get('height', 1024)}"
-        model = inputs.get("model", "dall-e-3")
+        model = inputs.get("model", "gpt-image-2")
 
+        # GPT image models don't accept response_format; they always return b64
         response = client.images.generate(
             model=model,
             prompt=prompt,
             size=size,
             n=1,
-            response_format="b64_json",
         )
 
         image_data = base64.b64decode(response.data[0].b64_json)

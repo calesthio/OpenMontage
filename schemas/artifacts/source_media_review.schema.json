@@ -9,6 +9,7 @@
     "version": { "type": "string", "const": "1.0" },
     "files": {
       "type": "array",
+      "description": "Reviewed source files. Empty when no user media was supplied (or none could be reviewed) — a valid 'fully generated production' state that review_source_media reports explicitly.",
       "items": {
         "type": "object",
         "required": ["path", "media_type", "reviewed"],
@@ -64,7 +65,7 @@
         },
         "additionalProperties": false
       },
-      "minItems": 1
+      "minItems": 0
     },
     "summary": {
       "type": "string",

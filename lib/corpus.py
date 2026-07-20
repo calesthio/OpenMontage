@@ -407,14 +407,21 @@ class Corpus:
             best_i = -1
             best_score = -1e9
             picked_mat = self.clip_embeddings[np.array(picked)]
-            for i in remaining:
+            # Normalize the position term to [0, 1] so it lives on the
+            # same scale as cosine similarity. An absolute index grows
+            # with the pool, drowning the similarity term: at the 0.5
+            # default a candidate one slot later needed a similarity gap
+            # > 1.0 to be preferred — impossible for non-negative
+            # cosines — so diversify() degenerated to input order.
+            denom = max(1, len(remaining) - 1)
+            for pos, i in enumerate(remaining):
                 sim_picked = float(np.max(self.clip_embeddings[i] @ picked_mat.T))
                 # We want LOW similarity, so we negate.
                 score = -sim_picked
                 # Diversity weights how hard we penalize similarity. At
                 # diversity=1 we always pick the most different; at
                 # diversity=0 we just take them in input order.
-                score = diversity * score + (1.0 - diversity) * (-remaining.index(i))
+                score = diversity * score + (1.0 - diversity) * (-pos / denom)
                 if score > best_score:
                     best_score = score
                     best_i = i

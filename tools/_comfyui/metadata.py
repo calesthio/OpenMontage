@@ -86,10 +86,10 @@ BUNDLED_MODEL_STACKS: dict[str, list[dict[str, Any]]] = {
         },
         {
             "role": "vae",
-            "name": "wan2.2_vae.safetensors",
+            "name": "wan_2.1_vae.safetensors",
             "destination_hint": "ComfyUI/models/vae/",
             "download_url": (
-                "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/"
+                "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/"
                 "tree/main/split_files/vae"
             ),
         },

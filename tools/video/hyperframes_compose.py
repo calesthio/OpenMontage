@@ -654,7 +654,9 @@ class HyperFramesCompose(BaseTool):
             )
 
         workspace = self._require_workspace(inputs)
-        output_path = Path(inputs.get("output_path") or (workspace / "renders" / "final.mp4"))
+        output_path = Path(
+            inputs.get("output_path") or (workspace / "renders" / "final.mp4")
+        ).expanduser().resolve()
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         steps: dict[str, Any] = {}

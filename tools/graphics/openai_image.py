@@ -1,4 +1,4 @@
-"""OpenAI GPT Image generation (gpt-image-1 / DALL-E 3)."""
+"""OpenAI GPT Image generation (gpt-image-2)."""
 
 from __future__ import annotations
 
@@ -60,20 +60,17 @@ class OpenAIImage(BaseTool):
             "prompt": {"type": "string"},
             "model": {
                 "type": "string",
-                "enum": ["gpt-image-1", "dall-e-3"],
-                "default": "gpt-image-1",
+                "enum": ["gpt-image-2"],
+                "default": "gpt-image-2",
             },
             "size": {
                 "type": "string",
-                "enum": [
-                    "1024x1024", "1536x1024", "1024x1536", "auto",
-                    "1024x1792", "1792x1024",  # dall-e-3 only
-                ],
+                "enum": ["1024x1024", "1536x1024", "1024x1536", "auto"],
                 "default": "1024x1024",
             },
             "quality": {
                 "type": "string",
-                "enum": ["low", "medium", "high", "auto", "standard", "hd"],
+                "enum": ["low", "medium", "high", "auto"],
                 "default": "high",
             },
             "output_format": {
@@ -94,21 +91,37 @@ class OpenAIImage(BaseTool):
     side_effects = ["writes image file to output_path", "calls OpenAI API"]
     user_visible_verification = ["Inspect generated image for relevance and quality"]
 
+    @staticmethod
+    def _output_paths(output_path: str | None, count: int, extension: str) -> list[Path]:
+        """Derive one output path per generated image.
+
+        With a single image, honor the requested path as-is. With several,
+        suffix each with `_1`, `_2`, … so no image overwrites another.
+        """
+        ext = extension if extension.startswith(".") else f".{extension}"
+        if not output_path:
+            return [Path(f"generated_image_{idx + 1}{ext}") for idx in range(count)]
+
+        path = Path(output_path)
+        suffix = path.suffix or ext
+        if count == 1:
+            return [path if path.suffix else path.with_suffix(suffix)]
+
+        base = path.with_suffix("") if path.suffix else path
+        return [base.parent / f"{base.name}_{idx + 1}{suffix}" for idx in range(count)]
+
     def get_status(self) -> ToolStatus:
         if os.environ.get("OPENAI_API_KEY"):
             return ToolStatus.AVAILABLE
         return ToolStatus.UNAVAILABLE
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
-        model = inputs.get("model", "gpt-image-1")
+        # gpt-image-2 per-image pricing at 1024x1024 (non-square sizes run
+        # slightly cheaper): https://developers.openai.com/api/docs/guides/image-generation
         quality = inputs.get("quality", "high")
         n = inputs.get("n", 1)
-        if model == "gpt-image-1":
-            cost_map = {"low": 0.011, "medium": 0.042, "high": 0.167, "auto": 0.042}
-            return cost_map.get(quality, 0.042) * n
-        # dall-e-3 fallback pricing
-        quality_map = {"standard": 0.04, "hd": 0.08}
-        return quality_map.get(quality, 0.04) * n
+        cost_map = {"low": 0.006, "medium": 0.053, "high": 0.211, "auto": 0.053}
+        return cost_map.get(quality, 0.053) * n
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         if not os.environ.get("OPENAI_API_KEY"):
@@ -121,42 +134,34 @@ class OpenAIImage(BaseTool):
 
         start = time.time()
         client = OpenAI()
-        model = inputs.get("model", "gpt-image-1")
+        model = inputs.get("model", "gpt-image-2")
         prompt = inputs["prompt"]
         size = inputs.get("size", "1024x1024")
         n = inputs.get("n", 1)
 
         try:
-            if model == "gpt-image-1":
-                quality = inputs.get("quality", "high")
-                output_format = inputs.get("output_format", "png")
-                response = client.images.generate(
-                    model=model,
-                    prompt=prompt,
-                    size=size,
-                    quality=quality,
-                    output_format=output_format,
-                    n=n,
-                )
-            else:
-                # dall-e-3 path
-                quality = inputs.get("quality", "standard")
-                if quality in ("low", "medium", "high", "auto"):
-                    quality = "standard"  # map to dall-e-3 quality options
-                response = client.images.generate(
-                    model=model,
-                    prompt=prompt,
-                    size=size,
-                    quality=quality,
-                    n=1,  # dall-e-3 only supports n=1
-                    response_format="b64_json",
-                )
+            quality = inputs.get("quality", "high")
+            output_format = inputs.get("output_format", "png")
+            response = client.images.generate(
+                model=model,
+                prompt=prompt,
+                size=size,
+                quality=quality,
+                output_format=output_format,
+                n=n,
+            )
 
-            image_data = base64.b64decode(response.data[0].b64_json)
-            ext = inputs.get("output_format", "png")
-            output_path = Path(inputs.get("output_path", f"generated_image.{ext}"))
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_path.write_bytes(image_data)
+            items = response.data or []
+            if not items:
+                return ToolResult(success=False, error="OpenAI returned no image outputs")
+
+            ext = output_format
+            output_paths = self._output_paths(inputs.get("output_path"), len(items), ext)
+            outputs: list[str] = []
+            for item, out_path in zip(items, output_paths):
+                out_path.parent.mkdir(parents=True, exist_ok=True)
+                out_path.write_bytes(base64.b64decode(item.b64_json))
+                outputs.append(str(out_path))
 
         except Exception as e:
             return ToolResult(success=False, error=f"OpenAI image generation failed: {e}")
@@ -167,9 +172,11 @@ class OpenAIImage(BaseTool):
                 "provider": "openai",
                 "model": model,
                 "prompt": prompt,
-                "output": str(output_path),
+                "output": outputs[0],
+                "outputs": outputs,
+                "images_generated": len(outputs),
             },
-            artifacts=[str(output_path)],
+            artifacts=outputs,
             cost_usd=self.estimate_cost(inputs),
             duration_seconds=round(time.time() - start, 2),
             model=model,

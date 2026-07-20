@@ -69,6 +69,17 @@ class MusicGen(BaseTool):
                 ),
             },
             "output_path": {"type": "string"},
+            "force_instrumental": {
+                "type": "boolean",
+                "default": True,
+                "description": (
+                    "Whether to generate instrumental-only music (no vocals). "
+                    "Defaults to True — the music-gen-usage mandate is to always "
+                    "set force_instrumental=true for video background music, since "
+                    "vocals collide with narration/dialogue. Set False only for "
+                    "explicitly vocal-led pieces."
+                ),
+            },
         },
     }
 
@@ -147,6 +158,11 @@ class MusicGen(BaseTool):
         payload = {
             "prompt": prompt,
             "music_length_ms": int(duration * 1000),
+            # music-gen-usage mandate: always set force_instrumental=true for
+            # video background music (vocals collide with narration). The input
+            # schema defaults this to True, so callers get the mandate by
+            # default; they may opt out only by passing force_instrumental=False.
+            "force_instrumental": bool(inputs.get("force_instrumental", True)),
         }
 
         response = requests.post(

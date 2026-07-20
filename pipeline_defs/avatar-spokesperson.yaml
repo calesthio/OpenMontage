@@ -124,7 +124,7 @@ stages:
       - audio_enhance
       - video_selector
     checkpoint_required: true
-    human_approval_default: false
+    human_approval_default: true
     review_focus:
       - Avatar generation path is explicit and honest (including no-avatar pivot if applicable)
       - Narration, subtitle, and background assets are aligned

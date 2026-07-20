@@ -59,6 +59,17 @@ If a style playbook is active, verify:
 
 Each violation is a **suggestion** severity finding.
 
+### Step 4b: Taste Direction Review
+
+If `proposal_packet.production_plan.taste_profile` or the active playbook's `taste_profile` exists, verify:
+- [ ] `design_read` explains the brief, audience, and delivery promise; it is not just "modern/clean/professional"
+- [ ] `visual_variance`, `motion_intensity`, and `information_density` are reflected in scene layout, pacing, callout density, and asset prompts
+- [ ] `reference_strategy` is present when atelier work, AI image/video, product/brand visuals, or mood boards depend on visual nuance
+- [ ] Listed `anti_patterns` are actually avoided
+- [ ] Quality gates are concrete enough for the next stage to enforce
+
+At proposal stage, a missing `taste_profile` is a **suggestion** for preset/low-stakes work and a **critical** finding for atelier, product/brand, launch, hero, or custom-playbook work. At scene_plan/edit/compose, treat dial violations as **suggestion** unless they break the approved delivery promise.
+
 ### Step 5: Evaluate Success Criteria
 
 For each `success_criteria` item from the manifest:

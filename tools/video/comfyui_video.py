@@ -57,7 +57,7 @@ _REQUIRED_MODELS_T2V = [
     *_REQUIRED_MODELS_COMMON,
     "wan2.2_t2v_high_noise_14B_fp8_scaled.safetensors",
     "wan2.2_t2v_low_noise_14B_fp8_scaled.safetensors",
-    "wan2.2_vae.safetensors",
+    "wan_2.1_vae.safetensors",
     "wan2.2_t2v_lightx2v_4steps_lora_v1.1_high_noise.safetensors",
     "wan2.2_t2v_lightx2v_4steps_lora_v1.1_low_noise.safetensors",
 ]

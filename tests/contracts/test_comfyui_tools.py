@@ -174,6 +174,20 @@ def test_t2v_workflow_has_templated_nodes():
     assert "16" in w  # SaveVideo (output)
 
 
+def test_t2v_workflow_uses_14b_compatible_vae():
+    with open(WORKFLOW_DIR / "wan22-t2v-4step.json") as f:
+        w = json.load(f)
+    assert w["4"]["inputs"]["vae_name"] == "wan_2.1_vae.safetensors"
+
+
+def test_t2v_metadata_stack_uses_14b_compatible_vae():
+    from tools._comfyui.metadata import BUNDLED_MODEL_STACKS
+
+    vae_entry = next(item for item in BUNDLED_MODEL_STACKS["wan22-t2v-4step"] if item["role"] == "vae")
+    assert vae_entry["name"] == "wan_2.1_vae.safetensors"
+    assert "Wan_2.1_ComfyUI_repackaged" in vae_entry["download_url"]
+
+
 # ------------------------------------------------------------------
 # Client unit tests
 # ------------------------------------------------------------------

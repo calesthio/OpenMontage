@@ -183,7 +183,7 @@ stages:
       - freesound_music
       - music_gen
     checkpoint_required: true
-    human_approval_default: false
+    human_approval_default: true
     review_focus:
       - Source selects and support assets are clearly separated
       - Motion-required beats use actual video clips rather than still-image substitutes

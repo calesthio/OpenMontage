@@ -16,13 +16,14 @@ Everything you need to know about every provider in OpenMontage — setup instru
 | 4 | **$0** | ElevenLabs | Premium TTS + music + SFX (10K chars/month free) |
 | 5 | **$0** | Piper (local install) | Fully offline TTS — no API key, no cost, no network |
 | 6 | **~$0.03/image** | fal.ai | FLUX images + Kling/Veo/MiniMax video + Recraft — broad single-key image + video coverage |
-| 7 | **~$0.04/image** | OpenAI | DALL-E 3 images + OpenAI TTS |
+| 7 | **~$0.05/image** | OpenAI | GPT Image 2 images + OpenAI TTS |
 | 8 | **~$0.04/image** | Google Imagen | Imagen 4 images (shares the Google API key) |
-| 9 | **$12/month** | Runway | Gen-4 video — highest quality AI video |
-| 10 | **pay-as-you-go** | HeyGen | Avatar videos, multi-model video gateway |
-| 11 | **pay-as-you-go** | Suno | Full song generation with vocals and lyrics |
-| 12 | **$0 + GPU** | Local video gen | WAN 2.1, Hunyuan, CogVideo, LTX — free, offline |
-| 13 | **$0 + GPU** | Local Diffusion | Stable Diffusion images — free, offline |
+| 9 | **pay-as-you-go** | Kling Official | Official direct Kling video, image, TTS, avatar, and lip-sync API, separate from fal.ai Kling |
+| 10 | **$12/month** | Runway | Gen-4 video — highest quality AI video |
+| 11 | **pay-as-you-go** | HeyGen | Avatar videos, multi-model video gateway |
+| 12 | **pay-as-you-go** | Suno | Full song generation with vocals and lyrics |
+| 13 | **$0 + GPU** | Local video gen | WAN 2.1, Hunyuan, CogVideo, LTX — free, offline |
+| 14 | **$0 + GPU** | Local Diffusion | Stable Diffusion images — free, offline |
 
 ### Environment Variable Summary
 
@@ -36,18 +37,27 @@ WAVESPEED_API_KEY=           # WaveSpeed auth only; models come from config.yaml
 PEXELS_API_KEY=              # Stock photos + videos
 PIXABAY_API_KEY=             # Stock photos + videos
 
-# GOOGLE (one key, two tools, generous free tier)
-GOOGLE_API_KEY=              # Google TTS + Google Imagen
+# GOOGLE (one key, multiple tools, generous TTS free tier)
+GOOGLE_API_KEY=              # Google TTS + Imagen + Lyria music + Gemini Omni/Veo video
 
 # VOICE + MUSIC
 ELEVENLABS_API_KEY=          # TTS, music, sound effects (10K chars/month free)
-OPENAI_API_KEY=              # OpenAI TTS + DALL-E 3 images
+OPENAI_API_KEY=              # OpenAI TTS + GPT Image 2 images
 XAI_API_KEY=                 # xAI Grok image generation/editing + Grok video generation
 DOUBAO_SPEECH_API_KEY=       # Volcengine Doubao Speech TTS (strong Mandarin narration)
 DOUBAO_SPEECH_VOICE_TYPE=    # Default Doubao speaker/voice type
+DASHSCOPE_API_KEY=           # Alibaba DashScope (Qwen image gen, TTS, ASR with word timestamps)
+
+# SPEECH-TO-TEXT (optional cloud transcription; local whisper is the default)
+AZURE_SPEECH_KEY=            # Azure AI Speech — Fast Transcription (word-level timestamps)
+AZURE_SPEECH_REGION=         # Speech resource region, e.g. eastus
 
 # MULTI-MODEL GATEWAY (one key, 6+ tools)
 FAL_KEY=                     # FLUX, Recraft, Kling, Veo, MiniMax video
+
+# KLING OFFICIAL DIRECT API
+KLING_API_KEY=               # Official Kling video, image, TTS, avatar, lip sync
+KLING_API_BASE_URL=          # Optional; default https://api-singapore.klingai.com
 
 # VIDEO
 HEYGEN_API_KEY=              # HeyGen avatar video gateway
@@ -132,6 +142,43 @@ OpenMontage now uses those published rates in the Grok tool estimators.
 
 ---
 
+### Alibaba DashScope — Qwen Image + TTS + ASR
+
+> **Best for Chinese-language production.** One key unlocks Qwen-Image generation, Qwen-TTS Mandarin narration, and Qwen-ASR with word-level timestamps — the only DashScope path that provides word-level granularity for subtitle alignment.
+
+**Tools unlocked:** `dashscope_image`, `dashscope_tts`, `dashscope_asr`
+**Env var:** `DASHSCOPE_API_KEY`
+
+#### Setup
+
+1. Go to [dashscope.aliyun.com](https://dashscope.aliyun.com/)
+2. Create an Alibaba Cloud account if you don't have one
+3. Generate an API key in the DashScope console
+4. Add to `.env`: `DASHSCOPE_API_KEY=sk-...`
+
+#### What it's best for
+
+- Chinese-language image generation with strong prompt understanding (Qwen-Image)
+- Natural Mandarin narration (Qwen-TTS, Cherry voice)
+- Word-level timestamp transcription for subtitle alignment (Qwen-ASR filetrans)
+- Replacing the broken `whisperx` slot for ASR
+
+#### API notes
+
+DashScope's `/compatible-mode/v1/` only supports `/chat/completions` and `/embeddings`. Image gen, TTS, and ASR all use DashScope-native endpoints with nested `{model, input, parameters}` request shape — not OpenAI-compatible paths.
+
+The ASR tool (`qwen3-asr-flash-filetrans`) uses an async submit-poll pattern. Audio must be at a publicly accessible URL (local files are not supported). Word timestamps are in milliseconds, normalized to seconds by the tool.
+
+#### Pricing
+
+| Model | Price |
+|------|-------|
+| `qwen-image-2.0-pro` | ~$0.02 per image (check console for current rates) |
+| `qwen3-tts-flash` | ~$0.000015 per character |
+| `qwen3-asr-flash-filetrans` | Per-minute billing (check console) |
+
+---
+
 ### fal.ai — Multi-Model Gateway
 
 > **Broad single-key coverage.** One API key unlocks image and video providers across multiple models.
@@ -168,6 +215,48 @@ No subscription — pure pay-as-you-go, no minimum spend.
 | WAN 2.5 | $0.05/sec | 20 seconds |
 
 **Free tier:** None — but $0 to start, you only pay for what you use.
+
+---
+
+### Kling Official — Direct API
+
+> **Official Kling path.** This is separate from `kling_video` via fal.ai: it uses Kling's official `Authorization: Bearer <KLING_API_KEY>` API, provider name `kling_official`, and direct Classic/Turbo/Omni task protocols.
+
+**Tools unlocked:** `kling_official_video`, `kling_official_image`, `kling_tts`, `kling_avatar`, `kling_lip_sync`
+**Env vars:** `KLING_API_KEY`, optional `KLING_API_BASE_URL`
+
+#### Setup
+
+1. Create or open a Kling AI Open Platform account.
+2. Generate an official API key in the Kling API console.
+3. Add to `.env`:
+   ```bash
+   KLING_API_KEY=your-key-here
+   # Optional, defaults to Singapore:
+   KLING_API_BASE_URL=https://api-singapore.klingai.com
+   ```
+
+#### What It Is Best For
+
+- Direct official Kling API provenance rather than fal.ai gateway routing
+- Text-to-video, image-to-video, and deep Video Omni reference workflows via `kling_official_video`
+- Text-to-image, image edit/reference, and Image Omni multi-reference or series workflows via `kling_official_image`
+- Text-to-speech via `kling_tts` when you already know the official Kling `voice_id`
+- Cloud avatar presenter clips via `kling_avatar`, without replacing local `talking_head`
+- Cloud lip-sync via `kling_lip_sync`, with explicit face selection for multi-person videos
+- Accounts that need to use official Kling model permissions, resource packs, or regional endpoints
+
+#### Notes
+
+- `provider="kling_official"` is intentionally different from fal.ai's `provider="kling"`.
+- Official Kling is a paid remote API. OpenMontage uses conservative cost estimates and includes high-cost factors such as Omni references, series output, 4k mode, and native sound.
+- Local image paths are sent as raw base64 for supported Classic/image-generation fields. Turbo image-to-video requires a URL and will not silently upload through fal.ai.
+- Video Omni and Image Omni can pass official `element_id` references through `element_list`; Elements remain an internal Kling Official helper, not a standalone OpenMontage capability.
+- Account Usage is available as a low-frequency diagnostic helper under `tools/_kling/account.py`; it is not a selector or pipeline tool.
+- `callback_url` is passed through and recorded when supplied, but OpenMontage still polls tasks by default.
+- `kling_tts` requires an explicit `voice_id`; OpenMontage does not guess a default official voice.
+- `kling_avatar` and `kling_lip_sync` register under the existing `avatar` capability and coexist with local SadTalker/Wav2Lip tools. Current avatar pipelines must opt into them explicitly; registry discovery alone does not replace local tools.
+- Official Kling audio effects and video effects are documented but intentionally not registered as OpenMontage tools yet, because current pipelines do not have a stable sound-effects or video-effects capability slot for them.
 
 ---
 
@@ -245,12 +334,60 @@ Doubao Speech 2.0 is billed by character package or usage in Volcengine. OpenMon
 
 ---
 
-### Google — TTS + Imagen (Shared Key)
+### Azure AI Speech — Speech-to-Text
 
-> **One key, two tools.** Google Cloud TTS has 700+ voices in 50+ languages — the strongest localization option. Imagen 4 generates high-quality images.
+> **Cloud transcription.** Azure AI Speech Fast Transcription turns local audio into text with word-level timestamps, speaker diarization, and multi-language identification — no GPU required. Optional: the local faster-whisper `transcriber` remains the default offline STT path. When `AZURE_SPEECH_KEY` is set, the agent prefers `azure_stt` for cloud transcription.
 
-**Tools unlocked:** `google_tts`, `google_imagen`
-**Env var:** `GOOGLE_API_KEY`
+**Tools unlocked:** `azure_stt`
+**Env vars:** `AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION` (or `AZURE_SPEECH_ENDPOINT`)
+
+#### Setup
+
+1. In the [Azure portal](https://portal.azure.com), create a **Speech** resource (Azure AI services → Speech service).
+2. Open the resource's **Keys and Endpoint** page.
+3. Copy **KEY 1** and the **Location/Region** (e.g. `eastus`).
+4. Add to `.env`:
+   ```bash
+   AZURE_SPEECH_KEY=your-speech-resource-key
+   AZURE_SPEECH_REGION=eastus
+   # AZURE_SPEECH_ENDPOINT=https://<custom>...  # optional, overrides region
+   ```
+
+#### API Notes
+
+OpenMontage uses the **Fast Transcription** REST endpoint, which accepts a local
+audio file directly (multipart upload) and returns a synchronous result — no
+Azure Blob storage, SAS URLs, or async job polling:
+
+```text
+POST https://{region}.api.cognitive.microsoft.com/speechtotext/transcriptions:transcribe?api-version=2024-11-15
+Ocp-Apim-Subscription-Key: ${AZURE_SPEECH_KEY}
+```
+
+For files longer than ~2 hours or bulk jobs, use Azure Batch Transcription instead (not wired into OpenMontage).
+
+#### What It Is Best For
+
+- Cloud transcription with word-level timestamps and no local GPU
+- Multi-language auto-detection across a candidate locale set
+- Speaker diarization without a HuggingFace token
+- Subtitle timing metadata that flows straight into `subtitle_gen`
+
+#### Pricing
+
+Azure AI Speech Standard (S0) bills speech-to-text by audio-hour (roughly
+$1.00/audio-hour at time of writing; a free F0 tier includes a limited monthly
+allowance). OpenMontage estimates cost from the transcribed audio duration. See
+[Azure AI Speech pricing](https://azure.microsoft.com/pricing/details/cognitive-services/speech-services/) for current rates.
+
+---
+
+### Google — TTS + Imagen + Music + Video (Shared Key)
+
+> **One key, five tools.** Google Cloud TTS has 700+ voices in 50+ languages — the strongest localization option. Imagen 4 generates high-quality images. Google Lyria generates high-quality background music. Gemini Omni Flash supports conversational video editing, and direct Veo generation covers premium short video clips.
+
+**Tools unlocked:** `google_tts`, `google_imagen`, `google_music`, `gemini_omni_video`, `veo_video`
+**Env var:** `GOOGLE_API_KEY` (or `GEMINI_API_KEY` — either works; `GEMINI_API_KEY` takes precedence)
 
 #### Setup
 
@@ -258,14 +395,14 @@ Doubao Speech 2.0 is billed by character package or usage in Volcengine. OpenMon
 2. Navigate to [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
 3. Click **Create API Key**, select a Google Cloud project
 4. Copy the key
-5. Add to `.env`: `GOOGLE_API_KEY=AIza...`
+5. Add to `.env`: `GOOGLE_API_KEY=AIza...` (or `GEMINI_API_KEY=AIza...`)
 
 **For TTS specifically**, you also need to enable the Text-to-Speech API:
 1. Visit [console.cloud.google.com/apis/library/texttospeech.googleapis.com](https://console.cloud.google.com/apis/library/texttospeech.googleapis.com)
 2. Click **Enable**
 3. Make sure your API key's restrictions allow the Text-to-Speech API
 
-**For Imagen**, enable the Generative Language API:
+**For Imagen, Lyria Music, Gemini Omni video, and direct Veo video**, enable the Generative Language API:
 1. Visit [console.cloud.google.com/apis/library/generativelanguage.googleapis.com](https://console.cloud.google.com/apis/library/generativelanguage.googleapis.com)
 2. Click **Enable**
 
@@ -291,7 +428,23 @@ The free tiers apply *independently* — you get 1M Standard AND 1M WaveNet AND 
 
 **Free tier for Imagen:** None. Paid tier only.
 
-**New account bonus:** Google Cloud offers **$300 in free credits** for new accounts (90-day trial), applicable to both TTS and Imagen.
+#### Gemini Omni Video Pricing
+
+| Model | Price | Notes |
+|-------|-------|-------|
+| `gemini-omni-flash-preview` | ~$0.10 per second of video | Billed as 5,792 output tokens/sec of 720p video at $17.50/1M tokens |
+
+Generates 3–10 second clips at 720p/24fps with synthesized audio, plus stateful conversational editing (`edit_video` via `previous_interaction_id`). **Paid tier only — no free tier.** A typical 8-second clip costs ~$0.80; each edit turn generates a new clip and bills again.
+
+#### Google Music (Lyria) Pricing
+
+| Model | Price per generation request |
+|-------|-----------------------------|
+| `lyria-3-pro-preview` | $0.08 (flat rate, up to 184s duration) |
+
+**Free tier for Music:** None. Paid tier only.
+
+**New account bonus:** Google Cloud offers **$300 in free credits** for new accounts (90-day trial), applicable to TTS, Imagen, Music, Gemini Omni video, and direct Veo video.
 
 #### Google TTS Voice Types
 
@@ -314,7 +467,7 @@ Google TTS offers 700+ voices across 50+ languages. Voice names follow the patte
 
 ### OpenAI — TTS + Image Generation
 
-> **Solid all-rounder.** DALL-E 3 handles complex multi-element compositions well. TTS is fast and affordable.
+> **Solid all-rounder.** GPT Image 2 handles complex multi-element compositions and in-image text well. TTS is fast and affordable.
 
 **Tools unlocked:** `openai_tts`, `openai_image`
 **Env var:** `OPENAI_API_KEY`
@@ -339,10 +492,14 @@ Google TTS offers 700+ voices across 50+ languages. Voice names follow the patte
 
 | Model | Size | Quality | Price per image |
 |-------|------|---------|----------------|
-| DALL-E 3 | 1024x1024 | standard | $0.040 |
-| DALL-E 3 | 1024x1024 | hd | $0.080 |
-| DALL-E 3 | 1024x1792 | standard | $0.080 |
-| DALL-E 3 | 1024x1792 | hd | $0.120 |
+| GPT Image 2 | 1024x1024 | low | $0.006 |
+| GPT Image 2 | 1024x1024 | medium | $0.053 |
+| GPT Image 2 | 1024x1024 | high | $0.211 |
+| GPT Image 2 | 1024x1536 / 1536x1024 | low | $0.005 |
+| GPT Image 2 | 1024x1536 / 1536x1024 | medium | $0.041 |
+| GPT Image 2 | 1024x1536 / 1536x1024 | high | $0.165 |
+
+> **Note:** DALL-E 2/3 were shut down by OpenAI on 2026-05-12, and the `gpt-image-1` family (`gpt-image-1-mini`, `gpt-image-1.5`) retires 2026-12-01 — `gpt-image-2` is OpenAI's recommended replacement ([deprecations](https://developers.openai.com/api/docs/deprecations)).
 
 **Free tier:** None. Requires prepaid billing. Previously offered $5 in free credits for new accounts (discontinued for most signups).
 
@@ -710,7 +867,7 @@ First run downloads the model (~4GB). Subsequent runs use the cached model.
 
 **VRAM requirement:** 4GB+ (8GB recommended for 1024x1024 images)
 
-**Supports:** Negative prompts, seeds, custom sizes. Quality is lower than FLUX or DALL-E 3 but completely free and offline.
+**Supports:** Negative prompts, seeds, custom sizes. Quality is lower than FLUX or GPT Image 2 but completely free and offline.
 
 ---
 
@@ -760,9 +917,10 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **Pexels** | `PEXELS_API_KEY` | `pexels_image`, `pexels_video` | Free |
 | **Pixabay** | `PIXABAY_API_KEY` | `pixabay_image`, `pixabay_video` | Free |
 | **Piper** | — (install only) | `piper_tts` | Free |
-| **Google** | `GOOGLE_API_KEY` | `google_tts`, `google_imagen` | Free tier + paid |
+| **Google** | `GOOGLE_API_KEY` (or `GEMINI_API_KEY`) | `google_tts`, `google_imagen`, `google_music`, `gemini_omni_video`, `veo_video` | Free tier (TTS) + paid |
 | **ElevenLabs** | `ELEVENLABS_API_KEY` | `elevenlabs_tts`, `music_gen` | Free tier + paid |
 | **fal.ai** | `FAL_KEY` | `flux_image`, `recraft_image`, `kling_video`, `veo_video`, `minimax_video` | Pay-as-you-go |
+| **Kling Official** | `KLING_API_KEY` | `kling_official_video`, `kling_official_image`, `kling_tts`, `kling_avatar`, `kling_lip_sync` | Pay-as-you-go |
 | **OpenAI** | `OPENAI_API_KEY` | `openai_tts`, `openai_image` | Paid only |
 | **xAI** | `XAI_API_KEY` | `grok_image`, `grok_video` | Paid only |
 | **Runway** | `RUNWAY_API_KEY` | `runway_video` | Free trial + paid |
@@ -781,14 +939,14 @@ How many providers cover each capability:
 
 | Capability | Cloud Providers | Local Providers | Free Options |
 |-----------|----------------|-----------------|--------------|
-| **Image Generation** | FLUX, Grok, Google Imagen, DALL-E 3, Recraft | Local Diffusion | Pexels, Pixabay (stock) |
-| **Video Generation** | Grok, Kling, Runway, Veo, Higgsfield, MiniMax, HeyGen | WAN, Hunyuan, CogVideo, LTX | Pexels, Pixabay (stock) |
-| **Text-to-Speech** | ElevenLabs, Google TTS, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier |
-| **Music Generation** | ElevenLabs, Suno | — | ElevenLabs free tier |
+| **Image Generation** | FLUX, Kling Official, Grok, Google Imagen, GPT Image 2, Recraft | Local Diffusion | Pexels, Pixabay (stock) |
+| **Video Generation** | Grok, Kling Official, Kling via fal.ai, Runway, Veo, Gemini Omni, Higgsfield, MiniMax, HeyGen | WAN, Hunyuan, CogVideo, LTX | Pexels, Pixabay (stock) |
+| **Text-to-Speech** | ElevenLabs, Google TTS, Kling Official, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier |
+| **Music Generation** | ElevenLabs, Suno, Google Lyria | — | ElevenLabs free tier |
 | **Post-Production** | — | FFmpeg (compose, stitch, trim, mix, enhance, grade) | All free |
 | **Analysis** | — | WhisperX, Scene Detect, Frame Sampler, CLIP/BLIP-2 | All free |
 | **Enhancement** | — | Upscale, BG Remove, Face Enhance, Face Restore | All free |
-| **Avatar** | — | SadTalker, Wav2Lip | All free |
+| **Avatar** | Kling Official | SadTalker, Wav2Lip | Local tools are free |
 
 ---
 

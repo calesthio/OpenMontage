@@ -24,7 +24,11 @@ from tools.base_tool import (
     ToolStatus,
     ToolTier,
 )
-from tools.google_credentials import get_access_token, service_account_configured
+from tools.google_credentials import (
+    get_access_token,
+    service_account_configured,
+    has_google_credentials,
+)
 
 
 class GoogleTTS(BaseTool):
@@ -121,8 +125,17 @@ class GoogleTTS(BaseTool):
     resource_profile = ResourceProfile(
         cpu_cores=1, ram_mb=256, vram_mb=0, disk_mb=50, network_required=True
     )
-    retry_policy = RetryPolicy(max_retries=2, retryable_errors=["rate_limit", "timeout"])
-    idempotency_key_fields = ["text", "input_type", "voice", "language_code", "speaking_rate", "pitch"]
+    retry_policy = RetryPolicy(
+        max_retries=2, retryable_errors=["rate_limit", "timeout"]
+    )
+    idempotency_key_fields = [
+        "text",
+        "input_type",
+        "voice",
+        "language_code",
+        "speaking_rate",
+        "pitch",
+    ]
     side_effects = ["writes audio file to output_path", "calls Google Cloud TTS API"]
     user_visible_verification = ["Listen to generated audio for natural speech quality"]
 
@@ -141,7 +154,7 @@ class GoogleTTS(BaseTool):
     def get_status(self) -> ToolStatus:
         # Available via either an API key or a service-account JSON. Both paths
         # are honoured by execute() — so this no longer over-reports.
-        if self._get_api_key() or service_account_configured():
+        if has_google_credentials():
             return ToolStatus.AVAILABLE
         return ToolStatus.UNAVAILABLE
 
@@ -226,7 +239,11 @@ class GoogleTTS(BaseTool):
 
         if input_type == "ssml":
             stripped = text.strip()
-            ssml = stripped if stripped.startswith("<speak") else f"<speak>{stripped}</speak>"
+            ssml = (
+                stripped
+                if stripped.startswith("<speak")
+                else f"<speak>{stripped}</speak>"
+            )
             synthesis_input = {"ssml": ssml}
         else:
             synthesis_input = {"text": text}
@@ -252,7 +269,7 @@ class GoogleTTS(BaseTool):
         params: dict[str, str] = {}
         if bearer_token:
             headers["Authorization"] = f"Bearer {bearer_token}"
-        else:
+        elif api_key:
             params["key"] = api_key
 
         response = requests.post(

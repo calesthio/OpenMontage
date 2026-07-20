@@ -77,3 +77,12 @@ Recommended metadata keys:
 - Treating a generic generated-video request as a deterministic avatar workflow.
 - Writing the CTA before confirming the avatar and narration path.
 - Planning multiple aspect ratios before the hero layout is proven.
+
+---
+
+## Gate Reminder (Binding)
+
+This stage gates on human approval (`human_approval_default: true`). After review passes:
+checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
+the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
+Approval is per-gate — an earlier "go ahead" does not cover this gate.

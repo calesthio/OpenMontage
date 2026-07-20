@@ -24,6 +24,7 @@ from tools.google_credentials import (
     get_access_token,
     resolve_project_id,
     service_account_configured,
+    has_google_credentials,
 )
 
 # Aspect ratio to approximate pixel dimensions (for cost/reporting only)
@@ -93,7 +94,10 @@ class GoogleImagen(BaseTool):
         "type": "object",
         "required": ["prompt"],
         "properties": {
-            "prompt": {"type": "string", "description": "Image description (max 480 tokens)"},
+            "prompt": {
+                "type": "string",
+                "description": "Image description (max 480 tokens)",
+            },
             "aspect_ratio": {
                 "type": "string",
                 "enum": ["1:1", "3:4", "4:3", "9:16", "16:9"],
@@ -131,17 +135,41 @@ class GoogleImagen(BaseTool):
     resource_profile = ResourceProfile(
         cpu_cores=1, ram_mb=512, vram_mb=0, disk_mb=100, network_required=True
     )
-    retry_policy = RetryPolicy(max_retries=2, retryable_errors=["rate_limit", "timeout"])
+    retry_policy = RetryPolicy(
+        max_retries=2, retryable_errors=["rate_limit", "timeout"]
+    )
     idempotency_key_fields = ["prompt", "aspect_ratio", "model"]
-    side_effects = ["writes image file to output_path", "calls Google Generative AI API"]
+    side_effects = [
+        "writes image file to output_path",
+        "calls Google Generative AI API",
+    ]
     user_visible_verification = ["Inspect generated image for relevance and quality"]
+
+    @staticmethod
+    def _output_paths(output_path: str | None, count: int) -> list[Path]:
+        """Derive one output path per generated image.
+
+        With a single image, honor the requested path as-is. With several,
+        suffix each with `_1`, `_2`, … so no image overwrites another.
+        """
+        ext = ".png"
+        if not output_path:
+            return [Path(f"generated_image_{idx + 1}{ext}") for idx in range(count)]
+
+        path = Path(output_path)
+        suffix = path.suffix or ext
+        if count == 1:
+            return [path if path.suffix else path.with_suffix(suffix)]
+
+        base = path.with_suffix("") if path.suffix else path
+        return [base.parent / f"{base.name}_{idx + 1}{suffix}" for idx in range(count)]
 
     def _get_api_key(self) -> str | None:
         return os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
 
     def get_status(self) -> ToolStatus:
         # API key -> AI Studio endpoint; service-account JSON -> Vertex AI.
-        if self._get_api_key() or service_account_configured():
+        if has_google_credentials():
             return ToolStatus.AVAILABLE
         return ToolStatus.UNAVAILABLE
 
@@ -188,6 +216,7 @@ class GoogleImagen(BaseTool):
         prompt = inputs["prompt"]
 
         import logging
+
         logger = logging.getLogger(__name__)
 
         # Resolve aspect ratio: explicit > derived from width/height > default
@@ -198,7 +227,8 @@ class GoogleImagen(BaseTool):
             aspect_ratio = _dims_to_aspect_ratio(inputs["width"], inputs["height"])
             logger.info(
                 "google_imagen: remapped %s to nearest supported aspect ratio %s",
-                requested_ratio, aspect_ratio,
+                requested_ratio,
+                aspect_ratio,
             )
         else:
             aspect_ratio = "1:1"
@@ -228,7 +258,7 @@ class GoogleImagen(BaseTool):
             )
             headers = {
                 "Content-Type": "application/json",
-                "x-goog-api-key": api_key,
+                "x-goog-api-key": api_key or "",
             }
 
         try:
@@ -246,15 +276,20 @@ class GoogleImagen(BaseTool):
 
             predictions = data.get("predictions", [])
             if not predictions:
-                return ToolResult(success=False, error="No images returned from Imagen API")
+                return ToolResult(
+                    success=False, error="No images returned from Imagen API"
+                )
 
-            image_bytes = base64.b64decode(
-                predictions[0]["bytesBase64Encoded"]
+            output_paths = self._output_paths(
+                inputs.get("output_path"), len(predictions)
             )
-
-            output_path = Path(inputs.get("output_path", "generated_image.png"))
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_path.write_bytes(image_bytes)
+            outputs: list[str] = []
+            for prediction, out_path in zip(predictions, output_paths):
+                out_path.parent.mkdir(parents=True, exist_ok=True)
+                out_path.write_bytes(
+                    base64.b64decode(prediction["bytesBase64Encoded"])
+                )
+                outputs.append(str(out_path))
 
         except Exception as e:
             return ToolResult(success=False, error=f"Imagen generation failed: {e}")
@@ -266,10 +301,11 @@ class GoogleImagen(BaseTool):
                 "model": model,
                 "prompt": prompt,
                 "aspect_ratio": aspect_ratio,
-                "output": str(output_path),
-                "images_generated": len(predictions),
+                "output": outputs[0],
+                "outputs": outputs,
+                "images_generated": len(outputs),
             },
-            artifacts=[str(output_path)],
+            artifacts=outputs,
             cost_usd=self.estimate_cost(inputs),
             duration_seconds=round(time.time() - start, 2),
             model=model,

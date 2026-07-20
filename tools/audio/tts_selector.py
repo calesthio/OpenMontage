@@ -45,6 +45,17 @@ class TTSSelector(BaseTool):
                 "type": "string",
                 "description": "Provider-specific voice ID. Passed through to the selected TTS provider.",
             },
+            "voice_language": {
+                "type": "string",
+                "enum": ["zh", "en"],
+                "description": "Kling official voice language. Passed through when selected provider supports it.",
+            },
+            "voice_speed": {
+                "type": "number",
+                "minimum": 0.5,
+                "maximum": 2.0,
+                "description": "Kling official voice speed. Use speed for OpenAI/ElevenLabs-style controls.",
+            },
             "model_id": {
                 "type": "string",
                 "description": "TTS model to use (e.g. eleven_multilingual_v2). Passed through to provider.",

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Google Lyria"
+  short_description: "Generate and validate music with Lyria 3"
+  default_prompt: "Use $lyria to design a production-ready Lyria 3 music generation prompt and verification plan."

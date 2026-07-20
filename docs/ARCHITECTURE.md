@@ -48,7 +48,7 @@ OpenMontage/
 │   ├── audio/              # TTS (ElevenLabs, OpenAI, Piper), music gen, mixing, enhancement
 │   ├── avatar/             # Talking head animation, lip sync
 │   ├── enhancement/        # Upscale, bg removal, face enhance/restore, color grading
-│   ├── graphics/           # Image gen (FLUX, DALL-E, Recraft, local diffusion), stock, diagrams, code snippets, math animation
+│   ├── graphics/           # Image gen (FLUX, GPT Image, Recraft, local diffusion), stock, diagrams, code snippets, math animation
 │   ├── publishers/         # (Reserved)
 │   ├── subtitle/           # SRT/VTT generation from timestamps
 │   └── video/              # 13 video gen providers, composition, stitching, trimming
@@ -383,9 +383,11 @@ All config is validated via Pydantic models in `lib/config_model.py`.
 | Variable | Used By | Purpose |
 |----------|---------|---------|
 | `ELEVENLABS_API_KEY` | elevenlabs_tts, music_gen | TTS, music, sound effects |
-| `OPENAI_API_KEY` | openai_tts, openai_image | TTS fallback, DALL-E 3 |
+| `OPENAI_API_KEY` | openai_tts, openai_image | TTS fallback, GPT Image 2 |
 | `XAI_API_KEY` | grok_image, grok_video | Grok image editing/generation, Grok video generation |
 | `FAL_KEY` | flux_image, kling_video, veo_video, minimax_video, recraft_image | fal.ai hosted models (FLUX, Veo, Kling, MiniMax, Recraft) |
+| `KLING_API_KEY` | kling_official_video, kling_official_image, kling_tts, kling_avatar, kling_lip_sync | Official Kling direct API for video, image, TTS, avatar, and lip sync |
+| `KLING_API_BASE_URL` | kling_official_video, kling_official_image, kling_tts, kling_avatar, kling_lip_sync | Optional official Kling API endpoint override |
 | `HEYGEN_API_KEY` | heygen_video | Multi-provider video generation |
 | `PEXELS_API_KEY` | pexels_image, pexels_video | Stock media |
 | `PIXABAY_API_KEY` | pixabay_image, pixabay_video | Stock media |
@@ -395,6 +397,18 @@ All config is validated via Pydantic models in `lib/config_model.py`.
 | `MODAL_LTX2_ENDPOINT_URL` | ltx_video_modal | Self-hosted LTX-2 |
 | `VIDEO_GEN_LOCAL_ENABLED` | local video tools | Enable local GPU generation |
 | `VIDEO_GEN_LOCAL_MODEL` | wan, hunyuan, ltx, cogvideo | Select local model |
+
+Kling Official support stays inside the existing provider and capability model.
+`kling_official_video` and `kling_official_image` handle Classic, Turbo, and Omni
+request shapes, while Elements and Account Usage live under `tools/_kling/` as
+internal helpers for element ID references and low-frequency account diagnostics;
+they are not separate pipeline stages, selectors, or generated-asset capabilities.
+
+Kling Official also adds provider tools only where OpenMontage already has a
+matching capability slot: `kling_tts` for `tts`, plus `kling_avatar` and
+`kling_lip_sync` for `avatar`. Official Kling audio effects and video effects are
+not registered as tools because current pipelines do not define stable
+`sound_effects` or `video_effects` capability routing.
 
 ---
 

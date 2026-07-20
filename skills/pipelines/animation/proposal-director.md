@@ -46,6 +46,7 @@ A `render_runtime_selection` decision with only one option considered when both 
 | Tool registry | `support_envelope()` output | What's actually available right now |
 | Cost tracker | `tools/cost_tracker.py` | Cost estimation data |
 | Style playbooks | `styles/*.yaml` | Available visual styles |
+| Meta skill | `skills/meta/taste-direction.md` | Design read, taste dials, reference strategy |
 | User input | Topic, any preferences expressed | Creative direction |
 
 ## Process
@@ -120,6 +121,8 @@ Record all findings. **Do not propose an animation mode that requires tools you 
 ### Step 3: Animation Approach Selection
 
 This is the key differentiator from the explainer proposal. **Present the user with concrete animation approaches, explain what each looks like, what tools/keys they need, and what's already available.**
+
+Before locking animation mode or visual identity, read `skills/meta/taste-direction.md` and write a `production_plan.taste_profile`. The three dials (`visual_variance`, `motion_intensity`, `information_density`) should explain whether the concept needs calm data builds, kinetic typography, dense diagrams, reference stills, or a custom/atelier visual system.
 
 #### Step 3a: Tool Availability Scan
 
@@ -278,7 +281,7 @@ For each concept, specify:
 For each concept, specify:
 - **Animation approach**: `image_animation` / `clip_video` / `manim` / `remotion_dataviz` / `diagram_stills` / `mixed`
 - **Why this approach**: grounded in technique research AND tool availability from Step 3
-- **Image/video generation provider**: which specific provider from the preflight scan (e.g., "FLUX via fal.ai", "gpt-image-1 via OpenAI", "Stable Diffusion local")
+- **Image/video generation provider**: which specific provider from the preflight scan (e.g., "FLUX via fal.ai", "gpt-image-2 via OpenAI", "Stable Diffusion local")
 - **Reuse strategy**: What's the visual system? (recurring motifs, layout grid, color scheme, transition family)
 - **Complexity estimate**: How many unique scene types vs. reusable templates?
 - **Visual identity**: palette, typography, texture, motion energy, and why they fit this subject, audience, and platform
@@ -461,8 +464,17 @@ If you encounter a generation technique, provider behavior, or prompting pattern
 
 This is especially important for:
 - **Video generation prompting** — models respond to specific vocabularies that change with each version
-- **Image model parameters** — optimal settings for FLUX, DALL-E, Imagen differ and evolve
+- **Image model parameters** — optimal settings for FLUX, GPT Image, Imagen differ and evolve
 - **Audio provider quirks** — voice cloning, music generation, and TTS each have model-specific best practices
 - **Remotion component patterns** — new composition techniques emerge as the framework evolves
 
 Do not rely on stale knowledge. When in doubt, search first.
+
+---
+
+## Gate Reminder (Binding)
+
+This stage gates on human approval (`human_approval_default: true`). After review passes:
+checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
+the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
+Approval is per-gate — an earlier "go ahead" does not cover this gate.

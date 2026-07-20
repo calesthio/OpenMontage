@@ -141,11 +141,15 @@ class CostTracker:
 
         # Check budget
         if estimated > self.usable_budget_usd:
+            message = (
+                f"Reservation of ${estimated:.2f} exceeds usable budget "
+                f"${self.usable_budget_usd:.2f}"
+            )
             if self.mode == BudgetMode.CAP:
-                raise BudgetExceededError(
-                    f"Reservation of ${estimated:.2f} exceeds usable budget "
-                    f"${self.usable_budget_usd:.2f}"
-                )
+                raise BudgetExceededError(message)
+            if self.mode == BudgetMode.WARN:
+                entry["budget_warning"] = True
+                entry["budget_warning_message"] = message
 
         entry["status"] = EntryStatus.RESERVED.value
         entry["reserved_usd"] = estimated
@@ -155,6 +159,7 @@ class CostTracker:
     def approve_tool(self, tool: str) -> None:
         """Mark a tool as approved for paid operations."""
         self._approved_tools.add(tool)
+        self._save()
 
     def reconcile(self, entry_id: str, actual_usd: float, success: bool = True) -> None:
         """Reconcile actual spend after tool execution."""
@@ -487,6 +492,7 @@ class CostTracker:
             "budget_total_usd": self.budget_total_usd,
             "budget_reserved_usd": round(self.budget_reserved_usd, 4),
             "budget_spent_usd": round(self.budget_spent_usd, 4),
+            "approved_tools": sorted(self._approved_tools),
             "entries": self.entries,
         }
         self.cost_log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -498,6 +504,7 @@ class CostTracker:
             data = json.load(f)
         self.entries = data.get("entries", [])
         self.budget_total_usd = data.get("budget_total_usd", self.budget_total_usd)
+        self._approved_tools = set(data.get("approved_tools", []))
 
     # ---- Helpers ----
 

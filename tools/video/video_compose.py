@@ -17,9 +17,11 @@ Routing is driven by `edit_decisions.render_runtime` (locked at proposal):
 
 Authoring mode is orthogonal to runtime. Setting
 `edit_decisions.composition_mode = "atelier"` (or `renderer_family="bespoke"`)
-routes to a hand-authored, project-local Remotion composition that BYPASSES the
-cut-schema and the stock scene-type registry entirely — the "hand-stitched
-every time" path for hero/bespoke pieces. See `_render_via_atelier`.
+means the composition is hand-authored rather than assembled from stock scene
+components. Runtime still wins first: HyperFrames atelier routes through
+`hyperframes_compose`, FFmpeg stays FFmpeg-only, and only Remotion atelier uses
+`_render_via_atelier` for a project-local Remotion entry that bypasses the
+cut-schema and stock scene-type registry.
 
 Silent runtime swaps are forbidden by governance. If the chosen runtime is
 unavailable or fails, this tool surfaces a structured blocker and waits for
@@ -187,6 +189,15 @@ class VideoCompose(BaseTool):
             "codec": {"type": "string", "default": "libx264"},
             "crf": {"type": "integer", "default": 23},
             "preset": {"type": "string", "default": "medium"},
+            "remotion_timeout_ms": {
+                "type": "integer",
+                "description": (
+                    "Remotion render timeout in milliseconds, passed through as "
+                    "`--timeout` (governs headless-browser setup and delayRender). "
+                    "Raise this when the browser is slow to start (e.g. restricted "
+                    "networks). The subprocess timeout is widened to match."
+                ),
+            },
         },
     }
 
@@ -230,6 +241,12 @@ class VideoCompose(BaseTool):
             return False
         return True
 
+    def _ffmpeg_available(self) -> bool:
+        """Check if the ffmpeg binary is actually resolvable on PATH."""
+        import shutil as _shutil
+
+        return bool(_shutil.which("ffmpeg"))
+
     def _hyperframes_available(self) -> bool:
         """Check if HyperFrames rendering is available.
 
@@ -250,10 +267,11 @@ class VideoCompose(BaseTool):
         fallback between runtimes is forbidden.
         """
         info = super().get_info()
+        ffmpeg_ok = self._ffmpeg_available()
         remotion_ok = self._remotion_available()
         hyperframes_ok = self._hyperframes_available()
         info["render_engines"] = {
-            "ffmpeg": True,
+            "ffmpeg": ffmpeg_ok,
             "remotion": remotion_ok,
             "hyperframes": hyperframes_ok,
         }
@@ -1293,6 +1311,36 @@ class VideoCompose(BaseTool):
         if not edit_decisions:
             return ToolResult(success=False, error="edit_decisions required for render")
 
+        # --- Runtime routing: honor render_runtime locked at proposal ---
+        # Silent swaps are forbidden by governance. Resolve this before any
+        # composition-mode branching so `composition_mode="atelier"` cannot
+        # accidentally force the Remotion atelier path when HyperFrames or
+        # FFmpeg was approved.
+        render_runtime = (edit_decisions.get("render_runtime") or "").strip().lower()
+
+        if not render_runtime:
+            return ToolResult(
+                success=False,
+                error=(
+                    "render_runtime is not set in edit_decisions. Per governance, "
+                    "it MUST be locked at proposal stage (proposal_packet."
+                    "production_plan.render_runtime) and carried forward through "
+                    "edit_decisions.render_runtime. Valid values: 'remotion', "
+                    "'hyperframes', 'ffmpeg'. Re-run the proposal stage with an "
+                    "explicit runtime choice — do NOT default this field."
+                ),
+            )
+
+        if render_runtime not in {"remotion", "hyperframes", "ffmpeg"}:
+            return ToolResult(
+                success=False,
+                error=(
+                    f"Unknown render_runtime {render_runtime!r}. "
+                    f"Valid values: remotion, hyperframes, ffmpeg. "
+                    f"render_runtime must be set at proposal stage."
+                ),
+            )
+
         # --- Atelier (bespoke) mode -------------------------------------
         # Hand-authored, project-local Remotion composition. Deliberately
         # bypasses the cut-schema, the stock scene-type registry, and the
@@ -1301,8 +1349,11 @@ class VideoCompose(BaseTool):
         # under remotion-composer/projects/<slug>/ and points this renderer at
         # it. No reusable creative components; a new visual language per video.
         # Triggered by composition_mode="atelier" (or renderer_family="bespoke").
-        if (edit_decisions.get("composition_mode") == "atelier"
-                or edit_decisions.get("renderer_family") == "bespoke"):
+        remotion_atelier_requested = (
+            edit_decisions.get("composition_mode") == "atelier"
+            or edit_decisions.get("renderer_family") == "bespoke"
+        )
+        if render_runtime == "remotion" and remotion_atelier_requested:
             return self._render_via_atelier(inputs, edit_decisions)
 
         if not asset_manifest:
@@ -1336,26 +1387,6 @@ class VideoCompose(BaseTool):
         # Also accept profile as "output_profile" (skill convention) or "profile"
         profile = inputs.get("profile") or inputs.get("output_profile")
 
-        # --- Runtime routing: honor render_runtime locked at proposal ---
-        # Silent swaps are forbidden by governance. If the chosen runtime
-        # is unavailable, surface a structured blocker rather than quietly
-        # picking a different engine. Missing render_runtime is itself a
-        # governance violation — edit_decisions.schema.json requires it.
-        render_runtime = (edit_decisions.get("render_runtime") or "").strip().lower()
-
-        if not render_runtime:
-            return ToolResult(
-                success=False,
-                error=(
-                    "render_runtime is not set in edit_decisions. Per governance, "
-                    "it MUST be locked at proposal stage (proposal_packet."
-                    "production_plan.render_runtime) and carried forward through "
-                    "edit_decisions.render_runtime. Valid values: 'remotion', "
-                    "'hyperframes', 'ffmpeg'. Re-run the proposal stage with an "
-                    "explicit runtime choice — do NOT default this field."
-                ),
-            )
-
         if render_runtime == "hyperframes":
             return self._render_via_hyperframes(
                 inputs=inputs,
@@ -1374,16 +1405,6 @@ class VideoCompose(BaseTool):
                 output_path=output_path,
                 profile=profile,
             )
-        if render_runtime != "remotion":
-            return ToolResult(
-                success=False,
-                error=(
-                    f"Unknown render_runtime {render_runtime!r}. "
-                    f"Valid values: remotion, hyperframes, ffmpeg. "
-                    f"render_runtime must be set at proposal stage."
-                ),
-            )
-
         # --- Explicit Remotion path (render_runtime == 'remotion') ---
         if self._needs_remotion(resolved_cuts):
             remotion_inputs: dict[str, Any] = {
@@ -1392,6 +1413,11 @@ class VideoCompose(BaseTool):
             }
             if profile:
                 remotion_inputs["profile"] = profile
+            # Forward the creator-facing render timeout through the high-level
+            # render path (execute(operation="render") -> _render), otherwise it
+            # would only take effect on a direct _remotion_render() call.
+            if inputs.get("remotion_timeout_ms") is not None:
+                remotion_inputs["remotion_timeout_ms"] = inputs["remotion_timeout_ms"]
             render_result = self._remotion_render(remotion_inputs)
 
             # Governance: NEVER silently fall back to FFmpeg when Remotion fails.
@@ -1738,12 +1764,45 @@ class VideoCompose(BaseTool):
             except (ImportError, ValueError):
                 pass
 
+        # Optional creator-facing render timeout. Remotion's `--timeout` (ms)
+        # governs headless-browser setup and delayRender(); on slow machines or
+        # restricted networks the default 30s browser setup times out with an
+        # opaque failure. Pass it through and give the subprocess enough headroom
+        # so run_command() does not kill Remotion before its own timeout fires.
+        remotion_timeout_ms = inputs.get("remotion_timeout_ms")
+        subprocess_timeout = 600
+        if remotion_timeout_ms:
+            try:
+                ms = int(remotion_timeout_ms)
+                cmd.append(f"--timeout={ms}")
+                subprocess_timeout = max(subprocess_timeout, ms // 1000 + 60)
+            except (TypeError, ValueError):
+                pass
+
         try:
             # Invoke from inside the composer dir so npx can resolve the
             # local remotion binary via node_modules/.bin. Without this,
             # Windows npx cannot locate the CLI and returns "could not
             # determine executable to run".
-            self.run_command(cmd, timeout=600, cwd=composer_dir)
+            self.run_command(cmd, timeout=subprocess_timeout, cwd=composer_dir)
+        except subprocess.CalledProcessError as e:
+            # run_command uses check=True + capture_output, so the useful
+            # Remotion diagnostics live in stderr/stdout — surface the tail
+            # instead of the bare "returned non-zero exit status 1".
+            detail = (e.stderr or e.stdout or "").strip()
+            tail = "\n".join(detail.splitlines()[-25:]) if detail else "(no output captured)"
+            return ToolResult(
+                success=False,
+                error=f"Remotion render failed (exit {e.returncode}):\n{tail}",
+            )
+        except subprocess.TimeoutExpired as e:
+            return ToolResult(
+                success=False,
+                error=(
+                    f"Remotion render timed out after {e.timeout}s. If the headless "
+                    "browser is slow to start, raise remotion_timeout_ms (ms)."
+                ),
+            )
         except Exception as e:
             return ToolResult(success=False, error=f"Remotion render failed: {e}")
         finally:

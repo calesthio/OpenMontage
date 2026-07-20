@@ -124,7 +124,7 @@ stages:
       - audio_mixer
       - image_selector
     checkpoint_required: true
-    human_approval_default: false
+    human_approval_default: true
     review_focus:
       - Subtitle file exists and matches transcript timing
       - Audio extracted and normalized

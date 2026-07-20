@@ -35,3 +35,12 @@ Prefer fewer, stronger shots:
 
 Avoid scenes that require many unique views or complex physical contact unless
 the user approved that complexity.
+
+---
+
+## Gate Reminder (Binding)
+
+This stage gates on human approval (`human_approval_default: true`). After review passes:
+checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
+the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
+Approval is per-gate — an earlier "go ahead" does not cover this gate.

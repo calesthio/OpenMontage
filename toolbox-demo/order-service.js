@@ -5,6 +5,10 @@ export async function getOrderForUser(db, orderId, userId) {
     throw new Error("Order not found");
   }
 
+  if (order.userId !== userId) {
+    throw new Error("Order not found");
+  }
+
   return order;
 }
 

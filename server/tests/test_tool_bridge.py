@@ -184,6 +184,51 @@ def test_absolute_input_path_untouched(tmp_path, monkeypatch):
     assert tool.executed_with["input_path"] == abs_path
 
 
+def test_export_bundle_style_video_path_anchored_to_project_dir(tmp_path, monkeypatch):
+    """Regression: export_bundle's schema uses video_path/subtitles_path/
+    thumbnail_path, not input_path — the input_path-only anchor never
+    covered it, so export_bundle failed "regardless of path format" while
+    video_trimmer (which uses input_path) succeeded on the same underlying
+    file. The anchor must cover any "*_path" read field generically, not
+    just the one literal field name."""
+    hero = tmp_path / "renders" / "hero.mp4"
+    hero.parent.mkdir(parents=True)
+    hero.write_bytes(b"fake-video-bytes")
+    subs = tmp_path / "renders" / "subs.srt"
+    subs.write_text("1\n00:00:00,000 --> 00:00:01,000\nhi\n")
+
+    tool = FakeTool(capability="publish")
+    from tools import tool_registry
+    monkeypatch.setattr(tool_registry.registry, "ensure_discovered", lambda *a, **k: None)
+    monkeypatch.setattr(tool_registry.registry, "get", lambda name: tool)
+    args = {
+        "tool_name": "export_bundle",
+        "inputs": {
+            "video_path": "renders/hero.mp4",
+            "subtitles_path": "renders/subs.srt",
+            "title": "test",
+        },
+    }
+    execute_tool("run_openmontage_tool", args, tmp_path)
+    assert tool.executed_with["video_path"] == str(hero.resolve())
+    assert tool.executed_with["subtitles_path"] == str(subs.resolve())
+
+
+def test_output_path_not_double_anchored_by_generic_path_loop(tmp_path, monkeypatch):
+    """output_path already went through _anchor_output_path above — the
+    generic "*_path" loop must skip it, not re-anchor it a second time."""
+    tool = FakeTool(capability="video_post")
+    from tools import tool_registry
+    monkeypatch.setattr(tool_registry.registry, "ensure_discovered", lambda *a, **k: None)
+    monkeypatch.setattr(tool_registry.registry, "get", lambda name: tool)
+    args = {
+        "tool_name": "video_trimmer",
+        "inputs": {"operation": "cut", "output_path": "renders/out.mp4"},
+    }
+    execute_tool("run_openmontage_tool", args, tmp_path)
+    assert tool.executed_with["output_path"] == str((tmp_path / "renders" / "out.mp4").resolve())
+
+
 def test_cost_to_cny_passes_through_cny_declared_tool():
     from app.runner.tool_bridge import _cost_to_cny
     assert _cost_to_cny(FakeTool(cost_currency="CNY"), 1.0) == 1.0
@@ -917,6 +962,91 @@ def test_write_artifact_no_schema_for_artifact_name_is_not_a_warning(tmp_path, m
         emit_event=events.append,
     )
     assert out == f"Written to {tmp_path / 'artifacts' / 'research.json'}"
+    assert not [e for e in events if e["type"] == "warning"]
+
+
+# ── write_artifact: asset_manifest missing-file detection ───────────────────
+# Catches a corrupted/typo'd/never-generated asset path at the source (asset
+# stage) instead of two stages later when compose tries to render it and
+# gets an opaque Remotion "file:// not supported" proxy error. Observed live
+# 2026-07-19: an LLM-provider PII filter mangled a hex asset hash containing
+# an 11-digit run while an agent re-transcribed it into asset_manifest.json.
+
+def test_write_artifact_warns_on_missing_asset_path(tmp_path, monkeypatch):
+    from app.runner import tool_bridge
+    monkeypatch.setattr(tool_bridge, "OM_ROOT", tmp_path)
+    events = []
+    out = execute_tool(
+        "write_artifact",
+        {
+            "artifact_name": "asset_manifest",
+            "content": {
+                "version": "1.0",
+                "assets": [{
+                    "id": "vid_01", "type": "video", "source_tool": "maas_video",
+                    "scene_id": "sc01", "path": "assets/video/does_not_exist.mp4",
+                }],
+            },
+        },
+        tmp_path,
+        emit_event=events.append,
+    )
+    assert "not found on disk" in out
+    assert "vid_01" in out
+    warnings = [e for e in events if e["type"] == "warning"]
+    assert any("not found on disk" in w["message"] for w in warnings)
+
+
+def test_write_artifact_no_warning_when_asset_path_exists(tmp_path, monkeypatch):
+    from app.runner import tool_bridge
+    monkeypatch.setattr(tool_bridge, "OM_ROOT", tmp_path)
+    real = tmp_path / "assets" / "video" / "clip.mp4"
+    real.parent.mkdir(parents=True)
+    real.write_bytes(b"fake")
+    events = []
+    out = execute_tool(
+        "write_artifact",
+        {
+            "artifact_name": "asset_manifest",
+            "content": {
+                "version": "1.0",
+                "assets": [{
+                    "id": "vid_01", "type": "video", "source_tool": "maas_video",
+                    "scene_id": "sc01", "path": "assets/video/clip.mp4",
+                }],
+            },
+        },
+        tmp_path,
+        emit_event=events.append,
+    )
+    assert "not found on disk" not in out
+    assert not [e for e in events if e["type"] == "warning"]
+
+
+def test_write_artifact_skips_native_remotion_component_assets(tmp_path, monkeypatch):
+    # A title/text card rendered by a Remotion component (HeroTitle,
+    # TextCard) is a symbolic manifest entry, not a real media file — must
+    # not be flagged as missing.
+    from app.runner import tool_bridge
+    monkeypatch.setattr(tool_bridge, "OM_ROOT", tmp_path)
+    events = []
+    out = execute_tool(
+        "write_artifact",
+        {
+            "artifact_name": "asset_manifest",
+            "content": {
+                "version": "1.0",
+                "assets": [{
+                    "id": "title_sc05", "type": "animation", "source_tool": "remotion",
+                    "scene_id": "sc05", "path": "assets/title_cards/sc05.remotion",
+                    "format": "remotion_component",
+                }],
+            },
+        },
+        tmp_path,
+        emit_event=events.append,
+    )
+    assert "not found on disk" not in out
     assert not [e for e in events if e["type"] == "warning"]
 
 

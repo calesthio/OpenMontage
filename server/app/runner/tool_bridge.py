@@ -534,6 +534,35 @@ def execute_tool(
             if len(schema_warning) > 300:
                 schema_warning = schema_warning[:300] + "…"
 
+        # asset_manifest-specific: catch a referenced local asset that
+        # doesn't exist on disk right here, at the source, instead of two
+        # stages later when compose tries to render it and gets an opaque
+        # Remotion "file:// not supported" proxy error. Observed live
+        # 2026-07-19: an LLM-provider PII filter mangled a hex asset hash
+        # that happened to contain an 11-digit run ("de2cd78360806541" ->
+        # "de2cd[PHONE_REDACTED]1") while the agent was re-transcribing it
+        # into asset_manifest.json — the real file on disk still had the
+        # correct name, only the manifest's copy of the path was corrupted.
+        # Skip entries that are deliberately not real files by convention
+        # (format="remotion_component" — a native title/text card rendered
+        # by a Remotion component, not loaded from a media file).
+        if artifact_name == "asset_manifest" and isinstance(content, dict):
+            missing_asset_paths = []
+            for a in content.get("assets", []) or []:
+                if not isinstance(a, dict):
+                    continue
+                if a.get("format") == "remotion_component":
+                    continue
+                p = a.get("path")
+                if not isinstance(p, str) or not p or p.startswith(("http://", "https://", "data:")):
+                    continue
+                if not (project_dir / p).exists():
+                    missing_asset_paths.append(f"{a.get('id', '?')} -> {p}")
+            if missing_asset_paths:
+                listed = "; ".join(missing_asset_paths)
+                warning_msg = f"asset_manifest references {len(missing_asset_paths)} path(s) not found on disk: {listed}"
+                schema_warning = f"{schema_warning}; {warning_msg}" if schema_warning else warning_msg
+
         if emit_event:
             emit_event({
                 "type": "artifact_written",
@@ -756,25 +785,38 @@ def execute_tool(
             anchored.parent.mkdir(parents=True, exist_ok=True)
             inputs = {**inputs, "output_path": str(anchored)}
 
-        # Anchor a relative input_path the same way output_path already is.
-        # render_report.outputs[].path and asset_manifest.assets[].path are
-        # intentionally project-relative (e.g. "renders/x.mp4") — every tool
-        # that reads a file via "input_path" (video_trimmer, auto_reframe,
-        # video_compose's extract_poster, audio_enhance, ...) gets that value
-        # passed straight through and resolves it against the server's CWD,
-        # not project_dir, so a file that has existed the whole time 404s as
-        # "not found". Confirmed live: the publish stage's derivative calls
-        # (teaser cut, portrait reframe, poster extract) all failed this way
-        # against the hero export. Only rewrite when the project-relative
-        # candidate actually exists — otherwise leave it alone so the tool's
-        # own error names the path the agent actually gave.
-        if "input_path" in inputs:
-            raw_input = inputs["input_path"]
-            p = Path(raw_input)
+        # Anchor every relative *_path read-field the same way output_path
+        # already is. render_report.outputs[].path and
+        # asset_manifest.assets[].path are intentionally project-relative
+        # (e.g. "renders/x.mp4") — every tool that reads a file via a
+        # "*_path" input (video_trimmer/auto_reframe's input_path,
+        # export_bundle's video_path/subtitles_path/thumbnail_path,
+        # audio_enhance, ...) gets that value passed straight through and
+        # resolves it against the server's CWD, not project_dir, so a file
+        # that has existed the whole time 404s as "not found". Confirmed
+        # live twice: first for input_path (publish stage's teaser/reframe/
+        # poster derivative calls against the hero export), then again for
+        # export_bundle's differently-named fields — export_bundle failed
+        # on every path format the agent tried because it was never covered
+        # by the input_path-only version of this anchor. Generalized to any
+        # "*_path" field (output_path is handled separately above) so the
+        # next differently-named read-path field doesn't need its own fix.
+        # Only rewrite when the project-relative candidate actually exists —
+        # otherwise leave it alone so the tool's own error names the path
+        # the agent actually gave.
+        anchored_reads = {}
+        for key, raw_value in inputs.items():
+            if key == "output_path" or not key.endswith("_path"):
+                continue
+            if not isinstance(raw_value, str) or not raw_value:
+                continue
+            p = Path(raw_value)
             if not p.is_absolute():
                 candidate = (project_dir / p).resolve()
                 if candidate.is_file():
-                    inputs = {**inputs, "input_path": str(candidate)}
+                    anchored_reads[key] = str(candidate)
+        if anchored_reads:
+            inputs = {**inputs, **anchored_reads}
 
         # Hard budget ceiling — pre-call check. Bounds total spend to <= budget
         # by refusing a paid call that would cross it, instead of letting a

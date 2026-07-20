@@ -18,4 +18,10 @@ describe("order service", () => {
   it("calculates a refund", () => {
     expect(calculateRefund([{ price: 12, quantity: 2 }])).toBe(24);
   });
+
+  it("rejects negative refund values", () => {
+    expect(() => calculateRefund([{ price: 12, quantity: -1 }])).toThrow(
+      "Refund items cannot contain negative values",
+    );
+  });
 });

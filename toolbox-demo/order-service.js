@@ -13,5 +13,15 @@ export async function getOrderForUser(db, orderId, userId) {
 }
 
 export function calculateRefund(items) {
-  return items.reduce((total, item) => total + item.price * item.quantity, 0);
+  return items.reduce((total, item) => {
+    if (!Number.isFinite(item.price) || !Number.isInteger(item.quantity)) {
+      throw new TypeError("Refund items require a numeric price and integer quantity");
+    }
+
+    if (item.price < 0 || item.quantity < 0) {
+      throw new RangeError("Refund items cannot contain negative values");
+    }
+
+    return total + item.price * item.quantity;
+  }, 0);
 }

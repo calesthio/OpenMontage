@@ -65,6 +65,15 @@ export type JobLifecycleState = {
   // The agent's latest narration line (agent_text) — surfaced as the page's
   // "正在做什么" live line instead of being buried in the log (roadmap 1.5).
   agentText: string | null;
+  // True from the moment a cancel POST resolves with the job still live
+  // (queued/running/awaiting_approval) until a terminal SSE event lands.
+  // Confirmed live: without this, the page's local "in flight" spinner
+  // cleared the instant the fire-and-forget POST settled — a few hundred
+  // ms — while the actual cancellation is cooperative and can take up to
+  // a stage checkpoint (real case: ~60s mid-script-stage) to land. The
+  // button reverted to its idle "✕ 取消任务" label for that whole window,
+  // reading as "cancel did nothing" even though it was working correctly.
+  cancelRequested: boolean;
 };
 
 export const initialJobLifecycleState: JobLifecycleState = {
@@ -87,6 +96,7 @@ export const initialJobLifecycleState: JobLifecycleState = {
   budgetCny: null,
   assets: [],
   agentText: null,
+  cancelRequested: false,
 };
 
 /** The subset of the GET /jobs/:id response this reducer cares about. */
@@ -162,6 +172,10 @@ export function jobLifecycleReducer(
         awaitingGate: stillLive ? state.awaitingGate : null,
         awaitingGateSeq: stillLive ? state.awaitingGateSeq : null,
         approvalExpiresAt: stillLive ? state.approvalExpiresAt : null,
+        // Still live means the POST only flipped the flag — the real
+        // transition is still pending, so keep showing "取消中…" until a
+        // terminal SSE event (job_cancelled/completed/failed) lands.
+        cancelRequested: stillLive ? true : state.cancelRequested,
       };
     }
 
@@ -249,6 +263,7 @@ function applySseEvent(state: JobLifecycleState, ev: SseEvent): JobLifecycleStat
       next.status = "completed";
       next.renderUrl = ev.render_url ?? null;
       next.renderUrls = ev.render_urls ?? null;
+      next.cancelRequested = false;
       break;
 
     case "job_failed":
@@ -263,6 +278,7 @@ function applySseEvent(state: JobLifecycleState, ev: SseEvent): JobLifecycleStat
       next.awaitingGate = null;
       next.awaitingGateSeq = null;
       next.approvalExpiresAt = null;
+      next.cancelRequested = false;
       break;
 
     case "job_cancelled":
@@ -275,6 +291,7 @@ function applySseEvent(state: JobLifecycleState, ev: SseEvent): JobLifecycleStat
       next.awaitingGate = null;
       next.awaitingGateSeq = null;
       next.approvalExpiresAt = null;
+      next.cancelRequested = false;
       break;
   }
   return next;

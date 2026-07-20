@@ -288,9 +288,52 @@ describe("JobDetailPage cancel job", () => {
 
     resolvePost({ ok: true, json: async () => ({ job_id: JOB_ID, status: "queued" }) } as Response);
 
-    // Request settled — button returns to its idle label (still cancellable,
-    // since the response reported status unchanged).
-    expect(await screen.findByRole("button", { name: /取消任务/ })).toBeInTheDocument();
+    // Confirmed live: cancellation is cooperative and can take up to a
+    // stage checkpoint to land (real case: ~60s mid-stage) — the button
+    // must keep showing "取消中…" for that whole window, not just for the
+    // fire-and-forget POST's own round-trip, or a working cancellation
+    // reads as "did nothing" the moment the request settles.
+    await waitFor(() => {
+      const stillCancelling = screen.getByRole("button", { name: /取消中/ });
+      expect(stillCancelling).toBeInTheDocument();
+      expect(stillCancelling).toBeDisabled();
+    });
+  });
+
+  it("stops showing the cancelling state once the terminal SSE event lands", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, init?: RequestInit) => {
+        const method = init?.method ?? "GET";
+        if (method === "GET" && url === `${SERVER}/jobs/${JOB_ID}`) {
+          return { ok: true, json: async () => ({}) } as Response;
+        }
+        if (method === "POST" && url === `${SERVER}/jobs/${JOB_ID}/cancel`) {
+          return { ok: true, json: async () => ({ job_id: JOB_ID, status: "queued" }) } as Response;
+        }
+        return { ok: true, json: async () => ({}) } as Response;
+      })
+    );
+
+    renderPage();
+    const button = await screen.findByRole("button", { name: /取消任务/ });
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /取消中/ })).toBeInTheDocument();
+    });
+
+    act(() => {
+      FakeEventSource.instances[0].onmessage?.({
+        data: JSON.stringify(seqEvent(2, { type: "job_cancelled" })),
+      } as MessageEvent);
+    });
+
+    // Terminal status reached — cancel button (in any label) no longer
+    // renders at all (isCancellable is false once status is terminal).
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: /取消/ })).not.toBeInTheDocument();
+    });
   });
 
   it("resolves an awaiting_approval job to a terminal status immediately from the response body", async () => {

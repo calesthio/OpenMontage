@@ -259,10 +259,10 @@ export default function JobDetailPage() {
               variant="outline"
               size="sm"
               onClick={handleCancel}
-              disabled={cancelling}
+              disabled={cancelling || state.cancelRequested}
               className="border-red-500/40 text-red-400 hover:bg-red-500/10"
             >
-              {cancelling ? "取消中…" : "✕ 取消任务"}
+              {cancelling || state.cancelRequested ? "取消中…" : "✕ 取消任务"}
             </Button>
           )}
           <StatusBadge status={state.status} />

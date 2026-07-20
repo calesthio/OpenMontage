@@ -38,10 +38,11 @@ paths:
 # WaveSpeed is one of multiple AI generation providers.
 # 
 # active_profile:
-#   - null (default): All profiles compete by score; best wins. Other providers
+#   - null: All WaveSpeed profiles compete by score; best wins. Other providers
 #     (FAL, OpenAI, Google, etc.) also compete. Multi-provider mode.
-#   - "default" or other: Explicitly use that profile's models. WaveSpeed + others
-#     compete. Deterministic within WaveSpeed.
+#   - "default" (the shipped value below) or another profile name: explicitly use
+#     that profile's models. WaveSpeed + others still compete. Deterministic
+#     within WaveSpeed.
 #   - Set WAVESPEED_MODEL_PROFILE env var to override at runtime.
 #
 # See README.md for detailed setup.

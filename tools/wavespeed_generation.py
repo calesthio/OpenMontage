@@ -93,6 +93,39 @@ AUDIO_INPUT_TASKS = {"lip_sync"}
 # Task types that operate on a source asset and do not require a text prompt.
 PROMPT_OPTIONAL_TASKS = {"image_upscale", "background_removal", "lip_sync"}
 
+# Rough per-task USD cost estimates for planning and cost snapshots. WaveSpeed is
+# a paid gateway whose real price depends on the model configured in each profile,
+# so these are deliberately coarse floors — enough that a paid provider never
+# reports $0. Refine per-model if/when WaveSpeed exposes a pricing API.
+WAVESPEED_TASK_COST_USD = {
+    "text_to_image": 0.03,
+    "image_edit": 0.04,
+    "image_upscale": 0.02,
+    "background_removal": 0.02,
+    "text_to_video": 0.20,
+    "image_to_video": 0.20,
+    "digital_human": 0.30,
+    "lip_sync": 0.15,
+    "text_to_audio": 0.02,
+    "text_to_music": 0.05,
+}
+DEFAULT_WAVESPEED_TASK_COST_USD = 0.05
+
+
+def wavespeed_estimate_cost(
+    task_type: str, inputs: dict[str, Any] | None = None
+) -> float:
+    """Rough USD estimate for one WaveSpeed task.
+
+    WaveSpeed is a paid gateway whose real price depends on the profile's model,
+    so this returns a coarse per-task floor — enough that planning and cost
+    snapshots never show $0 for a paid provider. ``inputs`` is accepted for
+    signature parity with ``BaseTool.estimate_cost`` and future model-aware
+    refinement.
+    """
+
+    return WAVESPEED_TASK_COST_USD.get(task_type, DEFAULT_WAVESPEED_TASK_COST_USD)
+
 
 def run_wavespeed_generation(
     *,

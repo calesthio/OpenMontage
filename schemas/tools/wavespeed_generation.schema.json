@@ -23,11 +23,22 @@
         "height"
     ],
     "properties": {
-        "asset_type": { "type": "string", "enum": ["image", "video"] },
+        "asset_type": { "type": "string", "enum": ["image", "video", "audio"] },
         "provider": { "type": "string", "const": "wavespeed" },
         "task_type": {
             "type": "string",
-            "enum": ["text_to_image", "image_to_video", "text_to_video"]
+            "enum": [
+                "text_to_image",
+                "image_to_video",
+                "text_to_video",
+                "image_edit",
+                "image_upscale",
+                "background_removal",
+                "text_to_audio",
+                "text_to_music",
+                "digital_human",
+                "lip_sync"
+            ]
         },
         "model_id": { "type": "string" },
         "profile": { "type": "string" },

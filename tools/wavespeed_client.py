@@ -282,10 +282,18 @@ class WaveSpeedClient:
                     return str(value)
         return None
 
+    # Keys that designate provider *outputs*. Deliberately excludes ambiguous
+    # keys such as "image"/"images"/"video"/"videos": for image_to_video,
+    # image_edit, and lip_sync the /result payload can echo the *input* asset
+    # URL under one of those keys, and treating that as an output would write the
+    # source back out as the result. WaveSpeed returns results under
+    # (data.)outputs; keep extraction scoped to output-designated keys only.
+    OUTPUT_KEYS = ("output", "outputs", "result", "results")
+
     @classmethod
     def _extract_outputs(cls, data: dict[str, Any]) -> list[str]:
         candidates: list[Any] = []
-        for key in ("output", "outputs", "result", "results", "image", "images", "video", "videos"):
+        for key in cls.OUTPUT_KEYS:
             if key in data:
                 candidates.append(data[key])
         nested = data.get("data")
@@ -295,8 +303,6 @@ class WaveSpeedClient:
         urls: list[str] = []
         for item in candidates:
             urls.extend(cls._urls_from_value(item))
-        if not urls:
-            urls.extend(cls._urls_from_value(data))
 
         deduped: list[str] = []
         seen: set[str] = set()

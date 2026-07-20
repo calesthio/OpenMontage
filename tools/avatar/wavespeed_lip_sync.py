@@ -18,7 +18,10 @@ from tools.base_tool import (
     ToolStatus,
     ToolTier,
 )
-from tools.wavespeed_generation import run_wavespeed_generation
+from tools.wavespeed_generation import (
+    run_wavespeed_generation,
+    wavespeed_estimate_cost,
+)
 
 
 class WaveSpeedLipSync(BaseTool):
@@ -88,10 +91,20 @@ class WaveSpeedLipSync(BaseTool):
         if not os.environ.get("WAVESPEED_API_KEY"):
             return ToolStatus.UNAVAILABLE
         try:
-            resolve_wavespeed_task("lip_sync")
+            # Honor a selector-assigned profile/model (active_profile=null mode)
+            # so multi-profile candidates report AVAILABLE the same way execute()
+            # runs them, instead of UNAVAILABLE from the null-profile lookup.
+            resolve_wavespeed_task(
+                "lip_sync",
+                explicit_profile=getattr(self, "_wavespeed_profile", None),
+                explicit_model_id=getattr(self, "_wavespeed_model_id", None),
+            )
         except WaveSpeedConfigError:
             return ToolStatus.UNAVAILABLE
         return ToolStatus.AVAILABLE
+
+    def estimate_cost(self, inputs: dict[str, Any]) -> float:
+        return wavespeed_estimate_cost("lip_sync", inputs)
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         inputs = dict(inputs)

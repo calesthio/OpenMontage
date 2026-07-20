@@ -18,7 +18,11 @@ from tools.base_tool import (
     ToolStatus,
     ToolTier,
 )
-from tools.wavespeed_generation import cli_main, run_wavespeed_generation
+from tools.wavespeed_generation import (
+    cli_main,
+    run_wavespeed_generation,
+    wavespeed_estimate_cost,
+)
 
 
 class WaveSpeedTextToVideo(BaseTool):
@@ -93,10 +97,20 @@ class WaveSpeedTextToVideo(BaseTool):
         if not os.environ.get("WAVESPEED_API_KEY"):
             return ToolStatus.UNAVAILABLE
         try:
-            resolve_wavespeed_task("text_to_video")
+            # Honor a selector-assigned profile/model (active_profile=null mode)
+            # so multi-profile candidates report AVAILABLE the same way execute()
+            # runs them, instead of UNAVAILABLE from the null-profile lookup.
+            resolve_wavespeed_task(
+                "text_to_video",
+                explicit_profile=getattr(self, "_wavespeed_profile", None),
+                explicit_model_id=getattr(self, "_wavespeed_model_id", None),
+            )
         except WaveSpeedConfigError:
             return ToolStatus.UNAVAILABLE
         return ToolStatus.AVAILABLE
+
+    def estimate_cost(self, inputs: dict[str, Any]) -> float:
+        return wavespeed_estimate_cost("text_to_video", inputs)
 
     def is_operation_available(self, operation: str) -> bool:
         return operation == "text_to_video"

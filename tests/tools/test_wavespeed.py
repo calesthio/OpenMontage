@@ -599,6 +599,135 @@ def test_image_selector_selects_wavespeed_when_preferred(monkeypatch):
     assert tool.provider == "wavespeed"
 
 
+def test_get_status_honors_selector_profile_in_null_mode(tmp_path, monkeypatch):
+    """Regression (Blocker 1): in active_profile=null mode, a candidate the
+    selector built with `_wavespeed_profile` must report AVAILABLE so it survives
+    selection. Without that attribute the null-profile lookup fails -> UNAVAILABLE."""
+    import lib.wavespeed_config as ws_config
+    from tools.base_tool import ToolStatus
+
+    config_path = write_config(
+        tmp_path,
+        """
+        wavespeed:
+          active_profile: null
+          profiles:
+            fast:
+              text_to_image:
+                model_id: "google/fast/text-to-image"
+        """,
+    )
+    monkeypatch.setattr(ws_config, "DEFAULT_CONFIG_PATH", config_path)
+    monkeypatch.setenv("WAVESPEED_API_KEY", "test-key")
+    monkeypatch.delenv("WAVESPEED_MODEL_PROFILE", raising=False)
+
+    # No selector profile assigned -> null-mode lookup fails -> UNAVAILABLE.
+    assert WaveSpeedTextToImage().get_status() == ToolStatus.UNAVAILABLE
+
+    # Selector-assigned profile/model -> AVAILABLE, matching how execute() runs it.
+    candidate = WaveSpeedTextToImage()
+    candidate._wavespeed_profile = "fast"
+    candidate._wavespeed_model_id = "google/fast/text-to-image"
+    assert candidate.get_status() == ToolStatus.AVAILABLE
+
+
+def test_null_mode_wavespeed_candidate_is_selected(tmp_path, monkeypatch):
+    """Regression (Blocker 1): a WaveSpeed candidate built in null mode must be
+    selectable and actually chosen by the selector, not filtered back out."""
+    import lib.wavespeed_config as ws_config
+    from tools.graphics.image_selector import ImageSelector
+
+    config_path = write_config(
+        tmp_path,
+        """
+        wavespeed:
+          active_profile: null
+          profiles:
+            fast:
+              text_to_image:
+                model_id: "google/fast/text-to-image"
+        """,
+    )
+    monkeypatch.setattr(ws_config, "DEFAULT_CONFIG_PATH", config_path)
+    monkeypatch.setenv("WAVESPEED_API_KEY", "test-key")
+    monkeypatch.delenv("WAVESPEED_MODEL_PROFILE", raising=False)
+
+    sel = ImageSelector()
+    candidate = WaveSpeedTextToImage()
+    candidate._wavespeed_profile = "fast"
+    candidate._wavespeed_model_id = "google/fast/text-to-image"
+
+    assert sel._tool_selectable(candidate, {}) is True
+    tool, _score = sel._select_best_tool(
+        {"prompt": "a calico cat", "preferred_provider": "wavespeed"},
+        [candidate],
+        sel._prepare_task_context({"prompt": "a calico cat"}),
+    )
+    assert tool is candidate
+
+
+def test_wavespeed_tools_report_nonzero_cost():
+    """Regression (Blocker 2): WaveSpeed is a paid gateway; no tool may inherit
+    the base $0 estimate."""
+    from tools.graphics.wavespeed_text_to_image import WaveSpeedTextToImage
+    from tools.graphics.wavespeed_image_edit import WaveSpeedImageEdit
+    from tools.video.wavespeed_text_to_video import WaveSpeedTextToVideo
+    from tools.video.wavespeed_image_to_video import WaveSpeedImageToVideo
+    from tools.audio.wavespeed_text_to_audio import WaveSpeedTextToAudio
+    from tools.audio.wavespeed_text_to_music import WaveSpeedTextToMusic
+    from tools.avatar.wavespeed_digital_human import WaveSpeedDigitalHuman
+    from tools.avatar.wavespeed_lip_sync import WaveSpeedLipSync
+    from tools.enhancement.wavespeed_image_upscale import WaveSpeedImageUpscale
+    from tools.enhancement.wavespeed_background_removal import (
+        WaveSpeedBackgroundRemoval,
+    )
+
+    tool_classes = [
+        WaveSpeedTextToImage,
+        WaveSpeedImageEdit,
+        WaveSpeedTextToVideo,
+        WaveSpeedImageToVideo,
+        WaveSpeedTextToAudio,
+        WaveSpeedTextToMusic,
+        WaveSpeedDigitalHuman,
+        WaveSpeedLipSync,
+        WaveSpeedImageUpscale,
+        WaveSpeedBackgroundRemoval,
+    ]
+    for cls in tool_classes:
+        cost = cls().estimate_cost({"prompt": "x"})
+        assert cost > 0.0, f"{cls.__name__} must not report $0 for a paid provider"
+
+
+def test_extract_outputs_ignores_echoed_input_url():
+    """Regression (Blocker 4): an input asset URL echoed under image/video keys
+    must not be treated as an output (i2v / image_edit / lip_sync)."""
+    data = {
+        "data": {
+            "status": "succeeded",
+            "image": "https://cdn.example/INPUT-source.png",
+            "video": "https://cdn.example/INPUT-source.png",
+            "outputs": ["https://cdn.example/OUTPUT-result.mp4"],
+        }
+    }
+    assert WaveSpeedClient._extract_outputs(data) == [
+        "https://cdn.example/OUTPUT-result.mp4"
+    ]
+
+
+def test_extract_outputs_empty_when_only_input_echoed():
+    """If the provider echoes only the input (no real output key), extraction
+    must return nothing so run_prediction fails loudly instead of writing the
+    input back out as the result."""
+    data = {
+        "data": {
+            "status": "succeeded",
+            "image": "https://cdn.example/INPUT-source.png",
+        }
+    }
+    assert WaveSpeedClient._extract_outputs(data) == []
+
+
 def test_text_to_audio_maps_text_alias_to_prompt(monkeypatch):
     """tts_selector routes with `text`; the tool must normalize it to `prompt`."""
     from tools.audio.wavespeed_text_to_audio import WaveSpeedTextToAudio

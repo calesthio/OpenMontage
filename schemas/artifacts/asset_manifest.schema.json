@@ -34,7 +34,18 @@
           "provider": { "type": "string", "description": "Provider name (e.g. pixabay, google_imagen)" },
           "task_type": {
             "type": "string",
-            "enum": ["text_to_image", "image_to_video", "text_to_video"],
+            "enum": [
+              "text_to_image",
+              "image_to_video",
+              "text_to_video",
+              "image_edit",
+              "image_upscale",
+              "background_removal",
+              "text_to_audio",
+              "text_to_music",
+              "digital_human",
+              "lip_sync"
+            ],
             "description": "AI generation task type when applicable"
           },
           "model_id": { "type": "string", "description": "Provider model id used for generation" },

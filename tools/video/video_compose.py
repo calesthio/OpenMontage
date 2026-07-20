@@ -971,13 +971,50 @@ class VideoCompose(BaseTool):
             "--color-space=bt709",
         ]
 
+        staged_props_path: Path | None = None
         props_path = bespoke.get("props_path")
         if props_path:
             pp = Path(props_path).resolve()
             if not pp.exists():
                 return ToolResult(success=False, error=f"atelier props_path not found: {pp}")
+            # Atelier props go through the SAME local-asset staging as the
+            # templated path — this used to be skipped entirely, so any
+            # scenes[].src / backgroundSrc pointing at a real project file
+            # reached Remotion as a raw absolute path and was rejected with
+            # "Can only download URLs starting with http:// or https://"
+            # (Remotion has no file:// support; confirmed live 2026-07-19 —
+            # the exact same failure the templated path was already fixed
+            # for, just never ported to this second render path).
+            with open(pp, encoding="utf-8") as f:
+                props = json.load(f)
+            # Unlike the templated cuts[] path (anchored via
+            # _resolve_manifest_asset_path before it ever reaches staging),
+            # atelier props are hand-authored by the agent with no anchoring
+            # guarantee at all. Confirmed live 2026-07-19: an agent wrote
+            # "projects/<slug>/assets/video/x.mp4" (relative to the repo
+            # root) — neither a valid absolute path nor a real public/
+            # -relative one, so staging's own contract (leave already
+            # "relative" paths untouched) correctly but unhelpfully passed
+            # it straight through, and it 404'd downstream. Try the two
+            # roots a hand-typed relative path is plausibly meant against
+            # before handing off to staging.
+            self._anchor_atelier_props(props, project_dir=output_path.parent.parent, repo_root=composer_dir.parent)
+            _, staged, missing_assets = self._stage_public_assets(props)
+            if missing_assets:
+                listed = "\n".join(f"  • {p}" for p in missing_assets)
+                return ToolResult(
+                    success=False,
+                    error=(
+                        f"{len(missing_assets)} local asset path(s) referenced by "
+                        f"atelier props do not exist on disk:\n{listed}\n\n"
+                        f"Check asset_manifest.json for a typo'd or corrupted path."
+                    ),
+                )
+            staged_props_path = output_path.parent / ".remotion_atelier_props.json"
+            with open(staged_props_path, "w", encoding="utf-8") as f:
+                json.dump(props, f, ensure_ascii=False)
             # Equals form is required for cross-platform path parsing (see _remotion_render).
-            cmd.append(f"--props={pp}")
+            cmd.append(f"--props={staged_props_path}")
 
         public_dir = bespoke.get("public_dir")
         if public_dir:
@@ -996,8 +1033,24 @@ class VideoCompose(BaseTool):
             # Run from inside the composer dir so npx resolves the local
             # remotion binary (mirrors _remotion_render).
             self.run_command(cmd, timeout=1800, cwd=composer_dir)
+        except subprocess.CalledProcessError as e:
+            # Bare str(e) is just "returned non-zero exit status 1" — the
+            # actual Remotion diagnostics live in stderr/stdout. Without
+            # this, a real failure (e.g. the file:// asset error above)
+            # reaches the agent as an empty signal, and it has to guess at
+            # a root cause instead of reading one (observed live
+            # 2026-07-19 — the agent guessed "missing node_modules").
+            detail = (e.stderr or e.stdout or "").strip()
+            tail = "\n".join(detail.splitlines()[-25:]) if detail else "(no output captured)"
+            return ToolResult(
+                success=False,
+                error=f"Atelier (bespoke) Remotion render failed (exit {e.returncode}):\n{tail}",
+            )
         except Exception as e:
             return ToolResult(success=False, error=f"Atelier (bespoke) Remotion render failed: {e}")
+        finally:
+            if staged_props_path is not None and staged_props_path.exists():
+                staged_props_path.unlink()
 
         if not output_path.exists():
             return ToolResult(
@@ -1426,11 +1479,87 @@ class VideoCompose(BaseTool):
             return raw
         p = Path(raw)
         if p.is_absolute():
+            candidate = p
+        elif output_path.parent.name != "renders":
             return raw
-        if output_path.parent.name != "renders":
-            return raw
-        project_dir = output_path.parent.parent
-        return str((project_dir / p).resolve())
+        else:
+            candidate = (output_path.parent.parent / p).resolve()
+
+        if candidate.exists():
+            return str(candidate)
+        recovered = VideoCompose._recover_redacted_filename(candidate)
+        return str(recovered) if recovered is not None else str(candidate)
+
+    @staticmethod
+    def _recover_redacted_filename(candidate: Path) -> Path | None:
+        """Best-effort recovery for a manifest filename mangled by an
+        upstream LLM-provider content filter.
+
+        Observed live 2026-07-19: an agent's own completion redacted a
+        digit run inside a hex asset hash mid-conversation (not a one-time
+        file corruption — re-reading the correct file from disk and having
+        the agent re-type/echo it reproduced the SAME redaction on a later
+        turn), e.g. "maas_video_ltx-2-3_de2cd78360806541.mp4" ->
+        "...de2cd[PHONE_REDACTED]1.mp4". Fixing the artifact on disk alone
+        cannot prevent this — it can recur any time the agent re-echoes the
+        digit run. Recover by wildcard-matching the bracketed placeholder:
+        if the candidate's parent directory has exactly one file whose name
+        starts with the text before "[" and ends with the text after "]"
+        (same extension), that's almost certainly the real file.
+        """
+        name = candidate.name
+        if "[" not in name or "]" not in name:
+            return None
+        prefix, _, rest = name.partition("[")
+        _, _, suffix = rest.partition("]")
+        if not candidate.parent.is_dir():
+            return None
+        matches = [
+            f for f in candidate.parent.iterdir()
+            if f.is_file() and f.name.startswith(prefix) and f.name.endswith(suffix)
+        ]
+        return matches[0] if len(matches) == 1 else None
+
+    @staticmethod
+    def _anchor_atelier_props(props: dict[str, Any], project_dir: Path, repo_root: Path) -> None:
+        """Rewrite hand-typed relative asset paths in atelier `scenes[]`
+        in place, anchoring them against whichever of `project_dir` /
+        `repo_root` actually contains the file — mirrors what
+        `_resolve_manifest_asset_path` already does for the templated
+        `cuts[]` path, which atelier props never got (they're hand-authored
+        by the agent with no anchoring guarantee at all).
+
+        Leaves alone: absolute paths, http(s)/data URLs, and anything
+        already staged (`om-staged/...`) — only a bare relative path that
+        doesn't exist as given gets a resolution attempt.
+        """
+        def anchor(value: Any) -> Any:
+            if not isinstance(value, str) or not value:
+                return value
+            if value.startswith(("http://", "https://", "data:", "om-staged/")):
+                return value
+            p = Path(value)
+            if p.is_absolute() or p.exists():
+                return value
+            for root in (project_dir, repo_root):
+                candidate = (root / p).resolve()
+                if candidate.exists():
+                    return str(candidate)
+                recovered = VideoCompose._recover_redacted_filename(candidate)
+                if recovered is not None:
+                    return str(recovered)
+            return value
+
+        for scene in props.get("scenes", []) or []:
+            if not isinstance(scene, dict):
+                continue
+            for key in ("src", "backgroundSrc"):
+                if key in scene:
+                    scene[key] = anchor(scene[key])
+        for track_key in ("music", "soundtrack"):
+            track = props.get(track_key)
+            if isinstance(track, dict) and "src" in track:
+                track["src"] = anchor(track["src"])
 
     @classmethod
     def _resolve_audio_music(
@@ -2008,10 +2137,33 @@ class VideoCompose(BaseTool):
         # hand — its scenes[].src are public-relative paths, while the
         # absolute-path cuts[] this function rewrote went unused. The templated
         # cut path was dead on arrival for every local asset.
-        public_dir, staged = self._stage_public_assets(props)
+        public_dir, staged, missing_assets = self._stage_public_assets(props)
         if staged:
             logging.getLogger("video_compose").info(
                 "Staged %d asset(s) into public dir %s", staged, public_dir
+            )
+        if missing_assets:
+            # Fail before ever invoking npx — a missing path here can only
+            # ever surface downstream as an opaque Remotion "file:// not
+            # supported" proxy error, which hides the real cause (asset
+            # never generated, a stale/typo'd manifest path, or — observed
+            # live 2026-07-19 — an LLM-provider PII filter mangling a hex
+            # asset hash that happens to contain a phone-number-length digit
+            # run, e.g. "de2cd78360806541" -> "de2cd[PHONE_REDACTED]1").
+            listed = "\n".join(f"  • {p}" for p in missing_assets)
+            return ToolResult(
+                success=False,
+                error=(
+                    f"{len(missing_assets)} local asset path(s) referenced by "
+                    f"edit_decisions do not exist on disk:\n{listed}\n\n"
+                    f"Check asset_manifest.json for a typo'd or corrupted "
+                    f"path (a digit run that looks like a phone number can "
+                    f"get silently mangled in transit), or a source_tool "
+                    f"that never actually ran. If any of these are meant to "
+                    f"be native Remotion title/text cards rather than media "
+                    f"files, use cut.type='hero_title' or 'text_card' with "
+                    f"cut.text instead of a fabricated asset + cut.source."
+                ),
             )
 
         # Build a custom themeConfig from the playbook's actual colors.
@@ -2208,13 +2360,18 @@ class VideoCompose(BaseTool):
     # looks like a path" so a caption word or a title can never be mangled.
     _ASSET_CUT_KEYS = ("source", "backgroundImage", "backgroundVideo", "backgroundSrc")
 
-    def _stage_public_assets(self, props: dict[str, Any]) -> tuple[Path, int]:
+    def _stage_public_assets(self, props: dict[str, Any]) -> tuple[Path, int, list[str]]:
         """Symlink every local asset into a per-render public dir, rewriting
         props in place to public-relative paths.
 
-        Returns (public_dir, staged_count). Remotion serves the public dir over
-        http, and staticFile(relative) — which resolveAsset already produces for
-        relative inputs — resolves against it.
+        Returns (public_dir, staged_count, missing_paths). Remotion serves the
+        public dir over http, and staticFile(relative) — which resolveAsset
+        already produces for relative inputs — resolves against it.
+        missing_paths lists every absolute local path that was referenced but
+        does not exist on disk — the caller should fail loud on these rather
+        than let them reach Remotion, where they can only ever surface as an
+        opaque "file:// not supported" proxy error several layers removed
+        from the real cause.
 
         HARD links, not symlinks: Remotion bundles by COPYING public/ into a
         webpack temp dir, and that copy does not follow symlinks (verified —
@@ -2235,6 +2392,7 @@ class VideoCompose(BaseTool):
         public_dir.mkdir(parents=True, exist_ok=True)
 
         staged = 0
+        missing: list[str] = []
 
         def stage(value: str) -> str:
             nonlocal staged
@@ -2246,7 +2404,29 @@ class VideoCompose(BaseTool):
                 # Already public-relative (the working convention) — leave it.
                 return value
             if not src.exists():
-                return value
+                # Try recovery before giving up — this hits atelier props
+                # too (hand-authored by the agent, not routed through
+                # _resolve_manifest_asset_path), and the redaction that
+                # produces a bracketed placeholder like "[PHONE_REDACTED]"
+                # happens live in the agent's own completion each time it
+                # transcribes the digit run — observed live 2026-07-19 to
+                # recur even after the source asset_manifest.json on disk
+                # was corrected, because the agent re-typed the path fresh
+                # into its own props artifact and got redacted again.
+                recovered = VideoCompose._recover_redacted_filename(src)
+                if recovered is not None:
+                    src = recovered
+                else:
+                    # An absolute path that doesn't exist on disk is never
+                    # correct to hand to Remotion as-is — it can only ever
+                    # surface downstream as an opaque "file:// not
+                    # supported" proxy error, several layers removed from
+                    # the real cause (missing asset, typo, or a corrupted
+                    # path). Collect it so the caller can fail loud with
+                    # the actual missing path instead of quietly shipping
+                    # it through.
+                    missing.append(str(src))
+                    return value
             digest = hashlib.sha1(str(src.resolve()).encode()).hexdigest()[:12]
             link = public_dir / f"{digest}{src.suffix.lower()}"
             if not link.exists():
@@ -2287,13 +2467,14 @@ class VideoCompose(BaseTool):
             entry = audio.get(layer)
             if isinstance(entry, dict) and isinstance(entry.get("src"), str):
                 entry["src"] = stage(entry["src"])
-        music = props.get("music")
-        if isinstance(music, dict) and isinstance(music.get("src"), str):
-            music["src"] = stage(music["src"])
+        for track_key in ("music", "soundtrack"):
+            track = props.get(track_key)
+            if isinstance(track, dict) and isinstance(track.get("src"), str):
+                track["src"] = stage(track["src"])
         if isinstance(props.get("videoSrc"), str):
             props["videoSrc"] = stage(props["videoSrc"])
 
-        return public_dir, staged
+        return public_dir, staged, missing
 
     def _normalize_deliverable_loudness(self, output_path: Path) -> bool:
         """Two-pass loudnorm the FINISHED file to -14 LUFS. Returns success.

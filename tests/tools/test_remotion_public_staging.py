@@ -40,7 +40,8 @@ def _cleanup(rewritten: str) -> None:
 class TestStagePublicAssets:
     def test_absolute_path_becomes_public_relative(self, asset):
         props = {"cuts": [{"id": "c1", "source": str(asset)}]}
-        _, staged = VideoCompose()._stage_public_assets(props)
+        _, staged, missing = VideoCompose()._stage_public_assets(props)
+        assert missing == []
         src = props["cuts"][0]["source"]
         try:
             assert staged == 1
@@ -83,24 +84,60 @@ class TestStagePublicAssets:
             {"id": "a", "source": "https://cdn.example/x.mp4"},
             {"id": "b", "source": "data:image/png;base64,AAAA"},
         ]}
-        _, staged = VideoCompose()._stage_public_assets(props)
+        _, staged, missing = VideoCompose()._stage_public_assets(props)
         assert staged == 0
+        assert missing == []
         assert props["cuts"][0]["source"] == "https://cdn.example/x.mp4"
         assert props["cuts"][1]["source"] == "data:image/png;base64,AAAA"
 
     def test_public_relative_paths_untouched(self):
         # The convention the one working Remotion project already used.
         props = {"cuts": [{"id": "a", "source": "projects/xiaotuzi/video/a.mp4"}]}
-        _, staged = VideoCompose()._stage_public_assets(props)
+        _, staged, missing = VideoCompose()._stage_public_assets(props)
         assert staged == 0
+        assert missing == []
         assert props["cuts"][0]["source"] == "projects/xiaotuzi/video/a.mp4"
 
-    def test_missing_file_left_alone(self, tmp_path):
-        # Not this function's job to fail — the renderer reports it with
-        # better context.
-        props = {"cuts": [{"id": "a", "source": str(tmp_path / "nope.mp4")}]}
-        _, staged = VideoCompose()._stage_public_assets(props)
+    def test_missing_file_left_alone_but_reported(self, tmp_path):
+        # Not this function's job to raise — but it must report the missing
+        # path so the caller (_remotion_render) can fail loud with the real
+        # cause instead of letting a bogus absolute path reach Remotion,
+        # where it can only ever surface as an opaque "file:// not
+        # supported" proxy error (observed live 2026-07-19: a
+        # never-generated / corrupted-in-transit asset path silently rode
+        # all the way to the Remotion subprocess before failing).
+        missing_path = tmp_path / "nope.mp4"
+        props = {"cuts": [{"id": "a", "source": str(missing_path)}]}
+        _, staged, missing = VideoCompose()._stage_public_assets(props)
         assert staged == 0
+        assert missing == [str(missing_path)]
+        # Left untouched in props — the caller decides what to do with it.
+        assert props["cuts"][0]["source"] == str(missing_path)
+
+    def test_stages_a_redacted_path_recovered_from_directory(self, tmp_path):
+        # Atelier props are hand-authored by the agent directly — they never
+        # pass through _resolve_manifest_asset_path, so its recovery alone
+        # doesn't cover this case. Observed live 2026-07-19: the source
+        # asset_manifest.json on disk was already correct, but the agent
+        # re-typed the path into its own _cinematic_props.json and got the
+        # same live redaction applied to that fresh transcription. Staging
+        # must recover here too, since this is the one choke point both the
+        # templated and atelier render paths share.
+        video_dir = tmp_path / "video"
+        video_dir.mkdir()
+        real = video_dir / "maas_video_ltx-2-3_de2cd78360806541.mp4"
+        real.write_bytes(b"fake-video-bytes")
+        redacted = str(video_dir / "maas_video_ltx-2-3_de2cd[PHONE_REDACTED]1.mp4")
+
+        props = {"scenes": [{"id": "sc01", "kind": "video", "src": redacted}]}
+        _, staged, missing = VideoCompose()._stage_public_assets(props)
+        src = props["scenes"][0]["src"]
+        try:
+            assert missing == []
+            assert staged == 1
+            assert src.startswith("om-staged/")
+        finally:
+            _cleanup(src)
 
     def test_every_asset_bearing_field_is_staged(self, asset, tmp_path):
         img = tmp_path / "bg.png"
@@ -169,13 +206,47 @@ class TestStagePublicAssets:
         assert Path(resolved) == clip
 
         props = {"cuts": [{"id": "c1", "source": resolved}]}
-        _, staged = VideoCompose()._stage_public_assets(props)
+        _, staged, missing = VideoCompose()._stage_public_assets(props)
         src = props["cuts"][0]["source"]
         try:
             assert staged == 1
+            assert missing == []
             assert src.startswith("om-staged/")
         finally:
             _cleanup(src)
+
+    def test_resolve_manifest_asset_path_recovers_redacted_filename(self, tmp_path):
+        # Observed live 2026-07-19: an upstream LLM-provider content filter
+        # redacted a digit run inside a hex asset hash mid-conversation —
+        # not a one-time file corruption, since re-reading the correct file
+        # from disk and having the agent re-echo it reproduced the SAME
+        # redaction on a later turn. The recovery is a wildcard match on
+        # the bracketed placeholder against the real directory listing.
+        project_dir = tmp_path / "projects" / "some-job"
+        video_dir = project_dir / "assets" / "video_generation"
+        video_dir.mkdir(parents=True)
+        real = video_dir / "maas_video_ltx-2-3_de2cd78360806541.mp4"
+        real.write_bytes(b"fake-video-bytes")
+        output_path = project_dir / "renders" / "final.mp4"
+
+        raw = "assets/video_generation/maas_video_ltx-2-3_de2cd[PHONE_REDACTED]1.mp4"
+        resolved = VideoCompose._resolve_manifest_asset_path(raw, output_path)
+        assert Path(resolved) == real
+
+    def test_resolve_manifest_asset_path_no_recovery_when_ambiguous(self, tmp_path):
+        # More than one file matches the wildcard — refuse to guess.
+        project_dir = tmp_path / "projects" / "some-job"
+        video_dir = project_dir / "assets" / "video_generation"
+        video_dir.mkdir(parents=True)
+        (video_dir / "maas_video_ltx-2-3_de2cd78360806541.mp4").write_bytes(b"a")
+        (video_dir / "maas_video_ltx-2-3_de2cd00000000001.mp4").write_bytes(b"b")
+        output_path = project_dir / "renders" / "final.mp4"
+
+        raw = "assets/video_generation/maas_video_ltx-2-3_de2cd[PHONE_REDACTED]1.mp4"
+        resolved = VideoCompose._resolve_manifest_asset_path(raw, output_path)
+        # Falls back to the (nonexistent) literal candidate — caller's
+        # missing-asset handling takes over from here.
+        assert not Path(resolved).exists()
 
     def test_resolve_manifest_asset_path_absolute_passthrough(self, asset):
         assert VideoCompose._resolve_manifest_asset_path(
@@ -258,3 +329,129 @@ class TestStagePublicAssets:
             assert props["captions"][0]["word"] == "/usr/bin"
         finally:
             _cleanup(props["cuts"][0]["source"])
+
+
+class TestMissingAssetFailsLoud:
+    """_remotion_render must refuse to invoke npx at all when a referenced
+    local asset doesn't exist — the old behavior let the bogus absolute path
+    ride all the way into the Remotion subprocess, where it surfaced as an
+    opaque "file:// not supported" proxy error with no link back to the
+    actual missing/corrupted manifest path (observed live 2026-07-19)."""
+
+    def test_missing_asset_blocks_before_npx_runs(self, tmp_path, monkeypatch):
+        monkeypatch.setattr("shutil.which", lambda _: "/usr/bin/npx")
+        tool = VideoCompose()
+        called = []
+        monkeypatch.setattr(tool, "run_command", lambda *a, **k: called.append(a))
+
+        missing_path = tmp_path / "vid" / "sc01.mp4"
+        result = tool._remotion_render({
+            "composition_data": {
+                "cuts": [{"id": "c1", "source": str(missing_path)}],
+            },
+            "output_path": str(tmp_path / "renders" / "out.mp4"),
+        })
+
+        assert result.success is False
+        assert str(missing_path) in result.error
+        assert called == [], "npx must never be invoked once a missing asset is found"
+
+    def test_existing_assets_are_unaffected(self, asset, tmp_path, monkeypatch):
+        monkeypatch.setattr("shutil.which", lambda _: "/usr/bin/npx")
+        tool = VideoCompose()
+
+        def fake_run_command(cmd, **k):
+            # Emulate a successful Remotion render by producing the output
+            # file. cmd = ["npx", "remotion", "render", entry, comp_id,
+            # output_path, "--color-space=bt709"].
+            out = Path(cmd[5])
+            out.write_bytes(b"fake-mp4")
+
+        monkeypatch.setattr(tool, "run_command", fake_run_command)
+        monkeypatch.setattr(tool, "_normalize_deliverable_loudness", lambda *_: False)
+        monkeypatch.setattr(
+            "tools.video.aigc_label.embed_aigc_metadata", lambda *a, **k: {}
+        )
+
+        result = tool._remotion_render({
+            "composition_data": {"cuts": [{"id": "c1", "source": str(asset)}]},
+            "output_path": str(tmp_path / "renders" / "out.mp4"),
+        })
+
+        assert result.success is True
+
+
+class TestAnchorAtelierProps:
+    """Atelier props are hand-authored by the agent with no anchoring
+    guarantee — unlike cuts[] (anchored via _resolve_manifest_asset_path
+    before staging). Observed live 2026-07-19: an agent wrote
+    "projects/<slug>/assets/video/x.mp4" (relative to the repo root) into
+    scenes[].src — neither absolute nor a real public/-relative path, so
+    staging's own "leave relative paths alone" contract correctly but
+    unhelpfully passed it straight through and it 404'd downstream."""
+
+    def test_anchors_repo_root_relative_path(self, tmp_path):
+        repo_root = tmp_path / "repo"
+        project_dir = repo_root / "projects" / "some-job"
+        video_dir = project_dir / "assets" / "video"
+        video_dir.mkdir(parents=True)
+        real = video_dir / "x.mp4"
+        real.write_bytes(b"fake")
+
+        props = {"scenes": [{
+            "id": "sc01", "kind": "video",
+            "src": "projects/some-job/assets/video/x.mp4",
+        }]}
+        VideoCompose._anchor_atelier_props(props, project_dir=project_dir, repo_root=repo_root)
+        assert props["scenes"][0]["src"] == str(real)
+
+    def test_anchors_project_relative_path(self, tmp_path):
+        repo_root = tmp_path / "repo"
+        project_dir = repo_root / "projects" / "some-job"
+        video_dir = project_dir / "assets" / "video"
+        video_dir.mkdir(parents=True)
+        real = video_dir / "x.mp4"
+        real.write_bytes(b"fake")
+
+        props = {"scenes": [{"id": "sc01", "kind": "video", "src": "assets/video/x.mp4"}]}
+        VideoCompose._anchor_atelier_props(props, project_dir=project_dir, repo_root=repo_root)
+        assert props["scenes"][0]["src"] == str(real)
+
+    def test_leaves_already_staged_path_untouched(self, tmp_path):
+        props = {"scenes": [{"id": "sc01", "kind": "video", "src": "om-staged/abc123.mp4"}]}
+        VideoCompose._anchor_atelier_props(
+            props, project_dir=tmp_path / "p", repo_root=tmp_path / "r",
+        )
+        assert props["scenes"][0]["src"] == "om-staged/abc123.mp4"
+
+    def test_leaves_unresolvable_relative_path_for_staging_to_report(self, tmp_path):
+        props = {"scenes": [{"id": "sc01", "kind": "video", "src": "assets/video/nope.mp4"}]}
+        VideoCompose._anchor_atelier_props(
+            props, project_dir=tmp_path / "p", repo_root=tmp_path / "r",
+        )
+        assert props["scenes"][0]["src"] == "assets/video/nope.mp4"
+
+    def test_anchor_then_stage_recovers_repo_root_relative_src(self, tmp_path):
+        # Composed pipeline: anchor (repo-root-relative -> absolute) then
+        # stage (absolute -> om-staged/ public-relative) — the exact two
+        # steps _render_via_atelier now runs before invoking npx.
+        repo_root = tmp_path / "repo"
+        project_dir = repo_root / "projects" / "some-job"
+        video_dir = project_dir / "assets" / "video"
+        video_dir.mkdir(parents=True)
+        real = video_dir / "x.mp4"
+        real.write_bytes(b"fake")
+
+        props = {"scenes": [{
+            "id": "sc01", "kind": "video",
+            "src": "projects/some-job/assets/video/x.mp4",
+        }]}
+        VideoCompose._anchor_atelier_props(props, project_dir=project_dir, repo_root=repo_root)
+        _, staged, missing = VideoCompose()._stage_public_assets(props)
+        src = props["scenes"][0]["src"]
+        try:
+            assert missing == []
+            assert staged == 1
+            assert src.startswith("om-staged/")
+        finally:
+            _cleanup(src)

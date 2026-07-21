@@ -1,8 +1,18 @@
 FROM python:3.12-slim
 
-# curl is also how NodeSource's setup script is fetched below.
+# curl is also how NodeSource's setup script is fetched below. The
+# libnspr4/libnss3/... block is the standard Chrome/Puppeteer headless
+# runtime dependency list — Remotion's `browser ensure` step below happily
+# downloads chrome-headless-shell without them, but the binary then fails
+# to LAUNCH at actual render time: "error while loading shared libraries:
+# libnspr4.so: cannot open shared object file" (confirmed live 2026-07-21 —
+# the download-only smoke test this Dockerfile was validated with never
+# caught it, only a real render did).
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg curl ca-certificates gnupg \
+    libnspr4 libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+    libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+    libgbm1 libasound2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Node.js 22, needed for the Remotion render path (tools/video/video_compose.py

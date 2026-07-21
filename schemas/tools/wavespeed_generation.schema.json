@@ -1,0 +1,73 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "openmontage/tools/wavespeed_generation",
+    "title": "WaveSpeed Generation Output",
+    "description": "Standard output contract for WaveSpeed image/video generation tools.",
+    "type": "object",
+    "required": [
+        "asset_type",
+        "provider",
+        "task_type",
+        "model_id",
+        "profile",
+        "task_id",
+        "status",
+        "prompt",
+        "params",
+        "outputs",
+        "local_paths",
+        "metadata_path",
+        "created_at",
+        "duration_sec",
+        "width",
+        "height"
+    ],
+    "properties": {
+        "asset_type": { "type": "string", "enum": ["image", "video", "audio"] },
+        "provider": { "type": "string", "const": "wavespeed" },
+        "task_type": {
+            "type": "string",
+            "enum": [
+                "text_to_image",
+                "image_to_video",
+                "text_to_video",
+                "image_edit",
+                "image_upscale",
+                "background_removal",
+                "text_to_audio",
+                "text_to_music",
+                "digital_human",
+                "lip_sync"
+            ]
+        },
+        "model_id": { "type": "string" },
+        "profile": { "type": "string" },
+        "task_id": { "type": "string" },
+        "status": { "type": "string", "enum": ["completed", "failed", "timeout"] },
+        "prompt": { "type": "string" },
+        "params": { "type": "object" },
+        "outputs": {
+            "type": "array",
+            "items": { "type": "string" }
+        },
+        "local_paths": {
+            "type": "array",
+            "items": { "type": "string" }
+        },
+        "metadata_path": { "type": "string" },
+        "created_at": { "type": "string" },
+        "duration_sec": { "type": ["number", "null"], "minimum": 0 },
+        "width": { "type": ["integer", "null"], "minimum": 1 },
+        "height": { "type": ["integer", "null"], "minimum": 1 },
+        "input_reference": {
+            "type": "object",
+            "properties": {
+                "kind": { "type": "string", "enum": ["url", "path"] },
+                "value": { "type": "string" }
+            },
+            "additionalProperties": false
+        },
+        "error": { "type": "string" }
+    },
+    "additionalProperties": true
+}

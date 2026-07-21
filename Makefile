@@ -6,7 +6,7 @@ PIP = $(RUN_PYTHON) -m pip
 
 .DEFAULT_GOAL := setup
 
-.PHONY: setup install install-dev install-gpu test test-contracts lint clean preflight demo demo-list hyperframes-doctor hyperframes-warm venv ensure-venv
+.PHONY: setup install install-dev install-gpu test test-contracts lint clean preflight demo demo-list hyperframes-doctor hyperframes-warm wavespeed-doctor venv ensure-venv
 
 # ---- Virtual environment ----
 
@@ -109,6 +109,10 @@ hyperframes-warm:
 	@echo "    Uses --prefer-online so npx picks up new releases since your last run."
 	npx --yes --prefer-online hyperframes --version
 	@echo "==> Cache warm complete."
+
+wavespeed-doctor: ensure-venv
+	@echo "==> Checking WaveSpeed setup (no paid generation)..."
+	$(RUN_PYTHON) -m tools.wavespeed_doctor
 
 demo: ensure-venv
 	@echo "==> Rendering zero-key demo videos (no API keys needed)..."

@@ -175,6 +175,20 @@ class ImageSelector(BaseTool):
                 "description": "Optional provenance metadata for custom workflow dependencies.",
             },
             "output_path": {"type": "string"},
+            "output_dir": {"type": "string"},
+            "model_id": {
+                "type": "string",
+                "description": "Optional provider model override. WaveSpeed uses this for one-task overrides.",
+            },
+            "params": {
+                "type": "object",
+                "description": "Optional provider params. Merged with WaveSpeed profile defaults.",
+            },
+            "allow_stock_sources": {
+                "type": "boolean",
+                "default": False,
+                "description": "Explicitly allow stock/open-source image providers for non-AI sourcing.",
+            },
         },
     }
 
@@ -213,11 +227,29 @@ class ImageSelector(BaseTool):
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         import logging
+        import os
         from lib.scoring import rank_providers
+        from lib.wavespeed_config import get_wavespeed_candidates_for_task
 
         logger = logging.getLogger(__name__)
         task_context = self._prepare_task_context(inputs)
-        candidates = self._filter_candidates(inputs, self._providers())
+
+        # Gather all candidates: WaveSpeed + auto-discovered providers
+        candidates: list[BaseTool] = []
+
+        # Add WaveSpeed candidates if API key is present
+        if os.getenv("WAVESPEED_API_KEY"):
+            ws_candidates = get_wavespeed_candidates_for_task("text_to_image")
+            for model_id, profile_name in ws_candidates:
+                from tools.graphics.wavespeed_text_to_image import WaveSpeedTextToImage
+
+                ws_tool = WaveSpeedTextToImage()
+                ws_tool._wavespeed_profile = profile_name
+                ws_tool._wavespeed_model_id = model_id
+                candidates.append(ws_tool)
+
+        candidates.extend(self._providers())
+        candidates = self._filter_candidates(inputs, candidates)
 
         # Rank mode — return scored provider rankings without generating
         if inputs.get("operation") == "rank":
@@ -259,6 +291,10 @@ class ImageSelector(BaseTool):
                 "n",
                 "aspect_ratio",
                 "resolution",
+                "model_id",
+                "params",
+                "output_dir",
+                "allow_stock_sources",
                 "generation_mode",
                 "image_url",
                 "image_path",
@@ -375,6 +411,11 @@ class ImageSelector(BaseTool):
         return serialized
 
     def _filter_candidates(self, inputs: dict[str, Any], candidates: list[BaseTool]) -> list[BaseTool]:
+        # Filter by allowed_providers if specified
+        if inputs.get("allowed_providers"):
+            allowed = set(inputs["allowed_providers"])
+            candidates = [t for t in candidates if t.provider in allowed]
+
         # A caller-supplied custom workflow is provider-specific (ComfyUI graph
         # JSON). Route it only to custom-workflow-capable providers whose server
         # is reachable — bundled-model readiness is irrelevant in that case.

@@ -208,6 +208,20 @@ class VideoSelector(BaseTool):
                 "description": "Optional provenance metadata for custom workflow dependencies.",
             },
             "output_path": {"type": "string"},
+            "output_dir": {"type": "string"},
+            "model_id": {
+                "type": "string",
+                "description": "Optional provider model override. WaveSpeed uses this for one-task overrides.",
+            },
+            "params": {
+                "type": "object",
+                "description": "Optional provider params. Merged with WaveSpeed profile defaults.",
+            },
+            "allow_stock_sources": {
+                "type": "boolean",
+                "default": False,
+                "description": "Explicitly allow stock/open-source video providers for non-AI sourcing.",
+            },
         },
     }
 
@@ -272,9 +286,41 @@ class VideoSelector(BaseTool):
         return tool.estimate_runtime(inputs) if tool else 0.0
 
     def execute(self, inputs: dict[str, object]) -> ToolResult:
+        import os
         from lib.scoring import rank_providers
+        from lib.wavespeed_config import get_wavespeed_candidates_for_task
 
-        candidates = self._providers()
+        # Determine which video capability is requested
+        operation = inputs.get("operation", "")
+        if (
+            operation == "image_to_video"
+            or inputs.get("reference_image_path")
+            or inputs.get("image_url")
+        ):
+            task_type = "image_to_video"
+        else:
+            task_type = "text_to_video"
+
+        # Gather all candidates: WaveSpeed + auto-discovered providers
+        candidates: list = []
+
+        # Add WaveSpeed candidates if API key is present
+        if os.getenv("WAVESPEED_API_KEY"):
+            ws_candidates = get_wavespeed_candidates_for_task(task_type)
+            for model_id, profile_name in ws_candidates:
+                if task_type == "image_to_video":
+                    from tools.video.wavespeed_image_to_video import WaveSpeedImageToVideo
+
+                    ws_tool = WaveSpeedImageToVideo()
+                else:
+                    from tools.video.wavespeed_text_to_video import WaveSpeedTextToVideo
+
+                    ws_tool = WaveSpeedTextToVideo()
+                ws_tool._wavespeed_profile = profile_name
+                ws_tool._wavespeed_model_id = model_id
+                candidates.append(ws_tool)
+
+        candidates.extend(self._providers())
 
         # Rank mode — return scored provider rankings without generating
         if inputs.get("operation") == "rank":
@@ -449,6 +495,11 @@ class VideoSelector(BaseTool):
         inputs: dict[str, object],
         candidates: list[BaseTool],
     ) -> list[BaseTool]:
+        # Filter by allowed_providers if specified
+        if inputs.get("allowed_providers"):
+            allowed = set(inputs["allowed_providers"])
+            candidates = [t for t in candidates if t.provider in allowed]
+
         # A caller-supplied custom workflow is provider-specific (ComfyUI graph
         # JSON). Route it only to custom-workflow-capable providers whose server
         # is reachable — bundled-model readiness is irrelevant in that case.

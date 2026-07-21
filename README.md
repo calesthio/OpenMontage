@@ -225,8 +225,9 @@ This repo is built for agentic operation. If you're an OpenClaw-style agent, her
 ```bash
 # .env — every key is optional, add what you have
 
-# Image + video gateway:
-FAL_KEY=your-key               # FLUX images + Google Veo, Kling, MiniMax video + Recraft images
+# Image + video gateways:
+WAVESPEED_API_KEY=your-key     # WaveSpeed: multi-model gateway (models set in config.yaml profiles)
+FAL_KEY=your-key               # fal.ai: FLUX images + Google Veo, Kling, MiniMax video + Recraft images
 
 # Kling official direct API:
 KLING_API_KEY=your-key         # Official Kling video, image, TTS, avatar, lip sync
@@ -289,6 +290,12 @@ OpenMontage picks between Remotion and HyperFrames at proposal time (locked as `
 - **Real-footage video:** the documentary montage pipeline builds a CLIP-searchable corpus from Archive.org, NASA, Wikimedia Commons, and optional free-key sources like Pexels and Unsplash, then cuts together actual motion footage into a finished video.
 
 If you want the second one, prompt for a **documentary montage**, **tone poem**, or **stock-footage collage**, and explicitly say **use real footage only**.
+
+---
+
+## Configuration
+
+See [`config.yaml`](config.yaml) for provider configuration and WaveSpeed profile selection (default, quality, fast, or custom profiles). No env override needed for most setups.
 
 ---
 
@@ -477,10 +484,11 @@ Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to
 > **Full setup guide with pricing and free tiers:** [`docs/PROVIDERS.md`](docs/PROVIDERS.md)
 
 <details>
-<summary><strong>Video Generation — 15 providers</strong></summary>
+<summary><strong>Video Generation — 16 providers</strong></summary>
 
 | Provider | Type | Notes |
 |----------|------|-------|
+| **WaveSpeed** | Cloud API | Multi-model gateway for text-to-video and image-to-video; models set via `config.yaml` profiles |
 | **Kling (fal.ai)** | Cloud API | High quality, fast via fal.ai gateway |
 | **Kling Official** | Cloud API | Official direct API with separate `kling_official` provider |
 | **Runway Gen-4** | Cloud API | Cinematic quality, Gen-3 Alpha Turbo / Gen-4 Turbo / Gen-4 Aleph |
@@ -504,6 +512,7 @@ Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to
 
 | Provider | Type | Notes |
 |----------|------|-------|
+| **WaveSpeed** | Cloud API | Multi-model gateway for text-to-image; models set via `config.yaml` profiles |
 | **FLUX** | Cloud API | State-of-the-art quality |
 | **Google Imagen** | Cloud API | Imagen 4 — high-quality, multiple aspect ratios |
 | **Grok Imagine Image** | Cloud API | Strong image edits, style transfer, and multi-image compositing |
@@ -523,6 +532,7 @@ Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to
 
 | Provider | Type | Notes |
 |----------|------|-------|
+| **WaveSpeed** | Cloud API | Gateway path for text-to-audio (TTS/music) models set via `config.yaml` profiles |
 | **ElevenLabs** | Cloud API | Premium voice quality |
 | **Google TTS** | Cloud API | 700+ voices, 50+ languages — best for localization |
 | **Kling Official TTS** | Cloud API | Official Kling narration when a `voice_id` is known |

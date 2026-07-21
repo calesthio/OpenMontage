@@ -1,0 +1,124 @@
+"""WaveSpeed image-edit (image-to-image) provider."""
+
+from __future__ import annotations
+
+import os
+from typing import Any
+
+from lib.wavespeed_config import resolve_wavespeed_task, WaveSpeedConfigError
+from tools.base_tool import (
+    BaseTool,
+    Determinism,
+    ExecutionMode,
+    ResourceProfile,
+    RetryPolicy,
+    ToolResult,
+    ToolRuntime,
+    ToolStability,
+    ToolStatus,
+    ToolTier,
+)
+from tools.wavespeed_generation import (
+    run_wavespeed_generation,
+    wavespeed_estimate_cost,
+)
+
+
+class WaveSpeedImageEdit(BaseTool):
+    name = "wavespeed_image_edit"
+    version = "0.1.0"
+    tier = ToolTier.GENERATE
+    capability = "image_generation"
+    provider = "wavespeed"
+    stability = ToolStability.BETA
+    execution_mode = ExecutionMode.SYNC
+    determinism = Determinism.STOCHASTIC
+    runtime = ToolRuntime.API
+
+    dependencies = []
+    install_instructions = (
+        "Set WAVESPEED_API_KEY for authentication and configure "
+        "config.yaml wavespeed.profiles.<profile>.image_edit.model_id."
+    )
+    agent_skills = ["wavespeed"]
+
+    capabilities = ["image_edit", "image_to_image"]
+    supports = {
+        "image_edit": True,
+        "profile_based_model_selection": True,
+        "model_id_override": True,
+        "metadata_sidecar": True,
+    }
+    best_for = [
+        "AI image editing / image-to-image through WaveSpeed",
+        "instruction-based edits on an existing image",
+    ]
+    not_good_for = ["text-only image generation (use wavespeed_text_to_image)"]
+
+    input_schema = {
+        "type": "object",
+        "required": ["prompt"],
+        "properties": {
+            "prompt": {"type": "string", "description": "Edit instruction."},
+            "image_url": {"type": "string", "description": "Source image URL."},
+            "image_path": {"type": "string", "description": "Local source image path."},
+            "output_dir": {"type": "string"},
+            "output_path": {"type": "string"},
+            "model_id": {
+                "type": "string",
+                "description": "Optional one-task override. Defaults to active WaveSpeed profile.",
+            },
+            "params": {
+                "type": ["object", "string"],
+                "description": "JSON params merged over active profile defaults.",
+            },
+        },
+    }
+    output_schema = {"$ref": "schemas/tools/wavespeed_generation.schema.json"}
+
+    resource_profile = ResourceProfile(
+        cpu_cores=1, ram_mb=512, vram_mb=0, disk_mb=200, network_required=True
+    )
+    retry_policy = RetryPolicy(max_retries=0)
+    idempotency_key_fields = ["prompt", "image_url", "image_path", "model_id", "params"]
+    side_effects = ["writes image files", "writes metadata JSON", "calls WaveSpeed API"]
+    user_visible_verification = ["Inspect edited image and metadata sidecar"]
+
+    def get_status(self) -> ToolStatus:
+        if not os.environ.get("WAVESPEED_API_KEY"):
+            return ToolStatus.UNAVAILABLE
+        try:
+            # Honor a selector-assigned profile/model (active_profile=null mode)
+            # so multi-profile candidates report AVAILABLE the same way execute()
+            # runs them, instead of UNAVAILABLE from the null-profile lookup.
+            resolve_wavespeed_task(
+                "image_edit",
+                explicit_profile=getattr(self, "_wavespeed_profile", None),
+                explicit_model_id=getattr(self, "_wavespeed_model_id", None),
+            )
+        except WaveSpeedConfigError:
+            return ToolStatus.UNAVAILABLE
+        return ToolStatus.AVAILABLE
+
+    def estimate_cost(self, inputs: dict[str, Any]) -> float:
+        return wavespeed_estimate_cost("image_edit", inputs)
+
+    def execute(self, inputs: dict[str, Any]) -> ToolResult:
+        inputs = dict(inputs)
+        if hasattr(self, "_wavespeed_profile"):
+            inputs["_wavespeed_profile"] = self._wavespeed_profile
+        if hasattr(self, "_wavespeed_model_id") and "model_id" not in inputs:
+            inputs["model_id"] = self._wavespeed_model_id
+
+        return run_wavespeed_generation(
+            task_type="image_edit",
+            asset_type="image",
+            inputs=inputs,
+        )
+
+    def dry_run(self, inputs: dict[str, Any]) -> dict[str, Any]:
+        data = super().dry_run(inputs)
+        data["would_submit_paid_task"] = True
+        data["provider"] = "wavespeed"
+        data["task_type"] = "image_edit"
+        return data

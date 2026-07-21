@@ -70,6 +70,43 @@ class TestStagePublicAssets:
         finally:
             _cleanup(src)
 
+    def test_cross_device_hardlink_failure_falls_back_to_a_real_copy_not_a_symlink(
+        self, asset, monkeypatch,
+    ):
+        # Confirmed live 2026-07-21: in the actual deployed container,
+        # project assets are bind-mounted from a different device than
+        # remotion-composer/public/ (baked into the image), so os.link()
+        # always raises EXDEV there. The old fallback chain tried symlink()
+        # next — @remotion/bundler's copyDir() DOES resolve and recreate
+        # that symlink in the render's temp bundle copy, but the recreated
+        # symlink then 404s at actual render time inside the headless-shell
+        # sandbox (this environment difference is exactly why this bug
+        # shipped: hardlink succeeds locally on a single-disk dev machine,
+        # so this path was never exercised there). Simulate the cross-
+        # device failure and assert the result is a real file, not a
+        # symlink — the only fallback shape @remotion/bundler's copy step
+        # has ever been confirmed to survive.
+        import os as os_module
+        real_link = os_module.link
+
+        def failing_link(*a, **k):
+            raise OSError(18, "Invalid cross-device link")
+
+        monkeypatch.setattr(os_module, "link", failing_link)
+
+        props = {"cuts": [{"id": "c1", "source": str(asset)}]}
+        try:
+            _, staged, missing = VideoCompose()._stage_public_assets(props)
+            src = props["cuts"][0]["source"]
+            assert missing == []
+            assert staged == 1
+            staged_path = COMPOSER_PUBLIC / src.split("/", 1)[1]
+            assert not staged_path.is_symlink()
+            assert staged_path.read_bytes() == b"fake-video-bytes"
+        finally:
+            monkeypatch.setattr(os_module, "link", real_link)
+            _cleanup(src)
+
     def test_file_uri_input_is_also_staged(self, asset):
         props = {"cuts": [{"id": "c1", "source": f"file://{asset}"}]}
         VideoCompose()._stage_public_assets(props)

@@ -2429,16 +2429,29 @@ class VideoCompose(BaseTool):
                     return value
             digest = hashlib.sha1(str(src.resolve()).encode()).hexdigest()[:12]
             link = public_dir / f"{digest}{src.suffix.lower()}"
+            # A symlink left over from a run before this fix — self-heal it
+            # to a real file rather than trusting it (see the no-symlink
+            # rationale below; an existing broken/unreachable-at-render-time
+            # symlink would otherwise short-circuit past the fix forever).
+            if link.is_symlink():
+                link.unlink()
             if not link.exists():
                 real = src.resolve()
                 try:
                     os.link(real, link)
                 except OSError:
-                    try:
-                        link.symlink_to(real)
-                    except OSError:
-                        import shutil
-                        shutil.copy2(real, link)
+                    # NOT a symlink fallback here on purpose. Confirmed live
+                    # 2026-07-21: project assets are bind-mounted from a
+                    # different device than remotion-composer/public/ (baked
+                    # into the image), so os.link() always raises EXDEV in
+                    # this deployment, falling back to a symlink — which
+                    # Remotion's bundler DOES recreate at the bundle's temp
+                    # copy (@remotion/bundler's copyDir resolves+re-symlinks
+                    # it), but the recreated symlink then 404s at actual
+                    # render time inside the headless-shell sandbox. A plain
+                    # copy has no such failure mode.
+                    import shutil
+                    shutil.copy2(real, link)
             staged += 1
             return f"om-staged/{link.name}"
 

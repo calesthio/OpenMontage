@@ -38,6 +38,7 @@ GOOGLE_API_KEY=              # Google TTS + Imagen + Lyria music + Gemini Omni/V
 
 # VOICE + MUSIC
 ELEVENLABS_API_KEY=          # TTS, music, sound effects (10K chars/month free)
+FISH_AUDIO_API_KEY=          # fish.audio TTS (voice cloning via reference_id, inline emotion tags)
 OPENAI_API_KEY=              # OpenAI TTS + GPT Image 2 images
 XAI_API_KEY=                 # xAI Grok image generation/editing + Grok video generation
 DOUBAO_SPEECH_API_KEY=       # Volcengine Doubao Speech TTS (strong Mandarin narration)
@@ -247,6 +248,39 @@ No subscription — pure pay-as-you-go, no minimum spend.
 | Scale | $330/mo | 2,000,000 | Priority support |
 
 **Free tier:** 10,000 characters/month (roughly 2-3 minutes of narration). API access included. Music generation and sound effects also available on free tier with limited credits.
+
+---
+
+### fish.audio — Expressive TTS + Voice Cloning
+
+> **High-emotion narration and reusable cloned voices.** S2-generation models support inline emotion tags (`[laugh]`, `[whispers]`) and 80+ languages. Voices created in the fish.audio playground are reused across runs via `reference_id`.
+
+**Tools unlocked:** `fish_audio_tts`
+**Env var:** `FISH_AUDIO_API_KEY`
+
+#### Setup
+
+1. Sign up at [fish.audio](https://fish.audio)
+2. Create an API key at [fish.audio/go-api/api-keys](https://fish.audio/go-api/api-keys/)
+3. Add to `.env`: `FISH_AUDIO_API_KEY=your-key-here`
+4. (Optional) Build or pick a voice model in the fish.audio playground and pass its id as `reference_id` to reuse a cloned voice
+
+#### Backend models
+
+`model` is **required — there is no default**. Pass one of:
+
+| Model | Best for |
+|-------|----------|
+| `s2.1-pro` | Latest flagship — inline emotion tags, 80+ languages, hero narration |
+| `s2.1-pro-free` | Free tier of s2.1-pro — drafts, samples, validation runs at $0 |
+| `s2-pro` | First S2 generation — stable high quality with emotion-tag support |
+| `s1` | Previous flagship, kept for compatibility (no emotion tags) |
+
+The legacy `speech-1.x` tier and `s1-mini` have been removed from the fish.audio API and are not supported.
+
+#### Pricing
+
+Billing is **per UTF-8 byte of input text** (not per character) — CJK text and emoji cost 3-4x an ASCII character of the same visible length. Approximate: `s1` / `s2-pro` / `s2.1-pro` ≈ $15 per 1M bytes; `s2.1-pro-free` is $0. Verify current pricing at [fish.audio](https://fish.audio) before large batches.
 
 ---
 
@@ -881,6 +915,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **Piper** | — (install only) | `piper_tts` | Free |
 | **Google** | `GOOGLE_API_KEY` (or `GEMINI_API_KEY`) | `google_tts`, `google_imagen`, `google_music`, `gemini_omni_video`, `veo_video` | Free tier (TTS) + paid |
 | **ElevenLabs** | `ELEVENLABS_API_KEY` | `elevenlabs_tts`, `music_gen` | Free tier + paid |
+| **fish.audio** | `FISH_AUDIO_API_KEY` | `fish_audio_tts` | Free tier (s2.1-pro-free) + paid |
 | **fal.ai** | `FAL_KEY` | `flux_image`, `recraft_image`, `kling_video`, `veo_video`, `minimax_video` | Pay-as-you-go |
 | **Kling Official** | `KLING_API_KEY` | `kling_official_video`, `kling_official_image`, `kling_tts`, `kling_avatar`, `kling_lip_sync` | Pay-as-you-go |
 | **OpenAI** | `OPENAI_API_KEY` | `openai_tts`, `openai_image` | Paid only |
@@ -903,7 +938,7 @@ How many providers cover each capability:
 |-----------|----------------|-----------------|--------------|
 | **Image Generation** | FLUX, Kling Official, Grok, Google Imagen, GPT Image 2, Recraft | Local Diffusion | Pexels, Pixabay (stock) |
 | **Video Generation** | Grok, Kling Official, Kling via fal.ai, Runway, Veo, Gemini Omni, Higgsfield, MiniMax, HeyGen | WAN, Hunyuan, CogVideo, LTX | Pexels, Pixabay (stock) |
-| **Text-to-Speech** | ElevenLabs, Google TTS, Kling Official, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier |
+| **Text-to-Speech** | ElevenLabs, fish.audio, Google TTS, Kling Official, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier, fish.audio s2.1-pro-free |
 | **Music Generation** | ElevenLabs, Suno, Google Lyria | — | ElevenLabs free tier |
 | **Post-Production** | — | FFmpeg (compose, stitch, trim, mix, enhance, grade) | All free |
 | **Analysis** | — | WhisperX, Scene Detect, Frame Sampler, CLIP/BLIP-2 | All free |

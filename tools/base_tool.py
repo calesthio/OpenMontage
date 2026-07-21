@@ -225,6 +225,47 @@ def _instrument_execute(fn: Callable) -> Callable:
     return wrapper
 
 
+_FILE_HASH_CHUNK = 1024 * 1024
+
+
+def _hash_file(path: Path) -> Optional[str]:
+    """SHA-256 of a file's bytes, read in chunks. None if it can't be read."""
+    try:
+        h = hashlib.sha256()
+        with open(path, "rb") as f:
+            for chunk in iter(lambda: f.read(_FILE_HASH_CHUNK), b""):
+                h.update(chunk)
+        return h.hexdigest()
+    except OSError:
+        return None
+
+
+def _fingerprint_value(value: Any) -> Any:
+    """Make one cache-key value content-addressed.
+
+    A value that points at an existing file is replaced by a hash of the file's
+    bytes, so rewriting the file at the same path changes the key. A path string
+    on its own would not, which would let a rerun restore output derived from
+    stale input bytes. Lists and dicts are walked so nested asset paths are
+    covered too; everything else passes through unchanged.
+    """
+    if isinstance(value, (str, os.PathLike)):
+        try:
+            path = Path(value)
+            if path.is_file():
+                digest = _hash_file(path)
+                if digest is not None:
+                    return {"__file_sha256__": digest}
+        except (OSError, ValueError):
+            pass
+        return value
+    if isinstance(value, (list, tuple)):
+        return [_fingerprint_value(v) for v in value]
+    if isinstance(value, dict):
+        return {k: _fingerprint_value(v) for k, v in value.items()}
+    return value
+
+
 def _is_cacheable(tool: "BaseTool", inputs: dict[str, Any]) -> bool:
     """Whether a call may be served from / written to the asset cache.
 
@@ -507,13 +548,20 @@ class BaseTool(ABC):
         ``idempotency_key_fields`` so identical inputs to the same tool version
         resolve to the same key, while a version bump or a different tool never
         collides. Returns the full SHA-256 hex; the cache stores blobs under it.
-        Output-path fields are intentionally excluded so the same content is a
-        hit regardless of where the caller wants the file to land.
+
+        File-valued fields are fingerprinted by content, not by path string, so
+        rewriting an input file at the same path changes the key rather than
+        serving output derived from the old bytes. Output-path fields are not in
+        this set, so the same content is a hit regardless of where the caller
+        wants the file to land.
         """
         key_data = {
             "tool": self.name,
             "version": self.version,
-            "fields": {k: inputs.get(k) for k in self.idempotency_key_fields},
+            "fields": {
+                k: _fingerprint_value(inputs.get(k))
+                for k in self.idempotency_key_fields
+            },
         }
         raw = json.dumps(key_data, sort_keys=True, default=str)
         return hashlib.sha256(raw.encode()).hexdigest()

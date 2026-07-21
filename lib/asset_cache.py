@@ -6,7 +6,7 @@ declares the two things needed to know when a call is a repeat: its
 ``determinism`` class. Nothing consumed them, so re-running a pipeline with
 the same brief paid the same provider for the same bytes again. This cache
 closes that gap: when a deterministic (or seed-pinned) tool is about to
-produce an artifact it has produced before, the bytes are linked back from
+produce an artifact it has produced before, the bytes are copied back from
 disk and the API call is skipped.
 
 Keyed by *content*, not by output path. The cache key is derived by the tool
@@ -36,9 +36,10 @@ Design decisions
   serialize on ``asset_cache.lock``. Uses ``filelock`` when importable, else a
   naive ``O_EXCL`` create-file fallback with a polling retry. 60s timeout.
 
-- **Hard links first, copies as fallback.** Same-filesystem restores hard-link
-  the blob into the caller's output path, which is instant and free on disk.
-  Cross-drive (Windows C:->D:) falls back to ``shutil.copy2``.
+- **Blobs are copied, never hard-linked.** A hard link would share an inode
+  with the caller's output file, so a later in-place rewrite of that file (a
+  normal regeneration) would silently mutate the stored blob. Store and restore
+  both copy, keeping cache content immutable at the cost of the extra disk.
 
 - **LRU eviction at cap.** Default cap is 20 GB, overridable via
   ``OPENMONTAGE_ASSET_CACHE_MAX_GB``. Ingesting past the cap evicts
@@ -349,7 +350,7 @@ class AssetCache:
                 except OSError:
                     pass
 
-            if not _link_or_copy(blob_path, dest):
+            if not _copy_file(blob_path, dest):
                 # Cannot reach dest, so treat as a miss and let the caller regenerate.
                 # The blob is still valid; leave the entry alone.
                 self.misses += 1
@@ -431,7 +432,7 @@ class AssetCache:
                 except OSError:
                     return False
 
-            if not _link_or_copy(source_path, blob_path):
+            if not _copy_file(source_path, blob_path):
                 return False
 
             now = time.time()
@@ -515,20 +516,17 @@ class AssetCache:
 # ----------------------------------------------------------------------
 
 
-def _link_or_copy(src: Path, dst: Path) -> bool:
-    """Hard-link ``src`` to ``dst``; on failure fall back to ``shutil.copy2``.
+def _copy_file(src: Path, dst: Path) -> bool:
+    """Copy ``src`` to ``dst`` as an independent file. True on success.
 
-    Hard linking is instant and uses zero extra disk on the same filesystem.
-    Cross-drive / cross-filesystem raises ``OSError`` on ``os.link`` and we
-    copy the bytes instead. Returns ``True`` on success.
+    Deliberately a copy, never a hard link. A hard link shares an inode with the
+    cache blob, so a later in-place rewrite of either file (a normal
+    regeneration) would silently mutate the stored bytes and corrupt the entry.
+    The store must stay immutable, which is worth the extra disk. ``copy2``
+    handles cross-drive transparently.
     """
     src = Path(src)
     dst = Path(dst)
-    try:
-        os.link(str(src), str(dst))
-        return True
-    except (OSError, NotImplementedError):
-        pass
     try:
         shutil.copy2(str(src), str(dst))
         return True

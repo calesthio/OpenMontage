@@ -141,6 +141,25 @@ class _NoPathGen(_GenBase):
         )
 
 
+class _InputFileGen(_GenBase):
+    """A deterministic tool whose output depends on the CONTENTS of a file
+    input declared via idempotency_key_fields (the Upscale/enhance shape).
+    """
+    name = "input_file_gen"
+    idempotency_key_fields = ["input_path"]
+
+    def execute(self, inputs: dict) -> ToolResult:
+        self.calls += 1
+        src = Path(inputs["input_path"]).read_bytes()
+        out = Path(inputs["output_path"])
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_bytes(b"OUT:" + src)
+        return ToolResult(
+            success=True, data={"output": str(out)},
+            artifacts=[str(out)], cost_usd=0.05,
+        )
+
+
 # ----------------------------------------------------------------------
 # Fixtures
 # ----------------------------------------------------------------------
@@ -286,3 +305,30 @@ def test_no_output_path_is_not_cached(cache_on):
     tool.execute({"prompt": "p"})
     tool.execute({"prompt": "p"})
     assert tool.calls == 2
+
+
+def test_file_valued_input_is_keyed_by_content(cache_on):
+    # Rewriting the file at the same input_path must invalidate the key, or a
+    # rerun would restore an output derived from the old input bytes.
+    tool = _InputFileGen()
+    src = cache_on / "in.bin"
+    src.write_bytes(b"AAAA")
+    tool.execute({"input_path": str(src), "output_path": str(cache_on / "o1.bin")})
+    assert tool.calls == 1
+
+    src.write_bytes(b"BBBB")  # same path, different bytes
+    r2 = tool.execute({"input_path": str(src), "output_path": str(cache_on / "o2.bin")})
+    assert r2.from_cache is False
+    assert tool.calls == 2
+    assert Path(r2.artifacts[0]).read_bytes() == b"OUT:BBBB"
+
+
+def test_identical_file_input_still_hits(cache_on):
+    # The complement: unchanged input content at the same path is still a hit.
+    tool = _InputFileGen()
+    src = cache_on / "in.bin"
+    src.write_bytes(b"AAAA")
+    tool.execute({"input_path": str(src), "output_path": str(cache_on / "o1.bin")})
+    r2 = tool.execute({"input_path": str(src), "output_path": str(cache_on / "o2.bin")})
+    assert r2.from_cache is True
+    assert tool.calls == 1

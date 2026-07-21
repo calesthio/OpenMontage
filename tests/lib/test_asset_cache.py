@@ -18,7 +18,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from lib.asset_cache import (  # noqa: E402
     AssetCache,
     AssetCacheEntry,
-    _link_or_copy,
+    _copy_file,
     asset_cache_enabled,
     default_asset_cache_dir,
     default_max_total_bytes,
@@ -157,18 +157,35 @@ def test_same_key_restores_to_any_output_path(tmp_path):
     assert round(cache.cost_saved_usd, 2) == 0.20
 
 
-def test_restore_is_hard_link_when_possible(tmp_path):
+def test_restored_blob_is_immutable_when_destination_overwritten(tmp_path):
+    # Overwriting a restored file in place (a normal regeneration) must not
+    # mutate the stored blob. Hard links would share an inode and corrupt the
+    # cache; the store keeps immutable copies instead.
     cache = AssetCache(cache_dir=tmp_path / "cache")
-    src = _fake_asset(tmp_path / "gen" / "img.png", b"X" * 2048)
+    src = _fake_asset(tmp_path / "gen" / "img.bin", b"ORIGINAL")
     cache.store("k1", src)
-    dest = tmp_path / "project" / "scene.png"
-    cache.try_restore("k1", dest)
 
-    blob = cache.cache_dir / "k1.png"
-    assert blob.exists()
-    if os.name != "nt" or blob.stat().st_dev == dest.stat().st_dev:
-        assert blob.stat().st_ino == dest.stat().st_ino
-        assert blob.stat().st_nlink >= 2
+    dest = tmp_path / "project" / "scene.bin"
+    assert cache.try_restore("k1", dest) is not None
+    assert dest.read_bytes() == b"ORIGINAL"
+
+    dest.write_bytes(b"REWRITTEN-IN-PLACE-DIFFERENT-BYTES")
+
+    blob = cache.cache_dir / "k1.bin"
+    assert blob.read_bytes() == b"ORIGINAL"
+    dest2 = tmp_path / "project2" / "scene.bin"
+    cache.try_restore("k1", dest2)
+    assert dest2.read_bytes() == b"ORIGINAL"
+
+
+def test_store_source_rewrite_does_not_mutate_blob(tmp_path):
+    # The other direction: rewriting the tool's own output after it was stored
+    # must not reach back into the cache blob.
+    cache = AssetCache(cache_dir=tmp_path / "cache")
+    src = _fake_asset(tmp_path / "gen" / "img.bin", b"ORIGINAL")
+    cache.store("k1", src)
+    src.write_bytes(b"REGENERATED")
+    assert (cache.cache_dir / "k1.bin").read_bytes() == b"ORIGINAL"
 
 
 def test_store_rejects_missing_source(tmp_path):
@@ -249,13 +266,15 @@ def test_manifest_tolerates_corrupt_lines(tmp_path):
     assert list(cache._read_manifest().keys()) == ["good"]
 
 
-def test_link_or_copy_falls_back_to_copy(tmp_path, monkeypatch):
-    src = _fake_asset(tmp_path / "src.png", b"BYTES")
-    dst = tmp_path / "other" / "dst.png"
+def test_copy_file_makes_independent_copy(tmp_path):
+    src = _fake_asset(tmp_path / "src.bin", b"BYTES")
+    dst = tmp_path / "other" / "dst.bin"
     dst.parent.mkdir(exist_ok=True)
-    monkeypatch.setattr(os, "link", lambda a, b: (_ for _ in ()).throw(OSError("x-dev")))
-    assert _link_or_copy(src, dst) is True
+    assert _copy_file(src, dst) is True
     assert dst.read_bytes() == b"BYTES"
+    # Independent: overwriting the copy must not touch the source (no shared inode).
+    dst.write_bytes(b"CHANGED")
+    assert src.read_bytes() == b"BYTES"
 
 
 # ----------------------------------------------------------------------

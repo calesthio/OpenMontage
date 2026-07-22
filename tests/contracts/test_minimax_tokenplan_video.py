@@ -33,7 +33,7 @@ class TestContract:
         tool = MinimaxTokenPlanVideo()
         assert tool.name == "minimax_tokenplan_video"
         assert tool.version
-        assert tool.provider == "minimax"
+        assert tool.provider == "minimax_tokenplan"
         assert tool.capability == "video_generation"
         assert tool.tier == ToolTier.GENERATE
         assert tool.stability == ToolStability.EXPERIMENTAL
@@ -73,7 +73,7 @@ class TestContract:
         info = MinimaxTokenPlanVideo().get_info()
         assert isinstance(info, dict)
         assert info["name"] == "minimax_tokenplan_video"
-        assert info["provider"] == "minimax"
+        assert info["provider"] == "minimax_tokenplan"
         assert info["runtime"] == "api"
 
     def test_status_unavailable_without_key(self, monkeypatch):
@@ -202,6 +202,43 @@ class TestToolSpecific:
         cost6 = tool.estimate_cost({"prompt": "x", "duration": 6})
         cost10 = tool.estimate_cost({"prompt": "x", "duration": 10})
         assert cost10 > cost6
+
+    def test_cost_aware_of_resolution(self):
+        tool = MinimaxTokenPlanVideo()
+        cost_768 = tool.estimate_cost({"prompt": "x", "duration": 6, "resolution": "768P"})
+        cost_1080 = tool.estimate_cost({"prompt": "x", "duration": 6, "resolution": "1080P"})
+        assert cost_1080 > cost_768
+
+    def test_cost_aware_of_model(self):
+        tool = MinimaxTokenPlanVideo()
+        cost_hailuo_1080 = tool.estimate_cost({"prompt": "x", "duration": 6, "model": "MiniMax-Hailuo-2.3", "resolution": "1080P"})
+        cost_fast_768 = tool.estimate_cost({"prompt": "x", "duration": 6, "model": "MiniMax-Hailuo-2.3-Fast", "resolution": "768P"})
+        assert cost_fast_768 < cost_hailuo_1080
+
+    def test_schema_duration_enum(self):
+        schema = MinimaxTokenPlanVideo().input_schema
+        assert schema["properties"]["duration"]["enum"] == [6, 10]
+
+    def test_schema_resolution_no_720p(self):
+        schema = MinimaxTokenPlanVideo().input_schema
+        assert "720P" not in schema["properties"]["resolution"]["enum"]
+
+    def test_execute_rejects_1080p_10s(self, monkeypatch):
+        monkeypatch.setenv("MINIMAX_API_KEY", "test-key")
+        result = MinimaxTokenPlanVideo().execute({
+            "prompt": "x", "duration": 10, "resolution": "1080P",
+        })
+        assert result.success is False
+        assert "1080P" in result.error
+
+    def test_execute_accepts_1080p_6s(self, monkeypatch):
+        monkeypatch.setenv("MINIMAX_API_KEY", "test-key")
+        monkeypatch.setenv("MINIMAX_TOKEN_PLAN_API_KEY", "test-key")
+        payload = MinimaxTokenPlanVideo()._build_payload({
+            "prompt": "x", "duration": 6, "resolution": "1080P",
+        })
+        assert payload["duration"] == 6
+        assert payload["resolution"] == "1080P"
 
     def test_build_payload_t2v(self):
         tool = MinimaxTokenPlanVideo()
@@ -375,7 +412,7 @@ class TestRegistryDiscovery:
         registry.discover()
         minimax_tools = [
             t for t in registry._tools.values()
-            if t.provider == "minimax"
+            if t.provider in ("minimax", "minimax_tokenplan")
         ]
         names = {t.name for t in minimax_tools}
         assert "minimax_tokenplan_video" in names

@@ -35,13 +35,13 @@ class MinimaxTokenPlanVideo(BaseTool):
     version = "0.1.0"
     tier = ToolTier.GENERATE
     capability = "video_generation"
-    provider = "minimax"
+    provider = "minimax_tokenplan"
     stability = ToolStability.EXPERIMENTAL
     execution_mode = ExecutionMode.ASYNC
     determinism = Determinism.STOCHASTIC
     runtime = ToolRuntime.API
 
-    dependencies = []
+    dependencies = ["env:MINIMAX_TOKEN_PLAN_API_KEY", "env:MINIMAX_API_KEY"]
     install_instructions = (
         "Set MINIMAX_TOKEN_PLAN_API_KEY (preferred) or MINIMAX_API_KEY to your MiniMax Token Plan API key.\n"
         "  Get one at https://platform.minimax.io/user-center/basic-information/interface-key\n"
@@ -96,14 +96,16 @@ class MinimaxTokenPlanVideo(BaseTool):
             },
             "duration": {
                 "type": "integer",
-                "minimum": 4,
-                "maximum": 10,
+                "enum": [6, 10],
                 "default": 6,
-                "description": "Video length in seconds.",
+                "description": (
+                    "Video length in seconds. 768P supports 6 or 10; "
+                    "1080P supports 6 only."
+                ),
             },
             "resolution": {
                 "type": "string",
-                "enum": ["768P", "720P", "1080P"],
+                "enum": ["768P", "1080P"],
                 "default": "768P",
                 "description": "Video resolution. 768P is the Token Plan default.",
             },
@@ -194,10 +196,18 @@ class MinimaxTokenPlanVideo(BaseTool):
             return ToolStatus.AVAILABLE
         return ToolStatus.UNAVAILABLE
 
+    _PAYG_PRICING = {
+        ("MiniMax-Hailuo-2.3", "768P"): 0.03,
+        ("MiniMax-Hailuo-2.3", "1080P"): 0.08,
+        ("MiniMax-Hailuo-2.3-Fast", "768P"): 0.03,
+    }
+
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
-        # MiniMax bills per second of generated video; ~$0.05/sec.
+        model = inputs.get("model", "MiniMax-Hailuo-2.3")
+        resolution = inputs.get("resolution", "768P")
         duration = int(inputs.get("duration", 6))
-        return round(0.05 * duration, 2)
+        per_second = self._PAYG_PRICING.get((model, resolution), 0.03)
+        return round(per_second * duration, 2)
 
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         duration = int(inputs.get("duration", 6))
@@ -213,6 +223,8 @@ class MinimaxTokenPlanVideo(BaseTool):
 
         operation = inputs.get("operation", "text_to_video")
         model = inputs.get("model", "MiniMax-Hailuo-2.3")
+        duration = int(inputs.get("duration", 6))
+        resolution = inputs.get("resolution", "768P")
 
         if model == "MiniMax-Hailuo-2.3-Fast" and operation == "text_to_video":
             return ToolResult(
@@ -220,6 +232,15 @@ class MinimaxTokenPlanVideo(BaseTool):
                 error=(
                     "MiniMax-Hailuo-2.3-Fast does not support text-to-video. "
                     "Use MiniMax-Hailuo-2.3 or switch operation to image_to_video."
+                ),
+            )
+
+        if resolution == "1080P" and duration != 6:
+            return ToolResult(
+                success=False,
+                error=(
+                    "1080P supports 6 seconds only. "
+                    "Use 768P for 10-second videos."
                 ),
             )
 

@@ -121,16 +121,24 @@ OpenMontage now uses those published rates in the Grok tool estimators.
 
 The tool uses the async submit-poll-download pattern: `POST /v1/video_generation` returns a `task_id`, poll `GET /v1/query/video_generation` until `status == "Success"`, then `GET /v1/files/retrieve` to get the download URL.
 
-`MiniMax-Hailuo-2.3` supports both text-to-video and image-to-video. `MiniMax-Hailuo-2.3-Fast` is faster but only supports image-to-video (the tool rejects text-to-video with this model). Resolution defaults to `768P` (the Token Plan default); `720P` and `1080P` are also available.
+`MiniMax-Hailuo-2.3` supports both text-to-video and image-to-video. `MiniMax-Hailuo-2.3-Fast` is faster but only supports image-to-video (the tool rejects text-to-video with this model). Resolution defaults to `768P` (the Token Plan default); `1080P` is also available (6 seconds only — 10-second videos require 768P).
 
-This tool is distinct from `minimax_video` (which routes through `FAL_KEY`). Both share `provider="minimax"` but have different tool names and cost routes.
+This tool is distinct from `minimax_video` (which routes through `FAL_KEY`). They use different provider IDs (`minimax_tokenplan` vs `minimax`) so `video_selector` can route to the correct cost path.
+
+**Schema constraints** (enforced to prevent paid-call failures):
+- `duration`: must be exactly `6` or `10` seconds
+- `resolution`: `768P` or `1080P` (no `720P`)
+- `1080P` supports 6 seconds only
 
 #### Pricing
 
-| Model | Price |
-|------|-------|
-| `MiniMax-Hailuo-2.3` | ~$0.05/sec (Token Plan quota, check console for actual rate) |
-| `MiniMax-Hailuo-2.3-Fast` | ~$0.05/sec (Token Plan quota) |
+| Model | Resolution | Price |
+|------|-----------|-------|
+| `MiniMax-Hailuo-2.3` | 768P | ~$0.03/sec (PAYG) |
+| `MiniMax-Hailuo-2.3` | 1080P | ~$0.08/sec (PAYG) |
+| `MiniMax-Hailuo-2.3-Fast` | 768P | ~$0.03/sec (PAYG) |
+
+> Token Plan is subscription quota, not per-second marginal charge. Check the [MiniMax pricing page](https://platform.minimax.io/docs/guides/pricing-token-plan) for current daily allowances.
 
 ---
 

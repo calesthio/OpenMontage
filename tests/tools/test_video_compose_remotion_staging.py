@@ -1,4 +1,4 @@
-"""Integration: video_compose Remotion path stages local assets before render."""
+"""Integration: video_compose Remotion path stages into project-scoped public dir."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ COMPOSER_DIR = REPO_ROOT / "remotion-composer"
     not COMPOSER_DIR.exists() or not (COMPOSER_DIR / "node_modules").exists(),
     reason="remotion-composer not installed",
 )
-def test_remotion_render_stages_local_assets_into_public(monkeypatch, tmp_path):
+def test_remotion_render_stages_into_project_public_dir(monkeypatch, tmp_path):
     slug = f"pytest-staging-{uuid.uuid4().hex[:8]}"
     project_dir = tmp_path / "projects" / slug
     renders = project_dir / "renders"
@@ -34,19 +34,18 @@ def test_remotion_render_stages_local_assets_into_public(monkeypatch, tmp_path):
     captured: dict = {}
 
     def fake_run_command(cmd, timeout=None, cwd=None):
+        captured["cmd"] = list(cmd)
         for arg in cmd:
             if isinstance(arg, str) and arg.startswith("--props="):
                 captured["props"] = json.loads(Path(arg.split("=", 1)[1]).read_text())
+            if isinstance(arg, str) and arg.startswith("--public-dir="):
+                captured["public_dir"] = arg.split("=", 1)[1]
         for arg in cmd:
             if isinstance(arg, str) and arg.endswith(".mp4"):
                 Path(arg).write_bytes(b"\x00\x00\x00\x18ftypmp42")
                 break
 
     monkeypatch.setattr(VideoCompose, "run_command", staticmethod(fake_run_command))
-    monkeypatch.setattr(
-        "shutil.which",
-        lambda name: "/usr/bin/npx" if name == "npx" else None,
-    )
 
     import shutil
 
@@ -75,19 +74,22 @@ def test_remotion_render_stages_local_assets_into_public(monkeypatch, tmp_path):
         }
     )
 
-    staging_dir = COMPOSER_DIR / "public" / slug
-    try:
-        assert result.success, result.error
-        props = captured["props"]
-        assert props["cuts"][0]["source"] == f"{slug}/frame.jpg"
-        assert props["audio"]["narration"]["src"] == f"{slug}/narration.mp3"
-        assert (staging_dir / "frame.jpg").exists()
-        assert (staging_dir / "narration.mp3").exists()
-        report = props["metadata"]["remotion_asset_staging"]
-        assert report["project_slug"] == slug
-        assert len(report["staged"]) == 2
-    finally:
-        if staging_dir.exists():
-            import shutil as sh
+    project_public = project_dir / "remotion-public"
+    shared_public = COMPOSER_DIR / "public" / slug
+    report_path = renders / ".remotion_asset_staging.json"
 
-            sh.rmtree(staging_dir, ignore_errors=True)
+    assert result.success, result.error
+    props = captured["props"]
+    assert props["cuts"][0]["source"] == "frame.jpg"
+    assert props["audio"]["narration"]["src"] == "narration.mp3"
+    assert "--public-dir=" in " ".join(captured["cmd"])
+    assert Path(captured["public_dir"]).resolve() == project_public.resolve()
+    # Media cleaned after render; shared composer public untouched.
+    assert not project_public.exists()
+    assert not shared_public.exists()
+    # Debug report survives cleanup.
+    assert report_path.exists()
+    report = json.loads(report_path.read_text())
+    assert report["project_slug"] == slug
+    assert len(report["staged"]) == 2
+    assert result.data["remotion_asset_staging_report"] == str(report_path)

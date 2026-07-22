@@ -1,9 +1,13 @@
-"""Stage local media into remotion-composer/public/ for Remotion renders.
+"""Stage local media into a project-scoped Remotion public dir for renders.
 
 Headless Chromium blocks ``file://`` URIs for ``<Audio>`` (and can be flaky for
-other media). Remotion's ``staticFile()`` only serves paths under ``public/``.
-Copy local cut sources and audio into ``public/<project_slug>/`` and rewrite
-props to relative paths the Explainer composition can resolve.
+other media). Remotion's ``staticFile()`` only serves paths under a public
+directory (default ``remotion-composer/public/``, or an explicit ``--public-dir``).
+
+This module stages into a **project-scoped** public directory under
+``projects/<id>/remotion-public/`` (never the shared composer tree), rewrites
+props to relative ``staticFile()`` paths, and supports reliable cleanup after
+render while leaving a debug report in the project workspace.
 """
 
 from __future__ import annotations
@@ -17,10 +21,13 @@ from urllib.parse import unquote, urlparse
 from urllib.request import url2pathname
 
 _REMOTE_PREFIXES = ("http://", "https://", "data:")
+_RESERVED_SLUGS = frozenset({".", ".."})
+# Dots are disallowed so metadata project_id=".." cannot escape via Path join.
+_SLUG_SAFE = re.compile(r"[^a-zA-Z0-9_-]+")
 
 
 def derive_staging_slug(output_path: Path, composition_data: dict[str, Any] | None = None) -> str:
-    """Derive a stable public/ subdirectory name for staged assets."""
+    """Derive a stable project slug for naming / reports (never a path segment from raw metadata)."""
     composition_data = composition_data or {}
     meta = composition_data.get("metadata") or {}
     for key in ("project_id", "project_slug", "slug"):
@@ -39,8 +46,62 @@ def derive_staging_slug(output_path: Path, composition_data: dict[str, Any] | No
 
 
 def _sanitize_slug(value: str) -> str:
-    cleaned = re.sub(r"[^a-zA-Z0-9._-]+", "-", value.strip()).strip("-")
-    return cleaned or "remotion-staged"
+    """Return a path-safe slug; reject reserved dot segments (``.``, ``..``)."""
+    cleaned = _SLUG_SAFE.sub("-", value.strip()).strip("-_")
+    if not cleaned or cleaned in _RESERVED_SLUGS:
+        return "remotion-staged"
+    # Reject any residual reserved segment if separators somehow survived.
+    for part in cleaned.replace("\\", "/").split("/"):
+        if part in _RESERVED_SLUGS or part == "":
+            return "remotion-staged"
+    return cleaned
+
+
+def resolve_project_public_dir(
+    output_path: Path,
+    composition_data: dict[str, Any] | None = None,
+) -> Path:
+    """Resolve a project-scoped Remotion ``--public-dir`` (not remotion-composer/public).
+
+    Prefer ``projects/<slug>/remotion-public/`` when the output lives under a
+    project tree; otherwise use ``<output_parent>/.remotion-public/``.
+    """
+    del composition_data  # reserved for future metadata overrides
+    resolved = output_path.resolve()
+    parts = resolved.parts
+    if "projects" in parts:
+        idx = parts.index("projects")
+        slug_idx = idx + 1
+        if slug_idx < len(parts):
+            # Climb from the output file up to projects/<slug>/.
+            # parents[0] = one level up; we need (depth(file) - depth(slug)) - 1.
+            levels_to_slug = (len(parts) - 1) - slug_idx
+            project_dir = resolved.parents[levels_to_slug - 1] if levels_to_slug >= 1 else resolved.parent
+            return project_dir / "remotion-public"
+    return resolved.parent / ".remotion-public"
+
+
+def ensure_contained(path: Path, root: Path) -> Path:
+    """Resolve *path* and raise if it is not under *root*."""
+    resolved = path.resolve()
+    root_resolved = root.resolve()
+    try:
+        resolved.relative_to(root_resolved)
+    except ValueError as exc:
+        raise ValueError(
+            f"staging path escapes root: {resolved} is not under {root_resolved}"
+        ) from exc
+    return resolved
+
+
+def cleanup_staging_dir(public_dir: Path) -> None:
+    """Remove a project-scoped Remotion public staging directory after render."""
+    if not public_dir.exists():
+        return
+    # Only delete leaf staging dirs we created (name contract).
+    if public_dir.name not in ("remotion-public", ".remotion-public"):
+        return
+    shutil.rmtree(public_dir, ignore_errors=True)
 
 
 def _is_remote_asset(src: str) -> bool:
@@ -76,10 +137,6 @@ def _parse_file_uri(uri: str) -> Path | None:
     - Windows drive (RFC-ish): ``file:///C:/Users/me/voice.mp3``
     - Windows drive as authority: ``file://C:/Users/me/voice.mp3``
     - Windows drive (naive ``f"file://{path}"``): ``file://C:\\Users\\me\\voice.mp3``
-
-    Previously, stripping ``file://`` and prepending ``/`` turned
-    ``file://C:\\...`` into a POSIX-rooted ``/C:\\...`` path that never
-    existed on Windows — so staging silently skipped the asset.
     """
     if not uri.lower().startswith("file:"):
         return None
@@ -107,13 +164,9 @@ def _parse_file_uri(uri: str) -> Path | None:
         if len(netloc) == 2 and netloc[1] == ":":
             return _as_filesystem_path(netloc + path_part)
         if len(netloc) == 2 and netloc[1] == "|":
-            # Rare file://C|/path form
             return _as_filesystem_path(netloc[0] + ":" + path_part)
-        # UNC / host form — uncommon for Remotion staging
         return Path(f"//{netloc}{path_part}")
 
-    # file:///C:/Users/... → path="/C:/Users/..."
-    # file:///Users/...   → path="/Users/..."
     if not path_part:
         return None
     try:
@@ -146,8 +199,8 @@ def _resolve_local_path(src: str) -> Path | None:
     if path.is_absolute():
         return path.resolve() if path.exists() else None
 
-    # Already a public-relative path (e.g. "my-project/narration.mp3") — do not
-    # treat as a filesystem path unless it exists relative to cwd.
+    # Already a public-relative path (e.g. "narration.mp3") — do not treat as
+    # a filesystem path unless it exists relative to cwd.
     if "/" in src and not path.exists():
         return None
 
@@ -155,21 +208,29 @@ def _resolve_local_path(src: str) -> Path | None:
     return resolved if resolved.exists() else None
 
 
-def _stage_file(src: Path, staging_dir: Path) -> Path:
-    """Copy *src* into *staging_dir*, disambiguating basename collisions."""
+def _stage_file(src: Path, staging_dir: Path, *, staging_root: Path) -> Path:
+    """Copy *src* into *staging_dir*, disambiguating basename collisions.
+
+    Destination is verified to remain under *staging_root* after resolve.
+    """
     staging_dir.mkdir(parents=True, exist_ok=True)
+    ensure_contained(staging_dir, staging_root)
+
     dest = staging_dir / src.name
+    ensure_contained(dest, staging_root)
+
     if dest.exists():
         try:
             if dest.resolve() == src.resolve():
-                return dest
+                return ensure_contained(dest, staging_root)
         except OSError:
             pass
         digest = hashlib.sha256(str(src.resolve()).encode()).hexdigest()[:8]
         dest = staging_dir / f"{src.stem}_{digest}{src.suffix}"
+        ensure_contained(dest, staging_root)
 
     shutil.copy2(src, dest)
-    return dest
+    return ensure_contained(dest, staging_root)
 
 
 def _set_nested(props: dict[str, Any], key: str, value: str) -> None:
@@ -205,14 +266,21 @@ def stage_local_assets_for_remotion(
     props: dict[str, Any],
     *,
     public_dir: Path,
-    project_slug: str,
+    project_slug: str | None = None,
 ) -> dict[str, Any]:
-    """Stage local media and rewrite *props* paths for Remotion ``staticFile()``.
+    """Stage local media into *public_dir* and rewrite props for ``staticFile()``.
 
-    Mutates *props* in place. Returns a report dict with ``staged`` and
-    ``skipped`` lists for render metadata / debugging.
+    *public_dir* is the Remotion ``--public-dir`` root (project-scoped). Files are
+    copied directly into that root; props get basename-relative paths
+    (``narration.mp3``), not shared ``remotion-composer/public/<slug>/`` paths.
+
+    Mutates *props* in place. Returns a report dict for render metadata / debugging.
     """
-    staging_dir = public_dir / project_slug
+    slug = _sanitize_slug(project_slug) if project_slug else "remotion-staged"
+    staging_root = public_dir.resolve()
+    staging_root.mkdir(parents=True, exist_ok=True)
+    ensure_contained(staging_root, staging_root)
+
     staged: list[dict[str, str]] = []
     skipped: list[dict[str, str]] = []
     already_staged: dict[str, str] = {}
@@ -231,16 +299,18 @@ def stage_local_assets_for_remotion(
         if src_key in already_staged:
             relative = already_staged[src_key]
         else:
-            dest = _stage_file(local, staging_dir)
-            relative = f"{project_slug}/{dest.name}"
+            dest = _stage_file(local, staging_root, staging_root=staging_root)
+            relative = dest.name
             already_staged[src_key] = relative
 
         _set_nested(props, key, relative)
         staged.append({"key": key, "from": str(local), "to": relative})
 
     return {
-        "project_slug": project_slug,
-        "staging_dir": str(staging_dir),
+        "project_slug": slug,
+        "public_dir": str(staging_root),
+        "staging_dir": str(staging_root),
         "staged": staged,
         "skipped": skipped,
+        "lifecycle": "project-scoped; caller should cleanup_staging_dir after render",
     }

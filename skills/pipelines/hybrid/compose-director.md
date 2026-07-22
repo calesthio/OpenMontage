@@ -47,15 +47,17 @@ Source dialogue, narration, music, and effects should feel like one mix, not sep
 ### 4. Remotion Local Asset Staging
 
 When `render_runtime="remotion"`, `video_compose` automatically copies local cut
-sources and audio (`narration`, `music`) into `remotion-composer/public/<project_slug>/`
-and rewrites props to `staticFile()`-compatible relative paths (`<slug>/file.mp3`).
+sources and audio (`narration`, `music`) into a **project-scoped** Remotion
+public directory (`projects/<slug>/remotion-public/`) and passes it via
+`--public-dir`. Props are rewritten to basename-relative `staticFile()` paths.
 
 **Do not** pass absolute paths or `file://` URIs for audio — headless Chromium blocks
 them and the render will fail. Remote `https://` sources are left unchanged.
 
-The staging report is written to `metadata.remotion_asset_staging` on the props payload
-for debugging. Prefer `projects/<slug>/renders/` output paths so the slug is derived
-from the project directory name.
+Staged media is cleaned up after the render. A durable debug report is written to
+`renders/.remotion_asset_staging.json` (also mirrored in
+`metadata.remotion_asset_staging` on the props payload). Prefer
+`projects/<slug>/renders/` output paths so the project root is derived correctly.
 
 ### 5. Use Render Metadata
 

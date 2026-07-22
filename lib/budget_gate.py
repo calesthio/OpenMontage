@@ -28,9 +28,23 @@ control" is worse than none, because it looks like protection.
 
 Scope
 -----
-Only tools whose `runtime` is API or HYBRID *and* whose `estimate_cost()`
-returns > 0 are gated. LOCAL/LOCAL_GPU tools and free operations never touch
-this module, so zero-key and local pipelines behave exactly as before.
+Whether the gate applies is decided by CLASSIFICATION (`BaseTool.paid`), not
+by the size of the estimate:
+
+- LOCAL/LOCAL_GPU tools are free -- they never touch this module -- unless a
+  tool explicitly marks itself `paid = True`.
+- API/HYBRID tools are treated as PAID unless they explicitly declare
+  `paid = False` (the genuinely free stock-media-search tools).
+- A paid tool is gated even when its `estimate_cost()` returns zero: a zero
+  estimate means "unknown", never "free".
+- Every paid request must provide a defensible `max_cost_usd()` bound, or the
+  call is refused (fail closed).
+- An explicit ZERO bound is honoured only for requests that are guaranteed
+  not to dispatch to a paid provider (a selector's rank mode, requests
+  execute() refuses locally).
+
+Zero-key and local pipelines therefore behave exactly as before, while a
+broken or information-starved estimate can no longer skip the gate.
 """
 
 from __future__ import annotations

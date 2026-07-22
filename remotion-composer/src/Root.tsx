@@ -16,6 +16,11 @@ import { ProductReveal, ProductRevealProps } from "./components/ProductReveal";
 import { CaptionOverlay, WordCaption } from "./components/CaptionOverlay";
 import { CollageBurst, CollageBurstProps } from "./CollageBurst";
 import { LyricOverlay, LyricOverlayProps } from "./LyricOverlay";
+import {
+  MaibeiProofVideo,
+  MaibeiProofVideoProps,
+  defaultMaibeiProofVideoProps,
+} from "./MaibeiProofVideo";
 
 // ---------------------------------------------------------------------------
 // Theme System — prevents every video from looking like dark fintech
@@ -295,6 +300,15 @@ export const Root: React.FC = () => {
           lyrics: [],
           bottomY: 0.88,
         } as LyricOverlayProps}
+      />
+      <Composition
+        id="MaibeiProofVertical"
+        component={MaibeiProofVideo}
+        durationInFrames={30 * 48}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={defaultMaibeiProofVideoProps as MaibeiProofVideoProps}
       />
       <Composition
         id="EndTag"

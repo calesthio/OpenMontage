@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import time
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -38,7 +39,7 @@ class FishAudioTTS(BaseTool):
     determinism = Determinism.STOCHASTIC
     runtime = ToolRuntime.API
 
-    dependencies = []
+    dependencies = ["env:FISH_AUDIO_API_KEY"]
     install_instructions = (
         "Set FISH_AUDIO_API_KEY to an API key from https://fish.audio/go-api/api-keys/\n"
         "Create voice models in the fish.audio playground and pass their id as\n"
@@ -76,7 +77,7 @@ class FishAudioTTS(BaseTool):
 
     input_schema = {
         "type": "object",
-        "required": ["text"],
+        "required": ["text", "model"],
         "properties": {
             "text": {"type": "string", "description": "Text to convert to speech"},
             "model": {
@@ -84,9 +85,18 @@ class FishAudioTTS(BaseTool):
                 "enum": list(_VALID_MODELS),
                 "description": (
                     "Backend TTS model (sent as the 'model' HTTP header). Required — no "
-                    "default. s2.1-pro = latest flagship (emotion tags, 80+ languages), "
-                    "s2.1-pro-free = free tier for drafts, s2-pro = first S2 generation, "
-                    "s1 = previous flagship kept for compatibility."
+                    "default; may also be supplied via the model_id alias. s2.1-pro = "
+                    "latest flagship (emotion tags, 80+ languages), s2.1-pro-free = free "
+                    "tier for drafts (promotional; see estimate_cost), s2-pro = first S2 "
+                    "generation, s1 = previous flagship kept for compatibility."
+                ),
+            },
+            "model_id": {
+                "type": "string",
+                "enum": list(_VALID_MODELS),
+                "description": (
+                    "Alias for model (selector compatibility — tts_selector exposes "
+                    "model_id). Used only when model is absent."
                 ),
             },
             "reference_id": {
@@ -179,7 +189,21 @@ class FishAudioTTS(BaseTool):
     retry_policy = RetryPolicy(
         max_retries=2, backoff_seconds=2.0, retryable_errors=["rate_limit", "timeout"]
     )
-    idempotency_key_fields = ["text", "model", "reference_id", "format"]
+    idempotency_key_fields = [
+        "text",
+        "model",
+        "reference_id",
+        "format",
+        "mp3_bitrate",
+        "sample_rate",
+        "temperature",
+        "top_p",
+        "repetition_penalty",
+        "latency",
+        "prosody",
+        "normalize",
+        "chunk_length",
+    ]
     side_effects = [
         "writes audio file to output_path",
         "calls the fish.audio TTS API",
@@ -200,11 +224,58 @@ class FishAudioTTS(BaseTool):
         "s1": 0.000015,            # ~$15 / 1M bytes
         "s2-pro": 0.000015,        # ~$15 / 1M bytes
         "s2.1-pro": 0.000015,      # ~$15 / 1M bytes
-        "s2.1-pro-free": 0.0,      # free tier
+        "s2.1-pro-free": 0.0,      # promotional free tier — see _S21_PRO_FREE_PROMO_END
     }
     _DEFAULT_RATE = 0.000015
 
+    # s2.1-pro-free is a promotion, not a durable free tier: free API access runs
+    # through the end of July 2026, subject to Fair Use, with no SLA/latency
+    # guarantee, possible request retention, and commercial-use restrictions
+    # (https://fish.audio/ar/blog/s2-1-pro-free-api/?articleLocale=en). After the
+    # window, cost planning falls back to the paid s2.1-pro rate.
+    _S21_PRO_FREE_PROMO_END = date(2026, 7, 31)
+
+    # Effective API defaults for output-affecting inputs. Applied when computing
+    # the idempotency key so an omitted field and its explicit default hash the
+    # same (both produce identical audio).
+    _KEY_DEFAULTS = {
+        "format": "mp3",
+        "mp3_bitrate": 128,
+        "chunk_length": 300,
+        "normalize": True,
+        "latency": "normal",
+        "temperature": 0.7,
+        "top_p": 0.7,
+        "repetition_penalty": 1.2,
+    }
+
     _EXT_MAP = {"mp3": "mp3", "wav": "wav", "pcm": "pcm", "opus": "opus"}
+
+    @classmethod
+    def _normalized_inputs(cls, inputs: dict[str, Any]) -> dict[str, Any]:
+        """Resolve selector-compatible aliases (model_id -> model, voice_id -> reference_id)."""
+        normalized = dict(inputs)
+        if not normalized.get("model") and normalized.get("model_id"):
+            normalized["model"] = normalized["model_id"]
+        if not normalized.get("reference_id") and normalized.get("voice_id"):
+            normalized["reference_id"] = normalized["voice_id"]
+        return normalized
+
+    @classmethod
+    def _effective_inputs(cls, inputs: dict[str, Any]) -> dict[str, Any]:
+        """Alias-normalized inputs with API defaults filled for output-affecting fields."""
+        provided = {k: v for k, v in cls._normalized_inputs(inputs).items() if v is not None}
+        effective = {**cls._KEY_DEFAULTS, **provided}
+        if effective.get("format") != "mp3":
+            effective["mp3_bitrate"] = None
+        return effective
+
+    def idempotency_key(self, inputs: dict[str, Any]) -> str:
+        return super().idempotency_key(self._effective_inputs(inputs))
+
+    @staticmethod
+    def _today() -> date:
+        return date.today()
 
     def _get_api_key(self) -> str | None:
         return os.environ.get("FISH_AUDIO_API_KEY")
@@ -215,9 +286,12 @@ class FishAudioTTS(BaseTool):
         return ToolStatus.UNAVAILABLE
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
+        inputs = self._normalized_inputs(inputs)
         byte_count = len(str(inputs.get("text", "")).encode("utf-8"))
         model = inputs.get("model", "")
         rate = self._FALLBACK_RATES.get(model, self._DEFAULT_RATE)
+        if model == "s2.1-pro-free" and self._today() > self._S21_PRO_FREE_PROMO_END:
+            rate = self._FALLBACK_RATES["s2.1-pro"]
         return round(byte_count * rate, 4)
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
@@ -228,12 +302,13 @@ class FishAudioTTS(BaseTool):
                 error="No fish.audio API key. " + self.install_instructions,
             )
 
+        inputs = self._normalized_inputs(inputs)
         model = inputs.get("model")
         if not model:
             return ToolResult(
                 success=False,
                 error=(
-                    "fish_audio_tts requires an explicit 'model'. "
+                    "fish_audio_tts requires an explicit 'model' (or its 'model_id' alias). "
                     f"Valid values: {', '.join(self._VALID_MODELS)}."
                 ),
             )

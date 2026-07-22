@@ -272,15 +272,17 @@ No subscription — pure pay-as-you-go, no minimum spend.
 | Model | Best for |
 |-------|----------|
 | `s2.1-pro` | Latest flagship — inline emotion tags, 80+ languages, hero narration |
-| `s2.1-pro-free` | Free tier of s2.1-pro — drafts, samples, validation runs at $0 |
+| `s2.1-pro-free` | Promotional free access to s2.1-pro — drafts, samples, validation runs (see caveats below) |
 | `s2-pro` | First S2 generation — stable high quality with emotion-tag support |
 | `s1` | Previous flagship, kept for compatibility (no emotion tags) |
+
+**`s2.1-pro-free` caveats — promotional, not a durable free tier.** Per the [fish.audio announcement](https://fish.audio/ar/blog/s2-1-pro-free-api/?articleLocale=en), free API access runs **through the end of July 2026** and is subject to Fair Use limits, carries **no SLA or latency guarantee**, requests **may be retained** by fish.audio, and **commercial use is restricted**. Don't route client work or production narration through it, and don't plan long-term costs at $0 — `fish_audio_tts.estimate_cost()` falls back to the paid `s2.1-pro` rate after the promotional window ends.
 
 The legacy `speech-1.x` tier and `s1-mini` have been removed from the fish.audio API and are not supported.
 
 #### Pricing
 
-Billing is **per UTF-8 byte of input text** (not per character) — CJK text and emoji cost 3-4x an ASCII character of the same visible length. Approximate: `s1` / `s2-pro` / `s2.1-pro` ≈ $15 per 1M bytes; `s2.1-pro-free` is $0. Verify current pricing at [fish.audio](https://fish.audio) before large batches.
+Billing is **per UTF-8 byte of input text** (not per character) — CJK text and emoji cost 3-4x an ASCII character of the same visible length. Approximate: `s1` / `s2-pro` / `s2.1-pro` ≈ $15 per 1M bytes; `s2.1-pro-free` is $0 only during the promotional window (through end of July 2026 — see caveats above). Verify current pricing at [fish.audio](https://fish.audio) before large batches.
 
 ---
 

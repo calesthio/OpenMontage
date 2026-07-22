@@ -200,6 +200,18 @@ class GeminiOmniVideo(BaseTool):
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         return _COST_PER_SECOND * self._duration_hint(inputs)
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Flat upper bound over the whole input domain.
+
+        _duration_hint() clamps every request to at most 10 billable seconds,
+        so no valid call can cost more than 10x the per-second rate. Deriving
+        the bound from the same clamp ceiling and _COST_PER_SECOND constant
+        the estimate uses means the two cannot drift. execute() issues one
+        billed interaction per call (polling is free; no retry loop wraps the
+        billed request).
+        """
+        return round(_COST_PER_SECOND * 10, 4)
+
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         return 180.0
 

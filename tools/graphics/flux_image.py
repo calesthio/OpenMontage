@@ -94,6 +94,16 @@ class FluxImage(BaseTool):
             return 0.05
         return 0.03  # dev tier
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Upper bound on a single call's spend.
+
+        fal FLUX bills a flat per-generation price. An arbitrary model string
+        cannot be priced below the dearest published tier, so every call is
+        bounded at the pro rate via the same estimate the pricing lives in.
+        execute() issues one billed generation request.
+        """
+        return self.estimate_cost({**inputs, "model": "flux-pro/v1.1"})
+
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         api_key = self._get_api_key()
         if not api_key:

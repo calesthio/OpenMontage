@@ -34,6 +34,8 @@ class ScreenCaptureSelector(BaseTool):
     execution_mode = ExecutionMode.SYNC
     determinism = Determinism.DETERMINISTIC
     runtime = ToolRuntime.HYBRID
+    # Genuinely free: no provider charge can ever be incurred (see BaseTool.paid).
+    paid = False
 
     agent_skills = ["screen-demo"]
 

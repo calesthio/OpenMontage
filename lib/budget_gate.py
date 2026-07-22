@@ -41,7 +41,7 @@ from pathlib import Path
 from typing import NamedTuple, Optional
 
 from lib.config_model import OpenMontageConfig
-from tools.cost_tracker import CostTracker
+from tools.cost_tracker import CostTracker, quantize_usd
 
 
 class BudgetHandle(NamedTuple):
@@ -132,7 +132,9 @@ def reserve(tool: str, operation: str, bound_usd: float) -> BudgetHandle:
         # here -- and it stops a refusal from leaving a dangling ESTIMATED row.
         tracker.refund(entry_id)
         raise
-    return BudgetHandle(tracker, entry_id, round(max(0.0, bound_usd), 4))
+    # Ceiling-quantized so a positive bound settled as "actual unknown" can
+    # never charge zero -- it matches exactly what the ledger reserved.
+    return BudgetHandle(tracker, entry_id, quantize_usd(bound_usd))
 
 
 def settle(handle: BudgetHandle, actual_usd: Optional[float], success: bool) -> None:

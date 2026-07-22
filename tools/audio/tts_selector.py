@@ -159,11 +159,37 @@ class TTSSelector(BaseTool):
         return ToolStatus.UNAVAILABLE
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
+        if inputs.get("operation") == "rank":
+            return 0.0  # rank mode returns scores without dispatching a provider
         candidates = self._providers()
         if not candidates:
             return 0.0
         tool, _ = self._select_best_tool(inputs, candidates, self._prepare_task_context(inputs))
         return tool.estimate_cost(inputs) if tool else 0.0
+
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Bound = the selected provider's bound; the selector adds no charge.
+
+        Resolves the provider with the same candidates and _select_best_tool
+        call execute() uses, then delegates to that provider's max_cost_usd()
+        for the request (execute() forwards the inputs unchanged). Rank mode
+        and requests that cannot resolve a provider return 0.0 because
+        execute() is guaranteed to answer locally without dispatching. An
+        unbounded selected provider propagates None, keeping the call
+        fail-closed.
+        """
+        if inputs.get("operation") == "rank":
+            return 0.0
+        candidates = self._providers()
+        if not candidates:
+            return 0.0
+        tool, _ = self._select_best_tool(inputs, candidates, self._prepare_task_context(inputs))
+        if tool is None:
+            return 0.0
+        if getattr(tool, "paid", None) is False:
+            # Declared-free provider (stock media search): nothing to bound.
+            return 0.0
+        return tool.max_cost_usd(inputs)
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         from lib.scoring import rank_providers

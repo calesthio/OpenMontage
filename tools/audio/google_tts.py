@@ -180,7 +180,26 @@ class GoogleTTS(BaseTool):
             rate_per_char = 0.000016  # $16/1M chars
         else:
             rate_per_char = 0.000004  # $4/1M chars (Standard)
-        return round(char_count * rate_per_char, 4)
+        # Raw positive value, deliberately unrounded: the budget ledger's
+        # central ceiling quantization is the only monetary rounding, so a
+        # short text can never present itself as free.
+        return char_count * rate_per_char
+
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Upper bound on a single call's spend.
+
+        For voices whose family the estimate recognizes by substring, the
+        per-character rate is exact and the estimate is its own ceiling. A
+        voice name matching NO known family falls into the cheap Standard
+        branch of the estimate, which could under-price an unknown premium
+        family -- so those are bounded at the dearest published rate (Studio)
+        instead. execute() issues one billed synthesis request.
+        """
+        voice = str(inputs.get("voice", "en-US-Chirp3-HD-Orus"))
+        known = ("Chirp3-HD", "Studio", "Neural2", "Journey", "WaveNet", "Standard")
+        if any(family in voice for family in known):
+            return self.estimate_cost(inputs)
+        return self.estimate_cost({**inputs, "voice": "Studio"})
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         # Prefer an API key (cheapest path); otherwise mint a Bearer token from

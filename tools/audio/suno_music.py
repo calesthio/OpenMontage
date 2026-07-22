@@ -143,6 +143,15 @@ class SunoMusic(BaseTool):
         # Suno credits cost $0.005 each; a generation is roughly 10 credits
         return 0.05
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Upper bound on a single call's spend.
+
+        Flat per-generation credit pricing independent of inputs; the
+        estimate is itself the ceiling. execute() issues one billed
+        generation request; no internal retry loop re-bills.
+        """
+        return self.estimate_cost(inputs)
+
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         api_key = self._get_api_key()
         if not api_key:

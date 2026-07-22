@@ -169,6 +169,24 @@ class KlingOfficialImage(BaseTool):
             base *= 1 + (0.08 * reference_count)
         return round(base * max(n, 1), 4)
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Worst-case upper bound on a single call's spend.
+
+        Fail closed on the opt-in account-usage diagnostic (billing not
+        authoritatively verified -- same rule as kling_lip_sync). Otherwise
+        the per-attempt cost is estimate_cost() with an UNRECOGNIZED
+        resolution upgraded to the dearest published tier (4k), times
+        1 + retry_policy.max_retries -- the SAME setting execute() passes to
+        KlingClient, so bound and real retry loop read one authority.
+        """
+        if inputs.get("include_account_usage"):
+            return None
+        worst = dict(inputs)
+        if str(inputs.get("resolution", "1k")) not in ("1k", "2k", "4k"):
+            worst["resolution"] = "4k"
+        billed_attempts = 1 + self.retry_policy.max_retries
+        return round(self.estimate_cost(worst) * billed_attempts, 4)
+
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         return 90.0
 
@@ -192,7 +210,8 @@ class KlingOfficialImage(BaseTool):
         start = time.time()
         try:
             request = self._build_request(inputs)
-            client = KlingClient()
+            # Same retry setting the bound in max_cost_usd() reserves against.
+            client = KlingClient(max_retries=self.retry_policy.max_retries)
             task_id = client.create_classic_task(request["path"], request["payload"])
             outputs = client.poll_classic(
                 request["path"],

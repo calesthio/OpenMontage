@@ -50,6 +50,7 @@ import threading
 import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
+from decimal import ROUND_CEILING, Decimal
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Iterator, Optional
@@ -57,10 +58,52 @@ from typing import Any, Callable, Iterator, Optional
 from lib.config_model import BudgetMode
 from lib.ledger_lock import ledger_lock
 
-# Comparisons are made against values rounded to 4dp; this tolerance keeps an
-# exact-cap request (estimated == remaining) on the allowed side of the line
-# rather than losing it to float representation error.
+# Comparisons are made against values quantized to the ledger grid below;
+# this tolerance keeps an exact-cap request (estimated == remaining) on the
+# allowed side of the line rather than losing it to float representation
+# error. All recorded amounts are exact multiples of LEDGER_QUANTUM_USD, so
+# float error on them (~1e-16 per term) never approaches this epsilon.
 _EPSILON = 1e-6
+
+# ---- Monetary precision ----
+# The ledger's explicit monetary quantum. Every recorded amount -- estimate,
+# reservation, actual spend -- is an exact multiple of $0.0001. Positive
+# amounts quantize UPWARD (Decimal ROUND_CEILING), so no positive paid
+# amount can ever be recorded as zero: $0.00004 reserves $0.0001, and
+# repeated sub-quantum calls accumulate against the cap instead of slipping
+# under it. Zero and negative inputs record exactly $0. Ceiling can only
+# OVERSTATE spend (by < one quantum per entry), never understate it.
+LEDGER_QUANTUM_USD = Decimal("0.0001")
+
+
+def quantize_usd(amount: float) -> float:
+    """Quantize a dollar amount onto the ledger's $0.0001 grid, upward.
+
+    The quantization itself is done in Decimal (no binary-float rounding);
+    only the final exact grid multiple is returned as a float. $0 stays
+    exactly $0; any positive amount yields at least one quantum.
+    """
+    value = Decimal(str(float(amount)))
+    if value <= 0:
+        return 0.0
+    return float(value.quantize(LEDGER_QUANTUM_USD, rounding=ROUND_CEILING))
+
+
+def format_usd(amount: float) -> str:
+    """Render a dollar amount so a positive cost never displays as $0.00.
+
+    Sub-cent positives widen to 4 (then 6) decimal places; everything else
+    keeps the familiar $X.XX form. Refusal messages use this so an operator
+    reading "estimate $0.0018" understands the call was genuinely paid.
+    """
+    a = float(amount)
+    if a > 0:
+        for fmt in ("%.2f", "%.4f", "%.6f"):
+            text = fmt % a
+            if float(text) > 0:
+                return f"${text}"
+        return f"${a:.6f}"
+    return f"${a:.2f}"
 
 
 class EntryStatus(str, Enum):
@@ -287,9 +330,10 @@ class CostTracker:
                 "status": EntryStatus.ESTIMATED.value,
                 # Immutable. Assigned once, never recalculated on reconcile.
                 "budget_date": self.current_budget_date(),
-                # Never record a negative cost: a provider or estimator that
-                # returns one must not be able to credit the ledger.
-                "estimated_usd": round(max(0.0, estimated_usd), 4),
+                # Quantized upward onto the ledger grid: a positive estimate
+                # can never round to a recorded zero, and a negative one can
+                # never credit the ledger.
+                "estimated_usd": quantize_usd(estimated_usd),
                 "reserved_usd": 0.0,
                 "actual_usd": 0.0,
                 "timestamp": self._now(),
@@ -332,8 +376,8 @@ class CostTracker:
             threshold = self.single_action_approval_usd
             if threshold is not None and threshold > 0 and estimated - threshold > _EPSILON:
                 raise ApprovalRequiredError(
-                    f"Action costs ${estimated:.2f}, which exceeds the configured "
-                    f"single-action approval threshold of ${threshold:.2f}. "
+                    f"Action costs {format_usd(estimated)}, which exceeds the configured "
+                    f"single-action approval threshold of {format_usd(threshold)}. "
                     f"This safeguard is independent of budget mode "
                     f"({self.mode.value}); raise or disable "
                     f"budget.single_action_approval_usd to permit it."
@@ -361,8 +405,8 @@ class CostTracker:
             elif self.mode == BudgetMode.WARN:
                 if estimated > self.usable_budget_usd:
                     message = (
-                        f"Reservation of ${estimated:.2f} exceeds usable budget "
-                        f"${self.usable_budget_usd:.2f}"
+                        f"Reservation of {format_usd(estimated)} exceeds usable budget "
+                        f"{format_usd(self.usable_budget_usd)}"
                     )
                     entry["budget_warning"] = True
                     entry["budget_warning_message"] = message
@@ -378,11 +422,11 @@ class CostTracker:
             f"Daily budget hard cap reached for {budget_date}: this request is "
             f"blocked before any paid provider call was made.\n"
             f"  budget date:          {budget_date} (timezone: {self.tz_name})\n"
-            f"  configured daily cap: ${self.budget_total_usd:.2f}\n"
-            f"  recorded spend today: ${self.spent_on(budget_date):.2f}\n"
-            f"  reserved (in-flight): ${self.reserved_on(budget_date):.2f}\n"
-            f"  this request:         ${estimated:.2f}\n"
-            f"  remaining today:      ${self.remaining_on(budget_date):.2f}\n"
+            f"  configured daily cap: {format_usd(self.budget_total_usd)}\n"
+            f"  recorded spend today: {format_usd(self.spent_on(budget_date))}\n"
+            f"  reserved (in-flight): {format_usd(self.reserved_on(budget_date))}\n"
+            f"  this request:         {format_usd(estimated)}\n"
+            f"  remaining today:      {format_usd(self.remaining_on(budget_date))}\n"
             f"The budget resets at midnight ({self.tz_name}). Raise "
             f"budget.total_usd in config.yaml to permit more spend today."
         )
@@ -393,9 +437,9 @@ class CostTracker:
             f"exceeded what was reserved, so the cap for this date can no longer "
             f"be guaranteed. All further paid calls for {budget_date} are "
             f"blocked.\n"
-            f"  configured daily cap: ${self.budget_total_usd:.2f}\n"
-            f"  recorded spend today: ${self.spent_on(budget_date):.2f}\n"
-            f"  this request:         ${estimated:.2f}\n"
+            f"  configured daily cap: {format_usd(self.budget_total_usd)}\n"
+            f"  recorded spend today: {format_usd(self.spent_on(budget_date))}\n"
+            f"  this request:         {format_usd(estimated)}\n"
             f"The budget resets at midnight ({self.tz_name}). Prior-day history "
             f"is preserved and is not cleared to free budget."
         )
@@ -424,7 +468,9 @@ class CostTracker:
             entry = self._find(entry_id)
             budget_date = self._entry_date(entry)
             reserved_before = entry.get("reserved_usd", 0.0)
-            actual = round(max(0.0, actual_usd), 4)
+            # Ceiling-quantized: a positive actual charge can never be
+            # written as zero, and never below what the provider billed.
+            actual = quantize_usd(actual_usd)
 
             entry["status"] = (
                 EntryStatus.COMPLETED.value if success else EntryStatus.FAILED.value

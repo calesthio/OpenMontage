@@ -89,6 +89,15 @@ class LTXVideoModal(BaseTool):
     def estimate_cost(self, inputs: dict[str, object]) -> float:
         return 0.25
 
+    def max_cost_usd(self, inputs: dict[str, object]) -> float | None:
+        """Upper bound on a single call's spend.
+
+        Flat per-generation Modal compute pricing independent of inputs; the
+        estimate is itself the ceiling. execute() issues one billed
+        generation; no internal retry loop re-bills.
+        """
+        return self.estimate_cost(inputs)
+
     def estimate_runtime(self, inputs: dict[str, object]) -> float:
         return 180.0
 

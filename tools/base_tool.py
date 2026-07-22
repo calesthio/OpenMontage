@@ -244,8 +244,14 @@ def _enforce_budget(fn: Callable) -> Callable:
 
     Untouched paths (no tracker involvement, no cost log written):
       - runtime LOCAL / LOCAL_GPU  (FFmpeg, Remotion, HyperFrames, Piper, ...)
-      - any tool whose estimate_cost() is 0  (free operations)
-    This is what preserves the zero-key and local pipelines exactly.
+      - tools that declare `paid = False`  (genuinely free API-backed search)
+        while their estimate is 0
+      - paid tools whose max_cost_usd() EXPLICITLY returns 0.0 for a request
+        that bills nothing (selector rank mode, guaranteed-local refusals)
+    A paid tool whose estimate_cost() merely RETURNS 0 -- sub-cent rounding,
+    unknown duration, missing billing info -- is NOT free: it must still
+    declare a bound or be refused. This is what preserves the zero-key and
+    local pipelines exactly without letting a broken estimate skip the gate.
     """
     if getattr(fn, "_budget_enforced", False):
         return fn
@@ -258,7 +264,11 @@ def _enforce_budget(fn: Callable) -> Callable:
             return fn(self, inputs, *args, **kwargs)
 
         runtime = getattr(self, "runtime", ToolRuntime.LOCAL)
-        if runtime in (ToolRuntime.LOCAL, ToolRuntime.LOCAL_GPU):
+        declared_paid = getattr(self, "paid", None)
+        if (
+            runtime in (ToolRuntime.LOCAL, ToolRuntime.LOCAL_GPU)
+            and declared_paid is not True
+        ):
             return fn(self, inputs, *args, **kwargs)
 
         tool_name = getattr(self, "name", "") or type(self).__name__
@@ -271,17 +281,28 @@ def _enforce_budget(fn: Callable) -> Callable:
                 f"can spend money must return a number. Refusing to execute "
                 f"(fail closed)."
             )
-        if estimated <= 0:
+        # Classification, not the estimate, decides whether the gate applies:
+        # API/HYBRID tools are paid unless they declare paid = False. A paid
+        # tool whose estimate is 0 (sub-cent, unknown duration, missing
+        # billing info) still has to produce a bound; a declared-free tool
+        # whose estimate claims money is gated as paid (the safe reading of
+        # the contradiction).
+        is_paid = True if declared_paid is None else bool(declared_paid)
+        if not is_paid and estimated <= 0:
             return fn(self, inputs, *args, **kwargs)
+
+        from tools.cost_tracker import format_usd
 
         bound = self.max_cost_usd(safe_inputs)
         if bound is None:
             raise BudgetGateError(
-                f"{tool_name} cannot declare a bounded maximum cost for this call "
-                f"(estimate ${float(estimated):.2f}). Refusing to execute (fail "
+                f"{tool_name} is classified as a PAID tool but cannot declare a "
+                f"bounded maximum cost for this call (estimate "
+                f"{format_usd(float(estimated))}). Refusing to execute (fail "
                 f"closed): a daily hard cap cannot be guaranteed against an "
-                f"unbounded cost. estimate_cost() is an approximation, not a "
-                f"ceiling. Override max_cost_usd() on {tool_name} to declare a "
+                f"unbounded cost, and a zero estimate does not make a paid tool "
+                f"free. estimate_cost() is an approximation, not a ceiling. "
+                f"Override max_cost_usd() on {tool_name} to declare a "
                 f"defensible upper bound -- it must cover every provider request "
                 f"the call can make, including retry_policy.max_retries."
             )
@@ -297,10 +318,16 @@ def _enforce_budget(fn: Callable) -> Callable:
             )
         if float(bound) - float(estimated) < -1e-6:
             raise BudgetGateError(
-                f"{tool_name}.max_cost_usd() returned ${float(bound):.4f}, which is "
-                f"below its own estimate_cost() of ${float(estimated):.4f}. That is "
+                f"{tool_name}.max_cost_usd() returned {format_usd(float(bound))}, which is "
+                f"below its own estimate_cost() of {format_usd(float(estimated))}. That is "
                 f"not an upper bound. Refusing to execute (fail closed)."
             )
+        if float(bound) <= 0 and estimated <= 0:
+            # The tool has EXPLICITLY declared this exact request bills
+            # nothing (selector rank mode, a request execute() is guaranteed
+            # to refuse locally). Distinct from the None case above: a
+            # declared zero is an answer, a missing bound is not.
+            return fn(self, inputs, *args, **kwargs)
 
         from lib.budget_gate import reserve, settle
 
@@ -353,6 +380,18 @@ class BaseTool(ABC):
     execution_mode: ExecutionMode = ExecutionMode.SYNC
     determinism: Determinism = Determinism.DETERMINISTIC
     runtime: ToolRuntime = ToolRuntime.LOCAL
+
+    # --- Budget classification ---
+    # Whether this tool can incur provider charges. None (the default) infers
+    # it from runtime: LOCAL/LOCAL_GPU tools are free; API/HYBRID tools are
+    # treated as PAID and must declare max_cost_usd() -- returning 0.0 only
+    # for a request that genuinely bills nothing (a selector's rank mode, a
+    # request execute() is guaranteed to refuse locally). Genuinely free
+    # API-backed tools (stock media search) set paid = False explicitly.
+    # This is what stops a paid tool whose estimate_cost() returns 0 --
+    # sub-cent, unknown duration, missing billing info -- from slipping past
+    # the budget gate on the strength of that zero.
+    paid: Optional[bool] = None
 
     # --- Dependencies ---
     # For API tools, add "env:ENVVAR_NAME" to signal required API keys

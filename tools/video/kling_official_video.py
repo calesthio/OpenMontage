@@ -199,6 +199,31 @@ class KlingOfficialVideo(BaseTool):
                 base *= 1 + (0.10 * len(multi_prompt))
         return round(base * max(duration, 3) / 5, 4)
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Worst-case upper bound on a single call's spend.
+
+        Fail closed on the opt-in account-usage diagnostic: that endpoint's
+        billing is not authoritatively verified, so a call that requests it
+        cannot be bounded and is refused rather than assumed free (same rule
+        as kling_lip_sync).
+
+        Otherwise the per-attempt cost is estimate_cost() evaluated with any
+        UNRECOGNIZED mode or api_family upgraded to the dearest published
+        tier (4k / omni) so an unknown value can never price below reality.
+        The attempt count is 1 + retry_policy.max_retries -- the SAME setting
+        execute() passes to KlingClient below, so bound and real retry loop
+        read one authority.
+        """
+        if inputs.get("include_account_usage"):
+            return None
+        worst = dict(inputs)
+        if str(inputs.get("mode", "std")) not in ("std", "pro", "4k"):
+            worst["mode"] = "4k"
+        if str(inputs.get("api_family", "classic")) not in ("classic", "turbo", "omni"):
+            worst["api_family"] = "omni"
+        billed_attempts = 1 + self.retry_policy.max_retries
+        return round(self.estimate_cost(worst) * billed_attempts, 4)
+
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         return 180.0
 
@@ -222,7 +247,8 @@ class KlingOfficialVideo(BaseTool):
         start = time.time()
         try:
             request = self._build_request(inputs)
-            client = KlingClient()
+            # Same retry setting the bound in max_cost_usd() reserves against.
+            client = KlingClient(max_retries=self.retry_policy.max_retries)
             if request["protocol"] == "turbo":
                 task_id = client.create_turbo(request["path"], request["payload"])
                 outputs = client.poll_turbo(

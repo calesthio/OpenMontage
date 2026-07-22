@@ -51,9 +51,12 @@ def _install_fake_requests(monkeypatch, post_responses, get_responses):
 
 
 @pytest.fixture()
-def gemini_env(monkeypatch):
+def gemini_env(monkeypatch, budget_gate_isolated):
     monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
     monkeypatch.setenv("GEMINI_API_KEY", "test-gemini-key")
+    # Budget gate active on an isolated ledger; approve this paid tool via
+    # the gate's real API so mocked-provider execute() paths can run.
+    budget_gate_isolated.approve_tool("gemini_omni_video")
 
 
 def test_gemini_omni_is_discovered_as_video_provider():

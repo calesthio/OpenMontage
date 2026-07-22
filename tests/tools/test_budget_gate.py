@@ -546,10 +546,18 @@ class FreeLocalTool(BaseTool):
 
 
 class ZeroCostApiTool(UnboundedPaidTool):
+    """API runtime, zero estimate, no bound, no free declaration -- the
+    azure_stt/dashscope_asr shape that used to slip past the gate."""
     name = "zero_cost_api"
 
     def estimate_cost(self, inputs):
         return 0.0
+
+
+class DeclaredFreeApiTool(ZeroCostApiTool):
+    """API runtime but explicitly classified free (stock-search shape)."""
+    name = "declared_free_api"
+    paid = False
 
 
 class BadBoundTool(UnboundedPaidTool):
@@ -626,8 +634,17 @@ class TestGateFreePaths:
         assert rec.called
         assert not (gate_env / "cost_log.json").exists()
 
-    def test_zero_cost_api_tool_allowed(self, gate_env):
+    def test_zero_estimate_paid_api_tool_fails_closed(self, gate_env):
+        """A paid tool's zero estimate means 'unknown', not 'free': without a
+        declared bound or an explicit paid=False, the gate must refuse."""
         rec = _Recorder()
-        assert ZeroCostApiTool(rec).execute({}).success
+        with pytest.raises(BudgetGateError, match="zero_cost_api"):
+            ZeroCostApiTool(rec).execute({})
+        assert rec.called is False, "provider must not be reached"
+        assert not (gate_env / "cost_log.json").exists()
+
+    def test_declared_free_api_tool_allowed(self, gate_env):
+        rec = _Recorder()
+        assert DeclaredFreeApiTool(rec).execute({}).success
         assert rec.called
         assert not (gate_env / "cost_log.json").exists()

@@ -126,6 +126,23 @@ class ImageGen(BaseTool):
             return 0.03
         return 0.0  # local
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Upper bound on a single call's spend.
+
+        The OpenAI path requests auto quality, which the provider may resolve
+        to the dearest gpt-image-2 tier ($0.211 at 1024x1024 -- the "high"
+        constant in openai_image.estimate_cost). The FLUX path is bounded at
+        the dearest fal FLUX tier ($0.05 pro, see flux_image.estimate_cost).
+        Local diffusers or no provider bills nothing. One billed request per
+        execute(); no internal retry loop re-bills.
+        """
+        provider = inputs.get("provider") or self._detect_provider()
+        if provider == "openai":
+            return 0.211
+        if provider == "flux":
+            return 0.05
+        return 0.0
+
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         provider = inputs.get("provider") or self._detect_provider()
         if not provider:

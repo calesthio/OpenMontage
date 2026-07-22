@@ -337,9 +337,10 @@ class TestDashscopeImageMultiOutput:
         paths = DashscopeImage._resolve_output_paths("foo", 2)
         assert paths == [Path("foo_1"), Path("foo_2")]
 
-    def test_execute_downloads_all_images(self, monkeypatch, tmp_path):
+    def test_execute_downloads_all_images(self, monkeypatch, tmp_path, budget_gate_isolated):
         """The bug: n=3 returned images_generated=3 but downloaded 1 file.
         Mock the DashScope response with 3 URLs and verify all 3 are saved."""
+        budget_gate_isolated.approve_tool("dashscope_image")
         monkeypatch.setenv("DASHSCOPE_API_KEY", "fake-key")
 
         class FakeResp:
@@ -386,8 +387,9 @@ class TestDashscopeImageMultiOutput:
         assert (tmp_path / "shot_2.png").exists()
         assert (tmp_path / "shot_3.png").exists()
 
-    def test_execute_single_image_uses_base_path(self, monkeypatch, tmp_path):
+    def test_execute_single_image_uses_base_path(self, monkeypatch, tmp_path, budget_gate_isolated):
         """n=1 must keep the legacy single-path behavior (no _1 suffix)."""
+        budget_gate_isolated.approve_tool("dashscope_image")
         monkeypatch.setenv("DASHSCOPE_API_KEY", "fake-key")
 
         class FakeResp:

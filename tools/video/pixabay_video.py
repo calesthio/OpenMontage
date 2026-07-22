@@ -31,6 +31,8 @@ class PixabayVideo(BaseTool):
     execution_mode = ExecutionMode.SYNC
     determinism = Determinism.DETERMINISTIC
     runtime = ToolRuntime.API
+    # Genuinely free: no provider charge can ever be incurred (see BaseTool.paid).
+    paid = False
 
     dependencies = []
     install_instructions = (

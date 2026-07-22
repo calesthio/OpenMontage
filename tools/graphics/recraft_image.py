@@ -120,6 +120,18 @@ class RecraftImage(BaseTool):
             return 0.25
         return 0.04
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Upper bound on a single call's spend.
+
+        Flat per-generation pricing: the two known models price exactly, and
+        an unrecognized model string is bounded at the dearest tier (v4-pro)
+        rather than assumed cheap. execute() issues one billed request.
+        """
+        model = inputs.get("model", "v4")
+        if model in ("v4", "v4-pro"):
+            return self.estimate_cost(inputs)
+        return self.estimate_cost({**inputs, "model": "v4-pro"})
+
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         api_key = self._get_api_key()
         if not api_key:

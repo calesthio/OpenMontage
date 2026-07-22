@@ -64,7 +64,9 @@ def test_tts_payload_and_validation():
             raise AssertionError(f"Invalid TTS inputs should fail: {bad_inputs}")
 
 
-def test_execute_downloads_all_audio_results(monkeypatch, tmp_path):
+def test_execute_downloads_all_audio_results(monkeypatch, tmp_path, budget_gate_isolated):
+    budget_gate_isolated.approve_tool("kling_tts")
+
     class FakeClient:
         def create_classic_task(self, path, payload):
             self.path = path
@@ -83,7 +85,7 @@ def test_execute_downloads_all_audio_results(monkeypatch, tmp_path):
             return output_path
 
     monkeypatch.setenv("KLING_API_KEY", "test-key")
-    monkeypatch.setattr("tools.audio.kling_tts.KlingClient", lambda: FakeClient())
+    monkeypatch.setattr("tools.audio.kling_tts.KlingClient", lambda *args, **kwargs: FakeClient())
     monkeypatch.setattr("tools.audio.kling_tts.probe_duration", lambda path: 1.23)
 
     output_path = tmp_path / "speech.mp3"
@@ -105,7 +107,9 @@ def test_execute_downloads_all_audio_results(monkeypatch, tmp_path):
     assert result.cost_usd > 0
 
 
-def test_execute_accepts_synchronous_create_response(monkeypatch, tmp_path):
+def test_execute_accepts_synchronous_create_response(monkeypatch, tmp_path, budget_gate_isolated):
+    budget_gate_isolated.approve_tool("kling_tts")
+
     class FakeClient:
         def post(self, path, payload):
             assert path == "/v1/audio/tts"
@@ -133,7 +137,7 @@ def test_execute_accepts_synchronous_create_response(monkeypatch, tmp_path):
             return output_path
 
     monkeypatch.setenv("KLING_API_KEY", "test-key")
-    monkeypatch.setattr("tools.audio.kling_tts.KlingClient", lambda: FakeClient())
+    monkeypatch.setattr("tools.audio.kling_tts.KlingClient", lambda *args, **kwargs: FakeClient())
     monkeypatch.setattr("tools.audio.kling_tts.probe_duration", lambda path: 2.5)
 
     result = KlingTTS().execute(
@@ -150,7 +154,10 @@ def test_execute_accepts_synchronous_create_response(monkeypatch, tmp_path):
     assert result.data["audio_duration_seconds"] == 2.5
 
 
-def test_tts_selector_prefers_kling_official(monkeypatch, isolated_tool_registry):
+def test_tts_selector_prefers_kling_official(monkeypatch, isolated_tool_registry, budget_gate_isolated):
+    # The selector is the outermost (gated) call; its reservation delegates
+    # to the selected provider's bound.
+    budget_gate_isolated.approve_tool("tts_selector")
     monkeypatch.setenv("KLING_API_KEY", "test-key")
     isolated_tool_registry.discover("tools")
 

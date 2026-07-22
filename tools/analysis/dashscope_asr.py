@@ -43,6 +43,11 @@ class DashscopeAsr(BaseTool):
     execution_mode = ExecutionMode.ASYNC
     determinism = Determinism.DETERMINISTIC
     runtime = ToolRuntime.API
+    # DashScope bills ASR per audio minute: this is a PAID tool. The
+    # repository has no verified pricing constant for it, so dispatchable
+    # requests are refused by the budget gate (max_cost_usd returns None)
+    # until real pricing is recorded here. Explicitly NOT free.
+    paid = True
 
     dependencies = []
     install_instructions = (
@@ -153,8 +158,27 @@ class DashscopeAsr(BaseTool):
         return ToolStatus.UNAVAILABLE
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
-        # DashScope ASR pricing is per-minute; check console for actual cost.
+        # DashScope ASR bills per minute but the repository holds no verified
+        # rate; 0.0 here is "unknown", NOT "free" -- max_cost_usd() below
+        # keeps every dispatchable request fail-closed until pricing lands.
         return 0.0
+
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """No defensible bound exists: DashScope ASR is billed per audio
+        minute but the repository records no verified rate, and inventing one
+        would defeat the cap. Requests execute() is guaranteed to refuse
+        locally before any dispatch -- missing API key, or an audio_url that
+        is empty or not a public URL -- bill nothing and return 0.0 so those
+        guardrails still answer. Every dispatchable request returns None and
+        is refused by the budget gate as a paid tool without a declared
+        maximum cost.
+        """
+        if not os.environ.get("DASHSCOPE_API_KEY"):
+            return 0.0  # execute() refuses before any dispatch
+        audio_url = str(inputs.get("audio_url", "") or "").strip()
+        if not audio_url or not self._is_public_url(audio_url):
+            return 0.0  # execute() refuses before any dispatch
+        return None
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         api_key = os.environ.get("DASHSCOPE_API_KEY")

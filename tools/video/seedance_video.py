@@ -174,6 +174,19 @@ class SeedanceVideo(BaseTool):
         rate = 0.2419 if variant == "fast" else 0.3034
         return round(rate * secs, 2)
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Upper bound on a single call's spend.
+
+        duration="auto" lets the MODEL choose the length, so the bound prices
+        it at the schema's maximum (15 seconds) instead of the estimate's 5s
+        guess. Explicit durations price exactly; the non-fast rate is already
+        the dearest and is the estimate's fallback for unknown variants.
+        execute() issues one billed request.
+        """
+        if inputs.get("duration", "5") == "auto":
+            return self.estimate_cost({**inputs, "duration": "15"})
+        return self.estimate_cost(inputs)
+
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         variant = inputs.get("model_variant", "standard")
         return 60.0 if variant == "fast" else 120.0

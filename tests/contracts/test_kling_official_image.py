@@ -180,7 +180,9 @@ def test_image_model_must_match_api_family():
         raise AssertionError("omni requests must reject generation image models")
 
 
-def test_execute_downloads_all_image_results(monkeypatch, tmp_path):
+def test_execute_downloads_all_image_results(monkeypatch, tmp_path, budget_gate_isolated):
+    budget_gate_isolated.approve_tool("kling_official_image")
+
     class FakeClient:
         def create_classic_task(self, path, payload):
             return "img-task-1"
@@ -196,7 +198,7 @@ def test_execute_downloads_all_image_results(monkeypatch, tmp_path):
             return output_path
 
     monkeypatch.setenv("KLING_API_KEY", "test-key")
-    monkeypatch.setattr("tools.graphics.kling_official_image.KlingClient", lambda: FakeClient())
+    monkeypatch.setattr("tools.graphics.kling_official_image.KlingClient", lambda *args, **kwargs: FakeClient())
     output_path = tmp_path / "image.png"
     result = KlingOfficialImage().execute({"prompt": "x", "n": 2, "output_path": str(output_path)})
     assert result.success
@@ -209,7 +211,11 @@ def test_execute_downloads_all_image_results(monkeypatch, tmp_path):
     assert result.cost_usd > 0
 
 
-def test_execute_image_omni_series_records_references_callback_and_artifacts(monkeypatch, tmp_path):
+def test_execute_image_omni_series_records_references_callback_and_artifacts(
+    monkeypatch, tmp_path, budget_gate_isolated
+):
+    budget_gate_isolated.approve_tool("kling_official_image")
+
     class FakeClient:
         def create_classic_task(self, path, payload):
             self.path = path
@@ -227,7 +233,7 @@ def test_execute_image_omni_series_records_references_callback_and_artifacts(mon
             return output_path
 
     monkeypatch.setenv("KLING_API_KEY", "test-key")
-    monkeypatch.setattr("tools.graphics.kling_official_image.KlingClient", lambda: FakeClient())
+    monkeypatch.setattr("tools.graphics.kling_official_image.KlingClient", lambda *args, **kwargs: FakeClient())
     result = KlingOfficialImage().execute(
         {
             "prompt": "series from references",
@@ -252,7 +258,10 @@ def test_execute_image_omni_series_records_references_callback_and_artifacts(mon
     assert Path(result.artifacts[1]).name == "series_2.png"
 
 
-def test_image_selector_prefers_official_provider(monkeypatch, isolated_tool_registry):
+def test_image_selector_prefers_official_provider(monkeypatch, isolated_tool_registry, budget_gate_isolated):
+    # The selector is the outermost (gated) call; its reservation delegates
+    # to the selected provider's bound.
+    budget_gate_isolated.approve_tool("image_selector")
     monkeypatch.setenv("KLING_API_KEY", "test-key")
     isolated_tool_registry.discover("tools")
 

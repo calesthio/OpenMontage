@@ -87,6 +87,10 @@ class AzureSpeechToText(BaseTool):
     execution_mode = ExecutionMode.SYNC
     determinism = Determinism.DETERMINISTIC
     runtime = ToolRuntime.API
+    # Azure bills per audio-hour: this is a PAID tool even when the estimate
+    # cannot price a request up front. Explicit so the classification is
+    # auditable rather than inferred.
+    paid = True
 
     # Availability is decided by get_status() (env var check), mirroring the
     # ElevenLabs provider tool — dependencies stays empty.
@@ -193,11 +197,63 @@ class AzureSpeechToText(BaseTool):
     # roughly $1.00/audio-hour at time of writing).
     COST_PER_AUDIO_HOUR = 1.0
 
+    def _local_duration_seconds(self, inputs: dict[str, Any]) -> float | None:
+        """Billable duration, determined WITHOUT contacting Azure.
+
+        Preference order: an explicit duration_seconds input, else a local
+        ffprobe of input_path (tools.analysis.audio_probe.probe_duration).
+        Returns None when neither yields a positive duration -- the caller
+        must treat that as unboundable, never as zero.
+        """
+        explicit = inputs.get("duration_seconds")
+        if explicit:
+            try:
+                value = float(explicit)
+            except (TypeError, ValueError):
+                return None
+            return value if value > 0 else None
+        path = inputs.get("input_path")
+        if path and Path(str(path)).is_file():
+            from tools.analysis.audio_probe import probe_duration
+
+            duration = probe_duration(path)
+            if duration and duration > 0:
+                return duration
+        return None
+
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
-        # Duration is unknown until the audio is transcribed; return the actual
-        # cost by passing duration_seconds, else 0.0 as a pre-call estimate.
-        seconds = inputs.get("duration_seconds", 0) or 0
-        return round((seconds / 3600.0) * self.COST_PER_AUDIO_HOUR, 4)
+        # Exact per-audio-hour pricing from an explicit duration_seconds or a
+        # local ffprobe of input_path. 0.0 only when neither is available --
+        # in which case max_cost_usd() returns None and the gate refuses the
+        # call, so the zero can never be mistaken for "free". Raw positive
+        # value, deliberately unrounded: the budget ledger's central ceiling
+        # quantization is the only monetary rounding, so a sub-second clip
+        # can never present itself as free.
+        seconds = self._local_duration_seconds(inputs) or 0
+        return (seconds / 3600.0) * self.COST_PER_AUDIO_HOUR
+
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Upper bound on a single call's spend, derived without any dispatch.
+
+        Requests execute() is guaranteed to refuse locally -- credentials
+        missing, or no duration given and no such file -- bill nothing and
+        return 0.0. Otherwise the bound is the exact per-audio-hour price for
+        the locally determined duration (explicit input or local ffprobe).
+        A file that exists but whose duration cannot be probed returns None:
+        fail closed rather than guess or silently zero.
+        """
+        seconds = self._local_duration_seconds(inputs)
+        if seconds is not None:
+            # Raw float, matching estimate_cost(); centrally quantized later.
+            return (seconds / 3600.0) * self.COST_PER_AUDIO_HOUR
+        # Duration unknown. Requests execute() is guaranteed to refuse
+        # locally bill nothing; anything else is unboundable.
+        if self.get_status() != ToolStatus.AVAILABLE:
+            return 0.0  # execute() refuses (credentials) before any dispatch
+        path = inputs.get("input_path")
+        if not path or not Path(str(path)).is_file():
+            return 0.0  # execute() refuses the missing file before any dispatch
+        return None  # file exists but duration is unprobeable: fail closed
 
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         # Fast Transcription is well under real-time; conservative default.

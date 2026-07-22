@@ -488,7 +488,8 @@ class TestVeoVideo:
             assert tool.get_status() == ToolStatus.AVAILABLE
 
     @patch("tools.video._shared.probe_output")
-    def test_duration_coercion(self, mock_probe):
+    def test_duration_coercion(self, mock_probe, budget_gate_isolated):
+        budget_gate_isolated.approve_tool("veo_video")
         tool = VeoVideo()
         mock_probe.return_value = {"width": 1920, "height": 1080, "duration": 8.0}
 
@@ -527,8 +528,9 @@ class TestVeoVideo:
     @patch("os.path.exists")
     @patch("requests.get")
     def test_operations_mapping(
-        self, mock_req_get, mock_exists, mock_img_open, mock_probe
+        self, mock_req_get, mock_exists, mock_img_open, mock_probe, budget_gate_isolated
     ):
+        budget_gate_isolated.approve_tool("veo_video")
         tool = VeoVideo()
         mock_probe.return_value = {"width": 1920, "height": 1080, "duration": 8.0}
         mock_exists.return_value = True
@@ -582,7 +584,8 @@ class TestVeoVideo:
             called_kwargs = mock_client.models.generate_videos.call_args[1]
             assert called_kwargs["image"] is not None
 
-    def test_vertex_ai_mode_rejection(self):
+    def test_vertex_ai_mode_rejection(self, budget_gate_isolated):
+        budget_gate_isolated.approve_tool("veo_video")
         tool = VeoVideo()
         mock_client = MagicMock()
         mock_client.vertexai = True
@@ -602,7 +605,8 @@ class TestVeoVideo:
             assert res.error is not None
             assert "only supported using the Gemini Developer API" in res.error
 
-    def test_missing_local_image_paths(self):
+    def test_missing_local_image_paths(self, budget_gate_isolated):
+        budget_gate_isolated.approve_tool("veo_video")
         tool = VeoVideo()
         with patch.dict(
             os.environ,
@@ -618,7 +622,8 @@ class TestVeoVideo:
             assert res.success is False
             assert "Local input image not found" in res.error
 
-    def test_missing_reference_image_paths(self):
+    def test_missing_reference_image_paths(self, budget_gate_isolated):
+        budget_gate_isolated.approve_tool("veo_video")
         tool = VeoVideo()
         with patch.dict(
             os.environ,

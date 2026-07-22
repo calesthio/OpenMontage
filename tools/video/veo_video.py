@@ -224,6 +224,50 @@ class VeoVideo(BaseTool):
 
         return (audio_per_second if generate_audio else base_per_second) * duration
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Worst-case upper bound on a single call's spend.
+
+        Resolves the backend exactly as estimate_cost() does. Two facts make
+        the bound differ from the estimate:
+
+        - auto_fix can COERCE the billed duration up to exactly 8 seconds
+          (never higher), so the bound prices max(requested, 8) seconds.
+        - On fal, audio billing (generate_audio defaults to True) is the
+          dearer per-second rate, and an unrecognized resolution string is
+          priced at the 4k top tier rather than assumed cheap.
+
+        execute() issues one billed generation per call on both backends (no
+        internal retry loop wraps the provider request).
+        """
+        backend = inputs.get("backend", "auto")
+        if backend == "auto":
+            if self._get_google_credentials_status():
+                backend = "google"
+            elif self._get_fal_api_key():
+                backend = "fal"
+            else:
+                backend = "google"
+
+        duration_text = str(inputs.get("duration", "8s")).lower().replace("s", "")
+        try:
+            duration = int(duration_text)
+        except ValueError:
+            duration = 8
+        billable_seconds = max(duration, 8)
+
+        if backend == "google":
+            return round(billable_seconds * 0.40, 4)
+
+        variant = str(inputs.get("model_variant", "veo3.1"))
+        resolution = str(inputs.get("resolution", "1080p")).lower()
+        if "fast" in variant:
+            per_second = 0.20  # fast tier with audio
+        elif resolution in ("720p", "1080p"):
+            per_second = 0.40  # standard tier with audio
+        else:
+            per_second = 0.60  # 4k -- and anything unrecognized prices here
+        return round(per_second * billable_seconds, 4)
+
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         """Estimate the expected runtime in seconds."""
         backend = inputs.get("backend", "auto")

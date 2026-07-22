@@ -167,17 +167,34 @@ class TestPhase2ErrorHandling:
         r = tool.execute({"input_path": "/nonexistent.mp4"})
         assert not r.success
 
-    def test_image_selector_no_provider(self):
-        tool = ImageSelector()
-        # Will fail if no API key or local model
-        r = tool.execute({"prompt": "test"})
-        # Either succeeds (provider available) or fails gracefully
-        assert isinstance(r, ToolResult)
+    def test_image_selector_no_provider(self, monkeypatch, budget_gate_isolated, tmp_path):
+        """With no provider configured the selector must fail locally --
+        graceful ToolResult, nothing dispatched, nothing reserved.
 
-    def test_diagram_gen_empty_boxes(self):
+        Providers are stubbed to none (rather than relying on which API keys
+        happen to be set on this machine) so environment credentials can
+        never turn this test into a real provider call.
+        """
+        tool = ImageSelector()
+        monkeypatch.setattr(ImageSelector, "_providers", lambda self: [])
+        r = tool.execute({"prompt": "test"})
+        assert isinstance(r, ToolResult)
+        assert r.success is False
+        # No provider was resolvable, so the budget gate saw a $0 request and
+        # the isolated ledger was never written.
+        import os
+        assert not Path(os.environ["OPENMONTAGE_COST_LOG"]).exists()
+
+    def test_diagram_gen_empty_boxes(self, tmp_path):
         tool = DiagramGen()
         if tool.get_status() == ToolStatus.AVAILABLE:
-            r = tool.execute({"diagram_type": "boxes", "boxes": []})
+            # Explicit output_path: without it the tool defaults to
+            # ./diagram.png and overwrites the tracked repo-root file.
+            r = tool.execute({
+                "diagram_type": "boxes",
+                "boxes": [],
+                "output_path": str(tmp_path / "empty_boxes.png"),
+            })
             assert isinstance(r, ToolResult)
 
 

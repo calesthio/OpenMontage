@@ -350,7 +350,21 @@ def write_checkpoint(
     error: Optional[str] = None,
     metadata: Optional[dict] = None,
 ) -> Path:
-    """Write a checkpoint file for a pipeline stage."""
+    """Write a checkpoint file for a pipeline stage.
+
+    ``pipeline_dir`` and ``project_id`` together determine where the
+    checkpoint lands: ``pipeline_dir / project_id / checkpoint_<stage>.json``.
+    ``pipeline_dir`` does not have to be pre-initialized via ``init_project()``
+    — this function will create ``pipeline_dir / project_id`` on demand if it
+    doesn't exist yet (this is relied on by tests that call ``write_checkpoint``
+    directly against a fresh temp directory). The common mistake is passing a
+    project's *own* directory as ``pipeline_dir`` when you meant its parent —
+    that computes an unintended, doubly-nested path
+    (``pipeline_dir / project_id / project_id / ...``) rather than raising,
+    since a missing marker file is indistinguishable from a legitimate
+    first-time bootstrap. Double-check the resulting path if a checkpoint
+    doesn't show up where you expected it.
+    """
     # Backfill a missing pipeline_type from the project marker so that
     # omitting the kwarg doesn't quietly bypass gate enforcement.
     if not pipeline_type:

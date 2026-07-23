@@ -24,6 +24,7 @@ When you add a new component, append it here and in `src/components/index.ts`.
 | `progress_bar` | `ProgressBar` | `progress` | `progressLabel`, `progressColor`, `progressSegments` | Animated progress |
 | `anime_scene` | `AnimeScene` | `images` (list) | `particles`, `lightingFrom`, `lightingTo`, `vignette` | Still-image anime scene with particles + camera motion |
 | **`terminal_scene`** | **`TerminalScene`** | **`steps`** (list of cmd/out/pause/pill) | **`terminalTitle`, `prompt`, `accentColor`** | **Synthetic terminal animation — NO real capture needed. See [`.agents/skills/synthetic-screen-recording/SKILL.md`](../.agents/skills/synthetic-screen-recording/SKILL.md)** |
+| **`clock`** | **`Clock`** | *(none)* | **`tickSound` (path), `tickVolume`, `secondsPerStep` (default 1), `startSecond`, `clockLabel`, `clockSize`, `accentColor`** | **Analog clock whose second hand steps once per `secondsPerStep`, with an optional tick sound locked to each step. Both the hand angle and the tick `<Audio>` derive from the same frame counter, so they are frame-accurately synced by construction. `durationSeconds` is passed automatically from the cut. Omit `tickSound` for a silent clock. Reference example of audio↔visual sync.** |
 | **`screenshot_scene`** | **`ScreenshotScene`** | **`backgroundImage`** (path in `public/`), **`screenshotSteps`** (list of overlays) | **`screenshotSize` (natural px w/h), `cursorStartAt`, `accentColor`** | **Approach-1 synthetic UI — drop any screenshot, animate scripted overlays on top (cursor, click_pulse, type_into, bubble_append, typing_dots, highlight_box, callout_balloon). Viewer-indistinguishable from a real recording for 15–30s focused demos. Coordinates are normalized (0–1) against the contain-fit rect. See [`.agents/skills/synthetic-ui-recording/SKILL.md`](../.agents/skills/synthetic-ui-recording/SKILL.md) (planned).** |
 
 ---
@@ -36,6 +37,17 @@ When you add a new component, append it here and in `src/components/index.ts`.
 | `stat_reveal` | `StatReveal` | `text` | `subtitle`, `accentColor`, `position` | Corner stat badge |
 | `hero_title` | `HeroTitle` (as overlay) | `text` | `subtitle` | Full-frame title overlay |
 | **`provider_chip`** | **`ProviderChip`** | **`providers`** (list of strings) | **`cycleSeconds`, `position`, `accentColor`, `label`** | **Rotating badge that cycles through provider names — used in AI-generated-motion scenes to show which model produced the clip** |
+
+---
+
+## Top-level composition props (not a cut/overlay type)
+
+| Prop | Default | Purpose |
+|---|---|---|
+| `captionWordsPerPage` | `6` | Word-level caption page size for `CaptionOverlay`. Pages are built by chunking the flat `captions` array sequentially and are **not** scene-boundary-aware — a page can straddle a cut boundary (e.g. last word of scene N grouped with first words of scene N+1) if the word-count math lines up wrong. Set `captionWordsPerPage: 1` for word-by-word/karaoke captions, which sidesteps the bleed entirely since a 1-word page can never span two scenes. |
+| `audio.narration` | — | `{ src, volume? }` — full narration track over the whole composition. |
+| `audio.music` | — | `{ src, volume?, offsetSeconds?, fadeInSeconds?, fadeOutSeconds?, loop? }` — one background music bed. For varied music, pre-mix multiple tracks into one file and pass it here. |
+| `audio.sfx` | `[]` | Array of one-shot sound-effect cues: `{ src, atSeconds, volume?, durationSeconds? }`. Each fires on the exact frame `atSeconds * fps`, so it's frame-locked to any visual driven by the same frame counter. Use for whooshes on transitions, clicks on reveals, impacts, ticks. Sources can be Freesound CC0 clips, `sfx_gen` (ElevenLabs), or `colab_sfx` (MMAudio/AudioGen) output. |
 
 ---
 

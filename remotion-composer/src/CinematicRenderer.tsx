@@ -14,6 +14,11 @@ import {
 } from "remotion";
 
 function resolveAsset(src: string): string {
+  // Bugfix (2026-06-30): guard against undefined/empty src. A soundtrack/music
+  // entry that is a truthy object without a `.src` (e.g. {source:"none"} from a
+  // music opt-out) previously crashed the entire render here via
+  // `undefined.startsWith`. Fail soft instead.
+  if (!src) return "";
   if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("data:")) {
     return src;
   }
@@ -483,7 +488,7 @@ export const CinematicRenderer: React.FC<CinematicRendererProps> = ({
   return (
     <AbsoluteFill style={{ backgroundColor: "#000000" }}>
       {/* Layer 1: Narration audio */}
-      {soundtrack ? (
+      {soundtrack?.src ? (
         <Soundtrack
           src={soundtrack.src}
           volume={soundtrack.volume ?? 1}
@@ -494,7 +499,7 @@ export const CinematicRenderer: React.FC<CinematicRendererProps> = ({
         />
       ) : null}
       {/* Layer 2: Music bed (separate track, ducked) */}
-      {music ? (
+      {music?.src ? (
         <Soundtrack
           src={music.src}
           volume={music.volume ?? 0.15}

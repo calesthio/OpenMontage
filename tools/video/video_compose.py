@@ -1700,15 +1700,71 @@ class VideoCompose(BaseTool):
         # Deep-copy props so we don't mutate the original
         props = json.loads(json.dumps(composition_data))
 
-        # Convert absolute file paths to file:// URIs for Remotion's
-        # Img and OffthreadVideo components
+        # Stage local asset files into the composer's public/ directory and
+        # reference them via staticFile-relative paths. Remotion's renderer only
+        # downloads http(s) URLs or files served from public/ — file:// URIs are
+        # rejected at render time — so local images, video, narration, and music
+        # must be copied under public/ for both cuts and audio layers to resolve.
+        import hashlib
+
+        composer_dir = Path(__file__).resolve().parent.parent.parent / "remotion-composer"
+        staged_dir = composer_dir / "public" / "_om_assets"
+
+        def _stage_asset(value: str) -> str:
+            if not value or value.startswith(("http://", "https://", "data:")):
+                return value
+            local = Path(value.replace("file://", "", 1)).expanduser()
+            if not local.exists():
+                return value
+            staged_dir.mkdir(parents=True, exist_ok=True)
+            digest = hashlib.md5(str(local.resolve()).encode()).hexdigest()[:12]
+            dest_name = f"{digest}{local.suffix}"
+            dest = staged_dir / dest_name
+            if not dest.exists():
+                shutil.copy2(local, dest)
+            return f"_om_assets/{dest_name}"  # resolved by staticFile() in the composer
+
         for cut in props.get("cuts", []):
-            source = cut.get("source", "")
-            if source and not source.startswith(("http://", "https://", "file://")):
-                resolved = Path(source).resolve()
-                if resolved.exists():
-                    posix = resolved.as_posix()
-                    cut["source"] = f"file:///{posix}" if not posix.startswith("/") else f"file://{posix}"
+            cut["source"] = _stage_asset(cut.get("source", ""))
+
+        audio = props.get("audio")
+        if isinstance(audio, dict):
+            for layer in ("narration", "music"):
+                entry = audio.get(layer)
+                if isinstance(entry, dict) and entry.get("src"):
+                    entry["src"] = _stage_asset(entry["src"])
+
+        # Bugfix (2026-06-30): map cuts -> scenes for the CinematicRenderer.
+        # The CinematicRenderer composition (renderer_family documentary-montage /
+        # cinematic-trailer) consumes a `scenes` array (id/kind/src/startSeconds/
+        # durationSeconds). edit_decisions only carry `cuts`, and nothing here was
+        # translating them, so the composition fell back to its empty default
+        # scenes and rendered a black video (the "local rendering broken" symptom).
+        # Build video scenes from the already-staged cuts when none are present.
+        _rf = (composition_data or {}).get("renderer_family", "explainer-data")
+        if self._get_composition_id(_rf) == "CinematicRenderer" and not props.get("scenes"):
+            _scenes: list[dict[str, Any]] = []
+            _t = 0.0
+            for _c in props.get("cuts", []):
+                try:
+                    _dur = float(_c.get("out_seconds", 0)) - float(_c.get("in_seconds", 0))
+                except (TypeError, ValueError):
+                    _dur = 0.0
+                if _dur <= 0:
+                    _dur = float(_c.get("duration_seconds", 0) or 0)
+                _src = _c.get("source", "")
+                if _dur <= 0 or not _src:
+                    continue
+                _scenes.append({
+                    "id": _c.get("id", f"sc{len(_scenes)}"),
+                    "kind": "video",
+                    "src": _src,  # already staged to _om_assets/ above
+                    "startSeconds": round(_t, 3),
+                    "durationSeconds": round(_dur, 3),
+                })
+                _t += _dur
+            if _scenes:
+                props["scenes"] = _scenes
 
         # Build a custom themeConfig from the playbook's actual colors.
         # This ensures every video gets a unique visual identity derived

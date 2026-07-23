@@ -1,6 +1,6 @@
 # Image Generation Usage for OpenMontage
 
-> Sources: OpenAI DALL-E 3 documentation, FLUX/BFL API documentation, existing Layer 3 skills
+> Sources: OpenAI GPT Image documentation, FLUX/BFL API documentation, existing Layer 3 skills
 > at `.agents/skills/flux-best-practices/` and `.agents/skills/bfl-api/`
 
 ## Quick Reference Card
@@ -150,7 +150,7 @@ optimized for image/video generation providers.
 ## Common Pitfalls
 
 1. **Text in images** — AI image generators are unreliable with text. Never include text in prompts; add text as overlays in the compose stage
-2. **Hands and fingers** — DALL-E 3 and FLUX still struggle. Avoid prompts requiring detailed hand poses
+2. **Hands and fingers** — AI image models still struggle. Avoid prompts requiring detailed hand poses
 3. **Inconsistent characters** — Without reference images, the same character will look different each time. Always use the hero reference strategy
 4. **Over-prompting** — Long, complex prompts produce unpredictable results. Keep to 2-3 sentences
 5. **Over-unifying prompts** — Forcing the exact same style phrase into every prompt makes scenes look samey. Keep the visual system consistent, but let each scene express its own subject, shot, and emotional beat.

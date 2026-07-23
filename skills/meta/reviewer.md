@@ -59,6 +59,17 @@ If a style playbook is active, verify:
 
 Each violation is a **suggestion** severity finding.
 
+### Step 4b: Taste Direction Review
+
+If `proposal_packet.production_plan.taste_profile` or the active playbook's `taste_profile` exists, verify:
+- [ ] `design_read` explains the brief, audience, and delivery promise; it is not just "modern/clean/professional"
+- [ ] `visual_variance`, `motion_intensity`, and `information_density` are reflected in scene layout, pacing, callout density, and asset prompts
+- [ ] `reference_strategy` is present when atelier work, AI image/video, product/brand visuals, or mood boards depend on visual nuance
+- [ ] Listed `anti_patterns` are actually avoided
+- [ ] Quality gates are concrete enough for the next stage to enforce
+
+At proposal stage, a missing `taste_profile` is a **suggestion** for preset/low-stakes work and a **critical** finding for atelier, product/brand, launch, hero, or custom-playbook work. At scene_plan/edit/compose, treat dial violations as **suggestion** unless they break the approved delivery promise.
+
 ### Step 5: Evaluate Success Criteria
 
 For each `success_criteria` item from the manifest:
@@ -305,3 +316,39 @@ Run at **compose** and **publish** stages. Ensures the agent reviewed the actual
 1. Verify that `final_review` was passed through as a required artifact
 2. If `final_review.status` is not `pass`: **CRITICAL** — "Cannot publish with a non-passing self-review"
 3. If `final_review.issues_found` is non-empty and `recommended_action` is not `present_to_user`: **SUGGESTION** — "Self-review found issues; verify they were resolved before publishing"
+
+## Composition Authoring Mode Review
+
+The templated→atelier inversion (`AGENT_GUIDE.md` → "Composition Authoring Mode" + `skills/meta/bespoke-composition.md`) is governance, not a suggestion. The reviewer is the enforcement point: without these checks, the next agent quietly defaults back to the stock cut-schema and every video starts looking the same again.
+
+### At proposal stage:
+1. `decision_log` must contain a `composition_mode` decision with `options_considered: ["templated","atelier"]` and a `selected` value with a real reason tied to the brief.
+   - Missing `composition_mode` decision entirely: **CRITICAL** — "Proposal missing composition_mode choice. Atelier vs templated is a mandatory presented decision (see AGENT_GUIDE.md → Composition Authoring Mode)."
+   - Decision logged with only one option considered: **CRITICAL** — "composition_mode decision logged without presenting both templated and atelier alternatives."
+2. For **hero work** (brief tagged marketing / launch / brand piece / explainer-with-quality-bar / any single-deliverable where quality is the point) where `selected == "templated"`: **CRITICAL** — "Hero brief locked composition_mode='templated'. Default is atelier per doctrine; templated requires an explicit reason in `decision_log.<entry>.reason` (e.g. localization variant, batch, time-boxed draft)." Only suppress if the reason field names a sanctioned exception.
+3. If `composition_mode == "atelier"` and `proposal_packet` lacks an `art_direction` declaration (palette, type, motion, signature device): **CRITICAL** — "Atelier proposal missing art-direction commitment. Per `skills/meta/bespoke-composition.md` step 1, art direction must be written down *before* authoring scenes."
+
+### At scene_plan / edit stage (when composition_mode == "atelier"):
+1. `edit_decisions.composition_mode` must equal `"atelier"` and `edit_decisions.bespoke.{entry, composition_id, art_direction}` must all be set.
+   - Missing any of `entry`/`composition_id`: **CRITICAL** — "Atelier compose contract incomplete; render will be rejected by `_render_via_atelier`."
+   - Missing `art_direction`: **CRITICAL** — "Atelier without an art-direction declaration; reviewer cannot evaluate distinctness."
+2. Any presence of stock `cut.type` scene-types (`text_card`, `stat_card`, `bar_chart`, `kpi_grid`, `callout`, `comparison`, `hero_title`, `terminal_scene`, `anime_scene`, `progress_bar`, `pie_chart`, `line_chart`) in `edit_decisions.cuts`: **CRITICAL** — "Atelier piece reaches for stock cut.type {name}. Hand-author the scene; the stock registry is a mechanics codex, not a parts bin (`skills/meta/bespoke-composition.md`)."
+
+### At compose stage (when composition_mode == "atelier"):
+1. The compose stage's `final_review.checks.atelier` block must exist. If absent: **CRITICAL** — "Atelier render skipped doctrine checks — `_render_via_atelier` returned without `atelier` checks; investigate tool wiring."
+2. If `final_review.checks.atelier.stock_reuse_detected == true`: **CRITICAL** — "Stock-registry import inside bespoke project ({offending_imports[0].file} → {offending_imports[0].import}). Hand-author the scene; do not import from the stock src/."
+3. If `final_review.checks.atelier.art_direction_declared == false`: **CRITICAL** — "Atelier render with no art-direction declaration. Set `edit_decisions.bespoke.art_direction` before re-render."
+4. **Scene distinctness — no hero-component spine (mandatory record).** Sample one representative frame per scene (e.g. mid-window of each `props.sections[i]`) and answer in the review record:
+   - *Does each scene have a distinct primary visual subject?* If two or more scenes share their primary visual (same hero element merely re-captioned — the candle that never leaves, the browser frame on every beat, the score ring as scaffolding): **CRITICAL** — "Hero-component spine detected: scenes {ids} share their primary visual subject. Per `skills/meta/bespoke-composition.md` step 1.5, each scene must earn its own composition; the signature device belongs to one climactic beat, not as scaffolding. Re-plan the affected scenes."
+   - *Is the signature device named in `art_direction` actually present in at least one beat?* (no ⇒ CRITICAL, re-author or update the declaration to match what was actually built)
+   - *Is the signature device present in **most** beats?* (yes ⇒ CRITICAL — see hero-component-spine above; signature is meant to be scarce)
+   This check cannot be skipped silently; absence of a recorded scene-by-scene inventory is itself **CRITICAL** ("scene_distinctness inventory not recorded").
+5. **Captions / on-screen text dedup (mandatory check).** Compare the active caption text to any on-screen text rendered in the same time window:
+   - If they are the same content (caption echoes the scene's title/headline that the narration is already reading aloud): **CRITICAL** — "Caption duplicates on-screen text at {t}s ('{text}'). Decide once per piece whether captions add meaning (numbers, names, translations) or are accessibility subtitles; do not do both for the same line. Either clear `captions=[]` for these scenes or remove the redundant on-screen SerifLine."
+6. **Distinctness review (human-judged, mandatory).** Before approving the render, the reviewer must explicitly answer in the review record:
+   - *"Could this video be any other product's video?"* (yes ⇒ CRITICAL, re-author art direction)
+   - *"Does its visual language reuse a look from a prior piece I've made?"* (yes ⇒ CRITICAL, re-author)
+   Distinctness is taste-call territory the tool can't automate; reviewer absence on this question is itself a **CRITICAL** finding ("distinctness review not recorded").
+
+### At publish stage (when composition_mode == "atelier"):
+1. All six atelier compose-stage checks above (existence of `atelier` block, stock_reuse, art_direction_declared, scene_distinctness, captions/text dedup, human distinctness review) must show `resolved` in the review record. Any unresolved: **CRITICAL** — "Cannot publish atelier piece with unresolved doctrine or distinctness findings."

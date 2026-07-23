@@ -1,0 +1,51 @@
+# Normalize line endings across platforms.
+#
+# Default: treat every file as text, auto-detect, and store/check out with LF.
+# This keeps Windows, macOS, and Linux checkouts byte-consistent and prevents
+# CRLF drift from producing noisy whole-file diffs.
+* text=auto eol=lf
+
+# --- Source code -----------------------------------------------------------
+*.py    text eol=lf
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.js    text eol=lf
+*.jsx   text eol=lf
+*.mjs   text eol=lf
+*.json  text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
+*.toml  text eol=lf
+*.md    text eol=lf
+*.mdc   text eol=lf
+*.txt   text eol=lf
+*.cfg   text eol=lf
+*.ini   text eol=lf
+
+# --- Newline-sensitive files (must stay LF) --------------------------------
+# A shell script checked out with CRLF has a broken shebang and will not run.
+*.sh        text eol=lf
+Makefile    text eol=lf
+.env.example text eol=lf
+
+# Windows batch files, if ever added, must keep CRLF.
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+
+# --- Binary assets (never normalize or diff) -------------------------------
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.ico   binary
+*.mp4   binary
+*.mov   binary
+*.webm  binary
+*.mp3   binary
+*.wav   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.pdf   binary

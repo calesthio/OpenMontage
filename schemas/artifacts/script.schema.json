@@ -9,6 +9,28 @@
     "version": { "type": "string", "const": "1.0" },
     "title": { "type": "string" },
     "total_duration_seconds": { "type": "number", "minimum": 1 },
+    "voice_performance": {
+      "type": "object",
+      "description": "Narration delivery contract used by TTS asset generation.",
+      "properties": {
+        "performance_intent": { "type": "string" },
+        "pacing_profile": {
+          "type": "string",
+          "enum": ["contemplative", "conversational", "energetic", "technical", "cinematic", "custom"]
+        },
+        "energy_curve": { "type": "string" },
+        "pause_policy": { "type": "string" },
+        "sample_section_id": {
+          "type": "string",
+          "description": "Most performance-sensitive section to use for TTS sample approval."
+        },
+        "provider_notes": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
     "sections": {
       "type": "array",
       "items": {
@@ -21,6 +43,29 @@
           "start_seconds": { "type": "number", "minimum": 0 },
           "end_seconds": { "type": "number", "minimum": 0 },
           "speaker_directions": { "type": "string" },
+          "delivery_cues": {
+            "type": "object",
+            "description": "Structured voice-performance cues that TTS generation must apply.",
+            "properties": {
+              "pace": {
+                "type": "string",
+                "enum": ["slow", "measured", "conversational", "brisk", "fast", "custom"]
+              },
+              "energy": { "type": "string" },
+              "emphasis_words": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "pause_before_seconds": { "type": "number", "minimum": 0 },
+              "pause_after_seconds": { "type": "number", "minimum": 0 },
+              "delivery_note": { "type": "string" },
+              "provider_text": {
+                "type": "string",
+                "description": "Provider-ready narration text, including purposeful punctuation or SSML break tags when supported."
+              }
+            },
+            "additionalProperties": false
+          },
           "enhancement_cues": {
             "type": "array",
             "items": {

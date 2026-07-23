@@ -48,3 +48,12 @@ Recommended metadata keys:
 - Hiding which output is the hero cut.
 - Packaging a source-led project like a generic generated asset.
 - Losing platform-specific copy and labeling across variants.
+
+---
+
+## Gate Reminder (Binding)
+
+This stage gates on human approval (`human_approval_default: true`). After review passes:
+checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
+the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
+Approval is per-gate — an earlier "go ahead" does not cover this gate.

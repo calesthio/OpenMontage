@@ -8,15 +8,18 @@
     "upgrade": "npx remotion upgrade"
   },
   "dependencies": {
-    "@remotion/captions": "^4.0.441",
-    "@remotion/cli": "^4.0.441",
-    "@remotion/google-fonts": "^4.0.441",
-    "@remotion/media": "^4.0.441",
-    "@remotion/player": "^4.0.441",
-    "@remotion/transitions": "^4.0.441",
+    "@remotion/captions": "^4.0.484",
+    "@remotion/cli": "^4.0.484",
+    "@remotion/google-fonts": "^4.0.484",
+    "@remotion/media": "^4.0.484",
+    "@remotion/player": "^4.0.484",
+    "@remotion/transitions": "^4.0.484",
+    "d3-geo": "^3.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "remotion": "^4.0.441"
+    "remotion": "^4.0.484",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",

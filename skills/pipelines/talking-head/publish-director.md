@@ -50,3 +50,12 @@ Document the publish event with platform, status (draft), and export path.
 ### Step 6: Submit
 
 Validate the publish_log against the schema and persist via checkpoint.
+
+---
+
+## Gate Reminder (Binding)
+
+This stage gates on human approval (`human_approval_default: true`). After review passes:
+checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
+the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
+Approval is per-gate — an earlier "go ahead" does not cover this gate.

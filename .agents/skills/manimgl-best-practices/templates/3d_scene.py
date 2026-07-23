@@ -254,5 +254,5 @@ class LightingTemplate(Scene):
 
 
 if __name__ == "__main__":
-    import os
-    os.system(f"manimgl {__file__} ThreeDSceneTemplate")
+    import subprocess
+    subprocess.run(["manimgl", __file__, "ThreeDSceneTemplate"])

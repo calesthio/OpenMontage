@@ -79,7 +79,7 @@ Transform each script section into 1-3 visual scenes. Each scene is a distinct v
 | `text_card` | Statements, closing messages, key terms | Remotion TextCard (centered, spring animation) | 3-5s |
 | `animation` | Concepts needing motion (data flow, math) | Remotion, Manim | 4-10s |
 | `diagram` | Processes, architecture, relationships | `diagram_gen` (Mermaid), `image_selector` | 4-8s |
-| `generated` | Illustrations, metaphors, real-world imagery | `image_selector` (FLUX/DALL-E) | 3-6s |
+| `generated` | Illustrations, metaphors, real-world imagery | `image_selector` (FLUX/GPT Image) | 3-6s |
 | `talking_head` | AI avatar speaking (if HeyGen available) | HeyGen tools | 5-15s |
 | `broll` | Context, real-world examples | Stock or generated footage | 3-6s |
 | `screen_recording` | Code demos, UI walkthroughs | Recorded or simulated | 5-15s |
@@ -206,7 +206,7 @@ The style playbook constrains your visual choices:
 **Feasibility check:**
 - [ ] Every `required_asset` with `source: "generate"` is achievable with available tools
 - [ ] Diagram descriptions are specific enough for Mermaid syntax generation
-- [ ] Image descriptions are specific enough for FLUX/DALL-E prompt engineering
+- [ ] Image descriptions are specific enough for FLUX/GPT Image prompt engineering
 - [ ] No scene requires tools that aren't in the tool registry
 
 ### Step 7: Self-Evaluate
@@ -238,3 +238,12 @@ Call `handle_explainer_scene_plan(state, {"scene_plan": scene_plan_json})` to va
 - **Preset thinking**: A scene plan that says "make it flat-motion-graphics" is not enough. The planner must specify what makes THIS video's motion graphics feel distinct.
 - **Static scenes for dynamic concepts**: If the narrator describes a process or transformation, the visual should move. Use animation or progressive reveal, not a static image.
 - **Using `generated` type for CTA/closing screens with exact text**: AI image models hallucinate text — wrong business names, misspelled words, wrong phone numbers. Any scene with verbatim text (CTA, business info, contact details, legal) MUST be `type: "text_card"` so Remotion renders the text exactly. Never plan a `generated` image for a scene where text accuracy matters.
+
+---
+
+## Gate Reminder (Binding)
+
+This stage gates on human approval (`human_approval_default: true`). After review passes:
+checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
+the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
+Approval is per-gate — an earlier "go ahead" does not cover this gate.

@@ -33,7 +33,24 @@
           "generation_summary": { "type": "string", "description": "Brief summary of how the asset was generated or sourced" },
           "provider": { "type": "string", "description": "Provider name (e.g. pixabay, google_imagen)" },
           "license": { "type": "string", "description": "License type (e.g. Pixabay License, CC0)" },
-          "original_url": { "type": "string", "description": "Source URL if downloaded from a stock service" }
+          "original_url": { "type": "string", "description": "Source URL if downloaded from a stock service" },
+          "voice_performance": {
+            "type": "object",
+            "description": "Applied voice-performance contract for narration assets.",
+            "properties": {
+              "source_section_id": { "type": "string" },
+              "delivery_cues_applied": { "type": "boolean" },
+              "provider_text_used": { "type": "boolean" },
+              "provider_settings": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "sample_approved": { "type": "boolean" },
+              "sample_path": { "type": "string" },
+              "review_notes": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
         },
         "additionalProperties": false
       }

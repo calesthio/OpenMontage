@@ -133,3 +133,12 @@ Before checkpointing, verify:
 - Choosing `9:16` for a dense desktop capture just because the user asked for Shorts.
 - Writing a concept-heavy brief when the user really needs task completion.
 - Failing to note silence; if there is no voiceover, downstream stages must know immediately.
+
+---
+
+## Gate Reminder (Binding)
+
+This stage gates on human approval (`human_approval_default: true`). After review passes:
+checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
+the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
+Approval is per-gate — an earlier "go ahead" does not cover this gate.

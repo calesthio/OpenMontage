@@ -14,6 +14,7 @@ The script is the backbone of the video. Every visual, every scene, every audio 
 | Prior artifact | `proposal_packet` | Selected concept with title, hook, key_points, core_message, tone, narrative_structure, duration |
 | Prior artifact | `research_brief` (optional but high-value) | Data points, audience insights, expert quotes — ground the script in real facts |
 | Playbook | Active style playbook from `proposal_packet.selected_concept.suggested_playbook` | Voice style, pacing rules |
+| Meta skill | `skills/meta/voice-performance-director.md` | Structured TTS delivery cues for natural, expressive narration |
 | Layer 3 | TTS provider skills (check `agent_skills` on the selected TTS tool) | TTS capabilities for speaker directions |
 
 ## Process
@@ -77,6 +78,11 @@ Map each of the brief's `key_points` to a specific section in the BUILD phase.
 
 ### Step 4: Write the Script
 
+Before writing sections, create a top-level `voice_performance` plan using
+`skills/meta/voice-performance-director.md`. The plan must describe the vocal
+intent, pacing profile, energy curve, pause policy, and which section should be
+used for TTS sample approval. Do not leave this as a vague "natural voice" note.
+
 Write each section with these fields:
 
 ```json
@@ -87,6 +93,14 @@ Write each section with these fields:
   "start_seconds": 0,
   "end_seconds": 5,
   "speaker_directions": "Emphasize 'every single row' with measured pacing. Brief pause before the question.",
+  "delivery_cues": {
+    "pace": "measured",
+    "energy": "curious",
+    "emphasis_words": ["every", "single"],
+    "pause_after_seconds": 0.6,
+    "delivery_note": "Let the repetition feel intentional, then soften into the question.",
+    "provider_text": "Your database searches every single row. Every. Single. One. <break time=\"0.6s\"/> What if it didn't have to?"
+  },
   "enhancement_cues": [
     {
       "type": "animation",
@@ -117,7 +131,8 @@ Count your words. If you're 20%+ over budget, the TTS will either rush or exceed
 
 #### Speaker Directions
 
-Write directions that TTS can actually implement. Reference ElevenLabs capabilities:
+Write directions that TTS can actually implement. Prefer structured
+`delivery_cues` over prose-only `speaker_directions`:
 
 | Direction | TTS Implementation |
 |-----------|-------------------|
@@ -128,6 +143,12 @@ Write directions that TTS can actually implement. Reference ElevenLabs capabilit
 | "Emphasize THIS word" | Note for post-processing or SSML emphasis |
 
 Avoid directions TTS can't do: "smile while speaking", "gesture toward screen", "look at camera."
+
+**Expressive narration rule:** every narration-led section must include at
+least two concrete cues among `pace`, `energy`, `emphasis_words`,
+`pause_before_seconds`, `pause_after_seconds`, `delivery_note`, or
+`provider_text`. Use `provider_text` when punctuation or SSML break tags are
+needed to make the read sound human.
 
 #### Enhancement Cues
 
@@ -162,6 +183,7 @@ Read the active style playbook and verify:
 |----------------|---------------|
 | `identity.pace` | Match word density. `contemplative` = fewer words, longer pauses |
 | `audio.voice_style` | Shape tone of speaker directions |
+| `voice_performance` | Confirm pacing, pauses, and energy curve are explicit enough for TTS |
 | `motion.pacing_rules` | E.g., "hold establishing shots for 2s minimum" affects section timing |
 | `identity.mood` | Word choice: `warm` uses casual language; `professional` uses precise language |
 
@@ -175,6 +197,7 @@ Score your script (1-5):
 | **Word count accuracy** | Within ±10% of target for the duration? |
 | **Narrative flow** | Does each section build on the last? "Therefore/but" not "and then"? |
 | **Enhancement density** | At least one cue every 8-10 seconds? |
+| **Voice performance** | Are pauses, emphasis, pace, and sample section explicit? |
 | **Jargon management** | Technical terms explained or have pronunciation guides? |
 | **Climax payoff** | Does the aha moment deliver on the hook's promise? |
 | **CTA relevance** | Is the call to action specific and actionable? |
@@ -232,3 +255,12 @@ add the source. Do not invent statistics, dates, or attributions.
   ]
 }
 ```
+
+---
+
+## Gate Reminder (Binding)
+
+This stage gates on human approval (`human_approval_default: true`). After review passes:
+checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
+the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
+Approval is per-gate — an earlier "go ahead" does not cover this gate.

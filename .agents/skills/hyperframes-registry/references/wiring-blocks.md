@@ -58,34 +58,4 @@ To position a block in a specific area of the screen, add CSS:
 
 ## Multiple blocks
 
-Include multiple blocks sequentially or overlapping:
-
-```html
-<div
-  data-composition-id="data-chart"
-  data-composition-src="compositions/data-chart.html"
-  data-start="0"
-  data-duration="15"
-  data-track-index="1"
-  data-width="1920"
-  data-height="1080"
-></div>
-<div
-  data-composition-id="flowchart"
-  data-composition-src="compositions/flowchart.html"
-  data-start="15"
-  data-duration="12"
-  data-track-index="1"
-  data-width="1920"
-  data-height="1080"
-></div>
-<div
-  data-composition-id="logo-outro"
-  data-composition-src="compositions/logo-outro.html"
-  data-start="27"
-  data-duration="6"
-  data-track-index="1"
-  data-width="1920"
-  data-height="1080"
-></div>
-```
+Add additional `<div data-composition-src="...">` siblings with non-overlapping or overlapping `data-start` values — each block's timeline is independent and seeked in sync by the runtime.

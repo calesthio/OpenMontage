@@ -7,17 +7,32 @@
 <p align="center"><strong>The first open-source, agentic video production system.</strong></p>
 
 <p align="center">
+  <a href="https://openmontage.video"><img src="https://img.shields.io/badge/Website-openmontage.video-d14a28?style=for-the-badge" alt="openmontage.video"></a>
+</p>
+
+<p align="center">
   <a href="#start-from-a-video-you-already-love">Paste A Video</a> &nbsp;·&nbsp;
   <a href="#quick-start">Quick Start</a> &nbsp;·&nbsp;
   <a href="#try-these-prompts">Try These Prompts</a> &nbsp;·&nbsp;
   <a href="#pipelines">Pipelines</a> &nbsp;·&nbsp;
   <a href="#how-it-works">How It Works</a> &nbsp;·&nbsp;
+  <a href="#sponsors">Sponsors</a> &nbsp;·&nbsp;
   <a href="docs/PROVIDERS.md">Providers</a> &nbsp;·&nbsp;
+  <a href="docs/PR_REVIEW_GUIDE.md">Review Guide</a> &nbsp;·&nbsp;
   <a href="AGENT_GUIDE.md">Agent Guide</a>
 </p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPLv3-blue.svg" alt="License"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/trending">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset=".github/assets/repo-of-the-day-dark.svg">
+      <img alt="🏆 #1 Repository of the Day on GitHub Trending" src=".github/assets/repo-of-the-day-light.svg" height="60">
+    </picture>
+  </a>
 </p>
 
 <p align="center"><strong>Follow The Build</strong></p>
@@ -27,6 +42,26 @@
   <a href="https://x.com/calesthioailabs"><img src="https://img.shields.io/badge/X-%40calesthioailabs-111111?style=for-the-badge&logo=x&logoColor=white" alt="X"></a>
   <a href="https://github.com/calesthio/OpenMontage/discussions"><img src="https://img.shields.io/badge/Community-GitHub%20Discussions-0b1220?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Discussions"></a>
 </p>
+
+## Sponsors
+
+> Want to support OpenMontage? [Sponsor the project](https://github.com/sponsors/calesthio).
+
+<details open>
+<summary>Click to collapse</summary>
+
+<table>
+<tr>
+<td width="180" align="center"><a href="https://bloome.im/app?ref=calesthio&utm_medium=github&utm_source=calesthio-OpenMontage-ivor-202607"><img src="assets/sponsors/bloome.png" alt="Bloome" width="150"></a></td>
+<td><strong>Bloome</strong> lets multiple AI agents (Claude, ChatGPT, DeepSeek, and more) collaborate in one conversation for agentic video pipelines. It has zero setup, runs in the cloud, works on web and mobile, and lets you share a configured agent with your whole team. <strong><a href="https://bloome.im/app?ref=calesthio&utm_medium=github&utm_source=calesthio-OpenMontage-ivor-202607">Try Bloome</a></strong>.</td>
+</tr>
+<tr>
+<td width="180" align="center"><a href="https://www.atlascloud.ai/coding-plan"><img src="assets/sponsors/atlas-cloud.png" alt="Atlas Cloud" width="150"></a></td>
+<td><strong>Atlas Cloud</strong> is a full-modal AI inference platform that gives developers a single AI API for video generation, image generation, and LLM APIs. Instead of managing multiple vendor integrations, you connect once and get unified access to 300+ curated models across all modalities. Check out Atlas Cloud's new <a href="https://www.atlascloud.ai/coding-plan">coding plan</a> promotion for more budget-friendly API access.</td>
+</tr>
+</table>
+
+</details>
 
 ---
 
@@ -47,6 +82,12 @@ Turn your AI coding assistant into a full video production studio. Describe what
 > **"THE LAST BANANA"** — a 60-second Pixar-style animated short about a lonely banana who finds friendship with a kiwi. 6 Kling v3-generated motion clips (via fal.ai), Google Chirp3-HD narration, royalty-free piano music, TikTok-style word-level captions, and Remotion composition. Total cost: **$1.33**.
 
 <div align="center">
+  <video src="https://github.com/user-attachments/assets/e03b5d1f-1199-4093-9f31-a43aa9da2c68" width="100%" controls></video>
+</div>
+
+> **"The Library at Alexandria"** — a 70-second history elegy on what humanity lost in a single night. Five hand-authored scenes — an illuminated manuscript page, cascading scroll-tags, a Burning Counter ticking 700,000 → 0 inside a candle's flame, a charred vellum fragment with surviving Greek, and an empty void — set to OpenAI 'ash' narration and a free Pixabay strings score. Total cost: **$0.02**. Built through OpenMontage's atelier (bespoke) composition mode — every scene crafted from scratch, no shared components.
+
+<div align="center">
   <video src="https://github.com/user-attachments/assets/8a6d2cc3-7ad2-46f5-922f-a8e3e5848d9f" width="100%" controls></video>
 </div>
 
@@ -63,12 +104,6 @@ Turn your AI coding assistant into a full video production studio. Describe what
 </div>
 
 > **"Mori no Seishin"** — a Ghibli-style anime animation of a forest spirit's journey through ancient woods. 12 FLUX-generated images with parallax crossfade, drift and pan camera motion, firefly and petal particles, cinematic vignette lighting, and ambient forest soundtrack. Total cost: **$0.15**. Still images brought to life through Remotion's animation engine.
-
-<div align="center">
-  <video src="https://github.com/user-attachments/assets/9cf633d9-c264-4961-bfd0-b1db188654aa" width="100%" controls></video>
-</div>
-
-> **"Into the Abyss"** — a deep ocean exploration rendered in anime style. Bioluminescent gardens, coral cathedrals, and creatures of light — 12 FLUX-generated images with sparkle and mist particle overlays, light-ray effects, smooth camera motion, and ambient oceanic soundtrack. Total cost: **$0.15**. Zero video generation APIs needed.
 
 <p align="center">
   <a href="https://www.youtube.com/@OpenMontage?sub_confirmation=1"><strong>Subscribe to @OpenMontage on YouTube</strong></a> to see new videos as they ship — every video includes the full prompt, pipeline, tools used, and cost so you can reproduce it yourself.
@@ -98,6 +133,36 @@ What you get back is not "best guess prompt spaghetti." You get:
 - **What it will actually look like** with your currently available tools
 
 Works with **Claude Code, Cursor, Copilot, Windsurf, Codex** — any AI coding assistant that can read files and run code.
+
+---
+
+## Watch It Happen — The Backlot Living Storyboard
+
+Chat tells you what the agent *said*. **Backlot shows you what the production is actually doing** — a local board that fills itself in as the pipeline runs. Stages light up, the script lands as a screenplay page, scene cards shimmer while assets generate, and every provider decision and dollar spent is on the wall.
+
+When a production starts, the agent opens it for you automatically. No setup, no reporting — the board derives everything from the project files the pipeline already writes.
+
+<p align="center"><img src="docs/images/backlot/board-live.png" alt="Backlot live board — assets generating" width="920"></p>
+
+**The storyboard is now a real approval gate.** Asset generation pauses on a scene-by-scene contact sheet — takes, prompts, per-asset cost, quality scores — so you approve the visuals *before* the render, not after it's too late:
+
+<p align="center"><img src="docs/images/backlot/storyboard.png" alt="Backlot storyboard — filmstrip with takes and renders" width="920"></p>
+
+Creative gates hold until you answer. The board shows what's waiting and why; you reply in chat:
+
+<p align="center"><img src="docs/images/backlot/script-gate.png" alt="Backlot script gate — awaiting approval" width="920"></p>
+
+Every production on your machine, live-first, in the library:
+
+<p align="center"><img src="docs/images/backlot/library.png" alt="Backlot library" width="920"></p>
+
+```bash
+python -m backlot open                  # the library — every project on disk
+python -m backlot open <project-id>     # one production's live board
+python scripts/backlot_simulate_run.py  # no production yet? watch a simulated one live
+```
+
+And when a run is done, hit **▶ REPLAY RUN** — the whole production replays from its timestamps, scrubbable end to end. See [`backlot/README.md`](backlot/README.md) for how it works.
 
 ---
 
@@ -132,7 +197,9 @@ Or if you want the real-footage path:
 
 That's it. The agent researches your topic with live web search, generates AI images, writes and narrates the script with voice direction, finds royalty-free background music automatically, burns in word-level subtitles, and renders the final video. Before you see anything, the system runs a multi-point self-review — ffprobe validation, frame sampling, audio level analysis, delivery promise verification, and subtitle checks. Every provider selection is scored across 7 dimensions with an auditable decision log. Every creative decision gets your approval.
 
-> **No `make`?** Run manually: `pip install -r requirements.txt && cd remotion-composer && npm install && cd .. && pip install piper-tts && cp .env.example .env`
+> **No `make`?** macOS/Linux: `python3 -m venv .venv && source .venv/bin/activate && python -m pip install -r requirements.txt && cd remotion-composer && npm install && cd .. && python -m pip install piper-tts && cp .env.example .env`
+>
+> Windows PowerShell: `py -3 -m venv .venv; .\.venv\Scripts\Activate.ps1; python -m pip install -r requirements.txt; cd remotion-composer; npm install; cd ..; python -m pip install piper-tts; Copy-Item .env.example .env`
 >
 > **Windows:** If `npm install` fails with `ERR_INVALID_ARG_TYPE`, use `npx --yes npm install` instead.
 
@@ -160,6 +227,11 @@ This repo is built for agentic operation. If you're an OpenClaw-style agent, her
 
 # Image + video gateway:
 FAL_KEY=your-key               # FLUX images + Google Veo, Kling, MiniMax video + Recraft images
+ATLASCLOUD_API_KEY=your-key    # Atlas Cloud — Seedream/Nano Banana/GPT Image + Kling/Seedance/Hailuo video
+
+# Kling official direct API:
+KLING_API_KEY=your-key         # Official Kling video, image, TTS, avatar, lip sync
+KLING_API_BASE_URL=            # Optional; default Singapore API endpoint
 
 # Free stock media:
 PEXELS_API_KEY=your-key        # Free stock footage and images
@@ -171,7 +243,7 @@ SUNO_API_KEY=your-key          # Full songs, instrumentals, any genre
 
 # Voice & images:
 ELEVENLABS_API_KEY=your-key    # Premium TTS, AI music, sound effects
-OPENAI_API_KEY=your-key        # OpenAI TTS, DALL-E 3 images
+OPENAI_API_KEY=your-key        # OpenAI TTS, GPT Image 2 images
 XAI_API_KEY=your-key           # xAI Grok image edits/generation + Grok video generation
 GOOGLE_API_KEY=your-key        # Google Imagen images, Google TTS (700+ voices)
 
@@ -308,8 +380,8 @@ Most "free AI video" stacks quietly mean "animate still images." OpenMontage can
 Edit your own talking-head footage. Generate a fully animated explainer from scratch. Cut a 2-hour podcast into a dozen social clips. Translate and dub your content into 10 languages. Build a cinematic brand teaser from stock footage and AI-generated scenes. **If a production team can make it, OpenMontage can orchestrate it.**
 
 - **12 production pipelines** — explainers, talking heads, screen demos, cinematic trailers, animations, podcasts, localization, documentary montages, and more
-- **52 production tools** — spanning video generation, image creation, text-to-speech, music, audio mixing, subtitles, enhancement, and analysis
-- **400+ agent skills** — production skills, pipeline directors, creative techniques, quality checklists, and deep technology knowledge packs that teach the agent how to use every tool like an expert
+- **100+ production tools** — spanning video generation, image creation, text-to-speech, music, audio mixing, subtitles, enhancement, and analysis
+- **700+ agent skill and production-knowledge files** — pipeline directors, creative techniques, quality checklists, and deep technology knowledge packs that teach the agent how to use every tool like an expert
 - **Reference-driven creation** — paste a video you like and the agent turns it into a grounded, differentiated production plan instead of forcing you to invent the perfect prompt from scratch
 - **Real-footage documentary creation without paid video models** — build actual edited videos from free/open motion footage and archival sources, not just Ken Burns over images
 - **Live web research built in** — before writing a single word of script, the agent runs 15-25+ web searches across YouTube, Reddit, news sites, and academic sources to ground your video in real, current data
@@ -366,7 +438,7 @@ Final video output -- only if self-review passes
 
 ```
 OpenMontage/
-├── tools/              # 48 Python tools (the agent's hands)
+├── tools/              # 100+ Python tools (the agent's hands)
 │   ├── video/          # 13 video gen tools + compose, stitch, trim
 │   ├── audio/          # 4 TTS providers + Suno/ElevenLabs music, mixing, enhancement
 │   ├── graphics/       # 9 image/graphics generation tools + diagrams, code snippets, math
@@ -406,11 +478,12 @@ Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to
 > **Full setup guide with pricing and free tiers:** [`docs/PROVIDERS.md`](docs/PROVIDERS.md)
 
 <details>
-<summary><strong>Video Generation — 14 providers</strong></summary>
+<summary><strong>Video Generation — 15 providers</strong></summary>
 
 | Provider | Type | Notes |
 |----------|------|-------|
-| **Kling** | Cloud API | High quality, fast |
+| **Kling (fal.ai)** | Cloud API | High quality, fast via fal.ai gateway |
+| **Kling Official** | Cloud API | Official direct API with separate `kling_official` provider |
 | **Runway Gen-4** | Cloud API | Cinematic quality, Gen-3 Alpha Turbo / Gen-4 Turbo / Gen-4 Aleph |
 | **Google Veo 3** | Cloud API | Long-form, cinematic. Via fal.ai or HeyGen. |
 | **Grok Imagine Video** | Cloud API | Strong reference-image video and xAI-native short-form generation |
@@ -428,15 +501,16 @@ Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to
 </details>
 
 <details>
-<summary><strong>Image Generation — 10 tools/providers</strong></summary>
+<summary><strong>Image Generation — 11 tools/providers</strong></summary>
 
 | Provider | Type | Notes |
 |----------|------|-------|
 | **FLUX** | Cloud API | State-of-the-art quality |
 | **Google Imagen** | Cloud API | Imagen 4 — high-quality, multiple aspect ratios |
 | **Grok Imagine Image** | Cloud API | Strong image edits, style transfer, and multi-image compositing |
-| **DALL-E 3** | Cloud API | OpenAI's image model |
+| **GPT Image 2** | Cloud API | OpenAI's image model |
 | **Recraft** | Cloud API | Design-focused generation |
+| **Kling Official** | Cloud API | Official direct API for Kling image generation and reference workflows |
 | **Local Diffusion** | Local GPU | Stable Diffusion, free |
 | **Pexels** | Stock | Free stock images |
 | **Pixabay** | Stock | Free stock images |
@@ -446,12 +520,13 @@ Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to
 </details>
 
 <details>
-<summary><strong>Text-to-Speech — 4 providers</strong></summary>
+<summary><strong>Text-to-Speech — 5 providers</strong></summary>
 
 | Provider | Type | Notes |
 |----------|------|-------|
 | **ElevenLabs** | Cloud API | Premium voice quality |
 | **Google TTS** | Cloud API | 700+ voices, 50+ languages — best for localization |
+| **Kling Official TTS** | Cloud API | Official Kling narration when a `voice_id` is known |
 | **OpenAI TTS** | Cloud API | Fast, affordable |
 | **Piper** | Local | Completely free, offline |
 
@@ -504,6 +579,8 @@ Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to
 |------|-------------|
 | **Talking Head** | SadTalker / MuseTalk avatar animation |
 | **Lip Sync** | Wav2Lip audio-driven lip synchronization |
+| **Kling Avatar** | Official Kling cloud avatar presenter generation |
+| **Kling Lip Sync** | Official Kling cloud lip-sync with explicit face selection |
 
 **Composition & Rendering:**
 
@@ -556,6 +633,7 @@ OpenMontage treats video production like real engineering — with quality gates
 
 ### Quality Gates
 
+- **Human approval gates are enforced, not suggested** — proposal, script, scene plan, generated assets, and publish all pause for your sign-off. The checkpoint writer rejects a "completed" gated stage without recorded approval, and every superseded checkpoint is archived so the audit trail (including gate transitions) survives revisions. Review happens visually on the [Backlot board](#watch-it-happen--the-backlot-living-storyboard).
 - **Pre-compose validation** — blocks render if the delivery promise is violated (e.g. "motion-led" video with 80% still images), slideshow risk score is critical, or renderer family is missing. Catches broken plans before wasting GPU time.
 - **Post-render self-review** — after every render, the runtime runs ffprobe validation, extracts frames at 4 positions to check for black frames and broken overlays, analyzes audio levels for silence and clipping, verifies the delivery promise was honored, and checks subtitle presence. If the review fails, the video is not presented.
 - **Slideshow risk scoring** — 6-dimension analysis (repetition, decorative visuals, weak motion, shot intent, typography overreliance, unsupported cinematic claims) prevents "animated PowerPoint" outputs.
@@ -655,6 +733,18 @@ make test
 
 ---
 
+## Star History
+
+<a href="https://www.star-history.com/?repos=calesthio%2FOpenMontage&type=date&legend=top-left">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/image?repos=calesthio/OpenMontage&type=date&theme=dark&legend=top-left" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/image?repos=calesthio/OpenMontage&type=date&legend=top-left" />
+    <img alt="Star History Chart" src="https://api.star-history.com/image?repos=calesthio/OpenMontage&type=date&legend=top-left" />
+  </picture>
+</a>
+
+---
+
 ## License
 
 [GNU AGPLv3](LICENSE)
@@ -663,4 +753,6 @@ make test
 
 **OpenMontage** — Production-grade video with real quality enforcement, orchestrated by your AI assistant.
 
-If this project looks useful to you, a star would really mean a lot — it helps others discover it too.
+If this project looks useful to you, a ⭐ would really mean a lot — it helps others discover it too.
+
+If you'd like to go further, [sponsor the project](https://github.com/sponsors/calesthio) — OpenMontage is built nights and weekends, and your support makes that sustainable.

@@ -1,5 +1,7 @@
 # GSAP Skills in OpenMontage
 
+> **Scope:** This directory has no `SKILL.md` — it is **not** a loadable skill. This file is a navigation map for the eight loadable `gsap-*` skills that live in sibling directories (`gsap-core`, `gsap-timeline`, …). Read it to find the right `gsap-*` skill; the agent loads those, not this README.
+
 Eight Layer 3 skills teaching the agent correct GSAP (GreenSock Animation Platform) usage. Sourced from [greensock/gsap-skills](https://github.com/greensock/gsap-skills), MIT licensed.
 
 ## Why GSAP is in this repo
@@ -7,7 +9,7 @@ Eight Layer 3 skills teaching the agent correct GSAP (GreenSock Animation Platfo
 OpenMontage doesn't use GSAP directly today — Remotion compositions are driven by `useCurrentFrame()` + `interpolate()` + `spring()`. GSAP becomes relevant in two concrete scenarios:
 
 1. **Advanced text / SVG / motion-path animation inside a Remotion component.** GSAP's plugin family (SplitText, MorphSVG, DrawSVG, MotionPath, CustomEase) solves problems that are painful to hand-roll with primitive `interpolate()` calls. When you need per-character reveals, curved camera paths over SVG, or morphing between two arbitrary shapes — reach for GSAP.
-2. **HyperFrames composition (future)**. If the parallel HyperFrames engine gets wired in (see `DESIGN.md` / earlier discussion), GSAP is its native animation runtime via the Frame Adapter pattern — timelines are paused and registered on `window.__timelines`, and the engine seeks them frame-by-frame. GSAP timeline authoring becomes a day-1 skill.
+2. **HyperFrames composition.** HyperFrames is a production composition runtime in OpenMontage (rendered via `hyperframes_compose`; see `skills/core/hyperframes.md` and `AGENT_GUIDE.md`). GSAP is its native animation runtime via the Frame Adapter pattern — timelines are paused and registered on `window.__timelines`, and the engine seeks them frame-by-frame. GSAP timeline authoring is a day-1 skill for HyperFrames scenes.
 
 ## When to read which
 
@@ -31,7 +33,7 @@ These skills don't fire automatically. Trigger points:
 
 - **`skills/meta/animation-runtime-selector.md`** — the dispatcher meta skill. When authoring any animated scene, read this first; it routes you to the right Layer 3 skill based on what kind of motion you need.
 - **Pipeline asset-director skills** — `animated-explainer`, `animation`, and `cinematic` pipelines reference these skills where applicable (SplitText for text, MorphSVG for logos, MotionPath for camera moves).
-- **Future `hyperframes_compose` tool** — if added, will declare `agent_skills: ["gsap-timeline", "gsap-core"]` so the agent auto-reads them before authoring a HyperFrames composition.
+- **`hyperframes_compose` tool** — declares `agent_skills: ["gsap-timeline", "gsap-core"]` so the agent auto-reads them before authoring a HyperFrames composition.
 
 ## Running GSAP deterministically inside Remotion
 

@@ -96,6 +96,16 @@ class ElevenLabsTTS(BaseTool):
                 "minimum": 0,
                 "maximum": 1,
             },
+            "speed": {
+                "type": "number",
+                "default": 1.0,
+                "minimum": 0.7,
+                "maximum": 1.2,
+            },
+            "use_speaker_boost": {
+                "type": "boolean",
+                "default": True,
+            },
             "output_path": {"type": "string"},
             "output_format": {
                 "type": "string",
@@ -109,7 +119,16 @@ class ElevenLabsTTS(BaseTool):
         cpu_cores=1, ram_mb=256, vram_mb=0, disk_mb=50, network_required=True
     )
     retry_policy = RetryPolicy(max_retries=2, retryable_errors=["rate_limit", "timeout"])
-    idempotency_key_fields = ["text", "voice_id", "model_id"]
+    idempotency_key_fields = [
+        "text",
+        "voice_id",
+        "model_id",
+        "stability",
+        "similarity_boost",
+        "style",
+        "speed",
+        "use_speaker_boost",
+    ]
     side_effects = ["writes audio file to output_path", "calls ElevenLabs API"]
     user_visible_verification = ["Listen to generated audio for natural speech quality"]
 
@@ -145,6 +164,13 @@ class ElevenLabsTTS(BaseTool):
         voice_id = inputs.get("voice_id", self.DEFAULT_VOICE_ID)
         model_id = inputs.get("model_id", "eleven_multilingual_v2")
         output_format = inputs.get("output_format", "mp3_44100_128")
+        voice_settings = {
+            "stability": inputs.get("stability", 0.5),
+            "similarity_boost": inputs.get("similarity_boost", 0.75),
+            "style": inputs.get("style", 0.0),
+            "speed": inputs.get("speed", 1.0),
+            "use_speaker_boost": inputs.get("use_speaker_boost", True),
+        }
 
         response = requests.post(
             f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
@@ -156,11 +182,7 @@ class ElevenLabsTTS(BaseTool):
             json={
                 "text": text,
                 "model_id": model_id,
-                "voice_settings": {
-                    "stability": inputs.get("stability", 0.5),
-                    "similarity_boost": inputs.get("similarity_boost", 0.75),
-                    "style": inputs.get("style", 0.0),
-                },
+                "voice_settings": voice_settings,
             },
             params={"output_format": output_format},
             timeout=120,
@@ -178,6 +200,7 @@ class ElevenLabsTTS(BaseTool):
                 "provider": self.provider,
                 "model": model_id,
                 "voice_id": voice_id,
+                "voice_settings": voice_settings,
                 "text_length": len(text),
                 "output": str(output_path),
                 "format": output_format,

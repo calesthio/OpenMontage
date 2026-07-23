@@ -1,0 +1,228 @@
+{
+  "build_id": "97939672",
+  "source_urls": [
+    "https://kling.ai/document-api/api/get-started/authentication",
+    "https://kling.ai/document-api/api/get-started/error-codes",
+    "https://kling.ai/document-api/api/get-started/concurrency-rules",
+    "https://kling.ai/document-api/api/video/3-0-turbo/text-to-video",
+    "https://kling.ai/document-api/api/video/3-0-turbo/image-to-video",
+    "https://kling.ai/document-api/api/video/3-0-omni/text-to-video",
+    "https://kling.ai/document-api/api/video/3-0-omni/image-to-video",
+    "https://kling.ai/document-api/api/video/3-0-omni/video-omni",
+    "https://kling.ai/document-api/api/image/3-0-omni/image-generation",
+    "https://kling.ai/document-api/api/image/3-0-omni/image-omni",
+    "https://kling.ai/document-api/api/video/audio-generation/text-to-audio",
+    "https://kling.ai/document-api/api/video/audio-generation/video-to-audio",
+    "https://kling.ai/document-api/api/video/avatar",
+    "https://kling.ai/document-api/api/video/lip-sync",
+    "https://kling.ai/document-api/api/video/effects"
+  ],
+  "chunk_names": [
+    "index-0m3slU3p.js",
+    "document-navigation-Dk7H_V3n.js"
+  ],
+  "extracted_at": "2026-07-10T08:34:20Z",
+  "api_base": {
+    "default": "https://api-singapore.klingai.com",
+    "env_override": "KLING_API_BASE_URL",
+    "auth_env": "KLING_API_KEY",
+    "auth_header": "Authorization: Bearer <KLING_API_KEY>"
+  },
+  "endpoints": {
+    "classic_text_to_video": {
+      "method": "POST",
+      "path": "/v1/videos/text2video",
+      "poll": "GET /v1/videos/text2video/{id}"
+    },
+    "classic_image_to_video": {
+      "method": "POST",
+      "path": "/v1/videos/image2video",
+      "poll": "GET /v1/videos/image2video/{id}"
+    },
+    "turbo_text_to_video": {
+      "method": "POST",
+      "path": "/text-to-video/kling-3.0-turbo",
+      "poll": "GET /tasks?task_ids=<id>"
+    },
+    "turbo_image_to_video": {
+      "method": "POST",
+      "path": "/image-to-video/kling-3.0-turbo",
+      "poll": "GET /tasks?task_ids=<id>"
+    },
+    "video_omni": {
+      "method": "POST",
+      "path": "/v1/videos/omni-video",
+      "poll": "GET /v1/videos/omni-video/{id}"
+    },
+    "image_generation": {
+      "method": "POST",
+      "path": "/v1/images/generations",
+      "poll": "GET /v1/images/generations/{id}"
+    },
+    "image_omni": {
+      "method": "POST",
+      "path": "/v1/images/omni-image",
+      "poll": "GET /v1/images/omni-image/{id}"
+    },
+    "tts": {
+      "method": "POST",
+      "path": "/v1/audio/tts",
+      "poll": "GET /v1/audio/tts/{id}"
+    },
+    "text_to_audio": {
+      "method": "POST",
+      "path": "/v1/audio/text-to-audio",
+      "poll": "GET /v1/audio/text-to-audio/{id}"
+    },
+    "video_to_audio": {
+      "method": "POST",
+      "path": "/v1/audio/video-to-audio",
+      "poll": "GET /v1/audio/video-to-audio/{id}"
+    },
+    "avatar_image_to_video": {
+      "method": "POST",
+      "path": "/v1/videos/avatar/image2video",
+      "poll": "GET /v1/videos/avatar/image2video/{id}"
+    },
+    "identify_face": {
+      "method": "POST",
+      "path": "/v1/videos/identify-face"
+    },
+    "advanced_lip_sync": {
+      "method": "POST",
+      "path": "/v1/videos/advanced-lip-sync",
+      "poll": "GET /v1/videos/advanced-lip-sync/{id}"
+    },
+    "video_effects": {
+      "method": "POST",
+      "path": "/v1/videos/effects",
+      "poll": "GET /v1/videos/effects/{id}"
+    }
+  },
+  "models": {
+    "video": [
+      "kling-v1",
+      "kling-v1-5",
+      "kling-v1-6",
+      "kling-v2-master",
+      "kling-v2-1",
+      "kling-v2-1-master",
+      "kling-v2-5-turbo",
+      "kling-v2-6",
+      "kling-v3",
+      "kling-video-o1",
+      "kling-v3-omni"
+    ],
+    "image": [
+      "kling-v1",
+      "kling-v1-5",
+      "kling-v2",
+      "kling-v2-new",
+      "kling-v2-1",
+      "kling-v3",
+      "kling-image-o1",
+      "kling-v3-omni"
+    ]
+  },
+  "task_statuses": {
+    "classic": [
+      "submitted",
+      "processing",
+      "succeed",
+      "failed"
+    ],
+    "turbo": [
+      "submitted",
+      "processing",
+      "succeeded",
+      "failed"
+    ]
+  },
+  "result_paths": {
+    "classic_created_id": "data.task_id",
+    "turbo_created_id": "data.id",
+    "classic_video_results": "data.task_result.videos[]",
+    "classic_image_results": "data.task_result.images[]",
+    "classic_audio_results": "data.task_result.audios[]",
+    "identify_face_session": "data.session_id",
+    "identify_face_results": "data.face_data[]",
+    "turbo_results": "data[0].outputs[]"
+  },
+  "core_field_enums": {
+    "aspect_ratio": [
+      "16:9",
+      "9:16",
+      "1:1"
+    ],
+    "video_duration": [
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15"
+    ],
+    "video_resolution": [
+      "720p",
+      "1080p"
+    ],
+    "image_resolution": [
+      "1k",
+      "2k",
+      "4k"
+    ],
+    "mode": [
+      "std",
+      "pro",
+      "4k"
+    ],
+    "sound": [
+      "on",
+      "off"
+    ],
+    "image_aspect_ratio": [
+      "16:9",
+      "9:16",
+      "1:1",
+      "4:3",
+      "3:4",
+      "3:2",
+      "2:3",
+      "21:9",
+      "auto"
+    ],
+    "image_reference": [
+      "subject",
+      "face"
+    ],
+    "image_result_type": [
+      "single",
+      "series"
+    ],
+    "tts_voice_language": [
+      "zh",
+      "en"
+    ],
+    "avatar_mode": [
+      "std",
+      "pro"
+    ],
+    "lip_sync_operation": [
+      "identify_face",
+      "advanced_lip_sync",
+      "full_lip_sync"
+    ]
+  },
+  "notes": [
+    "Official docs were fetched as a SPA on 2026-07-10. Current HTML exposes buildId 97939672.",
+    "Advanced lip sync currently accepts one face_choose item. The item contains face_id, audio_id or sound_file, and sound_start_time, sound_end_time, and sound_insert_time.",
+    "The current entry/navigation bundles no longer expose the older api-*.js chunk names as literal references, so this fixture records the current entry assets and the Phase 1 core schema facts used by implementation and tests."
+  ]
+}

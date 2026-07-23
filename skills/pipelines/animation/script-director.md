@@ -11,6 +11,7 @@ This stage turns the approved proposal into animation-ready beats. The script mu
 | Schema | `schemas/artifacts/script.schema.json` | Artifact validation |
 | Prior artifact | `proposal_packet` from Proposal Director | Selected concept, animation mode, target duration, reuse strategy |
 | Optional artifact | `research_brief` from Research Director | Data points, audience insights, accuracy constraints |
+| Meta skill | `skills/meta/voice-performance-director.md` | Structured TTS delivery cues for natural, expressive narration |
 | Tools | `transcriber` | Optional source transcript support |
 
 ## Process
@@ -40,6 +41,11 @@ Each section should express ONE clear visual idea:
 - **Transformation** — morph from one state to another (transition)
 - **Comparison** — show two things side by side (split screen or sequential)
 - **Conclusion** — land the insight (hold + emphasis)
+
+If the piece is narration-led, also create `voice_performance` and section
+`delivery_cues` using `skills/meta/voice-performance-director.md`. Motion-heavy
+videos need vocal breathing room: mark pauses where the viewer must absorb an
+animation, and mark emphasis where a reveal, transform, or comparison lands.
 
 **Animation mode affects writing style:**
 
@@ -82,6 +88,7 @@ Recommended metadata keys per section:
 - `narration_plan`: how narration relates to visual (describes / complements / silent)
 - `visual_priority`: what the viewer should focus on (the animation, the text, the data)
 - `hold_time_seconds`: minimum visual hold time after this section's content
+- `delivery_cues`: pace, energy, emphasis, pause timing, and provider-ready narration text for TTS
 - `data_source`: if this section uses a research data point, reference it
 
 ### 6. Research Integration
@@ -101,6 +108,7 @@ Before submitting the script, verify:
 - [ ] Every section supports ONE strong visual idea
 - [ ] On-screen text is concise (phrases, not paragraphs)
 - [ ] Timing is animation-friendly (holds budgeted)
+- [ ] Narration-led sections include concrete delivery cues and a voice-performance sample section
 - [ ] Word count is within ±10% of target duration
 - [ ] Animation mode is respected in writing style
 - [ ] Research data points are integrated (if research_brief available)
@@ -126,3 +134,12 @@ add the source. Do not invent statistics, dates, or attributions.
 - **Ignoring the animation mode.** A Manim script reads differently than an AI video script.
 - **Writing research-less scripts when a research_brief exists.** If the research found surprising data, use it. Generic scripts waste the research investment.
 - **Oversimplifying math to the point of being wrong.** Check the research brief's accuracy notes.
+
+---
+
+## Gate Reminder (Binding)
+
+This stage gates on human approval (`human_approval_default: true`). After review passes:
+checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
+the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
+Approval is per-gate — an earlier "go ahead" does not cover this gate.

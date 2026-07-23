@@ -15,6 +15,14 @@ Routing is driven by `edit_decisions.render_runtime` (locked at proposal):
 - `ffmpeg`     → FFmpeg concat/trim. Used only for simple video cuts without
                  composition, or when the approved path explicitly names FFmpeg.
 
+Authoring mode is orthogonal to runtime. Setting
+`edit_decisions.composition_mode = "atelier"` (or `renderer_family="bespoke"`)
+means the composition is hand-authored rather than assembled from stock scene
+components. Runtime still wins first: HyperFrames atelier routes through
+`hyperframes_compose`, FFmpeg stays FFmpeg-only, and only Remotion atelier uses
+`_render_via_atelier` for a project-local Remotion entry that bypasses the
+cut-schema and stock scene-type registry.
+
 Silent runtime swaps are forbidden by governance. If the chosen runtime is
 unavailable or fails, this tool surfaces a structured blocker and waits for
 the agent to re-ask the user rather than substituting a different engine.
@@ -181,6 +189,15 @@ class VideoCompose(BaseTool):
             "codec": {"type": "string", "default": "libx264"},
             "crf": {"type": "integer", "default": 23},
             "preset": {"type": "string", "default": "medium"},
+            "remotion_timeout_ms": {
+                "type": "integer",
+                "description": (
+                    "Remotion render timeout in milliseconds, passed through as "
+                    "`--timeout` (governs headless-browser setup and delayRender). "
+                    "Raise this when the browser is slow to start (e.g. restricted "
+                    "networks). The subprocess timeout is widened to match."
+                ),
+            },
         },
     }
 
@@ -224,6 +241,12 @@ class VideoCompose(BaseTool):
             return False
         return True
 
+    def _ffmpeg_available(self) -> bool:
+        """Check if the ffmpeg binary is actually resolvable on PATH."""
+        import shutil as _shutil
+
+        return bool(_shutil.which("ffmpeg"))
+
     def _hyperframes_available(self) -> bool:
         """Check if HyperFrames rendering is available.
 
@@ -244,10 +267,11 @@ class VideoCompose(BaseTool):
         fallback between runtimes is forbidden.
         """
         info = super().get_info()
+        ffmpeg_ok = self._ffmpeg_available()
         remotion_ok = self._remotion_available()
         hyperframes_ok = self._hyperframes_available()
         info["render_engines"] = {
-            "ffmpeg": True,
+            "ffmpeg": ffmpeg_ok,
             "remotion": remotion_ok,
             "hyperframes": hyperframes_ok,
         }
@@ -383,8 +407,22 @@ class VideoCompose(BaseTool):
         preset = inputs.get("preset", "medium")
         profile_name = inputs.get("profile")
 
-        # Resolve target resolution from profile or default
+        # Resolve target resolution + fit mode. Priority: explicit `profile`
+        # arg > edit_decisions.metadata.compose_target > default (landscape HD).
+        # compose_target = {"width": W, "height": H, "fit": "pad"|"cover"} lets a
+        # caller request vertical (9:16) or any aspect without a named profile.
+        # fit="pad" letterboxes (no content loss, the historical default);
+        # fit="cover" scales-to-fill and centre-crops (better for vertical social).
         resolution = "1920x1080"
+        fit_mode = "pad"
+        compose_target = (edit_decisions.get("metadata") or {}).get("compose_target")
+        if isinstance(compose_target, dict):
+            try:
+                resolution = f"{int(compose_target['width'])}x{int(compose_target['height'])}"
+            except (KeyError, ValueError, TypeError):
+                pass
+            if compose_target.get("fit") in ("pad", "cover"):
+                fit_mode = compose_target["fit"]
         if profile_name:
             try:
                 from lib.media_profiles import get_profile
@@ -392,6 +430,10 @@ class VideoCompose(BaseTool):
                 resolution = f"{p.width}x{p.height}"
             except (ImportError, ValueError):
                 pass
+        try:
+            target_w, target_h = (int(v) for v in resolution.split("x"))
+        except ValueError:
+            target_w, target_h = 1920, 1080
 
         cuts = edit_decisions.get("cuts", [])
         if not cuts:
@@ -468,17 +510,22 @@ class VideoCompose(BaseTool):
                     # pix_fmt / sar across ALL segments — otherwise it throws
                     # "Non-monotonous DTS" or silently produces corrupt output.
                     #
-                    # Default target is 1920x1080 @ 30fps, yuv420p, sar=1. If the
-                    # source is smaller it letterboxes; if larger it downscales.
-                    # Callers can override via edit_decisions.metadata.compose_target
-                    # (future extension) but the defaults match the most common
-                    # delivery profile (YouTube landscape).
-                    vf_parts: list[str] = [
-                        "scale=1920:1080:force_original_aspect_ratio=decrease",
-                        "pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=black",
-                        "setsar=1",
-                        "fps=30",
-                    ]
+                    # Target is target_w x target_h @ 30fps, yuv420p, sar=1
+                    # (default 1920x1080; overridable via `profile` or
+                    # edit_decisions.metadata.compose_target — see above).
+                    # fit="pad" letterboxes to preserve all content; fit="cover"
+                    # scales-to-fill then centre-crops (no bars, for vertical social).
+                    if fit_mode == "cover":
+                        geom = [
+                            f"scale={target_w}:{target_h}:force_original_aspect_ratio=increase",
+                            f"crop={target_w}:{target_h}",
+                        ]
+                    else:
+                        geom = [
+                            f"scale={target_w}:{target_h}:force_original_aspect_ratio=decrease",
+                            f"pad={target_w}:{target_h}:(ow-iw)/2:(oh-ih)/2:color=black",
+                        ]
+                    vf_parts: list[str] = [*geom, "setsar=1", "fps=30"]
                     af_parts: list[str] = []
                     if speed != 1.0:
                         vf_parts.append(f"setpts={1.0/speed}*PTS")
@@ -666,6 +713,332 @@ class VideoCompose(BaseTool):
                 f"Set renderer_family at proposal stage."
             )
         return comp
+
+    def _render_via_atelier(
+        self,
+        inputs: dict[str, Any],
+        edit_decisions: dict[str, Any],
+    ) -> ToolResult:
+        """Render a hand-authored, project-local Remotion composition ("atelier" mode).
+
+        Unlike the cut-schema path, atelier mode does NOT route through the
+        stock Explainer/CinematicRenderer compositions, the cut.type scene
+        registry, or RENDERER_FAMILY_MAP. The agent hand-authors a bespoke
+        composition — its own scenes, theme, and motion — and points this
+        renderer at the project-local entry. This is the deliberate
+        "hand-stitched every time" path: zero reusable creative components,
+        a fresh visual language per video.
+
+        Contract — edit_decisions["bespoke"] = {
+            "entry":          <path to the project-local Remotion entry .tsx;
+                               MUST live under remotion-composer/ so the
+                               Remotion bundler can resolve node_modules.
+                               Convention: remotion-composer/projects/<slug>/index.tsx>,
+            "composition_id": <id registered in that entry's Root>,
+            "props_path":     <optional absolute path to a props JSON (--props)>,
+            "public_dir":     <optional path to a SMALL per-project public dir,
+                               avoids copying the bloated shared public/>,
+            "scale":          <optional float, e.g. 0.5 for a fast draft>,
+            "crf":            <optional int, e.g. 18 for a crisp final>,
+            "concurrency":    <optional int>,
+        }
+        """
+        bespoke = edit_decisions.get("bespoke") or {}
+        entry = bespoke.get("entry")
+        comp_id = bespoke.get("composition_id")
+        if not entry or not comp_id:
+            return ToolResult(
+                success=False,
+                error=(
+                    "atelier mode requires edit_decisions.bespoke.entry (path to the "
+                    "project-local Remotion entry .tsx) and edit_decisions.bespoke."
+                    "composition_id (the id registered in that entry's Root)."
+                ),
+            )
+
+        composer_dir = Path(__file__).resolve().parent.parent.parent / "remotion-composer"
+        if not composer_dir.exists() or not (composer_dir / "node_modules").exists():
+            return ToolResult(
+                success=False,
+                error=(
+                    f"remotion-composer or its node_modules is missing at {composer_dir}. "
+                    f"Run `cd remotion-composer && npm install` first."
+                ),
+            )
+
+        entry_path = Path(entry)
+        if not entry_path.is_absolute():
+            # Resolve relative to repo root first, then to the composer dir.
+            repo_root = composer_dir.parent
+            cand = (repo_root / entry).resolve()
+            entry_path = cand if cand.exists() else (composer_dir / entry).resolve()
+        entry_path = entry_path.resolve()
+        if not entry_path.exists():
+            return ToolResult(success=False, error=f"atelier entry not found: {entry_path}")
+
+        # Remotion's bundler resolves `remotion` and friends by walking up from the
+        # entry file to find node_modules — so the entry must live under
+        # remotion-composer/ at render time. But OpenMontage's project convention is
+        # repo-root projects/<slug>/, where artifacts/assets/renders/ already live.
+        # Resolution: keep the source of truth under projects/<slug>/ and auto-stage
+        # a directory junction (Windows) / symlink (Unix) at
+        # remotion-composer/projects/<slug>/ → projects/<slug>/ so the bundler sees
+        # the entry inside the composer tree without us copying files. Junctions are
+        # weightless, idempotent across renders, and need no admin/dev-mode on Windows.
+        try:
+            entry_path.relative_to(composer_dir)
+            effective_entry = entry_path
+        except ValueError:
+            try:
+                effective_entry = self._stage_atelier_project(entry_path, composer_dir)
+            except Exception as e:
+                return ToolResult(
+                    success=False,
+                    error=(
+                        f"atelier auto-stage failed for entry {entry_path}: {e}. "
+                        f"Either place the entry under {composer_dir}/projects/<slug>/ "
+                        f"directly, or fix the staging permission issue."
+                    ),
+                )
+
+        output_path = Path(inputs.get("output_path", "renders/output.mp4")).resolve()
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        cmd = ["npx", "remotion", "render", str(effective_entry), str(comp_id), str(output_path)]
+
+        props_path = bespoke.get("props_path")
+        if props_path:
+            pp = Path(props_path).resolve()
+            if not pp.exists():
+                return ToolResult(success=False, error=f"atelier props_path not found: {pp}")
+            # Equals form is required for cross-platform path parsing (see _remotion_render).
+            cmd.append(f"--props={pp}")
+
+        public_dir = bespoke.get("public_dir")
+        if public_dir:
+            pd = Path(public_dir).resolve()
+            if pd.exists():
+                cmd.append(f"--public-dir={pd}")
+
+        if bespoke.get("scale"):
+            cmd.append(f"--scale={bespoke['scale']}")
+        if bespoke.get("crf") is not None:
+            cmd.append(f"--crf={bespoke['crf']}")
+        if bespoke.get("concurrency"):
+            cmd.append(f"--concurrency={bespoke['concurrency']}")
+
+        try:
+            # Run from inside the composer dir so npx resolves the local
+            # remotion binary (mirrors _remotion_render).
+            self.run_command(cmd, timeout=1800, cwd=composer_dir)
+        except Exception as e:
+            return ToolResult(success=False, error=f"Atelier (bespoke) Remotion render failed: {e}")
+
+        if not output_path.exists():
+            return ToolResult(
+                success=False,
+                error=f"Atelier render completed but output file missing: {output_path}",
+            )
+
+        # --- Atelier post-render review -------------------------------------
+        # The cut-schema paths run _run_final_review (technical/visual/audio
+        # probes + transcript-vs-script). Atelier MUST do the same so hero
+        # renders aren't shipped without the safety net — and additionally
+        # enforce the bespoke doctrine: no stock-registry imports, an
+        # art-direction declaration must exist. The distinctness review
+        # ("could this be any other product's video?") stays human; what we
+        # automate here is the *doctrine bypass*, not the taste call.
+        final_review = self._run_final_review(
+            output_path=output_path,
+            edit_decisions=edit_decisions,
+            proposal_packet=inputs.get("proposal_packet"),
+            narration_transcript_path=inputs.get("narration_transcript_path"),
+            script_text=inputs.get("script_text"),
+        )
+
+        atelier_checks = self._run_atelier_checks(entry_path, bespoke)
+        final_review.setdefault("checks", {})["atelier"] = atelier_checks
+        final_review["issues_found"] = list(final_review.get("issues_found", [])) + atelier_checks.get("issues", [])
+
+        # Escalate atelier-critical issues (stock reuse) to the overall status.
+        # Missing art-direction is a warning, not a fail — it shows in issues_found.
+        if atelier_checks.get("stock_reuse_detected"):
+            final_review["status"] = "fail"
+            final_review["recommended_action"] = "re_author"
+
+        data: dict[str, Any] = {
+            "operation": "render",
+            "composition_mode": "atelier",
+            "entry": str(entry_path),
+            "effective_entry": str(effective_entry) if effective_entry != entry_path else None,
+            "composition_id": comp_id,
+            "output": str(output_path),
+            "final_review": final_review,
+            "final_review_status": final_review.get("status"),
+        }
+
+        if final_review.get("status") == "fail":
+            return ToolResult(
+                success=False,
+                error=(
+                    "Atelier render produced an invalid output:\n"
+                    + "\n".join(f"  • {i}" for i in final_review.get("issues_found", []))
+                ),
+                data=data,
+                artifacts=[str(output_path)],
+            )
+
+        return ToolResult(success=True, data=data, artifacts=[str(output_path)])
+
+    # Source-file extensions that get staged into the composer tree at render time.
+    # Anything not in this set lives only under the real project dir (assets, renders,
+    # artifacts) and is referenced via --public-dir or absolute paths.
+    _ATELIER_STAGE_EXTS = {".tsx", ".ts", ".jsx", ".js", ".css"}
+
+    def _stage_atelier_project(self, entry_path: Path, composer_dir: Path) -> Path:
+        """Auto-stage a bespoke project under remotion-composer/projects/<slug>/.
+
+        The source of truth lives under the repo-root `projects/<slug>/` (where
+        artifacts/, assets/, renders/ already are). Remotion's webpack bundler,
+        however, resolves modules (`remotion`, `@remotion/*`) by walking up from
+        the entry's REAL location — so a directory junction/symlink would
+        dereference and webpack would fail to find node_modules. We copy the
+        source files into a sibling dir inside the composer tree instead.
+
+        mtime-skip semantics make repeat renders cheap (typical project is a
+        handful of small .tsx files). Non-source files (assets, renders, props
+        JSON) stay only in the real project dir and are referenced via
+        --public-dir or absolute paths in props.
+
+        Resolves the slug as the first path segment under a `projects/` ancestor;
+        falls back to the entry's parent directory name. Returns the staged entry
+        path.
+        """
+        import shutil
+
+        real_project_dir = entry_path.parent.resolve()
+
+        # Derive a stable slug. Prefer the first segment under a `projects/` ancestor.
+        slug = real_project_dir.name
+        try:
+            parts = real_project_dir.parts
+            if "projects" in parts:
+                i = parts.index("projects")
+                if i + 1 < len(parts):
+                    slug = parts[i + 1]
+        except Exception:
+            pass
+
+        staging_root = composer_dir / "projects"
+        staging_root.mkdir(parents=True, exist_ok=True)
+        staging_dir = staging_root / slug
+
+        # If a stale junction/symlink is in the way from an earlier (failed) attempt,
+        # remove it before creating a real staging directory.
+        if staging_dir.is_symlink() or (staging_dir.exists() and staging_dir.is_dir()
+                                        and staging_dir.resolve() != staging_dir):
+            try:
+                staging_dir.unlink()
+            except (OSError, PermissionError):
+                # Some Windows junctions need rmdir
+                import subprocess as _sp
+                _sp.run(["cmd", "/c", "rmdir", str(staging_dir)], check=True)
+
+        staging_dir.mkdir(parents=True, exist_ok=True)
+
+        # mtime-skip copy of source files only. Mirrors directory structure so
+        # relative imports work identically.
+        for src in real_project_dir.rglob("*"):
+            if not src.is_file():
+                continue
+            if src.suffix.lower() not in self._ATELIER_STAGE_EXTS:
+                continue
+            rel = src.relative_to(real_project_dir)
+            dst = staging_dir / rel
+            try:
+                if dst.exists() and dst.stat().st_mtime >= src.stat().st_mtime:
+                    continue
+            except OSError:
+                pass
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dst)
+
+        return staging_dir / entry_path.name
+
+    # Stock-registry import patterns that violate the atelier doctrine.
+    # Any of these inside a bespoke project tree means a creative component
+    # was reused instead of hand-stitched. Engine knowledge (the `remotion`
+    # package, `@remotion/*`, project-local files) is fine.
+    _ATELIER_STOCK_IMPORT_RE = (
+        r"""from\s+["']("""
+        # parent-traversed paths into the stock src/
+        r"""(?:\.\./)+src/(?:components|Explainer|CinematicRenderer|"""
+        r"""TitledVideo|TalkingHead|CollageBurst|LyricOverlay|cinematic|crucix|phantom)"""
+        # or absolute-ish paths into the same
+        r"""|remotion-composer/src/(?:components|Explainer|CinematicRenderer|"""
+        r"""TitledVideo|TalkingHead|CollageBurst|LyricOverlay|cinematic|crucix|phantom)"""
+        r""")"""
+    )
+
+    def _run_atelier_checks(self, entry_path: Path, bespoke: dict[str, Any]) -> dict[str, Any]:
+        """Doctrine-enforcement checks specific to atelier mode.
+
+        Returns a dict with two checks:
+          - stock_reuse_detected (bool) + offending_imports (list) — CRITICAL,
+            fails the render. Catches `import X from "../../src/components/..."`
+            and similar reuse of stock creative components.
+          - art_direction_declared (bool) + art_direction (str|None) — WARNING.
+            Forces step 1 of the bespoke-composition skill (commit to a fresh
+            art direction per video) to be written down rather than skipped.
+        """
+        import re as _re
+
+        issues: list[str] = []
+        offending: list[dict[str, str]] = []
+        project_dir = entry_path.parent
+        pat = _re.compile(self._ATELIER_STOCK_IMPORT_RE)
+
+        try:
+            for f in project_dir.rglob("*"):
+                if not f.is_file() or f.suffix.lower() not in {".tsx", ".ts", ".jsx", ".js"}:
+                    continue
+                try:
+                    txt = f.read_text(encoding="utf-8", errors="replace")
+                except Exception:
+                    continue
+                for m in pat.finditer(txt):
+                    offending.append({"file": str(f.relative_to(project_dir)), "import": m.group(1)})
+        except Exception as e:  # pragma: no cover — never let the check itself break a render
+            issues.append(f"atelier stock-reuse scan errored: {e}")
+
+        stock_reuse_detected = bool(offending)
+        if stock_reuse_detected:
+            issues.append(
+                "atelier doctrine violation: bespoke project imports from the stock "
+                "creative registry. Hand-author the scene instead — the registry is "
+                "a mechanics codex, not a parts bin. Offending imports: "
+                + ", ".join(f"{o['file']} → {o['import']}" for o in offending[:5])
+                + ("…" if len(offending) > 5 else "")
+            )
+
+        art_direction = bespoke.get("art_direction") or bespoke.get("art_direction_note")
+        art_direction_declared = bool(art_direction and str(art_direction).strip())
+        if not art_direction_declared:
+            issues.append(
+                "atelier warning: no bespoke.art_direction declared. Per "
+                "skills/meta/bespoke-composition.md step 1, every atelier piece must "
+                "commit to a fresh art direction (palette, type, motion, signature "
+                "device) before authoring. Pass edit_decisions.bespoke.art_direction "
+                "as a short note or a path to art-direction.md."
+            )
+
+        return {
+            "stock_reuse_detected": stock_reuse_detected,
+            "offending_imports": offending,
+            "art_direction_declared": art_direction_declared,
+            "art_direction": str(art_direction) if art_direction else None,
+            "issues": issues,
+        }
 
     @staticmethod
     def _build_theme_from_playbook(
@@ -937,6 +1310,52 @@ class VideoCompose(BaseTool):
         asset_manifest = inputs.get("asset_manifest")
         if not edit_decisions:
             return ToolResult(success=False, error="edit_decisions required for render")
+
+        # --- Runtime routing: honor render_runtime locked at proposal ---
+        # Silent swaps are forbidden by governance. Resolve this before any
+        # composition-mode branching so `composition_mode="atelier"` cannot
+        # accidentally force the Remotion atelier path when HyperFrames or
+        # FFmpeg was approved.
+        render_runtime = (edit_decisions.get("render_runtime") or "").strip().lower()
+
+        if not render_runtime:
+            return ToolResult(
+                success=False,
+                error=(
+                    "render_runtime is not set in edit_decisions. Per governance, "
+                    "it MUST be locked at proposal stage (proposal_packet."
+                    "production_plan.render_runtime) and carried forward through "
+                    "edit_decisions.render_runtime. Valid values: 'remotion', "
+                    "'hyperframes', 'ffmpeg'. Re-run the proposal stage with an "
+                    "explicit runtime choice — do NOT default this field."
+                ),
+            )
+
+        if render_runtime not in {"remotion", "hyperframes", "ffmpeg"}:
+            return ToolResult(
+                success=False,
+                error=(
+                    f"Unknown render_runtime {render_runtime!r}. "
+                    f"Valid values: remotion, hyperframes, ffmpeg. "
+                    f"render_runtime must be set at proposal stage."
+                ),
+            )
+
+        # --- Atelier (bespoke) mode -------------------------------------
+        # Hand-authored, project-local Remotion composition. Deliberately
+        # bypasses the cut-schema, the stock scene-type registry, and the
+        # RENDERER_FAMILY_MAP. This is the "hand-stitched every time" path:
+        # the agent writes a fresh composition (its own scenes, theme, motion)
+        # under remotion-composer/projects/<slug>/ and points this renderer at
+        # it. No reusable creative components; a new visual language per video.
+        # Triggered by composition_mode="atelier" (or renderer_family="bespoke").
+        remotion_atelier_requested = (
+            edit_decisions.get("composition_mode") == "atelier"
+            or edit_decisions.get("renderer_family") == "bespoke"
+        )
+        if render_runtime == "remotion" and remotion_atelier_requested:
+            return self._render_via_atelier(inputs, edit_decisions)
+
         if not asset_manifest:
             return ToolResult(success=False, error="asset_manifest required for render")
 
@@ -968,26 +1387,6 @@ class VideoCompose(BaseTool):
         # Also accept profile as "output_profile" (skill convention) or "profile"
         profile = inputs.get("profile") or inputs.get("output_profile")
 
-        # --- Runtime routing: honor render_runtime locked at proposal ---
-        # Silent swaps are forbidden by governance. If the chosen runtime
-        # is unavailable, surface a structured blocker rather than quietly
-        # picking a different engine. Missing render_runtime is itself a
-        # governance violation — edit_decisions.schema.json requires it.
-        render_runtime = (edit_decisions.get("render_runtime") or "").strip().lower()
-
-        if not render_runtime:
-            return ToolResult(
-                success=False,
-                error=(
-                    "render_runtime is not set in edit_decisions. Per governance, "
-                    "it MUST be locked at proposal stage (proposal_packet."
-                    "production_plan.render_runtime) and carried forward through "
-                    "edit_decisions.render_runtime. Valid values: 'remotion', "
-                    "'hyperframes', 'ffmpeg'. Re-run the proposal stage with an "
-                    "explicit runtime choice — do NOT default this field."
-                ),
-            )
-
         if render_runtime == "hyperframes":
             return self._render_via_hyperframes(
                 inputs=inputs,
@@ -1006,16 +1405,6 @@ class VideoCompose(BaseTool):
                 output_path=output_path,
                 profile=profile,
             )
-        if render_runtime != "remotion":
-            return ToolResult(
-                success=False,
-                error=(
-                    f"Unknown render_runtime {render_runtime!r}. "
-                    f"Valid values: remotion, hyperframes, ffmpeg. "
-                    f"render_runtime must be set at proposal stage."
-                ),
-            )
-
         # --- Explicit Remotion path (render_runtime == 'remotion') ---
         if self._needs_remotion(resolved_cuts):
             remotion_inputs: dict[str, Any] = {
@@ -1024,6 +1413,11 @@ class VideoCompose(BaseTool):
             }
             if profile:
                 remotion_inputs["profile"] = profile
+            # Forward the creator-facing render timeout through the high-level
+            # render path (execute(operation="render") -> _render), otherwise it
+            # would only take effect on a direct _remotion_render() call.
+            if inputs.get("remotion_timeout_ms") is not None:
+                remotion_inputs["remotion_timeout_ms"] = inputs["remotion_timeout_ms"]
             render_result = self._remotion_render(remotion_inputs)
 
             # Governance: NEVER silently fall back to FFmpeg when Remotion fails.
@@ -1352,7 +1746,12 @@ class VideoCompose(BaseTool):
             str(composer_dir / "src" / "index.tsx"),
             composition_id,
             str(output_path),
-            "--props", str(props_path),
+            # Use the `--props=<path>` equals form rather than two separate
+            # args. On Windows, passing `--props` and the path separately makes
+            # Remotion mis-parse the value (quote escaping differs), failing
+            # with "neither valid JSON nor a file path". The equals form is the
+            # API Remotion recommends for file paths and is cross-platform safe.
+            f"--props={props_path}",
         ]
 
         # Apply media profile dimensions
@@ -1365,12 +1764,45 @@ class VideoCompose(BaseTool):
             except (ImportError, ValueError):
                 pass
 
+        # Optional creator-facing render timeout. Remotion's `--timeout` (ms)
+        # governs headless-browser setup and delayRender(); on slow machines or
+        # restricted networks the default 30s browser setup times out with an
+        # opaque failure. Pass it through and give the subprocess enough headroom
+        # so run_command() does not kill Remotion before its own timeout fires.
+        remotion_timeout_ms = inputs.get("remotion_timeout_ms")
+        subprocess_timeout = 600
+        if remotion_timeout_ms:
+            try:
+                ms = int(remotion_timeout_ms)
+                cmd.append(f"--timeout={ms}")
+                subprocess_timeout = max(subprocess_timeout, ms // 1000 + 60)
+            except (TypeError, ValueError):
+                pass
+
         try:
             # Invoke from inside the composer dir so npx can resolve the
             # local remotion binary via node_modules/.bin. Without this,
             # Windows npx cannot locate the CLI and returns "could not
             # determine executable to run".
-            self.run_command(cmd, timeout=600, cwd=composer_dir)
+            self.run_command(cmd, timeout=subprocess_timeout, cwd=composer_dir)
+        except subprocess.CalledProcessError as e:
+            # run_command uses check=True + capture_output, so the useful
+            # Remotion diagnostics live in stderr/stdout — surface the tail
+            # instead of the bare "returned non-zero exit status 1".
+            detail = (e.stderr or e.stdout or "").strip()
+            tail = "\n".join(detail.splitlines()[-25:]) if detail else "(no output captured)"
+            return ToolResult(
+                success=False,
+                error=f"Remotion render failed (exit {e.returncode}):\n{tail}",
+            )
+        except subprocess.TimeoutExpired as e:
+            return ToolResult(
+                success=False,
+                error=(
+                    f"Remotion render timed out after {e.timeout}s. If the headless "
+                    "browser is slow to start, raise remotion_timeout_ms (ms)."
+                ),
+            )
         except Exception as e:
             return ToolResult(success=False, error=f"Remotion render failed: {e}")
         finally:

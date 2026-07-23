@@ -47,6 +47,11 @@ _RUNTIME_SECONDS = {
     "seedance_2.0_fast": 60.0,
 }
 
+# Single source of truth for the default model. Referenced by both the input
+# schema and every code path that reads `model`, so estimate_cost / estimate_runtime
+# / execute can never silently diverge from the advertised default again.
+_DEFAULT_MODEL = "seedance_2.0"
+
 
 class RunwayVideo(BaseTool):
     name = "runway_video"
@@ -101,7 +106,7 @@ class RunwayVideo(BaseTool):
             "model": {
                 "type": "string",
                 "enum": ["seedance_2.0", "seedance_2.0_fast", "gen4_turbo", "gen4_aleph", "gen3a_turbo"],
-                "default": "seedance_2.0",
+                "default": _DEFAULT_MODEL,
                 "description": (
                     "seedance_2.0 = preferred premium default (single-pass synced audio, multi-shot, lip-sync — "
                     "Runway Unlimited/Enterprise plan, non-US only). "
@@ -149,12 +154,12 @@ class RunwayVideo(BaseTool):
         return os.environ.get("RUNWAY_API_KEY") or os.environ.get("RUNWAYML_API_SECRET")
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
-        model = inputs.get("model", "gen4_turbo")
+        model = inputs.get("model", _DEFAULT_MODEL)
         duration = inputs.get("duration", 5)
         return _COST_PER_SECOND.get(model, 0.05) * duration
 
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
-        model = inputs.get("model", "gen4_turbo")
+        model = inputs.get("model", _DEFAULT_MODEL)
         return _RUNTIME_SECONDS.get(model, 30.0)
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
@@ -168,7 +173,7 @@ class RunwayVideo(BaseTool):
         import requests
 
         start = time.time()
-        model = inputs.get("model", "gen4_turbo")
+        model = inputs.get("model", _DEFAULT_MODEL)
         operation = inputs.get("operation", "text_to_video")
         ratio_friendly = inputs.get("ratio", "16:9")
         ratio_pixels = _RATIO_MAP.get(ratio_friendly, "1280:720")

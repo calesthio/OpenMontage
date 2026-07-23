@@ -91,6 +91,7 @@ class ToolRegistry:
         env_path = Path(__file__).resolve().parent.parent / ".env"
         if not env_path.is_file():
             return
+        import re
         with open(env_path, encoding="utf-8", errors="ignore") as f:
             for line in f:
                 line = line.strip()
@@ -98,7 +99,19 @@ class ToolRegistry:
                     continue
                 key, _, value = line.partition("=")
                 key = key.strip()
-                value = value.strip().strip("'\"")
+                value = value.strip()
+                # Quoted value: take the content inside the quotes verbatim.
+                if value[:1] in ("'", '"'):
+                    quote = value[0]
+                    end = value.find(quote, 1)
+                    value = value[1:end] if end != -1 else value[1:]
+                else:
+                    # Strip an inline comment ('#' at line start or after
+                    # whitespace) so "KEY=   # note" yields "" not "# note".
+                    match = re.search(r"(^|\s)#", value)
+                    if match:
+                        value = value[: match.start()]
+                    value = value.strip()
                 if key and key not in os.environ:
                     os.environ[key] = value
 
@@ -269,6 +282,7 @@ class ToolRegistry:
                 "provider": tool.provider,
                 "runtime": tool.runtime.value,
                 "best_for": tool.best_for,
+                "dependencies": info.get("dependencies", []),
                 "install_instructions": tool.install_instructions,
                 "status": status.value,
             }
@@ -278,6 +292,10 @@ class ToolRegistry:
                 "render_engines",
                 "remotion_note",
                 "provider_matrix",
+                "setup_offer",
+                "operation_statuses",
+                "resource_profiles",
+                "resource_profile_note",
             ):
                 if extra_key in info:
                     entry[extra_key] = info[extra_key]
@@ -385,6 +403,40 @@ class ToolRegistry:
         setup_offers: list[dict[str, Any]] = []
         for cap, bucket in menu.items():
             for entry in bucket.get("unavailable", []):
+                offer = entry.get("setup_offer")
+                if offer:
+                    setup_offers.append(
+                        {
+                            "capability": cap,
+                            "tool": entry.get("name"),
+                            "provider": entry.get("provider"),
+                            "runtime": entry.get("runtime"),
+                            "install_instructions": entry.get("install_instructions") or "",
+                            **offer,
+                        }
+                    )
+                    continue
+
+                env_vars = [
+                    dep[4:]
+                    for dep in entry.get("dependencies", [])
+                    if isinstance(dep, str) and dep.startswith("env:")
+                ]
+                if env_vars:
+                    setup_offers.append(
+                        {
+                            "capability": cap,
+                            "tool": entry.get("name"),
+                            "provider": entry.get("provider"),
+                            "runtime": entry.get("runtime"),
+                            "kind": "env_var",
+                            "fix_complexity": "1-minute env-var",
+                            "env_vars": env_vars,
+                            "install_instructions": entry.get("install_instructions") or "",
+                        }
+                    )
+                    continue
+
                 hint = entry.get("install_instructions") or ""
                 # Heuristic: 1-minute fixes mention an env var or API key.
                 if any(k in hint.lower() for k in ["api key", "env", "_key=", "_api"]):
@@ -393,8 +445,15 @@ class ToolRegistry:
                             "capability": cap,
                             "tool": entry.get("name"),
                             "provider": entry.get("provider"),
+                            "runtime": entry.get("runtime"),
                             "install_instructions": hint,
                         }
+                    )
+
+            for entry in bucket.get("available", []) + bucket.get("unavailable", []):
+                if entry.get("resource_profile_note"):
+                    runtime_warnings.append(
+                        f"{entry.get('name')}: {entry.get('resource_profile_note')}"
                     )
 
         result = {

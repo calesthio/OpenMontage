@@ -126,16 +126,18 @@ REFERENCE NEEDS          YOUR CAPABILITIES          GAP
 Video clips (sci-fi)     Video gen: 0/12 configured BLOCKED without key
 Narration (deep male)    TTS: ElevenLabs available  READY
 Background music         Music: MusicGen available  READY
-Composition engine       Remotion: available        READY (preferred)
-                         FFmpeg: available          READY (fallback only)
+Composition engine       Remotion: available        READY
+                         HyperFrames: available     READY
+                         FFmpeg: available          READY (standalone ops)
 ```
 
-**Composition engine priority:** Remotion is the **default** composition engine for
-ALL final renders — video clips, images, animated scenes, mixed content. It embeds
-video natively via `<OffthreadVideo>` and handles transitions, overlays, and profile
-scaling in a single React render pass. FFmpeg is only used when Remotion is
-unavailable, or for standalone operations (trim, transcode, subtitle burn) outside
-the composition pipeline. **Never default to FFmpeg when Remotion is available.**
+**Composition engine selection:** Remotion and HyperFrames are parallel, non-ranked
+composition runtimes — do NOT pre-lock either one here. When both are available, the
+"Present Both Composition Runtimes (HARD RULE)" gate in `AGENT_GUIDE.md` governs the
+choice: present both options to the user with tradeoffs at the proposal stage and wait
+for explicit approval before locking `render_runtime`. Silently picking a default is
+forbidden. FFmpeg is not a composition runtime in this flow — it is reserved for
+standalone operations (trim, transcode, subtitle burn) outside the composition pipeline.
 
 Be honest about gaps. If video generation is needed but unavailable, say so clearly:
 

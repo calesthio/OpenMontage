@@ -80,3 +80,12 @@ When the EP triggers a no-avatar pivot (no `talking_head` or `lip_sync` availabl
 - Filling empty space with decorative panels.
 - Assuming a landscape presenter layout will survive a vertical crop untouched.
 - (Fallback mode) Producing a wall of text on screen to compensate for no presenter — let the narration carry the content.
+
+---
+
+## Gate Reminder (Binding)
+
+This stage gates on human approval (`human_approval_default: true`). After review passes:
+checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
+the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
+Approval is per-gate — an earlier "go ahead" does not cover this gate.

@@ -99,7 +99,7 @@ LTX_LOCAL_VARIANTS = {
         "default_width": 768,
         "default_height": 512,
         "default_num_frames": 121,
-        "fps": 24,
+        "fps": 30,
     },
 }
 
@@ -147,6 +147,39 @@ LTX2_FRAME_COUNTS = {
 }
 
 
+def get_torch_device() -> str:
+    """Return best available torch device: cuda > mps (Apple Silicon Metal) > cpu.
+
+    Priority order:
+      1. cuda  — NVIDIA GPU (fastest for most diffusion models)
+      2. mps   — Apple Silicon Metal (M1/M2/M3/M4/M5, macOS >= 12.3)
+      3. cpu   — fallback, always available but slow
+
+    MPS detection is guarded for torch builds that lack ``torch.backends.mps``
+    (e.g. older pip wheels or Linux builds).  We check both build-time support
+    (``is_built()``) and runtime availability (``is_available()``).
+    """
+    try:
+        import torch as _torch  # noqa: PLC0415
+    except ImportError:
+        return "cpu"
+    if _torch.cuda.is_available():
+        return "cuda"
+    # Guard: torch.backends.mps may not exist on older/non-macOS builds
+    try:
+        mps_backend = getattr(_torch, "backends", None)
+        mps_backend = getattr(mps_backend, "mps", None) if mps_backend else None
+        if mps_backend is not None:
+            # Check build-time support first, then runtime availability
+            is_built = getattr(mps_backend, "is_built", lambda: True)()
+            is_available = getattr(mps_backend, "is_available", lambda: False)()
+            if is_built and is_available:
+                return "mps"
+    except Exception:
+        pass
+    return "cpu"
+
+
 def local_generation_enabled() -> bool:
     return os.environ.get("VIDEO_GEN_LOCAL_ENABLED", "").lower() in {"true", "1", "yes"}
 
@@ -165,9 +198,15 @@ def local_generation_status() -> ToolStatus:
 def local_install_instructions() -> str:
     return (
         "Enable local video generation and install the diffusers stack:\n"
-        "  set VIDEO_GEN_LOCAL_ENABLED=true\n"
-        "  pip install diffusers transformers accelerate torch pillow requests\n"
-        "Use a GPU with the VRAM profile listed on the selected tool."
+        "  export VIDEO_GEN_LOCAL_ENABLED=true\n"
+        "  uv pip install diffusers transformers accelerate torch pillow requests\n"
+        "\n"
+        "GPU support — pick what matches your hardware:\n"
+        "  NVIDIA CUDA    — works out of the box with the above\n"
+        "  Apple Silicon (MPS, macOS >= 12.3) — works out of the box; no extra build\n"
+        "  CPU fallback   — slow but functional on any machine\n"
+        "\n"
+        "VRAM profile: see the selected tool's resource_profile for minimum VRAM."
     )
 
 
@@ -201,13 +240,30 @@ def load_diffusers_pipeline(pipeline_class: str, model_id: str, enable_offload: 
     }
     pipeline_name = pipeline_map.get(pipeline_class, pipeline_class)
     pipeline_class_obj = getattr(diffusers, pipeline_name)
-    dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+
+    device = get_torch_device()
+    # bfloat16 is only reliable on CUDA; MPS uses float16 for inference,
+    # CPU must use float32 (float16 is emulated and unreliable on CPU)
+    if device == "cuda" and torch.cuda.is_bf16_supported():
+        dtype = torch.bfloat16
+    elif device == "cpu":
+        dtype = torch.float32
+    else:
+        dtype = torch.float16
+
     pipeline = pipeline_class_obj.from_pretrained(model_id, torch_dtype=dtype)
 
     if enable_offload:
-        pipeline.enable_model_cpu_offload()
+        if device == "cuda":
+            pipeline.enable_model_cpu_offload()
+        else:
+            # enable_model_cpu_offload() is CUDA-only; fall back to direct device placement
+            pipeline = pipeline.to(device)
     else:
-        pipeline = pipeline.to("cuda")
+        pipeline = pipeline.to(device)
+
+    if hasattr(pipeline, "enable_attention_slicing"):
+        pipeline.enable_attention_slicing()
 
     if hasattr(pipeline, "vae") and pipeline.vae is not None:
         if hasattr(pipeline.vae, "enable_tiling"):

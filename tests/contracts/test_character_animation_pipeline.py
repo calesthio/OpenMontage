@@ -10,6 +10,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from lib.pipeline_loader import get_required_tools, get_stage_order, load_pipeline
 from schemas.artifacts import ARTIFACT_NAMES, validate_artifact
+from tools.base_tool import ToolResult
 from tools.character.character_animation import (
     ActionTimelineCompiler,
     CharacterAnimationReviewer,
@@ -186,6 +187,33 @@ def test_character_animation_smoke_flow(tmp_path):
     assert qa_report["checks"]["schema_valid"] is True
 
 
+def test_character_reviewer_success_false_when_qa_finds_issues():
+    """
+    CharacterAnimationReviewer surfaces QA failures via status/issues, not success.
+
+    success=True means the tool executed successfully; the QA verdict lives in
+    character_qa_report.status and character_qa_report.issues — matching the
+    pattern used by visual_qa.py (success=True, verdict in validation_passed).
+    compose-director gates on report.status, not result.success.
+    """
+    result = CharacterAnimationReviewer().execute(
+        {
+            # Minimal rig_plan with missing joints — will trigger schema issues
+            "rig_plan": {"characters": [{"id": "char1", "role": "lead"}]},
+            "pose_library": {},
+            "action_timeline": {},
+            "review_level": "static",
+        }
+    )
+
+    qa_report = result.data["character_qa_report"]
+    assert result.success is True, "tool execution must succeed even when QA finds issues"
+    assert qa_report["status"] == "revise", (
+        f"Expected status='revise' for a broken rig, got '{qa_report['status']}'"
+    )
+    assert len(qa_report["issues"]) > 0, "Expected at least one issue for a broken rig"
+
+
 def test_character_style_is_normalized_for_schema(tmp_path):
     result = CharacterSpecGenerator().execute(
         {
@@ -208,12 +236,7 @@ def test_character_style_is_normalized_for_schema(tmp_path):
     }
 
 
-def test_character_renderer_can_handoff_to_video_compose(tmp_path):
-    hyperframes = HyperFramesCompose()
-    runtime = hyperframes._runtime_check()
-    if not runtime["runtime_available"]:
-        pytest.skip("HyperFrames runtime is required for character render handoff")
-
+def test_character_renderer_can_handoff_to_video_compose(tmp_path, monkeypatch):
     character_design = CharacterSpecGenerator().execute(
         {"characters": [{"id": "mouse_lead", "role": "lead", "body_type": "mouse with tail"}]}
     ).data["character_design"]
@@ -259,6 +282,21 @@ def test_character_renderer_can_handoff_to_video_compose(tmp_path):
     assert Path(render_result.data["composition_path"]).exists()
 
     output_path = tmp_path / "renders" / "final.mp4"
+    captured_handoff = {}
+
+    def fake_hyperframes_execute(self, inputs):
+        captured_handoff.update(inputs)
+        Path(inputs["output_path"]).write_bytes(b"fake mp4")
+        return ToolResult(success=True, data={"output": inputs["output_path"]})
+
+    monkeypatch.setattr(VideoCompose, "_hyperframes_available", lambda self: True)
+    monkeypatch.setattr(
+        VideoCompose,
+        "_run_final_review",
+        lambda self, *args, **kwargs: {"status": "pass", "issues_found": []},
+    )
+    monkeypatch.setattr(HyperFramesCompose, "execute", fake_hyperframes_execute)
+
     compose_result = VideoCompose().execute(
         {
             "operation": "render",
@@ -274,3 +312,8 @@ def test_character_renderer_can_handoff_to_video_compose(tmp_path):
 
     assert compose_result.success, compose_result.error
     assert output_path.exists()
+    assert captured_handoff["operation"] == "render"
+    assert captured_handoff["workspace_path"] == render_result.data["hyperframes_workspace"]
+    assert captured_handoff["output_path"] == str(output_path)
+    assert captured_handoff["edit_decisions"]["render_runtime"] == "hyperframes"
+    assert captured_handoff["skip_contrast"] is True

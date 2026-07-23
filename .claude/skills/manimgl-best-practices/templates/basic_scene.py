@@ -130,5 +130,5 @@ class AnimationShowcase(Scene):
 if __name__ == "__main__":
     # This allows you to run: python basic_scene.py
     # (though using manimgl is recommended)
-    import os
-    os.system(f"manimgl {__file__} BasicSceneTemplate")
+    import subprocess
+    subprocess.run(["manimgl", __file__, "BasicSceneTemplate"])

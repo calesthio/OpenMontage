@@ -80,10 +80,24 @@ class OpenAITTS(BaseTool):
                 "type": "string",
                 "default": "mp3",
                 "enum": ["mp3", "wav", "pcm"],
+                "description": "Backward-compatible alias for response_format.",
+            },
+            "response_format": {
+                "type": "string",
+                "default": "mp3",
+                "enum": ["mp3", "opus", "aac", "flac", "wav", "pcm"],
+                "description": "OpenAI speech response_format.",
             },
             "instructions": {
                 "type": "string",
-                "description": "Optional delivery instructions for the voice",
+                "description": "Optional delivery instructions. Supported by gpt-4o-mini-tts.",
+            },
+            "speed": {
+                "type": "number",
+                "default": 1.0,
+                "minimum": 0.25,
+                "maximum": 4.0,
+                "description": "OpenAI speech speed multiplier.",
             },
             "output_path": {"type": "string"},
         },
@@ -93,7 +107,7 @@ class OpenAITTS(BaseTool):
         cpu_cores=1, ram_mb=256, vram_mb=0, disk_mb=50, network_required=True
     )
     retry_policy = RetryPolicy(max_retries=2, retryable_errors=["rate_limit", "timeout"])
-    idempotency_key_fields = ["text", "voice", "model", "format"]
+    idempotency_key_fields = ["text", "voice", "model", "format", "response_format", "instructions", "speed"]
     side_effects = ["writes audio file to output_path", "calls OpenAI API"]
     user_visible_verification = ["Listen to generated audio for intelligibility and tone"]
 
@@ -104,6 +118,10 @@ class OpenAITTS(BaseTool):
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         return round(len(inputs.get("text", "")) * 0.000015, 4)
+
+    @staticmethod
+    def _supports_instructions(model: str) -> bool:
+        return model.startswith("gpt-4o-mini-tts")
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         if not os.environ.get("OPENAI_API_KEY"):
@@ -124,11 +142,20 @@ class OpenAITTS(BaseTool):
 
         from tools.analysis.audio_probe import probe_duration
 
-        client = OpenAI()
         text = inputs["text"]
         model = inputs.get("model", "gpt-4o-mini-tts")
         voice = inputs.get("voice", "alloy")
-        fmt = inputs.get("format", "mp3")
+        fmt = inputs.get("response_format") or inputs.get("format", "mp3")
+        if inputs.get("instructions") and not self._supports_instructions(model):
+            return ToolResult(
+                success=False,
+                error=(
+                    "OpenAI TTS instructions are only supported by "
+                    "gpt-4o-mini-tts. Use that model or omit instructions."
+                ),
+            )
+
+        client = OpenAI()
         output_path = Path(inputs.get("output_path", f"openai_tts.{fmt}"))
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -155,6 +182,9 @@ class OpenAITTS(BaseTool):
                 "model": model,
                 "voice": voice,
                 "format": fmt,
+                "response_format": fmt,
+                "instructions": inputs.get("instructions"),
+                "speed": inputs.get("speed", 1.0),
                 "text_length": len(text),
                 "audio_duration_seconds": round(audio_duration, 2) if audio_duration else None,
                 "output": str(output_path),

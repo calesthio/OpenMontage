@@ -199,6 +199,26 @@
       "enum": ["remotion", "hyperframes", "ffmpeg"],
       "description": "Locked at proposal stage — technical runtime that realizes renderer_family. Edit MUST carry this forward unchanged unless a logged render_runtime_selection decision overrides it."
     },
+    "composition_mode": {
+      "type": "string",
+      "enum": ["templated", "atelier"],
+      "description": "Locked at proposal — HOW the composition is built. Edit MUST carry forward unchanged. 'atelier' routes video_compose to _render_via_atelier (no cut-schema, no stock registry); requires `bespoke` block below."
+    },
+    "bespoke": {
+      "type": "object",
+      "description": "Required when composition_mode='atelier'. Contract for the hand-authored, project-local Remotion render. See tools/video/video_compose.py → _render_via_atelier docstring.",
+      "required": ["entry", "composition_id", "art_direction"],
+      "properties": {
+        "entry": { "type": "string", "description": "Path to the project-local Remotion entry .tsx (typically projects/<slug>/index.tsx). If outside remotion-composer/, auto-staged via directory junction/symlink at render time." },
+        "composition_id": { "type": "string", "description": "id registered in that entry's Root" },
+        "art_direction": { "type": "string", "description": "Short commitment to a fresh visual language (or a path to art-direction.md). REQUIRED — enforced by _run_atelier_checks." },
+        "props_path": { "type": "string", "description": "Absolute path to a props JSON (Remotion --props)" },
+        "public_dir": { "type": "string", "description": "Per-project public dir (avoids copying the bloated shared remotion-composer/public/)" },
+        "scale": { "type": "number", "minimum": 0.1, "maximum": 1.0 },
+        "crf": { "type": "integer", "minimum": 0, "maximum": 51 },
+        "concurrency": { "type": "integer", "minimum": 1 }
+      }
+    },
     "slideshow_risk_score": {
       "type": "object",
       "description": "Slideshow risk assessment from lib/slideshow_risk.py",

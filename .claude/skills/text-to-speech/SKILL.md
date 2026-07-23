@@ -356,6 +356,25 @@ Rules:
 - Must have spaces before and after the tag
 - Self-closing tag format
 
+## Expressive Voice Direction
+
+For narration, create a short voice-performance plan before generating audio:
+
+- narrator persona and emotional intent
+- pacing profile
+- energy curve across the script
+- where pauses should land
+- words or phrases that need emphasis
+
+Use concrete cues, not generic instructions. "Warm but decisive; pause before
+the contrast; slow down on the final sentence" is useful. "Sound natural" is
+not.
+
+When the selected voice supports pauses, put the most important pauses directly
+in the text with break tags. Generate a sample from the most performance-heavy
+section first, and do not batch-generate the rest if the sample sounds flat,
+rushed, or ignores the intended breaks.
+
 ## Best Practices
 
 1. **Use `GET /v1/audio/voices`** to find compatible voices — not all voices from `GET /v2/voices` support Starfish TTS

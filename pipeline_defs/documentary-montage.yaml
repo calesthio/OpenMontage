@@ -102,7 +102,7 @@ stages:
       - clip_search
       - music_gen
     checkpoint_required: true
-    human_approval_default: false
+    human_approval_default: true
     review_focus:
       - Every slot has exactly one picked clip
       - No clip_id is picked for two slots

@@ -24,6 +24,11 @@ from tools.base_tool import (
     ToolTier,
 )
 
+# Single source of truth for the default model. Referenced by both the input
+# schema and every code path that reads `model`, so estimate_cost / estimate_runtime
+# / execute can never silently diverge from the advertised default again.
+_DEFAULT_MODEL = "seedance_2.0"
+
 
 class HiggsFieldVideo(BaseTool):
     name = "higgsfield_video"
@@ -89,7 +94,7 @@ class HiggsFieldVideo(BaseTool):
                     "wan_2.5",
                     "soul_cinema",
                 ],
-                "default": "seedance_2.0",
+                "default": _DEFAULT_MODEL,
                 "description": "Underlying model. Defaults to Seedance 2.0 (preferred premium) — see .agents/skills/seedance-2-0/",
             },
             "duration": {
@@ -134,7 +139,7 @@ class HiggsFieldVideo(BaseTool):
         return ToolStatus.UNAVAILABLE
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
-        model = inputs.get("model", "seedance_2.0")
+        model = inputs.get("model", _DEFAULT_MODEL)
         duration = int(inputs.get("duration", "5"))
         # Approximate per-clip costs based on Higgsfield credit pricing.
         # Seedance 2.0 on Higgsfield runs ~50-80 credits per 5s clip ≈ $0.50-$1.20.
@@ -151,7 +156,7 @@ class HiggsFieldVideo(BaseTool):
         return base * (duration / 5)
 
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
-        model = inputs.get("model", "seedance_2.0")
+        model = inputs.get("model", _DEFAULT_MODEL)
         if model in ("veo_3.1", "sora_2", "seedance_2.0"):
             return 120.0
         if model == "seedance_2.0_fast":
@@ -171,7 +176,7 @@ class HiggsFieldVideo(BaseTool):
         api_key, api_secret = creds
         start = time.time()
         operation = inputs.get("operation", "text_to_video")
-        model = inputs.get("model", "kling_3.0")
+        model = inputs.get("model", _DEFAULT_MODEL)
 
         payload: dict[str, Any] = {
             "prompt": inputs["prompt"],

@@ -77,6 +77,31 @@ class CogVideoVideo(BaseTool):
     def get_status(self) -> ToolStatus:
         return local_generation_status()
 
+    DEFAULT_VARIANT = "cogvideo-5b"
+
+    def _variant_for(self, inputs: dict[str, object]) -> dict[str, object]:
+        """Resolve the active variant dict, falling back to the default."""
+        return COGVIDEO_VARIANTS.get(
+            inputs.get("model_variant", self.DEFAULT_VARIANT),
+            COGVIDEO_VARIANTS[self.DEFAULT_VARIANT],
+        )
+
+    def is_operation_available(self, operation: str) -> bool:
+        """Capability is variant-driven, not unconditional.
+
+        cogvideo_video advertised image_to_video unconditionally, but the 2B
+        variant declares i2v=False (it is t2v-only). The selector calls this
+        without inputs, so we report capability for the DEFAULT variant
+        (cogvideo-5b: t2v=True, i2v=True) — execute() re-checks against the
+        caller's chosen variant and fails fast if it lacks the requested mode.
+        """
+        variant = COGVIDEO_VARIANTS[self.DEFAULT_VARIANT]
+        if operation == "image_to_video":
+            return bool(variant.get("i2v"))
+        if operation == "text_to_video":
+            return bool(variant.get("t2v"))
+        return True
+
     def estimate_cost(self, inputs: dict[str, object]) -> float:
         return 0.0
 
@@ -87,6 +112,22 @@ class CogVideoVideo(BaseTool):
     def execute(self, inputs: dict[str, object]) -> ToolResult:
         if self.get_status() != ToolStatus.AVAILABLE:
             return ToolResult(success=False, error="CogVideo local generation is unavailable. " + self.install_instructions)
+
+        # Consult the variant flag the selector cannot see: the 2B variant is
+        # t2v-only (i2v=False), so an image_to_video brief against it would
+        # otherwise reach the diffusion pipeline and fail opaquely.
+        operation = inputs.get("operation", "text_to_video")
+        variant = self._variant_for(inputs)
+        if operation == "image_to_video" and not variant.get("i2v"):
+            chosen = inputs.get("model_variant", self.DEFAULT_VARIANT)
+            return ToolResult(
+                success=False,
+                error=(
+                    f"CogVideo variant '{chosen}' does not support image_to_video "
+                    f"(i2v=False). Use the cogvideo-5b variant or a text_to_video operation."
+                ),
+            )
+
         start = time.time()
         try:
             result = generate_local_video(tool_name=self.name, variants=COGVIDEO_VARIANTS, default_variant="cogvideo-5b", inputs=inputs)

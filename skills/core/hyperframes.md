@@ -9,10 +9,18 @@ For raw HyperFrames knowledge (authoring contract, `data-*` attributes, GSAP
 timeline rules, CLI flags, registry blocks, website-to-video), read the Layer 3
 skills:
 
-- `.agents/skills/hyperframes/` — composition authoring contract + GSAP rules
-- `.agents/skills/hyperframes-cli/` — init, lint, validate, preview, render
+- `.agents/skills/hyperframes/` — router into the focused skills below (HF 0.7+ split the monolithic skill)
+- `.agents/skills/hyperframes-core/` — composition contract: `data-*` timing, tracks, sub-compositions, deterministic-render rules
+- `.agents/skills/hyperframes-creative/` — non-animation creative direction: palette, type, narration, beat planning
+- `.agents/skills/hyperframes-media/` — TTS/BGM/SFX/transcription/captions/background-removal
+- `.agents/skills/hyperframes-animation/` — all motion knowledge (rules, blueprints, transitions, runtime adapters)
+- `.agents/skills/hyperframes-cli/` — init, add, lint, validate, inspect, snapshot, preview, render, benchmark, lambda, doctor (0.7+)
 - `.agents/skills/hyperframes-registry/` — `hyperframes add` + block wiring
-- `.agents/skills/website-to-hyperframes/` — capture-to-video workflow
+- `.agents/skills/website-to-video/` — capture-to-video workflow (renamed from website-to-video in 0.7)
+- `.agents/skills/music-to-video/` — beat-synced music-driven video using `hyperframes beats`
+- `.agents/skills/motion-graphics/` — short design-led motion graphic patterns
+- `.agents/skills/media-use/` — `resolve` verb for BGM/SFX/image/icon (any pipeline, any runtime)
+- `.agents/skills/remotion-to-hyperframes/` — migration ONLY when user explicitly asks to port a Remotion source
 
 This file teaches the bridge between the two.
 
@@ -40,7 +48,7 @@ logged in `decision_log`. Silent runtime swaps are a contract violation.
 | Avatar / lip-sync presenter | **Remotion** | `TalkingHead` composition lives in Remotion. No HyperFrames equivalent yet. |
 | Kinetic typography, heavy text motion, GSAP-native animation | **HyperFrames** | HTML/GSAP is the natural medium. Expressing this as Remotion `interpolate()` calls is slow and fragile. |
 | Product promo / launch reel / marketing title card | **HyperFrames** | CSS/GSAP composition grammar matches how designers already think about these. Templates (`kinetic-type`, `product-promo`, `swiss-grid`) give a strong starting point. |
-| Website-to-video / UI-driven composition | **HyperFrames** | The `website-to-hyperframes` workflow exists for exactly this. |
+| Website-to-video / UI-driven composition | **HyperFrames** | The `website-to-video` workflow exists for exactly this. |
 | Registry block needed (data chart, grain overlay, shimmer sweep, shader transition) | **HyperFrames** | The registry is HyperFrames-only. Remotion does not have `hyperframes add`. |
 | Synthetic UI / fake terminal / fake browser demo | Either — depends on existing coverage | OpenMontage already ships Remotion `TerminalScene` (see `synthetic-screen-recording` Layer 3). For UI chrome beyond terminal, HyperFrames HTML is easier. |
 | Pure concat / trim of source clips, no composition | **FFmpeg** | Neither Remotion nor HyperFrames add value here. |
@@ -128,7 +136,7 @@ and gitignored along with the rest of `projects/`.
 - `npx hyperframes lint | validate | render` all operate on a project
   directory. They don't take an abstract composition ID the way Remotion does.
 - Assets live next to the HTML that references them, matching the
-  `website-to-hyperframes` reference workflow.
+  `website-to-video` reference workflow.
 
 ---
 
@@ -155,7 +163,7 @@ with the path to the generated MP4. See `tools/video/hyperframes_compose.py`.
 
 ### Workspace-local authoring artifacts
 
-Upstream's `website-to-hyperframes` skill uses `DESIGN.md`, `SCRIPT.md`, and
+Upstream's `website-to-video` skill uses `DESIGN.md`, `SCRIPT.md`, and
 `STORYBOARD.md` as step-by-step workspace files. OpenMontage does **not**
 replace its canonical artifact contracts with these — `brief`, `script`,
 `scene_plan`, `edit_decisions`, etc. remain the source of truth under

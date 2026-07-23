@@ -1,0 +1,69 @@
+name: Bug report
+description: Report a reproducible problem with OpenMontage
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. Please fill in the fields below so it can be reproduced and triaged quickly.
+        For questions or help, use [GitHub Discussions](https://github.com/calesthio/OpenMontage/discussions) instead.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: A clear, one-paragraph description of the bug.
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: e.g. Windows 11, macOS 14.5, Ubuntu 24.04
+    validations:
+      required: true
+  - type: input
+    id: pipeline
+    attributes:
+      label: Pipeline
+      description: Which pipeline were you running, if any?
+      placeholder: e.g. cinematic, explainer, character-animation
+    validations:
+      required: false
+  - type: input
+    id: runtime
+    attributes:
+      label: Runtime / renderer
+      placeholder: e.g. remotion, hyperframes
+    validations:
+      required: false
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: The exact commands or actions that trigger the bug.
+      placeholder: |
+        1. Run `...`
+        2. ...
+        3. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or error output
+      description: Paste any error messages or tracebacks. This is automatically formatted as code.
+      render: shell
+    validations:
+      required: false

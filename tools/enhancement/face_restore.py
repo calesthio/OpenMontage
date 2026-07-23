@@ -37,7 +37,9 @@ class FaceRestore(BaseTool):
 
     dependencies = ["python:gfpgan", "python:torch"]
     install_instructions = (
-        "pip install gfpgan  # Includes CodeFormer support. Requires PyTorch."
+        "uv pip install gfpgan torch\n"
+        "Works on: CUDA (NVIDIA), MPS (Apple Silicon M-series, macOS >= 12.3), CPU fallback.\n"
+        "No CUDA build needed on macOS — uv pip install torch includes MPS support."
     )
     agent_skills = ["ffmpeg"]
     fallback = None
@@ -121,12 +123,17 @@ class FaceRestore(BaseTool):
 
         try:
             import cv2
+            import inspect
             from gfpgan import GFPGANer
+            import torch
+            from tools.video._shared import get_torch_device as _get_device
         except ImportError as e:
             return ToolResult(
                 success=False,
-                error=f"Missing dependency: {e}. Run: pip install gfpgan",
+                error=f"Missing dependency: {e}. Run: uv pip install gfpgan",
             )
+
+        _device = _get_device()
 
         start = time.time()
 
@@ -141,18 +148,22 @@ class FaceRestore(BaseTool):
                     num_in_ch=3, num_out_ch=3, num_feat=64,
                     num_block=23, num_grow_ch=32, scale=2,
                 )
-                bg_upsampler = RealESRGANer(
-                    scale=2,
-                    model_path=(
+                bg_kwargs: dict = {
+                    "scale": 2,
+                    "model_path": (
                         "https://github.com/xinntao/Real-ESRGAN/releases/download/"
                         "v0.2.1/RealESRGAN_x2plus.pth"
                     ),
-                    model=realesrgan_model,
-                    tile=400,
-                    tile_pad=10,
-                    pre_pad=0,
-                    half=True,
-                )
+                    "model": realesrgan_model,
+                    "tile": 400,
+                    "tile_pad": 10,
+                    "pre_pad": 0,
+                    "half": (_device == "cuda"),
+                }
+                # Guard: only pass device= if the installed version accepts it
+                if "device" in inspect.signature(RealESRGANer.__init__).parameters:
+                    bg_kwargs["device"] = torch.device(_device)
+                bg_upsampler = RealESRGANer(**bg_kwargs)
             except ImportError:
                 bg_upsampler = None
 
@@ -172,12 +183,16 @@ class FaceRestore(BaseTool):
 
         # Instantiate restorer
         try:
-            restorer = GFPGANer(
-                model_path=model_path,
-                upscale=upscale,
-                arch=arch,
-                bg_upsampler=bg_upsampler,
-            )
+            restorer_kwargs: dict = {
+                "model_path": model_path,
+                "upscale": upscale,
+                "arch": arch,
+                "bg_upsampler": bg_upsampler,
+            }
+            # Guard: only pass device= if the installed version accepts it
+            if "device" in inspect.signature(GFPGANer.__init__).parameters:
+                restorer_kwargs["device"] = torch.device(_device)
+            restorer = GFPGANer(**restorer_kwargs)
         except Exception as e:
             return ToolResult(
                 success=False, error=f"Failed to load {model_name} model: {e}"

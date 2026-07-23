@@ -227,13 +227,13 @@ def classify_from_brief(
     if user_intent.get("motion_required") is False and promise_type == PromiseType.MOTION_LED:
         promise_type = PromiseType.HYBRID
 
-    motion_required = user_intent.get("motion_required", promise_type in (
-        PromiseType.MOTION_LED, PromiseType.AVATAR_PRESENTER,
-    ))
-
     source_required = user_intent.get("has_footage", False)
     if source_required and promise_type not in (PromiseType.SOURCE_LED, PromiseType.LOCALIZATION):
         promise_type = PromiseType.SOURCE_LED
+
+    motion_required = user_intent.get("motion_required", promise_type in (
+        PromiseType.MOTION_LED, PromiseType.AVATAR_PRESENTER,
+    ))
 
     tone_mode = user_intent.get("tone", "corporate")
     quality_floor = user_intent.get("quality", "presentable")

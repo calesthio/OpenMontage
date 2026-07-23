@@ -1,136 +1,109 @@
 ---
 name: hyperframes-cli
-description: HyperFrames CLI tool — hyperframes init, lint, validate, preview, render, transcribe, tts, doctor, browser, info, upgrade, compositions, docs, benchmark. Use when scaffolding a project, linting or validating compositions, previewing in the studio, rendering to video, transcribing audio, generating TTS, or troubleshooting the HyperFrames environment.
+description: HyperFrames CLI dev loop. Use when running npx hyperframes init, add, catalog, capture, lint, validate, inspect, layout, snapshot, preview, play, render, publish, lambda, doctor, browser, info, upgrade, skills, compositions, docs, benchmark, telemetry, transcribe, tts, or remove-background, or when troubleshooting the HyperFrames build/render environment. Entry point for AWS Lambda cloud rendering (`hyperframes lambda deploy / render / progress / destroy / policies`).
 ---
-
-<!--
-Vendored into OpenMontage from C:\Users\ishan\Documents\hyperframes\skills\hyperframes-cli\SKILL.md
-Source commit: d291358 (2026-04-17)
-See .agents/skills/hyperframes/PROVENANCE.md for re-sync instructions.
-
-OpenMontage-local edit: added `validate` to the top-line command list and a
-dedicated "Validation" section — upstream omits it even though the CLI ships it
-and `hyperframes validate` is the real browser-based contract check (contrast,
-timelines, assets) that runs before render.
--->
 
 # HyperFrames CLI
 
-Everything runs through `npx hyperframes`. Requires Node.js >= 22 and FFmpeg.
+Everything runs through `npx hyperframes` unless project instructions specify a local wrapper. Obey the local wrapper exactly. Requires Node.js >= 22 and FFmpeg.
 
 ## Workflow
 
-1. **Scaffold** — `npx hyperframes init my-video`
-2. **Write** — author HTML composition (see the `hyperframes` skill)
-3. **Lint** — `npx hyperframes lint` (static checks)
-4. **Validate** — `npx hyperframes validate` (browser-based runtime checks + contrast audit)
-5. **Preview** — `npx hyperframes preview`
-6. **Render** — `npx hyperframes render`
+1. **Scaffold** — `npx hyperframes init my-video` (or `capture` from a URL). `init` also checks the installed skills against the latest on GitHub and updates the global set if any are out of date. The `--skip-skills` flag is currently neutered (temporary, while the skills.sh registry catches up), so every `init` runs this check and pulls our latest skills regardless.
+2. **Write** — author HTML composition (see the `hyperframes-core` skill)
+3. **Lint** — `npx hyperframes lint`
+4. **Validate** — `npx hyperframes validate` (runtime errors + contrast)
+5. **Visual inspect** — `npx hyperframes inspect`
+6. **Preview** — `npx hyperframes preview` opens **Studio**, the timeline editor where the user can manually edit anything (not just watch). Review there, then ask before rendering.
+7. **Render** — pick the variant:
+   - Iterate: `npx hyperframes render --quality draft`
+   - Deliver: `npx hyperframes render --quality high --output out.mp4`
+   - CI / cross-host repro: `npx hyperframes render --docker --strict --output out.mp4`
+   - Cloud (long / large): `npx hyperframes lambda render ./my-project --width 1920 --height 1080 --wait` (see Lambda below)
 
-Lint catches static issues (missing `data-composition-id`, overlapping tracks, unregistered timelines). Validate catches runtime/visual issues by seeking into the paused composition in a real browser (contrast, broken overlays, missing assets). Run both before render.
+Run lint, validate, and inspect before preview. `lint` catches missing `data-composition-id`, overlapping tracks, and unregistered timelines. `validate` loads the composition in headless Chrome and reports runtime console errors plus WCAG contrast issues. `inspect` seeks through the timeline and reports text spilling out of bubbles/containers or off the canvas — and, when a `*.motion.json` sidecar is present, verifies motion intent (entrances firing under seek, stagger order, in-frame, liveness) against that same seeked timeline.
 
-## Validation
+For motion-heavy work, prefer snapshot-driven iteration and a `*.motion.json` sidecar — see `references/lint-validate-inspect.md` for the discipline and motion-verification spec.
 
-```bash
-npx hyperframes validate                 # full validation (static + contrast + contract)
-npx hyperframes validate --no-contrast   # skip WCAG contrast audit when iterating fast
-npx hyperframes validate --json          # machine-readable output
-```
+## Agent Conventions
 
-Validation seeks to several timestamps in the paused composition, screenshots the page, samples pixels behind every text element to compute WCAG contrast ratios, and verifies runtime contracts (`window.__timelines` registration, `class="clip"` presence, valid `data-*` attributes). Run it before every render — it's cheap and catches issues lint cannot see.
+Cross-cutting rules that hold for every command:
 
-## Scaffolding
+- **`--json` is available on every command except `render`, `preview`, and `play`.** Use it for any agent / CI invocation of the supported commands; output includes a `_meta` envelope (cli version, latest available, update advice). `render` reports status via stdout + exit code only — verify success with the post-render check below; `preview` / `play` are servers, no JSON.
+- **`doctor --json` always exits 0**, even when the environment is broken. Gate on the payload's `ok` field: `npx hyperframes doctor --json | jq -e '.ok' > /dev/null`. This insulates pipelines from CLI release churn.
+- **Non-TTY mode is auto-detected.** When `stdout` is not a TTY (CI, agents, piped output) the CLI auto-switches to non-interactive; `init` then **requires `--example`**. Pass `--non-interactive` to force this mode even on a TTY.
+- **CI gating on render**: `--strict` fails on lint errors, `--strict-all` fails on warnings too, `--strict-variables` fails on undeclared `--variables` keys.
+- **Paths in `--json` are redacted** — `$HOME` becomes the literal `$HOME` so output is safe to paste into bug reports and agent contexts.
+- **Render is user-gated.** Never auto-render once the checks pass. Pause at `preview`, tell the user the video is editable in Studio, and render only after they approve.
+- **Post-render verification.** After `render` returns exit 0, confirm the output file exists and has plausible size before reporting success: `[ -s "$OUTPUT" ] || echo "render produced no output"`. The CLI prints `◇  <path>` on success; for long renders also sanity-check duration with `ffprobe -i "$OUTPUT" -show_format -v error`.
 
-```bash
-npx hyperframes init my-video                        # interactive wizard
-npx hyperframes init my-video --example warm-grain   # pick an example
-npx hyperframes init my-video --video clip.mp4        # with video file
-npx hyperframes init my-video --audio track.mp3       # with audio file
-npx hyperframes init my-video --non-interactive       # skip prompts (CI/agents)
-```
+## Routing
 
-Templates: `blank`, `warm-grain`, `play-mode`, `swiss-grid`, `vignelli`, `decision-tree`, `kinetic-type`, `product-promo`, `nyt-graph`.
+| Want to…                                                                                                   | Read                                  |
+| ---------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| Scaffold a project (`init`, `capture`, `skills`)                                                           | `references/init-and-scaffold.md`     |
+| Check correctness (`lint`, `validate`, `inspect`, `snapshot`)                                              | `references/lint-validate-inspect.md` |
+| Preview or render (`preview`, `play`, `render`, `publish`)                                                 | `references/preview-render.md`        |
+| Diagnose the environment (`doctor`, `browser`)                                                             | `references/doctor-browser.md`        |
+| Cloud render on AWS Lambda (`lambda deploy / sites / render / progress / destroy / policies`)              | `references/lambda.md`                |
+| Everything else (`info`, `upgrade`, `compositions`, `docs`, `benchmark`, `telemetry`, asset preprocessing) | `references/upgrade-info-misc.md`     |
 
-`init` creates the right file structure, copies media, transcribes audio with Whisper, and installs AI coding skills. Use it instead of creating files by hand.
+## Cross-Skill Hand-Offs
 
-## Linting
+- **Tailwind projects** (`init --tailwind`) → use `hyperframes-core` (Tailwind reference) before editing classes or theme tokens.
+- **Registry blocks/components** (`hyperframes add`, `hyperframes catalog`) → use `hyperframes-registry` for install paths, sub-composition wiring, and snippet merging.
+- **Asset preprocessing** (`tts`, `transcribe`, `remove-background`) → use `hyperframes-media` for voice selection, Whisper model rules, captions, and TTS-to-captions chain.
+- **Parametrized renders** (`--variables`) → declared via `data-composition-variables` on `<html>`; see `hyperframes-core` for the full schema.
 
-```bash
-npx hyperframes lint                  # current directory
-npx hyperframes lint ./my-project     # specific project
-npx hyperframes lint --verbose        # info-level findings
-npx hyperframes lint --json           # machine-readable
-```
+## Lambda (Cloud Rendering)
 
-Lints `index.html` and all files in `compositions/`. Reports errors (must fix), warnings (should fix), and info (with `--verbose`).
-
-## Previewing
-
-```bash
-npx hyperframes preview                   # serve current directory
-npx hyperframes preview --port 4567       # custom port (default 3002)
-```
-
-Hot-reloads on file changes. Opens the studio in your browser automatically.
-
-## Rendering
+`hyperframes lambda` deploys distributed rendering to AWS Lambda and drives renders from your laptop or CI. End-to-end is three commands:
 
 ```bash
-npx hyperframes render                                # standard MP4
-npx hyperframes render --output final.mp4             # named output
-npx hyperframes render --quality draft                # fast iteration
-npx hyperframes render --fps 60 --quality high        # final delivery
-npx hyperframes render --format webm                  # transparent WebM
-npx hyperframes render --docker                       # byte-identical
+npx hyperframes lambda deploy                                             # provision SAM stack (Lambda + Step Functions + S3)
+npx hyperframes lambda render ./my-project --width 1920 --height 1080 --wait
+npx hyperframes lambda destroy                                            # tear down (S3 bucket is retained)
 ```
 
-| Flag           | Options               | Default                    | Notes                       |
-| -------------- | --------------------- | -------------------------- | --------------------------- |
-| `--output`     | path                  | renders/name_timestamp.mp4 | Output path                 |
-| `--fps`        | 24, 30, 60            | 30                         | 60fps doubles render time   |
-| `--quality`    | draft, standard, high | standard                   | draft for iterating         |
-| `--format`     | mp4, webm             | mp4                        | WebM supports transparency  |
-| `--workers`    | 1-8 or auto           | auto                       | Each spawns Chrome          |
-| `--docker`     | flag                  | off                        | Reproducible output         |
-| `--gpu`        | flag                  | off                        | GPU-accelerated encoding    |
-| `--strict`     | flag                  | off                        | Fail on lint errors         |
-| `--strict-all` | flag                  | off                        | Fail on errors AND warnings |
+Use Lambda when a render is too long / too large for one host (multi-minute videos, 4K, large parallel batches) and you have AWS credentials configured. For dev-loop iteration stay on local `render`.
 
-**Quality guidance:** `draft` while iterating, `standard` for review, `high` for final delivery.
+See `references/lambda.md` for prerequisites, all 6 subcommands (`deploy`, `sites create`, `render`, `progress`, `destroy`, `policies`), IAM policy validation, state files, and cost / cleanup rules.
 
-## Transcription
+## Minimum Completion Gate
+
+### Static gates
 
 ```bash
-npx hyperframes transcribe audio.mp3
-npx hyperframes transcribe video.mp4 --model medium.en --language en
-npx hyperframes transcribe subtitles.srt   # import existing
-npx hyperframes transcribe subtitles.vtt
-npx hyperframes transcribe openai-response.json
+npx hyperframes lint
+npx hyperframes validate
 ```
 
-## Text-to-Speech
+Add `inspect` for layout-sensitive work and `render --strict` in CI to fail on lint errors.
+
+### Visual smoke test — required when the project uses sub-compositions
+
+`lint` / `validate` / `inspect` evaluate each composition **in isolation**. They never load `index.html` and mount sub-compositions via `data-composition-src`, so they cannot catch cross-file mount failures (see `hyperframes-core` → `references/sub-compositions.md`, "Common pitfalls"). The only gate that catches them is one that actually loads `index.html` and seeks the timeline.
+
+Use `hyperframes snapshot` — it loads the project the same way `render` does (so it exercises the same mount path) but only captures the timestamps you request, so it's seconds instead of a full render:
 
 ```bash
-npx hyperframes tts "Text here" --voice af_nova --output narration.wav
-npx hyperframes tts script.txt --voice bf_emma
-npx hyperframes tts --list  # show all voices
+# Capture one frame at the midpoint of every sub-composition.
+# Midpoints = data-start + data-duration/2 for each host slot in index.html.
+npx hyperframes snapshot --at <t1>,<t2>,<t3>,...
+
+# Or, if you don't need per-scene targeting, an evenly-spaced sample:
+npx hyperframes snapshot --frames 9
 ```
 
-## Troubleshooting
+Output lands in `snapshots/frame-NN-at-Xs.png`. Eyeball each frame against the scene plan.
 
-```bash
-npx hyperframes doctor       # check environment (Chrome, FFmpeg, Node, memory)
-npx hyperframes browser      # manage bundled Chrome
-npx hyperframes info         # version and environment details
-npx hyperframes upgrade      # check for updates
-```
+Per-frame red flags (each maps to a specific failure mode the static gates miss):
 
-Run `doctor` first if rendering fails. Common issues: missing FFmpeg, missing Chrome, low memory.
+| What you see                                                                       | Root cause                                                                                  |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Text shows up tiny + unstyled in the top-left corner                               | `<style>` block left in `<head>` outside `<template>` (Pitfall 1) — no CSS reached live DOM |
+| SVG/icon elements blown up to canvas-size                                          | Same as above — no width/height constraints applied                                         |
+| Hero element of the scene is missing entirely; only background + watermark visible | Host-id ≠ template id (Pitfall 2) — timeline never ran, frame captured at initial state     |
+| Snapshot command logs `Sub-composition timelines not registered after 45000ms`     | Pitfall 2 — direct confirmation                                                             |
 
-## Other
-
-```bash
-npx hyperframes compositions   # list compositions in project
-npx hyperframes docs           # open documentation
-npx hyperframes benchmark .    # benchmark render performance
-```
+`snapshots/` can be deleted after eyeballing; the user-facing final render is a separate pass with `npx hyperframes render`.

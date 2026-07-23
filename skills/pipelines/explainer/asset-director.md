@@ -70,7 +70,7 @@ Before generating anything:
 
 Before batch-generating assets, produce one sample of each expensive asset type and present them to the user for approval:
 
-1. **TTS sample**: Generate narration for the first script section only. Play it for the user. Confirm voice, pace, and tone are acceptable before generating the rest.
+1. **TTS sample**: Generate narration for `script.voice_performance.sample_section_id` when present; otherwise pick the section with the most demanding delivery. Play it for the user. Confirm voice, pace, pauses, emphasis, and tone are acceptable before generating the rest.
 2. **Image sample**: Generate one image for the most representative scene. Show it to the user. Confirm the style, quality, and prompt approach before batch-generating all images.
 3. **Music sample** (if using `music_gen`): Generate one short clip. Confirm mood and energy before committing.
 
@@ -85,12 +85,23 @@ This step typically costs $0.03–0.08 total and prevents $1–3 of wasted gener
 
 For each script section:
 1. Extract the narration text
-2. Apply speaker directions from the script (pace, emphasis, emotion)
-3. Apply the playbook's `audio.voice_style`
-4. Generate using `tts_selector` — it auto-routes to the best available TTS provider based on user preference and availability. Check the registry's `best_for` fields to understand each provider's strengths.
-5. Verify the audio file exists and duration matches expected timing (±15%)
+2. Read `script.voice_performance` and section `delivery_cues`
+3. Use `delivery_cues.provider_text` when present; otherwise transform the section text with purposeful punctuation and break tags only when the selected provider supports them
+4. Apply speaker directions from the script (pace, emphasis, emotion)
+5. Apply the playbook's `audio.voice_style`
+6. Map cues to provider parameters:
+   - OpenAI: `instructions` only with `model: "gpt-4o-mini-tts"`; use `response_format` for output format
+   - Google TTS: `input_type: "ssml"` when using `<break>` tags, plus `speaking_rate` in `0.25..2.0` and `pitch` in `-20..20`
+   - ElevenLabs: `stability`, `similarity_boost`, `style`, `speed`, and `use_speaker_boost`
+7. Generate using `tts_selector` — it auto-routes to the best available TTS provider based on user preference and availability. Check the registry's `best_for` fields to understand each provider's strengths.
+8. Record the applied `voice_performance` metadata on each narration asset
+9. Verify the audio file exists and duration matches expected timing (±15%)
 
 **Pronunciation guide**: If the script contains technical terms, jargon, or names with non-obvious pronunciation, include a pronunciation map in the TTS request.
+
+**Flat voice failure:** If the approved voice sounds monotone, robotic, rushed,
+or ignores intended pauses, do not batch the remaining sections. Revise the
+`voice_performance` plan or provider parameters and regenerate the sample.
 
 ### Step 4: Generate Visual Assets
 
@@ -204,6 +215,8 @@ Assemble all generated assets into the manifest:
 
 **Quality check:**
 - [ ] Narration durations within ±15% of expected timing
+- [ ] Narration assets record `voice_performance.delivery_cues_applied`
+- [ ] Approved TTS sample uses the same provider, voice, and expressive settings as the batch
 - [ ] Images match the playbook's style (review consistency anchors)
 - [ ] Diagrams are legible and complete
 - [ ] Total cost within budget
@@ -242,6 +255,7 @@ the AI model's training data — it may be wrong or outdated.
 - **Generating before checking budget**: Always estimate total cost first. A 60-second video with 15 images can burn $3+ quickly.
 - **Inconsistent image style**: Each image_selector call is independent. Use consistent anchors, but adapt them per scene. If you paste the same style prefix into every prompt, the video will feel machine-made and repetitive.
 - **Ignoring narration timing**: If TTS produces 12s of audio for a 10s section, the edit phase will struggle. Check durations.
+- **Ignoring delivery cues**: Generating raw script text when `provider_text` or `delivery_cues` exist will flatten the read. Apply the voice-performance contract first.
 - **Missing pronunciation guide**: "PostgreSQL" or "Kubernetes" will be mispronounced without explicit guidance.
 - **One retry then give up**: If an image doesn't match, refine the prompt specifically — don't just retry the same prompt.
 - **AI-generating images with exact text (CTA, business names, contact info)**: AI image models frequently hallucinate wrong text — wrong business name, wrong phone number, misspelled words. **Never use AI image generation for scenes where text must be verbatim.** Use Remotion `text_card` type instead. This applies to: CTA screens, title cards with business names, contact info overlays, legal disclaimers. If a scene's `type` is `text_card` in the scene plan, do NOT generate an image for it — skip it and let the compose stage render it natively in Remotion.
@@ -259,8 +273,17 @@ If you encounter a generation technique, provider behavior, or prompting pattern
 
 This is especially important for:
 - **Video generation prompting** — models respond to specific vocabularies that change with each version
-- **Image model parameters** — optimal settings for FLUX, DALL-E, Imagen differ and evolve
+- **Image model parameters** — optimal settings for FLUX, GPT Image, Imagen differ and evolve
 - **Audio provider quirks** — voice cloning, music generation, and TTS each have model-specific best practices
 - **Remotion component patterns** — new composition techniques emerge as the framework evolves
 
 Do not rely on stale knowledge. When in doubt, search first.
+
+---
+
+## Gate Reminder (Binding)
+
+This stage gates on human approval (`human_approval_default: true`). After review passes:
+checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
+the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
+Approval is per-gate — an earlier "go ahead" does not cover this gate.

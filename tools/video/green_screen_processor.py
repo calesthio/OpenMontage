@@ -161,7 +161,7 @@ class GreenScreenProcessor(BaseTool):
 
             if method == "chromakey":
                 ok = self._process_chromakey(
-                    frames_dir, processed_dir, bg_color, frame_count
+                    frames_dir, processed_dir, bg_color, frame_count, width, height
                 )
             else:
                 ok = self._process_rembg(
@@ -445,6 +445,8 @@ class GreenScreenProcessor(BaseTool):
         processed_dir: Path,
         bg_color: str,
         frame_count: int,
+        width: int,
+        height: int,
     ) -> bool:
         """Process frames using FFmpeg chromakey filter.
 
@@ -461,13 +463,23 @@ class GreenScreenProcessor(BaseTool):
             out_path = processed_dir / frame.name
             cmd = [
                 "ffmpeg", "-y",
-                "-f", "lavfi", "-i", f"color=c={ffmpeg_bg}:size=1x1",
+                # Background sized to the frame up front. The old code used a 1x1
+                # color source and `[0:v]scale=iw:ih` — a no-op (iw/ih were the
+                # 1x1 source's own size) — and overlay takes the size of its
+                # FIRST input, so every frame was clipped to a single pixel and
+                # the whole video came out a solid color with the subject gone.
+                "-f", "lavfi", "-i", f"color=c={ffmpeg_bg}:size={width}x{height}",
                 "-i", str(frame),
                 "-filter_complex",
                 (
-                    f"[0:v]scale=iw:ih[bg];"
-                    f"[1:v]chromakey=color=0x00FF00:similarity=0.3:blend=0.08[fg];"
-                    f"[bg][fg]overlay=0:0"
+                    # Force an explicit alpha format after chromakey so the keyed
+                    # transparency survives filter negotiation on every FFmpeg
+                    # build — without it, some Linux builds carry the keyed frame
+                    # forward without an alpha plane and overlay draws opaque
+                    # green over the background instead of compositing.
+                    f"[1:v]chromakey=color=0x00FF00:similarity=0.3:blend=0.08,"
+                    f"format=yuva420p[fg];"
+                    f"[0:v][fg]overlay=0:0:format=auto,format=yuv420p"
                 ),
                 "-frames:v", "1",
                 str(out_path),

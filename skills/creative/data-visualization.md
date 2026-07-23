@@ -12,7 +12,7 @@ clear, accurate, and effective in video.
 | Tool | Role |
 |------|------|
 | `diagram_gen` | Generate charts via Mermaid or D3 |
-| `image_selector` | Generate stylized chart illustrations (FLUX/DALL-E) |
+| `image_selector` | Generate stylized chart illustrations (FLUX/GPT Image) |
 | Remotion | Animated chart components (bar grow, line draw, pie fill) |
 | Manim | Mathematical plots, coordinate systems, function graphs |
 

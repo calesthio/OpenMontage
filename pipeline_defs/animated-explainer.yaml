@@ -40,6 +40,7 @@ required_skills:
   - meta/checkpoint-protocol
   - meta/skill-creator
   - meta/animation-runtime-selector
+  - meta/voice-performance-director
 
 orchestration:
   mode: executive-producer
@@ -130,6 +131,7 @@ stages:
       - "Enhancement cue density: 1 per 8-10 seconds"
       - "Narrative arc: hook -> setup -> build -> climax -> landing"
       - Speaker directions present for TTS
+      - Voice performance plan includes concrete pacing, pause, emphasis, and sample cues
       - Script incorporates research data points and cited facts
     success_criteria:
       - Schema-valid script with enhancement_cues per section
@@ -182,10 +184,11 @@ stages:
       - music_gen
       - math_animate
     checkpoint_required: true
-    human_approval_default: false
+    human_approval_default: true
     review_focus:
       - All asset files exist on disk
       - Narration covers all script sections
+      - Narration assets apply the approved voice performance plan and sample settings
       - Total cost within approved budget from proposal_packet
       - Image style consistency across all generated visuals
     success_criteria:
@@ -254,7 +257,7 @@ stages:
       - proposal_packet
     produces:
       - publish_log
-    tools_available: []
+    tools_available: [export_bundle]
     checkpoint_required: true
     human_approval_default: true
     review_focus:

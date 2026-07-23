@@ -83,6 +83,11 @@ class GrokVideo(BaseTool):
     ]
     not_good_for = ["offline generation"]
     fallback_tools = ["veo_video", "runway_video", "kling_video", "minimax_video"]
+    # Native synchronized audio (lip-sync + dialogue + SFX in one pass) puts
+    # Grok on par with the other premium providers; without a quality_score the
+    # scorer only counted supports/stability flags, under-ranking it relative to
+    # seedance (0.95) / runway / higgsfield (0.9). See lib/scoring.py.
+    quality_score = 0.9
 
     input_schema = {
         "type": "object",

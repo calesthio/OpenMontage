@@ -45,6 +45,17 @@ class TTSSelector(BaseTool):
                 "type": "string",
                 "description": "Provider-specific voice ID. Passed through to the selected TTS provider.",
             },
+            "voice_language": {
+                "type": "string",
+                "enum": ["zh", "en"],
+                "description": "Kling official voice language. Passed through when selected provider supports it.",
+            },
+            "voice_speed": {
+                "type": "number",
+                "minimum": 0.5,
+                "maximum": 2.0,
+                "description": "Kling official voice speed. Use speed for OpenAI/ElevenLabs-style controls.",
+            },
             "model_id": {
                 "type": "string",
                 "description": "TTS model to use (e.g. eleven_multilingual_v2). Passed through to provider.",
@@ -60,6 +71,43 @@ class TTSSelector(BaseTool):
             "style": {
                 "type": "number", "minimum": 0, "maximum": 1,
                 "description": "Style exaggeration (ElevenLabs). Higher = more expressive.",
+            },
+            "instructions": {
+                "type": "string",
+                "description": "Provider-level delivery instructions for expressive narration when supported.",
+            },
+            "speaking_rate": {
+                "type": "number",
+                "minimum": 0.25,
+                "maximum": 2.0,
+                "description": "Google-style speakingRate control. Use speed for OpenAI/ElevenLabs-style controls.",
+            },
+            "speed": {
+                "type": "number",
+                "minimum": 0.25,
+                "maximum": 4.0,
+                "description": "Alias for speaking speed used by some providers.",
+            },
+            "pitch": {
+                "type": "number",
+                "minimum": -50,
+                "maximum": 50,
+                "description": "Provider-specific pitch control. Google TTS accepts -20..20; HeyGen-style providers may accept wider ranges.",
+            },
+            "input_type": {
+                "type": "string",
+                "enum": ["text", "ssml"],
+                "default": "text",
+                "description": "Use 'ssml' only when the selected provider supports tags such as <break>.",
+            },
+            "voice_performance": {
+                "type": "object",
+                "description": "Structured voice-performance plan or section delivery cues from the script artifact.",
+            },
+            "sample_mode": {
+                "type": "boolean",
+                "default": False,
+                "description": "True when generating an approval sample before batch narration.",
             },
             "output_format": {
                 "type": "string",

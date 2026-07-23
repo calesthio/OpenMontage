@@ -147,7 +147,7 @@ _SYNONYM_CLUSTERS: list[set[str]] = [
     {"music", "soundtrack", "background-music", "score", "ambient"},
 ]
 
-_TOKEN_RE = re.compile(r"[a-z0-9][a-z0-9+._-]*")
+_TOKEN_RE = re.compile(r"[a-z0-9](?:[a-z0-9+._-]*[a-z0-9])?")
 _GENERATED_VISUAL_TERMS = {
     "animated",
     "animation",
@@ -498,7 +498,7 @@ def score_provider(tool, task_context: dict[str, Any]) -> ProviderScore:
     # lip-sync from quoted dialogue. This is what makes Seedance 2.0 (and
     # peer premium APIs) meaningfully better than generic clip providers.
     if asset_type == "video":
-        intent_words = _expand_synonyms(set(intent.lower().split())) | set(style_keywords)
+        intent_words = _expand_synonyms(set(_tokenize_text(intent))) | set(style_keywords)
         cinematic_signal = bool(
             intent_words & {"cinematic", "film", "movie", "trailer", "teaser", "dramatic", "epic", "premium"}
         )

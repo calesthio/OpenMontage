@@ -125,7 +125,7 @@ stages:
       - lip_sync
       - audio_enhance
     checkpoint_required: true
-    human_approval_default: false
+    human_approval_default: true
     review_focus:
       - Subtitle and dubbed-audio assets exist for each language
       - Timing and pronunciation risks are recorded

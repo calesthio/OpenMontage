@@ -329,5 +329,5 @@ class MatrixTemplate(Scene):
 
 
 if __name__ == "__main__":
-    import os
-    os.system(f"manimgl {__file__} MathSceneTemplate")
+    import subprocess
+    subprocess.run(["manimgl", __file__, "MathSceneTemplate"])

@@ -309,19 +309,27 @@ class SubtitleGen(BaseTool):
         return "\n".join(lines)
 
     @staticmethod
-    def _ts_srt(seconds: float) -> str:
+    def _hmsms(seconds: float) -> tuple[int, int, int, int]:
+        """Decompose seconds into (h, m, s, ms), rounding to whole ms first.
+
+        Rounding to total milliseconds before splitting the fields lets the
+        carry propagate: 0.9995s+ must become the next second (…,000), not a
+        malformed 4-digit …,1000 with the seconds field left unincremented.
+        """
+        total_ms = int(round(max(0.0, seconds) * 1000))
+        h, rem = divmod(total_ms, 3_600_000)
+        m, rem = divmod(rem, 60_000)
+        s, ms = divmod(rem, 1_000)
+        return h, m, s, ms
+
+    @classmethod
+    def _ts_srt(cls, seconds: float) -> str:
         """Format seconds as SRT timestamp: HH:MM:SS,mmm"""
-        h = int(seconds // 3600)
-        m = int((seconds % 3600) // 60)
-        s = int(seconds % 60)
-        ms = int(round((seconds % 1) * 1000))
+        h, m, s, ms = cls._hmsms(seconds)
         return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
 
-    @staticmethod
-    def _ts_vtt(seconds: float) -> str:
+    @classmethod
+    def _ts_vtt(cls, seconds: float) -> str:
         """Format seconds as VTT timestamp: HH:MM:SS.mmm"""
-        h = int(seconds // 3600)
-        m = int((seconds % 3600) // 60)
-        s = int(seconds % 60)
-        ms = int(round((seconds % 1) * 1000))
+        h, m, s, ms = cls._hmsms(seconds)
         return f"{h:02d}:{m:02d}:{s:02d}.{ms:03d}"

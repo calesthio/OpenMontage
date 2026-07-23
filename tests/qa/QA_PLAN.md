@@ -9,7 +9,7 @@ Run every tool with real API keys, inspect outputs (see images, listen to audio,
 | Script | Tools Tested | API Keys Used | Est. Cost |
 |--------|-------------|---------------|-----------|
 | `test_01_tts.py` | `elevenlabs_tts` (ElevenLabs) | ELEVENLABS_API_KEY | ~$0.02 |
-| `test_02_image_gen.py` | `image_gen` (DALL-E 3 + FLUX) | OPENAI_API_KEY, FAL_AI_API_KEY | ~$0.15 |
+| `test_02_image_gen.py` | `image_gen` (GPT Image 2 + FLUX) | OPENAI_API_KEY, FAL_AI_API_KEY | ~$0.15 |
 | `test_03_music.py` | `music_gen` (ElevenLabs) | ELEVENLABS_API_KEY | ~$0.10 |
 | `test_04_audio_mix.py` | `audio_mixer` | None (ffmpeg only) | $0 |
 | `test_05_video_compose.py` | `video_compose` | None (ffmpeg only) | $0 |
@@ -30,7 +30,7 @@ For each output:
 | Area | Risk | How to Validate |
 |------|------|-----------------|
 | TTS voice selection | Default voice may not match playbook mood | Test with multiple voice IDs, compare against playbook `voice_style` |
-| Image gen consistency | DALL-E/FLUX outputs vary wildly per prompt | Test with playbook `image_prompt_prefix` prepended |
+| Image gen consistency | GPT Image/FLUX outputs vary wildly per prompt | Test with playbook `image_prompt_prefix` prepended |
 | Music duration alignment | Music may not match narration duration | Compare `music.duration` vs `tts.duration`, check padding/looping |
 | Audio ducking timing | Ducking may cut music too aggressively | Inspect waveform: music should duck ~6dB under speech, recover smoothly |
 | Video stitch transitions | Crossfade may flicker with mismatched codecs | Test with both matching and mismatched clips, check `auto_normalize` |

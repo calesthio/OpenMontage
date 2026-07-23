@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="340" height="68" viewBox="0 0 340 68" role="img" aria-label="#1 Repository of the Day on GitHub Trending">
+  <!-- Card -->
+  <rect x="1.5" y="1.5" width="337" height="65" rx="12" ry="12" fill="#0D1117" stroke="#A78BFA" stroke-width="1.6"/>
+
+  <!-- Laurel + "1" emblem -->
+  <g transform="translate(22 14)">
+    <g fill="none" stroke="#A78BFA" stroke-width="1.5" stroke-linecap="round">
+      <path d="M 4 34 C -2 26 -2 14 6 6"/>
+      <path d="M 4 30 C 0 30 -3 27 -3 24"/>
+      <path d="M 1 24 C -2 23 -4 20 -3 17"/>
+      <path d="M 0 18 C -2 16 -3 13 -1 10"/>
+      <path d="M 2 12 C 0 10 0 7 3 5"/>
+    </g>
+    <g fill="none" stroke="#A78BFA" stroke-width="1.5" stroke-linecap="round">
+      <path d="M 36 34 C 42 26 42 14 34 6"/>
+      <path d="M 36 30 C 40 30 43 27 43 24"/>
+      <path d="M 39 24 C 42 23 44 20 43 17"/>
+      <path d="M 40 18 C 42 16 43 13 41 10"/>
+      <path d="M 38 12 C 40 10 40 7 37 5"/>
+    </g>
+    <text x="20" y="30" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="28" font-weight="400" fill="#A78BFA">1</text>
+  </g>
+
+  <g transform="translate(96 0)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif">
+    <text x="0" y="28" font-size="11" font-weight="700" letter-spacing="1.8" fill="#7E74A6">GITHUB TRENDING</text>
+    <text x="0" y="52" font-size="20" font-weight="800" fill="#C4B5FD">#1 Repository Of The Day</text>
+  </g>
+</svg>

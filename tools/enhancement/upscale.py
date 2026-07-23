@@ -56,7 +56,11 @@ class Upscale(BaseTool):
     runtime = ToolRuntime.LOCAL_GPU
 
     dependencies = ["python:realesrgan", "python:torch", "cmd:ffmpeg"]
-    install_instructions = "pip install realesrgan  # Requires PyTorch with CUDA"
+    install_instructions = (
+        "uv pip install realesrgan torch\n"
+        "Works on: CUDA (NVIDIA), MPS (Apple Silicon M-series, macOS >= 12.3), CPU fallback.\n"
+        "No separate CUDA build needed on macOS — uv pip install torch includes MPS support."
+    )
     agent_skills = ["ffmpeg"]
 
     capabilities = [
@@ -266,6 +270,8 @@ class Upscale(BaseTool):
         face_enhance: bool,
     ):
         """Build and return a RealESRGANer instance."""
+        import inspect
+
         import torch
         from basicsr.archs.rrdbnet_arch import RRDBNet
         from realesrgan import RealESRGANer
@@ -281,25 +287,37 @@ class Upscale(BaseTool):
         if model_name == "RealESRGAN_x4plus_anime_6B":
             model_url = f"https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.2.4/{model_name}.pth"
 
-        half = torch.cuda.is_available()
+        from tools.video._shared import get_torch_device as _get_device
+        _device = _get_device()
+        half = _device == "cuda"  # fp16 only safe on CUDA; MPS/CPU use fp32 for realesrgan
 
-        upsampler = RealESRGANer(
-            scale=4,
-            model_path=model_url,
-            model=model,
-            dni_weight=denoise_strength,
-            half=half,
-        )
+        upsampler_kwargs: dict = {
+            "scale": 4,
+            "model_path": model_url,
+            "model": model,
+            "dni_weight": denoise_strength,
+            "half": half,
+        }
+        # Guard: only pass device= if the installed version accepts it
+        if "device" in inspect.signature(RealESRGANer.__init__).parameters:
+            upsampler_kwargs["device"] = torch.device(_device)
+
+        upsampler = RealESRGANer(**upsampler_kwargs)
 
         if face_enhance:
             from gfpgan import GFPGANer
-            face_enhancer = GFPGANer(
-                model_path="https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.3.pth",
-                upscale=scale,
-                arch="clean",
-                channel_multiplier=2,
-                bg_upsampler=upsampler,
-            )
+            face_kwargs: dict = {
+                "model_path": "https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.3.pth",
+                "upscale": scale,
+                "arch": "clean",
+                "channel_multiplier": 2,
+                "bg_upsampler": upsampler,
+            }
+            # Guard: only pass device= if the installed version accepts it
+            if "device" in inspect.signature(GFPGANer.__init__).parameters:
+                face_kwargs["device"] = torch.device(_device)
+
+            face_enhancer = GFPGANer(**face_kwargs)
             # Monkey-patch so the caller can use the same interface
             original_enhance = upsampler.enhance
 

@@ -19,6 +19,8 @@ boolean prop proliferation by using compound components, lifting state, and
 composing internals. These patterns make codebases easier for both humans and AI
 agents to work with as they scale.
 
+> **Extended reference:** [`AGENTS.md`](AGENTS.md) in this directory is the long-form upstream guide (vendored from Vercel). It is supplementary reference material scoped to this skill only — `SKILL.md` is the loadable entry point and the authority. It does not override or extend the repository-root `AGENTS.md` / `AGENT_GUIDE.md`.
+
 ## When to Apply
 
 Reference these guidelines when:

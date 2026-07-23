@@ -49,7 +49,7 @@ Prefer the lowest-variance useful path:
 
 Before batch-generating assets, produce one sample of each expensive type and show the user:
 
-1. **TTS sample** (if narration-led): Generate one section. Confirm voice and tone before batching.
+1. **TTS sample** (if narration-led): Generate `script.voice_performance.sample_section_id` when present; otherwise choose the section with the strongest emotional or pacing change. Confirm voice, pace, pauses, emphasis, and tone before batching.
 2. **Visual sample**: Generate one representative scene visual (diagram, illustration, or motion background). Confirm style and quality before batching the rest.
 
 If rejected, adjust parameters and retry (max 3 iterations). Do not batch until approved.
@@ -100,7 +100,12 @@ Create once:
 
 ### 3. Narration Is Optional, But The Plan Must Be Explicit
 
-If the project is narration-led, produce or source narration. If it is text-led or music-led, say so clearly in metadata.
+If the project is narration-led, produce or source narration. Read
+`skills/meta/voice-performance-director.md`, then apply `script.voice_performance`
+and each section's `delivery_cues` when building TTS requests. Use
+`provider_text` when present, map cues to provider controls, and record the
+applied settings on each narration asset. If it is text-led or music-led, say so
+clearly in metadata.
 
 ### 4. Use Metadata For Feasibility Truth
 
@@ -109,6 +114,7 @@ Recommended metadata keys:
 - `tool_path_map`
 - `reusable_assets`
 - `narration_assets`
+- `voice_performance`: sample approval path, provider settings, and whether delivery cues were applied
 - `scene_asset_index`
 - `blocked_assets`
 
@@ -117,7 +123,8 @@ Recommended metadata keys:
 - the asset path is explicit per scene,
 - reusable assets are actually reused,
 - missing capabilities are surfaced honestly,
-- every referenced file exists.
+- every referenced file exists,
+- narration-led assets apply the approved voice-performance settings.
 
 ### Mid-Production Fact Verification
 
@@ -135,6 +142,8 @@ the AI model's training data — it may be wrong or outdated.
 - Using high-variance generation when a deterministic asset would work better.
 - Rebuilding the same title or label system repeatedly.
 - Hiding failed asset paths instead of reporting them.
+- Treating TTS as raw text-to-audio. Narration-led animation needs pauses,
+  emphasis, and pace cues carried from the script into the generated audio.
 - Treating "consistency" as "same prompt every time." Good animation keeps a recognizable world while still letting each beat feel fresh.
 
 
@@ -150,8 +159,17 @@ If you encounter a generation technique, provider behavior, or prompting pattern
 
 This is especially important for:
 - **Video generation prompting** — models respond to specific vocabularies that change with each version
-- **Image model parameters** — optimal settings for FLUX, DALL-E, Imagen differ and evolve
+- **Image model parameters** — optimal settings for FLUX, GPT Image, Imagen differ and evolve
 - **Audio provider quirks** — voice cloning, music generation, and TTS each have model-specific best practices
 - **Remotion component patterns** — new composition techniques emerge as the framework evolves
 
 Do not rely on stale knowledge. When in doubt, search first.
+
+---
+
+## Gate Reminder (Binding)
+
+This stage gates on human approval (`human_approval_default: true`). After review passes:
+checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
+the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
+Approval is per-gate — an earlier "go ahead" does not cover this gate.

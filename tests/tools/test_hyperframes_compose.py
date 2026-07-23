@@ -353,6 +353,40 @@ def test_hyperframes_render_requires_workspace():
     assert ("workspace" in err) or ("runtime" in err) or ("hyperframes" in err)
 
 
+def test_hyperframes_render_resolves_relative_output_path_once(tmp_path, monkeypatch):
+    """A successful CLI render must not be reported missing for a relative path."""
+    import subprocess
+
+    from tools.base_tool import ToolResult
+
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    tool = HyperFramesCompose()
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(tool, "_runtime_check", lambda: {"runtime_available": True})
+    monkeypatch.setattr(tool, "_scaffold", lambda inputs: ToolResult(success=True, data={}))
+    monkeypatch.setattr(tool, "_lint", lambda inputs: ToolResult(success=True, data={}))
+    monkeypatch.setattr(tool, "_validate", lambda inputs: ToolResult(success=True, data={}))
+
+    def run_render(args, *, cwd, timeout, check):
+        output = Path(args[args.index("--output") + 1])
+        rendered_output = output if output.is_absolute() else cwd / output
+        rendered_output.parent.mkdir(parents=True, exist_ok=True)
+        rendered_output.write_bytes(b"rendered")
+        return subprocess.CompletedProcess(args, 0, "", "")
+
+    monkeypatch.setattr(tool, "_run_hf", run_render)
+
+    result = tool._render(
+        {"workspace_path": str(workspace), "output_path": "renders/final.mp4"}
+    )
+
+    expected = tmp_path / "renders" / "final.mp4"
+    assert result.success, result.error
+    assert result.data["output"] == str(expected)
+    assert result.artifacts == [str(expected)]
+
+
 # ------------------------------------------------------------------
 # video_compose runtime routing
 # ------------------------------------------------------------------
@@ -870,6 +904,45 @@ def test_video_compose_blocks_hyperframes_when_runtime_unavailable(
     assert "blocker" in err or "not available" in err
 
 
+def test_video_compose_honors_hyperframes_runtime_before_atelier_mode(
+    tmp_path, monkeypatch
+):
+    """Regression for F-14: composition_mode='atelier' must not force the
+    Remotion atelier branch when render_runtime='hyperframes' is locked."""
+
+    monkeypatch.setattr(
+        VideoCompose, "_hyperframes_available", lambda self: False, raising=True
+    )
+
+    result = VideoCompose().execute(
+        {
+            "operation": "render",
+            "edit_decisions": {
+                "version": "1.0",
+                "cuts": [
+                    {
+                        "id": "c1",
+                        "source": "a1",
+                        "in_seconds": 0,
+                        "out_seconds": 3,
+                    }
+                ],
+                "render_runtime": "hyperframes",
+                "composition_mode": "atelier",
+                "renderer_family": "animation-first",
+            },
+            "asset_manifest": {"assets": [{"id": "a1", "path": "does-not-matter.png"}]},
+            "output_path": str(tmp_path / "out.mp4"),
+        }
+    )
+
+    assert not result.success
+    err = (result.error or "").lower()
+    assert "hyperframes" in err
+    assert "not available" in err or "blocker" in err
+    assert "remotion entry" not in err
+
+
 # ------------------------------------------------------------------
 # Scaffold / workspace generation (no CLI invocation)
 # ------------------------------------------------------------------
@@ -1060,6 +1133,69 @@ def test_proposal_packet_schema_accepts_render_runtime():
     assert "render_runtime" in props
     assert "renderer_family" in props
     assert props["render_runtime"]["enum"] == ["remotion", "hyperframes", "ffmpeg"]
+
+
+def test_schemas_accept_voice_performance_contract():
+    root = Path(__file__).resolve().parent.parent.parent
+
+    script_schema = json.loads(
+        (root / "schemas" / "artifacts" / "script.schema.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert "voice_performance" in script_schema["properties"]
+    section_props = script_schema["properties"]["sections"]["items"]["properties"]
+    assert "delivery_cues" in section_props
+    assert "provider_text" in section_props["delivery_cues"]["properties"]
+
+    proposal_schema = json.loads(
+        (root / "schemas" / "artifacts" / "proposal_packet.schema.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    voice_selection = proposal_schema["properties"]["production_plan"]["properties"][
+        "voice_selection"
+    ]["properties"]
+    assert "delivery_style" in voice_selection
+    assert "pacing_policy" in voice_selection
+    assert "sample_approval_required" in voice_selection
+
+    asset_schema = json.loads(
+        (root / "schemas" / "artifacts" / "asset_manifest.schema.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    asset_props = asset_schema["properties"]["assets"]["items"]["properties"]
+    assert "voice_performance" in asset_props
+    assert "provider_settings" in asset_props["voice_performance"]["properties"]
+
+
+def test_tts_provider_contracts_match_supported_fields():
+    from tools.audio.elevenlabs_tts import ElevenLabsTTS
+    from tools.audio.google_tts import GoogleTTS
+    from tools.audio.openai_tts import OpenAITTS
+
+    google_props = GoogleTTS.input_schema["properties"]
+    assert google_props["input_type"]["enum"] == ["text", "ssml"]
+    assert google_props["speaking_rate"]["maximum"] == 2.0
+    assert google_props["pitch"]["minimum"] == -20.0
+    assert google_props["pitch"]["maximum"] == 20.0
+
+    openai_props = OpenAITTS.input_schema["properties"]
+    assert "response_format" in openai_props
+    assert {"mp3", "opus", "aac", "flac", "wav", "pcm"}.issubset(
+        set(openai_props["response_format"]["enum"])
+    )
+    assert OpenAITTS._supports_instructions("gpt-4o-mini-tts")
+    assert not OpenAITTS._supports_instructions("tts-1")
+    assert not OpenAITTS._supports_instructions("tts-1-hd")
+
+    eleven_props = ElevenLabsTTS.input_schema["properties"]
+    assert {"stability", "similarity_boost", "style", "speed", "use_speaker_boost"}.issubset(
+        set(eleven_props)
+    )
+    assert eleven_props["speed"]["minimum"] == 0.7
+    assert eleven_props["speed"]["maximum"] == 1.2
 
 
 def test_edit_decisions_schema_accepts_render_runtime():

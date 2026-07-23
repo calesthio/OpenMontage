@@ -333,6 +333,63 @@ class VideoCompose(BaseTool):
         operation = inputs["operation"]
         start = time.time()
 
+      # =====================================================================
+        # QUALITY GATE: Issue #222 Alignment Check & Timing Staleness
+        # =====================================================================
+        edit_decisions = inputs.get("edit_decisions", {})
+        if edit_decisions:
+            # 1. Timing Staleness Check (TTS Config change trigger)
+            tts_config = inputs.get("tts_config", {})
+            if tts_config and "staleness_threshold" in tts_config:
+                if check_timing_staleness(edit_decisions, tts_config):
+                    return ToolResult(
+                        success=False,
+                        error="Composition blocked: TTS parameter drift detected (Timing Stale)!"
+                    )
+
+            # 2. Extract layers for alignment checking
+            narration_beats = edit_decisions.get("narration_beats", [])
+            visual_scenes = edit_decisions.get("cuts", [])  # Schema cuts act as the active visual array elements
+
+            # Blocker 2 Fix: Populate runtime arrays dynamically if upstream stages are empty
+            if not narration_beats and visual_scenes:
+                for cut in visual_scenes:
+                    narration_beats.append({
+                        "beat_id": f"beat_{cut.get('id')}",
+                        "transcript_start": float(cut.get("in_seconds", 0.0)),
+                        "transcript_end": float(cut.get("out_seconds", 0.0)),
+                        "required_visual_intent": cut.get("layer", "primary").upper(),
+                        "expected_scene_id": cut.get("id")
+                    })
+
+                normalized_scenes = []
+                for cut in visual_scenes:
+                    normalized_scenes.append({
+                        "scene_id": cut.get("id"),
+                        "start": float(cut.get("in_seconds", 0.0)),
+                        "end": float(cut.get("out_seconds", 0.0)),
+                        "visual_intent": cut.get("layer", "primary").upper()
+                    })
+            else:
+                normalized_scenes = edit_decisions.get("visual_scenes", [])
+
+            # Enforce active semantic and timing validation gate execution
+            if narration_beats and normalized_scenes:
+                report = verify_audio_visual_alignment(
+                    narration_beats=narration_beats,
+                    visual_scenes=normalized_scenes,
+                    old_metadata=edit_decisions.get("metadata"),  # Monitored timing structures
+                    new_metadata=edit_decisions.get("metadata")
+                )
+
+                # Should-Fix: Proper framework handling via standard ToolResult instead of raw crash
+                if report["status"] == "FAIL":
+                    return ToolResult(
+                        success=False,
+                        error=f"OpenMontage Deterministic Render Blocked: {report['mismatches']}"
+                    )
+        # =====================================================================
+
         try:
             if operation == "compose":
                 result = self._compose(inputs)

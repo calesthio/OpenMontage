@@ -29,6 +29,7 @@ the agent to re-ask the user rather than substituting a different engine.
 """
 
 from __future__ import annotations
+from tools.video.alignment_gate import verify_audio_visual_alignmen
 
 import json
 import logging
@@ -332,6 +333,21 @@ class VideoCompose(BaseTool):
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         operation = inputs["operation"]
         start = time.time()
+
+      # Alignment Check         
+        edit_decisions = inputs.get("edit_decisions", {})
+        if edit_decisions:
+            # Safely fetch timeline mapping layers from the payload manifest metrics
+            narration_beats = edit_decisions.get("metadata", {}).get("narration_beats") or edit_decisions.get("narration_beats", [])
+            visual_scenes = edit_decisions.get("metadata", {}).get("visual_scenes") or edit_decisions.get("visual_scenes", [])
+            
+            if narration_beats and visual_scenes:
+                report = verify_audio_visual_alignment(narration_beats, visual_scenes)
+                if report["status"] == "FAIL":
+                    return ToolResult(
+                        success=False, 
+                        error=f"Composition blocked by alignment quality gate! Mismatches: {json.dumps(report['mismatches'], indent=2)}"
+                    )
 
         try:
             if operation == "compose":

@@ -206,7 +206,7 @@ If any dimension scores below 3, revise before submitting.
 
 ### Step 7: Submit
 
-Call `handle_explainer_script(state, {"script": script_json})` to validate and persist.
+Validate the script against the schema and persist via checkpoint.
 
 ### Mid-Production Fact Verification
 

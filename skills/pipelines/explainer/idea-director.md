@@ -129,7 +129,7 @@ If any dimension scores below 3, iterate before submitting. The reviewer will ch
 
 ### Step 7: Submit
 
-Call `handle_explainer_idea(state, {"brief": brief_json})` to validate and persist.
+Validate the brief against the schema and persist via checkpoint.
 
 ## Playbook Selection Guide
 

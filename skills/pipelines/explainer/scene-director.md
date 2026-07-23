@@ -65,24 +65,34 @@ Transform each script section into 1-3 visual scenes. Each scene is a distinct v
 
 #### Scene Types and When to Use Them
 
-| Type | Best For | Available Tools | Duration Guidance |
-|------|----------|-----------------|-------------------|
-| `hero_title` | Opening titles, dramatic reveals | Remotion HeroTitle (theme-driven title treatment) | 3-5s |
-| `stat_card` | Big dramatic numbers, impactful metrics | Remotion StatCard (large stat + subtitle) | 4-6s |
-| `bar_chart` | Category comparisons, rankings | Remotion BarChart (animated grow-up/slide-in/pop) | 5-7s |
-| `line_chart` | Trends, time series, growth curves | Remotion LineChart (draw/fade animation, multi-series) | 5-7s |
-| `pie_chart` | Proportions, breakdowns, distributions | Remotion PieChart (donut mode, center label, spin/expand) | 5-7s |
-| `kpi_grid` | Dashboards, traction metrics, at-a-glance data | Remotion KPIGrid (2-4 columns, count-up/pop/cascade) | 5-7s |
-| `comparison` | Before/after, A/B, versus comparisons | Remotion ComparisonCard (dual-value with divider) | 4-6s |
-| `callout` | Expert quotes, tips, warnings, important notes | Remotion CalloutBox (info/warning/tip/quote types) | 4-6s |
-| `progress_bar` | Journey visualization, completion, stacked metrics | Remotion ProgressBar (fill/pulse/step animations) | 4-6s |
-| `text_card` | Statements, closing messages, key terms | Remotion TextCard (centered, spring animation) | 3-5s |
-| `animation` | Concepts needing motion (data flow, math) | Remotion, Manim | 4-10s |
-| `diagram` | Processes, architecture, relationships | `diagram_gen` (Mermaid), `image_selector` | 4-8s |
-| `generated` | Illustrations, metaphors, real-world imagery | `image_selector` (FLUX/GPT Image) | 3-6s |
-| `talking_head` | AI avatar speaking (if HeyGen available) | HeyGen tools | 5-15s |
-| `broll` | Context, real-world examples | Stock or generated footage | 3-6s |
-| `screen_recording` | Code demos, UI walkthroughs | Recorded or simulated | 5-15s |
+These are Remotion render-template names consumed later as `edit_decisions.cuts[].type`
+by the Edit Agent (see `edit-director.md`) — **not** all of them are valid values for
+this scene's own `type` field. `text_card`, `animation`, `diagram`, `generated`,
+`talking_head`, `broll`, and `screen_recording` are (they appear in
+`schemas/artifacts/scene_plan.schema.json`'s `type` enum); the other nine rows below
+are Remotion component names only. For a scene whose visual is one of those nine, set
+this scene's own `type` to the value in the **Maps to `scene.type`** column, and record
+the intended render template in `overlay_notes` or `required_assets[].type` (a free-form
+string, no enum) so the Edit Agent can pick the right component up later.
+
+| Render Template (`cut.type` at Edit stage) | Maps to `scene.type` | Best For | Available Tools | Duration Guidance |
+|------|------|----------|-----------------|-------------------|
+| `hero_title` | `text_card` | Opening titles, dramatic reveals | Remotion HeroTitle (theme-driven title treatment) | 3-5s |
+| `stat_card` | `text_card` | Big dramatic numbers, impactful metrics | Remotion StatCard (large stat + subtitle) | 4-6s |
+| `bar_chart` | `diagram` | Category comparisons, rankings | Remotion BarChart (animated grow-up/slide-in/pop) | 5-7s |
+| `line_chart` | `diagram` | Trends, time series, growth curves | Remotion LineChart (draw/fade animation, multi-series) | 5-7s |
+| `pie_chart` | `diagram` | Proportions, breakdowns, distributions | Remotion PieChart (donut mode, center label, spin/expand) | 5-7s |
+| `kpi_grid` | `diagram` | Dashboards, traction metrics, at-a-glance data | Remotion KPIGrid (2-4 columns, count-up/pop/cascade) | 5-7s |
+| `comparison` | `text_card` (or `diagram` if chart-driven) | Before/after, A/B, versus comparisons | Remotion ComparisonCard (dual-value with divider) | 4-6s |
+| `callout` | `text_card` | Expert quotes, tips, warnings, important notes | Remotion CalloutBox (info/warning/tip/quote types) | 4-6s |
+| `progress_bar` | `diagram` | Journey visualization, completion, stacked metrics | Remotion ProgressBar (fill/pulse/step animations) | 4-6s |
+| `text_card` | `text_card` | Statements, closing messages, key terms | Remotion TextCard (centered, spring animation) | 3-5s |
+| `animation` | `animation` | Concepts needing motion (data flow, math) | Remotion, Manim | 4-10s |
+| `diagram` | `diagram` | Processes, architecture, relationships | `diagram_gen` (Mermaid), `image_selector` | 4-8s |
+| `generated` | `generated` | Illustrations, metaphors, real-world imagery | `image_selector` (FLUX/GPT Image) | 3-6s |
+| `talking_head` | `talking_head` | AI avatar speaking (if HeyGen available) | HeyGen tools | 5-15s |
+| `broll` | `broll` | Context, real-world examples | Stock or generated footage | 3-6s |
+| `screen_recording` | `screen_recording` | Code demos, UI walkthroughs | Recorded or simulated | 5-15s |
 
 **Zero-key scene selection:** When no image/video generation is available, prefer `hero_title`, `stat_card`, `bar_chart`, `line_chart`, `pie_chart`, `kpi_grid`, `comparison`, `callout`, `progress_bar`, and `text_card`. These render entirely from Remotion components with zero external dependencies and can still feel distinct if you derive color, typography, and pacing from the subject instead of defaulting to a generic dashboard aesthetic.
 
@@ -226,7 +236,7 @@ If any dimension scores below 3, revise.
 
 ### Step 8: Submit
 
-Call `handle_explainer_scene_plan(state, {"scene_plan": scene_plan_json})` to validate and persist.
+Validate the scene_plan against the schema and persist via checkpoint.
 
 ## Common Pitfalls
 

@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/design_system",
+  "title": "Design System",
+  "description": "Design system extracted from a product's source-code repository. Canonical artifact of the repo_analysis stage. Every token carries provenance (the repo file it was read from) — this is the enforceable core of staying truthful to the actual product. Anything inferred rather than read goes in gaps[].",
+  "type": "object",
+  "required": ["version", "source", "tokens", "summary"],
+  "$defs": {
+    "provenance": {
+      "type": "object",
+      "description": "Where in the analyzed repo this value was read from",
+      "required": ["file"],
+      "properties": {
+        "file": { "type": "string", "description": "Repo-relative path of the source file" },
+        "line": { "type": "integer", "description": "1-indexed line number, when known" },
+        "key": { "type": "string", "description": "Config key or CSS custom property name (e.g. '--color-primary', 'theme.extend.colors.brand')" }
+      },
+      "additionalProperties": false
+    },
+    "token": {
+      "type": "object",
+      "required": ["name", "value", "provenance"],
+      "properties": {
+        "name": { "type": "string" },
+        "value": { "type": "string" },
+        "role": { "type": "string", "description": "Semantic role (e.g. 'primary', 'surface', 'text-muted', 'card-radius')" },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      },
+      "additionalProperties": false
+    },
+    "component_style": {
+      "type": "object",
+      "required": ["variant", "css_summary", "provenance"],
+      "properties": {
+        "variant": { "type": "string", "description": "e.g. 'primary button', 'ghost button', 'text input focused'" },
+        "css_summary": { "type": "string", "description": "The styling that defines this variant, condensed (colors, radius, border, shadow, padding, type)" },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "version": { "type": "string", "const": "1.0" },
+    "source": {
+      "type": "object",
+      "required": ["repo_path", "framework"],
+      "properties": {
+        "repo_path": { "type": "string", "description": "Absolute or user-supplied path of the analyzed repository" },
+        "framework": {
+          "type": "string",
+          "enum": ["react", "next", "vue", "nuxt", "svelte", "other"],
+          "description": "Primary frontend framework detected from package.json"
+        },
+        "styling_systems": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["tailwind", "css-variables", "styled-components", "css-modules", "sass", "emotion", "inline", "other"]
+          },
+          "description": "Styling approaches actually found in the repo"
+        },
+        "git_commit": { "type": "string", "description": "Commit SHA the analysis was run against, for reproducibility" }
+      },
+      "additionalProperties": false
+    },
+    "tokens": {
+      "type": "object",
+      "description": "The extracted design tokens. Values must be read from the repo, not invented — inferred values belong in gaps[] with the glass spec's derived flag as the model.",
+      "properties": {
+        "colors": { "type": "array", "items": { "$ref": "#/$defs/token" } },
+        "typography": {
+          "type": "object",
+          "properties": {
+            "fonts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["family", "provenance"],
+                "properties": {
+                  "family": { "type": "string" },
+                  "role": { "type": "string", "description": "display | body | mono | caption" },
+                  "weights": { "type": "array", "items": { "type": "integer" } },
+                  "provenance": { "$ref": "#/$defs/provenance" }
+                },
+                "additionalProperties": false
+              }
+            },
+            "scale": {
+              "type": "array",
+              "description": "Type scale entries (size/weight/line-height per role)",
+              "items": {
+                "type": "object",
+                "required": ["name", "provenance"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "size": { "type": "string" },
+                  "weight": { "type": "string" },
+                  "line_height": { "type": "string" },
+                  "letter_spacing": { "type": "string" },
+                  "provenance": { "$ref": "#/$defs/provenance" }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "spacing": { "type": "array", "items": { "$ref": "#/$defs/token" } },
+        "radii": { "type": "array", "items": { "$ref": "#/$defs/token" } },
+        "shadows": { "type": "array", "items": { "$ref": "#/$defs/token" } },
+        "glass": {
+          "type": "object",
+          "description": "Glass/frosted surface spec for the video's panels. Usually DERIVED from the product's palette rather than read verbatim — set derived: true and explain in rationale.",
+          "required": ["derived"],
+          "properties": {
+            "background": { "type": "string" },
+            "backdrop_blur": { "type": "string" },
+            "border": { "type": "string" },
+            "highlight": { "type": "string", "description": "Top-edge highlight stroke, if any" },
+            "derived": { "type": "boolean", "description": "true when composed from palette tokens rather than read from repo CSS" },
+            "rationale": { "type": "string", "description": "How the spec was derived, or provenance note when read directly" },
+            "provenance": { "$ref": "#/$defs/provenance" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "component_styles": {
+      "type": "object",
+      "description": "Exact per-component CSS summaries read from the repo's real components",
+      "properties": {
+        "buttons": { "type": "array", "items": { "$ref": "#/$defs/component_style" } },
+        "inputs": { "type": "array", "items": { "$ref": "#/$defs/component_style" } },
+        "cards": { "type": "array", "items": { "$ref": "#/$defs/component_style" } },
+        "other": { "type": "array", "items": { "$ref": "#/$defs/component_style" } }
+      },
+      "additionalProperties": false
+    },
+    "gaps": {
+      "type": "array",
+      "description": "Honesty ledger: every value that was inferred or derived rather than read from the repo, and how",
+      "items": {
+        "type": "object",
+        "required": ["token", "how_inferred"],
+        "properties": {
+          "token": { "type": "string" },
+          "how_inferred": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "summary": {
+      "type": "string",
+      "description": "The design read in prose — what this product's visual language actually is, stated from evidence"
+    },
+    "metadata": { "type": "object" }
+  },
+  "additionalProperties": false
+}

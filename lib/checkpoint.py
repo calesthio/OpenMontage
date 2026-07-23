@@ -18,17 +18,21 @@ from schemas.artifacts import ARTIFACT_NAMES, validate_artifact
 
 # All known stages across all pipelines (used only for artifact name lookup).
 ALL_KNOWN_STAGES = frozenset([
-    "research", "proposal", "idea", "script", "scene_plan",
+    "research", "repo_analysis", "proposal", "idea", "script", "scene_plan",
     "assets", "edit", "compose", "publish",
 ])
 
 # Backward-compatible alias — existing code / tests that import STAGES still work.
 # New code should use get_pipeline_stages(pipeline_type) instead.
+# NOTE: repo_analysis (product-motion) is intentionally NOT in this legacy
+# fallback order — manifest-driven pipelines get their order from
+# get_pipeline_stages(pipeline_type); the fallback keeps the canonical 9.
 STAGES = ["research", "proposal", "idea", "script", "scene_plan",
           "assets", "edit", "compose", "publish"]
 
 CANONICAL_STAGE_ARTIFACTS = {
     "research": "research_brief",
+    "repo_analysis": "design_system",
     "proposal": "proposal_packet",
     "idea": "brief",
     "script": "script",
@@ -45,6 +49,7 @@ SUPPLEMENTARY_ARTIFACTS = {
     "source_media_review",  # Required before first planning stage when user media exists
     "final_review",         # Required by compose stage before presenting to user
     "video_analysis_brief", # Reference-video grounding artifact carried alongside stages
+    "ui_inventory",         # Screens/components catalog produced alongside design_system (repo_analysis)
 }
 
 

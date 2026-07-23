@@ -34,6 +34,24 @@
           "provider": { "type": "string", "description": "Provider name (e.g. pixabay, google_imagen)" },
           "license": { "type": "string", "description": "License type (e.g. Pixabay License, CC0)" },
           "original_url": { "type": "string", "description": "Source URL if downloaded from a stock service" },
+          "provenance": {
+            "type": "object",
+            "description": "For assets that replicate a real product's UI (product-motion pipeline): the repo sources this asset is grounded in. Enables truthfulness spot-checks at review gates.",
+            "properties": {
+              "source_files": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Repo-relative paths of the component/screen files this asset replicates"
+              },
+              "design_tokens": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Names of design_system tokens the asset's styling draws from"
+              },
+              "notes": { "type": "string", "description": "Deviations from the source and why" }
+            },
+            "additionalProperties": false
+          },
           "voice_performance": {
             "type": "object",
             "description": "Applied voice-performance contract for narration assets.",

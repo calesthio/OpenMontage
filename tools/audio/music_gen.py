@@ -1,6 +1,8 @@
 """Music generation tool via ElevenLabs Music API.
 
-Generates background music and sound effects for video production.
+Generates background music for video production. For short sound effects
+(UI ticks, whooshes, impacts) use the dedicated ``sfx_gen`` tool — it calls
+the ElevenLabs sound-generation endpoint, which this tool does not.
 Reports unavailable when no API key is configured.
 """
 
@@ -47,7 +49,6 @@ class MusicGen(BaseTool):
 
     capabilities = [
         "generate_background_music",
-        "generate_sfx",
     ]
 
     input_schema = {

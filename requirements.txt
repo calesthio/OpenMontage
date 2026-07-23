@@ -14,3 +14,8 @@ openai>=2.44.0         # Videos API support for Sora 2
 fastapi>=0.110
 uvicorn>=0.29
 watchfiles>=0.21
+# YouTube uploader dependencies
+google-api-python-client>=2.70.0
+google-auth-oauthlib>=0.8.0
+google-auth-httplib2>=0.1.0
+

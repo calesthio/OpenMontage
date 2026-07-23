@@ -113,6 +113,17 @@ class VideoCompose(BaseTool):
                     "edit_decisions.metadata.proposal_render_runtime."
                 ),
             },
+            "decision_log": {
+                "type": "object",
+                "description": (
+                    "Full decision_log artifact. Required when compose proceeds "
+                    "via edit_decisions.runtime_availability_override: the log "
+                    "MUST already contain a revised render_runtime_selection "
+                    "entry (same subject as the proposal-time decision, "
+                    "selected=accepted_runtime, user_approved=true) BEFORE "
+                    "video_compose dispatches to the downgrade engine."
+                ),
+            },
             "narration_transcript_path": {
                 "type": "string",
                 "description": (
@@ -1388,13 +1399,32 @@ class VideoCompose(BaseTool):
         profile = inputs.get("profile") or inputs.get("output_profile")
 
         if render_runtime == "hyperframes":
-            return self._render_via_hyperframes(
+            if self._hyperframes_available():
+                return self._render_via_hyperframes(
+                    inputs=inputs,
+                    edit_decisions=edit_decisions,
+                    asset_manifest=asset_manifest,
+                    resolved_cuts=resolved_cuts,
+                    output_path=output_path,
+                    profile=profile,
+                )
+            # Locked runtime is unavailable at compose. Governance forbids a
+            # silent swap to Remotion/FFmpeg (issue #359). The ONLY sanctioned
+            # way forward is a user-approved runtime_availability_override
+            # in edit_decisions PLUS a matching pre-appended decision_log
+            # revision (render_runtime_selection, same subject). Without both,
+            # this is a hard blocker — no post-render "suggested" audit trail.
+            override = self._validated_runtime_override(
+                edit_decisions,
+                decision_log=inputs.get("decision_log"),
+                locked_runtime="hyperframes",
+            )
+            if override is None:
+                return self._runtime_unavailable_blocker("hyperframes")
+            return self._render_with_runtime_override(
                 inputs=inputs,
                 edit_decisions=edit_decisions,
-                asset_manifest=asset_manifest,
-                resolved_cuts=resolved_cuts,
-                output_path=output_path,
-                profile=profile,
+                override=override,
             )
         if render_runtime == "ffmpeg":
             # Caller explicitly asked for FFmpeg — don't auto-upgrade to Remotion.
@@ -1492,6 +1522,373 @@ class VideoCompose(BaseTool):
 
         return render_result
 
+    # ------------------------------------------------------------------
+    # Runtime-availability governance (issue #359)
+    # ------------------------------------------------------------------
+    #
+    # A runtime is *locked* at proposal and carried through edit_decisions.
+    # If it becomes unavailable at compose (HyperFrames: Node < 22 or npm
+    # package unresolvable; Remotion: no node_modules; etc.) the tool MUST NOT
+    # silently substitute a different engine — that ships a deliverable whose
+    # visual treatment (GSAP kinetic typography, spring physics, …) differs
+    # from what was approved, with no audit trail. Instead:
+    #   1. Detect the mismatch BEFORE rendering.
+    #   2. Return a structured blocker with the three required options.
+    #   3. Proceed to a different engine ONLY when BOTH are present BEFORE
+    #      dispatch:
+    #        - edit_decisions.runtime_availability_override naming the
+    #          accepted runtime with user_approved=true
+    #        - a decision_log revision already appended with category
+    #          render_runtime_selection and the SAME subject as the
+    #          proposal-time decision (Re-log Changed Decisions board key)
+    #      Never a tool-chosen default; never a post-render suggested entry.
+
+    _RUNTIME_DECISION_CATEGORY = "render_runtime_selection"
+    _DEFAULT_RUNTIME_DECISION_SUBJECT = "composition runtime"
+
+    def _available_runtimes(self) -> dict[str, bool]:
+        """Live availability of every composition engine at compose time."""
+        return {
+            "ffmpeg": self._ffmpeg_available(),
+            "remotion": self._remotion_available(),
+            "hyperframes": self._hyperframes_available(),
+        }
+
+    def _runtime_missing_requirements(self, runtime: str) -> list[str]:
+        """Human-readable reasons a locked runtime can't render right now.
+
+        Re-runs the same availability probe used at preflight (the HyperFrames
+        `doctor` equivalent: Node major, ffmpeg, npx, npm-resolve) so the
+        blocker surfaces the *specific* missing piece, not a generic message.
+        """
+        if runtime == "hyperframes":
+            try:
+                from tools.video.hyperframes_compose import HyperFramesCompose
+                return list(HyperFramesCompose()._runtime_check().get("reasons", []))
+            except Exception as e:  # pragma: no cover - defensive
+                return [f"hyperframes runtime check failed: {e}"]
+        if runtime == "remotion":
+            return [
+                "Remotion not resolvable (needs Node.js/npx + "
+                "remotion-composer/node_modules)"
+            ]
+        if runtime == "ffmpeg":
+            return ["ffmpeg binary not found on PATH"]
+        return [f"unknown runtime {runtime!r}"]
+
+    @classmethod
+    def _runtime_decision_subject(cls, decision_log: Any) -> str:
+        """Subject of the proposal-time runtime decision (board identity key).
+
+        The board keys current state by (category, subject). A compose-time
+        revision MUST reuse the exact same subject as the original
+        render_runtime_selection entry; otherwise both appear as current.
+        """
+        if isinstance(decision_log, dict):
+            for entry in decision_log.get("decisions") or []:
+                if (
+                    isinstance(entry, dict)
+                    and entry.get("category") == cls._RUNTIME_DECISION_CATEGORY
+                    and isinstance(entry.get("subject"), str)
+                    and entry["subject"].strip()
+                ):
+                    return entry["subject"]
+        return cls._DEFAULT_RUNTIME_DECISION_SUBJECT
+
+    @classmethod
+    def _matching_runtime_revision_entry(
+        cls,
+        decision_log: Any,
+        *,
+        locked: str,
+        accepted: str,
+        decision_id: Optional[str] = None,
+    ) -> Optional[dict[str, Any]]:
+        """Return the latest matching revised render_runtime_selection entry.
+
+        Requires: category=render_runtime_selection, same subject as the
+        original decision, selected=accepted, user_approved=true, and the
+        unavailable locked runtime present in options_considered with a
+        rejected_because. Returns None if evidence is missing or incomplete.
+        """
+        if not isinstance(decision_log, dict):
+            return None
+        subject = cls._runtime_decision_subject(decision_log)
+        latest: Optional[dict[str, Any]] = None
+        for entry in decision_log.get("decisions") or []:
+            if not isinstance(entry, dict):
+                continue
+            if entry.get("category") != cls._RUNTIME_DECISION_CATEGORY:
+                continue
+            if entry.get("subject") != subject:
+                continue
+            latest = entry
+        if latest is None:
+            return None
+        if latest.get("selected") != accepted:
+            return None
+        if latest.get("user_approved") is not True:
+            return None
+        if decision_id and latest.get("decision_id") != decision_id:
+            return None
+        options = latest.get("options_considered") or []
+        locked_opt = next(
+            (o for o in options if isinstance(o, dict) and o.get("option_id") == locked),
+            None,
+        )
+        if locked_opt is None or not locked_opt.get("rejected_because"):
+            return None
+        accepted_opt = next(
+            (o for o in options if isinstance(o, dict) and o.get("option_id") == accepted),
+            None,
+        )
+        if accepted_opt is None:
+            return None
+        return latest
+
+    def _runtime_unavailable_blocker(self, locked_runtime: str) -> ToolResult:
+        """Structured blocker for a locked-but-unavailable runtime.
+
+        Carries the full context the governance contract requires: what was
+        locked, what is available now, the specific missing pieces, why it
+        matters, and the three explicit options (install / downgrade / abort)
+        plus exactly how to record a user-approved override with a revised
+        render_runtime_selection decision_log entry BEFORE re-calling compose.
+        """
+        available = self._available_runtimes()
+        available_names = [r for r, ok in available.items() if ok]
+        missing = self._runtime_missing_requirements(locked_runtime)
+        downgrade_targets = [r for r in available_names if r != locked_runtime]
+
+        why = (
+            f"render_runtime={locked_runtime!r} was locked at proposal and carried "
+            f"through edit_decisions, but {locked_runtime} cannot render on this "
+            f"machine right now. The approved treatment depends on it (HyperFrames "
+            f"realizes GSAP kinetic typography, SplitText/MotionPath timelines, and "
+            f"spring physics that Remotion/FFmpeg cannot reproduce). Substituting "
+            f"another engine would silently change the deliverable versus the "
+            f"approved brief, which the governance contract forbids."
+        )
+        options = [
+            {
+                "id": "install_runtime",
+                "label": f"Install / fix {locked_runtime}, then retry compose",
+                "detail": (
+                    "Resolve the missing_requirements below, re-run the availability "
+                    "check (hyperframes_compose operation='doctor' / "
+                    "make hyperframes-doctor), then re-run compose unchanged. "
+                    "Preferred — keeps the approved treatment intact."
+                ),
+            },
+            {
+                "id": "downgrade_runtime",
+                "label": (
+                    "Accept a downgrade to " + " or ".join(downgrade_targets)
+                    if downgrade_targets
+                    else "Accept a downgrade (no alternative runtime is available)"
+                ),
+                "detail": (
+                    "Requires EXPLICIT user approval. Preview what is lost (kinetic "
+                    "typography, GSAP timelines, spring physics), then: (1) write "
+                    "edit_decisions.runtime_availability_override "
+                    "{locked_runtime, accepted_runtime, user_approved: true}; "
+                    "(2) APPEND a revised decision_log entry with "
+                    "category='render_runtime_selection' and the SAME subject as "
+                    "the proposal-time runtime decision (board key), carrying the "
+                    "unavailable runtime in options_considered/rejected_because and "
+                    "the approved downgrade as selected with user_approved=true; "
+                    "(3) re-call video_compose with BOTH artifacts. Compose will not "
+                    "dispatch until the decision_log evidence is already present."
+                ),
+                "requires_user_approval": True,
+                "available_downgrade_targets": downgrade_targets,
+            },
+            {
+                "id": "abort",
+                "label": "Abort compose",
+                "detail": (
+                    "Stop here, leave render_runtime locked, produce no output. "
+                    "Nothing is written and no swap is recorded."
+                ),
+            },
+        ]
+        error = (
+            f"BLOCKER: render_runtime={locked_runtime!r} is locked but not available "
+            f"at compose time. Per AGENT_GUIDE.md > 'Escalate Blockers Explicitly' "
+            f"and 'Critical Rule: Motion-Required Requests', this is a hard blocker — "
+            f"video_compose will NOT silently fall back to another engine. Missing: "
+            f"{'; '.join(missing) or 'unknown'}. Surface data['options'] to the user "
+            f"and wait for an explicit choice; to downgrade, record "
+            f"edit_decisions.runtime_availability_override AND append a revised "
+            f"render_runtime_selection decision_log entry BEFORE re-calling compose "
+            f"(see data['how_to_record_override'])."
+        )
+        return ToolResult(
+            success=False,
+            error=error,
+            data={
+                "blocker": "runtime_unavailable",
+                "locked_runtime": locked_runtime,
+                "available_runtimes": available,
+                "available_runtime_names": available_names,
+                "missing_requirements": missing,
+                "why_it_matters": why,
+                "options": options,
+                "how_to_record_override": {
+                    "edit_decisions_field": "runtime_availability_override",
+                    "required_fields": [
+                        "locked_runtime",
+                        "accepted_runtime",
+                        "user_approved",
+                    ],
+                    "decision_log_category": self._RUNTIME_DECISION_CATEGORY,
+                    "decision_log_subject": self._DEFAULT_RUNTIME_DECISION_SUBJECT,
+                    "decision_log_must_be_appended_before_compose": True,
+                    "note": (
+                        "user_approved MUST be true on BOTH the override and the "
+                        "decision_log entry. Append a revised render_runtime_selection "
+                        "with the identical subject as the original runtime decision "
+                        "(Re-log Changed Decisions); do NOT invent a new category. "
+                        "accepted_runtime MUST be one of available_runtime_names. "
+                        "Compose validates the decision_log evidence BEFORE dispatch."
+                    ),
+                    "example_decision_log_entry": self._runtime_override_decision_scaffold(
+                        locked_runtime,
+                        downgrade_targets[0] if downgrade_targets else "remotion",
+                        {"reason": "user-approved compose-time downgrade"},
+                    ),
+                },
+            },
+        )
+
+    def _validated_runtime_override(
+        self,
+        edit_decisions: dict[str, Any],
+        *,
+        decision_log: Any,
+        locked_runtime: str,
+    ) -> Optional[dict[str, Any]]:
+        """Return the override ONLY if it is a valid, fully audited downgrade.
+
+        Guards against every ungoverned path: implied approval, a mismatched
+        locked_runtime, downgrading to a runtime that is itself unavailable,
+        OR asserting approval without a matching pre-appended
+        render_runtime_selection decision_log revision. Returns None
+        (→ hard blocker) in all of those cases.
+        """
+        override = edit_decisions.get("runtime_availability_override")
+        if not isinstance(override, dict):
+            return None
+        if override.get("user_approved") is not True:
+            return None
+        if override.get("locked_runtime") != locked_runtime:
+            return None
+        accepted = override.get("accepted_runtime")
+        if accepted not in {"remotion", "hyperframes", "ffmpeg"}:
+            return None
+        if accepted == locked_runtime:
+            return None
+        # Never downgrade to a second unavailable engine.
+        if not self._available_runtimes().get(accepted, False):
+            return None
+        # Pre-render audit trail is mandatory — suggested post-render entries
+        # are not enough (PR #376 review).
+        if self._matching_runtime_revision_entry(
+            decision_log,
+            locked=locked_runtime,
+            accepted=accepted,
+            decision_id=override.get("decision_id"),
+        ) is None:
+            return None
+        return override
+
+    @classmethod
+    def _runtime_override_decision_scaffold(
+        cls, locked: str, accepted: str, override: dict[str, Any]
+    ) -> dict[str, Any]:
+        """A schema-valid revised render_runtime_selection entry to append.
+
+        Reuses category=render_runtime_selection and subject='composition
+        runtime' so the board treats this as a revision of the original
+        runtime decision (Re-log Changed Decisions), not a forked identity.
+        """
+        return {
+            "decision_id": override.get("decision_id") or "d-runtime-override",
+            "stage": "compose",
+            "category": cls._RUNTIME_DECISION_CATEGORY,
+            "subject": cls._DEFAULT_RUNTIME_DECISION_SUBJECT,
+            "options_considered": [
+                {
+                    "option_id": locked,
+                    "label": f"{locked} (locked at proposal)",
+                    "score": 1.0,
+                    "reason": "Approved treatment; realizes the locked visual grammar.",
+                    "rejected_because": (
+                        "Runtime unavailable at compose time; user approved downgrade."
+                    ),
+                },
+                {
+                    "option_id": accepted,
+                    "label": f"{accepted} (downgrade)",
+                    "score": 0.5,
+                    "reason": override.get("reason")
+                    or "User-approved downgrade so compose can proceed.",
+                },
+            ],
+            "selected": accepted,
+            "reason": override.get("reason")
+            or f"{locked} unavailable at compose; user approved downgrade to {accepted}.",
+            "user_visible": True,
+            "user_approved": True,
+        }
+
+    def _render_with_runtime_override(
+        self,
+        *,
+        inputs: dict[str, Any],
+        edit_decisions: dict[str, Any],
+        override: dict[str, Any],
+    ) -> ToolResult:
+        """Proceed to a user-approved downgrade runtime (the governed path).
+
+        Reached only when the locked runtime is unavailable AND both a valid
+        runtime_availability_override and a matching pre-appended
+        render_runtime_selection decision_log revision are present. Re-routes
+        to the accepted runtime, stamps metadata.proposal_render_runtime with
+        the originally locked runtime so the final self-review's
+        runtime_swap_detected fires, and attaches the audit block.
+        """
+        locked = override["locked_runtime"]
+        accepted = override["accepted_runtime"]
+
+        downgraded_ed = dict(edit_decisions)
+        downgraded_ed["render_runtime"] = accepted
+        meta = dict(downgraded_ed.get("metadata") or {})
+        # Preserve what was approved so the swap is detected and auditable.
+        meta.setdefault("proposal_render_runtime", locked)
+        downgraded_ed["metadata"] = meta
+
+        new_inputs = dict(inputs)
+        new_inputs["edit_decisions"] = downgraded_ed
+
+        result = self._render(new_inputs)
+
+        if result.data is None:
+            result.data = {}
+        result.data["runtime_availability_override"] = {
+            "locked_runtime": locked,
+            "accepted_runtime": accepted,
+            "user_approved": True,
+            "reason": override.get("reason"),
+            "acknowledged_losses": override.get("acknowledged_losses", []),
+            "decision_id": override.get("decision_id"),
+            "decision_log_category": self._RUNTIME_DECISION_CATEGORY,
+            "decision_log_subject": self._runtime_decision_subject(
+                inputs.get("decision_log")
+            ),
+        }
+        return result
+
     def _render_via_hyperframes(
         self,
         *,
@@ -1509,18 +1906,10 @@ class VideoCompose(BaseTool):
         surface the blocker and get user approval before any runtime swap.
         """
         if not self._hyperframes_available():
-            return ToolResult(
-                success=False,
-                error=(
-                    "render_runtime='hyperframes' was locked at proposal, but "
-                    "the HyperFrames runtime is not available on this machine. "
-                    "Per governance this is a BLOCKER — surface it to the user "
-                    "per AGENT_GUIDE.md > 'Escalate Blockers Explicitly' and wait "
-                    "for approval before switching runtime. Requirements: "
-                    "Node.js >= 22, FFmpeg, and npx on PATH. See "
-                    "tools/video/hyperframes_compose.py for the specific missing piece."
-                ),
-            )
+            # Safety net: the primary gate lives in _render (which also honors a
+            # user-approved runtime_availability_override). A direct caller of
+            # this method still gets the structured blocker, never a silent swap.
+            return self._runtime_unavailable_blocker("hyperframes")
 
         try:
             from tools.video.hyperframes_compose import HyperFramesCompose

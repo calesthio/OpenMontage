@@ -227,6 +227,35 @@
         "verdict": { "type": "string", "enum": ["strong", "acceptable", "revise", "fail"] }
       }
     },
+    "runtime_availability_override": {
+      "type": "object",
+      "description": "Compose-time acknowledgment written ONLY after the user explicitly approves a runtime downgrade because the runtime locked in render_runtime became unavailable at compose (e.g. HyperFrames locked at proposal, but Node < 22 / npm package unresolvable at compose). This is the ONLY governed channel that lets video_compose proceed to a different engine than the locked render_runtime — without it, an unavailable locked runtime is a hard blocker (no silent swap). A matching revised decision_log entry MUST already be appended BEFORE compose dispatches, with category='render_runtime_selection' and the SAME subject as the proposal-time runtime decision (Re-log Changed Decisions — do not invent a new category). See AGENT_GUIDE.md > 'Re-log Changed Decisions' / 'Critical Rule: Motion-Required Requests' and skills/core/hyperframes.md > 'Runtime selection rules'.",
+      "required": ["locked_runtime", "accepted_runtime", "user_approved"],
+      "properties": {
+        "locked_runtime": {
+          "type": "string",
+          "enum": ["remotion", "hyperframes", "ffmpeg"],
+          "description": "The runtime originally locked in render_runtime that turned out unavailable at compose."
+        },
+        "accepted_runtime": {
+          "type": "string",
+          "enum": ["remotion", "hyperframes", "ffmpeg"],
+          "description": "The runtime the user approved as a downgrade. MUST be actually available at compose and differ from locked_runtime."
+        },
+        "user_approved": {
+          "type": "boolean",
+          "description": "MUST be true. video_compose refuses the downgrade otherwise — approval cannot be implied."
+        },
+        "reason": { "type": "string", "description": "Why the user accepted the downgrade (e.g. 'deadline; will re-render on HyperFrames later')." },
+        "decision_id": { "type": "string", "description": "decision_id of the matching revised render_runtime_selection entry already appended to decision_log." },
+        "acknowledged_losses": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "What the downgrade sacrifices (e.g. 'GSAP kinetic typography', 'SplitText/MotionPath timelines') — surfaced to the user before approval."
+        }
+      },
+      "additionalProperties": false
+    },
     "metadata": { "type": "object" }
   },
   "additionalProperties": false

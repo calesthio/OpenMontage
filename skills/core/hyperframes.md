@@ -195,9 +195,44 @@ artifact wins.
 4. **Compose stage** reads `edit_decisions.render_runtime` and routes via
    `video_compose` → `hyperframes_compose` (for HyperFrames) or the existing
    Remotion path (for Remotion). Compose may not swap runtime without a new
-   `render_runtime_selection` decision.
-5. **Final review** records `render_runtime_used` and sets
-   `runtime_swap_detected = true` if it differs from proposal.
+   decision.
+5. **Compose-time availability re-check (issue #359).** Before rendering,
+   `video_compose` re-runs the same availability probe used at preflight (the
+   `hyperframes doctor` equivalent: Node ≥ 22, `ffmpeg`, `npx`, and a live npm
+   resolve of the `hyperframes` package). If the locked runtime is **not**
+   available at compose time, `video_compose` returns a **structured blocker**
+   (`ToolResult.data["blocker"] == "runtime_unavailable"`) instead of
+   silently routing to another engine. The blocker carries: `locked_runtime`,
+   `available_runtimes`, `missing_requirements`, `why_it_matters`, and the
+   three options the user must choose between:
+   1. **install_runtime** — fix the missing pieces and retry compose unchanged
+      (preferred — keeps the approved treatment).
+   2. **downgrade_runtime** — accept a downgrade to an available engine. This
+      requires **explicit user approval** and is the ONLY sanctioned way to
+      proceed to a different engine.
+   3. **abort** — stop, produce nothing.
+
+   To take option (2), write a
+   **`edit_decisions.runtime_availability_override`** block
+   `{locked_runtime, accepted_runtime, user_approved: true}` (only after the
+   user approves, having seen what is lost) AND **append a revised**
+   `decision_log` entry with **`category: "render_runtime_selection"`** and
+   the **same subject** as the proposal-time runtime decision (board key —
+   see AGENT_GUIDE.md > "Re-log Changed Decisions"; do not invent a new
+   category). The revision must carry the unavailable runtime in
+   `options_considered`/`rejected_because` and the approved downgrade as
+   `selected` with `user_approved: true`. Pass that `decision_log` into
+   `video_compose`; compose validates the evidence **before** dispatch and
+   proceeds only to the `accepted_runtime` you named — never a tool-chosen
+   default, never a post-render suggested entry. Downgrading to a runtime that
+   is itself unavailable, with `user_approved` anything other than `true`, or
+   without the matching decision_log revision already appended, is rejected
+   (stays a blocker).
+6. **Final review** records `render_runtime_used` and sets
+   `runtime_swap_detected = true` if it differs from proposal (a governed
+   downgrade preserves the originally-locked runtime in
+   `edit_decisions.metadata.proposal_render_runtime` so the swap stays
+   auditable).
 
 ---
 

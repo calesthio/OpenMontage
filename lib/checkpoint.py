@@ -260,6 +260,33 @@ def _stage_requires_approval(pipeline_type: Optional[str], stage: str) -> Option
     return get_stage_human_approval_default(manifest, stage)
 
 
+def _first_unapproved_predecessor(
+    pipeline_dir: Path, project_id: str, pipeline_type: Optional[str], stage: str
+) -> Optional[str]:
+    """Return the name of the first prior stage (in pipeline order) that is
+    gated but not yet completed+approved, or None if every gated predecessor
+    is clear.
+
+    write_checkpoint()'s existing gate check only looks at the stage being
+    written right now — nothing previously checked that EARLIER gated stages
+    were actually approved before letting a later stage advance. That gap let
+    downstream stages get written while an earlier stage's checkpoint sat
+    unresolved indefinitely.
+    """
+    if not pipeline_type:
+        return None
+    stages = get_pipeline_stages(pipeline_type)
+    if stage not in stages:
+        return None
+    for predecessor in stages[: stages.index(stage)]:
+        if not _stage_requires_approval(pipeline_type, predecessor):
+            continue
+        cp = read_checkpoint(pipeline_dir, project_id, predecessor)
+        if not cp or cp.get("status") != "completed" or not cp.get("human_approved"):
+            return predecessor
+    return None
+
+
 def _archive_superseded_checkpoint(path: Path, stage: str) -> None:
     """Copy an existing checkpoint into history/ before it is overwritten.
 
@@ -402,6 +429,27 @@ def write_checkpoint(
                 f"status='awaiting_human', present the artifact summary to the "
                 f"user, END YOUR TURN, and only after the user approves "
                 f"re-write with status='completed', human_approved=True."
+            )
+
+    # --- Sequence gate enforcement ---
+    # The check above only guards the stage being written right now. It says
+    # nothing about whether EARLIER gated stages were ever actually approved.
+    # That gap lets a pipeline advance past an unresolved gate indefinitely
+    # (e.g. scene_plan sitting "awaiting_human" while assets/edit/compose get
+    # written anyway). Skip the check for "in_progress" writes so resume
+    # heartbeats and partial-progress refreshes (see checkpoint-protocol.md)
+    # keep working unblocked — only real stage advancement is gated here.
+    if status != "in_progress":
+        blocking_predecessor = _first_unapproved_predecessor(
+            pipeline_dir, project_id, pipeline_type, stage
+        )
+        if blocking_predecessor is not None:
+            raise CheckpointValidationError(
+                f"SEQUENCE GATE VIOLATION: stage {stage!r} cannot be written "
+                f"with status {status!r} because prior gated stage "
+                f"{blocking_predecessor!r} has not been completed and "
+                f"human-approved. Resolve the {blocking_predecessor!r} gate "
+                f"before advancing to {stage!r}."
             )
 
     checkpoint = {

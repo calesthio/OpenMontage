@@ -1710,6 +1710,32 @@ class VideoCompose(BaseTool):
                     posix = resolved.as_posix()
                     cut["source"] = f"file:///{posix}" if not posix.startswith("/") else f"file://{posix}"
 
+        # Adapter: CinematicRenderer expects scenes, but edit_decisions produces cuts.
+        # Map them if we are routing to a cinematic composition.
+        renderer_family = (composition_data or {}).get("renderer_family", "explainer-data")
+        if renderer_family in {"documentary-montage", "cinematic-trailer"} and "scenes" not in props and "cuts" in props:
+            scenes = []
+            current_time = 0.0
+            for i, cut in enumerate(props["cuts"]):
+                in_s = float(cut.get("in_seconds", 0) or 0)
+                out_s = float(cut.get("out_seconds", 0) or 0)
+                duration = max(0.1, out_s - in_s)
+                
+                scene = {
+                    "id": f"scene-{i}",
+                    "startSeconds": current_time,
+                    "durationSeconds": duration,
+                }
+                if cut.get("type") in {"text_card", "hero_title", "callout"} or not cut.get("source"):
+                    scene["kind"] = "title"
+                    scene["text"] = cut.get("text") or cut.get("title") or ""
+                else:
+                    scene["kind"] = "video"
+                    scene["src"] = cut.get("source")
+                scenes.append(scene)
+                current_time += duration
+            props["scenes"] = scenes
+
         # Build a custom themeConfig from the playbook's actual colors.
         # This ensures every video gets a unique visual identity derived
         # from its production decisions — not picked from a preset menu.

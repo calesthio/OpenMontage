@@ -185,6 +185,16 @@ as a single Remotion composition using the Explainer entry point. No FFmpeg asse
 The edit_decisions cuts array maps directly to Remotion props. See `skills/core/remotion.md`
 for the proven formula — especially the all-dark-background rule for visual consistency.
 
+**Local asset staging (automatic):** When `video_compose` runs the Remotion path, it
+copies local cut `source` paths and `audio.narration` / `audio.music` files into a
+**project-scoped** directory (`projects/<slug>/remotion-public/`) passed as Remotion
+`--public-dir`, and rewrites props to basename-relative `staticFile()` paths
+(`narration.mp3`). Do **not** hand-copy into `remotion-composer/public/` for this path —
+and never use absolute paths or `file://` for audio (headless Chromium blocks them).
+`https://` remote assets are unchanged. Staged media is cleaned up after render; a
+durable report lands in `renders/.remotion_asset_staging.json` and
+`metadata.remotion_asset_staging`.
+
 ### Step 5: Audio Post-Processing
 
 **Remotion path (DEFAULT):** Skip external audio mixing entirely. Remotion handles all audio

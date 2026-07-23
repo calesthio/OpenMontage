@@ -1700,15 +1700,36 @@ class VideoCompose(BaseTool):
         # Deep-copy props so we don't mutate the original
         props = json.loads(json.dumps(composition_data))
 
-        # Convert absolute file paths to file:// URIs for Remotion's
-        # Img and OffthreadVideo components
-        for cut in props.get("cuts", []):
-            source = cut.get("source", "")
-            if source and not source.startswith(("http://", "https://", "file://")):
-                resolved = Path(source).resolve()
-                if resolved.exists():
-                    posix = resolved.as_posix()
-                    cut["source"] = f"file:///{posix}" if not posix.startswith("/") else f"file://{posix}"
+        # remotion-composer lives at project root (needed before staging)
+        composer_dir = Path(__file__).resolve().parent.parent.parent / "remotion-composer"
+        if not composer_dir.exists():
+            return ToolResult(
+                success=False,
+                error=f"Remotion composer project not found at {composer_dir}",
+            )
+
+        # Stage local image/audio into a project-scoped --public-dir so
+        # Remotion's staticFile() can serve them. Headless Chromium blocks
+        # file:// for <Audio>. Never write into shared remotion-composer/public/.
+        from lib.remotion_asset_staging import (
+            cleanup_staging_dir,
+            derive_staging_slug,
+            resolve_project_public_dir,
+            stage_local_assets_for_remotion,
+        )
+
+        project_slug = derive_staging_slug(output_path, props)
+        public_dir = resolve_project_public_dir(output_path, props)
+        staging_report = stage_local_assets_for_remotion(
+            props,
+            public_dir=public_dir,
+            project_slug=project_slug,
+        )
+        props.setdefault("metadata", {})["remotion_asset_staging"] = staging_report
+        # Persist report next to the render so debug evidence survives media cleanup.
+        staging_report_path = output_path.parent / ".remotion_asset_staging.json"
+        with open(staging_report_path, "w", encoding="utf-8") as f:
+            json.dump(staging_report, f, indent=2)
 
         # Build a custom themeConfig from the playbook's actual colors.
         # This ensures every video gets a unique visual identity derived
@@ -1728,14 +1749,6 @@ class VideoCompose(BaseTool):
         with open(props_path, "w", encoding="utf-8") as f:
             json.dump(props, f)
 
-        # remotion-composer lives at project root
-        composer_dir = Path(__file__).resolve().parent.parent.parent / "remotion-composer"
-        if not composer_dir.exists():
-            return ToolResult(
-                success=False,
-                error=f"Remotion composer project not found at {composer_dir}",
-            )
-
         # Route to the correct Remotion composition based on renderer_family.
         # This prevents all pipelines from collapsing into the Explainer visual grammar.
         renderer_family = (composition_data or {}).get("renderer_family", "explainer-data")
@@ -1752,6 +1765,8 @@ class VideoCompose(BaseTool):
             # with "neither valid JSON nor a file path". The equals form is the
             # API Remotion recommends for file paths and is cross-platform safe.
             f"--props={props_path}",
+            # Project-scoped public dir (not remotion-composer/public).
+            f"--public-dir={public_dir.resolve()}",
         ]
 
         # Apply media profile dimensions
@@ -1808,6 +1823,8 @@ class VideoCompose(BaseTool):
         finally:
             if props_path.exists():
                 props_path.unlink()
+            # Remove staged user media; keep .remotion_asset_staging.json for debug.
+            cleanup_staging_dir(public_dir)
 
         if not output_path.exists():
             return ToolResult(
@@ -1821,8 +1838,10 @@ class VideoCompose(BaseTool):
                 "operation": "remotion_render",
                 "output": str(output_path),
                 "profile": profile_name,
+                "remotion_asset_staging": staging_report,
+                "remotion_asset_staging_report": str(staging_report_path),
             },
-            artifacts=[str(output_path)],
+            artifacts=[str(output_path), str(staging_report_path)],
         )
 
     # ------------------------------------------------------------------

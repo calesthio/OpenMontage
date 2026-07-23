@@ -6,7 +6,7 @@ PIP = $(RUN_PYTHON) -m pip
 
 .DEFAULT_GOAL := setup
 
-.PHONY: setup install install-dev install-gpu test test-contracts lint clean preflight demo demo-list hyperframes-doctor hyperframes-warm venv ensure-venv
+.PHONY: setup install install-dev install-gpu test test-contracts lint clean preflight demo demo-list hyperframes-doctor hyperframes-warm venv ensure-venv install-mlx-audio
 
 # ---- Virtual environment ----
 
@@ -74,6 +74,7 @@ setup: ensure-venv
 	@echo "  Optional: run 'make install-gpu' if you have an NVIDIA GPU."
 	@echo "  Optional: run 'make hyperframes-doctor' to fully validate the HyperFrames runtime."
 	@echo "  Optional: run 'make hyperframes-warm' anytime to refresh the npx cache to the latest hyperframes version."
+	@echo "  Optional: on Apple Silicon, run 'make install-mlx-audio' for local model-based TTS."
 
 # ---- Individual installs ----
 
@@ -86,6 +87,16 @@ install-dev: ensure-venv
 install-gpu: ensure-venv
 	$(PIP) install -r requirements-gpu.txt
 	$(PIP) install diffusers transformers accelerate
+
+install-mlx-audio: ensure-venv
+	@os="$$(uname -s)"; arch="$$(uname -m)"; \
+	if [ "$$os" != "Darwin" ] || [ "$$arch" != "arm64" ]; then \
+		echo "ERROR: MLX-Audio TTS requires macOS on Apple Silicon (Darwin arm64); detected $$os $$arch."; \
+		exit 1; \
+	fi
+	@echo "==> Installing MLX-Audio TTS for Apple Silicon..."
+	$(PIP) install -r requirements-mlx-audio.txt
+	@echo "==> Set MLX_AUDIO_ENABLED=true in .env to enable the provider."
 
 # ---- Testing ----
 

@@ -36,6 +36,7 @@ from tools.audio.openai_tts import OpenAITTS
 from tools.audio.piper_tts import PiperTTS
 from tools.audio.tts_selector import TTSSelector
 from tools.audio.google_tts import GoogleTTS
+from tools.audio.mlx_audio_tts import MLXAudioTTS
 from tools.graphics.google_imagen import GoogleImagen
 from tools.audio.google_music import GoogleMusic
 from tools.video.veo_video import VeoVideo
@@ -155,6 +156,22 @@ class TestGoogleTTS:
         tool = GoogleTTS()
         assert "text_to_speech" in tool.capabilities
         assert "voice_selection" in tool.capabilities
+
+
+class TestMLXAudioTTS:
+    def test_identity_and_hard_cut_contract(self):
+        tool = MLXAudioTTS()
+        info = tool.get_info()
+        assert info["name"] == "mlx_audio_tts"
+        assert info["tier"] == "voice"
+        assert info["capability"] == "tts"
+        assert info["provider"] == "mlx_audio"
+        assert info["runtime"] == "local_gpu"
+        assert info["dependencies"] == ["python:mlx_audio", "binary:ffprobe"]
+        assert tool.input_schema["required"] == ["text", "output_path"]
+        assert tool.retry_policy.max_retries == 0
+        assert tool.fallback is None
+        assert tool.fallback_tools == []
 
 
 # ---- Music Generation Tools ----
@@ -630,17 +647,24 @@ class TestNewToolsRegistry:
         reg.register(ElevenLabsTTS())
         reg.register(PiperTTS())
         reg.register(MusicGen())
-        assert len(reg.list_all()) == 3
+        reg.register(MLXAudioTTS())
+        assert len(reg.list_all()) == 4
 
     def test_voice_tier_tools(self):
         reg = ToolRegistry()
         reg.register(ElevenLabsTTS())
         reg.register(OpenAITTS())
         reg.register(PiperTTS())
+        reg.register(MLXAudioTTS())
         voice_tools = reg.get_by_tier(ToolTier.VOICE)
-        assert len(voice_tools) == 3
+        assert len(voice_tools) == 4
         names = {t.name for t in voice_tools}
-        assert names == {"elevenlabs_tts", "openai_tts", "piper_tts"}
+        assert names == {
+            "elevenlabs_tts",
+            "openai_tts",
+            "piper_tts",
+            "mlx_audio_tts",
+        }
 
 
 class TestCapabilityMetadata:
@@ -661,11 +685,13 @@ class TestCapabilityMetadata:
         reg.register(OpenAITTS())
         reg.register(PiperTTS())
         reg.register(TTSSelector())
+        reg.register(MLXAudioTTS())
         assert {tool.name for tool in reg.get_by_capability("tts")} == {
             "elevenlabs_tts",
             "openai_tts",
             "piper_tts",
             "tts_selector",
+            "mlx_audio_tts",
         }
         assert {tool.name for tool in reg.get_by_provider("elevenlabs")} == {
             "elevenlabs_tts"
@@ -687,6 +713,7 @@ class TestCapabilityMetadata:
             "kling_official",
             "openai",
             "piper",
+            "mlx_audio",
         }
 
 

@@ -1,0 +1,9 @@
+Amazon just spent $1,000,000,000 admitting something: AI does not deploy itself.
+
+AWS is embedding thousands of engineers inside customer companies to build agents with them. Not selling tools. Shipping outcomes. The model was never the bottleneck. Deployment is.
+
+Steal the play: one workflow, one builder inside it for two weeks, shipped against a real metric.
+
+comment "deploy" and I'll send you The Deployment Brief (free PDF).
+
+#ai #aws #aiagents #automation #buildinpublic #operator #deployment

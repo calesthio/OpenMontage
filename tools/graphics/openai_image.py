@@ -123,6 +123,21 @@ class OpenAIImage(BaseTool):
         cost_map = {"low": 0.006, "medium": 0.053, "high": 0.211, "auto": 0.053}
         return cost_map.get(quality, 0.053) * n
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Worst-case upper bound on a single call's spend.
+
+        For an explicit low/medium/high quality the estimate IS the per-image
+        price times n, so it is its own ceiling. "auto" (and any unrecognized
+        value) lets the provider resolve the tier, which can land on the
+        dearest one -- so those are priced as "high". Evaluating
+        estimate_cost() keeps the bound reading the same price map as the
+        estimate. execute() bills exactly one images.generate request.
+        """
+        quality = inputs.get("quality", "high")
+        if quality in ("low", "medium", "high"):
+            return self.estimate_cost(inputs)
+        return self.estimate_cost({**inputs, "quality": "high"})
+
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         if not os.environ.get("OPENAI_API_KEY"):
             return ToolResult(

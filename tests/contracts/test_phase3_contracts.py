@@ -188,8 +188,10 @@ class TestGoogleMusic:
         assert info["provider"] == "google"
         assert info["agent_skills"] == ["lyria"]
 
-    def test_duration_validation(self):
+    def test_duration_validation(self, budget_gate_isolated):
         tool = GoogleMusic()
+        # Gate active; approve this paid tool via the gate's real API.
+        budget_gate_isolated.approve_tool("google_music")
         mock_client = MagicMock()
 
         mock_interaction = MagicMock()
@@ -226,8 +228,10 @@ class TestGoogleMusic:
             assert res.error is not None
             assert "maximum duration is 184" in res.error
 
-    def test_execute_success_convenience_extraction(self, tmp_path):
+    def test_execute_success_convenience_extraction(self, tmp_path, budget_gate_isolated):
         tool = GoogleMusic()
+        # Gate active; approve this paid tool via the gate's real API.
+        budget_gate_isolated.approve_tool("google_music")
         mock_client = MagicMock()
 
         mock_interaction = MagicMock()
@@ -255,8 +259,10 @@ class TestGoogleMusic:
             assert res.data["output"] == str(output_file)
             assert output_file.read_bytes() == b"my_fake_google_lyria_audio"
 
-    def test_execute_success_fallback_extraction(self, tmp_path):
+    def test_execute_success_fallback_extraction(self, tmp_path, budget_gate_isolated):
         tool = GoogleMusic()
+        # Gate active; approve this paid tool via the gate's real API.
+        budget_gate_isolated.approve_tool("google_music")
         mock_client = MagicMock()
 
         mock_interaction = MagicMock()
@@ -292,8 +298,10 @@ class TestGoogleMusic:
 
     @patch("os.path.exists")
     @patch("requests.get")
-    def test_multimodal_image(self, mock_get, mock_exists, tmp_path):
+    def test_multimodal_image(self, mock_get, mock_exists, tmp_path, budget_gate_isolated):
         tool = GoogleMusic()
+        # Gate active; approve this paid tool via the gate's real API.
+        budget_gate_isolated.approve_tool("google_music")
         mock_client = MagicMock()
 
         mock_interaction = MagicMock()
@@ -360,10 +368,12 @@ class TestGoogleMusic:
                 b"url_image_bytes"
             ).decode("utf-8")
 
-    def test_minimum_duration_validation(self, caplog):
+    def test_minimum_duration_validation(self, caplog, budget_gate_isolated):
         import logging
 
         tool = GoogleMusic()
+        # Gate active; approve this paid tool via the gate's real API.
+        budget_gate_isolated.approve_tool("google_music")
         mock_client = MagicMock()
 
         mock_interaction = MagicMock()
@@ -412,8 +422,10 @@ class TestGoogleMusic:
             assert res.error is not None
             assert "minimum duration is 5" in res.error
 
-    def test_missing_image_path_error(self, tmp_path):
+    def test_missing_image_path_error(self, tmp_path, budget_gate_isolated):
         tool = GoogleMusic()
+        # Gate active; approve this paid tool via the gate's real API.
+        budget_gate_isolated.approve_tool("google_music")
         with patch.dict(os.environ, {"GEMINI_API_KEY": "test_key"}):
             inputs = {
                 "prompt": "music with missing image",
@@ -477,7 +489,8 @@ class TestVeoVideo:
             assert tool.get_status() == ToolStatus.AVAILABLE
 
     @patch("tools.video._shared.probe_output")
-    def test_duration_coercion(self, mock_probe):
+    def test_duration_coercion(self, mock_probe, budget_gate_isolated):
+        budget_gate_isolated.approve_tool("veo_video")
         tool = VeoVideo()
         mock_probe.return_value = {"width": 1920, "height": 1080, "duration": 8.0}
 
@@ -516,8 +529,9 @@ class TestVeoVideo:
     @patch("os.path.exists")
     @patch("requests.get")
     def test_operations_mapping(
-        self, mock_req_get, mock_exists, mock_img_open, mock_probe
+        self, mock_req_get, mock_exists, mock_img_open, mock_probe, budget_gate_isolated
     ):
+        budget_gate_isolated.approve_tool("veo_video")
         tool = VeoVideo()
         mock_probe.return_value = {"width": 1920, "height": 1080, "duration": 8.0}
         mock_exists.return_value = True
@@ -571,7 +585,8 @@ class TestVeoVideo:
             called_kwargs = mock_client.models.generate_videos.call_args[1]
             assert called_kwargs["image"] is not None
 
-    def test_vertex_ai_mode_rejection(self):
+    def test_vertex_ai_mode_rejection(self, budget_gate_isolated):
+        budget_gate_isolated.approve_tool("veo_video")
         tool = VeoVideo()
         mock_client = MagicMock()
         mock_client.vertexai = True
@@ -591,7 +606,8 @@ class TestVeoVideo:
             assert res.error is not None
             assert "only supported using the Gemini Developer API" in res.error
 
-    def test_missing_local_image_paths(self):
+    def test_missing_local_image_paths(self, budget_gate_isolated):
+        budget_gate_isolated.approve_tool("veo_video")
         tool = VeoVideo()
         with patch.dict(
             os.environ,
@@ -607,7 +623,8 @@ class TestVeoVideo:
             assert res.success is False
             assert "Local input image not found" in res.error
 
-    def test_missing_reference_image_paths(self):
+    def test_missing_reference_image_paths(self, budget_gate_isolated):
+        budget_gate_isolated.approve_tool("veo_video")
         tool = VeoVideo()
         with patch.dict(
             os.environ,

@@ -140,6 +140,16 @@ class DashscopeImage(BaseTool):
         n = int(inputs.get("n", 1))
         return n * 0.02
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Upper bound on a single call's spend.
+
+        DashScope bills per generated image and the per-image constant above
+        is already the repository's conservative ceiling, so the estimate --
+        fully determined by the requested n -- is itself the bound. execute()
+        issues one billed HTTP request with no retry loop.
+        """
+        return self.estimate_cost(inputs)
+
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         api_key = os.environ.get("DASHSCOPE_API_KEY")
         if not api_key:

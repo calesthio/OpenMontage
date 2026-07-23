@@ -182,6 +182,20 @@ class GoogleImagen(BaseTool):
             return 0.02 * n
         return 0.04 * n
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Upper bound on a single call's spend.
+
+        Per-image pricing keyed off the model tier. Models in the imagen-4
+        family the estimate's branches were written for price exactly; any
+        other model string is bounded at the dearest published rate (ultra)
+        rather than the cheap default branch. execute() issues one billed
+        request for the requested image count.
+        """
+        model = str(inputs.get("model", "imagen-4.0-generate-001"))
+        if model.startswith("imagen-4"):
+            return self.estimate_cost(inputs)
+        return self.estimate_cost({**inputs, "model": "imagen-ultra"})
+
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         # Two auth paths: an AI Studio API key, or a service-account JSON that
         # routes to Vertex AI (the AI Studio endpoint does not accept service

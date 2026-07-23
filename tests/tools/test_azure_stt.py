@@ -184,6 +184,19 @@ class TestParsePayload:
 
 # ---- execute() guardrails + mocked success ----
 
+def _write_real_wav(path, seconds=1.0, rate=8000):
+    """Write a genuine (silent) WAV so the budget gate's local ffprobe can
+    price the call. Garbage bytes would be unprobeable and correctly refused."""
+    import wave
+
+    with wave.open(str(path), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(rate)
+        w.writeframes(b"\x00\x00" * int(rate * seconds))
+    return path
+
+
 class TestExecute:
     def test_missing_file(self, azure_env, tmp_path):
         res = AzureSpeechToText().execute({"input_path": str(tmp_path / "nope.wav")})
@@ -199,9 +212,10 @@ class TestExecute:
         assert not res.success
         assert "not configured" in res.error.lower()
 
-    def test_success_path_mocked(self, azure_env, tmp_path, monkeypatch):
+    def test_success_path_mocked(self, azure_env, tmp_path, monkeypatch, budget_gate_isolated):
         import requests
 
+        budget_gate_isolated.approve_tool("azure_stt")
         captured = {}
 
         def fake_post(url, headers=None, files=None, timeout=None):
@@ -211,8 +225,7 @@ class TestExecute:
 
         monkeypatch.setattr(requests, "post", fake_post)
 
-        audio = tmp_path / "a.wav"
-        audio.write_bytes(b"RIFF....")
+        audio = _write_real_wav(tmp_path / "a.wav")
         res = AzureSpeechToText().execute(
             {"input_path": str(audio), "language": "en", "output_dir": str(tmp_path)}
         )
@@ -228,15 +241,15 @@ class TestExecute:
         assert "transcriptions:transcribe" in captured["url"]
         assert captured["headers"]["Ocp-Apim-Subscription-Key"] == "fake-key"
 
-    def test_http_error_surfaced(self, azure_env, tmp_path, monkeypatch):
+    def test_http_error_surfaced(self, azure_env, tmp_path, monkeypatch, budget_gate_isolated):
         import requests
 
+        budget_gate_isolated.approve_tool("azure_stt")
         monkeypatch.setattr(
             requests, "post",
             lambda *a, **k: _FakeResponse(None, status_code=401, text="Unauthorized"),
         )
-        audio = tmp_path / "a.wav"
-        audio.write_bytes(b"RIFF....")
+        audio = _write_real_wav(tmp_path / "a.wav")
         res = AzureSpeechToText().execute({"input_path": str(audio), "output_dir": str(tmp_path)})
         assert not res.success
         assert "401" in res.error

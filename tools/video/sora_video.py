@@ -134,6 +134,20 @@ class SoraVideo(BaseTool):
         # Placeholder estimate until the registry has live OpenAI video pricing.
         return 0.50 * (seconds / 4)
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Flat upper bound on a single call's spend, over the whole domain.
+
+        Cost depends only on `seconds`, which _normalize_seconds constrains to
+        _ALLOWED_SECONDS (any other value raises before a billed call is made).
+        model, size, and output count do not affect price, and execute() bills
+        exactly one generation with no retry loop -- so no valid call can cost
+        more than the longest allowed duration. Evaluating estimate_cost() at
+        that duration derives the bound from the very same enum and pricing
+        constant as the estimate, so the two cannot drift. -> $1.50 today.
+        """
+        longest = max(_ALLOWED_SECONDS, key=int)
+        return self.estimate_cost({"seconds": longest})
+
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         seconds = int(self._normalize_seconds(inputs))
         return 120.0 * (seconds / 4)

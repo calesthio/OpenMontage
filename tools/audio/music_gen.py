@@ -107,8 +107,21 @@ class MusicGen(BaseTool):
                 "Derive it from the approved target runtime in the script/proposal. "
                 "Silent defaults are not permitted."
             )
-        # Approximate: ~$0.05 per 30 seconds
-        return round(duration / 30 * 0.05, 4)
+        # Approximate: ~$0.05 per 30 seconds. Raw positive value, deliberately
+        # unrounded: the budget ledger's central ceiling quantization is the
+        # only monetary rounding, so a tiny duration can never present itself
+        # as free.
+        return duration / 30 * 0.05
+
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Upper bound on a single call's spend.
+
+        Per-generation pricing scales with the mandatory duration_seconds
+        input (estimate_cost refuses to guess it), so the estimate is fully
+        request-determined and is itself the ceiling. execute() issues one
+        billed generation request; no internal retry loop re-bills.
+        """
+        return self.estimate_cost(inputs)
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         api_key = os.environ.get("ELEVENLABS_API_KEY")

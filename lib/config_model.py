@@ -33,10 +33,30 @@ class LLMConfig(BaseModel):
 
 
 class BudgetConfig(BaseModel):
+    """Budget governance settings. Enforced by lib/budget_gate.py.
+
+    `mode` governs the aggregate daily total ONLY. The two approval
+    safeguards below are independent of it and are evaluated in every mode.
+    """
+
+    # observe = record only | warn = flag and proceed | cap = hard stop
     mode: BudgetMode = BudgetMode.WARN
+    # Maximum spend per `period`, in the `timezone` below.
     total_usd: float = 10.0
+    # Only "daily" is implemented; any other value fails closed rather than
+    # silently applying daily semantics.
+    period: str = "daily"
+    # "system_local" or an IANA name (e.g. "America/New_York"). Defines the
+    # midnight boundary between daily buckets; unresolvable values fail closed.
+    timezone: str = "system_local"
+    # warn-mode planning holdback. cap enforces the true daily total instead,
+    # so an exact-cap request is allowed.
     reserve_pct: float = 0.10
-    single_action_approval_usd: float = 0.50
+    # Independent safeguard: refuse any single call estimated above this.
+    # None (or <= 0) disables it. Not coupled to `mode`.
+    single_action_approval_usd: Optional[float] = 0.50
+    # Independent safeguard: refuse the first paid use of each tool.
+    # Not coupled to `mode`.
     require_approval_for_new_paid_tool: bool = True
 
 

@@ -6,6 +6,8 @@ import base64
 import sys
 from pathlib import Path
 
+import pytest
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -274,7 +276,9 @@ def test_video_model_must_match_api_family():
         raise AssertionError("omni requests must reject classic video models")
 
 
-def test_execute_downloads_video_and_returns_artifact(monkeypatch, tmp_path):
+def test_execute_downloads_video_and_returns_artifact(monkeypatch, tmp_path, budget_gate_isolated):
+    budget_gate_isolated.approve_tool("kling_official_video")
+
     class FakeClient:
         def create_classic_task(self, path, payload):
             self.path = path
@@ -289,7 +293,7 @@ def test_execute_downloads_video_and_returns_artifact(monkeypatch, tmp_path):
             return output_path
 
     monkeypatch.setenv("KLING_API_KEY", "test-key")
-    monkeypatch.setattr("tools.video.kling_official_video.KlingClient", lambda: FakeClient())
+    monkeypatch.setattr("tools.video.kling_official_video.KlingClient", lambda *args, **kwargs: FakeClient())
     monkeypatch.setattr("tools.video.kling_official_video.probe_output", lambda path: {"duration_seconds": 5.0})
     output_path = tmp_path / "out.mp4"
     result = KlingOfficialVideo().execute({"prompt": "x", "output_path": str(output_path)})
@@ -301,7 +305,10 @@ def test_execute_downloads_video_and_returns_artifact(monkeypatch, tmp_path):
     assert result.cost_usd > 0
 
 
-def test_execute_downloads_all_omni_video_outputs_and_records_metadata(monkeypatch, tmp_path):
+def test_execute_downloads_all_omni_video_outputs_and_records_metadata(
+    monkeypatch, tmp_path, budget_gate_isolated
+):
+    budget_gate_isolated.approve_tool("kling_official_video")
     reset_account_usage_cache()
 
     class FakeClient:
@@ -320,12 +327,8 @@ def test_execute_downloads_all_omni_video_outputs_and_records_metadata(monkeypat
             output_path.write_bytes(url.encode("utf-8"))
             return output_path
 
-        def get(self, path, params=None):
-            assert path == "/account/costs"
-            return {"code": 0, "data": {"resource_pack_subscribe_infos": [{"name": "pack-a"}]}}
-
     monkeypatch.setenv("KLING_API_KEY", "test-key")
-    monkeypatch.setattr("tools.video.kling_official_video.KlingClient", lambda: FakeClient())
+    monkeypatch.setattr("tools.video.kling_official_video.KlingClient", lambda *args, **kwargs: FakeClient())
     monkeypatch.setattr("tools.video.kling_official_video.probe_output", lambda path: {"duration_seconds": 5.0})
     result = KlingOfficialVideo().execute(
         {
@@ -335,7 +338,6 @@ def test_execute_downloads_all_omni_video_outputs_and_records_metadata(monkeypat
             "video_list": [{"video_url": "https://example.com/ref.mp4", "refer_type": "base"}],
             "element_list": [789],
             "callback_url": "https://example.com/callback",
-            "include_account_usage": True,
             "output_path": str(tmp_path / "out.mp4"),
         }
     )
@@ -345,16 +347,39 @@ def test_execute_downloads_all_omni_video_outputs_and_records_metadata(monkeypat
     assert result.data["element_ids"] == [789]
     assert result.data["callback_requested"] is True
     assert result.data["polling_used"] is True
-    assert result.data["account_usage"]["resource_pack_subscribe_infos"][0]["name"] == "pack-a"
-    assert result.data["cost_source"] == "estimate_with_account_usage_context"
     assert result.cost_usd > 0
     assert len(result.artifacts) == 2
     assert Path(result.artifacts[1]).name == "out_2.mp4"
 
 
+def test_video_account_usage_request_is_fail_closed(monkeypatch, budget_gate_isolated):
+    """include_account_usage requests cannot be cost-bounded (that endpoint's
+    billing is unverified -- same rule as kling_lip_sync), so the gate must
+    refuse them by name before any provider call, even for an approved tool."""
+    from tools.base_tool import BudgetGateError
+
+    budget_gate_isolated.approve_tool("kling_official_video")
+    monkeypatch.setenv("KLING_API_KEY", "test-key")
+
+    reached = {"provider": False}
+
+    class FakeClient:
+        def create_classic_task(self, path, payload):
+            reached["provider"] = True
+            return "task-x"
+
+    monkeypatch.setattr("tools.video.kling_official_video.KlingClient", lambda *args, **kwargs: FakeClient())
+    with pytest.raises(BudgetGateError, match="kling_official_video"):
+        KlingOfficialVideo().execute({"prompt": "x", "include_account_usage": True})
+    assert reached["provider"] is False
+
+
 def test_video_selector_prefers_official_provider_without_fal_upload(
-    monkeypatch, tmp_path, isolated_tool_registry
+    monkeypatch, tmp_path, isolated_tool_registry, budget_gate_isolated
 ):
+    # The selector is the outermost (gated) call; its reservation delegates
+    # to the selected provider's bound.
+    budget_gate_isolated.approve_tool("video_selector")
     monkeypatch.setenv("KLING_API_KEY", "test-key")
     image_path = tmp_path / "ref.png"
     image_path.write_bytes(b"fake")
@@ -407,13 +432,15 @@ def test_video_cost_estimate_is_not_zero():
     assert dry_run["cost_estimate_confidence"] == "low"
 
 
-def test_video_account_resource_error_includes_diagnostic(monkeypatch):
+def test_video_account_resource_error_includes_diagnostic(monkeypatch, budget_gate_isolated):
+    budget_gate_isolated.approve_tool("kling_official_video")
+
     class FakeClient:
         def create_classic_task(self, path, payload):
             raise KlingAPIError("resource pack exhausted", code=1102, request_id="req-1")
 
     monkeypatch.setenv("KLING_API_KEY", "test-key")
-    monkeypatch.setattr("tools.video.kling_official_video.KlingClient", lambda: FakeClient())
+    monkeypatch.setattr("tools.video.kling_official_video.KlingClient", lambda *args, **kwargs: FakeClient())
     result = KlingOfficialVideo().execute({"prompt": "x"})
     assert not result.success
     assert result.data["account_usage_diagnostic"]["reason"] == "account_balance_or_resource_pack"

@@ -103,6 +103,19 @@ class MiniMaxVideo(BaseTool):
             return 0.08
         return 0.10  # standard
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Upper bound on a single call's spend.
+
+        Flat per-generation pricing by variant tier; the bound is the dearest
+        published tier (pro) unless the request already prices there, so an
+        unrecognized variant can never underestimate. execute() issues one
+        billed request.
+        """
+        return max(
+            self.estimate_cost(inputs),
+            self.estimate_cost({**inputs, "model_variant": "hailuo-02/pro"}),
+        )
+
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         variant = inputs.get("model_variant", "hailuo-02/pro")
         if "fast" in variant:

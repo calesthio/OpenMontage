@@ -99,6 +99,19 @@ class HeyGenVideo(BaseTool):
         meta = HEYGEN_PROVIDERS.get(inputs.get("provider_variant", "veo_3_1"), HEYGEN_PROVIDERS["veo_3_1"])
         return estimate_quality_cost(meta["quality"])
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Upper bound on a single call's spend.
+
+        A known provider_variant maps to a fixed quality tier, so the
+        estimate prices it exactly. An unknown variant is rejected by
+        generate_heygen_video before any billed dispatch, but is still
+        bounded at the dearest quality tier rather than the estimate's
+        default-variant guess. execute() issues one billed request.
+        """
+        if inputs.get("provider_variant", "veo_3_1") in HEYGEN_PROVIDERS:
+            return self.estimate_cost(inputs)
+        return estimate_quality_cost("highest")
+
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         meta = HEYGEN_PROVIDERS.get(inputs.get("provider_variant", "veo_3_1"), HEYGEN_PROVIDERS["veo_3_1"])
         return estimate_speed_runtime(meta["speed"])

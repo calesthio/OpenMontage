@@ -130,6 +130,15 @@ class GoogleMusic(BaseTool):
         # Lyria 3 Pro is a flat $0.08 per generation request
         return 0.08
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Guaranteed upper bound on a single call's spend.
+
+        Lyria 3 Pro bills a flat $0.08 per generation, independent of every
+        input, and execute() issues exactly one billed request (no retry loop
+        wraps it). The flat price is therefore itself the ceiling.
+        """
+        return 0.08
+
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         """Execute the music generation tool using the Google GenAI SDK."""
         if not self._get_google_credentials_status():

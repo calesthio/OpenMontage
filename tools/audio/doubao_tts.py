@@ -182,8 +182,19 @@ class DoubaoTTS(BaseTool):
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         # Volcengine bills Doubao Speech 2.0 by characters. Keep this conservative
-        # and prefer provider-returned usage when available.
-        return round(len(inputs.get("text", "")) * 0.000015, 4)
+        # and prefer provider-returned usage when available. Raw positive value,
+        # deliberately unrounded: the budget ledger's central ceiling
+        # quantization is the only monetary rounding.
+        return len(inputs.get("text", "")) * 0.000015
+
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Upper bound on a single call's spend.
+
+        Per-character billing at the conservative flat rate above, fully
+        determined by the request text -- the estimate is itself the ceiling.
+        execute() issues one billed request; no internal retry loop re-bills.
+        """
+        return self.estimate_cost(inputs)
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         api_key = os.environ.get("DOUBAO_SPEECH_API_KEY")

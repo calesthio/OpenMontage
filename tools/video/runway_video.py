@@ -158,6 +158,21 @@ class RunwayVideo(BaseTool):
         duration = inputs.get("duration", 5)
         return _COST_PER_SECOND.get(model, 0.05) * duration
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Upper bound on a single call's spend.
+
+        Models present in _COST_PER_SECOND price exactly through the
+        estimate; an unrecognized model string is bounded at the dearest
+        published per-second rate in that same table rather than the cheap
+        default. Duration comes from the request. execute() issues one billed
+        request.
+        """
+        model = inputs.get("model", _DEFAULT_MODEL)
+        if model in _COST_PER_SECOND:
+            return self.estimate_cost(inputs)
+        dearest = max(_COST_PER_SECOND, key=_COST_PER_SECOND.get)
+        return self.estimate_cost({**inputs, "model": dearest})
+
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         model = inputs.get("model", _DEFAULT_MODEL)
         return _RUNTIME_SECONDS.get(model, 30.0)

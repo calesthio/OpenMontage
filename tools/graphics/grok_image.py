@@ -156,6 +156,16 @@ class GrokImage(BaseTool):
         # image plus $0.002 per input image for edits or composites.
         return output_count * 0.02 + input_count * 0.002
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Upper bound on a single call's spend.
+
+        Published flat rates per generated image and per input image, both
+        counts fully determined by the request -- the estimate is itself the
+        ceiling. execute() issues one billed request; no internal retry loop
+        re-bills.
+        """
+        return self.estimate_cost(inputs)
+
     def _build_payload(self, inputs: dict[str, Any]) -> tuple[str, dict[str, Any]]:
         mode = inputs.get("generation_mode", "generate")
         payload: dict[str, Any] = {

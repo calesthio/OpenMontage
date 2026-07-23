@@ -2,21 +2,108 @@
 
 Implements the budget governance rules from the spec:
 - Every paid operation produces a preflight estimate
-- The orchestrator reserves estimated budget before execution
-- Budget overruns trigger pauses (in warn/cap mode)
+- The budget gate reserves estimated budget before execution
+- Budget overruns are blocked (cap) or flagged (warn)
 - Actual spend is reconciled when the tool finishes or fails
+
+Enforcement is wired in via lib/budget_gate.py, which is called from
+BaseTool's execute() wrapper. This module is the ledger; it does not know
+about tools or providers.
+
+Daily buckets
+-------------
+`total_usd` is a per-CALENDAR-DAY cap, not a lifetime one. Every entry carries
+an immutable `budget_date` (YYYY-MM-DD in the configured timezone) assigned
+when the entry is created and never recomputed. A day's available budget is
+derived only from that day's spend and that day's unresolved reservations, so
+a reservation opened at 23:59 keeps consuming its own day's bucket after
+midnight and never leaks into the new day. History is never rewritten or
+cleared to free budget.
+
+Three independent controls
+--------------------------
+`mode` governs the AGGREGATE daily total ONLY:
+  observe - record, never block
+  warn    - flag an over-budget reservation, proceed (holdback-aware)
+  cap     - block when spent(day) + reserved(day) + estimated > total_usd
+
+`single_action_approval_usd` and `require_approval_for_new_paid_tool` are
+SEPARATE, explicitly configured safeguards. They are evaluated independently
+of `mode` -- set them to None/0/False to disable. They were previously
+coupled to `mode != OBSERVE`, which made `cap` implicitly inherit warn's
+"raise on first paid tool use" behavior; that coupling is removed.
+
+Concurrency
+-----------
+Every public operation runs inside _transaction(): an in-process reentrant
+lock plus a cross-process OS file lock, inside which the ledger is RELOADED
+from disk before the bucket is computed and atomically saved afterwards.
+Reloading under the lock is what makes concurrent processes safe -- in-memory
+state cannot be trusted when another process may have written since.
 """
 
 from __future__ import annotations
 
 import json
+import os
+import threading
 import uuid
+from contextlib import contextmanager
 from datetime import datetime, timezone
+from decimal import ROUND_CEILING, Decimal
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Callable, Iterator, Optional
 
 from lib.config_model import BudgetMode
+from lib.ledger_lock import ledger_lock
+
+# Comparisons are made against values quantized to the ledger grid below;
+# this tolerance keeps an exact-cap request (estimated == remaining) on the
+# allowed side of the line rather than losing it to float representation
+# error. All recorded amounts are exact multiples of LEDGER_QUANTUM_USD, so
+# float error on them (~1e-16 per term) never approaches this epsilon.
+_EPSILON = 1e-6
+
+# ---- Monetary precision ----
+# The ledger's explicit monetary quantum. Every recorded amount -- estimate,
+# reservation, actual spend -- is an exact multiple of $0.0001. Positive
+# amounts quantize UPWARD (Decimal ROUND_CEILING), so no positive paid
+# amount can ever be recorded as zero: $0.00004 reserves $0.0001, and
+# repeated sub-quantum calls accumulate against the cap instead of slipping
+# under it. Zero and negative inputs record exactly $0. Ceiling can only
+# OVERSTATE spend (by < one quantum per entry), never understate it.
+LEDGER_QUANTUM_USD = Decimal("0.0001")
+
+
+def quantize_usd(amount: float) -> float:
+    """Quantize a dollar amount onto the ledger's $0.0001 grid, upward.
+
+    The quantization itself is done in Decimal (no binary-float rounding);
+    only the final exact grid multiple is returned as a float. $0 stays
+    exactly $0; any positive amount yields at least one quantum.
+    """
+    value = Decimal(str(float(amount)))
+    if value <= 0:
+        return 0.0
+    return float(value.quantize(LEDGER_QUANTUM_USD, rounding=ROUND_CEILING))
+
+
+def format_usd(amount: float) -> str:
+    """Render a dollar amount so a positive cost never displays as $0.00.
+
+    Sub-cent positives widen to 4 (then 6) decimal places; everything else
+    keeps the familiar $X.XX form. Refusal messages use this so an operator
+    reading "estimate $0.0018" understands the call was genuinely paid.
+    """
+    a = float(amount)
+    if a > 0:
+        for fmt in ("%.2f", "%.4f", "%.6f"):
+            text = fmt % a
+            if float(text) > 0:
+                return f"${text}"
+        return f"${a:.6f}"
+    return f"${a:.2f}"
 
 
 class EntryStatus(str, Enum):
@@ -37,146 +124,383 @@ class ApprovalRequiredError(Exception):
     pass
 
 
+class CostLogCorruptError(Exception):
+    """Raised when the persisted cost log exists but cannot be read.
+
+    Callers must treat this as fail-closed. An unreadable ledger means
+    accumulated spend is unknown, and unknown spend must never be allowed to
+    proceed to a paid provider.
+    """
+    pass
+
+
+class BudgetPeriodError(Exception):
+    """Raised when the configured budget period/timezone cannot be honoured."""
+    pass
+
+
 class CostTracker:
-    """Tracks estimated, reserved, and actual costs for a pipeline project."""
+    """Tracks estimated, reserved, and actual costs against a daily budget.
+
+    Safe across threads AND processes: every public operation reloads the
+    ledger from disk inside a cross-process file lock before computing the
+    day's bucket, so two callers cannot independently consume the same
+    remaining daily budget.
+    """
 
     def __init__(
         self,
         budget_total_usd: float = 10.0,
         reserve_pct: float = 0.10,
-        single_action_approval_usd: float = 0.50,
+        single_action_approval_usd: Optional[float] = 0.50,
         require_approval_for_new_paid_tool: bool = True,
         mode: BudgetMode = BudgetMode.WARN,
         cost_log_path: Optional[Path] = None,
+        period: str = "daily",
+        tz_name: str = "system_local",
+        clock: Optional[Callable[[], datetime]] = None,
     ) -> None:
+        if period != "daily":
+            raise BudgetPeriodError(
+                f"budget.period={period!r} is not supported; only 'daily' is "
+                f"implemented. Refusing to proceed (fail closed) rather than "
+                f"silently applying daily semantics to a different period."
+            )
         self.budget_total_usd = budget_total_usd
         self.reserve_pct = reserve_pct
         self.single_action_approval_usd = single_action_approval_usd
         self.require_approval_for_new_paid_tool = require_approval_for_new_paid_tool
         self.mode = mode
         self.cost_log_path = cost_log_path
+        self.period = period
+        self.tz_name = tz_name
+        self._tzinfo = self._resolve_tz(tz_name)
+        self._clock = clock or self._default_clock
         self.entries: list[dict[str, Any]] = []
         self._approved_tools: set[str] = set()
+        self._overrun_dates: set[str] = set()
+        # Reentrant: _transaction() is entered once per public op, and the
+        # helpers it calls must not try to re-acquire the cross-process lock
+        # (msvcrt byte locks are not reentrant across fds).
+        self._lock = threading.RLock()
 
         if cost_log_path and cost_log_path.exists():
-            self._load()
+            with self._lock:
+                self._load()
 
-    # ---- Budget calculations ----
+    # ---- Clock / period ----
 
-    @property
-    def budget_reserved_usd(self) -> float:
+    @staticmethod
+    def _resolve_tz(tz_name: str):
+        if tz_name == "system_local":
+            return None  # means: use the system local offset
+        try:
+            from zoneinfo import ZoneInfo
+            return ZoneInfo(tz_name)
+        except Exception as exc:
+            raise BudgetPeriodError(
+                f"budget.timezone={tz_name!r} could not be resolved ({exc}). "
+                f"Refusing to proceed (fail closed): the daily boundary must be "
+                f"unambiguous. Use 'system_local' or a valid IANA name."
+            ) from exc
+
+    def _default_clock(self) -> datetime:
+        if self._tzinfo is None:
+            return datetime.now().astimezone()
+        return datetime.now(self._tzinfo)
+
+    def current_budget_date(self) -> str:
+        """Today's bucket key (YYYY-MM-DD) in the configured timezone."""
+        return self._clock().date().isoformat()
+
+    def _entry_date(self, entry: dict[str, Any]) -> str:
+        """The entry's immutable bucket key.
+
+        Legacy v1.0 rows have no budget_date; derive one from the recorded
+        timestamp READ-ONLY. Prior-day history is never rewritten.
+        """
+        existing = entry.get("budget_date")
+        if existing:
+            return str(existing)
+        raw = entry.get("timestamp")
+        try:
+            parsed = datetime.fromisoformat(str(raw))
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            local = (
+                parsed.astimezone() if self._tzinfo is None
+                else parsed.astimezone(self._tzinfo)
+            )
+            return local.date().isoformat()
+        except (TypeError, ValueError) as exc:
+            raise CostLogCorruptError(
+                f"Cost entry {entry.get('id')!r} has neither a budget_date nor a "
+                f"parseable timestamp ({raw!r}); its day's spend cannot be "
+                f"determined. Refusing to proceed (fail closed)."
+            ) from exc
+
+    # ---- Budget calculations (per-day) ----
+
+    def reserved_on(self, budget_date: str) -> float:
         return sum(
             e.get("reserved_usd", 0.0)
             for e in self.entries
             if e["status"] == EntryStatus.RESERVED.value
+            and self._entry_date(e) == budget_date
         )
 
-    @property
-    def budget_spent_usd(self) -> float:
+    def spent_on(self, budget_date: str) -> float:
         return sum(
             e.get("actual_usd", 0.0)
             for e in self.entries
             if e["status"] in (EntryStatus.COMPLETED.value, EntryStatus.FAILED.value)
+            and self._entry_date(e) == budget_date
         )
+
+    def remaining_on(self, budget_date: str) -> float:
+        return self.budget_total_usd - self.spent_on(budget_date) - self.reserved_on(budget_date)
+
+    def is_overrun(self, budget_date: str) -> bool:
+        """True once a day's actual spend has breached its reservation/cap."""
+        return budget_date in self._overrun_dates
+
+    # ---- Today-scoped conveniences (backwards-compatible property names) ----
+
+    @property
+    def budget_reserved_usd(self) -> float:
+        return self.reserved_on(self.current_budget_date())
+
+    @property
+    def budget_spent_usd(self) -> float:
+        return self.spent_on(self.current_budget_date())
 
     @property
     def budget_remaining_usd(self) -> float:
-        return self.budget_total_usd - self.budget_spent_usd - self.budget_reserved_usd
+        return self.remaining_on(self.current_budget_date())
 
     @property
     def usable_budget_usd(self) -> float:
-        """Budget minus the reserve holdback."""
+        """Today's budget minus the reserve holdback (warn-mode planning only)."""
         holdback = self.budget_total_usd * self.reserve_pct
         return max(0.0, self.budget_remaining_usd - holdback)
 
-    def cost_snapshot(self) -> dict[str, float]:
+    def cost_snapshot(self) -> dict[str, Any]:
+        today = self.current_budget_date()
         return {
-            "total_spent_usd": round(self.budget_spent_usd, 4),
-            "total_reserved_usd": round(self.budget_reserved_usd, 4),
-            "budget_remaining_usd": round(self.budget_remaining_usd, 4),
+            "budget_date": today,
+            "total_spent_usd": round(self.spent_on(today), 4),
+            "total_reserved_usd": round(self.reserved_on(today), 4),
+            "budget_remaining_usd": round(self.remaining_on(today), 4),
+            "overrun": self.is_overrun(today),
         }
+
+    # ---- Transaction ----
+
+    @contextmanager
+    def _transaction(self) -> Iterator[None]:
+        """Serialize a full read-modify-write across threads and processes.
+
+        Reload happens INSIDE the lock: another process may have reserved since
+        we last read, and a stale in-memory bucket is exactly how two callers
+        independently spend the same remaining budget.
+        """
+        with self._lock:
+            if self.cost_log_path is None:
+                yield  # in-memory tracker (tests): no file, nothing to lock
+                return
+            with ledger_lock(self.cost_log_path):
+                if self.cost_log_path.exists():
+                    self._load()
+                yield
 
     # ---- Core operations ----
 
     def estimate(self, tool: str, operation: str, estimated_usd: float) -> str:
-        """Record an estimate. Returns entry ID."""
-        entry_id = self._new_id()
-        self.entries.append({
-            "id": entry_id,
-            "tool": tool,
-            "operation": operation,
-            "status": EntryStatus.ESTIMATED.value,
-            "estimated_usd": round(estimated_usd, 4),
-            "reserved_usd": 0.0,
-            "actual_usd": 0.0,
-            "timestamp": self._now(),
-        })
-        self._save()
-        return entry_id
+        """Record an estimate and stamp its immutable budget_date.
+
+        The date is assigned here, at entry creation, and never recomputed --
+        that is what keeps a reservation opened at 23:59 bound to its own day.
+        """
+        with self._transaction():
+            entry_id = self._new_id()
+            self.entries.append({
+                "id": entry_id,
+                "tool": tool,
+                "operation": operation,
+                "status": EntryStatus.ESTIMATED.value,
+                # Immutable. Assigned once, never recalculated on reconcile.
+                "budget_date": self.current_budget_date(),
+                # Quantized upward onto the ledger grid: a positive estimate
+                # can never round to a recorded zero, and a negative one can
+                # never credit the ledger.
+                "estimated_usd": quantize_usd(estimated_usd),
+                "reserved_usd": 0.0,
+                "actual_usd": 0.0,
+                "timestamp": self._now(),
+            })
+            self._save()
+            return entry_id
 
     def reserve(self, entry_id: str) -> None:
-        """Reserve budget for an estimated entry.
+        """Reserve budget for an estimated entry, before the paid call runs.
 
-        Raises BudgetExceededError in cap mode, or ApprovalRequiredError
-        when the action exceeds the single-action approval threshold.
+        Three independent checks, in order:
+
+        1. single_action_approval_usd -- independent safeguard, evaluated
+           regardless of `mode`. None or <= 0 disables it.
+        2. require_approval_for_new_paid_tool -- independent safeguard,
+           evaluated regardless of `mode`. False disables it.
+        3. `mode` -- governs the aggregate total budget ONLY.
+           cap:     block if spent + reserved + estimated > total_usd.
+                    An exact-cap request (estimated == remaining) is ALLOWED.
+                    The reserve_pct holdback does not apply -- cap enforces the
+                    true aggregate the user configured, nothing tighter.
+           warn:    flag and proceed, measured against the holdback-aware
+                    usable budget (unchanged pre-existing semantics).
+           observe: record only.
+
+        The check is made against the entry's OWN budget_date bucket, not
+        today's -- so a reservation stamped 23:59 is measured against that day
+        even if reserve() runs a moment after midnight.
+
+        Raises ApprovalRequiredError or BudgetExceededError. The entry is left
+        ESTIMATED (not RESERVED) when a check rejects it, so a rejected call
+        consumes no budget.
         """
-        entry = self._find(entry_id)
-        estimated = entry["estimated_usd"]
+        with self._transaction():
+            entry = self._find(entry_id)
+            estimated = entry["estimated_usd"]
+            budget_date = self._entry_date(entry)
 
-        # Check single-action approval threshold
-        if estimated > self.single_action_approval_usd:
-            if self.mode != BudgetMode.OBSERVE:
+            # --- Safeguard 1: single-action threshold (independent of mode) ---
+            threshold = self.single_action_approval_usd
+            if threshold is not None and threshold > 0 and estimated - threshold > _EPSILON:
                 raise ApprovalRequiredError(
-                    f"Action costs ${estimated:.2f}, exceeds "
-                    f"single-action threshold ${self.single_action_approval_usd:.2f}"
+                    f"Action costs {format_usd(estimated)}, which exceeds the configured "
+                    f"single-action approval threshold of {format_usd(threshold)}. "
+                    f"This safeguard is independent of budget mode "
+                    f"({self.mode.value}); raise or disable "
+                    f"budget.single_action_approval_usd to permit it."
                 )
 
-        # Check new paid tool approval
-        if self.require_approval_for_new_paid_tool and estimated > 0:
-            if entry["tool"] not in self._approved_tools:
-                if self.mode != BudgetMode.OBSERVE:
+            # --- Safeguard 2: first paid use of a tool (independent of mode) ---
+            if self.require_approval_for_new_paid_tool and estimated > 0:
+                if entry["tool"] not in self._approved_tools:
                     raise ApprovalRequiredError(
-                        f"First paid use of tool {entry['tool']!r} requires approval"
+                        f"First paid use of tool {entry['tool']!r} requires approval. "
+                        f"This safeguard is independent of budget mode "
+                        f"({self.mode.value}); call approve_tool({entry['tool']!r}) or "
+                        f"disable budget.require_approval_for_new_paid_tool."
                     )
 
-        # Check budget
-        if estimated > self.usable_budget_usd:
-            message = (
-                f"Reservation of ${estimated:.2f} exceeds usable budget "
-                f"${self.usable_budget_usd:.2f}"
-            )
+            # --- Control 3: the day's aggregate budget (governed by mode) ---
             if self.mode == BudgetMode.CAP:
-                raise BudgetExceededError(message)
-            if self.mode == BudgetMode.WARN:
-                entry["budget_warning"] = True
-                entry["budget_warning_message"] = message
+                # A day whose actual spend already breached its reservations is
+                # closed for business, regardless of how small this request is.
+                if budget_date in self._overrun_dates:
+                    raise BudgetExceededError(self._overrun_message(budget_date, estimated))
+                remaining = self.remaining_on(budget_date)
+                if estimated - remaining > _EPSILON:
+                    raise BudgetExceededError(self._cap_message(budget_date, estimated))
+            elif self.mode == BudgetMode.WARN:
+                if estimated > self.usable_budget_usd:
+                    message = (
+                        f"Reservation of {format_usd(estimated)} exceeds usable budget "
+                        f"{format_usd(self.usable_budget_usd)}"
+                    )
+                    entry["budget_warning"] = True
+                    entry["budget_warning_message"] = message
 
-        entry["status"] = EntryStatus.RESERVED.value
-        entry["reserved_usd"] = estimated
-        entry["timestamp"] = self._now()
-        self._save()
+            entry["status"] = EntryStatus.RESERVED.value
+            entry["reserved_usd"] = estimated
+            entry["timestamp"] = self._now()
+            self._save()
+
+    def _cap_message(self, budget_date: str, estimated: float) -> str:
+        """Operator-readable refusal. Contains no credentials or provider keys."""
+        return (
+            f"Daily budget hard cap reached for {budget_date}: this request is "
+            f"blocked before any paid provider call was made.\n"
+            f"  budget date:          {budget_date} (timezone: {self.tz_name})\n"
+            f"  configured daily cap: {format_usd(self.budget_total_usd)}\n"
+            f"  recorded spend today: {format_usd(self.spent_on(budget_date))}\n"
+            f"  reserved (in-flight): {format_usd(self.reserved_on(budget_date))}\n"
+            f"  this request:         {format_usd(estimated)}\n"
+            f"  remaining today:      {format_usd(self.remaining_on(budget_date))}\n"
+            f"The budget resets at midnight ({self.tz_name}). Raise "
+            f"budget.total_usd in config.yaml to permit more spend today."
+        )
+
+    def _overrun_message(self, budget_date: str, estimated: float) -> str:
+        return (
+            f"Daily bucket {budget_date} is marked OVER BUDGET: actual spend "
+            f"exceeded what was reserved, so the cap for this date can no longer "
+            f"be guaranteed. All further paid calls for {budget_date} are "
+            f"blocked.\n"
+            f"  configured daily cap: {format_usd(self.budget_total_usd)}\n"
+            f"  recorded spend today: {format_usd(self.spent_on(budget_date))}\n"
+            f"  this request:         {format_usd(estimated)}\n"
+            f"The budget resets at midnight ({self.tz_name}). Prior-day history "
+            f"is preserved and is not cleared to free budget."
+        )
 
     def approve_tool(self, tool: str) -> None:
         """Mark a tool as approved for paid operations."""
-        self._approved_tools.add(tool)
-        self._save()
+        with self._transaction():
+            self._approved_tools.add(tool)
+            self._save()
 
     def reconcile(self, entry_id: str, actual_usd: float, success: bool = True) -> None:
-        """Reconcile actual spend after tool execution."""
-        entry = self._find(entry_id)
-        entry["status"] = EntryStatus.COMPLETED.value if success else EntryStatus.FAILED.value
-        entry["actual_usd"] = round(actual_usd, 4)
-        entry["reserved_usd"] = 0.0
-        entry["timestamp"] = self._now()
-        self._save()
+        """Reconcile actual spend after tool execution.
+
+        Lands in the entry's ORIGINAL budget_date bucket -- never the date on
+        which reconciliation happens to run.
+
+        Called for successful AND failed calls: a provider that charged and
+        then errored still consumed real money, so FAILED entries keep their
+        actual spend and continue to count against that day (see spent_on).
+        Spend is never recorded below zero and never truncated to the
+        reservation: if actual exceeds what was reserved, the FULL actual is
+        recorded and the day is marked over budget, which blocks further paid
+        calls for that date.
+        """
+        with self._transaction():
+            entry = self._find(entry_id)
+            budget_date = self._entry_date(entry)
+            reserved_before = entry.get("reserved_usd", 0.0)
+            # Ceiling-quantized: a positive actual charge can never be
+            # written as zero, and never below what the provider billed.
+            actual = quantize_usd(actual_usd)
+
+            entry["status"] = (
+                EntryStatus.COMPLETED.value if success else EntryStatus.FAILED.value
+            )
+            # Full actual, always. Truncating to the reservation would hide
+            # real money and make the ledger lie about the day's spend.
+            entry["actual_usd"] = actual
+            entry["reserved_usd"] = 0.0
+            entry["timestamp"] = self._now()
+
+            overran = actual - reserved_before > _EPSILON
+            entry["actual_exceeded_reservation"] = overran
+            if overran or self.spent_on(budget_date) - self.budget_total_usd > _EPSILON:
+                self._overrun_dates.add(budget_date)
+
+            self._save()
 
     def refund(self, entry_id: str) -> None:
-        """Cancel a reservation without executing."""
-        entry = self._find(entry_id)
-        entry["status"] = EntryStatus.REFUNDED.value
-        entry["reserved_usd"] = 0.0
-        entry["timestamp"] = self._now()
-        self._save()
+        """Release a reservation for a call that never reached the provider.
+
+        Only correct when the request was cancelled BEFORE dispatch. A call
+        that may have reached the provider must go through reconcile(), not
+        refund(), or real spend would be silently dropped from the ledger.
+        """
+        with self._transaction():
+            entry = self._find(entry_id)
+            entry["status"] = EntryStatus.REFUNDED.value
+            entry["reserved_usd"] = 0.0
+            entry["timestamp"] = self._now()
+            self._save()
 
     # ---- Reference-driven estimation ----
 
@@ -485,26 +809,75 @@ class CostTracker:
     # ---- Persistence ----
 
     def _save(self) -> None:
+        """Persist the ledger atomically.
+
+        Writes a sibling temp file and os.replace()s it onto the target
+        (atomic on Windows and POSIX). A crash mid-write can therefore leave
+        the previous complete ledger or the new one, never a truncated file
+        that would strand the cap on the next start.
+        """
         if self.cost_log_path is None:
             return
-        data = {
-            "version": "1.0",
-            "budget_total_usd": self.budget_total_usd,
-            "budget_reserved_usd": round(self.budget_reserved_usd, 4),
-            "budget_spent_usd": round(self.budget_spent_usd, 4),
-            "approved_tools": sorted(self._approved_tools),
-            "entries": self.entries,
-        }
-        self.cost_log_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.cost_log_path, "w") as f:
-            json.dump(data, f, indent=2)
+        with self._lock:
+            today = self.current_budget_date()
+            data = {
+                "version": "2.0",
+                "budget_total_usd": self.budget_total_usd,
+                # Recorded for audit only. Behaviour always comes from config
+                # via the constructor -- a stale log must never be able to
+                # downgrade cap to warn, or raise the cap, across a restart.
+                "budget_mode": self.mode.value,
+                "period": self.period,
+                "timezone": self.tz_name,
+                "overrun_dates": sorted(self._overrun_dates),
+                # Today's rollup, for humans reading the file. The authority is
+                # always the per-entry budget_date, recomputed on load.
+                "budget_date": today,
+                "budget_reserved_usd": round(self.reserved_on(today), 4),
+                "budget_spent_usd": round(self.spent_on(today), 4),
+                "approved_tools": sorted(self._approved_tools),
+                "entries": self.entries,
+            }
+            self.cost_log_path.parent.mkdir(parents=True, exist_ok=True)
+            # Unique temp name: two processes must never share one temp file.
+            tmp = self.cost_log_path.with_suffix(
+                f"{self.cost_log_path.suffix}.{os.getpid()}.tmp"
+            )
+            with open(tmp, "w") as f:
+                json.dump(data, f, indent=2)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp, self.cost_log_path)
 
     def _load(self) -> None:
-        with open(self.cost_log_path) as f:  # type: ignore[arg-type]
-            data = json.load(f)
-        self.entries = data.get("entries", [])
-        self.budget_total_usd = data.get("budget_total_usd", self.budget_total_usd)
+        """Rehydrate spend and unresolved reservations from disk.
+
+        Fails closed: an unreadable ledger raises rather than silently
+        starting from zero spend, which would defeat the cap.
+
+        budget_total_usd and mode are deliberately NOT restored from the log --
+        config.yaml is the sole authority for both.
+        """
+        try:
+            with open(self.cost_log_path) as f:  # type: ignore[arg-type]
+                data = json.load(f)
+            if not isinstance(data, dict):
+                raise ValueError("cost log root is not an object")
+            entries = data.get("entries", [])
+            if not isinstance(entries, list):
+                raise ValueError("cost log 'entries' is not a list")
+        except (json.JSONDecodeError, ValueError, OSError) as exc:
+            raise CostLogCorruptError(
+                f"Cost log at {self.cost_log_path} could not be read ({exc}). "
+                f"Refusing to proceed: accumulated spend is unknown, so the "
+                f"budget cap cannot be enforced. Inspect or delete the file to "
+                f"reset recorded spend."
+            ) from exc
+
+        self.entries = entries
         self._approved_tools = set(data.get("approved_tools", []))
+        # Sticky: a day marked over budget stays marked across restarts.
+        self._overrun_dates = set(data.get("overrun_dates", []))
 
     # ---- Helpers ----
 

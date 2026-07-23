@@ -175,6 +175,16 @@ class GrokVideo(BaseTool):
         # $0.07/sec for 720p, plus $0.002 per input image.
         return base_per_second * duration + input_image_cost
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Upper bound on a single call's spend.
+
+        Duration and input-image count come from the request; the only free
+        variable is the resolution tier, so the bound prices every call at
+        the dearest published per-second rate (720p) via the same estimate
+        the pricing lives in. execute() issues one billed request.
+        """
+        return self.estimate_cost({**inputs, "resolution": "720p"})
+
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         duration = int(inputs.get("duration", 5))
         return 90.0 + duration * 8.0

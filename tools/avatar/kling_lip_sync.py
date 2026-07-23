@@ -174,6 +174,35 @@ class KlingLipSync(BaseTool):
             return 0.34
         return 0.32
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Worst-case upper bound on a single call's spend.
+
+        Fail closed on the opt-in account-usage diagnostic: that endpoint's
+        billing is not authoritatively verified, so a call that requests it
+        cannot be bounded and is refused rather than assumed free.
+
+        Otherwise the bound is the operation's worst-case billed cost times
+        1 + retry_policy.max_retries -- the SAME setting execute() passes to
+        KlingClient below, so bound and client's real retry loop share one
+        authority (no independent x3). full_lip_sync bills TWO sequential
+        requests in one execute() (identify THEN advanced), each retried
+        independently, so their per-request costs are summed BEFORE the shared
+        retry multiplier -- never max(). -> identify $0.06 / advanced $0.96 /
+        full $1.02 today.
+        """
+        if inputs.get("include_account_usage"):
+            return None
+        operation = str(inputs.get("operation") or "advanced_lip_sync")
+        billed_attempts = 1 + self.retry_policy.max_retries
+        if operation == "full_lip_sync":
+            worst_per_attempt = (
+                self.estimate_cost({"operation": "identify_face"})
+                + self.estimate_cost({"operation": "advanced_lip_sync"})
+            )
+        else:
+            worst_per_attempt = self.estimate_cost(inputs)
+        return round(worst_per_attempt * billed_attempts, 4)
+
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         if inputs.get("operation") == "identify_face":
             return 15.0
@@ -198,7 +227,8 @@ class KlingLipSync(BaseTool):
 
         operation = str(inputs.get("operation") or "advanced_lip_sync")
         start = time.time()
-        client = KlingClient()
+        # Same retry setting the bound in max_cost_usd() reserves against.
+        client = KlingClient(max_retries=self.retry_policy.max_retries)
         try:
             if operation == "identify_face":
                 identify = self._identify_faces(client, inputs)

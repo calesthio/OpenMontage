@@ -39,12 +39,15 @@ class _FakeClient:
 
 
 @pytest.fixture
-def openai_tool(monkeypatch):
+def openai_tool(monkeypatch, budget_gate_isolated):
     # Stub the `openai` SDK so execute() runs fully offline.
     fake = types.ModuleType("openai")
     fake.OpenAI = _FakeClient
     monkeypatch.setitem(sys.modules, "openai", fake)
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    # Budget gate active on an isolated ledger; approve this paid tool via
+    # the gate's real API so the stubbed execute() paths can run.
+    budget_gate_isolated.approve_tool("openai_image")
     from tools.graphics.openai_image import OpenAIImage
 
     return OpenAIImage()

@@ -117,7 +117,20 @@ class OpenAITTS(BaseTool):
         return ToolStatus.UNAVAILABLE
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
-        return round(len(inputs.get("text", "")) * 0.000015, 4)
+        # Raw positive value, deliberately unrounded: the budget ledger's
+        # central ceiling quantization is the only monetary rounding, so a
+        # short text can never present itself as free.
+        return len(inputs.get("text", "")) * 0.000015
+
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Upper bound on a single call's spend.
+
+        OpenAI TTS bills per character at the flat rate above, fully
+        determined by the request text, so the estimate is itself the
+        ceiling. execute() issues one billed request; no internal retry loop
+        re-bills.
+        """
+        return self.estimate_cost(inputs)
 
     @staticmethod
     def _supports_instructions(model: str) -> bool:

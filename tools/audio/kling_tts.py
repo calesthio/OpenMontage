@@ -118,8 +118,28 @@ class KlingTTS(BaseTool):
     latency_p50_seconds = 20.0
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
+        # Raw positive value, deliberately unrounded: quantization happens
+        # once, centrally, in the budget ledger (ceiling to $0.0001), so a
+        # 1-character request can never present itself as free.
         text_length = len(str(inputs.get("text") or ""))
-        return round(max(text_length, 1) * 0.000018, 4)
+        return max(text_length, 1) * 0.000018
+
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Worst-case upper bound on a single call's spend.
+
+        Fail closed on the opt-in account-usage diagnostic (billing not
+        authoritatively verified -- same rule as kling_lip_sync). Otherwise
+        the character-based estimate is fully determined by the request text,
+        so the bound is that per-attempt cost times
+        1 + retry_policy.max_retries -- the SAME setting execute() passes to
+        KlingClient, so bound and real retry loop read one authority.
+        """
+        if inputs.get("include_account_usage"):
+            return None
+        billed_attempts = 1 + self.retry_policy.max_retries
+        # Raw float; the ledger's central ceiling quantization is the only
+        # rounding a monetary value receives.
+        return self.estimate_cost(inputs) * billed_attempts
 
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         return 30.0
@@ -144,7 +164,8 @@ class KlingTTS(BaseTool):
         start = time.time()
         try:
             request = self._build_request(inputs)
-            client = KlingClient()
+            # Same retry setting the bound in max_cost_usd() reserves against.
+            client = KlingClient(max_retries=self.retry_policy.max_retries)
             task_id, outputs = self._create_and_collect_audios(client, request, inputs)
             paths = self._download_audios(client, outputs, inputs)
             audio_duration = probe_duration(paths[0])

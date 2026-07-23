@@ -476,7 +476,15 @@ class TestToolRegistry:
 
 class TestCostTracker:
     def test_estimate_reserve_reconcile(self):
-        tracker = CostTracker(budget_total_usd=10.0, mode=BudgetMode.OBSERVE)
+        # require_approval_for_new_paid_tool is an INDEPENDENT safeguard: it is
+        # evaluated in every mode, so observe no longer implicitly suppresses
+        # it. Disable it explicitly to isolate the estimate/reserve/reconcile
+        # lifecycle under test.
+        tracker = CostTracker(
+            budget_total_usd=10.0,
+            mode=BudgetMode.OBSERVE,
+            require_approval_for_new_paid_tool=False,
+        )
         entry_id = tracker.estimate("image_selector", "generate", 0.05)
         tracker.reserve(entry_id)
         assert tracker.budget_reserved_usd == 0.05
@@ -485,19 +493,26 @@ class TestCostTracker:
         assert tracker.budget_reserved_usd == 0.0
 
     def test_cap_mode_blocks_overspend(self):
+        # cap no longer inherits warn's approval raises, so the budget check is
+        # reached without having to defuse the two safeguards first.
         tracker = CostTracker(
             budget_total_usd=1.0,
             mode=BudgetMode.CAP,
-            single_action_approval_usd=10.0,  # raise threshold so budget check triggers
+            single_action_approval_usd=None,
+            require_approval_for_new_paid_tool=False,
         )
-        tracker.approve_tool("expensive")
         eid = tracker.estimate("expensive", "op", 5.0)
         with pytest.raises(BudgetExceededError):
             tracker.reserve(eid)
 
     def test_persistence(self, tmp_path):
         log_path = tmp_path / "cost_log.json"
-        t1 = CostTracker(budget_total_usd=10.0, mode=BudgetMode.OBSERVE, cost_log_path=log_path)
+        t1 = CostTracker(
+            budget_total_usd=10.0,
+            mode=BudgetMode.OBSERVE,
+            require_approval_for_new_paid_tool=False,
+            cost_log_path=log_path,
+        )
         eid = t1.estimate("tool", "op", 0.10)
         t1.reserve(eid)
         t1.reconcile(eid, 0.08)

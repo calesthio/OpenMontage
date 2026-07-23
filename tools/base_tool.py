@@ -10,6 +10,7 @@ import functools
 import hashlib
 import inspect
 import json
+import math
 import os
 import platform
 import subprocess
@@ -224,15 +225,152 @@ def _instrument_execute(fn: Callable) -> Callable:
     return wrapper
 
 
+def _enforce_budget(fn: Callable) -> Callable:
+    """Wrap a tool's execute() with the budget hard cap.
+
+    This is the choke point: every paid provider call in OpenMontage goes
+    through a BaseTool.execute(), so gating here covers every tool that exists
+    and every tool added later, with no per-tool wiring to forget.
+
+    Unlike the event layer above, this wrapper is strictly FAIL-CLOSED. If the
+    budget cannot be evaluated -- bad config, unreadable cost log, a paid tool
+    with a broken estimate_cost() -- the call is refused rather than allowed.
+
+    What is reserved is max_cost_usd(), NOT estimate_cost(). estimate_cost()
+    is an approximation whose errors across this repo are biased downward (see
+    the `.get(model, <cheap default>)` pattern), so reserving it would let a
+    day's true spend exceed the cap. A tool that cannot state a defensible
+    upper bound is refused by name rather than gambling the cap on a guess.
+
+    Untouched paths (no tracker involvement, no cost log written):
+      - runtime LOCAL / LOCAL_GPU  (FFmpeg, Remotion, HyperFrames, Piper, ...)
+      - tools that declare `paid = False`  (genuinely free API-backed search)
+        while their estimate is 0
+      - paid tools whose max_cost_usd() EXPLICITLY returns 0.0 for a request
+        that bills nothing (selector rank mode, guaranteed-local refusals)
+    A paid tool whose estimate_cost() merely RETURNS 0 -- sub-cent rounding,
+    unknown duration, missing billing info -- is NOT free: it must still
+    declare a bound or be refused. This is what preserves the zero-key and
+    local pipelines exactly without letting a broken estimate skip the gate.
+    """
+    if getattr(fn, "_budget_enforced", False):
+        return fn
+
+    @functools.wraps(fn)
+    def wrapper(self, inputs: Any, *args: Any, **kwargs: Any):
+        # Selectors delegate to provider tools; both reach this wrapper. Gate
+        # only the outermost call, or one logical spend would reserve twice.
+        if getattr(_EXECUTE_DEPTH, "value", 0) != 0:
+            return fn(self, inputs, *args, **kwargs)
+
+        runtime = getattr(self, "runtime", ToolRuntime.LOCAL)
+        declared_paid = getattr(self, "paid", None)
+        if (
+            runtime in (ToolRuntime.LOCAL, ToolRuntime.LOCAL_GPU)
+            and declared_paid is not True
+        ):
+            return fn(self, inputs, *args, **kwargs)
+
+        tool_name = getattr(self, "name", "") or type(self).__name__
+        safe_inputs = inputs if isinstance(inputs, dict) else {}
+
+        estimated = self.estimate_cost(safe_inputs)
+        if not isinstance(estimated, (int, float)) or isinstance(estimated, bool):
+            raise BudgetGateError(
+                f"{tool_name}.estimate_cost() returned {estimated!r}; a tool that "
+                f"can spend money must return a number. Refusing to execute "
+                f"(fail closed)."
+            )
+        # Classification, not the estimate, decides whether the gate applies:
+        # API/HYBRID tools are paid unless they declare paid = False. A paid
+        # tool whose estimate is 0 (sub-cent, unknown duration, missing
+        # billing info) still has to produce a bound; a declared-free tool
+        # whose estimate claims money is gated as paid (the safe reading of
+        # the contradiction).
+        is_paid = True if declared_paid is None else bool(declared_paid)
+        if not is_paid and estimated <= 0:
+            return fn(self, inputs, *args, **kwargs)
+
+        from tools.cost_tracker import format_usd
+
+        bound = self.max_cost_usd(safe_inputs)
+        if bound is None:
+            raise BudgetGateError(
+                f"{tool_name} is classified as a PAID tool but cannot declare a "
+                f"bounded maximum cost for this call (estimate "
+                f"{format_usd(float(estimated))}). Refusing to execute (fail "
+                f"closed): a daily hard cap cannot be guaranteed against an "
+                f"unbounded cost, and a zero estimate does not make a paid tool "
+                f"free. estimate_cost() is an approximation, not a ceiling. "
+                f"Override max_cost_usd() on {tool_name} to declare a "
+                f"defensible upper bound -- it must cover every provider request "
+                f"the call can make, including retry_policy.max_retries."
+            )
+        if (
+            isinstance(bound, bool)
+            or not isinstance(bound, (int, float))
+            or not math.isfinite(bound)
+            or bound < 0
+        ):
+            raise BudgetGateError(
+                f"{tool_name}.max_cost_usd() returned {bound!r}; a bound must be "
+                f"finite and non-negative. Refusing to execute (fail closed)."
+            )
+        if float(bound) - float(estimated) < -1e-6:
+            raise BudgetGateError(
+                f"{tool_name}.max_cost_usd() returned {format_usd(float(bound))}, which is "
+                f"below its own estimate_cost() of {format_usd(float(estimated))}. That is "
+                f"not an upper bound. Refusing to execute (fail closed)."
+            )
+        if float(bound) <= 0 and estimated <= 0:
+            # The tool has EXPLICITLY declared this exact request bills
+            # nothing (selector rank mode, a request execute() is guaranteed
+            # to refuse locally). Distinct from the None case above: a
+            # declared zero is an answer, a missing bound is not.
+            return fn(self, inputs, *args, **kwargs)
+
+        from lib.budget_gate import reserve, settle
+
+        # Reserve the BOUND. Actual spend replaces it at reconcile.
+        handle = reserve(tool_name, "execute", float(bound))
+        try:
+            result = fn(self, inputs, *args, **kwargs)
+        except BaseException:
+            # Includes KeyboardInterrupt/cancellation. The provider may already
+            # have billed, so charge the bound rather than release. Never leave
+            # the reservation unresolved.
+            settle(handle, None, success=False)
+            raise
+        actual = getattr(result, "cost_usd", None)
+        settle(
+            handle,
+            actual if isinstance(actual, (int, float)) else None,
+            success=bool(getattr(result, "success", True)),
+        )
+        return result
+
+    wrapper._budget_enforced = True  # type: ignore[attr-defined]
+    return wrapper
+
+
+class BudgetGateError(Exception):
+    """Raised when a paid call's cost cannot be bounded before dispatch."""
+    pass
+
+
 class BaseTool(ABC):
     """Abstract base class for all OpenMontage tools."""
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Auto-instrument every concrete execute() with Backlot events."""
+        """Auto-instrument every concrete execute() with events + budget gate.
+
+        The budget gate wraps outermost so it reads the nesting depth before
+        the event layer increments it.
+        """
         super().__init_subclass__(**kwargs)
         impl = cls.__dict__.get("execute")
         if impl is not None and not getattr(impl, "__isabstractmethod__", False):
-            cls.execute = _instrument_execute(impl)
+            cls.execute = _enforce_budget(_instrument_execute(impl))
 
     # --- Identity (override in subclasses) ---
     name: str = ""
@@ -242,6 +380,18 @@ class BaseTool(ABC):
     execution_mode: ExecutionMode = ExecutionMode.SYNC
     determinism: Determinism = Determinism.DETERMINISTIC
     runtime: ToolRuntime = ToolRuntime.LOCAL
+
+    # --- Budget classification ---
+    # Whether this tool can incur provider charges. None (the default) infers
+    # it from runtime: LOCAL/LOCAL_GPU tools are free; API/HYBRID tools are
+    # treated as PAID and must declare max_cost_usd() -- returning 0.0 only
+    # for a request that genuinely bills nothing (a selector's rank mode, a
+    # request execute() is guaranteed to refuse locally). Genuinely free
+    # API-backed tools (stock media search) set paid = False explicitly.
+    # This is what stops a paid tool whose estimate_cost() returns 0 --
+    # sub-cent, unknown duration, missing billing info -- from slipping past
+    # the budget gate on the strength of that zero.
+    paid: Optional[bool] = None
 
     # --- Dependencies ---
     # For API tools, add "env:ENVVAR_NAME" to signal required API keys
@@ -374,8 +524,31 @@ class BaseTool(ABC):
     # ---- Cost estimation ----
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
-        """Estimate cost in USD for the given inputs. Override for paid tools."""
+        """Estimate cost in USD for the given inputs. Override for paid tools.
+
+        This is an APPROXIMATION for planning and provider ranking. It is NOT a
+        guaranteed ceiling and must never be treated as one -- see
+        max_cost_usd() for the value the budget gate actually reserves.
+        """
         return 0.0
+
+    def max_cost_usd(self, inputs: dict[str, Any]) -> Optional[float]:
+        """Defensible UPPER BOUND on what this call can cost, or None.
+
+        Returning None means "I cannot bound this", and the budget gate will
+        refuse the call by name. That default is deliberate: a daily hard cap
+        is only real if every paid call's worst case is known in advance, and
+        it is safer to block a provider than to silently blow the cap.
+
+        A correct override must cover EVERY provider request the call can make
+        under the worst-case inputs, including:
+          - retry_policy.max_retries (one execute() can bill many times)
+          - provider-chosen quantities (e.g. duration="auto")
+          - the most expensive model/quality the inputs could resolve to
+
+        Return a finite, non-negative float >= estimate_cost(inputs).
+        """
+        return None
 
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         """Estimate runtime in seconds. Override for long-running tools."""

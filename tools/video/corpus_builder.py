@@ -81,6 +81,8 @@ class CorpusBuilder(BaseTool):
     execution_mode = ExecutionMode.SYNC
     determinism = Determinism.DETERMINISTIC
     runtime = ToolRuntime.HYBRID  # local compute + network APIs
+    # Genuinely free: no provider charge can ever be incurred (see BaseTool.paid).
+    paid = False
 
     dependencies = [
         "python:cv2",

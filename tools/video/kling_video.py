@@ -113,6 +113,19 @@ class KlingVideo(BaseTool):
             return 0.20 * (duration / 5)
         return 0.10 * (duration / 5)  # standard
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Upper bound on a single call's spend.
+
+        The schema's known variants price exactly through the estimate; an
+        unrecognized variant string is bounded at the dearest tier (master)
+        rather than the cheap standard fallback. Duration comes from the
+        request. execute() issues one billed request.
+        """
+        variant = inputs.get("model_variant", "v3/standard")
+        if variant in ("v3/standard", "v2.1/master", "v2.1/pro", "v2.1/standard"):
+            return self.estimate_cost(inputs)
+        return self.estimate_cost({**inputs, "model_variant": "v2.1/master"})
+
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         return 60.0  # ~1 minute typical
 

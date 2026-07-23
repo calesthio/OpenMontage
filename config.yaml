@@ -7,11 +7,26 @@ llm:
   max_tokens: 4096
 
 budget:
-  mode: warn                     # observe | warn | cap
-  total_usd: 10.00
-  reserve_pct: 0.10              # holdback for retries / cleanup
-  single_action_approval_usd: 0.50
-  require_approval_for_new_paid_tool: true
+  # HARD CAP. $10.00 is the aggregate provider-spend ceiling per CALENDAR DAY,
+  # summed across all projects and all processes (not per-project, not per-run).
+  # A request landing exactly at the cap is ALLOWED; a request that would push
+  # the day's total OVER the cap is refused BEFORE any provider dispatch.
+  mode: cap                          # observe | warn | cap  (overrides the WARN model default)
+  total_usd: 10.00                   # aggregate paid-provider spend cap, per day
+  # Daily rollover is automatic at midnight in the timezone below. Historical
+  # ledger entries are preserved (never cleared to free budget), and an
+  # unresolved reservation stays attached to its immutable ORIGINAL budget_date
+  # even if it settles on a later day.
+  period: daily                      # only "daily" is implemented; other values fail closed
+  timezone: system_local             # "system_local" or an IANA name; unresolvable -> fail closed
+  # The three controls below are INDEPENDENT safeguards, evaluated in every mode:
+  reserve_pct: 0.10                  # warn-mode planning holdback; cap enforces the true
+                                     #   daily total, so an exact-cap request is still allowed
+  single_action_approval_usd: 0.50   # refuse any single call estimated above this
+  require_approval_for_new_paid_tool: true   # refuse the first paid use of each tool until approved
+  # A paid tool that has not declared a defensible max_cost_usd() bound remains
+  # FAIL-CLOSED (its calls are refused). Free/local operations with cost 0 are
+  # unaffected by any of the above.
 
 checkpoint:
   policy: guided                 # guided | manual_all | auto_noncreative

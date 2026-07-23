@@ -142,6 +142,16 @@ class ElevenLabsTTS(BaseTool):
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         return round(len(inputs.get("text", "")) * 0.0003, 4)
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Upper bound on a single call's spend.
+
+        ElevenLabs bills per character at the flat rate above, fully
+        determined by the request text, so the estimate is itself the
+        ceiling. execute() issues one billed generation request (the declared
+        retry_policy is advisory metadata; no internal loop re-bills).
+        """
+        return self.estimate_cost(inputs)
+
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         api_key = os.environ.get("ELEVENLABS_API_KEY")
         if not api_key:

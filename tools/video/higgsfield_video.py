@@ -155,6 +155,23 @@ class HiggsFieldVideo(BaseTool):
         base = base_costs.get(model, 0.15)
         return base * (duration / 5)
 
+    def max_cost_usd(self, inputs: dict[str, Any]) -> float | None:
+        """Upper bound on a single call's spend.
+
+        Known models price exactly through the estimate; an unrecognized
+        model string is bounded at the dearest catalog entry (seedance_2.0)
+        rather than the cheap default. Duration comes from the request.
+        execute() issues one billed request.
+        """
+        known_models = (
+            "seedance_2.0", "seedance_2.0_fast", "kling_3.0", "wan_2.5",
+            "veo_3.1", "sora_2", "soul_cinema",
+        )
+        model = inputs.get("model", _DEFAULT_MODEL)
+        if model in known_models:
+            return self.estimate_cost(inputs)
+        return self.estimate_cost({**inputs, "model": "seedance_2.0"})
+
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         model = inputs.get("model", _DEFAULT_MODEL)
         if model in ("veo_3.1", "sora_2", "seedance_2.0"):

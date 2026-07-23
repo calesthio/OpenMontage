@@ -10,6 +10,7 @@ Run every tool with real API keys, inspect outputs (see images, listen to audio,
 |--------|-------------|---------------|-----------|
 | `test_01_tts.py` | `elevenlabs_tts` (ElevenLabs) | ELEVENLABS_API_KEY | ~$0.02 |
 | `test_02_image_gen.py` | `image_gen` (GPT Image 2 + FLUX) | OPENAI_API_KEY, FAL_AI_API_KEY | ~$0.15 |
+| `test_02_mlx_image_gen.py` | `mlx_image` t2i matrix + `run.py caption --style score` (local MLX + LM Studio VLM) | None (local Apple Silicon) | $0 |
 | `test_03_music.py` | `music_gen` (ElevenLabs) | ELEVENLABS_API_KEY | ~$0.10 |
 | `test_04_audio_mix.py` | `audio_mixer` | None (ffmpeg only) | $0 |
 | `test_05_video_compose.py` | `video_compose` | None (ffmpeg only) | $0 |
@@ -46,6 +47,7 @@ cd C:/Users/ishan/Documents/OpenMontage
 # Phase 1: Individual tools (can run in parallel)
 python tests/qa/test_01_tts.py
 python tests/qa/test_02_image_gen.py
+python tests/qa/test_02_mlx_image_gen.py   # local MLX only: MLX_MOVIE_DIRECTOR_DIR=... + LM Studio on :1234
 python tests/qa/test_03_music.py
 
 # Phase 2: Composition (depends on Phase 1 outputs)

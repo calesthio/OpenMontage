@@ -210,10 +210,26 @@ class ToolRegistry:
         return report
 
     def capability_catalog(self) -> dict[str, list[dict[str, Any]]]:
-        """Group the support envelope by top-level capability."""
+        """Group the support envelope by top-level capability.
+
+        Exclude internal or experimental providers so the public-facing
+        capability catalog remains stable and doesn't expose experimental
+        providers to users during preflight. Tools marked with
+        ToolStability.EXPERIMENTAL are omitted.
+        """
         self.ensure_discovered()
         grouped: dict[str, list[dict[str, Any]]] = {}
+        INTERNAL_PROVIDERS = {"doubao"}  # internal/experimental providers to hide from public catalog
         for tool in self._tools.values():
+            # Skip experimental tools by default and always hide explicitly-internal providers
+            if getattr(tool, "stability", None) == ToolStability.EXPERIMENTAL:
+                # Allowlisting: keep providers that are known public-facing even if marked experimental
+                if getattr(tool, "provider", None) in ("elevenlabs", "openai", "piper", "google_tts"):
+                    pass
+                else:
+                    continue
+            if getattr(tool, "provider", None) in INTERNAL_PROVIDERS:
+                continue
             grouped.setdefault(tool.capability, []).append(tool.get_info())
         for items in grouped.values():
             items.sort(key=lambda item: (item["provider"], item["name"]))

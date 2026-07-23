@@ -227,6 +227,32 @@ No subscription — pure pay-as-you-go, no minimum spend.
 
 ---
 
+### KIE.AI — Multi-Model Video Gateway
+
+> **Alternative to fal.ai for video generation.** One KIE.AI key unlocks Market video models such as Seedance and Kling through the unified task API.
+
+**Tools unlocked:** `kie_video`
+**Env var:** `KIE_API_KEY`
+
+#### Setup
+
+1. Go to [kie.ai](https://kie.ai/) and sign in
+2. Create/copy an API key from the KIE.AI API key management page
+3. Add to `.env`: `KIE_API_KEY=your-key-here`
+
+#### Supported operations in OpenMontage
+
+- `text_to_video` via `bytedance/seedance-2`, `bytedance/seedance-2-fast`, and `kling/v3-turbo-text-to-video`
+- `image_to_video` via `bytedance/seedance-2`, `bytedance/seedance-2-fast`, and `kling/v3-turbo-image-to-video`
+- `reference_to_video` and `first_last_frame_to_video` via Seedance 2.0 variants
+- Local image paths are uploaded through KIE's file upload API automatically
+
+#### Notes
+
+KIE.AI bills in credits and pricing can change by model. OpenMontage records KIE's `creditsConsumed` value in tool results when the API returns it, while `estimate_cost()` remains a rough planning estimate.
+
+---
+
 ### Kling Official — Direct API
 
 > **Official Kling path.** This is separate from `kling_video` via fal.ai: it uses Kling's official `Authorization: Bearer <KLING_API_KEY>` API, provider name `kling_official`, and direct Classic/Turbo/Omni task protocols.
@@ -929,6 +955,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **Google** | `GOOGLE_API_KEY` (or `GEMINI_API_KEY`) | `google_tts`, `google_imagen`, `google_music`, `gemini_omni_video`, `veo_video` | Free tier (TTS) + paid |
 | **ElevenLabs** | `ELEVENLABS_API_KEY` | `elevenlabs_tts`, `music_gen` | Free tier + paid |
 | **fal.ai** | `FAL_KEY` | `flux_image`, `recraft_image`, `kling_video`, `veo_video`, `minimax_video` | Pay-as-you-go |
+| **KIE.AI** | `KIE_API_KEY` | `kie_video` | Credit-based pay-as-you-go |
 | **Kling Official** | `KLING_API_KEY` | `kling_official_video`, `kling_official_image`, `kling_tts`, `kling_avatar`, `kling_lip_sync` | Pay-as-you-go |
 | **OpenAI** | `OPENAI_API_KEY` | `openai_tts`, `openai_image` | Paid only |
 | **xAI** | `XAI_API_KEY` | `grok_image`, `grok_video` | Paid only |
@@ -949,7 +976,7 @@ How many providers cover each capability:
 | Capability | Cloud Providers | Local Providers | Free Options |
 |-----------|----------------|-----------------|--------------|
 | **Image Generation** | FLUX, Kling Official, Grok, Google Imagen, GPT Image 2, Recraft | Local Diffusion | Pexels, Pixabay (stock) |
-| **Video Generation** | Grok, Kling Official, Kling via fal.ai, Runway, Veo, Gemini Omni, Higgsfield, MiniMax, HeyGen | WAN, Hunyuan, CogVideo, LTX | Pexels, Pixabay (stock) |
+| **Video Generation** | Grok, Kling Official, Kling via fal.ai, KIE.AI, Runway, Veo, Gemini Omni, Higgsfield, MiniMax, HeyGen | WAN, Hunyuan, CogVideo, LTX | Pexels, Pixabay (stock) |
 | **Text-to-Speech** | ElevenLabs, Google TTS, Kling Official, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier |
 | **Music Generation** | ElevenLabs, Suno, Google Lyria | — | ElevenLabs free tier |
 | **Post-Production** | — | FFmpeg (compose, stitch, trim, mix, enhance, grade) | All free |
@@ -968,7 +995,7 @@ A: FFmpeg + Node.js (both free, local). FFmpeg handles video assembly, audio mix
 A: Yes. The agent generates still images (via any image provider — even free stock from Pexels/Pixabay) and Remotion composes them into animated video with spring physics transitions, text cards, stat cards, and charts. This is the default path for explainer and animation pipelines when no video gen is configured.
 
 **Q: What's one low-friction way to get AI-generated images and video?**
-A: fal.ai (`FAL_KEY`) is one pay-as-you-go option with broad single-key coverage. It unlocks FLUX images plus multiple video providers. No subscription — pay only for what you generate.
+A: fal.ai (`FAL_KEY`) is one pay-as-you-go option with broad single-key coverage. KIE.AI (`KIE_API_KEY`) is an alternative video gateway for Seedance/Kling-style clips. Both are pay-as-you-go; configure whichever provider you already use.
 
 **Q: I have a GPU. What can I run locally for free?**
 A: Set `VIDEO_GEN_LOCAL_ENABLED=true` and install `diffusers`. You get WAN 2.1, Hunyuan, CogVideo, and LTX video generation plus Stable Diffusion image generation — all free, all offline.

@@ -122,6 +122,27 @@
       "enum": ["guided", "manual_all", "auto_noncreative"],
       "default": "guided"
     },
+    "approval_profiles": {
+      "type": "object",
+      "description": "Named, opt-in gate overrides for a specific run. The default stage policy remains binding when no profile is selected.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["stage_overrides"],
+        "properties": {
+          "description": { "type": "string" },
+          "stage_overrides": {
+            "type": "object",
+            "additionalProperties": { "type": "boolean" }
+          },
+          "post_approval_rerun": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Stages whose completed placeholder checkpoints are superseded when the gate is approved, so the deterministic resume loop re-runs them for the paid pass. Stage names are validated against the pipeline's declared stages at profile resolution."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
     "reference_input": {
       "type": "object",
       "description": "Configuration for reference video input support",

@@ -21,6 +21,11 @@
           "fps": { "type": "number" },
           "duration_seconds": { "type": "number", "minimum": 0 },
           "file_size_bytes": { "type": "integer" },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "SHA-256 of the exact rendered bytes; client publish guards may require it."
+          },
           "platform_target": { "type": "string" }
         },
         "additionalProperties": false

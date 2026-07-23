@@ -6,9 +6,10 @@ checkpoints to resume pipelines and to present state at human checkpoints.
 
 from __future__ import annotations
 
+import hashlib
 import json
-from functools import lru_cache
 from datetime import datetime, timezone
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional
 
@@ -175,6 +176,42 @@ def _checkpoint_path(pipeline_dir: Path, project_id: str, stage: str) -> Path:
     return pipeline_dir / project_id / f"checkpoint_{stage}.json"
 
 
+def _resolve_approval_profile(
+    manifest: dict[str, Any],
+    pipeline_type: str,
+    approval_profile: str,
+) -> dict[str, Any]:
+    profiles = manifest.get("approval_profiles", {})
+    profile = profiles.get(approval_profile) if isinstance(profiles, dict) else None
+    if not isinstance(profile, dict):
+        available = sorted(profiles) if isinstance(profiles, dict) else []
+        raise CheckpointValidationError(
+            f"Unknown approval_profile {approval_profile!r} for pipeline "
+            f"{pipeline_type!r}; available profiles: {available}"
+        )
+
+    # A typo'd stage name in a profile would be silently ignored downstream
+    # and drop the gate the profile intended — fail closed instead.
+    declared = {
+        stage.get("name")
+        for stage in manifest.get("stages", [])
+        if isinstance(stage, dict)
+    }
+    overrides = profile.get("stage_overrides", {})
+    rerun = profile.get("post_approval_rerun", [])
+    unknown = sorted(
+        {key for key in overrides if key not in declared}
+        | {key for key in rerun if key not in declared}
+    )
+    if unknown:
+        raise CheckpointValidationError(
+            f"approval_profile {approval_profile!r} in pipeline {pipeline_type!r} "
+            f"references unknown stages: {unknown}. Declared stages: "
+            f"{sorted(s for s in declared if s)}"
+        )
+    return profile
+
+
 def init_project(
     project_id: str,
     *,
@@ -182,6 +219,7 @@ def init_project(
     pipeline_type: str,
     pipeline_dir: Optional[Path] = None,
     style_playbook: Optional[str] = None,
+    approval_profile: Optional[str] = None,
 ) -> Path:
     """Initialize a project workspace with the canonical layout + marker file.
 
@@ -192,6 +230,16 @@ def init_project(
     Idempotent: re-running preserves the original created_at and merges fields.
     Returns the project directory.
     """
+    if approval_profile is not None:
+        try:
+            from lib.pipeline_loader import load_pipeline_readonly
+            manifest = load_pipeline_readonly(pipeline_type)
+        except Exception as exc:
+            raise CheckpointValidationError(
+                f"Cannot validate approval_profile for pipeline {pipeline_type!r}"
+            ) from exc
+        _resolve_approval_profile(manifest, pipeline_type, approval_profile)
+
     base = pipeline_dir or PROJECTS_DIR
     project_dir = base / project_id
     for sub in (
@@ -220,6 +268,8 @@ def init_project(
     marker["pipeline_type"] = pipeline_type
     if style_playbook is not None:
         marker["style_playbook"] = style_playbook
+    if approval_profile is not None:
+        marker["approval_profile"] = approval_profile
 
     with open(marker_path, "w") as f:
         json.dump(marker, f, indent=2)
@@ -227,7 +277,11 @@ def init_project(
     return project_dir
 
 
-def _stage_requires_approval(pipeline_type: Optional[str], stage: str) -> Optional[bool]:
+def _stage_requires_approval(
+    pipeline_type: Optional[str],
+    stage: str,
+    approval_profile: Optional[str] = None,
+) -> Optional[bool]:
     """Read human_approval_default for a stage from its pipeline manifest.
 
     Returns None when the stage isn't declared in the manifest or no
@@ -257,7 +311,26 @@ def _stage_requires_approval(pipeline_type: Optional[str], stage: str) -> Option
             "the caller's human_approval_required flag.", pipeline_type, exc,
         )
         return None
-    return get_stage_human_approval_default(manifest, stage)
+    default = get_stage_human_approval_default(manifest, stage)
+    if not approval_profile:
+        return default
+
+    profile = _resolve_approval_profile(manifest, pipeline_type, approval_profile)
+    overrides = profile.get("stage_overrides", {})
+    if stage not in overrides:
+        return default
+    return bool(overrides[stage])
+
+
+def checkpoint_resume_token(checkpoint: dict[str, Any]) -> str:
+    """Bind a resume request to one exact awaiting-human checkpoint."""
+    payload = json.dumps(
+        checkpoint,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
 
 
 def _archive_superseded_checkpoint(path: Path, stage: str) -> None:
@@ -349,21 +422,38 @@ def write_checkpoint(
     cost_snapshot: Optional[dict] = None,
     error: Optional[str] = None,
     metadata: Optional[dict] = None,
+    approval_profile: Optional[str] = None,
 ) -> Path:
     """Write a checkpoint file for a pipeline stage."""
     # Backfill a missing pipeline_type from the project marker so that
     # omitting the kwarg doesn't quietly bypass gate enforcement.
-    if not pipeline_type:
-        marker = None
-        marker_path = pipeline_dir / project_id / PROJECT_MARKER_FILENAME
-        if marker_path.exists():
-            try:
-                with open(marker_path) as f:
-                    marker = json.load(f)
-            except (json.JSONDecodeError, OSError):
-                marker = None
-        if isinstance(marker, dict) and marker.get("pipeline_type"):
-            pipeline_type = marker["pipeline_type"]
+    marker = None
+    marker_path = pipeline_dir / project_id / PROJECT_MARKER_FILENAME
+    if marker_path.exists():
+        try:
+            with open(marker_path) as f:
+                marker = json.load(f)
+        except (json.JSONDecodeError, OSError):
+            marker = None
+    if not pipeline_type and isinstance(marker, dict) and marker.get("pipeline_type"):
+        pipeline_type = marker["pipeline_type"]
+    # The persisted project selection is authoritative for approval profiles.
+    # Accepting a per-call profile the project never selected would let any
+    # stage caller opt itself out of the project's default gates.
+    marker_profile = marker.get("approval_profile") if isinstance(marker, dict) else None
+    if not (isinstance(marker_profile, str) and marker_profile):
+        marker_profile = None
+    if approval_profile:
+        if approval_profile != marker_profile:
+            raise CheckpointValidationError(
+                f"approval_profile {approval_profile!r} was passed for project "
+                f"{project_id!r} but {PROJECT_MARKER_FILENAME} records "
+                f"{marker_profile!r}. Profiles are selected once at "
+                f"init_project(); write_checkpoint cannot override the "
+                f"persisted selection."
+            )
+    else:
+        approval_profile = marker_profile
 
     valid_stages = (
         set(get_pipeline_stages(pipeline_type)) if pipeline_type
@@ -377,16 +467,27 @@ def write_checkpoint(
 
     # --- Gate enforcement (GI-4) ---
     # The pipeline manifest is the binding source of truth for whether a stage
-    # gates on human approval; a caller may gate MORE strictly (e.g. a
-    # manual_all checkpoint policy) but never less. A gated stage can only be
-    # written "completed" with explicit evidence of approval
+    # gates on human approval. Without a selected profile, a caller may gate
+    # more strictly (e.g. a manual_all checkpoint policy) but never less. An
+    # explicit manifest-defined profile is itself the complete policy: its
+    # false overrides must not be re-gated by stale unprofiled director input.
+    # A gated stage can only be written "completed" with explicit approval
     # (human_approved=True). Skipping a gate is a hard error.
     #
     # Enforcement happens at write time only: pre-existing checkpoints written
     # before gating (or by hand) still read as completed — deliberate
     # back-compat so in-flight and legacy projects keep resuming.
-    manifest_gate = _stage_requires_approval(pipeline_type, stage)
-    gated = bool(manifest_gate) or human_approval_required
+    manifest_gate = _stage_requires_approval(
+        pipeline_type,
+        stage,
+        approval_profile=approval_profile,
+    )
+    profile_policy_is_binding = approval_profile is not None and manifest_gate is not None
+    if profile_policy_is_binding:
+        gated = bool(manifest_gate)
+        human_approval_required = gated
+    else:
+        gated = bool(manifest_gate) or human_approval_required
     if gated:
         human_approval_required = True
         if status == "completed" and not human_approved:
@@ -418,6 +519,8 @@ def write_checkpoint(
     }
     if style_playbook is not None:
         checkpoint["style_playbook"] = style_playbook
+    if approval_profile is not None:
+        checkpoint["approval_profile"] = approval_profile
     if review is not None:
         checkpoint["review"] = review
     if cost_snapshot is not None:
@@ -465,6 +568,210 @@ def write_checkpoint(
     os.replace(tmp_path, path)
 
     return path
+
+
+def record_checkpoint_approval(
+    pipeline_dir: Path,
+    project_id: str,
+    stage: str,
+    *,
+    expected_resume_token: str,
+    approval_evidence: dict[str, Any],
+) -> Path:
+    """Record approval without pretending the gated work already completed.
+
+    The checkpoint remains ``awaiting_human``.  A paid stage can now verify the
+    approval evidence, run, and only then replace it with ``completed``.  The
+    resume token prevents a reply to an old preview from authorizing a newer
+    revision.
+    """
+    checkpoint = read_checkpoint(pipeline_dir, project_id, stage)
+    if checkpoint is None or checkpoint.get("status") != "awaiting_human":
+        raise CheckpointValidationError(
+            f"Stage {stage!r} has no awaiting_human checkpoint to approve"
+        )
+
+    actual_token = checkpoint_resume_token(checkpoint)
+    if expected_resume_token != actual_token:
+        raise CheckpointValidationError(
+            "Stale or invalid checkpoint resume token; request a fresh preview"
+        )
+    if not isinstance(approval_evidence, dict) or not approval_evidence:
+        raise CheckpointValidationError("approval_evidence must be a non-empty object")
+    required_evidence = ("decision", "source_message_id", "timestamp")
+    missing = [
+        key for key in required_evidence
+        if not isinstance(approval_evidence.get(key), str)
+        or not approval_evidence[key].strip()
+    ]
+    if missing:
+        raise CheckpointValidationError(
+            "approval_evidence requires non-empty decision, source_message_id "
+            f"and timestamp; missing: {', '.join(missing)}"
+        )
+    try:
+        approval_time = datetime.fromisoformat(
+            approval_evidence["timestamp"].replace("Z", "+00:00")
+        )
+    except ValueError as exc:
+        raise CheckpointValidationError(
+            "approval_evidence timestamp must be ISO-8601"
+        ) from exc
+    if approval_time.tzinfo is None:
+        raise CheckpointValidationError(
+            "approval_evidence timestamp must include a timezone"
+        )
+
+    metadata = dict(checkpoint.get("metadata") or {})
+    metadata["approval_evidence"] = approval_evidence
+    metadata["approved_resume_token"] = actual_token
+    approved_path = write_checkpoint(
+        pipeline_dir,
+        project_id,
+        stage,
+        "awaiting_human",
+        checkpoint["artifacts"],
+        pipeline_type=checkpoint.get("pipeline_type"),
+        style_playbook=checkpoint.get("style_playbook"),
+        checkpoint_policy=checkpoint.get("checkpoint_policy", "guided"),
+        human_approval_required=True,
+        human_approved=True,
+        review=checkpoint.get("review"),
+        cost_snapshot=checkpoint.get("cost_snapshot"),
+        metadata=metadata,
+        approval_profile=checkpoint.get("approval_profile"),
+    )
+    _supersede_post_approval_rerun_checkpoints(
+        pipeline_dir,
+        project_id,
+        approved_stage=stage,
+        pipeline_type=checkpoint.get("pipeline_type"),
+        approval_profile=checkpoint.get("approval_profile"),
+    )
+    return approved_path
+
+
+def _supersede_post_approval_rerun_checkpoints(
+    pipeline_dir: Path,
+    project_id: str,
+    *,
+    approved_stage: str,
+    pipeline_type: Optional[str],
+    approval_profile: Optional[str],
+) -> list[str]:
+    """Route the deterministic resume loop into the profile's paid re-run.
+
+    A profile such as ``preview_then_avatar`` completes cheap placeholder
+    passes of ``assets``/``edit`` before the gated ``compose`` preview. Once
+    the human approves that preview, those placeholder checkpoints must stop
+    counting as done — otherwise ``get_next_stage`` resumes at the approved
+    stage and re-renders the placeholder instead of running the paid pass.
+    Each superseded checkpoint is archived to ``history/`` first, then removed,
+    so the same governed runner re-executes the stages listed in the profile's
+    ``post_approval_rerun``. The approved awaiting checkpoint itself is kept:
+    it carries the resume token the paid adapter verifies before spend.
+    """
+    if not approval_profile or not pipeline_type or pipeline_type == "unknown":
+        return []
+    from lib.pipeline_loader import load_pipeline_readonly
+    try:
+        manifest = load_pipeline_readonly(pipeline_type)
+    except Exception as exc:
+        raise CheckpointValidationError(
+            f"Cannot resolve approval_profile {approval_profile!r} for the "
+            f"post-approval transition of pipeline {pipeline_type!r}"
+        ) from exc
+    profile = _resolve_approval_profile(manifest, pipeline_type, approval_profile)
+    superseded: list[str] = []
+    for prior_stage in profile.get("post_approval_rerun", []):
+        if prior_stage == approved_stage:
+            continue
+        path = _checkpoint_path(pipeline_dir, project_id, prior_stage)
+        if not path.exists():
+            continue
+        try:
+            with open(path) as f:
+                existing = json.load(f)
+        except (json.JSONDecodeError, OSError):
+            continue
+        if existing.get("status") != "completed":
+            continue
+        _archive_superseded_checkpoint(path, prior_stage)
+        path.unlink()
+        superseded.append(prior_stage)
+    return superseded
+
+
+def assert_checkpoint_approved_for_resume(
+    pipeline_dir: Path,
+    project_id: str,
+    stage: str,
+    *,
+    expected_resume_token: str,
+    expected_decision: str,
+) -> dict[str, Any]:
+    """Verify the recorded decision immediately before a gated operation.
+
+    This is deliberately separate from ``record_checkpoint_approval`` so a
+    caller cannot treat a successful write as authorization forever.  Paid
+    adapters should call it at the last possible moment before provider spend.
+    It is tamper-evident state, not a security boundary against a process that
+    can rewrite the whole workspace.
+    """
+    checkpoint = read_checkpoint(pipeline_dir, project_id, stage)
+    if checkpoint is None or checkpoint.get("status") != "awaiting_human":
+        raise CheckpointValidationError(
+            f"Stage {stage!r} is not awaiting an approved resume"
+        )
+    if checkpoint.get("human_approved") is not True:
+        raise CheckpointValidationError(
+            f"Stage {stage!r} has no recorded human approval"
+        )
+    metadata = checkpoint.get("metadata") or {}
+    if metadata.get("approved_resume_token") != expected_resume_token:
+        raise CheckpointValidationError(
+            "Approved resume token does not match the requested checkpoint"
+        )
+    evidence = metadata.get("approval_evidence")
+    if not isinstance(evidence, dict):
+        raise CheckpointValidationError("Approved checkpoint has no approval_evidence")
+    required_evidence = ("decision", "source_message_id", "timestamp")
+    if any(not isinstance(evidence.get(key), str) or not evidence[key].strip()
+           for key in required_evidence):
+        raise CheckpointValidationError(
+            "Approved checkpoint evidence is incomplete"
+        )
+    if evidence["decision"] != expected_decision:
+        raise CheckpointValidationError(
+            f"Approved decision {evidence['decision']!r} does not match "
+            f"required decision {expected_decision!r}"
+        )
+    try:
+        approval_time = datetime.fromisoformat(evidence["timestamp"].replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise CheckpointValidationError("Approved timestamp is not ISO-8601") from exc
+    if approval_time.tzinfo is None:
+        raise CheckpointValidationError("Approved timestamp has no timezone")
+
+    original_found = False
+    history_dir = pipeline_dir / project_id / HISTORY_DIRNAME
+    for path in history_dir.glob(f"checkpoint_{stage}_*.json"):
+        try:
+            original = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if (
+            original.get("status") == "awaiting_human"
+            and original.get("human_approved") is not True
+            and checkpoint_resume_token(original) == expected_resume_token
+        ):
+            original_found = True
+            break
+    if not original_found:
+        raise CheckpointValidationError(
+            "Approved resume token is not bound to an original awaiting checkpoint"
+        )
+    return dict(evidence)
 
 
 def read_checkpoint(

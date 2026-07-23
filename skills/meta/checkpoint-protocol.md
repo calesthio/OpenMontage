@@ -8,7 +8,7 @@ Checkpoints are the save points of a pipeline. They enable resume-from-failure, 
 
 ## Protocol
 
-### Step 1: Check Manifest Policy
+### Step 1: Check Effective Manifest Policy
 
 Read the current stage's configuration from the pipeline manifest:
 
@@ -18,11 +18,17 @@ Read the current stage's configuration from the pipeline manifest:
   human_approval_default: true   # Must we ask the human?
 ```
 
-| `checkpoint_required` | `human_approval_default` | Action |
+| `checkpoint_required` | effective approval | Action |
 |----------------------|------------------------|--------|
 | true | true | Checkpoint + present to human for approval |
 | true | false | Checkpoint + proceed automatically |
 | false | * | Skip checkpoint entirely (rare) |
+
+The default remains binding unless `project.json` selects a named
+`approval_profile` declared by this same pipeline manifest. Profiles are
+opt-in per project and only override stages listed in their
+`stage_overrides`; an unknown profile fails closed. This consolidates reviews
+without weakening the default policy for any other run.
 
 ### Step 2: Prepare Checkpoint Data
 
@@ -71,6 +77,17 @@ marker the Backlot board needs to show the project before its first
 checkpoint. Then launch the board: `python -m backlot open my-project`
 (non-fatal if unavailable — the board is an observer, never a blocker).
 
+Persist an explicitly selected manifest profile at initialization:
+
+```python
+init_project(
+    "my-project",
+    title="My Project",
+    pipeline_type="avatar-spokesperson",
+    approval_profile="preview_then_avatar",
+)
+```
+
 ### Step 4: Intra-Stage Checkpointing (Resume Support + Liveness)
 
 **On entering any stage, write an `in_progress` checkpoint first.** This is
@@ -101,13 +118,13 @@ Long-running stages (like `assets` or `compose` loops) can fail midway due to AP
 
 ### Step 5: Human Approval (If Required)
 
-**The manifest value is binding.** `human_approval_default` in the pipeline
-manifest is the single source of truth for whether a stage gates. This skill
-never overrides it, and neither do you — there is no "this case is different."
+**The effective manifest policy is binding.** `human_approval_default`, plus
+an explicitly selected manifest-defined `approval_profile`, is the source of
+truth for whether a stage gates. This skill never invents ad-hoc exceptions.
 (`lib/checkpoint.py` enforces this: writing `status="completed"` for a gated
 stage without `human_approved=True` raises a `GATE VIOLATION` error.)
 
-When `human_approval_default: true`:
+When effective approval is `true`:
 
 1. **Write the checkpoint with `status="awaiting_human"`** (not `completed`).
 
@@ -148,7 +165,7 @@ When `human_approval_default: true`:
    `decision_log` entry (`category: "approval_policy"`) at the moment they
    say it — absent that entry, stop at every gate.
 
-6. **The assets gate reviews the storyboard — before any draft render.**
+6. **The default assets gate reviews the storyboard — before any draft render.**
    `assets` now gates in every pipeline: present the generated assets
    scene-by-scene (the Backlot board's filmstrip is the natural review
    surface), including spend so far and the projected compose cost. A bad
@@ -165,6 +182,12 @@ When `human_approval_default: true`:
    land, then STOP at the gate. The draft/final render is the **compose**
    stage — it runs only after the assets gate is approved. Rendering a full
    draft inside the assets stage jumps the gate the user is meant to hold.
+
+   `preview_then_avatar` is an explicit manifest-defined exception: the first
+   assets pass contains only cheap/free assets and an avatar placeholder;
+   edit/compose creates the complete structure preview; `compose` then waits
+   for approval. No paid avatar asset may exist before that checkpoint is
+   approved.
 
 ### Step 6: Determine Next Stage
 
@@ -198,6 +221,41 @@ If a checkpoint exists with status `"awaiting_human"`:
 1. Inform the human: "Stage [name] is awaiting your approval"
 2. Present the checkpoint data for review
 3. Wait for approval before proceeding
+
+### Deterministic run-until-checkpoint + resume
+
+Use one transition sequence; do not improvise a second runner or render path:
+
+1. `init_project(...)` once, including the selected `approval_profile`.
+2. Call `get_next_stage(...)`, run the declared stage director/tool, and write
+   its schema-valid checkpoint. Repeat until the effective gate writes
+   `awaiting_human`.
+3. Return immediately with project id, stage and
+   `checkpoint_resume_token(checkpoint)`.
+4. On the next turn, call `record_checkpoint_approval(...)`. Evidence must
+   include `decision`, `source_message_id`, and a timezone-qualified ISO-8601
+   `timestamp`.
+5. Immediately before any paid provider call, invoke
+   `assert_checkpoint_approved_for_resume(..., expected_resume_token=...,
+   expected_decision=...)`. A stale token, ambiguous command, or missing
+   original checkpoint fails closed.
+6. Run the paid and downstream stages, then write their final checkpoints.
+
+For `preview_then_avatar`, the cheap run ends at `compose` with the complete
+placeholder preview. The post-approval transition is machine-enforced, not a
+convention: when `record_checkpoint_approval(...)` succeeds, the completed
+placeholder checkpoints for the stages listed in the profile's
+`post_approval_rerun` (`assets`, `edit`) are archived to `history/` and
+removed, so the **same** `get_next_stage(...)` loop resumes at `assets` and
+the paid avatar pass replaces the placeholder. The approved `compose`
+checkpoint stays `awaiting_human` — it carries the resume token that
+`assert_checkpoint_approved_for_resume(...)` verifies immediately before the
+first paid avatar call. There is no second creative gate in this profile, and
+no second runner.
+
+This workspace evidence is tamper-evident, not a security boundary against a
+process with root write access. Malice-resistant deployments must isolate paid
+provider and publisher credentials behind validated adapters.
 
 ### Sample Checkpoint (Reference-Driven Productions)
 
@@ -237,7 +295,7 @@ Does this feel right? I can adjust: voice, visual style, pacing, music, colors.
 
 1. **Always checkpoint completed work.** Even if `checkpoint_required: false`, consider checkpointing anyway if the stage took significant time or cost. Losing work is worse than an extra file on disk.
 
-2. **Never skip human approval on creative stages.** `idea` and `script` shape everything. Rushing past them to save time produces videos nobody wants.
+2. **Honor the effective approval policy.** Defaults review creative stages individually; an explicit profile may consolidate them into a later preview but may not remove its paid-operation gate.
 
 3. **Include cost snapshots.** The human should know how much has been spent and how much remains before approving expensive downstream stages (assets, compose).
 

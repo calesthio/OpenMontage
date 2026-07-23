@@ -34,6 +34,14 @@ Before batch-generating assets, produce one sample of each expensive type and sh
 
 If rejected, adjust parameters and retry (max 3 iterations). Do not batch until approved.
 
+When `project.json.approval_profile` is `preview_then_avatar`, do **not**
+generate even the avatar sample during the first assets pass. Produce
+narration, support assets and a neutral avatar placeholder, then let
+edit/compose create the complete structure preview. The compose checkpoint is
+the sole approval gate. On resume, verify the exact checkpoint token and
+expected decision immediately before the first paid avatar call, then re-run
+this stage with the real avatar.
+
 ### 2. Resolve Narration Before Support Graphics
 
 Spokesperson videos depend on speech. Determine whether narration is:
@@ -134,7 +142,9 @@ Do not rely on stale knowledge. When in doubt, search first.
 
 ## Gate Reminder (Binding)
 
-This stage gates on human approval (`human_approval_default: true`). After review passes:
+This stage gates by default (`human_approval_default: true`). A selected,
+manifest-defined approval profile may override the effective gate. After a
+gated review passes:
 checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
 the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
 Approval is per-gate — an earlier "go ahead" does not cover this gate.

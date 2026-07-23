@@ -9,6 +9,31 @@ category: custom
 stability: production
 default_checkpoint_policy: guided
 
+# Optional, explicit KISS policy for clients that want one complete cheap
+# preview before authorizing paid avatar generation. Selecting this profile is
+# per-project; runs that omit it retain every default gate below.
+approval_profiles:
+  preview_then_avatar:
+    description: >
+      Auto-complete the cheap brief, script and scene-plan stages, present the
+      fully composed structure preview at compose, and require one human approval before paid
+      avatar generation. Delivery to storage is not a social-publication gate.
+    stage_overrides:
+      idea: false
+      script: false
+      scene_plan: false
+      assets: false
+      edit: false
+      compose: true
+      publish: false
+    # After the compose preview is approved, the placeholder assets/edit
+    # checkpoints are superseded (archived to history/) so get_next_stage
+    # resumes at assets and the paid avatar pass replaces the placeholder.
+    post_approval_rerun:
+      - assets
+      - edit
+      - compose
+
 orchestration:
   mode: executive-producer
   skill: pipelines/avatar-spokesperson/executive-producer

@@ -20,6 +20,7 @@
     "pipeline_type": { "type": "string", "description": "Pipeline manifest name" },
     "style_playbook": { "type": "string" },
     "checkpoint_policy": { "type": "string", "enum": ["guided", "manual_all", "auto_noncreative"] },
+    "approval_profile": { "type": "string" },
     "human_approval_required": { "type": "boolean" },
     "human_approved": { "type": "boolean" },
     "artifacts": {

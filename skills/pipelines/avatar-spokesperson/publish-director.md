@@ -6,6 +6,11 @@ Package the finished spokesperson outputs for delivery. This stage should make i
 
 ## Process
 
+`preview_then_avatar` has no second creative gate here: the human already
+approved the complete structure before paid avatar generation. Still write and
+schema-validate `publish_log`; the profile changes only whether execution stops
+for another approval.
+
 ### 1. Label Deliverables Clearly
 
 Distinguish:
@@ -47,7 +52,8 @@ If the avatar path has limitations such as visible lip-sync risk, retain that no
 
 ## Gate Reminder (Binding)
 
-This stage gates on human approval (`human_approval_default: true`). After review passes:
+This stage gates by default (`human_approval_default: true`). A selected,
+manifest-defined approval profile may override it. After a gated review passes:
 checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
 the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
 Approval is per-gate — an earlier "go ahead" does not cover this gate.

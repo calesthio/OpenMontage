@@ -54,6 +54,19 @@ Record important findings in:
 - `render_report.warnings`
 - `render_report.metadata.variant_notes`
 
+Copy the tool-produced `render_evidence` into the canonical report; never type
+or estimate it yourself:
+
+- `render_report.outputs[].path`, `sha256`, and `file_size_bytes` come from the
+  exact `video_compose` result.
+- `render_report.metadata.producer_tool` is `video_compose` and
+  `render_report.metadata.operation` is `render`.
+- The successful `video_compose` finish event for the same output remains in
+  `projects/<id>/events.jsonl`.
+
+Client publish guards may require all three signals and will fail closed if
+the file changes after compose.
+
 ### 5. Quality Gate
 
 - the output file is valid,

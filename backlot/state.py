@@ -583,6 +583,63 @@ def _last_activity(project_dir: Path) -> float:
 # Public API
 # ---------------------------------------------------------------------------
 
+def _collect_flywheel(project_dir: Path) -> Optional[dict[str, Any]]:
+    """Augment the board with Hermes Creative Flywheel state, if present.
+
+    Reads ``flywheel/population.jsonl`` (raw individuals) and
+    ``flywheel/run_summary.json`` (best fitness, convergence, best individual).
+    Returns None when no flywheel dir exists. Never raises.
+    """
+    flywheel_dir = project_dir / "flywheel"
+    if not flywheel_dir.is_dir():
+        return None
+    summary = _read_json(flywheel_dir / "run_summary.json")
+    intel = _read_json(flywheel_dir / "intelligence.json")
+    pop_path = flywheel_dir / "population.jsonl"
+    individuals: list[dict] = []
+    if pop_path.exists():
+        for line in pop_path.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                individuals.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    # Compact per-generation view for the board.
+    generations: dict[int, dict[str, Any]] = {}
+    for ind in individuals:
+        gen = int(ind.get("generation", 0))
+        g = generations.setdefault(gen, {"count": 0, "best": 0.0, "topics": []})
+        g["count"] += 1
+        g["best"] = max(g["best"], float(ind.get("score", 0.0)))
+        topic = ind.get("topic") or (ind.get("artifact") or {}).get("topic")
+        if topic and len(g["topics"]) < 5:
+            g["topics"].append(topic)
+    if summary is None and not individuals:
+        return None
+    best_score = float((summary or {}).get("best_score", 0.0)) if individuals else 0.0
+    if not best_score and individuals:
+        best_score = max(float(i.get("score", 0.0)) for i in individuals)
+    intel_spaces = []
+    if intel and isinstance(intel.get("top_spaces"), list):
+        intel_spaces = intel["top_spaces"]
+    return {
+        "active": summary is not None or bool(individuals),
+        "best_score": best_score,
+        "converged": bool((summary or {}).get("converged", False)),
+        "generations": {str(k): v for k, v in sorted(generations.items())},
+        "individual_count": len(individuals),
+        "population": individuals,
+        "best_individual": (summary or {}).get("best_individual"),
+        "intelligence": {
+            "enabled": bool(intel),
+            "spaces_mined": intel.get("spaces_mined") if intel else None,
+            "top_spaces": intel_spaces,
+        },
+    }
+
+
 def load_board_state(project_dir: Path) -> dict[str, Any]:
     """Full BoardState for one project. Never raises."""
     project_dir = Path(project_dir)
@@ -635,10 +692,15 @@ def load_board_state(project_dir: Path) -> dict[str, Any]:
             stage_entry["stalled"] = True
             stage_entry["stalled_minutes"] = int((now - last_activity) / 60)
 
+    # Hermes Creative Flywheel panel: read flywheel/ only if it exists.
+    # Never raises; degrades to None if absent or malformed.
+    flywheel = _collect_flywheel(project_dir)
+
     state: dict[str, Any] = {
         "project_id": project_id,
         "title": marker.get("title") or meta_json.get("name") or project_id.replace("-", " ").title(),
         "pipeline": pipeline_meta,
+        "flywheel": flywheel,
         "style_playbook": marker.get("style_playbook"),
         "created_at": marker.get("created_at"),
         "has_marker": bool(marker),

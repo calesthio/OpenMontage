@@ -1,0 +1,167 @@
+name: hermes-flywheel
+version: "1.0"
+description: >-
+  The Hermes Creative Flywheel: an autonomous, evolutionary content engine.
+  Runs the OpenMontage production pipeline as a generation, scores each
+  rendered individual against an explainable fitness function, then breeds the
+  fittest into seed variants for the next generation. Converges toward better
+  videos with no human in the loop (autonomous mode) while still exposing
+  checkpoint gates for oversight. Stage machine: script -> render -> score -> breed.
+category: custom
+stability: beta
+
+# Autonomous by default: the loop drives itself; human gates are opt-in.
+default_checkpoint_policy: auto_noncreative
+
+extensions:
+  custom_scripts: true
+  custom_playbooks: true
+  custom_skills: true
+  custom_tools: true   # evolution tools live under tools/evolution
+
+required_skills:
+  - pipelines/hermes-flywheel/script-director
+  - pipelines/hermes-flywheel/render-director
+  - pipelines/hermes-flywheel/score-director
+  - pipelines/hermes-flywheel/breed-director
+  - pipelines/hermes-flywheel/flywheel-director
+  - creative/video-media-skill-selector   # how to choose a Video & Media skill (planning/editing/transcription/audio/delivery) + preflight/rights discipline
+  - meta/reviewer
+  - meta/checkpoint-protocol
+
+orchestration:
+  mode: hermes-flywheel
+  skill: pipelines/hermes-flywheel/flywheel-director
+  budget_default_usd: 5.00
+  max_revisions_per_stage: 2
+  max_send_backs: 2
+  max_wall_time_minutes: 30
+
+metadata:
+  # The flywheel can render through any underlying pipeline. The render-director
+  # selects one based on the topic (see skill). These are the supported bases.
+  compatible_pipelines:
+    - animated-explainer
+    - cinematic
+    - clip-factory
+    - talking-head
+  flywheel:
+    population_size: 4
+    elite_fraction: 0.5
+    exploration: 0.2
+    mutation_rate: 0.6
+    generations_target: 6
+    convergence_threshold: 0.02   # stop early if best score gains < this for 2 gens
+  # How to choose a Video & Media skill (creative/video-media-skill-selector).
+  # Machine-readable guidance the Render stage consults before a full render.
+  skill_catalog:
+    how_to_choose: >-
+      Video & Media skills may handle planning, editing, transcription, audio
+      processing, or delivery. Select around the source media and final platform
+      requirements, then test timing, codec, caption, and rights constraints with
+      a short representative clip before processing a full project.
+    what_to_evaluate:
+      - "Confirm support for the required containers, codecs, resolutions, frame rates, channel layouts, and caption formats."
+      - "Check whether cuts, transcripts, loudness changes, and generated assets remain editable and traceable to source timestamps."
+      - "Review upload limits, processing location, retention, consent, and music or footage rights before sending source media."
+    continue_search:
+      compare_video_skills: "Review workflows for editing, generation, transcription, rendering, and delivery across common video formats."
+      work_with_music_and_audio: "Explore audio-specific skills when speech cleanup, mixing, composition, or podcast production is the main task."
+      all_video_and_media_skills: "Catalog is large (313 skills; ~60 surfaced at a time). Browse the full catalog to match a niche capability."
+    # Catalog orientation snapshot (capability map, not an endorsement).
+    capabilities:
+      ai_video_generation: [ai-video-generation, runcomfy-router, inference-sh-router]
+      ai_avatar_talking_head: [ai-avatar-video]
+      music_audio: [ai-music, ai-music-album, elevenlabs-music, audio-jingle, code-to-music]
+      podcast: [ai-podcast-creation]
+      social_content: [ai-social-media-content, ai-marketing-videos]
+      transcription: [audio-transcriber, azure-ai-transcription-py, baoyu-youtube-transcript]
+      editing_captions: [embedded-captions, converting-files, demo-producer]
+      motion_animation: [animation-motion-design, animejs, css-animations, 8-bit-orbit-video-template]
+      content_intelligence: [apify-trend-analysis, apify-content-analytics, apify-audience-analysis]
+
+stages:
+  - name: script
+    skill: pipelines/hermes-flywheel/script-director
+    produces: [script, scene_plan]
+    review_focus:
+      - hook_power
+      - word_count_accuracy
+      - narrative_flow
+      - enhancement_density
+    checkpoint_required: true
+    human_approval_default: false
+    success_criteria:
+      - "script contains >= 1 enhancement cue per 8-10s"
+      - "word count within +/-10% of target duration"
+
+  - name: render
+    skill: pipelines/hermes-flywheel/render-director
+    required_artifacts_in: [script, scene_plan]
+    produces: [render_report, artifact]
+    required_tools: [composition_validator]
+    optional_tools: [breed_scorer]
+    review_focus:
+      - composition_validity
+      - asset_completeness
+      - duration_match
+      # Skill-selection discipline (creative/video-media-skill-selector):
+      - skill_selected_for_source_and_platform
+      - preflight_clip_passed
+      - rights_and_consent_cleared
+    checkpoint_required: true
+    human_approval_default: false
+    success_criteria:
+      - "render_report indicates a completed render"
+      - "artifact carries measurable fields (duration, cost, sections)"
+      - "skill_selection block: source-media + final-platform matched to a Video & Media skill, and a short representative clip passed timing/codec/caption/rights preflight before the full render"
+    # Formal preflight gate (creative/video-media-skill-selector discipline).
+    # Must pass BEFORE the full assets -> edit -> compose render.
+    sub_stages:
+      - name: skill-selection-preflight
+        description: >-
+          Choose the Video & Media skill / base pipeline for the source media and
+          final platform, then validate timing, codec, caption, and rights on a
+          short (5-10s) representative clip before processing the full project.
+        human_approval_default: false
+        review_focus:
+          - skill_matched_to_source_and_platform
+          - containers_codecs_resolutions_fps_channels_captions_supported
+          - cuts_transcripts_loudness_editable_and_timestamp_traceable
+          - upload_limits_processing_location_retention_consent_rights_reviewed
+        tools_available:
+          - composition_validator
+          - video_analyzer
+      - name: full-render
+        description: >-
+          Only after skill-selection-preflight passes: run assets -> edit ->
+          compose for the full individual.
+        human_approval_default: false
+        review_focus:
+          - composition_validity
+          - asset_completeness
+          - duration_match
+
+  - name: score
+    skill: pipelines/hermes-flywheel/score-director
+    required_artifacts_in: [artifact]
+    produces: [score_report]
+    required_tools: [breed_scorer, population_store]
+    review_focus:
+      - fitness_explainability
+      - hard_gate_pass
+    checkpoint_required: false   # scoring is non-creative; auto in autonomous mode
+    human_approval_default: false
+    success_criteria:
+      - "score_report contains numeric fitness + components"
+
+  - name: breed
+    skill: pipelines/hermes-flywheel/breed-director
+    required_artifacts_in: [score_report]
+    required_tools: [population_store, breed_mutator]
+    produces: [next_generation_seeds]
+    checkpoint_required: true
+    human_approval_default: false   # autonomous; flip to true for oversight
+    success_criteria:
+      - "next_generation_seeds carries population_size variants"
+      - "or a convergence/termination signal is emitted"

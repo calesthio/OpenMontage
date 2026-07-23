@@ -47,6 +47,117 @@ applyTheme(currentTheme);
 // header slate
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Hermes Creative Flywheel panel — live evolutionary engine state
+// ---------------------------------------------------------------------------
+
+function renderFlywheel(s) {
+  const fw = s.flywheel;
+  if (!fw || !fw.active) return null;
+
+  const gens = Object.entries(fw.generations || {})
+    .map(([g, v]) => ({ g: Number(g), ...v }))
+    .sort((a, b) => a.g - b.g);
+  const best = Number(fw.best_score ?? 0);
+  const converged = !!fw.converged;
+  const pop = Array.isArray(fw.population) ? fw.population : [];
+
+  // Best-fitness sparkline (SVG polyline, normalized 0..1 over seen range).
+  let sparkline = null;
+  if (gens.length >= 1) {
+    const pts = gens.map((x) => Number(x.best ?? 0));
+    const lo = Math.min(...pts), hi = Math.max(...pts);
+    const span = hi - lo || 1;
+    const W = 220, H = 38, pad = 3;
+    const coords = pts.map((p, i) => {
+      const x = pad + (pts.length === 1 ? W / 2 : (i / (pts.length - 1)) * (W - 2 * pad));
+      const y = H - pad - ((p - lo) / span) * (H - 2 * pad);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(" ");
+    sparkline = el("svg", {
+      class: "fw-spark", viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: "none",
+      width: W, height: H,
+    }, el("polyline", { points: coords, fill: "none", stroke: "var(--fly)", "stroke-width": "2" }));
+  }
+
+  const head = el("div", { class: "panel-head" },
+    el("h2", {}, "Hermes Flywheel"),
+    el("span", { class: "meta" }, `generations · ${fw.individual_count ?? pop.length} individuals`),
+    converged ? el("span", { class: "fw-badge conv" }, "✓ CONVERGED") : null,
+    sparkline ? el("span", { class: "fw-spark-wrap" }, sparkline) : null,
+    el("span", { class: "fw-best", title: "best fitness across all generations" },
+      el("b", {}, best.toFixed(3)), " best"));
+
+  // generations table
+  const genBody = el("div", { class: "fw-gens" });
+  for (const gen of gens) {
+    const topics = Array.isArray(gen.topics) ? gen.topics.slice(0, 4) : [];
+    genBody.append(el("div", { class: "fw-gen" },
+      el("span", { class: "fw-gen-n" }, `G${gen.g}`),
+      el("span", { class: "fw-gen-best" }, (Number(gen.best ?? 0)).toFixed(3)),
+      el("span", { class: "fw-gen-topics" }, topics.join(" · ").slice(0, 56)),
+      el("span", { class: "fw-gen-count" }, `${gen.count ?? 0}🜨`)));
+  }
+
+  // population / breed lineage cards
+  const popBody = el("div", { class: "fw-pop" });
+  for (const ind of pop.slice(0, 24)) {
+    const parents = Array.isArray(ind.parent_ids) ? ind.parent_ids : [];
+    popBody.append(el("div", { class: "fw-ind" },
+      el("span", { class: "fw-ind-id", title: ind.id }, (ind.id || "?").slice(0, 6)),
+      el("span", { class: "fw-ind-score" }, (Number(ind.score ?? 0)).toFixed(3)),
+      parents.length
+        ? el("span", { class: "fw-ind-parents", title: `bred from ${parents.join(", ")}` },
+            "↗ " + parents.map((p) => String(p).slice(0, 4)).join(" "))
+        : el("span", { class: "fw-ind-seed" }, "seed")));
+  }
+
+  return el("div", { class: "panel flywheel" },
+    head,
+    el("div", { class: "panel-body" },
+      el("div", { class: "fw-section-label" }, "GENERATIONS"),
+      genBody,
+      el("div", { class: "fw-section-label", style: "margin-top:10px" }, "POPULATION · BREED LINEAGE"),
+      popBody));
+}
+
+// ---------------------------------------------------------------------------
+// Discovery / Knowledge-Graph / Novelty — Opportunity Mining panels
+// Reads s.flywheel.intelligence (mined idea SPACES, not videos).
+// ---------------------------------------------------------------------------
+
+function renderDiscovery(s) {
+  const fw = s.flywheel;
+  if (!fw || !fw.intelligence || !fw.intelligence.enabled) return null;
+
+  const intel = fw.intelligence;
+  const spaces = Array.isArray(intel.top_spaces) ? intel.top_spaces : [];
+
+  const rows = spaces.map((sp) => {
+    const opp = Number(sp.opportunity_score ?? 0);
+    const nov = Number(sp.novelty ?? 0);
+    const gap = Number(sp.creator_gap ?? 0);
+    // saturation heat = 1 - creator_gap (red = crowded, green = open)
+    const sat = 1 - gap;
+    const heat = `hsl(${Math.round((1 - sat) * 130)}, 62%, 46%)`;
+    return el("div", { class: "disc-row" },
+      el("span", { class: "disc-label", title: sp.label }, sp.label),
+      el("span", { class: "disc-bar" },
+        el("i", { style: `width:${Math.round(opp * 100)}%;background:${heat}` })),
+      el("span", { class: "disc-opp" }, opp.toFixed(3)),
+      el("span", { class: "disc-nov", title: "novelty" }, `◈${nov.toFixed(2)}`));
+  });
+
+  return el("div", { class: "panel discovery" },
+    el("div", { class: "panel-head" },
+      el("h2", {}, "Discovery"),
+      el("span", { class: "meta" }, `${intel.spaces_mined ?? spaces.length} idea spaces mined`)),
+    el("div", { class: "panel-body" },
+      el("div", { class: "fw-section-label" }, "OPPORTUNITY RANKING · saturation heatmap"),
+      rows.length ? el("div", { class: "disc-list" }, ...rows)
+                 : el("div", { class: "hint" }, "no novel spaces above floor")));
+}
+
 function renderSlate(s) {
   const board = s.storyboard;
   const chips = [
@@ -1077,8 +1188,12 @@ function render() {
   const aside = el("aside", {});
   const decisions = renderDecisions(s);
   const activity = renderActivity(s);
+  const discovery = renderDiscovery(s);
+  const flywheel = renderFlywheel(s);
   if (decisions) aside.append(decisions);
   if (activity) aside.append(activity);
+  if (discovery) aside.append(discovery);
+  if (flywheel) aside.append(flywheel);
 
   // Media sections live INSIDE the main column so a tall decisions rail
   // never pushes them below the fold — the column flows beside the rail.
@@ -1113,6 +1228,7 @@ function normalize(s) {
   s.media.snapshots = Array.isArray(s.media.snapshots) ? s.media.snapshots : [];
   s.media.music = Array.isArray(s.media.music) ? s.media.music : [];
   s.events = Array.isArray(s.events) ? s.events : [];
+  s.flywheel = s.flywheel || null;
   if (s.storyboard && Array.isArray(s.storyboard.scenes)) {
     for (const c of s.storyboard.scenes) {
       c.takes = Array.isArray(c.takes) ? c.takes : [];

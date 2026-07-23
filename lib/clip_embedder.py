@@ -61,6 +61,22 @@ def model_info() -> dict:
     }
 
 
+def _as_feature_tensor(features):
+    """Return CLIP features as a plain tensor, across transformers versions.
+
+    transformers < 5 returned a tensor directly from ``get_text_features()``
+    and ``get_image_features()``. 5.x wraps the result in a
+    ``BaseModelOutputWithPooling`` whose ``pooler_output`` already holds the
+    projected, shared-space embedding — the projection must NOT be applied
+    again (on the vision tower ``visual_projection`` expects 768 inputs and
+    would raise on the 512-d pooled output).
+
+    Accept either shape so the embedder works on both.
+    """
+    pooled = getattr(features, "pooler_output", None)
+    return features if pooled is None else pooled
+
+
 def embed_images(image_paths: Sequence[Union[str, Path]]) -> np.ndarray:
     """Embed a list of image files into a (N, 512) float32 matrix.
 
@@ -82,7 +98,7 @@ def embed_images(image_paths: Sequence[Union[str, Path]]) -> np.ndarray:
 
     inputs = _PROCESSOR(images=images, return_tensors="pt").to(_DEVICE)
     with torch.no_grad():
-        features = _MODEL.get_image_features(**inputs)
+        features = _as_feature_tensor(_MODEL.get_image_features(**inputs))
     features = features / features.norm(dim=-1, keepdim=True).clamp_min(1e-8)
     arr = features.cpu().numpy().astype(np.float32, copy=False)
     # Close PIL handles to avoid leaking file handles on Windows
@@ -116,7 +132,7 @@ def embed_texts(texts: Sequence[str]) -> np.ndarray:
         max_length=77,
     ).to(_DEVICE)
     with torch.no_grad():
-        features = _MODEL.get_text_features(**inputs)
+        features = _as_feature_tensor(_MODEL.get_text_features(**inputs))
     features = features / features.norm(dim=-1, keepdim=True).clamp_min(1e-8)
     return features.cpu().numpy().astype(np.float32, copy=False)
 

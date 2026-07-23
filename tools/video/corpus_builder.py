@@ -392,8 +392,20 @@ class CorpusBuilder(BaseTool):
             except Exception as e:
                 cache_snapshot = {"error": f"{type(e).__name__}: {e}"}
 
+            # Every candidate we actually processed failed, so the corpus was
+            # saved with no new rows. Reporting success here lets downstream
+            # retrieval build on an empty index, so fail closed and surface why
+            # (per-candidate reasons are in data.errors). Runs that only skipped
+            # already-present clips (failed == 0) stay successful.
+            embedded_none = failed > 0 and not added_ids
+            error = (
+                f"{failed} candidate(s) processed, none embedded; no clips added"
+                if embedded_none
+                else None
+            )
+
             return ToolResult(
-                success=True,
+                success=not embedded_none,
                 data={
                     "corpus_dir": str(corpus_dir),
                     "queries_run": len(queries),
@@ -416,6 +428,7 @@ class CorpusBuilder(BaseTool):
                     "cache_stats": cache_snapshot,
                     "errors": errors[:25],  # cap log noise
                 },
+                error=error,
                 cost_usd=0.0,
                 duration_seconds=round(elapsed, 2),
             )

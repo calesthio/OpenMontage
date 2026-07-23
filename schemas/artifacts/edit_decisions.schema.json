@@ -227,7 +227,24 @@
         "verdict": { "type": "string", "enum": ["strong", "acceptable", "revise", "fail"] }
       }
     },
+    "narration_beats": {
+      "type": "array",
+      "description": "Requirement 1 & 2: List of speech intervals containing timestamps and structural intents.",
+      "items": {
+        "type": "object",
+        "required": ["beat_id", "transcript_start", "transcript_end", "required_visual_intent", "expected_scene_id"],
+        "properties": {
+          "beat_id": { "type": "string" },
+          "transcript_start": { "type": "number", "minimum": 0 },
+          "transcript_end": { "type": "number", "minimum": 0 },
+          "required_visual_intent": { "type": "string" },
+          "expected_scene_id": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
     "metadata": { "type": "object" }
+    
   },
   "additionalProperties": false
 }

@@ -32,10 +32,12 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import subprocess
 import time
 from pathlib import Path
 from typing import Any, Optional
+from urllib.parse import unquote, urlparse
 
 from tools.base_tool import (
     BaseTool,
@@ -890,6 +892,34 @@ class VideoCompose(BaseTool):
 
         return ToolResult(success=True, data=data, artifacts=[str(output_path)])
 
+    # A leading slash before a drive letter is URI syntax, not part of the path:
+    # Path("C:/x").as_uri() == "file:///C:/x". Stripping only the "file://"
+    # scheme leaves "/C:/x", which does not resolve to the Windows file.
+    _URI_DRIVE_RE = re.compile(r"^/([A-Za-z]):[/\\]")
+
+    @classmethod
+    def _local_path_from_uri(cls, value: str) -> Path:
+        """Convert a file:// URI (or a plain path) to a local filesystem path.
+
+        Handles the canonical forms `Path.as_uri()` emits on Windows —
+        `file:///C:/dir/clip.mp4` (drive) and `file://server/share/clip.mp4`
+        (UNC) — plus percent-encoding, which a naive scheme strip leaves
+        intact so paths with spaces never match a real file.
+        """
+        if not value.startswith("file://"):
+            return Path(value).expanduser()
+
+        parsed = urlparse(value)
+        path = unquote(parsed.path)
+
+        # UNC share: file://server/share/... -> //server/share/...
+        if parsed.netloc and parsed.netloc.lower() != "localhost":
+            return Path(f"//{parsed.netloc}{path}")
+
+        if cls._URI_DRIVE_RE.match(path):
+            path = path[1:]
+        return Path(path).expanduser()
+
     # Source-file extensions that get staged into the composer tree at render time.
     # Anything not in this set lives only under the real project dir (assets, renders,
     # artifacts) and is referenced via --public-dir or absolute paths.
@@ -1697,23 +1727,41 @@ class VideoCompose(BaseTool):
         # Absolutise so the CLI can resolve the output regardless of cwd.
         output_path = output_path.resolve()
 
+        # remotion-composer lives at project root. Checked before staging so a
+        # missing composer fails fast, without first copying media that the
+        # early return would then leave behind.
+        composer_dir = Path(__file__).resolve().parent.parent.parent / "remotion-composer"
+        if not composer_dir.exists():
+            return ToolResult(
+                success=False,
+                error=f"Remotion composer project not found at {composer_dir}",
+            )
+
         # Deep-copy props so we don't mutate the original
         props = json.loads(json.dumps(composition_data))
 
-        # Stage local asset files into the composer's public/ directory and
-        # reference them via staticFile-relative paths. Remotion's renderer only
-        # downloads http(s) URLs or files served from public/ — file:// URIs are
-        # rejected at render time — so local images, video, narration, and music
-        # must be copied under public/ for both cuts and audio layers to resolve.
+        # Stage local asset files into a public/ root and reference them via
+        # staticFile-relative paths. Remotion's renderer only downloads http(s)
+        # URLs or files served from public/ — file:// URIs are rejected at render
+        # time — so local images, video, narration, and music must be copied
+        # under public/ for both cuts and audio layers to resolve.
+        #
+        # The root is unique per render and lives beside the output inside the
+        # project workspace, passed to Remotion via --public-dir. Staging into
+        # the shared repository checkout instead would leave user media in
+        # remotion-composer/public/ indefinitely: readable by later projects and
+        # renders, unbounded on disk, and racy when two renders touch the same
+        # source. It is removed in the finally below.
         import hashlib
+        import uuid
 
-        composer_dir = Path(__file__).resolve().parent.parent.parent / "remotion-composer"
-        staged_dir = composer_dir / "public" / "_om_assets"
+        render_public_dir = output_path.parent / f".om_public_{uuid.uuid4().hex[:12]}"
+        staged_dir = render_public_dir / "_om_assets"
 
         def _stage_asset(value: str) -> str:
             if not value or value.startswith(("http://", "https://", "data:")):
                 return value
-            local = Path(value.replace("file://", "", 1)).expanduser()
+            local = self._local_path_from_uri(value)
             if not local.exists():
                 return value
             staged_dir.mkdir(parents=True, exist_ok=True)
@@ -1775,14 +1823,6 @@ class VideoCompose(BaseTool):
         with open(props_path, "w", encoding="utf-8") as f:
             json.dump(props, f)
 
-        # remotion-composer lives at project root
-        composer_dir = Path(__file__).resolve().parent.parent.parent / "remotion-composer"
-        if not composer_dir.exists():
-            return ToolResult(
-                success=False,
-                error=f"Remotion composer project not found at {composer_dir}",
-            )
-
         # Route to the correct Remotion composition based on renderer_family.
         # This prevents all pipelines from collapsing into the Explainer visual grammar.
         renderer_family = (composition_data or {}).get("renderer_family", "explainer-data")
@@ -1799,6 +1839,10 @@ class VideoCompose(BaseTool):
             # with "neither valid JSON nor a file path". The equals form is the
             # API Remotion recommends for file paths and is cross-platform safe.
             f"--props={props_path}",
+            # Serve the render-scoped staging root instead of the composer's
+            # shared public/, so staticFile("_om_assets/...") resolves to this
+            # render's copies and nothing is written into the repo checkout.
+            f"--public-dir={render_public_dir}",
         ]
 
         # Apply media profile dimensions
@@ -1855,6 +1899,11 @@ class VideoCompose(BaseTool):
         finally:
             if props_path.exists():
                 props_path.unlink()
+            # Staged media is a render-time cache, not an artifact — drop it
+            # whether the render succeeded, failed, or timed out, so no user
+            # media outlives the call that staged it.
+            if render_public_dir.exists():
+                shutil.rmtree(render_public_dir, ignore_errors=True)
 
         if not output_path.exists():
             return ToolResult(

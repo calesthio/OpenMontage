@@ -1,0 +1,9 @@
+Prompt engineering is already dead.
+
+The people shipping real agents stopped tuning clever prompts months ago. The model is not the variable anymore. What you feed it is: the right files, memory, tools, and limits. Give a smaller model the right context and it beats a genius flying blind.
+
+They call it context engineering. It is the actual job now.
+
+comment the word "context" and I'll send you The Context Stack Checklist (free PDF): task, files, memory, tools, and hard limits, every run.
+
+#ai #aiagents #contextengineering #promptengineering #buildinpublic #automation #operator

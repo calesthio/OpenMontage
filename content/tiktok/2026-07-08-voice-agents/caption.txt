@@ -1,0 +1,14 @@
+Anyone can build a voice agent now. Almost none of them will work.
+
+No-code voice agent builders dropped everywhere this week, so every business is about to launch one. But a founder who deployed agents for 100+ companies says ~90% fail. Not because the AI is bad. Because the operation behind it is: an outdated knowledge base, a CRM that doesn't connect, and no plan for the human handoff.
+
+Before you build, do three things:
+1. Write your top 10 calls with the exact answer to each.
+2. Connect it to your real system of record, not a spreadsheet.
+3. Define the handoff. The moment it stops and gets a person.
+
+A voice agent is not an AI project. It's an operations project.
+
+Comment the word voice and I'll send you the Voice Agent Playbook: the readiness checklist we run before deploying one.
+
+#aiagents #voiceai #automation #buildinpublic #aitools #smallbusiness #operations

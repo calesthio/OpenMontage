@@ -297,6 +297,11 @@ class Upscale(BaseTool):
             "model": model,
             "dni_weight": denoise_strength,
             "half": half,
+            # Tile on CPU/MPS: a full-frame pass allocates the whole x4 tensor at
+            # once and hard-crashes (access violation) on low-RAM machines. CUDA
+            # keeps the faster single-pass path.
+            "tile": 0 if _device == "cuda" else 256,
+            "tile_pad": 10,
         }
         # Guard: only pass device= if the installed version accepts it
         if "device" in inspect.signature(RealESRGANer.__init__).parameters:

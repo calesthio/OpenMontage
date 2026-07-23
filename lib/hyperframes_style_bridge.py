@@ -96,13 +96,27 @@ def style_bridge(
         typo = playbook.get("typography", {}) or {}
         motion = playbook.get("motion", {}) or {}
 
+        prim_list = palette.get("primary")
         bg = _first(palette.get("background"), css["--color-bg"])
         fg = _first(palette.get("text"), css["--color-fg"])
         accent = _first(palette.get("accent"), css["--color-accent"])
-        primary = _first(palette.get("primary"), css["--color-primary"])
-        secondary = _first(palette.get("secondary"), css["--color-secondary"])
-        surface = _first(palette.get("surface"), css["--color-surface"])
-        muted = _first(palette.get("muted_text"), css["--color-muted"])
+        primary = _first(prim_list, css["--color-primary"])
+        # Schema `color_palette` only defines primary/accent/background/text/muted
+        # (additionalProperties:false). Derive the rest instead of reading keys
+        # that can never be set: secondary → 2nd primary if present; surface →
+        # the background (light-safe — never a dark fallback under a light brand);
+        # muted → the schema's `muted` (older bridges read `muted_text`).
+        if palette.get("secondary"):
+            secondary = _first(palette.get("secondary"), css["--color-secondary"])
+        elif isinstance(prim_list, list) and len(prim_list) > 1:
+            secondary = str(prim_list[1])
+        else:
+            secondary = css["--color-secondary"]
+        surface = _first(palette.get("surface"), bg)
+        muted = _first(palette.get("muted") or palette.get("muted_text"), css["--color-muted"])
+
+        # Typography: the schema uses `headings` (plural); accept `heading` too.
+        heading_font = _font(typo, "headings", _font(typo, "heading", css["--font-heading"]))
 
         duration, ease = _motion_easing(motion)
 
@@ -115,7 +129,7 @@ def style_bridge(
                 "--color-secondary": secondary,
                 "--color-surface": surface,
                 "--color-muted": muted,
-                "--font-heading": _font(typo, "heading", css["--font-heading"]),
+                "--font-heading": heading_font,
                 "--font-body": _font(typo, "body", css["--font-body"]),
                 "--font-mono": _font(typo, "code", css["--font-mono"]),
                 "--ease-primary": ease,

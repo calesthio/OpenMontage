@@ -684,6 +684,7 @@ class TestCapabilityMetadata:
             "doubao",
             "elevenlabs",
             "google_tts",
+            "mimo",
             "kling_official",
             "openai",
             "piper",

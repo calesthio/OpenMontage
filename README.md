@@ -22,6 +22,13 @@
   <a href="AGENT_GUIDE.md">Agent Guide</a>
 </p>
 
+<p align="center">Other languages</p>
+
+<p align="center">
+  <a href="README.md">English</a> &nbsp;·&nbsp;
+  <a href="README_zh-CN.md">简体中文</a>
+</p>
+
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPLv3-blue.svg" alt="License"></a>
 </p>

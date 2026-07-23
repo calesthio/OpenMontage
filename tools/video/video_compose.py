@@ -2137,6 +2137,14 @@ class VideoCompose(BaseTool):
             "mix_intelligible": True,
             "issues": [],
         }
+        audio_config = (edit_decisions.get("audio") or {}) if edit_decisions else {}
+        legacy_music = edit_decisions.get("music") if edit_decisions else None
+        declared_narration = self._declares_audio_layer(audio_config.get("narration"))
+        declared_music = (
+            self._declares_audio_layer(audio_config.get("music"))
+            or self._declares_audio_layer(legacy_music)
+        )
+        declared_audio_layers = declared_narration or declared_music
         if technical_probe.get("has_audio") and duration > 0:
             try:
                 # Use ffmpeg volumedetect to check audio levels
@@ -2169,11 +2177,14 @@ class VideoCompose(BaseTool):
                         audio_spotcheck["issues"].append(
                             f"Mean volume {mean_vol:.1f} dB — effectively silent"
                         )
-                    # Assume narration present if mean volume is reasonable
-                    if mean_vol > -40:
+                    audible_audio = mean_vol > -60
+                    if declared_narration:
+                        audio_spotcheck["narration_present"] = audible_audio
+                    elif not declared_audio_layers and mean_vol > -40:
                         audio_spotcheck["narration_present"] = True
-                    # Assume music present if audio exists (conservative)
-                    if mean_vol > -50:
+                    if declared_music:
+                        audio_spotcheck["music_present"] = audible_audio
+                    elif not declared_audio_layers and mean_vol > -50:
                         audio_spotcheck["music_present"] = True
 
                 if max_vol is not None and max_vol > -0.5:
@@ -2384,6 +2395,12 @@ class VideoCompose(BaseTool):
         )
 
         return final_review
+
+    @staticmethod
+    def _declares_audio_layer(layer: Any) -> bool:
+        if not isinstance(layer, dict):
+            return bool(layer)
+        return any(value not in (None, "", [], {}) for value in layer.values())
 
     @staticmethod
     def _parse_probe_fps(fps_str: str) -> float:

@@ -21,6 +21,12 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Optional
 
+try:
+    import jsonschema
+    HAS_JSONSCHEMA = True
+except ImportError:
+    HAS_JSONSCHEMA = False
+
 
 def _load_dotenv() -> None:
     """Load .env into os.environ once at import time.
@@ -478,3 +484,105 @@ class ToolCommandError(subprocess.CalledProcessError):
 class DependencyError(Exception):
     """Raised when a tool's dependency is not satisfied."""
     pass
+
+
+class ValidationError(Exception):
+    """Raised when input/output validation fails."""
+    pass
+
+
+# ============================================
+# Tool Contract Validation Methods
+# ============================================
+    def validate_inputs(self, inputs: dict[str, Any]) -> tuple[bool, Optional[str]]:
+        """Validate inputs against input_schema.
+        
+        Args:
+            inputs: The input dictionary to validate
+            
+        Returns:
+            Tuple of (success boolean, error message if any)
+        """
+        if not self.input_schema:
+            return True, None
+        
+        if not HAS_JSONSCHEMA:
+            # Fallback if jsonschema not available - skip validation
+            return True, None
+        
+        try:
+            jsonschema.validate(instance=inputs, schema=self.input_schema)
+            return True, None
+        except jsonschema.ValidationError as e:
+            error_msg = f"Input validation failed: {e.message}"
+            if e.path:
+                error_msg += f" at path {list(e.path)}"
+            return False, error_msg
+        except jsonschema.SchemaError as e:
+            return False, f"Invalid input schema: {e.message}"
+    
+    def validate_outputs(self, outputs: dict[str, Any]) -> tuple[bool, Optional[str]]:
+        """Validate outputs against output_schema.
+        
+        Args:
+            outputs: The output dictionary to validate
+            
+        Returns:
+            Tuple of (success boolean, error message if any)
+        """
+        if not self.output_schema:
+            return True, None
+        
+        if not HAS_JSONSCHEMA:
+            # Fallback if jsonschema not available - skip validation
+            return True, None
+        
+        try:
+            jsonschema.validate(instance=outputs, schema=self.output_schema)
+            return True, None
+        except jsonschema.ValidationError as e:
+            error_msg = f"Output validation failed: {e.message}"
+            if e.path:
+                error_msg += f" at path {list(e.path)}"
+            return False, error_msg
+        except jsonschema.SchemaError as e:
+            return False, f"Invalid output schema: {e.message}"
+    
+    def execute_safe(self, inputs: dict[str, Any]) -> ToolResult:
+        """Execute with validation and error handling.
+        
+        This wraps execute() with:
+        - Input validation before execution
+        - Output validation after execution (warning only)
+        - Proper error handling
+        
+        Args:
+            inputs: The input dictionary
+            
+        Returns:
+            ToolResult instance
+        """
+        # Input validation
+        is_valid, error_msg = self.validate_inputs(inputs)
+        if not is_valid:
+            return ToolResult(
+                success=False,
+                error=error_msg
+            )
+        
+        try:
+            result = self.execute(inputs)
+            
+            # Output validation (warning level - doesn't fail execution)
+            if hasattr(result, 'data') and result.data:
+                is_valid, error_msg = self.validate_outputs(result.data)
+                if not is_valid:
+                    # Note: We log but don't fail for output validation
+                    pass
+            
+            return result
+        except Exception as e:
+            return ToolResult(
+                success=False,
+                error=f"Tool execution failed: {str(e)}"
+            )

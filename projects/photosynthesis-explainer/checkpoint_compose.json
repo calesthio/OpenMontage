@@ -1,0 +1,110 @@
+{
+  "version": "1.0",
+  "project_id": "photosynthesis-explainer",
+  "pipeline_type": "animated-explainer",
+  "stage": "compose",
+  "status": "completed",
+  "timestamp": "2026-07-12T11:57:04.859137+00:00",
+  "checkpoint_policy": "guided",
+  "human_approval_required": true,
+  "human_approved": true,
+  "artifacts": {
+    "render_report": {
+      "version": "1.0",
+      "outputs": [
+        {
+          "path": "renders/photosynthesis-explainer.mp4",
+          "format": "mp4",
+          "codec": "h264",
+          "audio_codec": "aac",
+          "resolution": "1920x1080",
+          "fps": 30,
+          "duration_seconds": 30.19,
+          "file_size_bytes": 6268671,
+          "platform_target": "youtube_landscape"
+        }
+      ],
+      "render_time_seconds": 361.5,
+      "warnings": [
+        "ffprobe not on PATH \u2014 technical validation used `npx remotion ffmpeg` instead",
+        "Frame sampling skipped (ffmpeg not on PATH)"
+      ],
+      "verification_notes": [
+        "Remotion CaptionOverlay word-level subtitles burned in composition",
+        "Narration + music embedded via Remotion Audio components",
+        "Runtime: remotion / explainer-teacher as locked at proposal"
+      ],
+      "render_grammar": "explainer-teacher",
+      "decision_log_ref": "projects/photosynthesis-explainer/artifacts/decision_log.json",
+      "final_review_ref": "projects/photosynthesis-explainer/artifacts/final_review.json",
+      "metadata": {
+        "composition_path": "artifacts/composition.json"
+      }
+    },
+    "final_review": {
+      "version": "1.0",
+      "output_path": "projects/photosynthesis-explainer/renders/photosynthesis-explainer.mp4",
+      "status": "pass",
+      "checks": {
+        "technical_probe": {
+          "valid_container": true,
+          "duration_seconds": 30.19,
+          "resolution": "1920x1080",
+          "fps": 30,
+          "has_audio": true,
+          "codec": "h264",
+          "file_size_bytes": 6268671,
+          "issues": []
+        },
+        "visual_spotcheck": {
+          "frames_sampled": 4,
+          "frame_paths": [
+            "artifacts/review-frames/review_frame_0.png",
+            "artifacts/review-frames/review_frame_1.png",
+            "artifacts/review-frames/review_frame_2.png",
+            "artifacts/review-frames/review_frame_3.png"
+          ],
+          "black_frames_detected": false,
+          "broken_overlays": false,
+          "missing_assets": false,
+          "unreadable_text": false,
+          "issues": []
+        },
+        "audio_spotcheck": {
+          "narration_present": true,
+          "music_present": true,
+          "unexpected_silence": false,
+          "clipping_detected": false,
+          "mix_intelligible": true,
+          "issues": []
+        },
+        "promise_preservation": {
+          "delivery_promise_honored": true,
+          "silent_downgrade_detected": false,
+          "runtime_swap_detected": false,
+          "issues": [],
+          "renderer_family_used": "explainer-teacher",
+          "render_runtime_used": "remotion",
+          "runtime_swap_check": "ok \u2014 proposal and edit agree (proposal_packet.production_plan.render_runtime)"
+        },
+        "subtitle_check": {
+          "subtitles_expected": true,
+          "subtitles_present": true,
+          "coverage_ratio": 1.0,
+          "issues": []
+        },
+        "transcript_comparison": {
+          "transcript_matches_script": true,
+          "word_accuracy": 1.0,
+          "script_word_count": 63,
+          "transcript_word_count": 63,
+          "spurious_punctuation_words": [],
+          "issues": []
+        }
+      },
+      "issues_found": [],
+      "recommended_action": "present_to_user"
+    }
+  },
+  "style_playbook": "flat-motion-graphics"
+}

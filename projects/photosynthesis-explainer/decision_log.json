@@ -1,0 +1,216 @@
+{
+  "version": "1.0",
+  "project_id": "photosynthesis-explainer",
+  "decisions": [
+    {
+      "decision_id": "d-001",
+      "stage": "proposal",
+      "category": "pipeline_selection",
+      "subject": "Production pipeline",
+      "options_considered": [
+        {
+          "option_id": "animated-explainer",
+          "label": "animated-explainer",
+          "score": 1.0,
+          "reason": "AI-generated 30s educational explainer from topic"
+        },
+        {
+          "option_id": "animation",
+          "label": "animation",
+          "score": 0.6,
+          "reason": "Possible but optimized for longer motion-graphics pieces"
+        },
+        {
+          "option_id": "cinematic",
+          "label": "cinematic",
+          "score": 0.2,
+          "reason": "Wrong grammar for a science explainer"
+        }
+      ],
+      "selected": "animated-explainer",
+      "reason": "User requested a 30-second animated explainer about photosynthesis \u2014 matches generated explainer pipeline."
+    },
+    {
+      "decision_id": "d-002",
+      "stage": "proposal",
+      "category": "render_runtime_selection",
+      "subject": "Composition render runtime",
+      "options_considered": [
+        {
+          "option_id": "remotion",
+          "label": "Remotion (React scene stack)",
+          "score": 1.0,
+          "reason": "Available on machine \u2014 text_card, stat_card, hero_title, diagram overlays, word-level captions"
+        },
+        {
+          "option_id": "hyperframes",
+          "label": "HyperFrames (HTML/CSS/GSAP)",
+          "score": 0.0,
+          "reason": "Rejected \u2014 FFmpeg not on PATH; hyperframes doctor would fail"
+        },
+        {
+          "option_id": "ffmpeg",
+          "label": "FFmpeg-only concat",
+          "score": 0.0,
+          "reason": "Rejected \u2014 ffmpeg binary not on PATH; insufficient for animated explainer grammar"
+        }
+      ],
+      "selected": "remotion",
+      "reason": "Only Remotion is available. Recommended for this brief: existing React scene types (text_card, hero_title, stat_card) fit equation-led 30s edu motion. HyperFrames unavailable until FFmpeg is installed."
+    },
+    {
+      "decision_id": "d-003",
+      "stage": "proposal",
+      "category": "composition_mode",
+      "subject": "Composition authoring mode",
+      "options_considered": [
+        {
+          "option_id": "templated",
+          "label": "Templated (stock cut.type scenes)",
+          "score": 0.9,
+          "reason": "Fast, reliable for 30s equation explainer"
+        },
+        {
+          "option_id": "atelier",
+          "label": "Atelier (hand-authored)",
+          "score": 0.5,
+          "reason": "Higher craft but overkill for 30s standard edu brief"
+        }
+      ],
+      "selected": "templated",
+      "reason": "30-second educational equation walkthrough fits templated Remotion scenes; atelier reserved for hero/brand work."
+    },
+    {
+      "decision_id": "d-004",
+      "stage": "proposal",
+      "category": "playbook_selection",
+      "subject": "Visual style playbook",
+      "options_considered": [
+        {
+          "option_id": "flat-motion-graphics",
+          "label": "flat-motion-graphics",
+          "score": 0.95,
+          "reason": "Bold icons, fast pace, social-native \u2014 pipeline recommended"
+        },
+        {
+          "option_id": "minimalist-diagram",
+          "label": "minimalist-diagram",
+          "score": 0.75,
+          "reason": "Clean but slower feel for 30s"
+        },
+        {
+          "option_id": "clean-professional",
+          "label": "clean-professional",
+          "score": 0.5,
+          "reason": "Better for corporate 60s+ pieces"
+        }
+      ],
+      "selected": "flat-motion-graphics",
+      "reason": "Energetic motion graphics with purple/teal palette fits photosynthesis inputs/outputs animation."
+    },
+    {
+      "decision_id": "d-005",
+      "stage": "proposal",
+      "category": "music_source",
+      "subject": "Background music plan",
+      "options_considered": [
+        {
+          "option_id": "pixabay",
+          "label": "Pixabay royalty-free search",
+          "score": 0.9,
+          "reason": "Available now, free"
+        },
+        {
+          "option_id": "user_library",
+          "label": "music_library/ folder",
+          "score": 0.3,
+          "reason": "Folder empty / not configured"
+        },
+        {
+          "option_id": "ai_generated",
+          "label": "ElevenLabs / Suno generation",
+          "score": 0.0,
+          "reason": "No music generation API keys configured"
+        },
+        {
+          "option_id": "none",
+          "label": "No music",
+          "score": 0.4,
+          "reason": "Valid fallback but weaker engagement"
+        }
+      ],
+      "selected": "pixabay",
+      "reason": "Pixabay music search is the only music path available without new API keys."
+    },
+    {
+      "decision_id": "d-010",
+      "stage": "assets",
+      "category": "voice_selection",
+      "subject": "Narration TTS provider",
+      "options_considered": [
+        {
+          "option_id": "openai_tts",
+          "label": "OpenAI TTS (ash)",
+          "score": 0.0,
+          "reason": "Rejected \u2014 OPENAI_API_KEY not configured"
+        },
+        {
+          "option_id": "piper_tts",
+          "label": "Piper local (en_US-lessac-medium)",
+          "score": 1.0,
+          "reason": "User installed Piper at C:/piper after TTS blocker"
+        }
+      ],
+      "selected": "piper_tts",
+      "reason": "User installed Piper and said continue; batch narration generated locally at zero cost."
+    },
+    {
+      "decision_id": "d-011",
+      "stage": "assets",
+      "category": "approval_policy",
+      "subject": "Assets stage approval",
+      "options_considered": [
+        {
+          "option_id": "approved",
+          "label": "Approve 7 assets",
+          "score": 1.0,
+          "reason": "User explicit approval"
+        }
+      ],
+      "selected": "approved",
+      "reason": "User message: approve assets and enter Edit stage"
+    },
+    {
+      "decision_id": "d-012",
+      "stage": "compose",
+      "category": "approval_policy",
+      "subject": "Compose stage approval",
+      "options_considered": [
+        {
+          "option_id": "approved",
+          "label": "Approve 1080p Remotion render",
+          "score": 1.0,
+          "reason": "User explicit approval"
+        }
+      ],
+      "selected": "approved",
+      "reason": "User approved compose and requested Publish stage."
+    },
+    {
+      "decision_id": "d-013",
+      "stage": "publish",
+      "category": "approval_policy",
+      "subject": "Publish stage approval",
+      "options_considered": [
+        {
+          "option_id": "approved",
+          "label": "Approve export bundle and metadata",
+          "score": 1.0,
+          "reason": "User explicit approval"
+        }
+      ],
+      "selected": "approved",
+      "reason": "User approved publish package via message: \u901a\u8fc7."
+    }
+  ]
+}

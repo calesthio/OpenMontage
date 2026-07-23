@@ -1,0 +1,60 @@
+{
+  "version": "1.0",
+  "entries": [
+    {
+      "platform": "tiktok",
+      "status": "exported",
+      "export_path": "C:\\Users\\木白\\OpenMontage\\projects\\mingchao-yangyang-c1\\exports",
+      "timestamp": "2026-07-12T13:07:45.155586+00:00",
+      "metadata_used": {
+        "title": "霓裳入梦｜鸣潮秧秧·玄翎",
+        "description": "霓裳一曲千峰上——玄翎入梦，尽日欢娱。\n\n30 秒竖屏诗意混剪，无旁白——古诗金句 × 机核实机 × 青金调色。\n秧秧·玄翎羽发与风粒子为视觉锚，BGM 慢起后在技能高潮处推高。\n\n0:00 - 霓裳一曲千峰上\n0:03 - 雾面大景\n0:08 - 尽日欢娱忘岁年\n0:11 - 秧秧·玄翎特写\n0:17 - 大招金青粒子\n0:23 - #鸣潮秧秧玄翎\n0:26 - 玄翎上线\n\n#鸣潮秧秧玄翎 · 玄翎上线\n\n素材来源：机核演示实机（鸣潮秧秧·玄翎）",
+        "hashtags": [
+          "#鸣潮秧秧玄翎",
+          "#鸣潮",
+          "#秧秧",
+          "#玄翎",
+          "#游戏混剪",
+          "#二次元"
+        ],
+        "chapters": [
+          {
+            "start_seconds": 0,
+            "title": "霓裳一曲千峰上"
+          },
+          {
+            "start_seconds": 3,
+            "title": "雾面大景"
+          },
+          {
+            "start_seconds": 8,
+            "title": "尽日欢娱忘岁年"
+          },
+          {
+            "start_seconds": 11,
+            "title": "秧秧·玄翎特写"
+          },
+          {
+            "start_seconds": 17,
+            "title": "大招金青粒子"
+          },
+          {
+            "start_seconds": 23,
+            "title": "#鸣潮秧秧玄翎"
+          },
+          {
+            "start_seconds": 26,
+            "title": "玄翎上线"
+          }
+        ]
+      },
+      "visibility": "public"
+    }
+  ],
+  "metadata": {
+    "hero_output": "exports/video/output.mp4",
+    "derivative_outputs": [],
+    "poster_frame_notes": "深青黑 (#0A1628) 竖屏底，中央秧秧·玄翎半身剪影带金青羽发光；顶部细宋体金句「霓裳一曲千峰上」，底部小字「玄翎上线」。",
+    "distribution_notes": "Hero 30s vertical montage for Douyin/TikTok. No VO; paste description.txt and hashtags from metadata/. Poster frame from thumbnails/concept.json if needed."
+  }
+}

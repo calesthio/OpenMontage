@@ -213,8 +213,9 @@ def test_upscale_build_upsampler_uses_signature_guard(monkeypatch):
 
     # Build a fake RealESRGANer whose __init__ DOES accept device=
     class FakeRealESRGANer:
-        def __init__(self, *, scale, model_path, model, dni_weight, half, device=None):
+        def __init__(self, *, scale, model_path, model, dni_weight, half, tile=0, tile_pad=10, device=None):
             self.called_with_device = device
+            self.called_with_tile = tile
     fake_realesrganer_cls = FakeRealESRGANer
 
     monkeypatch.setitem(sys.modules, "torch", fake_torch)
@@ -252,8 +253,9 @@ def test_upscale_build_upsampler_skips_device_when_unsupported(monkeypatch):
 
     # Build a fake RealESRGANer whose __init__ does NOT accept device=
     class FakeRealESRGANerNoDevice:
-        def __init__(self, *, scale, model_path, model, dni_weight, half):
+        def __init__(self, *, scale, model_path, model, dni_weight, half, tile=0, tile_pad=10):
             self.called_with_device = None  # no device param
+            self.called_with_tile = tile
     fake_realesrganer_cls = FakeRealESRGANerNoDevice
 
     monkeypatch.setitem(sys.modules, "torch", fake_torch)
@@ -279,6 +281,60 @@ def test_upscale_build_upsampler_skips_device_when_unsupported(monkeypatch):
     # Should NOT raise TypeError about unexpected keyword argument 'device'
     result = tool._build_upsampler(scale=4, model_name="RealESRGAN_x4plus", denoise_strength=0.5, face_enhance=False)
     assert result.called_with_device is None
+
+
+# ------------------------------------------------------------------
+# upscale.py — tiling guard for low-memory (non-CUDA) devices
+# ------------------------------------------------------------------
+
+def _build_upsampler_on_device(monkeypatch, device: str):
+    """Helper: build an upsampler with a faked backend on the given device."""
+    import importlib
+
+    fake_torch = MagicMock()
+    fake_torch.device = lambda x: f"device({x})"
+
+    class FakeRealESRGANer:
+        def __init__(self, *, scale, model_path, model, dni_weight, half, tile=0, tile_pad=10, device=None):
+            self.called_with_tile = tile
+
+    monkeypatch.setitem(sys.modules, "torch", fake_torch)
+
+    basicsr_mock = MagicMock()
+    monkeypatch.setitem(sys.modules, "basicsr", basicsr_mock)
+    monkeypatch.setitem(sys.modules, "basicsr.archs", basicsr_mock.archs)
+    monkeypatch.setitem(sys.modules, "basicsr.archs.rrdbnet_arch", basicsr_mock.archs.rrdbnet_arch)
+
+    realesrgan_mock = MagicMock()
+    realesrgan_mock.RealESRGANer = FakeRealESRGANer
+    monkeypatch.setitem(sys.modules, "realesrgan", realesrgan_mock)
+
+    fake_shared = MagicMock()
+    fake_shared.get_torch_device.return_value = device
+    monkeypatch.setitem(sys.modules, "tools.video._shared", fake_shared)
+
+    from tools.enhancement import upscale
+    importlib.reload(upscale)
+
+    return upscale.Upscale()._build_upsampler(
+        scale=4, model_name="RealESRGAN_x4plus", denoise_strength=0.5, face_enhance=False
+    )
+
+
+@pytest.mark.parametrize("device", ["cpu", "mps"])
+def test_upscale_tiles_on_non_cuda_devices(monkeypatch, device):
+    """A full-frame pass allocates the whole x4 tensor and segfaults on low-RAM
+    CPU/MPS machines, so tiling must be on for every non-CUDA device."""
+    result = _build_upsampler_on_device(monkeypatch, device)
+    assert result.called_with_tile > 0, (
+        f"tiling disabled on {device}: large images will exhaust memory and crash"
+    )
+
+
+def test_upscale_does_not_tile_on_cuda(monkeypatch):
+    """CUDA has the headroom for a single pass, which is faster — keep it untiled."""
+    result = _build_upsampler_on_device(monkeypatch, "cuda")
+    assert result.called_with_tile == 0
 
 
 # ------------------------------------------------------------------

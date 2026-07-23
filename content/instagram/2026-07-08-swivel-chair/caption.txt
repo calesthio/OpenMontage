@@ -1,0 +1,11 @@
+Your team isn't slow. Your systems just don't talk to each other.
+
+One order comes in. Someone keys it into accounting. Then inventory. Then the CRM. Same data, three times, by hand.
+
+The average employee burns 9+ hours a week just moving data between systems. That's more than $28,500 per person, every year, on typing a computer should do. And half of it comes back wrong (Parseur, 2025).
+
+We call it swivel-chair work. We don't fix it with more software. We audit the operation first, find every place a number gets entered twice, then connect your systems so it flows once. Entered one time. Everywhere it needs to be.
+
+Comment the word retype and we'll send you the Swivel-Chair Audit: the checklist we use to find every double-entry in your operation.
+
+#smallbusinessoperations #businessautomation #dataentry #systemsintegration #operationsmanagement #smbtech #workflowautomation

@@ -35,6 +35,12 @@ Caps
 - Per-source search errors and per-candidate processing errors are
   caught and collected into `errors` in the return payload. One flaky
   URL or one broken codec must not poison the whole run.
+- Tolerating per-candidate failures is not the same as tolerating a
+  *total* failure. When candidates were found but none survived
+  processing, the run failed — every candidate hitting the same fault
+  (a broken CLIP/`transformers` install, for example) is a systemic
+  break, not a run of bad luck, and reporting success for it hands the
+  pipeline an empty corpus that only surfaces much later in retrieval.
 
 Idempotence
 -----------
@@ -391,6 +397,39 @@ class CorpusBuilder(BaseTool):
                 cache_snapshot = cache.stats()
             except Exception as e:
                 cache_snapshot = {"error": f"{type(e).__name__}: {e}"}
+
+            # Every candidate failing is a systemic fault (commonly a broken
+            # CLIP/`transformers` install), not per-candidate bad luck. Saying
+            # success here writes a 0-row index and defers the error to
+            # whichever retrieval call later reads an empty corpus, so surface
+            # it now. A run that legitimately had nothing to do — no candidates
+            # at all, or everything already present — is still a success.
+            total_failure = bool(candidates_seen) and not added_ids and not skipped
+            if total_failure:
+                sample = "; ".join(
+                    e["error"] for e in errors if e.get("phase") == "process"
+                )[:400]
+                return ToolResult(
+                    success=False,
+                    error=(
+                        f"All {failed} of {candidates_seen} candidates failed to "
+                        f"process; corpus index is empty. This usually means the "
+                        f"CLIP embedding stack is broken (check that `transformers` "
+                        f"and `torch` are installed and mutually compatible). "
+                        f"First errors: {sample or '(none recorded)'}"
+                    ),
+                    data={
+                        "corpus_dir": str(corpus_dir),
+                        "queries_run": len(queries),
+                        "candidates_seen": candidates_seen,
+                        "clips_added": 0,
+                        "clips_skipped_existing": skipped,
+                        "clips_failed": failed,
+                        "total_corpus_size": len(corp),
+                        "errors": errors[:25],
+                    },
+                    duration_seconds=round(elapsed, 2),
+                )
 
             return ToolResult(
                 success=True,

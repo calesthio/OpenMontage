@@ -17,8 +17,12 @@ function resolveAsset(src: string): string {
   if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("data:")) {
     return src;
   }
-  const clean = src.replace(/^file:\/\/\/?/, "");
-  if (clean.startsWith("/") || /^[A-Za-z]:[/\\]/.test(clean)) {
+  // file:///Users/... must keep its root slash (a relative "Users/..." would
+  // hit staticFile and 404); file:///C:/... must drop only the URI slash.
+  const clean = src
+    .replace(/^file:\/\//, "")
+    .replace(/^\/(?=[A-Za-z]:[\\/])/, "");
+  if (clean.startsWith("/") || /^[A-Za-z]:[\\/]/.test(clean)) {
     const posix = clean.replace(/\\/g, "/");
     // POSIX absolute paths already have a leading "/" — file:// + posix
     // gives exactly three slashes. Windows drive paths (C:/...) need the

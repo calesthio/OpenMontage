@@ -85,9 +85,32 @@ CHECKPOINT_SCHEMA_PATH = (
 # live under PROJECTS_DIR/<project_id>/ — this is the location the Backlot
 # board watches. Callers may still pass a different pipeline_dir (tests do),
 # but production runs should use the default.
-from lib.paths import PROJECTS_DIR  # noqa: E402  (single source of truth)
+from lib.paths import PROJECTS_DIR, REPO_ROOT  # noqa: E402  (single source of truth)
 
 PROJECT_MARKER_FILENAME = "project.json"
+
+
+def _validate_style_playbook(style_playbook: Optional[str]) -> None:
+    """Fail closed on an unresolvable style_playbook name.
+
+    Unlike pipeline_dir/project_id (where a missing marker can mean a
+    legitimate first-time bootstrap), a style_playbook name is never
+    lazily created — it must already exist as styles/<name>.yaml. A typo
+    or unwritten playbook here previously passed through silently: every
+    downstream consumer (video_compose's playbook loads) wraps the load in
+    a bare try/except, so the project's declared visual identity would be
+    silently dropped with no warning anywhere, not even in the checkpoint
+    or the Backlot board.
+    """
+    if style_playbook is None:
+        return
+    styles_dir = REPO_ROOT / "styles"
+    if not (styles_dir / f"{style_playbook}.yaml").exists():
+        available = sorted(p.stem for p in styles_dir.glob("*.yaml"))
+        raise CheckpointValidationError(
+            f"Unknown style_playbook {style_playbook!r} — no "
+            f"styles/{style_playbook}.yaml found. Available: {available}"
+        )
 HISTORY_DIRNAME = "history"
 
 
@@ -192,6 +215,7 @@ def init_project(
     Idempotent: re-running preserves the original created_at and merges fields.
     Returns the project directory.
     """
+    _validate_style_playbook(style_playbook)
     base = pipeline_dir or PROJECTS_DIR
     project_dir = base / project_id
     for sub in (
@@ -351,6 +375,8 @@ def write_checkpoint(
     metadata: Optional[dict] = None,
 ) -> Path:
     """Write a checkpoint file for a pipeline stage."""
+    _validate_style_playbook(style_playbook)
+
     # Backfill a missing pipeline_type from the project marker so that
     # omitting the kwarg doesn't quietly bypass gate enforcement.
     if not pipeline_type:

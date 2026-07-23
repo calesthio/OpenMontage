@@ -1064,7 +1064,9 @@ class VideoCompose(BaseTool):
                 from styles.playbook_loader import load_playbook
                 playbook = load_playbook(playbook_name)
             except Exception:
-                pass
+                logging.getLogger("video_compose").warning(
+                    "Playbook %r not found, falling back to defaults", playbook_name
+                )
 
         if playbook:
             vl = playbook.get("visual_language", {})
@@ -1547,6 +1549,9 @@ class VideoCompose(BaseTool):
                     from styles.playbook_loader import load_playbook  # type: ignore
                     playbook_data = load_playbook(playbook_name)
                 except Exception:
+                    logging.getLogger("video_compose").warning(
+                        "Playbook %r not found, falling back to defaults", playbook_name
+                    )
                     playbook_data = None
 
         hf_inputs: dict[str, Any] = {

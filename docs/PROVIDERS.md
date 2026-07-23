@@ -132,13 +132,16 @@ This tool is distinct from `minimax_video` (which routes through `FAL_KEY`). The
 
 #### Pricing
 
-| Model | Resolution | Price |
-|------|-----------|-------|
-| `MiniMax-Hailuo-2.3` | 768P | ~$0.03/sec (PAYG) |
-| `MiniMax-Hailuo-2.3` | 1080P | ~$0.08/sec (PAYG) |
-| `MiniMax-Hailuo-2.3-Fast` | 768P | ~$0.03/sec (PAYG) |
+| Model | Resolution | Duration | PAYG Price | Token Plan Points |
+|------|-----------|----------|-----------|-------------------|
+| `MiniMax-Hailuo-2.3` | 768P | 6s | $0.28 | 1.0 |
+| `MiniMax-Hailuo-2.3` | 768P | 10s | $0.56 | 2.0 |
+| `MiniMax-Hailuo-2.3` | 1080P | 6s | $0.49 | 2.0 |
+| `MiniMax-Hailuo-2.3-Fast` | 768P | 6s | $0.19 | 0.7 |
+| `MiniMax-Hailuo-2.3-Fast` | 768P | 10s | $0.32 | 1.1 |
+| `MiniMax-Hailuo-2.3-Fast` | 1080P | 6s | $0.33 | 1.3 |
 
-> Token Plan is subscription quota, not per-second marginal charge. Check the [MiniMax pricing page](https://platform.minimax.io/docs/guides/pricing-token-plan) for current daily allowances.
+> When `MINIMAX_TOKEN_PLAN_API_KEY` is set, `cost_usd` reports 0.0 (subscription quota, not marginal charge) and `data.quota_points` reports the consumed video points. When only `MINIMAX_API_KEY` is set (PAYG), `cost_usd` reports the exact per-video price. See [MiniMax PAYG pricing](https://platform.minimax.io/docs/guides/pricing-paygo) and [Token Plan allowances](https://platform.minimax.io/docs/guides/pricing-token-plan).
 
 ---
 

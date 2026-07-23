@@ -197,17 +197,39 @@ class MinimaxTokenPlanVideo(BaseTool):
         return ToolStatus.UNAVAILABLE
 
     _PAYG_PRICING = {
-        ("MiniMax-Hailuo-2.3", "768P"): 0.03,
-        ("MiniMax-Hailuo-2.3", "1080P"): 0.08,
-        ("MiniMax-Hailuo-2.3-Fast", "768P"): 0.03,
+        ("MiniMax-Hailuo-2.3", "768P", 6): 0.28,
+        ("MiniMax-Hailuo-2.3", "768P", 10): 0.56,
+        ("MiniMax-Hailuo-2.3", "1080P", 6): 0.49,
+        ("MiniMax-Hailuo-2.3-Fast", "768P", 6): 0.19,
+        ("MiniMax-Hailuo-2.3-Fast", "768P", 10): 0.32,
+        ("MiniMax-Hailuo-2.3-Fast", "1080P", 6): 0.33,
     }
 
+    _TOKEN_PLAN_POINTS = {
+        ("MiniMax-Hailuo-2.3", "768P", 6): 1,
+        ("MiniMax-Hailuo-2.3", "768P", 10): 2,
+        ("MiniMax-Hailuo-2.3", "1080P", 6): 2,
+        ("MiniMax-Hailuo-2.3-Fast", "768P", 6): 0.7,
+        ("MiniMax-Hailuo-2.3-Fast", "768P", 10): 1.1,
+        ("MiniMax-Hailuo-2.3-Fast", "1080P", 6): 1.3,
+    }
+
+    def _is_token_plan(self) -> bool:
+        return bool(os.environ.get("MINIMAX_TOKEN_PLAN_API_KEY"))
+
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
+        if self._is_token_plan():
+            return 0.0
         model = inputs.get("model", "MiniMax-Hailuo-2.3")
         resolution = inputs.get("resolution", "768P")
         duration = int(inputs.get("duration", 6))
-        per_second = self._PAYG_PRICING.get((model, resolution), 0.03)
-        return round(per_second * duration, 2)
+        return self._PAYG_PRICING.get((model, resolution, duration), 0.28)
+
+    def _estimate_quota_points(self, inputs: dict[str, Any]) -> float:
+        model = inputs.get("model", "MiniMax-Hailuo-2.3")
+        resolution = inputs.get("resolution", "768P")
+        duration = int(inputs.get("duration", 6))
+        return self._TOKEN_PLAN_POINTS.get((model, resolution, duration), 1)
 
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         duration = int(inputs.get("duration", 6))
@@ -332,23 +354,30 @@ class MinimaxTokenPlanVideo(BaseTool):
         output_path.write_bytes(download.content)
 
         probed = probe_output(output_path)
+        is_token_plan = self._is_token_plan()
+        data = {
+            "provider": "minimax_tokenplan",
+            "route": "token_plan" if is_token_plan else "payg",
+            "model": payload["model"],
+            "prompt": inputs["prompt"],
+            "operation": inputs.get("operation", "text_to_video"),
+            "duration": payload.get("duration", 6),
+            "resolution": payload.get("resolution", "768P"),
+            "aigc_watermark": payload.get("aigc_watermark", False),
+            "task_id": task_id,
+            "file_id": file_id,
+            "output": str(output_path),
+            "format": "mp4",
+            **probed,
+        }
+        if is_token_plan:
+            data["quota_points"] = self._estimate_quota_points(inputs)
+            data["pricing_note"] = "Token Plan subscription quota consumed"
+        else:
+            data["pricing_note"] = "PAYG per-video charge"
         return ToolResult(
             success=True,
-            data={
-                "provider": "minimax",
-                "route": "token_plan",
-                "model": payload["model"],
-                "prompt": inputs["prompt"],
-                "operation": inputs.get("operation", "text_to_video"),
-                "duration": payload.get("duration", 6),
-                "resolution": payload.get("resolution", "768P"),
-                "aigc_watermark": payload.get("aigc_watermark", False),
-                "task_id": task_id,
-                "file_id": file_id,
-                "output": str(output_path),
-                "format": "mp4",
-                **probed,
-            },
+            data=data,
             artifacts=[str(output_path)],
             cost_usd=self.estimate_cost(inputs),
             model=payload["model"],

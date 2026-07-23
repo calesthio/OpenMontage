@@ -106,15 +106,17 @@ class TestContract:
     def test_has_user_visible_verification(self):
         assert len(MinimaxTokenPlanVideo().user_visible_verification) > 0
 
-    def test_lazy_imports_requests(self):
+    def test_lazy_imports_requests(self, monkeypatch):
         import importlib
         import sys
         mod_name = "tools.video.minimax_tokenplan_video"
         if "requests" in sys.modules:
-            del sys.modules["requests"]
+            monkeypatch.delitem(sys.modules, "requests")
         importlib.reload(sys.modules[mod_name])
 
-    def test_estimate_cost_returns_float(self):
+    def test_estimate_cost_returns_float(self, monkeypatch):
+        monkeypatch.delenv("MINIMAX_TOKEN_PLAN_API_KEY", raising=False)
+        monkeypatch.setenv("MINIMAX_API_KEY", "test-key")
         cost = MinimaxTokenPlanVideo().estimate_cost({"prompt": "x", "duration": 6})
         assert isinstance(cost, float)
         assert cost > 0.0
@@ -197,23 +199,48 @@ class TestToolSpecific:
         tool = MinimaxTokenPlanVideo()
         assert tool.input_schema["properties"]["aigc_watermark"]["default"] is False
 
-    def test_cost_scales_with_duration(self):
-        tool = MinimaxTokenPlanVideo()
-        cost6 = tool.estimate_cost({"prompt": "x", "duration": 6})
-        cost10 = tool.estimate_cost({"prompt": "x", "duration": 10})
-        assert cost10 > cost6
+    def test_cost_zero_when_token_plan_key_set(self, monkeypatch):
+        monkeypatch.setenv("MINIMAX_TOKEN_PLAN_API_KEY", "test-key")
+        cost = MinimaxTokenPlanVideo().estimate_cost({"prompt": "x", "duration": 6})
+        assert cost == 0.0
 
-    def test_cost_aware_of_resolution(self):
-        tool = MinimaxTokenPlanVideo()
-        cost_768 = tool.estimate_cost({"prompt": "x", "duration": 6, "resolution": "768P"})
-        cost_1080 = tool.estimate_cost({"prompt": "x", "duration": 6, "resolution": "1080P"})
-        assert cost_1080 > cost_768
+    def test_cost_payg_when_no_token_plan_key(self, monkeypatch):
+        monkeypatch.delenv("MINIMAX_TOKEN_PLAN_API_KEY", raising=False)
+        monkeypatch.setenv("MINIMAX_API_KEY", "test-key")
+        cost = MinimaxTokenPlanVideo().estimate_cost({
+            "prompt": "x", "duration": 6, "resolution": "768P",
+            "model": "MiniMax-Hailuo-2.3",
+        })
+        assert cost == 0.28
 
-    def test_cost_aware_of_model(self):
+    def test_payg_exact_prices(self, monkeypatch):
+        monkeypatch.delenv("MINIMAX_TOKEN_PLAN_API_KEY", raising=False)
+        monkeypatch.setenv("MINIMAX_API_KEY", "test-key")
         tool = MinimaxTokenPlanVideo()
-        cost_hailuo_1080 = tool.estimate_cost({"prompt": "x", "duration": 6, "model": "MiniMax-Hailuo-2.3", "resolution": "1080P"})
-        cost_fast_768 = tool.estimate_cost({"prompt": "x", "duration": 6, "model": "MiniMax-Hailuo-2.3-Fast", "resolution": "768P"})
-        assert cost_fast_768 < cost_hailuo_1080
+        cases = [
+            ({"model": "MiniMax-Hailuo-2.3", "resolution": "768P", "duration": 6}, 0.28),
+            ({"model": "MiniMax-Hailuo-2.3", "resolution": "768P", "duration": 10}, 0.56),
+            ({"model": "MiniMax-Hailuo-2.3", "resolution": "1080P", "duration": 6}, 0.49),
+            ({"model": "MiniMax-Hailuo-2.3-Fast", "resolution": "768P", "duration": 6}, 0.19),
+            ({"model": "MiniMax-Hailuo-2.3-Fast", "resolution": "768P", "duration": 10}, 0.32),
+            ({"model": "MiniMax-Hailuo-2.3-Fast", "resolution": "1080P", "duration": 6}, 0.33),
+        ]
+        for inputs, expected in cases:
+            assert tool.estimate_cost(inputs) == expected, f"{inputs} expected {expected}"
+
+    def test_quota_points_exact_values(self, monkeypatch):
+        monkeypatch.setenv("MINIMAX_TOKEN_PLAN_API_KEY", "test-key")
+        tool = MinimaxTokenPlanVideo()
+        cases = [
+            ({"model": "MiniMax-Hailuo-2.3", "resolution": "768P", "duration": 6}, 1),
+            ({"model": "MiniMax-Hailuo-2.3", "resolution": "768P", "duration": 10}, 2),
+            ({"model": "MiniMax-Hailuo-2.3", "resolution": "1080P", "duration": 6}, 2),
+            ({"model": "MiniMax-Hailuo-2.3-Fast", "resolution": "768P", "duration": 6}, 0.7),
+            ({"model": "MiniMax-Hailuo-2.3-Fast", "resolution": "768P", "duration": 10}, 1.1),
+            ({"model": "MiniMax-Hailuo-2.3-Fast", "resolution": "1080P", "duration": 6}, 1.3),
+        ]
+        for inputs, expected in cases:
+            assert tool._estimate_quota_points(inputs) == expected, f"{inputs} expected {expected}"
 
     def test_schema_duration_enum(self):
         schema = MinimaxTokenPlanVideo().input_schema

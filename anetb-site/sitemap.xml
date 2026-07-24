@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://anetb.com/</loc>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://anetb.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://anetb.com/en.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://anetb.com/es.html"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://anetb.com/zh.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://anetb.com/"/>
+    <lastmod>2026-07-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://anetb.com/en.html</loc>
+    <lastmod>2026-07-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://anetb.com/es.html</loc>
+    <lastmod>2026-07-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://anetb.com/zh.html</loc>
+    <lastmod>2026-07-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://anetb.com/product-anet1600.html</loc>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://anetb.com/product-anet1600.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://anetb.com/product-anet1600-en.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://anetb.com/product-anet1600-es.html"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://anetb.com/product-anet1600-zh.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://anetb.com/product-anet1600.html"/>
+    <lastmod>2026-07-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://anetb.com/product-anet1600-en.html</loc>
+    <lastmod>2026-07-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://anetb.com/product-anet1600-es.html</loc>
+    <lastmod>2026-07-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://anetb.com/product-anet1600-zh.html</loc>
+    <lastmod>2026-07-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+</urlset>

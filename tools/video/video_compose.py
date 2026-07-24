@@ -1786,91 +1786,96 @@ class VideoCompose(BaseTool):
             if isinstance(entry, dict) and entry.get("src"):
                 entry["src"] = _stage_asset(entry["src"])
 
-        # Explainer-style visual cuts and Cinematic-style scenes both carry a
-        # local source path that must be staged under public/.
-        for cut in props.get("cuts", []):
-            if isinstance(cut, dict) and cut.get("source"):
-                cut["source"] = _stage_asset(cut["source"])
-        for scene in props.get("scenes", []):
-            if isinstance(scene, dict) and scene.get("src"):
-                scene["src"] = _stage_asset(scene["src"])
-
-        # Audio layers differ by composition:
-        #   Explainer     → audio.narration.src, audio.music.src (nested)
-        #   Cinematic     → soundtrack.src, music.src (top-level)
-        audio = props.get("audio")
-        if isinstance(audio, dict):
-            for layer in ("narration", "music"):
-                _stage_audio_layer(audio, layer)
-        for layer in ("soundtrack", "music"):
-            _stage_audio_layer(props, layer)
-
-        # Build a custom themeConfig from the playbook's actual colors.
-        # This ensures every video gets a unique visual identity derived
-        # from its production decisions — not picked from a preset menu.
-        if "themeConfig" not in props:
-            playbook_name = (
-                props.get("playbook")
-                or props.get("theme")
-                or props.get("metadata", {}).get("playbook")
-            )
-            theme_config = self._build_theme_from_playbook(playbook_name, composition_data)
-            if theme_config:
-                props["themeConfig"] = theme_config
-
-        # Write props to temp file for Remotion CLI
+        # Everything from the first staged copy through the render runs under
+        # one guard. The staging directory is created lazily inside
+        # _stage_asset, so a copy, theme build, or props write that raises after
+        # that point would otherwise strand .om_public_* and copied user media —
+        # the finally cleans it up regardless of where the failure lands.
         props_path = output_path.parent / ".remotion_props.json"
-        with open(props_path, "w", encoding="utf-8") as f:
-            json.dump(props, f)
-
-        # Route to the correct Remotion composition based on renderer_family.
-        # This prevents all pipelines from collapsing into the Explainer visual grammar.
-        renderer_family = (composition_data or {}).get("renderer_family", "explainer-data")
-        composition_id = self._get_composition_id(renderer_family)
-
-        cmd = [
-            "npx", "remotion", "render",
-            str(composer_dir / "src" / "index.tsx"),
-            composition_id,
-            str(output_path),
-            # Use the `--props=<path>` equals form rather than two separate
-            # args. On Windows, passing `--props` and the path separately makes
-            # Remotion mis-parse the value (quote escaping differs), failing
-            # with "neither valid JSON nor a file path". The equals form is the
-            # API Remotion recommends for file paths and is cross-platform safe.
-            f"--props={props_path}",
-            # Serve the render-scoped staging root instead of the composer's
-            # shared public/, so staticFile("_om_assets/...") resolves to this
-            # render's copies and nothing is written into the repo checkout.
-            f"--public-dir={render_public_dir}",
-        ]
-
-        # Apply media profile dimensions
-        profile_name = inputs.get("profile")
-        if profile_name:
-            try:
-                from lib.media_profiles import get_profile
-                p = get_profile(profile_name)
-                cmd.extend(["--width", str(p.width), "--height", str(p.height)])
-            except (ImportError, ValueError):
-                pass
-
-        # Optional creator-facing render timeout. Remotion's `--timeout` (ms)
-        # governs headless-browser setup and delayRender(); on slow machines or
-        # restricted networks the default 30s browser setup times out with an
-        # opaque failure. Pass it through and give the subprocess enough headroom
-        # so run_command() does not kill Remotion before its own timeout fires.
-        remotion_timeout_ms = inputs.get("remotion_timeout_ms")
-        subprocess_timeout = 600
-        if remotion_timeout_ms:
-            try:
-                ms = int(remotion_timeout_ms)
-                cmd.append(f"--timeout={ms}")
-                subprocess_timeout = max(subprocess_timeout, ms // 1000 + 60)
-            except (TypeError, ValueError):
-                pass
-
         try:
+            # Explainer-style visual cuts and Cinematic-style scenes both carry a
+            # local source path that must be staged under public/.
+            for cut in props.get("cuts", []):
+                if isinstance(cut, dict) and cut.get("source"):
+                    cut["source"] = _stage_asset(cut["source"])
+            for scene in props.get("scenes", []):
+                if isinstance(scene, dict) and scene.get("src"):
+                    scene["src"] = _stage_asset(scene["src"])
+
+            # Audio layers differ by composition:
+            #   Explainer     → audio.narration.src, audio.music.src (nested)
+            #   Cinematic     → soundtrack.src, music.src (top-level)
+            audio = props.get("audio")
+            if isinstance(audio, dict):
+                for layer in ("narration", "music"):
+                    _stage_audio_layer(audio, layer)
+            for layer in ("soundtrack", "music"):
+                _stage_audio_layer(props, layer)
+
+            # Build a custom themeConfig from the playbook's actual colors.
+            # This ensures every video gets a unique visual identity derived
+            # from its production decisions — not picked from a preset menu.
+            if "themeConfig" not in props:
+                playbook_name = (
+                    props.get("playbook")
+                    or props.get("theme")
+                    or props.get("metadata", {}).get("playbook")
+                )
+                theme_config = self._build_theme_from_playbook(playbook_name, composition_data)
+                if theme_config:
+                    props["themeConfig"] = theme_config
+
+            # Write props to temp file for Remotion CLI
+            with open(props_path, "w", encoding="utf-8") as f:
+                json.dump(props, f)
+
+            # Route to the correct Remotion composition based on renderer_family.
+            # This prevents all pipelines from collapsing into the Explainer visual grammar.
+            renderer_family = (composition_data or {}).get("renderer_family", "explainer-data")
+            composition_id = self._get_composition_id(renderer_family)
+
+            cmd = [
+                "npx", "remotion", "render",
+                str(composer_dir / "src" / "index.tsx"),
+                composition_id,
+                str(output_path),
+                # Use the `--props=<path>` equals form rather than two separate
+                # args. On Windows, passing `--props` and the path separately
+                # makes Remotion mis-parse the value (quote escaping differs),
+                # failing with "neither valid JSON nor a file path". The equals
+                # form is the API Remotion recommends and is cross-platform safe.
+                f"--props={props_path}",
+                # Serve the render-scoped staging root instead of the composer's
+                # shared public/, so staticFile("_om_assets/...") resolves to
+                # this render's copies and nothing is written into the checkout.
+                f"--public-dir={render_public_dir}",
+            ]
+
+            # Apply media profile dimensions
+            profile_name = inputs.get("profile")
+            if profile_name:
+                try:
+                    from lib.media_profiles import get_profile
+                    p = get_profile(profile_name)
+                    cmd.extend(["--width", str(p.width), "--height", str(p.height)])
+                except (ImportError, ValueError):
+                    pass
+
+            # Optional creator-facing render timeout. Remotion's `--timeout` (ms)
+            # governs headless-browser setup and delayRender(); on slow machines
+            # or restricted networks the default 30s browser setup times out with
+            # an opaque failure. Pass it through and give the subprocess enough
+            # headroom so run_command() does not kill Remotion before its timeout.
+            remotion_timeout_ms = inputs.get("remotion_timeout_ms")
+            subprocess_timeout = 600
+            if remotion_timeout_ms:
+                try:
+                    ms = int(remotion_timeout_ms)
+                    cmd.append(f"--timeout={ms}")
+                    subprocess_timeout = max(subprocess_timeout, ms // 1000 + 60)
+                except (TypeError, ValueError):
+                    pass
+
             # Invoke from inside the composer dir so npx can resolve the
             # local remotion binary via node_modules/.bin. Without this,
             # Windows npx cannot locate the CLI and returns "could not

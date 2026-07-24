@@ -107,3 +107,37 @@ def test_execute_names_the_missing_requested_model(monkeypatch, tmp_path):
     )
     assert r.success is False
     assert "en_US-ryan-high" in (r.error or "")
+
+
+def test_find_voice_requires_companion_json_for_explicit_path(tmp_path):
+    # A bare .onnx with no sibling .onnx.json must not resolve. Piper needs the
+    # pair; returning the lone model passes preflight and then fails at synthesis.
+    lonely = tmp_path / "custom.onnx"
+    lonely.write_bytes(b"\x00")
+    assert PiperTTS()._find_voice(str(lonely)) is None
+
+    # Companion present -> the explicit path resolves.
+    (tmp_path / "custom.onnx.json").write_text("{}")
+    assert PiperTTS()._find_voice(str(lonely)) == lonely
+
+
+def test_execute_rejects_explicit_onnx_without_companion(monkeypatch, tmp_path):
+    # The full execute path must refuse a companion-less explicit model rather
+    # than shelling out to piper with a model it cannot load.
+    monkeypatch.setattr("shutil.which", lambda _: "/usr/bin/piper")
+    _install_fake_voice(tmp_path)  # default voice present, so the tool is AVAILABLE
+    monkeypatch.setattr(PiperTTS, "_voice_search_dirs", staticmethod(lambda: [tmp_path]))
+
+    lonely = tmp_path / "custom.onnx"  # explicit path, no .onnx.json
+    lonely.write_bytes(b"\x00")
+
+    def fail_if_called(*a, **k):  # pragma: no cover - must never run
+        raise AssertionError("piper was invoked with a companion-less model")
+
+    monkeypatch.setattr("subprocess.run", fail_if_called)
+
+    r = PiperTTS().execute(
+        {"text": "hi", "model": str(lonely), "output_path": str(tmp_path / "o.wav")}
+    )
+    assert r.success is False
+    assert str(lonely) in (r.error or "")

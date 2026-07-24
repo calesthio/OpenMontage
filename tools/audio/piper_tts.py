@@ -119,11 +119,16 @@ class PiperTTS(BaseTool):
         """Locate a Piper voice model (.onnx + .onnx.json) by name or path.
 
         Accepts a direct path to an .onnx file or a bare model name resolved
-        against the voice search dirs. Returns the .onnx path if found.
+        against the voice search dirs. Returns the .onnx path only when its
+        sibling .onnx.json config is present — Piper needs the pair, so a lone
+        .onnx would pass preflight and then fail at synthesis. The companion
+        check applies equally to explicit paths and bare names.
         """
         direct = Path(name).expanduser()
-        if direct.suffix == ".onnx" and direct.is_file():
-            return direct
+        if direct.suffix == ".onnx":
+            if direct.is_file() and direct.with_suffix(".onnx.json").is_file():
+                return direct
+            return None
         for d in self._voice_search_dirs():
             if d.is_dir():
                 cand = d / f"{name}.onnx"

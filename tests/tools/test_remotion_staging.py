@@ -239,6 +239,56 @@ def test_staging_dir_is_removed_when_render_fails(tool, tmp_path):
     assert not list(out.parent.glob(".om_public_*"))
 
 
+def test_staging_dir_is_removed_when_setup_raises_before_render(tool, tmp_path, monkeypatch):
+    """A failure during staging/setup — before run_command — must still clean up.
+
+    The staging directory is created lazily by the first asset copy, so an
+    exception in a later copy or in props/theme construction happens after the
+    directory exists but before the render call. The cleanup guard must cover
+    that whole window, not just the subprocess.
+    """
+    a = tmp_path / "a.mp4"
+    a.write_bytes(b"a")
+    b = tmp_path / "b.mp4"
+    b.write_bytes(b"b")
+
+    # run_command must never be reached; if setup cleanup is scoped correctly the
+    # exception surfaces before it.
+    def unreached(*a, **k):  # pragma: no cover
+        raise AssertionError("run_command should not run when setup fails")
+
+    tool.run_command = unreached  # type: ignore[assignment]
+
+    # Blow up on the SECOND staged copy: the first has already created the dir.
+    real_copy = __import__("shutil").copy2
+    calls = {"n": 0}
+
+    def flaky_copy(src, dst, *a, **k):
+        calls["n"] += 1
+        if calls["n"] >= 2:
+            raise OSError("disk full mid-stage")
+        return real_copy(src, dst, *a, **k)
+
+    monkeypatch.setattr("shutil.copy2", flaky_copy)
+
+    out = tmp_path / "renders" / "out.mp4"
+    result = tool._remotion_render(
+        {
+            "composition_data": {
+                "renderer_family": "cinematic-trailer",
+                "scenes": [{"src": str(a)}],
+                "soundtrack": {"src": str(b)},
+            },
+            "output_path": str(out),
+        }
+    )
+
+    assert result.success is False
+    assert "disk full" in (result.error or "")
+    # The half-populated staging dir must not survive the failure.
+    assert not list(out.parent.glob(".om_public_*"))
+
+
 def test_repo_composer_public_is_never_written(tool, tmp_path):
     before = (
         sorted(p.name for p in REPO_STAGING_DIR.iterdir())

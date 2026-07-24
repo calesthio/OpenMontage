@@ -32,10 +32,12 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import subprocess
 import time
 from pathlib import Path
 from typing import Any, Optional
+from urllib.parse import unquote, urlparse
 
 from tools.base_tool import (
     BaseTool,
@@ -890,6 +892,34 @@ class VideoCompose(BaseTool):
 
         return ToolResult(success=True, data=data, artifacts=[str(output_path)])
 
+    # A leading slash before a drive letter is URI syntax, not part of the path:
+    # Path("C:/x").as_uri() == "file:///C:/x". Stripping only the "file://"
+    # scheme leaves "/C:/x", which does not resolve to the Windows file.
+    _URI_DRIVE_RE = re.compile(r"^/([A-Za-z]):[/\\]")
+
+    @classmethod
+    def _local_path_from_uri(cls, value: str) -> Path:
+        """Convert a file:// URI (or a plain path) to a local filesystem path.
+
+        Handles the canonical forms `Path.as_uri()` emits on Windows —
+        `file:///C:/dir/clip.mp4` (drive) and `file://server/share/clip.mp4`
+        (UNC) — plus percent-encoding, which a naive scheme strip leaves
+        intact so paths with spaces never match a real file.
+        """
+        if not value.startswith("file://"):
+            return Path(value).expanduser()
+
+        parsed = urlparse(value)
+        path = unquote(parsed.path)
+
+        # UNC share: file://server/share/... -> //server/share/...
+        if parsed.netloc and parsed.netloc.lower() != "localhost":
+            return Path(f"//{parsed.netloc}{path}")
+
+        if cls._URI_DRIVE_RE.match(path):
+            path = path[1:]
+        return Path(path).expanduser()
+
     # Source-file extensions that get staged into the composer tree at render time.
     # Anything not in this set lives only under the real project dir (assets, renders,
     # artifacts) and is referenced via --public-dir or absolute paths.
@@ -1697,38 +1727,9 @@ class VideoCompose(BaseTool):
         # Absolutise so the CLI can resolve the output regardless of cwd.
         output_path = output_path.resolve()
 
-        # Deep-copy props so we don't mutate the original
-        props = json.loads(json.dumps(composition_data))
-
-        # Convert absolute file paths to file:// URIs for Remotion's
-        # Img and OffthreadVideo components
-        for cut in props.get("cuts", []):
-            source = cut.get("source", "")
-            if source and not source.startswith(("http://", "https://", "file://")):
-                resolved = Path(source).resolve()
-                if resolved.exists():
-                    posix = resolved.as_posix()
-                    cut["source"] = f"file:///{posix}" if not posix.startswith("/") else f"file://{posix}"
-
-        # Build a custom themeConfig from the playbook's actual colors.
-        # This ensures every video gets a unique visual identity derived
-        # from its production decisions — not picked from a preset menu.
-        if "themeConfig" not in props:
-            playbook_name = (
-                props.get("playbook")
-                or props.get("theme")
-                or props.get("metadata", {}).get("playbook")
-            )
-            theme_config = self._build_theme_from_playbook(playbook_name, composition_data)
-            if theme_config:
-                props["themeConfig"] = theme_config
-
-        # Write props to temp file for Remotion CLI
-        props_path = output_path.parent / ".remotion_props.json"
-        with open(props_path, "w", encoding="utf-8") as f:
-            json.dump(props, f)
-
-        # remotion-composer lives at project root
+        # remotion-composer lives at project root. Checked before staging so a
+        # missing composer fails fast, without first copying media that the
+        # early return would then leave behind.
         composer_dir = Path(__file__).resolve().parent.parent.parent / "remotion-composer"
         if not composer_dir.exists():
             return ToolResult(
@@ -1736,50 +1737,145 @@ class VideoCompose(BaseTool):
                 error=f"Remotion composer project not found at {composer_dir}",
             )
 
-        # Route to the correct Remotion composition based on renderer_family.
-        # This prevents all pipelines from collapsing into the Explainer visual grammar.
-        renderer_family = (composition_data or {}).get("renderer_family", "explainer-data")
-        composition_id = self._get_composition_id(renderer_family)
+        # Deep-copy props so we don't mutate the original
+        props = json.loads(json.dumps(composition_data))
 
-        cmd = [
-            "npx", "remotion", "render",
-            str(composer_dir / "src" / "index.tsx"),
-            composition_id,
-            str(output_path),
-            # Use the `--props=<path>` equals form rather than two separate
-            # args. On Windows, passing `--props` and the path separately makes
-            # Remotion mis-parse the value (quote escaping differs), failing
-            # with "neither valid JSON nor a file path". The equals form is the
-            # API Remotion recommends for file paths and is cross-platform safe.
-            f"--props={props_path}",
-        ]
+        # Stage local asset files into a public/ root and reference them via
+        # staticFile-relative paths. Remotion's renderer only downloads http(s)
+        # URLs or files served from public/ — file:// URIs are rejected at render
+        # time — so local images, video, narration, and music must be copied
+        # under public/ for both cuts and audio layers to resolve.
+        #
+        # The root is unique per render and lives beside the output inside the
+        # project workspace, passed to Remotion via --public-dir. Staging into
+        # the shared repository checkout instead would leave user media in
+        # remotion-composer/public/ indefinitely: readable by later projects and
+        # renders, unbounded on disk, and racy when two renders touch the same
+        # source. It is removed in the finally below.
+        import hashlib
+        import uuid
 
-        # Apply media profile dimensions
-        profile_name = inputs.get("profile")
-        if profile_name:
-            try:
-                from lib.media_profiles import get_profile
-                p = get_profile(profile_name)
-                cmd.extend(["--width", str(p.width), "--height", str(p.height)])
-            except (ImportError, ValueError):
-                pass
+        render_public_dir = output_path.parent / f".om_public_{uuid.uuid4().hex[:12]}"
+        staged_dir = render_public_dir / "_om_assets"
 
-        # Optional creator-facing render timeout. Remotion's `--timeout` (ms)
-        # governs headless-browser setup and delayRender(); on slow machines or
-        # restricted networks the default 30s browser setup times out with an
-        # opaque failure. Pass it through and give the subprocess enough headroom
-        # so run_command() does not kill Remotion before its own timeout fires.
-        remotion_timeout_ms = inputs.get("remotion_timeout_ms")
-        subprocess_timeout = 600
-        if remotion_timeout_ms:
-            try:
-                ms = int(remotion_timeout_ms)
-                cmd.append(f"--timeout={ms}")
-                subprocess_timeout = max(subprocess_timeout, ms // 1000 + 60)
-            except (TypeError, ValueError):
-                pass
+        def _stage_asset(value: str) -> str:
+            if not value or value.startswith(("http://", "https://", "data:")):
+                return value
+            local = self._local_path_from_uri(value)
+            if not local.exists():
+                return value
+            staged_dir.mkdir(parents=True, exist_ok=True)
+            digest = hashlib.md5(str(local.resolve()).encode()).hexdigest()[:12]
+            dest_name = f"{digest}{local.suffix}"
+            dest = staged_dir / dest_name
+            # Refresh the staged copy when the source changes. The filename keys
+            # on the source path, so a regenerated asset written to the same path
+            # would otherwise leave the previous render's bytes in place and be
+            # served stale. copy2 preserves mtime, so size+mtime identify a match.
+            src_stat = local.stat()
+            if (
+                not dest.exists()
+                or dest.stat().st_size != src_stat.st_size
+                or dest.stat().st_mtime_ns != src_stat.st_mtime_ns
+            ):
+                shutil.copy2(local, dest)
+            return f"_om_assets/{dest_name}"  # resolved by staticFile() in the composer
 
+        def _stage_audio_layer(container: dict, key: str) -> None:
+            entry = container.get(key)
+            if isinstance(entry, dict) and entry.get("src"):
+                entry["src"] = _stage_asset(entry["src"])
+
+        # Everything from the first staged copy through the render runs under
+        # one guard. The staging directory is created lazily inside
+        # _stage_asset, so a copy, theme build, or props write that raises after
+        # that point would otherwise strand .om_public_* and copied user media —
+        # the finally cleans it up regardless of where the failure lands.
+        props_path = output_path.parent / ".remotion_props.json"
         try:
+            # Explainer-style visual cuts and Cinematic-style scenes both carry a
+            # local source path that must be staged under public/.
+            for cut in props.get("cuts", []):
+                if isinstance(cut, dict) and cut.get("source"):
+                    cut["source"] = _stage_asset(cut["source"])
+            for scene in props.get("scenes", []):
+                if isinstance(scene, dict) and scene.get("src"):
+                    scene["src"] = _stage_asset(scene["src"])
+
+            # Audio layers differ by composition:
+            #   Explainer     → audio.narration.src, audio.music.src (nested)
+            #   Cinematic     → soundtrack.src, music.src (top-level)
+            audio = props.get("audio")
+            if isinstance(audio, dict):
+                for layer in ("narration", "music"):
+                    _stage_audio_layer(audio, layer)
+            for layer in ("soundtrack", "music"):
+                _stage_audio_layer(props, layer)
+
+            # Build a custom themeConfig from the playbook's actual colors.
+            # This ensures every video gets a unique visual identity derived
+            # from its production decisions — not picked from a preset menu.
+            if "themeConfig" not in props:
+                playbook_name = (
+                    props.get("playbook")
+                    or props.get("theme")
+                    or props.get("metadata", {}).get("playbook")
+                )
+                theme_config = self._build_theme_from_playbook(playbook_name, composition_data)
+                if theme_config:
+                    props["themeConfig"] = theme_config
+
+            # Write props to temp file for Remotion CLI
+            with open(props_path, "w", encoding="utf-8") as f:
+                json.dump(props, f)
+
+            # Route to the correct Remotion composition based on renderer_family.
+            # This prevents all pipelines from collapsing into the Explainer visual grammar.
+            renderer_family = (composition_data or {}).get("renderer_family", "explainer-data")
+            composition_id = self._get_composition_id(renderer_family)
+
+            cmd = [
+                "npx", "remotion", "render",
+                str(composer_dir / "src" / "index.tsx"),
+                composition_id,
+                str(output_path),
+                # Use the `--props=<path>` equals form rather than two separate
+                # args. On Windows, passing `--props` and the path separately
+                # makes Remotion mis-parse the value (quote escaping differs),
+                # failing with "neither valid JSON nor a file path". The equals
+                # form is the API Remotion recommends and is cross-platform safe.
+                f"--props={props_path}",
+                # Serve the render-scoped staging root instead of the composer's
+                # shared public/, so staticFile("_om_assets/...") resolves to
+                # this render's copies and nothing is written into the checkout.
+                f"--public-dir={render_public_dir}",
+            ]
+
+            # Apply media profile dimensions
+            profile_name = inputs.get("profile")
+            if profile_name:
+                try:
+                    from lib.media_profiles import get_profile
+                    p = get_profile(profile_name)
+                    cmd.extend(["--width", str(p.width), "--height", str(p.height)])
+                except (ImportError, ValueError):
+                    pass
+
+            # Optional creator-facing render timeout. Remotion's `--timeout` (ms)
+            # governs headless-browser setup and delayRender(); on slow machines
+            # or restricted networks the default 30s browser setup times out with
+            # an opaque failure. Pass it through and give the subprocess enough
+            # headroom so run_command() does not kill Remotion before its timeout.
+            remotion_timeout_ms = inputs.get("remotion_timeout_ms")
+            subprocess_timeout = 600
+            if remotion_timeout_ms:
+                try:
+                    ms = int(remotion_timeout_ms)
+                    cmd.append(f"--timeout={ms}")
+                    subprocess_timeout = max(subprocess_timeout, ms // 1000 + 60)
+                except (TypeError, ValueError):
+                    pass
+
             # Invoke from inside the composer dir so npx can resolve the
             # local remotion binary via node_modules/.bin. Without this,
             # Windows npx cannot locate the CLI and returns "could not
@@ -1808,6 +1904,11 @@ class VideoCompose(BaseTool):
         finally:
             if props_path.exists():
                 props_path.unlink()
+            # Staged media is a render-time cache, not an artifact — drop it
+            # whether the render succeeded, failed, or timed out, so no user
+            # media outlives the call that staged it.
+            if render_public_dir.exists():
+                shutil.rmtree(render_public_dir, ignore_errors=True)
 
         if not output_path.exists():
             return ToolResult(

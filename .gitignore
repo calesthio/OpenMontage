@@ -97,3 +97,6 @@ venv/
 
 # Backlot local cache (thumbnails)
 .backlot/
+
+# yt-dlp browser-session cookies for video_downloader (never commit these)
+/cookies.txt

@@ -16,7 +16,6 @@ import time
 from pathlib import Path
 from typing import Any
 
-import numpy as np
 from PIL import Image
 
 from tools.base_tool import (
@@ -248,6 +247,8 @@ class GreenScreenComposite(BaseTool):
 
     def _parse_hex_color(self, hex_str: str) -> np.ndarray:
         """Parse a hex color string like '#0E172A' to an RGB numpy array."""
+        import numpy as np
+
         hex_str = hex_str.lstrip("#")
         r = int(hex_str[0:2], 16)
         g = int(hex_str[2:4], 16)
@@ -318,6 +319,8 @@ class GreenScreenComposite(BaseTool):
         out_h: int,
     ) -> Image.Image:
         """Composite a single speaker frame over a background frame using the given layout."""
+        import numpy as np
+
         # Create alpha mask from speaker frame
         speaker_arr = np.array(speaker_img).astype(float)
         dist = np.sqrt(np.sum((speaker_arr - bg_color.astype(float)) ** 2, axis=2))

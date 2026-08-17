@@ -21,6 +21,13 @@
   <a href="AGENT_GUIDE.md">智能体指南</a>
 </p>
 
+<p align="center">其他语言</p>
+
+<p align="center">
+  <a href="README.md">English</a> &nbsp;·&nbsp;
+  <a href="README_zh-CN.md">简体中文</a>
+</p>
+
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPLv3-blue.svg" alt="License"></a>
 </p>
@@ -47,7 +54,7 @@
   <video src="https://github.com/user-attachments/assets/f77ce7a4-68b8-4f94-a287-e94bf50a32e1" width="100%" controls></video>
 </div>
 
-> **“来自明天的信号 (SIGNAL FROM TOMORROW)”** — 一部完全通过 OpenMontage 制作的电影级科幻预告片：包括概念、剧本、场景规划、Veo 生成的动态片段、配乐以及 Remotion 合成。
+> **“明日信号 (SIGNAL FROM TOMORROW)”** — 一部完全通过 OpenMontage 制作的科幻电影级预告片：包括概念、剧本、场景规划、Veo 生成的动态片段、配乐以及 Remotion 合成。
 
 <div align="center">
   <video src="https://github.com/user-attachments/assets/8daca07f-cdf8-4bec-89c3-9dc2176363fa" width="100%" controls></video>
@@ -193,7 +200,7 @@ RUNWAY_API_KEY=your-key        # Runway Gen-4 直连
 ```
 
 <details>
-<summary><strong>有 GPU 吗？解锁免费的本地视频生成</strong></summary>
+<summary><strong>有显卡吗？解锁免费的本地视频生成</strong></summary>
 
 ```bash
 make install-gpu
@@ -223,13 +230,13 @@ VIDEO_GEN_LOCAL_MODEL=wan2.1-1.3b  # 或 wan2.1-14b, hunyuan-1.5, ltx2-local, co
 
 OpenMontage 会在提案阶段在 Remotion 和 HyperFrames 之间进行选择（锁定为 `render_runtime`）。Remotion 是数据驱动解说和任何使用现有 React 场景堆栈内容的默认选择；HyperFrames 则是大量使用动态图形且更自然表达为 HTML + GSAP 的需求的默认选择，包括 `character-animation` 流水线的 SVG/GSAP 绑定输出。详见 `skills/core/hyperframes.md` 了解完整的决策矩阵。
 
-**两条近乎免费的路径：**
+**几种近乎免费的方法：**
 
 - **基于图像的视频：** Piper 为您的脚本配音，图像提供视觉效果，而 Remotion 将其动画化为精心打磨的剪辑。
 - **本地角色动画：** SVG 绑定、姿势库、GSAP 时间线以及 HyperFrames 会渲染卡通角色表演，输出到 `projects/<project-name>/renders/final.mp4`。
 - **真实素材视频：** 纪录片蒙太奇流水线从 Archive.org、NASA、Wikimedia Commons 和可选的免费源（如 Pexels 和 Unsplash）构建支持 CLIP 检索的语料库，然后将实际的动态影像剪辑成一部完整的视频。
 
-如果您想要第二种（真实素材）路径，请在提示词中要求制作**纪录片蒙太奇 (documentary montage)**、**音画诗 (tone poem)** 或**素材库拼贴 (stock-footage collage)**，并明确说明**只使用真实素材 (use real footage only)**。
+如果您想要第三种（真实素材）路径，请在提示词中要求制作**纪录片蒙太奇 (documentary montage)**、**音画诗 (tone poem)** 或**素材库拼贴 (stock-footage collage)**，并明确说明**只使用真实素材 (use real footage only)**。
 
 ---
 
@@ -239,43 +246,58 @@ OpenMontage 会在提案阶段在 Remotion 和 HyperFrames 之间进行选择（
 
 ### 从参考视频开始
 
-> "Here's a YouTube short I love. Make me something like this, but about CRISPR for high school students."（这是一个我非常喜欢的 YouTube 短片。请给我制作一个类似的视频，但主题是面向高中生的 CRISPR 基因编辑技术。）
+> "Here's a YouTube short I love. Make me something like this, but about CRISPR for high school students."  
+> （这是一个我非常喜欢的 YouTube 短片。请给我制作一个类似的视频，但主题是面向高中生的 CRISPR 基因编辑技术。）
 
-> "Analyze this Reel and give me 3 original variants I could make for my own product launch."（分析这个 Reel 视频并给我 3 个原创变体，我可以用它来发布我自己的产品。）
+> "Analyze this Reel and give me 3 original variants I could make for my own product launch."  
+> （分析这个 Reel 视频并给我 3 个原创变体，我可以用它来发布我自己的产品。）
 
-> "I like the pacing and hook in this video. Keep that energy, but turn it into a 45-second explainer about black holes."（我喜欢这个视频的节奏和钩子。保持这种能量，但把它变成一个 45 秒的关于黑洞的解说视频。）
+> "I like the pacing and hook in this video. Keep that energy, but turn it into a 45-second explainer about black holes."  
+> （我喜欢这个视频的节奏和钩子。保持这种能量，但把它变成一个 45 秒的关于黑洞的解说视频。）
 
 ### 零密钥需求
 
-> "Make a 45-second animated explainer about why the sky is blue"（制作一个 45 秒的动画解说视频，解释为什么天空是蓝色的）
+> "Make a 45-second animated explainer about why the sky is blue"  
+> （制作一个 45 秒的动画解说视频，解释为什么天空是蓝色的）
 
-> "Create a 60-second video about the history of the internet, with narration and captions"（制作一个 60 秒关于互联网历史的视频，包含旁白和字幕）
+> "Create a 60-second video about the history of the internet, with narration and captions"  
+> （制作一个 60 秒关于互联网历史的视频，包含旁白和字幕）
 
-> "Make a data-driven explainer about coffee consumption around the world"（制作一个关于全球咖啡消费情况的数据驱动型解说视频）
+> "Make a data-driven explainer about coffee consumption around the world"  
+> （制作一个关于全球咖啡消费情况的数据驱动型解说视频）
 
 ### 免费的真实素材纪录片路径
 
-> "Make a 90-second documentary montage about what a city feels like at 4am. Use real footage only, no narration, elegiac tone."（制作一部 90 秒的纪录片蒙太奇，展现凌晨 4 点城市的感觉。只使用真实素材，无旁白，挽歌般的基调。）
+> "Make a 90-second documentary montage about what a city feels like at 4am. Use real footage only, no narration, elegiac tone."  
+> （制作一部 90 秒的纪录片蒙太奇，展现凌晨 4 点城市的感觉。只使用真实素材，无旁白，挽歌般的基调。）
 
-> "Create a 60-second Adam-Curtis-style archival collage about 1950s consumer optimism. Prefer Archive.org and Wikimedia footage."（制作一部 60 秒 Adam Curtis 风格的档案拼贴画，探讨 20 世纪 50 年代的消费乐观主义。优先使用 Archive.org 和 Wikimedia 的素材。）
+> "Create a 60-second Adam-Curtis-style archival collage about 1950s consumer optimism. Prefer Archive.org and Wikimedia footage."  
+> （制作一部 60 秒 Adam Curtis 风格的档案拼贴画，探讨 20 世纪 50 年代的消费乐观主义。优先使用 Archive.org 和 Wikimedia 的素材。）
 
-> "Cut together a dreamlike montage about coming home in the rain using real stock footage only. Music yes, narration no."（用纯真实素材剪辑一个关于雨中归家的梦幻般蒙太奇。需要音乐，不需要旁白。）
+> "Cut together a dreamlike montage about coming home in the rain using real stock footage only. Music yes, narration no."  
+> （用纯真实素材剪辑一个关于雨中归家的梦幻般蒙太奇。需要音乐，不需要旁白。）
 
 ### 配置了图像/视频提供商 (~0.15 美元–1.50 美元)
 
-> "Create a 30-second Ghibli-style animated video of a magical floating library in the clouds at golden hour"（制作一部 30 秒的吉卜力风格动画视频，展示黄金时刻云端上一座神奇的漂浮图书馆）
+> "Create a 30-second Ghibli-style animated video of a magical floating library in the clouds at golden hour"  
+> （制作一部 30 秒的吉卜力风格动画视频，在视频高潮时展示云端上一座神奇的漂浮图书馆）
 
-> "Make a 30-second anime-style animation of an underwater temple with bioluminescent coral and ancient ruins"（制作一部 30 秒动漫风格的水下神庙动画，内含发光珊瑚和古代遗迹）
+> "Make a 30-second anime-style animation of an underwater temple with bioluminescent coral and ancient ruins"  
+> （制作一部 30 秒动漫风格的水下神庙动画，内含发光珊瑚和古代遗迹）
 
-> "Create an animated explainer about how CRISPR gene editing works, using AI-generated visuals"（使用 AI 生成视觉效果，制作一部关于 CRISPR 基因编辑原理的动画解说视频）
+> "Create an animated explainer about how CRISPR gene editing works, using AI-generated visuals"  
+> （使用 AI 生成视觉效果，制作一部关于 CRISPR 基因编辑原理的动画解说视频）
 
-> "Make a product launch teaser for a fictional smart water bottle called AquaPulse"（为一款虚构的名为 AquaPulse 的智能水瓶制作一个产品发布预告片）
+> "Make a product launch teaser for a fictional smart water bottle called AquaPulse"  
+> （为一款虚构的名为 AquaPulse 的智能水瓶制作一个产品发布预告片）
 
 ### 完整设置 (~1 美元–3 美元)
 
-> "Create a cinematic 30-second trailer for a sci-fi concept: humanity receives a warning from 1000 years in the future"（为一个科幻概念制作一部 30 秒的电影级预告片：人类收到了来自 1000 年后的警告）
+> "Create a cinematic 30-second trailer for a sci-fi concept: humanity receives a warning from 1000 years in the future"  
+> （为一个科幻概念制作一部 30 秒的电影级预告片：人类收到了来自 1000 年后的警告）
 
-> "Make a 90-second animated explainer about quantum computing for middle school students, with a fun narrator voice and custom soundtrack"（制作一部面向中学生的 90 秒量子计算动画解说视频，配有有趣的旁白声音和定制的背景音乐）
+> "Make a 90-second animated explainer about quantum computing for middle school students, with a fun narrator voice and custom soundtrack"  
+> （制作一部面向中学生的 90 秒量子计算动画解说视频，配有有趣的旁白声音和定制的背景音乐）
 
 想了解更多？查看完整的 **[提示词画廊](PROMPT_GALLERY.md)** 获取经过测试的提示词、预期成本和输出示例，或者运行 `make demo` 立即渲染零密钥的演示视频。
 
@@ -307,7 +329,7 @@ OpenMontage 会在提案阶段在 Remotion 和 HyperFrames 之间进行选择（
 
 每个阶段都有专门的 **导演技能 (director skill)** — 一个 Markdown 指令文件，指导智能体如何精确执行该阶段。智能体阅读技能、使用工具、自我审查、为状态做检查点，并在创意决定点请求人类批准。
 
-> **网络研究是一等公民（first-class stage）。** 在写下一句脚本之前，智能体会搜索 YouTube、Reddit、Hacker News、新闻网站和学术资源。它会收集数据点、受众问题、热门角度和视觉参考，然后将所有内容记录在结构化的研究简报中。您的视频将立足于真实、当前的信息，而不是幻觉产生的虚假事实。
+> **网络研究第一。** 在写下一句脚本之前，智能体会搜索 YouTube、Reddit、Hacker News、新闻网站和学术资源。它会收集数据点、受众问题、热门角度和视觉参考，然后将所有内容记录在结构化的研究简报中。您的视频将立足于真实、当前的信息，而不是幻觉产生的虚假事实。
 
 ---
 
@@ -315,7 +337,7 @@ OpenMontage 会在提案阶段在 Remotion 和 HyperFrames 之间进行选择（
 
 大多数 AI 视频工具仅根据提示词提供单一的剪辑片段。OpenMontage 为您提供了一个 **端到端的制作流水线** — 就像真实制作团队所遵循的结构化流程一样，由您的 AI 智能体自动完成。
 
-大多数“免费 AI 视频”技术栈往往暗指“让静态图像动起来”。OpenMontage 固然也能做到这一点，但它还能利用从免费/开源获取的**真实素材**制作完整的视频：在语义上对其进行排名，有目的地进行剪辑，并作为正确的时间线渲染输出。
+大多数“免费 AI 视频”技术栈往往暗指“让静态图变动图”。OpenMontage 固然也能做到这一点，但它还能利用从免费/开源获取的**真实素材**制作完整的视频：在语义上对其进行排名，有目的地进行剪辑，并作为正确的时间线渲染输出。
 
 剪辑您自己的口播素材。从零开始生成一个完全动画化的解说。将长达 2 小时的播客剪辑成十几个社交短片。将您的内容翻译并配音成 10 种语言。用库存影像和 AI 生成的场景构建电影级品牌预告片。**只要制作团队能做出来的东西，OpenMontage 就能编排它。**
 
@@ -367,7 +389,7 @@ OpenMontage 采用 **智能体优先 (agent-first) 的架构**。这里没有代
 渲染后自我审查 -- ffprobe、帧提取、音频分析、承诺验证
  |
  v
-最终视频输出 -- 只有通过自我审查才会输出
+最终视频输出 -- 只有通过自审才会输出
 ```
 
 **Python 提供工具和持久化。** 所有的创意决策、编排逻辑、审查标准和质量标准都存在于可读的指令文件（YAML 清单 + Markdown 技能）中，您可以检查和自定义它们。每一项决定都会被记录，包括考虑过的备选方案、置信度得分以及每次选择背后的推理。
@@ -554,11 +576,11 @@ OpenMontage/
 |---------|-----------|--------------|
 | YouTube 宽屏 (Landscape) | 1920x1080 | 16:9 |
 | YouTube 4K | 3840x2160 | 16:9 |
-| YouTube 短片 (Shorts) | 1080x1920 | 9:16 |
+| YouTube Shorts (短视频) | 1080x1920 | 9:16 |
 | Instagram Reels | 1080x1920 | 9:16 |
 | Instagram 动态 (Feed) | 1080x1080 | 1:1 |
-| TikTok | 1080x1920 | 9:16 |
-| LinkedIn | 1920x1080 | 16:9 |
+| TikTok (海外抖音) | 1080x1920 | 9:16 |
+| LinkedIn (领英) | 1920x1080 | 16:9 |
 | 电影级 (Cinematic) | 2560x1080 | 21:9 |
 
 ---
@@ -567,9 +589,9 @@ OpenMontage/
 
 OpenMontage 像对待真正的工程开发一样对待视频制作——在每个阶段都设有质量关卡、审计跟踪和执行控制。
 
-### 质量检验门
+### 质量检验
 
-- **合成前验证** — 如果违反了交付承诺（例如：“以运动为主”的视频却有 80% 是静态图像），幻灯片风险得分处于危急水平，或缺少渲染器族，则阻止渲染。在浪费 GPU 时间之前拦截崩溃的计划。
+- **合成前验证** — 如果违反了输出承诺（例如：“以运动为主”的视频却有 80% 是静态图像），PPT 风险得分处于危急水平，或缺少渲染器族，则阻止渲染。在浪费 GPU 时间之前拦截失败的计划。
 - **渲染后自我审查** — 每次渲染后，运行时会运行 ffprobe 验证，在 4 个位置提取帧以检查是否存在黑屏和破损覆盖，分析音频电平是否静音或削峰（clipping），验证是否履行了交付承诺，并检查字幕是否正常。如果审查失败，将不会展示此视频。
 - **PPT 风险评分** — 6 维度分析（重复性、装饰性视觉、运动幅度弱、镜头意图、过度依赖排版、不支持的电影级宣称）防止产生“带动画的 PPT”输出。
 - **源文件检查** — 当用户提供自己的素材时，系统会探查每个文件（分辨率、编解码器、音频通道、时长）并在做出单一创意决策前建立规划预估。不再凭借文件名来虚构内容。
@@ -582,7 +604,7 @@ OpenMontage 像对待真正的工程开发一样对待视频制作——在每�
 
 选择器的输出还会展示被选提供商的 `agent_skills`，以便智能体在编写提示词前能立即阅读相关的第 3 层提供商技能。
 
-### 决策审计跟踪
+### 决策审计记录
 
 每一个重大的创意和技术选择——提供商选择、风格/剧本选择、音乐曲目、声音选择、渲染器族系，以及任何备选方案或降级——都会被记录下来，包含备选项、置信度得分和推理过程。累积的决策日志跨所有阶段持久保存，这样您就能确切追溯为何输出呈现出最终的模样。
 

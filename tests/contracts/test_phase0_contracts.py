@@ -23,6 +23,7 @@ from lib.checkpoint import (
     CheckpointValidationError,
     STAGES,
     get_next_stage,
+    get_project_cost_tracker,
     read_checkpoint,
     write_checkpoint,
 )
@@ -532,6 +533,52 @@ class TestCostTracker:
             "scene visual types have not been enriched yet" in note
             for note in estimate["assumptions"]
         )
+
+
+# ---- Project Cost Tracker (wired to project cost_log.json) ----
+
+class TestProjectCostTracker:
+    def test_factory_sets_project_cost_log_path(self, tmp_path):
+        tracker = get_project_cost_tracker(tmp_path, "proj_a")
+        assert tracker.cost_log_path == tmp_path / "proj_a" / "cost_log.json"
+
+    def test_factory_persists_cost_log_on_first_operation(self, tmp_path):
+        tracker = get_project_cost_tracker(tmp_path, "proj_b")
+        tracker.approve_tool("image_selector")
+        eid = tracker.estimate("image_selector", "generate", 0.10)
+        tracker.reserve(eid)
+        tracker.reconcile(eid, 0.08, success=True)
+        assert (tmp_path / "proj_b" / "cost_log.json").exists()
+
+    def test_factory_tracks_failed_paid_attempts(self, tmp_path):
+        tracker = get_project_cost_tracker(tmp_path, "proj_c")
+        tracker.approve_tool("kling_fal")
+        eid = tracker.estimate("kling_fal", "video_generate", 0.30)
+        tracker.reserve(eid)
+        tracker.reconcile(eid, 0.30, success=False)
+        assert tracker.budget_spent_usd == 0.30
+        log = json.loads((tmp_path / "proj_c" / "cost_log.json").read_text())
+        assert any(e["status"] == "failed" for e in log["entries"])
+
+    def test_factory_reloads_prior_entries_across_stages(self, tmp_path):
+        t1 = get_project_cost_tracker(tmp_path, "proj_d")
+        t1.approve_tool("elevenlabs_tts")
+        eid = t1.estimate("elevenlabs_tts", "narration", 0.05)
+        t1.reserve(eid)
+        t1.reconcile(eid, 0.05)
+
+        t2 = get_project_cost_tracker(tmp_path, "proj_d")
+        assert t2.budget_spent_usd == 0.05
+
+    def test_different_projects_have_isolated_cost_logs(self, tmp_path):
+        ta = get_project_cost_tracker(tmp_path, "proj_x")
+        ta.approve_tool("flux_fal")
+        eid = ta.estimate("flux_fal", "image", 0.20)
+        ta.reserve(eid)
+        ta.reconcile(eid, 0.20)
+
+        tb = get_project_cost_tracker(tmp_path, "proj_y")
+        assert tb.budget_spent_usd == 0.0
 
 
 # ---- Pipeline Instruction Architecture ----

@@ -1,0 +1,164 @@
+{
+  "theme": "flat-motion-graphics",
+  "cuts": [
+    {
+      "id": "hook",
+      "type": "hero_title",
+      "in_seconds": 0,
+      "out_seconds": 4.5,
+      "text": "How Neural Networks Learn",
+      "subtitle": "Guess. Measure. Adjust. Repeat.",
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "what-is-it",
+      "type": "callout",
+      "callout_type": "info",
+      "in_seconds": 4.5,
+      "out_seconds": 9.5,
+      "title": "The setup",
+      "text": "A neural network is just layers of tiny units joined by weighted connections. Each weight is a number that says how much one signal matters.",
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "starts-clueless",
+      "type": "text_card",
+      "in_seconds": 9.5,
+      "out_seconds": 13.5,
+      "text": "At the start, every weight is random. So the first guesses are basically noise.",
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "guess-vs-truth",
+      "type": "comparison",
+      "in_seconds": 13.5,
+      "out_seconds": 19,
+      "title": "First guess vs. reality",
+      "leftLabel": "Network says",
+      "leftValue": "\"Cat: 12%\"",
+      "rightLabel": "Truth",
+      "rightValue": "\"Cat: 100%\"",
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "the-loss",
+      "type": "stat_card",
+      "in_seconds": 19,
+      "out_seconds": 24,
+      "stat": "8.42",
+      "subtitle": "The loss: one number for how wrong the guess was. Learning means shrinking it.",
+      "accentColor": "#EC4899",
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "the-loop",
+      "type": "kpi_grid",
+      "in_seconds": 24,
+      "out_seconds": 31,
+      "title": "The learning loop, repeated millions of times",
+      "columns": 4,
+      "chartData": [
+        { "label": "Forward pass", "value": 1, "icon": "1" },
+        { "label": "Measure loss", "value": 2, "icon": "2" },
+        { "label": "Backpropagate", "value": 3, "icon": "3" },
+        { "label": "Update weights", "value": 4, "icon": "4" }
+      ],
+      "chartColors": ["#7C3AED", "#EC4899", "#06B6D4", "#10B981"],
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "backprop",
+      "type": "callout",
+      "callout_type": "tip",
+      "in_seconds": 31,
+      "out_seconds": 37,
+      "title": "Backpropagation",
+      "text": "The loss flows backward through the layers. Each weight learns which direction to nudge to make the error a little smaller. That direction is the gradient.",
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "loss-curve",
+      "type": "line_chart",
+      "in_seconds": 37,
+      "out_seconds": 45,
+      "title": "Loss falls as training goes on",
+      "chartSeries": [
+        {
+          "label": "Loss",
+          "data": [
+            { "x": 0, "y": 8.42 },
+            { "x": 1, "y": 5.1 },
+            { "x": 2, "y": 3.3 },
+            { "x": 3, "y": 2.0 },
+            { "x": 4, "y": 1.2 },
+            { "x": 5, "y": 0.7 },
+            { "x": 6, "y": 0.4 },
+            { "x": 7, "y": 0.25 }
+          ],
+          "color": "#EC4899"
+        }
+      ],
+      "showGrid": true,
+      "showMarkers": true,
+      "xLabel": "Epoch",
+      "yLabel": "Loss",
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "accuracy-climb",
+      "type": "bar_chart",
+      "in_seconds": 45,
+      "out_seconds": 51,
+      "title": "...and accuracy climbs",
+      "chartData": [
+        { "label": "Epoch 1", "value": 34 },
+        { "label": "Epoch 3", "value": 62 },
+        { "label": "Epoch 5", "value": 85 },
+        { "label": "Epoch 7", "value": 97 }
+      ],
+      "chartColors": ["#06B6D4", "#7C3AED", "#EC4899", "#10B981"],
+      "showValues": true,
+      "showGrid": true,
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "scale",
+      "type": "stat_card",
+      "in_seconds": 51,
+      "out_seconds": 56,
+      "stat": "1,000,000+",
+      "subtitle": "Tiny weight adjustments. No single one is smart. Together they become skill.",
+      "accentColor": "#10B981",
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "close",
+      "type": "text_card",
+      "in_seconds": 56,
+      "out_seconds": 60,
+      "text": "That's learning: guess, measure the error, adjust every weight, repeat.",
+      "color": "#F8FAFC",
+      "backgroundColor": "#0F172A"
+    }
+  ],
+  "overlays": [
+    {
+      "type": "section_title",
+      "in_seconds": 24,
+      "out_seconds": 27,
+      "text": "The Loop",
+      "subtitle": "Four steps, on repeat",
+      "accentColor": "#7C3AED",
+      "position": "top-left"
+    },
+    {
+      "type": "stat_reveal",
+      "in_seconds": 45.5,
+      "out_seconds": 50,
+      "text": "97%",
+      "subtitle": "accuracy by epoch 7",
+      "accentColor": "#10B981",
+      "position": "bottom-right"
+    }
+  ]
+}

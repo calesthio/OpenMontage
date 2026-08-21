@@ -64,8 +64,19 @@ class WikimediaSource:
         The cascade (see ``_build_search_queries``) tries strict first,
         then narrows to 2 distinctive tokens, then to 1 — returning the
         first non-empty video result set.
+
+        An individual strategy is allowed to fail — that is what the
+        cascade is for. But `[]` is the answer for "Commons has
+        nothing", so returning it requires having actually heard that
+        from the API. If no strategy got an answer, the last error is
+        raised instead. See `base.StockSource`.
         """
         import requests  # lazy
+
+        # True once a strategy has run end to end without erroring —
+        # the one thing that makes an empty return honest.
+        answered = False
+        last_error: Exception | None = None
 
         for _label, search_text in _build_search_queries(query, filters.kind):
             params = {
@@ -91,8 +102,11 @@ class WikimediaSource:
                 )
                 r.raise_for_status()
                 data = r.json()
-            except Exception:
+            except Exception as e:
+                last_error = e
                 continue
+
+            answered = True
             pages = list(((data.get("query") or {}).get("pages") or {}).values())
             if not pages:
                 continue
@@ -105,6 +119,9 @@ class WikimediaSource:
                     out.append(cand)
             if out:
                 return out
+
+        if not answered and last_error is not None:
+            raise last_error
 
         return []
 

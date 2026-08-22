@@ -134,12 +134,23 @@ class ArchiveOrgSource:
         why a cascade is needed — pure OR-join is too noisy, pure
         phrase-proximity is too strict, no single strategy wins across
         the documentary query space.
+
+        An individual strategy is allowed to fail — that is what the
+        cascade is for. But `[]` is the answer for "Archive.org has
+        nothing", so returning it requires having actually heard that
+        from the API. If nothing in this call got an answer, the last
+        error is raised instead. See `base.StockSource`.
         """
         kind = (filters.kind or "video").lower()
         if kind not in ("video", "any"):
             return []
 
         import requests  # lazy
+
+        # True once a strategy has run end to end without erroring —
+        # the one thing that makes an empty return honest.
+        answered = False
+        last_error: Optional[Exception] = None
 
         for _label, solr_q in self._build_queries(query):
             params = [
@@ -161,21 +172,38 @@ class ArchiveOrgSource:
                 r = requests.get(_SEARCH_URL, params=params, timeout=30)
                 r.raise_for_status()
                 data = r.json()
-            except Exception:
+            except Exception as e:
                 # One strategy's network/parse error shouldn't kill the
                 # whole cascade — try the next one.
+                last_error = e
                 continue
             docs = (data.get("response") or {}).get("docs", []) or []
             if not docs:
+                answered = True
                 continue
 
             out: list[Candidate] = []
+            hydrate_failed = False
             for doc in docs:
-                cand = self._hydrate_candidate(doc, filters)
+                try:
+                    cand = self._hydrate_candidate(doc, filters)
+                except Exception as e:
+                    # One bad item shouldn't poison the strategy, but it
+                    # also isn't evidence that the item was unusable.
+                    hydrate_failed = True
+                    last_error = e
+                    continue
                 if cand is not None:
                     out.append(cand)
             if out:
                 return out
+            if not hydrate_failed:
+                # Every doc was inspected and none was usable — the
+                # strategy completed, it just found nothing.
+                answered = True
+
+        if not answered and last_error is not None:
+            raise last_error
 
         return []
 
@@ -322,16 +350,13 @@ class ArchiveOrgSource:
         if not identifier:
             return None
 
-        try:
-            r = requests.get(f"{_METADATA_URL}/{identifier}", timeout=30)
-            r.raise_for_status()
-            meta = r.json()
-        except Exception:
-            # Swallow per-item fetch failures — one bad item shouldn't
-            # poison the whole search. Alternative would be to raise and
-            # have corpus_builder catch per-source, but at this layer we
-            # can keep going.
-            return None
+        # Per-item fetch failures propagate. `search()` tolerates them
+        # one at a time — one bad item shouldn't poison the whole
+        # search — but it needs to tell them apart from "this item has
+        # no usable files", which is what `None` means here.
+        r = requests.get(f"{_METADATA_URL}/{identifier}", timeout=30)
+        r.raise_for_status()
+        meta = r.json()
 
         files = meta.get("files") or []
         picked = _pick_video_file(files)

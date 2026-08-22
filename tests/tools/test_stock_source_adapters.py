@@ -4,6 +4,7 @@ import types
 import pytest
 
 from tools.video.stock_sources import SearchFilters, all_sources, get_source
+from tools.video.stock_sources.archive_org import _METADATA_URL
 from tools.video.stock_sources.unsplash import _build_download_url, _orientation_for_unsplash
 from tools.video.stock_sources.wikimedia import (
     _build_search_queries,
@@ -105,32 +106,26 @@ _SOURCE_CREDENTIALS = {
     "VIDEVO_API_KEY": "test-videvo",
 }
 
-# Adapters that still swallow transport failures, recorded as known
-# defects rather than encoded as expected behavior. `strict=True` means
-# the suite fails the moment one of them is fixed and left in this map.
-_STILL_SWALLOWS_TRANSPORT_ERRORS = {
-    "archive_org": "#511 follow-up: query cascade continues past a failed strategy",
-    "wikimedia": "#511 follow-up: query cascade continues past a failed strategy",
-    "pond5_pd": "#511 follow-up: API failure falls through to the web fallback",
-}
-
 
 class TransportError(Exception):
     """Distinct failure type so the assertion cannot pass by accident."""
 
 
-class _EmptyOkResponse:
-    """A genuine 200 that simply carries no results."""
+class _OkResponse:
+    """A genuine 200 carrying `payload` (empty by default)."""
 
     status_code = 200
-    text = "<html><body></body></html>"
     content = b""
+
+    def __init__(self, payload=None, text="<html><body></body></html>"):
+        self._payload = payload if payload is not None else {}
+        self.text = text
 
     def raise_for_status(self):
         return None
 
     def json(self):
-        return {}
+        return self._payload
 
     def __enter__(self):
         return self
@@ -183,16 +178,7 @@ def _adapter_names():
     return [source.name for source in all_sources()]
 
 
-def _transport_error_params():
-    params = []
-    for name in _adapter_names():
-        reason = _STILL_SWALLOWS_TRANSPORT_ERRORS.get(name)
-        marks = [pytest.mark.xfail(strict=True, reason=reason)] if reason else []
-        params.append(pytest.param(name, marks=marks, id=name))
-    return params
-
-
-@pytest.mark.parametrize("source_name", _transport_error_params())
+@pytest.mark.parametrize("source_name", _adapter_names(), ids=_adapter_names())
 def test_search_propagates_transport_errors(source_name, monkeypatch):
     def boom(*_args, **_kwargs):
         raise TransportError("simulated connection reset")
@@ -211,7 +197,7 @@ def test_search_returns_empty_when_the_source_has_no_results(
 ):
     # The other half of the contract: `[]` still has to mean "nothing
     # matched". A 200 with an empty payload must not raise.
-    _install_fake_transport(monkeypatch, lambda *_a, **_k: _EmptyOkResponse())
+    _install_fake_transport(monkeypatch, lambda *_a, **_k: _OkResponse())
 
     assert (
         get_source(source_name).search(
@@ -219,3 +205,161 @@ def test_search_returns_empty_when_the_source_has_no_results(
         )
         == []
     )
+
+
+# ---------------------------------------------------------------------
+# Cascade and fallback semantics (issue #511, second half)
+#
+# `archive_org` and `wikimedia` walk a query cascade, and `pond5_pd`
+# falls back from its API to a web scraper. All three are *designed* to
+# absorb a failure and keep going, which is why they could not take the
+# plain re-raise the other eight got. The rule they follow instead: a
+# partial failure is fine, but returning `[]` means the source itself
+# said "nothing" — so it requires having actually heard that.
+# ---------------------------------------------------------------------
+
+_ARCHIVE_DOC = {
+    "identifier": "ocean-waves",
+    "title": "Ocean waves",
+    "description": "Waves breaking on a shore",
+    "collection": "prelinger",
+}
+
+_ARCHIVE_METADATA = {
+    "files": [
+        {
+            "format": "h.264",
+            "name": "ocean-waves.mp4",
+            "size": str(8 * 1024 * 1024),
+            "length": "12.0",
+            "width": "1920",
+            "height": "1080",
+        }
+    ]
+}
+
+_WIKIMEDIA_PAGE = {
+    "pageid": 42,
+    "index": 1,
+    "title": "File:Ocean waves.webm",
+    "canonicalurl": "https://commons.wikimedia.org/wiki/File:Ocean_waves.webm",
+    "imageinfo": [
+        {
+            "mime": "video/webm",
+            "width": 1920,
+            "height": 1080,
+            "duration": 12.0,
+            "url": "https://upload.wikimedia.org/ocean-waves.webm",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Ocean_waves.webm",
+            "extmetadata": {},
+        }
+    ],
+}
+
+
+def test_archive_org_cascade_survives_one_failed_strategy(monkeypatch):
+    # The cascade exists precisely so a weak strategy can be skipped.
+    # A failed one must not become an error as long as a later strategy
+    # gets an answer.
+    searches = []
+
+    def fake_get(url, **_kwargs):
+        if url.startswith(_METADATA_URL):
+            return _OkResponse(_ARCHIVE_METADATA)
+        searches.append(url)
+        if len(searches) == 1:
+            raise TransportError("first strategy died")
+        return _OkResponse({"response": {"docs": [_ARCHIVE_DOC]}})
+
+    _install_fake_transport(monkeypatch, fake_get)
+
+    out = get_source("archive_org").search(
+        "ocean waves", SearchFilters(kind="video", per_page=5)
+    )
+
+    assert [c.source_id for c in out] == ["ocean-waves"]
+    assert len(searches) == 2
+
+
+def test_wikimedia_cascade_survives_one_failed_strategy(monkeypatch):
+    calls = []
+
+    def fake_get(url, **_kwargs):
+        calls.append(url)
+        if len(calls) == 1:
+            raise TransportError("first strategy died")
+        return _OkResponse({"query": {"pages": {"42": _WIKIMEDIA_PAGE}}})
+
+    _install_fake_transport(monkeypatch, fake_get)
+
+    out = get_source("wikimedia").search(
+        "ocean waves", SearchFilters(kind="video", per_page=5)
+    )
+
+    assert [c.source_id for c in out] == ["42"]
+    assert len(calls) == 2
+
+
+def test_archive_org_raises_when_every_item_fetch_fails(monkeypatch):
+    # The search request lands, so the cascade knows the query matched
+    # items — it just can't hydrate any of them. `[]` here would claim
+    # Archive.org has nothing, which is the opposite of what happened.
+    def fake_get(url, **_kwargs):
+        if url.startswith(_METADATA_URL):
+            raise TransportError("metadata endpoint down")
+        return _OkResponse({"response": {"docs": [_ARCHIVE_DOC]}})
+
+    _install_fake_transport(monkeypatch, fake_get)
+
+    with pytest.raises(TransportError):
+        get_source("archive_org").search(
+            "ocean waves", SearchFilters(kind="video", per_page=5)
+        )
+
+
+def test_archive_org_returns_empty_when_no_item_has_a_usable_file(monkeypatch):
+    # Every request lands and every item is inspected — the items just
+    # hold nothing playable. That is a real answer, so it stays `[]`.
+    def fake_get(url, **_kwargs):
+        if url.startswith(_METADATA_URL):
+            return _OkResponse({"files": [{"format": "JPEG", "name": "cover.jpg"}]})
+        return _OkResponse({"response": {"docs": [_ARCHIVE_DOC]}})
+
+    _install_fake_transport(monkeypatch, fake_get)
+
+    assert (
+        get_source("archive_org").search(
+            "ocean waves", SearchFilters(kind="video", per_page=5)
+        )
+        == []
+    )
+
+
+def test_pond5_raises_when_the_web_fallback_cannot_run(monkeypatch):
+    def boom(*_args, **_kwargs):
+        raise TransportError("pond5 api down")
+
+    _install_fake_transport(monkeypatch, boom)
+    source = get_source("pond5_pd")
+
+    # The fallback is still a stub, so it reports that it could not run
+    # and the API's error is what the caller has to see.
+    assert source._search_web_fallback("ocean waves", "video", SearchFilters()) is None
+    with pytest.raises(TransportError):
+        source.search("ocean waves", SearchFilters(kind="video", per_page=5))
+
+
+def test_pond5_stays_quiet_when_the_web_fallback_can_run(monkeypatch):
+    # The other half of "raise only when both paths fail": once the
+    # fallback is implemented, an API outage it covers for is not an
+    # error the caller needs to hear about.
+    def boom(*_args, **_kwargs):
+        raise TransportError("pond5 api down")
+
+    _install_fake_transport(monkeypatch, boom)
+    source = get_source("pond5_pd")
+    monkeypatch.setattr(
+        type(source), "_search_web_fallback", lambda *_a, **_k: []
+    )
+
+    assert source.search("ocean waves", SearchFilters(kind="video", per_page=5)) == []

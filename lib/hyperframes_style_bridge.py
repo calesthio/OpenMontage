@@ -57,14 +57,26 @@ def _font(typo: dict[str, Any], key: str, default: str) -> str:
     return default
 
 
-def _motion_easing(motion: dict[str, Any]) -> tuple[str, str]:
-    """Derive (duration, ease) from the playbook motion block."""
-    pace = (motion.get("pace") or "moderate").lower()
-    if pace == "fast":
-        return "0.4s", "cubic-bezier(0.33, 1, 0.68, 1)"
-    if pace == "slow":
-        return "0.9s", "cubic-bezier(0.65, 0, 0.35, 1)"
-    return "0.6s", "cubic-bezier(0.5, 0, 0.5, 1)"
+_FAST_EASE = "cubic-bezier(0.33, 1, 0.68, 1)"
+_SLOW_EASE = "cubic-bezier(0.65, 0, 0.35, 1)"
+_MODERATE_EASE = "cubic-bezier(0.5, 0, 0.5, 1)"
+
+# Keyed by the `identity.pace` enum (schema: slow/deliberate/moderate/fast/rapid).
+# Every enum value must be covered here — an unmapped-but-valid pace would
+# silently collapse to the moderate default.
+_PACE_MOTION = {
+    "rapid": ("0.3s", _FAST_EASE),
+    "fast": ("0.4s", _FAST_EASE),
+    "moderate": ("0.6s", _MODERATE_EASE),
+    "deliberate": ("0.8s", _SLOW_EASE),
+    "slow": ("0.9s", _SLOW_EASE),
+}
+
+
+def _motion_easing(pace: Any) -> tuple[str, str]:
+    """Derive (duration, ease) from the playbook's `identity.pace` value."""
+    key = pace.lower() if isinstance(pace, str) else "moderate"
+    return _PACE_MOTION.get(key, _PACE_MOTION["moderate"])
 
 
 def style_bridge(
@@ -94,6 +106,7 @@ def style_bridge(
         vl = playbook.get("visual_language", {}) or {}
         palette = vl.get("color_palette", {}) or {}
         typo = playbook.get("typography", {}) or {}
+        identity = playbook.get("identity", {}) or {}
         motion = playbook.get("motion", {}) or {}
 
         bg = _first(palette.get("background"), css["--color-bg"])
@@ -104,7 +117,10 @@ def style_bridge(
         surface = _first(palette.get("surface"), css["--color-surface"])
         muted = _first(palette.get("muted_text"), css["--color-muted"])
 
-        duration, ease = _motion_easing(motion)
+        # Pace lives under `identity` in the current schema; older/custom
+        # playbooks placed it under `motion`. Prefer the schema key, fall back
+        # to the legacy location so existing callers keep working.
+        duration, ease = _motion_easing(identity.get("pace") or motion.get("pace"))
 
         css.update(
             {
@@ -115,7 +131,11 @@ def style_bridge(
                 "--color-secondary": secondary,
                 "--color-surface": surface,
                 "--color-muted": muted,
-                "--font-heading": _font(typo, "heading", css["--font-heading"]),
+                # Schema key is `headings` (plural); legacy/custom playbooks used
+                # `heading` (singular). Prefer the schema key, fall back to legacy.
+                "--font-heading": _font(
+                    typo, "headings", _font(typo, "heading", css["--font-heading"])
+                ),
                 "--font-body": _font(typo, "body", css["--font-body"]),
                 "--font-mono": _font(typo, "code", css["--font-mono"]),
                 "--ease-primary": ease,

@@ -47,6 +47,11 @@ Use this skill before calling `comfyui_image`, `comfyui_video`, or `comfyui_musi
 - Fixed nodes are model loaders, VAEs, text encoders, LoRA loaders, schedulers, and graph wiring. Do not mutate those unless the workflow author intended that customization.
 - For community workflows, inspect each loader node and note every required model or custom node before running. Missing models should be handled through the tool's structured `missing_models` payload when available.
 
+### Video workflows need a temporal latent
+
+- A video workflow's empty-latent node must be a **video** latent -- `EmptyHunyuanLatentVideo` for Wan 2.2 t2v, `Wan22ImageToVideoLatent` or `WanImageToVideo` for the image-conditioned variants. The frame count goes in `length`; `batch_size` is how many separate clips to generate and stays at `1`.
+- `EmptyLatentImage` with `batch_size` set to the frame count is a trap: it asks for N unrelated images, and the resulting MP4 has the right frame count, duration and codec and passes `ffprobe` cleanly -- it just strobes. Check the latent node before running any unfamiliar video workflow.
+
 ## Model and LoRA Setup
 
 - Use ComfyUI Manager or the workflow author's model links when available, and respect model licenses.
@@ -66,6 +71,7 @@ Use this skill before calling `comfyui_image`, `comfyui_video`, or `comfyui_musi
 - If models are missing, read `data.missing_models[]`; each item should include the file name, role, destination hint, and download URL when OpenMontage knows it.
 - If custom nodes are missing, ask the user to install them through ComfyUI Manager or the workflow author's documented install path, then restart ComfyUI.
 - If a long render times out locally, check ComfyUI history before retrying from scratch; the server may still have completed the prompt -- or just call again with `resume_prompt_id` set to the `prompt_id` from the timeout error.
+- `comfyui_video` checks the clip it produced and reports `data.coherence` with the mean adjacent-frame difference and its coefficient of variation. A `STROBING_STILLS` verdict fails the call: the file is structurally valid but its frames are unrelated, which almost always means the workflow's latent node is an image latent rather than a temporal one. Fix the workflow rather than retrying with a new seed -- every seed will fail the same way.
 
 ## Music (`comfyui_music`)
 

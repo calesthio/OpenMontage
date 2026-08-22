@@ -72,11 +72,12 @@
     }
   },
   "11": {
-    "class_type": "EmptyLatentImage",
+    "class_type": "EmptyHunyuanLatentVideo",
     "inputs": {
       "width": 832,
       "height": 480,
-      "batch_size": 81
+      "length": 81,
+      "batch_size": 1
     }
   },
   "12": {

@@ -1217,6 +1217,16 @@ the ComfyUI machine. MiniMax H3 is available as an official open-weight local
 workflow; pass the official workflow exported in API format using
 `workflow_json` or `workflow_path`, plus its `output_node`.
 
+Local video generations are checked for frame coherence before they are
+reported as successful. The result carries `data.coherence` (mean
+adjacent-frame difference, its coefficient of variation, and a verdict), and a
+`STROBING_STILLS` verdict fails the call: the output is a structurally valid
+MP4 whose frames are unrelated stills rather than motion. That is what a video
+workflow produces when its empty-latent node is an image latent
+(`EmptyLatentImage`) instead of a temporal one (`EmptyHunyuanLatentVideo` and
+friends), so it is a workflow bug rather than a bad seed. The check is skipped,
+rather than failing the call, when `numpy` or `ffmpeg` is unavailable.
+
 The MiniMax H3 local stack includes the pruned INT8 diffusion model, Qwen3-VL
 text encoder, video VAE, and audio VAE. OpenMontage exposes the official
 download URLs and destination folders in tool metadata rather than silently

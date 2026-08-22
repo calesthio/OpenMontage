@@ -176,6 +176,60 @@ def test_t2v_workflow_has_templated_nodes():
     assert "16" in w  # SaveVideo (output)
 
 
+def test_t2v_workflow_latent_is_temporal_not_an_image_batch():
+    """A video model needs a video latent. This is not pedantry.
+
+    Node 11 was an ``EmptyLatentImage`` with ``batch_size`` set to the frame
+    count from the workflow's first commit until it was found by inspection.
+    That asks for N unrelated images rather than one N-frame video, and the
+    resulting mp4 has the right frame count, the right duration, the right
+    codec and a clean ffprobe -- it just strobes. Every structural test in this
+    file passed the whole time, because they checked that nodes existed rather
+    than what they were.
+
+    ComfyUI's own ``video_wan2_2_14B_t2v`` template uses
+    ``EmptyHunyuanLatentVideo``; the i2v sibling in this directory has always
+    used ``WanImageToVideo`` correctly.
+    """
+    with open(WORKFLOW_DIR / "wan22-t2v-4step.json") as f:
+        w = json.load(f)
+    latent = w["11"]
+    assert latent["class_type"] != "EmptyLatentImage", (
+        "node 11 is an image latent; output will be unrelated stills that "
+        "strobe inside a structurally valid mp4"
+    )
+    assert latent["class_type"] in {
+        "EmptyHunyuanLatentVideo",
+        "Wan22ImageToVideoLatent",
+        "WanImageToVideo",
+    }, f"unexpected latent node {latent['class_type']!r}"
+    inputs = latent["inputs"]
+    assert "length" in inputs, "a temporal latent carries the frame count in `length`"
+    assert inputs["length"] > 1, "a single-frame latent is not a video"
+    assert inputs.get("batch_size", 1) == 1, (
+        "batch_size is how many separate clips to generate, not how many "
+        "frames each has -- setting it to the frame count is the original bug"
+    )
+
+
+def test_t2v_builder_patches_frame_count_into_length_not_batch_size():
+    """The builder must not put the frame count back where it does not belong.
+
+    Fixing the workflow alone is not enough: ``_build_t2v`` patches node 11 on
+    every call, so a builder still writing ``batch_size: num_frames`` would
+    reintroduce the bug against a corrected workflow.
+    """
+    from tools.video.comfyui_video import ComfyUIVideo
+
+    workflow, _ = ComfyUIVideo()._build_t2v(
+        {"prompt": "x", "width": 832, "height": 480, "num_frames": 81},
+        seed=1,
+        output_path=Path("out.mp4"),
+    )
+    assert workflow["11"]["inputs"]["length"] == 81
+    assert workflow["11"]["inputs"]["batch_size"] == 1
+
+
 def test_t2v_workflow_uses_14b_compatible_vae():
     with open(WORKFLOW_DIR / "wan22-t2v-4step.json") as f:
         w = json.load(f)

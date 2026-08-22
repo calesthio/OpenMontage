@@ -76,6 +76,7 @@ Each tool's `agent_skills[]` field bridges Layer 1 → Layer 3. See `skills/INDE
 | `tools/graphics/threejs_asset_catalog.py` | CC0 GLTF/GLB catalog acquisition, inventory, and provenance for production-fidelity world builds |
 | `tools/graphics/atlas_3d.py` | Atlas Cloud Tripo H3.1 text-to-3D for unique textured/PBR GLB assets |
 | `tools/graphics/fal_3d.py` | fal.ai Hunyuan 3D and SAM 3D routes for image-conditioned and multi-object GLB generation |
+| `tools/graphics/hunyuan_cloud_3d.py` | Tencent Hunyuan Cloud hy-3d-3.1 text/image/multi-view-to-3D via the TokenHub API (submit + poll + download) |
 | `tools/graphics/blender_world.py` | Blender 4.5 LTS production world assembly, terrain, lighting, camera, and Eevee Next rendering |
 | `tools/character/character_animation.py` | Local character-animation tools — character specs, SVG rig plans, pose libraries, action timelines, HyperFrames packages, and QA reports |
 | `lib/hyperframes_style_bridge.py` | Playbook → CSS custom properties + `DESIGN.md` bridge for HyperFrames workspaces |

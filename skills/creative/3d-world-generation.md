@@ -17,7 +17,7 @@ Use this Layer 2 skill when an animation or cinematic project needs a real, cont
 | proposal | Record world promise, explicit-vs-inferred policy, fidelity tier, and either the browser-native Three.js/HyperFrames route or production Blender/FFmpeg route. |
 | script | Use beats or sparse titles; narration is optional. |
 | scene_plan | Define global, regional, and walk-level camera beats in one continuous coordinate system. |
-| assets | Install/inventory repeated assets with `threejs_asset_catalog`; sample unique hero assets with `atlas_3d` or `fal_3d`; assemble and render global/regional/walk stills with `blender_world`; register meshes as `type="3d_asset"` and the editable world spec/`.blend` as `type="3d_world"`. |
+| assets | Install/inventory repeated assets with `threejs_asset_catalog`; sample unique hero assets with `atlas_3d`, `fal_3d`, or `hunyuan_cloud_3d`; assemble and render global/regional/walk stills with `blender_world`; register meshes as `type="3d_asset"` and the editable world spec/`.blend` as `type="3d_world"`. |
 | assets review | Produce semantic/wireframe diagnostics and representative snapshots; log bounded refinement issues. |
 | edit | Carry camera times without changing region IDs or seed. |
 | compose | Browser-native: call `video_compose` on the authored HyperFrames workspace. Production Blender: render a numbered PNG sequence with resume enabled, then let `video_compose`/FFmpeg package frames and audio without pretending FFmpeg generated the motion. |

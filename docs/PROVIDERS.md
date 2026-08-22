@@ -68,8 +68,8 @@ HEYGEN_API_KEY=              # HeyGen avatar video gateway
 RUNWAY_API_KEY=              # Runway native + Seedance 2.5, Gemini Omni, MiniMax H3
 SUNO_API_KEY=                # Suno music generation
 
-# TENCLOUD HUNYUAN VIDEO
-TENCENT_TOKENHUB_API_KEY=    # Tencent Hunyuan cloud video via TokenHub API
+# TENCLOUD HUNYUAN
+TENCENT_TOKENHUB_API_KEY=    # Tencent Hunyuan cloud video + 3D (hy-3d-3.1) via TokenHub API
 
 # LOCAL (no keys needed — just GPU + install)
 VIDEO_GEN_LOCAL_ENABLED=     # Set to "true" for local video gen
@@ -651,6 +651,114 @@ Tencent TokenHub uses a credit-based pricing system (1 credit = 1.2 RMB ≈ $0.1
 | YT-Video-2.0 | 720p / 1080p | 5 | ~$0.83 |
 
 > **Free tier:** Tencent occasionally offers new-user credits for TokenHub. Check the [TokenHub console](https://console.cloud.tencent.com/tokenhub) for current promotions.
+
+---
+
+### Tencent Hunyuan Cloud — 3D Generation
+
+> **Tencent Hunyuan (腾讯混元) 3D asset generation via TokenHub API.** Generates
+> textured/PBR GLB meshes from text, a single image, or up to eight multi-view
+> images using the Tencent TokenHub OpenAI-compatible gateway with Bearer-token
+> authentication — the same key as `hunyuan_cloud_video`. No TC3-HMAC-SHA256
+> signing required.
+
+**Tools unlocked:** `hunyuan_cloud_3d`
+**Env var:** `TENCENT_TOKENHUB_API_KEY`
+
+#### Setup
+
+Same TokenHub key as video/image generation:
+
+1. Go to the [Tencent Cloud TokenHub console](https://console.cloud.tencent.com/tokenhub).
+2. Create an application or navigate to the **API Key** section.
+3. Generate an API key and copy its value.
+4. Add to `.env`:
+   ```bash
+   TENCENT_TOKENHUB_API_KEY=your-tokenhub-api-key
+   ```
+
+#### Model Support
+
+Only the **`hy-3d-3.1`** professional model is supported. Operations:
+
+| Operation | Input | Notes |
+|-----------|-------|-------|
+| `text_to_3d` | Prompt (max 1024 UTF-8 chars) | Chinese-friendly; prompt and image are mutually exclusive |
+| `image_to_3d` | One front-view image (URL or local path), optionally + up to 7 `multi_view_images` | Max 8MB, 128–5000px per side, jpg/png/jpeg/webp; views: `left`, `right`, `back`, `top`, `bottom`, `left_front`, `right_front`; encoded total ≤8MB |
+
+`generate_type`: **Normal** (textured geometry, default) or **Geometry**
+(untextured white model). `LowPoly` and `Sketch` are 3.0-only and rejected.
+`enable_pbr` adds PBR materials; `face_count` targets 3000–1500000 triangles.
+`result_format` may add one of STL/USDZ/FBX — OBJ and GLB are always returned
+(GLB only for `Geometry`).
+
+#### API Notes
+
+TokenHub uses a **submit-then-poll** pattern mirroring the native Tencent
+Cloud actions `SubmitHunyuanTo3DProJob` / `QueryHunyuanTo3DProJob`
+(parameters snake_cased):
+
+```text
+# Submit a generation task
+POST https://tokenhub.tencentmaas.com/v1/api/3d/submit
+Authorization: Bearer ${TENCENT_TOKENHUB_API_KEY}
+Body: {"model": "hy-3d-3.1", "prompt": "一只小猫", ...}
+
+# Poll for results
+POST https://tokenhub.tencentmaas.com/v1/api/3d/query
+Authorization: Bearer ${TENCENT_TOKENHUB_API_KEY}
+Body: {"model": "hy-3d-3.1", "id": "<job id>"}
+```
+
+Completed jobs return a `data` array of `{type, url, preview_image_url}`
+entries (typically `obj` and `glb`). The `obj` entry arrives as a ZIP
+package (obj + mtl + textures), which the tool detects by magic bytes and
+extracts into `<stem>-pkg/`; the GLB is written to `output_path`. The tool
+records preview URLs and the `job_id` in a `.provenance.json` manifest, and
+reports the credits the API consumed.
+
+References:
+- TokenHub 3D guide: <https://cloud.tencent.com/document/product/1823/130082>
+- Submit action: <https://cloud.tencent.com/document/api/1804/123447>
+- Query action: <https://cloud.tencent.com/document/api/1804/123448>
+
+#### Fallback Tools
+
+If `hunyuan_cloud_3d` returns an error, the agent may retry with: `fal_3d`, `atlas_3d`
+
+#### Pricing
+
+Per-job credits, per the [混元生3D 计费概述](https://cloud.tencent.com.cn/document/product/1804/123461).
+Post-paid price is **1 credit = 0.12 RMB** (settled daily, see
+[TokenHub 计费方式](https://cloud.tencent.com.cn/document/product/1823/130054) and
+[模型价格](https://cloud.tencent.com.cn/document/product/1823/130055)):
+
+> **3D credits are a separate system from other TokenHub models.** The
+> 0.12 RMB credit applies only to the Hunyuan 3D models. HY/YT video models
+> use a different credit unit (1.0 RMB/credit), and image models bill by
+> tokens (10 RMB per million tokens, settled hourly). Per the
+> [模型价格](https://cloud.tencent.com.cn/document/product/1823/130055) doc,
+> credits of different model families are calculated and consumed
+> independently (不互通) — do not reuse the video tool's credit price when
+> estimating 3D costs.
+
+| Feature | Credits | Est. RMB | Est. USD |
+|---------|---------|----------|----------|
+| Normal (textured) generation | 20 | ¥2.40 | ~$0.33 |
+| Geometry (white model) | 15 | ¥1.80 | ~$0.25 |
+| Multi-view images | +10 | +¥1.20 | ~$0.17 |
+| PBR materials (`enable_pbr`) | +10 | +¥1.20 | ~$0.17 |
+| Explicit face count | +10 | +¥1.20 | ~$0.17 |
+| Extra result format | +5 | +¥0.60 | ~$0.08 |
+
+Typical jobs: Normal text/image-to-3D ≈ $0.33; with PBR ≈ $0.50; the 3.1
+model's full combo (Normal + multi-view + PBR + face count + format) ≈ $0.92.
+Failed jobs are never billed, and the API returns the consumed credits per job.
+
+Prepaid credit packs discount the per-credit price to 0.09–0.10 RMB, and new
+users can claim a 100-credit free package in the console. Check the
+[TokenHub console](https://console.cloud.tencent.com/tokenhub) for current
+promotions before quoting a batch.
 
 ---
 
@@ -1430,7 +1538,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **Higgsfield** | `HIGGSFIELD_API_KEY` + `HIGGSFIELD_API_SECRET` | `higgsfield_video` | Subscription ($15-84/mo) |
 | **HeyGen** | `HEYGEN_API_KEY` | `heygen_video` | Pay-as-you-go |
 | **Suno** | `SUNO_API_KEY` | `suno_music` | Pay-as-you-go |
-| **Tencent Hunyuan** | `TENCENT_TOKENHUB_API_KEY` | `hunyuan_cloud_video` | Pay-as-you-go (~$0.25–0.83/gen) |
+| **Tencent Hunyuan** | `TENCENT_TOKENHUB_API_KEY` | `hunyuan_cloud_video`, `hunyuan_cloud_3d` | Pay-as-you-go (video ~$0.25–0.83/gen; 3D ~$0.25–0.92/model) |
 | **Local GPU** | `VIDEO_GEN_LOCAL_ENABLED` | `wan_video`, `hunyuan_video`, `cogvideo_video`, `ltx_video_local` | Free (GPU required) |
 | **Local Diffusion** | — (install only) | `local_diffusion` | Free (GPU required) |
 | **Modal** | `MODAL_LTX2_ENDPOINT_URL` | `ltx_video_modal` | Self-hosted cloud |
@@ -1448,6 +1556,7 @@ How many providers cover each capability:
 | **Video Generation** | Grok, Kling Official, fal.ai, Seedance via Volcengine Ark, Runway, Veo, Gemini Omni, Higgsfield, MiniMax, HeyGen, Tencent Hunyuan, ComfyUI Partner Nodes | WAN, Hunyuan, CogVideo, LTX, ComfyUI WAN, ComfyUI MiniMax H3 | Pexels, Pixabay (stock) |
 | **Text-to-Speech** | Azure AI Speech, ElevenLabs, fish.audio, Google TTS, Kling Official, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier, Azure free tier, fish.audio s2.1-pro-free |
 | **Music Generation** | ElevenLabs, Suno, Google Lyria | — | ElevenLabs free tier |
+| **3D Asset Generation** | Atlas Cloud, fal.ai, Tencent Hunyuan | Blender (assembly) | CC0 catalogs (`threejs_asset_catalog`) |
 | **Post-Production** | — | FFmpeg (compose, stitch, trim, mix, enhance, grade) | All free |
 | **Analysis** | — | WhisperX, Scene Detect, Frame Sampler, CLIP/BLIP-2 | All free |
 | **Enhancement** | — | Upscale, BG Remove, Face Enhance, Face Restore | All free |

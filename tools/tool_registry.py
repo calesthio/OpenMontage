@@ -59,6 +59,7 @@ class ToolRegistry:
     def __init__(self) -> None:
         self._tools: dict[str, BaseTool] = {}
         self._discovered_packages: set[str] = set()
+        self._mcp_warnings: list[str] = []
 
     def register(self, tool: BaseTool) -> None:
         """Register a tool instance."""
@@ -78,6 +79,10 @@ class ToolRegistry:
             if cls is BaseTool or not issubclass(cls, BaseTool):
                 continue
             if cls.__module__ != module.__name__ or inspect.isabstract(cls):
+                continue
+            if getattr(cls, "_registry_managed", False):
+                # Dynamic/managed base classes (e.g. MCPTool) are instantiated
+                # only by their factories, never auto-registered here.
                 continue
             tool = cls()
             self.register(tool)
@@ -132,7 +137,16 @@ class ToolRegistry:
             discovered.extend(self.register_module(module))
 
         self._discovered_packages.add(package_name)
+        try:
+            self.discover_mcp()
+        except Exception as exc:  # never break core tool discovery
+            self._mcp_warnings.append(f"mcp discovery error: {exc}")
         return discovered
+
+    def discover_mcp(self) -> None:
+        """Register MCP-backed provider tools (deterministic, cached, non-fatal)."""
+        from tools.mcp.mcp_registry import sync_mcp_servers
+        sync_mcp_servers(self)
 
     def ensure_discovered(self, package_name: str = "tools") -> None:
         """Load tool modules once before reporting capabilities."""
@@ -501,6 +515,8 @@ class ToolRegistry:
                     runtime_warnings.append(
                         f"{entry.get('name')}: {entry.get('resource_profile_note')}"
                     )
+
+        runtime_warnings = [*runtime_warnings, *getattr(self, "_mcp_warnings", [])]
 
         result = {
             "composition_runtimes": comp_runtimes,

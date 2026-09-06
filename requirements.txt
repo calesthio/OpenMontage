@@ -18,3 +18,4 @@ watchfiles>=0.21
 
 websockets>=14.0       # Eleven v4 Turbo and realtime audio transports
 pythainlp>=5.0         # Thai word segmentation for karaoke captions
+mcp>=2.0,<3            # Model Context Protocol client + MCPServer

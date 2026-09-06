@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openmontage.dev/schemas/mcp_servers.schema.json",
+  "title": "mcp_servers.yaml",
+  "type": "object",
+  "properties": {
+    "mcp": {
+      "type": "object",
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "list_on_boot": {"type": "boolean"},
+        "servers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["transport"],
+            "properties": {
+              "transport": {"enum": ["stdio", "http"]},
+              "command": {"type": "string"},
+              "args": {"type": "array", "items": {"type": "string"}},
+              "url": {"type": "string"},
+              "auth_token_env": {"type": "string"},
+              "timeout_seconds": {"type": "number"},
+              "tools": {
+                "type": ["object", "null"],
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "capability": {"type": "string"},
+                    "cost_usd": {"type": "number"},
+                    "agent_skills": {"type": "array", "items": {"type": "string"}},
+                    "model": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

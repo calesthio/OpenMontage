@@ -38,6 +38,10 @@ printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocol
 Grok is configured in `.grok/config.toml` as `mcp_servers.circuit-video`.
 Reload with `/mcps` → `r`.
 
+Claude Code picks it up automatically from the repo-root `.mcp.json`
+(project-scoped, server name `circuit-video`). Start `claude` from the repo
+root, approve the project server when prompted, and check with `/mcp`.
+
 ## S3
 
 The k8s worker still uploads to **MinIO**. This MCP uploads to **AWS S3** using

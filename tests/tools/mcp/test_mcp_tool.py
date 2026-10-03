@@ -72,6 +72,36 @@ def test_managed_not_registered_by_register_module():
     assert getattr(MCPTool, "_registry_managed", False) is True
 
 
+def test_execute_is_error_with_artifacts_returns_failure(fake_server_config, tmp_path):
+    """is_error is authoritative: even an error result carrying media must fail."""
+    from pathlib import Path
+
+    from mcp.types import CallToolResult, TextContent
+
+    from tools.mcp.mcp_client import MCPClient
+    from tools.mcp.mcp_config import McpToolOverride
+    from tools.mcp.mcp_tool import build_mcp_tools
+
+    cfg = fake_server_config
+    cfg.tools["generate_image_t2i_zit"] = McpToolOverride(capability="image_generation")
+    client = MCPClient(cfg)
+    try:
+        instances = build_mcp_tools(cfg, client.list_tools())
+        instance = instances[0]
+        # Error response that nonetheless ships an image block.
+        instance._client.call_tool = lambda *a, **k: CallToolResult(
+            content=[TextContent(type="text", text="boom"), _image_block()],
+            is_error=True,
+        )
+        result = instance.execute({"prompt": "x", "output_path": str(tmp_path / "err.png")})
+        assert result.success is False
+        assert "boom" in result.error
+        assert result.artifacts  # diagnostic artifact retained, not treated as success
+        assert Path(result.artifacts[0]).exists()
+    finally:
+        client.close()
+
+
 def test_execute_writes_png(fake_server_config, tmp_path):
     from pathlib import Path
 

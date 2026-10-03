@@ -58,9 +58,9 @@ class MCPCall(BaseTool):
             data["text"] = "\n".join(texts)
         if structured is not None:
             data["raw"] = structured
-        if getattr(result, "is_error", False) and not artifacts:
+        if getattr(result, "is_error", False):
             data["error"] = "\n".join(texts) or "remote tool reported an error"
-            return ToolResult(success=False, data=data,
+            return ToolResult(success=False, data=data, artifacts=artifacts,
                               duration_seconds=round(time.monotonic() - start, 2))
         return ToolResult(success=True, data=data, artifacts=artifacts,
                           duration_seconds=round(time.monotonic() - start, 2))

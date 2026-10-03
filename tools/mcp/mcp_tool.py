@@ -182,9 +182,10 @@ class MCPTool(BaseTool):
             return ToolResult(success=False, error=f"MCP call to {self.name} failed: {_redact(str(exc))}")
 
         artifacts, texts, structured = extract_outputs(result, output_path)
-        if getattr(result, "is_error", False) and not artifacts:
+        if getattr(result, "is_error", False):
             message = "\n".join(texts) or "remote tool reported an error"
-            return ToolResult(success=False, error=message, duration_seconds=round(time.monotonic() - start, 2))
+            return ToolResult(success=False, error=message, artifacts=artifacts,
+                              duration_seconds=round(time.monotonic() - start, 2))
 
         model = self._override.model or self._tool.name
         data: dict[str, Any] = {

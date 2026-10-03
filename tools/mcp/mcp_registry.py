@@ -10,7 +10,7 @@ from typing import Any
 
 from tools.mcp.mcp_client import MCPClient
 from tools.mcp.mcp_config import McpServerConfig, load_mcp_config
-from tools.mcp.mcp_tool import _tool_slug, build_mcp_tools
+from tools.mcp.mcp_tool import MCPTool, _tool_slug, build_mcp_tools
 
 _CACHE_ROOT = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "openmontage" / "mcp"
 
@@ -90,14 +90,27 @@ def _warn(registry, message: str) -> None:
         warnings.append(message)
 
 
+def _generated_mcp_tools(registry) -> dict:
+    """Only bridge-generated MCPTool instances.
+
+    Cleanup must never touch the built-in ``mcp_catalog`` / ``mcp_call``
+    tools: they share the ``mcp_`` name prefix but are ordinary BaseTool
+    subclasses auto-registered by the registry. Discriminate by type, not
+    prefix, so discovery/raw-call tools survive every sync.
+    """
+    return {
+        name: tool for name, tool in getattr(registry, "_tools", {}).items()
+        if isinstance(tool, MCPTool)
+    }
+
+
 def _drop_mcp_tools(registry) -> None:
-    for name in list(getattr(registry, "_tools", {})):
-        if name.startswith("mcp_"):
-            registry._tools.pop(name, None)
+    for name in list(_generated_mcp_tools(registry)):
+        registry._tools.pop(name, None)
 
 
 def _drop_stale_mcp_tools(registry, cfg) -> None:
     desired = {f"mcp_{s.slug}_{_tool_slug(name)}" for s in cfg.servers for name in s.frozen_tool_names}
-    for name in list(getattr(registry, "_tools", {})):
-        if name.startswith("mcp_") and name not in desired:
+    for name in list(_generated_mcp_tools(registry)):
+        if name not in desired:
             registry._tools.pop(name, None)

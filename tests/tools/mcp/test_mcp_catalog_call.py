@@ -57,6 +57,23 @@ def test_call_unknown_server(monkeypatch, tmp_path):
     assert result.success is False
 
 
+def test_call_is_error_with_artifacts_returns_failure(monkeypatch, tmp_path):
+    """MCPCall must fail on is_error even when an error response ships media."""
+    from mcp.types import CallToolResult, TextContent
+
+    from tools.mcp.mcp_client import MCPClient
+
+    _env(monkeypatch, tmp_path, {})
+
+    def _error_call(self, name, arguments):
+        return CallToolResult(content=[TextContent(type="text", text="boom")], is_error=True)
+
+    monkeypatch.setattr(MCPClient, "call_tool", _error_call)
+    result = MCPCall().execute({"server": "fake", "tool": "expand_prompt", "arguments": {}})
+    assert result.success is False
+    assert result.data["error"] == "boom"
+
+
 def test_call_strips_reserved_keys():
     # RESERVED_KEYS must never be forwarded to a remote tool.
     assert "output_path" in RESERVED_KEYS

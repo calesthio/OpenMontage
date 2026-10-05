@@ -94,6 +94,18 @@ def main() -> int:
     brief["topic"] = "The Last Lighthouse"
     cp("research", "completed", {"research_brief": brief})
 
+    # proposal gates first: awaiting_human -> approved
+    cp("proposal", "in_progress", {})
+    from tests.contracts.test_phase0_contracts import sample_artifact
+    proposal = sample_artifact("proposal_packet")
+    proposal["selected_concept"]["rationale"] = "Simulation chooses the strongest research-backed angle."
+    save_artifact("proposal", proposal)
+    cp("proposal", "awaiting_human", {"proposal_packet": proposal},
+       review={"round": 1, "decision": "pass", "critical": 0, "suggestions": 1,
+               "nitpicks": 0, "summary": "Concept is clear; move to script."})
+    time.sleep(wait)
+    cp("proposal", "completed", {"proposal_packet": proposal}, human_approved=True)
+
     # script gates: awaiting_human -> approved
     cp("script", "in_progress", {})
     save_artifact("script", art["script"])

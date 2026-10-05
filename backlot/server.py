@@ -10,14 +10,32 @@ from __future__ import annotations
 import asyncio
 import json
 import time
+import sys
 from contextlib import asynccontextmanager, suppress
 from pathlib import Path
+from datetime import datetime, timezone
+import re
+import unicodedata
 from typing import Optional
+
+# The Hermes desktop injects its own site-packages ahead of this project’s
+# venv. Force the local OpenMontage venv to the front so Backlot uses the
+# matching FastAPI/Pydantic wheels instead of mixing environments.
+_LOCAL_SITE_PACKAGES = Path(__file__).resolve().parent.parent / ".venv" / "Lib" / "site-packages"
+if _LOCAL_SITE_PACKAGES.is_dir():
+    local_site = str(_LOCAL_SITE_PACKAGES)
+    try:
+        sys.path.remove(local_site)
+    except ValueError:
+        pass
+    sys.path.insert(0, local_site)
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
+from lib.checkpoint import init_project, read_checkpoint, write_checkpoint
+from lib.pipeline_loader import list_pipelines
 from backlot.state import PROJECTS_DIR, REPO_ROOT, list_projects, load_board_state, summarize_project
 
 UI_DIR = Path(__file__).resolve().parent / "ui"
@@ -175,6 +193,105 @@ def create_app() -> FastAPI:
     async def projects() -> list:
         return await asyncio.to_thread(_cached_summaries)
 
+    @app.get("/api/pipelines")
+    async def pipelines() -> list[str]:
+        return await asyncio.to_thread(list_pipelines)
+
+    @app.post("/api/projects/create")
+    async def create_project(request: Request) -> dict:
+        payload = await request.json()
+        prompt = str(payload.get("prompt") or "").strip()
+        if not prompt:
+            raise HTTPException(status_code=400, detail="prompt is required")
+
+        pipeline_type = str(payload.get("pipeline_type") or "animated-explainer")
+        if pipeline_type not in list_pipelines():
+            raise HTTPException(status_code=400, detail=f"unknown pipeline_type: {pipeline_type}")
+
+        style_playbook = str(payload.get("style_playbook") or "clean-professional").strip() or None
+        title = str(payload.get("title") or prompt.splitlines()[0]).strip() or "Untitled video"
+
+        slug = _slugify(title)
+        project_id = await asyncio.to_thread(_unique_project_id, slug)
+        await asyncio.to_thread(
+            init_project,
+            project_id,
+            title=title,
+            pipeline_type=pipeline_type,
+            style_playbook=style_playbook,
+            pipeline_dir=PROJECTS_DIR,
+        )
+
+        research_brief = _prompt_to_research_brief(prompt, title)
+        await asyncio.to_thread(
+            write_checkpoint,
+            PROJECTS_DIR,
+            project_id,
+            "research",
+            "awaiting_human",
+            {"research_brief": research_brief},
+            pipeline_type=pipeline_type,
+        )
+
+        _invalidate_summary(project_id)
+        hub.publish(project_id)
+        return {
+            "project_id": project_id,
+            "project_url": f"/p/{project_id}",
+            "pipeline_type": pipeline_type,
+            "title": title,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+    @app.post("/api/project/{project_id}/stage/{stage}/review")
+    async def review_stage(project_id: str, stage: str, request: Request) -> dict:
+        _safe_project_dir(project_id)
+        checkpoint = await asyncio.to_thread(read_checkpoint, PROJECTS_DIR, project_id, stage)
+        if checkpoint is None:
+            raise HTTPException(status_code=404, detail=f"unknown stage: {stage}")
+        if checkpoint.get("status") != "awaiting_human":
+            raise HTTPException(status_code=409, detail=f"stage {stage} is not awaiting human review")
+
+        payload = await request.json()
+        action = str(payload.get("action") or "").strip().lower()
+        note = str(payload.get("message") or "").strip() or None
+        if action not in {"approve", "request_changes"}:
+            raise HTTPException(status_code=400, detail="action must be approve or request_changes")
+
+        review = dict(checkpoint.get("review") or {})
+        if note:
+            review["user_message"] = note
+        review["decision"] = "pass" if action == "approve" else "changes_requested"
+
+        status = "completed" if action == "approve" else "awaiting_human"
+        human_approved = action == "approve"
+        await asyncio.to_thread(
+            write_checkpoint,
+            PROJECTS_DIR,
+            project_id,
+            stage,
+            status,
+            checkpoint.get("artifacts") or {},
+            pipeline_type=checkpoint.get("pipeline_type"),
+            style_playbook=checkpoint.get("style_playbook"),
+            human_approval_required=bool(checkpoint.get("human_approval_required")),
+            human_approved=human_approved,
+            review=review,
+            cost_snapshot=checkpoint.get("cost_snapshot"),
+            metadata=checkpoint.get("metadata"),
+        )
+
+        _invalidate_summary(project_id)
+        hub.publish(project_id)
+        return {
+            "ok": True,
+            "project_id": project_id,
+            "stage": stage,
+            "status": status,
+            "next_stage": None,
+            "message": note,
+        }
+
     @app.get("/api/project/{project_id}/state")
     async def project_state(project_id: str) -> dict:
         project_dir = _safe_project_dir(project_id)
@@ -316,6 +433,87 @@ def _safe_project_dir(project_id: str) -> Path:
     if not project_dir.is_dir():
         raise HTTPException(status_code=404, detail=f"unknown project: {project_id}")
     return project_dir
+
+
+def _slugify(text: str) -> str:
+    normalized = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
+    slug = re.sub(r"[^a-zA-Z0-9]+", "-", normalized).strip("-").lower()
+    return (slug[:48] or "video").strip("-") or "video"
+
+
+def _unique_project_id(base: str) -> str:
+    candidate = base
+    suffix = 1
+    while (PROJECTS_DIR / candidate).exists():
+        suffix += 1
+        candidate = f"{base}-{suffix}"
+    return candidate
+
+
+def _prompt_to_research_brief(prompt: str, title: str) -> dict:
+    today = datetime.now(timezone.utc).date().isoformat()
+    snippet = prompt.replace("\n", " ").strip()
+    snippet = snippet[:180] + ("…" if len(snippet) > 180 else "")
+    return {
+        "version": "1.0",
+        "topic": title,
+        "research_date": today,
+        "landscape": {
+            "existing_content": [
+                {"title": "Reference 1", "source": "manual", "angle": "overview", "what_it_covers": snippet or title},
+                {"title": "Reference 2", "source": "manual", "angle": "contrast", "what_it_covers": "Different visual treatment for the same topic"},
+                {"title": "Reference 3", "source": "manual", "angle": "short-form", "what_it_covers": "Hook-first version of the idea"},
+            ],
+            "saturated_angles": ["generic explainer", "standard promo"],
+            "underserved_gaps": ["more specific hook", "clearer visual progression"],
+        },
+        "data_points": [
+            {"claim": title, "source_url": "https://example.com/brief", "credibility": "secondary_source"},
+            {"claim": "Prompt entered from the Backlot start page", "source_url": "https://example.com/ui", "credibility": "anecdotal"},
+            {"claim": "Use the prompt as the creative brief for the first production pass", "source_url": "https://example.com/workflow", "credibility": "anecdotal"},
+        ],
+        "audience_insights": {
+            "common_questions": [
+                "What exactly should the video show?",
+                "What style best matches the prompt?",
+                "How long should the final cut be?",
+            ],
+            "misconceptions": [
+                {"myth": "A prompt is enough without a production brief", "reality": "The pipeline still needs a clear topic, style, and duration target."},
+            ],
+            "knowledge_level": "unknown",
+        },
+        "angles_discovered": [
+            {
+                "name": "Direct answer",
+                "hook": f"{title}: the fastest way to make the idea visible.",
+                "type": "narrative",
+                "why_now": "Best for immediate production start",
+                "grounded_in": ["manual_input"],
+            },
+            {
+                "name": "High-energy version",
+                "hook": "Turn the idea into a punchy short-form video.",
+                "type": "data_driven",
+                "why_now": "Best when the user wants a quick output",
+                "grounded_in": ["manual_input"],
+            },
+            {
+                "name": "Cinematic version",
+                "hook": "Build the prompt into a mood-led cut.",
+                "type": "narrative",
+                "why_now": "Best when visuals and pacing matter most",
+                "grounded_in": ["manual_input"],
+            },
+        ],
+        "sources": [
+            {"url": "https://example.com/brief", "title": "User prompt", "used_for": "topic"},
+            {"url": "https://example.com/ui", "title": "Backlot start page", "used_for": "workflow"},
+            {"url": "https://example.com/workflow", "title": "OpenMontage start flow", "used_for": "production"},
+            {"url": "https://example.com/reference-1", "title": "Reference 1", "used_for": "angle"},
+            {"url": "https://example.com/reference-2", "title": "Reference 2", "used_for": "angle"},
+        ],
+    }
 
 
 def _sse(payload: dict) -> str:

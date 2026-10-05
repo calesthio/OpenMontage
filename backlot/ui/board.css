@@ -612,6 +612,58 @@ aside .panel:nth-of-type(1) { animation-delay: .32s } aside .panel:nth-of-type(2
   color: var(--text-2); font-size: calc(11.5px * var(--fs-scale)); line-height: 1.5;
 }
 .approval-review-note b { color: var(--amber); font-size: calc(9px * var(--fs-scale)); }
+.approval-composer {
+  margin: 18px 26px 0;
+  padding: 14px 14px 12px;
+  border: 1px solid color-mix(in srgb, var(--amber) 34%, var(--border-soft));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface-2) 82%, var(--amber) 6%);
+}
+.approval-composer-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--amber);
+  font-family: var(--mono);
+  font-size: calc(9px * var(--fs-scale));
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+.approval-reply {
+  width: 100%; min-height: 96px; resize: vertical;
+  padding: 12px 13px; border-radius: 9px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text); font: inherit;
+  line-height: 1.5; outline: none;
+}
+.approval-reply:focus-visible {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 2px rgba(240, 168, 60, .14);
+}
+.approval-composer-actions {
+  display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;
+  margin-top: 10px;
+}
+.approval-composer-actions button {
+  border-radius: 999px; padding: 8px 12px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-2); font: inherit; letter-spacing: .08em;
+  cursor: pointer;
+}
+.approval-composer-actions button:disabled { opacity: .65; cursor: wait; }
+.approval-composer-actions .approval-approve {
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 55%, var(--border));
+  background: color-mix(in srgb, var(--green) 10%, var(--surface));
+}
+.approval-composer-actions .approval-request {
+  color: var(--amber);
+  border-color: color-mix(in srgb, var(--amber) 55%, var(--border));
+  background: color-mix(in srgb, var(--amber) 8%, var(--surface));
+}
+.approval-composer-actions button:hover,
+.approval-composer-actions button:focus-visible {
+  outline: none;
+  border-color: var(--amber);
+  color: var(--amber);
+}
 .approval-artifacts { display: grid; gap: 14px; padding: 20px 26px 22px; }
 .approval-artifact {
   padding: 20px; border: 1px solid var(--border-soft); border-radius: 10px;
@@ -825,6 +877,37 @@ aside .panel:nth-of-type(1) { animation-delay: .32s } aside .panel:nth-of-type(2
 
 /* ---------- library ---------- */
 .lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; padding-top: 24px; }
+.starter-panel { margin-top: 18px; }
+.starter-body { padding: 14px 16px 16px; }
+.starter-form { display: grid; gap: 12px; }
+.starter-input,
+.starter-textarea,
+.starter-select {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 11px 12px;
+  font-family: var(--sans);
+  font-size: calc(13px * var(--fs-scale));
+}
+.starter-textarea { resize: vertical; min-height: 108px; }
+.starter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.starter-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.starter-submit {
+  border: 1px solid var(--amber);
+  background: var(--amber-dim);
+  color: var(--amber);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-family: var(--mono);
+  font-size: calc(11px * var(--fs-scale));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.starter-submit:disabled { opacity: .6; cursor: not-allowed; }
+.starter-status { color: var(--text-3); font-size: calc(12px * var(--fs-scale)); }
 .lib-card { background: var(--surface); border: 1px solid var(--border-soft); border-radius: 12px; overflow: hidden; transition: border-color .15s, transform .15s; }
 .lib-card:hover { border-color: #34343e; transform: translateY(-2px); }
 .lib-card.live-card { border-color: rgba(240,168,60,.4); }
@@ -1036,6 +1119,7 @@ body:not(.first) .approval-review { animation: none; }
   .scene-card { max-width: calc(100vw - 42px); }
   .approval-review-head, .approval-artifacts, .approval-review-foot { padding-left: 16px; padding-right: 16px; }
   .approval-review-note { margin-left: 16px; margin-right: 16px; }
+  .approval-composer { margin-left: 16px; margin-right: 16px; }
   .approval-review-foot { align-items: flex-start; flex-direction: column; }
   .approval-review-foot button { width: 100%; }
   .approval-status { white-space: normal; }

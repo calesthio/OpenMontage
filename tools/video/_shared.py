@@ -9,6 +9,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from tools.base_tool import ToolResult, ToolStatus
 
 
@@ -280,7 +282,15 @@ def get_torch_device() -> str:
 
 
 def local_generation_enabled() -> bool:
-    return os.environ.get("VIDEO_GEN_LOCAL_ENABLED", "").lower() in {"true", "1", "yes"}
+    if os.environ.get("VIDEO_GEN_LOCAL_ENABLED", "").lower() in {"true", "1", "yes"}:
+        return True
+    config_path = Path(__file__).resolve().parents[2] / "config.yaml"
+    try:
+        raw = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    except Exception:
+        return False
+    video_cfg = raw.get("video") or {}
+    return bool(video_cfg.get("local_enabled", False))
 
 
 def local_generation_status() -> ToolStatus:

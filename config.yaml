@@ -31,3 +31,6 @@ paths:
   styles_dir: styles
   skills_dir: skills
   output_dir: output
+
+video:
+  local_enabled: true          # enable free local video generation paths when deps are installed

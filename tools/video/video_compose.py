@@ -194,6 +194,19 @@ class VideoCompose(BaseTool):
             "codec": {"type": "string", "default": "libx264"},
             "crf": {"type": "integer", "default": 23},
             "preset": {"type": "string", "default": "medium"},
+            "fps": {
+                "type": "integer",
+                "default": 30,
+                "description": (
+                    "Output frame rate for the FFmpeg compose path. Overrides "
+                    "edit_decisions.metadata.compose_target.fps. Every segment is "
+                    "normalized to this rate, because concat with -c copy requires "
+                    "a consistent fps across segments. Set it when the source is "
+                    "not 30fps — interpolated footage composed at the default is "
+                    "silently decimated, and generative 16fps footage gains judder "
+                    "from uneven frame duplication."
+                ),
+            },
             "remotion_timeout_ms": {
                 "type": "integer",
                 "description": (
@@ -435,6 +448,54 @@ class VideoCompose(BaseTool):
             artifacts=[str(video_path)],
         )
 
+    @staticmethod
+    def _project_dir_for(output_path: Path) -> Optional[Path]:
+        """Infer the project directory from where the output is being written.
+
+        The workspace convention is ``projects/<id>/renders/final.mp4``, so the
+        project directory is the parent of ``renders/``. Anything else falls
+        back to the output's own directory.
+        """
+        parent = output_path.parent
+        if parent.name == "renders":
+            return parent.parent
+        return parent
+
+    @classmethod
+    def _resolve_source(
+        cls, raw: str, output_path: Path
+    ) -> tuple[Optional[Path], list[Path]]:
+        """Find a cut source on disk, returning the path and everything tried.
+
+        ``asset_manifest.schema.json`` defines an asset ``path`` as a "relative
+        path within the pipeline project directory", but sources used to be
+        opened relative to the process CWD -- so a manifest that followed the
+        schema only worked when the caller happened to be running from inside
+        the project directory. Callers worked around it by storing
+        repo-relative paths instead, which then broke if the process ran from
+        anywhere else.
+
+        Both now resolve. CWD is tried first so existing callers keep the
+        behavior they have, then the project directory the schema describes.
+        Returning the list of attempts lets the error say where it looked
+        instead of just naming a path that "does not exist".
+        """
+        candidate = Path(raw)
+        if candidate.is_absolute():
+            return (candidate, [candidate]) if candidate.exists() else (None, [candidate])
+
+        tried: list[Path] = []
+        bases = [Path.cwd()]
+        project_dir = cls._project_dir_for(output_path)
+        if project_dir is not None:
+            bases.append(project_dir.resolve())
+        for base in bases:
+            resolved = base / candidate
+            tried.append(resolved)
+            if resolved.exists():
+                return resolved, tried
+        return None, tried
+
     def _compose(self, inputs: dict[str, Any]) -> ToolResult:
         """FFmpeg composition: concat video cuts, add audio, burn subtitles.
 
@@ -463,6 +524,17 @@ class VideoCompose(BaseTool):
         # fit="cover" scales-to-fill and centre-crops (better for vertical social).
         resolution = "1920x1080"
         fit_mode = "pad"
+        # Output frame rate. 30 stays the default, so callers that say nothing
+        # get exactly what they got before. Every segment is normalized to this
+        # rate because the concat demuxer with `-c copy` requires identical fps
+        # across segments -- which is why this is one value for the whole
+        # composition rather than per-cut.
+        #
+        # It matters for sources that are not 30fps: a 64fps interpolated clip
+        # composed at 30 is silently decimated, and a 16fps generative clip is
+        # padded by uneven frame duplication (a 1.875 ratio), which reads as
+        # judder. Both look like a bad render rather than a wrong setting.
+        target_fps = 30
         compose_target = (edit_decisions.get("metadata") or {}).get("compose_target")
         if isinstance(compose_target, dict):
             try:
@@ -471,6 +543,18 @@ class VideoCompose(BaseTool):
                 pass
             if compose_target.get("fit") in ("pad", "cover"):
                 fit_mode = compose_target["fit"]
+            try:
+                requested_fps = int(compose_target["fps"])
+                if requested_fps > 0:
+                    target_fps = requested_fps
+            except (KeyError, ValueError, TypeError):
+                pass
+        try:
+            requested_fps = int(inputs["fps"])
+            if requested_fps > 0:
+                target_fps = requested_fps
+        except (KeyError, ValueError, TypeError):
+            pass
         if profile_name:
             try:
                 from lib.media_profiles import get_profile
@@ -510,9 +594,15 @@ class VideoCompose(BaseTool):
 
         try:
             for i, cut in enumerate(cuts):
-                source = Path(cut["source"])
-                if not source.exists():
-                    return ToolResult(success=False, error=f"Cut source not found: {source}")
+                source, tried = self._resolve_source(cut["source"], output_path)
+                if source is None:
+                    return ToolResult(
+                        success=False,
+                        error=(
+                            f"Cut source not found: {cut['source']}\n"
+                            "Tried, in order: " + ", ".join(str(t) for t in tried)
+                        ),
+                    )
 
                 seg_path = temp_dir / f"seg_{i:04d}.mp4"
                 in_s = cut["in_seconds"]
@@ -558,7 +648,7 @@ class VideoCompose(BaseTool):
                     # pix_fmt / sar across ALL segments — otherwise it throws
                     # "Non-monotonous DTS" or silently produces corrupt output.
                     #
-                    # Target is target_w x target_h @ 30fps, yuv420p, sar=1
+                    # Target is target_w x target_h @ target_fps, yuv420p, sar=1
                     # (default 1920x1080; overridable via `profile` or
                     # edit_decisions.metadata.compose_target — see above).
                     # fit="pad" letterboxes to preserve all content; fit="cover"
@@ -573,7 +663,7 @@ class VideoCompose(BaseTool):
                             f"scale={target_w}:{target_h}:force_original_aspect_ratio=decrease",
                             f"pad={target_w}:{target_h}:(ow-iw)/2:(oh-ih)/2:color=black",
                         ]
-                    vf_parts: list[str] = [*geom, "setsar=1", "fps=30"]
+                    vf_parts: list[str] = [*geom, "setsar=1", f"fps={target_fps}"]
                     af_parts: list[str] = []
                     if speed != 1.0:
                         vf_parts.append(f"setpts={1.0/speed}*PTS")
@@ -588,7 +678,7 @@ class VideoCompose(BaseTool):
                         "-crf", str(crf),
                         "-preset", preset,
                         "-pix_fmt", "yuv420p",
-                        "-r", "30",
+                        "-r", str(target_fps),
                     ])
 
                     # Audio handling: some source clips have no audio stream
@@ -623,7 +713,7 @@ class VideoCompose(BaseTool):
                             "-crf", str(crf),
                             "-preset", preset,
                             "-pix_fmt", "yuv420p",
-                            "-r", "30",
+                            "-r", str(target_fps),
                             "-c:a", "aac",
                             "-b:a", "192k",
                             "-ar", "48000",

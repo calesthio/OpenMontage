@@ -85,8 +85,38 @@ Recommended metadata keys:
 - `mix_notes`
 - `variant_outputs`
 
+### 5. State The Frame Rate When It Is Not 30
+
+The FFmpeg compose path normalizes every segment to one frame rate, because
+concat with `-c copy` requires a consistent fps across segments. That rate
+defaults to **30**, so say otherwise when the footage is not 30fps:
+
+```json
+"metadata": {
+  "compose_target": {"width": 832, "height": 480, "fit": "pad", "fps": 64}
+}
+```
+
+(or pass `fps` directly to `video_compose.execute()`, which takes precedence).
+
+Getting this wrong is quiet rather than loud. Interpolated 64fps footage
+composed at 30 is decimated back to half its frames -- the smoothness that was
+just paid for is discarded. Generative 16fps footage composed at 30 is padded by
+uneven frame duplication at a 1.875 ratio, which reads as judder rather than as
+a wrong setting.
+
+### 6. Asset Paths Resolve Against The Project Directory
+
+`asset_manifest` asset paths are, per the schema, relative to the project
+directory -- `assets/video/shot1.mp4`, not a repo-relative or absolute path.
+Cut sources are looked up first relative to the process working directory and
+then relative to the project directory inferred from `output_path`, so both
+conventions work. If a source cannot be found the error lists every base that
+was tried; read it before assuming the file is missing.
+
 ## Common Pitfalls
 
+- Composing non-30fps footage without setting `compose_target.fps` -- see step 5.
 - Flattening the audio so the piece loses dynamics.
 - Applying letterbox to footage that needs every pixel.
 - Letting grading or sharpening damage faces or text.

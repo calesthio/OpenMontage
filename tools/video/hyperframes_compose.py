@@ -190,6 +190,16 @@ class HyperFramesCompose(BaseTool):
                 "enum": [24, 30, 60],
                 "default": 30,
             },
+            "preserve_workspace": {
+                "type": "boolean",
+                "default": False,
+                "description": (
+                    "Render the workspace's existing hand-authored index.html "
+                    "instead of regenerating it from edit_decisions. Required "
+                    "for composition_mode='atelier', where scaffolding would "
+                    "overwrite the bespoke composition. lint/validate still run."
+                ),
+            },
             "strict": {
                 "type": "boolean",
                 "default": False,
@@ -224,7 +234,9 @@ class HyperFramesCompose(BaseTool):
     )
     retry_policy = RetryPolicy(max_retries=0)
     resume_support = ResumeSupport.FROM_START
-    idempotency_key_fields = ["operation", "workspace_path", "edit_decisions"]
+    idempotency_key_fields = [
+        "operation", "workspace_path", "edit_decisions", "preserve_workspace",
+    ]
     side_effects = [
         "writes HTML/CSS/JS files into workspace_path",
         "copies asset files into workspace_path/assets/",
@@ -787,14 +799,28 @@ class HyperFramesCompose(BaseTool):
         steps: dict[str, Any] = {}
 
         # 1. Scaffold — generate HTML/CSS/assets.
-        scaffold = self._scaffold(inputs)
-        steps["scaffold"] = scaffold.data
-        if not scaffold.success:
-            return ToolResult(
-                success=False,
-                error=f"Scaffold failed: {scaffold.error}",
-                data={"steps": steps},
-            )
+        #    Atelier mode hand-authors index.html, so scaffolding would overwrite
+        #    the composition it is supposed to render. Skip it and render what is
+        #    already on disk; lint/validate below still gate the output.
+        if inputs.get("preserve_workspace"):
+            if not (workspace / "index.html").exists():
+                return ToolResult(
+                    success=False,
+                    error=(
+                        f"preserve_workspace=true but no index.html in {workspace}. "
+                        "Hand-author the composition first, or drop the flag to scaffold."
+                    ),
+                )
+            steps["scaffold"] = {"skipped": "preserve_workspace=true (atelier)"}
+        else:
+            scaffold = self._scaffold(inputs)
+            steps["scaffold"] = scaffold.data
+            if not scaffold.success:
+                return ToolResult(
+                    success=False,
+                    error=f"Scaffold failed: {scaffold.error}",
+                    data={"steps": steps},
+                )
 
         # 2. Lint — static contract checks.
         lint = self._lint({"workspace_path": str(workspace)})

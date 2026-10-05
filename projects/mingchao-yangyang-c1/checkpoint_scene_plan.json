@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "project_id": "mingchao-yangyang-c1",
+  "pipeline_type": "cinematic",
+  "stage": "scene_plan",
+  "status": "completed",
+  "timestamp": "2026-07-12T12:50:00+00:00",
+  "checkpoint_policy": "guided",
+  "human_approval_required": true,
+  "human_approved": true,
+  "artifacts": {"scene_plan": "artifacts/scene_plan.json"}
+}

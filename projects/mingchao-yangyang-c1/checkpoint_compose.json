@@ -1,0 +1,17 @@
+{
+  "version": "1.0",
+  "project_id": "mingchao-yangyang-c1",
+  "pipeline_type": "cinematic",
+  "stage": "compose",
+  "status": "completed",
+  "timestamp": "2026-07-12T13:00:00+00:00",
+  "checkpoint_policy": "guided",
+  "human_approval_required": true,
+  "human_approved": true,
+  "artifacts": {
+    "composition": "artifacts/composition.json",
+    "render_report": "artifacts/render_report.json",
+    "output": "renders/mingchao-yangyang-c1.mp4"
+  },
+  "notes": "1080x1920 tiktok render complete; self-review flagged missing ffprobe only."
+}

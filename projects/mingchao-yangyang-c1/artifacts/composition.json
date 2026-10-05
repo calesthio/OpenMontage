@@ -1,0 +1,263 @@
+{
+  "version": "1.0",
+  "renderer_family": "cinematic-trailer",
+  "render_runtime": "remotion",
+  "composition_mode": "templated",
+  "cuts": [
+    {
+      "id": "cut-s2",
+      "source": "source-gameplay",
+      "type": "video",
+      "in_seconds": 3,
+      "out_seconds": 8,
+      "layer": "primary",
+      "transition_in": "dissolve",
+      "transition_out": "dissolve",
+      "reason": "scene-2 establishing broll"
+    },
+    {
+      "id": "cut-s4",
+      "source": "source-gameplay",
+      "type": "video",
+      "in_seconds": 11,
+      "out_seconds": 17,
+      "layer": "primary",
+      "transition_in": "cut",
+      "transition_out": "dissolve",
+      "reason": "scene-4 CU reveal"
+    },
+    {
+      "id": "cut-s5",
+      "source": "source-gameplay",
+      "type": "video",
+      "in_seconds": 17,
+      "out_seconds": 23,
+      "layer": "primary",
+      "transition_in": "dissolve",
+      "transition_out": "dissolve",
+      "reason": "scene-5 ultimate peak"
+    },
+    {
+      "id": "cut-s6-bg",
+      "source": "source-gameplay",
+      "type": "video",
+      "in_seconds": 23,
+      "out_seconds": 26,
+      "layer": "primary",
+      "transition_in": "fade",
+      "transition_out": "fade",
+      "reason": "scene-6 tag background"
+    }
+  ],
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "title",
+      "startSeconds": 0,
+      "durationSeconds": 3,
+      "text": "霓裳一曲千峰上",
+      "accent": "#D4AF37",
+      "intensity": 0.85,
+      "variant": "plate"
+    },
+    {
+      "id": "s2",
+      "kind": "video",
+      "startSeconds": 3,
+      "durationSeconds": 5,
+      "trimBeforeSeconds": 22,
+      "trimAfterSeconds": 27,
+      "tone": "cold",
+      "fadeInFrames": 12,
+      "fadeOutFrames": 12,
+      "src": "mingchao-yangyang-c1/jiguan_xuanling_demo.mp4"
+    },
+    {
+      "id": "s3",
+      "kind": "title",
+      "startSeconds": 8,
+      "durationSeconds": 3,
+      "text": "尽日欢娱忘岁年",
+      "accent": "#E8D5B5",
+      "intensity": 0.75,
+      "variant": "plate"
+    },
+    {
+      "id": "s4",
+      "kind": "video",
+      "startSeconds": 11,
+      "durationSeconds": 6,
+      "trimBeforeSeconds": 0.5,
+      "trimAfterSeconds": 6.5,
+      "tone": "cold",
+      "fadeInFrames": 8,
+      "fadeOutFrames": 10,
+      "src": "mingchao-yangyang-c1/jiguan_xuanling_demo.mp4"
+    },
+    {
+      "id": "s5",
+      "kind": "video",
+      "startSeconds": 17,
+      "durationSeconds": 6,
+      "trimBeforeSeconds": 34,
+      "trimAfterSeconds": 40,
+      "tone": "steel",
+      "fadeInFrames": 6,
+      "fadeOutFrames": 12,
+      "src": "mingchao-yangyang-c1/jiguan_xuanling_demo.mp4"
+    },
+    {
+      "id": "s6",
+      "kind": "title",
+      "startSeconds": 23,
+      "durationSeconds": 3,
+      "text": "#鸣潮秧秧玄翎",
+      "accent": "#7EC8E3",
+      "intensity": 1.0,
+      "variant": "overlay",
+      "backgroundTrimBeforeSeconds": 34,
+      "backgroundTrimAfterSeconds": 37,
+      "backgroundSrc": "mingchao-yangyang-c1/jiguan_xuanling_demo.mp4"
+    },
+    {
+      "id": "s7",
+      "kind": "title",
+      "startSeconds": 26,
+      "durationSeconds": 4,
+      "text": "玄翎上线",
+      "accent": "#D4AF37",
+      "intensity": 1.1,
+      "variant": "plate"
+    }
+  ],
+  "titleFontSize": 56,
+  "titleWidth": 900,
+  "signalLineCount": 12,
+  "music": {
+    "src": "mingchao-yangyang-c1/background_music.mp3",
+    "volume": 0.38,
+    "fadeInSeconds": 1.5,
+    "fadeOutSeconds": 2.5
+  },
+  "subtitles": {
+    "enabled": false
+  },
+  "metadata": {
+    "total_duration_seconds": 30,
+    "profile": "tiktok",
+    "delivery_promise": {
+      "promise_type": "source_led",
+      "motion_required": true,
+      "source_required": true,
+      "tone_mode": "cinematic",
+      "quality_floor": "presentable"
+    },
+    "beat_timing": [
+      {
+        "beat": "b1",
+        "at": 0
+      },
+      {
+        "beat": "b5",
+        "at": 17
+      },
+      {
+        "beat": "b7",
+        "at": 26
+      }
+    ],
+    "remotion_props": {
+      "titleFontSize": 56,
+      "titleWidth": 900,
+      "signalLineCount": 12,
+      "music": {
+        "asset_id": "music-bg",
+        "volume": 0.38,
+        "fadeInSeconds": 1.5,
+        "fadeOutSeconds": 2.5
+      },
+      "scenes": [
+        {
+          "id": "s1",
+          "kind": "title",
+          "startSeconds": 0,
+          "durationSeconds": 3,
+          "text": "霓裳一曲千峰上",
+          "accent": "#D4AF37",
+          "intensity": 0.85,
+          "variant": "plate"
+        },
+        {
+          "id": "s2",
+          "kind": "video",
+          "startSeconds": 3,
+          "durationSeconds": 5,
+          "asset_id": "source-gameplay",
+          "trimBeforeSeconds": 22,
+          "trimAfterSeconds": 27,
+          "tone": "cold",
+          "fadeInFrames": 12,
+          "fadeOutFrames": 12
+        },
+        {
+          "id": "s3",
+          "kind": "title",
+          "startSeconds": 8,
+          "durationSeconds": 3,
+          "text": "尽日欢娱忘岁年",
+          "accent": "#E8D5B5",
+          "intensity": 0.75,
+          "variant": "plate"
+        },
+        {
+          "id": "s4",
+          "kind": "video",
+          "startSeconds": 11,
+          "durationSeconds": 6,
+          "asset_id": "source-gameplay",
+          "trimBeforeSeconds": 0.5,
+          "trimAfterSeconds": 6.5,
+          "tone": "cold",
+          "fadeInFrames": 8,
+          "fadeOutFrames": 10
+        },
+        {
+          "id": "s5",
+          "kind": "video",
+          "startSeconds": 17,
+          "durationSeconds": 6,
+          "asset_id": "source-gameplay",
+          "trimBeforeSeconds": 34,
+          "trimAfterSeconds": 40,
+          "tone": "steel",
+          "fadeInFrames": 6,
+          "fadeOutFrames": 12
+        },
+        {
+          "id": "s6",
+          "kind": "title",
+          "startSeconds": 23,
+          "durationSeconds": 3,
+          "text": "#鸣潮秧秧玄翎",
+          "accent": "#7EC8E3",
+          "intensity": 1.0,
+          "variant": "overlay",
+          "asset_id": "source-gameplay",
+          "backgroundTrimBeforeSeconds": 34,
+          "backgroundTrimAfterSeconds": 37
+        },
+        {
+          "id": "s7",
+          "kind": "title",
+          "startSeconds": 26,
+          "durationSeconds": 4,
+          "text": "玄翎上线",
+          "accent": "#D4AF37",
+          "intensity": 1.1,
+          "variant": "plate"
+        }
+      ]
+    }
+  },
+  "total_duration_seconds": 30
+}

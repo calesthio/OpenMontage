@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "project_id": "mingchao-yangyang-c1",
+  "pipeline_type": "cinematic",
+  "stage": "research",
+  "status": "completed",
+  "timestamp": "2026-07-12T12:35:00+00:00",
+  "checkpoint_policy": "guided",
+  "human_approval_required": false,
+  "human_approved": true,
+  "artifacts": {
+    "research_brief": "@research_brief.json",
+    "reference_douyin_brief": "artifacts/reference_douyin_brief.json",
+    "source_analysis": "artifacts/source_analysis/video_analysis_brief.json",
+    "download_manifest": "artifacts/download_manifest.json"
+  },
+  "notes": "抖音参考下载失败（需 Cookie）；已用机核 BV12BJg6dEzf 1080p 源片 + 元数据参考 brief 继续。"
+}

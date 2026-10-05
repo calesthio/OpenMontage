@@ -1,0 +1,194 @@
+{
+  "version": "1.0",
+  "topic": "鸣潮秧秧·玄翎竖屏情绪混剪（c1 霓裳入梦）",
+  "research_date": "2026-07-12",
+  "research_summary": "秧秧·玄翎于 2026-07-10 正式上线，抖音粉丝混剪赛道已被「古诗 hook + 无解说情绪片」验证（良阿公参考 17.8 万赞）。机核独家实机演示（BV12BJg6dEzf，198 万播放）提供 1080p 可剪辑素材：青灰雾面场景、玄翎羽发发光、大招金青粒子。差异化空间：同诗意结构下用更慢 dissolve、更少梗化话题、机核源片而非搬运。",
+  "landscape": {
+    "existing_content": [
+      {
+        "title": "霓裳一曲千峰上（良阿公抖音参考）",
+        "url": "https://v.douyin.com/VO-L3VKu_0Y/",
+        "source": "douyin",
+        "angle": "古诗字幕 + 竖屏角色情绪混剪",
+        "what_it_covers": "秧秧玄翎上线氛围、纣王/霓裳话题、无 VO BGM 卡点",
+        "what_it_misses": "不可直接下载分析；梗向评论稀释诗意",
+        "engagement_signal": "17.8万赞 · 804评 · 3.4万转"
+      },
+      {
+        "title": "【机核独家】秧秧·玄翎、穗穗演示",
+        "url": "https://www.bilibili.com/video/BV12BJg6dEzf/",
+        "source": "bilibili",
+        "angle": "官方实机战斗演示",
+        "what_it_covers": "玄方地界场景、秧秧连招、大招风暴、穗穗片段",
+        "what_it_misses": "横屏 16:9、无古诗包装、偏资讯而非情绪",
+        "engagement_signal": "198.4万播放 · 5400弹幕"
+      },
+      {
+        "title": "鸣潮角色舞蹈混剪，卡点超带感",
+        "url": "https://www.bilibili.com/video/BV1YNk2B9EGf/",
+        "source": "bilibili",
+        "angle": "快节奏多角色卡点",
+        "what_it_covers": "强节奏鼓点、快切",
+        "what_it_misses": "缺诗意留白；非玄翎专题",
+        "engagement_signal": "鸣潮创作激励计划条目"
+      },
+      {
+        "title": "初次见面，我叫秧秧",
+        "url": "https://www.bilibili.com/video/BV11MLy66E8G/",
+        "source": "bilibili",
+        "angle": "AI/短片式角色情绪叙事",
+        "what_it_covers": "秧秧 IP 情感向二创",
+        "what_it_misses": "非玄翎皮肤；非实机",
+        "engagement_signal": "47.4万播放"
+      }
+    ],
+    "saturated_angles": [
+      "纯强度测评/抽卡建议",
+      "快节奏全员混剪无主题",
+      "直接搬运官方 PV 不加字幕结构"
+    ],
+    "underserved_gaps": [
+      "古诗一句定调 + 30s 竖屏诗意混剪（非梗向）",
+      "机核实机源 + 电影感青金调色 + 慢 dissolve",
+      "无解说 BGM 驱动的角色上线氛围片"
+    ]
+  },
+  "trending": {
+    "recent_developments": [
+      {
+        "headline": "鸣潮 3.5 秧秧·玄翎正式上线",
+        "url": "https://www.bilibili.com/video/BV12BJg6dEzf/",
+        "date": "2026-07-10",
+        "relevance": "上线窗口期，角色话题搜索量峰值，适合发布竖屏混剪"
+      }
+    ],
+    "active_discussions": [
+      {
+        "platform": "douyin",
+        "topic_or_url": "#鸣潮秧秧玄翎 #鸣潮秧秧玄翎上线",
+        "sentiment": "兴奋、玩梗与审美讨论并存",
+        "key_quotes": [
+          "霓裳一曲千峰上 — 标题即传播钩子",
+          "粉丝更关注角色造型与水中镜头"
+        ]
+      }
+    ],
+    "timeliness_window": "days"
+  },
+  "data_points": [
+    {
+      "claim": "参考抖音视频获约 17.8 万赞、3.4 万转发",
+      "source_url": "https://v.douyin.com/VO-L3VKu_0Y/",
+      "source_name": "抖音页面元数据",
+      "credibility": "primary_source",
+      "surprise_factor": "notable",
+      "usable_as": "hook"
+    },
+    {
+      "claim": "机核独家演示片时长 60.3s、1920×1080@30fps，已本地下载",
+      "source_url": "https://www.bilibili.com/video/BV12BJg6dEzf/",
+      "source_name": "本地 ffprobe via ffmpeg",
+      "credibility": "primary_source",
+      "surprise_factor": "expected",
+      "usable_as": "script_anchor"
+    },
+    {
+      "claim": "秧秧·玄翎为湮灭属性，技能含玄翎雀召唤风暴与双剑法切换",
+      "source_url": "https://www.bilibili.com/video/BV12BJg6dEzf/",
+      "source_name": "机核演示解说",
+      "credibility": "secondary_source",
+      "surprise_factor": "expected",
+      "usable_as": "closing_punch"
+    },
+    {
+      "claim": "角色设定：明庭音乐世家，苍翎响远音，青金风元素视觉",
+      "source_url": "https://www.bilibili.com/opus/1214871017709633552",
+      "source_name": "官方寰宇人类注疏",
+      "credibility": "primary_source",
+      "surprise_factor": "notable",
+      "usable_as": "stat_card"
+    }
+  ],
+  "audience_insights": {
+    "common_questions": [
+      "秧秧玄翎手感/强度如何？",
+      "值不值得抽？",
+      "水中/舞蹈镜头在哪段实机？"
+    ],
+    "misconceptions": [
+      {
+        "myth": "混剪必须快节奏才有流量",
+        "reality": "参考片用慢起诗意 + 鼓点高潮同样高互动",
+        "source": "良阿公抖音参考数据"
+      }
+    ],
+    "knowledge_level": "受众熟悉鸣潮 IP，对 SP 秧秧有情感羁绊；不一定需要机制讲解",
+    "pain_points": [
+      "官方横屏演示不适合直接发抖音",
+      "同质化攻略视频缺乏情绪记忆点"
+    ]
+  },
+  "angles_discovered": [
+    {
+      "name": "霓裳入梦（诗意慢燃）",
+      "hook": "一句古诗，把玄翎起舞装进竖屏诗境。",
+      "type": "narrative",
+      "why_now": "上线日话题峰值 + 参考片验证古诗 hook；机核源片已就绪",
+      "grounded_in": ["良阿公参考结构", "机核 1080p 源", "青金官方设定"]
+    },
+    {
+      "name": "千峰玄翎（史诗环境）",
+      "hook": "从千峰云海拉到峰顶一人。",
+      "type": "evergreen",
+      "why_now": "演示片含大景广场与浮空门户，适合史诗拉远",
+      "grounded_in": ["frame_006 大景关键帧", "标题千峰意象"]
+    },
+    {
+      "name": "最后一舞（快切转化）",
+      "hook": "鼓点一到，剑光成片。",
+      "type": "trending",
+      "why_now": "混剪赛道习惯快切；适合强 CTA 转化",
+      "grounded_in": ["BV1YNk2B9EGf 卡点先例", "大招金青粒子镜头"]
+    }
+  ],
+  "visual_references": [
+    {
+      "description": "秧秧玄翎正面半身，羽发发光，雾面宫殿",
+      "url": "file://artifacts/source_analysis/keyframes/frame_001.jpg",
+      "what_works": "角色识别度高；青灰+发光羽发适合竖屏 CU"
+    },
+    {
+      "description": "背身大景广场，浮空圆环门户",
+      "url": "file://artifacts/source_analysis/keyframes/frame_006.jpg",
+      "what_works": "establishing 镜头；对称构图利于古诗字幕叠加"
+    },
+    {
+      "description": "大招金青放射粒子",
+      "url": "file://artifacts/source_analysis/keyframes/frame_010.jpg",
+      "what_works": "情绪高点；青金配色与项目主色一致"
+    }
+  ],
+  "sources": [
+    {"url": "https://v.douyin.com/VO-L3VKu_0Y/", "title": "良阿公抖音参考", "used_for": "reference_context", "reliability": "primary"},
+    {"url": "https://www.bilibili.com/video/BV12BJg6dEzf/", "title": "机核独家演示", "used_for": "source_footage", "reliability": "primary"},
+    {"url": "https://www.bilibili.com/video/BV1YNk2B9EGf/", "title": "鸣潮舞蹈混剪", "used_for": "landscape", "reliability": "secondary"},
+    {"url": "https://www.bilibili.com/video/BV11MLy66E8G/", "title": "初次见面我叫秧秧", "used_for": "landscape", "reliability": "secondary"},
+    {"url": "https://www.bilibili.com/opus/1214871017709633552", "title": "秧秧玄翎官方注疏", "used_for": "data_points", "reliability": "primary"}
+  ],
+  "metadata": {
+    "reference_context": {
+      "reference_cinematic_language": "竖屏、黑场古诗字幕、慢 dissolve、游戏 motion_clip、青金调色、无 VO",
+      "emotional_territory": "沉醉、浪漫、角色羁绊",
+      "adjacent_territories": ["史诗孤独（千峰）", "强节奏转化（快切）"],
+      "evolution_plan": "保留古诗结构与水中 reveal；改用机核实机；减梗化；加品牌落版",
+      "source_analysis_path": "artifacts/source_analysis/video_analysis_brief.json",
+      "douyin_brief_path": "artifacts/reference_douyin_brief.json"
+    },
+    "assets_downloaded": {
+      "source_mp4": "assets/source/jiguan_xuanling_demo.mp4",
+      "source_size_bytes": 35243793,
+      "reference_mp4": null,
+      "download_blockers": ["Douyin: Fresh cookies required", "Edge cookie DB permission denied"]
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "version": "1.0",
+  "outputs": [
+    {
+      "path": "renders/mingchao-yangyang-c1.mp4",
+      "format": "mp4",
+      "profile": "tiktok",
+      "duration_seconds": 30
+    }
+  ],
+  "render_runtime": "remotion",
+  "renderer_family": "cinematic-trailer",
+  "composition_path": "artifacts/composition.json",
+  "success": false,
+  "error": "Post-render self-review FAILED. The output is not presentable.\n  • ffprobe not found — cannot validate output\n  • transcript_comparison skipped: narration_transcript not provided",
+  "final_review": {
+    "version": "1.0",
+    "output_path": "C:\\Users\\木白\\OpenMontage\\projects\\mingchao-yangyang-c1\\renders\\mingchao-yangyang-c1.mp4",
+    "status": "fail",
+    "checks": {
+      "technical_probe": {
+        "valid_container": false,
+        "issues": [
+          "ffprobe not found — cannot validate output"
+        ]
+      },
+      "visual_spotcheck": {
+        "frames_sampled": 0,
+        "frame_paths": [],
+        "black_frames_detected": false,
+        "broken_overlays": false,
+        "missing_assets": false,
+        "unreadable_text": false,
+        "issues": []
+      },
+      "audio_spotcheck": {
+        "narration_present": false,
+        "music_present": false,
+        "unexpected_silence": false,
+        "clipping_detected": false,
+        "mix_intelligible": true,
+        "issues": []
+      },
+      "promise_preservation": {
+        "delivery_promise_honored": true,
+        "silent_downgrade_detected": false,
+        "runtime_swap_detected": false,
+        "issues": [],
+        "renderer_family_used": "cinematic-trailer",
+        "render_runtime_used": "remotion",
+        "runtime_swap_check": "ok — proposal and edit agree (proposal_packet.production_plan.render_runtime)",
+        "motion_ratio_actual": 1.0
+      },
+      "subtitle_check": {
+        "subtitles_expected": false,
+        "subtitles_present": false,
+        "issues": []
+      },
+      "transcript_comparison": {
+        "transcript_matches_script": false,
+        "word_accuracy": null,
+        "script_word_count": 0,
+        "transcript_word_count": 0,
+        "spurious_punctuation_words": [],
+        "issues": [
+          "transcript_comparison skipped: narration_transcript not provided"
+        ]
+      }
+    },
+    "issues_found": [
+      "ffprobe not found — cannot validate output",
+      "transcript_comparison skipped: narration_transcript not provided"
+    ],
+    "recommended_action": "re_render"
+  },
+  "final_review_status": "fail"
+}

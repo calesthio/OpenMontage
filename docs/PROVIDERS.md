@@ -97,6 +97,10 @@ SUNO_API_KEY=                # Suno music generation
 # TENCLOUD HUNYUAN VIDEO
 TENCENT_TOKENHUB_API_KEY=    # Tencent Hunyuan cloud video via TokenHub API
 
+# PUBLISHING
+UPLOAD_POST_API_KEY=         # Upload-Post — publish to TikTok, Instagram, YouTube, LinkedIn, X and more
+UPLOAD_POST_USER=            # Default Upload-Post profile to post from
+
 # LOCAL (no keys needed — just GPU + install)
 VIDEO_GEN_LOCAL_ENABLED=     # Set to "true" for local video gen
 VIDEO_GEN_LOCAL_MODEL=       # wan2.2-ti2v-5b, wan2.1-1.3b, wan2.1-14b, hunyuan-1.5, ltx2-local, cogvideo-5b
@@ -1123,6 +1127,41 @@ Gen-3 Alpha Turbo and Gen-4 Aleph were removed from the Runway API on
 
 ---
 
+### Upload-Post — Social Publishing
+
+> **Publish a finished render to TikTok, Instagram Reels, YouTube, LinkedIn, Facebook, X, Threads, Pinterest and Bluesky with one key.** No developer app or OAuth client per platform.
+
+**Tools unlocked:** `upload_post_publisher` (capability `publish`)
+**Env var:** `UPLOAD_POST_API_KEY` (optional `UPLOAD_POST_USER` = default profile)
+
+#### Setup
+
+1. Create an account at [upload-post.com](https://upload-post.com)
+2. Create a profile and connect the social accounts you want to post to
+3. Create an API key in the dashboard
+4. Add to `.env`: `UPLOAD_POST_API_KEY=your-key-here` and `UPLOAD_POST_USER=your-profile-name`
+5. Check it without posting: run the tool with `dry_run: true` — it reports which of the requested platforms are connected
+
+#### What it does (and doesn't)
+
+- Video only, publish now: one render to any mix of the platforms above, one `publish_log` entry per platform (URL or post id, visibility, error)
+- Idempotent: the request id is a hash of the video, cover and caption being published. Re-running the same publish resumes it instead of posting again; a changed cover or caption is a different publish, and the tool refuses to post it while another version of the same render is live or in flight unless `allow_additional_post` is set
+- Ambiguous failures never re-send: only definitive rejections (400/401/403/422, …) allow a retry. A 5xx, a dropped connection or an empty response is looked up by request id; if Upload-Post has no record, the publish is marked `ambiguous` and stays blocked until the user confirms nothing went out (`confirm_not_published`)
+- Safe defaults: YouTube `private`, TikTok the account's own privacy; `visibility: "private"` is rejected for platforms with no private mode
+- Not covered by this tool: scheduling, photo/text posts, comments. Keep using `export_bundle` for offline hand-off
+
+#### Pricing
+
+| Plan | Price | Uploads | Notes |
+|------|-------|---------|-------|
+| Free | $0 | 10/month | All platforms above except TikTok |
+| Basic | $24/mo ($16/mo yearly) | Unlimited | 5 profiles, TikTok included |
+| Professional | $50/mo | Unlimited | 25 profiles |
+
+No per-call charge, so the tool's cost estimate is `$0.00`. Full API reference: [docs.upload-post.com](https://docs.upload-post.com).
+
+---
+
 ## Local Providers (Free, No API Key)
 
 These providers run entirely on your machine. No network, no API key, no cost. Some require a GPU.
@@ -1456,6 +1495,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **Higgsfield** | `HIGGSFIELD_API_KEY` + `HIGGSFIELD_API_SECRET` | `higgsfield_video` | Subscription ($15-84/mo) |
 | **HeyGen** | `HEYGEN_API_KEY` | `heygen_video` | Pay-as-you-go |
 | **Suno** | `SUNO_API_KEY` | `suno_music` | Pay-as-you-go |
+| **Upload-Post** | `UPLOAD_POST_API_KEY` | `upload_post_publisher` | Free tier (10 uploads/mo, no TikTok) + subscription |
 | **Tencent Hunyuan** | `TENCENT_TOKENHUB_API_KEY` | `hunyuan_cloud_video` | Pay-as-you-go (~$0.25–0.83/gen) |
 | **Local GPU** | `VIDEO_GEN_LOCAL_ENABLED` | `wan_video`, `hunyuan_video`, `cogvideo_video`, `ltx_video_local` | Free (GPU required) |
 | **Local Diffusion** | — (install only) | `local_diffusion` | Free (GPU required) |
@@ -1478,6 +1518,7 @@ How many providers cover each capability:
 | **Analysis** | — | WhisperX, Scene Detect, Frame Sampler, CLIP/BLIP-2 | All free |
 | **Enhancement** | — | Upscale, BG Remove, Face Enhance, Face Restore | All free |
 | **Avatar** | Kling Official | SadTalker, Wav2Lip | Local tools are free |
+| **Publishing** | Upload-Post (TikTok, Instagram, YouTube, LinkedIn, Facebook, X, Threads, Pinterest, Bluesky) | export_bundle (offline package) | export_bundle, Upload-Post free tier |
 
 ---
 

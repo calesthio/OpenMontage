@@ -113,9 +113,42 @@ exports/
 publisher (e.g. a YouTube uploader) would be a separate `publish`-capability
 provider.
 
+### Step 5b (optional): Publish to Social Platforms
+
+If the user wants the video posted — not just packaged — and `upload_post_publisher`
+is available (`UPLOAD_POST_API_KEY` set), it publishes the render to TikTok,
+Instagram Reels, YouTube, LinkedIn, Facebook, X, Threads, Pinterest and/or
+Bluesky in one call and returns the same `publish_log` shape, one entry per
+platform. Pass the same `video_path`, `title`, `description`, `tags`,
+`hashtags` and `thumbnail_path` you gave `export_bundle`, plus `platforms`.
+
+Publishing is public and can't be undone, so it happens **after** this stage's
+approval, never before:
+
+1. Call it with `dry_run: true`. Show the user the exact caption, cover,
+   platforms and visibility from the report, plus `missing_platforms`
+   (accounts not connected — they would be skipped) and any `conflicts`.
+2. Checkpoint and wait for approval as usual (see Gate Reminder).
+3. Once approved, call it again with the **same inputs** and `dry_run: false`.
+
+Re-running with the same inputs is always safe: it resumes the existing
+publish instead of posting again. If it reports a conflict (a different version
+of this render — another cover or caption — is already live or in flight), show
+it to the user; only pass `allow_additional_post: true` if they confirm a
+second post. To retry a failed publish, pass `attempt: 2`.
+
+If it reports `ambiguous` (a 5xx, dropped connection or crash meant the upload
+may or may not have been accepted), it will not send it again on its own. Ask
+the user to check the target accounts; only if nothing went out, re-run with
+`confirm_not_published: true`.
+
+Defaults: YouTube `private`, TikTok the account's own privacy, other platforms
+public. `visibility: "private"` is rejected for platforms that have no private
+mode rather than silently posting publicly.
+
 ### Step 6: Build Publish Log
 
-`export_bundle` already returns a schema-valid `publish_log` in `data["publish_log"]` — persist that directly rather than hand-building one. Do **not** add extra entry fields (the schema sets `additionalProperties: false`; only `platform`, `status`, `url`, `video_id`, `visibility`, `export_path`, `timestamp`, `metadata_used`, `error` are allowed). The shape it returns:
+`export_bundle` already returns a schema-valid `publish_log` in `data["publish_log"]` — persist that directly rather than hand-building one. If Step 5b ran, append its `entries` to the same log and keep its `metadata` block (request id and the hashes of what was published). Do **not** add extra entry fields (the schema sets `additionalProperties: false`; only `platform`, `status`, `url`, `video_id`, `visibility`, `export_path`, `timestamp`, `metadata_used`, `error` are allowed). The shape it returns:
 
 ```json
 {

@@ -184,6 +184,7 @@ SUNO_API_KEY=your-key          # 完整的歌曲、伴奏，涵盖任何流派
 ELEVENLABS_API_KEY=your-key    # 顶级 TTS、AI 音乐、音效
 OPENAI_API_KEY=your-key        # OpenAI TTS、GPT Image 2 图像
 XAI_API_KEY=your-key           # xAI Grok 图像编辑/生成 + Grok 视频生成
+ORCAROUTER_API_KEY=your-key    # [OrcaRouter](https://www.orcarouter.ai) — LLM 路由 + 零信任 AI 智能体安全
 GOOGLE_API_KEY=your-key        # Google Imagen 图像、Google TTS（700+ 种声音）
 
 # 更多视频提供商:

@@ -253,6 +253,19 @@ def sample_artifact(name: str) -> dict:
 # ---- Config ----
 
 class TestConfig:
+    # Providers the driving agent can use via llm.provider; kept in sync with
+    # config.yaml's documented list and docs/PROVIDERS.md.
+    KNOWN_PROVIDERS = {
+        "anthropic",
+        "openai",
+        "gemini",
+        "openrouter",
+        "orcarouter",
+        "ollama",
+        "mistral",
+        "minimax",
+    }
+
     def test_load_defaults(self):
         config = OpenMontageConfig()
         assert config.llm.provider == "anthropic"
@@ -262,6 +275,24 @@ class TestConfig:
     def test_load_from_yaml(self):
         config = OpenMontageConfig.load()
         assert config.budget.total_usd == 10.0
+
+    def test_config_yaml_documents_orcarouter_provider(self):
+        """The config registry documents 'orcarouter' as a selectable provider.
+
+        OrcaRouter is an OpenAI-compatible LLM gateway (https://api.orcarouter.ai/v1)
+        that also provides zero-trust security for AI agents.
+        """
+        assert "orcarouter" in self.KNOWN_PROVIDERS
+        config = OpenMontageConfig.load()
+        # A user can select the provider without tripping validation.
+        config.llm.provider = "orcarouter"
+        assert config.llm.provider == "orcarouter"
+        # The shipped config.yaml documents it in its provider comment.
+        config_path = Path(__file__).resolve().parents[2] / "config.yaml"
+        assert config_path.exists()
+        raw = config_path.read_text()
+        assert "orcarouter" in raw
+        assert "anthropic | openai | gemini | openrouter | orcarouter" in raw
 
 
 # ---- Schemas ----

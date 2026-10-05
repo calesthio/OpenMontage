@@ -262,6 +262,7 @@ SUNO_API_KEY=your-key          # Full songs, instrumentals, any genre
 ELEVENLABS_API_KEY=your-key    # Premium TTS, AI music, sound effects
 OPENAI_API_KEY=your-key        # OpenAI TTS, GPT Image 2 images
 XAI_API_KEY=your-key           # xAI Grok image edits/generation + Grok video generation
+ORCAROUTER_API_KEY=your-key    # [OrcaRouter](https://www.orcarouter.ai) — LLM routing + zero-trust AI agent security
 GOOGLE_API_KEY=your-key        # Google Imagen images, Google TTS (700+ voices)
 
 # More video providers:

@@ -69,6 +69,7 @@ ELEVENLABS_API_KEY=          # TTS, music, sound effects (10K chars/month free)
 FISH_AUDIO_API_KEY=          # fish.audio TTS (voice cloning via reference_id, inline emotion tags)
 OPENAI_API_KEY=              # OpenAI TTS + GPT Image 2 images
 XAI_API_KEY=                 # xAI Grok image generation/editing + Grok video generation
+ORCAROUTER_API_KEY=          # OrcaRouter — LLM routing + zero-trust AI agent security (OpenAI-compatible)
 DOUBAO_SPEECH_API_KEY=       # Volcengine Doubao Speech TTS (strong Mandarin narration)
 DOUBAO_SPEECH_VOICE_TYPE=    # Default Doubao speaker/voice type
 DASHSCOPE_API_KEY=           # Alibaba DashScope (Qwen image gen, TTS, ASR with word timestamps)
@@ -131,6 +132,47 @@ stable contract for them at the time of this update.
 ---
 
 ## Cloud Providers
+
+### OrcaRouter — LLM Gateway + Zero-Trust AI Agent Security
+
+> **Best if you want one OpenAI-compatible key for the agent that drives OpenMontage.** [OrcaRouter](https://www.orcarouter.ai) is a smart LLM routing gateway: a single endpoint gives the driving agent access to many models across providers, and `orcarouter/auto` picks the best model for each request automatically. It also runs gateway-level, zero-trust security for AI agents on the same endpoint — screening every prompt/response and governing every tool call on a default-deny basis, with no application code changes.
+
+**Tools unlocked:** the OpenAI-compatible LLM path used by the driving agent
+**Env var:** `ORCAROUTER_API_KEY`
+
+#### Setup
+
+1. Create an account at [orcarouter.ai](https://www.orcarouter.ai)
+2. Generate an API key in the OrcaRouter console (keys start with `sk-orca-`)
+3. Add to `.env`: `ORCAROUTER_API_KEY=sk-orca-...`
+4. Set the provider for the driving agent in `config.yaml`:
+
+```yaml
+llm:
+  provider: orcarouter
+```
+
+#### Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ORCAROUTER_API_KEY` | — | API key from the OrcaRouter console |
+| `ORCAROUTER_BASE_URL` | `https://api.orcarouter.ai/v1` | API base URL override |
+| `ORCAROUTER_MODEL` | provider default | Model override, e.g. `orcarouter/auto` for smart routing |
+
+`orcarouter/auto` is the recommended model: OrcaRouter routes each request to the best provider/model for the task. Full model list: [orcarouter.ai/models](https://www.orcarouter.ai/models). API docs: [docs.orcarouter.ai](https://docs.orcarouter.ai).
+
+#### What it's best for
+
+- One key for many models/providers — no per-vendor signups
+- Smart cost/latency-aware routing via `orcarouter/auto`
+- Zero-trust security for AI agents (default-deny tool calls, prompt/response screening) at the gateway
+
+#### Pricing
+
+Pay-as-you-go per token. See [orcarouter.ai](https://www.orcarouter.ai) for current pricing.
+
+---
 
 ### xAI — Grok Image + Video
 

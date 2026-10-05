@@ -373,3 +373,82 @@ def test_dry_run_checks_account_and_never_uploads(api, render):
     assert report["already_submitted"] is False and report["conflicts"] == []
     assert UploadPostPublisher().execute(_inputs(render[0], dry_run=True)).success
     assert api.posts == []
+
+
+# ---- Restart cases: the ledger is the durable evidence ----
+
+
+def test_completed_publish_is_not_resent_after_remote_record_expires(api, render):
+    """Completed locally, then Upload-Post forgets the request (status/idempotency
+    retention expired, status returns 404). A re-run must answer from the ledger,
+    never upload again."""
+    first = UploadPostPublisher().execute(_inputs(render[0]))
+    assert first.success and len(api.posts) == 1
+    api.requests.clear()  # remote retention expired: GET status -> 404
+
+    rerun = UploadPostPublisher().execute(_inputs(render[0]))  # new instance, state from disk
+    assert rerun.success, rerun.error
+    assert rerun.data["resumed"] is True and rerun.data["resumed_from"] == "ledger"
+    assert rerun.data["request_id"] == first.data["request_id"]
+    assert [r["platform"] for r in rerun.data["results"]] == [r["platform"] for r in first.data["results"]]
+    assert rerun.data["publish_log"]["entries"] == first.data["publish_log"]["entries"]
+    assert len(api.posts) == 1
+
+    # A second post of the same publish needs deliberate authorization.
+    again = UploadPostPublisher().execute(_inputs(render[0], allow_additional_post=True))
+    assert again.success and again.data["resumed"] is False
+    assert len(api.posts) == 2
+
+
+def test_completed_publish_with_a_platform_failure_replays_the_failure(api, render):
+    api.result_for["youtube"] = {"platform": "youtube", "success": False, "error_message": "quota"}
+    first = UploadPostPublisher().execute(_inputs(render[0]))
+    assert first.success is False and "youtube" in first.error
+    api.requests.clear()
+    rerun = UploadPostPublisher().execute(_inputs(render[0]))
+    assert rerun.success is False and "youtube" in rerun.error
+    assert rerun.data["resumed_from"] == "ledger" and len(api.posts) == 1
+
+
+def test_corrupt_ledger_blocks_publishing(api, render):
+    """A damaged ledger may be the only record of an accepted upload: fail closed."""
+    tool = UploadPostPublisher()
+    plan = tool._plan(_inputs(render[0]))
+    plan["ledger"].parent.mkdir(parents=True, exist_ok=True)
+    plan["ledger"].write_text("{\"version\": 1, \"submissions\": [{\"request_id\": ", encoding="utf-8")
+
+    result = UploadPostPublisher().execute(_inputs(render[0]))
+    assert result.success is False and result.data["ledger_unreadable"] is True
+    assert "ledger" in result.error and "nothing was sent" in result.error
+    assert api.posts == []
+    assert plan["ledger"].read_text(encoding="utf-8").startswith("{\"version\": 1")  # untouched
+
+    dry = UploadPostPublisher().execute(_inputs(render[0], dry_run=True))
+    assert "ledger" in (dry.data["dry_run"].get("error") or "")
+
+    plan["ledger"].write_text(json.dumps({"version": 1, "submissions": "not-a-list"}), encoding="utf-8")
+    result = UploadPostPublisher().execute(_inputs(render[0]))
+    assert result.success is False and result.data["ledger_unreadable"] is True and api.posts == []
+
+
+@pytest.mark.skipif(not hasattr(Path, "chmod") or __import__("os").geteuid() == 0, reason="needs a non-root user")
+def test_unreadable_ledger_blocks_publishing(api, render):
+    tool = UploadPostPublisher()
+    plan = tool._plan(_inputs(render[0]))
+    tool._record(plan, "completed")
+    plan["ledger"].chmod(0)
+    try:
+        result = UploadPostPublisher().execute(_inputs(render[0]))
+    finally:
+        plan["ledger"].chmod(0o600)
+    assert result.success is False and result.data["ledger_unreadable"] is True
+    assert "cannot read" in result.error and api.posts == []
+
+
+def test_missing_ledger_is_an_empty_history(api, render):
+    tool = UploadPostPublisher()
+    plan = tool._plan(_inputs(render[0]))
+    assert not plan["ledger"].exists()
+    assert tool._read_ledger(plan["ledger"]) == []
+    result = UploadPostPublisher().execute(_inputs(render[0]))
+    assert result.success and len(api.posts) == 1

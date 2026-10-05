@@ -28,7 +28,11 @@ posting stale inputs:
   every submission. If an earlier submission of the same render with *different*
   inputs is still in flight or already live on an overlapping platform, the tool
   refuses to publish again unless ``allow_additional_post`` is set — the
-  corrected version and the stale one can't both go out silently.
+  corrected version and the stale one can't both go out silently. The ledger is
+  also the durable evidence of a completed publish: once Upload-Post has
+  forgotten the request (status retention expired), a re-run answers from the
+  ledger instead of uploading again, and a ledger that exists but cannot be
+  read or parsed blocks publishing rather than being treated as empty.
 * **Auditable log.** ``publish_log.metadata`` records the request id and the
   SHA-256 of the video, thumbnail and caption that were actually sent.
 """
@@ -104,6 +108,21 @@ class UploadPostError(Exception):
     def __init__(self, message: str, status: Optional[int] = None):
         super().__init__(message)
         self.status = status
+
+
+class LedgerError(UploadPostError):
+    """The submission ledger exists but cannot be trusted (unreadable or corrupt).
+
+    It may hold the only record of an upload Upload-Post already accepted, so the
+    publisher fails closed instead of treating it as empty history."""
+
+    def __init__(self, path: Path, reason: str):
+        super().__init__(
+            f"The submission ledger {path} is unreadable or corrupt ({reason}). It may be the only record "
+            "of an earlier accepted upload, so nothing was sent. Repair it or move it aside after checking "
+            "the target accounts, then re-run."
+        )
+        self.path = path
 
 
 def _sha256_file(path: Path) -> str:
@@ -467,10 +486,22 @@ class UploadPostPublisher(BaseTool):
 
     @staticmethod
     def _read_ledger(path: Path) -> list[dict[str, Any]]:
+        """Submissions recorded so far. A missing ledger is an empty history; an
+        existing one that cannot be read or parsed is NOT — see LedgerError."""
         try:
-            return json.loads(path.read_text(encoding="utf-8")).get("submissions", [])
-        except (OSError, ValueError):
+            text = path.read_text(encoding="utf-8")
+        except FileNotFoundError:
             return []
+        except OSError as exc:
+            raise LedgerError(path, f"cannot read: {exc}") from exc
+        try:
+            doc = json.loads(text)
+        except ValueError as exc:
+            raise LedgerError(path, f"invalid JSON: {exc}") from exc
+        submissions = doc.get("submissions") if isinstance(doc, dict) else None
+        if not isinstance(submissions, list) or not all(isinstance(s, dict) for s in submissions):
+            raise LedgerError(path, "unexpected structure")
+        return submissions
 
     @staticmethod
     def _write_ledger(path: Path, submissions: list[dict[str, Any]]) -> None:
@@ -479,7 +510,7 @@ class UploadPostPublisher(BaseTool):
         tmp.write_text(json.dumps({"version": 1, "submissions": submissions}, indent=2), encoding="utf-8")
         tmp.replace(path)
 
-    def _record(self, plan: dict[str, Any], state: str) -> None:
+    def _record(self, plan: dict[str, Any], state: str, **extra: Any) -> None:
         submissions = self._read_ledger(plan["ledger"])
         entry = next((s for s in submissions if s.get("request_id") == plan["request_id"]), None)
         if entry is None:
@@ -494,6 +525,7 @@ class UploadPostPublisher(BaseTool):
             submissions.append(entry)
         entry["state"] = state
         entry["updated_at"] = datetime.now(timezone.utc).isoformat()
+        entry.update(extra)
         self._write_ledger(plan["ledger"], submissions)
 
     def _conflicts(self, api_key: Optional[str], plan: dict[str, Any]) -> list[dict[str, Any]]:
@@ -666,11 +698,37 @@ class UploadPostPublisher(BaseTool):
 
     # ---- Ambiguity handling ----
 
-    def _ledger_state(self, plan: dict[str, Any]) -> Optional[str]:
+    def _ledger_entry(self, plan: dict[str, Any]) -> Optional[dict[str, Any]]:
         for sub in self._read_ledger(plan["ledger"]):
             if sub.get("request_id") == plan["request_id"]:
-                return sub.get("state")
+                return sub
         return None
+
+    def _ledger_state(self, plan: dict[str, Any]) -> Optional[str]:
+        entry = self._ledger_entry(plan)
+        return entry.get("state") if entry else None
+
+    def _completed_result(self, plan: dict[str, Any], entry: dict[str, Any], started: float) -> ToolResult:
+        """This exact publish already completed according to the ledger, and Upload-Post
+        no longer has the request (status/idempotency retention expired). The local
+        record is the durable evidence: return it instead of inferring "never
+        published" from the missing remote record and uploading again."""
+        results = entry.get("results") or []
+        failed = [r for r in results if r.get("status") == "failed"]
+        return ToolResult(
+            success=not failed,
+            data={
+                "publish_log": entry.get("publish_log"),
+                "request_id": plan["request_id"],
+                "resumed": True,
+                "resumed_from": "ledger",
+                "recorded_at": entry.get("updated_at"),
+                "results": results,
+                "ledger_path": str(plan["ledger"]),
+            },
+            error=None if not failed else "; ".join(f"{r['platform']}: {r.get('error')}" for r in failed),
+            duration_seconds=round(time.monotonic() - started, 2),
+        )
 
     def _submit_classified(self, api_key: str, plan: dict[str, Any]) -> Any:
         """Send the upload once. Returns the ledger state to record ("submitted" or
@@ -751,7 +809,13 @@ class UploadPostPublisher(BaseTool):
                 # Same request id seen before but unknown to Upload-Post: a previous run may have
                 # been accepted without us learning it (5xx, dropped connection, crash). Never
                 # upload it again on our own.
-                previous = self._ledger_state(plan)
+                entry = self._ledger_entry(plan)
+                previous = entry.get("state") if entry else None
+                # Completed locally but gone from the status endpoint: the remote record
+                # expired, not the publication. Only an explicit allow_additional_post
+                # sends the same publish again.
+                if previous == "completed" and not inputs.get("allow_additional_post"):
+                    return self._completed_result(plan, entry, started)
                 if previous in UNRESOLVED_STATES and not inputs.get("confirm_not_published"):
                     return self._ambiguous_result(plan, previous_state=previous)
                 # Recorded before the upload so an interruption mid-request is still visible next run.
@@ -762,6 +826,11 @@ class UploadPostPublisher(BaseTool):
                 self._record(plan, outcome)
 
             status = self._wait(api_key, plan["request_id"], int(inputs.get("wait_seconds", DEFAULT_WAIT_SECONDS)))
+        except LedgerError as exc:
+            return ToolResult(
+                success=False, error=str(exc),
+                data={"request_id": plan["request_id"], "ledger_path": str(exc.path), "ledger_unreadable": True},
+            )
         except UploadPostError as exc:
             return ToolResult(success=False, error=f"Upload-Post: {exc}", data={"request_id": plan["request_id"]})
         except Exception as exc:
@@ -784,8 +853,13 @@ class UploadPostPublisher(BaseTool):
             # either way, so block re-sending until the user checks.
             self._record(plan, "ambiguous")
             return self._ambiguous_result(plan, previous_state=None)
-        self._record(plan, final if final in FINAL_STATES else "in_flight")
         publish_log = self._publish_log(plan, status, resumed)
+        if final in FINAL_STATES:
+            # Keep the outcome with the record: a later run can answer from the
+            # ledger once Upload-Post has forgotten the request.
+            self._record(plan, final, results=self._normalize(status), publish_log=publish_log)
+        else:
+            self._record(plan, "in_flight")
 
         try:
             from schemas.artifacts import validate_artifact

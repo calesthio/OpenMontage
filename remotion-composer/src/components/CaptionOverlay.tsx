@@ -125,7 +125,16 @@ const PageRenderer: React.FC<{
                     : "0 2px 4px rgba(0,0,0,0.5)",
                 }}
               >
-                {w.word}{i < page.words.length - 1 ? wordSeparator : ""}
+                {/* A plain trailing space inside an inline-block span is
+                    trimmed by the browser, so words run together. A
+                    non-breaking space survives it. CJK (separator "")
+                    is unaffected. */}
+                {w.word}
+                {i < page.words.length - 1
+                  ? wordSeparator === " "
+                    ? "\u00A0"
+                    : wordSeparator
+                  : ""}
               </span>
             );
           })}

@@ -896,7 +896,7 @@ class VideoCompose(BaseTool):
         """
 
         staged_by_source: dict[Path, str] = {}
-        media_keys = {"source", "src", "backgroundSrc"}
+        media_keys = {"source", "src", "backgroundSrc", "images"}
 
         def visit(node: Any, parent_key: str | None = None) -> Any:
             if isinstance(node, dict):

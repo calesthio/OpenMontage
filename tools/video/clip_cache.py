@@ -170,6 +170,44 @@ class CacheEntry:
 
 
 # ----------------------------------------------------------------------
+# Path confinement and safety helpers
+# ----------------------------------------------------------------------
+
+
+def _is_safe_clip_id(clip_id: str) -> bool:
+    """Validate that clip_id is safe and cannot escape the cache directory."""
+    if not clip_id or not isinstance(clip_id, str):
+        return False
+    if "\x00" in clip_id:
+        return False
+    if any(sep in clip_id for sep in ("/", "\\", ":")) or ".." in clip_id:
+        return False
+    if clip_id.strip() in {".", ".."}:
+        return False
+    return True
+
+
+def _safe_blob_path(cache_dir: Path, name: str) -> Optional[Path]:
+    """Resolve a blob path and ensure it stays strictly within cache_dir."""
+    if not name or not isinstance(name, str):
+        return None
+    if "\x00" in name:
+        return None
+    if any(sep in name for sep in ("/", "\\", ":")) or ".." in name:
+        return None
+    if name.strip() in {".", ".."}:
+        return None
+    try:
+        resolved_dir = cache_dir.resolve()
+        candidate = (cache_dir / name).resolve()
+        if candidate.is_relative_to(resolved_dir) and candidate != resolved_dir:
+            return candidate
+    except (ValueError, RuntimeError, OSError):
+        return None
+    return None
+
+
+# ----------------------------------------------------------------------
 # The cache itself
 # ----------------------------------------------------------------------
 
@@ -277,6 +315,10 @@ class ClipCache:
                     try:
                         d = json.loads(line)
                         entry = CacheEntry.from_dict(d)
+                        if not _is_safe_clip_id(entry.clip_id):
+                            continue
+                        if _safe_blob_path(self.cache_dir, entry.file_name) is None:
+                            continue
                         entries[entry.clip_id] = entry
                     except (json.JSONDecodeError, KeyError, TypeError, ValueError):
                         continue
@@ -326,6 +368,10 @@ class ClipCache:
         gone), the stale entry is pruned and the call reports a miss,
         so the caller falls back to downloading fresh.
         """
+        if not _is_safe_clip_id(clip_id):
+            self.misses += 1
+            return False
+
         dest = Path(dest)
         with self._locked():
             entries = self._read_manifest()
@@ -334,9 +380,9 @@ class ClipCache:
                 self.misses += 1
                 return False
 
-            blob_path = self.cache_dir / entry.file_name
-            if not blob_path.exists():
-                # Drift — prune and miss.
+            blob_path = _safe_blob_path(self.cache_dir, entry.file_name)
+            if blob_path is None or not blob_path.exists():
+                # Drift or unsafe — prune and miss.
                 del entries[clip_id]
                 self._write_manifest(entries)
                 self.misses += 1
@@ -382,6 +428,9 @@ class ClipCache:
         and had its access time bumped), ``False`` if ingest failed
         (missing source, empty file, lock timeout, or link/copy fail).
         """
+        if not _is_safe_clip_id(clip_id):
+            return False
+
         source_path = Path(source_path)
         if not source_path.exists():
             return False
@@ -398,12 +447,14 @@ class ClipCache:
             entries = self._read_manifest()
 
             # Already cached → just bump last_access and return.
-            if clip_id in entries and (
-                self.cache_dir / entries[clip_id].file_name
-            ).exists():
-                entries[clip_id].last_access_at = time.time()
-                self._write_manifest(entries)
-                return True
+            if clip_id in entries:
+                existing_blob = _safe_blob_path(
+                    self.cache_dir, entries[clip_id].file_name
+                )
+                if existing_blob and existing_blob.exists():
+                    entries[clip_id].last_access_at = time.time()
+                    self._write_manifest(entries)
+                    return True
 
             # Make room.
             self._evict_to_fit_locked(entries, size_bytes)
@@ -412,7 +463,9 @@ class ClipCache:
             # as long as clip_ids are unique (they are — {source}_{source_id}).
             ext = source_path.suffix or ""
             blob_name = f"{clip_id}{ext}"
-            blob_path = self.cache_dir / blob_name
+            blob_path = _safe_blob_path(self.cache_dir, blob_name)
+            if blob_path is None:
+                return False
 
             # Clean any stale blob at the same path (drift or interrupted
             # ingest from a previous run).
@@ -497,7 +550,10 @@ class ClipCache:
         for victim in sorted_victims:
             if current_bytes + needed_bytes <= self.max_total_bytes:
                 break
-            blob_path = self.cache_dir / victim.file_name
+            blob_path = _safe_blob_path(self.cache_dir, victim.file_name)
+            if blob_path is None:
+                del entries[victim.clip_id]
+                continue
             unlinked = False
             try:
                 if blob_path.exists():

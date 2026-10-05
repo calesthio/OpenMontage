@@ -339,6 +339,7 @@ reference-image inputs are normalized to the provider's `images` array.
 > **Broad single-key coverage.** One API key unlocks image and video providers across multiple models.
 
 **Tools unlocked:** `flux_image`, `recraft_image`, `seedream_image`,
+`gpt_image2_fal`, `nano_banana_fal`,
 `kling_video`, `veo_video`, `seedance_video`, `gemini_omni_fal`,
 `minimax_fal_video`, `fal_elevenlabs_tts`, `fal_elevenlabs_music`
 **Env var:** `FAL_KEY`
@@ -363,6 +364,9 @@ No subscription — pure pay-as-you-go, no minimum spend.
 | Recraft v3 | ~$0.04/image | 25 images |
 | Seedream 5 Pro (up to 1536x1536) | $0.0675/image | ~14 images |
 | Seedream 5 Pro (up to 2048x2048) | $0.135/image | ~7 images |
+| GPT Image 2 (`gpt_image2_fal`, 1024x1024, high) | $0.211/image | ~5 images |
+| Nano Banana 2 (`nano_banana_fal`, 1K) | $0.08/image | ~12 images |
+| Nano Banana 2 Pro (`nano_banana_fal`, 1K) | $0.08/image (unconfirmed — same base rate as Nano Banana 2, not separately published) | ~12 images |
 
 **Video generation:**
 
@@ -376,6 +380,17 @@ No subscription — pure pay-as-you-go, no minimum spend.
 | WAN 2.5 | $0.05/sec | 20 seconds |
 
 **Free tier:** None — but $0 to start, you only pay for what you use.
+
+`gpt_image2_fal` and `nano_banana_fal` reach OpenAI's GPT Image 2 and
+Google's Nano Banana 2 / Nano Banana 2 Pro directly through fal.ai, gated
+only by `FAL_KEY` — no `OPENAI_API_KEY` or `ATLASCLOUD_API_KEY` required.
+They are separate tools from `openai_image` (direct OpenAI API) and
+`atlas_image` (Atlas Cloud gateway, which does not expose the Pro variant);
+all three are auto-discovered and selectable through `image_selector`.
+Nano Banana 2 Pro's per-image rate was not published on fal.ai's docs at
+the time these tools were built — `nano_banana_fal.estimate_cost()` uses
+Nano Banana 2's confirmed $0.08 base rate as a placeholder for the Pro
+variant. Confirm against fal.ai's live pricing before a paid batch run.
 
 The same key can also access ElevenLabs speech and music through fal.ai. Use
 `fal_elevenlabs_tts` when direct ElevenLabs credentials are unavailable, or
@@ -1445,7 +1460,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **Google** | `GOOGLE_API_KEY` (or `GEMINI_API_KEY`) | `google_tts`, `google_imagen`, `google_music`, `gemini_omni_video`, `veo_video` | Free tier (TTS) + paid |
 | **ElevenLabs** | `ELEVENLABS_API_KEY` | `elevenlabs_tts`, `music_gen` | Free tier + paid |
 | **fish.audio** | `FISH_AUDIO_API_KEY` | `fish_audio_tts` | Free tier (s2.1-pro-free) + paid |
-| **fal.ai** | `FAL_KEY` | `flux_image`, `recraft_image`, `kling_video`, `veo_video`, `seedance_video`, `gemini_omni_fal`, `minimax_fal_video` | Pay-as-you-go |
+| **fal.ai** | `FAL_KEY` | `flux_image`, `recraft_image`, `gpt_image2_fal`, `nano_banana_fal`, `kling_video`, `veo_video`, `seedance_video`, `gemini_omni_fal`, `minimax_fal_video` | Pay-as-you-go |
 | **Atlas Cloud** | `ATLASCLOUD_API_KEY` | `atlas_image`, `atlas_video` | Pay-as-you-go |
 | **Kling Official** | `KLING_API_KEY` | `kling_official_video`, `kling_official_image`, `kling_tts`, `kling_avatar`, `kling_lip_sync` | Pay-as-you-go |
 | **Volcengine Ark** | `ARK_API_KEY` | `seedance_ark` | Pay-as-you-go |
@@ -1470,7 +1485,7 @@ How many providers cover each capability:
 
 | Capability | Cloud Providers | Local Providers | Free Options |
 |-----------|----------------|-----------------|--------------|
-| **Image Generation** | FLUX, Kling Official, Grok, Google Imagen, GPT Image 2, Recraft | Local Diffusion | Pexels, Pixabay (stock) |
+| **Image Generation** | FLUX, Kling Official, Grok, Google Imagen, GPT Image 2 (OpenAI direct, fal.ai, Atlas Cloud), Nano Banana 2 (fal.ai, Atlas Cloud) / Nano Banana 2 Pro (fal.ai only), Recraft | Local Diffusion | Pexels, Pixabay (stock) |
 | **Video Generation** | Grok, Kling Official, fal.ai, Seedance via Volcengine Ark, Runway, Veo, Gemini Omni, Higgsfield, MiniMax, HeyGen, Tencent Hunyuan, ComfyUI Partner Nodes | WAN, Hunyuan, CogVideo, LTX, ComfyUI WAN, ComfyUI MiniMax H3 | Pexels, Pixabay (stock) |
 | **Text-to-Speech** | Azure AI Speech, ElevenLabs, fish.audio, Google TTS, Kling Official, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier, Azure free tier, fish.audio s2.1-pro-free |
 | **Music Generation** | ElevenLabs, Suno, Google Lyria | — | ElevenLabs free tier |

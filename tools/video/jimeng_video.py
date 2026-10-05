@@ -14,6 +14,7 @@ console.volcengine.com/iam/keymanage.
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import hmac
 import json
@@ -101,6 +102,14 @@ class JimengVideo(BaseTool):
                     "Must be publicly accessible."
                 ),
             },
+            "image_path": {
+                "type": "string",
+                "description": (
+                    "Local first-frame image for image-to-video. Sent as "
+                    "binary_data_base64 so no public URL or object storage is "
+                    "needed. Takes precedence over image_url when both are set."
+                ),
+            },
             "frames": {
                 "type": "integer",
                 "enum": [121, 241],
@@ -144,6 +153,7 @@ class JimengVideo(BaseTool):
         "prompt",
         "operation",
         "image_url",
+        "image_path",
         "frames",
         "aspect_ratio",
         "seed",
@@ -191,11 +201,21 @@ class JimengVideo(BaseTool):
             )
 
         operation = inputs.get("operation", "text_to_video")
-        if operation == "image_to_video" and not inputs.get("image_url"):
-            return ToolResult(
-                success=False,
-                error="image_to_video requires image_url (public URL).",
-            )
+        if operation == "image_to_video":
+            image_path = inputs.get("image_path")
+            if not image_path and not inputs.get("image_url"):
+                return ToolResult(
+                    success=False,
+                    error=(
+                        "image_to_video requires image_path (local file) or "
+                        "image_url (public URL)."
+                    ),
+                )
+            if image_path and not Path(image_path).is_file():
+                return ToolResult(
+                    success=False,
+                    error=f"image_path not found: {image_path}",
+                )
 
         start = time.time()
         try:
@@ -271,8 +291,16 @@ class JimengVideo(BaseTool):
             "aspect_ratio": inputs.get("aspect_ratio", "16:9"),
             "seed": int(inputs.get("seed", -1)),
         }
-        if operation == "image_to_video" and inputs.get("image_url"):
-            payload["image_urls"] = [inputs["image_url"]]
+        if operation == "image_to_video":
+            # A local file wins over a URL: it needs no public hosting, so it is
+            # the safer path for unreleased client artwork.
+            image_path = inputs.get("image_path")
+            if image_path:
+                payload["binary_data_base64"] = [
+                    base64.b64encode(Path(image_path).read_bytes()).decode("ascii")
+                ]
+            elif inputs.get("image_url"):
+                payload["image_urls"] = [inputs["image_url"]]
         return payload
 
     def _submit_task(self, payload: dict[str, Any], *, ak: str, sk: str) -> str:

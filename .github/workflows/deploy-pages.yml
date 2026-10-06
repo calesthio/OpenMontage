@@ -31,6 +31,13 @@ jobs:
         with:
           enablement: true
 
+      - name: Keep internal docs out of the published site
+        run: |
+          rm -rf a1-tour-and-travels/domains a1-tour-and-travels/set-url.sh
+          find a1-tour-and-travels -maxdepth 1 -name '*.md' -delete
+          find a1-tour-and-travels/marketing -name '*.md' -delete
+          echo "publishing:"; find a1-tour-and-travels -type f | sort
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: a1-tour-and-travels

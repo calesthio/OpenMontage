@@ -24,7 +24,7 @@ jobs:
         run: |
           set +e
           mkdir -p .diagnostics/screenshots
-          SITE="https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html"
+          SITE="https://snazim0345.github.io/OpenMontage/"
           ENC=$(python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1],safe=''))" "$SITE")
           {
             echo "screenshot attempts — $(date -u)"
@@ -36,10 +36,11 @@ jobs:
               magic=$(head -c 4 ".diagnostics/screenshots/$name" 2>/dev/null | od -An -tx1 | tr -d ' \n')
               printf "  %-16s http=%s bytes=%s magic=%s\n" "$name" "$code" "$size" "$magic"
             }
-            echo "== A. WordPress mShots (keyless) =="
-            grab mshots.png "https://s.wordpress.com/mshots/v1/$ENC?w=1200&h=1000"
-            echo "== B. thum.io (keyless) =="
+            echo "== A. full-page desktop shot (microlink, 1600px wide) =="
+            echo "== B. thum.io desktop =="
             grab thumio.png "https://image.thum.io/get/width/1200/crop/1000/noanimate/$SITE"
+            echo "== D. thum.io MOBILE (375px) =="
+            grab thumio-mobile.png "https://image.thum.io/get/width/375/crop/900/viewportWidth/375/noanimate/$SITE"
             echo "== C. microlink (keyless tier) =="
             curl -s -m 90 "https://api.microlink.io/?url=$ENC&screenshot=true&meta=false" > /tmp/ml.json
             head -c 400 /tmp/ml.json
@@ -61,6 +62,33 @@ jobs:
             done
           } > .diagnostics/screenshots/attempts.txt 2>&1
           cat .diagnostics/screenshots/attempts.txt
+
+      - name: Regenerate QR codes + claim a fresh short link for the new URL
+        run: |
+          set +e
+          SITE="https://snazim0345.github.io/OpenMontage/"
+          ENC=$(python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1],safe=''))" "$SITE")
+          {
+            echo "assets for the new URL — $(date -u)"
+            curl -sL -m 40 -o a1-tour-and-travels/assets/qr-website.png \
+              "https://api.qrserver.com/v1/create-qr-code/?size=800x800&margin=12&data=$ENC"
+            head -c 4 a1-tour-and-travels/assets/qr-website.png | grep -q PNG \
+              && echo "  qr-website.png regenerated for GitHub Pages ($(wc -c < a1-tour-and-travels/assets/qr-website.png) bytes)" \
+              || echo "  qr regeneration FAILED"
+            echo
+            echo "== short links pointing at the GitHub Pages site =="
+            for ALIAS in a1toursandtravel a1tourspune a1toursandtravelgh; do
+              printf "  is.gd/%-20s " "$ALIAS"
+              curl -s -m 25 "https://is.gd/create.php?format=simple&url=$ENC&shorturl=$ALIAS"; echo
+              sleep 2
+            done
+          } > .diagnostics/newurl-assets.txt 2>&1
+          cat .diagnostics/newurl-assets.txt
+          git config user.name site-bot
+          git config user.email site-bot@users.noreply.github.com
+          git add -f .diagnostics a1-tour-and-travels/assets/qr-website.png
+          git commit -q -m "assets: QR + short links for the GitHub Pages URL" || echo "nothing to commit"
+          git push origin HEAD:arena/54180390-openmontage 2>&1 | tail -2
 
       - name: Retry GitHub Pages with a fresh token context
         env:

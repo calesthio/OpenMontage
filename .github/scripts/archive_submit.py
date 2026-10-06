@@ -45,12 +45,14 @@ def pages():
 
 
 def submit(item):
+    """archive.org rate-limits hard, so be patient: 5 tries with growing waits."""
     url, name = item
-    for attempt in range(1, 4):
+    code = 0
+    for attempt in range(1, 6):
         code, _ = get("https://web.archive.org/save/" + url)
         if code in (200, 201, 302):
-            return f"  {name:<40} submitted  http={code}"
-        time.sleep(20 * attempt)
+            return f"  {name:<40} submitted  http={code} (attempt {attempt})"
+        time.sleep(30 * attempt)
     return f"  {name:<40} NOT submitted (last http={code})"
 
 
@@ -65,17 +67,36 @@ def verify(item):
     return f"  {name:<40} archived={'yes' if live else 'NO'}  {snap[:96]}"
 
 
+def _retry_missing(item):
+    """If the availability API still says NO, submit once more."""
+    line = verify(item)
+    if "archived=yes" in line:
+        return None
+    url, name = item
+    get("https://web.archive.org/save/" + url)
+    time.sleep(10)
+    return f"  (retried) " + verify(item)
+
+
 def main():
     items = pages()
     LOG.append(f"=== Wayback submissions — {time.strftime('%a %d %b %Y %H:%M UTC', time.gmtime())} ===")
     LOG.append(f"pages found in sitemap: {len(items)}")
     LOG.append("")
-    LOG.append("-- submitting (3 at a time) --")
-    with cf.ThreadPoolExecutor(max_workers=3) as ex:
+    LOG.append("-- submitting (2 at a time, patiently) --")
+    with cf.ThreadPoolExecutor(max_workers=2) as ex:
         for line in ex.map(submit, items):
             LOG.append(line)
             print(line, flush=True)
-    time.sleep(30)
+    LOG.append("")
+    LOG.append("-- retrying anything the availability API has not caught up with --")
+    time.sleep(45)
+    with cf.ThreadPoolExecutor(max_workers=1) as ex:
+        for line in ex.map(lambda it: _retry_missing(it), items):
+            if line:
+                LOG.append(line)
+                print(line, flush=True)
+
     LOG.append("")
     LOG.append("-- verifying the archive actually took the snapshots --")
     with cf.ThreadPoolExecutor(max_workers=3) as ex:

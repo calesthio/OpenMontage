@@ -1,0 +1,100 @@
+# A1 Tour and Travels — Free Marketing & Growth Kit
+
+Everything here costs **₹0**. No ads, no subscriptions, no credit card.
+Work top-to-bottom on day one: the first three items are what actually bring the phone calls.
+
+---
+
+## 0. Status — what is already done
+
+| Done for you | Where |
+|---|---|
+| Website live and reachable on the internet | `https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html` |
+| SEO: title, meta, Open Graph, geo tags, canonical | `index.html` `<head>` |
+| SEO: rich results markup (LocalBusiness + TaxiService, fares, hours, service areas) | `index.html` JSON-LD |
+| SEO: FAQ schema + a visible FAQ section targeting real searches | `index.html` `#faq` |
+| SEO: `sitemap.xml`, `robots.txt` | site folder |
+| Landing page with booking form → WhatsApp | `index.html` |
+| Free-host upgrade path (permanent URL) | see "Hosting" below |
+
+## 1. The 3 things that need your phone (OTP — nobody can do these for you)
+
+These are gated by an OTP sent to **7888007234**. They take ~10 minutes total and are the
+single highest-return marketing actions for a local transport business.
+
+| # | Action | Time | Why it matters |
+|---|---|---|---|
+| 1 | **Create the Google Business Profile** — cookbook in `01-google-business-profile.md` | 7 min | This is what makes you appear in Google Maps + "cab near me" searches. Free. Biggest win. |
+| 2 | **Set up WhatsApp Business** together with a Catalogue — `03-whatsapp-business-kit.md` | 3 min | Turns "Hi" into a booking without you typing fares repeatedly. |
+| 3 | **Create a free Facebook Page** — `04-social-media-content-pack.md` | 3 min | Free credibility + a place to collect reviews; also feeds Instagram. |
+
+> Nothing on the website is blocked on these. Do them in any order.
+
+## 2. Hosting — the permanent URL
+
+The live link above runs through a free CDN of the site's source code. It works, it's
+free, and you can share it today. For a "proper" web address there are two free upgrades:
+
+**Option A — GitHub Pages (1 click, keeps the same free setup)**
+1. Open https://github.com/snazim0345/OpenMontage/settings/pages
+2. Source → **Deploy from a branch**
+3. Branch → `arena/54180390-openmontage`, Folder → `/a1-tour-and-travels` → **Save**
+4. Wait ~60 seconds. Your site is then live at
+   `https://snazim0345.github.io/OpenMontage/`
+
+   (A publish workflow is already installed — every future update goes live by itself.)
+
+**Option B — a custom domain (₹0 hosting, ~₹700/year for the name)**
+Only if you later want `a1tourandtravels.in`. Buy the domain, then point it at Option A.
+Then find-and-replace the canonical URL in `index.html`, `sitemap.xml` and `robots.txt`.
+
+## 3. Thirty-day marketing calendar (all free)
+
+| Days | Focus | File |
+|---|---|---|
+| 1 | Google Business Profile live + first 10 photos + 3 posts | `01` |
+| 1 | WhatsApp Business + catalogue + greeting message | `03` |
+| 2 | Facebook Page + first 5 posts scheduled | `04` |
+| 2–3 | 8 free directory listings (NAP identical everywhere) | `02` |
+| 3 | Message your last 30 customers asking for a Google review | `05` |
+| 4 | Vehicle stickers + driver card + QR poster in the car | `05` |
+| 5–30 | 1 Google post + 3 WhatsApp status updates + 3 social posts per week | `03`, `04` |
+| 7, 14, 21, 28 | Ask every completed trip for a review (script in `05`) | `05` |
+| 10 | Partner outreach: 10 hotels/guest houses/lodges on both ends | `06` |
+| 20 | Check: calls per week, WhatsApp enquiries, direction requests | `06` |
+
+## 4. Tracking — how you'll know it's working
+
+Ask every caller **"How did you find us?"** and note it in a notebook or a Google Sheet with
+one row per booking:
+
+```
+Date | Name | Phone | Route | Vehicle | Fare | Source (Google/Friend/WhatsApp/Repeat/Board)
+```
+
+Review it weekly. When Google overtakes "friend" as your top source, your SEO is working.
+Google Business Profile also shows **calls, direction requests and website clicks** for free —
+open the profile → Performance.
+
+## 5. Ground rules that protect the business
+
+- **Never buy reviews or post fake ones.** Google detects them; the penalty is losing the
+  profile — the most valuable asset you have. Ask real customers instead (`05`).
+- Keep your **name, phone and service areas identical** everywhere (Google, Justdial,
+  Facebook, sticker). Inconsistent phone numbers split your ranking and confuse customers.
+- Reply to **every** review, especially bad ones, within 24 hours.
+- The three testimonials on the website are realistic *samples* — replace them with real
+  customer quotes (with their permission) as soon as you have them.
+
+## Files
+
+```
+marketing/
+├── README.md                        ← you are here (plan + calendar)
+├── 01-google-business-profile.md    ← do this first
+├── 02-free-listings-directories.md  ← paste-ready listings + copy in EN/HI/MR
+├── 03-whatsapp-business-kit.md      ← messages, catalogue, broadcasts, status
+├── 04-social-media-content-pack.md  ← 20 ready posts, reels, hashtags
+├── 05-reviews-referrals-offline.md  ← review engine, referral scheme, vehicle branding
+└── 06-seo-partnerships-growth.md    ← keywords, free links, hotel/tie-up outreach
+```

@@ -1,4 +1,21 @@
-# A1 Tour and Travels — single-page website
+# A1 Tour and Travels — website + growth kit
+
+> ### 🌐 Live site: https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html
+> ### 📞 Bookings: 7888007234 · 💬 https://wa.me/917888007234
+> Marketing playbooks (all free): [`marketing/`](marketing/README.md)
+
+## Hosting status
+
+| | |
+|---|---|
+| **Live now** | The CDN link above serves `index.html` with `content-type: text/html` (verified from CI). Free, no account, no card. |
+| **Permanent upgrade (1 click)** | GitHub → Settings → Pages → Source: *Deploy from a branch* → branch `arena/54180390-openmontage`, folder `/a1-tour-and-travels` → Save. Publishes at `https://snazim0345.github.io/OpenMontage/`. `deploy-pages.yml` then auto-publishes every update. |
+| **Blocked on** | The GitHub App that deploys this repo has no *Pages* permission, so enabling Pages via API returns `403 Resource not accessible by integration`. Tested from two token contexts. |
+| **Tested and rejected** | jsDelivr / statically.io / raw.githubusercontent serve HTML as `text/plain` (won't render). |
+| **Monitored** | `live-check.yml` verifies the live URL weekly and records history in `.diagnostics/`. |
+
+---
+
 
 A complete, mobile-responsive one-page site for a Pune–Mumbai taxi & bus business.
 **One file, zero dependencies, no build step:** `index.html` (HTML + CSS + vanilla JS inline).
@@ -18,6 +35,7 @@ Open `index.html` directly in any browser, or drop it on any static host
 | 6 | Why choose us | 24x7, experienced drivers, sanitized vehicles, affordable rates |
 | 7 | Booking form | Name, mobile, pickup, drop, date, vehicle, message → opens WhatsApp with everything pre-filled |
 | 8 | Testimonials | 3 five-star reviews |
+| 8b | FAQ | 6 questions that feed FAQPage rich results |
 | 9 | Footer | Contact, quick links, services, service areas (Pune, Mumbai, Lonavala, Nashik, Shirdi, All India), © 2026 |
 
 Plus a floating WhatsApp button, back-to-top button, smooth scroll, scroll-reveal
@@ -69,3 +87,22 @@ tap-here fallback.
 - Images are lazy-loaded below the fold; the hero is a CSS background so it paints fast.
 - Verified: balanced tags, unique IDs, no dangling anchors, valid JS, in-bounds SVG fallbacks.
 - Testimonials are realistic samples — replace with real customer quotes before going live.
+
+
+---
+
+## SEO built in
+
+- Title, meta description, keywords, canonical, robots, geo tags, hreflang, Open Graph + Twitter cards
+- **JSON-LD**: `LocalBusiness` + `TaxiService` (hours, geo, service areas, payment, language) with a
+  full `OfferCatalog` carrying the four fares, plus `FAQPage` and `WebSite` schema
+- Visible **FAQ section** (`#faq`) whose questions mirror real searches
+- `sitemap.xml` and `robots.txt`
+- No fabricated data in markup: no fake email, no self-serving `aggregateRating` (Google penalises
+  review spam — the visible testimonials are clearly samples to be replaced with real ones)
+
+## Marketing
+
+See [`marketing/README.md`](marketing/README.md) — Google Business Profile setup, directory
+listings (with English/Hindi/Marathi copy), WhatsApp Business kit, 20-post social pack,
+review engine, referral scheme, vehicle branding and partnership outreach. All zero-cost.

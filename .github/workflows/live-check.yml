@@ -3,7 +3,7 @@ name: Live site check
 on:
   push:
     branches: [arena/54180390-openmontage]
-    paths: ['a1-tour-and-travels/**']
+    paths: ['a1-tour-and-travels/**', '.github/workflows/live-check.yml']
   schedule:
     - cron: '0 4 * * 1'      # every Monday 04:00 UTC — free uptime monitoring
   workflow_dispatch:
@@ -19,7 +19,20 @@ jobs:
       - name: Verify the public site loads and contains the essentials
         run: |
           set +e
+          SHA=$(git rev-parse HEAD)
           URL="https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html"
+          P=a1-tour-and-travels/index.html
+          echo "==== which URL variants serve FRESH content? (local file = $(wc -c < $P) bytes) ====" | tee /tmp/probe.txt
+          for u in \
+            "https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/$P" \
+            "https://raw.githack.com/snazim0345/OpenMontage/$SHA/$P" \
+            "https://rawcdn.githack.com/snazim0345/OpenMontage/$SHA/$P" \
+            "https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/$P?v=$SHA" ; do
+            printf "%-110s" "$u" >> /tmp/probe.txt
+            curl -sL -m 30 -o /tmp/p.html -w " http=%{http_code} type=%{content_type} bytes=%{size_download}" "$u" >> /tmp/probe.txt
+            grep -qF "Pune ↔ Mumbai Travel Questions" /tmp/p.html && echo "  FRESH(has FAQ)" >> /tmp/probe.txt || echo "  stale" >> /tmp/probe.txt
+          done
+          cat /tmp/probe.txt
           mkdir -p .diagnostics
           {
             echo "live site check — $(date -u)"
@@ -33,6 +46,7 @@ jobs:
             done
             [ "$code" = "200" ] && [ "$ok" = "1" ] && echo "RESULT: PASS" || echo "RESULT: FAIL"
             echo "$(date -u +%F) http=$code pass=$ok" >> .diagnostics/live-history.txt
+            cat /tmp/probe.txt
           } > .diagnostics/live-check.txt 2>&1
           cat .diagnostics/live-check.txt
           git config user.name site-bot

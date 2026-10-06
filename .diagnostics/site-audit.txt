@@ -1,0 +1,453 @@
+{
+ "pages": [
+  {
+   "file": "404.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Page not found | A1 Tour and Travels — Call 7888007234",
+   "titleLen": 54,
+   "desc": "",
+   "h1": [
+    "Page nahi mili — but your ride is one tap away"
+   ],
+   "h2count": 0,
+   "canonical": "",
+   "words": 57,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 1,
+   "wa": 1
+  },
+  {
+   "file": "404.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Page not found | A1 Tour and Travels — Call 7888007234",
+   "titleLen": 54,
+   "desc": "",
+   "h1": [
+    "Page nahi mili — but your ride is one tap away"
+   ],
+   "h2count": 0,
+   "canonical": "",
+   "words": 57,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 1,
+   "wa": 1
+  },
+  {
+   "file": "airport-transfer-pune-mumbai.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Pune & Mumbai Airport Transfer | 24x7 with Flight Tracking | A1 Tour and Travels",
+   "titleLen": 80,
+   "desc": "Pune (PNQ) and Mumbai (BOM) airport pickup and drop, 24x7, with flight-timing tracking. Sedan, SUV and Tempo Traveller. Call 7888007234.",
+   "h1": [
+    "Pune & Mumbai Airport Transfers"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/airport-transfer-pune-mumbai.html",
+   "words": 853,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "airport-transfer-pune-mumbai.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Pune & Mumbai Airport Transfer | 24x7 with Flight Tracking | A1 Tour and Travels",
+   "titleLen": 80,
+   "desc": "Pune (PNQ) and Mumbai (BOM) airport pickup and drop, 24x7, with flight-timing tracking. Sedan, SUV and Tempo Traveller. Call 7888007234.",
+   "h1": [
+    "Pune & Mumbai Airport Transfers"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/airport-transfer-pune-mumbai.html",
+   "words": 845,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "index.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "A1 Tour and Travels | Pune ↔ Mumbai Cabs, Match Cabs & Bus Service | 7888007234",
+   "titleLen": 79,
+   "desc": "A1 Tour and Travels — 24x7 Pune to Mumbai cab, match cab (share cab) and AC bus service. Sedan, SUV, Tempo Traveller & bus booking + All India tour packages. Call 7888007234.",
+   "h1": [
+    "Pune ↔ Mumbai Cabs & Buses"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/",
+   "words": 1244,
+   "overflow": false,
+   "imgs": 4,
+   "brokenImgs": 0,
+   "tel": 14,
+   "wa": 21
+  },
+  {
+   "file": "index.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "A1 Tour and Travels | Pune ↔ Mumbai Cabs, Match Cabs & Bus Service | 7888007234",
+   "titleLen": 79,
+   "desc": "A1 Tour and Travels — 24x7 Pune to Mumbai cab, match cab (share cab) and AC bus service. Sedan, SUV, Tempo Traveller & bus booking + All India tour packages. Call 7888007234.",
+   "h1": [
+    "Pune ↔ Mumbai Cabs & Buses"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/",
+   "words": 1250,
+   "overflow": false,
+   "imgs": 4,
+   "brokenImgs": 0,
+   "tel": 14,
+   "wa": 21
+  },
+  {
+   "file": "match-cab-pune-mumbai.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Match Cab Pune to Mumbai | Pay Per Seat from ₹500 | A1 Tour and Travels",
+   "titleLen": 71,
+   "desc": "Match cab (share cab) between Pune and Mumbai from ₹500 per seat. Departures every hour both ways, AC vehicles, doorstep pickup on the way. Book on 7888007234.",
+   "h1": [
+    "Match Cab Pune ⇄ Mumbai"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/match-cab-pune-mumbai.html",
+   "words": 806,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 11,
+   "wa": 11
+  },
+  {
+   "file": "match-cab-pune-mumbai.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Match Cab Pune to Mumbai | Pay Per Seat from ₹500 | A1 Tour and Travels",
+   "titleLen": 71,
+   "desc": "Match cab (share cab) between Pune and Mumbai from ₹500 per seat. Departures every hour both ways, AC vehicles, doorstep pickup on the way. Book on 7888007234.",
+   "h1": [
+    "Match Cab Pune ⇄ Mumbai"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/match-cab-pune-mumbai.html",
+   "words": 798,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 11,
+   "wa": 11
+  },
+  {
+   "file": "mumbai-to-pune-cab.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Mumbai to Pune Cab ₹2500–3000 | Doorstep Pickup 24x7 | A1 Tour and Travels",
+   "titleLen": 74,
+   "desc": "Mumbai to Pune cab with doorstep pickup anywhere in Mumbai, including the airport and railway stations. Sedan ₹2500–3000, SUV ₹3500–4500. Toll included. Call 7888007234.",
+   "h1": [
+    "Mumbai to Pune Cab"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/mumbai-to-pune-cab.html",
+   "words": 821,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "mumbai-to-pune-cab.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Mumbai to Pune Cab ₹2500–3000 | Doorstep Pickup 24x7 | A1 Tour and Travels",
+   "titleLen": 74,
+   "desc": "Mumbai to Pune cab with doorstep pickup anywhere in Mumbai, including the airport and railway stations. Sedan ₹2500–3000, SUV ₹3500–4500. Toll included. Call 7888007234.",
+   "h1": [
+    "Mumbai to Pune Cab"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/mumbai-to-pune-cab.html",
+   "words": 813,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "pune-mumbai-bus.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Mumbai AC Bus | Seat ₹500–800 | Timings & Booking | A1 Tour and Travels",
+   "titleLen": 79,
+   "desc": "Pune to Mumbai AC bus service with reserved seating from ₹500–800 per seat. Daily departures both ways, boarding at convenient points. Book on 7888007234.",
+   "h1": [
+    "Pune to Mumbai AC Bus"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-mumbai-bus.html",
+   "words": 893,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "pune-mumbai-bus.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Mumbai AC Bus | Seat ₹500–800 | Timings & Booking | A1 Tour and Travels",
+   "titleLen": 79,
+   "desc": "Pune to Mumbai AC bus service with reserved seating from ₹500–800 per seat. Daily departures both ways, boarding at convenient points. Book on 7888007234.",
+   "h1": [
+    "Pune to Mumbai AC Bus"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-mumbai-bus.html",
+   "words": 885,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "pune-to-lonavala-cab.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Lonavala Cab | One Way & Day Trip | ₹1500–2500 | A1 Tour and Travels",
+   "titleLen": 76,
+   "desc": "Pune to Lonavala cab for one-way trips, monsoon drives and sightseeing day trips. Sedan, SUV and Tempo Traveller with verified drivers. Call 7888007234.",
+   "h1": [
+    "Pune to Lonavala Cab"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-lonavala-cab.html",
+   "words": 825,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "pune-to-lonavala-cab.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Lonavala Cab | One Way & Day Trip | ₹1500–2500 | A1 Tour and Travels",
+   "titleLen": 76,
+   "desc": "Pune to Lonavala cab for one-way trips, monsoon drives and sightseeing day trips. Sedan, SUV and Tempo Traveller with verified drivers. Call 7888007234.",
+   "h1": [
+    "Pune to Lonavala Cab"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-lonavala-cab.html",
+   "words": 817,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "pune-to-mumbai-cab.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Mumbai Cab ₹2500–3000 | Toll, Fuel & Parking Included | A1 Tour and Travels",
+   "titleLen": 83,
+   "desc": "Pune to Mumbai cab at a fixed fare — sedan ₹2500–3000, SUV ₹3500–4500. Doorstep pickup anywhere in Pune, toll and parking included, 24x7. Call 7888007234.",
+   "h1": [
+    "Pune to Mumbai Cab"
+   ],
+   "h2count": 9,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-mumbai-cab.html",
+   "words": 955,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 11,
+   "wa": 11
+  },
+  {
+   "file": "pune-to-mumbai-cab.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Mumbai Cab ₹2500–3000 | Toll, Fuel & Parking Included | A1 Tour and Travels",
+   "titleLen": 83,
+   "desc": "Pune to Mumbai cab at a fixed fare — sedan ₹2500–3000, SUV ₹3500–4500. Doorstep pickup anywhere in Pune, toll and parking included, 24x7. Call 7888007234.",
+   "h1": [
+    "Pune to Mumbai Cab"
+   ],
+   "h2count": 9,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-mumbai-cab.html",
+   "words": 947,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 11,
+   "wa": 11
+  },
+  {
+   "file": "pune-to-shirdi-cab.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Shirdi Cab & Tempo Traveller | Darshan Trip | A1 Tour and Travels",
+   "titleLen": 73,
+   "desc": "Pune to Shirdi cab and Tempo Traveller for Sai Baba darshan. Comfortable one-way or round trip, group friendly, verified drivers. Call 7888007234 for a fixed quote.",
+   "h1": [
+    "Pune to Shirdi Cab & Tempo Traveller"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-shirdi-cab.html",
+   "words": 811,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "pune-to-shirdi-cab.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Shirdi Cab & Tempo Traveller | Darshan Trip | A1 Tour and Travels",
+   "titleLen": 73,
+   "desc": "Pune to Shirdi cab and Tempo Traveller for Sai Baba darshan. Comfortable one-way or round trip, group friendly, verified drivers. Call 7888007234 for a fixed quote.",
+   "h1": [
+    "Pune to Shirdi Cab & Tempo Traveller"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-shirdi-cab.html",
+   "words": 803,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "tempo-traveller-pune.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Tempo Traveller on Hire in Pune | 12–17 Seater | Groups & Tours | A1 Tour and Travels",
+   "titleLen": 85,
+   "desc": "Tempo Traveller on hire in Pune — 12–17 seater with push-back seats for family functions, weddings, corporate outings and pilgrimage tours. Call 7888007234 for a quote.",
+   "h1": [
+    "Tempo Traveller on Hire in Pune"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/tempo-traveller-pune.html",
+   "words": 839,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "tempo-traveller-pune.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Tempo Traveller on Hire in Pune | 12–17 Seater | Groups & Tours | A1 Tour and Travels",
+   "titleLen": 85,
+   "desc": "Tempo Traveller on hire in Pune — 12–17 seater with push-back seats for family functions, weddings, corporate outings and pilgrimage tours. Call 7888007234 for a quote.",
+   "h1": [
+    "Tempo Traveller on Hire in Pune"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/tempo-traveller-pune.html",
+   "words": 831,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "tour-packages.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "All India Tour Packages from Pune | Family, Honeymoon & Pilgrimage | A1 Tour and Travels",
+   "titleLen": 88,
+   "desc": "Customised All India tour packages from Pune — Maharashtra weekend trips, Shirdi and Nashik pilgrimage, Goa, Ajanta–Ellora, Kerala, Rajasthan and more. Call 7888007234.",
+   "h1": [
+    "All India Tour Packages"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/tour-packages.html",
+   "words": 841,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "tour-packages.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "All India Tour Packages from Pune | Family, Honeymoon & Pilgrimage | A1 Tour and Travels",
+   "titleLen": 88,
+   "desc": "Customised All India tour packages from Pune — Maharashtra weekend trips, Shirdi and Nashik pilgrimage, Goa, Ajanta–Ellora, Kerala, Rajasthan and more. Call 7888007234.",
+   "h1": [
+    "All India Tour Packages"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/tour-packages.html",
+   "words": 833,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  }
+ ],
+ "brokenInternalLinks": [
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230B3D91'/%3E%3Cpath d='M7 19.5h18M9 19.5l1.6-5.2A2 2 0 0 1 12.5 13h7a2 2 0 0 1 1.9 1.3l1.6 5.2' stroke='%23FFA500' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='11.5' cy='21.5' r='1.8' fill='%23FFA500'/%3E%3Ccircle cx='20.5' cy='21.5' r='1.8' fill='%23FFA500'/%3E%3C/svg%3E -> 404"
+ ]
+}
+
+=== SUMMARY ===
+page-viewport combinations checked: 22
+problems: 0
+broken internal links: 1
+  data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230B3D91'/%3E%3Cpath d='M7 19.5h18M9 19.5l1.6-5.2A2 2 0 0 1 12.5 13h7a2 2 0 0 1 1.9 1.3l1.6 5.2' stroke='%23FFA500' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='11.5' cy='21.5' r='1.8' fill='%23FFA500'/%3E%3Ccircle cx='20.5' cy='21.5' r='1.8' fill='%23FFA500'/%3E%3C/svg%3E -> 404

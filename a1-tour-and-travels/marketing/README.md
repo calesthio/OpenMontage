@@ -1,6 +1,8 @@
 # A1 Tour and Travels — Free Marketing & Growth Kit
 
 Everything here costs **₹0**. No ads, no subscriptions, no credit card.
+
+**Fastest start:** open the ad pack — [post-ads.html](../post-ads.html) — download an image, copy the caption, post it. Two minutes, zero rupees.
 Work top-to-bottom on day one: the first three items are what actually bring the phone calls.
 
 ---
@@ -22,6 +24,9 @@ Everything below is **done, deployed and verified**. Nothing here needs money, a
 | 📈 **Uptime monitoring** | Weekly check, history logged, all green |
 | 🔒 **Security** | CSP (blocks any data exfiltration), no third-party JS, HTTPS/HSTS, hardened links, `SECURITY.md` |
 | 📱 **Installable app** | Add to Home Screen works, with offline access — proven: `swController=True, offlineReload=True` |
+| 🎨 **6 ready-to-post ad creatives** | Real PNGs you can post today: 4 square (1080×1080) + 2 WhatsApp-status vertical (1080×1920) |
+| 📲 **Ad pack page (on your phone)** | Every creative with a **Download** button, a **Copy caption** button and a **Share** button — plus the captions written out. Open it live: https://snazim0345.github.io/OpenMontage/post-ads.html |
+| 🗄️ **Internet Archive copies** | Every page submitted to the Wayback Machine — free permanent copies, no account needed |
 | 🖨️ **Print kit + QR codes** | Fare card, vehicle sticker, QR poster, WhatsApp status, Instagram post — ready to print |
 | 📣 **20 social posts + 15 broadcasts** | Ready to copy-paste (English + Marathi) |
 

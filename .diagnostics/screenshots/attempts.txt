@@ -1,0 +1,14 @@
+screenshot attempts — Tue Oct  6 01:40:33 UTC 2026
+== A. WordPress mShots (keyless) ==
+  mshots.png       http=200 bytes=8737 magic=47494638
+== B. thum.io (keyless) ==
+  thumio.png       http=200 bytes=54828 magic=89504e47
+== C. microlink (keyless tier) ==
+{"status":"success","data":{"url":"https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html","screenshot":{"size_pretty":"136 kB","size":136009,"type":"png","url":"https://iad.microlink.io/l20UEQLZ9PIp0SH31TVGyg62BVL_-uJk9P3g-q4uKwojwSXy1XKnozYnWtyrKyecR7yEx3FvnHjRQgIoV_XV9g.png","width":2560,"height":1600}},"statusCode":null,"headers":[]}
+  microlink url: https://iad.microlink.io/l20UEQLZ9PIp0SH31TVGyg62BVL_-uJk9P3g-q4uKwojwSXy1XKnozYnWtyrKyecR7yEx3FvnHjRQgIoV_XV9g.png
+  microlink.png    http=200 bytes=136009 magic=89504e47
+
+== keep only real PNGs ==
+  VALID   .diagnostics/screenshots/microlink.png (136009 bytes)
+  discard .diagnostics/screenshots/mshots.png
+  VALID   .diagnostics/screenshots/thumio.png (54828 bytes)

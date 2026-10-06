@@ -1,0 +1,50 @@
+name: Claim a branded short link
+on:
+  push:
+    branches: [arena/54180390-openmontage]
+    paths: ['linkname-trigger.txt']
+permissions:
+  contents: write
+jobs:
+  claim:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Try to claim a1toursandtravel on free short-link services
+        run: |
+          set +e
+          TARGET="https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html"
+          ENC=$(python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1],safe=''))" "$TARGET")
+          mkdir -p .diagnostics
+          {
+            echo "branded short-link attempt — $(date -u)"
+            echo "target: $TARGET"
+            echo
+            for ALIAS in a1toursandtravel a1toursandtravels a1tourstravel punemumbaitaxi a1tourtravel; do
+              echo "-- alias: $ALIAS --"
+              echo -n "  is.gd  : "
+              curl -s -m 25 "https://is.gd/create.php?format=simple&url=$ENC&shorturl=$ALIAS"
+              echo
+              echo -n "  tinyurl: "
+              curl -s -m 25 "https://tinyurl.com/api-create.php?url=$ENC&alias=$ALIAS"
+              echo
+              sleep 2
+            done
+            echo
+            echo "== verify which links resolve to our site =="
+            for U in https://is.gd/a1toursandtravel https://tinyurl.com/a1toursandtravel \
+                     https://is.gd/a1toursandtravels https://tinyurl.com/a1toursandtravels \
+                     https://is.gd/a1tourstravel https://tinyurl.com/a1tourstravel \
+                     https://is.gd/punemumbaitaxi https://tinyurl.com/punemumbaitaxi \
+                     https://is.gd/a1tourtravel https://tinyurl.com/a1tourtravel; do
+              printf "  %-42s" "$U"
+              curl -sL -o /tmp/x.html -m 30 -w "http=%{http_code}\n" "$U"
+              if grep -qF "A1 Tour and Travels" /tmp/x.html; then echo "        -> OK, serves our site"; else echo "        -> NOT ours"; fi
+            done
+          } > .diagnostics/shortlinks.txt 2>&1
+          cat .diagnostics/shortlinks.txt
+          git config user.name site-bot
+          git config user.email site-bot@users.noreply.github.com
+          git add -f .diagnostics/shortlinks.txt
+          git commit -q -m "seo: branded short-link claim" || true
+          git push origin HEAD:arena/54180390-openmontage 2>&1 | tail -2

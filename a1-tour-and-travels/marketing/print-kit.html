@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>A1 Tour and Travels — Print & Social Kit</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   PRINT & SOCIAL KIT — everything here is free to print/share.
+   How to use:
+     • Print (Ctrl/Cmd+P) → choose A5 or A4 → "Background graphics" ON
+     • Social: open the sheet, screenshot the box, or use your phone
+   Each ".sheet" is exactly one deliverable.
+   ============================================================ */
+*{ box-sizing:border-box; margin:0; padding:0; }
+body{
+  font-family:'Poppins',system-ui,Arial,sans-serif; background:#eef2f8; color:#132043;
+  padding:24px; display:flex; flex-direction:column; align-items:center; gap:26px;
+}
+.howto{
+  max-width:820px; background:#fff; border-left:5px solid #FFA500; border-radius:12px;
+  padding:16px 20px; font-size:14px; line-height:1.6; box-shadow:0 6px 20px rgba(11,61,145,.08);
+}
+.howto b{ color:#0B3D91; }
+.howto code{ background:#eef3fc; padding:2px 6px; border-radius:5px; font-size:13px; }
+.sheet{
+  width:760px; max-width:100%; background:#fff; border-radius:16px; overflow:hidden;
+  box-shadow:0 14px 40px rgba(11,61,145,.16); position:relative;
+}
+.sheet__label{
+  width:760px; max-width:100%; font-size:12px; font-weight:700; letter-spacing:.12em;
+  text-transform:uppercase; color:#0B3D91; margin-bottom:-18px;
+}
+.brand{ background:linear-gradient(135deg,#0B3D91,#1250b8); color:#fff; padding:22px 26px; display:flex; align-items:center; gap:14px; }
+.brand__logo{ width:48px; height:48px; border-radius:13px; background:rgba(255,255,255,.14); display:grid; place-items:center; font-size:24px; }
+.brand h1{ font-size:20px; letter-spacing:-.02em; }
+.brand p{ font-size:12px; color:#c6d8f7; letter-spacing:.08em; text-transform:uppercase; }
+.brand .phone{ margin-left:auto; text-align:right; font-weight:800; font-size:20px; }
+.brand .phone small{ display:block; font-weight:500; font-size:11px; color:#c6d8f7; letter-spacing:.1em; }
+
+/* ---- fare card ---- */
+.fare{ padding:24px 26px 28px; }
+.fare h2{ font-size:16px; color:#0B3D91; margin-bottom:14px; letter-spacing:-.01em; }
+.fare table{ width:100%; border-collapse:collapse; }
+.fare td{ padding:13px 12px; border-bottom:1px solid #e3e9f4; font-size:15px; }
+.fare tr:last-child td{ border-bottom:0; }
+.fare .veh{ font-weight:700; color:#072a66; }
+.fare .veh small{ display:block; font-weight:400; font-size:12px; color:#5b6b8c; }
+.fare .price{ text-align:right; font-weight:800; color:#0B3D91; white-space:nowrap; }
+.fare .price em{ font-style:normal; font-size:11px; font-weight:600; color:#5b6b8c; display:block; }
+.fare__note{
+  margin-top:16px; background:#fff6e6; border:1px dashed #ffcf78; border-radius:10px;
+  padding:12px 14px; font-size:12.5px; color:#7a5a12; line-height:1.55;
+}
+.fare__cta{
+  margin-top:16px; display:flex; align-items:center; gap:16px;
+  background:#f5f8fe; border:1px solid #dfe8f8; border-radius:12px; padding:14px 16px;
+}
+.fare__cta img{ width:96px; height:96px; }
+.fare__cta strong{ display:block; font-size:15px; color:#0B3D91; margin-bottom:4px; }
+.fare__cta span{ font-size:12.5px; color:#5b6b8c; line-height:1.5; }
+
+/* ---- sticker ---- */
+.sticker{ display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:18px; }
+.sticker .st{
+  border:3px solid #0B3D91; border-radius:12px; padding:14px 16px; text-align:center;
+}
+.sticker .st--alt{ background:#0B3D91; color:#fff; border-color:#0B3D91; }
+.sticker .st h3{ font-size:17px; letter-spacing:.02em; margin-bottom:6px; color:inherit; }
+.sticker .st--alt h3{ color:#FFA500; }
+.sticker .st p{ font-size:15px; font-weight:700; line-height:1.5; }
+.sticker .st span{ display:block; font-size:12px; font-weight:500; opacity:.75; margin-top:4px; }
+
+/* ---- QR poster ---- */
+.poster{
+  background:linear-gradient(160deg,#072a66,#0B3D91 55%,#1250b8); color:#fff;
+  padding:34px 30px; text-align:center;
+}
+.poster h2{ font-size:30px; letter-spacing:-.03em; line-height:1.15; }
+.poster h2 span{ color:#FFA500; }
+.poster .sub{ color:#cfe0ff; font-size:15px; margin:10px 0 20px; }
+.poster .qr{ background:#fff; border-radius:20px; padding:16px; width:280px; margin:0 auto 18px; }
+.poster .qr img{ width:100%; display:block; }
+.poster .bignum{ font-size:30px; font-weight:800; letter-spacing:-.01em; }
+.poster .bignum small{ display:block; font-size:12px; font-weight:500; color:#cfe0ff; letter-spacing:.14em; text-transform:uppercase; margin-top:6px; }
+.poster .steps{ display:flex; justify-content:center; gap:26px; margin-top:22px; font-size:13px; color:#dbe7fb; }
+.poster .steps div b{ display:block; color:#FFA500; font-size:20px; }
+
+/* ---- social: status 1080x1920 ratio ---- */
+.status{
+  width:100%; aspect-ratio:9/16; max-height:620px;
+  background:linear-gradient(165deg,#0B3D91,#072a66 60%,#051d47);
+  color:#fff; padding:34px 30px; display:flex; flex-direction:column; justify-content:space-between;
+}
+.status__tag{
+  align-self:flex-start; background:#FFA500; color:#3a2500; font-size:13px; font-weight:800;
+  padding:7px 16px; border-radius:99px; letter-spacing:.04em;
+}
+.status h2{ font-size:34px; line-height:1.15; letter-spacing:-.03em; margin-top:14px; }
+.status h2 em{ font-style:normal; color:#FFA500; }
+.status ul{ list-style:none; margin:18px 0 0; display:grid; gap:10px; }
+.status li{ font-size:18px; display:flex; justify-content:space-between; border-bottom:1px dashed rgba(255,255,255,.22); padding-bottom:9px; }
+.status li b{ color:#FFA500; white-space:nowrap; }
+.status__foot{ text-align:center; }
+.status__foot .num{ font-size:30px; font-weight:800; }
+.status__foot small{ display:block; color:#cfe0ff; font-size:13px; letter-spacing:.1em; text-transform:uppercase; margin-top:4px; }
+
+/* ---- social: square post ---- */
+.post{ width:100%; aspect-ratio:1/1; max-height:620px; background:#fff; display:flex; flex-direction:column; }
+.post__top{ background:#0B3D91; color:#fff; padding:22px 26px; display:flex; align-items:center; gap:12px; }
+.post__top b{ font-size:19px; }
+.post__top span{ margin-left:auto; font-size:17px; font-weight:800; color:#FFA500; }
+.post__body{ flex:1; padding:26px; display:flex; flex-direction:column; justify-content:center; }
+.post__body h2{ font-size:32px; color:#072a66; letter-spacing:-.03em; line-height:1.2; margin-bottom:8px; }
+.post__body h2 em{ font-style:normal; color:#FFA500; }
+.post__body p{ color:#5b6b8c; font-size:15px; }
+.post__grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px; }
+.post__grid div{ background:#f5f8fe; border:1px solid #dfe8f8; border-radius:10px; padding:12px; }
+.post__grid b{ display:block; font-size:13px; color:#5b6b8c; font-weight:600; }
+.post__grid span{ font-size:20px; font-weight:800; color:#0B3D91; }
+.post__foot{ background:#f5f8fe; border-top:1px solid #dfe8f8; padding:16px 26px; font-size:15px; font-weight:700; color:#0B3D91; }
+
+@media print{
+  body{ background:#fff; padding:0; gap:0; }
+  .howto{ display:none; }
+  .sheet__label{ display:none; }
+  .sheet{ box-shadow:none; border-radius:0; page-break-after:always; width:100%; }
+}
+@media (max-width:800px){
+  body{ padding:12px; }
+  .sheet__label{ width:100%; }
+  .sticker{ grid-template-columns:1fr; }
+  .status, .post{ max-height:none; }
+}
+</style>
+</head>
+<body>
+
+<div class="howto">
+  <b>How to use this kit (all free):</b><br />
+  1. Open this file in your browser. 2. <b>Print</b> (Ctrl/Cmd&nbsp;+&nbsp;P) → paper <b>A5</b> or <b>A4</b> → turn
+  <b>"Background graphics" ON</b> → print the fare card / sticker / QR poster and stick them up.<br />
+  3. For WhatsApp status &amp; Instagram, screenshot the last two boxes on your phone, or open this
+  page on the phone and screenshot. The QR images live in <code>../assets/</code>.
+</div>
+
+<!-- ══════════════ 1. FARE CARD (hand to every passenger) ══════════════ -->
+<div class="sheet__label">1 · Fare card — print A5, keep in every car</div>
+<div class="sheet">
+  <div class="brand">
+    <div class="brand__logo">🚖</div>
+    <div>
+      <h1>A1 Tour and Travels</h1>
+      <p>Pune ↔ Mumbai · 24x7</p>
+    </div>
+    <div class="phone">7888007234<small>Call / WhatsApp</small></div>
+  </div>
+  <div class="fare">
+    <h2>PUNE ↔ MUMBAI — ONE WAY FARES</h2>
+    <table>
+      <tr><td class="veh">Sedan<small>Dzire / Etios</small></td><td class="price">₹2500 – ₹3000<em>4 seater</em></td></tr>
+      <tr><td class="veh">SUV<small>Ertiga / Innova</small></td><td class="price">₹3500 – ₹4500<em>7 seater</em></td></tr>
+      <tr><td class="veh">Tempo Traveller<small>Push-back seats</small></td><td class="price">₹6000 – ₹8000<em>17 seater</em></td></tr>
+      <tr><td class="veh">AC Bus<small>Per seat</small></td><td class="price">₹500 – ₹800<em>45 seater</em></td></tr>
+    </table>
+    <div class="fare__note">
+      <b>Prices may vary.</b> Toll, fuel, parking and driver allowance included. Match cab (share cab)
+      rates are per seat and start lower. Call for an exact quote — Lonavala, Nashik, Shirdi and all-India
+      tours also available.
+    </div>
+    <div class="fare__cta">
+      <img src="../assets/qr-whatsapp.png" alt="WhatsApp QR code — scan to book" />
+      <div>
+        <strong>Scan to book on WhatsApp</strong>
+        <span>Scan → Send → get your exact fare in 5 minutes.<br />Or call <b>7888007234</b> any time, day or night.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ 2. VEHICLE STICKER ══════════════ -->
+<div class="sheet__label">2 · Vehicle sticker — print, laminate, paste on both rear windows</div>
+<div class="sheet">
+  <div class="sticker">
+    <div class="st">
+      <h3>A1 TOUR AND TRAVELS</h3>
+      <p>PUNE ⇄ MUMBAI<br />MATCH CAB · AC BUS</p>
+      <span>📞 7888007234</span>
+    </div>
+    <div class="st st--alt">
+      <h3>24x7 CABS &amp; BUSES</h3>
+      <p>All India Tours<br />Tempo Traveller · SUV</p>
+      <span>WhatsApp 7888007234</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ 3. QR POSTER ══════════════ -->
+<div class="sheet__label">3 · QR poster — print A5, ask petrol pumps / dhabas / hotels to display</div>
+<div class="sheet">
+  <div class="poster">
+    <h2>Cab chahiye?<br /><span>Scan karo, book karo.</span></h2>
+    <p class="sub">Pune ↔ Mumbai · Match Cab · AC Bus · All India Tours</p>
+    <div class="qr"><img src="../assets/qr-whatsapp.png" alt="Scan to book A1 Tour and Travels on WhatsApp" /></div>
+    <div class="bignum">7888007234<small>Or just call — we answer 24x7</small></div>
+    <div class="steps">
+      <div><b>1</b>Scan</div>
+      <div><b>2</b>Send</div>
+      <div><b>3</b>Get fare</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ 4. WHATSAPP STATUS (9:16) ══════════════ -->
+<div class="sheet__label">4 · WhatsApp status / Instagram story — screenshot this box</div>
+<div class="sheet">
+  <div class="status">
+    <div>
+      <span class="status__tag">A1 TOUR AND TRAVELS</span>
+      <h2>Pune → Mumbai<br /><em>aaj niklo, ghar se pickup</em></h2>
+      <ul>
+        <li>Sedan (4 seater) <b>₹2500+</b></li>
+        <li>SUV (7 seater) <b>₹3500+</b></li>
+        <li>Tempo Traveller (17) <b>₹6000+</b></li>
+        <li>AC Bus seat <b>₹500+</b></li>
+      </ul>
+    </div>
+    <div class="status__foot">
+      <div class="num">7888007234</div>
+      <small>Call / WhatsApp · 24x7</small>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ 5. INSTAGRAM POST (1:1) ══════════════ -->
+<div class="sheet__label">5 · Instagram / Facebook post — screenshot this box</div>
+<div class="sheet">
+  <div class="post">
+    <div class="post__top">🚖 <b>A1 Tour and Travels</b> <span>24x7</span></div>
+    <div class="post__body">
+      <h2>No surge.<br /><em>Fixed fare.</em></h2>
+      <p>Toll, fuel, parking and driver — all included. What we quote is what you pay.</p>
+      <div class="post__grid">
+        <div><b>Sedan · 4 seater</b><span>₹2500+</span></div>
+        <div><b>SUV · 7 seater</b><span>₹3500+</span></div>
+        <div><b>Tempo · 17 seater</b><span>₹6000+</span></div>
+        <div><b>Bus seat</b><span>₹500+</span></div>
+      </div>
+    </div>
+    <div class="post__foot">Pune ↔ Mumbai · 📞 7888007234 · WhatsApp to book</div>
+  </div>
+</div>
+
+</body>
+</html>

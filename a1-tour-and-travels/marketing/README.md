@@ -57,7 +57,7 @@ Then find-and-replace the canonical URL in `index.html`, `sitemap.xml` and `robo
 | 2 | Facebook Page + first 5 posts scheduled | `04` |
 | 2–3 | 8 free directory listings (NAP identical everywhere) | `02` |
 | 3 | Message your last 30 customers asking for a Google review | `05` |
-| 4 | Vehicle stickers + driver card + QR poster in the car | `05` |
+| 4 | Vehicle stickers + fare card + QR poster in the car (**print-ready file included**) | `05`, `print-kit.html` |
 | 5–30 | 1 Google post + 3 WhatsApp status updates + 3 social posts per week | `03`, `04` |
 | 7, 14, 21, 28 | Ask every completed trip for a review (script in `05`) | `05` |
 | 10 | Partner outreach: 10 hotels/guest houses/lodges on both ends | `06` |
@@ -75,6 +75,15 @@ Date | Name | Phone | Route | Vehicle | Fare | Source (Google/Friend/WhatsApp/Re
 Review it weekly. When Google overtakes "friend" as your top source, your SEO is working.
 Google Business Profile also shows **calls, direction requests and website clicks** for free —
 open the profile → Performance.
+
+## 4b. Ready-made graphics (already generated for you)
+
+`marketing/print-kit.html` contains five print/screenshot-ready designs: the **fare card** to keep
+in every car, the **vehicle sticker**, an **A5 QR poster**, a **WhatsApp status** and an
+**Instagram post**. It uses two real QR codes committed at
+`assets/qr-whatsapp.png` (opens your WhatsApp with a booking message pre-filled) and
+`assets/qr-website.png` (opens the website). Open the file in a browser → print, or screenshot
+on your phone.
 
 ## 5. Ground rules that protect the business
 
@@ -96,5 +105,7 @@ marketing/
 ├── 03-whatsapp-business-kit.md      ← messages, catalogue, broadcasts, status
 ├── 04-social-media-content-pack.md  ← 20 ready posts, reels, hashtags
 ├── 05-reviews-referrals-offline.md  ← review engine, referral scheme, vehicle branding
-└── 06-seo-partnerships-growth.md    ← keywords, free links, hotel/tie-up outreach
+├── 06-seo-partnerships-growth.md    ← keywords, free links, hotel/tie-up outreach
+└── print-kit.html                   ← 5 print/social designs, ready to print or screenshot
+                                       (fare card, vehicle sticker, QR poster, status, IG post)
 ```

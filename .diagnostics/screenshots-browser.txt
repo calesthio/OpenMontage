@@ -1,0 +1,53 @@
+real-browser screenshots — Tue Oct  6 01:52:48 UTC 2026
+site: https://snazim0345.github.io/OpenMontage/
+
+[
+ {
+  "name": "desktop",
+  "viewport": 1440,
+  "errors": [
+   "console: Refused to create a worker from 'https://snazim0345.github.io/OpenMontage/sw.js' because it violates the following Content Security Policy directive: \"script-src 'unsafe-inline'\". Note that 'worker-src' was not explicitly set, so 'script-src' is used as a fallback.\n"
+  ],
+  "title": "A1 Tour and Travels | Pune ↔ Mumbai Cabs, Match Cabs & Bus Service | 7888007234",
+  "h1": "Pune ↔ Mumbai Cabs & Buses",
+  "sections": [
+   "hero",
+   "services",
+   "fleet",
+   "pricing",
+   "why",
+   "book",
+   "testimonials",
+   "faq"
+  ],
+  "callLinks": 14,
+  "waLinks": 21,
+  "docWidth": 1440,
+  "horizontalOverflow": false,
+  "swRegistered": true
+ },
+ {
+  "name": "mobile",
+  "viewport": 390,
+  "errors": [
+   "console: Refused to create a worker from 'https://snazim0345.github.io/OpenMontage/sw.js' because it violates the following Content Security Policy directive: \"script-src 'unsafe-inline'\". Note that 'worker-src' was not explicitly set, so 'script-src' is used as a fallback.\n"
+  ],
+  "title": "A1 Tour and Travels | Pune ↔ Mumbai Cabs, Match Cabs & Bus Service | 7888007234",
+  "h1": "Pune ↔ Mumbai Cabs & Buses",
+  "sections": [
+   "hero",
+   "services",
+   "fleet",
+   "pricing",
+   "why",
+   "book",
+   "testimonials",
+   "faq"
+  ],
+  "callLinks": 14,
+  "waLinks": 21,
+  "docWidth": 390,
+  "horizontalOverflow": false,
+  "swRegistered": true
+ }
+]

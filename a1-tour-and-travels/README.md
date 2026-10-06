@@ -1,19 +1,21 @@
 # A1 Tour and Travels — website + growth kit
 
 > ### 🌐 Live site: https://snazim0345.github.io/OpenMontage
-> ### 🔗 Short link for print & WhatsApp: **https://tinyurl.com/a1toursandtravel**
+> ### 🔗 Short link for print & WhatsApp: **https://tinyurl.com/a1tourstravels**
 > ### 📞 Bookings: 7888007234 · 💬 https://wa.me/917888007234
 > Marketing playbooks (all free): [`marketing/`](marketing/README.md)
 
-## Hosting status
+## Hosting status — LIVE ✅
 
 | | |
 |---|---|
-| **Live now** | The CDN link above serves `index.html` with `content-type: text/html` (verified from CI). Free, no account, no card. |
-| **Permanent upgrade (1 click)** | GitHub → Settings → Pages → Source: *Deploy from a branch* → branch `arena/54180390-openmontage`, folder `/a1-tour-and-travels` → Save. Publishes at `https://snazim0345.github.io/OpenMontage/`. `deploy-pages.yml` then auto-publishes every update. |
-| **Blocked on** | The GitHub App that deploys this repo has no *Pages* permission, so enabling Pages via API returns `403 Resource not accessible by integration`. Tested from two token contexts. |
-| **Tested and rejected** | jsDelivr / statically.io / raw.githubusercontent serve HTML as `text/plain` (won't render). |
-| **Monitored** | `live-check.yml` verifies the live URL weekly and records history in `.diagnostics/`. |
+| **Live site** | **https://snazim0345.github.io/OpenMontage/** — real GitHub Pages hosting, free HTTPS, no warning interstitials |
+| **Short link for print/SMS** | **https://tinyurl.com/a1tourstravels** (verified: resolves straight to the site) |
+| **Auto-deploy** | `deploy-pages.yml` republishes on every change to this folder |
+| **Internal docs** | excluded from the published artifact (only web files go live) |
+| **Monitored** | `live-check.yml` weekly; `screenshot.yml` runs a real browser on request |
+| **Optional upgrade** | a custom domain (`a1toursandtravel.is-a.dev`, or a paid `.in`/`.com`) → see DOMAIN.md |
+
 
 ---
 

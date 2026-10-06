@@ -1,7 +1,14 @@
 # Free domain for A1 Tour and Travels — the exact options
 
-**Goal:** replace the long `raw.githack.com/...` link with something like
-`a1toursandtravel.netlify.app` or `a1toursandtravel.is-a.dev`.
+**Status: your site is already live at** **https://snazim0345.github.io/OpenMontage/** (real GitHub Pages hosting, free HTTPS,
+no warning page, auto-deploying). This file is about the *optional* next step — a shorter,
+more brandable address.
+
+**Already done for you:** `https://tinyurl.com/a1tourstravels` — verified to open the site directly.
+Use that on printed material today.
+
+**Goal (optional):** get something even better, like `a1toursandtravel.is-a.dev`
+or a paid `a1toursandtravel.in`.
 
 ## Why I can't just do this for you
 

@@ -21,7 +21,7 @@ Work top-to-bottom on day one: the first three items are what actually bring the
 
 | Link | Use it for |
 |---|---|
-| **https://tinyurl.com/a1toursandtravel** | Everything — WhatsApp status, SMS, SMS signatures, printed cards, posters, Google posts. Short, memorable, always redirects to the live site. |
+| **https://tinyurl.com/a1tourstravels** | Everything — WhatsApp status, SMS, SMS signatures, printed cards, posters, Google posts. Short, memorable, always redirects to the live site. |
 | `wa.me/917888007234` | Every "WhatsApp us" button |
 | `tel:+917888007234` | Every "Call now" button |
 

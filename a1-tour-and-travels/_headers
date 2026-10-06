@@ -1,0 +1,49 @@
+# =============================================================
+# HTTP security headers for A1 Tour and Travels
+#
+# This file is the native format for Netlify / Cloudflare Pages,
+# both of which host this site FREE. It is inert everywhere else.
+# If you deploy to Netlify (drag-and-drop) or Cloudflare Pages,
+# these become real, server-enforced HTTP headers — stronger than
+# anything a <meta> tag can do, and they survive on every page.
+#
+# If you stay on GitHub Pages you cannot set HTTP headers (GitHub
+# doesn't allow it); the <meta> CSP in index.html still applies.
+# =============================================================
+
+/*
+  # ---- Hard security headers ----
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  X-XSS-Protection: 1; mode=block
+
+  # ---- Content Security Policy ----
+  # The page is a single self-contained file: inline CSS + inline JS are
+  # required, and the sitemap uses Google Fonts + Unsplash photos.
+  # Everything else is denied, so a successful injection has nowhere to
+  # send data (connect-src 'none') and no external script can load.
+  Content-Security-Policy: default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'none'; base-uri 'none'; form-action 'self'; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests
+
+  # ---- Caching: fast for repeat visitors, fresh content weekly ----
+  Cache-Control: public, max-age=3600, must-revalidate
+
+# Immutable assets (icons, QR codes) can be cached hard
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# The service worker must never be cached, or updates stall
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# Machine-readable files
+/sitemap.xml
+  Content-Type: application/xml; charset=utf-8
+/robots.txt
+  Content-Type: text/plain; charset=utf-8
+/manifest.webmanifest
+  Content-Type: application/manifest+json; charset=utf-8

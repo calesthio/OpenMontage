@@ -1,0 +1,30 @@
+{
+  "name": "A1 Tour and Travels — Pune ↔ Mumbai Cabs & Buses",
+  "short_name": "A1 Travels",
+  "description": "Book 24x7 Pune ↔ Mumbai cabs, match cabs, AC buses and All India tours. Call or WhatsApp 7888007234.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#0B3D91",
+  "lang": "en-IN",
+  "categories": ["travel", "business"],
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Call 7888007234",
+      "short_name": "Call",
+      "url": "./index.html?action=call"
+    },
+    {
+      "name": "Book on WhatsApp",
+      "short_name": "Book",
+      "url": "./index.html?action=whatsapp"
+    }
+  ]
+}

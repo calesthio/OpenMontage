@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-IN">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -32,6 +32,19 @@
 <meta property="og:image" content="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=1200&q=70" />
 <meta name="twitter:card" content="summary_large_image" />
 
+<!-- App-like install (Android: "Add to Home screen" works even if manifest is ignored) -->
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="A1 Travels" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="format-detection" content="telephone=yes" />
+<!-- Security: restricts what this page may load or contact. Pairs with the HTTP headers
+     in _headers (used automatically by Netlify / Cloudflare Pages). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'none'; base-uri 'none'; form-action 'self'; frame-src 'none'; object-src 'none'; upgrade-insecure-requests" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230B3D91'/%3E%3Cpath d='M7 19.5h18M9 19.5l1.6-5.2A2 2 0 0 1 12.5 13h7a2 2 0 0 1 1.9 1.3l1.6 5.2' stroke='%23FFA500' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='11.5' cy='21.5' r='1.8' fill='%23FFA500'/%3E%3Ccircle cx='20.5' cy='21.5' r='1.8' fill='%23FFA500'/%3E%3C/svg%3E" />
 
 <!-- Google Fonts: Poppins (preconnect keeps it fast) -->
@@ -1040,11 +1053,18 @@ form{ display:grid; gap:15px; margin-top:22px; }
     <li><a href="#contact">Contact</a></li>
     <li class="mobile-cta">
       <a class="btn btn--call btn--block u-center" href="tel:7888007234">📞 Call 7888007234</a>
-      <a class="btn btn--wa btn--block u-center" href="https://wa.me/917888007234?text=Hi%20A1%20Tour%20and%20Travels%2C%20I%20want%20to%20book%20a%20Pune%20%E2%86%94%20Mumbai%20cab%2Fbus." target="_blank" rel="noopener">💬 WhatsApp Now</a>
+      <a class="btn btn--wa btn--block u-center" href="https://wa.me/917888007234?text=Hi%20A1%20Tour%20and%20Travels%2C%20I%20want%20to%20book%20a%20Pune%20%E2%86%94%20Mumbai%20cab%2Fbus." target="_blank" rel="noopener noreferrer">💬 WhatsApp Now</a>
     </li>
   </ul>
 </div>
 
+<noscript>
+  <div style="background:#FFA500;color:#3a2500;padding:14px 18px;text-align:center;font-weight:600;font-size:.95rem">
+    This site works best with JavaScript on, but you can book right now:
+    <a href="tel:+917888007234" style="color:#072a66;text-decoration:underline">Call 7888007234</a> or
+    <a href="https://wa.me/917888007234" target="_blank" rel="noopener noreferrer" style="color:#072a66;text-decoration:underline">WhatsApp us</a>.
+  </div>
+</noscript>
 <main>
 
 <!-- ═══════════════════ 2. HERO ═══════════════════ -->
@@ -1060,7 +1080,7 @@ form{ display:grid; gap:15px; margin-top:22px; }
 
     <div class="hero__cta">
       <a class="btn btn--call btn--lg" href="tel:7888007234">📞 Call 7888007234</a>
-      <a class="btn btn--wa btn--lg" href="https://wa.me/917888007234?text=Hi%20A1%20Tour%20and%20Travels%2C%20I%20want%20to%20book%20a%20Pune%20%E2%86%94%20Mumbai%20cab%2Fbus.%20Please%20share%20the%20fare." target="_blank" rel="noopener">💬 WhatsApp Now</a>
+      <a class="btn btn--wa btn--lg" href="https://wa.me/917888007234?text=Hi%20A1%20Tour%20and%20Travels%2C%20I%20want%20to%20book%20a%20Pune%20%E2%86%94%20Mumbai%20cab%2Fbus.%20Please%20share%20the%20fare." target="_blank" rel="noopener noreferrer">💬 WhatsApp Now</a>
     </div>
 
     <ul class="trust">
@@ -1102,7 +1122,7 @@ form{ display:grid; gap:15px; margin-top:22px; }
         <div class="card__icon" aria-hidden="true">🤝</div>
         <h3>Match Cab (Share Cab)</h3>
         <p>Travel alone, pay per seat. Comfortable shared cabs leaving Pune and Mumbai every hour.</p>
-        <a class="card__meta" href="https://wa.me/917888007234?text=Hi%2C%20I%20want%20details%20for%20a%20Match%20Cab%20(share%20cab)%20between%20Pune%20and%20Mumbai." target="_blank" rel="noopener">Check seats</a>
+        <a class="card__meta" href="https://wa.me/917888007234?text=Hi%2C%20I%20want%20details%20for%20a%20Match%20Cab%20(share%20cab)%20between%20Pune%20and%20Mumbai." target="_blank" rel="noopener noreferrer">Check seats</a>
       </article>
 
       <article class="card reveal">
@@ -1138,7 +1158,7 @@ form{ display:grid; gap:15px; margin-top:22px; }
           <span class="fleet-card__tag">Most Affordable</span>
           <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=70"
                alt="Sedan cab — Dzire or Etios — used for Pune to Mumbai trips" loading="lazy" decoding="async"
-               data-fallback="sedan" />
+               data-fallback="sedan"  width="800" height="500" />
         </div>
         <div class="fleet-card__body">
           <h3>Sedan — Dzire / Etios</h3>
@@ -1147,7 +1167,7 @@ form{ display:grid; gap:15px; margin-top:22px; }
             <span class="chip">👥 4 Seater</span>
             <span class="chip chip--orange">❄️ AC</span>
           </div>
-          <a class="btn btn--blue btn--block" href="https://wa.me/917888007234?text=Hi%20A1%20Tour%20and%20Travels%2C%20I%20want%20to%20book%20a%20SEDAN%20(Dzire%2FEtios)%20for%20Pune%20%E2%86%94%20Mumbai.%20Please%20share%20availability%20and%20fare." target="_blank" rel="noopener">Book Now</a>
+          <a class="btn btn--blue btn--block" href="https://wa.me/917888007234?text=Hi%20A1%20Tour%20and%20Travels%2C%20I%20want%20to%20book%20a%20SEDAN%20(Dzire%2FEtios)%20for%20Pune%20%E2%86%94%20Mumbai.%20Please%20share%20availability%20and%20fare." target="_blank" rel="noopener noreferrer">Book Now</a>
         </div>
       </article>
 
@@ -1156,7 +1176,7 @@ form{ display:grid; gap:15px; margin-top:22px; }
           <span class="fleet-card__tag">Most Popular</span>
           <img src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=70"
                alt="SUV cab — Ertiga or Innova — for family trips between Pune and Mumbai" loading="lazy" decoding="async"
-               data-fallback="suv" />
+               data-fallback="suv"  width="800" height="500" />
         </div>
         <div class="fleet-card__body">
           <h3>SUV — Ertiga / Innova</h3>
@@ -1165,7 +1185,7 @@ form{ display:grid; gap:15px; margin-top:22px; }
             <span class="chip">👥 7 Seater</span>
             <span class="chip chip--orange">🧳 Big Boot</span>
           </div>
-          <a class="btn btn--blue btn--block" href="https://wa.me/917888007234?text=Hi%20A1%20Tour%20and%20Travels%2C%20I%20want%20to%20book%20an%20SUV%20(Ertiga%2FInnova)%20for%20Pune%20%E2%86%94%20Mumbai.%20Please%20share%20availability%20and%20fare." target="_blank" rel="noopener">Book Now</a>
+          <a class="btn btn--blue btn--block" href="https://wa.me/917888007234?text=Hi%20A1%20Tour%20and%20Travels%2C%20I%20want%20to%20book%20an%20SUV%20(Ertiga%2FInnova)%20for%20Pune%20%E2%86%94%20Mumbai.%20Please%20share%20availability%20and%20fare." target="_blank" rel="noopener noreferrer">Book Now</a>
         </div>
       </article>
 
@@ -1174,7 +1194,7 @@ form{ display:grid; gap:15px; margin-top:22px; }
           <span class="fleet-card__tag">Groups &amp; Family</span>
           <img src="https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=800&q=70"
                alt="Tempo Traveller van for group travel and tour packages" loading="lazy" decoding="async"
-               data-fallback="tempo" />
+               data-fallback="tempo"  width="800" height="500" />
         </div>
         <div class="fleet-card__body">
           <h3>Tempo Traveller</h3>
@@ -1183,7 +1203,7 @@ form{ display:grid; gap:15px; margin-top:22px; }
             <span class="chip">👥 17 Seater</span>
             <span class="chip chip--orange">🛣️ Outstation</span>
           </div>
-          <a class="btn btn--blue btn--block" href="https://wa.me/917888007234?text=Hi%20A1%20Tour%20and%20Travels%2C%20I%20want%20to%20book%20a%20TEMPO%20TRAVELLER%20(17%20seater).%20Please%20share%20availability%20and%20fare." target="_blank" rel="noopener">Book Now</a>
+          <a class="btn btn--blue btn--block" href="https://wa.me/917888007234?text=Hi%20A1%20Tour%20and%20Travels%2C%20I%20want%20to%20book%20a%20TEMPO%20TRAVELLER%20(17%20seater).%20Please%20share%20availability%20and%20fare." target="_blank" rel="noopener noreferrer">Book Now</a>
         </div>
       </article>
 
@@ -1192,7 +1212,7 @@ form{ display:grid; gap:15px; margin-top:22px; }
           <span class="fleet-card__tag">Cheapest Per Seat</span>
           <img src="https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=800&q=70&sat=-25"
                alt="AC bus with 45 seats for Pune to Mumbai bus service" loading="lazy" decoding="async"
-               data-fallback="bus" />
+               data-fallback="bus"  width="800" height="500" />
         </div>
         <div class="fleet-card__body">
           <h3>AC Bus</h3>
@@ -1201,7 +1221,7 @@ form{ display:grid; gap:15px; margin-top:22px; }
             <span class="chip">👥 45 Seater</span>
             <span class="chip chip--orange">🎟️ Per Seat</span>
           </div>
-          <a class="btn btn--blue btn--block" href="https://wa.me/917888007234?text=Hi%20A1%20Tour%20and%20Travels%2C%20I%20want%20to%20book%20a%20seat%20in%20the%20AC%20bus%20(45%20seater)%20for%20Pune%20%E2%86%94%20Mumbai.%20Please%20share%20timings%20and%20fare." target="_blank" rel="noopener">Book Now</a>
+          <a class="btn btn--blue btn--block" href="https://wa.me/917888007234?text=Hi%20A1%20Tour%20and%20Travels%2C%20I%20want%20to%20book%20a%20seat%20in%20the%20AC%20bus%20(45%20seater)%20for%20Pune%20%E2%86%94%20Mumbai.%20Please%20share%20timings%20and%20fare." target="_blank" rel="noopener noreferrer">Book Now</a>
         </div>
       </article>
     </div>
@@ -1247,7 +1267,7 @@ form{ display:grid; gap:15px; margin-top:22px; }
             </td>
             <td data-label="Capacity">4 Seater</td>
             <td data-label="Fare (one way)"><span class="amt amt--best">₹2500 – ₹3000</span></td>
-            <td data-label="Book"><a class="btn btn--orange btn--sm" href="https://wa.me/917888007234?text=Hi%2C%20I%20want%20to%20book%20a%20SEDAN%20for%20Pune%20%E2%86%94%20Mumbai%20(%E2%82%B92500-3000)." target="_blank" rel="noopener">Book</a></td>
+            <td data-label="Book"><a class="btn btn--orange btn--sm" href="https://wa.me/917888007234?text=Hi%2C%20I%20want%20to%20book%20a%20SEDAN%20for%20Pune%20%E2%86%94%20Mumbai%20(%E2%82%B92500-3000)." target="_blank" rel="noopener noreferrer">Book</a></td>
           </tr>
           <tr>
             <td class="cell-veh">
@@ -1258,7 +1278,7 @@ form{ display:grid; gap:15px; margin-top:22px; }
             </td>
             <td data-label="Capacity">6–7 Seater</td>
             <td data-label="Fare (one way)"><span class="amt">₹3500 – ₹4500</span></td>
-            <td data-label="Book"><a class="btn btn--orange btn--sm" href="https://wa.me/917888007234?text=Hi%2C%20I%20want%20to%20book%20an%20SUV%20for%20Pune%20%E2%86%94%20Mumbai%20(%E2%82%B93500-4500)." target="_blank" rel="noopener">Book</a></td>
+            <td data-label="Book"><a class="btn btn--orange btn--sm" href="https://wa.me/917888007234?text=Hi%2C%20I%20want%20to%20book%20an%20SUV%20for%20Pune%20%E2%86%94%20Mumbai%20(%E2%82%B93500-4500)." target="_blank" rel="noopener noreferrer">Book</a></td>
           </tr>
           <tr>
             <td class="cell-veh">
@@ -1269,7 +1289,7 @@ form{ display:grid; gap:15px; margin-top:22px; }
             </td>
             <td data-label="Capacity">12–17 Seater</td>
             <td data-label="Fare (one way)"><span class="amt">₹6000 – ₹8000</span></td>
-            <td data-label="Book"><a class="btn btn--orange btn--sm" href="https://wa.me/917888007234?text=Hi%2C%20I%20want%20to%20book%20a%20TEMPO%20TRAVELLER%20for%20Pune%20%E2%86%94%20Mumbai%20(%E2%82%B96000-8000)." target="_blank" rel="noopener">Book</a></td>
+            <td data-label="Book"><a class="btn btn--orange btn--sm" href="https://wa.me/917888007234?text=Hi%2C%20I%20want%20to%20book%20a%20TEMPO%20TRAVELLER%20for%20Pune%20%E2%86%94%20Mumbai%20(%E2%82%B96000-8000)." target="_blank" rel="noopener noreferrer">Book</a></td>
           </tr>
           <tr>
             <td class="cell-veh">
@@ -1280,7 +1300,7 @@ form{ display:grid; gap:15px; margin-top:22px; }
             </td>
             <td data-label="Capacity">45 Seater</td>
             <td data-label="Fare (per seat)"><span class="amt amt--best">₹500 – ₹800 <small>/ seat</small></span></td>
-            <td data-label="Book"><a class="btn btn--orange btn--sm" href="https://wa.me/917888007234?text=Hi%2C%20I%20want%20to%20book%20an%20AC%20BUS%20seat%20for%20Pune%20%E2%86%94%20Mumbai%20(%E2%82%B9500-800%20per%20seat)." target="_blank" rel="noopener">Book</a></td>
+            <td data-label="Book"><a class="btn btn--orange btn--sm" href="https://wa.me/917888007234?text=Hi%2C%20I%20want%20to%20book%20an%20AC%20BUS%20seat%20for%20Pune%20%E2%86%94%20Mumbai%20(%E2%82%B9500-800%20per%20seat)." target="_blank" rel="noopener noreferrer">Book</a></td>
           </tr>
         </tbody>
       </table>
@@ -1292,7 +1312,7 @@ form{ display:grid; gap:15px; margin-top:22px; }
 
       <div class="price-foot">
         <a class="btn btn--call" href="tel:7888007234">📞 Get Exact Quote</a>
-        <a class="btn btn--wa" href="https://wa.me/917888007234?text=Hi%20A1%20Tour%20and%20Travels%2C%20please%20share%20the%20exact%20quote%20for%20a%20Pune%20%E2%86%94%20Mumbai%20trip." target="_blank" rel="noopener">💬 WhatsApp for Quote</a>
+        <a class="btn btn--wa" href="https://wa.me/917888007234?text=Hi%20A1%20Tour%20and%20Travels%2C%20please%20share%20the%20exact%20quote%20for%20a%20Pune%20%E2%86%94%20Mumbai%20trip." target="_blank" rel="noopener noreferrer">💬 WhatsApp for Quote</a>
       </div>
     </div>
   </div>
@@ -1365,37 +1385,37 @@ form{ display:grid; gap:15px; margin-top:22px; }
           <form id="bookingForm" novalidate>
             <div class="field">
               <label for="name">Your Name <span class="req">*</span></label>
-              <input type="text" id="name" name="name" placeholder="e.g. Rahul Sharma" autocomplete="name" required />
+              <input type="text" id="name" aria-describedby="err-name" name="name" placeholder="e.g. Rahul Sharma" autocomplete="name" required maxlength="60" />
               <span class="msg" id="err-name">Please enter your name.</span>
             </div>
 
             <div class="field">
               <label for="mobile">Mobile Number <span class="req">*</span></label>
-              <input type="tel" id="mobile" name="mobile" placeholder="10-digit mobile number" inputmode="numeric" autocomplete="tel" maxlength="14" required />
+              <input type="tel" id="mobile" aria-describedby="err-mobile" name="mobile" placeholder="10-digit mobile number" inputmode="numeric" autocomplete="tel" maxlength="14" required />
               <span class="msg" id="err-mobile">Enter a valid 10-digit Indian mobile number.</span>
             </div>
 
             <div class="field">
               <label for="pickup">Pickup Location <span class="req">*</span></label>
-              <input type="text" id="pickup" name="pickup" placeholder="e.g. Hinjewadi, Pune" required />
+              <input type="text" id="pickup" aria-describedby="err-pickup" name="pickup" placeholder="e.g. Hinjewadi, Pune" required maxlength="80" />
               <span class="msg" id="err-pickup">Please enter your pickup location.</span>
             </div>
 
             <div class="field">
               <label for="drop">Drop Location <span class="req">*</span></label>
-              <input type="text" id="drop" name="drop" placeholder="e.g. Andheri, Mumbai" required />
+              <input type="text" id="drop" aria-describedby="err-drop" name="drop" placeholder="e.g. Andheri, Mumbai" required maxlength="80" />
               <span class="msg" id="err-drop">Please enter your drop location.</span>
             </div>
 
             <div class="field">
               <label for="date">Travel Date <span class="req">*</span></label>
-              <input type="date" id="date" name="date" required />
+              <input type="date" id="date" aria-describedby="err-date" name="date" required />
               <span class="msg" id="err-date">Please choose a travel date (today or later).</span>
             </div>
 
             <div class="field">
               <label for="vehicle">Vehicle Type <span class="req">*</span></label>
-              <select id="vehicle" name="vehicle" required>
+              <select id="vehicle" aria-describedby="err-vehicle" name="vehicle" required>
                 <option value="" selected disabled>Select vehicle</option>
                 <option>Sedan (Dzire / Etios) — 4 seater</option>
                 <option>SUV (Ertiga / Innova) — 7 seater</option>
@@ -1409,7 +1429,7 @@ form{ display:grid; gap:15px; margin-top:22px; }
 
             <div class="field field--full">
               <label for="message">Message <small class="label-note">(optional)</small></label>
-              <textarea id="message" name="message" placeholder="Passengers, luggage, round trip, hotel pickup, flight timing…"></textarea>
+              <textarea id="message" name="message" placeholder="Passengers, luggage, round trip, hotel pickup, flight timing…" maxlength="300"></textarea>
             </div>
 
             <div class="field--full">
@@ -1541,27 +1561,27 @@ form{ display:grid; gap:15px; margin-top:22px; }
     <div class="faq-list reveal">
       <details class="faq">
         <summary>How much does a Pune to Mumbai cab cost?</summary>
-        <p>A one-way Pune to Mumbai sedan (Dzire/Etios, 4 seater) costs ₹2500–₹3000, an SUV (Ertiga/Innova, 7 seater) costs ₹3500–₹4500, and a 17-seater Tempo Traveller costs ₹6000–₹8000. These fares include toll, fuel, driver allowance and parking. Call or WhatsApp 7888007234 for an exact quote. <a href="tel:7888007234">Call 7888007234</a> or <a href="https://wa.me/917888007234" target="_blank" rel="noopener">WhatsApp us</a>.</p>
+        <p>A one-way Pune to Mumbai sedan (Dzire/Etios, 4 seater) costs ₹2500–₹3000, an SUV (Ertiga/Innova, 7 seater) costs ₹3500–₹4500, and a 17-seater Tempo Traveller costs ₹6000–₹8000. These fares include toll, fuel, driver allowance and parking. Call or WhatsApp 7888007234 for an exact quote. <a href="tel:7888007234">Call 7888007234</a> or <a href="https://wa.me/917888007234" target="_blank" rel="noopener noreferrer">WhatsApp us</a>.</p>
       </details>
       <details class="faq">
         <summary>Is there a cheaper shared option between Pune and Mumbai?</summary>
-        <p>Yes. Our Match Cab (share cab) service lets you pay per seat instead of hiring the whole vehicle, with departures from Pune and Mumbai every hour. AC bus seats are also available from ₹500–₹800 per seat. <a href="tel:7888007234">Call 7888007234</a> or <a href="https://wa.me/917888007234" target="_blank" rel="noopener">WhatsApp us</a>.</p>
+        <p>Yes. Our Match Cab (share cab) service lets you pay per seat instead of hiring the whole vehicle, with departures from Pune and Mumbai every hour. AC bus seats are also available from ₹500–₹800 per seat. <a href="tel:7888007234">Call 7888007234</a> or <a href="https://wa.me/917888007234" target="_blank" rel="noopener noreferrer">WhatsApp us</a>.</p>
       </details>
       <details class="faq">
         <summary>Do you provide Pune and Mumbai airport or railway station pickup?</summary>
-        <p>Yes. We do doorstep pickup and drop anywhere in Pune and Mumbai, including the airport, railway stations, hotels and homes, 24 hours a day, 7 days a week. <a href="tel:7888007234">Call 7888007234</a> or <a href="https://wa.me/917888007234" target="_blank" rel="noopener">WhatsApp us</a>.</p>
+        <p>Yes. We do doorstep pickup and drop anywhere in Pune and Mumbai, including the airport, railway stations, hotels and homes, 24 hours a day, 7 days a week. <a href="tel:7888007234">Call 7888007234</a> or <a href="https://wa.me/917888007234" target="_blank" rel="noopener noreferrer">WhatsApp us</a>.</p>
       </details>
       <details class="faq">
         <summary>How long does the Pune to Mumbai journey take?</summary>
-        <p>The drive takes about 3 to 3.5 hours on the Mumbai–Pune Expressway, depending on traffic and your pickup and drop points. We track your flight or train timing for airport and station runs. <a href="tel:7888007234">Call 7888007234</a> or <a href="https://wa.me/917888007234" target="_blank" rel="noopener">WhatsApp us</a>.</p>
+        <p>The drive takes about 3 to 3.5 hours on the Mumbai–Pune Expressway, depending on traffic and your pickup and drop points. We track your flight or train timing for airport and station runs. <a href="tel:7888007234">Call 7888007234</a> or <a href="https://wa.me/917888007234" target="_blank" rel="noopener noreferrer">WhatsApp us</a>.</p>
       </details>
       <details class="faq">
         <summary>Can I book a tempo traveller or bus for a group trip?</summary>
-        <p>Yes. We arrange 12–17 seater Tempo Travellers and 45-seater AC buses for family functions, corporate outings, school trips and pilgrimage tours to Shirdi, Nashik and beyond. <a href="tel:7888007234">Call 7888007234</a> or <a href="https://wa.me/917888007234" target="_blank" rel="noopener">WhatsApp us</a>.</p>
+        <p>Yes. We arrange 12–17 seater Tempo Travellers and 45-seater AC buses for family functions, corporate outings, school trips and pilgrimage tours to Shirdi, Nashik and beyond. <a href="tel:7888007234">Call 7888007234</a> or <a href="https://wa.me/917888007234" target="_blank" rel="noopener noreferrer">WhatsApp us</a>.</p>
       </details>
       <details class="faq">
         <summary>Which places do you cover outside Pune and Mumbai?</summary>
-        <p>We regularly serve Lonavala, Nashik, Shirdi, Mahabaleshwar, Alibaug and all India tour packages by cab and tempo traveller. Tell us your route and we will quote a fixed price. <a href="tel:7888007234">Call 7888007234</a> or <a href="https://wa.me/917888007234" target="_blank" rel="noopener">WhatsApp us</a>.</p>
+        <p>We regularly serve Lonavala, Nashik, Shirdi, Mahabaleshwar, Alibaug and all India tour packages by cab and tempo traveller. Tell us your route and we will quote a fixed price. <a href="tel:7888007234">Call 7888007234</a> or <a href="https://wa.me/917888007234" target="_blank" rel="noopener noreferrer">WhatsApp us</a>.</p>
       </details>
     </div>
   </div>
@@ -1591,7 +1611,7 @@ form{ display:grid; gap:15px; margin-top:22px; }
         </p>
         <div class="footer__cta">
           <a class="btn btn--call" href="tel:7888007234">📞 7888007234</a>
-          <a class="btn btn--wa" href="https://wa.me/917888007234?text=Hi%20A1%20Tour%20and%20Travels%2C%20I%20need%20help%20with%20a%20booking." target="_blank" rel="noopener">💬 WhatsApp</a>
+          <a class="btn btn--wa" href="https://wa.me/917888007234?text=Hi%20A1%20Tour%20and%20Travels%2C%20I%20need%20help%20with%20a%20booking." target="_blank" rel="noopener noreferrer">💬 WhatsApp</a>
         </div>
       </div>
 
@@ -1651,7 +1671,7 @@ form{ display:grid; gap:15px; margin-top:22px; }
           </li>
           <li>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.8-.9L3 21l1.9-4.5A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>
-            <a href="https://wa.me/917888007234" target="_blank" rel="noopener">WhatsApp: 7888007234</a>
+            <a href="https://wa.me/917888007234" target="_blank" rel="noopener noreferrer">WhatsApp: 7888007234</a>
           </li>
           <li>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 6-9 12-9 12S3 16 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -1675,7 +1695,7 @@ form{ display:grid; gap:15px; margin-top:22px; }
 <!-- Floating WhatsApp button (all screens) -->
 <a class="wa-float" id="waFloat"
    href="https://wa.me/917888007234?text=Hi%20A1%20Tour%20and%20Travels%2C%20I%20want%20to%20enquire%20about%20a%20Pune%20%E2%86%94%20Mumbai%20cab%2Fbus."
-   target="_blank" rel="noopener" aria-label="Chat with A1 Tour and Travels on WhatsApp">
+   target="_blank" rel="noopener noreferrer" aria-label="Chat with A1 Tour and Travels on WhatsApp">
   <svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
     <path d="M12.04 2a9.9 9.9 0 0 0-8.4 15.13L2.5 22l5.02-1.3A9.9 9.9 0 1 0 12.04 2zm5.77 14.06c-.24.68-1.4 1.3-1.94 1.35-.54.05-1.03.24-3.47-.72-2.94-1.16-4.79-4.19-4.94-4.38-.14-.19-1.16-1.55-1.16-2.96 0-1.4.73-2.09 1-2.37.24-.29.53-.36.72-.36l.51.01c.17 0 .39-.06.6.46.24.55.8 1.9.87 2.04.07.14.12.31.02.5-.1.19-.15.31-.29.48l-.43.5c-.14.14-.29.3-.12.58.16.29.73 1.2 1.56 1.95 1.07.95 1.9 1.25 2.18 1.39.29.14.46.12.63-.07.16-.19.72-.84.91-1.13.19-.29.39-.24.65-.15.26.1 1.66.79 1.95.93.29.15.48.22.55.34.07.13.07.79-.17 1.47z"/>
   </svg>
@@ -1910,6 +1930,8 @@ form{ display:grid; gap:15px; margin-top:22px; }
   function markError(input, hasError) {
     var field = input.closest('.field');
     input.classList.toggle('err', hasError);
+    // tell screen readers which field is wrong (pairs with aria-describedby)
+    input.setAttribute('aria-invalid', hasError ? 'true' : 'false');
     if (field) field.classList.toggle('has-err', hasError);
   }
 
@@ -1998,7 +2020,31 @@ form{ display:grid; gap:15px; margin-top:22px; }
   document.querySelectorAll('a[href^="tel:"]').forEach(function (a) {
     a.setAttribute('href', 'tel:+91' + PHONE_NUMBER);
   });
+/* ---------- Installable app (progressive enhancement) ---------- */
+  // Registers the offline cache where the host permits it. If the host serves
+  // sw.js with the wrong MIME type, the registration silently fails and the
+  // site behaves exactly as before — nothing here can break the page.
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      try {
+        navigator.serviceWorker.register('sw.js').catch(function () { /* offline cache unavailable */ });
+      } catch (e) { /* ignore */ }
+    });
+  }
+
+  /* ---------- Home-screen shortcut handling ---------- */
+  // manifest.webmanifest declares two shortcuts that open this page with
+  // ?action=call or ?action=whatsapp. Honour them when they are used.
+  try {
+    var action = new URLSearchParams(window.location.search).get('action');
+    if (action === 'call') {
+      window.location.href = 'tel:+91' + PHONE_NUMBER;
+    } else if (action === 'whatsapp') {
+      window.location.href = waBase + encodeURIComponent('Hi A1 Tour and Travels, I want to book a Pune to Mumbai cab/bus.');
+    }
+  } catch (e) { /* older browser without URLSearchParams */ }
 })();
+
 </script>
 </body>
 </html>

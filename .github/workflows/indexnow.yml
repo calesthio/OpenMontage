@@ -1,0 +1,85 @@
+name: Submit site to search engines (IndexNow)
+
+# AUTOMATIC SEARCH SUBMISSION — switches itself on as soon as you have a real host.
+#
+# IndexNow instantly notifies Bing, Yandex, Seznam and DuckDuckGo that the site
+# changed, so they re-crawl within minutes instead of weeks. It is free and needs
+# no account. It requires the site to be served from a host you control, and a
+# small key file that proves ownership — both of which GitHub Pages or Netlify give you.
+#
+# This workflow does nothing until you set ONE repository variable:
+#     Settings → Secrets and variables → Actions → Variables → New variable
+#         SITE_URL = https://snazim0345.github.io/OpenMontage   (or your domain)
+# Until then it exits immediately and costs nothing.
+
+on:
+  schedule:
+    - cron: '0 5 * * 1'      # weekly, Mondays
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check whether a real host is configured
+        id: gate
+        run: |
+          if [ -z "${{ vars.SITE_URL }}" ]; then
+            echo "SITE_URL is not set — skipping. Set it in repo Settings → Variables to enable auto-submission."
+            echo "ready=false" >> $GITHUB_OUTPUT
+          else
+            echo "Submitting URLs under: ${{ vars.SITE_URL }}"
+            echo "ready=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate the ownership key file (once)
+        if: steps.gate.outputs.ready == 'true'
+        run: |
+          KEY_FILE=$(ls a1-tour-and-travels/*.txt 2>/dev/null | grep -E '/[0-9a-f]{16,}\.txt$' | head -1)
+          if [ -z "$KEY_FILE" ]; then
+            KEY=$(head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')
+            echo "$KEY" > "a1-tour-and-travels/$KEY.txt"
+            echo "created key file: $KEY.txt"
+          else
+            KEY=$(basename "$KEY_FILE" .txt)
+            echo "reusing key file: $KEY_FILE"
+          fi
+          echo "KEY=$KEY" >> $GITHUB_ENV
+          git config user.name site-bot
+          git config user.email site-bot@users.noreply.github.com
+          git add -f a1-tour-and-travels/*.txt
+          git commit -q -m "seo: IndexNow ownership key" || echo "key already committed"
+          git push origin HEAD:arena/54180390-openmontage 2>&1 | tail -2
+
+      - name: Submit URLs to IndexNow
+        if: steps.gate.outputs.ready == 'true'
+        run: |
+          HOST=$(echo "${{ vars.SITE_URL }}" | sed -E 's#https?://([^/]+).*#\1#')
+          cat > /tmp/body.json <<JSON
+          {
+            "host": "$HOST",
+            "key": "$KEY",
+            "keyLocation": "${{ vars.SITE_URL }}/$KEY.txt",
+            "urlList": [
+              "${{ vars.SITE_URL }}/",
+              "${{ vars.SITE_URL }}/index.html",
+              "${{ vars.SITE_URL }}/sitemap.xml"
+            ]
+          }
+          JSON
+          echo "posting to IndexNow:"
+          curl -s -X POST "https://api.indexnow.org/indexnow" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -d @/tmp/body.json -w "\nhttp=%{http_code}\n" | tee /tmp/indexnow.txt
+          mkdir -p .diagnostics
+          echo "$(date -u) host=$HOST response: $(cat /tmp/indexnow.txt)" >> .diagnostics/indexnow-log.txt
+          git config user.name site-bot
+          git config user.email site-bot@users.noreply.github.com
+          git add -f .diagnostics/indexnow-log.txt
+          git commit -q -m "seo: IndexNow submission $(date -u +%F)" || true
+          git push origin HEAD:arena/54180390-openmontage 2>&1 | tail -2

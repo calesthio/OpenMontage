@@ -106,3 +106,63 @@ tap-here fallback.
 See [`marketing/README.md`](marketing/README.md) — Google Business Profile setup, directory
 listings (with English/Hindi/Marathi copy), WhatsApp Business kit, 20-post social pack,
 review engine, referral scheme, vehicle branding and partnership outreach. All zero-cost.
+
+---
+
+## Security
+
+Full detail in **[SECURITY.md](SECURITY.md)**. Summary:
+
+- **No server, no database, no login, no plugins** — there is nothing to break into. This is the
+  single biggest security advantage this business can have.
+- **Content Security Policy** in the page `<head>`: `connect-src 'none'` means nothing on the page
+  can transmit data anywhere; only the page's own inline script may run.
+- **`_headers`** — real HTTP security headers (HSTS, `X-Frame-Options: DENY`, `Referrer-Policy`,
+  `Permissions-Policy`, CSP) for Netlify / Cloudflare Pages, which apply them automatically and free.
+  (GitHub Pages does not allow custom headers; the `<meta>` CSP still applies there.)
+- All 22 external links use `rel="noopener noreferrer"`; no third-party JavaScript is loaded.
+- Form input capped with `maxlength`, strict mobile-number validation, everything
+  `encodeURIComponent`-escaped before it touches a URL.
+- **SECURITY.md §3** covers the things only you can enable — Google 2-Step Verification, WhatsApp
+  two-step PIN, SIM-swap lock, domain ownership. Those, not the website, are the real risks.
+
+## Installable app + offline access
+
+The site is now a **Progressive Web App**: open it on any phone and use
+*Add to Home Screen*. It then opens full-screen from an icon like a native app, with two
+home-screen shortcuts (**Call**, **Book**) and an **app icon** in the brand colours.
+
+`sw.js` caches the page, so if a customer has no network they still see your phone number and the
+WhatsApp link. HTML is deliberately **network-first**, so fares are never stale; only icons and
+photos are served from cache.
+
+## Accessibility
+
+- `lang="en-IN"`, proper heading order, landmarks (`header`/`main`/`footer`/`nav`)
+- Every form field has a `<label>`; errors are linked with `aria-describedby` and flagged with
+  `aria-invalid` so screen readers announce exactly what's wrong
+- Error messages and the success notice use `aria-live` regions
+- Visible keyboard focus rings; a "skip to content" link; ⌘/Ctrl-safe contrast ratios
+- A `<noscript>` banner keeps the phone and WhatsApp reachable if JavaScript is off or blocked
+- `prefers-reduced-motion` respected — animations switch off for users who ask for that
+
+## Automatic search submission
+
+`.github/workflows/indexnow.yml` submits the site to **IndexNow** (Bing, Yandex, Seznam,
+DuckDuckGo) so changes get re-crawled in minutes rather than weeks — free, no account.
+It stays dormant until you set one repository variable:
+
+> Settings → Secrets and variables → Actions → **Variables** → New variable → `SITE_URL`
+
+Set it to your real host once GitHub Pages (or Netlify) is enabled, and every subsequent push
+re-submits automatically. **Google** has no such public API — submit your URL once in
+**Search Console** (5 minutes, one-time) and it does the rest; steps are in
+`marketing/06-seo-partnerships-growth.md §C`.
+
+## Monitoring
+
+`live-check.yml` runs **every Monday** and records to `.diagnostics/live-check.txt`:
+HTTP status and content type, the presence of your phone number / FAQ / schema / security meta,
+plus the served content types of `manifest.webmanifest`, `sw.js`, `sitemap.xml`, every icon and
+the `_headers` file, and a reachability check of every Unsplash photo the page uses.
+Free uptime + regression monitoring.

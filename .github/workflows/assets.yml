@@ -1,0 +1,45 @@
+name: Assets & link audit
+on:
+  push:
+    branches: [arena/54180390-openmontage]
+    paths: ['.github/workflows/assets.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate QR codes + verify every external asset
+        run: |
+          set +e
+          mkdir -p a1-tour-and-travels/assets .diagnostics
+          WA="https://wa.me/917888007234?text=Hi%2C%20I%20want%20to%20book%20a%20Pune-Mumbai%20cab"
+          SITE="https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html"
+          echo "== QR codes =="
+          curl -sL -m 30 -o a1-tour-and-travels/assets/qr-whatsapp.png \
+            "https://api.qrserver.com/v1/create-qr-code/?size=800x800&margin=12&data=$(python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1],safe=''))" "$WA")"
+          curl -sL -m 30 -o a1-tour-and-travels/assets/qr-website.png \
+            "https://api.qrserver.com/v1/create-qr-code/?size=800x800&margin=12&data=$(python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1],safe=''))" "$SITE")"
+          file a1-tour-and-travels/assets/*.png
+          {
+            echo "asset audit — $(date -u)"
+            echo
+            echo "== QR codes generated =="
+            file a1-tour-and-travels/assets/*.png
+            echo
+            echo "== every external asset the site depends on =="
+            grep -o 'https://[^"'"'"')]*' a1-tour-and-travels/index.html \
+              | grep -v 'schema.org\|sitemaps.org\|wa.me\|w3.org\|raw.githack' | sort -u > /tmp/urls.txt
+            while read -r u; do
+              printf "%-108s" "$u"
+              curl -sL -o /dev/null -m 25 -w " http=%{http_code} type=%{content_type} bytes=%{size_download}\n" "$u"
+            done < /tmp/urls.txt
+          } > .diagnostics/asset-audit.txt 2>&1
+          cat .diagnostics/asset-audit.txt
+          git config user.name site-bot
+          git config user.email site-bot@users.noreply.github.com
+          git add -f a1-tour-and-travels/assets .diagnostics/asset-audit.txt
+          git commit -q -m "assets: QR codes + external asset audit" || echo "no change"
+          git push origin HEAD:arena/54180390-openmontage 2>&1 | tail -2

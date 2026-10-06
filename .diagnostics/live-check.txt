@@ -1,11 +1,16 @@
-live site check — Tue Oct  6 01:16:24 UTC 2026
+live site check — Tue Oct  6 01:17:35 UTC 2026
 url: https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html
 http: 200   content-type: content-type: text/html; charset=UTF-8
-bytes: 80407
+bytes: 93266
   found: A1 Tour and Travels
   found: 7888007234
   found: Pune ↔ Mumbai Cabs
   found: wa.me/917888007234
-  MISSING: Pune ↔ Mumbai Travel Questions
-  MISSING: TaxiService
-RESULT: FAIL
+  found: Pune ↔ Mumbai Travel Questions
+  found: TaxiService
+RESULT: PASS
+==== which URL variants serve FRESH content? (local file = 93266 bytes) ====
+https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html       http=200 type=text/html; charset=utf-8 bytes=80407  stale
+https://raw.githack.com/snazim0345/OpenMontage/b972b66735f5b58e46cf86a36cc8df5d7858afac/a1-tour-and-travels/index.html http=200 type=text/html; charset=utf-8 bytes=93266  FRESH(has FAQ)
+https://rawcdn.githack.com/snazim0345/OpenMontage/b972b66735f5b58e46cf86a36cc8df5d7858afac/a1-tour-and-travels/index.html http=200 type=text/html; charset=utf-8 bytes=93266  FRESH(has FAQ)
+https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html?v=b972b66735f5b58e46cf86a36cc8df5d7858afac http=200 type=text/html; charset=utf-8 bytes=93266  FRESH(has FAQ)

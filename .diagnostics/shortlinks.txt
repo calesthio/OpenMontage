@@ -58,3 +58,35 @@ target site: https://snazim0345.github.io/OpenMontage/
 -- result --
   is.gd: not available
   v.gd: not available
+=== branded short links — Tue 06 Oct 2026 02:55 UTC ===
+target site: https://snazim0345.github.io/OpenMontage/
+
+-- is.gd (free, no account, custom alias) --
+  https://is.gd/a1toursandtravel -> http=404
+  create -> http=200
+  response: Error, database insert failed
+  verify https://is.gd/a1toursandtravel -> http=404 landed=https://is.gd/a1toursandtravel
+  shows our phone number on the landing page: no
+
+-- v.gd (same service, different domain) --
+  https://v.gd/a1toursandtravel -> http=404
+  create -> http=200
+  response: Error, database insert failed
+  verify https://v.gd/a1toursandtravel -> http=404 landed=https://v.gd/a1toursandtravel
+  shows our phone number on the landing page: no
+
+-- 1pt.co (free API, custom short name) --
+  create -> http=0 body=ERROR <urlopen error [Errno -2] Name or service not known>
+  -> not available
+
+-- spoo.me (free shortener, custom alias) --
+  create -> http=200 body={"short_url":"http://spoo.me/a1toursandtravel","domain":"spoo.me","original_url":"https://snazim0345.github.io/OpenMontage/"}
+  verify http://spoo.me/a1toursandtravel -> http=200 landed=https://snazim0345.github.io/OpenMontage/
+  shows our phone number: YES
+
+-- result --
+  is.gd: not available
+  v.gd: not available
+  1pt.co: not available
+  spoo.me: WORKS — branded short link live
+  use: https://spoo.me/a1toursandtravel

@@ -1,11 +1,11 @@
-live site check — Tue Oct  6 01:54:36 UTC 2026
+live site check — Tue Oct  6 01:57:38 UTC 2026
 PRIMARY  (GitHub Pages): https://snazim0345.github.io/OpenMontage/
 BACKUP   (CDN):          https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html
-backup status:           200 96807 bytes
+backup status:           200 96413 bytes
 local file size:         96413
 http:  200
 type:  content-type: text/html; charset=utf-8
-bytes: 96366
+bytes: 96413
 
 == content essentials ==
   OK      A1 Tour and Travels
@@ -24,7 +24,7 @@ bytes: 96366
   external <script src> count: 0  (0 = no third-party JS)
 
 == assets / app files served with correct types ==
-  index.html                      http=200 type=text/html; charset=utf-8 bytes=96366
+  index.html                      http=200 type=text/html; charset=utf-8 bytes=96413
   404.html                        http=200 type=text/html; charset=utf-8 bytes=2865
   manifest.json                   http=200 type=application/json; charset=utf-8 bytes=1013
   sw.js                           http=200 type=application/javascript; charset=utf-8 bytes=2537
@@ -35,7 +35,7 @@ bytes: 96366
   assets/icon-512.png             http=200 type=image/png bytes=198937
   assets/apple-touch-icon.png     http=200 type=image/png bytes=26431
   assets/qr-whatsapp.png          http=200 type=image/png bytes=1164
-  _headers                        http=200 type=application/octet-stream bytes=2351
+  _headers                        http=200 type=application/octet-stream bytes=2398
 
 == external assets the page needs ==
   https://images.unsplash.com/photo-1533473359331-0135ef1b58bf          http=200 type=image/jpeg

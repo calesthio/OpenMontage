@@ -38,3 +38,23 @@ target: https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontag
         -> NOT ours
   https://tinyurl.com/a1tourtravel          http=404
         -> NOT ours
+=== branded short links — Tue 06 Oct 2026 02:54 UTC ===
+target site: https://snazim0345.github.io/OpenMontage/
+
+-- is.gd (free, no account, custom alias) --
+  https://is.gd/a1toursandtravel -> http=404
+  create -> http=200
+  response: Error, database insert failed
+  verify https://is.gd/a1toursandtravel -> http=404 landed=https://is.gd/a1toursandtravel
+  shows our phone number on the landing page: no
+
+-- v.gd (same service, different domain) --
+  https://v.gd/a1toursandtravel -> http=404
+  create -> http=200
+  response: Error, database insert failed
+  verify https://v.gd/a1toursandtravel -> http=404 landed=https://v.gd/a1toursandtravel
+  shows our phone number on the landing page: no
+
+-- result --
+  is.gd: not available
+  v.gd: not available

@@ -45,5 +45,5 @@
   Content-Type: application/xml; charset=utf-8
 /robots.txt
   Content-Type: text/plain; charset=utf-8
-/manifest.webmanifest
+/manifest.json
   Content-Type: application/manifest+json; charset=utf-8

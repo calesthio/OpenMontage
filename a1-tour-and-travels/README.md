@@ -163,6 +163,6 @@ re-submits automatically. **Google** has no such public API — submit your URL 
 
 `live-check.yml` runs **every Monday** and records to `.diagnostics/live-check.txt`:
 HTTP status and content type, the presence of your phone number / FAQ / schema / security meta,
-plus the served content types of `manifest.webmanifest`, `sw.js`, `sitemap.xml`, every icon and
+plus the served content types of `manifest.json`, `sw.js`, `sitemap.xml`, every icon and
 the `_headers` file, and a reachability check of every Unsplash photo the page uses.
 Free uptime + regression monitoring.

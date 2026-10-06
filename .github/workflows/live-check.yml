@@ -22,11 +22,16 @@ jobs:
           SHA=$(git rev-parse HEAD)
           BR=arena/54180390-openmontage
           BASE="https://raw.githack.com/snazim0345/OpenMontage/$BR/a1-tour-and-travels"
-          URL="$BASE/index.html"
+          SHA_BASE="https://raw.githack.com/snazim0345/OpenMontage/$SHA/a1-tour-and-travels"
+          URL="$SHA_BASE/index.html"      # SHA-pinned = never a stale CDN copy
+          SHARE_URL="$BASE/index.html"     # the link customers open (branch URL)
           mkdir -p .diagnostics
           {
             echo "live site check — $(date -u)"
-            echo "url: $URL"
+            echo "verifying (sha-pinned, always fresh): $URL"
+            echo "share link (branch):                 $SHARE_URL"
+            echo "share-link bytes right now:          $(curl -sL -o /dev/null -m 45 -w '%{http_code} %{size_download}' "$SHARE_URL")   (the branch URL refreshes within ~1-2 min of a push)"
+            echo "local file size:                     $(wc -c < a1-tour-and-travels/index.html)"
             code=$(curl -sL -o /tmp/page.html -m 45 -w '%{http_code}' "$URL")
             echo "http:  $code"
             echo "type:  $(curl -sIL -m 45 "$URL" | grep -i '^content-type' | tail -1)"
@@ -46,7 +51,7 @@ jobs:
             echo "  external <script src> count: $(grep -o '<script src=' /tmp/page.html | wc -l)  (0 = no third-party JS)"
             echo
             echo "== assets / app files served with correct types =="
-            for f in manifest.webmanifest sw.js sitemap.xml robots.txt 404.html \
+            for f in manifest.json sw.js sitemap.xml robots.txt 404.html \
                      assets/icon-192.png assets/icon-512.png assets/apple-touch-icon.png \
                      assets/qr-whatsapp.png _headers; do
               printf "  %-32s" "$f"

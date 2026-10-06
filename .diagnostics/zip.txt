@@ -1,10 +1,10 @@
-zip availability — Tue Oct  6 01:40:39 UTC 2026
-  https://raw.githack.com/snazim0345/OpenMontage/ad94cb17f902b00795ac0bbdb40e4d16d0007b08/a1toursandtravel-deploy.zip
+zip availability — Tue Oct  6 01:48:23 UTC 2026
+  https://raw.githack.com/snazim0345/OpenMontage/414747f6b0a0a1bea3bbdd003c34008a1c1469f5/a1toursandtravel-deploy.zip
      http=200 type=application/zip bytes=316220
      -> VALID zip with 16 files
-  https://raw.githubusercontent.com/snazim0345/OpenMontage/ad94cb17f902b00795ac0bbdb40e4d16d0007b08/a1toursandtravel-deploy.zip
+  https://raw.githubusercontent.com/snazim0345/OpenMontage/414747f6b0a0a1bea3bbdd003c34008a1c1469f5/a1toursandtravel-deploy.zip
      http=200 type=application/zip bytes=316220
      -> VALID zip with 16 files
-  https://cdn.jsdelivr.net/gh/snazim0345/OpenMontage@ad94cb17f902b00795ac0bbdb40e4d16d0007b08/a1toursandtravel-deploy.zip
+  https://cdn.jsdelivr.net/gh/snazim0345/OpenMontage@414747f6b0a0a1bea3bbdd003c34008a1c1469f5/a1toursandtravel-deploy.zip
      http=200 type=application/zip bytes=316220
      -> VALID zip with 16 files

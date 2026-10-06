@@ -241,6 +241,46 @@
    "wa": 10
   },
   {
+   "file": "post-ads.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Free ad pack — A1 Tour and Travels",
+   "titleLen": 34,
+   "desc": "",
+   "h1": [
+    "Free ad pack for A1 Tour and Travels"
+   ],
+   "h2count": 5,
+   "canonical": "",
+   "words": 772,
+   "overflow": false,
+   "imgs": 8,
+   "brokenImgs": 0,
+   "tel": 1,
+   "wa": 8
+  },
+  {
+   "file": "post-ads.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Free ad pack — A1 Tour and Travels",
+   "titleLen": 34,
+   "desc": "",
+   "h1": [
+    "Free ad pack for A1 Tour and Travels"
+   ],
+   "h2count": 5,
+   "canonical": "",
+   "words": 772,
+   "overflow": false,
+   "imgs": 8,
+   "brokenImgs": 0,
+   "tel": 1,
+   "wa": 8
+  },
+  {
    "file": "pune-mumbai-bus.html",
    "vp": "desktop",
    "status": 200,
@@ -565,6 +605,6 @@
 }
 
 === SUMMARY ===
-page-viewport combinations checked: 28
+page-viewport combinations checked: 30
 problems: 0
 broken internal links: 0

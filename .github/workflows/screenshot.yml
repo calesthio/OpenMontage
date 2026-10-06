@@ -19,14 +19,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Install Chromium for Playwright
-        run: npx --yes playwright@1.47.0 install --with-deps chromium
+      - name: Install Playwright + Chromium (as a real package)
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-audit --no-fund playwright@1.47.0
+          npx playwright install --with-deps chromium
+          node -e "const {chromium}=require('playwright'); console.log('playwright importable OK:', typeof chromium.launch === 'function')" 
       - name: Screenshot desktop + mobile (real browser)
         env:
           SITE: https://snazim0345.github.io/OpenMontage/
         run: |
           set +e
-          cat > /tmp/shot.mjs <<'JS'
+          cat > shot.mjs <<'JS'
           import { chromium } from 'playwright';
           const site = process.env.SITE;
           const shot = async (name, viewport, isMobile) => {
@@ -68,11 +72,13 @@ jobs:
           { echo "real-browser screenshots — $(date -u)"
             echo "site: $SITE"
             echo
-            node /tmp/shot.mjs
+            node shot.mjs
           } > /tmp/report.txt 2>&1
           cat /tmp/report.txt
           mkdir -p .diagnostics
           cp /tmp/report.txt .diagnostics/screenshots-browser.txt
+          echo "--- report committed below; failing loudly is better than silence ---"
+          grep -qi "error\|Cannot find module" /tmp/report.txt && echo "NOTE: report contains errors (see above)"
           for n in desktop mobile; do
             if head -c 4 /tmp/$n.png | grep -q PNG; then
               cp /tmp/$n.png .diagnostics/screenshots/real-$n.png

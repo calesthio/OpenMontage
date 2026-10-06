@@ -1,6 +1,9 @@
 name: branded free URL
-# Goal: get a real, branded, live web address for A1 Tour and Travels, at no cost,
-# without needing the owner to sign up anywhere.
+
+# Goal: a real, branded, live web address for A1 Tour and Travels at zero cost,
+# with no signup and no involvement from the site owner.
+# All probe logic lives in .github/scripts/branded_url.py to keep YAML simple.
+
 on:
   push:
     branches: [arena/54180390-openmontage]
@@ -11,79 +14,13 @@ permissions:
   contents: write
 
 jobs:
-  netlify-anonymous:
+  attempt:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Try account-free Netlify deploy with the chosen name
-        run: |
-          set +e
-          mkdir -p .diagnostics
-          {
-            echo "=== branded free URL probe — $(date -u) ==="
-            echo
-            echo "-- current state of the candidate names --"
-            for u in https://a1toursandtravel.netlify.app/ https://a1toursandtravel.surge.sh/ https://a1toursandtravel.vercel.app/ https://a1toursandtravel.neocities.org/; do
-              printf "  %-46s " "$u"
-              curl -s -o /dev/null -m 25 -w "http=%{http_code}\n" "$u"
-            done
-            echo
-            echo "-- 1. anonymous site creation (no token at all) --"
-            curl -s -m 60 -X POST -H "Content-Type: application/json" \
-              -d '{"name":"a1toursandtravel"}' https://api.netlify.com/api/v1/sites > /tmp/nl.json
-            head -c 700 /tmp/nl.json; echo
-            echo
-            python3 -c "
-import json
-try:
-    d = json.load(open('/tmp/nl.json'))
-except Exception as e:
-    print('  unparseable:', e); raise SystemExit
-if isinstance(d, dict) and d.get('id'):
-    print('  CREATED  id=', d['id'])
-    print('  name   =', d.get('name'))
-    print('  ssl_url=', d.get('ssl_url'))
-    open('/tmp/siteid','w').write(d['id'])
-else:
-    print('  not created:', str(d)[:300])
-"
-            echo
-            echo "-- 2. if created, can we rename it to the branded name without login? --"
-            SITEID=$(cat /tmp/siteid 2>/dev/null)
-            if [ -n "$SITEID" ]; then
-              curl -s -m 45 -X PATCH -H "Content-Type: application/json" \
-                -d '{"name":"a1toursandtravel"}' \
-                "https://api.netlify.com/api/v1/sites/$SITEID" > /tmp/nlpatch.json
-              python3 -c "
-import json
-d = json.load(open('/tmp/nlpatch.json'))
-print('  patch result name =', d.get('name'), '| ssl_url =', d.get('ssl_url'), '| err:', d.get('message'))
-" 2>/dev/null || head -c 300 /tmp/nlpatch.json
-            else
-              echo "  (skipped - no site id)"
-            fi
-            echo
-            echo "-- 3. deploy the real site to that site id --"
-            if [ -n "$SITEID" ]; then
-              rm -f /tmp/site.zip
-              cd a1-tour-and-travels
-              zip -qr /tmp/site.zip . -x 'build-pages.py' -x 'build-blog.py' -x 'domains/*'
-              cd ..
-              ls -la /tmp/site.zip
-              curl -s -m 180 -X POST -H "Content-Type: application/zip" \
-                --data-binary @/tmp/site.zip \
-                "https://api.netlify.com/api/v1/sites/$SITEID/deploys" > /tmp/nldep.json
-              python3 -c "
-import json
-d = json.load(open('/tmp/nldep.json'))
-print('  deploy id    :', d.get('id'))
-print('  state        :', d.get('state'))
-print('  url          :', d.get('ssl_url') or d.get('url'))
-print('  err          :', d.get('message'))
-"
-            fi
-          } > .diagnostics/branded-url.txt 2>&1
-          cat .diagnostics/branded-url.txt
+
+      - name: Attempt account-free branded deployment
+        run: python3 .github/scripts/branded_url.py
 
       - name: Commit diagnostics
         run: |
@@ -95,5 +32,7 @@ print('  err          :', d.get('message'))
           for a in 1 2 3 4 5; do
             if git pull --rebase --autostash origin "$BR" >/dev/null 2>&1 && git push origin HEAD:"$BR" 2>&1 | tail -1; then
               echo "push $a OK"; break
-            else sleep 6; fi
+            else
+              sleep 6
+            fi
           done

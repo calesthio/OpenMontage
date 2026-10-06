@@ -1,0 +1,91 @@
+name: Real browser screenshots
+
+# Uses a real headless Chromium so the results are trustworthy:
+# desktop 1440x900 and mobile 390x844 (iPhone-class), full page.
+on:
+  push:
+    branches: [arena/54180390-openmontage]
+    paths: ['shot-trigger.txt']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  shoot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Chromium for Playwright
+        run: npx --yes playwright@1.47.0 install --with-deps chromium
+      - name: Screenshot desktop + mobile (real browser)
+        env:
+          SITE: https://snazim0345.github.io/OpenMontage/
+        run: |
+          set +e
+          cat > /tmp/shot.mjs <<'JS'
+          import { chromium } from 'playwright';
+          const site = process.env.SITE;
+          const shot = async (name, viewport, isMobile) => {
+            const browser = await chromium.launch();
+            const ctx = await browser.newContext({
+              viewport,
+              isMobile,
+              deviceScaleFactor: 1,
+              userAgent: isMobile
+                ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+                : undefined,
+            });
+            const page = await ctx.newPage();
+            const errors = [];
+            page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
+            page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
+            await page.goto(site, { waitUntil: 'networkidle', timeout: 90000 });
+            await page.waitForTimeout(2500);
+            await page.screenshot({ path: `/tmp/${name}.png`, fullPage: true });
+            const data = await page.evaluate(() => ({
+              title: document.title,
+              h1: (document.querySelector('h1') || {}).textContent,
+              sections: [...document.querySelectorAll('section[id]')].map((s) => s.id),
+              callLinks: document.querySelectorAll('a[href^="tel:"]').length,
+              waLinks: document.querySelectorAll('a[href*="wa.me"]').length,
+              docWidth: document.documentElement.scrollWidth,
+              viewport: window.innerWidth,
+              horizontalOverflow: document.documentElement.scrollWidth > window.innerWidth + 1,
+              swRegistered: !!navigator.serviceWorker,
+            }));
+            await browser.close();
+            return { name, viewport, errors, ...data };
+          };
+          const out = [];
+          out.push(await shot('desktop', { width: 1440, height: 900 }, false));
+          out.push(await shot('mobile', { width: 390, height: 844 }, true));
+          console.log(JSON.stringify(out, null, 1));
+          JS
+          { echo "real-browser screenshots — $(date -u)"
+            echo "site: $SITE"
+            echo
+            node /tmp/shot.mjs
+          } > /tmp/report.txt 2>&1
+          cat /tmp/report.txt
+          mkdir -p .diagnostics
+          cp /tmp/report.txt .diagnostics/screenshots-browser.txt
+          for n in desktop mobile; do
+            if head -c 4 /tmp/$n.png | grep -q PNG; then
+              cp /tmp/$n.png .diagnostics/screenshots/real-$n.png
+              echo "saved real-$n.png ($(wc -c < /tmp/$n.png) bytes)"
+            fi
+          done
+          # shrink before committing so the repo stays light
+          command -v convert >/dev/null && for n in desktop mobile; do
+            convert .diagnostics/screenshots/real-$n.png -resize 900x -strip -quality 82 .diagnostics/screenshots/real-$n.jpg 2>/dev/null && rm -f .diagnostics/screenshots/real-$n.png
+          done
+          ls -la .diagnostics/screenshots/
+          git config user.name site-bot
+          git config user.email site-bot@users.noreply.github.com
+          git add -f .diagnostics
+          git commit -q -m "screenshots: real browser desktop + mobile" || echo "nothing to commit"
+          git push origin HEAD:arena/54180390-openmontage 2>&1 | tail -2

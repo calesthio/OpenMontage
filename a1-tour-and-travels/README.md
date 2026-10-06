@@ -1,6 +1,6 @@
 # A1 Tour and Travels — website + growth kit
 
-> ### 🌐 Live site: https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html
+> ### 🌐 Live site: https://snazim0345.github.io/OpenMontage
 > ### 🔗 Short link for print & WhatsApp: **https://tinyurl.com/a1toursandtravel**
 > ### 📞 Bookings: 7888007234 · 💬 https://wa.me/917888007234
 > Marketing playbooks (all free): [`marketing/`](marketing/README.md)

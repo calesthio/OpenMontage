@@ -9,7 +9,7 @@ Work top-to-bottom on day one: the first three items are what actually bring the
 
 | Done for you | Where |
 |---|---|
-| Website live and reachable on the internet | `https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html` |
+| Website live and reachable on the internet | `https://snazim0345.github.io/OpenMontage` |
 | SEO: title, meta, Open Graph, geo tags, canonical | `index.html` `<head>` |
 | SEO: rich results markup (LocalBusiness + TaxiService, fares, hours, service areas) | `index.html` JSON-LD |
 | SEO: FAQ schema + a visible FAQ section targeting real searches | `index.html` `#faq` |

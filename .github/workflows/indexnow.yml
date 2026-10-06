@@ -26,16 +26,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check whether a real host is configured
+      - name: Resolve the site URL (no manual setup needed)
         id: gate
         run: |
-          if [ -z "${{ vars.SITE_URL }}" ]; then
-            echo "SITE_URL is not set — skipping. Set it in repo Settings → Variables to enable auto-submission."
-            echo "ready=false" >> $GITHUB_OUTPUT
-          else
-            echo "Submitting URLs under: ${{ vars.SITE_URL }}"
-            echo "ready=true" >> $GITHUB_OUTPUT
-          fi
+          # Uses the SITE_URL repository variable when present, and otherwise falls
+          # back to the live GitHub Pages address — so this works with zero setup.
+          SITE="${{ steps.gate.outputs.site }}"
+          if [ -z "$SITE" ]; then SITE="https://snazim0345.github.io/OpenMontage"; fi
+          echo "Submitting URLs under: $SITE"
+          echo "site=$SITE" >> $GITHUB_OUTPUT
+          echo "ready=true" >> $GITHUB_OUTPUT
 
       - name: Generate the ownership key file (once)
         if: steps.gate.outputs.ready == 'true'
@@ -59,16 +59,16 @@ jobs:
       - name: Submit URLs to IndexNow
         if: steps.gate.outputs.ready == 'true'
         run: |
-          HOST=$(echo "${{ vars.SITE_URL }}" | sed -E 's#https?://([^/]+).*#\1#')
+          HOST=$(echo "${{ steps.gate.outputs.site }}" | sed -E 's#https?://([^/]+).*#\1#')
           cat > /tmp/body.json <<JSON
           {
             "host": "$HOST",
             "key": "$KEY",
-            "keyLocation": "${{ vars.SITE_URL }}/$KEY.txt",
+            "keyLocation": "${{ steps.gate.outputs.site }}/$KEY.txt",
             "urlList": [
-              "${{ vars.SITE_URL }}/",
-              "${{ vars.SITE_URL }}/index.html",
-              "${{ vars.SITE_URL }}/sitemap.xml"
+              "${{ steps.gate.outputs.site }}/",
+              "${{ steps.gate.outputs.site }}/index.html",
+              "${{ steps.gate.outputs.site }}/sitemap.xml"
             ]
           }
           JSON

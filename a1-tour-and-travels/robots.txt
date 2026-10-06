@@ -5,4 +5,4 @@ Allow: /
 # Do not let crawlers index these
 Disallow: /*?text=
 
-Sitemap: https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/sitemap.xml
+Sitemap: https://snazim0345.github.io/OpenMontage/sitemap.xml

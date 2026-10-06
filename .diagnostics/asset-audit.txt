@@ -1,0 +1,17 @@
+asset audit — Tue Oct  6 01:19:47 UTC 2026
+
+== QR codes generated ==
+a1-tour-and-travels/assets/qr-website.png:  PNG image data, 800 x 800, 1-bit colormap, non-interlaced
+a1-tour-and-travels/assets/qr-whatsapp.png: PNG image data, 800 x 800, 1-bit colormap, non-interlaced
+
+== every external asset the site depends on ==
+https://fonts.googleapis.com                                                                                 http=404 type=text/html; charset=utf-8 bytes=1621
+https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap                       http=200 type=text/css; charset=utf-8 bytes=1021
+https://fonts.gstatic.com                                                                                    http=404 type=text/html; charset=UTF-8 bytes=1561
+https://images.unsplash.com                                                                                  http=200 type=text/html bytes=2765
+https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=70                 http=200 type=image/jpeg bytes=87784
+https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=1200&q=70                   http=200 type=image/jpeg bytes=122860
+https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=1800&q=70                   http=200 type=image/jpeg bytes=241412
+https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=70                    http=200 type=image/jpeg bytes=61671
+https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=800&q=70                 http=200 type=image/jpeg bytes=80131
+https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=800&q=70&sat=-25         http=200 type=image/jpeg bytes=77474

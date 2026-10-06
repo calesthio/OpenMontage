@@ -1,16 +1,40 @@
-live site check — Tue Oct  6 01:21:27 UTC 2026
+live site check — Tue Oct  6 01:26:57 UTC 2026
 url: https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html
-http: 200   content-type: content-type: text/html; charset=UTF-8
+http:  200
+type:  content-type: text/html; charset=UTF-8
 bytes: 93266
-  found: A1 Tour and Travels
-  found: 7888007234
-  found: Pune ↔ Mumbai Cabs
-  found: wa.me/917888007234
-  found: Pune ↔ Mumbai Travel Questions
-  found: TaxiService
-RESULT: PASS
-==== which URL variants serve FRESH content? (local file = 93266 bytes) ====
-https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html       http=200 type=text/html; charset=utf-8 bytes=93266  FRESH(has FAQ)
-https://raw.githack.com/snazim0345/OpenMontage/385a8e566306ba344b1600f4d9ccfd39b00101d0/a1-tour-and-travels/index.html http=200 type=text/html; charset=utf-8 bytes=93266  FRESH(has FAQ)
-https://rawcdn.githack.com/snazim0345/OpenMontage/385a8e566306ba344b1600f4d9ccfd39b00101d0/a1-tour-and-travels/index.html http=200 type=text/html; charset=utf-8 bytes=93266  FRESH(has FAQ)
-https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html?v=385a8e566306ba344b1600f4d9ccfd39b00101d0 http=200 type=text/html; charset=utf-8 bytes=93266  FRESH(has FAQ)
+
+== content essentials ==
+  OK      A1 Tour and Travels
+  OK      7888007234
+  OK      Pune ↔ Mumbai Cabs
+  OK      wa.me/917888007234
+  OK      Pune ↔ Mumbai Travel Questions
+  OK      TaxiService
+  OK      FAQPage
+
+== security hardening present ==
+  MISSING Content-Security-Policy
+  MISSING noopener noreferrer
+  MISSING rel="manifest"
+  MISSING <noscript>
+  external <script src> count: 0  (0 = no third-party JS)
+
+== assets / app files served with correct types ==
+  manifest.webmanifest            http=200 type=text/plain; charset=utf-8 bytes=1013
+  sw.js                           http=200 type=application/javascript; charset=utf-8 bytes=2537
+  sitemap.xml                     http=200 type=text/xml; charset=utf-8 bytes=580
+  robots.txt                      http=200 type=text/plain; charset=utf-8 bytes=215
+  404.html                        http=200 type=text/html; charset=utf-8 bytes=2865
+  assets/icon-192.png             http=200 type=image/png bytes=29436
+  assets/icon-512.png             http=200 type=image/png bytes=198937
+  assets/apple-touch-icon.png     http=200 type=image/png bytes=26431
+  assets/qr-whatsapp.png          http=200 type=image/png bytes=1164
+  _headers                        http=200 type=text/plain; charset=utf-8 bytes=2358
+
+== external assets the page needs ==
+  https://images.unsplash.com/photo-1533473359331-0135ef1b58bf          http=200 type=image/jpeg
+  https://images.unsplash.com/photo-1544620347-c4fd4a3d5957             http=200 type=image/jpeg
+  https://images.unsplash.com/photo-1570125909232-eb263c188f7e          http=200 type=image/jpeg
+
+RESULT: FAIL

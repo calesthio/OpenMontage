@@ -20,30 +20,31 @@ jobs:
           SHA=$(git rev-parse HEAD)
           BR=arena/54180390-openmontage
           P=a1-tour-and-travels/index.html
-          OUT=/tmp/out.txt
-          exec > >(tee $OUT) 2>&1
-          echo "sha: $SHA"
-          echo
-          echo "===== A. Free CDNs: does the site come back as a REAL web page? ====="
-          probe () { printf "%-92s" "$1"; curl -sL -o /dev/null -m 25 -w "  http=%{http_code} type=%{content_type} size=%{size_download}\n" "$1" || echo "  (curl error)"; }
-          probe "https://raw.githubusercontent.com/snazim0345/OpenMontage/$SHA/$P"
-          probe "https://cdn.jsdelivr.net/gh/snazim0345/OpenMontage@$SHA/$P"
-          probe "https://cdn.jsdelivr.net/gh/snazim0345/OpenMontage@$BR/$P"
-          probe "https://raw.githack.com/snazim0345/OpenMontage/$SHA/$P"
-          probe "https://raw.githack.com/snazim0345/OpenMontage/$BR/$P"
-          probe "https://cdn.statically.io/gh/snazim0345/OpenMontage/$SHA/$P"
-          probe "https://htmlpreview.github.io/?https://raw.githubusercontent.com/snazim0345/OpenMontage/$SHA/$P"
-          echo
-          echo "===== B. GitHub Pages API with a working token ====="
-          echo "--- GET /pages ---";      gh api "repos/$GITHUB_REPOSITORY/pages" 2>&1 | head -4; echo "   exit=$?"
-          echo "--- POST /pages ---";     gh api -X POST "repos/$GITHUB_REPOSITORY/pages" -f build_type=workflow 2>&1 | head -6
-          echo "--- repo state ---";      gh api "repos/$GITHUB_REPOSITORY" --jq '{has_pages,fork,visibility}' 2>&1 | head -3
-          echo "--- actions perms ---";   gh api "repos/$GITHUB_REPOSITORY/actions/permissions" 2>&1 | head -3
-          wait
+          {
+            echo "sha: $SHA"
+            echo
+            echo "===== A. Free CDNs: is the site served as a REAL web page? ====="
+            probe () { printf "%-92s" "$1"; curl -sL -o /dev/null -m 25 -w "  http=%{http_code} type=%{content_type} size=%{size_download}\n" "$1" || echo "   curl-error"; }
+            probe "https://raw.githubusercontent.com/snazim0345/OpenMontage/$SHA/$P"
+            probe "https://cdn.jsdelivr.net/gh/snazim0345/OpenMontage@$SHA/$P"
+            probe "https://cdn.jsdelivr.net/gh/snazim0345/OpenMontage@$BR/$P"
+            probe "https://raw.githack.com/snazim0345/OpenMontage/$SHA/$P"
+            probe "https://raw.githack.com/snazim0345/OpenMontage/$BR/$P"
+            probe "https://cdn.statically.io/gh/snazim0345/OpenMontage/$SHA/$P"
+            echo
+            echo "===== B. GitHub Pages API with a working token ====="
+            echo "--- GET /pages ---";     gh api "repos/$GITHUB_REPOSITORY/pages" 2>&1 | head -4
+            echo "--- POST /pages ---";    gh api -X POST "repos/$GITHUB_REPOSITORY/pages" -f build_type=workflow 2>&1 | head -6
+            echo "--- repo state ---";     gh api "repos/$GITHUB_REPOSITORY" --jq '{has_pages,fork,visibility}' 2>&1 | head -3
+            echo "--- actions perms ---";  gh api "repos/$GITHUB_REPOSITORY/actions/permissions" 2>&1 | head -3
+            echo "--- workflow perms ---"; gh api "repos/$GITHUB_REPOSITORY/actions/permissions/workflow" 2>&1 | head -3
+            echo
+            echo "===== C. Does a fresh enablement attempt now stick? ====="
+            gh api "repos/$GITHUB_REPOSITORY" --jq '.has_pages' 2>&1 | head -2
+          } > .diagnostics/hosting-probe.txt 2>&1
+          cat .diagnostics/hosting-probe.txt
           git config user.name diag-bot
           git config user.email diag@users.noreply.github.com
           git add -f .diagnostics/hosting-probe.txt
-          cp $OUT .diagnostics/hosting-probe.txt
-          git add -f .diagnostics/hosting-probe.txt
-          git commit -q -m "diag: hosting probe v2" || echo "no changes"
+          git commit -q -m "diag: hosting probe v3" || echo "no changes to commit"
           git push origin HEAD:arena/54180390-openmontage 2>&1 | tail -2

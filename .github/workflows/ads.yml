@@ -1,0 +1,75 @@
+name: Generate ad creatives
+
+# Renders .github/ads.html into post-ready PNGs:
+#   1080x1080 squares for Facebook / Instagram / Justdial / Google posts
+#   1080x1920 stories for WhatsApp status / Instagram stories
+# Free, repeatable, and version-controlled — change the HTML, get new ads.
+
+on:
+  push:
+    branches: [arena/54180390-openmontage]
+    paths: ['.github/ads.html', 'ads-trigger.txt']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ads:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Playwright + Chromium
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-audit --no-fund playwright@1.47.0
+          npx playwright install --with-deps chromium
+      - name: Render every ad to PNG
+        run: |
+          mkdir -p a1-tour-and-travels/assets/ads
+          cat > ads.mjs <<'JS'
+          import { chromium } from 'playwright';
+          const ids = ['ad-main-square','ad-matchcab-square','ad-airport-square',
+                       'ad-nosurge-square','ad-status-fares','ad-status-group'];
+          const b = await chromium.launch();
+          const p = await b.newPage({ viewport: { width: 1200, height: 2000 }, deviceScaleFactor: 1 });
+          await p.goto('file://' + process.cwd() + '/.github/ads.html', { waitUntil: 'networkidle' });
+          await p.waitForTimeout(2500);          // let Poppins load before shooting
+          for (const id of ids) {
+            const el = await p.$('#' + id);
+            if (!el) { console.log('MISSING #' + id); continue; }
+            const box = await el.boundingBox();
+            await el.screenshot({ path: `a1-tour-and-travels/assets/ads/${id}.png` });
+            console.log(`${id}.png  ${Math.round(box.width)}x${Math.round(box.height)}`);
+          }
+          await b.close();
+          JS
+          node ads.mjs
+          echo
+          echo "=== rendered files ==="
+          ls -la a1-tour-and-travels/assets/ads/
+          python3 - <<'PY'
+          import struct, glob, os
+          print()
+          for f in sorted(glob.glob('a1-tour-and-travels/assets/ads/*.png')):
+              d = open(f,'rb').read(33)
+              w,h = struct.unpack('>II', d[16:24])
+              print(f"  {os.path.basename(f):28} {w}x{h}  {os.path.getsize(f)//1024} KB")
+          PY
+      - name: Commit the ad creatives
+        run: |
+          BR=arena/54180390-openmontage
+          git config user.name site-bot
+          git config user.email site-bot@users.noreply.github.com
+          git add -f a1-tour-and-travels/assets/ads
+          git commit -q -m "ads: post-ready creatives (4 squares + 2 stories)" || echo "no changes"
+          for attempt in 1 2 3 4 5; do
+            if git pull --rebase --autostash origin "$BR" >/dev/null 2>&1 && git push origin HEAD:"$BR" 2>&1 | tail -2; then
+              echo "push attempt $attempt: OK"; break
+            else
+              echo "push attempt $attempt: rejected, retrying..."; sleep 6
+            fi
+          done

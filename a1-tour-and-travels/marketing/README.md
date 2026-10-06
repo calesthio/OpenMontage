@@ -15,12 +15,12 @@ Everything below is **done, deployed and verified**. Nothing here needs money, a
 |---|---|
 | 🌐 **Website live** | https://snazim0345.github.io/OpenMontage/ — real hosting, free HTTPS, no warning page |
 | 🔗 **Short branded link** | https://tinyurl.com/a1tourstravels — verified to open the site directly |
-| 📄 **14 pages of real content** | Home + 9 route/service pages + 3 travel guides — 12,123 words total |
-| 🔍 **SEO** | Unique title & meta per page, Service / FAQPage / Article / BreadcrumbList / LocalBusiness structured data, canonical URLs, sitemap.xml (13 URLs), robots.txt, geo tags, hreflang |
+| 📄 **16 pages of real content** | Home + 12 route/service pages + 3 travel guides — **17,590 words** total |
+| 🔍 **SEO** | Unique title & meta per page, Service / FAQPage / Article / BreadcrumbList / LocalBusiness structured data, canonical URLs, sitemap.xml (16 URLs), robots.txt, geo tags, hreflang |
 | 🖼️ **Social share image** | Branded 1200×630 card, so WhatsApp/Facebook shares show a proper preview |
-| 📡 **Search engines notified** | IndexNow accepted **all 13 URLs (HTTP 202)** → Bing, Yandex, Seznam, Naver, DuckDuckGo are crawling |
+| 📡 **Search engines notified** | IndexNow accepted **all 16 URLs (HTTP 202)** → Bing, Yandex, Seznam, Naver, DuckDuckGo are crawling |
 | 🔁 **Auto-deploy** | Every change publishes itself in about a minute |
-| 🧪 **Automated auditing** | Real headless Chromium checks all 14 pages at desktop + mobile: **28 checks, 0 problems, 0 broken links** |
+| 🧪 **Automated auditing** | Real headless Chromium checks all 18 files at desktop + mobile: **36 checks, 0 problems, 0 broken links** |
 | 📈 **Uptime monitoring** | Weekly check, history logged, all green |
 | 🔒 **Security** | CSP (blocks any data exfiltration), no third-party JS, HTTPS/HSTS, hardened links, `SECURITY.md` |
 | 📱 **Installable app** | Add to Home Screen works, with offline access — proven: `swController=True, offlineReload=True` |

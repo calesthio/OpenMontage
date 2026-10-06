@@ -440,12 +440,11 @@ def main():
         (out / a["slug"]).write_text(html, encoding="utf-8")
         written.append((a["slug"], len(html)))
 
-    # rebuild the sitemap: home + service pages + guides
-    service = ["pune-to-mumbai-cab.html", "mumbai-to-pune-cab.html", "match-cab-pune-mumbai.html",
-               "pune-mumbai-bus.html", "tempo-traveller-pune.html", "pune-to-shirdi-cab.html",
-               "pune-to-lonavala-cab.html", "airport-transfer-pune-mumbai.html", "tour-packages.html"]
-    guides = [a["slug"] for a in ARTICLES]
-    urls = [("", "1.0", "weekly")] + [(u, "0.9", "monthly") for u in service] + [(u, "0.7", "monthly") for u in guides]
+    # rebuild the sitemap from what is actually published, so adding a page can
+    # never leave the sitemap out of date (owner-only tools are excluded)
+    skip = {"404.html", "post-ads.html", "index.html"}
+    published = sorted(f.name for f in out.glob("*.html") if f.name not in skip)
+    urls = [("", "1.0", "weekly")] + [(u, "0.8", "monthly") for u in published]
     body = "\n".join(
         f'''  <url>
     <loc>{SITE}/{u}</loc>

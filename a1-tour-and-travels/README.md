@@ -116,6 +116,9 @@ review engine, referral scheme, vehicle branding and partnership outreach. All z
 
 | Page | Targets |
 |---|---|
+| `pune-to-nashik-cab.html` | pune to nashik cab, trimbakeshwar darshan from pune, saptashrungi cab, nashik vineyard trip |
+| `pune-to-mahabaleshwar-cab.html` | pune to mahabaleshwar cab, panchgani taxi, pratapgad trip, mahabaleshwar weekend package |
+| `pune-to-kolhapur-cab.html` | pune to kolhapur cab, mahalaxmi darshan from pune, jyotiba temple cab, panhala fort trip |
 | `index.html` | Home — "pune mumbai cab", brand |
 | `pune-to-mumbai-cab.html` | "pune to mumbai cab", "pune mumbai taxi fare" |
 | `mumbai-to-pune-cab.html` | "mumbai to pune cab" |

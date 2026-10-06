@@ -1,5 +1,5 @@
-live site check — Tue Oct  6 01:28:50 UTC 2026
-verifying (sha-pinned, always fresh): https://raw.githack.com/snazim0345/OpenMontage/d3e7455d886b896228df97eefc07677f797fbde9/a1-tour-and-travels/index.html
+live site check — Tue Oct  6 01:30:20 UTC 2026
+verifying (sha-pinned, always fresh): https://raw.githack.com/snazim0345/OpenMontage/0417c599cf05dcd5431507f8472ba2bc3030e4fe/a1-tour-and-travels/index.html
 share link (branch):                 https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html
 share-link bytes right now:          200 96814   (the branch URL refreshes within ~1-2 min of a push)
 local file size:                     96807
@@ -33,7 +33,7 @@ bytes: 96807
   assets/icon-512.png             http=200 type=image/png bytes=198937
   assets/apple-touch-icon.png     http=200 type=image/png bytes=26431
   assets/qr-whatsapp.png          http=200 type=image/png bytes=1164
-  _headers                        http=200 type=text/plain; charset=utf-8 bytes=2358
+  _headers                        http=200 type=text/plain; charset=utf-8 bytes=2351
 
 == external assets the page needs ==
   https://images.unsplash.com/photo-1533473359331-0135ef1b58bf          http=200 type=image/jpeg

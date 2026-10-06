@@ -8,6 +8,7 @@
 |---|---|---|
 | **https://snazim0345.github.io/OpenMontage/** | ✅ **Live** — real hosting, free HTTPS, no warning page, auto-deploys on every change | `live-check.yml` → `http=200 … RESULT: PASS` |
 | **https://tinyurl.com/a1tourstravels** | ✅ Live short link, opens the site directly | verified with a real HTTP request |
+| **https://spoo.me/a1toursandtravel** | ✅ **Branded short link with the exact name you wanted** — created free, no account, never expires | fetched: `http=200`, lands on the site, brand text present |
 | **https://a1toursandtravel.is-a.dev** | ⛔ **Not claimed — and it is free.** See §3 | checked against is-a.dev's live registry (their `domains/` folder has no such file) |
 
 The site is genuinely online and working. Nothing below is required for the website to function —

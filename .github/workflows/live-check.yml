@@ -70,6 +70,14 @@ jobs:
               curl -sL -o /dev/null -m 30 -w "http=%{http_code} type=%{content_type} bytes=%{size_download}\n" "$GH/$f"
             done
             echo
+            echo "== branded short links (these must never break) =="
+            for l in "https://tinyurl.com/a1tourstravels" "https://spoo.me/a1toursandtravel" "https://tinyurl.com/a1toursandtravel"; do
+              printf "  %-42s" "$l"
+              curl -sL -o /tmp/l.html -m 40 -w "http=%{http_code} " "$l"
+              echo -n "lands_on=$(curl -sL -o /dev/null -m 40 -w '%{url_effective}' "$l" | cut -c1-58) "
+              if grep -q '7888007234' /tmp/l.html; then echo "brand=YES"; else echo "brand=NO (do not use this link publicly)"; fi
+            done
+            echo
             echo "== external assets the page needs =="
             grep -o 'https://images\.unsplash\.com/[^"?]*' /tmp/page.html | sort -u | while read -r u; do
               printf "  %-70s" "$u"

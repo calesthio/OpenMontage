@@ -14,7 +14,7 @@ Everything below is **done, deployed and verified**. Nothing here needs money, a
 | Done | Detail |
 |---|---|
 | 🌐 **Website live** | https://snazim0345.github.io/OpenMontage/ — real hosting, free HTTPS, no warning page |
-| 🔗 **Short branded link** | https://tinyurl.com/a1tourstravels — verified to open the site directly |
+| 🔗 **Short branded links** | https://spoo.me/a1toursandtravel (**exactly the name you asked for**) and https://tinyurl.com/a1tourstravels — both verified to open the site directly |
 | 📄 **16 pages of real content** | Home + 12 route/service pages + 3 travel guides — **17,590 words** total |
 | 🔍 **SEO** | Unique title & meta per page, Service / FAQPage / Article / BreadcrumbList / LocalBusiness structured data, canonical URLs, sitemap.xml (16 URLs), robots.txt, geo tags, hreflang |
 | 🖼️ **Social share image** | Branded 1200×630 card, so WhatsApp/Facebook shares show a proper preview |

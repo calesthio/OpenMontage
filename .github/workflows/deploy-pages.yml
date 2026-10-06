@@ -1,0 +1,61 @@
+name: Deploy site (GitHub Pages)
+
+on:
+  push:
+    branches: [arena/54180390-openmontage]
+    paths:
+      - 'a1-tour-and-travels/**'
+      - '.github/workflows/deploy-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # ---- diagnostics: what can this token actually do? ----
+      - name: Diagnose token + Pages access
+        run: |
+          echo "=== token permissions (repo Actions settings) ==="
+          curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "${{ github.api_url }}/repos/${{ github.repository }}/actions/permissions" | head -c 500; echo
+          echo "=== existing Pages site? ==="
+          curl -s -o /dev/null -w "GET /pages -> %{http_code}\n" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "${{ github.api_url }}/repos/${{ github.repository }}/pages"
+          echo "=== can we enable Pages? ==="
+          curl -s -o /tmp/enable.json -w "POST /pages -> %{http_code}\n" -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "${{ github.api_url }}/repos/${{ github.repository }}/pages" \
+            -d '{"build_type":"workflow"}'
+          head -c 400 /tmp/enable.json; echo
+
+      - uses: actions/configure-pages@v5
+        continue-on-error: true
+        id: configure
+
+      - name: Report configure outcome
+        run: echo "configure-pages outcome = ${{ steps.configure.outcome }}"
+
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.configure.outcome == 'success'
+        with:
+          path: a1-tour-and-travels
+
+      - id: deploy
+        if: steps.configure.outcome == 'success'
+        uses: actions/deploy-pages@v4

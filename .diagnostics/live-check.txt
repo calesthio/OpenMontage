@@ -1,11 +1,11 @@
-live site check — Tue Oct  6 02:02:42 UTC 2026
+live site check — Tue Oct  6 02:11:07 UTC 2026
 PRIMARY  (GitHub Pages): https://snazim0345.github.io/OpenMontage/
 BACKUP   (CDN):          https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html
-backup status:           200 96413 bytes
-local file size:         96413
+backup status:           200 100324 bytes
+local file size:         100324
 http:  200
 type:  content-type: text/html; charset=utf-8
-bytes: 96413
+bytes: 100324
 
 == content essentials ==
   OK      A1 Tour and Travels
@@ -24,11 +24,11 @@ bytes: 96413
   external <script src> count: 0  (0 = no third-party JS)
 
 == assets / app files served with correct types ==
-  index.html                      http=200 type=text/html; charset=utf-8 bytes=96413
+  index.html                      http=200 type=text/html; charset=utf-8 bytes=100324
   404.html                        http=200 type=text/html; charset=utf-8 bytes=2865
   manifest.json                   http=200 type=application/json; charset=utf-8 bytes=1013
   sw.js                           http=200 type=application/javascript; charset=utf-8 bytes=2537
-  sitemap.xml                     http=200 type=application/xml bytes=517
+  sitemap.xml                     http=200 type=application/xml bytes=2196
   robots.txt                      http=200 type=text/plain; charset=utf-8 bytes=162
   404.html                        http=200 type=text/html; charset=utf-8 bytes=2865
   assets/icon-192.png             http=200 type=image/png bytes=29436

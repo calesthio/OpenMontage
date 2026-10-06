@@ -7,10 +7,12 @@ on:
   push:
     branches: [arena/54180390-openmontage]
     paths: ['solve-trigger.txt']
+  workflow_dispatch:
+
 permissions:
   contents: write
   pages: write
-  id-token: write
+  id-token: true
 
 jobs:
   solve:
@@ -18,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 1) Capture real screenshots of the live site
+      - name: Capture real screenshots of the live site
         run: |
           set +e
           mkdir -p .diagnostics/screenshots
@@ -27,7 +29,8 @@ jobs:
           {
             echo "screenshot attempts — $(date -u)"
             grab () {
-              name="$1"; url="$2"
+              name="$1"
+              url="$2"
               code=$(curl -sL -o ".diagnostics/screenshots/$name" -m 90 -w '%{http_code}' -A "Mozilla/5.0" "$url")
               size=$(wc -c < ".diagnostics/screenshots/$name" 2>/dev/null)
               magic=$(head -c 4 ".diagnostics/screenshots/$name" 2>/dev/null | od -An -tx1 | tr -d ' \n')
@@ -39,31 +42,27 @@ jobs:
             grab thumio.png "https://image.thum.io/get/width/1200/crop/1000/noanimate/$SITE"
             echo "== C. microlink (keyless tier) =="
             curl -s -m 90 "https://api.microlink.io/?url=$ENC&screenshot=true&meta=false" > /tmp/ml.json
-            head -c 300 /tmp/ml.json; echo
-            ML=$(python3 -c "
-import json
-try:
-    d=json.load(open('/tmp/ml.json'))
-    print(((d.get('data') or {}).get('screenshot') or {}).get('url',''))
-except Exception:
-    print('')
-")
+            head -c 400 /tmp/ml.json
+            echo
+            ML=$(python3 -c "import json;d=json.load(open('/tmp/ml.json'));print(((d.get('data') or {}).get('screenshot') or {}).get('url','') or '')" 2>/dev/null)
             echo "  microlink url: ${ML:-none}"
-            [ -n "$ML" ] && grab microlink.png "$ML"
+            if [ -n "$ML" ]; then grab microlink.png "$ML"; fi
             echo
             echo "== keep only real PNGs =="
             for f in .diagnostics/screenshots/*.png; do
-              [ -e "$f" ] || continue
-              if head -c 4 "$f" | grep -q PNG; then
-                echo "  VALID   $f ($(wc -c < "$f") bytes)"
-              else
-                echo "  discard $f"; rm -f "$f"
+              if [ -e "$f" ]; then
+                if head -c 4 "$f" | grep -q PNG; then
+                  echo "  VALID   $f ($(wc -c < "$f") bytes)"
+                else
+                  echo "  discard $f"
+                  rm -f "$f"
+                fi
               fi
             done
           } > .diagnostics/screenshots/attempts.txt 2>&1
           cat .diagnostics/screenshots/attempts.txt
 
-      - name: 2) Retry GitHub Pages with a fresh token context
+      - name: Retry GitHub Pages with a fresh token context
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -75,27 +74,22 @@ except Exception:
             echo "-- POST build_type=workflow --"
             gh api -X POST "repos/$GITHUB_REPOSITORY/pages" -f build_type=workflow 2>&1 | head -4
             echo "-- POST source=branch,path --"
-            gh api -X POST "repos/$GITHUB_REPOSITORY/pages" \
-              -f "source[branch]=arena/54180390-openmontage" -f "source[path]=/a1-tour-and-travels" 2>&1 | head -4
+            gh api -X POST "repos/$GITHUB_REPOSITORY/pages" -f "source[branch]=arena/54180390-openmontage" -f "source[path]=/a1-tour-and-travels" 2>&1 | head -4
             echo "-- PUT source=branch,path --"
-            gh api -X PUT "repos/$GITHUB_REPOSITORY/pages" \
-              -f "source[branch]=arena/54180390-openmontage" -f "source[path]=/a1-tour-and-travels" 2>&1 | head -4
+            gh api -X PUT "repos/$GITHUB_REPOSITORY/pages" -f "source[branch]=arena/54180390-openmontage" -f "source[path]=/a1-tour-and-travels" 2>&1 | head -4
             echo "-- repo has_pages --"
             gh api "repos/$GITHUB_REPOSITORY" --jq '.has_pages'
           } > .diagnostics/pages-retry.txt 2>&1
           cat .diagnostics/pages-retry.txt
 
-      - name: 3) Verify the one-click deploy zip is downloadable
+      - name: Verify the one-click deploy zip is downloadable
         run: |
           set +e
           SHA=$(git rev-parse HEAD)
           {
             echo "zip availability — $(date -u)"
-            for u in \
-              "https://raw.githack.com/snazim0345/OpenMontage/$SHA/a1toursandtravel-deploy.zip" \
-              "https://raw.githubusercontent.com/snazim0345/OpenMontage/$SHA/a1toursandtravel-deploy.zip" \
-              "https://cdn.jsdelivr.net/gh/snazim0345/OpenMontage@$SHA/a1toursandtravel-deploy.zip" ; do
-              printf "  %s\n" "$u"
+            for u in "https://raw.githack.com/snazim0345/OpenMontage/$SHA/a1toursandtravel-deploy.zip" "https://raw.githubusercontent.com/snazim0345/OpenMontage/$SHA/a1toursandtravel-deploy.zip" "https://cdn.jsdelivr.net/gh/snazim0345/OpenMontage@$SHA/a1toursandtravel-deploy.zip"; do
+              echo "  $u"
               curl -sL -o /tmp/z.zip -m 60 -w "     http=%{http_code} type=%{content_type} bytes=%{size_download}\n" "$u"
               if unzip -t /tmp/z.zip >/dev/null 2>&1; then
                 echo "     -> VALID zip with $(unzip -l /tmp/z.zip | tail -1 | awk '{print $2}') files"

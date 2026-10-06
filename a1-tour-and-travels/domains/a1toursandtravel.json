@@ -1,0 +1,36 @@
+{
+  "_comment": "is-a.dev domain request for A1 Tour and Travels. Submit as domains/a1toursandtravel.json in a fork of https://github.com/is-a-dev/register — see ../DOMAIN.md option C. Choose ONE records block below and delete the other. Replace the email with your own before submitting.",
+
+  "_option_1_if_you_used_netlify": {
+    "owner": {
+      "username": "snazim0345",
+      "email": "your-email@gmail.com"
+    },
+    "records": {
+      "CNAME": "a1toursandtravel.netlify.app"
+    },
+    "proxied": false
+  },
+
+  "_option_2_if_you_have_github_pages": {
+    "owner": {
+      "username": "snazim0345",
+      "email": "your-email@gmail.com"
+    },
+    "records": {
+      "CNAME": "snazim0345.github.io"
+    },
+    "proxied": false
+  },
+
+  "_option_3_redirect_instead_of_hosting": {
+    "owner": {
+      "username": "snazim0345",
+      "email": "your-email@gmail.com"
+    },
+    "record": {
+      "URL": "https://a1toursandtravel.netlify.app"
+    },
+    "proxied": false
+  }
+}

@@ -17,6 +17,17 @@ Work top-to-bottom on day one: the first three items are what actually bring the
 | Landing page with booking form → WhatsApp | `index.html` |
 | Free-host upgrade path (permanent URL) | see "Hosting" below |
 
+## Your links (use these in marketing)
+
+| Link | Use it for |
+|---|---|
+| **https://tinyurl.com/a1toursandtravel** | Everything — WhatsApp status, SMS, SMS signatures, printed cards, posters, Google posts. Short, memorable, always redirects to the live site. |
+| `wa.me/917888007234` | Every "WhatsApp us" button |
+| `tel:+917888007234` | Every "Call now" button |
+
+Print the short link, not the long one. If the site ever moves to a new address, the short link
+keeps working — you never have to reprint anything.
+
 ## 1. The 3 things that need your phone (OTP — nobody can do these for you)
 
 These are gated by an OTP sent to **7888007234**. They take ~10 minutes total and are the

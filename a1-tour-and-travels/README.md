@@ -1,6 +1,7 @@
 # A1 Tour and Travels — website + growth kit
 
 > ### 🌐 Live site: https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html
+> ### 🔗 Short link for print & WhatsApp: **https://tinyurl.com/a1toursandtravel**
 > ### 📞 Bookings: 7888007234 · 💬 https://wa.me/917888007234
 > Marketing playbooks (all free): [`marketing/`](marketing/README.md)
 
@@ -108,6 +109,18 @@ listings (with English/Hindi/Marathi copy), WhatsApp Business kit, 20-post socia
 review engine, referral scheme, vehicle branding and partnership outreach. All zero-cost.
 
 ---
+
+## Getting a branded domain (`a1toursandtravel.*`)
+
+See **[DOMAIN.md](DOMAIN.md)** — 5 free options, including the exact Netlify / Cloudflare steps that
+give you `https://a1toursandtravel.netlify.app` (or `.pages.dev`) in about 3 minutes, and a
+pre-written pull request for a genuinely free `a1toursandtravel.is-a.dev` domain.
+
+Once you've picked a name, one command moves everything:
+
+```bash
+bash a1-tour-and-travels/set-url.sh https://a1toursandtravel.netlify.app
+```
 
 ## Security
 

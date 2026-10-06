@@ -1,0 +1,69 @@
+name: Branded links for the live site
+
+on:
+  push:
+    branches: [arena/54180390-openmontage]
+    paths: ['links-trigger.txt']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Claim + verify short links that point at the real site
+        run: |
+          set +e
+          mkdir -p .diagnostics
+          SITE="https://snazim0345.github.io/OpenMontage/"
+          ENC=$(python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1],safe=''))" "$SITE")
+          {
+            echo "branded links for the live site — $(date -u)"
+            echo "target: $SITE"
+            echo
+            echo "== claiming tinyurl aliases =="
+            for ALIAS in a1toursandtravelgh a1tourstravels a1tourspune a1toursmumbai a1-tours-and-travel; do
+              printf "  %-22s " "$ALIAS"
+              R=$(curl -s -m 25 "https://tinyurl.com/api-create.php?url=$ENC&alias=$ALIAS")
+              echo "$R"
+              sleep 2
+            done
+            echo
+            echo "== also try is.gd again =="
+            for ALIAS in a1tours2 a1toursgo a1toursx; do
+              printf "  %-22s " "$ALIAS"
+              curl -s -m 25 "https://is.gd/create.php?format=simple&url=$ENC&shorturl=$ALIAS"; echo
+              sleep 2
+            done
+            echo
+            echo "== verify which ones actually serve our site =="
+            for U in https://tinyurl.com/a1toursandtravelgh https://tinyurl.com/a1tourstravels \
+                     https://tinyurl.com/a1tourspune https://tinyurl.com/a1toursmumbai \
+                     https://tinyurl.com/a1-tours-and-travel https://tinyurl.com/a1toursandtravel \
+                     https://is.gd/a1tours2 https://is.gd/a1toursgo https://is.gd/a1toursx; do
+              printf "  %-46s" "$U"
+              FINAL=$(curl -sL -o /tmp/x.html -m 40 -w "%{http_code} %{url_effective}" "$U")
+              echo "$FINAL"
+              if grep -qF "A1 Tour and Travels" /tmp/x.html; then
+                if grep -qi "one more step\|rawgithack" /tmp/x.html; then echo "        -> serves the rawgithack WARNING page (bad)"; else echo "        -> GOOD: serves our site directly"; fi
+              else
+                echo "        -> not our site"
+              fi
+            done
+          } > .diagnostics/shortlinks-live.txt 2>&1
+          cat .diagnostics/shortlinks-live.txt
+          BR=arena/54180390-openmontage
+          git config user.name site-bot
+          git config user.email site-bot@users.noreply.github.com
+          git add -f .diagnostics
+          git commit -q -m "links: branded short links for the live site" || echo "no changes"
+          for attempt in 1 2 3 4 5; do
+            if git pull --rebase --autostash origin "$BR" >/dev/null 2>&1 && git push origin HEAD:"$BR" 2>&1 | tail -2; then
+              echo "push attempt $attempt: OK"; break
+            else
+              echo "push attempt $attempt: rejected, retrying..."; sleep 6
+            fi
+          done

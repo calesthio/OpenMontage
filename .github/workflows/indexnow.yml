@@ -13,6 +13,9 @@ name: Submit site to search engines (IndexNow)
 # Until then it exits immediately and costs nothing.
 
 on:
+  push:
+    branches: [arena/54180390-openmontage]
+    paths: ['indexnow-trigger.txt']
   schedule:
     - cron: '0 5 * * 1'      # weekly, Mondays
   workflow_dispatch:

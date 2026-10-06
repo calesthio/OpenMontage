@@ -1,0 +1,134 @@
+name: is-a.dev domain readiness
+
+# Checks, against is-a.dev's LIVE registry and schema (so nothing is guessed):
+#   1. is a1toursandtravel.is-a.dev still unclaimed?
+#   2. what exactly does their schema require?
+#   3. does our prepared request file pass their schema?
+#   4. is the target site reachable (a hard requirement for approval)?
+on:
+  push:
+    branches: [arena/54180390-openmontage]
+    paths: ['isadev-trigger.txt', 'a1-tour-and-travels/domains/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch registry facts and validate our request file
+        run: |
+          set +e
+          mkdir -p .diagnostics
+          {
+            echo "=== is-a.dev readiness — $(date -u) ==="
+            echo
+            echo "== 1. name availability (checking their live registry) =="
+            for n in a1toursandtravel a1toursandtravels a1tourstravels a1tours punemumbaitaxi; do
+              code=$(curl -s -o /dev/null -w '%{http_code}' -m 30 \
+                "https://api.github.com/repos/is-a-dev/register/contents/domains/$n.json")
+              if [ "$code" = "404" ]; then echo "  FREE     $n.is-a.dev"; else echo "  TAKEN?   $n.is-a.dev  (api http=$code)"; fi
+            done
+            echo
+            echo "== 2. their schema (fetched live) =="
+            for path in domains.schema.json schema.json .github/schema.json; do
+              code=$(curl -s -o /tmp/schema.json -w '%{http_code}' -m 30 \
+                "https://raw.githubusercontent.com/is-a-dev/register/main/$path")
+              echo "  $path -> http=$code"
+              if [ "$code" = "200" ]; then
+                echo "  ---- schema content (first 3000 chars) ----"
+                head -c 3000 /tmp/schema.json
+                echo
+                SCHEMA_PATH="$path"
+              fi
+            done
+            echo
+            echo "== 3. their public docs (record format) =="
+            curl -sL -m 45 "https://raw.githubusercontent.com/is-a-dev/register/main/docs/README.md" | head -60
+            echo
+            echo "== 4. is our target site reachable? (their hard requirement) =="
+            curl -sL -o /dev/null -m 40 -w "  https://snazim0345.github.io/OpenMontage/ -> http=%{http_code} type=%{content_type}\n" \
+              https://snazim0345.github.io/OpenMontage/
+          } > .diagnostics/isadev-readiness.txt 2>&1
+          cat .diagnostics/isadev-readiness.txt
+
+      - name: Validate our request file against their schema
+        run: |
+          set +e
+          pip install --quiet jsonschema 2>/dev/null || echo "(jsonschema not installed, using manual checks)"
+          {
+            echo
+            echo "== 5. validating our prepared file =="
+            F=a1-tour-and-travels/domains/a1toursandtravel.json
+            echo "file: $F"
+            python3 -c "import json;d=json.load(open('$F'));print('  parses as JSON: yes');print('  top-level keys:', list(d.keys()))"
+            python3 - <<'PY'
+          import json
+          d = json.load(open('a1-tour-and-travels/domains/a1toursandtravel.json'))
+          print('  owner:', d.get('owner'))
+          print('  records:', d.get('records'))
+          print('  proxied:', d.get('proxied'))
+          ok = True
+          if not isinstance(d.get('owner'), dict) or 'username' not in d['owner']:
+              print('  PROBLEM: owner.username required'); ok = False
+          if 'records' not in d and 'record' not in d:
+              print('  PROBLEM: needs records or record'); ok = False
+          rec = d.get('records') or {}
+          if 'CNAME' in rec and rec['CNAME'].endswith('.'):
+              print('  PROBLEM: CNAME must not end with a dot'); ok = False
+          print('  manual validation:', 'PASS' if ok else 'FAIL')
+          PY
+            if [ -f /tmp/schema.json ]; then
+              python3 - <<'PY'
+          import json
+          try:
+              import jsonschema
+              schema = json.load(open('/tmp/schema.json'))
+              data = json.load(open('a1-tour-and-travels/domains/a1toursandtravel.json'))
+              jsonschema.validate(data, schema)
+              print('  OFFICIAL SCHEMA VALIDATION: PASS')
+          except ImportError:
+              print('  (jsonschema unavailable - manual checks above stand)')
+          except Exception as e:
+              print('  OFFICIAL SCHEMA VALIDATION FAILED:', str(e)[:400])
+          PY
+            fi
+          } >> .diagnostics/isadev-readiness.txt 2>&1
+          tail -20 .diagnostics/isadev-readiness.txt
+
+      - name: Archive key pages on the Wayback Machine (free, permanent, no account)
+        run: |
+          set +e
+          SITE="https://snazim0345.github.io/OpenMontage"
+          {
+            echo
+            echo "== 6. web.archive.org submissions (free permanent archives) — $(date -u) =="
+            for p in "" "pune-to-mumbai-cab.html" "match-cab-pune-mumbai.html" "pune-mumbai-bus.html" "tour-packages.html"; do
+              printf "  %-38s" "/$p"
+              curl -sL -o /dev/null -m 60 -w "submit http=%{http_code}\n" "https://web.archive.org/save/$SITE/$p"
+              sleep 6
+            done
+            echo
+            echo "  verifying one:"
+            sleep 15
+            curl -sL -m 45 "http://archive.org/wayback/available?url=$SITE/pune-to-mumbai-cab.html"
+          } >> .diagnostics/isadev-readiness.txt 2>&1
+          tail -14 .diagnostics/isadev-readiness.txt
+
+      - name: Commit
+        run: |
+          BR=arena/54180390-openmontage
+          git config user.name site-bot
+          git config user.email site-bot@users.noreply.github.com
+          git add -f .diagnostics
+          git commit -q -m "probe: is-a.dev readiness + schema validation + archive submissions" || echo "no changes"
+          for attempt in 1 2 3 4 5; do
+            if git pull --rebase --autostash origin "$BR" >/dev/null 2>&1 && git push origin HEAD:"$BR" 2>&1 | tail -2; then
+              echo "push attempt $attempt: OK"; break
+            else
+              echo "push attempt $attempt: rejected, retrying..."; sleep 6
+            fi
+          done

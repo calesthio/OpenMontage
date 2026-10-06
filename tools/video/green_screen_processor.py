@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import os
 import platform
+import re
 import shutil
 import time
 from pathlib import Path
@@ -121,7 +122,12 @@ class GreenScreenProcessor(BaseTool):
 
         method = inputs.get("method", "auto")
         fps = inputs.get("fps", 15)
-        bg_color = inputs.get("bg_color", "#0E172A")
+        bg_color_raw = inputs.get("bg_color", "#0E172A")
+        try:
+            bg_hex = self._validate_hex_color(bg_color_raw)
+            bg_color = f"#{bg_hex}"
+        except ValueError as e:
+            return ToolResult(success=False, error=str(e))
         max_frames = inputs.get("max_frames", 0)
         start = time.time()
 
@@ -452,7 +458,7 @@ class GreenScreenProcessor(BaseTool):
 
         Applies chromakey to remove green, then composites onto bg_color.
         """
-        bg_hex = bg_color.lstrip("#")
+        bg_hex = self._validate_hex_color(bg_color)
         # Convert hex to FFmpeg color format
         ffmpeg_bg = f"0x{bg_hex}"
 
@@ -542,7 +548,7 @@ class GreenScreenProcessor(BaseTool):
             return False
 
         # Parse bg_color hex to RGB
-        bg_hex = bg_color.lstrip("#")
+        bg_hex = self._validate_hex_color(bg_color)
         bg_r = int(bg_hex[0:2], 16)
         bg_g = int(bg_hex[2:4], 16)
         bg_b = int(bg_hex[4:6], 16)
@@ -604,6 +610,34 @@ class GreenScreenProcessor(BaseTool):
             str(output_path),
         ]
         self.run_command(cmd, timeout=600)
+
+    @staticmethod
+    def _validate_hex_color(bg_color: str) -> str:
+        """Validate and normalize a background hex color string.
+
+        Accepts 3, 6, or 8 character hex strings with optional leading "#".
+        Returns a canonical normalized uppercase hex string (e.g., "0E172A").
+        Raises ValueError if the input is not a valid hex color or contains
+        any injection characters.
+        """
+        if not isinstance(bg_color, str):
+            raise ValueError(f"Invalid bg_color: expected string, got {type(bg_color).__name__}")
+
+        s = bg_color.strip().removeprefix("#")
+
+        if not re.fullmatch(r"[0-9a-fA-F]+", s):
+            raise ValueError(
+                f"Invalid bg_color: '{bg_color}'. Expected hex color string (e.g., '#0E172A')."
+            )
+
+        if len(s) == 3:
+            return "".join(c * 2 for c in s).upper()
+        elif len(s) in (6, 8):
+            return s.upper()
+        else:
+            raise ValueError(
+                f"Invalid bg_color: '{bg_color}'. Expected 3, 6, or 8 hex digits."
+            )
 
     @staticmethod
     def _cleanup_dir(dir_path: Path) -> None:

@@ -50,11 +50,21 @@ jobs:
             echo "reusing key file: $KEY_FILE"
           fi
           echo "KEY=$KEY" >> $GITHUB_ENV
+          BR=arena/54180390-openmontage
           git config user.name site-bot
           git config user.email site-bot@users.noreply.github.com
-          git add -f a1-tour-and-travels/*.txt
-          git commit -q -m "seo: IndexNow ownership key" || echo "key already committed"
-          git push origin HEAD:arena/54180390-openmontage 2>&1 | tail -2
+          git add -f .diagnostics a1-tour-and-travels/assets 2>/dev/null
+          git commit -q -m "bot: update diagnostics $(date -u +%FT%TZ)" || echo "no changes to commit"
+          for attempt in 1 2 3 4 5; do
+            if git pull --rebase --autostash origin "$BR" >/dev/null 2>&1 && git push origin HEAD:"$BR" 2>&1 | tail -2; then
+              echo "push attempt $attempt: OK"
+              break
+            else
+              echo "push attempt $attempt: rejected, retrying..."
+              sleep 6
+            fi
+          done
+          echo "final state: $(git rev-parse --short HEAD)"
 
       - name: Submit URLs to IndexNow
         if: steps.gate.outputs.ready == 'true'
@@ -78,8 +88,18 @@ jobs:
             -d @/tmp/body.json -w "\nhttp=%{http_code}\n" | tee /tmp/indexnow.txt
           mkdir -p .diagnostics
           echo "$(date -u) host=$HOST response: $(cat /tmp/indexnow.txt)" >> .diagnostics/indexnow-log.txt
+          BR=arena/54180390-openmontage
           git config user.name site-bot
           git config user.email site-bot@users.noreply.github.com
-          git add -f .diagnostics/indexnow-log.txt
-          git commit -q -m "seo: IndexNow submission $(date -u +%F)" || true
-          git push origin HEAD:arena/54180390-openmontage 2>&1 | tail -2
+          git add -f .diagnostics a1-tour-and-travels/assets 2>/dev/null
+          git commit -q -m "bot: update diagnostics $(date -u +%FT%TZ)" || echo "no changes to commit"
+          for attempt in 1 2 3 4 5; do
+            if git pull --rebase --autostash origin "$BR" >/dev/null 2>&1 && git push origin HEAD:"$BR" 2>&1 | tail -2; then
+              echo "push attempt $attempt: OK"
+              break
+            else
+              echo "push attempt $attempt: rejected, retrying..."
+              sleep 6
+            fi
+          done
+          echo "final state: $(git rev-parse --short HEAD)"

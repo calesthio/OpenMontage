@@ -105,7 +105,7 @@ jobs:
             const html = fs.readFileSync('a1-tour-and-travels/' + f, 'utf8');
             for (const m of html.matchAll(/href="([^"#][^"]*?)"/g)) {
               const h = m[1];
-              if (!h.startsWith('http') && !h.startsWith('mailto') && !h.startsWith('tel')) links.add(h);
+              if (!h.startsWith('http') && !h.startsWith('mailto') && !h.startsWith('tel') && !h.startsWith('data:')) links.add(h);
             }
           }
           const missing = [];

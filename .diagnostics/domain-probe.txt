@@ -1,0 +1,1126 @@
+=== domain probe — Tue Oct  6 02:27:43 UTC 2026 ===
+  a1toursandtravel.is-a.dev          NS=A=104.18.5.103 104.18.4.103  CNAME=none NS=none
+  a1toursandtravels.is-a.dev         NS=A=104.18.4.103 104.18.5.103  CNAME=none NS=none
+  a1tours.is-a.dev                   NS=A=104.18.5.103 104.18.4.103  CNAME=none NS=none
+  a1tourstravels.is-a.dev            NS=A=104.18.4.103 104.18.5.103  CNAME=none NS=none
+  punemumbaitaxi.is-a.dev            NS=A=104.18.5.103 104.18.4.103  CNAME=none NS=none
+
+  (a domain with no A/CNAME and no NS is unregistered)
+
+=== is-a.dev apex NS for reference ===
+ns2.is-a.dev.
+ns4.is-a.dev.
+ns3.is-a.dev.
+ns1.is-a.dev.
+
+=== is-a.dev current requirements (fetched Tue Oct  6 02:27:44 UTC 2026) ===
+--- README (first 120 lines) ---
+<!-- <p align="center">
+   <img alt="is-a.dev Banner" src="https://raw.githubusercontent.com/is-a-dev/register/main/media/banner.png">
+</p> -->
+
+<p align="center">
+   <img height="350" alt="is-a.dev Banner" src="https://raw.githubusercontent.com/is-a-dev/register/main/media/banner.png">
+</p>
+
+<p align="center">
+   <img alt="Domains" src="https://img.shields.io/github/directory-file-count/is-a-dev/register/domains?color=5c46eb&label=domains&style=for-the-badge">
+   <img alt="Open Pull Requests" src="https://img.shields.io/github/issues-raw/is-a-dev/register?color=5c46eb&label=issues&style=for-the-badge">
+   <img alt="Open Issues" src="https://img.shields.io/github/issues-pr-raw/is-a-dev/register?color=5c46eb&label=pull%20requests&style=for-the-badge">
+   <br>
+</p>
+
+<h1 align="center">is-a.dev</h1>
+
+<p align="center"><strong>is-a.dev</strong> is a service that allows developers to get a sweet-looking <code>.is-a.dev</code> subdomain for their personal websites.</p>
+<p align="center">📕 <a href="https://docs.is-a.dev">Documentation</a> &bull; 📜 <a href="https://is-a.dev/terms">Terms of Service</a> &bull; 💖 <a href="https://donate.is-a.dev">Donate</a></p>
+
+---
+
+## 📢 Announcements
+Please join our [Discord server](https://discord.gg/is-a-dev-830872854677422150) for announcements, service updates, and downtime notifications regarding the service.
+
+Only critical announcements are posted on GitHub, everything else is posted on our Discord server.
+
+---
+
+> [!NOTE]
+> We've launched another free subdomain service! Claim your `.is-a.bot` subdomain [here](https://github.com/free-domains/is-a.bot).
+
+---
+
+# ✏️ Register
+> If you want a visual guide, check out [this blog post](https://blog.wharrison.com.au/2024/07/is-a-dev/).
+
+- [Fork](https://github.com/is-a-dev/register/fork) the repository.
+- Follow the instructions on our [documentation](https://docs.is-a.dev).
+  - Do not use AI to generate your request, it **WILL** always get it wrong and will delay you getting a domain.
+- Once you open your pull request (PR), it will be reviewed. *Keep an eye on it in case changes are needed!*
+   - If changes have been requested, please make the specified changes otherwise **you will be rejected**.
+- Once your PR is merged, your DNS records should be published with-in a few minutes.
+- Enjoy your new `.is-a.dev` subdomain! Please consider leaving a star ⭐️ to help support us!
+
+---
+
+## ⛔ Report Abuse
+If you find any subdomains being abused or breaking our [ToS](https://is-a.dev/terms), please report them by [creating an issue](https://github.com/is-a-dev/register/issues/new?assignees=&labels=report-abuse&projects=&template=report-abuse.md&title=Report+abuse) with relevant evidence.
+
+---
+
+## 💖 Supporting Us
+If you would like to help support us, please consider [donating](https://donate.is-a.dev) or [sponsoring](https://donate.is-a.dev/sponsor).
+
+We are proudly supported by Cloudflare's [Project Alexandria](https://www.cloudflare.com/lp/project-alexandria) program for our DNS management.
+
+We would like to thank all of our current and past [supporters](https://is-a.dev/thanks).
+
+--- example domain files in their repo ---
+   0-0.json
+   0.json
+   00.json
+   000.json
+   00x00.json
+   01.json
+   010101-sans.json
+   01rudra.json
+   0d4vid.json
+   0spol.json
+   0w0.json
+   0x0.json
+   0x00b.json
+   0x98c9.json
+   0xamit.json
+   0xarchit.json
+   0xbit.json
+   0xdwb.json
+   0xflotus.json
+   0xheartcode.json
+   0xio32.json
+   0xjerry.json
+   0xjob.json
+   0xmaruf.json
+   0xna.json
+   0xnipun.json
+   0xprathamesh.json
+   0xprogress.json
+   0xsatyam.json
+   0xshijn.json
+   0xviel.json
+   0xvinay.json
+   0xwi11iam.json
+   0xzer0x.json
+   1.json
+   10.json
+   104.json
+   11.json
+   110282348.maseblog.json
+   1234567890.json
+   1522905413783._domainkey.briankimemia.json
+   15aniruddh.json
+   1915333._domainkey.briankimemia.json
+   1b7e.json
+   1d20cacc45ecd67aadceddffe569d19d.mifta.json
+   1ndrajeet.json
+   2.json
+   20260930._domainkey.ratmail4080.json
+   2096779623.json
+   2101.json
+   21z.json
+   256javy.json
+   2a86ae1b._improvmx.blueboop.json
+   2giosangmitom.json
+   2n25wwlrzsbv.zorph.json
+   2tox.json
+   3.json
+   37cut.json
+   3gee.json
+   3lyly0.json
+   3mr.json
+   3pls0de.json
+   4.json
+   404.json
+   41nb.json
+   438353864.json
+   44.json
+   45i.json
+   4f4d.json
+   4hmet.json
+   4joy.json
+   4k5h4y.json
+   4realwilly.json
+   4thul.json
+   4yk5.json
+   5.json
+   50000.json
+   50k.json
+   50x.json
+   568032885.json
+   5a03e84d._improvmx.profilie.harys.json
+   5pyd3r.json
+   5pyd3rr.json
+   5y8z.json
+   5years.json
+   6.json
+   60nn13.json
+   62radio.json
+   6502.json
+   67.json
+   69.json
+   6z7y.json
+   7.json
+   720hz.json
+   733nwolf.json
+   7amada.json
+   7ames.json
+   7xdev.json
+   7z.json
+   8.json
+   8211249458._domainkey.donprueba.json
+   83r0x.json
+   8f7._domainkey.maseblog.json
+   8f72._domainkey.maseblog.json
+   8nova2.json
+   9.json
+   9ffeb778._improvmx.steve.json
+   9inecode.json
+   _0db4e790f89365ed50700dcf36927455.hasan.json
+   _0fc28cd6e2726800bd0ce6302d417c49.kumaran.json
+   _192043f6bcd6eabe96b17cc376c50263.www.mouadbensaid.json
+   _2413d7978c7709177ad4ad030673381b.joshcarl.json
+   _25._tcp.mail.gh0stp4wz.json
+   _30124e797774d3cfd3ce8e096fa85ef3.seodongok.json
+   _5a42e40416eb27ecd817d8c51f3452f2.15aniruddh.json
+   _5b076e00d956efeffd0910b64cf07921.sebastianvalencia.json
+   _7bdcfbad92c8eb292607d097a5837b61.platform.kozlov.json
+   _7c0370430037cdcedb8a968dee15f13f.vnamanmehta.json
+   _86628d81de108422b11294742fad759d.mouadbensaid.json
+   _89dbcccacb004b9f46b9ebf6ea65a1de.kyawhtethein.json
+   _98f407b4f544fafbd29753969d665abd.hs.r2turntrue.json
+   _99e2ba9ae2fdea4dde1014ac58d58649.dmitry-maranik.json
+   _a4e28d3383b2061c8e4e6057cda4da3e.chaitanyat.json
+   _acme-challenge.amit.json
+   _acme-challenge.analytics.juststudio.json
+   _acme-challenge.api.just.json
+   _acme-challenge.api.juststudio.json
+   _acme-challenge.api.reaver.json
+   _acme-challenge.c0ba.json
+   _acme-challenge.devspace.reaver.json
+   _acme-challenge.dextermac.json
+   _acme-challenge.docs.amit.json
+   _acme-challenge.eduardoaugusto.json
+   _acme-challenge.enderbot.json
+   _acme-challenge.frqme.json
+   _acme-challenge.god.json
+   _acme-challenge.iamabir.json
+   _acme-challenge.img.glitched-da-kitty-cat.json
+   _acme-challenge.ke.json
+   _acme-challenge.media.ferencpalos.json
+   _acme-challenge.michaelfarah.json
+   _acme-challenge.mifta.json
+   _acme-challenge.parrot.json
+   _acme-challenge.princey.json
+   _acme-challenge.rajagrawal.json
+   _acme-challenge.s1.api.just.json
+   _acme-challenge.s2.api.just.json
+   _acme-challenge.s3.api.just.json
+   _acme-challenge.s4.api.just.json
+   _acme-challenge.saad.json
+   _acme-challenge.scoobis.json
+   _acme-challenge.status.gamingto12.json
+   _acme-challenge.su.json
+   _acme-challenge.sulaimandigital.json
+   _acme-challenge.us.mcstatus.json
+   _acme-challenge.vault.gamingto12.json
+   _acme-challenge.veirt.json
+   _acme-challenge.www.devspace.reaver.json
+   _acme-challenge.yahya.json
+   _acme-challenge.yanle.json
+   _acme-challenge.yazan.json
+   _atproto.alfi.json
+   _atproto.alvin.json
+   _atproto.amit.json
+   _atproto.antonyaraujo.json
+   _atproto.avery.json
+   _atproto.blog.pinage404.json
+   _atproto.blueboop.json
+   _atproto.bot.masecodes.json
+   _atproto.brot.json
+   _atproto.catto24.json
+   _atproto.cosmas.json
+   _atproto.crischutu07.json
+   _atproto.froelen.json
+   _atproto.glitched-da-kitty-cat.json
+   _atproto.harys.json
+   _atproto.hcj.json
+   _atproto.horibyte.json
+   _atproto.jumanji.json
+   _atproto.lua.json
+   _atproto.lumi.json
+   _atproto.masecodes.json
+   _atproto.misu.json
+   _atproto.mortifiedtux.json
+   _atproto.narasima.json
+   _atproto.omhackz.json
+   _atproto.pikachannel.json
+   _atproto.pinage404.json
+   _atproto.priyanshu.json
+   _atproto.pycraft.json
+   _atproto.rc-chuah.json
+   _atproto.recettes.pinage404.json
+   _atproto.roxi.json
+   _atproto.sag.json
+   _atproto.sahooshuvranshu.json
+   _atproto.sarfaraz.json
+   _atproto.sivothajan.json
+   _atproto.sortalost.json
+   _atproto.thelamplighter.json
+   _atproto.tomasz.json
+   _atproto.unknown.json
+   _atproto.videatur.json
+   _atproto.weebo64.json
+   _atproto.willo.json
+   _atproto.xan.json
+   _autodiscover._tcp.gh0stp4wz.json
+   _autodiscover._tcp.stefdp.json
+   _beehiiv-authentication-0b338.maseblog.json
+   _cf-custom-hostname.ahmedsaif.json
+   _cf-custom-hostname.alianalytics.json
+   _cf-custom-hostname.alosh.json
+   _cf-custom-hostname.angeles-tasayco.json
+   _cf-custom-hostname.angshumanbaruah.json
+   _cf-custom-hostname.dewasheesh.json
+   _cf-custom-hostname.dildar.json
+   _cf-custom-hostname.docs.amit.json
+   _cf-custom-hostname.harindarpilania.json
+   _cf-custom-hostname.jimin.json
+   _cf-custom-hostname.johnninan.json
+   _cf-custom-hostname.johnnykhondowe.json
+   _cf-custom-hostname.ke.json
+   _cf-custom-hostname.kedhar.json
+   _cf-custom-hostname.keerthivasan.json
+   _cf-custom-hostname.kimjinwoo.json
+   _cf-custom-hostname.manthansomani.json
+   _cf-custom-hostname.mohammedayman.json
+   _cf-custom-hostname.mubarakabdulkodri.json
+   _cf-custom-hostname.play.sovereign-world.json
+   _cf-custom-hostname.prakash.json
+   _cf-custom-hostname.richardxavierqa.json
+   _cf-custom-hostname.sebastianlau.json
+   _cf-custom-hostname.snowlove.json
+   _cf-custom-hostname.status.gamingto12.json
+   _cf-custom-hostname.vault.gamingto12.json
+   _cf-custom-hostname.xavierbarriga.json
+   _cf-custom-hostname.zhaoyuxiao.json
+   _degit-verification.deadcode.json
+   _discord.01rudra.json
+   _discord.0xviel.json
+   _discord.1b7e.json
+   _discord.abbas.json
+   _discord.abeja.json
+   _discord.aboutjes.json
+   _discord.acronical.json
+   _discord.adarsh-67.json
+   _discord.adithyanm.json
+   _discord.adoqet.json
+   _discord.agent.json
+   _discord.ajtabs.json
+   _discord.akcord.json
+   _discord.akshtt.json
+   _discord.alfi.json
+   _discord.alimad.json
+   _discord.alora.json
+   _discord.alpha.json
+   _discord.alvin.json
+   _discord.amitkr.json
+   _discord.anasy.json
+   _discord.anime-oni.json
+   _discord.anins1der.json
+   _discord.anir183.json
+   _discord.ann.json
+   _discord.anonymousik.json
+   _discord.ante.json
+   _discord.anw.json
+   _discord.api.harys.json
+   _discord.arc.json
+   _discord.ari.json
+   _discord.aria.json
+   _discord.arlan.json
+   _discord.arman.json
+   _discord.arnabh.json
+   _discord.aruria.json
+   _discord.arvindt.json
+   _discord.arx.json
+   _discord.aryan-gupta.json
+   _discord.ashishagarwal.json
+   _discord.averagemikufan.json
+   _discord.avery.json
+   _discord.awkoro.json
+   _discord.ayaan.json
+   _discord.azhammakestrash.json
+   _discord.barrybosssss.json
+   _discord.barryhisbot.json
+   _discord.bladimir.json
+   _discord.blezecon.json
+   _discord.blog.vornexx.json
+   _discord.blue.json
+   _discord.blueboop.json
+   _discord.bob16077.json
+   _discord.brainoutofbounds.json
+   _discord.brat.json
+   _discord.briankimemia.json
+   _discord.britto.json
+   _discord.brot.json
+   _discord.bryan-ing.json
+   _discord.bryce.json
+   _discord.caiden.json
+   _discord.callie.json
+   _discord.cally.json
+   _discord.capivara.json
+   _discord.carry.json
+   _discord.casperong.json
+   _discord.catto24.json
+   _discord.chaotic.json
+   _discord.chip.json
+   _discord.chirath.json
+   _discord.ciao287.json
+   _discord.clintlorenzo.json
+   _discord.clmnnt.json
+   _discord.clove.json
+   _discord.codesoft.json
+   _discord.colin.json
+   _discord.computerblade.json
+   _discord.cool.json
+   _discord.cooler.vmbbi.json
+   _discord.cosintan.json
+   _discord.cosmic.json
+   _discord.crischutu07.json
+   _discord.ctrlaltspace.json
+   _discord.cutedog5695.json
+   _discord.cuxdi.json
+   _discord.cycloneaddons.json
+   _discord.dag.json
+   _discord.dan-who.json
+   _discord.danilo.json
+   _discord.darkdevil.json
+   _discord.davegt.json
+   _discord.dawnsey.json
+   _discord.deanez.json
+   _discord.debtlessflea.json
+   _discord.deney.json
+   _discord.devcat-exe.json
+   _discord.dj.json
+   _discord.drake.json
+   _discord.dranimalis.json
+   _discord.dscbmr.json
+   _discord.ducky.json
+   _discord.duckysolucky.json
+   _discord.dwigoric.json
+   _discord.dxrk.json
+   _discord.dyno.json
+   _discord.e.json
+   _discord.eduardoaugusto.json
+   _discord.ela.json
+   _discord.elkaff.json
+   _discord.emi.json
+   _discord.enderpoint.json
+   _discord.epicdavid.json
+   _discord.eryquicc.json
+   _discord.eryth.json
+   _discord.evie.json
+   _discord.exparc.json
+   _discord.f.json
+   _discord.faris.json
+   _discord.fatih.json
+   _discord.fawaz.json
+   _discord.fayaz.json
+   _discord.fourmiles.json
+   _discord.fran.json
+   _discord.froelen.json
+   _discord.fryvex.json
+   _discord.ftn.json
+   _discord.funn.json
+   _discord.fusion.json
+   _discord.gaeely.json
+   _discord.gamerxr637.json
+   _discord.gh0stp4wz.json
+   _discord.gioco.json
+   _discord.gnurub.json
+   _discord.gokulbarath.json
+   _discord.goyal.json
+   _discord.gunah.json
+   _discord.gunman.json
+   _discord.hafi.json
+   _discord.harunabdullah.json
+   _discord.harys.json
+   _discord.hawai1401.json
+   _discord.hcj.json
+   _discord.hcs.json
+   _discord.heath.json
+   _discord.henderythmix.json
+   _discord.henri.json
+   _discord.heyaxo.json
+   _discord.honaki.json
+   _discord.hoovad.json
+   _discord.hrs.json
+   _discord.iad.harys.json
+   _discord.icey.json
+   _discord.imide.json
+   _discord.imnahn.json
+   _discord.invisible.json
+   _discord.is-a-dev.harys.json
+   _discord.it.json
+   _discord.itzkr0bus.json
+   _discord.itzkrofi.json
+   _discord.j0code.json
+   _discord.j0sh.json
+   _discord.jairoms.json
+   _discord.jdplayyz.json
+   _discord.jeff.json
+   _discord.jericho.json
+   _discord.jerome.json
+   _discord.jes.json
+   _discord.jirka086.json
+   _discord.joetroll.json
+   _discord.joshua.json
+   _discord.jumanji.json
+   _discord.jumpstone.json
+   _discord.justdeveloper.json
+   _discord.juststudio.json
+   _discord.justwinstuff.json
+   _discord.kang.json
+   _discord.kanichi.json
+   _discord.kawasaki.json
+   _discord.kenny.json
+   _discord.key.json
+   _discord.keybinds.json
+   _discord.kira.json
+   _discord.kitr.json
+   _discord.kleb.json
+   _discord.kona.json
+   _discord.krishanu.json
+   _discord.krishnan.json
+   _discord.krunch.json
+   _discord.kuldeep.json
+   _discord.kzren.json
+   _discord.l7neg.json
+   _discord.lasty.json
+   _discord.lea.json
+   _discord.lewdhutao.json
+   _discord.liam.json
+   _discord.lilyisher.json
+   _discord.lingle.json
+   _discord.linus.json
+   _discord.lioren.json
+   _discord.lirysm.json
+   _discord.lj.json
+   _discord.lolo.json
+   _discord.lua.json
+   _discord.lumi.json
+   _discord.lumix.json
+   _discord.lver.json
+   _discord.m336.json
+   _discord.maseblog.json
+   _discord.masecodes.json
+   _discord.masonaldrich.json
+   _discord.mattias.json
+   _discord.maxlananas.json
+   _discord.mazeyboi.json
+   _discord.meesam.json
+   _discord.mehmet.json
+   _discord.mehulpathak.json
+   _discord.merely.json
+   _discord.meywy.json
+   _discord.minhphan.json
+   _discord.misu.json
+   _discord.miyuki.json
+   _discord.mortifiedtux.json
+   _discord.mrstickypiston.json
+   _discord.mttomaz.json
+   _discord.mxritz.json
+   _discord.naquth.json
+   _discord.narasima.json
+   _discord.nawaz.json
+   _discord.nekitori17.json
+   _discord.nekomyaa.json
+   _discord.neon.json
+   _discord.neotwis.json
+   _discord.nick.json
+   _discord.nickibreeki.json
+   _discord.niksne.json
+   _discord.no-one.json
+   _discord.noe.json
+   _discord.noob.json
+   _discord.normalturn.json
+   _discord.nothavoc.json
+   _discord.notzer0two.json
+   _discord.nuggew.json
+   _discord.null.json
+   _discord.nvimq.json
+   _discord.ojy5.json
+   _discord.okcoder1.json
+   _discord.okinea.json
+   _discord.oliverg.json
+   _discord.omhackz.json
+   _discord.oofybruh9.json
+   _discord.osc.json
+   _discord.osho.json
+   _discord.oxmc.json
+   _discord.painscreen.json
+   _discord.pamod.json
+   _discord.paul.json
+   _discord.pig.json
+   _discord.piker.json
+   _discord.pinont.json
+   _discord.piste.json
+   _discord.poked.json
+   _discord.priyanshu.json
+   _discord.profilie.harys.json
+   _discord.pyguy.json
+   _discord.qing762.json
+   _discord.qwertyu.json
+   _discord.rafsanza.json
+   _discord.ravener.json
+   _discord.razan.json
+   _discord.rc-chuah.json
+   _discord.reading.json
+   _discord.rejectmodders.json
+   _discord.ren.json
+   _discord.rexrk.json
+   _discord.riku.json
+   _discord.rimehrab.json
+   _discord.risuu.json
+   _discord.rizzed.json
+   _discord.robowhisperer.json
+   _discord.roki.json
+   _discord.roxi.json
+   _discord.rrcoder0167.json
+   _discord.rtx3080ti0415.json
+   _discord.rugveddanej.json
+   _discord.rusky.json
+   _discord.ryko.json
+   _discord.rzv.json
+   _discord.s4il.json
+   _discord.sabidzpro.json
+   _discord.sag.json
+   _discord.sahooshuvranshu.json
+   _discord.saifdemos.json
+   _discord.sanooj.json
+   _discord.sap.json
+   _discord.satr14.json
+   _discord.schuh.json
+   _discord.seiko.json
+   _discord.semant.json
+   _discord.senotix.json
+   _discord.seria.json
+   _discord.seyron.json
+   _discord.shakil.json
+   _discord.shauryasingh.json
+   _discord.sheikhasib.json
+   _discord.shimizu.json
+   _discord.shy.json
+   _discord.shymega.json
+   _discord.siddharth.json
+   _discord.sivothajan.json
+   _discord.spebelgenenst.json
+   _discord.spreadsheets600.json
+   _discord.stainowy.json
+   _discord.stan.json
+   _discord.steve.json
+   _discord.suggon.json
+   _discord.sun.json
+   _discord.sw3do.json
+   _discord.synacni.json
+   _discord.sys0xa7.json
+   _discord.tay.json
+   _discord.tentomasne.json
+   _discord.thatoddshade.json
+   _discord.the-nice-one.json
+   _discord.thehomelab.json
+   _discord.thenoppy12.json
+   _discord.thetommylong.json
+   _discord.toast.json
+   _discord.tobez.json
+   _discord.tomgxz.json
+   _discord.toraishi.json
+   _discord.trix.json
+   _discord.turker.json
+   _discord.tx24.json
+   _discord.uchumeow.json
+   _discord.unknown.json
+   _discord.urging.json
+   _discord.us.json
+   _discord.veirt.json
+   _discord.virexo.json
+   _discord.vmbbi.json
+   _discord.voda.json
+   _discord.vornexx.json
+   _discord.vtb.json
+   _discord.vulcanocraft.json
+   _discord.webcubed.json
+   _discord.weber.json
+   _discord.weebo64.json
+   _discord.windowsed.json
+   _discord.wizardsword.json
+   _discord.wldd.json
+   _discord.www.fauzan.json
+   _discord.wytsai7660.json
+   _discord.xan.json
+   _discord.xhide341.json
+   _discord.xiaoxi-tw.json
+   _discord.xrap1dx.json
+   _discord.xylapy.json
+   _discord.yfa.json
+   _discord.yocrrz.json
+   _discord.yuesmitha.json
+   _discord.yukiookii.json
+   _discord.yurei.json
+   _discord.zaorinu.json
+   _discord.zeaxey.json
+   _dmarc.104.json
+   _dmarc.aayushate.json
+   _dmarc.abdelkarimaityahia.json
+   _dmarc.abdulkareem.json
+   _dmarc.abineethan.json
+   _dmarc.adaptable.json
+   _dmarc.adhi.json
+   _dmarc.adityagarg.json
+   _dmarc.agustinh09.json
+   _dmarc.alexgaming.json
+   _dmarc.amanuel.json
+   _dmarc.amit.json
+   _dmarc.andrew-b.json
+   _dmarc.anveshraman.json
+   _dmarc.astraaero.json
+   _dmarc.aswinbkk.json
+   _dmarc.august.json
+   _dmarc.auguxt.json
+   _dmarc.balix18.json
+   _dmarc.benat.json
+   _dmarc.briankimemia.json
+   _dmarc.bro.json
+   _dmarc.bteamapp.json
+   _dmarc.chriscent.json
+   _dmarc.dean.json
+   _dmarc.debjit.json
+   _dmarc.dhilipan.json
+   _dmarc.divyanshu.json
+   _dmarc.fireexe.json
+   _dmarc.fm.json
+   _dmarc.francodurand.json
+   _dmarc.fred-blaise.json
+   _dmarc.gh0stp4wz.json
+   _dmarc.gupta.json
+   _dmarc.harunabdullah.json
+   _dmarc.hcs.json
+   _dmarc.huyiuminanh.json
+   _dmarc.ife.json
+   _dmarc.jakewalklate.json
+   _dmarc.javier.json
+   _dmarc.jean-arthur.json
+   _dmarc.kaleem.json
+   _dmarc.lenadijksma.json
+   _dmarc.linus.json
+   _dmarc.lourenco.json
+   _dmarc.m1st4ck.json
+   _dmarc.mail.alexgaming.json
+   _dmarc.mail.jyothibasu.json
+   _dmarc.mail.quereda.json
+   _dmarc.mareks.json
+   _dmarc.markbel.belal.json
+   _dmarc.mehdi-kheireddine.json
+   _dmarc.merugan.json
+   _dmarc.misu.json
+   _dmarc.mrstickypiston.json
+   _dmarc.muntasir.json
+   _dmarc.naman.json
+   _dmarc.nicoman.man-ray.json
+   _dmarc.noh.json
+   _dmarc.pantane.json
+   _dmarc.peme969.json
+   _dmarc.prapan.json
+   _dmarc.prayogo.json
+   _dmarc.primarizki.json
+   _dmarc.princetheprogrammer.json
+   _dmarc.quincetart10.json
+   _dmarc.rabbi.json
+   _dmarc.ratmail4080.json
+   _dmarc.rb.json
+   _dmarc.rohith.json
+   _dmarc.root-om.json
+   _dmarc.rt10.json
+   _dmarc.runtogether.json
+   _dmarc.sadiq.json
+   _dmarc.saianirudvarma.json
+   _dmarc.samkelongcobo.json
+   _dmarc.saqin.json
+   _dmarc.sarfaraz.json
+   _dmarc.seanti.json
+   _dmarc.send.eduardoaugusto.json
+   _dmarc.send.jikanwari.json
+   _dmarc.send.serchidev.json
+   _dmarc.send.theshashank.json
+   _dmarc.sergarsilla.json
+   _dmarc.shift24.json
+   _dmarc.sienna-oshea.json
+   _dmarc.sigmacat.json
+   _dmarc.simona.json
+   _dmarc.stageflow.json
+   _dmarc.sukhi.json
+   _dmarc.sulaimandigital.json
+   _dmarc.svnty.json
+   _dmarc.tausif.json
+   _dmarc.tayyab.json
+   _dmarc.tienda-razer.json
+   _dmarc.tools.dan.json
+   _dmarc.triman.json
+   _dmarc.trix.json
+   _dmarc.tsima.json
+   _dmarc.vitordaniel.json
+   _dmarc.yourfiyan.json
+   _dmarc.yxz.json
+   _dnsauth.bostjan.json
+   _dnslink.daoch4n.json
+   _domainkey.gh0stp4wz.json
+   _emailthing.cattopytheweb.json
+   _gh-50xsuisse-o.50x.json
+   _gh-alexgaming-dev-o.alexgaming.json
+   _gh-deadcodegames-o.deadcode.json
+   _gh-harys-development-o.harys.json
+   _gh-js-just-o.juststudio.json
+   _gh-juststudio7-o.js.json
+   _gh-juststudio7-o.juststudio.json
+   _gh-lumidevelopment-o.lumi.json
+   _gh-profilie-o.harys.json
+   _gh-profilie-o.profilie.harys.json
+   _gh-swissquotes-o.50x.json
+   _gh-teamdeadsmile-o.luxjson.json
+   _git-pages-forge-allowlist.xan.json
+   _git-pages-repository.amy.json
+   _git-pages-repository.arielx.json
+   _git-pages-repository.blog.arielx.json
+   _git-pages-repository.blog.vaishnavs.json
+   _git-pages-repository.forever2k38.json
+   _git-pages-repository.krzysztof-kawalek.json
+   _git-pages-repository.tech.arielx.json
+   _git-pages-repository.vaishnavs.json
+   _git-pages-repository.vmbbi.json
+   _git-pages-repository.xan.json
+   _github-challenge-thenoppy12-org.thenoppy12.json
+   _github-challenge-yfadev-org.alpha.json
+   _github-challenge-yfadev-org.yfa.json
+   _github-challenge-yfadev-org.yfadev.json
+   _github-pages-challenge-0pearlcz0.pearlcz.json
+   _github-pages-challenge-0xheartcode.0xheartcode.json
+   _github-pages-challenge-11sid11.sid.json
+   _github-pages-challenge-256javy.256javy.json
+   _github-pages-challenge-6alaile.wbalaile.json
+   _github-pages-challenge-7xdev.7xdev.json
+   _github-pages-challenge-9xn.44.json
+   _github-pages-challenge-aakankshabhende.aakanksha.json
+   _github-pages-challenge-abaan5467.abaan.json
+   _github-pages-challenge-abdalmoniem.abdalmoniem-alhifnawy.json
+   _github-pages-challenge-abdelrahman-shoeera.abdelrahman-shoeera.json
+   _github-pages-challenge-abdessattar23.abdessattar.json
+   _github-pages-challenge-abqoryme.aizawa.json
+   _github-pages-challenge-abrhamohny.abrham.json
+   _github-pages-challenge-abriciof.abriciof.json
+   _github-pages-challenge-abuzar-mishwani.mishwani.json
+   _github-pages-challenge-acamus79.acamus.json
+   _github-pages-challenge-achalla18.arjun.json
+   _github-pages-challenge-achilleasatha.achilleas-athanasiou-fragkoulis.json
+   _github-pages-challenge-adarsh-67r.adarsh-67.json
+   _github-pages-challenge-adel051700.adel.json
+   _github-pages-challenge-adil-uddin.adil.json
+   _github-pages-challenge-adil-webdev.adill.json
+   _github-pages-challenge-adityagarg8.gce.adityagarg.json
+   _github-pages-challenge-adityainzen.adityainzen.json
+   _github-pages-challenge-afaquekhan951753.buildwithak.json
+   _github-pages-challenge-agentsatwork.ubermensch.json
+   _github-pages-challenge-agusm2002.agusm2002.json
+   _github-pages-challenge-ahhj93.bryan-ing.json
+   _github-pages-challenge-ahmed-abdelhafez98.ahmedemad.json
+   _github-pages-challenge-ahmedtohamy1.ahmedtohamy.json
+   _github-pages-challenge-ahnaf16.ahnaf.json
+   _github-pages-challenge-ajtabjs.ajtabs.json
+   _github-pages-challenge-akhsaul.akhsaul.json
+   _github-pages-challenge-akshaykumar059004.smoothoperator.json
+   _github-pages-challenge-akverma00.akverma.json
+   _github-pages-challenge-aladdin-r3g.aladdin.json
+   _github-pages-challenge-alanjohnshibua.alanjohnshibua.json
+   _github-pages-challenge-aldnnnz.aldnnnz.json
+   _github-pages-challenge-alenseeman.alen.json
+   _github-pages-challenge-alexgamingstudio.alexgaming.json
+   _github-pages-challenge-alexravenna.alexravenna.json
+   _github-pages-challenge-alkastraverse.huynguyen.json
+   _github-pages-challenge-alpha-og.athulanoop.json
+   _github-pages-challenge-altricade.altricade.json
+   _github-pages-challenge-alvin-dennis.alvindennis.json
+   _github-pages-challenge-am333n.ameen.json
+   _github-pages-challenge-amalpotra.amarjeet.json
+   _github-pages-challenge-amartyaa.amartya.json
+   _github-pages-challenge-amosmurmu.amosmurmu.json
+   _github-pages-challenge-anakamath.anakama.json
+   _github-pages-challenge-ananth-swamy.ananth.json
+   _github-pages-challenge-andrejorgelopes.andrelopes.json
+   _github-pages-challenge-andyfaizan.andy.json
+   _github-pages-challenge-animeshkotka.animesh-kotka.json
+   _github-pages-challenge-anir183.anir183.json
+   _github-pages-challenge-anishdalvi.anishdalvi.json
+   _github-pages-challenge-anshonweb.ansh31.json
+   _github-pages-challenge-anshtyagi0093.anshtyagi.json
+   _github-pages-challenge-antlis.antlis.json
+   _github-pages-challenge-antton-dev.antton.json
+   _github-pages-challenge-anubhavsingh0708.anubhav.json
+   _github-pages-challenge-apoo711.aryan-gupta.json
+   _github-pages-challenge-arafat-suhail-dar.arafat-suhail.json
+   _github-pages-challenge-aravinds-arv.arv.json
+   _github-pages-challenge-arboygo.arboy.json
+   _github-pages-challenge-arch881010.arch.json
+   _github-pages-challenge-archelaus.archelaus.json
+   _github-pages-challenge-archivexgamexd.exparc.json
+   _github-pages-challenge-archivexgamexd.lland.exparc.json
+   _github-pages-challenge-arjunparmar03.arjunparmar.json
+   _github-pages-challenge-arthurextra.arthurx.json
+   _github-pages-challenge-arujjval.arujjval.json
+   _github-pages-challenge-aruntechpro.aruntechpro.json
+   _github-pages-challenge-ashesh3.ashesh.json
+   _github-pages-challenge-audtjddld.404.json
+   _github-pages-challenge-auravoid.aura.json
+   _github-pages-challenge-avipars.avi.json
+   _github-pages-challenge-axioris.axioris.json
+   _github-pages-challenge-ayvacs.ave.json
+   _github-pages-challenge-azamalicodes.azam.json
+   _github-pages-challenge-azamalicodes.azamali.json
+   _github-pages-challenge-b1ue-dev.blue.json
+   _github-pages-challenge-balix18.balix18.json
+   _github-pages-challenge-bappoz.lucas-zanetti.json
+   _github-pages-challenge-baprx.baptiste.json
+   _github-pages-challenge-barryallen16.jayadithya.json
+   _github-pages-challenge-baturalp52.baturalp.json
+   _github-pages-challenge-bennyliaw.benny.json
+   _github-pages-challenge-bi0hazardd.jonathancarrillo.json
+   _github-pages-challenge-bikoil.biko.json
+   _github-pages-challenge-bimarsha69.bimarsha.json
+   _github-pages-challenge-birabittoh.birabittoh.json
+   _github-pages-challenge-bitbend.bitbend.json
+   _github-pages-challenge-blob2763.blob2763.json
+   _github-pages-challenge-blob2763.utils.json
+   _github-pages-challenge-bob16077.bob16077.json
+   _github-pages-challenge-bqwerr.srujan.json
+   _github-pages-challenge-breakertws.breakertws.json
+   _github-pages-challenge-bricksarecool.sans.json
+   _github-pages-challenge-brinterwastaken.brin.json
+   _github-pages-challenge-brittojo7n.britto.json
+   _github-pages-challenge-btleffler.btleffler.json
+   _github-pages-challenge-bugcastersenpai.fredo.json
+   _github-pages-challenge-buiuyenlab.buiuyen.json
+   _github-pages-challenge-by3lish.elish.json
+   _github-pages-challenge-byson94.byson94.json
+   _github-pages-challenge-cantcode023.bd.json
+   _github-pages-challenge-carafelix.heroprotagonist.json
+   _github-pages-challenge-carlosnatanauan.kuyacarlos.json
+   _github-pages-challenge-catrinlam.catrin.json
+   _github-pages-challenge-catto24.catto24.json
+   _github-pages-challenge-chadeeeee.chadee.json
+   _github-pages-challenge-chamzz99.chamo.json
+   _github-pages-challenge-channyeintun.cnt.json
+   _github-pages-challenge-charlesnaig.naig.json
+   _github-pages-challenge-charmingdisorder.alexey.json
+   _github-pages-challenge-ciaranmcaleer.ciaranmcaleer.json
+   _github-pages-challenge-cindynatorella.cindy.json
+   _github-pages-challenge-clay-rip.clay.json
+   _github-pages-challenge-clay990.suraj.json
+   _github-pages-challenge-cliz17.liz.json
+   _github-pages-challenge-clumzyofficial.adarsh.json
+   _github-pages-challenge-codemaine.maine.json
+   _github-pages-challenge-codemug.usmanshahid.json
+   _github-pages-challenge-codewithemad.emad.json
+   _github-pages-challenge-crazy-max-blog.rpi.crazymax.json
+   _github-pages-challenge-creeperkafasi.deniz.json
+   _github-pages-challenge-creepsooff.creepso.json
+   _github-pages-challenge-crischutu07.crischutu07.json
+   _github-pages-challenge-crystalbajgai.crystal.json
+   _github-pages-challenge-ctrlaltspace.ctrlaltspace.json
+   _github-pages-challenge-cynnamolgus.veronica.json
+   _github-pages-challenge-d-pow.devon.json
+   _github-pages-challenge-daglaroglou.dag.json
+   _github-pages-challenge-damilola-gzy.damilola.json
+   _github-pages-challenge-dandepan303.dean.json
+   _github-pages-challenge-danilezheng4.danilezheng4.json
+   _github-pages-challenge-darkdevil3610.gourav.json
+   _github-pages-challenge-daspete.pete.json
+   _github-pages-challenge-daveneedcode.davegt.json
+   _github-pages-challenge-davidasync.davidasync.json
+   _github-pages-challenge-dawnsey.dawnsey.json
+   _github-pages-challenge-daynlalwani.dyn.json
+   _github-pages-challenge-ddjain.darshanjain.json
+   _github-pages-challenge-defpythoncoder.python-coder.json
+   _github-pages-challenge-dekoder-py.kyle-b.json
+   _github-pages-challenge-deltafumble.deltafumble.json
+   _github-pages-challenge-dev-ajay-sahani.ajays.json
+   _github-pages-challenge-dev-satyamjha.satyamjha.json
+   _github-pages-challenge-devansh501.devans.json
+   _github-pages-challenge-developeradhi.adhi.json
+   _github-pages-challenge-devhanza.hansana.json
+   _github-pages-challenge-dharshan-0.dharshan.json
+   _github-pages-challenge-dickymuliafiqri.dickymuliafiqri.json
+   _github-pages-challenge-dimonsmart.dimonsmart.json
+   _github-pages-challenge-discovir.krrish.json
+   _github-pages-challenge-distortionaltfr.distortionaltfr.json
+   _github-pages-challenge-dontman-tech.tamif.json
+   _github-pages-challenge-drake-dot-o.drake.json
+   _github-pages-challenge-dranimalis.dranimalis.json
+   _github-pages-challenge-drssoccer55.doug.json
+   _github-pages-challenge-drtheodor.theo.json
+   _github-pages-challenge-duc-ios.duc.json
+   _github-pages-challenge-ducky4life.ducky.json
+   _github-pages-challenge-dumprr.dumprr.json
+   _github-pages-challenge-dushmanta05.dushmanta.json
+   _github-pages-challenge-dustfree999.dustfree.json
+   _github-pages-challenge-dw256.dwiwahyu.json
+   _github-pages-challenge-dwapperom.dennis.json
+   _github-pages-challenge-dxrdev.ela.json
+   _github-pages-challenge-eatsjobs.pmangialavori.json
+   _github-pages-challenge-edenqwq.eden.json
+   _github-pages-challenge-edwardthelegend.edward.json
+   _github-pages-challenge-ekansh-bajpai.ekansh.json
+   _github-pages-challenge-eldano.eldano.json
+   _github-pages-challenge-eldarlrd.eldarlrd.json
+   _github-pages-challenge-emzyjeppp.jeppp.json
+   _github-pages-challenge-endermanbugzjfc.zjfc.json
+   _github-pages-challenge-enderpoint07.enderpoint.json
+   _github-pages-challenge-ethembeldagli.ethembeldagli.json
+   _github-pages-challenge-excitedlord.skm.json
+   _github-pages-challenge-ezraclintoc.ezra.json
+   _github-pages-challenge-fa-fifi.fafifi.json
+   _github-pages-challenge-faisalg1t.faishal.json
+   _github-pages-challenge-fajarnxm.fajarnxm.json
+   _github-pages-challenge-fatratra-png.fatratra.json
+   _github-pages-challenge-fdciabdul.fdciabdul.json
+   _github-pages-challenge-fearmyshotz.fear.json
+   _github-pages-challenge-felipecarvalhos.felipecarvalho.json
+   _github-pages-challenge-felixlusseau.felixlusseau.json
+   _github-pages-challenge-fjbaldon.fjbaldon.json
+   _github-pages-challenge-flazepe.flazepe.json
+   _github-pages-challenge-flc995.florin.json
+   _github-pages-challenge-flingo777.flingo.json
+   _github-pages-challenge-floydous.brat.json
+   _github-pages-challenge-foxsdenyt.foxsden.json
+   _github-pages-challenge-foxy4096.foxy4096.json
+   _github-pages-challenge-fritzfurher567.fritz.json
+   _github-pages-challenge-froelen.froelen.json
+   _github-pages-challenge-frost2k5.frost2k5.json
+   _github-pages-challenge-funnsam.funn.json
+   _github-pages-challenge-fusebie.fusebie.json
+   _github-pages-challenge-fwfurtado.mimi.json
+   _github-pages-challenge-gakhd625.gerlieanndagaas.json
+   _github-pages-challenge-gamerxr-637.gamerxr637.json
+   _github-pages-challenge-ganesh76.ganesh-g.json
+   _github-pages-challenge-gautamkrishnar.gkr.json
+   _github-pages-challenge-gegendepressed.sairaj.json
+   _github-pages-challenge-gemaaaaaa.cyrillus.json
+   _github-pages-challenge-geoywang.geo.json
+   _github-pages-challenge-gewaleelek.gewalee.json
+   _github-pages-challenge-gh0stkn1gh7.gh0stkn1ght.json
+   _github-pages-challenge-gigacrab.littlecrabby.json
+   _github-pages-challenge-giocoliere.gioco.json
+   _github-pages-challenge-githubfantest.bryce.json
+   _github-pages-challenge-greenfuze.greenfuze.json
+   _github-pages-challenge-h2rhenry.h2rhenry.json
+   _github-pages-challenge-haiere.hajir.json
+   _github-pages-challenge-hamzacodebase.hamza.json
+   _github-pages-challenge-hanzfelix.hanzfelix.json
+   _github-pages-challenge-harshnarayanjha.harshnj.json
+   _github-pages-challenge-harys722.harys.json
+   _github-pages-challenge-hasmbly.hasmbly.json
+   _github-pages-challenge-herwingx.ghsearch.json
+   _github-pages-challenge-hexer365.hexer.json
+   _github-pages-challenge-heyiamshiro.shiro.json
+   _github-pages-challenge-heyitzamjad.amjad.json
+   _github-pages-challenge-heymeowcat.heymeowcat.json
+   _github-pages-challenge-hgfghighif.hgfghighif.json
+   _github-pages-challenge-hienglyhor.lyhor.json
+   _github-pages-challenge-hmonsterg.soap.json
+   _github-pages-challenge-hmzalarbi.hamzalarbi.json
+   _github-pages-challenge-hnks-gh.hnks.json
+   _github-pages-challenge-hoaug-tran.trkhoang.json
+   _github-pages-challenge-hrittm.hrittick.json
+   _github-pages-challenge-i-jer.jer.json
+   _github-pages-challenge-iakzs.kz.json
+   _github-pages-challenge-iamhitya.hiteshkumar.json
+   _github-pages-challenge-iamrony777.ronit.json
+   _github-pages-challenge-ianarazny.ianarazny.json
+   _github-pages-challenge-icelessusr.icel.json
+   _github-pages-challenge-icky17.jairomorales.json
+   _github-pages-challenge-icm185.icm.json
+   _github-pages-challenge-ihopenre-eng.ihopenre.json
+   _github-pages-challenge-ikhsan3adi.ikhsan3adi.json
+   _github-pages-challenge-illinois-roadbuff.illinois-roadbuff.json
+   _github-pages-challenge-im-pranav-m.cosmic.json
+   _github-pages-challenge-imnotnahn.imnahn.json
+   _github-pages-challenge-impratik7.pratikmali.json
+   _github-pages-challenge-imshymike.shymike.json
+   _github-pages-challenge-indrapalijama.indrapalijama.json
+   _github-pages-challenge-inkilu.gautham.json
+   _github-pages-challenge-inkilu.inkilu.json
+   _github-pages-challenge-iostpa.cutedog5695.json
+   _github-pages-challenge-iraviteja.raviteja.json
+   _github-pages-challenge-itachisan.giovanni.json
+   _github-pages-challenge-its-sorakun.sorakun.json
+   _github-pages-challenge-itsreimau.itsreimau.json
+   _github-pages-challenge-itsshunya.shunya.json
+   _github-pages-challenge-itsvick.itsvick.json
+   _github-pages-challenge-j3rrythomas.jerry.json
+   _github-pages-challenge-jakehe1226.jakehe.json
+   _github-pages-challenge-jakethebest1238.jakehe.json
+   _github-pages-challenge-jamesk99.jameskeller.json
+   _github-pages-challenge-jameslawsantiago.law.json
+--- one live example file ---
+sample: https://raw.githubusercontent.com/is-a-dev/register/main/domains/0-0.json
+{
+  "owner": {
+    "username": "FWEEaaaa1",
+    "email": "gorgonfweman@outlook.com"
+  },
+  "records": {
+    "A": [
+      "216.198.79.1"
+    ]
+  }
+}
+
+--- public suffix / schema files if present ---
+  -- domains.schema.json --
+    http=404
+  -- schema.json --
+    http=404
+  -- .github/workflows/validate.yml --
+    http=404
+
+=== fork / PR capability ===
+  fork is-a-dev/register -> {"message":"Resource not accessible by integration","documentation_url":"https://docs.github.com/rest/repos/forks#create-a-fork","status":"403"}gh: Resource not accessible by integration (HTTP 403)
+  create a PR in is-a-dev/register -> {"message":"Resource not accessible by integration","documentation_url":"https://docs.github.com/rest/pulls/pulls#create-a-pull-request","status":"403"}gh: Resource not accessible by integration (HTTP 403)
+  push a branch to is-a-dev/register -> cb0d09e00bf725c5eeeda8c0ce686633435f81d0	HEAD
+cb0d09e00bf725c5eeeda8c0ce686633435f81d0	refs/heads/main
+
+=== account-free submission channels — Tue Oct  6 02:27:46 UTC 2026 ===
+  Wayback Machine save (archive.org)             http=200 type=text/html; charset=utf-8
+  IndexNow endpoint                              http=400 type=application/json; charset=utf-8
+  Bing sitemap ping                              http=410 type=
+  Yandex sitemap ping                            http=422 type=application/json; charset=utf-8
+  Google sitemap ping (retired)                  http=404 type=text/html; charset=UTF-8
+  Common Crawl index                             http=200 type=application/json
+  archive.today submit                           http=429 type=text/html
+  urlscan.io (free, no acct)                     http=404 type=application/json; charset=utf-8
+
+=== free domain / host routes and whether they need an account ===
+  https://is-a.dev                         http=200
+  https://nic.eu.org                       http=200
+  https://surge.sh                         http=200
+  https://app.netlify.com/drop             http=200
+  https://dash.cloudflare.com              http=403
+  https://vercel.com/signup                http=200
+  https://neocities.org                    http=200
+
+=== did the Wayback archive actually get created? ===
+{"url": "https://snazim0345.github.io/OpenMontage/", "archived_snapshots": {"closest": {"status": "200", "available": true, "url": "http://web.archive.org/web/20261006022749/https://snazim0345.github.io/OpenMontage/", "timestamp": "20261006022749"}}}

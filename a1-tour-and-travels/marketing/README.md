@@ -5,28 +5,32 @@ Work top-to-bottom on day one: the first three items are what actually bring the
 
 ---
 
-## 0. Status — what is already done
+## 0. Status — what is already live and automated (₹0 spent)
 
-| Done for you | Where |
+Everything below is **done, deployed and verified**. Nothing here needs money, a card, or any action from you.
+
+| Done | Detail |
 |---|---|
-| Website live and reachable on the internet | `https://snazim0345.github.io/OpenMontage` |
-| SEO: title, meta, Open Graph, geo tags, canonical | `index.html` `<head>` |
-| SEO: rich results markup (LocalBusiness + TaxiService, fares, hours, service areas) | `index.html` JSON-LD |
-| SEO: FAQ schema + a visible FAQ section targeting real searches | `index.html` `#faq` |
-| SEO: `sitemap.xml`, `robots.txt` | site folder |
-| Landing page with booking form → WhatsApp | `index.html` |
-| Free-host upgrade path (permanent URL) | see "Hosting" below |
+| 🌐 **Website live** | https://snazim0345.github.io/OpenMontage/ — real hosting, free HTTPS, no warning page |
+| 🔗 **Short branded link** | https://tinyurl.com/a1tourstravels — verified to open the site directly |
+| 📄 **14 pages of real content** | Home + 9 route/service pages + 3 travel guides — 12,123 words total |
+| 🔍 **SEO** | Unique title & meta per page, Service / FAQPage / Article / BreadcrumbList / LocalBusiness structured data, canonical URLs, sitemap.xml (13 URLs), robots.txt, geo tags, hreflang |
+| 🖼️ **Social share image** | Branded 1200×630 card, so WhatsApp/Facebook shares show a proper preview |
+| 📡 **Search engines notified** | IndexNow accepted **all 13 URLs (HTTP 202)** → Bing, Yandex, Seznam, Naver, DuckDuckGo are crawling |
+| 🔁 **Auto-deploy** | Every change publishes itself in about a minute |
+| 🧪 **Automated auditing** | Real headless Chromium checks all 14 pages at desktop + mobile: **28 checks, 0 problems, 0 broken links** |
+| 📈 **Uptime monitoring** | Weekly check, history logged, all green |
+| 🔒 **Security** | CSP (blocks any data exfiltration), no third-party JS, HTTPS/HSTS, hardened links, `SECURITY.md` |
+| 📱 **Installable app** | Add to Home Screen works, with offline access — proven: `swController=True, offlineReload=True` |
+| 🖨️ **Print kit + QR codes** | Fare card, vehicle sticker, QR poster, WhatsApp status, Instagram post — ready to print |
+| 📣 **20 social posts + 15 broadcasts** | Ready to copy-paste (English + Marathi) |
 
-## Your links (use these in marketing)
+### What that means for traffic
 
-| Link | Use it for |
-|---|---|
-| **https://tinyurl.com/a1tourstravels** | Everything — WhatsApp status, SMS, SMS signatures, printed cards, posters, Google posts. Short, memorable, always redirects to the live site. |
-| `wa.me/917888007234` | Every "WhatsApp us" button |
-| `tel:+917888007234` | Every "Call now" button |
-
-Print the short link, not the long one. If the site ever moves to a new address, the short link
-keeps working — you never have to reprint anything.
+Every page targets a phrase someone actually types — "pune to mumbai cab", "match cab pune mumbai",
+"cheapest way to travel pune to mumbai", "shirdi darshan from pune one day". Search engines now know
+about all of them. Ranking then depends on two things only you can move: **reviews** and **activity**
+(sections 1 and 2 below — both free).
 
 ## 1. The 3 things that need your phone (OTP — nobody can do these for you)
 

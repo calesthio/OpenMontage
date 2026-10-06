@@ -112,6 +112,27 @@ review engine, referral scheme, vehicle branding and partnership outreach. All z
 
 ---
 
+## Pages (14)
+
+| Page | Targets |
+|---|---|
+| `index.html` | Home — "pune mumbai cab", brand |
+| `pune-to-mumbai-cab.html` | "pune to mumbai cab", "pune mumbai taxi fare" |
+| `mumbai-to-pune-cab.html` | "mumbai to pune cab" |
+| `match-cab-pune-mumbai.html` | "match cab pune mumbai", "share cab" |
+| `pune-mumbai-bus.html` | "pune to mumbai bus", "ac bus booking" |
+| `tempo-traveller-pune.html` | "tempo traveller hire pune", "17 seater" |
+| `pune-to-shirdi-cab.html` | "pune to shirdi cab" |
+| `pune-to-lonavala-cab.html` | "pune to lonavala cab" |
+| `airport-transfer-pune-mumbai.html` | "pune airport taxi", "mumbai airport cab from pune" |
+| `tour-packages.html` | "all india tour packages from pune" |
+| `pune-to-mumbai-travel-guide.html` | "pune to mumbai travel time", expressway guide |
+| `cheapest-way-pune-to-mumbai.html` | "cheapest way to travel pune to mumbai" |
+| `shirdi-darshan-from-pune-one-day.html` | "shirdi darshan from pune one day" |
+| `404.html` | Branded not-found page that still converts |
+
+Regenerate the route pages and guides any time with `python3 build-pages.py` / `python3 build-blog.py`.
+
 ## Getting a branded domain (`a1toursandtravel.*`)
 
 See **[DOMAIN.md](DOMAIN.md)** — 5 free options, including the exact Netlify / Cloudflare steps that

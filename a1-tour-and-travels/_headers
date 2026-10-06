@@ -27,7 +27,7 @@
   # required, and the sitemap uses Google Fonts + Unsplash photos.
   # Everything else is denied, so a successful injection has nowhere to
   # send data (connect-src 'none') and no external script can load.
-  Content-Security-Policy: default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'none'; base-uri 'none'; form-action 'self'; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'none'; script-src 'self' 'unsafe-inline'; worker-src 'self'; manifest-src 'self'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'none'; base-uri 'none'; form-action 'self'; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests
 
   # ---- Caching: fast for repeat visitors, fresh content weekly ----
   Cache-Control: public, max-age=3600, must-revalidate

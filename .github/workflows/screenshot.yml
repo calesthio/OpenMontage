@@ -64,9 +64,28 @@ jobs:
             await browser.close();
             return { name, viewport, errors, ...data };
           };
+          // ---- offline test: does the cached page still work with no network? ----
+          const offlineTest = async () => {
+            const browser = await chromium.launch();
+            const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+            const page = await ctx.newPage();
+            await page.goto(site, { waitUntil: 'networkidle', timeout: 90000 });
+            await page.waitForTimeout(3500);                      // let the service worker install
+            const controlled = await page.evaluate(() => !!navigator.serviceWorker.controller);
+            await ctx.setOffline(true);
+            let reloaded = false, hasPhone = false, err = null;
+            try {
+              await page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 });
+              reloaded = true;
+              hasPhone = (await page.content()).includes('7888007234');
+            } catch (e) { err = String(e).slice(0, 120); }
+            await browser.close();
+            return { swController: controlled, reloadedWhileOffline: reloaded, phoneVisibleOffline: hasPhone, error: err };
+          };
           const out = [];
           out.push(await shot('desktop', { width: 1440, height: 900 }, false));
           out.push(await shot('mobile', { width: 390, height: 844 }, true));
+          out.push({ name: 'offline', ...(await offlineTest()) });
           console.log(JSON.stringify(out, null, 1));
           JS
           { echo "real-browser screenshots — $(date -u)"

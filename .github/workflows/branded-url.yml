@@ -22,6 +22,9 @@ jobs:
       - name: Attempt account-free branded deployment
         run: python3 .github/scripts/branded_url.py
 
+      - name: Try to claim the branded short link (no account needed)
+        run: python3 .github/scripts/shortlinks.py
+
       - name: Commit diagnostics
         run: |
           BR=arena/54180390-openmontage

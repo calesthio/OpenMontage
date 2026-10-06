@@ -1,0 +1,360 @@
+{
+  "version": "1.0",
+  "project_id": "us-trip-2026-highlight",
+  "pipeline_type": "cinematic",
+  "stage": "proposal",
+  "status": "completed",
+  "timestamp": "2026-07-02T15:36:10.463518+00:00",
+  "checkpoint_policy": "guided",
+  "human_approval_required": true,
+  "human_approved": true,
+  "artifacts": {
+    "proposal_packet": {
+      "version": "1.0",
+      "concept_options": [
+        {
+          "id": "c1",
+          "title": "Epic Build \u2014 Momentum Across America",
+          "hook": "The road doesn't stop, and neither does the music.",
+          "narrative_structure": "journey",
+          "visual_approach": "Fast, propulsive cutting through the whole 7-week trip; correction-then-grade teal/orange-leaning color; letterbox (2.35:1) reserved for landmark reveal moments only; driving orchestral-hybrid track as the pacing spine with deliberate breaks from the beat grid at scenic payoffs.",
+          "suggested_playbook": "flat-motion-graphics",
+          "target_platform": "youtube",
+          "target_duration_seconds": 150,
+          "key_points": [
+            "Chronological momentum from departure to return carries the whole edit",
+            "Fast cuts through transit/landscape footage, slow holds at hero landmark moments",
+            "Music-led pacing with intentional off-beat breaks at emotional peaks"
+          ],
+          "core_message": "A 7-week US road trip compressed into one continuous, propulsive cinematic arc.",
+          "tone": "epic",
+          "grounded_in": [
+            "Sam Kolder / Jay Alvarrez style cinematic travel videos",
+            "data_point: beat-grid pacing guidance",
+            "data_point: color correction then creative grade"
+          ],
+          "why_this_works": "This is the dominant genre convention research surfaced for 'cinematic + epic' travel montages, and directly matches the user's stated mood (cinematic & epic) and platform (YouTube)."
+        },
+        {
+          "id": "c2",
+          "title": "Quiet Wonder \u2014 Contemplative Vista",
+          "hook": "Some places don't need a cut. They need a breath.",
+          "narrative_structure": "journey",
+          "visual_approach": "Slower holds, wide vistas given room to breathe, restrained desaturated-warm grade, sparse strings building to one swell near the end; minimal beat-locked cutting.",
+          "suggested_playbook": "minimalist-diagram",
+          "target_platform": "youtube",
+          "target_duration_seconds": 150,
+          "key_points": [
+            "Patience over speed \u2014 earns 'epic' through scale and stillness rather than pace",
+            "One deliberate emotional swell near the close rather than sustained energy throughout",
+            "Directly counters mechanical beat-cutting saturation found in research"
+          ],
+          "core_message": "The trip as a series of moments worth sitting with.",
+          "tone": "epic",
+          "grounded_in": [
+            "data_point: travel edits vary pace, slow down at payoff moments",
+            "underserved_gaps: chronologically messy archive needs emotional throughline"
+          ],
+          "why_this_works": "Offers a genuinely different emotional register (stillness vs. speed) while staying inside the 'epic' territory the user asked for."
+        },
+        {
+          "id": "c3",
+          "title": "Chapters Across America \u2014 Journey Structure",
+          "hook": "Every stop was its own small story. Together, they're one big one.",
+          "narrative_structure": "timeline",
+          "visual_approach": "Clips grouped by date/location into named chapters with title cards per stop; epic build threads through all chapters toward a payoff on the final return-home shot.",
+          "suggested_playbook": "clean-professional",
+          "target_platform": "youtube",
+          "target_duration_seconds": 150,
+          "key_points": [
+            "Chaptered structure matches the trip's actual multi-stop, multi-week reality",
+            "Title cards per location give the chronologically messy archive a clear spine",
+            "Overall arc still builds to an epic payoff at the end"
+          ],
+          "core_message": "A cross-country journey told as a sequence of chapters that add up to one story.",
+          "tone": "epic",
+          "grounded_in": [
+            "underserved_gaps: multi-week road trip structuring",
+            "How To END A Travel Video (3 Tricks)"
+          ],
+          "why_this_works": "Directly addresses the gap in existing 'cinematic travel video' content, which is mostly built for single-destination shoots, not a 7-week multi-stop archive."
+        }
+      ],
+      "selected_concept": {
+        "concept_id": "c1",
+        "rationale": "User selected 'Epic Build' directly \u2014 fast, propulsive, music-led momentum edit."
+      },
+      "production_plan": {
+        "pipeline": "cinematic",
+        "playbook": "flat-motion-graphics",
+        "stages": [
+          {
+            "stage": "assets",
+            "tools": [
+              {
+                "tool_name": "pixabay_music",
+                "role": "Source a free epic/cinematic royalty-free track",
+                "provider": "pixabay",
+                "available": true,
+                "estimated_cost_usd": 0
+              },
+              {
+                "tool_name": "color_grade",
+                "role": "Correction + creative grade pass on source clips",
+                "provider": "ffmpeg",
+                "available": true,
+                "estimated_cost_usd": 0
+              }
+            ],
+            "approach": "Inventory and select hero clips + cutaways from the 282-clip source archive; source Pixabay track matching epic/cinematic mood."
+          },
+          {
+            "stage": "compose",
+            "tools": [
+              {
+                "tool_name": "video_compose",
+                "role": "Render final cut via Remotion CinematicRenderer",
+                "provider": "remotion",
+                "available": true,
+                "estimated_cost_usd": 0
+              },
+              {
+                "tool_name": "audio_mixer",
+                "role": "Mix music under source clip audio",
+                "provider": "ffmpeg",
+                "available": true,
+                "estimated_cost_usd": 0
+              }
+            ],
+            "approach": "Compose graded, letterboxed source clips with music sync via Remotion; local/free throughout."
+          }
+        ],
+        "delivery_promise": {
+          "promise_type": "source_led",
+          "motion_required": true,
+          "source_required": true,
+          "tone_mode": "epic",
+          "quality_floor": "presentable",
+          "approved_fallback": null
+        },
+        "renderer_family": "cinematic-trailer",
+        "render_runtime": "remotion",
+        "composition_mode": "templated",
+        "music_source": {
+          "source_type": "ai_generated",
+          "provider": "pixabay_music",
+          "mood_direction": "Epic orchestral-hybrid build \u2014 piano/strings intro rising into percussion-driven crescendo",
+          "estimated_cost_usd": 0
+        },
+        "decision_log_ref": "pipelines/us-trip-2026-highlight/decision_log.json"
+      },
+      "cost_estimate": {
+        "total_estimated_usd": 0,
+        "line_items": [
+          {
+            "tool": "pixabay_music",
+            "operation": "Search + download royalty-free track",
+            "quantity": 1,
+            "estimated_usd": 0
+          },
+          {
+            "tool": "video_compose (remotion)",
+            "operation": "Render final cinematic cut",
+            "quantity": 1,
+            "estimated_usd": 0
+          },
+          {
+            "tool": "color_grade",
+            "operation": "Grade pass on selected clips",
+            "quantity": 1,
+            "estimated_usd": 0
+          },
+          {
+            "tool": "audio_mixer",
+            "operation": "Mix music + source audio",
+            "quantity": 1,
+            "estimated_usd": 0
+          }
+        ],
+        "budget_verdict": "within_budget"
+      },
+      "approval": {
+        "status": "approved",
+        "user_notes": "Concept: Epic Build. Runtime: Remotion. Music: Pixabay search. Length: keep 2-3 minutes despite retention flag."
+      },
+      "metadata": {
+        "retention_flag_acknowledged": true,
+        "source_footage_path": "/Users/prasanthsasikumar/Downloads/USTrip2026"
+      }
+    },
+    "decision_log": {
+      "version": "1.0",
+      "project_id": "us-trip-2026-highlight",
+      "decisions": [
+        {
+          "decision_id": "d-001",
+          "stage": "idea",
+          "category": "pipeline_selection",
+          "subject": "Pipeline for editing 282 personal US-trip clips into a single video",
+          "options_considered": [
+            {
+              "option_id": "cinematic",
+              "label": "Cinematic (mood-led trailer/montage pipeline)",
+              "score": 0.9,
+              "reason": "Best fit for a single polished highlight reel from real source footage."
+            },
+            {
+              "option_id": "hybrid",
+              "label": "Hybrid (source footage + generated support)",
+              "score": 0.5,
+              "reason": "Fits documentary-style edits with narration/support graphics.",
+              "rejected_because": "User wants a highlight reel, not a documentary with generated support graphics."
+            },
+            {
+              "option_id": "clip-factory",
+              "label": "Clip-factory (many short clips from one source)",
+              "score": 0.4,
+              "reason": "Fits producing multiple short social clips.",
+              "rejected_because": "User wants one highlight reel, not multiple derivative clips."
+            }
+          ],
+          "selected": "cinematic",
+          "reason": "User explicitly chose 'One highlight reel' output type.",
+          "user_visible": true,
+          "user_approved": true,
+          "confidence": 0.95
+        },
+        {
+          "decision_id": "d-002",
+          "stage": "proposal",
+          "category": "concept_selection",
+          "subject": "Cinematic concept direction",
+          "options_considered": [
+            {
+              "option_id": "c1",
+              "label": "Epic Build \u2014 Momentum Across America",
+              "score": 0.9,
+              "reason": "Matches genre-standard 'epic cinematic travel' convention and user's stated mood directly."
+            },
+            {
+              "option_id": "c2",
+              "label": "Quiet Wonder \u2014 Contemplative Vista",
+              "score": 0.6,
+              "reason": "Different emotional register (stillness), still within epic territory.",
+              "rejected_because": "User preferred the faster, more propulsive direction."
+            },
+            {
+              "option_id": "c3",
+              "label": "Chapters Across America \u2014 Journey Structure",
+              "score": 0.7,
+              "reason": "Best structural fit for a 7-week multi-stop trip.",
+              "rejected_because": "User preferred continuous momentum over chaptered structure."
+            }
+          ],
+          "selected": "c1",
+          "reason": "User directly selected 'Epic Build' when presented with all three options.",
+          "user_visible": true,
+          "user_approved": true,
+          "confidence": 1.0
+        },
+        {
+          "decision_id": "d-003",
+          "stage": "proposal",
+          "category": "render_runtime_selection",
+          "subject": "Composition runtime for the cinematic edit",
+          "options_considered": [
+            {
+              "option_id": "remotion",
+              "label": "Remotion",
+              "score": 0.85,
+              "reason": "Video-led composition with <OffthreadVideo>, color-grade overlays, letterbox and title-card support over real source footage \u2014 matches this brief's video-led delivery promise."
+            },
+            {
+              "option_id": "hyperframes",
+              "label": "HyperFrames",
+              "score": 0.4,
+              "reason": "Strong for HTML/GSAP kinetic typography and launch-reel style motion.",
+              "rejected_because": "Not built around grading/compositing real source video as the primary layer, which is the core of this brief."
+            },
+            {
+              "option_id": "ffmpeg",
+              "label": "FFmpeg only",
+              "score": 0.3,
+              "reason": "Simplest concat/trim, no composition layer.",
+              "rejected_because": "Would not support color-grade overlays, letterbox reveal treatment, or title cards needed for the epic-cinematic treatment."
+            }
+          ],
+          "selected": "remotion",
+          "reason": "Both Remotion and HyperFrames were presented per the governance HARD RULE; user explicitly approved Remotion given the video-led nature of the piece.",
+          "user_visible": true,
+          "user_approved": true,
+          "confidence": 0.9
+        },
+        {
+          "decision_id": "d-004",
+          "stage": "proposal",
+          "category": "music_source",
+          "subject": "Music sourcing for the highlight reel",
+          "options_considered": [
+            {
+              "option_id": "user_library",
+              "label": "User music library (music_library/)",
+              "score": 0.0,
+              "reason": "Folder does not exist / no tracks present.",
+              "rejected_because": "Empty \u2014 no tracks available."
+            },
+            {
+              "option_id": "ai_generated_pixabay",
+              "label": "Pixabay stock music search",
+              "score": 0.8,
+              "reason": "Free, available now, well-suited to 'epic cinematic' mood tagging."
+            },
+            {
+              "option_id": "bring_your_own",
+              "label": "User provides own track",
+              "score": 0.5,
+              "reason": "Viable but requires the user to source and drop a file first.",
+              "rejected_because": "User preferred the faster Pixabay search path."
+            }
+          ],
+          "selected": "ai_generated_pixabay",
+          "reason": "User chose 'Search Pixabay for a track' when presented with the music plan options.",
+          "user_visible": true,
+          "user_approved": true,
+          "confidence": 0.9
+        },
+        {
+          "decision_id": "d-005",
+          "stage": "proposal",
+          "category": "budget_tradeoff",
+          "subject": "Target runtime vs. documented YouTube retention drop-off at 2-3 minutes",
+          "options_considered": [
+            {
+              "option_id": "keep_2_3min",
+              "label": "Keep 2-3 minutes",
+              "score": 0.7,
+              "reason": "Trip spans 7 weeks/multiple stops \u2014 more room needed to cover it than under-2-minute format allows."
+            },
+            {
+              "option_id": "under_2min",
+              "label": "Tighten to under 2 minutes",
+              "score": 0.6,
+              "reason": "Best documented retention, but forces cutting most of the trip's stops."
+            },
+            {
+              "option_id": "6_8min",
+              "label": "Extend to 6-8 minutes",
+              "score": 0.6,
+              "reason": "Better retention than 2-3min middle ground and more room to tell the story, but longer edit effort."
+            }
+          ],
+          "selected": "keep_2_3min",
+          "reason": "Retention data point was surfaced explicitly to the user; user chose to keep the original 2-3 minute target given the trip's length and scope.",
+          "user_visible": true,
+          "user_approved": true,
+          "confidence": 0.85
+        }
+      ]
+    }
+  }
+}

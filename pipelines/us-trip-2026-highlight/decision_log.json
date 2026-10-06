@@ -1,0 +1,169 @@
+{
+  "version": "1.0",
+  "project_id": "us-trip-2026-highlight",
+  "decisions": [
+    {
+      "decision_id": "d-001",
+      "stage": "idea",
+      "category": "pipeline_selection",
+      "subject": "Pipeline for editing 282 personal US-trip clips into a single video",
+      "options_considered": [
+        {
+          "option_id": "cinematic",
+          "label": "Cinematic (mood-led trailer/montage pipeline)",
+          "score": 0.9,
+          "reason": "Best fit for a single polished highlight reel from real source footage."
+        },
+        {
+          "option_id": "hybrid",
+          "label": "Hybrid (source footage + generated support)",
+          "score": 0.5,
+          "reason": "Fits documentary-style edits with narration/support graphics.",
+          "rejected_because": "User wants a highlight reel, not a documentary with generated support graphics."
+        },
+        {
+          "option_id": "clip-factory",
+          "label": "Clip-factory (many short clips from one source)",
+          "score": 0.4,
+          "reason": "Fits producing multiple short social clips.",
+          "rejected_because": "User wants one highlight reel, not multiple derivative clips."
+        }
+      ],
+      "selected": "cinematic",
+      "reason": "User explicitly chose 'One highlight reel' output type.",
+      "user_visible": true,
+      "user_approved": true,
+      "confidence": 0.95
+    },
+    {
+      "decision_id": "d-002",
+      "stage": "proposal",
+      "category": "concept_selection",
+      "subject": "Cinematic concept direction",
+      "options_considered": [
+        {
+          "option_id": "c1",
+          "label": "Epic Build \u2014 Momentum Across America",
+          "score": 0.9,
+          "reason": "Matches genre-standard 'epic cinematic travel' convention and user's stated mood directly."
+        },
+        {
+          "option_id": "c2",
+          "label": "Quiet Wonder \u2014 Contemplative Vista",
+          "score": 0.6,
+          "reason": "Different emotional register (stillness), still within epic territory.",
+          "rejected_because": "User preferred the faster, more propulsive direction."
+        },
+        {
+          "option_id": "c3",
+          "label": "Chapters Across America \u2014 Journey Structure",
+          "score": 0.7,
+          "reason": "Best structural fit for a 7-week multi-stop trip.",
+          "rejected_because": "User preferred continuous momentum over chaptered structure."
+        }
+      ],
+      "selected": "c1",
+      "reason": "User directly selected 'Epic Build' when presented with all three options.",
+      "user_visible": true,
+      "user_approved": true,
+      "confidence": 1.0
+    },
+    {
+      "decision_id": "d-003",
+      "stage": "proposal",
+      "category": "render_runtime_selection",
+      "subject": "Composition runtime for the cinematic edit",
+      "options_considered": [
+        {
+          "option_id": "remotion",
+          "label": "Remotion",
+          "score": 0.85,
+          "reason": "Video-led composition with <OffthreadVideo>, color-grade overlays, letterbox and title-card support over real source footage \u2014 matches this brief's video-led delivery promise."
+        },
+        {
+          "option_id": "hyperframes",
+          "label": "HyperFrames",
+          "score": 0.4,
+          "reason": "Strong for HTML/GSAP kinetic typography and launch-reel style motion.",
+          "rejected_because": "Not built around grading/compositing real source video as the primary layer, which is the core of this brief."
+        },
+        {
+          "option_id": "ffmpeg",
+          "label": "FFmpeg only",
+          "score": 0.3,
+          "reason": "Simplest concat/trim, no composition layer.",
+          "rejected_because": "Would not support color-grade overlays, letterbox reveal treatment, or title cards needed for the epic-cinematic treatment."
+        }
+      ],
+      "selected": "remotion",
+      "reason": "Both Remotion and HyperFrames were presented per the governance HARD RULE; user explicitly approved Remotion given the video-led nature of the piece.",
+      "user_visible": true,
+      "user_approved": true,
+      "confidence": 0.9
+    },
+    {
+      "decision_id": "d-004",
+      "stage": "proposal",
+      "category": "music_source",
+      "subject": "Music sourcing for the highlight reel",
+      "options_considered": [
+        {
+          "option_id": "user_library",
+          "label": "User music library (music_library/)",
+          "score": 0.0,
+          "reason": "Folder does not exist / no tracks present.",
+          "rejected_because": "Empty \u2014 no tracks available."
+        },
+        {
+          "option_id": "ai_generated_pixabay",
+          "label": "Pixabay stock music search",
+          "score": 0.8,
+          "reason": "Free, available now, well-suited to 'epic cinematic' mood tagging."
+        },
+        {
+          "option_id": "bring_your_own",
+          "label": "User provides own track",
+          "score": 0.5,
+          "reason": "Viable but requires the user to source and drop a file first.",
+          "rejected_because": "User preferred the faster Pixabay search path."
+        }
+      ],
+      "selected": "ai_generated_pixabay",
+      "reason": "User chose 'Search Pixabay for a track' when presented with the music plan options.",
+      "user_visible": true,
+      "user_approved": true,
+      "confidence": 0.9
+    },
+    {
+      "decision_id": "d-005",
+      "stage": "proposal",
+      "category": "budget_tradeoff",
+      "subject": "Target runtime vs. documented YouTube retention drop-off at 2-3 minutes",
+      "options_considered": [
+        {
+          "option_id": "keep_2_3min",
+          "label": "Keep 2-3 minutes",
+          "score": 0.7,
+          "reason": "Trip spans 7 weeks/multiple stops \u2014 more room needed to cover it than under-2-minute format allows."
+        },
+        {
+          "option_id": "under_2min",
+          "label": "Tighten to under 2 minutes",
+          "score": 0.6,
+          "reason": "Best documented retention, but forces cutting most of the trip's stops."
+        },
+        {
+          "option_id": "6_8min",
+          "label": "Extend to 6-8 minutes",
+          "score": 0.6,
+          "reason": "Better retention than 2-3min middle ground and more room to tell the story, but longer edit effort."
+        }
+      ],
+      "selected": "keep_2_3min",
+      "reason": "Retention data point was surfaced explicitly to the user; user chose to keep the original 2-3 minute target given the trip's length and scope.",
+      "user_visible": true,
+      "user_approved": true,
+      "confidence": 0.85
+    }
+  ]
+}

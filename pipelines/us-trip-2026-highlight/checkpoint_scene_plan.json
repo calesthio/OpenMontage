@@ -1,0 +1,1461 @@
+{
+  "version": "1.0",
+  "project_id": "us-trip-2026-highlight",
+  "pipeline_type": "cinematic",
+  "stage": "scene_plan",
+  "status": "completed",
+  "timestamp": "2026-07-02T16:03:23.332497+00:00",
+  "checkpoint_policy": "guided",
+  "human_approval_required": true,
+  "human_approved": true,
+  "artifacts": {
+    "scene_plan": {
+      "version": "1.0",
+      "style_playbook": "flat-motion-graphics",
+      "scenes": [
+        {
+          "id": "s1",
+          "type": "broll",
+          "description": "Looking out a car window at open sky \u2014 establishes the road frame before the title card.",
+          "start_seconds": 0.0,
+          "end_seconds": 8.0,
+          "script_section_id": "s1",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "close_up",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Looking out a car window at open sky \u2014 establishes the road frame before the title card.",
+          "narrative_role": "establish_context",
+          "information_role": "s1",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Looking out a car window at open sky \u2014 establishes the road frame before the title card.",
+              "source": "source",
+              "path": "IMG_0921.MOV"
+            }
+          ],
+          "overlay_notes": "Title card 'APRIL \u2014 MAY 2026' fades in at 0.5s, fades out before s2 begins."
+        },
+        {
+          "id": "esc-01-ch3",
+          "type": "broll",
+          "description": "Van/car interior detail shot",
+          "start_seconds": 8.0,
+          "end_seconds": 10.2,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Van/car interior detail shot",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Van/car interior detail shot",
+              "source": "source",
+              "path": "video-182_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-02-ch4",
+          "type": "broll",
+          "description": "Gym training",
+          "start_seconds": 10.2,
+          "end_seconds": 12.4,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Gym training",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Gym training",
+              "source": "source",
+              "path": "IMG_0964.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-03-ch21",
+          "type": "broll",
+          "description": "Kitchen, stovetop cooking",
+          "start_seconds": 12.4,
+          "end_seconds": 14.6,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Kitchen, stovetop cooking",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Kitchen, stovetop cooking",
+              "source": "source",
+              "path": "od_video-754_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-04-ch16",
+          "type": "broll",
+          "description": "Hardware/DIY store aisle",
+          "start_seconds": 14.6,
+          "end_seconds": 16.8,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Hardware/DIY store aisle",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Hardware/DIY store aisle",
+              "source": "source",
+              "path": "IMG_1089.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-05-ch9",
+          "type": "broll",
+          "description": "Waterfront, city skyline",
+          "start_seconds": 16.8,
+          "end_seconds": 19.0,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Waterfront, city skyline",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Waterfront, city skyline",
+              "source": "source",
+              "path": "video-398_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-06-ch22",
+          "type": "broll",
+          "description": "Driving: hands on wheel",
+          "start_seconds": 19.0,
+          "end_seconds": 21.2,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Driving: hands on wheel",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Driving: hands on wheel",
+              "source": "source",
+              "path": "video-774_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-07-ch18",
+          "type": "broll",
+          "description": "Gym training",
+          "start_seconds": 21.2,
+          "end_seconds": 23.4,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Gym training",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Gym training",
+              "source": "source",
+              "path": "IMG_1098.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-08-ch36",
+          "type": "broll",
+          "description": "Kitchen, stovetop cooking",
+          "start_seconds": 23.4,
+          "end_seconds": 25.6,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Kitchen, stovetop cooking",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Kitchen, stovetop cooking",
+              "source": "source",
+              "path": "video-421_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-09-ch14",
+          "type": "broll",
+          "description": "Van loading / hands-on van work",
+          "start_seconds": 25.6,
+          "end_seconds": 27.8,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Van loading / hands-on van work",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Van loading / hands-on van work",
+              "source": "source",
+              "path": "video-594_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-10-ch7",
+          "type": "broll",
+          "description": "Walking a city sidewalk",
+          "start_seconds": 27.8,
+          "end_seconds": 30.0,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Walking a city sidewalk",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Walking a city sidewalk",
+              "source": "source",
+              "path": "video-304_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-11-ch24",
+          "type": "broll",
+          "description": "Driving: hands on wheel",
+          "start_seconds": 30.0,
+          "end_seconds": 32.2,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Driving: hands on wheel",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Driving: hands on wheel",
+              "source": "source",
+              "path": "IMG_1134.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-12-ch11",
+          "type": "broll",
+          "description": "Gym training",
+          "start_seconds": 32.2,
+          "end_seconds": 34.4,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Gym training",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Gym training",
+              "source": "source",
+              "path": "IMG_1028.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-13-ch52",
+          "type": "broll",
+          "description": "Kitchen, stovetop cooking",
+          "start_seconds": 34.4,
+          "end_seconds": 36.6,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Kitchen, stovetop cooking",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Kitchen, stovetop cooking",
+              "source": "source",
+              "path": "video-1066_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-14-ch33",
+          "type": "broll",
+          "description": "Van loading / hands-on van work",
+          "start_seconds": 36.6,
+          "end_seconds": 38.8,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Van loading / hands-on van work",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Van loading / hands-on van work",
+              "source": "source",
+              "path": "video-52_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-15-ch10",
+          "type": "broll",
+          "description": "Walking a city sidewalk",
+          "start_seconds": 38.8,
+          "end_seconds": 41.0,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Walking a city sidewalk",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Walking a city sidewalk",
+              "source": "source",
+              "path": "od_video-403_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-16-ch46",
+          "type": "broll",
+          "description": "Van driving past a church",
+          "start_seconds": 41.0,
+          "end_seconds": 43.2,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Van driving past a church",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Van driving past a church",
+              "source": "source",
+              "path": "od_video-875_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-17-ch30",
+          "type": "broll",
+          "description": "Gym training",
+          "start_seconds": 43.2,
+          "end_seconds": 45.4,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Gym training",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Gym training",
+              "source": "source",
+              "path": "IMG_1246.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-18-ch54",
+          "type": "broll",
+          "description": "Kitchen, stovetop cooking",
+          "start_seconds": 45.4,
+          "end_seconds": 47.6,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Kitchen, stovetop cooking",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Kitchen, stovetop cooking",
+              "source": "source",
+              "path": "video-1162_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-19-ch15",
+          "type": "broll",
+          "description": "Van loading / hands-on van work",
+          "start_seconds": 47.6,
+          "end_seconds": 49.8,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Van loading / hands-on van work",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Van loading / hands-on van work",
+              "source": "source",
+              "path": "od_video-666_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-20-ch19",
+          "type": "broll",
+          "description": "Walking a city sidewalk",
+          "start_seconds": 49.8,
+          "end_seconds": 52.0,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Walking a city sidewalk",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Walking a city sidewalk",
+              "source": "source",
+              "path": "video-702_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-21-ch23",
+          "type": "broll",
+          "description": "Driving: hands on wheel",
+          "start_seconds": 52.0,
+          "end_seconds": 54.2,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Driving: hands on wheel",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Driving: hands on wheel",
+              "source": "source",
+              "path": "od_video-785_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-22-ch42",
+          "type": "broll",
+          "description": "Office conference room meeting",
+          "start_seconds": 54.2,
+          "end_seconds": 56.4,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Office conference room meeting",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Office conference room meeting",
+              "source": "source",
+              "path": "od_video-629_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-23-ch37",
+          "type": "broll",
+          "description": "Kitchen, stovetop cooking",
+          "start_seconds": 56.4,
+          "end_seconds": 58.6,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Kitchen, stovetop cooking",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Kitchen, stovetop cooking",
+              "source": "source",
+              "path": "video-426_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-24-ch17",
+          "type": "broll",
+          "description": "Hands doing domestic DIY (fabric/curtain)",
+          "start_seconds": 58.6,
+          "end_seconds": 60.8,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Hands doing domestic DIY (fabric/curtain)",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Hands doing domestic DIY (fabric/curtain)",
+              "source": "source",
+              "path": "video-700_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-25-ch53",
+          "type": "broll",
+          "description": "Walking a city sidewalk",
+          "start_seconds": 60.8,
+          "end_seconds": 63.0,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Walking a city sidewalk",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Walking a city sidewalk",
+              "source": "source",
+              "path": "video-1090_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-26-ch57",
+          "type": "broll",
+          "description": "Motion-blur shot from a moving vehicle",
+          "start_seconds": 63.0,
+          "end_seconds": 65.2,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Motion-blur shot from a moving vehicle",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Motion-blur shot from a moving vehicle",
+              "source": "source",
+              "path": "IMG_1521.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-27-ch41",
+          "type": "broll",
+          "description": "Office pantry",
+          "start_seconds": 65.2,
+          "end_seconds": 67.4,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Office pantry",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Office pantry",
+              "source": "source",
+              "path": "video-547_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "esc-28-ch48",
+          "type": "broll",
+          "description": "Night: cyclist crossing a lit bridge",
+          "start_seconds": 67.4,
+          "end_seconds": 69.6,
+          "script_section_id": "s2",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Night: cyclist crossing a lit bridge",
+          "narrative_role": "build_tension",
+          "information_role": "s2",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Night: cyclist crossing a lit bridge",
+              "source": "source",
+              "path": "IMG_1455.MOV"
+            }
+          ]
+        },
+        {
+          "id": "reveal-niagara1",
+          "type": "broll",
+          "description": "Niagara Falls: wide shot of the falls and rising mist \u2014 first hero landmark.",
+          "start_seconds": 69.6,
+          "end_seconds": 75.6,
+          "script_section_id": "s3",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "wide",
+            "camera_movement": "handheld",
+            "lighting_key": "overcast_soft",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Niagara Falls: wide shot of the falls and rising mist \u2014 first hero landmark.",
+          "narrative_role": "emotional_beat",
+          "information_role": "s3",
+          "hero_moment": true,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Niagara Falls: wide shot of the falls and rising mist \u2014 first hero landmark.",
+              "source": "source",
+              "path": "IMG_1163.MOV"
+            }
+          ]
+        },
+        {
+          "id": "reveal-niagara2",
+          "type": "broll",
+          "description": "Niagara Falls: closer angle into the mist and churn.",
+          "start_seconds": 75.6,
+          "end_seconds": 80.6,
+          "script_section_id": "s3",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium_wide",
+            "camera_movement": "handheld",
+            "lighting_key": "overcast_soft",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Niagara Falls: closer angle into the mist and churn.",
+          "narrative_role": "emotional_beat",
+          "information_role": "s3",
+          "hero_moment": true,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Niagara Falls: closer angle into the mist and churn.",
+              "source": "source",
+              "path": "IMG_1174.MOV"
+            }
+          ]
+        },
+        {
+          "id": "reveal-niagara3",
+          "type": "broll",
+          "description": "Niagara Falls: final held frame before pulling away.",
+          "start_seconds": 80.6,
+          "end_seconds": 85.6,
+          "script_section_id": "s3",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "wide",
+            "camera_movement": "handheld",
+            "lighting_key": "overcast_soft",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Niagara Falls: final held frame before pulling away.",
+          "narrative_role": "emotional_beat",
+          "information_role": "s3",
+          "hero_moment": true,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Niagara Falls: final held frame before pulling away.",
+              "source": "source",
+              "path": "IMG_1176.MOV"
+            }
+          ]
+        },
+        {
+          "id": "reveal-fort1",
+          "type": "broll",
+          "description": "Historic-reenactor field: costumed figure with musket, open grounds.",
+          "start_seconds": 85.6,
+          "end_seconds": 90.6,
+          "script_section_id": "s3",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium_wide",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Historic-reenactor field: costumed figure with musket, open grounds.",
+          "narrative_role": "emotional_beat",
+          "information_role": "s3",
+          "hero_moment": true,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Historic-reenactor field: costumed figure with musket, open grounds.",
+              "source": "source",
+              "path": "od_video-1010_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "reveal-fort2",
+          "type": "broll",
+          "description": "Historic-reenactor field: wider establishing shot of the grounds.",
+          "start_seconds": 90.6,
+          "end_seconds": 95.6,
+          "script_section_id": "s3",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "wide",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Historic-reenactor field: wider establishing shot of the grounds.",
+          "narrative_role": "emotional_beat",
+          "information_role": "s3",
+          "hero_moment": true,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Historic-reenactor field: wider establishing shot of the grounds.",
+              "source": "source",
+              "path": "video-1035_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "reveal-field-nature",
+          "type": "broll",
+          "description": "Green field and pond",
+          "start_seconds": 95.6,
+          "end_seconds": 100.6,
+          "script_section_id": "s3",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "wide",
+            "camera_movement": "handheld",
+            "lighting_key": "golden_hour",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Green field and pond",
+          "narrative_role": "emotional_beat",
+          "information_role": "s3",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Green field and pond",
+              "source": "source",
+              "path": "IMG_1334.MOV"
+            }
+          ]
+        },
+        {
+          "id": "reveal-park1",
+          "type": "broll",
+          "description": "Park path, bare spring trees",
+          "start_seconds": 100.6,
+          "end_seconds": 104.6,
+          "script_section_id": "s3",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "wide",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Park path, bare spring trees",
+          "narrative_role": "emotional_beat",
+          "information_role": "s3",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Park path, bare spring trees",
+              "source": "source",
+              "path": "video-835_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "reveal-field2",
+          "type": "broll",
+          "description": "Open grass field",
+          "start_seconds": 104.6,
+          "end_seconds": 108.6,
+          "script_section_id": "s3",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "extreme_wide",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Open grass field",
+          "narrative_role": "emotional_beat",
+          "information_role": "s3",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Open grass field",
+              "source": "source",
+              "path": "video-1055_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "reveal-park2",
+          "type": "broll",
+          "description": "Park, statue, tree-lined path",
+          "start_seconds": 108.6,
+          "end_seconds": 112.6,
+          "script_section_id": "s3",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "wide",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Park, statue, tree-lined path",
+          "narrative_role": "emotional_beat",
+          "information_role": "s3",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Park, statue, tree-lined path",
+              "source": "source",
+              "path": "IMG_1487.MOV"
+            }
+          ]
+        },
+        {
+          "id": "reveal-dusk",
+          "type": "broll",
+          "description": "Parking lot at dusk \u2014 golden-light transitional breathing shot before the landing beat.",
+          "start_seconds": 112.6,
+          "end_seconds": 117.6,
+          "script_section_id": "s3",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "wide",
+            "camera_movement": "handheld",
+            "lighting_key": "golden_hour",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Parking lot at dusk \u2014 golden-light transitional breathing shot before the landing beat.",
+          "narrative_role": "transition",
+          "information_role": "s3",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Parking lot at dusk \u2014 golden-light transitional breathing shot before the landing beat.",
+              "source": "source",
+              "path": "IMG_1529.MOV"
+            }
+          ]
+        },
+        {
+          "id": "land-laundromat",
+          "type": "broll",
+          "description": "Laundromat, row of washing machines \u2014 grounding, humanizing beat.",
+          "start_seconds": 117.6,
+          "end_seconds": 122.6,
+          "script_section_id": "s4",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium_wide",
+            "camera_movement": "handheld",
+            "lighting_key": "high_key",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Laundromat, row of washing machines \u2014 grounding, humanizing beat.",
+          "narrative_role": "emotional_beat",
+          "information_role": "s4",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Laundromat, row of washing machines \u2014 grounding, humanizing beat.",
+              "source": "source",
+              "path": "video-1568_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "land-fireprep",
+          "type": "broll",
+          "description": "Hands preparing kindling at a fire pit.",
+          "start_seconds": 122.6,
+          "end_seconds": 127.6,
+          "script_section_id": "s4",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "close_up",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Hands preparing kindling at a fire pit.",
+          "narrative_role": "emotional_beat",
+          "information_role": "s4",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Hands preparing kindling at a fire pit.",
+              "source": "source",
+              "path": "video-1448_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "land-campfire",
+          "type": "broll",
+          "description": "Campfire burning at dusk \u2014 warm hero close.",
+          "start_seconds": 127.6,
+          "end_seconds": 134.6,
+          "script_section_id": "s4",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium_close",
+            "camera_movement": "handheld",
+            "lighting_key": "low_key",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Campfire burning at dusk \u2014 warm hero close.",
+          "narrative_role": "emotional_beat",
+          "information_role": "s4",
+          "hero_moment": true,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Campfire burning at dusk \u2014 warm hero close.",
+              "source": "source",
+              "path": "video-1517_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "land-bridge",
+          "type": "broll",
+          "description": "Van driving across a large bridge at sunset, light glare through the windshield \u2014 final drive.",
+          "start_seconds": 134.6,
+          "end_seconds": 144.6,
+          "script_section_id": "s4",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "handheld",
+            "lighting_key": "golden_hour",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Van driving across a large bridge at sunset, light glare through the windshield \u2014 final drive.",
+          "narrative_role": "resolution",
+          "information_role": "s4",
+          "hero_moment": true,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Van driving across a large bridge at sunset, light glare through the windshield \u2014 final drive.",
+              "source": "source",
+              "path": "video-1597_singular_display.MOV"
+            }
+          ]
+        },
+        {
+          "id": "land-portrait",
+          "type": "broll",
+          "description": "Warm closing portrait, held for the title card.",
+          "start_seconds": 144.6,
+          "end_seconds": 147.6,
+          "script_section_id": "s4",
+          "framing": "handheld phone footage, source-led",
+          "movement": "handheld",
+          "transition_in": "hard cut",
+          "transition_out": "hard cut",
+          "shot_language": {
+            "shot_size": "close_up",
+            "camera_movement": "handheld",
+            "lighting_key": "natural",
+            "depth_of_field": "medium",
+            "color_temperature": "warm"
+          },
+          "shot_intent": "Warm closing portrait, held for the title card.",
+          "narrative_role": "resolution",
+          "information_role": "s4",
+          "hero_moment": false,
+          "required_assets": [
+            {
+              "type": "video",
+              "description": "Warm closing portrait, held for the title card.",
+              "source": "source",
+              "path": "IMG_1540.MOV"
+            }
+          ],
+          "overlay_notes": "Closing title card 'HOME.' fades in at start of this scene, holds through the final frame."
+        }
+      ],
+      "metadata": {
+        "hero_frames": {
+          "opening_image": "IMG_0921.MOV \u2014 looking out a car window",
+          "reveal_image": "IMG_1163.MOV \u2014 Niagara Falls wide shot",
+          "final_image": "video-1597_singular_display.MOV \u2014 bridge crossing at sunset, held into the HOME. title card"
+        },
+        "transition_rules": "Hard cuts throughout (2 vocabulary items max: hard cut for escalation/landing pace, restrained cross-dissolve reserved for the three Niagara clips in the reveal beat to soften the slow-down).",
+        "aspect_ratio_rules": "16:9 full-frame for escalation (fast cuts, no letterbox). 2.35:1 letterbox activates only for the reveal beat (Niagara + fort sequence) and the landing beat's campfire/bridge hero shots.",
+        "title_card_rules": "Two cards only: opening 'APRIL \u2014 MAY 2026' and closing 'HOME.' \u2014 minimal typography, high contrast, no invented place names on unverified locations.",
+        "support_insert_rules": "No generated inserts. 100% source-led per delivery_promise.source_required=true.",
+        "content_reality_note": "Per user-approved direction: 'life on the road' balance \u2014 daily-life rhythm (gym/cooking/DIY/driving/office) carries the escalation beat; landmark highlights (Niagara Falls, historic-reenactor field, campfire, bridge) reserved for reveal/landing beats as the emotional payoff.",
+        "chapter_category_map": {
+          "1": "hook_window",
+          "2": "city_arrival",
+          "3": "van_detail",
+          "4": "gym",
+          "6": "city",
+          "7": "city_walk",
+          "9": "city_establish",
+          "10": "city_walk",
+          "11": "gym",
+          "12": "portrait",
+          "13": "van_detail",
+          "14": "van_diy",
+          "15": "van_diy",
+          "16": "diy_shopping",
+          "17": "diy_domestic",
+          "18": "gym",
+          "19": "city_walk",
+          "20": "city",
+          "21": "cooking",
+          "22": "driving",
+          "23": "driving",
+          "24": "driving",
+          "25": "park_field",
+          "26": "HERO_NIAGARA",
+          "27": "HERO_FORT",
+          "28": "field",
+          "30": "gym",
+          "32": "van_driving",
+          "33": "van_diy",
+          "34": "city",
+          "36": "cooking",
+          "37": "cooking",
+          "38": "transit",
+          "39": "city_walk",
+          "40": "field_nature",
+          "41": "office",
+          "42": "office_meeting",
+          "43": "shopping",
+          "44": "casual",
+          "46": "driving_church",
+          "47": "portrait_van",
+          "48": "night_city",
+          "49": "office_cafe",
+          "51": "park",
+          "52": "cooking",
+          "53": "city_walk",
+          "54": "cooking",
+          "55": "cooking_interior",
+          "56": "cooking",
+          "57": "driving_motion",
+          "58": "driving_night",
+          "59": "van",
+          "60": "city_dusk",
+          "62": "portrait",
+          "63": "HERO_CAMPFIRE_PREP",
+          "64": "diy_detail",
+          "65": "driving",
+          "66": "van_diy",
+          "67": "city_suburb",
+          "68": "HERO_CAMPFIRE",
+          "69": "HERO_LAUNDROMAT",
+          "70": "HERO_BRIDGE"
+        }
+      }
+    }
+  }
+}

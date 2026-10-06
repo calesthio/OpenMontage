@@ -81,6 +81,46 @@
    "wa": 10
   },
   {
+   "file": "cheapest-way-pune-to-mumbai.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Cheapest Way to Travel Pune to Mumbai | Bus vs Match Cab vs Cab Compared",
+   "titleLen": 72,
+   "desc": "A straight comparison of the cheapest ways to travel between Pune and Mumbai — AC bus seats, match cab (share cab), full cab and train — with real fares and when each one actually saves you money.",
+   "h1": [
+    "Cheapest Way to Travel from Pune to Mumbai"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/cheapest-way-pune-to-mumbai.html",
+   "words": 1047,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 9,
+   "wa": 9
+  },
+  {
+   "file": "cheapest-way-pune-to-mumbai.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Cheapest Way to Travel Pune to Mumbai | Bus vs Match Cab vs Cab Compared",
+   "titleLen": 72,
+   "desc": "A straight comparison of the cheapest ways to travel between Pune and Mumbai — AC bus seats, match cab (share cab), full cab and train — with real fares and when each one actually saves you money.",
+   "h1": [
+    "Cheapest Way to Travel from Pune to Mumbai"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/cheapest-way-pune-to-mumbai.html",
+   "words": 1039,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 9,
+   "wa": 9
+  },
+  {
    "file": "index.html",
    "vp": "desktop",
    "status": 200,
@@ -91,9 +131,9 @@
    "h1": [
     "Pune ↔ Mumbai Cabs & Buses"
    ],
-   "h2count": 8,
+   "h2count": 9,
    "canonical": "https://snazim0345.github.io/OpenMontage/",
-   "words": 1244,
+   "words": 1339,
    "overflow": false,
    "imgs": 4,
    "brokenImgs": 0,
@@ -111,9 +151,9 @@
    "h1": [
     "Pune ↔ Mumbai Cabs & Buses"
    ],
-   "h2count": 8,
+   "h2count": 9,
    "canonical": "https://snazim0345.github.io/OpenMontage/",
-   "words": 1250,
+   "words": 1345,
    "overflow": false,
    "imgs": 4,
    "brokenImgs": 0,
@@ -321,6 +361,46 @@
    "wa": 11
   },
   {
+   "file": "pune-to-mumbai-travel-guide.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Mumbai Travel Guide 2026 | Expressway Time, Best Departure Times & Tips",
+   "titleLen": 79,
+   "desc": "How long the Pune to Mumbai drive really takes, the best times to leave, monsoon and weekend traffic tips, pickup points on both ends, and what to carry. A practical guide.",
+   "h1": [
+    "Pune to Mumbai: A Practical Travel Guide"
+   ],
+   "h2count": 9,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-mumbai-travel-guide.html",
+   "words": 1136,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 9,
+   "wa": 9
+  },
+  {
+   "file": "pune-to-mumbai-travel-guide.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Mumbai Travel Guide 2026 | Expressway Time, Best Departure Times & Tips",
+   "titleLen": 79,
+   "desc": "How long the Pune to Mumbai drive really takes, the best times to leave, monsoon and weekend traffic tips, pickup points on both ends, and what to carry. A practical guide.",
+   "h1": [
+    "Pune to Mumbai: A Practical Travel Guide"
+   ],
+   "h2count": 9,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-mumbai-travel-guide.html",
+   "words": 1128,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 9,
+   "wa": 9
+  },
+  {
    "file": "pune-to-shirdi-cab.html",
    "vp": "desktop",
    "status": 200,
@@ -354,6 +434,46 @@
    "h2count": 8,
    "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-shirdi-cab.html",
    "words": 803,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "shirdi-darshan-from-pune-one-day.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Shirdi Darshan from Pune in One Day | Complete Trip Plan & Timings",
+   "titleLen": 66,
+   "desc": "How to do Shirdi darshan from Pune in a single day — the ideal departure time, how long the drive takes, what to expect at the temple, and how to plan the return. Practical, from drivers who do this route weekly.",
+   "h1": [
+    "Shirdi Darshan from Pune in One Day"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/shirdi-darshan-from-pune-one-day.html",
+   "words": 900,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "shirdi-darshan-from-pune-one-day.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Shirdi Darshan from Pune in One Day | Complete Trip Plan & Timings",
+   "titleLen": 66,
+   "desc": "How to do Shirdi darshan from Pune in a single day — the ideal departure time, how long the drive takes, what to expect at the temple, and how to plan the return. Practical, from drivers who do this route weekly.",
+   "h1": [
+    "Shirdi Darshan from Pune in One Day"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/shirdi-darshan-from-pune-one-day.html",
+   "words": 892,
    "overflow": false,
    "imgs": 0,
    "brokenImgs": 0,
@@ -441,13 +561,10 @@
    "wa": 10
   }
  ],
- "brokenInternalLinks": [
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230B3D91'/%3E%3Cpath d='M7 19.5h18M9 19.5l1.6-5.2A2 2 0 0 1 12.5 13h7a2 2 0 0 1 1.9 1.3l1.6 5.2' stroke='%23FFA500' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='11.5' cy='21.5' r='1.8' fill='%23FFA500'/%3E%3Ccircle cx='20.5' cy='21.5' r='1.8' fill='%23FFA500'/%3E%3C/svg%3E -> 404"
- ]
+ "brokenInternalLinks": []
 }
 
 === SUMMARY ===
-page-viewport combinations checked: 22
+page-viewport combinations checked: 28
 problems: 0
-broken internal links: 1
-  data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230B3D91'/%3E%3Cpath d='M7 19.5h18M9 19.5l1.6-5.2A2 2 0 0 1 12.5 13h7a2 2 0 0 1 1.9 1.3l1.6 5.2' stroke='%23FFA500' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='11.5' cy='21.5' r='1.8' fill='%23FFA500'/%3E%3Ccircle cx='20.5' cy='21.5' r='1.8' fill='%23FFA500'/%3E%3C/svg%3E -> 404
+broken internal links: 0

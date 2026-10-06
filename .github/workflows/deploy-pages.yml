@@ -1,5 +1,9 @@
 name: Deploy site (GitHub Pages)
 
+# Publishes the website to https://snazim0345.github.io/OpenMontage/
+# Pages has build_type=workflow, so this workflow's artifact IS the site.
+# Runs automatically on every change to the site folder.
+
 on:
   push:
     branches: [arena/54180390-openmontage]
@@ -9,12 +13,12 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
 concurrency:
-  group: pages-${{ github.ref }}
+  group: pages-deploy
   cancel-in-progress: true
 
 jobs:
@@ -26,36 +30,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ---- diagnostics: what can this token actually do? ----
-      - name: Diagnose token + Pages access
-        run: |
-          echo "=== token permissions (repo Actions settings) ==="
-          curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "${{ github.api_url }}/repos/${{ github.repository }}/actions/permissions" | head -c 500; echo
-          echo "=== existing Pages site? ==="
-          curl -s -o /dev/null -w "GET /pages -> %{http_code}\n" \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "${{ github.api_url }}/repos/${{ github.repository }}/pages"
-          echo "=== can we enable Pages? ==="
-          curl -s -o /tmp/enable.json -w "POST /pages -> %{http_code}\n" -X POST \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github+json" \
-            "${{ github.api_url }}/repos/${{ github.repository }}/pages" \
-            -d '{"build_type":"workflow"}'
-          head -c 400 /tmp/enable.json; echo
-
       - uses: actions/configure-pages@v5
-        continue-on-error: true
-        id: configure
-
-      - name: Report configure outcome
-        run: echo "configure-pages outcome = ${{ steps.configure.outcome }}"
+        with:
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
-        if: steps.configure.outcome == 'success'
         with:
           path: a1-tour-and-travels
 
       - id: deploy
-        if: steps.configure.outcome == 'success'
         uses: actions/deploy-pages@v4
+
+      - name: Confirm what went live
+        if: always()
+        run: |
+          echo "page_url: ${{ steps.deploy.outputs.page_url }}"
+          echo "status:   ${{ steps.deploy.outcome }}"

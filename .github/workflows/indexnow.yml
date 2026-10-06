@@ -1,16 +1,12 @@
 name: Submit site to search engines (IndexNow)
 
-# AUTOMATIC SEARCH SUBMISSION — switches itself on as soon as you have a real host.
+# Free, automatic search-engine submission — no account, no key to buy, no card.
+# IndexNow instantly tells Bing, Yandex, Seznam, Naver and DuckDuckGo that pages
+# changed, so they re-crawl in minutes instead of weeks.
 #
-# IndexNow instantly notifies Bing, Yandex, Seznam and DuckDuckGo that the site
-# changed, so they re-crawl within minutes instead of weeks. It is free and needs
-# no account. It requires the site to be served from a host you control, and a
-# small key file that proves ownership — both of which GitHub Pages or Netlify give you.
-#
-# This workflow does nothing until you set ONE repository variable:
-#     Settings → Secrets and variables → Actions → Variables → New variable
-#         SITE_URL = https://snazim0345.github.io/OpenMontage   (or your domain)
-# Until then it exits immediately and costs nothing.
+# It submits every URL listed in sitemap.xml, so new route pages are covered too.
+# (Google has no public equivalent — see marketing/06-seo-partnerships-growth.md
+#  for the free 5-minute Search Console step, which is the only Google-side action.)
 
 on:
   push:
@@ -28,81 +24,95 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Resolve the site URL (no manual setup needed)
+      - name: Resolve the live site URL
         id: gate
         run: |
-          # Uses the SITE_URL repository variable when present, and otherwise falls
-          # back to the live GitHub Pages address — so this works with zero setup.
-          SITE="${{ steps.gate.outputs.site }}"
+          # Uses the SITE_URL repository variable if you ever set one,
+          # otherwise falls back to the live GitHub Pages address.
+          SITE="${{ vars.SITE_URL }}"
           if [ -z "$SITE" ]; then SITE="https://snazim0345.github.io/OpenMontage"; fi
-          echo "Submitting URLs under: $SITE"
-          echo "site=$SITE" >> $GITHUB_OUTPUT
-          echo "ready=true" >> $GITHUB_OUTPUT
+          echo "site=$SITE" >> "$GITHUB_OUTPUT"
+          echo "Will submit URLs under: $SITE"
 
-      - name: Generate the ownership key file (once)
-        if: steps.gate.outputs.ready == 'true'
+      - name: Ensure the ownership key file exists
+        id: key
         run: |
-          KEY_FILE=$(ls a1-tour-and-travels/*.txt 2>/dev/null | grep -E '/[0-9a-f]{16,}\.txt$' | head -1)
+          KEY_FILE=$(ls a1-tour-and-travels/ | grep -E '^[0-9a-f]{16,}\.txt$' | head -1 || true)
           if [ -z "$KEY_FILE" ]; then
             KEY=$(head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')
-            echo "$KEY" > "a1-tour-and-travels/$KEY.txt"
+            printf '%s' "$KEY" > "a1-tour-and-travels/$KEY.txt"
             echo "created key file: $KEY.txt"
           else
             KEY=$(basename "$KEY_FILE" .txt)
             echo "reusing key file: $KEY_FILE"
           fi
-          echo "KEY=$KEY" >> $GITHUB_ENV
-          BR=arena/54180390-openmontage
-          git config user.name site-bot
-          git config user.email site-bot@users.noreply.github.com
-          git add -f .diagnostics a1-tour-and-travels/assets 2>/dev/null
-          git commit -q -m "bot: update diagnostics $(date -u +%FT%TZ)" || echo "no changes to commit"
-          for attempt in 1 2 3 4 5; do
-            if git pull --rebase --autostash origin "$BR" >/dev/null 2>&1 && git push origin HEAD:"$BR" 2>&1 | tail -2; then
-              echo "push attempt $attempt: OK"
-              break
-            else
-              echo "push attempt $attempt: rejected, retrying..."
-              sleep 6
-            fi
-          done
-          echo "final state: $(git rev-parse --short HEAD)"
+          echo "key=$KEY" >> "$GITHUB_OUTPUT"
 
-      - name: Submit URLs to IndexNow
-        if: steps.gate.outputs.ready == 'true'
+      - name: Submit every URL from sitemap.xml to IndexNow
+        env:
+          SITE: ${{ steps.gate.outputs.site }}
+          KEY: ${{ steps.key.outputs.key }}
         run: |
-          HOST=$(echo "${{ steps.gate.outputs.site }}" | sed -E 's#https?://([^/]+).*#\1#')
-          cat > /tmp/body.json <<JSON
-          {
-            "host": "$HOST",
-            "key": "$KEY",
-            "keyLocation": "${{ steps.gate.outputs.site }}/$KEY.txt",
-            "urlList": [
-              "${{ steps.gate.outputs.site }}/",
-              "${{ steps.gate.outputs.site }}/index.html",
-              "${{ steps.gate.outputs.site }}/sitemap.xml"
-            ]
+          python3 - <<'PY'
+          import json, os, re, urllib.request
+
+          site = os.environ['SITE'].rstrip('/')
+          key = os.environ['KEY']
+          xml = open('a1-tour-and-travels/sitemap.xml', encoding='utf-8').read()
+          urls = re.findall(r'<loc>([^<]+)</loc>', xml)
+
+          host = re.sub(r'^https?://', '', site).split('/')[0]
+          body = {
+              "host": host,
+              "key": key,
+              "keyLocation": f"{site}/{key}.txt",
+              "urlList": urls,
           }
-          JSON
-          echo "posting to IndexNow:"
-          curl -s -X POST "https://api.indexnow.org/indexnow" \
-            -H "Content-Type: application/json; charset=utf-8" \
-            -d @/tmp/body.json -w "\nhttp=%{http_code}\n" | tee /tmp/indexnow.txt
+          print(f"submitting {len(urls)} URLs to IndexNow:")
+          for u in urls:
+              print("   " + u)
+
+          req = urllib.request.Request(
+              "https://api.indexnow.org/indexnow",
+              data=json.dumps(body).encode(),
+              headers={"Content-Type": "application/json; charset=utf-8"},
+              method="POST",
+          )
+          try:
+              with urllib.request.urlopen(req, timeout=45) as r:
+                  status, text = r.status, r.read().decode()[:200]
+          except urllib.error.HTTPError as e:
+              status, text = e.code, e.read().decode()[:200]
+          except Exception as e:
+              status, text = 0, str(e)[:200]
+
+          print(f"\nIndexNow response: HTTP {status} {text}")
+          note = {200: "accepted", 202: "accepted (processing)", 400: "bad request",
+                  403: "key not verified yet — the key file needs to be live first",
+                  422: "URLs do not match the host", 429: "rate limited"}.get(status, "see docs")
+          print(f"interpretation: {note}")
+
+          # keep a record of the key file content for the diagnostics log
+          open('/tmp/indexnow.txt', 'w').write(
+              f"site={site}\nkey={key}\nurls={len(urls)}\nHTTP {status} {text}\n{note}\n")
+          PY
           mkdir -p .diagnostics
-          echo "$(date -u) host=$HOST response: $(cat /tmp/indexnow.txt)" >> .diagnostics/indexnow-log.txt
+          cat /tmp/indexnow.txt >> .diagnostics/indexnow-log.txt
+
+      - name: Commit the key file and the log
+        run: |
           BR=arena/54180390-openmontage
           git config user.name site-bot
           git config user.email site-bot@users.noreply.github.com
-          git add -f .diagnostics a1-tour-and-travels/assets 2>/dev/null
-          git commit -q -m "bot: update diagnostics $(date -u +%FT%TZ)" || echo "no changes to commit"
+          git add -f "a1-tour-and-travels/${{ steps.key.outputs.key }}.txt" .diagnostics 2>/dev/null
+          git commit -q -m "seo: IndexNow submission ($(date -u +%F))" || echo "no changes"
           for attempt in 1 2 3 4 5; do
             if git pull --rebase --autostash origin "$BR" >/dev/null 2>&1 && git push origin HEAD:"$BR" 2>&1 | tail -2; then
-              echo "push attempt $attempt: OK"
-              break
+              echo "push attempt $attempt: OK"; break
             else
-              echo "push attempt $attempt: rejected, retrying..."
-              sleep 6
+              echo "push attempt $attempt: rejected, retrying..."; sleep 6
             fi
           done
-          echo "final state: $(git rev-parse --short HEAD)"

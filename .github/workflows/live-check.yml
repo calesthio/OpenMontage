@@ -3,7 +3,7 @@ name: Live site check
 on:
   push:
     branches: [arena/54180390-openmontage]
-    paths: ['a1-tour-and-travels/**', '.github/workflows/live-check.yml']
+    paths: ['a1-tour-and-travels/**', '.github/workflows/live-check.yml', 'live-trigger.txt']
   schedule:
     - cron: '0 4 * * 1'      # every Monday 04:00 UTC — free uptime monitoring
   workflow_dispatch:
@@ -16,22 +16,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify the public site (content, security, assets)
+      - name: Verify the public site (every page, security, assets)
         run: |
           set +e
-          SHA=$(git rev-parse HEAD)
-          BR=arena/54180390-openmontage
           GH="https://snazim0345.github.io/OpenMontage"
-          BASE="https://raw.githack.com/snazim0345/OpenMontage/$BR/a1-tour-and-travels"
-          URL="$GH/"                       # PRIMARY: GitHub Pages (real hosting, HTTPS)
-          SHARE_URL="$BASE/index.html"     # BACKUP: CDN link
+          URL="$GH/"
           mkdir -p .diagnostics
           {
             echo "live site check — $(date -u)"
-            echo "PRIMARY  (GitHub Pages): $URL"
-            echo "BACKUP   (CDN):          $SHARE_URL"
-            echo "backup status:           $(curl -sL -o /dev/null -m 45 -w '%{http_code} %{size_download} bytes' "$SHARE_URL")"
-            echo "local file size:         $(wc -c < a1-tour-and-travels/index.html)"
+            echo "PRIMARY (GitHub Pages): $URL"
+            echo "local index.html size:  $(wc -c < a1-tour-and-travels/index.html)"
             code=$(curl -sL -o /tmp/page.html -m 45 -w '%{http_code}' "$URL")
             echo "http:  $code"
             echo "type:  $(curl -sIL -m 45 "$URL" | grep -i '^content-type' | tail -1)"
@@ -50,11 +44,29 @@ jobs:
             done
             echo "  external <script src> count: $(grep -o '<script src=' /tmp/page.html | wc -l)  (0 = no third-party JS)"
             echo
+            echo "== EVERY page in the sitemap, fetched from the live site =="
+            fails=0
+            for u in $(grep -o '<loc>[^<]*' a1-tour-and-travels/sitemap.xml | sed 's/<loc>//'); do
+              p=${u#https://snazim0345.github.io/OpenMontage/}
+              [ -z "$p" ] && p="index.html"
+              printf "  %-42s" "/$p"
+              curl -sL -o /tmp/p.html -m 40 -w "http=%{http_code} " "$u"
+              echo -n "bytes=$(wc -c < /tmp/p.html) "
+              grep -o '<title>[^<]*' /tmp/p.html | head -1 | sed 's/<title>//' | cut -c1-44
+              c=$(curl -sL -o /dev/null -m 40 -w '%{http_code}' "$u")
+              [ "$c" = "200" ] || { echo "     ^^ THIS PAGE IS NOT SERVING (http=$c)"; fails=$((fails+1)); }
+            done
+            echo "  pages not serving: $fails"
+            [ "$fails" = "0" ] || ok=0
+            echo
             echo "== assets / app files served with correct types =="
-            for f in index.html 404.html manifest.json sw.js sitemap.xml robots.txt 404.html \
-                     assets/icon-192.png assets/icon-512.png assets/apple-touch-icon.png \
-                     assets/qr-whatsapp.png _headers; do
-              printf "  %-32s" "$f"
+            for f in manifest.json sw.js sitemap.xml robots.txt 404.html post-ads.html \
+                     marketing/print-kit.html assets/share.js assets/icon-192.png assets/icon-512.png \
+                     assets/apple-touch-icon.png assets/qr-whatsapp.png assets/qr-website.png \
+                     assets/ads/ad-main-square.png assets/ads/ad-matchcab-square.png \
+                     assets/ads/ad-airport-square.png assets/ads/ad-nosurge-square.png \
+                     assets/ads/ad-status-fares.png assets/ads/ad-status-group.png _headers; do
+              printf "  %-40s" "$f"
               curl -sL -o /dev/null -m 30 -w "http=%{http_code} type=%{content_type} bytes=%{size_download}\n" "$GH/$f"
             done
             echo
@@ -65,7 +77,7 @@ jobs:
             done
             echo
             [ "$code" = "200" ] && [ "$ok" = "1" ] && echo "RESULT: PASS" || echo "RESULT: FAIL"
-            echo "$(date -u +%F) http=$code pass=$ok" >> .diagnostics/live-history.txt
+            echo "$(date -u +%F) http=$code pass=$ok pages_not_serving=$fails" >> .diagnostics/live-history.txt
             echo
             echo "== security headers actually served by GitHub Pages (informational) =="
             curl -sI -m 30 "$GH/" | grep -iE "^(strict-transport|content-security|x-frame|x-content-type|referrer-policy|permissions-policy)" || echo "  (GitHub Pages does not set custom HTTP headers — the <meta> CSP still applies; use Netlify/Cloudflare for server-enforced headers)"
@@ -74,15 +86,12 @@ jobs:
           BR=arena/54180390-openmontage
           git config user.name site-bot
           git config user.email site-bot@users.noreply.github.com
-          git add -f .diagnostics a1-tour-and-travels/assets 2>/dev/null
+          git add -f .diagnostics
           git commit -q -m "bot: update diagnostics $(date -u +%FT%TZ)" || echo "no changes to commit"
           for attempt in 1 2 3 4 5; do
             if git pull --rebase --autostash origin "$BR" >/dev/null 2>&1 && git push origin HEAD:"$BR" 2>&1 | tail -2; then
-              echo "push attempt $attempt: OK"
-              break
+              echo "push attempt $attempt: OK"; break
             else
-              echo "push attempt $attempt: rejected, retrying..."
-              sleep 6
+              echo "push attempt $attempt: rejected, retrying..."; sleep 6
             fi
           done
-          echo "final state: $(git rev-parse --short HEAD)"

@@ -1,0 +1,32 @@
+=== Wayback submissions — Tue 06 Oct 2026 02:36 UTC ===
+pages found in sitemap: 13
+
+-- submitting (3 at a time) --
+  index.html                               submitted  http=200
+  pune-to-mumbai-cab.html                  submitted  http=200
+  mumbai-to-pune-cab.html                  submitted  http=200
+  match-cab-pune-mumbai.html               submitted  http=200
+  pune-mumbai-bus.html                     NOT submitted (last http=0)
+  tempo-traveller-pune.html                submitted  http=200
+  pune-to-shirdi-cab.html                  submitted  http=200
+  pune-to-lonavala-cab.html                submitted  http=200
+  airport-transfer-pune-mumbai.html        NOT submitted (last http=520)
+  tour-packages.html                       submitted  http=200
+  pune-to-mumbai-travel-guide.html         submitted  http=200
+  cheapest-way-pune-to-mumbai.html         submitted  http=200
+  shirdi-darshan-from-pune-one-day.html    submitted  http=200
+
+-- verifying the archive actually took the snapshots --
+  index.html                               archived=yes  https://snazim0345.github.io/OpenMontage/
+  pune-to-mumbai-cab.html                  archived=yes  https://snazim0345.github.io/OpenMontage/pune-to-mumbai-cab.html
+  mumbai-to-pune-cab.html                  archived=yes  https://snazim0345.github.io/OpenMontage/mumbai-to-pune-cab.html
+  match-cab-pune-mumbai.html               archived=yes  https://snazim0345.github.io/OpenMontage/match-cab-pune-mumbai.html
+  pune-mumbai-bus.html                     archived=NO  https://snazim0345.github.io/OpenMontage/pune-mumbai-bus.html
+  tempo-traveller-pune.html                archived=NO  https://snazim0345.github.io/OpenMontage/tempo-traveller-pune.html
+  pune-to-shirdi-cab.html                  archived=yes  https://snazim0345.github.io/OpenMontage/pune-to-shirdi-cab.html
+  pune-to-lonavala-cab.html                archived=yes  https://snazim0345.github.io/OpenMontage/pune-to-lonavala-cab.html
+  airport-transfer-pune-mumbai.html        archived=yes  https://snazim0345.github.io/OpenMontage/airport-transfer-pune-mumbai.html
+  tour-packages.html                       archived=yes  https://snazim0345.github.io/OpenMontage/tour-packages.html
+  pune-to-mumbai-travel-guide.html         archived=yes  https://snazim0345.github.io/OpenMontage/pune-to-mumbai-travel-guide.html
+  cheapest-way-pune-to-mumbai.html         archived=yes  https://snazim0345.github.io/OpenMontage/cheapest-way-pune-to-mumbai.html
+  shirdi-darshan-from-pune-one-day.html    archived=yes  https://snazim0345.github.io/OpenMontage/shirdi-darshan-from-pune-one-day.html

@@ -1,0 +1,34 @@
+{
+  "version": "1.0",
+  "project_id": "us-trip-2026-highlight",
+  "pipeline_type": "cinematic",
+  "stage": "publish",
+  "status": "completed",
+  "timestamp": "2026-07-02T16:31:20.486561+00:00",
+  "checkpoint_policy": "guided",
+  "human_approval_required": true,
+  "human_approved": true,
+  "artifacts": {
+    "publish_log": {
+      "version": "1.0",
+      "entries": [
+        {
+          "platform": "local_export",
+          "status": "exported",
+          "export_path": "projects/us-trip-2026-highlight/renders/final.mp4",
+          "timestamp": "2026-07-02T16:31:20.460215+00:00",
+          "metadata_used": {
+            "title": "Life on the Road \u2014 US Trip 2026",
+            "description": "A 2:28 cinematic highlight reel of a 7-week US road trip, built from 282 personal phone clips. Epic Build direction: propulsive daily-life montage (gym, cooking, DIY van life, driving) building to hero landmark moments (Niagara Falls, a historic-reenactor field, a campfire, a sunset bridge crossing), scored to a free Pixabay orchestral track."
+          }
+        }
+      ],
+      "metadata": {
+        "hero_output": "projects/us-trip-2026-highlight/renders/final.mp4",
+        "derivative_outputs": [],
+        "poster_frame_notes": "Niagara Falls wide shot (IMG_1163.MOV, ~78s mark) or the sunset bridge crossing (video-1597_singular_display.MOV, final ~10s) are the strongest poster-frame candidates.",
+        "distribution_notes": "Rendered at 1920x1080/30fps for YouTube per proposal. No captions/subtitles (music-driven, no narration, per approved proposal)."
+      }
+    }
+  }
+}

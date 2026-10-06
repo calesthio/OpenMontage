@@ -275,13 +275,14 @@ stages:
       - script
     produces:
       - publish_log
-    tools_available: []
+    tools_available: [export_bundle, fcpxml_export]
     checkpoint_required: true
     human_approval_default: true
     review_focus:
       - Hero export and derivative exports are clearly labeled
       - Metadata matches the tone and distribution intent
       - Poster-frame or thumbnail concept is coherent
+      - If an editorial hand-off was requested, the FCPXML timeline is exported alongside the flat render
     success_criteria:
       - Schema-valid publish_log artifact
       - Export package contains video and metadata outputs

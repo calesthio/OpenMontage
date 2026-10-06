@@ -1,14 +1,15 @@
-screenshot attempts — Tue Oct  6 01:40:33 UTC 2026
-== A. WordPress mShots (keyless) ==
-  mshots.png       http=200 bytes=8737 magic=47494638
-== B. thum.io (keyless) ==
-  thumio.png       http=200 bytes=54828 magic=89504e47
+screenshot attempts — Tue Oct  6 01:48:02 UTC 2026
+== A. full-page desktop shot (microlink, 1600px wide) ==
+== B. thum.io desktop ==
+  thumio.png       http=200 bytes=757840 magic=89504e47
+== D. thum.io MOBILE (375px) ==
+  thumio-mobile.png http=200 bytes=229621 magic=89504e47
 == C. microlink (keyless tier) ==
-{"status":"success","data":{"url":"https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html","screenshot":{"size_pretty":"136 kB","size":136009,"type":"png","url":"https://iad.microlink.io/l20UEQLZ9PIp0SH31TVGyg62BVL_-uJk9P3g-q4uKwojwSXy1XKnozYnWtyrKyecR7yEx3FvnHjRQgIoV_XV9g.png","width":2560,"height":1600}},"statusCode":null,"headers":[]}
-  microlink url: https://iad.microlink.io/l20UEQLZ9PIp0SH31TVGyg62BVL_-uJk9P3g-q4uKwojwSXy1XKnozYnWtyrKyecR7yEx3FvnHjRQgIoV_XV9g.png
-  microlink.png    http=200 bytes=136009 magic=89504e47
+{"status":"success","data":{"url":"https://snazim0345.github.io/OpenMontage/","screenshot":{"size_pretty":"1.78 MB","size":1776552,"type":"png","url":"https://iad.microlink.io/3ja4slYKxVj7J2wbEb8DnKLYTI37wqJp30cEfWK3tulmnC2HvA3fB6jlAOKcQkm38WzJD6cTHDLcX6TnQl1TfA.png","width":2560,"height":1600}},"statusCode":null,"headers":[]}
+  microlink url: https://iad.microlink.io/3ja4slYKxVj7J2wbEb8DnKLYTI37wqJp30cEfWK3tulmnC2HvA3fB6jlAOKcQkm38WzJD6cTHDLcX6TnQl1TfA.png
+  microlink.png    http=200 bytes=1776552 magic=89504e47
 
 == keep only real PNGs ==
-  VALID   .diagnostics/screenshots/microlink.png (136009 bytes)
-  discard .diagnostics/screenshots/mshots.png
-  VALID   .diagnostics/screenshots/thumio.png (54828 bytes)
+  VALID   .diagnostics/screenshots/microlink.png (1776552 bytes)
+  VALID   .diagnostics/screenshots/thumio-mobile.png (229621 bytes)
+  VALID   .diagnostics/screenshots/thumio.png (757840 bytes)

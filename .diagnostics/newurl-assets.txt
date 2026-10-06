@@ -1,0 +1,7 @@
+assets for the new URL — Tue Oct  6 01:48:12 UTC 2026
+  qr-website.png regenerated for GitHub Pages (952 bytes)
+
+== short links pointing at the GitHub Pages site ==
+  is.gd/a1toursandtravel     Error, database insert failed
+  is.gd/a1tourspune          Error, database insert failed
+  is.gd/a1toursandtravelgh   Error, database insert failed

@@ -1,0 +1,40 @@
+=== is-a.dev readiness — Tue Oct  6 02:29:30 UTC 2026 ===
+
+== 1. name availability (checking their live registry) ==
+  FREE     a1toursandtravel.is-a.dev
+  FREE     a1toursandtravels.is-a.dev
+  FREE     a1tourstravels.is-a.dev
+  FREE     a1tours.is-a.dev
+  FREE     punemumbaitaxi.is-a.dev
+
+== 2. their schema (fetched live) ==
+  domains.schema.json -> http=404
+  schema.json -> http=404
+  .github/schema.json -> http=404
+
+== 3. their public docs (record format) ==
+404: Not Found
+== 4. is our target site reachable? (their hard requirement) ==
+  https://snazim0345.github.io/OpenMontage/ -> http=200 type=text/html; charset=utf-8
+
+== 5. validating our prepared file ==
+file: a1-tour-and-travels/domains/a1toursandtravel.json
+  parses as JSON: yes
+  top-level keys: ['_comment', '_option_1_if_you_used_netlify', '_option_2_if_you_have_github_pages', '_option_3_redirect_instead_of_hosting']
+  owner: None
+  records: None
+  proxied: None
+  PROBLEM: owner.username required
+  PROBLEM: needs records or record
+  manual validation: FAIL
+  OFFICIAL SCHEMA VALIDATION FAILED: Extra data: line 1 column 4 (char 3)
+
+== 6. web.archive.org submissions (free permanent archives) — Tue Oct  6 02:29:33 UTC 2026 ==
+  /                                     submit http=200
+  /pune-to-mumbai-cab.html              submit http=200
+  /match-cab-pune-mumbai.html           submit http=200
+  /pune-mumbai-bus.html                 submit http=404
+  /tour-packages.html                   submit http=200
+
+  verifying one:
+{"url": "https://snazim0345.github.io/OpenMontage/pune-to-mumbai-cab.html", "archived_snapshots": {"closest": {"status": "200", "available": true, "url": "http://web.archive.org/web/20261006022949/https://snazim0345.github.io/OpenMontage/pune-to-mumbai-cab.html", "timestamp": "20261006022949"}}}

@@ -1,0 +1,15 @@
+screenshot attempts — Tue Oct  6 01:48:02 UTC 2026
+== A. full-page desktop shot (microlink, 1600px wide) ==
+== B. thum.io desktop ==
+  thumio.png       http=200 bytes=757840 magic=89504e47
+== D. thum.io MOBILE (375px) ==
+  thumio-mobile.png http=200 bytes=229621 magic=89504e47
+== C. microlink (keyless tier) ==
+{"status":"success","data":{"url":"https://snazim0345.github.io/OpenMontage/","screenshot":{"size_pretty":"1.78 MB","size":1776552,"type":"png","url":"https://iad.microlink.io/3ja4slYKxVj7J2wbEb8DnKLYTI37wqJp30cEfWK3tulmnC2HvA3fB6jlAOKcQkm38WzJD6cTHDLcX6TnQl1TfA.png","width":2560,"height":1600}},"statusCode":null,"headers":[]}
+  microlink url: https://iad.microlink.io/3ja4slYKxVj7J2wbEb8DnKLYTI37wqJp30cEfWK3tulmnC2HvA3fB6jlAOKcQkm38WzJD6cTHDLcX6TnQl1TfA.png
+  microlink.png    http=200 bytes=1776552 magic=89504e47
+
+== keep only real PNGs ==
+  VALID   .diagnostics/screenshots/microlink.png (1776552 bytes)
+  VALID   .diagnostics/screenshots/thumio-mobile.png (229621 bytes)
+  VALID   .diagnostics/screenshots/thumio.png (757840 bytes)

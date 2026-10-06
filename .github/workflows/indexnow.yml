@@ -1,0 +1,118 @@
+name: Submit site to search engines (IndexNow)
+
+# Free, automatic search-engine submission — no account, no key to buy, no card.
+# IndexNow instantly tells Bing, Yandex, Seznam, Naver and DuckDuckGo that pages
+# changed, so they re-crawl in minutes instead of weeks.
+#
+# It submits every URL listed in sitemap.xml, so new route pages are covered too.
+# (Google has no public equivalent — see marketing/06-seo-partnerships-growth.md
+#  for the free 5-minute Search Console step, which is the only Google-side action.)
+
+on:
+  push:
+    branches: [arena/54180390-openmontage]
+    paths: ['indexnow-trigger.txt']
+  schedule:
+    - cron: '0 5 * * 1'      # weekly, Mondays
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve the live site URL
+        id: gate
+        run: |
+          # Uses the SITE_URL repository variable if you ever set one,
+          # otherwise falls back to the live GitHub Pages address.
+          SITE="${{ vars.SITE_URL }}"
+          if [ -z "$SITE" ]; then SITE="https://snazim0345.github.io/OpenMontage"; fi
+          echo "site=$SITE" >> "$GITHUB_OUTPUT"
+          echo "Will submit URLs under: $SITE"
+
+      - name: Ensure the ownership key file exists
+        id: key
+        run: |
+          KEY_FILE=$(ls a1-tour-and-travels/ | grep -E '^[0-9a-f]{16,}\.txt$' | head -1 || true)
+          if [ -z "$KEY_FILE" ]; then
+            KEY=$(head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')
+            printf '%s' "$KEY" > "a1-tour-and-travels/$KEY.txt"
+            echo "created key file: $KEY.txt"
+          else
+            KEY=$(basename "$KEY_FILE" .txt)
+            echo "reusing key file: $KEY_FILE"
+          fi
+          echo "key=$KEY" >> "$GITHUB_OUTPUT"
+
+      - name: Submit every URL from sitemap.xml to IndexNow
+        env:
+          SITE: ${{ steps.gate.outputs.site }}
+          KEY: ${{ steps.key.outputs.key }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re, urllib.request
+
+          site = os.environ['SITE'].rstrip('/')
+          key = os.environ['KEY']
+          xml = open('a1-tour-and-travels/sitemap.xml', encoding='utf-8').read()
+          urls = re.findall(r'<loc>([^<]+)</loc>', xml)
+
+          host = re.sub(r'^https?://', '', site).split('/')[0]
+          body = {
+              "host": host,
+              "key": key,
+              "keyLocation": f"{site}/{key}.txt",
+              "urlList": urls,
+          }
+          print(f"submitting {len(urls)} URLs to IndexNow:")
+          for u in urls:
+              print("   " + u)
+
+          req = urllib.request.Request(
+              "https://api.indexnow.org/indexnow",
+              data=json.dumps(body).encode(),
+              headers={"Content-Type": "application/json; charset=utf-8"},
+              method="POST",
+          )
+          try:
+              with urllib.request.urlopen(req, timeout=45) as r:
+                  status, text = r.status, r.read().decode()[:200]
+          except urllib.error.HTTPError as e:
+              status, text = e.code, e.read().decode()[:200]
+          except Exception as e:
+              status, text = 0, str(e)[:200]
+
+          print(f"\nIndexNow response: HTTP {status} {text}")
+          note = {200: "accepted", 202: "accepted (processing)", 400: "bad request",
+                  403: "key not verified yet — the key file needs to be live first",
+                  422: "URLs do not match the host", 429: "rate limited"}.get(status, "see docs")
+          print(f"interpretation: {note}")
+
+          # keep a record of the key file content for the diagnostics log
+          open('/tmp/indexnow.txt', 'w').write(
+              f"site={site}\nkey={key}\nurls={len(urls)}\nHTTP {status} {text}\n{note}\n")
+          PY
+          mkdir -p .diagnostics
+          cat /tmp/indexnow.txt >> .diagnostics/indexnow-log.txt
+
+      - name: Commit the key file and the log
+        run: |
+          BR=arena/54180390-openmontage
+          git config user.name site-bot
+          git config user.email site-bot@users.noreply.github.com
+          git add -f "a1-tour-and-travels/${{ steps.key.outputs.key }}.txt" .diagnostics 2>/dev/null
+          git commit -q -m "seo: IndexNow submission ($(date -u +%F))" || echo "no changes"
+          for attempt in 1 2 3 4 5; do
+            if git pull --rebase --autostash origin "$BR" >/dev/null 2>&1 && git push origin HEAD:"$BR" 2>&1 | tail -2; then
+              echo "push attempt $attempt: OK"; break
+            else
+              echo "push attempt $attempt: rejected, retrying..."; sleep 6
+            fi
+          done

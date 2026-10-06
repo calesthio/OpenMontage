@@ -1,0 +1,92 @@
+branded short-link attempt — Tue Oct  6 01:31:42 UTC 2026
+target: https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html
+
+-- alias: a1toursandtravel --
+  is.gd  : Error, database insert failed
+  tinyurl: https://tinyurl.com/a1toursandtravel
+-- alias: a1toursandtravels --
+  is.gd  : Error, database insert failed
+  tinyurl: https://tinyurl.com/a1toursandtravels
+-- alias: a1tourstravel --
+  is.gd  : Error, database insert failed
+  tinyurl: Error
+-- alias: punemumbaitaxi --
+  is.gd  : Error, database insert failed
+  tinyurl: Error
+-- alias: a1tourtravel --
+  is.gd  : Error, database insert failed
+  tinyurl: Error
+
+== verify which links resolve to our site ==
+  https://is.gd/a1toursandtravel            http=404
+        -> NOT ours
+  https://tinyurl.com/a1toursandtravel      http=200
+        -> OK, serves our site
+  https://is.gd/a1toursandtravels           http=404
+        -> NOT ours
+  https://tinyurl.com/a1toursandtravels     http=200
+        -> OK, serves our site
+  https://is.gd/a1tourstravel               http=404
+        -> NOT ours
+  https://tinyurl.com/a1tourstravel         http=404
+        -> NOT ours
+  https://is.gd/punemumbaitaxi              http=404
+        -> NOT ours
+  https://tinyurl.com/punemumbaitaxi        http=404
+        -> NOT ours
+  https://is.gd/a1tourtravel                http=404
+        -> NOT ours
+  https://tinyurl.com/a1tourtravel          http=404
+        -> NOT ours
+=== branded short links — Tue 06 Oct 2026 02:54 UTC ===
+target site: https://snazim0345.github.io/OpenMontage/
+
+-- is.gd (free, no account, custom alias) --
+  https://is.gd/a1toursandtravel -> http=404
+  create -> http=200
+  response: Error, database insert failed
+  verify https://is.gd/a1toursandtravel -> http=404 landed=https://is.gd/a1toursandtravel
+  shows our phone number on the landing page: no
+
+-- v.gd (same service, different domain) --
+  https://v.gd/a1toursandtravel -> http=404
+  create -> http=200
+  response: Error, database insert failed
+  verify https://v.gd/a1toursandtravel -> http=404 landed=https://v.gd/a1toursandtravel
+  shows our phone number on the landing page: no
+
+-- result --
+  is.gd: not available
+  v.gd: not available
+=== branded short links — Tue 06 Oct 2026 02:55 UTC ===
+target site: https://snazim0345.github.io/OpenMontage/
+
+-- is.gd (free, no account, custom alias) --
+  https://is.gd/a1toursandtravel -> http=404
+  create -> http=200
+  response: Error, database insert failed
+  verify https://is.gd/a1toursandtravel -> http=404 landed=https://is.gd/a1toursandtravel
+  shows our phone number on the landing page: no
+
+-- v.gd (same service, different domain) --
+  https://v.gd/a1toursandtravel -> http=404
+  create -> http=200
+  response: Error, database insert failed
+  verify https://v.gd/a1toursandtravel -> http=404 landed=https://v.gd/a1toursandtravel
+  shows our phone number on the landing page: no
+
+-- 1pt.co (free API, custom short name) --
+  create -> http=0 body=ERROR <urlopen error [Errno -2] Name or service not known>
+  -> not available
+
+-- spoo.me (free shortener, custom alias) --
+  create -> http=200 body={"short_url":"http://spoo.me/a1toursandtravel","domain":"spoo.me","original_url":"https://snazim0345.github.io/OpenMontage/"}
+  verify http://spoo.me/a1toursandtravel -> http=200 landed=https://snazim0345.github.io/OpenMontage/
+  shows our phone number: YES
+
+-- result --
+  is.gd: not available
+  v.gd: not available
+  1pt.co: not available
+  spoo.me: WORKS — branded short link live
+  use: https://spoo.me/a1toursandtravel

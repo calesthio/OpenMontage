@@ -1,0 +1,34 @@
+branded links for the live site — Tue Oct  6 02:00:37 UTC 2026
+target: https://snazim0345.github.io/OpenMontage/
+
+== claiming tinyurl aliases ==
+  a1toursandtravelgh     https://tinyurl.com/a1toursandtravelgh
+  a1tourstravels         https://tinyurl.com/a1tourstravels
+  a1tourspune            Error
+  a1toursmumbai          Error
+  a1-tours-and-travel    Error
+
+== also try is.gd again ==
+  a1tours2               Error, database insert failed
+  a1toursgo              Error, database insert failed
+  a1toursx               Error, database insert failed
+
+== verify which ones actually serve our site ==
+  https://tinyurl.com/a1toursandtravelgh        200 https://snazim0345.github.io/OpenMontage/
+        -> GOOD: serves our site directly
+  https://tinyurl.com/a1tourstravels            200 https://snazim0345.github.io/OpenMontage/
+        -> GOOD: serves our site directly
+  https://tinyurl.com/a1tourspune               404 https://tinyurl.com/a1tourspune
+        -> not our site
+  https://tinyurl.com/a1toursmumbai             404 https://tinyurl.com/a1toursmumbai
+        -> not our site
+  https://tinyurl.com/a1-tours-and-travel       200 https://tinyurl.com/preview/a1-tours-and-travel
+        -> not our site
+  https://tinyurl.com/a1toursandtravel          200 https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html
+        -> GOOD: serves our site directly
+  https://is.gd/a1tours2                        404 https://is.gd/a1tours2
+        -> not our site
+  https://is.gd/a1toursgo                       404 https://is.gd/a1toursgo
+        -> not our site
+  https://is.gd/a1toursx                        404 https://is.gd/a1toursx
+        -> not our site

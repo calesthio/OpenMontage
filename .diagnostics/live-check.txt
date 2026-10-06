@@ -1,0 +1,73 @@
+live site check — Tue Oct  6 02:48:11 UTC 2026
+PRIMARY (GitHub Pages): https://snazim0345.github.io/OpenMontage/
+local index.html size:  102965
+http:  200
+type:  content-type: text/html; charset=utf-8
+bytes: 102965
+
+== content essentials ==
+  OK      A1 Tour and Travels
+  OK      7888007234
+  OK      Pune ↔ Mumbai Cabs
+  OK      wa.me/917888007234
+  OK      Pune ↔ Mumbai Travel Questions
+  OK      TaxiService
+  OK      FAQPage
+
+== security hardening present ==
+  OK      Content-Security-Policy
+  OK      noopener noreferrer
+  OK      rel="manifest"
+  OK      <noscript>
+  external <script src> count: 0  (0 = no third-party JS)
+
+== EVERY page in the sitemap, fetched from the live site ==
+  /index.html                               http=200 bytes=102965 A1 Tour and Travels | Pune ↔ Mumbai Cabs, 
+  /airport-transfer-pune-mumbai.html        http=200 bytes=19284 Pune & Mumbai Airport Transfer | 24x7 with F
+  /cheapest-way-pune-to-mumbai.html         http=200 bytes=17875 Cheapest Way to Travel Pune to Mumbai | Bus 
+  /match-cab-pune-mumbai.html               http=200 bytes=19712 Match Cab Pune to Mumbai | Pay Per Seat from
+  /mumbai-to-pune-cab.html                  http=200 bytes=19185 Mumbai to Pune Cab ₹2500–3000 | Doorstep
+  /pune-mumbai-bus.html                     http=200 bytes=19062 Pune to Mumbai AC Bus | Seat ₹500–800 | 
+  /pune-to-kolhapur-cab.html                http=200 bytes=19894 Pune to Kolhapur Cab | Mahalaxmi Darshan, Pa
+  /pune-to-lonavala-cab.html                http=200 bytes=18973 Pune to Lonavala Cab | One Way & Day Trip | 
+  /pune-to-mahabaleshwar-cab.html           http=200 bytes=20538 Pune to Mahabaleshwar Cab | Panchgani & Prat
+  /pune-to-mumbai-cab.html                  http=200 bytes=21378 Pune to Mumbai Cab ₹2500–3000 | Toll, Fu
+  /pune-to-mumbai-travel-guide.html         http=200 bytes=18060 Pune to Mumbai Travel Guide 2026 | Expresswa
+  /pune-to-nashik-cab.html                  http=200 bytes=21471 Pune to Nashik Cab | Trimbakeshwar, Saptashr
+  /pune-to-shirdi-cab.html                  http=200 bytes=19052 Pune to Shirdi Cab & Tempo Traveller | Darsh
+  /shirdi-darshan-from-pune-one-day.html    http=200 bytes=17532 Shirdi Darshan from Pune in One Day | Comple
+  /tempo-traveller-pune.html                http=200 bytes=19432 Tempo Traveller on Hire in Pune | 12–17 Se
+  /tour-packages.html                       http=200 bytes=19498 All India Tour Packages from Pune | Family, 
+  pages not serving: 0
+
+== assets / app files served with correct types ==
+  manifest.json                           http=200 type=application/json; charset=utf-8 bytes=1013
+  sw.js                                   http=200 type=application/javascript; charset=utf-8 bytes=2537
+  sitemap.xml                             http=200 type=application/xml bytes=3419
+  robots.txt                              http=200 type=text/plain; charset=utf-8 bytes=162
+  404.html                                http=200 type=text/html; charset=utf-8 bytes=2865
+  post-ads.html                           http=200 type=text/html; charset=utf-8 bytes=20990
+  marketing/print-kit.html                http=200 type=text/html; charset=utf-8 bytes=12831
+  assets/share.js                         http=200 type=application/javascript; charset=utf-8 bytes=2246
+  assets/icon-192.png                     http=200 type=image/png bytes=29436
+  assets/icon-512.png                     http=200 type=image/png bytes=198937
+  assets/apple-touch-icon.png             http=200 type=image/png bytes=26431
+  assets/qr-whatsapp.png                  http=200 type=image/png bytes=1164
+  assets/qr-website.png                   http=200 type=image/png bytes=1183
+  assets/ads/ad-main-square.png           http=200 type=image/png bytes=575961
+  assets/ads/ad-matchcab-square.png       http=200 type=image/png bytes=589097
+  assets/ads/ad-airport-square.png        http=200 type=image/png bytes=583916
+  assets/ads/ad-nosurge-square.png        http=200 type=image/png bytes=573268
+  assets/ads/ad-status-fares.png          http=200 type=image/png bytes=846718
+  assets/ads/ad-status-group.png          http=200 type=image/png bytes=871039
+  _headers                                http=200 type=application/octet-stream bytes=2398
+
+== external assets the page needs ==
+  https://images.unsplash.com/photo-1533473359331-0135ef1b58bf          http=200 type=image/jpeg
+  https://images.unsplash.com/photo-1544620347-c4fd4a3d5957             http=200 type=image/jpeg
+  https://images.unsplash.com/photo-1570125909232-eb263c188f7e          http=200 type=image/jpeg
+
+RESULT: PASS
+
+== security headers actually served by GitHub Pages (informational) ==
+strict-transport-security: max-age=31556952

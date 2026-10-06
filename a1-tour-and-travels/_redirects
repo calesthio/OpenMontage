@@ -1,0 +1,13 @@
+# =============================================================
+# Netlify / Cloudflare Pages redirect rules (free hosts).
+# Keeps internal documentation out of the public site and sends
+# anyone who lands on a wrong URL to the branded 404 page, which
+# still offers Call + WhatsApp.
+# =============================================================
+/marketing/*            /404.html   404
+/README.md              /404.html   404
+/SECURITY.md            /404.html   404
+/DOMAIN.md              /404.html   404
+/domains/*              /404.html   404
+/set-url.sh             /404.html   404
+/*.bak                  /404.html   404

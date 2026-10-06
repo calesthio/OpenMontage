@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://snazim0345.github.io/OpenMontage/sitemap.xml

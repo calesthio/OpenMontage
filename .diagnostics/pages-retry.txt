@@ -1,0 +1,10 @@
+pages retry — Tue Oct  6 01:48:21 UTC 2026
+-- GET /pages --
+{"url":"https://api.github.com/repos/snazim0345/OpenMontage/pages","status":null,"cname":null,"custom_404":false,"html_url":"https://snazim0345.github.io/OpenMontage/","build_type":"workflow","source":{"branch":"main","path":"/"},"public":true,"protected_domain_state":null,"pending_domain_unverified_at":null,"https_enforced":true}-- POST build_type=workflow --
+{"message":"Resource not accessible by integration","documentation_url":"https://docs.github.com/rest/pages/pages#create-a-apiname-pages-site","status":"403"}gh: Resource not accessible by integration (HTTP 403)
+-- POST source=branch,path --
+{"message":"Resource not accessible by integration","documentation_url":"https://docs.github.com/rest/pages/pages#create-a-apiname-pages-site","status":"403"}gh: Resource not accessible by integration (HTTP 403)
+-- PUT source=branch,path --
+{"message":"Resource not accessible by integration","documentation_url":"https://docs.github.com/rest/pages/pages#update-information-about-a-apiname-pages-site","status":"403"}gh: Resource not accessible by integration (HTTP 403)
+-- repo has_pages --
+true

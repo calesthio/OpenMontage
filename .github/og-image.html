@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>A1 Tour and Travels — social share image</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap" rel="stylesheet" />
+<style>
+  /* 1200 x 630 — the exact size WhatsApp / Facebook / Twitter want */
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{
+    width:1200px; height:630px; overflow:hidden; position:relative;
+    font-family:'Poppins',Arial,sans-serif; color:#fff;
+    background:linear-gradient(135deg,#051d47 0%,#0B3D91 55%,#1250b8 100%);
+  }
+  .glow{ position:absolute; width:560px; height:560px; border-radius:50%; right:-140px; top:-160px;
+         background:radial-gradient(circle,rgba(255,165,0,.34),transparent 65%); }
+  .glow2{ position:absolute; width:420px; height:420px; border-radius:50%; left:-120px; bottom:-180px;
+          background:radial-gradient(circle,rgba(37,211,102,.20),transparent 68%); }
+  .wrap{ position:relative; z-index:2; padding:56px 64px; height:100%; display:flex; flex-direction:column; justify-content:space-between; }
+  .brand{ display:flex; align-items:center; gap:16px; }
+  .mark{ width:62px; height:62px; border-radius:18px; background:linear-gradient(140deg,#FFA500,#e08c00);
+         display:grid; place-items:center; font-size:30px; }
+  .brand b{ font-size:30px; font-weight:800; letter-spacing:-.02em; }
+  .brand small{ display:block; font-size:14px; letter-spacing:.22em; text-transform:uppercase; color:#FFA500; font-weight:600; }
+  h1{ font-size:74px; font-weight:800; line-height:1.06; letter-spacing:-.035em; }
+  h1 em{ font-style:normal; color:#FFA500; }
+  .sub{ font-size:26px; color:#cfdffa; margin-top:14px; font-weight:600; }
+  .row{ display:flex; align-items:flex-end; justify-content:space-between; gap:30px; }
+  .prices{ display:flex; gap:14px; }
+  .p{ background:rgba(255,255,255,.12); border:1.5px solid rgba(255,255,255,.24); border-radius:16px; padding:14px 20px; }
+  .p b{ display:block; font-size:14px; font-weight:600; color:#cfdffa; letter-spacing:.06em; }
+  .p span{ font-size:30px; font-weight:800; color:#fff; }
+  .p.hi span{ color:#FFA500; }
+  .call{ text-align:right; }
+  .call .n{ font-size:46px; font-weight:800; letter-spacing:-.02em; }
+  .call small{ display:block; font-size:15px; letter-spacing:.2em; text-transform:uppercase; color:#cfdffa; font-weight:600; }
+</style>
+</head>
+<body>
+  <div class="glow"></div><div class="glow2"></div>
+  <div class="wrap">
+    <div class="brand">
+      <div class="mark">🚖</div>
+      <div><b>A1 Tour and Travels</b><small>Pune ↔ Mumbai · 24x7</small></div>
+    </div>
+    <div>
+      <h1>Pune ↔ Mumbai<br /><em>Cabs &amp; Buses</em></h1>
+      <div class="sub">Match Cabs · AC Bus · Tempo Traveller · All India Tours</div>
+    </div>
+    <div class="row">
+      <div class="prices">
+        <div class="p hi"><b>SEDAN</b><span>₹2500+</span></div>
+        <div class="p"><b>SUV</b><span>₹3500+</span></div>
+        <div class="p"><b>BUS SEAT</b><span>₹500+</span></div>
+      </div>
+      <div class="call">
+        <div class="n">7888007234</div>
+        <small>Call / WhatsApp 24x7</small>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

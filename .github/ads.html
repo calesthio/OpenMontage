@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>A1 Tour and Travels — ad creatives</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&display=swap" rel="stylesheet" />
+<style>
+/* =============================================================
+   AD CREATIVES — rendered to PNG by CI, one image per .ad block.
+   Sizes here are 1080x1080 (Instagram/Facebook square) and
+   1080x1920 (WhatsApp status / Instagram story).
+   Everything is free: no design tool, no template purchase.
+   ============================================================= */
+*{ margin:0; padding:0; box-sizing:border-box; }
+body{ font-family:'Poppins',Arial,sans-serif; background:#dfe6f2; }
+
+.ad{
+  position:relative; overflow:hidden; color:#fff; margin:0 auto 40px;
+  background:linear-gradient(150deg,#051d47 0%,#0B3D91 52%,#1250b8 100%);
+  display:flex; flex-direction:column; justify-content:space-between;
+}
+.square{ width:1080px; height:1080px; padding:72px 68px; }
+.story{ width:1080px; height:1920px; padding:120px 78px; }
+
+.glow{ position:absolute; border-radius:50%; pointer-events:none; }
+.glow--o{ width:620px; height:620px; right:-180px; top:-200px;
+          background:radial-gradient(circle,rgba(255,165,0,.36),transparent 65%); }
+.glow--g{ width:520px; height:520px; left:-200px; bottom:-220px;
+          background:radial-gradient(circle,rgba(37,211,102,.22),transparent 68%); }
+
+.inner{ position:relative; z-index:2; display:flex; flex-direction:column; height:100%; justify-content:space-between; }
+
+.brand{ display:flex; align-items:center; gap:20px; }
+.brand__mark{ width:76px; height:76px; border-radius:22px; display:grid; place-items:center; font-size:38px;
+              background:linear-gradient(140deg,#FFA500,#e08c00); box-shadow:0 10px 26px rgba(0,0,0,.28); }
+.brand b{ font-size:34px; font-weight:800; letter-spacing:-.02em; display:block; line-height:1.1; }
+.brand small{ font-size:16px; letter-spacing:.2em; text-transform:uppercase; color:#FFA500; font-weight:700; }
+
+.headline{ font-size:96px; font-weight:800; line-height:1.02; letter-spacing:-.04em; }
+.story .headline{ font-size:118px; }
+.headline em{ font-style:normal; color:#FFA500; }
+
+.sub{ font-size:34px; color:#cfdffa; font-weight:600; margin-top:22px; line-height:1.35; }
+.story .sub{ font-size:40px; }
+
+.fares{ display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:34px; }
+.fares div{ background:rgba(255,255,255,.12); border:2px solid rgba(255,255,255,.22);
+            border-radius:20px; padding:22px 26px; }
+.fares b{ display:block; font-size:19px; font-weight:600; color:#cfdffa; letter-spacing:.04em; }
+.fares span{ font-size:44px; font-weight:800; letter-spacing:-.02em; }
+.fares .hot span{ color:#FFA500; }
+
+.strip{ display:flex; flex-wrap:wrap; gap:14px; margin-top:30px; }
+.strip i{ font-style:normal; font-size:22px; font-weight:600; background:rgba(255,255,255,.1);
+          border:1.5px solid rgba(255,255,255,.2); padding:12px 22px; border-radius:999px; }
+
+.foot{ display:flex; align-items:flex-end; justify-content:space-between; gap:30px; }
+.call .n{ font-size:76px; font-weight:800; letter-spacing:-.03em; line-height:1; }
+.story .call .n{ font-size:96px; }
+.call small{ display:block; font-size:20px; letter-spacing:.18em; text-transform:uppercase;
+             color:#cfdffa; font-weight:700; margin-top:10px; }
+.badge{ background:#FFA500; color:#3a2500; font-weight:800; font-size:24px; padding:16px 30px;
+        border-radius:999px; white-space:nowrap; }
+.story .badge{ font-size:30px; padding:20px 38px; }
+.cta-row{ display:flex; gap:18px; margin-top:26px; }
+.cta-row span{ flex:1; text-align:center; font-size:26px; font-weight:700; padding:26px 10px; border-radius:999px; }
+.cta-row .a{ background:linear-gradient(135deg,#28d17c,#12a35d); }
+.cta-row .b{ background:linear-gradient(135deg,#31e07a,#128C7E); }
+</style>
+</head>
+<body>
+
+<!-- 1. MAIN SQUARE — fares + number -->
+<div class="ad square" id="ad-main-square">
+  <div class="glow glow--o"></div><div class="glow glow--g"></div>
+  <div class="inner">
+    <div class="brand">
+      <div class="brand__mark">🚖</div>
+      <div><b>A1 Tour and Travels</b><small>Pune ↔ Mumbai · 24x7</small></div>
+    </div>
+    <div>
+      <div class="headline">Pune → Mumbai<br /><em>Cabs &amp; Buses</em></div>
+      <div class="sub">Fixed fares. No surge. Doorstep pickup.</div>
+      <div class="fares">
+        <div class="hot"><b>SEDAN · 4 SEATER</b><span>₹2500+</span></div>
+        <div><b>SUV · 7 SEATER</b><span>₹3500+</span></div>
+        <div><b>TEMPO · 17 SEATER</b><span>₹6000+</span></div>
+        <div class="hot"><b>AC BUS · PER SEAT</b><span>₹500+</span></div>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="call"><div class="n">7888007234</div><small>Call / WhatsApp 24x7</small></div>
+      <div class="badge">Toll &amp; parking included</div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. MATCH CAB SQUARE -->
+<div class="ad square" id="ad-matchcab-square">
+  <div class="glow glow--o"></div><div class="glow glow--g"></div>
+  <div class="inner">
+    <div class="brand">
+      <div class="brand__mark">🤝</div>
+      <div><b>Match Cab</b><small>Share cab · Pune ⇄ Mumbai</small></div>
+    </div>
+    <div>
+      <div class="headline">Travelling<br />alone?<br /><em>Pay per seat.</em></div>
+      <div class="sub">Do not pay for the whole cab. Share it — departures every hour, both directions.</div>
+      <div class="fares">
+        <div class="hot"><b>PER SEAT</b><span>₹500+</span></div>
+        <div><b>DEPARTURES</b><span>Hourly</span></div>
+      </div>
+      <div class="strip"><i>✓ AC car, not a coach</i><i>✓ Verified drivers</i></div>
+    </div>
+    <div class="foot">
+      <div class="call"><div class="n">7888007234</div><small>WhatsApp us your route</small></div>
+      <div class="badge">Seats filling daily</div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. AIRPORT SQUARE -->
+<div class="ad square" id="ad-airport-square">
+  <div class="glow glow--o"></div><div class="glow glow--g"></div>
+  <div class="inner">
+    <div class="brand">
+      <div class="brand__mark">✈️</div>
+      <div><b>Airport Transfers</b><small>Pune (PNQ) · Mumbai (BOM)</small></div>
+    </div>
+    <div>
+      <div class="headline">2 AM flight?<br /><em>We are already<br />outside your gate.</em></div>
+      <div class="sub">24x7 pickups with flight-timing tracking. A delayed landing costs you nothing.</div>
+      <div class="fares">
+        <div class="hot"><b>PUNE → MUMBAI AIRPORT</b><span>₹2500+</span></div>
+        <div><b>PUNE CITY → PNQ</b><span>₹900+</span></div>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="call"><div class="n">7888007234</div><small>No night surcharge</small></div>
+      <div class="badge">Flight tracking included</div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. NO SURGE / TRUST SQUARE -->
+<div class="ad square" id="ad-nosurge-square">
+  <div class="glow glow--o"></div><div class="glow glow--g"></div>
+  <div class="inner">
+    <div class="brand">
+      <div class="brand__mark">🛡️</div>
+      <div><b>A1 Tour and Travels</b><small>Pune ↔ Mumbai · 24x7</small></div>
+    </div>
+    <div>
+      <div class="headline">No <em>surge</em>.<br />No hidden<br />charges.</div>
+      <div class="sub">The fare we quote is the fare you pay — at 2 AM as at 2 PM.</div>
+      <div class="strip"><i>✓ Verified drivers</i><i>✓ Sanitised vehicles</i><i>✓ 5000+ bookings</i><i>✓ Toll included</i></div>
+    </div>
+    <div class="foot">
+      <div class="call"><div class="n">7888007234</div><small>Call / WhatsApp 24x7</small></div>
+    </div>
+  </div>
+</div>
+
+<!-- 5. WHATSAPP STATUS / STORY — fares -->
+<div class="ad story" id="ad-status-fares">
+  <div class="glow glow--o"></div><div class="glow glow--g"></div>
+  <div class="inner">
+    <div class="brand">
+      <div class="brand__mark">🚖</div>
+      <div><b>A1 Tour and Travels</b><small>Pune ↔ Mumbai · 24x7</small></div>
+    </div>
+    <div>
+      <div class="headline">Pune →<br />Mumbai<br /><em>Book today</em></div>
+      <div class="sub">Doorstep pickup. Toll, fuel &amp; parking included. No surge, ever.</div>
+      <div class="fares" style="grid-template-columns:1fr">
+        <div class="hot"><b>SEDAN · 4 SEATER</b><span>₹2500+</span></div>
+        <div><b>SUV · 7 SEATER</b><span>₹3500+</span></div>
+        <div><b>TEMPO TRAVELLER · 17</b><span>₹6000+</span></div>
+        <div class="hot"><b>AC BUS · PER SEAT</b><span>₹500+</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="cta-row"><span class="a">📞 Call now</span><span class="b">💬 WhatsApp</span></div>
+      <div class="call" style="text-align:center;margin-top:34px">
+        <div class="n">7888007234</div><small>Available 24x7 · all days</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 6. STORY — group / tempo traveller -->
+<div class="ad story" id="ad-status-group">
+  <div class="glow glow--o"></div><div class="glow glow--g"></div>
+  <div class="inner">
+    <div class="brand">
+      <div class="brand__mark">🚐</div>
+      <div><b>Group travel</b><small>Tempo Traveller · 12–17 seats</small></div>
+    </div>
+    <div>
+      <div class="headline">Sog<br />ekatri<br /><em>prayan kara.</em></div>
+      <div class="sub">One vehicle instead of four cars. Push-back seats, roof carrier, AC — and it works out cheaper per head.</div>
+      <div class="fares">
+        <div class="hot"><b>PUNE ⇄ MUMBAI</b><span>₹6000+</span></div>
+        <div><b>PER PERSON</b><span>Cheaper*</span></div>
+      </div>
+      <div class="strip"><i>🛕 Shirdi &amp; Nashik</i><i>💍 Weddings</i><i>🏢 Corporate</i><i>🎒 School trips</i></div>
+    </div>
+    <div>
+      <div class="cta-row"><span class="a">📞 7888007234</span><span class="b">💬 WhatsApp</span></div>
+      <div class="call" style="text-align:center;margin-top:30px">
+        <div class="n">A1 Tour and Travels</div><small>*than multiple cabs</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

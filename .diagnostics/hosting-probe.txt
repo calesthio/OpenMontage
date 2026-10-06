@@ -1,0 +1,25 @@
+sha: 5b5b72aae3763a55403d78e946ba276cedf24f92
+
+===== A. Free CDNs: is the site served as a REAL web page? =====
+https://raw.githubusercontent.com/snazim0345/OpenMontage/5b5b72aae3763a55403d78e946ba276cedf24f92/a1-tour-and-travels/index.html  http=200 type=text/plain; charset=utf-8 size=80407
+https://cdn.jsdelivr.net/gh/snazim0345/OpenMontage@5b5b72aae3763a55403d78e946ba276cedf24f92/a1-tour-and-travels/index.html  http=200 type=text/plain; charset=utf-8 size=80407
+https://cdn.jsdelivr.net/gh/snazim0345/OpenMontage@arena/54180390-openmontage/a1-tour-and-travels/index.html  http=200 type=text/plain; charset=utf-8 size=80407
+https://raw.githack.com/snazim0345/OpenMontage/5b5b72aae3763a55403d78e946ba276cedf24f92/a1-tour-and-travels/index.html  http=200 type=text/html; charset=utf-8 size=80407
+https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html  http=200 type=text/html; charset=utf-8 size=80407
+https://cdn.statically.io/gh/snazim0345/OpenMontage/5b5b72aae3763a55403d78e946ba276cedf24f92/a1-tour-and-travels/index.html  http=200 type=text/plain; charset=utf-8 size=32768
+   curl-error
+
+===== B. GitHub Pages API with a working token =====
+--- GET /pages ---
+{"message":"Not Found","documentation_url":"https://docs.github.com/rest/pages/pages#get-a-apiname-pages-site","status":"404"}gh: Not Found (HTTP 404)
+--- POST /pages ---
+{"message":"Resource not accessible by integration","documentation_url":"https://docs.github.com/rest/pages/pages#create-a-apiname-pages-site","status":"403"}gh: Resource not accessible by integration (HTTP 403)
+--- repo state ---
+{"fork":true,"has_pages":false,"visibility":"public"}
+--- actions perms ---
+{"message":"Resource not accessible by integration","documentation_url":"https://docs.github.com/rest/actions/permissions#get-github-actions-permissions-for-a-repository","status":"403"}gh: Resource not accessible by integration (HTTP 403)
+--- workflow perms ---
+{"message":"Resource not accessible by integration","documentation_url":"https://docs.github.com/rest/actions/permissions#get-default-workflow-permissions-for-a-repository","status":"403"}gh: Resource not accessible by integration (HTTP 403)
+
+===== C. Does a fresh enablement attempt now stick? =====
+false

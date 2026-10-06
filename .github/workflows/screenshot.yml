@@ -1,0 +1,144 @@
+name: Site audit (real browser)
+
+# Runs real headless Chromium against the live site:
+#   • generates the branded 1200x630 social share image from .github/og-image.html
+#   • loads every page at desktop + mobile width
+#   • checks titles, console errors, horizontal overflow, and that every internal
+#     link and every asset actually returns 200
+# Results are committed to .diagnostics/ so the outcome is verifiable.
+
+on:
+  push:
+    branches: [arena/54180390-openmontage]
+    paths: ['audit-trigger.txt', 'a1-tour-and-travels/**', '.github/og-image.html']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright + Chromium
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-audit --no-fund playwright@1.47.0
+          npx playwright install --with-deps chromium
+
+      - name: Generate the social share image (1200x630)
+        run: |
+          cat > og.mjs <<'JS'
+          import { chromium } from 'playwright';
+          const b = await chromium.launch();
+          const p = await b.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 });
+          await p.goto('file://' + process.cwd() + '/.github/og-image.html', { waitUntil: 'networkidle' });
+          await p.waitForTimeout(1800);
+          await p.screenshot({ path: 'a1-tour-and-travels/assets/og-image.png' });
+          await b.close();
+          console.log('og-image.png written');
+          JS
+          node og.mjs
+          ls -la a1-tour-and-travels/assets/og-image.png
+          python3 -c "
+          import struct
+          d=open('a1-tour-and-travels/assets/og-image.png','rb').read(33)
+          w,h=struct.unpack('>II', d[16:24])
+          print(f'og-image dimensions: {w}x{h}', 'OK' if (w,h)==(1200,630) else 'WRONG SIZE')
+          "
+
+      - name: Audit every page in a real browser
+        env:
+          SITE: https://snazim0345.github.io/OpenMontage
+        run: |
+          cat > audit.mjs <<'JS'
+          import { chromium } from 'playwright';
+          import fs from 'fs';
+
+          const site = process.env.SITE;
+          const pages = fs.readdirSync('a1-tour-and-travels').filter(f => f.endsWith('.html'));
+          const browser = await chromium.launch();
+          const report = [];
+
+          for (const file of pages) {
+            const url = `${site}/${file === 'index.html' ? '' : file}`;
+            for (const vp of [{ n: 'desktop', w: 1440, h: 900 }, { n: 'mobile', w: 390, h: 844 }]) {
+              const ctx = await browser.newContext({ viewport: { width: vp.w, height: vp.h }, isMobile: vp.n === 'mobile' });
+              const page = await ctx.newPage();
+              const errors = [];
+              page.on('pageerror', e => errors.push('pageerror: ' + e.message));
+              page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
+              let status = 0;
+              try {
+                const resp = await page.goto(url, { waitUntil: 'load', timeout: 60000 });
+                status = resp ? resp.status() : 0;
+                await page.waitForTimeout(1200);
+              } catch (e) { errors.push('goto: ' + String(e).slice(0, 100)); }
+              const info = await page.evaluate(() => ({
+                title: document.title,
+                titleLen: document.title.length,
+                desc: (document.querySelector('meta[name="description"]') || {}).content || '',
+                h1: [...document.querySelectorAll('h1')].map(h => h.textContent.trim()),
+                h2count: document.querySelectorAll('h2').length,
+                canonical: (document.querySelector('link[rel="canonical"]') || {}).href || '',
+                words: (document.body.innerText || '').split(/\s+/).filter(Boolean).length,
+                overflow: document.documentElement.scrollWidth > window.innerWidth + 1,
+                imgs: [...document.images].length,
+                brokenImgs: [...document.images].filter(i => i.complete && i.naturalWidth === 0).length,
+                tel: document.querySelectorAll('a[href^="tel:"]').length,
+                wa: document.querySelectorAll('a[href*="wa.me"]').length,
+              }));
+              report.push({ file, vp: vp.n, status, errors, ...info });
+              await ctx.close();
+            }
+          }
+          await browser.close();
+
+          // ---- HTTP status of every internal link + asset ----
+          const links = new Set();
+          for (const f of pages) {
+            const html = fs.readFileSync('a1-tour-and-travels/' + f, 'utf8');
+            for (const m of html.matchAll(/href="([^"#][^"]*?)"/g)) {
+              const h = m[1];
+              if (!h.startsWith('http') && !h.startsWith('mailto') && !h.startsWith('tel') && !h.startsWith('data:')) links.add(h);
+            }
+          }
+          const missing = [];
+          for (const l of links) {
+            const r = await fetch(`${site}/${l}`, { method: 'HEAD' }).catch(() => null);
+            if (!r || !r.ok) missing.push(`${l} -> ${r ? r.status : 'fetch error'}`);
+          }
+
+          console.log(JSON.stringify({ pages: report, brokenInternalLinks: missing }, null, 1));
+          const bad = report.filter(r => r.status !== 200 || r.errors.length || r.overflow || r.brokenImgs);
+          console.log('\n=== SUMMARY ===');
+          console.log(`page-viewport combinations checked: ${report.length}`);
+          console.log(`problems: ${bad.length}`);
+          bad.forEach(b => console.log(`  ${b.file} [${b.vp}] status=${b.status} errors=${b.errors.length} overflow=${b.overflow} brokenImgs=${b.brokenImgs}`));
+          console.log(`broken internal links: ${missing.length}`);
+          missing.forEach(m => console.log('  ' + m));
+          JS
+          node audit.mjs > /tmp/audit.txt 2>&1
+          mkdir -p .diagnostics
+          cp /tmp/audit.txt .diagnostics/site-audit.txt
+          tail -40 /tmp/audit.txt
+
+      - name: Commit results
+        run: |
+          BR=arena/54180390-openmontage
+          git config user.name site-bot
+          git config user.email site-bot@users.noreply.github.com
+          git add -f .diagnostics a1-tour-and-travels/assets/og-image.png 2>/dev/null
+          git commit -q -m "audit: full-site browser audit + social share image" || echo "no changes"
+          for attempt in 1 2 3 4 5; do
+            if git pull --rebase --autostash origin "$BR" >/dev/null 2>&1 && git push origin HEAD:"$BR" 2>&1 | tail -2; then
+              echo "push attempt $attempt: OK"; break
+            else
+              echo "push attempt $attempt: rejected, retrying..."; sleep 6
+            fi
+          done

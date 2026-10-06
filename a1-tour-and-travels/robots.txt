@@ -1,0 +1,8 @@
+# A1 Tour and Travels
+User-agent: *
+Allow: /
+
+# Do not let crawlers index these
+Disallow: /*?text=
+
+Sitemap: https://snazim0345.github.io/OpenMontage/sitemap.xml

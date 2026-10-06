@@ -1,0 +1,53 @@
+name: Deploy site (GitHub Pages)
+
+# Publishes the website to https://snazim0345.github.io/OpenMontage/
+# Pages has build_type=workflow, so this workflow's artifact IS the site.
+# Runs automatically on every change to the site folder.
+
+on:
+  push:
+    branches: [arena/54180390-openmontage]
+    paths:
+      - 'a1-tour-and-travels/**'
+      - '.github/workflows/deploy-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Keep internal docs out of the published site
+        run: |
+          rm -rf a1-tour-and-travels/domains a1-tour-and-travels/set-url.sh
+          rm -f a1-tour-and-travels/build-pages.py a1-tour-and-travels/build-blog.py
+          find a1-tour-and-travels -maxdepth 1 -name '*.md' -delete
+          find a1-tour-and-travels/marketing -name '*.md' -delete
+          echo "publishing:"; find a1-tour-and-travels -type f | sort
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: a1-tour-and-travels
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+      - name: Confirm what went live
+        if: always()
+        run: |
+          echo "page_url: ${{ steps.deploy.outputs.page_url }}"
+          echo "status:   ${{ steps.deploy.outcome }}"

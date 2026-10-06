@@ -1,0 +1,41 @@
+name: branded free URL
+
+# Goal: a real, branded, live web address for A1 Tour and Travels at zero cost,
+# with no signup and no involvement from the site owner.
+# All probe logic lives in .github/scripts/branded_url.py to keep YAML simple.
+
+on:
+  push:
+    branches: [arena/54180390-openmontage]
+    paths: ['branded-url-trigger.txt']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  attempt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Attempt account-free branded deployment
+        run: python3 .github/scripts/branded_url.py
+
+      - name: Try to claim the branded short link (no account needed)
+        run: python3 .github/scripts/shortlinks.py
+
+      - name: Commit diagnostics
+        run: |
+          BR=arena/54180390-openmontage
+          git config user.name site-bot
+          git config user.email site-bot@users.noreply.github.com
+          git add -f .diagnostics
+          git commit -q -m "probe: account-free branded URL attempt" || echo "no changes"
+          for a in 1 2 3 4 5; do
+            if git pull --rebase --autostash origin "$BR" >/dev/null 2>&1 && git push origin HEAD:"$BR" 2>&1 | tail -1; then
+              echo "push $a OK"; break
+            else
+              sleep 6
+            fi
+          done

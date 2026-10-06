@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en-IN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Free ad pack — A1 Tour and Travels</title>
+<!-- Owner-only tool page: kept out of search results on purpose. -->
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#0B3D91" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; object-src 'none'; upgrade-insecure-requests" />
+<link rel="icon" href="assets/favicon-32.png" sizes="32x32" />
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  :root{ --blue:#0B3D91; --blue2:#1250b8; --orange:#FFA500; --ink:#0d1b34; --soft:#f3f6fc; }
+  body{
+    font-family:'Poppins',system-ui,Arial,sans-serif; color:var(--ink); background:var(--soft);
+    -webkit-text-size-adjust:100%; line-height:1.6;
+  }
+  a{ color:var(--blue); }
+  .top{
+    background:linear-gradient(150deg,#072a66,var(--blue) 55%,var(--blue2)); color:#fff;
+    padding:26px 18px 30px; text-align:center;
+  }
+  .top h1{ font-size:clamp(1.35rem,4.6vw,2rem); letter-spacing:-.02em; line-height:1.25; }
+  .top h1 span{ color:var(--orange); }
+  .top p{ color:#c8d8f6; font-size:.93rem; margin-top:10px; }
+  .shell{ max-width:940px; margin:0 auto; padding:20px 14px 70px; }
+  .note{
+    background:#fff7e6; border:1px solid #ffd98a; border-left:5px solid var(--orange);
+    border-radius:14px; padding:15px 16px; margin:0 0 18px; font-size:.9rem;
+  }
+  .note strong{ color:#7a4b00; }
+  h2.sec{
+    font-size:1.06rem; margin:30px 0 12px; display:flex; align-items:center; gap:9px;
+    letter-spacing:-.01em;
+  }
+  h2.sec:first-of-type{ margin-top:6px; }
+  h2.sec .n{
+    background:var(--blue); color:#fff; width:26px; height:26px; border-radius:8px; flex:0 0 26px;
+    display:grid; place-items:center; font-size:.8rem;
+  }
+  .cards{ display:grid; gap:16px; grid-template-columns:1fr; }
+  @media (min-width:660px){ .cards{ grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); } }
+  .ad{ background:#fff; border:1px solid #e2e8f5; border-radius:16px; overflow:hidden; display:flex; flex-direction:column; }
+  .ad__shot{ background:#eef2fb; padding:10px; display:grid; place-items:center; }
+  .ad__shot img{ width:100%; height:auto; border-radius:9px; display:block; box-shadow:0 6px 18px rgba(11,61,145,.14); }
+  .ad__body{ padding:13px 14px 15px; display:flex; flex-direction:column; gap:10px; flex:1; }
+  .ad__title{ font-weight:700; font-size:.95rem; }
+  .ad__meta{ font-size:.76rem; color:#5d7096; letter-spacing:.02em; text-transform:uppercase; font-weight:600; }
+  .ad__caption{
+    font-size:.86rem; background:#f7f9fe; border:1px dashed #cdd9ef; border-radius:11px;
+    padding:10px 11px; white-space:pre-wrap; word-break:break-word; flex:1;
+  }
+  .row{ display:flex; flex-wrap:wrap; gap:8px; }
+  .b{
+    display:inline-flex; align-items:center; justify-content:center; gap:6px; flex:1 1 auto;
+    min-height:44px; padding:10px 14px; border-radius:11px; font-size:.87rem; font-weight:600;
+    text-decoration:none; border:none; cursor:pointer; font-family:inherit; transition:transform .15s ease, filter .15s ease;
+  }
+  .b:active{ transform:scale(.97); }
+  .b--dl{ background:var(--blue); color:#fff; }
+  .b--wa{ background:#25D366; color:#04301c; }
+  .b--cp{ background:#eaf0fd; color:var(--blue); border:1px solid #c9d8f5; }
+  .b--ghost{ background:#fff; color:var(--blue); border:1px solid #c9d8f5; }
+  .b.done{ background:#12a35d; color:#fff; }
+  .links{ display:grid; gap:10px; }
+  .link{ background:#fff; border:1px solid #e2e8f5; border-radius:14px; padding:14px; font-size:.9rem; }
+  .link b{ display:block; margin-bottom:4px; }
+  .link span{ color:#5d7096; font-size:.85rem; }
+  .link a{ font-weight:600; }
+  .checklist{ list-style:none; display:grid; gap:9px; }
+  .checklist li{
+    background:#fff; border:1px solid #e2e8f5; border-radius:13px; padding:12px 14px; font-size:.9rem;
+    display:flex; gap:11px; align-items:flex-start;
+  }
+  .checklist .tick{ color:#12a35d; font-weight:800; flex:0 0 auto; }
+  .checklist .big{ font-weight:700; }
+  .checklist .sub{ display:block; color:#5d7096; font-size:.83rem; margin-top:2px; }
+  .qr{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; background:#fff; border:1px solid #e2e8f5; border-radius:14px; padding:14px; }
+  .qr img{ width:118px; height:118px; }
+  .foot{ text-align:center; font-size:.82rem; color:#67789b; padding:0 14px 40px; }
+  .foot a{ font-weight:600; }
+  .live{ display:inline-flex; gap:7px; align-items:center; font-size:.82rem; color:#0f7a45; font-weight:700; }
+  .live i{ width:8px; height:8px; border-radius:50%; background:#12a35d; display:inline-block; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>Free ad pack for <span>A1 Tour and Travels</span></h1>
+  <p>Six ready-made ads + ready-to-paste captions. Download an image, copy a caption, post it anywhere — total cost ₹0.</p>
+</div>
+
+<div class="shell">
+
+  <div class="note">
+    <strong>How to use this on your phone:</strong> tap <b>Download</b> to save the image, tap <b>Copy caption</b>,
+    then open WhatsApp / Facebook / Instagram and post. The caption is already written for you — just paste.
+    Everything on this page is free forever; no ads account, no card, no payment.
+  </div>
+
+  <h2 class="sec"><span class="n">1</span> Your website links (paste these anywhere)</h2>
+  <div class="links">
+    <div class="link">
+      <b>Main website</b>
+      <span>Use this in WhatsApp, Facebook, Instagram bio, printed cards, shop board.</span>
+      <a href="https://snazim0345.github.io/OpenMontage/">https://snazim0345.github.io/OpenMontage/</a>
+    </div>
+    <div class="link">
+      <b>Short link (easier to type into any form)</b>
+      <span>Same website, shorter address — good for directories and classifieds.</span>
+      <a href="https://tinyurl.com/a1tourstravels">https://tinyurl.com/a1tourstravels</a>
+    </div>
+    <div class="link">
+      <b>Direct booking message</b>
+      <span>Opens WhatsApp with the booking message already typed.</span>
+      <a href="https://wa.me/917888007234?text=Hi%20A1%20Tour%20and%20Travels%2C%20I%20want%20to%20book%20a%20Pune-Mumbai%20cab%2Fbus.">https://wa.me/917888007234</a>
+    </div>
+  </div>
+
+  <h2 class="sec"><span class="n">2</span> Download the ads</h2>
+  <div class="cards" id="cards">
+
+    <article class="ad">
+      <div class="ad__shot"><img src="assets/ads/ad-main-square.png" alt="Ad: Pune to Mumbai cabs and buses, fixed fares" loading="lazy" width="1080" height="1080" /></div>
+      <div class="ad__body">
+        <div class="ad__title">Main fares ad</div>
+        <div class="ad__meta">Square · 1080 × 1080 · WhatsApp, Facebook, Instagram</div>
+        <div class="ad__caption" data-caption="🚖 Pune ⇄ Mumbai Cabs &amp; Buses — A1 Tour and Travels
+
+Fixed fares, no surge pricing, doorstep pickup.
+• Sedan (4 seater) ₹2500+
+• SUV (7 seater) ₹3500+
+• Tempo Traveller (17 seater) ₹6000+
+• AC Bus ₹500+ per seat
+
+Toll &amp; parking included. 24x7 service.
+📞 Call / WhatsApp: 7888007234
+🌐 Book here: https://tinyurl.com/a1tourstravels">🚖 Pune ⇄ Mumbai Cabs &amp; Buses — A1 Tour and Travels
+
+Fixed fares, no surge pricing, doorstep pickup.
+• Sedan (4 seater) ₹2500+
+• SUV (7 seater) ₹3500+
+• Tempo Traveller (17 seater) ₹6000+
+• AC Bus ₹500+ per seat
+
+Toll &amp; parking included. 24x7 service.
+📞 Call / WhatsApp: 7888007234
+🌐 Book here: https://tinyurl.com/a1tourstravels</div>
+        <div class="row">
+          <a class="b b--dl" href="assets/ads/ad-main-square.png" download>⬇ Download</a>
+          <button class="b b--cp" type="button">Copy caption</button>
+          <a class="b b--wa" data-share="wa" href="https://wa.me/?text=%F0%9F%9A%96%20Pune%20%E2%87%84%20Mumbai%20Cabs%20%26%20Buses%20%E2%80%94%20A1%20Tour%20and%20Travels%0A%0AFixed%20fares%2C%20no%20surge%20pricing%2C%20doorstep%20pickup.%0A%E2%80%A2%20Sedan%20%284%20seater%29%20%E2%82%B92500%2B%0A%E2%80%A2%20SUV%20%287%20seater%29%20%E2%82%B93500%2B%0A%E2%80%A2%20Tempo%20Traveller%20%2817%20seater%29%20%E2%82%B96000%2B%0A%E2%80%A2%20AC%20Bus%20%E2%82%B9500%2B%20per%20seat%0A%0AToll%20%26%20parking%20included.%2024x7%20service.%0A%F0%9F%93%9E%20Call%20%2F%20WhatsApp%3A%207888007234%0A%F0%9F%8C%90%20Book%20here%3A%20https%3A%2F%2Ftinyurl.com%2Fa1tourstravels">Share</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="ad">
+      <div class="ad__shot"><img src="assets/ads/ad-matchcab-square.png" alt="Ad: Match cab, share cab Pune to Mumbai, pay per seat" loading="lazy" width="1080" height="1080" /></div>
+      <div class="ad__body">
+        <div class="ad__title">Match cab (share cab)</div>
+        <div class="ad__meta">Square · 1080 × 1080 · best for WhatsApp groups</div>
+        <div class="ad__caption" data-caption="🤝 Match Cab — share the ride, pay only for your seat
+
+Pune ⇄ Mumbai, AC car (not a coach).
+• ₹500+ per seat
+• Hourly departures
+• Verified drivers
+• Doorstep pickup
+
+Travelling alone or with one bag? This is the cheapest comfortable way.
+📞 Call / WhatsApp: 7888007234
+🌐 https://tinyurl.com/a1tourstravels">🤝 Match Cab — share the ride, pay only for your seat
+
+Pune ⇄ Mumbai, AC car (not a coach).
+• ₹500+ per seat
+• Hourly departures
+• Verified drivers
+• Doorstep pickup
+
+Travelling alone or with one bag? This is the cheapest comfortable way.
+📞 Call / WhatsApp: 7888007234
+🌐 https://tinyurl.com/a1tourstravels</div>
+        <div class="row">
+          <a class="b b--dl" href="assets/ads/ad-matchcab-square.png" download>⬇ Download</a>
+          <button class="b b--cp" type="button">Copy caption</button>
+          <a class="b b--wa" data-share="wa" href="https://wa.me/?text=%F0%9F%A4%9D%20Match%20Cab%20%E2%80%94%20share%20the%20ride%2C%20pay%20only%20for%20your%20seat%0A%0APune%20%E2%87%84%20Mumbai%2C%20AC%20car%20%28not%20a%20coach%29.%0A%E2%80%A2%20%E2%82%B9500%2B%20per%20seat%0A%E2%80%A2%20Hourly%20departures%0A%E2%80%A2%20Verified%20drivers%0A%E2%80%A2%20Doorstep%20pickup%0A%0ATravelling%20alone%20or%20with%20one%20bag%3F%20This%20is%20the%20cheapest%20comfortable%20way.%0A%F0%9F%93%9E%20Call%20%2F%20WhatsApp%3A%207888007234%0A%F0%9F%8C%90%20https%3A%2F%2Ftinyurl.com%2Fa1tourstravels">Share</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="ad">
+      <div class="ad__shot"><img src="assets/ads/ad-airport-square.png" alt="Ad: Pune and Mumbai airport transfers" loading="lazy" width="1080" height="1080" /></div>
+      <div class="ad__body">
+        <div class="ad__title">Airport transfers</div>
+        <div class="ad__meta">Square · 1080 × 1080 · for early-morning flights</div>
+        <div class="ad__caption" data-caption="✈️ Airport transfer, on time — Pune (PNQ) &amp; Mumbai (BOM) T1/T2
+
+We track your flight, so a delay doesn't cost you the cab.
+• 24x7 pickup and drop
+• Sedan, SUV, Tempo Traveller
+• Clean AC cars, experienced drivers
+
+📞 Call / WhatsApp: 7888007234
+🌐 https://tinyurl.com/a1tourstravels">✈️ Airport transfer, on time — Pune (PNQ) &amp; Mumbai (BOM) T1/T2
+
+We track your flight, so a delay doesn't cost you the cab.
+• 24x7 pickup and drop
+• Sedan, SUV, Tempo Traveller
+• Clean AC cars, experienced drivers
+
+📞 Call / WhatsApp: 7888007234
+🌐 https://tinyurl.com/a1tourstravels</div>
+        <div class="row">
+          <a class="b b--dl" href="assets/ads/ad-airport-square.png" download>⬇ Download</a>
+          <button class="b b--cp" type="button">Copy caption</button>
+          <a class="b b--wa" data-share="wa" href="https://wa.me/?text=%E2%9C%88%EF%B8%8F%20Airport%20transfer%2C%20on%20time%20%E2%80%94%20Pune%20%28PNQ%29%20%26%20Mumbai%20%28BOM%29%20T1%2FT2%0A%0AWe%20track%20your%20flight%2C%20so%20a%20delay%20doesn%27t%20cost%20you%20the%20cab.%0A%E2%80%A2%2024x7%20pickup%20and%20drop%0A%E2%80%A2%20Sedan%2C%20SUV%2C%20Tempo%20Traveller%0A%E2%80%A2%20Clean%20AC%20cars%2C%20experienced%20drivers%0A%0A%F0%9F%93%9E%20Call%20%2F%20WhatsApp%3A%207888007234%0A%F0%9F%8C%90%20https%3A%2F%2Ftinyurl.com%2Fa1tourstravels">Share</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="ad">
+      <div class="ad__shot"><img src="assets/ads/ad-nosurge-square.png" alt="Ad: taxi surge pricing explained, fixed fare option" loading="lazy" width="1080" height="1080" /></div>
+      <div class="ad__body">
+        <div class="ad__title">"No surge" ad</div>
+        <div class="ad__meta">Square · 1080 × 1080 · for rainy days &amp; festivals</div>
+        <div class="ad__caption" data-caption="😤 Surge fare again? Not with us.
+
+A1 Tour and Travels — fixed fare Pune ⇄ Mumbai, decided before you sit in the car. No app surge, no metre surprises.
+• Sedan ₹2500+ | SUV ₹3500+ | Tempo ₹6000+
+• Toll &amp; parking included
+
+📞 Call / WhatsApp: 7888007234
+🌐 https://tinyurl.com/a1tourstravels">😤 Surge fare again? Not with us.
+
+A1 Tour and Travels — fixed fare Pune ⇄ Mumbai, decided before you sit in the car. No app surge, no metre surprises.
+• Sedan ₹2500+ | SUV ₹3500+ | Tempo ₹6000+
+• Toll &amp; parking included
+
+📞 Call / WhatsApp: 7888007234
+🌐 https://tinyurl.com/a1tourstravels</div>
+        <div class="row">
+          <a class="b b--dl" href="assets/ads/ad-nosurge-square.png" download>⬇ Download</a>
+          <button class="b b--cp" type="button">Copy caption</button>
+          <a class="b b--wa" data-share="wa" href="https://wa.me/?text=%F0%9F%98%A4%20Surge%20fare%20again%3F%20Not%20with%20us.%0A%0AA1%20Tour%20and%20Travels%20%E2%80%94%20fixed%20fare%20Pune%20%E2%87%84%20Mumbai%2C%20decided%20before%20you%20sit%20in%20the%20car.%20No%20app%20surge%2C%20no%20metre%20surprises.%0A%E2%80%A2%20Sedan%20%E2%82%B92500%2B%20%7C%20SUV%20%E2%82%B93500%2B%20%7C%20Tempo%20%E2%82%B96000%2B%0A%E2%80%A2%20Toll%20%26%20parking%20included%0A%0A%F0%9F%93%9E%20Call%20%2F%20WhatsApp%3A%207888007234%0A%F0%9F%8C%90%20https%3A%2F%2Ftinyurl.com%2Fa1tourstravels">Share</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="ad">
+      <div class="ad__shot"><img src="assets/ads/ad-status-fares.png" alt="Ad: WhatsApp status sized fares creative" loading="lazy" width="1080" height="1920" /></div>
+      <div class="ad__body">
+        <div class="ad__title">WhatsApp status — fares</div>
+        <div class="ad__meta">Vertical · 1080 × 1920 · WhatsApp Status, Instagram Story</div>
+        <div class="ad__caption" data-caption="Pune ⇄ Mumbai daily — cab, match cab, bus. Fixed fare. 📞 7888007234
+Book: https://tinyurl.com/a1tourstravels">Pune ⇄ Mumbai daily — cab, match cab, bus. Fixed fare. 📞 7888007234
+Book: https://tinyurl.com/a1tourstravels</div>
+        <div class="row">
+          <a class="b b--dl" href="assets/ads/ad-status-fares.png" download>⬇ Download</a>
+          <button class="b b--cp" type="button">Copy caption</button>
+          <a class="b b--wa" data-share="wa" href="https://wa.me/?text=Pune%20%E2%87%84%20Mumbai%20daily%20%E2%80%94%20cab%2C%20match%20cab%2C%20bus.%20Fixed%20fare.%20%F0%9F%93%9E%207888007234%0ABook%3A%20https%3A%2F%2Ftinyurl.com%2Fa1tourstravels">Share</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="ad">
+      <div class="ad__shot"><img src="assets/ads/ad-status-group.png" alt="Ad: tempo traveller and group travel creative" loading="lazy" width="1080" height="1920" /></div>
+      <div class="ad__body">
+        <div class="ad__title">WhatsApp status — groups</div>
+        <div class="ad__meta">Vertical · 1080 × 1920 · family, office, temple trips</div>
+        <div class="ad__caption" data-caption="👨‍👩‍👧‍👦 Going in a group? Tempo Traveller 12–17 seats — one vehicle, one fare.
+
+Pune ⇄ Mumbai, Shirdi, Lonavala, Mahabaleshwar &amp; All India tours.
+📞 Call / WhatsApp: 7888007234
+🌐 https://tinyurl.com/a1tourstravels">👨‍👩‍👧‍👦 Going in a group? Tempo Traveller 12–17 seats — one vehicle, one fare.
+
+Pune ⇄ Mumbai, Shirdi, Lonavala, Mahabaleshwar &amp; All India tours.
+📞 Call / WhatsApp: 7888007234
+🌐 https://tinyurl.com/a1tourstravels</div>
+        <div class="row">
+          <a class="b b--dl" href="assets/ads/ad-status-group.png" download>⬇ Download</a>
+          <button class="b b--cp" type="button">Copy caption</button>
+          <a class="b b--wa" data-share="wa" href="https://wa.me/?text=%F0%9F%91%A8%E2%80%8D%F0%9F%91%A9%E2%80%8D%F0%9F%91%A7%E2%80%8D%F0%9F%91%A6%20Going%20in%20a%20group%3F%20Tempo%20Traveller%2012%E2%80%9317%20seats%20%E2%80%94%20one%20vehicle%2C%20one%20fare.%0A%0APune%20%E2%87%84%20Mumbai%2C%20Shirdi%2C%20Lonavala%2C%20Mahabaleshwar%20%26%20All%20India%20tours.%0A%F0%9F%93%9E%20Call%20%2F%20WhatsApp%3A%207888007234%0A%F0%9F%8C%90%20https%3A%2F%2Ftinyurl.com%2Fa1tourstravels">Share</a>
+        </div>
+      </div>
+    </article>
+
+  </div>
+
+  <h2 class="sec"><span class="n">3</span> Where to post these — free, and most of it takes 2 minutes</h2>
+  <ul class="checklist">
+    <li><span class="tick">1</span><span><span class="big">Your own WhatsApp Status</span><span class="sub">Post one vertical ad a day. Your customers already know you — this is the cheapest booking source that exists.</span></span></li>
+    <li><span class="tick">2</span><span><span class="big">WhatsApp groups you are already in</span><span class="sub">Family, building society, office, village, college groups. Post the square ad + caption. Do not spam — once a week is plenty.</span></span></li>
+    <li><span class="tick">3</span><span><span class="big">Facebook Page + local Pune/Mumbai groups</span><span class="sub">Search "Pune to Mumbai carpool", "Pune taxi", "Pune jobs/travel" groups and post the main ad with the caption.</span></span></li>
+    <li><span class="tick">4</span><span><span class="big">Instagram + Facebook Page profile</span><span class="sub">Use the vertical ad as a Story, the square ad as a post. Put the short link in your bio.</span></span></li>
+    <li><span class="tick">5</span><span><span class="big">Google Business Profile — the single biggest free win</span><span class="sub">Free listing that shows up when people search "cab Pune to Mumbai" near you. Needs your Google login once (phone verification).</span></span></li>
+    <li><span class="tick">6</span><span><span class="big">Free classifieds</span><span class="sub">OLX, Quikr, Justdial, Sulekha — free listings with the short link. Use the same caption.</span></span></li>
+    <li><span class="tick">7</span><span><span class="big">Print it</span><span class="sub">There is a print kit with cards, board and banner designs at <a href="marketing/print-kit.html">print-kit.html</a> — print the QR code on visiting cards and paste a sticker on your cars.</span></span></li>
+  </ul>
+
+  <h2 class="sec"><span class="n">4</span> QR codes — for cards, cars and shop board</h2>
+  <div class="qr">
+    <img src="assets/qr-whatsapp.png" alt="QR code that opens a WhatsApp booking message" loading="lazy" />
+    <div>
+      <b>qr-whatsapp.png</b><br />
+      <span style="color:#5d7096;font-size:.86rem">Scanning opens WhatsApp with the booking message ready.</span><br />
+      <a class="b b--dl" style="margin-top:9px;display:inline-flex" href="assets/qr-whatsapp.png" download>⬇ Download</a>
+    </div>
+  </div>
+  <div class="qr" style="margin-top:12px">
+    <img src="assets/qr-website.png" alt="QR code that opens the website" loading="lazy" />
+    <div>
+      <b>qr-website.png</b><br />
+      <span style="color:#5d7096;font-size:.86rem">Scanning opens the website. Put this on the car and the shop board.</span><br />
+      <a class="b b--dl" style="margin-top:9px;display:inline-flex" href="assets/qr-website.png" download>⬇ Download</a>
+    </div>
+  </div>
+
+  <h2 class="sec"><span class="n">5</span> Link back to the site</h2>
+  <p style="font-size:.9rem;margin-bottom:12px" class="live"><i></i> Your live website is already up and running, free, on HTTPS.</p>
+  <div class="row">
+    <a class="b b--dl" href="index.html">← Open the website</a>
+    <a class="b b--ghost" href="marketing/print-kit.html">Print kit</a>
+    <a class="b b--ghost" href="https://wa.me/917888007234?text=Hi%20A1%20Tour%20and%20Travels%2C%20I%20want%20to%20book%20a%20Pune-Mumbai%20cab%2Fbus.">WhatsApp</a>
+  </div>
+
+</div>
+
+<div class="foot">
+  A1 Tour and Travels · Pune ⇄ Mumbai cabs, match cabs, AC buses &amp; All India tours · <a href="tel:+917888007234">7888007234</a>
+</div>
+
+<script src="assets/share.js" defer></script>
+</body>
+</html>

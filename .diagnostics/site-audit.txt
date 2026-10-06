@@ -1,0 +1,730 @@
+{
+ "pages": [
+  {
+   "file": "404.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Page not found | A1 Tour and Travels — Call 7888007234",
+   "titleLen": 54,
+   "desc": "",
+   "h1": [
+    "Page nahi mili — but your ride is one tap away"
+   ],
+   "h2count": 0,
+   "canonical": "",
+   "words": 57,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 1,
+   "wa": 1
+  },
+  {
+   "file": "404.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Page not found | A1 Tour and Travels — Call 7888007234",
+   "titleLen": 54,
+   "desc": "",
+   "h1": [
+    "Page nahi mili — but your ride is one tap away"
+   ],
+   "h2count": 0,
+   "canonical": "",
+   "words": 57,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 1,
+   "wa": 1
+  },
+  {
+   "file": "airport-transfer-pune-mumbai.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Pune & Mumbai Airport Transfer | 24x7 with Flight Tracking | A1 Tour and Travels",
+   "titleLen": 80,
+   "desc": "Pune (PNQ) and Mumbai (BOM) airport pickup and drop, 24x7, with flight-timing tracking. Sedan, SUV and Tempo Traveller. Call 7888007234.",
+   "h1": [
+    "Pune & Mumbai Airport Transfers"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/airport-transfer-pune-mumbai.html",
+   "words": 853,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "airport-transfer-pune-mumbai.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Pune & Mumbai Airport Transfer | 24x7 with Flight Tracking | A1 Tour and Travels",
+   "titleLen": 80,
+   "desc": "Pune (PNQ) and Mumbai (BOM) airport pickup and drop, 24x7, with flight-timing tracking. Sedan, SUV and Tempo Traveller. Call 7888007234.",
+   "h1": [
+    "Pune & Mumbai Airport Transfers"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/airport-transfer-pune-mumbai.html",
+   "words": 845,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "cheapest-way-pune-to-mumbai.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Cheapest Way to Travel Pune to Mumbai | Bus vs Match Cab vs Cab Compared",
+   "titleLen": 72,
+   "desc": "A straight comparison of the cheapest ways to travel between Pune and Mumbai — AC bus seats, match cab (share cab), full cab and train — with real fares and when each one actually saves you money.",
+   "h1": [
+    "Cheapest Way to Travel from Pune to Mumbai"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/cheapest-way-pune-to-mumbai.html",
+   "words": 1047,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 9,
+   "wa": 9
+  },
+  {
+   "file": "cheapest-way-pune-to-mumbai.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Cheapest Way to Travel Pune to Mumbai | Bus vs Match Cab vs Cab Compared",
+   "titleLen": 72,
+   "desc": "A straight comparison of the cheapest ways to travel between Pune and Mumbai — AC bus seats, match cab (share cab), full cab and train — with real fares and when each one actually saves you money.",
+   "h1": [
+    "Cheapest Way to Travel from Pune to Mumbai"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/cheapest-way-pune-to-mumbai.html",
+   "words": 1039,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 9,
+   "wa": 9
+  },
+  {
+   "file": "index.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "A1 Tour and Travels | Pune ↔ Mumbai Cabs, Match Cabs & Bus Service | 7888007234",
+   "titleLen": 79,
+   "desc": "A1 Tour and Travels — 24x7 Pune to Mumbai cab, match cab (share cab) and AC bus service. Sedan, SUV, Tempo Traveller & bus booking + All India tour packages. Call 7888007234.",
+   "h1": [
+    "Pune ↔ Mumbai Cabs & Buses"
+   ],
+   "h2count": 9,
+   "canonical": "https://snazim0345.github.io/OpenMontage/",
+   "words": 1406,
+   "overflow": false,
+   "imgs": 4,
+   "brokenImgs": 0,
+   "tel": 14,
+   "wa": 21
+  },
+  {
+   "file": "index.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "A1 Tour and Travels | Pune ↔ Mumbai Cabs, Match Cabs & Bus Service | 7888007234",
+   "titleLen": 79,
+   "desc": "A1 Tour and Travels — 24x7 Pune to Mumbai cab, match cab (share cab) and AC bus service. Sedan, SUV, Tempo Traveller & bus booking + All India tour packages. Call 7888007234.",
+   "h1": [
+    "Pune ↔ Mumbai Cabs & Buses"
+   ],
+   "h2count": 9,
+   "canonical": "https://snazim0345.github.io/OpenMontage/",
+   "words": 1412,
+   "overflow": false,
+   "imgs": 4,
+   "brokenImgs": 0,
+   "tel": 14,
+   "wa": 21
+  },
+  {
+   "file": "match-cab-pune-mumbai.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Match Cab Pune to Mumbai | Pay Per Seat from ₹500 | A1 Tour and Travels",
+   "titleLen": 71,
+   "desc": "Match cab (share cab) between Pune and Mumbai from ₹500 per seat. Departures every hour both ways, AC vehicles, doorstep pickup on the way. Book on 7888007234.",
+   "h1": [
+    "Match Cab Pune ⇄ Mumbai"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/match-cab-pune-mumbai.html",
+   "words": 806,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 11,
+   "wa": 11
+  },
+  {
+   "file": "match-cab-pune-mumbai.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Match Cab Pune to Mumbai | Pay Per Seat from ₹500 | A1 Tour and Travels",
+   "titleLen": 71,
+   "desc": "Match cab (share cab) between Pune and Mumbai from ₹500 per seat. Departures every hour both ways, AC vehicles, doorstep pickup on the way. Book on 7888007234.",
+   "h1": [
+    "Match Cab Pune ⇄ Mumbai"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/match-cab-pune-mumbai.html",
+   "words": 798,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 11,
+   "wa": 11
+  },
+  {
+   "file": "mumbai-to-pune-cab.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Mumbai to Pune Cab ₹2500–3000 | Doorstep Pickup 24x7 | A1 Tour and Travels",
+   "titleLen": 74,
+   "desc": "Mumbai to Pune cab with doorstep pickup anywhere in Mumbai, including the airport and railway stations. Sedan ₹2500–3000, SUV ₹3500–4500. Toll included. Call 7888007234.",
+   "h1": [
+    "Mumbai to Pune Cab"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/mumbai-to-pune-cab.html",
+   "words": 821,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "mumbai-to-pune-cab.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Mumbai to Pune Cab ₹2500–3000 | Doorstep Pickup 24x7 | A1 Tour and Travels",
+   "titleLen": 74,
+   "desc": "Mumbai to Pune cab with doorstep pickup anywhere in Mumbai, including the airport and railway stations. Sedan ₹2500–3000, SUV ₹3500–4500. Toll included. Call 7888007234.",
+   "h1": [
+    "Mumbai to Pune Cab"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/mumbai-to-pune-cab.html",
+   "words": 813,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "post-ads.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Free ad pack — A1 Tour and Travels",
+   "titleLen": 34,
+   "desc": "",
+   "h1": [
+    "Free ad pack for A1 Tour and Travels"
+   ],
+   "h2count": 5,
+   "canonical": "",
+   "words": 772,
+   "overflow": false,
+   "imgs": 8,
+   "brokenImgs": 0,
+   "tel": 1,
+   "wa": 8
+  },
+  {
+   "file": "post-ads.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Free ad pack — A1 Tour and Travels",
+   "titleLen": 34,
+   "desc": "",
+   "h1": [
+    "Free ad pack for A1 Tour and Travels"
+   ],
+   "h2count": 5,
+   "canonical": "",
+   "words": 772,
+   "overflow": false,
+   "imgs": 8,
+   "brokenImgs": 0,
+   "tel": 1,
+   "wa": 8
+  },
+  {
+   "file": "pune-mumbai-bus.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Mumbai AC Bus | Seat ₹500–800 | Timings & Booking | A1 Tour and Travels",
+   "titleLen": 79,
+   "desc": "Pune to Mumbai AC bus service with reserved seating from ₹500–800 per seat. Daily departures both ways, boarding at convenient points. Book on 7888007234.",
+   "h1": [
+    "Pune to Mumbai AC Bus"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-mumbai-bus.html",
+   "words": 893,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "pune-mumbai-bus.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Mumbai AC Bus | Seat ₹500–800 | Timings & Booking | A1 Tour and Travels",
+   "titleLen": 79,
+   "desc": "Pune to Mumbai AC bus service with reserved seating from ₹500–800 per seat. Daily departures both ways, boarding at convenient points. Book on 7888007234.",
+   "h1": [
+    "Pune to Mumbai AC Bus"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-mumbai-bus.html",
+   "words": 885,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "pune-to-kolhapur-cab.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Kolhapur Cab | Mahalaxmi Darshan, Panhala & Jyotiba | 7888007234",
+   "titleLen": 72,
+   "desc": "Pune to Kolhapur cab with experienced drivers — Mahalaxmi temple darshan, Panhala fort, Jyotiba temple and shopping trips. Sedan, SUV and Tempo Traveller. Call 7888007234.",
+   "h1": [
+    "Pune to Kolhapur Cab"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-kolhapur-cab.html",
+   "words": 934,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "pune-to-kolhapur-cab.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Kolhapur Cab | Mahalaxmi Darshan, Panhala & Jyotiba | 7888007234",
+   "titleLen": 72,
+   "desc": "Pune to Kolhapur cab with experienced drivers — Mahalaxmi temple darshan, Panhala fort, Jyotiba temple and shopping trips. Sedan, SUV and Tempo Traveller. Call 7888007234.",
+   "h1": [
+    "Pune to Kolhapur Cab"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-kolhapur-cab.html",
+   "words": 926,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "pune-to-lonavala-cab.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Lonavala Cab | One Way & Day Trip | ₹1500–2500 | A1 Tour and Travels",
+   "titleLen": 76,
+   "desc": "Pune to Lonavala cab for one-way trips, monsoon drives and sightseeing day trips. Sedan, SUV and Tempo Traveller with verified drivers. Call 7888007234.",
+   "h1": [
+    "Pune to Lonavala Cab"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-lonavala-cab.html",
+   "words": 825,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "pune-to-lonavala-cab.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Lonavala Cab | One Way & Day Trip | ₹1500–2500 | A1 Tour and Travels",
+   "titleLen": 76,
+   "desc": "Pune to Lonavala cab for one-way trips, monsoon drives and sightseeing day trips. Sedan, SUV and Tempo Traveller with verified drivers. Call 7888007234.",
+   "h1": [
+    "Pune to Lonavala Cab"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-lonavala-cab.html",
+   "words": 817,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "pune-to-mahabaleshwar-cab.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Mahabaleshwar Cab | Panchgani & Pratapgad Day Trips | 7888007234",
+   "titleLen": 72,
+   "desc": "Pune to Mahabaleshwar cab for weekend trips, Panchgani and Pratapgad sightseeing. Sedan, SUV and Tempo Traveller with a driver who knows the ghats. Call 7888007234.",
+   "h1": [
+    "Pune to Mahabaleshwar Cab"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-mahabaleshwar-cab.html",
+   "words": 1020,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "pune-to-mahabaleshwar-cab.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Mahabaleshwar Cab | Panchgani & Pratapgad Day Trips | 7888007234",
+   "titleLen": 72,
+   "desc": "Pune to Mahabaleshwar cab for weekend trips, Panchgani and Pratapgad sightseeing. Sedan, SUV and Tempo Traveller with a driver who knows the ghats. Call 7888007234.",
+   "h1": [
+    "Pune to Mahabaleshwar Cab"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-mahabaleshwar-cab.html",
+   "words": 1012,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "pune-to-mumbai-cab.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Mumbai Cab ₹2500–3000 | Toll, Fuel & Parking Included | A1 Tour and Travels",
+   "titleLen": 83,
+   "desc": "Pune to Mumbai cab at a fixed fare — sedan ₹2500–3000, SUV ₹3500–4500. Doorstep pickup anywhere in Pune, toll and parking included, 24x7. Call 7888007234.",
+   "h1": [
+    "Pune to Mumbai Cab"
+   ],
+   "h2count": 9,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-mumbai-cab.html",
+   "words": 955,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 11,
+   "wa": 11
+  },
+  {
+   "file": "pune-to-mumbai-cab.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Mumbai Cab ₹2500–3000 | Toll, Fuel & Parking Included | A1 Tour and Travels",
+   "titleLen": 83,
+   "desc": "Pune to Mumbai cab at a fixed fare — sedan ₹2500–3000, SUV ₹3500–4500. Doorstep pickup anywhere in Pune, toll and parking included, 24x7. Call 7888007234.",
+   "h1": [
+    "Pune to Mumbai Cab"
+   ],
+   "h2count": 9,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-mumbai-cab.html",
+   "words": 947,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 11,
+   "wa": 11
+  },
+  {
+   "file": "pune-to-mumbai-travel-guide.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Mumbai Travel Guide 2026 | Expressway Time, Best Departure Times & Tips",
+   "titleLen": 79,
+   "desc": "How long the Pune to Mumbai drive really takes, the best times to leave, monsoon and weekend traffic tips, pickup points on both ends, and what to carry. A practical guide.",
+   "h1": [
+    "Pune to Mumbai: A Practical Travel Guide"
+   ],
+   "h2count": 9,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-mumbai-travel-guide.html",
+   "words": 1136,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 9,
+   "wa": 9
+  },
+  {
+   "file": "pune-to-mumbai-travel-guide.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Mumbai Travel Guide 2026 | Expressway Time, Best Departure Times & Tips",
+   "titleLen": 79,
+   "desc": "How long the Pune to Mumbai drive really takes, the best times to leave, monsoon and weekend traffic tips, pickup points on both ends, and what to carry. A practical guide.",
+   "h1": [
+    "Pune to Mumbai: A Practical Travel Guide"
+   ],
+   "h2count": 9,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-mumbai-travel-guide.html",
+   "words": 1128,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 9,
+   "wa": 9
+  },
+  {
+   "file": "pune-to-nashik-cab.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Nashik Cab | Trimbakeshwar, Saptashrungi & Vineyard Trips | 7888007234",
+   "titleLen": 78,
+   "desc": "Pune to Nashik cab with an experienced driver — one-way drops, Trimbakeshwar darshan, Saptashrungi and vineyard day trips. Tempo Traveller for groups. Call 7888007234.",
+   "h1": [
+    "Pune to Nashik Cab"
+   ],
+   "h2count": 9,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-nashik-cab.html",
+   "words": 1137,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "pune-to-nashik-cab.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Nashik Cab | Trimbakeshwar, Saptashrungi & Vineyard Trips | 7888007234",
+   "titleLen": 78,
+   "desc": "Pune to Nashik cab with an experienced driver — one-way drops, Trimbakeshwar darshan, Saptashrungi and vineyard day trips. Tempo Traveller for groups. Call 7888007234.",
+   "h1": [
+    "Pune to Nashik Cab"
+   ],
+   "h2count": 9,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-nashik-cab.html",
+   "words": 1129,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "pune-to-shirdi-cab.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Shirdi Cab & Tempo Traveller | Darshan Trip | A1 Tour and Travels",
+   "titleLen": 73,
+   "desc": "Pune to Shirdi cab and Tempo Traveller for Sai Baba darshan. Comfortable one-way or round trip, group friendly, verified drivers. Call 7888007234 for a fixed quote.",
+   "h1": [
+    "Pune to Shirdi Cab & Tempo Traveller"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-shirdi-cab.html",
+   "words": 811,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "pune-to-shirdi-cab.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Pune to Shirdi Cab & Tempo Traveller | Darshan Trip | A1 Tour and Travels",
+   "titleLen": 73,
+   "desc": "Pune to Shirdi cab and Tempo Traveller for Sai Baba darshan. Comfortable one-way or round trip, group friendly, verified drivers. Call 7888007234 for a fixed quote.",
+   "h1": [
+    "Pune to Shirdi Cab & Tempo Traveller"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/pune-to-shirdi-cab.html",
+   "words": 803,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "shirdi-darshan-from-pune-one-day.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Shirdi Darshan from Pune in One Day | Complete Trip Plan & Timings",
+   "titleLen": 66,
+   "desc": "How to do Shirdi darshan from Pune in a single day — the ideal departure time, how long the drive takes, what to expect at the temple, and how to plan the return. Practical, from drivers who do this route weekly.",
+   "h1": [
+    "Shirdi Darshan from Pune in One Day"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/shirdi-darshan-from-pune-one-day.html",
+   "words": 900,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "shirdi-darshan-from-pune-one-day.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Shirdi Darshan from Pune in One Day | Complete Trip Plan & Timings",
+   "titleLen": 66,
+   "desc": "How to do Shirdi darshan from Pune in a single day — the ideal departure time, how long the drive takes, what to expect at the temple, and how to plan the return. Practical, from drivers who do this route weekly.",
+   "h1": [
+    "Shirdi Darshan from Pune in One Day"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/shirdi-darshan-from-pune-one-day.html",
+   "words": 892,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "tempo-traveller-pune.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "Tempo Traveller on Hire in Pune | 12–17 Seater | Groups & Tours | A1 Tour and Travels",
+   "titleLen": 85,
+   "desc": "Tempo Traveller on hire in Pune — 12–17 seater with push-back seats for family functions, weddings, corporate outings and pilgrimage tours. Call 7888007234 for a quote.",
+   "h1": [
+    "Tempo Traveller on Hire in Pune"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/tempo-traveller-pune.html",
+   "words": 839,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "tempo-traveller-pune.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "Tempo Traveller on Hire in Pune | 12–17 Seater | Groups & Tours | A1 Tour and Travels",
+   "titleLen": 85,
+   "desc": "Tempo Traveller on hire in Pune — 12–17 seater with push-back seats for family functions, weddings, corporate outings and pilgrimage tours. Call 7888007234 for a quote.",
+   "h1": [
+    "Tempo Traveller on Hire in Pune"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/tempo-traveller-pune.html",
+   "words": 831,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "tour-packages.html",
+   "vp": "desktop",
+   "status": 200,
+   "errors": [],
+   "title": "All India Tour Packages from Pune | Family, Honeymoon & Pilgrimage | A1 Tour and Travels",
+   "titleLen": 88,
+   "desc": "Customised All India tour packages from Pune — Maharashtra weekend trips, Shirdi and Nashik pilgrimage, Goa, Ajanta–Ellora, Kerala, Rajasthan and more. Call 7888007234.",
+   "h1": [
+    "All India Tour Packages"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/tour-packages.html",
+   "words": 841,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  },
+  {
+   "file": "tour-packages.html",
+   "vp": "mobile",
+   "status": 200,
+   "errors": [],
+   "title": "All India Tour Packages from Pune | Family, Honeymoon & Pilgrimage | A1 Tour and Travels",
+   "titleLen": 88,
+   "desc": "Customised All India tour packages from Pune — Maharashtra weekend trips, Shirdi and Nashik pilgrimage, Goa, Ajanta–Ellora, Kerala, Rajasthan and more. Call 7888007234.",
+   "h1": [
+    "All India Tour Packages"
+   ],
+   "h2count": 8,
+   "canonical": "https://snazim0345.github.io/OpenMontage/tour-packages.html",
+   "words": 833,
+   "overflow": false,
+   "imgs": 0,
+   "brokenImgs": 0,
+   "tel": 10,
+   "wa": 10
+  }
+ ],
+ "brokenInternalLinks": []
+}
+
+=== SUMMARY ===
+page-viewport combinations checked: 36
+problems: 0
+broken internal links: 0

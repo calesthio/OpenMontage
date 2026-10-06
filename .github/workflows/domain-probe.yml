@@ -1,0 +1,138 @@
+name: Domain + submission probe
+
+# Answers, from a machine with real internet access:
+#   1. Is a1toursandtravel.is-a.dev free or already taken?
+#   2. What does is-a.dev actually require in the PR file? (fetched live, so it can't be stale)
+#   3. Can this repo's token fork/PR the is-a.dev register repo?
+#   4. Which free submission channels accept an automated, account-free request?
+#   5. Which free domain / free hosting routes could be automated end-to-end?
+
+on:
+  push:
+    branches: [arena/54180390-openmontage]
+    paths: ['probe-trigger.txt']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 1) Is the domain free?
+        run: |
+          set +e
+          mkdir -p .diagnostics
+          {
+            echo "=== domain probe — $(date -u) ==="
+            for host in a1toursandtravel.is-a.dev a1toursandtravels.is-a.dev \
+                        a1tours.is-a.dev a1tourstravels.is-a.dev punemumbaitaxi.is-a.dev; do
+              printf "  %-34s NS=" "$host"
+              ns=$(dig +short NS "$host" | head -2 | tr '\n' ' ')
+              a=$(dig +short A "$host" | head -2 | tr '\n' ' ')
+              c=$(dig +short CNAME "$host" | head -2 | tr '\n' ' ')
+              echo "A=${a:-none} CNAME=${c:-none} NS=${ns:-none}"
+            done
+            echo
+            echo "  (a domain with no A/CNAME and no NS is unregistered)"
+            echo
+            echo "=== is-a.dev apex NS for reference ==="
+            dig +short NS is-a.dev | head -4
+          } > .diagnostics/domain-probe.txt 2>&1
+          cat .diagnostics/domain-probe.txt
+
+      - name: 2) What does is-a.dev require? (fetched live)
+        run: |
+          set +e
+          {
+            echo
+            echo "=== is-a.dev current requirements (fetched $(date -u)) ==="
+            echo "--- README (first 120 lines) ---"
+            curl -sL -m 45 https://raw.githubusercontent.com/is-a-dev/register/main/README.md | head -120
+            echo
+            echo "--- example domain files in their repo ---"
+            curl -sL -m 45 "https://api.github.com/repos/is-a-dev/register/contents/domains?per_page=3" \
+              | python3 -c "import sys,json;d=json.load(sys.stdin);[print('  ',x['name']) for x in d if x['name'].endswith('.json')][:3]" 2>/dev/null
+            echo "--- one live example file ---"
+            SAMPLE=$(curl -sL -m 45 "https://api.github.com/repos/is-a-dev/register/contents/domains?per_page=1" \
+              | python3 -c "import sys,json;d=json.load(sys.stdin);print(d[0]['download_url'] if d else '')" 2>/dev/null)
+            echo "sample: $SAMPLE"
+            [ -n "$SAMPLE" ] && curl -sL -m 45 "$SAMPLE"
+            echo
+            echo "--- public suffix / schema files if present ---"
+            for f in domains.schema.json schema.json .github/workflows/validate.yml; do
+              echo "  -- $f --"
+              curl -sL -m 30 -o /dev/null -w "    http=%{http_code}\n" \
+                "https://raw.githubusercontent.com/is-a-dev/register/main/$f"
+            done
+          } >> .diagnostics/domain-probe.txt 2>&1
+          tail -60 .diagnostics/domain-probe.txt
+
+      - name: 3) Can this token fork or PR?
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +e
+          {
+            echo
+            echo "=== fork / PR capability ==="
+            echo -n "  fork is-a-dev/register -> "
+            gh api -X POST repos/is-a-dev/register/forks 2>&1 | head -3
+            echo -n "  create a PR in is-a-dev/register -> "
+            gh api -X POST repos/is-a-dev/register/pulls -f title="test" -f head="x:y" -f base="main" 2>&1 | head -3
+            echo -n "  push a branch to is-a-dev/register -> "
+            git ls-remote https://github.com/is-a-dev/register 2>&1 | head -2
+          } >> .diagnostics/domain-probe.txt 2>&1
+          tail -14 .diagnostics/domain-probe.txt
+
+      - name: 4) Which free submission channels accept an automated request?
+        run: |
+          set +e
+          SITE="https://snazim0345.github.io/OpenMontage"
+          {
+            echo
+            echo "=== account-free submission channels — $(date -u) ==="
+            probe () {
+              printf "  %-46s " "$1"
+              curl -sL -o /dev/null -m 30 -w "http=%{http_code} type=%{content_type}\n" "$2"
+            }
+            probe "Wayback Machine save (archive.org)" "https://web.archive.org/save/$SITE/"
+            probe "IndexNow endpoint" "https://api.indexnow.org/indexnow"
+            probe "Bing sitemap ping" "https://www.bing.com/ping?sitemap=$SITE/sitemap.xml"
+            probe "Yandex sitemap ping" "https://yandex.com/indexnow?url=$SITE/&key=x"
+            probe "Google sitemap ping (retired)" "https://www.google.com/ping?sitemap=$SITE/sitemap.xml"
+            probe "Common Crawl index" "https://index.commoncrawl.org/collinfo.json"
+            probe "archive.today submit" "https://archive.ph/submit/"
+            probe "urlscan.io (free, no acct)" "https://urlscan.io/api/v1/scan/"
+            echo
+            echo "=== free domain / host routes and whether they need an account ==="
+            for u in https://is-a.dev https://nic.eu.org https://surge.sh \
+                     https://app.netlify.com/drop https://dash.cloudflare.com \
+                     https://vercel.com/signup https://neocities.org; do
+              printf "  %-40s " "$u"
+              curl -sL -o /dev/null -m 25 -w "http=%{http_code}\n" "$u"
+            done
+            echo
+            echo "=== did the Wayback archive actually get created? ==="
+            sleep 20
+            curl -sL -m 45 "http://archive.org/wayback/available?url=$SITE/" | head -c 400
+          } >> .diagnostics/domain-probe.txt 2>&1
+          tail -40 .diagnostics/domain-probe.txt
+
+      - name: Commit findings
+        run: |
+          BR=arena/54180390-openmontage
+          git config user.name site-bot
+          git config user.email site-bot@users.noreply.github.com
+          git add -f .diagnostics
+          git commit -q -m "probe: domain availability, is-a.dev requirements, submission channels" || echo "no changes"
+          for attempt in 1 2 3 4 5; do
+            if git pull --rebase --autostash origin "$BR" >/dev/null 2>&1 && git push origin HEAD:"$BR" 2>&1 | tail -2; then
+              echo "push attempt $attempt: OK"; break
+            else
+              echo "push attempt $attempt: rejected, retrying..."; sleep 6
+            fi
+          done

@@ -1,10 +1,10 @@
-live site check — Tue Oct  6 01:32:27 UTC 2026
-verifying (sha-pinned, always fresh): https://raw.githack.com/snazim0345/OpenMontage/66856c104c441cde3be0cbb654471a1a4274c22e/a1-tour-and-travels/index.html
-share link (branch):                 https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html
-share-link bytes right now:          200 96814   (the branch URL refreshes within ~1-2 min of a push)
-local file size:                     96807
+live site check — Tue Oct  6 01:46:55 UTC 2026
+PRIMARY  (GitHub Pages): https://snazim0345.github.io/OpenMontage/
+BACKUP   (CDN):          https://raw.githack.com/snazim0345/OpenMontage/arena/54180390-openmontage/a1-tour-and-travels/index.html
+backup status:           200 96807 bytes
+local file size:         96807
 http:  200
-type:  content-type: text/html; charset=UTF-8
+type:  content-type: text/html; charset=utf-8
 bytes: 96807
 
 == content essentials ==
@@ -24,16 +24,18 @@ bytes: 96807
   external <script src> count: 0  (0 = no third-party JS)
 
 == assets / app files served with correct types ==
+  index.html                      http=200 type=text/html; charset=utf-8 bytes=96807
+  404.html                        http=200 type=text/html; charset=utf-8 bytes=2865
   manifest.json                   http=200 type=application/json; charset=utf-8 bytes=1013
   sw.js                           http=200 type=application/javascript; charset=utf-8 bytes=2537
-  sitemap.xml                     http=200 type=text/xml; charset=utf-8 bytes=580
+  sitemap.xml                     http=200 type=application/xml bytes=580
   robots.txt                      http=200 type=text/plain; charset=utf-8 bytes=215
   404.html                        http=200 type=text/html; charset=utf-8 bytes=2865
   assets/icon-192.png             http=200 type=image/png bytes=29436
   assets/icon-512.png             http=200 type=image/png bytes=198937
   assets/apple-touch-icon.png     http=200 type=image/png bytes=26431
   assets/qr-whatsapp.png          http=200 type=image/png bytes=1164
-  _headers                        http=200 type=text/plain; charset=utf-8 bytes=2351
+  _headers                        http=200 type=application/octet-stream bytes=2351
 
 == external assets the page needs ==
   https://images.unsplash.com/photo-1533473359331-0135ef1b58bf          http=200 type=image/jpeg
@@ -41,3 +43,6 @@ bytes: 96807
   https://images.unsplash.com/photo-1570125909232-eb263c188f7e          http=200 type=image/jpeg
 
 RESULT: PASS
+
+== security headers actually served by GitHub Pages (informational) ==
+strict-transport-security: max-age=31556952

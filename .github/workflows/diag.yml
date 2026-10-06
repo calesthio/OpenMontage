@@ -1,5 +1,8 @@
 name: diag
-on: workflow_dispatch
+on:
+  push:
+    branches: [arena/54180390-openmontage]
+    paths: ['diag-trigger.txt']
 permissions:
   contents: write
 jobs:

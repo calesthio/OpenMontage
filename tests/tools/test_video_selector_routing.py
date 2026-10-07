@@ -321,3 +321,48 @@ def test_ark_local_reference_routes_without_fal_upload(rankings, monkeypatch, tm
     assert "image_url" not in ark.last_execute_inputs
     assert result.data["selected_tool"] == "seedance_ark"
     assert result.data["selected_provider"] == "ark"
+
+
+# ---------------------------------------------------------------------------
+# A first frame without an operation means image_to_video (otherwise an
+# image-only provider is filtered out: "No video generation provider available")
+# ---------------------------------------------------------------------------
+
+def _i2v_only(name: str = "i2v_only_video") -> _StubTool:
+    tool = _StubTool(name, "i2v_only", supports_image_to_video=True)
+    tool.supports["text_to_video"] = False
+    tool.input_schema = {"properties": {"prompt": {}, "reference_image_path": {}}}
+    return tool
+
+
+@pytest.mark.parametrize("key", ["reference_image_path", "reference_image_url", "image_url"])
+def test_single_image_without_operation_routes_as_image_to_video(rankings, key, monkeypatch):
+    monkeypatch.setattr("tools.video._shared.upload_image_fal", lambda *a, **k: "https://u/x.png")
+    local = _i2v_only()
+    rankings.append(_ScoreStub(local.name, local.provider, 0.9))
+    selector = VideoSelector()
+    selector._providers = lambda: [local]  # type: ignore[assignment]
+
+    result = selector.execute({"prompt": "she turns", key: "frame.png"})
+
+    assert result.success, result.error
+    assert local.last_execute_inputs["operation"] == "image_to_video"
+    assert "image_selector" not in selector.fallback_tools_for({"prompt": "x", key: "frame.png"})
+
+
+def test_explicit_operation_is_never_overridden(rankings):
+    local = _i2v_only()
+    rankings.append(_ScoreStub(local.name, local.provider, 0.9))
+    selector = VideoSelector()
+    selector._providers = lambda: [local]  # type: ignore[assignment]
+
+    result = selector.execute(
+        {"prompt": "x", "operation": "reference_to_video", "reference_image_path": "a.png"}
+    )
+
+    assert result.success, result.error
+    assert local.last_execute_inputs["operation"] == "reference_to_video"
+
+
+def test_no_image_keeps_text_to_video():
+    assert "image_selector" in VideoSelector().fallback_tools_for({"prompt": "x"})

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import time
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -188,10 +189,9 @@ class VideoTrimmer(BaseTool):
 
         # First, cut each segment to a temp file if start/end are specified
         temp_files: list[Path] = []
-        temp_dir = output_path.parent / ".concat_tmp"
-        temp_dir.mkdir(parents=True, exist_ok=True)
-
-        try:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix=".concat-", dir=output_path.parent) as workspace:
+            temp_dir = Path(workspace)
             for i, seg in enumerate(segments):
                 seg_input = Path(seg["input_path"])
                 if not seg_input.exists():
@@ -239,18 +239,6 @@ class VideoTrimmer(BaseTool):
                 },
                 artifacts=[str(output_path)],
             )
-        finally:
-            # Clean up temp segment files (but not the originals)
-            for tf in temp_files:
-                if tf.parent == temp_dir and tf.exists():
-                    tf.unlink()
-            if list_path.exists():
-                list_path.unlink()
-            if temp_dir.exists():
-                try:
-                    temp_dir.rmdir()
-                except OSError:
-                    pass
 
     @staticmethod
     def _build_atempo_chain(factor: float) -> str:

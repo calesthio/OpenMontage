@@ -208,6 +208,11 @@ interface Cut {
   rightLabel?: string;
   leftValue?: string;
   rightValue?: string;
+  leftColor?: string;
+  rightColor?: string;
+  // Badge drawn on the divider, e.g. what the gap between the two sides is.
+  changeIndicator?: string;
+  changeDirection?: "up" | "down" | "neutral";
   // Chart props
   chartData?: any[];
   chartSeries?: any[];
@@ -241,6 +246,8 @@ interface Cut {
   color?: string;
   accentColor?: string;
   fontSize?: number;
+  // hero_title: how many leading words take the accent colour (default 1)
+  accentWords?: number;
   // Animation & transitions
   animation?: string;
   transition_in?: string;
@@ -307,6 +314,11 @@ export interface ExplainerProps {
   cuts: Cut[];
   overlays?: Overlay[];
   captions?: WordCaption[];
+  // Caption overrides. Left unset, CaptionOverlay sizes itself off the frame
+  // (vertical frames get larger type and a bigger bottom safe area).
+  captionFontSize?: number;
+  captionWordsPerPage?: number;
+  captionBottomOffset?: number;
   audio?: AudioConfig;
 }
 
@@ -617,6 +629,11 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
         leftValue={cut.leftValue} rightValue={cut.rightValue}
         title={cut.title} backgroundColor={bgColor} textColor={textColor}
         cardBackgroundColor={cut.cardBackgroundColor || theme.surfaceColor}
+        leftColor={cut.leftColor || textColor}
+        rightColor={cut.rightColor || accent}
+        fontFamily={theme.bodyFont ? `${theme.bodyFont}, Inter, system-ui, sans-serif` : undefined}
+        {...(cut.changeIndicator ? { changeIndicator: cut.changeIndicator } : {})}
+        {...(cut.changeDirection ? { changeDirection: cut.changeDirection } : {})}
       />
     );
   }
@@ -629,6 +646,8 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
         textColor={textColor}
         subtitleColor={theme.mutedTextColor}
         scrimBackground={heroScrim(theme)}
+        {...(cut.fontSize ? { fontSize: cut.fontSize } : {})}
+        {...(cut.accentWords !== undefined ? { accentWords: cut.accentWords } : {})}
       />
     );
   }
@@ -835,7 +854,15 @@ const OverlayRenderer: React.FC<{ overlay: Overlay; theme: ThemeConfig }> = ({
 // ---------------------------------------------------------------------------
 
 export const Explainer: React.FC<ExplainerProps> = (props) => {
-  const { cuts, overlays, captions, audio } = props;
+  const {
+    cuts,
+    overlays,
+    captions,
+    captionFontSize,
+    captionWordsPerPage,
+    captionBottomOffset,
+    audio,
+  } = props;
   const { fps, durationInFrames } = useVideoConfig();
 
   // Resolve theme from props — playbook name, theme name, or custom themeConfig
@@ -876,11 +903,12 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
       {captions && captions.length > 0 && (
         <CaptionOverlay
           words={captions}
-          wordsPerPage={6}
-          fontSize={42}
           color={theme.textColor}
           highlightColor={theme.captionHighlightColor}
           backgroundColor={theme.captionBackgroundColor}
+          {...(captionFontSize !== undefined ? { fontSize: captionFontSize } : {})}
+          {...(captionWordsPerPage !== undefined ? { wordsPerPage: captionWordsPerPage } : {})}
+          {...(captionBottomOffset !== undefined ? { bottomOffset: captionBottomOffset } : {})}
         />
       )}
 

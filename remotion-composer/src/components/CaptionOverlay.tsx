@@ -1,3 +1,4 @@
+import React from "react";
 import {
   AbsoluteFill,
   Sequence,
@@ -29,6 +30,11 @@ type CaptionOverlayProps = {
   // Separator rendered between words. Space-delimited languages want the
   // default " "; CJK languages (no inter-word spacing) should pass "".
   wordSeparator?: string;
+  // Gap between the caption block and the bottom of the frame, in px.
+  // Vertical deliverables need a much larger one: TikTok, Reels and Shorts all
+  // paint their own UI over roughly the bottom 12% of the frame, so a caption
+  // sitting 80px up is covered on every one of them.
+  bottomOffset?: number;
 };
 
 interface CaptionPage {
@@ -60,12 +66,13 @@ function buildPages(words: WordCaption[], wordsPerPage: number): CaptionPage[] {
 const PageRenderer: React.FC<{
   page: CaptionPage;
   fontSize: number;
+  bottomOffset: number;
   color: string;
   highlightColor: string;
   backgroundColor: string;
   fontFamily: string;
   wordSeparator: string;
-}> = ({ page, fontSize, color, highlightColor, backgroundColor, fontFamily, wordSeparator }) => {
+}> = ({ page, fontSize, bottomOffset, color, highlightColor, backgroundColor, fontFamily, wordSeparator }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -83,7 +90,7 @@ const PageRenderer: React.FC<{
       style={{
         justifyContent: "flex-end",
         alignItems: "center",
-        paddingBottom: 80,
+        paddingBottom: bottomOffset,
       }}
     >
       <div
@@ -110,8 +117,8 @@ const PageRenderer: React.FC<{
             const isActive = w.startMs <= currentMs && w.endMs > currentMs;
             const isPast = w.endMs <= currentMs;
             return (
+              <React.Fragment key={`${w.startMs}-${i}`}>
               <span
-                key={`${w.startMs}-${i}`}
                 style={{
                   // Keep each word unbroken so lines wrap only at word
                   // boundaries. For space-delimited text this matches the
@@ -125,8 +132,12 @@ const PageRenderer: React.FC<{
                     : "0 2px 4px rgba(0,0,0,0.5)",
                 }}
               >
-                {w.word}{i < page.words.length - 1 ? wordSeparator : ""}
+                {w.word}
               </span>
+              {/* The separator lives outside the inline-block: a trailing space
+                  inside an inline-block collapses, which ran words together. */}
+              {i < page.words.length - 1 ? wordSeparator : ""}
+              </React.Fragment>
             );
           })}
         </span>
@@ -137,16 +148,27 @@ const PageRenderer: React.FC<{
 
 export const CaptionOverlay: React.FC<CaptionOverlayProps> = ({
   words,
-  wordsPerPage = 6,
-  fontSize = 42,
+  wordsPerPage,
+  fontSize,
+  bottomOffset,
   color = "#F8FAFC",
   highlightColor = "#22D3EE",
   backgroundColor = "rgba(15, 23, 42, 0.75)",
   fontFamily = "Space Grotesk, Inter, system-ui, sans-serif",
   wordSeparator = " ",
 }) => {
-  const { fps } = useVideoConfig();
-  const pages = buildPages(words, wordsPerPage);
+  const { fps, width, height } = useVideoConfig();
+
+  // Vertical frames are read on a phone held at arm's length and the player
+  // chrome eats the bottom of the frame, so the landscape defaults are wrong
+  // there in three different ways. Scale them off the frame instead of making
+  // every caller remember to pass three overrides.
+  const isVertical = height > width;
+  const resolvedFontSize = fontSize ?? (isVertical ? 60 : 42);
+  const resolvedWordsPerPage = wordsPerPage ?? (isVertical ? 4 : 6);
+  const resolvedBottomOffset = bottomOffset ?? Math.round(height * (isVertical ? 0.17 : 0.07));
+
+  const pages = buildPages(words, resolvedWordsPerPage);
 
   return (
     <AbsoluteFill>
@@ -162,7 +184,8 @@ export const CaptionOverlay: React.FC<CaptionOverlayProps> = ({
           <Sequence key={i} from={fromFrame} durationInFrames={duration}>
             <PageRenderer
               page={page}
-              fontSize={fontSize}
+              fontSize={resolvedFontSize}
+              bottomOffset={resolvedBottomOffset}
               color={color}
               highlightColor={highlightColor}
               backgroundColor={backgroundColor}

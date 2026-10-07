@@ -41,12 +41,20 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
   cardBackgroundColor = "#F3F4F6",
   textColor = "#1F2937",
   fontFamily = "Inter, system-ui, sans-serif",
-  titleFontSize = 44,
-  labelFontSize = 28,
-  valueFontSize = 72,
+  titleFontSize,
+  labelFontSize,
+  valueFontSize,
 }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, width, height } = useVideoConfig();
+
+  // A portrait frame cannot hold two value columns side by side: 80% of a
+  // 1080px frame leaves each side ~400px, and a currency figure at the default
+  // 72px value size is wider than that. Stack the sides instead.
+  const isVertical = height > width;
+  const resolvedValueFontSize = valueFontSize ?? (isVertical ? 84 : 72);
+  const resolvedTitleFontSize = titleFontSize ?? (isVertical ? 52 : 44);
+  const resolvedLabelFontSize = labelFontSize ?? (isVertical ? 30 : 28);
 
   // Phase 1: Title + left side appears
   const titleOpacity = spring({
@@ -144,7 +152,7 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          width: "80%",
+          width: isVertical ? "88%" : "80%",
           maxWidth: 1540,
           gap: 32,
         }}
@@ -155,7 +163,7 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
             style={{
               fontFamily,
               fontWeight: 700,
-              fontSize: titleFontSize,
+              fontSize: resolvedTitleFontSize,
               color: textColor,
               textAlign: "center",
               opacity: titleOpacity,
@@ -170,7 +178,7 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
         <div
           style={{
             display: "flex",
-            flexDirection: "row",
+            flexDirection: isVertical ? "column" : "row",
             alignItems: "stretch",
             width: "100%",
             borderRadius: 16,
@@ -208,7 +216,7 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
               style={{
                 fontFamily,
                 fontWeight: 600,
-                fontSize: labelFontSize,
+                fontSize: resolvedLabelFontSize,
                 color: textColor,
                 opacity: 0.7,
                 textTransform: "uppercase" as const,
@@ -221,7 +229,7 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
               style={{
                 fontFamily,
                 fontWeight: 800,
-                fontSize: valueFontSize,
+                fontSize: resolvedValueFontSize,
                 color: leftColor,
                 lineHeight: 1.1,
               }}
@@ -237,18 +245,20 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              width: 80,
+              width: isVertical ? "100%" : 80,
+              height: isVertical ? 120 : undefined,
               position: "relative",
             }}
           >
-            {/* Vertical divider line */}
+            {/* Divider line — drawn along whichever axis separates the sides */}
             <div
               style={{
-                width: 2,
-                height: `${dividerDraw * 100}%`,
+                width: isVertical ? `${dividerDraw * 100}%` : 2,
+                height: isVertical ? 2 : `${dividerDraw * 100}%`,
                 backgroundColor: "#D1D5DB",
                 position: "absolute",
-                top: `${((1 - dividerDraw) / 2) * 100}%`,
+                top: isVertical ? "50%" : `${((1 - dividerDraw) / 2) * 100}%`,
+                left: isVertical ? `${((1 - dividerDraw) / 2) * 100}%` : undefined,
               }}
             />
 
@@ -259,18 +269,23 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
                   position: "relative",
                   zIndex: 1,
                   display: "flex",
-                  flexDirection: "column",
+                  flexDirection: isVertical ? "row" : "column",
                   alignItems: "center",
-                  gap: 4,
+                  gap: isVertical ? 14 : 4,
+                  padding: isVertical ? "10px 22px" : 0,
+                  borderRadius: isVertical ? 40 : 0,
+                  backgroundColor: isVertical ? backgroundColor : "transparent",
                   opacity: indicatorOpacity,
                   transform: `scale(${indicatorScale})`,
                 }}
               >
+                {!isVertical && (
                 <div
                   style={{
-                    width: 48,
-                    height: 48,
+                    width: isVertical ? 44 : 48,
+                    height: isVertical ? 44 : 48,
                     borderRadius: 24,
+                    flexShrink: 0,
                     backgroundColor,
                     display: "flex",
                     justifyContent: "center",
@@ -289,11 +304,12 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
                     {directionArrow}
                   </span>
                 </div>
+                )}
                 <div
                   style={{
                     fontFamily,
                     fontWeight: 700,
-                    fontSize: 18,
+                    fontSize: isVertical ? 28 : 18,
                     color: directionColor,
                     whiteSpace: "nowrap" as const,
                   }}
@@ -332,7 +348,7 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
               style={{
                 fontFamily,
                 fontWeight: 600,
-                fontSize: labelFontSize,
+                fontSize: resolvedLabelFontSize,
                 color: textColor,
                 opacity: 0.7,
                 textTransform: "uppercase" as const,
@@ -345,7 +361,7 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
               style={{
                 fontFamily,
                 fontWeight: 800,
-                fontSize: valueFontSize,
+                fontSize: resolvedValueFontSize,
                 color: rightColor,
                 lineHeight: 1.1,
               }}

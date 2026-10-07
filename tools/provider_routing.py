@@ -40,6 +40,11 @@ def filter_explicit_route(inputs, candidates):
             props = tool.input_schema.get("properties", {})
             if any(inputs.get(k) and k not in props for k in ("mask_path", "mask_url")):
                 continue
+            # Template tools (accepts_image_input) decide from the template the
+            # request's ``workflow`` selects, not from the default's schema.
+            accepts_image = getattr(tool, "accepts_image_input", None)
+            if accepts_image is not None and accepts_image(inputs):
+                props = {**props, "image_path": {}}
             if any(
                 inputs.get(k) and k not in props and "images" not in props
                 for k in ("image_path", "image_paths", "image_url", "image_urls")

@@ -163,7 +163,11 @@ class FreesoundMusic(BaseTool):
                 "query": inputs["query"],
                 "output": str(output_path),
                 "format": "mp3",
-                "license": "Creative Commons (check individual sound license)",
+                # Each sound carries its own CC license (CC0, BY, BY-NC...).
+                "license": sound.get("license")
+                or "Creative Commons (check individual sound license)",
+                # CC BY requires crediting the uploader.
+                "author": sound.get("username"),
                 "freesound_url": f"https://freesound.org/people/{sound.get('username', '')}/sounds/{sound.get('id', '')}/",
                 "results_found": len(search_result),
             },
@@ -182,7 +186,7 @@ class FreesoundMusic(BaseTool):
             "query": query,
             "filter": f"duration:[{min_dur} TO {max_dur}]",
             "sort": "rating_desc",
-            "fields": "id,name,duration,previews,tags,avg_rating,username",
+            "fields": "id,name,duration,previews,tags,avg_rating,username,license",
             "token": api_key,
             "page_size": 15,
         })

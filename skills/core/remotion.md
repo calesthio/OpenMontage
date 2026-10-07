@@ -211,6 +211,14 @@ In Python, invoke via `subprocess` from `video_compose.py` when `backend="remoti
 | `instagram_square` | `width: 1080, height: 1080, fps: 30` |
 | `cinematic_wide` | `width: 2560, height: 1080, fps: 24` |
 
+**Vertical renders with the stock Explainer components.** The components use
+fixed pixel sizes tuned for a 1920x1080 frame, so on a full 1080x1920 canvas
+their text comes out small. `video_compose` accepts `composition_width`,
+`composition_height` (passed as `--width/--height`, and used instead of the
+profile's dimensions when both are set) and `render_scale` (passed as
+`--scale`). A 720x1280 canvas with `render_scale: 1.5` renders a 1080x1920
+output with everything drawn 1.5x larger and still sharp.
+
 ## Key Patterns
 
 ### Scene Plan to Composition

@@ -555,7 +555,22 @@ const BackgroundVideoLayer: React.FC<{
   );
 };
 
-const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme }) => {
+// Chart scenes draw axis labels, legends and bar names down to the bottom
+// edge, exactly where burned captions sit. With captions on, they are laid
+// out in the frame minus this band (the SVG viewBox scales down to fit).
+const CHART_TYPES = new Set(["bar_chart", "line_chart", "pie_chart", "kpi_grid"]);
+
+const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig; captionSafeBottom?: number }> = ({
+  cut,
+  theme,
+  captionSafeBottom = 0,
+}) => {
+  const captionSafe = (element: React.ReactElement) =>
+    captionSafeBottom > 0 && CHART_TYPES.has(cut.type ?? "") ? (
+      <AbsoluteFill style={{ height: `calc(100% - ${captionSafeBottom}px)` }}>{element}</AbsoluteFill>
+    ) : (
+      element
+    );
   // Wrap component with background video or image if specified
   const maybeWrapWithBg = (element: React.ReactElement) => {
     if (cut.backgroundVideo) {
@@ -657,45 +672,45 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
 
   // --- Chart types — use theme.chartColors as default palette ---
   if (cut.type === "bar_chart" && cut.chartData) {
-    return maybeWrapWithBg(
+    return maybeWrapWithBg(captionSafe(
       <BarChart
         data={cut.chartData} title={cut.title} colors={cut.chartColors || theme.chartColors}
         animationStyle={(cut.chartAnimation as any) || "grow-up"}
         showGrid={cut.showGrid} showValues={cut.showValues} backgroundColor={bgColor}
         textColor={textColor}
-      />
+      />)
     );
   }
   if (cut.type === "line_chart" && cut.chartSeries) {
-    return maybeWrapWithBg(
+    return maybeWrapWithBg(captionSafe(
       <LineChart
         series={cut.chartSeries} title={cut.title} colors={cut.chartColors || theme.chartColors}
         animationStyle={(cut.chartAnimation as any) || "draw"}
         showGrid={cut.showGrid} showMarkers={cut.showMarkers} showLegend={cut.showLegend}
         xLabel={cut.xLabel} yLabel={cut.yLabel} backgroundColor={bgColor}
         textColor={textColor}
-      />
+      />)
     );
   }
   if (cut.type === "pie_chart" && cut.chartData) {
-    return maybeWrapWithBg(
+    return maybeWrapWithBg(captionSafe(
       <PieChart
         data={cut.chartData} title={cut.title} colors={cut.chartColors || theme.chartColors}
         animationStyle={(cut.chartAnimation as any) || "expand"}
         donut={cut.donut} centerLabel={cut.centerLabel} centerValue={cut.centerValue}
         showLegend={cut.showLegend} backgroundColor={bgColor}
         textColor={textColor}
-      />
+      />)
     );
   }
   if (cut.type === "kpi_grid" && cut.chartData) {
-    return maybeWrapWithBg(
+    return maybeWrapWithBg(captionSafe(
       <KPIGrid
         metrics={cut.chartData} title={cut.title} columns={cut.columns}
         colors={cut.chartColors || theme.chartColors} animationStyle={(cut.chartAnimation as any) || "count-up"}
         backgroundColor={bgColor}
         textColor={textColor}
-      />
+      />)
     );
   }
   if (cut.type === "progress_bar" && cut.progress !== undefined) {
@@ -836,7 +851,8 @@ const OverlayRenderer: React.FC<{ overlay: Overlay; theme: ThemeConfig }> = ({
 
 export const Explainer: React.FC<ExplainerProps> = (props) => {
   const { cuts, overlays, captions, audio } = props;
-  const { fps, durationInFrames } = useVideoConfig();
+  const { fps, durationInFrames, height } = useVideoConfig();
+  const captionSafeBottom = captions && captions.length > 0 ? Math.round(height * 0.15) : 0;
 
   // Resolve theme from props — playbook name, theme name, or custom themeConfig
   const theme = resolveTheme(props as Record<string, unknown>);
@@ -853,7 +869,7 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
 
         return (
           <Sequence key={cut.id} from={from} durationInFrames={duration}>
-            <SceneRenderer cut={cut} theme={theme} />
+            <SceneRenderer cut={cut} theme={theme} captionSafeBottom={captionSafeBottom} />
           </Sequence>
         );
       })}

@@ -114,6 +114,7 @@ class RemotionCaptionBurn(BaseTool):
                 "default": "#22D3EE",
                 "description": "Highlight color for the active word (hex).",
             },
+            "caption_props": {"type": "object", "description": "Extra CaptionOverlay props passed through as captionProps."},
             "corrections": {
                 "type": "object",
                 "description": (
@@ -275,6 +276,7 @@ class RemotionCaptionBurn(BaseTool):
         font_size: int,
         highlight_color: str,
         overlays: list[dict] | None = None,
+        caption_props: dict | None = None,
     ) -> ToolResult:
         root = self._find_remotion_root()
         if root is None:
@@ -320,6 +322,7 @@ class RemotionCaptionBurn(BaseTool):
             "wordsPerPage": words_per_page,
             "fontSize": font_size,
             "highlightColor": highlight_color,
+            **({"captionProps": caption_props} if caption_props else {}),
         }
         props_dir = root / "public" / "demo-props"
         props_dir.mkdir(parents=True, exist_ok=True)
@@ -485,7 +488,7 @@ class RemotionCaptionBurn(BaseTool):
             result = self._render_remotion(
                 input_path, output_path, captions,
                 words_per_page, font_size, highlight_color,
-                overlays=overlays,
+                overlays=overlays, caption_props=inputs.get("caption_props"),
             )
         else:
             result = self._render_ffmpeg(input_path, output_path, captions)

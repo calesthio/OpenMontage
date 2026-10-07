@@ -1308,11 +1308,16 @@ class VideoCompose(BaseTool):
             muted = palette.get("muted", "#6B7280")
 
             # Build chart colors from all palette entries
-            chart_colors = []
-            for key in ["primary", "accent", "secondary", "success", "warning", "info"]:
-                val = palette.get(key)
-                if val:
-                    chart_colors.append(val[0] if isinstance(val, list) else val)
+            # A playbook's own chart_palette wins (under color_palette first, as
+            # validate_palette reads it, then top level); otherwise derive from the palette.
+            own_chart = palette.get("chart_palette") or playbook.get("chart_palette") or []
+            chart_colors = [c for c in own_chart if isinstance(c, str)]
+            if len(chart_colors) < 3:
+                chart_colors = []
+                for key in ["primary", "accent", "secondary", "success", "warning", "info"]:
+                    val = palette.get(key)
+                    if val:
+                        chart_colors.append(val[0] if isinstance(val, list) else val)
             if len(chart_colors) < 3:
                 chart_colors = [primary, accent, "#10B981", "#8B5CF6", "#EC4899", "#06B6D4"]
 

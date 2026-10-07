@@ -159,7 +159,11 @@ class GeminiTTS(BaseTool):
             request = self.build_request(inputs)
             from tools.google_credentials import get_genai_client
 
-            result = get_genai_client().interactions.create(**request)
+            # Bind the client to a local name: a temporary Client is
+            # garbage-collected mid-request, which closes its httpx transport
+            # and raises "Cannot send a request, as the client has been closed."
+            client = get_genai_client()
+            result = client.interactions.create(**request)
             audio = getattr(result, "output_audio", None)
             if not audio or not getattr(audio, "data", None):
                 audio = next(

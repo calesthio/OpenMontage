@@ -62,6 +62,15 @@ class Transcriber(BaseTool):
                 "default": "base",
             },
             "language": {"type": "string", "description": "ISO 639-1 language code, or null for auto-detect"},
+            "initial_prompt": {
+                "type": "string",
+                "description": (
+                    "Optional priming text. Pass the known narration script here: "
+                    "it suppresses homophone errors and restores punctuation, which "
+                    "downstream cue splitting relies on. Strongly recommended for CJK, "
+                    "where per-character tokens carry no word boundaries."
+                ),
+            },
             "diarize": {"type": "boolean", "default": False},
             "output_dir": {"type": "string", "description": "Directory for output files"},
         },
@@ -117,6 +126,7 @@ class Transcriber(BaseTool):
         input_path = Path(inputs["input_path"])
         model_size = inputs.get("model_size", "base")
         language = inputs.get("language")
+        initial_prompt = inputs.get("initial_prompt")
         diarize = inputs.get("diarize", False)
         output_dir = Path(inputs.get("output_dir", input_path.parent))
 
@@ -164,6 +174,7 @@ class Transcriber(BaseTool):
                 language=language,
                 word_timestamps=True,
                 vad_filter=True,
+                **({"initial_prompt": initial_prompt} if initial_prompt else {}),
             )
 
             parsed_segments = []

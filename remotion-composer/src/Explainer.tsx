@@ -308,6 +308,12 @@ export interface ExplainerProps {
   overlays?: Overlay[];
   captions?: WordCaption[];
   audio?: AudioConfig;
+  // Separator rendered between caption tokens. Latin scripts want the default
+  // " "; CJK scripts must pass "" or every character gets a visible gap.
+  captionWordSeparator?: string;
+  // Tokens shown per caption page. The default suits space-delimited scripts;
+  // CJK packs far more meaning per token, so it wants a larger number.
+  captionWordsPerPage?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -835,7 +841,7 @@ const OverlayRenderer: React.FC<{ overlay: Overlay; theme: ThemeConfig }> = ({
 // ---------------------------------------------------------------------------
 
 export const Explainer: React.FC<ExplainerProps> = (props) => {
-  const { cuts, overlays, captions, audio } = props;
+  const { cuts, overlays, captions, audio, captionWordSeparator, captionWordsPerPage } = props;
   const { fps, durationInFrames } = useVideoConfig();
 
   // Resolve theme from props — playbook name, theme name, or custom themeConfig
@@ -876,11 +882,12 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
       {captions && captions.length > 0 && (
         <CaptionOverlay
           words={captions}
-          wordsPerPage={6}
+          wordsPerPage={captionWordsPerPage ?? 6}
           fontSize={42}
           color={theme.textColor}
           highlightColor={theme.captionHighlightColor}
           backgroundColor={theme.captionBackgroundColor}
+          wordSeparator={captionWordSeparator}
         />
       )}
 

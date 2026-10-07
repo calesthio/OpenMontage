@@ -8,6 +8,7 @@ the standard library.
 from __future__ import annotations
 
 import json
+from html import escape
 import time
 from pathlib import Path
 from typing import Any
@@ -279,14 +280,14 @@ class SubtitleGen(BaseTool):
                     lines.append(
                         f"{self._ts_vtt(word_info['start'])} --> {self._ts_vtt(word_info['end'])}"
                     )
-                    lines.append(word_info["word"])
+                    lines.append(escape(word_info["word"], quote=False))
                     lines.append("")
         elif highlight_style == "karaoke":
             for cue in cues:
                 words = cue.get("words", [])
                 if not words:
                     lines.append(f"{self._ts_vtt(cue['start'])} --> {self._ts_vtt(cue['end'])}")
-                    lines.append(cue["text"])
+                    lines.append(escape(cue["text"], quote=False))
                     lines.append("")
                     continue
                 for wi, word_info in enumerate(words):
@@ -296,15 +297,15 @@ class SubtitleGen(BaseTool):
                     parts = []
                     for wj, w in enumerate(words):
                         if wj == wi:
-                            parts.append(f"<b>{w['word']}</b>")
+                            parts.append(f"<b>{escape(w['word'], quote=False)}</b>")
                         else:
-                            parts.append(w["word"])
+                            parts.append(escape(w["word"], quote=False))
                     lines.append(" ".join(parts))
                     lines.append("")
         else:
             for cue in cues:
                 lines.append(f"{self._ts_vtt(cue['start'])} --> {self._ts_vtt(cue['end'])}")
-                lines.append(cue["text"])
+                lines.append(escape(cue["text"], quote=False))
                 lines.append("")
         return "\n".join(lines)
 

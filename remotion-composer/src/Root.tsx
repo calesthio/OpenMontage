@@ -123,13 +123,19 @@ export function resolveTheme(props: Record<string, unknown>): ThemeConfig {
 const calculateMetadata: CalculateMetadataFunction<ExplainerProps> = async ({
   props,
 }) => {
+  // Frame size is props-driven so one composition serves landscape (default),
+  // vertical (1080x1920) and square (1080x1080) deliverables.
+  const dimensions = {
+    width: (props.width as number) || 1920,
+    height: (props.height as number) || 1080,
+  };
   const cuts = props.cuts || [];
   if (cuts.length === 0) {
-    return { durationInFrames: 30 * 60 };
+    return { durationInFrames: 30 * 60, ...dimensions };
   }
   const lastEnd = Math.max(...cuts.map((c) => c.out_seconds || 0));
   // Add 1 second padding for final fade
-  return { durationInFrames: Math.ceil((lastEnd + 1) * 30) };
+  return { durationInFrames: Math.ceil((lastEnd + 1) * 30), ...dimensions };
 };
 
 export const Root: React.FC = () => {

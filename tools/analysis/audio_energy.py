@@ -14,6 +14,7 @@ Key use cases:
 from __future__ import annotations
 
 import json
+import math
 import re
 import shutil
 import subprocess
@@ -76,6 +77,7 @@ class AudioEnergy(BaseTool):
             },
             "video_duration_seconds": {
                 "type": "number",
+                "exclusiveMinimum": 0,
                 "description": "Duration of the video this music will accompany. "
                 "Used to recommend looping and find the best offset window.",
             },
@@ -115,6 +117,8 @@ class AudioEnergy(BaseTool):
 
         threshold_lufs = inputs.get("energy_threshold_lufs", -40)
         video_duration = inputs.get("video_duration_seconds")
+        if video_duration is not None and (not math.isfinite(video_duration) or video_duration <= 0):
+            return ToolResult(success=False, error="Video duration must be finite and greater than zero")
 
         start = time.time()
 
@@ -229,7 +233,7 @@ class AudioEnergy(BaseTool):
         )
 
         if video_duration and video_duration < audio_duration:
-            window_size = int(video_duration)
+            window_size = math.ceil(video_duration)
             loudness_values = [
                 s["loudness_lufs"] if s["loudness_lufs"] > -120 else -60
                 for s in energy_profile
@@ -239,7 +243,11 @@ class AudioEnergy(BaseTool):
                 best_avg = -999.0
                 best_start = 0
 
-                for i in range(len(loudness_values) - window_size + 1):
+                # A partial final analysis bucket may not contain enough
+                # audio for the requested window, even when it scores highest.
+                last_start = min(len(loudness_values) - window_size,
+                                 math.floor(audio_duration - video_duration))
+                for i in range(last_start + 1):
                     window = loudness_values[i : i + window_size]
                     avg = sum(window) / len(window)
                     if avg > best_avg:

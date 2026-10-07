@@ -158,7 +158,7 @@ class SubtitleGen(BaseTool):
                     import re as _re
                     seg["text"] = _re.sub(
                         r"\b" + _re.escape(wrong) + r"\b",
-                        right,
+                        lambda match, replacement=right: replacement,
                         seg["text"],
                         flags=_re.IGNORECASE,
                     )

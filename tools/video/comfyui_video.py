@@ -1,8 +1,9 @@
 """ComfyUI video generation via a local or remote ComfyUI server.
 
-Supports text-to-video and image-to-video using WAN 2.2 14B with
-4-step LightX2V LoRA acceleration.  Custom workflows are accepted
-via the ``workflow_json`` input.
+Supports text-to-video and image-to-video using WAN 2.2 14B.
+Image-to-video prefers LightWan2.2 NVFP4 4-step weights on Blackwell
+(RTX 5090), then falls back to FP8 + LightX2V LoRAs. Custom workflows
+are accepted via the ``workflow_json`` input.
 """
 
 from __future__ import annotations
@@ -44,6 +45,12 @@ _I2V_OUTPUT_NODE = "108"
 # Models required by the bundled WAN 2.2 workflows
 _REQUIRED_MODELS_COMMON = [
     "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+]
+_REQUIRED_MODELS_I2V_NVFP4 = [
+    *_REQUIRED_MODELS_COMMON,
+    "Wan2.2-I2V-A14B_NVFP4_Sparse_high_comfy.safetensors",
+    "Wan2.2-I2V-A14B_NVFP4_Sparse_low_comfy.safetensors",
+    "wan_2.1_vae.safetensors",
 ]
 _REQUIRED_MODELS_I2V = [
     *_REQUIRED_MODELS_COMMON,
@@ -219,10 +226,10 @@ class ComfyUIVideo(BaseTool):
             }
 
         _, missing_t2v = self._client.check_models(_REQUIRED_MODELS_T2V)
-        _, missing_i2v = self._client.check_models(_REQUIRED_MODELS_I2V)
+        i2v_ok = self._i2v_stack() is not None
         return {
             "text_to_video": "available" if not missing_t2v else "degraded",
-            "image_to_video": "available" if not missing_i2v else "degraded",
+            "image_to_video": "available" if i2v_ok else "degraded",
         }
 
     def is_operation_available(self, operation: str) -> bool:
@@ -253,7 +260,9 @@ class ComfyUIVideo(BaseTool):
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         operation = inputs.get("operation", "text_to_video")
         if operation == "image_to_video":
-            return 210.0  # ~3.5 min
+            if self._i2v_stack() == "nvfp4":
+                return 30.0
+            return 210.0  # ~3.5 min FP8 + LoRA
         return 240.0  # ~4 min
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
@@ -275,29 +284,54 @@ class ComfyUIVideo(BaseTool):
 
         operation = inputs.get("operation", "text_to_video")
 
+        i2v_stack = None
         if not custom_workflow:
-            required = _REQUIRED_MODELS_I2V if operation == "image_to_video" else _REQUIRED_MODELS_T2V
-            _, missing = self._client.check_models(required)
-            if missing:
-                workflow_key = (
-                    "wan22-i2v-4step"
-                    if operation == "image_to_video"
-                    else "wan22-t2v-4step"
-                )
-                return ToolResult(
-                    success=False,
-                    data=missing_models_payload(
-                        missing,
-                        workflow_key=workflow_key,
-                        workflow_name=f"{workflow_key}.json",
-                        operation=operation,
-                    ),
-                    error=(
-                        f"ComfyUI server is running but missing models for {operation}: "
-                        f"{', '.join(missing)}.\n"
-                        f"See data.missing_models for destination hints and download URLs."
-                    ),
-                )
+            if operation == "image_to_video":
+                i2v_stack = self._i2v_stack()
+                if i2v_stack is None:
+                    # Neither stack is complete. Report BOTH sets: the error text
+                    # already says the FP8 fallback is incomplete too, so omitting
+                    # its files would hand the caller a payload that cannot explain
+                    # the failure and hides the FP8 download URLs.
+                    _, missing_nvfp4 = self._client.check_models(_REQUIRED_MODELS_I2V_NVFP4)
+                    _, missing_fp8 = self._client.check_models(_REQUIRED_MODELS_I2V)
+                    missing = list(dict.fromkeys([*missing_nvfp4, *missing_fp8]))
+                    workflow_key = "wan22-i2v-nvfp4"
+                    return ToolResult(
+                        success=False,
+                        data=missing_models_payload(
+                            missing,
+                            workflow_key=workflow_key,
+                            workflow_name=f"{workflow_key}.json",
+                            operation=operation,
+                            fallback_workflow_keys=["wan22-i2v-4step"],
+                        ),
+                        error=(
+                            f"ComfyUI server is running but no complete I2V stack is installed. "
+                            f"Missing: {', '.join(missing)}. "
+                            f"FP8 + LightX2V LoRA fallback is also incomplete.\n"
+                            f"See data.missing_models for destination hints and download URLs."
+                        ),
+                    )
+            else:
+                required = _REQUIRED_MODELS_T2V
+                _, missing = self._client.check_models(required)
+                if missing:
+                    workflow_key = "wan22-t2v-4step"
+                    return ToolResult(
+                        success=False,
+                        data=missing_models_payload(
+                            missing,
+                            workflow_key=workflow_key,
+                            workflow_name=f"{workflow_key}.json",
+                            operation=operation,
+                        ),
+                        error=(
+                            f"ComfyUI server is running but missing models for {operation}: "
+                            f"{', '.join(missing)}.\n"
+                            f"See data.missing_models for destination hints and download URLs."
+                        ),
+                    )
         start = time.time()
         seed = inputs.get("seed") or ComfyUIClient.random_seed()
         output_path = Path(
@@ -309,12 +343,12 @@ class ComfyUIVideo(BaseTool):
                 workflow = self._load_custom_workflow(inputs)
                 output_node = str(inputs["output_node"])
             elif operation == "image_to_video":
-                workflow, output_node = self._build_i2v(inputs, seed, output_path)
+                workflow, output_node = self._build_i2v(inputs, seed, output_path, i2v_stack)
             else:
                 workflow, output_node = self._build_t2v(inputs, seed, output_path)
 
             provenance = self._workflow_provenance(
-                inputs, custom_workflow, output_node, operation, workflow
+                inputs, custom_workflow, output_node, operation, workflow, i2v_stack
             )
             paths = self._client.generate(
                 workflow,
@@ -333,7 +367,7 @@ class ComfyUIVideo(BaseTool):
         height = inputs.get("height", 480 if operation == "text_to_video" else 640)
         num_frames = inputs.get("num_frames", 81)
 
-        model_name = self._model_name(inputs, custom_workflow)
+        model_name = self._model_name(inputs, custom_workflow, i2v_stack)
         return ToolResult(
             success=True,
             data={
@@ -361,6 +395,16 @@ class ComfyUIVideo(BaseTool):
     # Workflow builders
     # ------------------------------------------------------------------
 
+    def _i2v_stack(self) -> str | None:
+        """Prefer NVFP4 distilled I2V on Blackwell; else FP8 + LoRA."""
+        _, missing_nvfp4 = self._client.check_models(_REQUIRED_MODELS_I2V_NVFP4)
+        if not missing_nvfp4:
+            return "nvfp4"
+        _, missing_fp8 = self._client.check_models(_REQUIRED_MODELS_I2V)
+        if not missing_fp8:
+            return "fp8"
+        return None
+
     def _build_t2v(
         self, inputs: dict[str, Any], seed: int, output_path: Path
     ) -> tuple[dict, str]:
@@ -378,7 +422,7 @@ class ComfyUIVideo(BaseTool):
         return workflow, _T2V_OUTPUT_NODE
 
     def _build_i2v(
-        self, inputs: dict[str, Any], seed: int, output_path: Path
+        self, inputs: dict[str, Any], seed: int, output_path: Path, stack: str | None = None
     ) -> tuple[dict, str]:
         width = inputs.get("width", 640)
         height = inputs.get("height", 640)
@@ -405,7 +449,8 @@ class ComfyUIVideo(BaseTool):
         upload_name = f"om_{output_path.stem}.png"
         server_name = self._client.upload_image(Path(ref_path), upload_name)
 
-        workflow = ComfyUIClient.load_workflow(_WORKFLOWS / "wan22-i2v-4step.json")
+        workflow_name = "wan22-i2v-nvfp4.json" if stack == "nvfp4" else "wan22-i2v-4step.json"
+        workflow = ComfyUIClient.load_workflow(_WORKFLOWS / workflow_name)
         workflow = ComfyUIClient.patch_workflow(workflow, {
             "93": {"text": inputs["prompt"]},
             "97": {"image": server_name},
@@ -422,8 +467,10 @@ class ComfyUIVideo(BaseTool):
         return ComfyUIClient.load_workflow(Path(inputs["workflow_path"]))
 
     @staticmethod
-    def _model_name(inputs: dict[str, Any], custom_workflow: bool) -> str:
+    def _model_name(inputs: dict[str, Any], custom_workflow: bool, i2v_stack: str | None = None) -> str:
         if not custom_workflow:
+            if i2v_stack == "nvfp4":
+                return "wan2.2-14b-nvfp4-4step"
             return "wan2.2-14b-fp8-4step"
         return (
             inputs.get("workflow_model")
@@ -439,20 +486,18 @@ class ComfyUIVideo(BaseTool):
         output_node: str,
         operation: str,
         workflow: dict[str, Any],
+        i2v_stack: str | None = None,
     ) -> dict[str, Any]:
         if not custom_workflow:
-            workflow_key = (
-                "wan22-i2v-4step"
-                if operation == "image_to_video"
-                else "wan22-t2v-4step"
-            )
+            if operation == "image_to_video" and i2v_stack == "nvfp4":
+                workflow_key = "wan22-i2v-nvfp4"
+            elif operation == "image_to_video":
+                workflow_key = "wan22-i2v-4step"
+            else:
+                workflow_key = "wan22-t2v-4step"
             return {
                 "source": "bundled",
-                "workflow": (
-                    "wan22-i2v-4step.json"
-                    if operation == "image_to_video"
-                    else "wan22-t2v-4step.json"
-                ),
+                "workflow": f"{workflow_key}.json",
                 "workflow_hash_sha256": workflow_hash(workflow),
                 "model_stack": model_stack(workflow_key, inputs),
                 "output_node": output_node,

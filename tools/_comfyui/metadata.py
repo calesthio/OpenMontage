@@ -176,6 +176,47 @@ BUNDLED_MODEL_STACKS: dict[str, list[dict[str, Any]]] = {
             ),
         },
     ],
+    "wan22-i2v-nvfp4": [
+        {
+            "role": "text_encoder",
+            "name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+            "quantization": "FP8",
+            "destination_hint": "ComfyUI/models/text_encoders/",
+            "download_url": (
+                "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/"
+                "tree/main/split_files/text_encoders"
+            ),
+        },
+        {
+            "role": "diffusion_model_high_noise",
+            "name": "Wan2.2-I2V-A14B_NVFP4_Sparse_high_comfy.safetensors",
+            "quantization": "NVFP4",
+            "destination_hint": "ComfyUI/models/diffusion_models/",
+            "download_url": (
+                "https://huggingface.co/lightx2v/LightWan2.2-A14B/resolve/main/"
+                "Wan2.2-I2V-A14B_NVFP4_Sparse_high_comfy.safetensors"
+            ),
+        },
+        {
+            "role": "diffusion_model_low_noise",
+            "name": "Wan2.2-I2V-A14B_NVFP4_Sparse_low_comfy.safetensors",
+            "quantization": "NVFP4",
+            "destination_hint": "ComfyUI/models/diffusion_models/",
+            "download_url": (
+                "https://huggingface.co/lightx2v/LightWan2.2-A14B/resolve/main/"
+                "Wan2.2-I2V-A14B_NVFP4_Sparse_low_comfy.safetensors"
+            ),
+        },
+        {
+            "role": "vae",
+            "name": "wan_2.1_vae.safetensors",
+            "destination_hint": "ComfyUI/models/vae/",
+            "download_url": (
+                "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/"
+                "tree/main/split_files/vae"
+            ),
+        },
+    ],
 }
 
 
@@ -199,14 +240,26 @@ def missing_models_payload(
     workflow_key: str,
     workflow_name: str,
     operation: str | None = None,
+    fallback_workflow_keys: list[str] | None = None,
 ) -> dict[str, Any]:
-    """Build a machine-readable missing-model error payload."""
-    stack_by_name = {
-        item["name"]: item for item in BUNDLED_MODEL_STACKS.get(workflow_key, [])
-    }
+    """Build a machine-readable missing-model error payload.
+
+    ``fallback_workflow_keys`` exists for tools that can satisfy an operation from
+    more than one model stack (for example ComfyUI I2V, which prefers NVFP4 and
+    falls back to FP8 + LoRA). When every stack is incomplete the caller must be
+    able to see the files for all of them, and each file must keep the role and
+    download URL it has in its OWN stack. Resolving a merged list against a single
+    workflow key silently degrades the other stack's files to role "unknown" with
+    no download URL -- exactly the information the payload exists to provide.
+    """
+    lookup: dict[str, dict[str, Any]] = {}
+    for key in [workflow_key, *(fallback_workflow_keys or [])]:
+        for item in BUNDLED_MODEL_STACKS.get(key, []):
+            lookup.setdefault(item["name"], item)
+
     items = []
     for name in missing:
-        meta = dict(stack_by_name.get(name, {}))
+        meta = dict(lookup.get(name, {}))
         meta.setdefault("name", name)
         meta.setdefault("role", "unknown")
         meta.setdefault("destination_hint", "ComfyUI/models/ matching the workflow node")

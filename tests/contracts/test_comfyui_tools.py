@@ -236,6 +236,7 @@ class TestContract:
 EXPECTED_WORKFLOWS = [
     "flux2-txt2img.json",
     "wan22-i2v-4step.json",
+    "wan22-i2v-nvfp4.json",
     "wan22-t2v-4step.json",
 ]
 
@@ -279,6 +280,123 @@ def test_t2v_workflow_uses_14b_compatible_vae():
     with open(WORKFLOW_DIR / "wan22-t2v-4step.json") as f:
         w = json.load(f)
     assert w["4"]["inputs"]["vae_name"] == "wan_2.1_vae.safetensors"
+
+
+# ------------------------------------------------------------------
+# NVFP4 I2V stack (Blackwell path)
+# ------------------------------------------------------------------
+
+def test_i2v_nvfp4_workflow_has_same_templated_nodes_as_fp8():
+    """The NVFP4 graph must expose the same node contract the tool patches.
+
+    _build_i2v patches nodes 93/97/98/86/108 regardless of which stack is
+    selected. If the NVFP4 graph renumbered anything, the patch would silently
+    write to keys that do not exist and the clip would render with the
+    template's placeholder prompt.
+    """
+    with open(WORKFLOW_DIR / "wan22-i2v-nvfp4.json") as f:
+        w = json.load(f)
+    assert w["93"]["class_type"] == "CLIPTextEncode"
+    assert w["97"]["class_type"] == "LoadImage"
+    assert w["98"]["class_type"] == "WanImageToVideo"
+    assert w["86"]["class_type"] == "KSamplerAdvanced"
+    assert w["108"]["class_type"] == "SaveVideo"
+    # the fields the tool actually writes
+    for node, field in (("93", "text"), ("97", "image"), ("86", "noise_seed"),
+                        ("108", "filename_prefix")):
+        assert field in w[node]["inputs"], f"node {node} missing {field}"
+    for field in ("width", "height", "length"):
+        assert field in w["98"]["inputs"], f"node 98 missing {field}"
+
+
+def test_i2v_nvfp4_metadata_stack_is_registered():
+    """The missing-model payload looks metadata up by workflow_key.
+
+    Without this entry a missing NVFP4 file would fall back to role 'unknown'
+    with no download URL, which is exactly the case the payload exists for.
+    """
+    from tools._comfyui.metadata import BUNDLED_MODEL_STACKS
+
+    stack = BUNDLED_MODEL_STACKS["wan22-i2v-nvfp4"]
+    names = {item["name"] for item in stack}
+    assert "Wan2.2-I2V-A14B_NVFP4_Sparse_high_comfy.safetensors" in names
+    assert "Wan2.2-I2V-A14B_NVFP4_Sparse_low_comfy.safetensors" in names
+    assert "wan_2.1_vae.safetensors" in names
+    for item in stack:
+        assert item["role"] != "unknown"
+        assert item.get("download_url"), f"{item['name']} has no download URL"
+
+
+def test_i2v_stack_prefers_nvfp4_then_falls_back_to_fp8(monkeypatch):
+    from tools.video import comfyui_video as mod
+
+    tool = ComfyUIVideo()
+
+    # both stacks complete -> NVFP4 wins
+    monkeypatch.setattr(tool._client, "check_models", lambda models: ([], []))
+    assert tool._i2v_stack() == "nvfp4"
+
+    # NVFP4 incomplete, FP8 complete -> FP8
+    # Note the two stacks share umt5_xxl and wan_2.1_vae, so a fake that marks
+    # "the NVFP4 list" missing would also break the FP8 stack. Mark only the
+    # files unique to NVFP4.
+    nvfp4_only = set(mod._REQUIRED_MODELS_I2V_NVFP4) - set(mod._REQUIRED_MODELS_I2V)
+    assert nvfp4_only, "expected NVFP4 to have files the FP8 stack does not"
+
+    def fp8_ok(models):
+        return [], [m for m in models if m in nvfp4_only]
+
+    monkeypatch.setattr(tool._client, "check_models", fp8_ok)
+    assert tool._i2v_stack() == "fp8"
+
+    # NVFP4 complete, FP8 incomplete -> NVFP4 (the shared files are present)
+    fp8_only = set(mod._REQUIRED_MODELS_I2V) - set(mod._REQUIRED_MODELS_I2V_NVFP4)
+
+    def nvfp4_ok(models):
+        return [], [m for m in models if m in fp8_only]
+
+    monkeypatch.setattr(tool._client, "check_models", nvfp4_ok)
+    assert tool._i2v_stack() == "nvfp4"
+
+    # neither complete -> None
+    monkeypatch.setattr(tool._client, "check_models", lambda models: ([], list(models)))
+    assert tool._i2v_stack() is None
+
+
+def test_i2v_missing_payload_reports_both_stacks(monkeypatch, tmp_path):
+    """When no I2V stack is complete the payload must cover BOTH stacks.
+
+    Regression: the first cut reported only the NVFP4 files while the error text
+    claimed the FP8 fallback was incomplete too, so the structured payload could
+    not explain the failure and hid the FP8 download URLs.
+    """
+    from tools.video import comfyui_video as mod  # noqa: F401
+    from tools.base_tool import ToolResult  # noqa: F401
+
+    tool = ComfyUIVideo()
+    monkeypatch.setattr(tool._client, "is_available", lambda: True)
+    # every model is missing
+    monkeypatch.setattr(tool._client, "check_models", lambda models: ([], list(models)))
+
+    ref = tmp_path / "ref.png"
+    ref.write_bytes(b"\x89PNG\r\n\x1a\n")
+
+    result = tool.execute({
+        "prompt": "test",
+        "operation": "image_to_video",
+        "reference_image_path": str(ref),
+        "output_path": str(tmp_path / "out.mp4"),
+    })
+
+    assert result.success is False
+    reported = {item["name"] for item in result.data["missing_models"]}
+    # at least one file unique to each stack must be present
+    assert "Wan2.2-I2V-A14B_NVFP4_Sparse_high_comfy.safetensors" in reported
+    assert "wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors" in reported
+    assert "wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors" in reported
+    # and each reported file must carry usable provenance, not the 'unknown' fallback
+    for item in result.data["missing_models"]:
+        assert item["role"] != "unknown", f"{item['name']} lost its role"
 
 
 def test_t2v_metadata_stack_uses_14b_compatible_vae():

@@ -246,6 +246,8 @@ def _run_local(cfg: dict, job: dict) -> dict:
     )
     env = os.environ.copy()
     env["OPENMONTAGE_PROJECTS_DIR"] = cfg["projects_dir"]
+    if cfg.get("browser"):
+        env["TUTORIAL_BROWSER"] = cfg["browser"]
     log_path = _project_dir(cfg, project_id) / "mcp_job.log"
     log_path.parent.mkdir(parents=True, exist_ok=True)
     _write_job(cfg, project_id, {**job, "status": "running", "log": str(log_path)})

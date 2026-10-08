@@ -6,5 +6,6 @@
   "projects_dir": "",
   "lang": "en",
   "ttsd_image": "ddev-circuit-bid-ttsd:latest",
-  "narration_repo": "/media/bl/Disk2/htdocs/circuit-bid/redis-bridge"
+  "narration_repo": "/media/bl/Disk2/htdocs/circuit-bid/redis-bridge",
+  "browser": "chrome"
 }

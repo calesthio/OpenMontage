@@ -29,6 +29,7 @@ DEFAULTS = {
     "s3_region": "eu-central-1",
     "render_api_url": "",
     "render_timeout_sec": "1800",
+    "browser": "",
 }
 
 _ENV = {
@@ -43,6 +44,7 @@ _ENV = {
     "s3_region": "CIRCUIT_VIDEO_S3_REGION",
     "render_api_url": "CIRCUIT_VIDEO_RENDER_API_URL",
     "render_timeout_sec": "CIRCUIT_VIDEO_RENDER_TIMEOUT_SEC",
+    "browser": "TUTORIAL_BROWSER",
 }
 
 
@@ -72,7 +74,7 @@ def load_config() -> dict:
         try:
             data = json.loads(tutorial_cfg.read_text())
             for key in ("narration_url", "base_url", "client_dir", "render_runtime",
-                        "projects_dir", "lang"):
+                        "projects_dir", "lang", "browser"):
                 val = data.get(key)
                 if val not in (None, ""):
                     cfg[key] = val

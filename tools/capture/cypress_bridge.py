@@ -70,6 +70,12 @@ def run_tutorial_spec(
         "--config-file", "cypress.tutorial.config.js",
         "--spec", spec,
     ]
+    # Browser: Electron (Cypress default) crashes its renderer on some heavy
+    # backoffice pages; `chrome` is reliable. Resolved from TUTORIAL_BROWSER /
+    # CYPRESS_BROWSER, else the "browser" key of tutorial.config.json.
+    browser = _resolve_browser()
+    if browser:
+        cmd += ["--browser", browser]
     if config_pairs:
         cmd += ["--config", ",".join(config_pairs)]
 
@@ -101,6 +107,18 @@ def run_tutorial_spec(
     manifest, manifest_path = _find_manifest(client, spec)
     manifest["manifest_path"] = str(manifest_path)
     return manifest
+
+
+def _resolve_browser() -> str:
+    import os
+    val = os.environ.get("TUTORIAL_BROWSER") or os.environ.get("CYPRESS_BROWSER")
+    if val:
+        return val.strip()
+    cfg = Path(__file__).resolve().parents[2] / "tutorial.config.json"
+    try:
+        return str(json.loads(cfg.read_text()).get("browser") or "").strip()
+    except (OSError, ValueError):
+        return ""
 
 
 def _find_manifest(client: Path, spec: str) -> tuple[dict, Path]:
@@ -157,7 +175,7 @@ def _to_cfr(src: str, dst: str, fps: int = CFR_FPS) -> None:
         [
             "ffmpeg", "-y", "-v", "error",
             "-i", str(src),
-            "-r", str(fps), "-vsync", "cfr",
+            "-r", str(fps), "-fps_mode", "cfr",
             "-an", "-c:v", "libx264", "-crf", "23", "-preset", "veryfast",
             str(dst),
         ]
@@ -253,7 +271,7 @@ def normalize_capture(
     cmd += [
         "-i", str(cfr),
         "-vf", vf,
-        "-r", str(fps), "-vsync", "cfr",
+        "-r", str(fps), "-fps_mode", "cfr",
         "-an", "-c:v", "libx264", "-crf", "20", "-preset", "medium",
         "-movflags", "faststart",
         str(out),

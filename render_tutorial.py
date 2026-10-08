@@ -34,6 +34,16 @@ from typing import Optional
 
 REPO_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(REPO_ROOT))
+# Repo-local virtualenv fallback: when this script runs under an interpreter that
+# lacks the requirements (e.g. the system python3 that hosts the MCP server), use
+# the packages installed in ./.venv (`uv venv .venv && uv pip install -r requirements.txt`).
+try:
+    import jsonschema  # noqa: F401
+except ImportError:
+    import sysconfig as _sc
+    _venv_sp = REPO_ROOT / ".venv" / "lib" / f"python{_sc.get_python_version()}" / "site-packages"
+    if _venv_sp.is_dir():
+        sys.path.append(str(_venv_sp))
 
 from lib import tutorial as T  # noqa: E402
 from lib.checkpoint import init_project  # noqa: E402

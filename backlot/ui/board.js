@@ -20,6 +20,153 @@ let activeRender = 0;
 let replay = null;          // {t0, t1, t, playing} — replay mode when non-null
 let firstPaint = true;
 
+// UISFX is optional, quiet by default, and only plays semantic state changes.
+// It synthesizes audio locally after a trusted user gesture; no audio files or
+// third-party network requests are needed at runtime.
+const SOUND_ENABLED_KEY = "backlot.ui-sounds.enabled";
+const SOUND_PREFS_KEY = "backlot.uisfx.preferences";
+function readSoundEnabled() {
+  try { return localStorage.getItem(SOUND_ENABLED_KEY) === "true"; }
+  catch { return false; }
+}
+function saveSoundEnabled(enabled) {
+  try { localStorage.setItem(SOUND_ENABLED_KEY, enabled ? "true" : "false"); }
+  catch { /* Sound remains a session preference when storage is unavailable. */ }
+}
+let soundEnabled = readSoundEnabled();
+let soundUnavailable = false;
+let soundEnableError = false;
+let soundUnlocked = false;
+let previousSoundStages = null;
+
+function markSoundUnavailable() {
+  soundUnavailable = true;
+  const button = document.querySelector(".sound-toggle");
+  if (button) {
+    button.disabled = true;
+    button.title = "UI sounds are unavailable. Run make setup, then reload Backlot.";
+    button.setAttribute("aria-label", button.title);
+    button.setAttribute("aria-pressed", "false");
+  }
+}
+
+const soundPlayerPromise = import("/vendor/uisfx/index.js")
+  .then(({ createUISFX }) => createUISFX({
+    pack: "studio",
+    volume: 0.55,
+    enabled: soundEnabled,
+    preferences: { key: SOUND_PREFS_KEY },
+  }))
+  .catch(() => {
+    markSoundUnavailable();
+    return null;
+  });
+
+function renderSoundToggle() {
+  const label = soundUnavailable
+    ? "UI sounds unavailable. Run make setup, then reload Backlot."
+    : soundEnableError
+      ? "Audio could not be started. Click to try enabling sounds again."
+      : soundEnabled ? "Mute UI sounds" : "Enable UI sounds";
+  return el("button", {
+    class: "theme-toggle sound-toggle",
+    type: "button",
+    title: label,
+    "aria-label": label,
+    "aria-pressed": soundEnabled ? "true" : "false",
+    disabled: soundUnavailable ? "" : null,
+    onclick: toggleUISounds,
+  }, el("span", { class: "theme-toggle-icon", "aria-hidden": "true" }, soundEnabled ? "♫" : "♪"));
+}
+
+async function toggleUISounds() {
+  if (soundUnavailable) return;
+  const ui = await soundPlayerPromise;
+  if (!ui) {
+    markSoundUnavailable();
+    return;
+  }
+  soundEnableError = false;
+  if (soundEnabled) {
+    soundEnabled = false;
+    saveSoundEnabled(false);
+    ui.setEnabled(false);
+    soundUnlocked = false;
+    render();
+    return;
+  }
+  // Unlock inside the trusted click/keyboard activation so browser autoplay
+  // rules are respected. If blocked, leave the setting off and allow retry.
+  let unlocked = false;
+  try { unlocked = await ui.unlock(); } catch { /* retry from the visible toggle */ }
+  if (!unlocked) {
+    soundEnableError = true;
+    const button = document.querySelector(".sound-toggle");
+    if (button) {
+      button.title = "Audio could not be started. Click to try enabling sounds again.";
+      button.setAttribute("aria-label", button.title);
+    }
+    return;
+  }
+  soundUnlocked = true;
+  soundEnabled = true;
+  saveSoundEnabled(true);
+  ui.setEnabled(true);
+  ui.play("toggle-on");
+  render();
+}
+
+function installSoundUnlockListeners() {
+  const unlockOnGesture = async () => {
+    if (!soundEnabled || soundUnlocked) return;
+    const ui = await soundPlayerPromise;
+    if (!ui || !soundEnabled) return;
+    try { soundUnlocked = await ui.unlock(); } catch { /* next gesture retries */ }
+    if (soundUnlocked) {
+      document.removeEventListener("pointerdown", unlockOnGesture);
+      document.removeEventListener("keydown", unlockOnGesture);
+    }
+  };
+  document.addEventListener("pointerdown", unlockOnGesture);
+  document.addEventListener("keydown", unlockOnGesture);
+}
+if (soundEnabled) installSoundUnlockListeners();
+
+function playSoundCue(cue) {
+  if (!soundEnabled || !soundUnlocked) return;
+  void soundPlayerPromise.then((ui) => {
+    if (soundEnabled && soundUnlocked && ui && ui.isEnabled()) ui.play(cue);
+  }).catch(() => { /* Optional sound must never interrupt the board. */ });
+}
+
+function trackSoundTransitions(nextState) {
+  const current = new Map((nextState.stages || []).map((stage) => [
+    stage.name,
+    { status: stage.status, stalled: Boolean(stage.stalled) },
+  ]));
+  if (previousSoundStages === null) {
+    previousSoundStages = current;
+    return; // Never sound historical states on initial page load.
+  }
+
+  const candidates = [];
+  const priority = { start: 1, complete: 2, notification: 3, warning: 4, error: 5 };
+  for (const [name, next] of current) {
+    const previous = previousSoundStages.get(name);
+    if (!previous) continue;
+    if (next.status !== previous.status) {
+      if (next.status === "failed" && previous.status !== "failed") candidates.push("error");
+      else if (next.status === "awaiting_human" && previous.status !== "awaiting_human") candidates.push("notification");
+      else if (next.status === "completed" && previous.status !== "completed") candidates.push("complete");
+      else if (next.status === "in_progress" && previous.status !== "in_progress") candidates.push("start");
+    }
+    if (next.stalled && !previous.stalled) candidates.push("warning");
+  }
+  previousSoundStages = current;
+  const cue = candidates.sort((a, b) => priority[b] - priority[a])[0];
+  if (cue) playSoundCue(cue);
+}
+
 function applyTheme(theme) {
   currentTheme = theme === "light" ? "light" : "dark";
   document.documentElement.dataset.theme = currentTheme;

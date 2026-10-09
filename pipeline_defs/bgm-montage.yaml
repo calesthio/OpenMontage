@@ -1,0 +1,66 @@
+name: bgm-montage
+version: "1.0"
+description: >
+  Specialized music-driven montage pipeline backed by the independently
+  maintained BGM Montage analyzer, planner, material matcher, FFmpeg renderer,
+  and QA engine.
+category: custom
+stability: beta
+default_checkpoint_policy: guided
+
+reference_input:
+  supported: true
+  analysis_depth: standard
+  analysis_tools:
+    - bgm_montage
+
+extensions:
+  custom_scripts: false
+  custom_playbooks: false
+  custom_skills: true
+  custom_tools: false
+
+required_skills:
+  - core/bgm-montage
+  - pipelines/bgm-montage/idea-director
+  - pipelines/bgm-montage/compose-director
+  - meta/reviewer
+  - meta/checkpoint-protocol
+
+stages:
+  - name: idea
+    skill: pipelines/bgm-montage/idea-director
+    produces:
+      - brief
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Music path, duration, ratio, theme, and material strategy are explicit
+      - Distribution mode and source rights expectations are recorded
+      - Visual review policy is explicit
+      - The FFmpeg render_runtime_selection and specialized renderer are disclosed
+    success_criteria:
+      - Schema-valid brief artifact
+      - Approved BGM Montage execution inputs are present
+
+  - name: compose
+    skill: pipelines/bgm-montage/compose-director
+    required_artifacts_in:
+      - brief
+    produces:
+      - render_report
+    required_tools:
+      - bgm_montage
+    tools_available:
+      - bgm_montage
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - BGM Montage audiomap and event-snapped timeline were generated
+      - Asset provenance and source intervals are retained
+      - Canonical render_report and raw BGM QA report agree
+      - Required programmatic and visual QA completed
+    success_criteria:
+      - Schema-valid render_report artifact
+      - Output file exists and has passed BGM Montage QA

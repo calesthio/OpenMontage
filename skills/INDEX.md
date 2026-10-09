@@ -92,6 +92,7 @@ Key capability families to look for in the output:
 | Azure TTS | (tool: `azure_tts`) | Optional cloud neural narration (SSML prosody, express-as styles) — same Speech key as `azure_stt` | `azure-text-to-speech` |
 | Subtitle Sync | `core/subtitle-sync.md` | Subtitle timing and alignment | `remotion-best-practices` |
 | Color Grading | `core/color-grading.md` | FFmpeg color profiles, LUT workflow, accessibility | `ffmpeg` |
+| BGM Montage | `core/bgm-montage.md` | Music analysis, beat-aware montage, material matching, FFmpeg render, and QA through the standalone BGM Montage bridge | `ffmpeg`, `video-toolkit` |
 
 ## Creative Skills
 

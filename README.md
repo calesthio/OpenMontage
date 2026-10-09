@@ -371,6 +371,7 @@ Each pipeline is a complete production workflow, from idea to finished video.
 | **Cinematic** | Trailer, teaser, and mood-driven edits | Brand films, teasers, promotional content |
 | **Clip Factory** | Batch of ranked short-form clips from one long source | Repurposing long content for social media |
 | **Documentary Montage** | Thematic montage cut from a CLIP-indexed corpus of free stock footage and open archives (Pexels, Archive.org, NASA, Wikimedia, Unsplash) | Video essays, mood pieces, retrieval-first B-roll edits, real-footage videos without paid generation APIs |
+| **BGM Montage** | Music-driven montage with measured beat/phrase analysis, source-aware selection, FFmpeg rendering, and independent QA | Local-library or rights-reviewed rhythm edits that must preserve auditable cut evidence |
 | **Hybrid** | Source footage + AI-generated support visuals | Enhancing existing footage with graphics |
 | **Localization & Dub** | Subtitle, dub, and translate existing video | Multi-language distribution |
 | **Podcast Repurpose** | Podcast highlights to video | Podcast marketing, audiogram videos |
@@ -384,6 +385,15 @@ research -> proposal -> script -> scene_plan -> assets -> edit -> compose
 ```
 
 Each stage has a dedicated **director skill** — a markdown instruction file that teaches the agent exactly how to execute that stage. The agent reads the skill, uses the tools, self-reviews, checkpoints state, and asks for human approval at creative decision points.
+
+The BGM Montage pipeline is a specialized two-stage route: its compose tool
+delegates the bounded music-analysis, material-matching, rendering, and QA
+sequence to the standalone [BGM Montage project](https://github.com/sharbvane/bgm-montage)
+while returning OpenMontage canonical artifacts.
+The full route requires at least one supported, readable reference video in
+`reference_dir` (default: `projects/<id>/references/`); the bridge checks for a
+supported video file before launch and BGM Montage validates it during
+reference analysis. This route does not support a reference-free run.
 
 > **Web research is a first-class stage.** Before writing a single word of script, the agent searches YouTube, Reddit, Hacker News, news sites, and academic sources. It gathers data points, audience questions, trending angles, and visual references — then cites everything in a structured research brief. Your videos are grounded in real, current information, not hallucinated facts.
 

@@ -36,6 +36,13 @@ def test_catalog_is_not_empty() -> None:
     assert PIPELINE_NAMES, "no pipeline manifests found"
 
 
+def test_bgm_montage_declares_its_reference_video_requirement() -> None:
+    manifest = load_pipeline("bgm-montage")
+
+    assert manifest["reference_input"]["supported"] is True
+    assert "bgm_montage" in manifest["reference_input"]["analysis_tools"]
+
+
 @pytest.mark.parametrize("name", PIPELINE_NAMES)
 def test_shipped_manifest_validates(name: str) -> None:
     """Regression: screen-demo.yaml carried a `production_modes` block the

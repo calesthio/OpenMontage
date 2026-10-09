@@ -175,3 +175,41 @@ def test_remotion_render_preserves_direct_cinematic_scenes(monkeypatch, tmp_path
 
     assert result.success, result.error
     assert captured["props"]["scenes"] == [scene]
+
+
+@pytest.mark.parametrize("renderer_family", ["cinematic-trailer", "documentary-montage"])
+def test_remotion_render_rejects_cinematic_overlays_before_rendering(
+    monkeypatch, tmp_path, renderer_family
+) -> None:
+    monkeypatch.setattr("tools.video.video_compose.shutil.which", lambda _name: None)
+    result = VideoCompose()._remotion_render(
+        {
+            "edit_decisions": {
+                "renderer_family": renderer_family,
+                "scenes": [
+                    {
+                        "id": "scene-1",
+                        "kind": "video",
+                        "src": "clip.mp4",
+                        "startSeconds": 0,
+                        "durationSeconds": 1,
+                    }
+                ],
+                "overlays": [
+                    {
+                        "type": "section_title",
+                        "text": "Chapter 1",
+                        "startSeconds": 0,
+                        "durationSeconds": 1,
+                    }
+                ],
+            },
+            "output_path": str(tmp_path / "render.mp4"),
+        }
+    )
+
+    assert not result.success
+    assert result.error == (
+        "CinematicRenderer does not support non-empty overlays; remove overlays "
+        "or use a composition that supports them."
+    )

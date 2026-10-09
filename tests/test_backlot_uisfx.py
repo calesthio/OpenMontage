@@ -1,5 +1,7 @@
 """Tests for the optional, locally served UISFX frontend dependency."""
 
+from pathlib import Path
+
 from backlot import server
 
 

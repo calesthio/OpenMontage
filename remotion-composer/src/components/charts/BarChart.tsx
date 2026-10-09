@@ -280,5 +280,6 @@ function formatNumber(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   if (Number.isInteger(n)) return String(n);
-  return n.toFixed(1);
+  // Keep the value's own precision (up to 2 decimals): 0.15 must not read "0.1".
+  return String(Number(n.toFixed(2)));
 }

@@ -1274,7 +1274,9 @@ function normalize(s) {
 }
 
 async function refresh() {
-  state = normalize(await getJSON(`/api/project/${encodeURIComponent(projectId)}/state`));
+  const nextState = normalize(await getJSON(`/api/project/${encodeURIComponent(projectId)}/state`));
+  trackSoundTransitions(nextState);
+  state = nextState;
   render();
 }
 

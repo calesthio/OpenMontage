@@ -216,6 +216,20 @@ aside .panel:nth-of-type(1) { animation-delay: .32s } aside .panel:nth-of-type(2
 }
 .theme-toggle:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
 .theme-toggle-icon { font-size: calc(15px * var(--fs-scale)); line-height: 1; transform: translateY(-.5px); }
+.sound-toggle[aria-pressed="true"] {
+  color: var(--amber);
+  border-color: rgba(240,168,60,.5);
+}
+.sound-toggle:disabled {
+  opacity: .42;
+  cursor: not-allowed;
+  transform: none;
+}
+.sound-toggle:disabled:hover {
+  color: var(--text-2);
+  border-color: var(--border);
+  transform: none;
+}
 
 :root[data-theme="light"] .theme-toggle {
   background:

@@ -244,6 +244,7 @@ function renderSlate(s) {
     ),
     ...chips,
     el("div", { class: "spacer" }),
+    renderSoundToggle(),
     renderThemeToggle(),
     liveEl,
     cost,

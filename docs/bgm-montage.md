@@ -68,7 +68,9 @@ default.
 
 The full run preserves BGM Montage's optional JianYing draft export through
 the `jianying_draft`, `jianying_draft_name`, `jianying_draft_root`, and
-`jianying_python` inputs.
+`jianying_python` inputs. When enabled, this writes to the configured JianYing
+workspace, which may be outside the OpenMontage project directory; use it only
+when that editor-side output is intended.
 
 run places native artifacts under
 projects/<id>/renders/bgm-montage/<theme>/<run-id>/, cache under

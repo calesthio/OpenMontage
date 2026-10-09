@@ -427,11 +427,13 @@ class BgmMontage(BaseTool):
     side_effects = [
         "writes project-scoped BGM Montage cache, analysis, timeline, media, render, and QA artifacts",
         "may download source media when an online source provider is selected",
+        "when jianying_draft is enabled, writes an editable draft to the configured JianYing workspace",
     ]
     user_visible_verification = [
         "Inspect the BGM Montage render_report and OpenMontage render_report",
         "Inspect validation_frames and the visual_review artifacts when agent review is required",
         "Play the final MP4 and verify beat cuts, framing, and source attribution",
+        "When requested, open the JianYing draft and inspect its generated draft report",
     ]
 
     input_schema = {

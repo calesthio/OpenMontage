@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from jsonschema import validate
 
-from lib.pipeline_loader import get_required_tools, load_pipeline
+from lib.pipeline_loader import load_pipeline
 from schemas.artifacts import validate_artifact
 from tools.tool_registry import registry
 from tools.video.bmts_lite import BgmMontageLite
@@ -47,7 +47,8 @@ def test_cinematic_compose_advertises_lite_as_an_optional_route() -> None:
     compose = next(stage for stage in manifest["stages"] if stage["name"] == "compose")
 
     assert "bgm_montage_lite" in compose["optional_tools"]
-    assert "bgm_montage_lite" in get_required_tools(manifest)
+    assert "bgm_montage_lite" in compose["tools_available"]
+    assert "bgm_montage_lite" not in compose["required_tools"]
     assert "video_compose" in compose["required_tools"]
 
 

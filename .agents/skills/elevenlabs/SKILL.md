@@ -279,6 +279,34 @@ export const sceneDurations = manifest.scenes.reduce((acc, scene) => {
 // <Series.Sequence durationInFrames={sceneDurations.title}>
 ```
 
+### Word-Level Timings (direct `elevenlabs_tts`)
+
+When captions, word-synced headlines or animation cues must follow the real
+speech, pass `with_timestamps: true` to the direct `elevenlabs_tts` tool instead
+of transcribing the audio afterwards:
+
+```python
+result = ElevenLabsTTS().execute({
+    "text": paragraph,
+    "voice_id": voice_id,
+    "previous_text": prev_paragraph,   # continuity across separately synthesized paragraphs
+    "next_text": next_paragraph,
+    "with_timestamps": True,
+    "output_path": "projects/<id>/assets/audio/tts/para_03.mp3",
+})
+result.data["word_timestamps"]   # [{"word": "Доверие.", "start": 0.12, "end": 0.71}, ...]
+result.data["alignment_path"]    # para_03.mp3.alignment.json (raw character alignment)
+```
+
+- Times are seconds from the start of that audio file. When paragraphs are placed
+  on one timeline, add each paragraph's placement offset.
+- Words are whitespace-delimited and keep their punctuation, so they line up with
+  `text.split()` of the script.
+- `alignment_matches_text` is `false` when the service normalised the text
+  (numbers, symbols); timings then follow the spoken form in the alignment.
+- Synthesizing per paragraph gives exact paragraph boundaries for scene cuts;
+  the word timings place captions and cues inside each paragraph.
+
 ### Audio Timing Patterns
 
 ```tsx

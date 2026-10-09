@@ -21,4 +21,4 @@ def test_uisfx_bundle_mount_is_optional(tmp_path, monkeypatch):
     app_with_uisfx = server.create_app()
     route = next(route for route in app_with_uisfx.routes if getattr(route, "name", None) == "uisfx")
     assert route.path == "/vendor/uisfx"
-    assert route.app.directory == dist
+    assert Path(route.app.directory) == dist

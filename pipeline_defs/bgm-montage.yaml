@@ -36,6 +36,7 @@ stages:
       - Music path, duration, ratio, theme, and material strategy are explicit
       - Distribution mode and source rights expectations are recorded
       - Visual review policy is explicit
+      - The FFmpeg render_runtime_selection and specialized renderer are disclosed
     success_criteria:
       - Schema-valid brief artifact
       - Approved BGM Montage execution inputs are present

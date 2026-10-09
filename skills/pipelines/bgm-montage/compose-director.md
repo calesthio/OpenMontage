@@ -20,6 +20,12 @@ Do not call a second renderer for the same run or silently rewrite its
 render_runtime. Preserve the raw BGM artifacts and use the returned
 OpenMontage canonical artifacts for checkpointing.
 
+This route locks `render_runtime=ffmpeg` because BGM Montage performs its own
+FFmpeg render. Remotion and the HyperFrames (`hyperframes`) runtime are
+intentionally not invoked; if the
+approved brief requests either runtime, stop and resolve the pipeline choice
+instead of silently rerouting through `video_compose`.
+
 ## Review
 
 Before presenting a completed render:

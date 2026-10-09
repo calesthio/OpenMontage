@@ -25,3 +25,13 @@ stages or duplicate its timeline logic in the brief.
 
 Do not mark the brief ready if the music path, duration, ratio, or rights mode
 is ambiguous.
+
+## Renderer decision
+
+Record a `render_runtime_selection` decision in the brief with
+`render_runtime=ffmpeg`: this specialized pipeline delegates the final render
+to BGM Montage's own FFmpeg engine so its beat-aware timeline and QA stay
+together. Remotion and the HyperFrames (`hyperframes`) runtime are not render
+choices inside this route;
+do not imply that `video_compose` will render or finish the montage. State this
+fixed renderer in the idea checkpoint before the user approves the brief.

@@ -20,6 +20,7 @@
     "react-dom": "^18.2.0",
     "remotion": "^4.0.484",
     "topojson-client": "^3.1.0",
+    "uisfx": "^0.4.0",
     "world-atlas": "^2.0.2"
   },
   "devDependencies": {

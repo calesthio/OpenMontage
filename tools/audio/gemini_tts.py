@@ -159,7 +159,10 @@ class GeminiTTS(BaseTool):
             request = self.build_request(inputs)
             from tools.google_credentials import get_genai_client
 
-            result = get_genai_client().interactions.create(**request)
+            # Keep the client referenced: a temporary client is garbage-collected
+            # (and closed) before the request is sent.
+            client = get_genai_client()
+            result = client.interactions.create(**request)
             audio = getattr(result, "output_audio", None)
             if not audio or not getattr(audio, "data", None):
                 audio = next(

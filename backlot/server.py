@@ -21,6 +21,9 @@ from fastapi.staticfiles import StaticFiles
 from backlot.state import PROJECTS_DIR, REPO_ROOT, list_projects, load_board_state, summarize_project
 
 UI_DIR = Path(__file__).resolve().parent / "ui"
+# UISFX is an optional frontend dependency installed with remotion-composer.
+# Backlot remains usable when Node dependencies have not been installed.
+UISFX_DIST_DIR = REPO_ROOT / "remotion-composer" / "node_modules" / "uisfx" / "dist"
 THUMB_CACHE_DIR = REPO_ROOT / ".backlot" / "thumbs"
 THUMB_WIDTHS = (320, 640, 960)
 
@@ -288,6 +291,11 @@ def create_app() -> FastAPI:
     @app.get("/")
     async def library_page() -> HTMLResponse:
         return _ui_html("index.html", ("board.css", "library.js"))
+
+    # Serve the installed, version-locked UISFX ESM bundle locally. Missing
+    # Node dependencies only disable optional sounds; the board still works.
+    if UISFX_DIST_DIR.is_dir():
+        app.mount("/vendor/uisfx", StaticFiles(directory=UISFX_DIST_DIR), name="uisfx")
 
     if UI_DIR.is_dir():
         app.mount("/ui", StaticFiles(directory=UI_DIR), name="ui")

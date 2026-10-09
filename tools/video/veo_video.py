@@ -483,9 +483,11 @@ class VeoVideo(BaseTool):
             # Download and save final file
             response = operation_handle.response
             if not response or not response.generated_videos:
+                reasons = getattr(response, "rai_media_filtered_reasons", None)
                 return ToolResult(
                     success=False,
-                    error="No video generation response received.",
+                    error="No video generation response received."
+                    + (f" Filtered: {reasons}" if reasons else ""),
                 )
             video_result = response.generated_videos[0]
             video_asset = video_result.video

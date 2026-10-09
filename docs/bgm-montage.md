@@ -42,6 +42,18 @@ separate from OpenMontage because BGM Montage's optional audio and
 semantic-analysis stack includes NumPy/SciPy/librosa/OpenCV and optional
 PyTorch/Transformers.
 
+## Reference-video requirement
+
+The full `run` operation is reference-dependent. Supply `reference_dir` with
+at least one video file using an extension supported by BGM Montage. If
+omitted, the bridge reads `projects/<project-id>/references/`; it fails before
+starting the CLI when that directory is missing or has no supported video
+files. BGM Montage then decodes and analyzes the references, and reports an
+analysis error if they are unreadable. It does not invent a style profile from
+an empty folder. Reference files are read-only and are never moved, renamed,
+or used as source footage. This is a different boundary from the `analyze`,
+`plan`, and `validate` operations.
+
 ## Tool calls
 
 The agent should always use a project-scoped project_dir:
@@ -54,6 +66,7 @@ bgm_montage.execute({
     "theme": "rainy city at night",
     "duration_seconds": 30,
     "ratio": "16:9",
+    "reference_dir": "projects/rain-city/references",
     "source_provider": "local-library",
     "local_library_dir": "projects/rain-city/library",
     "usage_mode": "local_evaluation",
@@ -76,7 +89,8 @@ run places native artifacts under
 projects/<id>/renders/bgm-montage/<theme>/<run-id>/, cache under
 projects/<id>/.bgm-montage-cache/, and material under
 projects/<id>/assets/bgm-montage/. By default, references are read from
-projects/<id>/references/. A local-library root is read as input and is not
+projects/<id>/references/ and must contain at least one supported video. A
+local-library root is read as input and is not
 modified by the bridge. Any custom output, report, frames, or cache path must
 stay inside project_dir.
 

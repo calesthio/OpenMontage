@@ -35,6 +35,28 @@ from tools.base_tool import (
 
 BGM_MONTAGE_URL = "https://github.com/sharbvane/bgm-montage"
 _OPERATIONS = {"analyze", "plan", "run", "validate"}
+_REFERENCE_VIDEO_EXTENSIONS = frozenset(
+    {
+        ".mp4",
+        ".mov",
+        ".m4v",
+        ".mkv",
+        ".webm",
+        ".avi",
+        ".wmv",
+        ".flv",
+        ".mts",
+        ".m2ts",
+        ".ts",
+    }
+)
+
+
+def _has_reference_video(directory: Path) -> bool:
+    return any(
+        path.is_file() and path.suffix.lower() in _REFERENCE_VIDEO_EXTENSIONS
+        for path in directory.rglob("*")
+    )
 
 
 def _number(value: Any, default: float = 0.0) -> float:
@@ -741,13 +763,19 @@ class BgmMontage(BaseTool):
         ratio = str(inputs.get("ratio") or "").strip()
         if not ratio:
             raise ValueError("ratio is required for run")
-        if inputs.get("reference_dir"):
-            reference = _path(inputs["reference_dir"], "reference_dir")
-            if not reference.is_dir():
-                raise ValueError(f"reference_dir does not exist: {reference}")
-        else:
-            reference = project / "references"
-            reference.mkdir(parents=True, exist_ok=True)
+        has_explicit_reference_dir = bool(inputs.get("reference_dir"))
+        reference = (
+            _path(inputs["reference_dir"], "reference_dir")
+            if has_explicit_reference_dir
+            else project / "references"
+        )
+        if has_explicit_reference_dir and not reference.is_dir():
+            raise ValueError(f"reference_dir does not exist: {reference}")
+        if not reference.is_dir() or not _has_reference_video(reference):
+            raise ValueError(
+                "operation=run requires at least one supported reference video under "
+                f"reference_dir (default: {project / 'references'}); this BGM Montage route is reference-dependent"
+            )
         output_root = project / "renders" / "bgm-montage"
         material_dir = project / "assets" / "bgm-montage"
         cache_dir = project / ".bgm-montage-cache"

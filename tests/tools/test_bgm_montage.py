@@ -4,6 +4,8 @@ import json
 import subprocess
 import sys
 
+import pytest
+
 from lib.pipeline_loader import get_required_tools, load_pipeline
 from schemas.artifacts import validate_artifact
 from tools.tool_registry import registry
@@ -143,6 +145,9 @@ def test_canonical_edit_decisions_clamp_negative_source_start() -> None:
 def test_run_forwards_optional_jianying_export(monkeypatch, tmp_path) -> None:
     project = tmp_path / "project"
     project.mkdir()
+    references = project / "references"
+    references.mkdir()
+    (references / "reference.mp4").touch()
     bgm = tmp_path / "music.wav"
     bgm.touch()
     tool = BgmMontage()
@@ -185,3 +190,43 @@ def test_run_forwards_optional_jianying_export(monkeypatch, tmp_path) -> None:
     assert args[args.index("--jianying-draft-name") + 1] == "test draft"
     assert args[args.index("--jianying-draft-root") + 1] == str(tmp_path / "drafts")
     assert args[args.index("--jianying-python") + 1] == sys.executable
+
+
+@pytest.mark.parametrize("explicit_reference_dir", [False, True])
+def test_run_requires_reference_video_before_invoking_cli(
+    monkeypatch, tmp_path, explicit_reference_dir
+) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    bgm = tmp_path / "music.wav"
+    bgm.touch()
+    references = project / "references"
+    if explicit_reference_dir:
+        references.mkdir()
+
+    tool = BgmMontage()
+    monkeypatch.setattr(tool, "_context", lambda inputs: (tmp_path, project, sys.executable))
+    monkeypatch.setattr(
+        tool,
+        "_run_script",
+        lambda *args, **kwargs: pytest.fail("BGM CLI must not run without a reference video"),
+    )
+    inputs = {
+        "operation": "run",
+        "project_dir": str(project),
+        "bgm": str(bgm),
+        "theme": "test",
+        "duration_seconds": 8,
+        "ratio": "16:9",
+        "source_provider": "local-library",
+        "local_library_dir": str(tmp_path / "library"),
+    }
+    if explicit_reference_dir:
+        inputs["reference_dir"] = str(references)
+
+    result = tool.execute(inputs)
+
+    assert not result.success
+    assert "requires at least one supported reference video" in (result.error or "")
+    if not explicit_reference_dir:
+        assert not references.exists()

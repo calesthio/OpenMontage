@@ -15,16 +15,19 @@ stages or duplicate its timeline logic in the brief.
 ## Decisions to lock
 
 1. Identify the music file and confirm it is readable.
-2. Choose 9:16, 16:9, 1:1, 4:5, or an explicit canvas.
-3. Choose source_provider=local-library for offline work; otherwise record
+2. Confirm at least one decodable reference video is available. If no path is
+   supplied, the compose tool reads `projects/<project-id>/references/`.
+3. Choose 9:16, 16:9, 1:1, 4:5, or an explicit canvas.
+4. Choose source_provider=local-library for offline work; otherwise record
    the provider and the user's distribution intent.
-4. Record whether agent_visual_review is required or off. The default is
+5. Record whether agent_visual_review is required or off. The default is
    required.
-5. Keep references, source manifests, and local-library rights evidence in
+6. Keep references, source manifests, and local-library rights evidence in
    the project so the compose stage can audit them.
 
-Do not mark the brief ready if the music path, duration, ratio, or rights mode
-is ambiguous.
+Do not mark the brief ready if the music path, duration, ratio, rights mode,
+or reference-video path is ambiguous. The full BGM Montage route is not a
+reference-free workflow.
 
 ## Renderer decision
 

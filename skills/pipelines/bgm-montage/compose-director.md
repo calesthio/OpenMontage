@@ -4,8 +4,11 @@
 
 Read the approved brief, then call bgm_montage with operation=run,
 project_dir=projects/<project-id>, the approved BGM path, theme, duration,
-ratio, source provider, and usage mode. Pass reference_dir and
-local_library_dir explicitly when they are not the project defaults.
+ratio, source provider, and usage mode. Pass a reference_dir containing at
+least one supported video that BGM Montage can decode; when omitted, the tool
+reads projects/<project-id>/references/. Pass local_library_dir explicitly
+when it is not the project default. Reference videos are read-only and are not
+a substitute for the local source library.
 
 The tool owns the following bounded sequence:
 

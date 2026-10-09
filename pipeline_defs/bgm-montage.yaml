@@ -9,7 +9,10 @@ stability: beta
 default_checkpoint_policy: guided
 
 reference_input:
-  supported: false
+  supported: true
+  analysis_depth: standard
+  analysis_tools:
+    - bgm_montage
 
 extensions:
   custom_scripts: false

@@ -11,6 +11,22 @@ python -m backlot open                # library view (all projects)
 python -m backlot serve --port 4750   # run the server in the foreground
 ```
 
+
+## Optional UI sound effects
+
+Backlot can use [UISFX](https://github.com/romainsimon/uisfx) for restrained
+sound cues when a pipeline stage starts, completes, waits for approval, stalls,
+or fails. Sounds are **off by default**; use the musical-note button in the
+project board header to enable or mute them. The preference is stored in the
+browser for that user, and audio starts only after a user gesture.
+
+The browser synthesizes sounds locally with Web Audio; it does not download
+audio assets or send activity data to UISFX. The package is installed by the
+existing `make setup` command through `remotion-composer`. If it has not been
+installed, Backlot continues to work and the sound toggle explains how to
+enable the optional feature. UISFX's runtime code is MIT-licensed and its
+bundled audio assets are CC0.
+
 ## How it stays live
 
 No agent involvement. A `watchfiles` watcher on `projects/` publishes change

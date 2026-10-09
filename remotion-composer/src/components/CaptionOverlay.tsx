@@ -8,6 +8,8 @@ import {
 } from "remotion";
 
 // Word-level caption for TikTok-style highlight display
+import { isRtlText } from "../lib/rtl";
+
 export interface WordCaption {
   word: string;
   startMs: number;
@@ -29,6 +31,8 @@ type CaptionOverlayProps = {
   // Separator rendered between words. Space-delimited languages want the
   // default " "; CJK languages (no inter-word spacing) should pass "".
   wordSeparator?: string;
+  // Text direction. When omitted it is detected from the caption text.
+  direction?: "ltr" | "rtl";
 };
 
 interface CaptionPage {
@@ -65,7 +69,8 @@ const PageRenderer: React.FC<{
   backgroundColor: string;
   fontFamily: string;
   wordSeparator: string;
-}> = ({ page, fontSize, color, highlightColor, backgroundColor, fontFamily, wordSeparator }) => {
+  direction: "ltr" | "rtl";
+}> = ({ page, fontSize, color, highlightColor, backgroundColor, fontFamily, wordSeparator, direction }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -95,6 +100,7 @@ const PageRenderer: React.FC<{
           padding: "14px 28px",
           maxWidth: "80%",
           textAlign: "center",
+          direction,
         }}
       >
         <span
@@ -118,6 +124,8 @@ const PageRenderer: React.FC<{
                   // previous behavior; for CJK it prevents mid-word breaks.
                   display: "inline-block",
                   whiteSpace: "nowrap",
+                  marginInlineEnd:
+                    direction === "rtl" && wordSeparator === " " ? "0.3em" : undefined,
                   color: isActive ? highlightColor : isPast ? color : `${color}99`,
                   transition: "none", // CSS transitions forbidden in Remotion
                   textShadow: isActive
@@ -144,8 +152,11 @@ export const CaptionOverlay: React.FC<CaptionOverlayProps> = ({
   backgroundColor = "rgba(15, 23, 42, 0.75)",
   fontFamily = "Space Grotesk, Inter, system-ui, sans-serif",
   wordSeparator = " ",
+  direction,
 }) => {
   const { fps } = useVideoConfig();
+  const resolvedDirection =
+    direction ?? (isRtlText(words.map((w) => w.word).join(" ")) ? "rtl" : "ltr");
   const pages = buildPages(words, wordsPerPage);
 
   return (
@@ -168,6 +179,7 @@ export const CaptionOverlay: React.FC<CaptionOverlayProps> = ({
               backgroundColor={backgroundColor}
               fontFamily={fontFamily}
               wordSeparator={wordSeparator}
+              direction={resolvedDirection}
             />
           </Sequence>
         );

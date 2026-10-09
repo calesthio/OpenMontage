@@ -5,6 +5,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { isRtlText, splitAnimationUnits } from "../lib/rtl";
 
 type HeroTitleProps = {
   title: string;
@@ -38,7 +39,8 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
   const { fps } = useVideoConfig();
 
   // Staggered letter-by-letter spring
-  const titleChars = title.split("");
+  const titleChars = splitAnimationUnits(title);
+  const rtl = isRtlText(title);
 
   return (
     <AbsoluteFill
@@ -48,13 +50,13 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
         background: scrimBackground,
       }}
     >
-      <div style={{ textAlign: "center", maxWidth: "85%" }}>
+      <div style={{ textAlign: "center", maxWidth: "85%", direction: rtl ? "rtl" : "ltr" }}>
         {/* Main title with per-character spring */}
         <div
           style={{
             fontSize: 72,
             fontWeight: 800,
-            fontFamily: "Space Grotesk, Inter, system-ui, sans-serif",
+            fontFamily: "Space Grotesk, Cairo, Inter, system-ui, sans-serif",
             lineHeight: 1.2,
             display: "flex",
             justifyContent: "center",
@@ -101,9 +103,9 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
               fontSize: 28,
               fontWeight: 400,
               color: subtitleColor,
-              fontFamily: "Space Grotesk, Inter, system-ui, sans-serif",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
+              fontFamily: "Space Grotesk, Cairo, Inter, system-ui, sans-serif",
+              letterSpacing: rtl ? "normal" : "0.1em",
+              textTransform: rtl ? "none" : "uppercase",
             }}
           >
             {subtitle}

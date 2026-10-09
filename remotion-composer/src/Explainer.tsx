@@ -10,6 +10,7 @@ import {
   useVideoConfig,
 } from "remotion";
 import { loadFont } from "@remotion/google-fonts/SpaceGrotesk";
+import { loadFont as loadArabicFont } from "@remotion/google-fonts/Cairo";
 import { TextCard } from "./components/TextCard";
 import { StatCard } from "./components/StatCard";
 import { CalloutBox } from "./components/CalloutBox";
@@ -38,6 +39,12 @@ import { resolveTheme, type ThemeConfig, DEFAULT_THEME } from "./Root";
 const { fontFamily } = loadFont("normal", {
   weights: ["400", "700"],
   subsets: ["latin"],
+});
+
+// Arabic glyphs: Space Grotesk has none, so Arabic text falls through to Cairo.
+const { fontFamily: arabicFontFamily } = loadArabicFont("normal", {
+  weights: ["400", "700"],
+  subsets: ["arabic", "latin"],
 });
 
 // ---------------------------------------------------------------------------
@@ -877,6 +884,7 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
         <CaptionOverlay
           words={captions}
           wordsPerPage={6}
+          fontFamily={`${fontFamily}, ${arabicFontFamily}, system-ui, sans-serif`}
           fontSize={42}
           color={theme.textColor}
           highlightColor={theme.captionHighlightColor}

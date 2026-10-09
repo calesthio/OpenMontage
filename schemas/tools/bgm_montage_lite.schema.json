@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/tools/bgm_montage_lite",
+  "title": "BGM Montage Lite",
+  "description": "Create a reference-free, full-song beat montage from one audio file and supplied video clips.",
+  "type": "object",
+  "required": ["audio_path", "video_paths"],
+  "properties": {
+    "audio_path": {"type": "string", "minLength": 1},
+    "video_paths": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "minItems": 1,
+      "maxItems": 100
+    },
+    "aspect_ratio": {
+      "type": "string",
+      "enum": ["auto", "16:9", "9:16", "4:3", "3:4", "1:1", "4:5"],
+      "default": "auto"
+    },
+    "project_dir": {
+      "type": "string",
+      "description": "Optional OpenMontage project root; defaults output to its renders folder."
+    },
+    "output_path": {
+      "type": "string",
+      "description": "Optional MP4 destination; defaults beside the music file or under project_dir/renders."
+    }
+  }
+}

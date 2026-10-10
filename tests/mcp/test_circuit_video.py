@@ -358,3 +358,12 @@ def test_tools_list_has_i18n_tools():
     assert {"get_tutorial_text", "save_tutorial_translation", "author_tutorial"} <= names
     rt = next(t for t in TOOLS if t["name"] == "render_tutorial")
     assert rt["inputSchema"]["properties"]["lang"]["type"] == "string"
+
+
+def test_render_tutorial_lang_rejected_in_remote_mode(monkeypatch, tmp_path):
+    """The k8s render-api does not take lang yet: refuse rather than return an English video."""
+    cfg = {**load_config(), "client_dir": str(_client_with_de(tmp_path)),
+           "render_api_url": "http://render.example.com", "projects_dir": str(tmp_path / "p")}
+    monkeypatch.setattr("circuit_video.service.load_config", lambda: cfg)
+    out = _call("render_tutorial", {"base_url": "https://d.example.com", "tutorial": "tour", "lang": "de"})
+    assert out.get("isError") is True and "remote" in out["content"][0]["text"]

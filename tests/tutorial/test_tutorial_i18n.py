@@ -118,3 +118,16 @@ def test_validate_translation_caps_line_length():
     assert any("step 0" in e and "long" in e for e in errs)
     doc["steps"][0]["narration"] = "x" * I.MAX_NARRATION_CHARS
     assert I.validate_translation(doc, lang="de", source_steps=SRC) == []
+
+
+def test_validate_translation_tolerates_garbage_without_raising():
+    doc = {"lang": "de", "steps": [{"index": "abc", "narration": "x"}, {"index": 1, "narration": 42}]}
+    errs = I.validate_translation(doc, lang="de", source_steps=SRC)
+    assert any("abc" in e for e in errs) and any("step 1" in e for e in errs)
+
+
+def test_apply_translation_skips_non_string_lines():
+    steps = [T.Step(index=0, narration="Open the Sales area.")]
+    bad = {"lang": "de", "steps": [{"index": 0, "source": "Open the Sales area.", "narration": 42}]}
+    warnings = I.apply_translation(steps, bad)
+    assert steps[0].narration == "Open the Sales area." and any("step 0" in w for w in warnings)

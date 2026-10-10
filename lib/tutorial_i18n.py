@@ -92,7 +92,11 @@ def validate_translation(doc: dict, *, lang: str, source_steps: list[dict]) -> l
         if not isinstance(s, dict) or "index" not in s:
             errs.append(f"step entry without index: {s!r}")
             continue
-        idx = int(s["index"])
+        try:
+            idx = int(s["index"])
+        except (TypeError, ValueError):
+            errs.append(f"step index {s.get('index')!r} is not an integer")
+            continue
         text = s.get("narration")
         if not isinstance(text, str):
             errs.append(f"step {idx}: narration must be a string")
@@ -120,14 +124,21 @@ def validate_translation(doc: dict, *, lang: str, source_steps: list[dict]) -> l
 def apply_translation(steps: list[Any], doc: dict) -> list[str]:
     """Replace each Step.narration with the sidecar line for its index."""
     warnings: list[str] = []
-    by_idx = {int(s["index"]): s for s in doc.get("steps", []) if isinstance(s, dict) and "index" in s}
+    by_idx: dict[int, dict] = {}
+    for s in doc.get("steps", []):
+        if isinstance(s, dict) and "index" in s:
+            try:
+                by_idx[int(s["index"])] = s
+            except (TypeError, ValueError):
+                warnings.append(f"step index {s.get('index')!r} is not an integer — ignored")
     present = set()
     for st in steps:
         present.add(st.index)
         entry = by_idx.get(st.index)
-        if not entry or not (entry.get("narration") or "").strip():
+        text = entry.get("narration") if entry else None
+        if not isinstance(text, str) or not text.strip():
             if st.narration:
-                warnings.append(f"step {st.index}: missing translation — keeping source text")
+                warnings.append(f"step {st.index}: missing or invalid translation — keeping source text")
             continue
         src = (entry.get("source") or "").strip()
         if src and src != st.narration.strip():

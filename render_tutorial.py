@@ -88,6 +88,13 @@ def resolve_tutorial(client_dir: Path, name: str, lang: Optional[str] = None) ->
     timings_path = I18N.timings_path(spec, name, lang, source_lang)
     i18n_path = I18N.i18n_path(spec, name, lang) if lang != source_lang else None
     i18n = I18N.load_sidecar(i18n_path) if i18n_path and i18n_path.exists() else None
+    source_timings = _load(source_timings_path)
+    # A committed, hand-editable file: validate it here so a bad line is a clean
+    # pre-capture error, not an AttributeError after the Cypress run.
+    i18n_errors = (
+        I18N.validate_translation(i18n, lang=lang, source_steps=source_timings.get("steps", []))
+        if i18n is not None else []
+    )
     spec_rel = spec.relative_to(client_dir).as_posix()
     return {
         "name": name,
@@ -98,9 +105,10 @@ def resolve_tutorial(client_dir: Path, name: str, lang: Optional[str] = None) ->
         "source_lang": source_lang,
         "timings": _load(timings_path),
         "timings_path": timings_path,
-        "source_timings": _load(source_timings_path),
+        "source_timings": source_timings,
         "i18n_path": i18n_path,
         "i18n": i18n,
+        "i18n_errors": i18n_errors,
     }
 
 
@@ -369,6 +377,10 @@ def main() -> int:
             print(f"ERROR: no translation sidecar {tut['i18n_path']} — run translate_tutorial.py "
                   f"--tutorial {args.tutorial} --lang {lang} first", file=sys.stderr)
             return 2
+        if tut.get("i18n_errors"):
+            print(f"ERROR: invalid translation sidecar {tut['i18n_path']}:\n  - "
+                  + "\n  - ".join(tut["i18n_errors"]), file=sys.stderr)
+            return 2
         if not (tut.get("timings") or {}).get("steps") and not args.offline_narration:
             print(f"ERROR: no {lang} timings {tut['timings_path'].name} — run "
                   f"author_tutorial.py --tutorial {args.tutorial} --lang {lang} --from-timings first",
@@ -437,6 +449,16 @@ def main() -> int:
         if not raw_video:
             print("ERROR: capture produced no video", file=sys.stderr)
             return 2
+        if lang != tut["source_lang"]:
+            # The client records the language it paced each step with. Anything else
+            # means the capture is paced to the source-language timings.
+            got = {s.get("lang") or "" for s in manifest.get("steps", [])}
+            if got != {lang}:
+                print(f"ERROR: Cypress did not pace the capture for {lang!r} (manifest steps report "
+                      f"{sorted(got) or 'no lang'}): the client's cypress.tutorial.config.js does not "
+                      "understand CYPRESS_TUTORIAL_LANG — update circuitauction-backoffice/client.",
+                      file=sys.stderr)
+                return 2
 
     # 2) Normalize: recover step times, crop marker strip, letterbox to 1080p.
     capture_mp4 = assets / "video" / "capture.mp4"

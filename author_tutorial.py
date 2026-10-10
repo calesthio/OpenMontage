@@ -77,6 +77,8 @@ def author_timings(tut: dict, client, *, steps: list[dict], backend: str, voice_
                 f"no translation sidecar {tut['i18n_path']} — run translate_tutorial.py "
                 f"--tutorial {tut['name']} --lang {lang} first"
             )
+        if tut.get("i18n_errors"):
+            raise ValueError(f"invalid translation sidecar {tut['i18n_path']}: " + "; ".join(tut["i18n_errors"]))
         for w in I18N.apply_translation(step_objs, tut["i18n"]):
             print(f"WARN: {w}", file=sys.stderr)
     out_steps = []
@@ -136,7 +138,7 @@ def main() -> int:
 
     try:
         doc = author_timings(tut, client, steps=steps, backend=backend, voice_id=voice_id)
-    except (FileNotFoundError, NarrationError) as e:
+    except (FileNotFoundError, ValueError, NarrationError) as e:
         print(f"ERROR: {e}", file=sys.stderr)
         return 2
     tut["timings_path"].write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

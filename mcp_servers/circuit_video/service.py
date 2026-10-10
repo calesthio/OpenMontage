@@ -499,6 +499,11 @@ def render_tutorial(
     narration_backend = validate_narration_backend(narration_backend or "")
     voice_id = validate_voice_id(voice_id or "")
     lang = I18N.validate_lang(lang) if lang else None
+    if lang and cfg.get("render_api_url"):
+        # deploy/render_api/app.py has no lang field yet: it would silently render the
+        # source language. Refuse instead of returning a "successful" English video.
+        raise ValueError("lang is not supported by the remote render API yet; "
+                         "unset CIRCUIT_VIDEO_RENDER_API_URL to render locally")
     if lang and not offline and not cfg.get("render_api_url"):
         # Translation + per-language timings must exist before the capture.
         tut = _resolve(cfg, tutorial, lang)

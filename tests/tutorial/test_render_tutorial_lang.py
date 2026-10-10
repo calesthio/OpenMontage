@@ -75,3 +75,36 @@ def test_main_german_render_fails_before_capture_without_sidecar(tmp_path, monke
     ])
     assert RT.main() == 2
     assert "translate_tutorial" in capsys.readouterr().err
+
+
+def test_main_rejects_invalid_sidecar_before_capture(tmp_path, monkeypatch, capsys):
+    client = _client(tmp_path, True)
+    sidecar = client / "cypress" / "e2e-tutorials" / "s" / "tour.i18n.de.json"
+    sidecar.write_text(json.dumps({"lang": "de", "source_lang": "en", "recipe": {},
+                                   "steps": [{"index": 0, "source": "Hello.", "narration": 42}]}))
+    monkeypatch.setattr(RT.bridge, "run_tutorial_spec",
+                        lambda *a, **k: (_ for _ in ()).throw(AssertionError("capture ran")))
+    monkeypatch.setattr(RT, "parse_env_file", lambda path: {})
+    monkeypatch.setattr(sys, "argv", [
+        "render_tutorial.py", "--tutorial", "tour", "--client-dir", str(client),
+        "--project-id", "p", "--base-url", "https://d.example.com", "--lang", "de", "--offline-narration",
+    ])
+    assert RT.main() == 2
+    assert "step 0" in capsys.readouterr().err
+
+
+def test_main_fails_when_cypress_ignored_the_language(tmp_path, monkeypatch, capsys):
+    """Old client checkout: env set, but the manifest steps carry no lang → English-paced capture."""
+    client = _client(tmp_path, True)
+    monkeypatch.setattr(RT.bridge, "run_tutorial_spec",
+                        lambda *a, **k: {"steps": [{"index": 0, "narration": "Hello."}], "video": "/nope.mp4"})
+    monkeypatch.setattr(RT.bridge, "normalize_capture",
+                        lambda *a, **k: (_ for _ in ()).throw(AssertionError("normalize ran")))
+    monkeypatch.setattr(RT, "init_project", lambda *a, **k: tmp_path / "proj")
+    monkeypatch.setattr(RT, "parse_env_file", lambda path: {})
+    monkeypatch.setattr(sys, "argv", [
+        "render_tutorial.py", "--tutorial", "tour", "--client-dir", str(client),
+        "--project-id", "p", "--base-url", "https://d.example.com", "--lang", "de", "--offline-narration",
+    ])
+    assert RT.main() == 2
+    assert "CYPRESS_TUTORIAL_LANG" in capsys.readouterr().err

@@ -18,6 +18,11 @@ from typing import Any
 # Broad scope that covers Cloud Text-to-Speech and Vertex AI prediction.
 CLOUD_PLATFORM_SCOPE = "https://www.googleapis.com/auth/cloud-platform"
 
+# Scope required by the generativelanguage.googleapis.com surface (Gemini
+# Developer API / Interactions). cloud-platform alone is NOT accepted there:
+# it returns 403 ACCESS_TOKEN_SCOPE_INSUFFICIENT.
+GENERATIVE_LANGUAGE_SCOPE = "https://www.googleapis.com/auth/generative-language"
+
 
 def resolve_google_location(location: str | None = None) -> str:
     """Return a Vertex location, treating blank env values as unset."""

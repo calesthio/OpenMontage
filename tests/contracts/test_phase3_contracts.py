@@ -474,6 +474,9 @@ class TestVeoVideo:
             os.environ,
             {"GEMINI_API_KEY": "", "GOOGLE_API_KEY": "", "FAL_KEY": "test_fal_key"},
         ):
+            # A service-account key is also a Google credential, so it has to be
+            # cleared too or this asserts against the ambient environment.
+            os.environ.pop("GOOGLE_APPLICATION_CREDENTIALS", None)
             assert tool._get_google_credentials_status() is False
             assert tool._get_fal_api_key() == "test_fal_key"
             assert tool.get_status() == ToolStatus.AVAILABLE

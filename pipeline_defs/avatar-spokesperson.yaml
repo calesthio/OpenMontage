@@ -108,6 +108,7 @@ stages:
     produces:
       - asset_manifest
     optional_tools:
+      - heygen_avatar
       - talking_head
       - lip_sync
       - tts_selector
@@ -116,6 +117,7 @@ stages:
       - audio_enhance
       - video_selector
     tools_available:
+      - heygen_avatar
       - talking_head
       - lip_sync
       - tts_selector

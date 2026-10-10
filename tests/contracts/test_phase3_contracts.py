@@ -252,7 +252,8 @@ class TestGoogleMusic:
             res = tool.execute(inputs)
             assert res.success is True
             assert res.data["provider"] == "google"
-            assert res.data["model"] == "lyria-3-pro-preview"
+            assert res.data["model"] == "lyria-3.5"
+            assert mock_client.interactions.create.call_args.kwargs["model"] == "lyria-3.5"
             assert res.data["output"] == str(output_file)
             assert output_file.read_bytes() == b"my_fake_google_lyria_audio"
 
@@ -692,12 +693,15 @@ class TestCapabilityMetadata:
         providers = {item["provider"] for item in catalog["tts"] if item["provider"] != "selector"}
         assert providers == {
             "azure",
+            "cartesia",
             "dashscope",
             "doubao",
             "elevenlabs",
             "fish_audio",
             "fal.ai",
+            "gemini",
             "google_tts",
+            "inworld",
             "kling_official",
             "openai",
             "piper",

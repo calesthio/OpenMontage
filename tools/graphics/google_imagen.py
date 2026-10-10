@@ -8,6 +8,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+from tools.provider_pricing import PriceQuoteRequired
+
 from tools.base_tool import (
     BaseTool,
     Determinism,
@@ -71,7 +73,7 @@ class GoogleImagen(BaseTool):
         "  GOOGLE_CLOUD_PROJECT and optionally GOOGLE_CLOUD_LOCATION (default us-central1).\n"
         "  Requires the Vertex AI API enabled and billing on the project."
     )
-    agent_skills = []
+    agent_skills = ["provider-model-refresh"]
 
     capabilities = ["generate_image", "generate_illustration", "text_to_image"]
     supports = {
@@ -79,6 +81,7 @@ class GoogleImagen(BaseTool):
         "seed": False,
         "custom_size": False,
         "aspect_ratio": True,
+        "image_edit": True,
     }
     best_for = [
         "high-quality photorealistic images",
@@ -120,6 +123,8 @@ class GoogleImagen(BaseTool):
                     "imagen-4.0-fast-generate-001",
                     "imagen-4.0-ultra-generate-001",
                     "gemini-2.5-flash-image",
+                    "gemini-3-pro-image",
+                    "gemini-3.1-flash-image",
                 ],
                 "default": "imagen-4.0-generate-001",
                 "description": "Imagen model variant, or a Gemini image model "
@@ -133,6 +138,14 @@ class GoogleImagen(BaseTool):
                 "maximum": 4,
             },
             "output_path": {"type": "string"},
+            "generation_mode": {"type": "string", "enum": ["generate", "edit"]},
+            "image_path": {"type": "string"},
+            "image_paths": {
+                "type": "array",
+                "items": {"type": "string"},
+                "maxItems": 14,
+            },
+            "resolution": {"type": "string", "enum": ["1K", "2K", "4K"]},
         },
     }
 
@@ -142,7 +155,13 @@ class GoogleImagen(BaseTool):
     retry_policy = RetryPolicy(
         max_retries=2, retryable_errors=["rate_limit", "timeout"]
     )
-    idempotency_key_fields = ["prompt", "aspect_ratio", "model"]
+    idempotency_key_fields = ["prompt", "aspect_ratio", "model"] + [
+        "generation_mode",
+        "image_path",
+        "image_paths",
+        "resolution",
+        "number_of_images",
+    ]
     side_effects = [
         "writes image file to output_path",
         "calls Google Generative AI API",
@@ -180,6 +199,10 @@ class GoogleImagen(BaseTool):
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         model = inputs.get("model", "imagen-4.0-generate-001")
         n = inputs.get("number_of_images", 1)
+        if model in {"gemini-3-pro-image", "gemini-3.1-flash-image"}:
+            raise PriceQuoteRequired(
+                "Gemini image pricing depends on input and output tokens/resolution; obtain a current quote"
+            )
         if model.startswith("gemini-"):
             # ~1290 output tokens per image at $30/1M tokens
             return 0.039 * n
@@ -225,18 +248,59 @@ class GoogleImagen(BaseTool):
                 error=f"Failed to initialize Google GenAI client: {e}",
             )
 
+        if (
+            inputs.get("image_url")
+            or inputs.get("image_urls")
+            or inputs.get("mask_url")
+        ):
+            return ToolResult(
+                success=False,
+                error="This direct Gemini adapter accepts local image_path/image_paths, not image URLs or masks",
+            )
         prompt = inputs["prompt"]
         aspect_ratio = self._resolve_aspect_ratio(inputs)
         number_of_images = inputs.get("number_of_images", 1)
+        image_config = {"aspect_ratio": aspect_ratio}
+        if inputs.get("resolution"):
+            if model == "gemini-2.5-flash-image":
+                return ToolResult(
+                    success=False,
+                    error="Resolution control requires Gemini 3 image models",
+                )
+            image_config["image_size"] = inputs["resolution"]
         config = types.GenerateContentConfig(
-            image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
+            image_config=types.ImageConfig(**image_config)
         )
+        contents = [prompt]
+        try:
+            import mimetypes
+
+            paths = list(inputs.get("image_paths") or [])
+            if inputs.get("image_path"):
+                paths.insert(0, inputs["image_path"])
+            if len(paths) > 14:
+                raise ValueError("At most 14 reference images")
+            if inputs.get("generation_mode") == "edit" and not paths:
+                raise ValueError("Edit requires source images")
+            if inputs.get("generation_mode") == "generate" and paths:
+                raise ValueError("Use edit for source images")
+            contents.extend(
+                types.Part.from_bytes(
+                    data=Path(p).read_bytes(),
+                    mime_type=mimetypes.guess_type(p)[0] or "image/png",
+                )
+                for p in paths
+            )
+        except Exception as exc:
+            return ToolResult(success=False, error=str(exc))
 
         image_bytes: list[bytes] = []
         try:
             for _ in range(number_of_images):
                 response = client.models.generate_content(
-                    model=model, contents=prompt, config=config
+                    model=model,
+                    contents=contents if len(contents) > 1 else prompt,
+                    config=config,
                 )
                 for part in response.candidates[0].content.parts or []:
                     inline = getattr(part, "inline_data", None)
@@ -271,9 +335,14 @@ class GoogleImagen(BaseTool):
                 "output": outputs[0],
                 "outputs": outputs,
                 "images_generated": len(outputs),
+                "cost_status": "unquoted"
+                if model in {"gemini-3-pro-image", "gemini-3.1-flash-image"}
+                else "estimated",
             },
             artifacts=outputs,
-            cost_usd=self.estimate_cost(inputs),
+            cost_usd=self.estimate_cost(inputs)
+            if model not in {"gemini-3-pro-image", "gemini-3.1-flash-image"}
+            else None,
             duration_seconds=round(time.time() - start, 2),
             model=model,
         )
@@ -282,8 +351,21 @@ class GoogleImagen(BaseTool):
         # Gemini image models go through generate_content via the shared genai
         # client, which resolves auth (API key or Vertex service account) itself.
         model = inputs.get("model", "imagen-4.0-generate-001")
+        if model not in self.input_schema["properties"]["model"]["enum"]:
+            return ToolResult(
+                success=False, error=f"Unsupported Google image model: {model}"
+            )
         if model.startswith("gemini-"):
             return self._execute_gemini(inputs, model)
+        if (
+            inputs.get("image_path")
+            or inputs.get("image_paths")
+            or inputs.get("generation_mode") == "edit"
+        ):
+            return ToolResult(
+                success=False,
+                error="Imagen generation does not accept source images; choose a Gemini image model",
+            )
 
         # Two auth paths: an AI Studio API key, or a service-account JSON that
         # routes to Vertex AI (the AI Studio endpoint does not accept service
@@ -370,9 +452,7 @@ class GoogleImagen(BaseTool):
             outputs: list[str] = []
             for prediction, out_path in zip(predictions, output_paths):
                 out_path.parent.mkdir(parents=True, exist_ok=True)
-                out_path.write_bytes(
-                    base64.b64decode(prediction["bytesBase64Encoded"])
-                )
+                out_path.write_bytes(base64.b64decode(prediction["bytesBase64Encoded"]))
                 outputs.append(str(out_path))
 
         except Exception as e:
@@ -388,9 +468,14 @@ class GoogleImagen(BaseTool):
                 "output": outputs[0],
                 "outputs": outputs,
                 "images_generated": len(outputs),
+                "cost_status": "unquoted"
+                if model in {"gemini-3-pro-image", "gemini-3.1-flash-image"}
+                else "estimated",
             },
             artifacts=outputs,
-            cost_usd=self.estimate_cost(inputs),
+            cost_usd=self.estimate_cost(inputs)
+            if model not in {"gemini-3-pro-image", "gemini-3.1-flash-image"}
+            else None,
             duration_seconds=round(time.time() - start, 2),
             model=model,
         )

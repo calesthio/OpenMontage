@@ -7,6 +7,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+from tools.provider_pricing import PriceQuoteRequired
+
 from tools.base_tool import (
     BaseTool,
     Determinism,
@@ -78,6 +80,14 @@ class ElevenLabsTTS(BaseTool):
             "model_id": {
                 "type": "string",
                 "default": "eleven_multilingual_v2",
+                "enum": [
+                    "eleven_v4",
+                    "eleven_v4_turbo",
+                    "eleven_v3",
+                    "eleven_multilingual_v2",
+                    "eleven_turbo_v2_5",
+                    "eleven_flash_v2_5",
+                ],
                 "description": "TTS model to use",
             },
             "stability": {
@@ -108,6 +118,24 @@ class ElevenLabsTTS(BaseTool):
                 "type": "boolean",
                 "default": True,
             },
+            "seed": {"type": "integer", "minimum": 0, "maximum": 4294967295},
+            "language_code": {"type": "string"},
+            "previous_text": {"type": "string"},
+            "next_text": {"type": "string"},
+            "previous_request_ids": {
+                "type": "array",
+                "items": {"type": "string"},
+                "maxItems": 3,
+            },
+            "next_request_ids": {
+                "type": "array",
+                "items": {"type": "string"},
+                "maxItems": 3,
+            },
+            "apply_text_normalization": {
+                "type": "string",
+                "enum": ["auto", "on", "off"],
+            },
             "output_path": {"type": "string"},
             "output_format": {
                 "type": "string",
@@ -120,7 +148,7 @@ class ElevenLabsTTS(BaseTool):
     resource_profile = ResourceProfile(
         cpu_cores=1, ram_mb=256, vram_mb=0, disk_mb=50, network_required=True
     )
-    retry_policy = RetryPolicy(max_retries=2, retryable_errors=["rate_limit", "timeout"])
+    retry_policy = RetryPolicy(max_retries=0)
     idempotency_key_fields = [
         "text",
         "voice_id",
@@ -130,6 +158,14 @@ class ElevenLabsTTS(BaseTool):
         "style",
         "speed",
         "use_speaker_boost",
+    ] + [
+        "seed",
+        "language_code",
+        "previous_text",
+        "next_text",
+        "previous_request_ids",
+        "next_request_ids",
+        "output_format",
     ]
     side_effects = ["writes audio file to output_path", "calls ElevenLabs API"]
     user_visible_verification = ["Listen to generated audio for natural speech quality"]
@@ -142,12 +178,17 @@ class ElevenLabsTTS(BaseTool):
         return ToolStatus.UNAVAILABLE
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
+        if inputs.get("model_id", "").startswith("eleven_v4"):
+            raise PriceQuoteRequired("Quote Eleven v4 pricing for your account plan")
         return round(len(inputs.get("text", "")) * 0.0003, 4)
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         api_key = os.environ.get("ELEVENLABS_API_KEY")
         if not api_key:
-            return ToolResult(success=False, error="No ElevenLabs API key. " + self.install_instructions)
+            return ToolResult(
+                success=False,
+                error="No ElevenLabs API key. " + self.install_instructions,
+            )
 
         start = time.time()
         try:
@@ -156,13 +197,32 @@ class ElevenLabsTTS(BaseTool):
             return ToolResult(success=False, error=f"TTS generation failed: {exc}")
 
         result.duration_seconds = round(time.time() - start, 2)
-        result.cost_usd = self.estimate_cost(inputs)
+        result.cost_usd = (
+            None
+            if inputs.get("model_id", "").startswith("eleven_v4")
+            else self.estimate_cost(inputs)
+        )
+        result.data["cost_status"] = (
+            "unquoted" if result.cost_usd is None else "estimated"
+        )
         return result
 
     def _generate(self, inputs: dict[str, Any], api_key: str) -> ToolResult:
         import requests
 
+        from jsonschema import validate
+
+        validate(inputs, self.input_schema)
         text = inputs["text"]
+        limit = (
+            10000
+            if inputs.get("model_id", "").startswith("eleven_v4")
+            else 5000
+            if inputs.get("model_id") == "eleven_v3"
+            else 40000
+        )
+        if not text.strip() or len(text) > limit:
+            raise ValueError(f"Text must contain 1–{limit} characters for this model")
         voice_id = inputs.get("voice_id", self.DEFAULT_VOICE_ID)
         model_id = inputs.get("model_id", "eleven_multilingual_v2")
         output_format = inputs.get("output_format", "mp3_44100_128")
@@ -174,6 +234,18 @@ class ElevenLabsTTS(BaseTool):
             "use_speaker_boost": inputs.get("use_speaker_boost", True),
         }
 
+        payload = {"text": text, "model_id": model_id, "voice_settings": voice_settings}
+        for field in (
+            "seed",
+            "language_code",
+            "previous_text",
+            "next_text",
+            "previous_request_ids",
+            "next_request_ids",
+            "apply_text_normalization",
+        ):
+            if field in inputs:
+                payload[field] = inputs[field]
         response = requests.post(
             f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
             headers={
@@ -181,11 +253,7 @@ class ElevenLabsTTS(BaseTool):
                 "Content-Type": "application/json",
                 "Accept": "audio/mpeg",
             },
-            json={
-                "text": text,
-                "model_id": model_id,
-                "voice_settings": voice_settings,
-            },
+            json=payload,
             params={"output_format": output_format},
             timeout=120,
         )
@@ -194,7 +262,16 @@ class ElevenLabsTTS(BaseTool):
         ext = "mp3" if "mp3" in output_format else "wav"
         output_path = Path(inputs.get("output_path", f"tts_output.{ext}"))
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_bytes(response.content)
+        if output_format.startswith("pcm_"):
+            import wave
+
+            with wave.open(str(output_path), "wb") as wav:
+                wav.setnchannels(1)
+                wav.setsampwidth(2)
+                wav.setframerate(int(output_format.split("_")[1]))
+                wav.writeframes(response.content)
+        else:
+            output_path.write_bytes(response.content)
 
         return ToolResult(
             success=True,
@@ -206,6 +283,7 @@ class ElevenLabsTTS(BaseTool):
                 "text_length": len(text),
                 "output": str(output_path),
                 "format": output_format,
+                "request_id": response.headers.get("request-id"),
             },
             artifacts=[str(output_path)],
             model=model_id,

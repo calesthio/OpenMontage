@@ -1,0 +1,2270 @@
+{
+  "alibaba/wan-3.0/image-to-video": {
+    "input_schema": {
+      "properties": {
+        "aspect_ratio": {
+          "default": "adaptive",
+          "type": "string",
+          "title": "Aspect Ratio",
+          "enum": [
+            "adaptive",
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16"
+          ],
+          "description": "Output aspect ratio, or adaptive selection."
+        },
+        "enable_prompt_expansion": {
+          "type": "boolean",
+          "title": "Enable Prompt Expansion",
+          "description": "Enable intelligent prompt rewriting. Disabling it can save roughly 20-60 seconds of latency but is likely to degrade generation quality.",
+          "default": true
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Seed"
+        },
+        "duration": {
+          "anyOf": [
+            {
+              "maximum": 30,
+              "minimum": 2,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 5,
+          "title": "Duration",
+          "description": "Output duration in seconds. Set to null for smart duration, which lets the model pick a length from the prompt and reference media."
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "title": "Enable Safety Checker",
+          "description": "Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked.",
+          "default": true
+        },
+        "end_image_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "End Image Url",
+          "description": "Last frame of the generated video. Requires start_image_url."
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Prompt",
+          "description": "Text prompt describing the motion to generate."
+        },
+        "audio": {
+          "default": true,
+          "type": "boolean",
+          "title": "Audio",
+          "description": "Include generated audio."
+        },
+        "enable_thinking": {
+          "default": false,
+          "type": "boolean",
+          "title": "Enable Thinking",
+          "description": "Enable enhanced reasoning before generation."
+        },
+        "resolution": {
+          "default": "1080p",
+          "type": "string",
+          "title": "Resolution",
+          "enum": [
+            "480p",
+            "720p",
+            "1080p"
+          ],
+          "description": "Output video resolution tier."
+        },
+        "start_image_url": {
+          "type": "string",
+          "title": "Start Image Url",
+          "description": "First frame of the generated video."
+        }
+      },
+      "required": [
+        "start_image_url"
+      ],
+      "title": "Wan30ImageToVideoInput",
+      "type": "object",
+      "x-fal-order-properties": [
+        "prompt",
+        "resolution",
+        "aspect_ratio",
+        "duration",
+        "audio",
+        "enable_prompt_expansion",
+        "enable_thinking",
+        "seed",
+        "enable_safety_checker",
+        "start_image_url",
+        "end_image_url"
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=alibaba/wan-3.0/image-to-video",
+    "verified_on": "2026-10-03"
+  },
+  "alibaba/wan-3.0/reference-to-video": {
+    "input_schema": {
+      "properties": {
+        "file_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "File Url",
+          "description": "Document URL to base the video on. Requires enable_thinking=true."
+        },
+        "enable_prompt_expansion": {
+          "type": "boolean",
+          "title": "Enable Prompt Expansion",
+          "description": "Enable intelligent prompt rewriting. Disabling it can save roughly 20-60 seconds of latency but is likely to degrade generation quality.",
+          "default": true
+        },
+        "reference_video_urls": {
+          "maxItems": 5,
+          "type": "array",
+          "title": "Reference Video Urls",
+          "description": "Up to 5 reference video URLs totaling at most 15 seconds. Each clip must be at least 16 fps. Input video duration is billed in addition to output duration.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Seed"
+        },
+        "duration": {
+          "anyOf": [
+            {
+              "maximum": 30,
+              "minimum": 2,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 5,
+          "title": "Duration",
+          "description": "Output duration in seconds. Set to null for smart duration, which lets the model pick a length from the prompt and reference media."
+        },
+        "web_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Web Url",
+          "description": "Public webpage URL to base the video on. Requires enable_thinking=true. Only pages that do not require login can be read."
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Prompt",
+          "description": "Text prompt directing how the reference media is used. Reference media can be addressed positionally, e.g. 'the subject in Image 1 walks past Video 1'."
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "title": "Enable Safety Checker",
+          "description": "Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked.",
+          "default": true
+        },
+        "reference_image_urls": {
+          "maxItems": 10,
+          "type": "array",
+          "title": "Reference Image Urls",
+          "description": "Up to 10 reference image URLs.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "audio": {
+          "default": true,
+          "type": "boolean",
+          "title": "Audio",
+          "description": "Include generated audio."
+        },
+        "enable_thinking": {
+          "default": false,
+          "type": "boolean",
+          "title": "Enable Thinking",
+          "description": "Enable enhanced reasoning before generation."
+        },
+        "resolution": {
+          "default": "1080p",
+          "type": "string",
+          "title": "Resolution",
+          "enum": [
+            "480p",
+            "720p",
+            "1080p"
+          ],
+          "description": "Output video resolution tier."
+        },
+        "reference_audio_urls": {
+          "maxItems": 5,
+          "type": "array",
+          "title": "Reference Audio Urls",
+          "description": "Up to 5 reference audio URLs totaling at most 15 seconds.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "aspect_ratio": {
+          "default": "adaptive",
+          "type": "string",
+          "title": "Aspect Ratio",
+          "enum": [
+            "adaptive",
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16"
+          ],
+          "description": "Output aspect ratio, or adaptive selection."
+        }
+      },
+      "type": "object",
+      "title": "Wan30ReferenceToVideoInput",
+      "x-fal-order-properties": [
+        "prompt",
+        "resolution",
+        "aspect_ratio",
+        "duration",
+        "audio",
+        "enable_prompt_expansion",
+        "enable_thinking",
+        "seed",
+        "enable_safety_checker",
+        "reference_image_urls",
+        "reference_video_urls",
+        "reference_audio_urls",
+        "file_url",
+        "web_url"
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=alibaba/wan-3.0/reference-to-video",
+    "verified_on": "2026-10-03"
+  },
+  "alibaba/wan-3.0/text-to-video": {
+    "input_schema": {
+      "properties": {
+        "seed": {
+          "anyOf": [
+            {
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Seed"
+        },
+        "enable_prompt_expansion": {
+          "type": "boolean",
+          "title": "Enable Prompt Expansion",
+          "description": "Enable intelligent prompt rewriting. Disabling it can save roughly 20-60 seconds of latency but is likely to degrade generation quality.",
+          "default": true
+        },
+        "duration": {
+          "anyOf": [
+            {
+              "maximum": 30,
+              "minimum": 2,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 5,
+          "title": "Duration",
+          "description": "Output duration in seconds. Set to null for smart duration, which lets the model pick a length from the prompt and reference media."
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "title": "Enable Safety Checker",
+          "description": "Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked.",
+          "default": true
+        },
+        "prompt": {
+          "type": "string",
+          "title": "Prompt",
+          "maxLength": 20000,
+          "examples": [
+            "A red panda walking through a bamboo forest at sunrise"
+          ],
+          "description": "Text prompt for the generated video.",
+          "minLength": 1
+        },
+        "enable_thinking": {
+          "default": false,
+          "type": "boolean",
+          "title": "Enable Thinking",
+          "description": "Enable enhanced reasoning before generation."
+        },
+        "audio": {
+          "default": true,
+          "type": "boolean",
+          "title": "Audio",
+          "description": "Include generated audio."
+        },
+        "resolution": {
+          "default": "1080p",
+          "type": "string",
+          "title": "Resolution",
+          "enum": [
+            "480p",
+            "720p",
+            "1080p"
+          ],
+          "description": "Output video resolution tier."
+        },
+        "aspect_ratio": {
+          "default": "adaptive",
+          "type": "string",
+          "title": "Aspect Ratio",
+          "enum": [
+            "adaptive",
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16"
+          ],
+          "description": "Output aspect ratio, or adaptive selection."
+        }
+      },
+      "required": [
+        "prompt"
+      ],
+      "title": "Wan30TextToVideoInput",
+      "type": "object",
+      "x-fal-order-properties": [
+        "prompt",
+        "resolution",
+        "aspect_ratio",
+        "duration",
+        "audio",
+        "enable_prompt_expansion",
+        "enable_thinking",
+        "seed",
+        "enable_safety_checker"
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=alibaba/wan-3.0/text-to-video",
+    "verified_on": "2026-10-03"
+  },
+  "elevenlabs/tts/eleven-v4": {
+    "input_schema": {
+      "x-fal-order-properties": [
+        "text",
+        "voice",
+        "stability",
+        "similarity_boost",
+        "seed",
+        "language_code",
+        "output_format",
+        "apply_text_normalization",
+        "timestamps"
+      ],
+      "required": [
+        "text"
+      ],
+      "type": "object",
+      "properties": {
+        "timestamps": {
+          "description": "Whether to return character-level timing information with the generated audio.",
+          "type": "boolean",
+          "default": false,
+          "title": "Timestamps"
+        },
+        "apply_text_normalization": {
+          "description": "Whether to normalize text such as numbers and dates before generation.",
+          "enum": [
+            "auto",
+            "on",
+            "off"
+          ],
+          "type": "string",
+          "default": "auto",
+          "title": "Apply Text Normalization"
+        },
+        "output_format": {
+          "description": "Output format of the generated audio. Formatted as codec_sample_rate_bitrate.",
+          "enum": [
+            "mp3_22050_32",
+            "mp3_44100_32",
+            "mp3_44100_64",
+            "mp3_44100_96",
+            "mp3_44100_128",
+            "mp3_44100_192",
+            "pcm_8000",
+            "pcm_16000",
+            "pcm_22050",
+            "pcm_24000",
+            "pcm_44100",
+            "pcm_48000",
+            "ulaw_8000",
+            "alaw_8000",
+            "opus_48000_32",
+            "opus_48000_64",
+            "opus_48000_96",
+            "opus_48000_128",
+            "opus_48000_192"
+          ],
+          "type": "string",
+          "default": "mp3_44100_128",
+          "title": "Output Format"
+        },
+        "language_code": {
+          "description": "Language code (ISO 639-1) for speech generation and text normalization.",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Language Code"
+        },
+        "text": {
+          "description": "The text to convert to speech. Supports audio tags such as [whispering] and IPA pronunciation enclosed in forward slashes.",
+          "minLength": 1,
+          "maxLength": 5000,
+          "type": "string",
+          "examples": [
+            "[excited] Hello! Welcome to Eleven v4."
+          ],
+          "title": "Text"
+        },
+        "stability": {
+          "maximum": 1,
+          "description": "Voice stability. Lower values allow more expressive delivery; higher values make delivery more consistent.",
+          "type": "number",
+          "minimum": 0,
+          "default": 0.5,
+          "title": "Stability"
+        },
+        "voice": {
+          "description": "The voice to use for speech generation",
+          "type": "string",
+          "default": "Rachel",
+          "examples": [
+            "Aria",
+            "Roger",
+            "Sarah",
+            "Laura",
+            "Charlie",
+            "George",
+            "Callum",
+            "River",
+            "Liam",
+            "Charlotte",
+            "Alice",
+            "Matilda",
+            "Will",
+            "Jessica",
+            "Eric",
+            "Chris",
+            "Brian",
+            "Daniel",
+            "Lily",
+            "Bill"
+          ],
+          "title": "Voice"
+        },
+        "similarity_boost": {
+          "maximum": 1,
+          "description": "How closely the output follows the reference voice. Higher values increase similarity but may reduce naturalness.",
+          "type": "number",
+          "minimum": 0,
+          "default": 0.75,
+          "title": "Similarity Boost"
+        },
+        "seed": {
+          "description": "Seed for best-effort reproducibility. Identical output is not guaranteed.",
+          "anyOf": [
+            {
+              "maximum": 4294967295,
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Seed"
+        }
+      },
+      "title": "TextToSpeechRequestV4",
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=elevenlabs/tts/eleven-v4",
+    "verified_on": "2026-10-03"
+  },
+  "fal-ai/nano-banana-pro": {
+    "input_schema": {
+      "x-fal-order-properties": [
+        "prompt",
+        "num_images",
+        "seed",
+        "aspect_ratio",
+        "output_format",
+        "safety_tolerance",
+        "sync_mode",
+        "system_prompt",
+        "resolution",
+        "limit_generations",
+        "enable_web_search"
+      ],
+      "required": [
+        "prompt"
+      ],
+      "type": "object",
+      "title": "NanoBananaTextToImageInput",
+      "properties": {
+        "limit_generations": {
+          "default": true,
+          "type": "boolean",
+          "title": "Limit Generations",
+          "description": "Experimental parameter to limit the number of generations from each round of prompting to 1. Set to `True` to to disregard any instructions in the prompt regarding the number of images to generate."
+        },
+        "num_images": {
+          "minimum": 1,
+          "default": 1,
+          "type": "integer",
+          "title": "Number of Images",
+          "maximum": 4,
+          "description": "The number of images to generate."
+        },
+        "aspect_ratio": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "auto",
+                "21:9",
+                "16:9",
+                "3:2",
+                "4:3",
+                "5:4",
+                "1:1",
+                "4:5",
+                "3:4",
+                "2:3",
+                "9:16"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "1:1",
+          "title": "Aspect Ratio",
+          "description": "The aspect ratio of the generated image."
+        },
+        "system_prompt": {
+          "maxLength": 50000,
+          "default": "",
+          "type": "string",
+          "title": "System Prompt",
+          "description": "Optional system instruction that steers the model's persona and output style across the request. Leave blank to omit; when provided, it is sent as the system instruction to Gemini (or as a system message on OpenAI-compatible providers)."
+        },
+        "prompt": {
+          "maxLength": 50000,
+          "description": "The text prompt to generate an image from.",
+          "examples": [
+            "An action shot of a black lab swimming in an inground suburban swimming pool. The camera is placed meticulously on the water line, dividing the image in half, revealing both the dogs head above water holding a tennis ball in it's mouth, and it's paws paddling underwater."
+          ],
+          "minLength": 3,
+          "title": "Prompt",
+          "type": "string"
+        },
+        "sync_mode": {
+          "default": false,
+          "type": "boolean",
+          "title": "Sync Mode",
+          "description": "If `True`, the media will be returned as a data URI and the output data won't be available in the request history."
+        },
+        "resolution": {
+          "description": "The resolution of the image to generate.",
+          "default": "1K",
+          "type": "string",
+          "enum": [
+            "1K",
+            "2K",
+            "4K"
+          ],
+          "title": "Resolution"
+        },
+        "safety_tolerance": {
+          "description": "The safety tolerance level for content moderation. 1 is the most strict (blocks most content), 6 is the least strict.",
+          "default": "4",
+          "type": "string",
+          "enum": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6"
+          ],
+          "title": "Safety Tolerance"
+        },
+        "output_format": {
+          "default": "png",
+          "type": "string",
+          "title": "Output Format",
+          "enum": [
+            "jpeg",
+            "png",
+            "webp"
+          ],
+          "description": "The format of the generated image."
+        },
+        "enable_web_search": {
+          "default": false,
+          "type": "boolean",
+          "title": "Enable Web Search",
+          "description": "Enable web search for the image generation task. This will allow the model to use the latest information from the web to generate the image."
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The seed for the random number generator.",
+          "title": "Seed"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/nano-banana-pro",
+    "verified_on": "2026-10-03"
+  },
+  "fal-ai/nano-banana-pro/edit": {
+    "input_schema": {
+      "x-fal-order-properties": [
+        "prompt",
+        "num_images",
+        "seed",
+        "aspect_ratio",
+        "output_format",
+        "safety_tolerance",
+        "sync_mode",
+        "image_urls",
+        "system_prompt",
+        "resolution",
+        "limit_generations",
+        "enable_web_search"
+      ],
+      "required": [
+        "prompt",
+        "image_urls"
+      ],
+      "type": "object",
+      "title": "NanoBananaImageToImageInput",
+      "properties": {
+        "limit_generations": {
+          "default": true,
+          "type": "boolean",
+          "title": "Limit Generations",
+          "description": "Experimental parameter to limit the number of generations from each round of prompting to 1. Set to `True` to to disregard any instructions in the prompt regarding the number of images to generate."
+        },
+        "num_images": {
+          "minimum": 1,
+          "default": 1,
+          "type": "integer",
+          "title": "Number of Images",
+          "maximum": 4,
+          "description": "The number of images to generate."
+        },
+        "aspect_ratio": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "auto",
+                "21:9",
+                "16:9",
+                "3:2",
+                "4:3",
+                "5:4",
+                "1:1",
+                "4:5",
+                "3:4",
+                "2:3",
+                "9:16"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "auto",
+          "title": "Aspect Ratio",
+          "description": "The aspect ratio of the generated image."
+        },
+        "image_urls": {
+          "description": "The URLs of the images to use for image-to-image generation or image editing.",
+          "examples": [
+            [
+              "https://storage.googleapis.com/falserverless/example_inputs/nano-banana-edit-input.png",
+              "https://storage.googleapis.com/falserverless/example_inputs/nano-banana-edit-input-2.png"
+            ]
+          ],
+          "type": "array",
+          "title": "Image URLs",
+          "items": {
+            "type": "string"
+          }
+        },
+        "system_prompt": {
+          "maxLength": 50000,
+          "default": "",
+          "type": "string",
+          "title": "System Prompt",
+          "description": "Optional system instruction that steers the model's persona and output style across the request. Leave blank to omit; when provided, it is sent as the system instruction to Gemini (or as a system message on OpenAI-compatible providers)."
+        },
+        "prompt": {
+          "maxLength": 50000,
+          "description": "The prompt for image editing.",
+          "examples": [
+            "make a photo of the man driving the car down the california coastline"
+          ],
+          "minLength": 3,
+          "title": "Prompt",
+          "type": "string"
+        },
+        "sync_mode": {
+          "default": false,
+          "type": "boolean",
+          "title": "Sync Mode",
+          "description": "If `True`, the media will be returned as a data URI and the output data won't be available in the request history."
+        },
+        "resolution": {
+          "description": "The resolution of the image to generate.",
+          "default": "1K",
+          "type": "string",
+          "enum": [
+            "1K",
+            "2K",
+            "4K"
+          ],
+          "title": "Resolution"
+        },
+        "output_format": {
+          "default": "png",
+          "type": "string",
+          "title": "Output Format",
+          "enum": [
+            "jpeg",
+            "png",
+            "webp"
+          ],
+          "description": "The format of the generated image."
+        },
+        "safety_tolerance": {
+          "description": "The safety tolerance level for content moderation. 1 is the most strict (blocks most content), 6 is the least strict.",
+          "default": "4",
+          "type": "string",
+          "enum": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6"
+          ],
+          "title": "Safety Tolerance"
+        },
+        "enable_web_search": {
+          "default": false,
+          "type": "boolean",
+          "title": "Enable Web Search",
+          "description": "Enable web search for the image generation task. This will allow the model to use the latest information from the web to generate the image."
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The seed for the random number generator.",
+          "title": "Seed"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/nano-banana-pro/edit",
+    "verified_on": "2026-10-03"
+  },
+  "ideogram/v4.5": {
+    "input_schema": {
+      "properties": {
+        "seed": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Seed",
+          "description": "Random seed. Omit to choose automatically."
+        },
+        "sync_mode": {
+          "default": false,
+          "description": "Return image data directly in the response.",
+          "title": "Sync Mode",
+          "type": "boolean"
+        },
+        "num_images": {
+          "minimum": 1,
+          "default": 1,
+          "description": "Number of images to generate.",
+          "maximum": 8,
+          "type": "integer",
+          "title": "Number of Images"
+        },
+        "enable_prompt_expansion": {
+          "default": true,
+          "description": "Enable partner prompt expansion.",
+          "title": "Enable Prompt Expansion",
+          "type": "boolean"
+        },
+        "quality": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "default": "medium",
+          "description": "Text-to-image quality.",
+          "title": "Quality",
+          "type": "string"
+        },
+        "prompt": {
+          "examples": [
+            "A colorful storefront with a sign reading hello"
+          ],
+          "type": "string",
+          "title": "Prompt",
+          "description": "The generation or editing prompt.",
+          "maxLength": 10000,
+          "minLength": 1
+        },
+        "image_size": {
+          "default": "square_hd",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ImageSize"
+            },
+            {
+              "enum": [
+                "square_hd",
+                "square",
+                "portrait_4_3",
+                "portrait_16_9",
+                "landscape_4_3",
+                "landscape_16_9"
+              ],
+              "type": "string"
+            }
+          ],
+          "description": "Output size. square is promoted to square_hd (1024x1024). 4:3 presets use 1152x864 or 864x1152; 16:9 presets use 1280x720 or 720x1280. Explicit dimensions must match a supported size: 1024x1024, 1024x3072, 1120x896, 1152x2944, 1152x864, 1248x3328, 1248x832, 1280x3072, 1280x720, 1280x800, 1296x3168, 1440x2560, 1440x2880, 1440x720, 1600x2560, 1664x2496, 1728x2304, 1792x2240, 2048x2048, 2240x1792, 2304x1728, 2496x1664, 2560x1440, 2560x1600, 2880x1440, 2944x1152, 3072x1024, 3072x1280, 3168x1296, 3328x1248, 720x1280, 720x1440, 800x1280, 832x1248, 864x1152, 896x1120",
+          "title": "Image Size"
+        }
+      },
+      "x-fal-order-properties": [
+        "prompt",
+        "image_size",
+        "quality",
+        "enable_prompt_expansion",
+        "num_images",
+        "seed",
+        "sync_mode"
+      ],
+      "title": "GenerateInputV45",
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "prompt"
+      ],
+      "$defs": {
+        "ImageSize": {
+          "properties": {
+            "width": {
+              "default": 512,
+              "exclusiveMinimum": 0,
+              "description": "The width of the generated image.",
+              "maximum": 14142,
+              "type": "integer",
+              "title": "Width"
+            },
+            "height": {
+              "default": 512,
+              "exclusiveMinimum": 0,
+              "description": "The height of the generated image.",
+              "maximum": 14142,
+              "type": "integer",
+              "title": "Height"
+            }
+          },
+          "x-fal-order-properties": [
+            "width",
+            "height"
+          ],
+          "title": "ImageSize",
+          "type": "object"
+        }
+      }
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=ideogram/v4.5",
+    "verified_on": "2026-10-03"
+  },
+  "ideogram/v4.5/edit": {
+    "input_schema": {
+      "properties": {
+        "image_size": {
+          "default": "auto",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ImageSize"
+            },
+            {
+              "enum": [
+                "auto",
+                "square",
+                "square_hd",
+                "portrait_4_3",
+                "landscape_4_3",
+                "portrait_16_9",
+                "landscape_16_9"
+              ],
+              "type": "string"
+            }
+          ],
+          "description": "auto preserves source geometry, downscaled by the provider if needed. Only unmasked regular edits accept named presets or custom sizes: dimensions >=256, multiples of 32, area <=4194304, ratio <=6:1. Named presets use standard fal dimensions.",
+          "title": "Image Size"
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Seed",
+          "description": "Random seed. Omit to choose automatically."
+        },
+        "mask_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Mask URL",
+          "description": "Mask matching the source dimensions. Black edits, white preserves. Must contain both regions after rounding."
+        },
+        "reference_image_urls": {
+          "description": "Up to four references plus the primary source, or three references plus the primary source and mask.",
+          "title": "Reference Image URLs",
+          "maxItems": 4,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "edit_precision": {
+          "enum": [
+            "regular",
+            "high"
+          ],
+          "default": "regular",
+          "description": "regular uses Generate; high uses Precise Edit with unchanged-pixel restoration. Both always prepare structured edit instructions.",
+          "title": "Edit Precision",
+          "type": "string"
+        },
+        "num_images": {
+          "minimum": 1,
+          "default": 1,
+          "description": "Number of images to generate.",
+          "maximum": 8,
+          "type": "integer",
+          "title": "Number of Images"
+        },
+        "image_url": {
+          "title": "Image URL",
+          "description": "Primary source image to edit.",
+          "type": "string"
+        },
+        "quality": {
+          "enum": [
+            "very_low",
+            "low",
+            "medium",
+            "high"
+          ],
+          "default": "medium",
+          "description": "Quality tier for either edit precision. Defaults to medium.",
+          "title": "Quality",
+          "type": "string"
+        },
+        "prompt": {
+          "examples": [
+            "A colorful storefront with a sign reading hello"
+          ],
+          "type": "string",
+          "title": "Prompt",
+          "description": "The generation or editing prompt.",
+          "maxLength": 10000,
+          "minLength": 1
+        },
+        "sync_mode": {
+          "default": false,
+          "description": "Return image data directly in the response.",
+          "title": "Sync Mode",
+          "type": "boolean"
+        }
+      },
+      "x-fal-order-properties": [
+        "prompt",
+        "image_url",
+        "reference_image_urls",
+        "mask_url",
+        "edit_precision",
+        "quality",
+        "image_size",
+        "num_images",
+        "seed",
+        "sync_mode"
+      ],
+      "title": "EditInputV45",
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "prompt",
+        "image_url"
+      ],
+      "$defs": {
+        "ImageSize": {
+          "properties": {
+            "width": {
+              "default": 512,
+              "exclusiveMinimum": 0,
+              "description": "The width of the generated image.",
+              "maximum": 14142,
+              "type": "integer",
+              "title": "Width"
+            },
+            "height": {
+              "default": 512,
+              "exclusiveMinimum": 0,
+              "description": "The height of the generated image.",
+              "maximum": 14142,
+              "type": "integer",
+              "title": "Height"
+            }
+          },
+          "x-fal-order-properties": [
+            "width",
+            "height"
+          ],
+          "title": "ImageSize",
+          "type": "object"
+        }
+      }
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=ideogram/v4.5/edit",
+    "verified_on": "2026-10-03"
+  },
+  "minimax/h3-max/image-to-video": {
+    "input_schema": {
+      "properties": {
+        "image_url": {
+          "title": "Image URL",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "examples": [
+            "https://storage.googleapis.com/falserverless/example_inputs/hailuo23/pro_i2v_in.jpg"
+          ],
+          "description": "Optional URL of the image to use as the first frame. When provided, the output canvas follows this image. If only end_image_url is provided, the canvas follows that last frame instead. If both images are omitted, the request is handled as text-to-video (16:9 by default)."
+        },
+        "prompt": {
+          "title": "Prompt",
+          "description": "Text prompt for video generation",
+          "type": "string",
+          "maxLength": 50000,
+          "minLength": 1,
+          "examples": [
+            "The camera slowly pulls back from the scene, revealing the full landscape as clouds drift overhead and light shifts across the terrain."
+          ]
+        },
+        "target_audio_url": {
+          "title": "Target Audio Url",
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "\\S",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional URL of an audio clip at least 2 seconds long (maximum 15 MB) to pin to the generated soundtrack. Longer clips are trimmed to the requested video duration, keeping the beginning. The original audio replaces the output soundtrack, padded with silence if shorter than the video, without changing playback speed. Exceptionally high sample rates may be resampled to 96 kHz. Accepts an HTTP(S) URL or a base64 data URI."
+        },
+        "prompt_expansion_mode": {
+          "title": "Prompt Expansion Mode",
+          "type": "string",
+          "default": "balanced",
+          "examples": [
+            "disabled",
+            "balanced",
+            "quality"
+          ],
+          "description": "How much effort to spend rewriting the prompt before generation. 'disabled' skips prompt expansion. 'balanced' returns in about a second. 'quality' spends up to ~30s on a richer prompt."
+        },
+        "enable_safety_checker": {
+          "title": "Enable Safety Checker",
+          "type": "boolean",
+          "default": true,
+          "description": "If set to true, the safety checker will be enabled."
+        },
+        "resolution": {
+          "title": "Resolution",
+          "type": "string",
+          "default": "768P",
+          "enum": [
+            "480P",
+            "768P",
+            "1080P"
+          ],
+          "description": "The native generation resolution, or 1080P latent refinement from a native 768P source."
+        },
+        "duration": {
+          "title": "Duration",
+          "minimum": 0.92,
+          "type": "number",
+          "default": 5,
+          "maximum": 15,
+          "description": "Video length in seconds. The output can run up to about 0.7 s longer than requested. Use at least 2 s with target_audio_url."
+        },
+        "seed": {
+          "title": "Seed",
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Random seed. A random seed is selected when omitted."
+        },
+        "end_image_url": {
+          "title": "End Image URL",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional URL of the image to use as the last frame. It may be provided alone for end-only keyframe generation; in that case the output canvas follows this image."
+        },
+        "sync_mode": {
+          "title": "Sync Mode",
+          "type": "boolean",
+          "default": false,
+          "description": "Return the generated video as base64 instead of a CDN URL."
+        }
+      },
+      "title": "TurboImageToVideoHailuo03Input",
+      "type": "object",
+      "required": [
+        "prompt",
+        "prompt_expansion_mode"
+      ],
+      "x-fal-order-properties": [
+        "prompt",
+        "duration",
+        "resolution",
+        "seed",
+        "enable_safety_checker",
+        "sync_mode",
+        "prompt_expansion_mode",
+        "target_audio_url",
+        "image_url",
+        "end_image_url"
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=minimax/h3-max/image-to-video",
+    "verified_on": "2026-10-03"
+  },
+  "minimax/h3-max/reference-to-video": {
+    "input_schema": {
+      "properties": {
+        "middle_image_url": {
+          "title": "Middle Image",
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional image to guide the video at middle_frame_time. Requires start and end images and native 480P or 768P resolution."
+        },
+        "reference_image_urls": {
+          "title": "Reference Image URLs",
+          "description": "URLs of subject/style reference images, referenced in the prompt as Image 1, Image 2, and so on. Reference images, videos, and audio clips must add up to at most 12 files.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "examples": [
+            [
+              "https://storage.googleapis.com/falserverless/example_inputs/hailuo23/pro_i2v_in.jpg"
+            ]
+          ],
+          "maxItems": 9
+        },
+        "aspect_ratio": {
+          "title": "Aspect Ratio",
+          "type": "string",
+          "default": "adaptive",
+          "enum": [
+            "adaptive",
+            "21:9",
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16"
+          ],
+          "description": "The aspect ratio of the generated video."
+        },
+        "prompt": {
+          "title": "Prompt",
+          "description": "Text prompt for video generation. Refer to reference assets by their modality and order in the reference lists: Image 1, Image 2, Video 1, Audio 1, and so on.",
+          "type": "string",
+          "maxLength": 50000,
+          "minLength": 1,
+          "examples": [
+            "Image 1 is the female protagonist. Image 2 is her small dog. Keep the woman and dog consistent with their respective reference images while they walk together through a sunlit garden."
+          ]
+        },
+        "prompt_expansion_mode": {
+          "title": "Prompt Expansion Mode",
+          "type": "string",
+          "default": "balanced",
+          "examples": [
+            "disabled",
+            "balanced",
+            "quality"
+          ],
+          "description": "How much effort to spend rewriting the prompt before generation. 'disabled' skips prompt expansion. 'balanced' returns in about a second. 'quality' spends up to ~30s on a richer prompt."
+        },
+        "enable_safety_checker": {
+          "title": "Enable Safety Checker",
+          "type": "boolean",
+          "default": true,
+          "description": "If set to true, the safety checker will be enabled."
+        },
+        "resolution": {
+          "title": "Resolution",
+          "type": "string",
+          "default": "768P",
+          "enum": [
+            "480P",
+            "768P",
+            "1080P"
+          ],
+          "description": "The native generation resolution, or 1080P latent refinement from a native 768P source."
+        },
+        "seed": {
+          "title": "Seed",
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Random seed. A random seed is selected when omitted."
+        },
+        "reference_audio_urls": {
+          "title": "Reference Audio URLs",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "URLs of reference audio clips (2-15 seconds each, combined duration at most 15 seconds), referenced in the prompt as Audio 1, Audio 2, and so on. Images, videos, and audio can be provided individually or together. Reference images, videos, and audio clips must add up to at most 12 files.",
+          "maxItems": 3
+        },
+        "sync_mode": {
+          "title": "Sync Mode",
+          "type": "boolean",
+          "default": false,
+          "description": "Return the generated video as base64 instead of a CDN URL."
+        },
+        "image_url": {
+          "title": "Start Image URL",
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional URL of the image to use as the first frame. The video opens exactly on this image while the references keep the subjects consistent; the output canvas follows this image."
+        },
+        "middle_frame_time": {
+          "title": "Time (seconds)",
+          "anyOf": [
+            {
+              "exclusiveMaximum": 15,
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "examples": [
+            2.5
+          ],
+          "description": "Target time for the middle image, in seconds from the start. Rounded to the nearest frame at 24 fps; it must fall strictly between the first and last frames of the requested duration. Requires middle_image_url."
+        },
+        "reference_video_urls": {
+          "title": "Reference Video URLs",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "URLs of motion/reference video clips (2-15 seconds each, combined duration at most 15 seconds), referenced in the prompt as Video 1, Video 2, and so on. Reference images, videos, and audio clips must add up to at most 12 files.",
+          "maxItems": 3
+        },
+        "duration": {
+          "title": "Duration",
+          "minimum": 0.92,
+          "type": "number",
+          "default": 5,
+          "maximum": 15,
+          "description": "Video length in seconds. The output can run up to about 0.7 s longer than requested."
+        },
+        "end_image_url": {
+          "title": "End Image URL",
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional URL of the image to use as the last frame. The video ends exactly on this image."
+        }
+      },
+      "title": "TurboReferenceToVideoHailuo03Input",
+      "type": "object",
+      "required": [
+        "prompt",
+        "prompt_expansion_mode"
+      ],
+      "x-fal-order-properties": [
+        "prompt",
+        "reference_image_urls",
+        "reference_video_urls",
+        "reference_audio_urls",
+        "image_url",
+        "middle_image_url",
+        "middle_frame_time",
+        "end_image_url",
+        "duration",
+        "resolution",
+        "seed",
+        "enable_safety_checker",
+        "sync_mode",
+        "prompt_expansion_mode",
+        "aspect_ratio"
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=minimax/h3-max/reference-to-video",
+    "verified_on": "2026-10-03"
+  },
+  "minimax/h3-max/text-to-video": {
+    "input_schema": {
+      "properties": {
+        "prompt": {
+          "title": "Prompt",
+          "description": "Text prompt for video generation",
+          "type": "string",
+          "maxLength": 50000,
+          "minLength": 1,
+          "examples": [
+            "A white kitten chases a butterfly across a sunlit garden. Gentle camera tracking, natural movement, soft afternoon light filtering through the leaves."
+          ]
+        },
+        "aspect_ratio": {
+          "title": "Aspect Ratio",
+          "type": "string",
+          "default": "16:9",
+          "enum": [
+            "21:9",
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16"
+          ],
+          "description": "The aspect ratio of the generated video."
+        },
+        "target_audio_url": {
+          "title": "Target Audio Url",
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "\\S",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional URL of an audio clip at least 2 seconds long (maximum 15 MB) to pin to the generated soundtrack. Longer clips are trimmed to the requested video duration, keeping the beginning. The original audio replaces the output soundtrack, padded with silence if shorter than the video, without changing playback speed. Exceptionally high sample rates may be resampled to 96 kHz. Accepts an HTTP(S) URL or a base64 data URI."
+        },
+        "resolution": {
+          "title": "Resolution",
+          "type": "string",
+          "default": "768P",
+          "enum": [
+            "480P",
+            "768P",
+            "1080P"
+          ],
+          "description": "The native generation resolution, or 1080P latent refinement from a native 768P source."
+        },
+        "enable_safety_checker": {
+          "title": "Enable Safety Checker",
+          "type": "boolean",
+          "default": true,
+          "description": "If set to true, the safety checker will be enabled."
+        },
+        "prompt_expansion_mode": {
+          "title": "Prompt Expansion Mode",
+          "type": "string",
+          "default": "balanced",
+          "examples": [
+            "disabled",
+            "balanced",
+            "quality"
+          ],
+          "description": "How much effort to spend rewriting the prompt before generation. 'disabled' skips prompt expansion. 'balanced' returns in about a second. 'quality' spends up to ~30s on a richer prompt."
+        },
+        "duration": {
+          "title": "Duration",
+          "minimum": 0.92,
+          "type": "number",
+          "default": 5,
+          "maximum": 15,
+          "description": "Video length in seconds. The output can run up to about 0.7 s longer than requested. Use at least 2 s with target_audio_url."
+        },
+        "seed": {
+          "title": "Seed",
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Random seed. A random seed is selected when omitted."
+        },
+        "sync_mode": {
+          "title": "Sync Mode",
+          "type": "boolean",
+          "default": false,
+          "description": "Return the generated video as base64 instead of a CDN URL."
+        }
+      },
+      "title": "TurboTextToVideoHailuo03Input",
+      "type": "object",
+      "required": [
+        "prompt",
+        "prompt_expansion_mode"
+      ],
+      "x-fal-order-properties": [
+        "prompt",
+        "duration",
+        "resolution",
+        "seed",
+        "enable_safety_checker",
+        "sync_mode",
+        "prompt_expansion_mode",
+        "target_audio_url",
+        "aspect_ratio"
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=minimax/h3-max/text-to-video",
+    "verified_on": "2026-10-03"
+  },
+  "openai/gpt-image-2.5/flare/edit": {
+    "input_schema": {
+      "title": "GPTImage25EditImageRequest",
+      "type": "object",
+      "properties": {
+        "mask_url": {
+          "title": "Mask URL",
+          "description": "The URL of the mask image to use for the generation. This indicates what part of the image to edit.",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "background": {
+          "title": "Background",
+          "enum": [
+            "auto",
+            "transparent",
+            "opaque"
+          ],
+          "type": "string",
+          "description": "Background for the generated image",
+          "default": "auto"
+        },
+        "output_compression": {
+          "title": "Output Compression",
+          "description": "Compression level from 0 to 100. Only supported when output_format is 'jpeg' or 'webp'.",
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer",
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "image_urls": {
+          "title": "Image URLs",
+          "type": "array",
+          "examples": [
+            [
+              "https://v3b.fal.media/files/b/0a8691af/9Se_1_VX1wzTjjTOpWbs9_bb39c2eb-1a41-4749-b1d0-cf134abc8bbf.png"
+            ]
+          ],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 16,
+          "description": "The URLs of the images to use as a reference for the generation. A maximum of 16 images are allowed."
+        },
+        "output_format": {
+          "title": "Output Format",
+          "enum": [
+            "jpeg",
+            "png",
+            "webp"
+          ],
+          "type": "string",
+          "description": "Output format for the images",
+          "default": "png"
+        },
+        "num_images": {
+          "title": "Number of Images",
+          "minimum": 1,
+          "type": "integer",
+          "examples": [
+            1
+          ],
+          "description": "Number of images to generate",
+          "maximum": 10,
+          "default": 1
+        },
+        "quality": {
+          "enum": [
+            "auto",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "type": "string",
+          "title": "Quality",
+          "description": "Quality for the generated image. Higher settings increase detail, latency, and token usage. Use 'auto' to let the model choose.",
+          "default": "high"
+        },
+        "sync_mode": {
+          "title": "Sync Mode",
+          "type": "boolean",
+          "description": "If `True`, the media will be returned as a data URI and the output data won't be available in the request history.",
+          "default": false
+        },
+        "image_size": {
+          "title": "Image Size",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ImageSize"
+            },
+            {
+              "enum": [
+                "square_hd",
+                "square",
+                "portrait_4_3",
+                "portrait_16_9",
+                "landscape_4_3",
+                "landscape_16_9",
+                "auto"
+              ],
+              "type": "string"
+            }
+          ],
+          "description": "The size of the generated image. Use 'auto' to infer from input images.",
+          "default": "auto"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "minLength": 1,
+          "type": "string",
+          "examples": [
+            "Same workers, same beam, same lunch boxes - but they're all on their phones now. One is taking a selfie. One is on a call looking annoyed. Same danger, new priorities. A hard hat has AirPods."
+          ],
+          "maxLength": 32000,
+          "description": "The prompt for image generation"
+        }
+      },
+      "x-fal-order-properties": [
+        "prompt",
+        "image_urls",
+        "mask_url",
+        "image_size",
+        "background",
+        "quality",
+        "num_images",
+        "output_format",
+        "output_compression",
+        "sync_mode"
+      ],
+      "description": "GPT Image 2.5 edit inputs with model-specific quality and compression.",
+      "required": [
+        "prompt",
+        "image_urls"
+      ],
+      "additionalProperties": false,
+      "$defs": {
+        "ImageSize": {
+          "title": "ImageSize",
+          "type": "object",
+          "properties": {
+            "width": {
+              "title": "Width",
+              "exclusiveMinimum": 0,
+              "type": "integer",
+              "description": "The width of the generated image.",
+              "maximum": 14142,
+              "default": 512
+            },
+            "height": {
+              "title": "Height",
+              "exclusiveMinimum": 0,
+              "type": "integer",
+              "description": "The height of the generated image.",
+              "maximum": 14142,
+              "default": 512
+            }
+          },
+          "x-fal-order-properties": [
+            "width",
+            "height"
+          ]
+        }
+      }
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=openai/gpt-image-2.5/flare/edit",
+    "verified_on": "2026-10-03"
+  },
+  "openai/gpt-image-2.5/flare/text-to-image": {
+    "input_schema": {
+      "title": "GPTImage25TextToImageRequest",
+      "type": "object",
+      "properties": {
+        "background": {
+          "title": "Background",
+          "enum": [
+            "auto",
+            "transparent",
+            "opaque"
+          ],
+          "type": "string",
+          "description": "Background for the generated image",
+          "default": "auto"
+        },
+        "output_compression": {
+          "title": "Output Compression",
+          "description": "Compression level from 0 to 100. Only supported when output_format is 'jpeg' or 'webp'.",
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer",
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quality": {
+          "enum": [
+            "auto",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "type": "string",
+          "title": "Quality",
+          "description": "Quality for the generated image. Higher settings increase detail, latency, and token usage. Use 'auto' to let the model choose.",
+          "default": "high"
+        },
+        "output_format": {
+          "title": "Output Format",
+          "enum": [
+            "jpeg",
+            "png",
+            "webp"
+          ],
+          "type": "string",
+          "description": "Output format for the images",
+          "default": "png"
+        },
+        "sync_mode": {
+          "title": "Sync Mode",
+          "type": "boolean",
+          "description": "If `True`, the media will be returned as a data URI and the output data won't be available in the request history.",
+          "default": false
+        },
+        "num_images": {
+          "title": "Number of Images",
+          "minimum": 1,
+          "type": "integer",
+          "examples": [
+            1
+          ],
+          "description": "Number of images to generate",
+          "maximum": 10,
+          "default": 1
+        },
+        "image_size": {
+          "title": "Image Size",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ImageSize"
+            },
+            {
+              "enum": [
+                "square_hd",
+                "square",
+                "portrait_4_3",
+                "portrait_16_9",
+                "landscape_4_3",
+                "landscape_16_9",
+                "auto"
+              ],
+              "type": "string"
+            }
+          ],
+          "description": "The size of the generated image. Supports preset names, explicit {width, height}, or 'auto' to let the model pick the best size. Concrete sizes must have both dimensions as multiples of 16, max edge 3840px, aspect ratio <= 3:1, total pixels between 655,360 and 8,294,400.",
+          "default": "landscape_4_3"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "minLength": 1,
+          "type": "string",
+          "examples": [
+            "create a realistic image taken with iphone at these coordinates 41\u00b043\u203232\u2033N 49\u00b056\u203249\u2033W 15 April 1912"
+          ],
+          "maxLength": 32000,
+          "description": "The prompt for image generation"
+        }
+      },
+      "x-fal-order-properties": [
+        "prompt",
+        "image_size",
+        "background",
+        "quality",
+        "num_images",
+        "output_format",
+        "output_compression",
+        "sync_mode"
+      ],
+      "description": "GPT Image 2.5 generation inputs, kept separate from GPT Image 2.",
+      "required": [
+        "prompt"
+      ],
+      "additionalProperties": false,
+      "$defs": {
+        "ImageSize": {
+          "title": "ImageSize",
+          "type": "object",
+          "properties": {
+            "width": {
+              "title": "Width",
+              "exclusiveMinimum": 0,
+              "type": "integer",
+              "description": "The width of the generated image.",
+              "maximum": 14142,
+              "default": 512
+            },
+            "height": {
+              "title": "Height",
+              "exclusiveMinimum": 0,
+              "type": "integer",
+              "description": "The height of the generated image.",
+              "maximum": 14142,
+              "default": 512
+            }
+          },
+          "x-fal-order-properties": [
+            "width",
+            "height"
+          ]
+        }
+      }
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=openai/gpt-image-2.5/flare/text-to-image",
+    "verified_on": "2026-10-03"
+  },
+  "openai/gpt-image-2.5/sunburst/edit": {
+    "input_schema": {
+      "title": "GPTImage25EditImageRequest",
+      "type": "object",
+      "properties": {
+        "mask_url": {
+          "title": "Mask URL",
+          "description": "The URL of the mask image to use for the generation. This indicates what part of the image to edit.",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "background": {
+          "title": "Background",
+          "enum": [
+            "auto",
+            "transparent",
+            "opaque"
+          ],
+          "type": "string",
+          "description": "Background for the generated image",
+          "default": "auto"
+        },
+        "output_compression": {
+          "title": "Output Compression",
+          "description": "Compression level from 0 to 100. Only supported when output_format is 'jpeg' or 'webp'.",
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer",
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "image_urls": {
+          "title": "Image URLs",
+          "type": "array",
+          "examples": [
+            [
+              "https://v3b.fal.media/files/b/0a8691af/9Se_1_VX1wzTjjTOpWbs9_bb39c2eb-1a41-4749-b1d0-cf134abc8bbf.png"
+            ]
+          ],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 16,
+          "description": "The URLs of the images to use as a reference for the generation. A maximum of 16 images are allowed."
+        },
+        "output_format": {
+          "title": "Output Format",
+          "enum": [
+            "jpeg",
+            "png",
+            "webp"
+          ],
+          "type": "string",
+          "description": "Output format for the images",
+          "default": "png"
+        },
+        "num_images": {
+          "title": "Number of Images",
+          "minimum": 1,
+          "type": "integer",
+          "examples": [
+            1
+          ],
+          "description": "Number of images to generate",
+          "maximum": 10,
+          "default": 1
+        },
+        "quality": {
+          "enum": [
+            "auto",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "type": "string",
+          "title": "Quality",
+          "description": "Quality for the generated image. Higher settings increase detail, latency, and token usage. Use 'auto' to let the model choose.",
+          "default": "high"
+        },
+        "sync_mode": {
+          "title": "Sync Mode",
+          "type": "boolean",
+          "description": "If `True`, the media will be returned as a data URI and the output data won't be available in the request history.",
+          "default": false
+        },
+        "image_size": {
+          "title": "Image Size",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ImageSize"
+            },
+            {
+              "enum": [
+                "square_hd",
+                "square",
+                "portrait_4_3",
+                "portrait_16_9",
+                "landscape_4_3",
+                "landscape_16_9",
+                "auto"
+              ],
+              "type": "string"
+            }
+          ],
+          "description": "The size of the generated image. Use 'auto' to infer from input images.",
+          "default": "auto"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "minLength": 1,
+          "type": "string",
+          "examples": [
+            "Same workers, same beam, same lunch boxes - but they're all on their phones now. One is taking a selfie. One is on a call looking annoyed. Same danger, new priorities. A hard hat has AirPods."
+          ],
+          "maxLength": 32000,
+          "description": "The prompt for image generation"
+        }
+      },
+      "x-fal-order-properties": [
+        "prompt",
+        "image_urls",
+        "mask_url",
+        "image_size",
+        "background",
+        "quality",
+        "num_images",
+        "output_format",
+        "output_compression",
+        "sync_mode"
+      ],
+      "description": "GPT Image 2.5 edit inputs with model-specific quality and compression.",
+      "required": [
+        "prompt",
+        "image_urls"
+      ],
+      "additionalProperties": false,
+      "$defs": {
+        "ImageSize": {
+          "title": "ImageSize",
+          "type": "object",
+          "properties": {
+            "width": {
+              "title": "Width",
+              "exclusiveMinimum": 0,
+              "type": "integer",
+              "description": "The width of the generated image.",
+              "maximum": 14142,
+              "default": 512
+            },
+            "height": {
+              "title": "Height",
+              "exclusiveMinimum": 0,
+              "type": "integer",
+              "description": "The height of the generated image.",
+              "maximum": 14142,
+              "default": 512
+            }
+          },
+          "x-fal-order-properties": [
+            "width",
+            "height"
+          ]
+        }
+      }
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=openai/gpt-image-2.5/sunburst/edit",
+    "verified_on": "2026-10-03"
+  },
+  "openai/gpt-image-2.5/sunburst/text-to-image": {
+    "input_schema": {
+      "title": "GPTImage25TextToImageRequest",
+      "type": "object",
+      "properties": {
+        "background": {
+          "title": "Background",
+          "enum": [
+            "auto",
+            "transparent",
+            "opaque"
+          ],
+          "type": "string",
+          "description": "Background for the generated image",
+          "default": "auto"
+        },
+        "output_compression": {
+          "title": "Output Compression",
+          "description": "Compression level from 0 to 100. Only supported when output_format is 'jpeg' or 'webp'.",
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer",
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quality": {
+          "enum": [
+            "auto",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "type": "string",
+          "title": "Quality",
+          "description": "Quality for the generated image. Higher settings increase detail, latency, and token usage. Use 'auto' to let the model choose.",
+          "default": "high"
+        },
+        "output_format": {
+          "title": "Output Format",
+          "enum": [
+            "jpeg",
+            "png",
+            "webp"
+          ],
+          "type": "string",
+          "description": "Output format for the images",
+          "default": "png"
+        },
+        "sync_mode": {
+          "title": "Sync Mode",
+          "type": "boolean",
+          "description": "If `True`, the media will be returned as a data URI and the output data won't be available in the request history.",
+          "default": false
+        },
+        "num_images": {
+          "title": "Number of Images",
+          "minimum": 1,
+          "type": "integer",
+          "examples": [
+            1
+          ],
+          "description": "Number of images to generate",
+          "maximum": 10,
+          "default": 1
+        },
+        "image_size": {
+          "title": "Image Size",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ImageSize"
+            },
+            {
+              "enum": [
+                "square_hd",
+                "square",
+                "portrait_4_3",
+                "portrait_16_9",
+                "landscape_4_3",
+                "landscape_16_9",
+                "auto"
+              ],
+              "type": "string"
+            }
+          ],
+          "description": "The size of the generated image. Supports preset names, explicit {width, height}, or 'auto' to let the model pick the best size. Concrete sizes must have both dimensions as multiples of 16, max edge 3840px, aspect ratio <= 3:1, total pixels between 655,360 and 8,294,400.",
+          "default": "landscape_4_3"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "minLength": 1,
+          "type": "string",
+          "examples": [
+            "create a realistic image taken with iphone at these coordinates 41\u00b043\u203232\u2033N 49\u00b056\u203249\u2033W 15 April 1912"
+          ],
+          "maxLength": 32000,
+          "description": "The prompt for image generation"
+        }
+      },
+      "x-fal-order-properties": [
+        "prompt",
+        "image_size",
+        "background",
+        "quality",
+        "num_images",
+        "output_format",
+        "output_compression",
+        "sync_mode"
+      ],
+      "description": "GPT Image 2.5 generation inputs, kept separate from GPT Image 2.",
+      "required": [
+        "prompt"
+      ],
+      "additionalProperties": false,
+      "$defs": {
+        "ImageSize": {
+          "title": "ImageSize",
+          "type": "object",
+          "properties": {
+            "width": {
+              "title": "Width",
+              "exclusiveMinimum": 0,
+              "type": "integer",
+              "description": "The width of the generated image.",
+              "maximum": 14142,
+              "default": 512
+            },
+            "height": {
+              "title": "Height",
+              "exclusiveMinimum": 0,
+              "type": "integer",
+              "description": "The height of the generated image.",
+              "maximum": 14142,
+              "default": 512
+            }
+          },
+          "x-fal-order-properties": [
+            "width",
+            "height"
+          ]
+        }
+      }
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=openai/gpt-image-2.5/sunburst/text-to-image",
+    "verified_on": "2026-10-03"
+  }
+}

@@ -89,6 +89,16 @@ def assign_start_times(
         st.video_start_s = max(0.0, st.t_ms / 1000.0 + lead_offset_s)
 
 
+def narrated_body_duration(steps: list[Step], tail_s: float = 0.6) -> float:
+    """Body length needed for every narration line to finish, plus a short tail.
+
+    The capture can be shorter than this: Cypress's screencast only emits frames
+    while the screen changes, so a static final step ends the video early.
+    """
+    ends = [st.video_end_s for st in steps if st.narration and st.duration_s > 0]
+    return max(ends) + tail_s if ends else 0.0
+
+
 def split_words(text: str) -> list[str]:
     return re.findall(r"\S+", text or "")
 

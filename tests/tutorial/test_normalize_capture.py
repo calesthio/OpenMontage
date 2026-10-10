@@ -62,3 +62,22 @@ def test_no_markers_falls_back_gracefully(tmp_path):
     norm = bridge.normalize_capture(str(raw), manifest, str(tmp_path / "cap.mp4"))
     assert norm["marker_times_s"] == []
     assert _probe_wh(tmp_path / "cap.mp4") == (1920, 1080)
+
+
+def test_extend_capture_holds_the_last_frame(tmp_path):
+    # Cypress's screencast stops at the last screen change, so a static final
+    # step is recorded shorter than its narration; the body is padded to fit.
+    cap = tmp_path / "cap.mp4"
+    _make_capture(cap, (), dur=3)
+    got = bridge.extend_capture(str(cap), 5.5)
+    assert abs(got - 5.5) < 0.1
+    assert abs(bridge.probe(str(cap))["duration"] - 5.5) < 0.1
+    assert _probe_wh(cap) == (1280, 720)
+
+
+def test_extend_capture_leaves_a_long_enough_clip_alone(tmp_path):
+    cap = tmp_path / "cap.mp4"
+    _make_capture(cap, (), dur=3)
+    before = cap.stat().st_mtime_ns
+    assert abs(bridge.extend_capture(str(cap), 2.0) - 3.0) < 0.1
+    assert cap.stat().st_mtime_ns == before

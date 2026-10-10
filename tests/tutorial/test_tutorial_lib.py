@@ -155,3 +155,11 @@ def test_narration_client_for_builds_each_backend(tmp_path):
     assert el.health()["backend"] == "elevenlabs" and el.voice_for("en") == "VX"
     with pytest.raises(ValueError):
         T.narration_client_for("nope", narration_url="")
+
+
+def test_narrated_body_duration_covers_the_last_line():
+    steps = [T.Step(index=0, narration="a"), T.Step(index=1, narration="b")]
+    steps[0].video_start_s, steps[0].duration_s = 1.0, 4.0
+    steps[1].video_start_s, steps[1].duration_s = 6.0, 9.5
+    assert T.narrated_body_duration(steps, tail_s=0.5) == 16.0
+    assert T.narrated_body_duration([]) == 0.0

@@ -511,6 +511,12 @@ def main() -> int:
     # Primary: marker times (already relative to the trimmed start). Fallback:
     # manifest t_ms (imprecise for the preamble — see the drift note in the plan).
     T.assign_start_times(steps, norm.get("marker_times_s") or None, lead_offset_s=0.0)
+    # A capture that ends on a static screen stops before the last line does.
+    needed = T.narrated_body_duration(steps)
+    if needed > body_duration:
+        print(f"INFO: capture is {body_duration:.1f}s but narration runs to {needed:.1f}s — "
+              "holding the last frame.", file=sys.stderr)
+        body_duration = bridge.extend_capture(str(capture_mp4), needed)
     for st in steps:
         if st.narration and st.duration_s > 0:
             clips.append((st.video_start_s, assets / "audio" / f"step_{st.index}.wav"))

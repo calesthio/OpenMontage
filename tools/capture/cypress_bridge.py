@@ -224,6 +224,29 @@ def detect_marker_times(
     return times
 
 
+def extend_capture(path: str, min_duration_s: float, fps: int = CFR_FPS) -> float:
+    """Hold the last frame so the clip lasts at least min_duration_s; returns the duration.
+
+    Cypress's CDP screencast emits frames only while the screen changes, so a
+    capture that ends on a static step is cut short of that step's hold.
+    """
+    cur = probe(path)["duration"]
+    if min_duration_s <= cur + 1.0 / fps:
+        return cur
+    src = Path(path)
+    tmp = src.with_name(src.stem + ".ext" + src.suffix)
+    _run([
+        "ffmpeg", "-y", "-v", "error", "-i", str(src),
+        "-vf", f"tpad=stop_mode=clone:stop_duration={min_duration_s - cur:.3f}",
+        "-r", str(fps), "-fps_mode", "cfr",
+        "-an", "-c:v", "libx264", "-crf", "20", "-preset", "medium",
+        "-movflags", "faststart",
+        str(tmp),
+    ])
+    tmp.replace(src)
+    return probe(path)["duration"]
+
+
 def normalize_capture(
     raw_video: str,
     manifest: dict,

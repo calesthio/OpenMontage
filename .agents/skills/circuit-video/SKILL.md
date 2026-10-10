@@ -15,6 +15,8 @@ into a 1080p tutorial MP4 and can publish it to AWS S3. Agents call the
 **circuit-video MCP**, not ad-hoc Python.
 
 Authoring a new spec is a different skill: `.agents/skills/cypress-recording/SKILL.md`.
+Going from a GitHub issue number to a published video + docs page + release note:
+`.agents/skills/publishing-circuit-tutorials/SKILL.md`.
 
 ## What this branch built
 

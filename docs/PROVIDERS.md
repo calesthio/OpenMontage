@@ -72,6 +72,7 @@ XAI_API_KEY=                 # xAI Grok image generation/editing + Grok video ge
 DOUBAO_SPEECH_API_KEY=       # Volcengine Doubao Speech TTS (strong Mandarin narration)
 DOUBAO_SPEECH_VOICE_TYPE=    # Default Doubao speaker/voice type
 DASHSCOPE_API_KEY=           # Alibaba DashScope (Qwen image gen, TTS, ASR with word timestamps)
+SARVAM_API_KEY=              # Sarvam AI Bulbul TTS (Indian-English + 22 Indic languages, code-mixed)
 
 # AZURE AI SPEECH (optional cloud STT + TTS; one key unlocks both directions)
 AZURE_SPEECH_KEY=            # Azure AI Speech — azure_stt (Fast Transcription) + azure_tts (neural narration)
@@ -783,6 +784,69 @@ Azure neural TTS Standard (S0) bills roughly **$16 per 1M characters** (a free
 F0 tier includes a limited monthly allowance). A 150-word narration segment
 costs about $0.015. OpenMontage estimates cost from character count. See
 [Azure AI Speech pricing](https://azure.microsoft.com/pricing/details/cognitive-services/speech-services/) for current rates.
+
+---
+
+### Sarvam AI — Indic + Indian-English Text-to-Speech
+
+> **Narration that sounds Indian.** Sarvam's Bulbul models cover Indian English and 22 Indic languages, and read code-mixed Hinglish ("aapka dashboard ready hai") without transliteration tricks. This is the provider to pick when the audience is Indian; `elevenlabs_tts`, `google_tts` and `azure_tts` remain better for other accents and for voice cloning, and `piper_tts` stays the offline default.
+
+**Tools unlocked:** `sarvam_tts`
+**Env var:** `SARVAM_API_KEY` (optional: `SARVAM_API_BASE_URL`, `SARVAM_INR_PER_USD`)
+
+#### Setup
+
+1. Sign in at [dashboard.sarvam.ai](https://dashboard.sarvam.ai/) — new accounts get ₹100 of free credits
+2. Create an API subscription key
+3. Add to `.env`: `SARVAM_API_KEY=sk_...`
+
+`sarvam_tts` reports AVAILABLE as soon as the key is set. On networks with an
+egress allowlist, `api.sarvam.ai` must be reachable — a blocked CONNECT fails
+before the key is ever checked, which looks like an auth error but is not one.
+
+#### Models and voices
+
+| Model | Speakers | Controls | Max chars/request |
+|-------|----------|----------|-------------------|
+| `bulbul:v3` (default) | 37, e.g. `shubh` (default), `ritu`, `priya`, `rahul`, `kavya`, `neha` | `pace` 0.5–2.0, `temperature` 0.01–2.0, `dict_id` | 2500 |
+| `bulbul:v2` (legacy) | `anushka`, `manisha`, `vidya`, `arya`, `abhilash`, `karun`, `hitesh` | `pace` 0.3–3.0, `pitch` ±0.75, `loudness` 0.1–3.0 | 1500 |
+
+Speaker names are lowercase and model-specific; `sarvam_tts` validates the
+pairing before spending a call. Languages include `en-IN`, `hi-IN`, `bn-IN`,
+`ta-IN`, `te-IN`, `mr-IN`, `gu-IN`, `kn-IN`, `ml-IN`, `pa-IN`, `od-IN` and more.
+
+#### API Notes
+
+```text
+POST https://api.sarvam.ai/text-to-speech
+api-subscription-key: ${SARVAM_API_KEY}
+Content-Type: application/json
+-> { "request_id": "...", "audios": ["<base64 wav>"] }
+```
+
+There is no SSML — punctuation, `pace` and `temperature` are the pacing
+controls. Scripts longer than the model limit are chunked on sentence
+boundaries by the tool and re-joined into one lossless WAV; `output_format:
+"mp3"` transcodes locally with FFmpeg. Numbers above four digits should be
+written with commas (`10,000`) so they are read as whole numbers.
+
+#### What It Is Best For
+
+- Hindi and regional-language narration for Indian audiences
+- Indian-English brand narration without an American accent
+- Code-mixed Hinglish scripts
+- Multi-language variants of one video (re-narrate per language, re-render)
+
+Not for: voice cloning (`elevenlabs_tts`), non-Indian accents (`google_tts`,
+`azure_tts`), or offline production (`piper_tts`).
+
+#### Pricing
+
+Bulbul v3 bills **₹30 per 10,000 characters** (~$0.0034 per 1,000 characters at
+₹88/USD) — a 150-word narration segment costs roughly ₹2.7 (~$0.03). New
+accounts include ₹100 of free credits. OpenMontage estimates cost from
+character count; set `SARVAM_INR_PER_USD` to adjust the reporting rate. See
+[Sarvam pricing](https://docs.sarvam.ai/api/getting-started/pricing).
 
 ---
 

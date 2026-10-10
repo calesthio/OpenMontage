@@ -94,6 +94,7 @@ For each script section:
    - Google TTS: `input_type: "ssml"` when using `<break>` tags, plus `speaking_rate` in `0.25..2.0` and `pitch` in `-20..20`
    - ElevenLabs: `stability`, `similarity_boost`, `style`, `speed`, and `use_speaker_boost`
    - Azure: voice aliases (`andrew`, `brandon`, `ava`, `guy`, `jenny`) or any Azure short name, SSML `rate` (e.g. `"-4%"`), `pitch` (e.g. `"+1st"`), and `style` (e.g. `"narration-professional"`) — see the `azure-text-to-speech` skill
+   - Sarvam: `speaker` (lowercase, model-specific), `target_language_code` (e.g. `"hi-IN"`), `pace` in `0.5..2.0`, and `temperature` in `0.01..2.0` on `bulbul:v3`; no SSML — see the `sarvam-tts` skill
 7. Generate using `tts_selector` — it auto-routes to the best available TTS provider based on user preference and availability. Check the registry's `best_for` fields to understand each provider's strengths.
 8. Record the applied `voice_performance` metadata on each narration asset
 9. Verify the audio file exists and duration matches expected timing (±15%)

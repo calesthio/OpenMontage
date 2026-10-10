@@ -30,7 +30,9 @@ INSTRUCTIONS = (
     "are set, the finished MP4 is uploaded to S3 and a presigned download URL "
     "is returned. Renders take several minutes; wait=false starts one in the background. "
     "Narration comes from the ttsd sidecar by default; pass narration_backend=\"elevenlabs\" "
-    "(and optionally voice_id) to call ElevenLabs directly — run doctor first."
+    "(and optionally voice_id) to call ElevenLabs directly — run doctor first. "
+    "For another language: get_tutorial_text → translate → save_tutorial_translation → "
+    "author_tutorial(lang) → render_tutorial(lang)."
 )
 
 
@@ -117,6 +119,12 @@ TOOLS = [
                                "Omit for the per-language voice from ELEVENLABS_VOICE_IDS "
                                "or the recipe's voice_id.",
             },
+            "lang": {
+                "type": "string",
+                "description": "Render voice, captions and title cards in this language (e.g. de). "
+                               "Needs the translation (get_tutorial_text → save_tutorial_translation) "
+                               "and timings (author_tutorial) for that lang. Default: source language.",
+            },
             "music": {
                 "type": "string",
                 "description": "Optional music file path or music_library/ track name.",
@@ -137,6 +145,46 @@ TOOLS = [
             },
         },
         ["base_url"],
+    ),
+    _tool(
+        "get_tutorial_text",
+        "Return the translation template for a tutorial: every narration step with its source "
+        "text (from the committed timings.json) plus the translatable recipe texts (title, "
+        "intro/outro). Fill `narration` for each step and the `recipe` values in the target "
+        "language, then call save_tutorial_translation.",
+        {
+            "tutorial": {"type": "string", "description": "Tutorial name, e.g. support-tickets."},
+            "lang": {"type": "string", "description": "Target language code, e.g. de."},
+        },
+        ["tutorial", "lang"],
+    ),
+    _tool(
+        "save_tutorial_translation",
+        "Validate and write <name>.i18n.<lang>.json next to the Cypress spec. Then run "
+        "author_tutorial for that lang (voice durations) and render_tutorial with lang.",
+        {
+            "tutorial": {"type": "string"},
+            "lang": {"type": "string"},
+            "translation": {
+                "type": "object",
+                "description": "The object from get_tutorial_text with narration/recipe filled in.",
+            },
+        },
+        ["tutorial", "lang", "translation"],
+    ),
+    _tool(
+        "author_tutorial",
+        "Synthesize each narration line once and write the timings file that paces the "
+        "Cypress capture (<name>.timings.json, or <name>.timings.<lang>.json). Re-run after "
+        "changing the voice, the narration text, or a translation. Uses the committed "
+        "source timings as the step list (no Cypress run).",
+        {
+            "tutorial": {"type": "string"},
+            "lang": {"type": "string", "description": "Language to author; default: the source language."},
+            "narration_backend": {"type": "string", "enum": ["ttsd", "elevenlabs"]},
+            "voice_id": {"type": "string"},
+        },
+        ["tutorial"],
     ),
     _tool(
         "get_render",
@@ -207,6 +255,18 @@ def _call(name: str, args: dict) -> dict:
                 render_runtime=args.get("render_runtime") or None,
                 upload=bool(args.get("upload", True)),
                 wait=bool(args.get("wait", True)),
+                narration_backend=args.get("narration_backend") or None,
+                voice_id=args.get("voice_id") or None,
+                lang=args.get("lang") or None,
+            ))
+        if name == "get_tutorial_text":
+            return _ok(service.tutorial_text(args.get("tutorial") or "", args.get("lang") or ""))
+        if name == "save_tutorial_translation":
+            return _ok(service.save_translation(args.get("tutorial") or "", args.get("lang") or "",
+                                                args.get("translation") or {}))
+        if name == "author_tutorial":
+            return _ok(service.author_tutorial(
+                args.get("tutorial") or "", args.get("lang") or None,
                 narration_backend=args.get("narration_backend") or None,
                 voice_id=args.get("voice_id") or None,
             ))
@@ -327,7 +387,8 @@ def main(argv: Optional[list[str]] = None) -> int:
         return run_job_file(argv[1])
     if argv[:1] in (["-h"], ["--help"]):
         print("circuit-video MCP server (stdio). Tools: list_tutorials, doctor, "
-              "render_tutorial, get_render, upload_video.", file=sys.stderr)
+              "render_tutorial, get_render, upload_video, get_tutorial_text, "
+              "save_tutorial_translation, author_tutorial.", file=sys.stderr)
         return 0
     return serve()
 

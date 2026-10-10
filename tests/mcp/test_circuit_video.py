@@ -46,6 +46,8 @@ def test_list_tutorials_from_temp_client(tmp_path):
         "spec": "cypress/e2e-tutorials/sales/sales-tour.tutorial.cy.js",
         "has_recipe": True,
         "has_timings": False,
+        "source_lang": "en",
+        "languages": {},
     }]
 
 
@@ -262,3 +264,96 @@ def test_caption_font_check(monkeypatch):
     assert caption_font_installed("Inter") is False
     monkeypatch.setattr("shutil.which", lambda name: None)
     assert caption_font_installed("Noto Sans") is None
+
+
+# --- multilingual: lang option, translation + authoring tools ----------------
+
+from circuit_video.service import author_tutorial, save_translation, tutorial_text  # noqa: E402
+
+
+def _client_with_de(tmp_path):
+    d = tmp_path / "cypress" / "e2e-tutorials" / "s"
+    d.mkdir(parents=True)
+    (d / "tour.tutorial.cy.js").write_text("")
+    (d / "tour.tutorial.json").write_text(json.dumps({"title": "Tour", "lang": "en"}))
+    (d / "tour.timings.json").write_text(json.dumps({"lang": "en", "steps": [
+        {"index": 0, "narration": "Hello.", "duration_ms": 1}]}))
+    return tmp_path
+
+
+def test_list_tutorials_reports_languages(tmp_path):
+    client = _client_with_de(tmp_path)
+    d = client / "cypress" / "e2e-tutorials" / "s"
+    (d / "tour.i18n.de.json").write_text("{}")
+    (d / "tour.timings.fr.json").write_text("{}")
+    out = list_tutorials({"client_dir": str(client)})["tutorials"][0]
+    assert out["source_lang"] == "en"
+    assert out["languages"] == {"de": {"translated": True, "timed": False},
+                                "fr": {"translated": False, "timed": True}}
+
+
+def test_tutorial_text_and_save_translation(tmp_path):
+    cfg = {"client_dir": str(_client_with_de(tmp_path))}
+    tpl = tutorial_text("tour", "de", cfg=cfg)
+    assert tpl["steps"] == [{"index": 0, "source": "Hello.", "narration": "", "stale": False}]
+    tpl["steps"][0]["narration"] = "Hallo."
+    tpl["recipe"]["title"] = "Rundgang"
+    res = save_translation("tour", "de", tpl, cfg=cfg)
+    assert res["path"].endswith("tour.i18n.de.json") and res["steps"] == 1
+    assert json.loads(Path(res["path"]).read_text(encoding="utf-8"))["recipe"]["title"] == "Rundgang"
+
+
+def test_save_translation_rejects_bad_payload(tmp_path):
+    cfg = {"client_dir": str(_client_with_de(tmp_path))}
+    with pytest.raises(ValueError, match="step 0"):
+        save_translation("tour", "de", {"lang": "de", "steps": [{"index": 0, "narration": ""}]}, cfg=cfg)
+    with pytest.raises(ValueError, match="lang"):
+        tutorial_text("tour", "German", cfg=cfg)
+
+
+def test_render_argv_lang():
+    cfg = {"client_dir": "/c", "narration_url": "http://127.0.0.1:5557", "render_runtime": "ffmpeg"}
+    argv = render_argv(cfg, tutorial="t", project_id="p", base_url="https://d.example.com", lang="de")
+    assert argv[argv.index("--lang") + 1] == "de"
+    argv = render_argv(cfg, tutorial="t", project_id="p", base_url="https://d.example.com")
+    assert "--lang" not in argv
+
+
+def test_author_tutorial_runs_cli(tmp_path, monkeypatch):
+    import subprocess as sp
+    cfg = {**load_config(), "client_dir": str(_client_with_de(tmp_path)), "projects_dir": str(tmp_path / "p")}
+    seen = {}
+
+    class P:
+        returncode = 0
+        stdout = "OK wrote x (1 steps, lang=de)\n"
+        stderr = ""
+
+    def fake_run(argv, **kw):
+        seen["argv"] = argv
+        return P()
+
+    monkeypatch.setattr(sp, "run", fake_run)
+    out = author_tutorial("tour", "de", narration_backend="elevenlabs", voice_id="VX", cfg=cfg)
+    a = seen["argv"]
+    assert a[1].endswith("author_tutorial.py") and "--from-timings" in a
+    assert a[a.index("--lang") + 1] == "de" and a[a.index("--voice-id") + 1] == "VX"
+    assert a[a.index("--narration-backend") + 1] == "elevenlabs"
+    assert out["status"] == "succeeded" and out["timings_path"].endswith("tour.timings.de.json")
+
+
+def test_render_tutorial_lang_requires_translation_before_capture(monkeypatch, tmp_path):
+    cfg = {**load_config(), "client_dir": str(_client_with_de(tmp_path)), "render_api_url": "",
+           "narration_backend": "", "projects_dir": str(tmp_path / "p")}
+    monkeypatch.setattr("circuit_video.service.load_config", lambda: cfg)
+    out = _call("render_tutorial", {"base_url": "https://d.example.com", "tutorial": "tour", "lang": "de"})
+    assert out.get("isError") is True
+    assert "translat" in out["content"][0]["text"]
+    assert not (tmp_path / "p").exists()
+
+
+def test_tools_list_has_i18n_tools():
+    names = {t["name"] for t in TOOLS}
+    assert {"get_tutorial_text", "save_tutorial_translation", "author_tutorial"} <= names
+    rt = next(t for t in TOOLS if t["name"] == "render_tutorial")
+    assert rt["inputSchema"]["properties"]["lang"]["type"] == "string"

@@ -223,6 +223,21 @@ class AudioMixer(BaseTool):
         # lands at a delivery rate instead of a 4x-oversized file.
         return f"[{in_label}]loudnorm=I={target}:LRA=11:TP=-1.5,aresample=48000[{out_label}]"
 
+    @staticmethod
+    def _limiter_filter(in_label: str, out_label: str) -> str:
+        """Clip guard for output paths that skip loudnorm.
+
+        Every amix here runs with normalize=0 so tracks keep the levels the
+        caller set, which means overlapping tracks can sum past full scale.
+        With normalize=true, loudnorm's true-peak limiter absorbs that; without
+        it the overs would hard-clip when the float mix is written as integer
+        PCM. limit=1 only engages above 0 dBFS, so in-range audio passes at
+        its original level; level=0 stops alimiter from re-gaining the output.
+        The 5 ms lookahead delay is left uncompensated because the ``latency``
+        option is missing from older FFmpeg builds (e.g. 4.x).
+        """
+        return f"[{in_label}]alimiter=limit=1:level=0[{out_label}]"
+
     def _track_filters(self, track: dict[str, Any]) -> list[str]:
         """Build per-track filters on the source timeline before scheduling it.
 
@@ -307,24 +322,25 @@ class AudioMixer(BaseTool):
             else:
                 filter_parts.append(f"[{i}:a]acopy[a{i}]")
 
-        # Amix all processed streams
+        # Amix all processed streams. normalize=0: amix's default normalize=1
+        # scales every input by 1/N (re-scaling again as inputs end), which
+        # silently overrides the per-track `volume` the caller set.
         mix_inputs = "".join(f"[a{i}]" for i in range(len(tracks)))
         filter_parts.append(
-            f"{mix_inputs}amix=inputs={len(tracks)}:duration=longest:dropout_transition=2[mixed]"
+            f"{mix_inputs}amix=inputs={len(tracks)}:duration=longest:dropout_transition=2:normalize=0[mixed]"
         )
 
         if normalize:
             filter_parts.append(self._loudnorm_filter(inputs, "mixed", "out"))
-            out_label = "[out]"
         else:
-            out_label = "[mixed]"
+            filter_parts.append(self._limiter_filter("mixed", "out"))
 
         filter_complex = ";".join(filter_parts)
 
         cmd = ["ffmpeg", "-y"]
         cmd.extend(input_args)
         cmd.extend(["-filter_complex", filter_complex])
-        cmd.extend(["-map", out_label, str(output_path)])
+        cmd.extend(["-map", "[out]", str(output_path)])
 
         self.run_command(cmd)
 
@@ -421,7 +437,10 @@ class AudioMixer(BaseTool):
             f"threshold=0.02:ratio=9:attack={attack}:release={release}:"
             f"level_sc=1:mix=0.9[ducked];"
             f"[ducked]volume={music_vol * 3}[music_out];"  # compensate sidechain level
-            f"[0:a][music_out]amix=inputs=2:duration=longest[out]"
+            # normalize=0: the default normalize=1 halves both inputs, so the
+            # speech came out 6 dB down. No loudnorm follows, so guard clipping.
+            f"[0:a][music_out]amix=inputs=2:duration=longest:normalize=0[mixed];"
+            + self._limiter_filter("mixed", "out")
         )
 
         cmd = [
@@ -560,9 +579,14 @@ class AudioMixer(BaseTool):
             speech_indices = list(range(len(speech_tracks)))
             speech_labels = "".join(f"[a{i}]" for i in speech_indices)
 
+            # normalize=0 throughout the ducking graph: amix's default
+            # normalize=1 divides every input by the input count, so N narration
+            # segments came out 20*log10(N) dB quiet (-15.6 dB for 6 lines) and
+            # the music buried the voice. Segments are sequential, so summing is
+            # correct; music level is already set by volume + ducking.
             if len(speech_tracks) > 1:
                 filter_parts.append(
-                    f"{speech_labels}amix=inputs={len(speech_tracks)}:duration=longest[speech_all]"
+                    f"{speech_labels}amix=inputs={len(speech_tracks)}:duration=longest:normalize=0[speech_all]"
                 )
             else:
                 filter_parts.append(f"[a{speech_indices[0]}]acopy[speech_all]")
@@ -582,7 +606,7 @@ class AudioMixer(BaseTool):
 
             if len(music_tracks) > 1:
                 filter_parts.append(
-                    f"{music_labels}amix=inputs={len(music_tracks)}:duration=longest[music_mix]"
+                    f"{music_labels}amix=inputs={len(music_tracks)}:duration=longest:normalize=0[music_mix]"
                 )
                 music_in = "[music_mix]"
             else:
@@ -602,7 +626,7 @@ class AudioMixer(BaseTool):
             )
 
             # Final mix: the other speech branch + ducked music
-            mix_label = "[speech_out][music_out]amix=inputs=2:duration=longest[premix]"
+            mix_label = "[speech_out][music_out]amix=inputs=2:duration=longest:normalize=0[premix]"
 
             # Add SFX if present
             sfx_start = len(speech_tracks) + len(music_tracks)
@@ -610,16 +634,17 @@ class AudioMixer(BaseTool):
                 sfx_labels = "".join(f"[a{i}]" for i in range(sfx_start, sfx_start + len(sfx_tracks)))
                 filter_parts.append(mix_label.replace("[premix]", "[pressfx]"))
                 filter_parts.append(
-                    f"[pressfx]{sfx_labels}amix=inputs={1 + len(sfx_tracks)}:duration=longest[premix]"
+                    f"[pressfx]{sfx_labels}amix=inputs={1 + len(sfx_tracks)}:duration=longest:normalize=0[premix]"
                 )
             else:
                 filter_parts.append(mix_label)
 
         else:
-            # No ducking: simple amix of all tracks
+            # No ducking: simple amix of all tracks. normalize=0 for the same
+            # reason as above — each track stays at the level the caller set.
             all_labels = "".join(f"[a{i}]" for i in range(len(all_tracks)))
             filter_parts.append(
-                f"{all_labels}amix=inputs={len(all_tracks)}:duration=longest:dropout_transition=2[premix]"
+                f"{all_labels}amix=inputs={len(all_tracks)}:duration=longest:dropout_transition=2:normalize=0[premix]"
             )
 
         # A ducked music stream is gated by the speech sidechain, so its tail
@@ -637,16 +662,15 @@ class AudioMixer(BaseTool):
         # Normalize
         if normalize:
             filter_parts.append(self._loudnorm_filter(inputs, premix_label, "out"))
-            out_label = "[out]"
         else:
-            out_label = f"[{premix_label}]"
+            filter_parts.append(self._limiter_filter(premix_label, "out"))
 
         filter_complex = ";".join(p for p in filter_parts if p)
 
         cmd = ["ffmpeg", "-y"]
         cmd.extend(input_args)
         cmd.extend(["-filter_complex", filter_complex])
-        cmd.extend(["-map", out_label])
+        cmd.extend(["-map", "[out]"])
         if target is not None:
             cmd.extend(["-t", str(target)])
         cmd.append(str(output_path))

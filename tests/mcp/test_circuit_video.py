@@ -167,9 +167,13 @@ def test_render_argv_narration_flags_only_when_set():
                        narration_backend="elevenlabs", voice_id="VX")
     assert argv[argv.index("--narration-backend") + 1] == "elevenlabs"
     assert argv[argv.index("--voice-id") + 1] == "VX"
-    cfg2 = {**cfg, "narration_backend": "elevenlabs"}
+    # Config/env-level values are NOT promoted to CLI flags (that would beat the
+    # recipe); they reach render_tutorial.py as environment variables instead.
+    cfg2 = {**cfg, "narration_backend": "elevenlabs", "voice_id": "CFGV"}
     argv = render_argv(cfg2, tutorial="t", project_id="p", base_url="https://d.example.com")
-    assert argv[argv.index("--narration-backend") + 1] == "elevenlabs"
+    assert "--narration-backend" not in argv and "--voice-id" not in argv
+    assert elevenlabs_env(cfg2)["TUTORIAL_NARRATION_BACKEND"] == "elevenlabs"
+    assert elevenlabs_env(cfg2)["TUTORIAL_VOICE_ID"] == "CFGV"
 
 
 def test_load_config_reads_narration_env(monkeypatch):
@@ -186,6 +190,8 @@ def test_load_config_reads_narration_env(monkeypatch):
         "ELEVENLABS_API_KEY": "sk_test",
         "ELEVENLABS_VOICE_IDS": "en:V1",
         "ELEVENLABS_MODEL_ID": "ELEVENLABS_MODEL_ID:-eleven_multilingual_v2",
+        "TUTORIAL_NARRATION_BACKEND": "elevenlabs",
+        "TUTORIAL_VOICE_ID": "VX",
     }
 
 
@@ -225,3 +231,17 @@ def test_doctor_reports_elevenlabs_backend(monkeypatch, tmp_path):
     bad = doctor({**cfg, "elevenlabs_api_key": ""})
     check = next(c for c in bad["checks"] if c["label"] == "elevenlabs narration")
     assert check["status"] == "fail" and "ELEVENLABS_API_KEY" in check["detail"]
+
+
+def test_doctor_tool_accepts_backend_override(monkeypatch, tmp_path):
+    tool = next(t for t in TOOLS if t["name"] == "doctor")
+    assert tool["inputSchema"]["properties"]["narration_backend"]["enum"] == ["ttsd", "elevenlabs"]
+    cfg = {**load_config(), "client_dir": str(tmp_path), "base_url": "", "narration_backend": "",
+           "elevenlabs_api_key": "sk", "elevenlabs_voice_ids": "en:V1", "elevenlabs_model_id": "",
+           "render_api_url": ""}
+    rep = doctor(cfg, narration_backend="elevenlabs", voice_id="VX")
+    assert rep["narration_backend"] == "elevenlabs"
+    check = next(c for c in rep["checks"] if c["label"] == "elevenlabs narration")
+    assert check["status"] == "ok" and "override=VX" in check["detail"]
+    with pytest.raises(ValueError):
+        doctor(cfg, narration_backend="piper")

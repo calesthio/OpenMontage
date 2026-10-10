@@ -79,10 +79,15 @@ def list_tutorials(cfg: Optional[dict] = None) -> dict:
     return {"client_dir": client_dir, "tutorials": items}
 
 
-def doctor(cfg: Optional[dict] = None, base_url: Optional[str] = None) -> dict:
+def doctor(cfg: Optional[dict] = None, base_url: Optional[str] = None,
+           narration_backend: Optional[str] = None, voice_id: Optional[str] = None) -> dict:
     cfg = dict(cfg or load_config())
     if base_url:
         cfg["base_url"] = validate_base_url(base_url)
+    if narration_backend:
+        cfg["narration_backend"] = validate_narration_backend(narration_backend)
+    if voice_id:
+        cfg["voice_id"] = validate_voice_id(voice_id)
     checks: list[dict] = []
 
     def add(label: str, status: str, detail: str = ""):
@@ -221,12 +226,13 @@ def render_argv(cfg: dict, *, tutorial: str, project_id: str, base_url: str,
         argv.append("--offline-narration")
     if music:
         argv += ["--music", music]
-    backend = narration_backend or cfg.get("narration_backend") or ""
-    if backend:
-        argv += ["--narration-backend", backend]
-    vid = voice_id or cfg.get("voice_id") or ""
-    if vid:
-        argv += ["--voice-id", vid]
+    # Only explicit tool-call values become CLI flags (CLI beats the recipe).
+    # Config/env-level values reach render_tutorial.py via elevenlabs_env() as
+    # TUTORIAL_NARRATION_BACKEND / TUTORIAL_VOICE_ID, i.e. below the recipe.
+    if narration_backend:
+        argv += ["--narration-backend", narration_backend]
+    if voice_id:
+        argv += ["--voice-id", voice_id]
     return argv
 
 
@@ -242,6 +248,8 @@ _ELEVENLABS_KEYS = (
     ("elevenlabs_voice_ids", "ELEVENLABS_VOICE_IDS"),
     ("elevenlabs_model_id", "ELEVENLABS_MODEL_ID"),
     ("narration_cache_dir", "TUTORIAL_NARRATION_CACHE_DIR"),
+    ("narration_backend", "TUTORIAL_NARRATION_BACKEND"),
+    ("voice_id", "TUTORIAL_VOICE_ID"),
 )
 
 

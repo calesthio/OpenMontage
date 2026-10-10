@@ -102,6 +102,15 @@ def _env_for(cfg: dict) -> dict:
     env = os.environ.copy()
     if cfg["projects_dir"]:
         env["OPENMONTAGE_PROJECTS_DIR"] = cfg["projects_dir"]
+    # Config-level narration choice travels as env (below the recipe, above the
+    # script default); explicit tutorialctl flags become CLI flags (see _narration_argv).
+    if cfg.get("narration_backend"):
+        env["TUTORIAL_NARRATION_BACKEND"] = cfg["narration_backend"]
+    if cfg.get("voice_id"):
+        env["TUTORIAL_VOICE_ID"] = cfg["voice_id"]
+    # ELEVENLABS_* from --env-file (shell env already wins inside _narration_env).
+    nenv, _src = _narration_env(cfg)
+    env.update(nenv)
     return env
 
 
@@ -412,7 +421,7 @@ def cmd_author(args, cfg) -> int:
     argv = [sys.executable, str(REPO_ROOT / "author_tutorial.py"),
             "--tutorial", args.name, "--client-dir", cfg["client_dir"],
             "--narration-url", cfg["narration_url"], "--lang", cfg["lang"]]
-    argv += _narration_argv(cfg)
+    argv += _narration_argv(args)
     if cfg["base_url"]:
         argv += ["--base-url", cfg["base_url"]]
     if getattr(args, "manifest", None):
@@ -420,13 +429,15 @@ def cmd_author(args, cfg) -> int:
     return _run_cmd(argv, cfg, getattr(args, "dry_run", False))
 
 
-def _narration_argv(cfg: dict) -> list[str]:
-    """--narration-backend / --voice-id for the CLIs, only when configured."""
+def _narration_argv(args) -> list[str]:
+    """--narration-backend / --voice-id only when given on the tutorialctl command
+    line (argparse SUPPRESS: absent attribute = not given). Config/env values go
+    through _env_for instead so a recipe-pinned choice still wins over them."""
     out: list[str] = []
-    if cfg.get("narration_backend"):
-        out += ["--narration-backend", cfg["narration_backend"]]
-    if cfg.get("voice_id"):
-        out += ["--voice-id", cfg["voice_id"]]
+    if getattr(args, "narration_backend", None):
+        out += ["--narration-backend", args.narration_backend]
+    if getattr(args, "voice_id", None):
+        out += ["--voice-id", args.voice_id]
     return out
 
 
@@ -436,7 +447,7 @@ def cmd_render(args, cfg) -> int:
             "--project-id", args.project_id or args.name,
             "--narration-url", cfg["narration_url"],
             "--render-runtime", cfg["render_runtime"]]
-    argv += _narration_argv(cfg)
+    argv += _narration_argv(args)
     if cfg["base_url"]:
         argv += ["--base-url", cfg["base_url"]]
     if args.offline:

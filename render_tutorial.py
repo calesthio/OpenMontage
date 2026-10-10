@@ -260,9 +260,8 @@ def timings_voice_warning(timings: dict, backend: str, voice_id: str) -> Optiona
     """Pacing guard: timings.json durations were measured with one voice; a
     different voice/backend speaks at a different pace, so the capture no
     longer lines up. Returns the warning text, or None when consistent/unknown."""
-    rec = (timings or {}).get("narration") or {}
-    if not rec:
-        return None
+    # Timings files from before the backend option were always authored by ttsd.
+    rec = (timings or {}).get("narration") or {"backend": "ttsd", "voice_id": ""}
     old_backend = rec.get("backend") or ""
     old_voice = rec.get("voice_id") or ""
     if old_backend == backend and old_voice == voice_id:
@@ -324,6 +323,20 @@ def main() -> int:
     except ValueError as e:
         print(f"ERROR: {e}", file=sys.stderr)
         return 2
+    # Build (and, for ElevenLabs, probe) the narration client BEFORE the capture:
+    # a missing key or voice must not cost a 5-20 minute Cypress run.
+    narrator: Optional[ClientNarrator] = None
+    if not args.offline_narration:
+        try:
+            client = T.narration_client_for(
+                backend, narration_url=args.narration_url, voice_id=voice_id, env=env,
+            )
+            if backend == "elevenlabs":
+                client.voice_for(lang)  # offline check: a voice exists for the recipe lang
+        except (ValueError, NarrationError) as e:
+            print(f"ERROR: narration backend {backend!r} not ready: {e}", file=sys.stderr)
+            return 2
+        narrator = ClientNarrator(client)
     target = (1920, 1080)
     # Runtime: explicit CLI wins, else the recipe can pin it (so the same tutorial
     # renders identically locally and on the cluster), else ffmpeg.
@@ -384,14 +397,7 @@ def main() -> int:
         warn = timings_voice_warning(tut["timings"], backend, voice_id)
         if warn:
             print(warn, file=sys.stderr)
-        try:
-            client = T.narration_client_for(
-                backend, narration_url=args.narration_url, voice_id=voice_id, env=env,
-            )
-        except (ValueError, NarrationError) as e:
-            print(f"ERROR: narration backend {backend!r} not ready: {e}", file=sys.stderr)
-            return 2
-        narrator = ClientNarrator(client)
+        assert narrator is not None  # built before the capture
 
     clips: list[tuple[float, Path]] = []
     for st in steps:

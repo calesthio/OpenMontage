@@ -72,7 +72,9 @@ The tool response includes a 24-hour presigned GET URL.
   or `narration_backend` in the tutorial recipe `<name>.tutorial.json`) calls
   ElevenLabs directly using `ELEVENLABS_API_KEY` + `ELEVENLABS_VOICE_IDS`; pass
   `voice_id` (tool argument, `TUTORIAL_VOICE_ID`, or recipe `voice_id`) to pick
-  any voice. Precedence: tool/CLI argument > recipe > environment.
+  any voice. Precedence: tool/CLI argument > recipe > environment (`.env`,
+  shell, `tutorial.config.json`). Config problems (missing key, no voice for
+  the recipe `lang`) fail before the Cypress capture starts.
 - Clips are cached under `.cache/narration/elevenlabs/` keyed on voice, model,
   settings and text, so authoring and rendering never pay twice.
 - Changing the voice changes durations: re-run `tutorialctl author <name>` with

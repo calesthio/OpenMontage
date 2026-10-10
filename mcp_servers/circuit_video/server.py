@@ -65,6 +65,16 @@ TOOLS = [
                 "type": "string",
                 "description": "Optional demo-app URL to ping instead of the configured default.",
             },
+            "narration_backend": {
+                "type": "string",
+                "enum": ["ttsd", "elevenlabs"],
+                "description": "Check this backend instead of the configured one (use the "
+                               "value you will pass to render_tutorial).",
+            },
+            "voice_id": {
+                "type": "string",
+                "description": "ElevenLabs voice id override to report in the check.",
+            },
         },
         [],
     ),
@@ -182,7 +192,11 @@ def _call(name: str, args: dict) -> dict:
         if name == "list_tutorials":
             return _ok(service.list_tutorials())
         if name == "doctor":
-            return _ok(service.doctor(base_url=args.get("base_url") or None))
+            return _ok(service.doctor(
+                base_url=args.get("base_url") or None,
+                narration_backend=args.get("narration_backend") or None,
+                voice_id=args.get("voice_id") or None,
+            ))
         if name == "render_tutorial":
             return _ok(service.render_tutorial(
                 base_url=args.get("base_url") or "",

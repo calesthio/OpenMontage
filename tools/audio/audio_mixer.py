@@ -219,7 +219,9 @@ class AudioMixer(BaseTool):
             target = -16.0
         # Clamp to a sane loudness range to avoid malformed ffmpeg args.
         target = max(-40.0, min(0.0, target))
-        return f"[{in_label}]loudnorm=I={target}:LRA=11:TP=-1.5[{out_label}]"
+        # loudnorm upsamples to 192 kHz internally; resample back so the mix
+        # lands at a delivery rate instead of a 4x-oversized file.
+        return f"[{in_label}]loudnorm=I={target}:LRA=11:TP=-1.5,aresample=48000[{out_label}]"
 
     def _track_filters(self, track: dict[str, Any]) -> list[str]:
         """Build per-track filters on the source timeline before scheduling it.

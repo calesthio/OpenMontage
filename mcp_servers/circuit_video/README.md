@@ -82,3 +82,18 @@ The tool response includes a 24-hour presigned GET URL.
   render prints a WARN when `timings.json` disagrees).
 - The k8s render-api path still uses the ttsd sidecar; `narration_backend` and
   `voice_id` are forwarded in the request body but not acted on there yet.
+
+## Captions (ffmpeg runtime)
+
+Burned-in captions use `lib/captions.py`: Noto Sans Bold, size 60 (libass
+line-height units, about a 31 px cap height at 1080p) on a translucent box,
+64 px above the bottom edge. Override per tutorial in `<name>.tutorial.json`:
+
+```json
+"caption_style": {"size_px": 54, "margin_bottom_px": 72, "font": "Noto Sans", "box_alpha": 0.6}
+```
+
+Keys: `font`, `size_px`, `bold`, `margin_bottom_px`, `margin_side_px`,
+`box_alpha` (0–1), `box_pad_px`, `text_color`, `box_color` (RRGGBB). Values
+scale linearly with the frame height. `doctor` warns when Noto Sans is not
+installed (captions then fall back to the system sans).

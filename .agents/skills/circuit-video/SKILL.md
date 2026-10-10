@@ -25,6 +25,7 @@ Deterministic re-render of a locked recipe (no LLM in the render loop):
 3. Narration: `ttsd` sidecar (default) or ElevenLabs direct (`narration_backend=elevenlabs`,
    optional `voice_id`; clip cache in `.cache/narration/`); `--offline` skips it.
 4. `render_tutorial.py` assembles intro/body/outro (`ffmpeg` or Remotion `screencast_scene`).
+   Captions: SRT from subtitle_gen → ASS with real-pixel style (`lib/captions.py`); recipe `caption_style` overrides.
 5. Output: `projects/<id>/renders/final.mp4`.
 6. k8s path (`deploy/`): render-api Job + ttsd sidecar + **MinIO**.
 7. MCP path (`mcp_servers/circuit_video/`): same local renderer, then **AWS S3**.

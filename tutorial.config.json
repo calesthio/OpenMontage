@@ -1,0 +1,11 @@
+{
+  "narration_url": "http://127.0.0.1:5557",
+  "base_url": "https://backoffice.ddev.site:9010",
+  "client_dir": "/media/bl/Disk2/htdocs/circuitauction-backoffice/client",
+  "render_runtime": "ffmpeg",
+  "projects_dir": "",
+  "lang": "en",
+  "ttsd_image": "ddev-circuit-bid-ttsd:latest",
+  "narration_repo": "/media/bl/Disk2/htdocs/circuit-bid/redis-bridge",
+  "browser": "chrome"
+}

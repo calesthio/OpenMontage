@@ -297,7 +297,7 @@ class VideoUnderstand(BaseTool):
                 subprocess.run(
                     ["ffmpeg", "-i", str(video_path),
                      "-vf", f"select='{select_expr}'",
-                     "-vsync", "vfr",
+                     "-fps_mode", "vfr",
                      str(tmp / "frame_%04d.png"),
                      "-y", "-loglevel", "error"],
                     capture_output=True, text=True, timeout=60,
@@ -322,7 +322,7 @@ class VideoUnderstand(BaseTool):
                 # an even pass over the file rather than returning nothing.
                 subprocess.run(
                     ["ffmpeg", "-i", str(video_path),
-                     "-vsync", "vfr", "-frames:v", str(max_frames),
+                     "-fps_mode", "vfr", "-frames:v", str(max_frames),
                      str(tmp / "frame_%04d.png"),
                      "-y", "-loglevel", "error"],
                     capture_output=True, text=True, timeout=60,

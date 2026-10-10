@@ -49,6 +49,7 @@ except ImportError:
         sys.path.append(str(_venv_sp))
 
 from lib import tutorial as T  # noqa: E402
+from lib import tutorial_i18n as I18N  # noqa: E402
 from lib.captions import CaptionStyle, srt_to_ass  # noqa: E402
 from lib.envfile import parse_env_file  # noqa: E402
 from lib.checkpoint import init_project  # noqa: E402
@@ -63,14 +64,13 @@ BG_HEX = "0x0f1216"
 
 # --- tutorial resolution ----------------------------------------------------
 
-def resolve_tutorial(client_dir: Path, name: str) -> dict:
+def resolve_tutorial(client_dir: Path, name: str, lang: Optional[str] = None) -> dict:
     root = client_dir / "cypress" / "e2e-tutorials"
     specs = list(root.rglob(f"{name}.tutorial.cy.js"))
     if not specs:
         raise FileNotFoundError(f"No tutorial spec {name}.tutorial.cy.js under {root}")
     spec = specs[0]
     recipe_path = spec.with_name(f"{name}.tutorial.json")
-    timings_path = spec.with_name(f"{name}.timings.json")
     recipe = json.loads(recipe_path.read_text()) if recipe_path.exists() else {}
     if not recipe_path.exists():
         print(f"WARN: no recipe {recipe_path.name} — using defaults (title from name).", file=sys.stderr)
@@ -78,14 +78,29 @@ def resolve_tutorial(client_dir: Path, name: str) -> dict:
     # to the literal cut id, e.g. "intro"). Default the title from the tutorial name.
     if not recipe.get("title"):
         recipe["title"] = name.replace("-", " ").replace("_", " ").title()
-    timings = json.loads(timings_path.read_text()) if timings_path.exists() else {}
+    source_lang = recipe.get("lang", "en")
+    lang = I18N.validate_lang(lang) if lang else source_lang
+
+    def _load(p: Path) -> dict:
+        return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+
+    source_timings_path = I18N.timings_path(spec, name, source_lang, source_lang)
+    timings_path = I18N.timings_path(spec, name, lang, source_lang)
+    i18n_path = I18N.i18n_path(spec, name, lang) if lang != source_lang else None
+    i18n = I18N.load_sidecar(i18n_path) if i18n_path and i18n_path.exists() else None
     spec_rel = spec.relative_to(client_dir).as_posix()
     return {
+        "name": name,
         "spec": spec,
         "spec_rel": spec_rel,
         "recipe": recipe,
-        "timings": timings,
+        "lang": lang,
+        "source_lang": source_lang,
+        "timings": _load(timings_path),
         "timings_path": timings_path,
+        "source_timings": _load(source_timings_path),
+        "i18n_path": i18n_path,
+        "i18n": i18n,
     }
 
 

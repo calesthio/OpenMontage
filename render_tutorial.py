@@ -8,9 +8,11 @@ intro/outro cards + optional music — with NO LLM in the loop. It is the piece
 that makes the k8s "worker jobs only" model work; it deliberately re-renders a
 locked recipe (see the Rule Zero note in the plan).
 
-Narration is fetched from the `ttsd` sidecar (reusing the circuit-bid narration
-core). Use --offline-narration to assemble with silent placeholder audio (from
-the committed timings) for testing without ttsd/ElevenLabs/the demo app.
+Narration comes from the `ttsd` sidecar (reusing the circuit-bid narration
+core) or, with --narration-backend elevenlabs, straight from the ElevenLabs API
+(tools/audio/elevenlabs_narrator.py, cached per clip). Use --offline-narration
+to assemble with silent placeholder audio (from the committed timings) for
+testing without ttsd/ElevenLabs/the demo app.
 
 Assembly reuses OpenMontage tools where they fit (subtitle_gen for captions,
 audio_mixer for music ducking) and drives ffmpeg directly for the rest. A valid
@@ -27,6 +29,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -46,8 +49,10 @@ except ImportError:
         sys.path.append(str(_venv_sp))
 
 from lib import tutorial as T  # noqa: E402
+from lib.envfile import parse_env_file  # noqa: E402
 from lib.checkpoint import init_project  # noqa: E402
 from lib.paths import PROJECTS_DIR  # noqa: E402
+from tools.audio.narration_client import NarrationError  # noqa: E402
 from tools.capture import cypress_bridge as bridge  # noqa: E402
 
 FPS = 30
@@ -241,25 +246,52 @@ class OfflineNarrator:
         return dur
 
 
-class HttpNarrator:
-    def __init__(self, base_url: str):
-        from tools.audio.narration_client import NarrationClient
+class ClientNarrator:
+    """Adapter from a narration client (ttsd or ElevenLabs) to the step narrator API."""
 
-        self.client = NarrationClient(base_url)
+    def __init__(self, client):
+        self.client = client
 
     def render(self, lang: str, text: str, index: int, out_wav: Path) -> int:
         return self.client.render(lang, text, str(out_wav))
 
 
+def timings_voice_warning(timings: dict, backend: str, voice_id: str) -> Optional[str]:
+    """Pacing guard: timings.json durations were measured with one voice; a
+    different voice/backend speaks at a different pace, so the capture no
+    longer lines up. Returns the warning text, or None when consistent/unknown."""
+    rec = (timings or {}).get("narration") or {}
+    if not rec:
+        return None
+    old_backend = rec.get("backend") or ""
+    old_voice = rec.get("voice_id") or ""
+    if old_backend == backend and old_voice == voice_id:
+        return None
+    return (
+        f"WARN: timings.json was authored with backend={old_backend or '?'} "
+        f"voice_id={old_voice or '(per-lang default)'} but this render uses "
+        f"backend={backend} voice_id={voice_id or '(per-lang default)'}. Durations "
+        "(and therefore capture pacing) may differ — re-run author_tutorial.py with "
+        "the same backend/voice and re-capture."
+    )
+
+
 # --- main -------------------------------------------------------------------
 
-def main() -> int:
+def build_arg_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(description="Render a tutorial video from a Cypress spec.")
     ap.add_argument("--tutorial", required=True, help="tutorial name (e.g. sales-tour)")
     ap.add_argument("--client-dir", required=True, help="path to circuitauction-backoffice/client")
     ap.add_argument("--project-id", required=True)
     ap.add_argument("--base-url", default=None, help="demo app URL to record against")
     ap.add_argument("--narration-url", default="http://127.0.0.1:5557")
+    ap.add_argument("--narration-backend", choices=list(T.NARRATION_BACKENDS), default=None,
+                    help="ttsd (sidecar at --narration-url) or elevenlabs (direct API; needs "
+                         "ELEVENLABS_API_KEY and ELEVENLABS_VOICE_IDS or --voice-id). "
+                         "Default: recipe.narration_backend, else $TUTORIAL_NARRATION_BACKEND, else ttsd.")
+    ap.add_argument("--voice-id", default=None,
+                    help="ElevenLabs voice id override. Default: recipe.voice_id, else "
+                         "$TUTORIAL_VOICE_ID, else the per-language voice.")
     ap.add_argument("--offline-narration", action="store_true",
                     help="use silent placeholder audio from timings (no ttsd)")
     ap.add_argument("--music", default=None, help="music file (else recipe.music_track in music_library/)")
@@ -273,12 +305,25 @@ def main() -> int:
                     help="use an existing raw capture mp4 instead of running Cypress (testing)")
     ap.add_argument("--manifest", default=None,
                     help="manifest json to use with --capture (testing)")
-    args = ap.parse_args()
+    return ap
+
+
+def main() -> int:
+    args = build_arg_parser().parse_args()
 
     client_dir = Path(args.client_dir).resolve()
     tut = resolve_tutorial(client_dir, args.tutorial)
     recipe = tut["recipe"]
     lang = recipe.get("lang", "en")
+    env = {**parse_env_file(REPO_ROOT / ".env"), **os.environ}  # shell wins over .env
+    try:
+        backend, voice_id = T.resolve_narration_choice(
+            cli_backend=args.narration_backend, cli_voice_id=args.voice_id,
+            recipe=recipe, env=env,
+        )
+    except ValueError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 2
     target = (1920, 1080)
     # Runtime: explicit CLI wins, else the recipe can pin it (so the same tutorial
     # renders identically locally and on the cluster), else ffmpeg.
@@ -334,9 +379,19 @@ def main() -> int:
     else:
         if not any(durations_ms):
             print("WARN: no committed timings.json for this tutorial — the capture was not "
-                  "paced to the narration. Synthesizing fresh via ttsd; run author_tutorial.py "
+                  f"paced to the narration. Synthesizing fresh via {backend}; run author_tutorial.py "
                   "to commit timings and re-capture for correct pacing.", file=sys.stderr)
-        narrator = HttpNarrator(args.narration_url)
+        warn = timings_voice_warning(tut["timings"], backend, voice_id)
+        if warn:
+            print(warn, file=sys.stderr)
+        try:
+            client = T.narration_client_for(
+                backend, narration_url=args.narration_url, voice_id=voice_id, env=env,
+            )
+        except (ValueError, NarrationError) as e:
+            print(f"ERROR: narration backend {backend!r} not ready: {e}", file=sys.stderr)
+            return 2
+        narrator = ClientNarrator(client)
 
     clips: list[tuple[float, Path]] = []
     for st in steps:

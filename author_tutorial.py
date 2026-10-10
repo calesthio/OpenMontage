@@ -2,8 +2,8 @@
 """Tutorial authoring pass (Workflow A, step 2).
 
 Runs the tutorial spec in fast collect-only mode (video off) to gather the
-ordered narration steps, synthesizes each line once via the `ttsd` narration
-sidecar to measure its duration, and writes the committed *.timings.json next to
+ordered narration steps, synthesizes each line once via the narration backend
+(ttsd sidecar or ElevenLabs direct, --narration-backend) to measure its duration, and writes the committed *.timings.json next to
 the spec. The capture (Workflow B) then holds each step long enough for its
 narration, and — because the narration cache is content-addressed — the render
 reuses the exact same audio/durations.
@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import tempfile
 from pathlib import Path
@@ -37,7 +38,9 @@ except ImportError:
     if _venv_sp.is_dir():
         sys.path.append(str(_venv_sp))
 
-from tools.audio.narration_client import NarrationClient  # noqa: E402
+from lib import tutorial as T  # noqa: E402
+from lib.envfile import parse_env_file  # noqa: E402
+from tools.audio.narration_client import NarrationError  # noqa: E402
 from tools.capture import cypress_bridge as bridge  # noqa: E402
 from render_tutorial import resolve_tutorial  # noqa: E402
 
@@ -48,6 +51,8 @@ def main() -> int:
     ap.add_argument("--client-dir", required=True)
     ap.add_argument("--base-url", default=None)
     ap.add_argument("--narration-url", default="http://127.0.0.1:5557")
+    ap.add_argument("--narration-backend", choices=list(T.NARRATION_BACKENDS), default=None)
+    ap.add_argument("--voice-id", default=None)
     ap.add_argument("--lang", default=None)
     ap.add_argument("--manifest", default=None,
                     help="reuse an existing collect manifest instead of running Cypress")
@@ -57,10 +62,20 @@ def main() -> int:
     tut = resolve_tutorial(client_dir, args.tutorial)
     lang = args.lang or tut["recipe"].get("lang", "en")
 
-    client = NarrationClient(args.narration_url)
+    env = {**parse_env_file(REPO_ROOT / ".env"), **os.environ}
     try:
+        backend, voice_id = T.resolve_narration_choice(
+            cli_backend=args.narration_backend, cli_voice_id=args.voice_id,
+            recipe=tut["recipe"], env=env,
+        )
+        client = T.narration_client_for(
+            backend, narration_url=args.narration_url, voice_id=voice_id, env=env,
+        )
         client.health()
-    except Exception as e:  # noqa: BLE001
+    except (ValueError, NarrationError) as e:
+        print(f"ERROR: narration backend not ready: {e}", file=sys.stderr)
+        return 2
+    except Exception as e:  # noqa: BLE001  (ttsd unreachable)
         print(f"ERROR: ttsd not reachable at {args.narration_url}: {e}", file=sys.stderr)
         return 2
 
@@ -82,7 +97,12 @@ def main() -> int:
             dur = client.render(lang, text, str(Path(tmp) / f"step_{idx}.wav"))
             out_steps.append({"index": idx, "narration": text, "duration_ms": dur})
 
-    timings = {"spec": tut["spec_rel"], "lang": lang, "steps": out_steps}
+    timings = {
+        "spec": tut["spec_rel"],
+        "lang": lang,
+        "narration": {"backend": backend, "voice_id": voice_id},
+        "steps": out_steps,
+    }
     tut["timings_path"].write_text(json.dumps(timings, indent=2))
     print(f"OK wrote {tut['timings_path']} ({len(out_steps)} steps)")
     return 0

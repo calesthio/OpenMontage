@@ -50,7 +50,10 @@ def test_ass_header_declares_real_resolution_and_pixel_style():
     # Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline,
     # Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
     assert fields[1] == "Noto Sans" and fields[2] == "60" and fields[7] == "-1"
-    assert fields[15] == "4" and fields[16] == "12" and fields[17] == "0"  # box, pad, no shadow
+    # BorderStyle 3 = opaque box; the "outline" is the box padding and must be the
+    # box colour (BorderStyle 4 keeps a per-glyph outline in OutlineColour).
+    assert fields[15] == "3" and fields[16] == "12" and fields[17] == "0"
+    assert fields[5] == fields[6]
     assert fields[18] == "2" and fields[19:22] == ["160", "160", "64"]
     # BackColour alpha: 0.7 opacity -> 0x4D transparency (255*0.3 = 76.5 rounds up) (&HAABBGGRR, alpha = 255*(1-0.7))
     assert fields[6].upper() == "&H4D181410"
@@ -88,3 +91,19 @@ def test_caption_style_rejects_unknown_keys():
         C.CaptionStyle.from_recipe({"caption_style": {"size_px": "big"}})
     with pytest.raises(ValueError, match="box_alpha"):
         C.CaptionStyle.from_recipe({"caption_style": {"box_alpha": 1.5}})
+
+
+def test_caption_style_rejects_malformed_strings_and_ranges():
+    for bad in ("Noto Sans,Bold", "X\nDialogue: 0,0:00:00.00,0:00:01.00,Caption,,0,0,0,,INJECTED", "A{B}", ""):
+        with pytest.raises(ValueError, match="font"):
+            C.CaptionStyle.from_recipe({"caption_style": {"font": bad}})
+    for key in ("text_color", "box_color"):
+        for bad in ("red", "#101418", "10141", "GGGGGG"):
+            with pytest.raises(ValueError, match=key):
+                C.CaptionStyle.from_recipe({"caption_style": {key: bad}})
+        assert getattr(C.CaptionStyle.from_recipe({"caption_style": {key: "abcdef"}}), key) == "ABCDEF"
+    with pytest.raises(ValueError, match="size_px"):
+        C.CaptionStyle.from_recipe({"caption_style": {"size_px": 0}})
+    for key in ("margin_bottom_px", "margin_side_px", "box_pad_px"):
+        with pytest.raises(ValueError, match=key):
+            C.CaptionStyle.from_recipe({"caption_style": {key: -1}})

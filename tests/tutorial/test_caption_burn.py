@@ -18,13 +18,13 @@ pytestmark = pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg r
 Image = pytest.importorskip("PIL.Image")
 
 
-def _burn_frame(tmp_path: Path, srt_text: str, recipe: dict):
+def _burn_frame(tmp_path: Path, srt_text: str, recipe: dict, bg: str = "0x2b3a4a"):
     srt = tmp_path / "subs.srt"
-    srt.write_text(srt_text)
+    srt.write_text(srt_text, encoding="utf-8")
     ass = RT.build_ass_file(srt, tmp_path / "captions.ass", recipe=recipe, target=(1920, 1080))
     png = tmp_path / "frame.png"
     subprocess.run(
-        ["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "color=c=0x2b3a4a:s=1920x1080:d=1",
+        ["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", f"color=c={bg}:s=1920x1080:d=1",
          "-vf", f"subtitles={ass.name}", "-frames:v", "1", str(png)],
         cwd=str(tmp_path), check=True,
     )
@@ -70,3 +70,28 @@ def test_two_line_cue_stays_above_margin(tmp_path):
 def test_recipe_override_changes_size(tmp_path):
     _, top, _, bottom = _bright_bbox(_burn_frame(tmp_path, ONE_LINE, {"caption_style": {"size_px": 80}}))
     assert bottom - top > 45
+
+
+def test_no_dark_glyph_outline_inside_the_box(tmp_path):
+    """Plan: 'no outline'. On a white frame, the only non-white pixels around the
+    text must be the translucent box (mid grey), never a near-black halo."""
+    im = _burn_frame(tmp_path, ONE_LINE, {}, bg="white")
+    w, _ = im.size
+    px = im.load()
+    darkest = min(px[x, y] for y in range(900, 1080) for x in range(0, w, 2))
+    assert darkest >= 40, f"found a pixel with luminance {darkest}: a glyph outline is still drawn"
+
+
+def test_umlauts_survive_the_ass_roundtrip_under_c_locale(tmp_path):
+    """build_ass_file must not depend on the locale's preferred encoding."""
+    srt = tmp_path / "subs.srt"
+    srt.write_text("1\n00:00:00,000 --> 00:00:02,000\nGrüße aus Köln, 日本語\n", encoding="utf-8")
+    code = (
+        "import sys; sys.path.insert(0, %r); import render_tutorial as RT; from pathlib import Path; "
+        "RT.build_ass_file(Path(%r), Path(%r), recipe={}, target=(1920, 1080))"
+        % (str(REPO), str(srt), str(tmp_path / "c.ass"))
+    )
+    env = {**__import__("os").environ, "LC_ALL": "C", "LANG": "C", "PYTHONUTF8": "0"}
+    r = subprocess.run([sys.executable, "-X", "utf8=0", "-c", code], env=env, capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr[-500:]
+    assert "Grüße aus Köln, 日本語" in (tmp_path / "c.ass").read_text(encoding="utf-8")

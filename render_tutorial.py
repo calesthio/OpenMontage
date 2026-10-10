@@ -229,7 +229,8 @@ def build_ass_file(srt: Path, out: Path, *, recipe: dict, target: tuple[int, int
     """Derive the burn-in ASS (real-pixel style, PlayRes = frame) from the SRT."""
     style = CaptionStyle.from_recipe(recipe).scaled(target[1])
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(srt_to_ass(srt.read_text(), size=target, style=style))
+    out.write_text(srt_to_ass(srt.read_text(encoding="utf-8"), size=target, style=style),
+                   encoding="utf-8")
     return out
 
 

@@ -13,6 +13,9 @@ import re
 from dataclasses import dataclass, replace
 from typing import Any, Mapping
 
+_HEX6 = re.compile(r"^[0-9A-Fa-f]{6}$")
+_FONT_FORBIDDEN = set(",{}\n\r")
+
 _SRT_TIME = re.compile(r"(\d+):(\d\d):(\d\d)[,.](\d{1,3})")
 _TAG = re.compile(r"<[^>]+>")
 _ALLOWED_RECIPE_KEYS = {
@@ -56,6 +59,19 @@ class CaptionStyle:
             clean[key] = val
         if "box_alpha" in clean and not 0.0 <= clean["box_alpha"] <= 1.0:
             raise ValueError("caption_style.box_alpha must be between 0 and 1")
+        font = clean.get("font")
+        if font is not None and (not font.strip() or any(ch in _FONT_FORBIDDEN for ch in font)):
+            raise ValueError("caption_style.font must be a plain family name (no commas, braces or newlines)")
+        for key in ("text_color", "box_color"):
+            if key in clean:
+                if not _HEX6.match(clean[key]):
+                    raise ValueError(f"caption_style.{key} must be 6 hex digits (RRGGBB)")
+                clean[key] = clean[key].upper()
+        if "size_px" in clean and clean["size_px"] < 1:
+            raise ValueError("caption_style.size_px must be >= 1")
+        for key in ("margin_bottom_px", "margin_side_px", "box_pad_px"):
+            if key in clean and clean[key] < 0:
+                raise ValueError(f"caption_style.{key} must be >= 0")
         return replace(cls(), **clean)
 
     def scaled(self, height: int) -> "CaptionStyle":
@@ -69,12 +85,15 @@ class CaptionStyle:
         )
 
     def ass_style_line(self) -> str:
+        # BorderStyle 3: an opaque box per line, padded by `Outline`, drawn in
+        # OutlineColour (and BackColour for the shadow area). No per-glyph outline:
+        # BorderStyle 4 would keep one, which reproduces the old thick-halo look.
         primary = _ass_color(self.text_color, 0.0)
-        back = _ass_color(self.box_color, 1.0 - self.box_alpha)
+        box = _ass_color(self.box_color, 1.0 - self.box_alpha)
         return (
-            "Style: Caption," f"{self.font},{self.size_px},{primary},&H000000FF,&H00000000,{back},"
+            "Style: Caption," f"{self.font},{self.size_px},{primary},&H000000FF,{box},{box},"
             f"{-1 if self.bold else 0},0,0,0,100,100,0,0,"
-            f"4,{self.box_pad_px},0,2,{self.margin_side_px},{self.margin_side_px},{self.margin_bottom_px},1"
+            f"3,{self.box_pad_px},0,2,{self.margin_side_px},{self.margin_side_px},{self.margin_bottom_px},1"
         )
 
 

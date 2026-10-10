@@ -433,7 +433,14 @@ def cmd_down(args, cfg) -> int:
 def cmd_author(args, cfg) -> int:
     argv = [sys.executable, str(REPO_ROOT / "author_tutorial.py"),
             "--tutorial", args.name, "--client-dir", cfg["client_dir"],
-            "--narration-url", cfg["narration_url"], "--lang", cfg["lang"]]
+            "--narration-url", cfg["narration_url"]]
+    lang = getattr(args, "lang", None)
+    if lang:
+        # Explicit --lang: author that language from the committed source timings
+        # (needs <name>.i18n.<lang>.json; see `tutorialctl translate`).
+        argv += ["--lang", lang, "--from-timings"]
+    else:
+        argv += ["--lang", cfg["lang"]]
     argv += _narration_argv(args)
     if cfg["base_url"]:
         argv += ["--base-url", cfg["base_url"]]
@@ -460,6 +467,8 @@ def cmd_render(args, cfg) -> int:
             "--project-id", args.project_id or args.name,
             "--narration-url", cfg["narration_url"],
             "--render-runtime", cfg["render_runtime"]]
+    if getattr(args, "lang", None):
+        argv += ["--lang", args.lang]
     argv += _narration_argv(args)
     if cfg["base_url"]:
         argv += ["--base-url", cfg["base_url"]]
@@ -475,6 +484,23 @@ def cmd_render(args, cfg) -> int:
         argv += ["--intro-seconds", str(args.intro_seconds)]
     if args.outro_seconds is not None:
         argv += ["--outro-seconds", str(args.outro_seconds)]
+    return _run_cmd(argv, cfg, getattr(args, "dry_run", False))
+
+
+def cmd_translate(args, cfg) -> int:
+    """Translation sidecar: --template writes the skeleton, --from saves a filled one."""
+    lang = getattr(args, "lang", None)
+    if not lang:
+        print(f"{RED}translate needs --lang <code>{RESET} (e.g. --lang de)")
+        return 2
+    argv = [sys.executable, str(REPO_ROOT / "translate_tutorial.py"),
+            "--tutorial", args.name, "--client-dir", cfg["client_dir"], "--lang", lang]
+    if getattr(args, "from_file", None):
+        argv += ["--from", args.from_file]
+    else:
+        argv.append("--template")
+        if getattr(args, "output", None):
+            argv += ["-o", args.output]
     return _run_cmd(argv, cfg, getattr(args, "dry_run", False))
 
 
@@ -530,10 +556,18 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("doctor", parents=[common], help="verify the environment").set_defaults(func=cmd_doctor)
     sub.add_parser("list", parents=[common], help="list tutorials").set_defaults(func=cmd_list)
 
-    sp = sub.add_parser("author", parents=[common], help="generate timings.json via ttsd")
+    sp = sub.add_parser("author", parents=[common],
+                        help="generate timings.json (or timings.<lang>.json with --lang)")
     sp.add_argument("name")
     sp.add_argument("--manifest", help="reuse an existing collect manifest")
     sp.set_defaults(func=cmd_author)
+
+    sp = sub.add_parser("translate", parents=[common],
+                        help="write a translation template, or save a filled one (--lang required)")
+    sp.add_argument("name")
+    sp.add_argument("--from", dest="from_file", help="filled template JSON to validate and save")
+    sp.add_argument("-o", "--output", help="with the template: write here instead of stdout")
+    sp.set_defaults(func=cmd_translate)
 
     def add_render_args(rp):
         rp.add_argument("name")

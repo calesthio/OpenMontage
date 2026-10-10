@@ -37,6 +37,9 @@ Paths default from `tutorial.config.json`. Override with `TUTORIAL_CLIENT_DIR`,
 `TUTORIAL_BASE_URL`, `TUTORIAL_NARRATION_URL`, `TUTORIAL_RENDER_RUNTIME`,
 `TUTORIAL_NARRATION_BACKEND`, `TUTORIAL_VOICE_ID`.
 
+Other languages: `get_tutorial_text` → `save_tutorial_translation` → `author_tutorial(lang)` →
+`render_tutorial(lang)`; see `mcp_servers/circuit_video/README.md`.
+
 Smoke-test the protocol (no Cypress):
 
 ```bash

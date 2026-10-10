@@ -97,3 +97,26 @@ Keys: `font`, `size_px`, `bold`, `margin_bottom_px`, `margin_side_px`,
 `box_alpha` (0–1), `box_pad_px`, `text_color`, `box_color` (RRGGBB). Values
 scale linearly with the frame height. `doctor` warns when Noto Sans is not
 installed (captions then fall back to the system sans).
+
+## Other languages (German first)
+
+Each tutorial has a source language (`lang` in the recipe, default `en`). To
+render it in German:
+
+1. `get_tutorial_text(tutorial, lang="de")` → translate every `narration` and the
+   `recipe` texts → `save_tutorial_translation(...)` (writes `<name>.i18n.de.json`
+   next to the spec; commit it in the client repo).
+2. `author_tutorial(tutorial, lang="de")` → `<name>.timings.de.json` (German voice
+   durations; uses the `de:` entry of `ELEVENLABS_VOICE_IDS` with either backend).
+3. `render_tutorial(..., lang="de")` → Cypress is paced by the German timings
+   (`CYPRESS_TUTORIAL_LANG=de`, needs the client repo's `cypress.tutorial.config.js`
+   that understands `*.timings.<lang>.json`); narration, captions and title cards
+   are German.
+
+CLI equivalents: `tutorialctl translate <name> --lang de [-o file | --from file]`,
+`tutorialctl author <name> --lang de`, `tutorialctl render <name> --lang de`
+(or `translate_tutorial.py`, `author_tutorial.py --lang de --from-timings`,
+`render_tutorial.py --lang de`). When the English line of a step changes, the
+render warns `stale translation for step N`; re-run step 1 (the template keeps
+existing translations and flags stale ones). `list_tutorials` reports which
+languages are translated and timed.

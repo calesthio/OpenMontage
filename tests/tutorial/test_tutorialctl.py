@@ -71,3 +71,22 @@ def test_env_for_withholds_elevenlabs_keys_when_backend_is_ttsd(tmp_path, monkey
     # Unset backend: the recipe may still pin elevenlabs, so the key is passed.
     cfg["narration_backend"] = ""
     assert TC._env_for(cfg)["ELEVENLABS_API_KEY"] == "sk_file"
+
+
+def test_lang_flag_forwarded_and_translate_subcommand(capsys):
+    cfg = {**TC.DEFAULTS, "base_url": ""}
+    TC.cmd_author(SimpleNamespace(name="t", manifest=None, dry_run=True, lang="de"), cfg)
+    out = capsys.readouterr().out
+    assert "--lang de" in out and "--from-timings" in out
+    TC.cmd_render(_render_args(lang="de"), cfg)
+    assert "--lang de" in capsys.readouterr().out
+    # No --lang given: author passes the config language (legacy behaviour), render passes none.
+    TC.cmd_render(_render_args(), cfg)
+    assert "--lang" not in capsys.readouterr().out
+    TC.cmd_translate(SimpleNamespace(name="t", lang="de", template=True, from_file=None,
+                                     output="/tmp/x.json", dry_run=True), cfg)
+    out = capsys.readouterr().out
+    assert "translate_tutorial.py" in out and "--lang de" in out and "--template" in out and "-o /tmp/x.json" in out
+    p = TC.build_parser()
+    ns = p.parse_args(["translate", "t", "--lang", "de", "--from", "f.json"])
+    assert ns.cmd == "translate" and ns.lang == "de" and ns.from_file == "f.json"

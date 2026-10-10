@@ -357,13 +357,42 @@ def _handle(msg: dict) -> Optional[dict]:
     }
 
 
+def _startup_banner(cfg: Optional[dict]) -> str:
+    """Human-readable status for stderr: stdout is the JSON-RPC channel and must stay silent."""
+    lines = [
+        f"circuit-video MCP server running (stdio, {SERVER_NAME} {SERVER_VERSION}, protocol {PROTOCOL})",
+        "  waiting for a client on stdin — nothing is printed on stdout until a JSON-RPC request arrives",
+        "  tools: " + ", ".join(t["name"] for t in TOOLS),
+    ]
+    if cfg:
+        backend = cfg.get("narration_backend") or "ttsd (default)"
+        narration = cfg["narration_url"] if backend.startswith("ttsd") else "ElevenLabs direct"
+        if cfg.get("voice_id"):
+            narration += f", voice {cfg['voice_id']}"
+        lines += [
+            f"  mode: {'remote render-api ' + cfg['render_api_url'] if cfg.get('render_api_url') else 'local'}"
+            f"  runtime: {cfg['render_runtime']}",
+            f"  client_dir: {cfg['client_dir']}",
+            f"  base_url: {cfg.get('base_url') or '(none — pass base_url to render_tutorial)'}",
+            f"  narration: {backend} — {narration}",
+            f"  projects_dir: {cfg['projects_dir']}",
+            "  s3 upload: " + (f"bucket {cfg['s3_bucket']} ({cfg['s3_region']})"
+                              if cfg.get("aws_access_key_id") and cfg.get("aws_secret_access_key")
+                              else "disabled (no AWS credentials)"),
+            "  smoke test: see circuit-mcp.md; run the doctor tool first",
+        ]
+    return "\n".join(lines)
+
+
 def serve() -> int:
     # Touch config once so a missing tutorial.config.json is a stderr warning,
     # not a surprise on the first tool call.
+    cfg = None
     try:
-        load_config()
+        cfg = load_config()
     except Exception as e:  # noqa: BLE001
         print(f"circuit-video config warning: {e}", file=sys.stderr)
+    print(_startup_banner(cfg), file=sys.stderr, flush=True)
     while True:
         try:
             msg = _read_message()

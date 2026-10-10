@@ -200,3 +200,14 @@ def test_cache_path_rejects_path_traversal_lang(tmp_path):
         with pytest.raises(NarrationError, match="lang"):
             n.cache_path(bad, "hi")
     assert n.cache_path("pt-BR", "hi").parent == tmp_path / "pt-BR"
+
+
+def test_relative_cache_dir_resolves_against_repo_root(tmp_path):
+    n = EN.ElevenLabsNarrator.from_env(
+        {"ELEVENLABS_API_KEY": "k", "ELEVENLABS_VOICE_IDS": "en:V1",
+         "TUTORIAL_NARRATION_CACHE_DIR": ".cache/narration/elevenlabs"},
+    )
+    assert n.cache_dir == EN.REPO_ROOT / ".cache" / "narration" / "elevenlabs"
+    absolute = EN.ElevenLabsNarrator.from_env(
+        {"ELEVENLABS_API_KEY": "k", "ELEVENLABS_VOICE_IDS": "en:V1"}, cache_dir=tmp_path)
+    assert absolute.cache_dir == tmp_path

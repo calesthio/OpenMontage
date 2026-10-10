@@ -186,6 +186,7 @@ def test_load_config_reads_narration_env(monkeypatch):
     monkeypatch.setenv("ELEVENLABS_VOICE_IDS", "en:V1")
     monkeypatch.setenv("ELEVENLABS_MODEL_ID", "ELEVENLABS_MODEL_ID:-eleven_multilingual_v2")
     monkeypatch.delenv("TUTORIAL_NARRATION_CACHE_DIR", raising=False)
+    monkeypatch.setattr("circuit_video.config._parse_env_file", lambda path: {})  # ignore the real .env
     cfg = load_config()
     assert cfg["narration_backend"] == "elevenlabs" and cfg["voice_id"] == "VX"
     assert cfg["elevenlabs_api_key"] == "sk_test"
@@ -367,3 +368,14 @@ def test_render_tutorial_lang_rejected_in_remote_mode(monkeypatch, tmp_path):
     monkeypatch.setattr("circuit_video.service.load_config", lambda: cfg)
     out = _call("render_tutorial", {"base_url": "https://d.example.com", "tutorial": "tour", "lang": "de"})
     assert out.get("isError") is True and "remote" in out["content"][0]["text"]
+
+
+def test_server_prints_startup_banner_to_stderr_only():
+    import subprocess as sp
+    r = sp.run([sys.executable, str(REPO / "mcp_servers" / "circuit_video" / "server.py")],
+               input="", capture_output=True, text=True, timeout=30)
+    assert r.returncode == 0
+    assert r.stdout == ""  # the JSON-RPC channel must stay clean
+    assert "circuit-video MCP server running" in r.stderr
+    assert "stdin" in r.stderr and "tools:" in r.stderr
+    assert "render_tutorial" in r.stderr and "narration:" in r.stderr and "client_dir:" in r.stderr

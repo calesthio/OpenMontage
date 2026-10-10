@@ -121,12 +121,15 @@ class ElevenLabsNarrator:
                 "no voice configured: set ELEVENLABS_VOICE_IDS (e.g. en:<voice_id>,fr:<voice_id>) "
                 "or pass a voice_id"
             )
+        chosen = Path(cache_dir or env.get("TUTORIAL_NARRATION_CACHE_DIR") or DEFAULT_CACHE_DIR)
+        if not chosen.is_absolute():
+            chosen = REPO_ROOT / chosen  # never depend on the caller's cwd (one cache, not two)
         return cls(
             api_key,
             voices,
             model_id=clean_model_id(env.get("ELEVENLABS_MODEL_ID", "")),
             voice_id=voice_id,
-            cache_dir=cache_dir or env.get("TUTORIAL_NARRATION_CACHE_DIR") or DEFAULT_CACHE_DIR,
+            cache_dir=chosen,
         )
 
     # --- config / introspection -------------------------------------------

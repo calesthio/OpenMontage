@@ -28,7 +28,11 @@ INSTRUCTIONS = (
     "Call list_tutorials, then render_tutorial with the tutorial name and "
     "base_url (the demo app Cypress records against). When AWS credentials "
     "are set, the finished MP4 is uploaded to S3 and a presigned download URL "
-    "is returned. Renders take several minutes; wait=false starts one in the background."
+    "is returned. Renders take several minutes; wait=false starts one in the background. "
+    "Narration comes from the ttsd sidecar by default; pass narration_backend=\"elevenlabs\" "
+    "(and optionally voice_id) to call ElevenLabs directly — run doctor first. "
+    "For another language: get_tutorial_text → translate → save_tutorial_translation → "
+    "author_tutorial(lang) → render_tutorial(lang)."
 )
 
 
@@ -55,12 +59,23 @@ TOOLS = [
     ),
     _tool(
         "doctor",
-        "Check that ffmpeg, Cypress/client specs, ttsd narration, the demo app URL, "
-        "and AWS S3 credentials are ready for a Circuit tutorial render.",
+        "Check that ffmpeg, Cypress/client specs, narration (ttsd or ElevenLabs per "
+        "narration_backend), the demo app URL, and AWS S3 credentials are ready for a "
+        "Circuit tutorial render.",
         {
             "base_url": {
                 "type": "string",
                 "description": "Optional demo-app URL to ping instead of the configured default.",
+            },
+            "narration_backend": {
+                "type": "string",
+                "enum": ["ttsd", "elevenlabs"],
+                "description": "Check this backend instead of the configured one (use the "
+                               "value you will pass to render_tutorial).",
+            },
+            "voice_id": {
+                "type": "string",
+                "description": "ElevenLabs voice id override to report in the check.",
             },
         },
         [],
@@ -90,6 +105,26 @@ TOOLS = [
                 "type": "boolean",
                 "description": "Silent placeholder narration (no ttsd / ElevenLabs). Default false.",
             },
+            "narration_backend": {
+                "type": "string",
+                "enum": ["ttsd", "elevenlabs"],
+                "description": "ttsd (default; sidecar at TUTORIAL_NARRATION_URL) or elevenlabs "
+                               "(direct ElevenLabs API using ELEVENLABS_API_KEY and "
+                               "ELEVENLABS_VOICE_IDS; cached per clip). Recipe narration_backend "
+                               "is used when omitted.",
+            },
+            "voice_id": {
+                "type": "string",
+                "description": "ElevenLabs voice id to narrate with (elevenlabs backend). "
+                               "Omit for the per-language voice from ELEVENLABS_VOICE_IDS "
+                               "or the recipe's voice_id.",
+            },
+            "lang": {
+                "type": "string",
+                "description": "Render voice, captions and title cards in this language (e.g. de). "
+                               "Needs the translation (get_tutorial_text → save_tutorial_translation) "
+                               "and timings (author_tutorial) for that lang. Default: source language.",
+            },
             "music": {
                 "type": "string",
                 "description": "Optional music file path or music_library/ track name.",
@@ -110,6 +145,46 @@ TOOLS = [
             },
         },
         ["base_url"],
+    ),
+    _tool(
+        "get_tutorial_text",
+        "Return the translation template for a tutorial: every narration step with its source "
+        "text (from the committed timings.json) plus the translatable recipe texts (title, "
+        "intro/outro). Fill `narration` for each step and the `recipe` values in the target "
+        "language, then call save_tutorial_translation.",
+        {
+            "tutorial": {"type": "string", "description": "Tutorial name, e.g. support-tickets."},
+            "lang": {"type": "string", "description": "Target language code, e.g. de."},
+        },
+        ["tutorial", "lang"],
+    ),
+    _tool(
+        "save_tutorial_translation",
+        "Validate and write <name>.i18n.<lang>.json next to the Cypress spec. Then run "
+        "author_tutorial for that lang (voice durations) and render_tutorial with lang.",
+        {
+            "tutorial": {"type": "string"},
+            "lang": {"type": "string"},
+            "translation": {
+                "type": "object",
+                "description": "The object from get_tutorial_text with narration/recipe filled in.",
+            },
+        },
+        ["tutorial", "lang", "translation"],
+    ),
+    _tool(
+        "author_tutorial",
+        "Synthesize each narration line once and write the timings file that paces the "
+        "Cypress capture (<name>.timings.json, or <name>.timings.<lang>.json). Re-run after "
+        "changing the voice, the narration text, or a translation. Uses the committed "
+        "source timings as the step list (no Cypress run).",
+        {
+            "tutorial": {"type": "string"},
+            "lang": {"type": "string", "description": "Language to author; default: the source language."},
+            "narration_backend": {"type": "string", "enum": ["ttsd", "elevenlabs"]},
+            "voice_id": {"type": "string"},
+        },
+        ["tutorial"],
     ),
     _tool(
         "get_render",
@@ -165,7 +240,11 @@ def _call(name: str, args: dict) -> dict:
         if name == "list_tutorials":
             return _ok(service.list_tutorials())
         if name == "doctor":
-            return _ok(service.doctor(base_url=args.get("base_url") or None))
+            return _ok(service.doctor(
+                base_url=args.get("base_url") or None,
+                narration_backend=args.get("narration_backend") or None,
+                voice_id=args.get("voice_id") or None,
+            ))
         if name == "render_tutorial":
             return _ok(service.render_tutorial(
                 base_url=args.get("base_url") or "",
@@ -176,6 +255,20 @@ def _call(name: str, args: dict) -> dict:
                 render_runtime=args.get("render_runtime") or None,
                 upload=bool(args.get("upload", True)),
                 wait=bool(args.get("wait", True)),
+                narration_backend=args.get("narration_backend") or None,
+                voice_id=args.get("voice_id") or None,
+                lang=args.get("lang") or None,
+            ))
+        if name == "get_tutorial_text":
+            return _ok(service.tutorial_text(args.get("tutorial") or "", args.get("lang") or ""))
+        if name == "save_tutorial_translation":
+            return _ok(service.save_translation(args.get("tutorial") or "", args.get("lang") or "",
+                                                args.get("translation") or {}))
+        if name == "author_tutorial":
+            return _ok(service.author_tutorial(
+                args.get("tutorial") or "", args.get("lang") or None,
+                narration_backend=args.get("narration_backend") or None,
+                voice_id=args.get("voice_id") or None,
             ))
         if name == "get_render":
             return _ok(service.get_render(
@@ -264,13 +357,42 @@ def _handle(msg: dict) -> Optional[dict]:
     }
 
 
+def _startup_banner(cfg: Optional[dict]) -> str:
+    """Human-readable status for stderr: stdout is the JSON-RPC channel and must stay silent."""
+    lines = [
+        f"circuit-video MCP server running (stdio, {SERVER_NAME} {SERVER_VERSION}, protocol {PROTOCOL})",
+        "  waiting for a client on stdin — nothing is printed on stdout until a JSON-RPC request arrives",
+        "  tools: " + ", ".join(t["name"] for t in TOOLS),
+    ]
+    if cfg:
+        backend = cfg.get("narration_backend") or "ttsd (default)"
+        narration = cfg["narration_url"] if backend.startswith("ttsd") else "ElevenLabs direct"
+        if cfg.get("voice_id"):
+            narration += f", voice {cfg['voice_id']}"
+        lines += [
+            f"  mode: {'remote render-api ' + cfg['render_api_url'] if cfg.get('render_api_url') else 'local'}"
+            f"  runtime: {cfg['render_runtime']}",
+            f"  client_dir: {cfg['client_dir']}",
+            f"  base_url: {cfg.get('base_url') or '(none — pass base_url to render_tutorial)'}",
+            f"  narration: {backend} — {narration}",
+            f"  projects_dir: {cfg['projects_dir']}",
+            "  s3 upload: " + (f"bucket {cfg['s3_bucket']} ({cfg['s3_region']})"
+                              if cfg.get("aws_access_key_id") and cfg.get("aws_secret_access_key")
+                              else "disabled (no AWS credentials)"),
+            "  smoke test: see circuit-mcp.md; run the doctor tool first",
+        ]
+    return "\n".join(lines)
+
+
 def serve() -> int:
     # Touch config once so a missing tutorial.config.json is a stderr warning,
     # not a surprise on the first tool call.
+    cfg = None
     try:
-        load_config()
+        cfg = load_config()
     except Exception as e:  # noqa: BLE001
         print(f"circuit-video config warning: {e}", file=sys.stderr)
+    print(_startup_banner(cfg), file=sys.stderr, flush=True)
     while True:
         try:
             msg = _read_message()
@@ -294,7 +416,8 @@ def main(argv: Optional[list[str]] = None) -> int:
         return run_job_file(argv[1])
     if argv[:1] in (["-h"], ["--help"]):
         print("circuit-video MCP server (stdio). Tools: list_tutorials, doctor, "
-              "render_tutorial, get_render, upload_video.", file=sys.stderr)
+              "render_tutorial, get_render, upload_video, get_tutorial_text, "
+              "save_tutorial_translation, author_tutorial.", file=sys.stderr)
         return 0
     return serve()
 

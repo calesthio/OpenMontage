@@ -7,6 +7,8 @@ Two images run together in one Job pod:
   Python + ffmpeg + both repos.
 - **ttsd** (`circuit-bid/redis-bridge/Dockerfile.ttsd`) — the narration sidecar.
   Holds the `ELEVENLABS_*` secret; the worker calls it over `localhost:5557`.
+  Local renders can bypass it with `narration_backend=elevenlabs` (see
+  `mcp_servers/circuit_video/README.md`).
 
 ## Build
 

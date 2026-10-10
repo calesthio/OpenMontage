@@ -21,9 +21,15 @@ from .config import (
     aws_ready,
     load_config,
     validate_base_url,
+    validate_narration_backend,
     validate_render_id,
     validate_tutorial_name,
+    validate_voice_id,
 )
+
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+from lib import tutorial_i18n as I18N  # noqa: E402
 
 _SLUG = re.compile(r"[^a-z0-9-]+")
 _UNVERIFIED = ssl._create_unverified_context()
@@ -52,6 +58,20 @@ def _http_status(url: str, timeout: int = 8, verify: bool = True) -> tuple[int, 
         return 0, str(e)
 
 
+def caption_font_installed(family: str) -> Optional[bool]:
+    """True/False via fontconfig; None when fc-list is not available."""
+    if not shutil.which("fc-list"):
+        return None
+    try:
+        r = subprocess.run(["fc-list", ":", "family"], capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if r.returncode != 0:
+        return None
+    families = {part.strip() for line in r.stdout.splitlines() for part in line.split(",")}
+    return family in families
+
+
 def tutorial_specs(client_dir: str) -> list[Path]:
     root = Path(client_dir) / "cypress" / "e2e-tutorials"
     return sorted(root.rglob("*.tutorial.cy.js")) if root.exists() else []
@@ -68,19 +88,40 @@ def list_tutorials(cfg: Optional[dict] = None) -> dict:
             rel = spec.relative_to(Path(client_dir)).as_posix()
         except ValueError:
             rel = str(spec)
+        recipe_path = spec.with_name(f"{name}.tutorial.json")
+        source_lang = "en"
+        try:
+            if recipe_path.exists():
+                source_lang = json.loads(recipe_path.read_text()).get("lang", "en")
+        except (OSError, json.JSONDecodeError):
+            pass
+        langs: dict[str, dict] = {}
+        for p in spec.parent.glob(f"{name}.i18n.*.json"):
+            code = p.name[len(f"{name}.i18n."):-len(".json")]
+            langs.setdefault(code, {"translated": False, "timed": False})["translated"] = True
+        for p in spec.parent.glob(f"{name}.timings.*.json"):
+            code = p.name[len(f"{name}.timings."):-len(".json")]
+            langs.setdefault(code, {"translated": False, "timed": False})["timed"] = True
         items.append({
             "name": name,
             "spec": rel,
-            "has_recipe": spec.with_name(f"{name}.tutorial.json").exists(),
+            "has_recipe": recipe_path.exists(),
             "has_timings": spec.with_name(f"{name}.timings.json").exists(),
+            "source_lang": source_lang,
+            "languages": dict(sorted(langs.items())),
         })
     return {"client_dir": client_dir, "tutorials": items}
 
 
-def doctor(cfg: Optional[dict] = None, base_url: Optional[str] = None) -> dict:
+def doctor(cfg: Optional[dict] = None, base_url: Optional[str] = None,
+           narration_backend: Optional[str] = None, voice_id: Optional[str] = None) -> dict:
     cfg = dict(cfg or load_config())
     if base_url:
         cfg["base_url"] = validate_base_url(base_url)
+    if narration_backend:
+        cfg["narration_backend"] = validate_narration_backend(narration_backend)
+    if voice_id:
+        cfg["voice_id"] = validate_voice_id(voice_id)
     checks: list[dict] = []
 
     def add(label: str, status: str, detail: str = ""):
@@ -93,14 +134,36 @@ def doctor(cfg: Optional[dict] = None, base_url: Optional[str] = None) -> dict:
         path = shutil.which(b)
         add(b, "ok" if path else "warn", path or "not on PATH (needed for Cypress/Remotion)")
 
-    narr = cfg["narration_url"].rstrip("/")
-    try:
-        body = _http_json(f"{narr}/health", timeout=5)
-        langs = ",".join(body.get("languages", [])) or "none configured"
-        status = "ok" if body.get("voices_configured") else "warn"
-        add("ttsd narration", status, f"{narr} — voices: {langs}")
-    except Exception as e:  # noqa: BLE001
-        add("ttsd narration", "fail", f"{narr} unreachable: {e}")
+    font = "Noto Sans"
+    have_font = caption_font_installed(font)
+    if have_font is None:
+        add("caption font", "warn", f"fc-list not available; cannot verify {font!r}")
+    else:
+        add("caption font", "ok" if have_font else "warn",
+            f"{font!r} {'installed' if have_font else 'missing — captions fall back to the default sans (install fonts-noto-core)'}")
+
+    backend = cfg.get("narration_backend") or "ttsd"
+    if backend == "elevenlabs":
+        try:
+            h = _elevenlabs_narrator(cfg).health()
+            langs = ",".join(h["languages"]) or "none"
+            detail = f"model={h['model_id']} voices: {langs}"
+            if h["voice_override"]:
+                detail += f" override={h['voice_override']}"
+            add("elevenlabs narration", "ok", detail)
+        except Exception as e:  # noqa: BLE001
+            add("elevenlabs narration", "fail", f"{e} — see mcp_servers/circuit_video/env.example")
+    else:
+        narr = cfg["narration_url"].rstrip("/")
+        try:
+            body = _http_json(f"{narr}/health", timeout=5)
+            langs = ",".join(body.get("languages", [])) or "none configured"
+            status = "ok" if body.get("voices_configured") else "warn"
+            add("ttsd narration", status, f"{narr} — voices: {langs}")
+        except Exception as e:  # noqa: BLE001
+            add("ttsd narration", "fail",
+                f"{narr} unreachable: {e} (run `tutorialctl up`, or set "
+                "narration_backend=elevenlabs)")
 
     if cfg.get("base_url"):
         status_code, err = _http_status(cfg["base_url"], timeout=8, verify=False)
@@ -147,9 +210,76 @@ def doctor(cfg: Optional[dict] = None, base_url: Optional[str] = None) -> dict:
     return {
         "ready": not fails,
         "runtime": cfg["render_runtime"],
+        "narration_backend": backend,
         "mode": "remote" if cfg.get("render_api_url") else "local",
         "checks": checks,
     }
+
+
+def _resolve(cfg: dict, tutorial: str, lang: Optional[str]):
+    from render_tutorial import resolve_tutorial
+
+    tutorial = validate_tutorial_name(tutorial)
+    lang = I18N.validate_lang(lang) if lang else None
+    return resolve_tutorial(Path(cfg["client_dir"]), tutorial, lang=lang)
+
+
+def tutorial_text(tutorial: str, lang: str, cfg: Optional[dict] = None) -> dict:
+    """Template for translating `tutorial` into `lang` (agent fills `narration` + `recipe`)."""
+    from translate_tutorial import template_for
+
+    cfg = cfg or load_config()
+    return template_for(_resolve(cfg, tutorial, lang))
+
+
+def save_translation(tutorial: str, lang: str, translation: dict, cfg: Optional[dict] = None) -> dict:
+    from translate_tutorial import write_sidecar
+
+    cfg = cfg or load_config()
+    if not isinstance(translation, dict):
+        raise ValueError("translation must be the object returned by get_tutorial_text, filled in")
+    tut = _resolve(cfg, tutorial, lang)
+    path = write_sidecar(tut, {**translation, "lang": tut["lang"]})
+    return {"path": str(path), "lang": tut["lang"], "steps": len(translation.get("steps", [])),
+            "next": f"author_tutorial(tutorial={tutorial!r}, lang={tut['lang']!r}) then "
+                    f"render_tutorial(..., lang={tut['lang']!r})"}
+
+
+def author_tutorial(tutorial: str, lang: Optional[str] = None, *, narration_backend: Optional[str] = None,
+                    voice_id: Optional[str] = None, from_timings: bool = True,
+                    cfg: Optional[dict] = None) -> dict:
+    """Run author_tutorial.py to (re)generate the timings file for a language."""
+    cfg = cfg or load_config()
+    tut = _resolve(cfg, tutorial, lang)
+    narration_backend = validate_narration_backend(narration_backend or "")
+    voice_id = validate_voice_id(voice_id or "")
+    argv = [sys.executable, str(REPO_ROOT / "author_tutorial.py"),
+            "--tutorial", tut["name"], "--client-dir", cfg["client_dir"],
+            "--narration-url", cfg["narration_url"], "--lang", tut["lang"]]
+    if from_timings:
+        argv.append("--from-timings")
+    elif cfg.get("base_url"):
+        argv += ["--base-url", cfg["base_url"]]
+    if narration_backend:
+        argv += ["--narration-backend", narration_backend]
+    if voice_id:
+        argv += ["--voice-id", voice_id]
+    env = os.environ.copy()
+    env.update(elevenlabs_env(cfg))
+    proc = subprocess.run(argv, cwd=str(REPO_ROOT), env=env, capture_output=True, text=True,
+                          timeout=cfg.get("render_timeout_sec") or 1800)
+    out = {
+        "status": "succeeded" if proc.returncode == 0 else "failed",
+        "lang": tut["lang"],
+        "timings_path": str(tut["timings_path"]),
+        "log_tail": _truncate((proc.stdout or "") + (proc.stderr or ""), 4000),
+    }
+    if proc.returncode == 0:
+        try:
+            out["steps"] = len(json.loads(tut["timings_path"].read_text(encoding="utf-8")).get("steps", []))
+        except (OSError, json.JSONDecodeError):
+            out["steps"] = None
+    return out
 
 
 def _slug(s: str) -> str:
@@ -188,7 +318,10 @@ def _read_job(cfg: dict, project_id: str) -> Optional[dict]:
 
 def render_argv(cfg: dict, *, tutorial: str, project_id: str, base_url: str,
                 offline: bool = False, music: Optional[str] = None,
-                render_runtime: Optional[str] = None) -> list[str]:
+                render_runtime: Optional[str] = None,
+                narration_backend: Optional[str] = None,
+                voice_id: Optional[str] = None,
+                lang: Optional[str] = None) -> list[str]:
     argv = [
         sys.executable, str(REPO_ROOT / "render_tutorial.py"),
         "--tutorial", tutorial,
@@ -202,6 +335,15 @@ def render_argv(cfg: dict, *, tutorial: str, project_id: str, base_url: str,
         argv.append("--offline-narration")
     if music:
         argv += ["--music", music]
+    # Only explicit tool-call values become CLI flags (CLI beats the recipe).
+    # Config/env-level values reach render_tutorial.py via elevenlabs_env() as
+    # TUTORIAL_NARRATION_BACKEND / TUTORIAL_VOICE_ID, i.e. below the recipe.
+    if narration_backend:
+        argv += ["--narration-backend", narration_backend]
+    if voice_id:
+        argv += ["--voice-id", voice_id]
+    if lang:
+        argv += ["--lang", lang]
     return argv
 
 
@@ -210,6 +352,32 @@ def _truncate(text: str, limit: int = 8000) -> str:
     if len(text) <= limit:
         return text
     return text[:2000] + "\n…\n" + text[-limit + 2200:]
+
+
+_ELEVENLABS_KEYS = (
+    ("elevenlabs_api_key", "ELEVENLABS_API_KEY"),
+    ("elevenlabs_voice_ids", "ELEVENLABS_VOICE_IDS"),
+    ("elevenlabs_model_id", "ELEVENLABS_MODEL_ID"),
+    ("narration_cache_dir", "TUTORIAL_NARRATION_CACHE_DIR"),
+    ("narration_backend", "TUTORIAL_NARRATION_BACKEND"),
+    ("voice_id", "TUTORIAL_VOICE_ID"),
+)
+
+
+def elevenlabs_env(cfg: dict) -> dict[str, str]:
+    """ELEVENLABS_* (+ cache dir) to hand to the render subprocess, from MCP config."""
+    return {env_name: cfg[key] for key, env_name in _ELEVENLABS_KEYS if cfg.get(key)}
+
+
+def _elevenlabs_narrator(cfg: dict, voice_id: str = ""):
+    """Build (offline) the ElevenLabs narrator from MCP config; raises NarrationError."""
+    if str(REPO_ROOT) not in sys.path:
+        sys.path.insert(0, str(REPO_ROOT))
+    from tools.audio.elevenlabs_narrator import ElevenLabsNarrator
+
+    return ElevenLabsNarrator.from_env(
+        elevenlabs_env(cfg), voice_id=voice_id or cfg.get("voice_id") or None,
+    )
 
 
 def _maybe_upload(cfg: dict, project_id: str, upload: bool) -> dict:
@@ -243,9 +411,13 @@ def _run_local(cfg: dict, job: dict) -> dict:
         offline=job.get("offline", False),
         music=job.get("music"),
         render_runtime=job.get("render_runtime"),
+        narration_backend=job.get("narration_backend"),
+        voice_id=job.get("voice_id"),
+        lang=job.get("lang"),
     )
     env = os.environ.copy()
     env["OPENMONTAGE_PROJECTS_DIR"] = cfg["projects_dir"]
+    env.update(elevenlabs_env(cfg))
     if cfg.get("browser"):
         env["TUTORIAL_BROWSER"] = cfg["browser"]
     log_path = _project_dir(cfg, project_id) / "mcp_job.log"
@@ -281,6 +453,9 @@ def _run_remote(cfg: dict, job: dict) -> dict:
         body["music"] = job["music"]
     if job.get("render_runtime"):
         body["render_runtime"] = job["render_runtime"]
+    for key in ("narration_backend", "voice_id", "lang"):
+        if job.get(key):
+            body[key] = job[key]  # forwarded; the k8s worker keeps ttsd today
     created = _http_json(f"{api}/renders", method="POST", body=body, timeout=30)
     render_id = created.get("render_id") or job["render_id"]
     payload = {**job, "render_id": render_id, "status": created.get("status", "queued"),
@@ -301,6 +476,9 @@ def render_tutorial(
     render_runtime: Optional[str] = None,
     upload: bool = True,
     wait: bool = True,
+    narration_backend: Optional[str] = None,
+    voice_id: Optional[str] = None,
+    lang: Optional[str] = None,
     cfg: Optional[dict] = None,
 ) -> dict:
     cfg = dict(cfg or load_config())
@@ -318,6 +496,34 @@ def render_tutorial(
         raise ValueError(f"unknown tutorial {tutorial!r}. Available: {', '.join(sorted(names))}")
     if render_runtime and render_runtime not in ("ffmpeg", "remotion"):
         raise ValueError("render_runtime must be ffmpeg or remotion")
+    narration_backend = validate_narration_backend(narration_backend or "")
+    voice_id = validate_voice_id(voice_id or "")
+    lang = I18N.validate_lang(lang) if lang else None
+    if lang and cfg.get("render_api_url"):
+        # deploy/render_api/app.py has no lang field yet: it would silently render the
+        # source language. Refuse instead of returning a "successful" English video.
+        raise ValueError("lang is not supported by the remote render API yet; "
+                         "unset CIRCUIT_VIDEO_RENDER_API_URL to render locally")
+    if lang and not offline and not cfg.get("render_api_url"):
+        # Translation + per-language timings must exist before the capture.
+        tut = _resolve(cfg, tutorial, lang)
+        if tut["lang"] != tut["source_lang"]:
+            if tut.get("i18n") is None:
+                raise RuntimeError(
+                    f"no {lang} translation for {tutorial}: call get_tutorial_text, translate, "
+                    "then save_tutorial_translation first"
+                )
+            if not (tut.get("timings") or {}).get("steps"):
+                raise RuntimeError(
+                    f"no {lang} timings for {tutorial}: call author_tutorial(lang={lang!r}) first"
+                )
+    effective_backend = narration_backend or cfg.get("narration_backend") or ""
+    if effective_backend == "elevenlabs" and not offline and not cfg.get("render_api_url"):
+        # Fail before a 5–20 minute Cypress capture when the key/voice is missing.
+        try:
+            _elevenlabs_narrator(cfg, voice_id).health()
+        except Exception as e:  # noqa: BLE001
+            raise RuntimeError(f"ElevenLabs narration not ready: {e}") from e
     project_id = project_id or f"{_slug(tutorial)}-{uuid.uuid4().hex[:8]}"
     job = {
         "render_id": project_id,
@@ -326,6 +532,9 @@ def render_tutorial(
         "offline": offline,
         "music": music,
         "render_runtime": render_runtime or cfg["render_runtime"],
+        "narration_backend": narration_backend,
+        "voice_id": voice_id,
+        "lang": lang,
         "upload": upload,
         "wait": wait,
         "status": "queued",
@@ -342,6 +551,7 @@ def render_tutorial(
     log_path = _project_dir(cfg, project_id) / "mcp_job.log"
     env = os.environ.copy()
     env["OPENMONTAGE_PROJECTS_DIR"] = cfg["projects_dir"]
+    env.update(elevenlabs_env(cfg))
     with log_path.open("w") as log:
         proc = subprocess.Popen(
             [sys.executable, str(Path(__file__).resolve().parent / "server.py"),

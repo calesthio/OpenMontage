@@ -49,6 +49,7 @@ def run_tutorial_spec(
     base_url: Optional[str] = None,
     collect_only: bool = False,
     timeout: int = 1800,
+    lang: Optional[str] = None,
 ) -> dict:
     """Run one tutorial spec via `cypress run` and return its manifest sidecar.
 
@@ -84,6 +85,8 @@ def run_tutorial_spec(
     env_pairs: list[str] = []
     if collect_only:
         env_pairs.append("tutorialCollectOnly=1")
+    if lang:
+        env_pairs.append(f"tutorialLang={lang}")
     for key in (
         "TEST_SALE_ID",
         "TEST_ITEM_ID",
@@ -102,6 +105,8 @@ def run_tutorial_spec(
 
     env = os.environ.copy()
     env["CYPRESS_NO_COMMAND_LOG"] = "1"
+    if lang:
+        env["CYPRESS_TUTORIAL_LANG"] = lang  # cypress.tutorial.config.js picks <name>.timings.<lang>.json
     _run(cmd, cwd=str(client), env=env, timeout=timeout)
 
     manifest, manifest_path = _find_manifest(client, spec)

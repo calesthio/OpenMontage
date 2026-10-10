@@ -51,6 +51,8 @@ DEFAULTS = {
     "ttsd_image": "circuit-ttsd:local",
     "narration_repo": str(REPO_ROOT.parent / "circuit-bid" / "redis-bridge"),
     "env_file": "",  # blank -> OpenMontage/.env; source of ELEVENLABS_* for `up`
+    "narration_backend": "",  # "" -> script default (recipe/env/ttsd); or ttsd|elevenlabs
+    "voice_id": "",  # ElevenLabs voice override (elevenlabs backend)
 }
 ENV_MAP = {
     "narration_url": "TUTORIAL_NARRATION_URL",
@@ -62,6 +64,8 @@ ENV_MAP = {
     "ttsd_image": "TUTORIAL_TTSD_IMAGE",
     "narration_repo": "TUTORIAL_NARRATION_REPO",
     "env_file": "TUTORIAL_ENV_FILE",
+    "narration_backend": "TUTORIAL_NARRATION_BACKEND",
+    "voice_id": "TUTORIAL_VOICE_ID",
 }
 NARRATION_KEYS = ("ELEVENLABS_API_KEY", "ELEVENLABS_VOICE_IDS", "ELEVENLABS_MODEL_ID")
 
@@ -98,6 +102,18 @@ def _env_for(cfg: dict) -> dict:
     env = os.environ.copy()
     if cfg["projects_dir"]:
         env["OPENMONTAGE_PROJECTS_DIR"] = cfg["projects_dir"]
+    # Config-level narration choice travels as env (below the recipe, above the
+    # script default); explicit tutorialctl flags become CLI flags (see _narration_argv).
+    if cfg.get("narration_backend"):
+        env["TUTORIAL_NARRATION_BACKEND"] = cfg["narration_backend"]
+    if cfg.get("voice_id"):
+        env["TUTORIAL_VOICE_ID"] = cfg["voice_id"]
+    # ELEVENLABS_* from --env-file (shell env already wins inside _narration_env),
+    # only when the child may need them: backend elevenlabs, or unset (a recipe
+    # may pin elevenlabs). An explicit ttsd backend never sees the key.
+    if cfg.get("narration_backend") != "ttsd":
+        nenv, _src = _narration_env(cfg)
+        env.update(nenv)
     return env
 
 
@@ -140,20 +156,46 @@ def cmd_doctor(args, cfg) -> int:
     for b in ("node", "npx"):
         add(b, "ok" if shutil.which(b) else "warn", shutil.which(b) or "not on PATH (needed for Cypress/Remotion)")
 
-    # ttsd narration sidecar (assumed already running — we only check it's reachable)
+    # Caption font (lib/captions.py defaults to Noto Sans; libass falls back silently).
     try:
-        import requests
+        r = subprocess.run(["fc-list", ":", "family"], capture_output=True, text=True, timeout=10)
+        families = {part.strip() for line in r.stdout.splitlines() for part in line.split(",")}
+        have = "Noto Sans" in families
+        add("caption font", "ok" if have else "warn",
+            "'Noto Sans' installed" if have else "'Noto Sans' missing — install fonts-noto-core")
+    except (OSError, subprocess.SubprocessError):
+        add("caption font", "warn", "fc-list not available; cannot verify 'Noto Sans'")
 
-        r = requests.get(f"{cfg['narration_url'].rstrip('/')}/health", timeout=5)
-        if r.status_code == 200:
-            body = r.json()
-            langs = ",".join(body.get("languages", [])) or "none configured"
-            status = "ok" if body.get("voices_configured") else "warn"
-            add("ttsd narration", status, f"{cfg['narration_url']} — voices: {langs}")
-        else:
-            add("ttsd narration", "fail", f"{cfg['narration_url']} -> HTTP {r.status_code}")
-    except Exception as e:  # noqa: BLE001
-        add("ttsd narration", "fail", f"{cfg['narration_url']} unreachable: {e}")
+    backend = cfg.get("narration_backend") or "ttsd"
+    if backend == "elevenlabs":
+        # Direct ElevenLabs: offline readiness check (key + voice map from shell/.env).
+        nenv, _src = _narration_env(cfg)
+        try:
+            sys.path.insert(0, str(REPO_ROOT))
+            from tools.audio.elevenlabs_narrator import ElevenLabsNarrator
+
+            h = ElevenLabsNarrator.from_env(nenv, voice_id=cfg.get("voice_id") or None).health()
+            detail = f"model={h['model_id']} voices: {','.join(h['languages']) or 'none'}"
+            if h["voice_override"]:
+                detail += f" override={h['voice_override']}"
+            add("elevenlabs narration", "ok", detail)
+        except Exception as e:  # noqa: BLE001
+            add("elevenlabs narration", "fail", str(e))
+    else:
+        # ttsd narration sidecar (assumed already running — we only check it's reachable)
+        try:
+            import requests
+
+            r = requests.get(f"{cfg['narration_url'].rstrip('/')}/health", timeout=5)
+            if r.status_code == 200:
+                body = r.json()
+                langs = ",".join(body.get("languages", [])) or "none configured"
+                status = "ok" if body.get("voices_configured") else "warn"
+                add("ttsd narration", status, f"{cfg['narration_url']} — voices: {langs}")
+            else:
+                add("ttsd narration", "fail", f"{cfg['narration_url']} -> HTTP {r.status_code}")
+        except Exception as e:  # noqa: BLE001
+            add("ttsd narration", "fail", f"{cfg['narration_url']} unreachable: {e}")
 
     # demo app
     try:
@@ -194,7 +236,8 @@ def cmd_doctor(args, cfg) -> int:
     warns = [c for c in checks if c[1] == "warn"]
     print()
     if any(c[0] == "ttsd narration" and c[1] == "fail" for c in checks):
-        print(f"{DIM}hint: run `tutorialctl up` to start the ttsd narration container locally.{RESET}")
+        print(f"{DIM}hint: run `tutorialctl up` to start the ttsd narration container locally, "
+              f"or use --narration-backend elevenlabs.{RESET}")
     if fails:
         print(f"{RED}{len(fails)} blocking issue(s).{RESET} Fix these before rendering.")
         return 1
@@ -390,12 +433,32 @@ def cmd_down(args, cfg) -> int:
 def cmd_author(args, cfg) -> int:
     argv = [sys.executable, str(REPO_ROOT / "author_tutorial.py"),
             "--tutorial", args.name, "--client-dir", cfg["client_dir"],
-            "--narration-url", cfg["narration_url"], "--lang", cfg["lang"]]
+            "--narration-url", cfg["narration_url"]]
+    lang = getattr(args, "lang", None)
+    if lang:
+        # Explicit --lang: author that language from the committed source timings
+        # (needs <name>.i18n.<lang>.json; see `tutorialctl translate`).
+        argv += ["--lang", lang, "--from-timings"]
+    else:
+        argv += ["--lang", cfg["lang"]]
+    argv += _narration_argv(args)
     if cfg["base_url"]:
         argv += ["--base-url", cfg["base_url"]]
     if getattr(args, "manifest", None):
         argv += ["--manifest", args.manifest]
     return _run_cmd(argv, cfg, getattr(args, "dry_run", False))
+
+
+def _narration_argv(args) -> list[str]:
+    """--narration-backend / --voice-id only when given on the tutorialctl command
+    line (argparse SUPPRESS: absent attribute = not given). Config/env values go
+    through _env_for instead so a recipe-pinned choice still wins over them."""
+    out: list[str] = []
+    if getattr(args, "narration_backend", None):
+        out += ["--narration-backend", args.narration_backend]
+    if getattr(args, "voice_id", None):
+        out += ["--voice-id", args.voice_id]
+    return out
 
 
 def cmd_render(args, cfg) -> int:
@@ -404,6 +467,9 @@ def cmd_render(args, cfg) -> int:
             "--project-id", args.project_id or args.name,
             "--narration-url", cfg["narration_url"],
             "--render-runtime", cfg["render_runtime"]]
+    if getattr(args, "lang", None):
+        argv += ["--lang", args.lang]
+    argv += _narration_argv(args)
     if cfg["base_url"]:
         argv += ["--base-url", cfg["base_url"]]
     if args.offline:
@@ -418,6 +484,23 @@ def cmd_render(args, cfg) -> int:
         argv += ["--intro-seconds", str(args.intro_seconds)]
     if args.outro_seconds is not None:
         argv += ["--outro-seconds", str(args.outro_seconds)]
+    return _run_cmd(argv, cfg, getattr(args, "dry_run", False))
+
+
+def cmd_translate(args, cfg) -> int:
+    """Translation sidecar: --template writes the skeleton, --from saves a filled one."""
+    lang = getattr(args, "lang", None)
+    if not lang:
+        print(f"{RED}translate needs --lang <code>{RESET} (e.g. --lang de)")
+        return 2
+    argv = [sys.executable, str(REPO_ROOT / "translate_tutorial.py"),
+            "--tutorial", args.name, "--client-dir", cfg["client_dir"], "--lang", lang]
+    if getattr(args, "from_file", None):
+        argv += ["--from", args.from_file]
+    else:
+        argv.append("--template")
+        if getattr(args, "output", None):
+            argv += ["-o", args.output]
     return _run_cmd(argv, cfg, getattr(args, "dry_run", False))
 
 
@@ -446,6 +529,9 @@ def build_parser() -> argparse.ArgumentParser:
     common.add_argument("--render-runtime", dest="render_runtime", default=S, choices=["ffmpeg", "remotion"])
     common.add_argument("--projects-dir", dest="projects_dir", default=S, help="OPENMONTAGE_PROJECTS_DIR override")
     common.add_argument("--lang", dest="lang", default=S, help="narration language code")
+    common.add_argument("--narration-backend", dest="narration_backend", default=S,
+                        choices=["ttsd", "elevenlabs"], help="ttsd sidecar or direct ElevenLabs")
+    common.add_argument("--voice-id", dest="voice_id", default=S, help="ElevenLabs voice id override")
     common.add_argument("--ttsd-image", dest="ttsd_image", default=S, help="ttsd docker image (for `up`)")
     common.add_argument("--narration-repo", dest="narration_repo", default=S,
                         help="circuit-bid/redis-bridge path (to build ttsd)")
@@ -470,10 +556,18 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("doctor", parents=[common], help="verify the environment").set_defaults(func=cmd_doctor)
     sub.add_parser("list", parents=[common], help="list tutorials").set_defaults(func=cmd_list)
 
-    sp = sub.add_parser("author", parents=[common], help="generate timings.json via ttsd")
+    sp = sub.add_parser("author", parents=[common],
+                        help="generate timings.json (or timings.<lang>.json with --lang)")
     sp.add_argument("name")
     sp.add_argument("--manifest", help="reuse an existing collect manifest")
     sp.set_defaults(func=cmd_author)
+
+    sp = sub.add_parser("translate", parents=[common],
+                        help="write a translation template, or save a filled one (--lang required)")
+    sp.add_argument("name")
+    sp.add_argument("--from", dest="from_file", help="filled template JSON to validate and save")
+    sp.add_argument("-o", "--output", help="with the template: write here instead of stdout")
+    sp.set_defaults(func=cmd_translate)
 
     def add_render_args(rp):
         rp.add_argument("name")

@@ -15,6 +15,8 @@ into a 1080p tutorial MP4 and can publish it to AWS S3. Agents call the
 **circuit-video MCP**, not ad-hoc Python.
 
 Authoring a new spec is a different skill: `.agents/skills/cypress-recording/SKILL.md`.
+Going from a GitHub issue number to a published video + docs page + release note:
+`.agents/skills/publishing-circuit-tutorials/SKILL.md`.
 
 ## What this branch built
 
@@ -22,8 +24,11 @@ Deterministic re-render of a locked recipe (no LLM in the render loop):
 
 1. Cypress `*.tutorial.cy.js` records the demo app (CDP screencast + drift markers).
 2. `tools/capture/cypress_bridge.py` normalizes to 1920×1080 CFR.
-3. `ttsd` (circuit-bid sidecar) supplies ElevenLabs narration; `--offline` skips it.
+3. Narration: `ttsd` sidecar (default) or ElevenLabs direct (`narration_backend=elevenlabs`,
+   optional `voice_id`; clip cache in `.cache/narration/`); `--offline` skips it.
 4. `render_tutorial.py` assembles intro/body/outro (`ffmpeg` or Remotion `screencast_scene`).
+   Other languages: `<name>.i18n.<lang>.json` + `<name>.timings.<lang>.json` next to the spec; `--lang de` (MCP: get_tutorial_text / save_tutorial_translation / author_tutorial / render_tutorial lang).
+   Captions: SRT from subtitle_gen → ASS with real-pixel style (`lib/captions.py`); recipe `caption_style` overrides.
 5. Output: `projects/<id>/renders/final.mp4`.
 6. k8s path (`deploy/`): render-api Job + ttsd sidecar + **MinIO**.
 7. MCP path (`mcp_servers/circuit_video/`): same local renderer, then **AWS S3**.

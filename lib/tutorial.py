@@ -8,10 +8,11 @@ shape — is unit-testable in isolation.
 
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Mapping, Optional
 
 
 # Base music level before ducking — kept in one place so render_tutorial's
@@ -125,6 +126,68 @@ def build_subtitle_segments(steps: list[Step]) -> list[dict]:
             }
         )
     return segments
+
+
+# --- narration backend selection -------------------------------------------
+
+NARRATION_BACKENDS = ("ttsd", "elevenlabs")
+_VOICE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+
+
+def resolve_narration_choice(
+    *,
+    cli_backend: Optional[str],
+    cli_voice_id: Optional[str],
+    recipe: Mapping[str, Any],
+    env: Mapping[str, str],
+) -> tuple[str, str]:
+    """(backend, voice_id) with precedence CLI > recipe > env > default.
+
+    backend default is "ttsd"; voice_id default is "" (= per-language voice
+    from the backend's own config). Pure function so the precedence is testable.
+    """
+    backend = (
+        (cli_backend or "").strip()
+        or str(recipe.get("narration_backend") or "").strip()
+        or (env.get("TUTORIAL_NARRATION_BACKEND") or "").strip()
+        or "ttsd"
+    )
+    if backend not in NARRATION_BACKENDS:
+        raise ValueError(
+            f"unknown narration backend {backend!r}; expected one of {', '.join(NARRATION_BACKENDS)}"
+        )
+    voice_id = (
+        (cli_voice_id or "").strip()
+        or str(recipe.get("voice_id") or "").strip()
+        or (env.get("TUTORIAL_VOICE_ID") or "").strip()
+    )
+    if voice_id and not _VOICE_ID_RE.match(voice_id):
+        raise ValueError("voice_id must be 1-64 letters, digits, underscores, or hyphens")
+    return backend, voice_id
+
+
+def narration_client_for(
+    backend: str,
+    *,
+    narration_url: str,
+    voice_id: str = "",
+    env: Optional[Mapping[str, str]] = None,
+    cache_dir: Optional[str] = None,
+):
+    """Return a narration client: `.health() -> dict`, `.render(lang, text, out_path) -> ms`."""
+    if backend == "ttsd":
+        from tools.audio.narration_client import NarrationClient
+
+        return NarrationClient(narration_url)
+    if backend == "elevenlabs":
+        from tools.audio.elevenlabs_narrator import ElevenLabsNarrator
+
+        return ElevenLabsNarrator.from_env(
+            env if env is not None else os.environ,
+            voice_id=voice_id or None,
+            cache_dir=cache_dir,
+        )
+    raise ValueError(f"unknown narration backend {backend!r}")
 
 
 def build_edit_decisions(

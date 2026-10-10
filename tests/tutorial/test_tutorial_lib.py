@@ -122,3 +122,36 @@ def test_wav_duration_ms_reads_header():
         + b"data" + struct.pack("<I", len(pcm))
     )
     assert wav_duration_ms(hdr + pcm) == 20
+
+
+def test_resolve_narration_choice_precedence():
+    env = {"TUTORIAL_NARRATION_BACKEND": "elevenlabs", "TUTORIAL_VOICE_ID": "ENVV"}
+    recipe = {"narration_backend": "ttsd", "voice_id": "RECV"}
+    # CLI beats recipe beats env.
+    assert T.resolve_narration_choice(cli_backend="elevenlabs", cli_voice_id="CLIV",
+                                      recipe=recipe, env=env) == ("elevenlabs", "CLIV")
+    assert T.resolve_narration_choice(cli_backend=None, cli_voice_id=None,
+                                      recipe=recipe, env=env) == ("ttsd", "RECV")
+    assert T.resolve_narration_choice(cli_backend=None, cli_voice_id=None,
+                                      recipe={}, env=env) == ("elevenlabs", "ENVV")
+    assert T.resolve_narration_choice(cli_backend=None, cli_voice_id=None,
+                                      recipe={}, env={}) == ("ttsd", "")
+
+
+def test_resolve_narration_choice_validates():
+    with pytest.raises(ValueError, match="narration backend"):
+        T.resolve_narration_choice(cli_backend="piper", cli_voice_id=None, recipe={}, env={})
+    with pytest.raises(ValueError, match="voice_id"):
+        T.resolve_narration_choice(cli_backend=None, cli_voice_id="bad id!", recipe={}, env={})
+
+
+def test_narration_client_for_builds_each_backend(tmp_path):
+    ttsd = T.narration_client_for("ttsd", narration_url="http://127.0.0.1:5557/")
+    assert ttsd.base_url == "http://127.0.0.1:5557"
+    el = T.narration_client_for(
+        "elevenlabs", narration_url="", voice_id="VX",
+        env={"ELEVENLABS_API_KEY": "k"}, cache_dir=str(tmp_path),
+    )
+    assert el.health()["backend"] == "elevenlabs" and el.voice_for("en") == "VX"
+    with pytest.raises(ValueError):
+        T.narration_client_for("nope", narration_url="")

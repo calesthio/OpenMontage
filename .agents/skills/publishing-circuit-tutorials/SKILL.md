@@ -5,8 +5,9 @@ description: Use when asked to make, render or publish a Circuit backoffice tuto
 
 # Publishing Circuit tutorials from an issue
 
-One GitHub issue/PR number in → a narrated 1080p video on S3, a docs page, and a
-release-note entry out. Four repos take part; nothing is invented along the way:
+One GitHub issue/PR number in → a narrated 1080p video on S3 **in English and in
+German**, a feature-page screenshot per language, a docs page, and a release-note
+entry out. Four repos take part; nothing is invented along the way:
 the video is a Cypress walkthrough of the real app, the docs embed its public URL.
 
 **Every tutorial records against the local demo database** (ddev site with the
@@ -38,7 +39,18 @@ becomes a video) and `.agents/skills/circuit-video/SKILL.md` (the MCP tools).
 
 1. **Read the feature.** PR title/body/files, the fixer plan, the PR's Cypress test, the views. Decide the 6–10 viewer-visible beats and the account/data they need from the demo DB (`MAINTAINING_DOCS.md` in the docs repo lists the demo fixtures: sale 792, client 12, consignment 827, staff user `staff`/`staff`). Need data the fixtures lack? Look for it first (`ddev drush sql-query "SELECT …"` on the demo site); if none exists, seed it with an idempotent statement that the spec's `TUTORIAL_PRE_RUN` runs every time (step 4), never by hand. A beat that cannot be shown on the demo site is left out of the video and covered by a release-note bullet instead.
 2. **Check the environment.** MCP `doctor` must be `ready`. Two local ddev sites exist, both with the demo DB: `backoffice` (`https://backoffice.ddev.site:9010`, mainline) and `backoffice2` (`https://backoffice2.ddev.site/app`, the branch under test). `base_url` is whichever site runs the feature's code. The spec file lives in the `circuitauction-backoffice` client checkout; switch that checkout to the PR branch (`git -C circuitauction-backoffice switch <branch>`) when the spec needs the PR's `data-testid`s, and say so. Draft or unmerged PRs are fine to record from `backoffice2`; note the branch in the recipe `notes`.
-3. **Write the spec** `<name>.tutorial.cy.js` next to the other `release-<X.Y>` specs. One `it()`, each beat as `cy.tutorialStep(narration, {target, action, importance})` *before* the real command. Copy `_demo.js` helpers (`loginDemo`) when the flow starts logged in; drive the real login form (`#username`, `#password`, `#login`) when the login itself is the feature. Narration = spoken line = caption: short, present tense, first line says "New in version X.Y: …", last line ends "Thanks for watching!".
+3. **Write the spec** `<name>.tutorial.cy.js` next to the other `release-<X.Y>` specs. One `it()`, each beat as `cy.tutorialStep(narration, {target, action, importance})` *before* the real command. Right after the first `cy.visit`, switch the UI to the recording language so the German render shows German screens (copy this block from `authenticator-setup.tutorial.cy.js`):
+   ```js
+   const lang = Cypress.env("tutorialLang");
+   if (lang && lang !== "en") {
+     cy.window({ log: false }).then((win) => {
+       const root = win.document.querySelector("[ng-app]") || win.document.documentElement;
+       win.angular.element(root).injector().get("$translate").use(lang);
+     });
+     cy.wait(1000);
+   }
+   ```
+   (Labels the PR left untranslated in `locale-de.json` stay English on screen; that is what German users see too, so record it as is and mention it on the PR.) Copy `_demo.js` helpers (`loginDemo`) when the flow starts logged in; drive the real login form (`#username`, `#password`, `#login`) when the login itself is the feature. Narration = spoken line = caption: short, present tense, first line says "New in version X.Y: …", last line ends "Thanks for watching!".
 4. **Make the run repeatable.** If a beat mutates the account or data (activating 2FA, creating a record), reset it in `before()` via `cy.exec(Cypress.env("TUTORIAL_PRE_RUN"))` and document the exact `ddev drush sql-query …` in the spec header; export `CYPRESS_TUTORIAL_PRE_RUN` for both the authoring and the render run. Secrets the flow needs (a TOTP code, a token) are computed in-browser or fetched from the demo site, never hardcoded from production.
 5. **Write the recipe** `<name>.tutorial.json`: copy a sibling (`title`, `lang`, `intro_text` "What's new in X.Y", `intro_subtitle` = feature, `outro_text`, `subtitle_style`, `notes` with the demo account used).
 6. **Author timings** (synthesizes each line once, measures durations):
@@ -46,11 +58,17 @@ becomes a video) and `.agents/skills/circuit-video/SKILL.md` (the MCP tools).
    → `<name>.timings.json`. Re-run after any narration edit. Commit spec + recipe + timings in the client repo.
 7. **Render + upload** via the MCP: `render_tutorial(tutorial=<name>, base_url=<base_url>, project_id="release-<X.Y>-<name>", upload=true)`. The S3 key is derived from `project_id`, so the id **is** the public URL. (If a render used another id, re-publish with `upload_video(file_path, key="openmontage/tutorials/release-<X.Y>-<name>/final.mp4")`.) Verify `curl -I` on the public URL returns 200.
 8. **Verify the video** before touching docs: `ffprobe` duration ≈ intro 3 s + sum of timings + outro 3 s; extract 3–4 frames (`ffmpeg -ss <t> -frames:v 1`) at the manifest step times and look at them: right page, captions readable, no error toast, no login screen where a feature page should be.
+8a. **German version** (always, right after the English render):
+   `get_tutorial_text(tutorial, lang="de")` → translate every `narration` and the `recipe` texts (formal "Sie"; UI labels as the app shows them, see `tools/i18n/glossary/de.md` in the docs repo) → `save_tutorial_translation` → `author_tutorial(tutorial, lang="de")` → `render_tutorial(tutorial, base_url, project_id="release-<X.Y>-<name>-de", lang="de", upload=true)`. The `-de` suffix is what the docs translation workflow looks for (`…/release-<X.Y>-<name>-de/final.mp4`, checked with `curl -I`). Commit `<name>.i18n.de.json` and `<name>.timings.de.json` with the spec. The same `TUTORIAL_PRE_RUN` reset applies to this run.
+8b. **Screenshot of the feature page** (every tutorial ships one per language). Take it from the clean capture, not from `final.mp4` (captions are burned in there): pick the manifest step that shows the feature page, then
+   `ffmpeg -y -ss <step video_start_s> -i projects/<id>/assets/video/capture.mp4 -vf "crop=1764:1008:93:57" -frames:v 1 circuitauction-docs/assets/screenshots/<name>-<page>.png`
+   (the crop removes the browser frame around the 1080p capture; check the result shows the whole page with no cursor over the key element, else move ±1 s). Same frame from the German render into `assets/screenshots/de/<name>-<page>.png` (the German docs pages use `/assets/screenshots/de/…` when it exists). Embed the English one in the docs page under the step it illustrates: `![<what the page shows>](assets/screenshots/<name>-<page>.png)` (from a subfolder: `../assets/screenshots/…`). Release notes keep the video only, unless there is no video.
 9. **Docs page.** New `<topic>.md` in the sidebar section the feature belongs to (`client/`, `items/`, `sale/`, `consignment/`, `bids/`, `data-migration/`, `website/`; top level for login, tasks and system-wide topics), opening with one paragraph, then the embed:
    `<video class="release-video" controls preload="metadata" playsinline src="<public URL>">Your browser does not support the video tag. <a href="<public URL>">Download the video</a>.</video>`
    then numbered steps mirroring the narration, a "For administrators" section when there is a setting, and a *See also* link. Add the page to **both** `_sidebar.md` and `SUMMARY.md` next to its neighbours; cross-link from the related existing page.
 10. **Release notes.** In `release-notes/version-<X.Y>.md` add `### <Feature>` under the `##` area of the page the user opens to use it (Reports & Statistics / Invoices & Emails / Tasks & Support / Sales & Bids / System; a feature touching several areas goes under the one shown in the video) with the same `<video>` embed, 3–5 bullets, and a link to the docs page; mention the feature in the version's intro sentence and in the one-line summary in `release-notes/README.md`. "Latest release notes" = the highest `version-*.md`, marked *upcoming* until released.
-11. **Commit** in each repo (client: spec/recipe/timings; docs: page + nav + notes). Pushing the docs repo publishes the site: say so and let the user push.
+11. **Commit** in each repo (client: spec/recipe/timings + `.i18n.de.json`/`.timings.de.json`; docs: page + nav + notes + both screenshots). Pushing the docs repo publishes the site: say so and let the user push.
+12. **German docs page.** Do not write `de/*.md` on `master`: the docs repo's `i18n-de` branch and its `translate-docs` skill (`.claude/skills/translate-docs/SKILL.md` there) own the German pages and pick up the `-de` video URL and the `de/` screenshot once they exist in S3 and `assets/`. Tell the user the English page is ready to translate (`python3 tools/i18n/status.py --lang de` on that branch lists it as missing).
 
 ## Quick checks
 
@@ -67,4 +85,6 @@ becomes a video) and `.agents/skills/circuit-video/SKILL.md` (the MCP tools).
 - Using a presigned URL from the render result in the docs: it expires in 24 h; use the public URL pattern.
 - Forgetting `SUMMARY.md` (sidebar only) or the README one-liner in release notes.
 - Shipping the video without the feature-page screenshot, or taking the screenshot from `final.mp4` (burned captions, title cards).
+- Rendering only the English video: the German one (`-de`) is part of every tutorial.
+- Rendering German with the UI still in English (missing `tutorialLang` switch in the spec).
 - Leaving the demo account mutated (2FA activated, records created) without a documented reset.

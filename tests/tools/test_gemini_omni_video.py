@@ -87,10 +87,47 @@ def test_gemini_omni_status_tracks_google_api_keys(monkeypatch):
 
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    monkeypatch.delenv("GOOGLE_APPLICATION_CREDENTIALS", raising=False)
     assert GeminiOmniVideo().get_status() == ToolStatus.UNAVAILABLE
 
     monkeypatch.setenv("GOOGLE_API_KEY", "test-google-key")
     assert GeminiOmniVideo().get_status() == ToolStatus.AVAILABLE
+
+
+def test_gemini_omni_status_accepts_service_account(monkeypatch, tmp_path):
+    """A service-account key is a valid second auth path for the Interactions API."""
+    from tools.video.gemini_omni_video import GeminiOmniVideo
+
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+
+    key_file = tmp_path / "sa.json"
+    key_file.write_text("{}")
+    monkeypatch.setenv("GOOGLE_APPLICATION_CREDENTIALS", str(key_file))
+    assert GeminiOmniVideo().get_status() == ToolStatus.AVAILABLE
+
+
+def test_gemini_omni_auth_headers_prefer_api_key(monkeypatch, tmp_path):
+    """API key wins over a service account, and rides in x-goog-api-key."""
+    from tools.video.gemini_omni_video import GeminiOmniVideo
+
+    key_file = tmp_path / "sa.json"
+    key_file.write_text("{}")
+    monkeypatch.setenv("GOOGLE_APPLICATION_CREDENTIALS", str(key_file))
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+
+    assert GeminiOmniVideo._auth_headers() == {"x-goog-api-key": "test-key"}
+
+
+def test_gemini_omni_auth_headers_error_without_credentials(monkeypatch):
+    from tools.video.gemini_omni_video import GeminiOmniVideo
+
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    monkeypatch.delenv("GOOGLE_APPLICATION_CREDENTIALS", raising=False)
+
+    with pytest.raises(RuntimeError, match="No Google credentials"):
+        GeminiOmniVideo._auth_headers()
 
 
 def test_gemini_omni_cost_estimate_clamps_duration_hint(gemini_env):

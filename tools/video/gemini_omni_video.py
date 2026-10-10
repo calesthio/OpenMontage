@@ -59,8 +59,12 @@ class GeminiOmniVideo(BaseTool):
 
     dependencies = []
     install_instructions = (
-        "Set GEMINI_API_KEY or GOOGLE_API_KEY to a Google AI Studio API key.\n"
+        "Auth option A - API key (AI Studio): set GEMINI_API_KEY or GOOGLE_API_KEY.\n"
         "  Get one at https://aistudio.google.com/apikey\n"
+        "Auth option B - service account: set GOOGLE_APPLICATION_CREDENTIALS to a\n"
+        "  service-account JSON key plus GOOGLE_CLOUD_PROJECT. The key is minted\n"
+        "  under the generative-language scope; the project needs the Generative\n"
+        "  Language API enabled and billing on.\n"
         "  Gemini Omni Flash is paid-tier only (no free tier); ~$0.10 per second of video."
     )
     agent_skills = ["gemini-omni", "ai-video-gen"]
@@ -182,8 +186,54 @@ class GeminiOmniVideo(BaseTool):
     def _get_api_key() -> str | None:
         return os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
 
+    @staticmethod
+    def _auth_headers() -> dict[str, str]:
+        """Return request headers for the Interactions API.
+
+        Two auth paths. An AI Studio API key goes in ``x-goog-api-key`` and wins
+        when both are present. Otherwise a service-account JSON is minted into an
+        OAuth bearer token — which the generativelanguage surface accepts only
+        under the generative-language scope (cloud-platform alone returns 403
+        ACCESS_TOKEN_SCOPE_INSUFFICIENT) and only alongside an explicit billing
+        project in ``x-goog-user-project``.
+
+        Raises:
+            RuntimeError: when neither credential is configured or the token
+                cannot be minted — message is safe to surface verbatim.
+        """
+        api_key = GeminiOmniVideo._get_api_key()
+        if api_key:
+            return {"x-goog-api-key": api_key}
+
+        from tools.google_credentials import (
+            GENERATIVE_LANGUAGE_SCOPE,
+            resolve_project_id,
+            service_account_configured,
+        )
+
+        if not service_account_configured():
+            raise RuntimeError(
+                "No Google credentials found. " + GeminiOmniVideo.install_instructions
+            )
+
+        from tools.google_credentials import get_access_token
+
+        token, creds_project = get_access_token(scopes=[GENERATIVE_LANGUAGE_SCOPE])
+        project_id = resolve_project_id(creds_project)
+        if not project_id:
+            raise RuntimeError(
+                "Service-account auth for Gemini Omni needs a billing project. "
+                "Set GOOGLE_CLOUD_PROJECT (or include project_id in the key file)."
+            )
+        return {
+            "Authorization": f"Bearer {token}",
+            "x-goog-user-project": project_id,
+        }
+
     def get_status(self) -> ToolStatus:
-        if self._get_api_key():
+        from tools.google_credentials import service_account_configured
+
+        if self._get_api_key() or service_account_configured():
             return ToolStatus.AVAILABLE
         return ToolStatus.UNAVAILABLE
 
@@ -217,7 +267,7 @@ class GeminiOmniVideo(BaseTool):
             "mime_type": mime_type,
         }
 
-    def _upload_video_file(self, requests_mod: Any, api_key: str, path_str: str) -> str:
+    def _upload_video_file(self, requests_mod: Any, auth: dict[str, str], path_str: str) -> str:
         """Upload a local video via the Files API (resumable) and return its URI."""
         path = Path(path_str)
         if not path.exists():
@@ -230,7 +280,7 @@ class GeminiOmniVideo(BaseTool):
         start_resp = requests_mod.post(
             _UPLOAD_URL,
             headers={
-                "x-goog-api-key": api_key,
+                **auth,
                 "X-Goog-Upload-Protocol": "resumable",
                 "X-Goog-Upload-Command": "start",
                 "X-Goog-Upload-Header-Content-Length": str(len(video_bytes)),
@@ -266,7 +316,7 @@ class GeminiOmniVideo(BaseTool):
             time.sleep(_POLL_INTERVAL_SECONDS)
             status_resp = requests_mod.get(
                 f"{_BASE_URL}/{file_info.get('name')}",
-                headers={"x-goog-api-key": api_key},
+                headers=dict(auth),
                 timeout=15,
             )
             status_resp.raise_for_status()
@@ -311,10 +361,10 @@ class GeminiOmniVideo(BaseTool):
         tail = path[idx + len(marker):] if idx != -1 else path.split("/")[-1]
         return tail.split(":", 1)[0]
 
-    def _download_via_uri(self, requests_mod: Any, api_key: str, uri: str) -> bytes:
+    def _download_via_uri(self, requests_mod: Any, auth: dict[str, str], uri: str) -> bytes:
         """Poll a Files API entry until ACTIVE, then download its bytes."""
         file_id = self._file_id_from_uri(uri)
-        headers = {"x-goog-api-key": api_key}
+        headers = dict(auth)
         deadline = time.time() + _MAX_POLL_SECONDS
         while True:
             status_resp = requests_mod.get(
@@ -340,12 +390,10 @@ class GeminiOmniVideo(BaseTool):
         return download_resp.content
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
-        api_key = self._get_api_key()
-        if not api_key:
-            return ToolResult(
-                success=False,
-                error="GEMINI_API_KEY / GOOGLE_API_KEY not set. " + self.install_instructions,
-            )
+        try:
+            auth = self._auth_headers()
+        except RuntimeError as exc:
+            return ToolResult(success=False, error=str(exc))
 
         import requests
 
@@ -373,7 +421,7 @@ class GeminiOmniVideo(BaseTool):
         try:
             parts: list[dict[str, Any]] = [self._image_part(p) for p in reference_paths]
             if inputs.get("input_video_path"):
-                video_uri = self._upload_video_file(requests, api_key, inputs["input_video_path"])
+                video_uri = self._upload_video_file(requests, auth, inputs["input_video_path"])
                 parts.append({"type": "document", "uri": video_uri})
         except Exception as e:
             return ToolResult(success=False, error=f"Gemini Omni input preparation failed: {e}")
@@ -399,7 +447,7 @@ class GeminiOmniVideo(BaseTool):
         try:
             resp = requests.post(
                 f"{_BASE_URL}/interactions",
-                headers={"x-goog-api-key": api_key, "Content-Type": "application/json"},
+                headers={**auth, "Content-Type": "application/json"},
                 json=payload,
                 timeout=600,
             )
@@ -422,7 +470,7 @@ class GeminiOmniVideo(BaseTool):
             if video.get("data"):
                 video_bytes = base64.b64decode(video["data"])
             else:
-                video_bytes = self._download_via_uri(requests, api_key, str(video["uri"]))
+                video_bytes = self._download_via_uri(requests, auth, str(video["uri"]))
 
             output_path = Path(inputs.get("output_path", "gemini_omni_output.mp4"))
             output_path.parent.mkdir(parents=True, exist_ok=True)

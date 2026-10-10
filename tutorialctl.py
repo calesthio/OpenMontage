@@ -51,6 +51,8 @@ DEFAULTS = {
     "ttsd_image": "circuit-ttsd:local",
     "narration_repo": str(REPO_ROOT.parent / "circuit-bid" / "redis-bridge"),
     "env_file": "",  # blank -> OpenMontage/.env; source of ELEVENLABS_* for `up`
+    "narration_backend": "",  # "" -> script default (recipe/env/ttsd); or ttsd|elevenlabs
+    "voice_id": "",  # ElevenLabs voice override (elevenlabs backend)
 }
 ENV_MAP = {
     "narration_url": "TUTORIAL_NARRATION_URL",
@@ -62,6 +64,8 @@ ENV_MAP = {
     "ttsd_image": "TUTORIAL_TTSD_IMAGE",
     "narration_repo": "TUTORIAL_NARRATION_REPO",
     "env_file": "TUTORIAL_ENV_FILE",
+    "narration_backend": "TUTORIAL_NARRATION_BACKEND",
+    "voice_id": "TUTORIAL_VOICE_ID",
 }
 NARRATION_KEYS = ("ELEVENLABS_API_KEY", "ELEVENLABS_VOICE_IDS", "ELEVENLABS_MODEL_ID")
 
@@ -140,20 +144,36 @@ def cmd_doctor(args, cfg) -> int:
     for b in ("node", "npx"):
         add(b, "ok" if shutil.which(b) else "warn", shutil.which(b) or "not on PATH (needed for Cypress/Remotion)")
 
-    # ttsd narration sidecar (assumed already running — we only check it's reachable)
-    try:
-        import requests
+    backend = cfg.get("narration_backend") or "ttsd"
+    if backend == "elevenlabs":
+        # Direct ElevenLabs: offline readiness check (key + voice map from shell/.env).
+        nenv, _src = _narration_env(cfg)
+        try:
+            sys.path.insert(0, str(REPO_ROOT))
+            from tools.audio.elevenlabs_narrator import ElevenLabsNarrator
 
-        r = requests.get(f"{cfg['narration_url'].rstrip('/')}/health", timeout=5)
-        if r.status_code == 200:
-            body = r.json()
-            langs = ",".join(body.get("languages", [])) or "none configured"
-            status = "ok" if body.get("voices_configured") else "warn"
-            add("ttsd narration", status, f"{cfg['narration_url']} — voices: {langs}")
-        else:
-            add("ttsd narration", "fail", f"{cfg['narration_url']} -> HTTP {r.status_code}")
-    except Exception as e:  # noqa: BLE001
-        add("ttsd narration", "fail", f"{cfg['narration_url']} unreachable: {e}")
+            h = ElevenLabsNarrator.from_env(nenv, voice_id=cfg.get("voice_id") or None).health()
+            detail = f"model={h['model_id']} voices: {','.join(h['languages']) or 'none'}"
+            if h["voice_override"]:
+                detail += f" override={h['voice_override']}"
+            add("elevenlabs narration", "ok", detail)
+        except Exception as e:  # noqa: BLE001
+            add("elevenlabs narration", "fail", str(e))
+    else:
+        # ttsd narration sidecar (assumed already running — we only check it's reachable)
+        try:
+            import requests
+
+            r = requests.get(f"{cfg['narration_url'].rstrip('/')}/health", timeout=5)
+            if r.status_code == 200:
+                body = r.json()
+                langs = ",".join(body.get("languages", [])) or "none configured"
+                status = "ok" if body.get("voices_configured") else "warn"
+                add("ttsd narration", status, f"{cfg['narration_url']} — voices: {langs}")
+            else:
+                add("ttsd narration", "fail", f"{cfg['narration_url']} -> HTTP {r.status_code}")
+        except Exception as e:  # noqa: BLE001
+            add("ttsd narration", "fail", f"{cfg['narration_url']} unreachable: {e}")
 
     # demo app
     try:
@@ -194,7 +214,8 @@ def cmd_doctor(args, cfg) -> int:
     warns = [c for c in checks if c[1] == "warn"]
     print()
     if any(c[0] == "ttsd narration" and c[1] == "fail" for c in checks):
-        print(f"{DIM}hint: run `tutorialctl up` to start the ttsd narration container locally.{RESET}")
+        print(f"{DIM}hint: run `tutorialctl up` to start the ttsd narration container locally, "
+              f"or use --narration-backend elevenlabs.{RESET}")
     if fails:
         print(f"{RED}{len(fails)} blocking issue(s).{RESET} Fix these before rendering.")
         return 1
@@ -391,11 +412,22 @@ def cmd_author(args, cfg) -> int:
     argv = [sys.executable, str(REPO_ROOT / "author_tutorial.py"),
             "--tutorial", args.name, "--client-dir", cfg["client_dir"],
             "--narration-url", cfg["narration_url"], "--lang", cfg["lang"]]
+    argv += _narration_argv(cfg)
     if cfg["base_url"]:
         argv += ["--base-url", cfg["base_url"]]
     if getattr(args, "manifest", None):
         argv += ["--manifest", args.manifest]
     return _run_cmd(argv, cfg, getattr(args, "dry_run", False))
+
+
+def _narration_argv(cfg: dict) -> list[str]:
+    """--narration-backend / --voice-id for the CLIs, only when configured."""
+    out: list[str] = []
+    if cfg.get("narration_backend"):
+        out += ["--narration-backend", cfg["narration_backend"]]
+    if cfg.get("voice_id"):
+        out += ["--voice-id", cfg["voice_id"]]
+    return out
 
 
 def cmd_render(args, cfg) -> int:
@@ -404,6 +436,7 @@ def cmd_render(args, cfg) -> int:
             "--project-id", args.project_id or args.name,
             "--narration-url", cfg["narration_url"],
             "--render-runtime", cfg["render_runtime"]]
+    argv += _narration_argv(cfg)
     if cfg["base_url"]:
         argv += ["--base-url", cfg["base_url"]]
     if args.offline:
@@ -446,6 +479,9 @@ def build_parser() -> argparse.ArgumentParser:
     common.add_argument("--render-runtime", dest="render_runtime", default=S, choices=["ffmpeg", "remotion"])
     common.add_argument("--projects-dir", dest="projects_dir", default=S, help="OPENMONTAGE_PROJECTS_DIR override")
     common.add_argument("--lang", dest="lang", default=S, help="narration language code")
+    common.add_argument("--narration-backend", dest="narration_backend", default=S,
+                        choices=["ttsd", "elevenlabs"], help="ttsd sidecar or direct ElevenLabs")
+    common.add_argument("--voice-id", dest="voice_id", default=S, help="ElevenLabs voice id override")
     common.add_argument("--ttsd-image", dest="ttsd_image", default=S, help="ttsd docker image (for `up`)")
     common.add_argument("--narration-repo", dest="narration_repo", default=S,
                         help="circuit-bid/redis-bridge path (to build ttsd)")

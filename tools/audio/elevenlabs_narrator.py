@@ -42,6 +42,7 @@ DEFAULT_VOICE_SETTINGS: dict = {
     "use_speaker_boost": True,
 }
 VOICE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+LANG_RE = re.compile(r"^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$")  # a safe single path segment
 _SELF_REF_RE = re.compile(r"^\$?\{?ELEVENLABS_MODEL_ID(?::-?(.*?))?\}?$")
 
 
@@ -167,6 +168,8 @@ class ElevenLabsNarrator:
         return hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()
 
     def cache_path(self, lang: str, text: str) -> Path:
+        if not LANG_RE.match(lang or ""):
+            raise NarrationError(f"invalid lang {lang!r} (expected a code like en, de or pt-BR)")
         return self.cache_dir / lang / f"{self.cache_key(lang, text)}.wav"
 
     # --- rendering ----------------------------------------------------------

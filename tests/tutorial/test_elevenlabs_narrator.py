@@ -192,3 +192,11 @@ def test_fetch_mp3_maps_http_errors(tmp_path, monkeypatch):
         n._fetch_mp3("V1", "Hello.", tmp_path / "x.mp3")
     assert "422" in str(exc.value) and "voice not found" in str(exc.value)
     assert not (tmp_path / "x.mp3").exists()
+
+
+def test_cache_path_rejects_path_traversal_lang(tmp_path):
+    n = EN.ElevenLabsNarrator("k", {"en": "V1"}, voice_id="V1", cache_dir=tmp_path)
+    for bad in ("../../etc", "en/../..", "", "de ", "x" * 20):
+        with pytest.raises(NarrationError, match="lang"):
+            n.cache_path(bad, "hi")
+    assert n.cache_path("pt-BR", "hi").parent == tmp_path / "pt-BR"

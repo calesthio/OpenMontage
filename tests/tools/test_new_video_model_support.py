@@ -71,6 +71,37 @@ def test_fal_seedance_25_uses_current_endpoint_and_reference_fields(
     assert payload["duration"] == "30"
 
 
+def test_fal_seedance_20_reference_to_video_uses_fal_reference_fields(
+    monkeypatch, tmp_path
+):
+    # fal's 2.0 reference-to-video endpoint reads image_urls / video_urls / audio_urls,
+    # same as 2.5; reference_*_urls is ignored and the request 422s with
+    # "At least one reference image or video is required."
+    from tools.video.seedance_video import SeedanceVideo
+
+    monkeypatch.setenv("FAL_KEY", "test")
+    calls = _queue_mocks(monkeypatch)
+    result = SeedanceVideo().execute(
+        {
+            "prompt": "Macro shot of the ball on this court",
+            "model_version": "2.0",
+            "operation": "reference_to_video",
+            "reference_image_urls": ["https://image"],
+            "reference_video_urls": ["https://motion"],
+            "reference_audio_urls": ["https://voice"],
+            "output_path": str(tmp_path / "seedance20.mp4"),
+        }
+    )
+    assert result.success, result.error
+    url, payload = calls["posts"][0]
+    assert url.endswith("/bytedance/seedance-2.0/reference-to-video")
+    assert payload["image_urls"] == ["https://image"]
+    assert payload["video_urls"] == ["https://motion"]
+    assert payload["audio_urls"] == ["https://voice"]
+    for stale in ("reference_image_urls", "reference_video_urls", "reference_audio_urls"):
+        assert stale not in payload
+
+
 def test_fal_gemini_omni_and_minimax_h3_are_discovered_and_submit(
     monkeypatch, tmp_path
 ):

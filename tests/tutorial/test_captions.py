@@ -49,11 +49,11 @@ def test_ass_header_declares_real_resolution_and_pixel_style():
     # Format: Name, Fontname, Fontsize, Primary, Secondary, Outline, Back, Bold, Italic,
     # Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline,
     # Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-    assert fields[1] == "Noto Sans" and fields[2] == "46" and fields[7] == "-1"
+    assert fields[1] == "Noto Sans" and fields[2] == "60" and fields[7] == "-1"
     assert fields[15] == "4" and fields[16] == "12" and fields[17] == "0"  # box, pad, no shadow
     assert fields[18] == "2" and fields[19:22] == ["160", "160", "64"]
-    # BackColour alpha: 0.55 opacity -> 0x73 transparency (&HAABBGGRR, alpha = 255*(1-0.55))
-    assert fields[6].upper() == "&H73181410"
+    # BackColour alpha: 0.7 opacity -> 0x4D transparency (255*0.3 = 76.5 rounds up) (&HAABBGGRR, alpha = 255*(1-0.7))
+    assert fields[6].upper() == "&H4D181410"
     assert fields[3].upper() == "&H00FFFFFF"
 
 
@@ -78,7 +78,7 @@ def test_caption_style_from_recipe_and_scaling():
     assert (s.size_px, s.font, s.bold, s.margin_bottom_px) == (40, "Inter", False, 64)
     assert C.CaptionStyle.from_recipe({}) == C.CaptionStyle()
     half = C.CaptionStyle().scaled(540)
-    assert (half.size_px, half.margin_bottom_px, half.margin_side_px, half.box_pad_px) == (23, 32, 80, 6)
+    assert (half.size_px, half.margin_bottom_px, half.margin_side_px, half.box_pad_px) == (30, 32, 80, 6)
 
 
 def test_caption_style_rejects_unknown_keys():

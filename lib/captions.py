@@ -25,11 +25,13 @@ _ALLOWED_RECIPE_KEYS = {
 @dataclass(frozen=True)
 class CaptionStyle:
     font: str = "Noto Sans"
-    size_px: int = 46
+    # libass applies Fontsize to the font's line height (ascent+descent), not
+    # the em size: 60 here ≈ a 44 px em / ~31 px cap height at 1080p.
+    size_px: int = 60
     bold: bool = True
     margin_bottom_px: int = 64
     margin_side_px: int = 160
-    box_alpha: float = 0.55        # box opacity 0..1
+    box_alpha: float = 0.7         # box opacity 0..1 (the UI behind is mostly white)
     box_pad_px: int = 12
     text_color: str = "FFFFFF"     # RRGGBB
     box_color: str = "101418"      # RRGGBB

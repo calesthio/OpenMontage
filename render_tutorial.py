@@ -49,6 +49,7 @@ except ImportError:
         sys.path.append(str(_venv_sp))
 
 from lib import tutorial as T  # noqa: E402
+from lib.captions import CaptionStyle, srt_to_ass  # noqa: E402
 from lib.envfile import parse_env_file  # noqa: E402
 from lib.checkpoint import init_project  # noqa: E402
 from lib.paths import PROJECTS_DIR  # noqa: E402
@@ -188,24 +189,26 @@ def card_clip(png: Path, duration_s: float, out: Path, target: tuple[int, int]) 
     return out
 
 
-def _srt_style(recipe: dict) -> str:
-    return (
-        "FontName=DejaVu Sans,FontSize=22,PrimaryColour=&H00FFFFFF,"
-        "OutlineColour=&H00000000,BorderStyle=1,Outline=2,Shadow=0,MarginV=48,Alignment=2"
-    )
+def build_ass_file(srt: Path, out: Path, *, recipe: dict, target: tuple[int, int]) -> Path:
+    """Derive the burn-in ASS (real-pixel style, PlayRes = frame) from the SRT."""
+    style = CaptionStyle.from_recipe(recipe).scaled(target[1])
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(srt_to_ass(srt.read_text(), size=target, style=style))
+    return out
 
 
-def burn_and_mux(video: Path, audio: Path, srt: Optional[Path], out: Path,
+def burn_and_mux(video: Path, audio: Path, subs: Optional[Path], out: Path,
                  target: tuple[int, int], recipe: dict) -> Path:
     tw, th = target
     vf = f"scale={tw}:{th},setsar=1,format=yuv420p"
     cwd = None
-    if srt and srt.exists():
-        # Reference the SRT by basename from its own dir so the filtergraph never
+    if subs and subs.exists():
+        # Reference the ASS by basename from its own dir so the filtergraph never
         # embeds a path with special chars (':', apostrophes) that break ffmpeg's
         # lavfi quoting. Input/output stay absolute (passed as argv, not in-filter).
-        cwd = str(srt.parent)
-        vf += f",subtitles={srt.name}:force_style='{_srt_style(recipe)}'"
+        # The ASS carries its own real-pixel style (lib/captions.py), no force_style.
+        cwd = str(subs.parent)
+        vf += f",subtitles={subs.name}"
     _run([
         "ffmpeg", "-y", "-v", "error",
         "-i", str(video), "-i", str(audio),
@@ -314,6 +317,11 @@ def main() -> int:
     tut = resolve_tutorial(client_dir, args.tutorial)
     recipe = tut["recipe"]
     lang = recipe.get("lang", "en")
+    try:
+        CaptionStyle.from_recipe(recipe)  # fail on a recipe typo before the capture
+    except ValueError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 2
     env = {**parse_env_file(REPO_ROOT / ".env"), **os.environ}  # shell wins over .env
     try:
         backend, voice_id = T.resolve_narration_choice(
@@ -493,6 +501,7 @@ def render_ffmpeg_assembly(project_dir: Path, assets: Path, capture_mp4: Path, s
     else:
         body_audio = narr
     srt = _build_srt(steps, project_dir)
+    ass = build_ass_file(srt, assets / "captions.ass", recipe=recipe, target=target) if srt else None
     intro_png = T.make_title_card(str(assets / "images" / "intro.png"),
                                   recipe.get("intro_text", recipe.get("title", "")),
                                   recipe.get("intro_subtitle", ""))
@@ -501,7 +510,7 @@ def render_ffmpeg_assembly(project_dir: Path, assets: Path, capture_mp4: Path, s
                                   recipe.get("outro_subtitle", ""))
     intro_mp4 = card_clip(Path(intro_png), intro_s, assets / "video" / "intro.mp4", target)
     outro_mp4 = card_clip(Path(outro_png), outro_s, assets / "video" / "outro.mp4", target)
-    body_final = burn_and_mux(capture_mp4, Path(body_audio), srt,
+    body_final = burn_and_mux(capture_mp4, Path(body_audio), ass,
                               assets / "video" / "body_final.mp4", target, recipe)
     concat_av([intro_mp4, body_final, outro_mp4], final)
     return Path(body_audio), srt

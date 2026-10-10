@@ -135,3 +135,93 @@ def test_render_tutorial_rejects_bad_url():
 def test_unknown_method():
     reply = _handle({"jsonrpc": "2.0", "id": 9, "method": "nope", "params": {}})
     assert reply["error"]["code"] == -32601
+
+
+# --- narration backend / ElevenLabs options ---------------------------------
+
+from circuit_video.config import (  # noqa: E402
+    load_config,
+    validate_narration_backend,
+    validate_voice_id,
+)
+from circuit_video.service import doctor, elevenlabs_env  # noqa: E402
+
+
+def test_validate_narration_inputs():
+    assert validate_narration_backend("") == ""
+    assert validate_narration_backend("elevenlabs") == "elevenlabs"
+    with pytest.raises(ValueError):
+        validate_narration_backend("piper")
+    assert validate_voice_id("") == ""
+    assert validate_voice_id("21m00Tcm4TlvDq8ikWAM") == "21m00Tcm4TlvDq8ikWAM"
+    with pytest.raises(ValueError):
+        validate_voice_id("../x")
+
+
+def test_render_argv_narration_flags_only_when_set():
+    cfg = {"client_dir": "/tmp/client", "narration_url": "http://127.0.0.1:5557",
+           "render_runtime": "ffmpeg", "narration_backend": "", "voice_id": ""}
+    argv = render_argv(cfg, tutorial="t", project_id="p", base_url="https://d.example.com")
+    assert "--narration-backend" not in argv and "--voice-id" not in argv
+    argv = render_argv(cfg, tutorial="t", project_id="p", base_url="https://d.example.com",
+                       narration_backend="elevenlabs", voice_id="VX")
+    assert argv[argv.index("--narration-backend") + 1] == "elevenlabs"
+    assert argv[argv.index("--voice-id") + 1] == "VX"
+    cfg2 = {**cfg, "narration_backend": "elevenlabs"}
+    argv = render_argv(cfg2, tutorial="t", project_id="p", base_url="https://d.example.com")
+    assert argv[argv.index("--narration-backend") + 1] == "elevenlabs"
+
+
+def test_load_config_reads_narration_env(monkeypatch):
+    monkeypatch.setenv("TUTORIAL_NARRATION_BACKEND", "elevenlabs")
+    monkeypatch.setenv("TUTORIAL_VOICE_ID", "VX")
+    monkeypatch.setenv("ELEVENLABS_API_KEY", "sk_test")
+    monkeypatch.setenv("ELEVENLABS_VOICE_IDS", "en:V1")
+    monkeypatch.setenv("ELEVENLABS_MODEL_ID", "ELEVENLABS_MODEL_ID:-eleven_multilingual_v2")
+    monkeypatch.delenv("TUTORIAL_NARRATION_CACHE_DIR", raising=False)
+    cfg = load_config()
+    assert cfg["narration_backend"] == "elevenlabs" and cfg["voice_id"] == "VX"
+    assert cfg["elevenlabs_api_key"] == "sk_test"
+    assert elevenlabs_env(cfg) == {
+        "ELEVENLABS_API_KEY": "sk_test",
+        "ELEVENLABS_VOICE_IDS": "en:V1",
+        "ELEVENLABS_MODEL_ID": "ELEVENLABS_MODEL_ID:-eleven_multilingual_v2",
+    }
+
+
+def test_tools_list_exposes_narration_params():
+    tool = next(t for t in TOOLS if t["name"] == "render_tutorial")
+    props = tool["inputSchema"]["properties"]
+    assert props["narration_backend"]["enum"] == ["ttsd", "elevenlabs"]
+    assert props["voice_id"]["type"] == "string"
+
+
+def test_render_tutorial_elevenlabs_without_key_fails_early(monkeypatch, tmp_path):
+    for k in ("ELEVENLABS_API_KEY", "ELEVENLABS_VOICE_IDS", "TUTORIAL_NARRATION_BACKEND"):
+        monkeypatch.delenv(k, raising=False)
+    spec_dir = tmp_path / "cypress" / "e2e-tutorials"
+    spec_dir.mkdir(parents=True)
+    (spec_dir / "t.tutorial.cy.js").write_text("")
+    cfg = {**load_config(), "client_dir": str(tmp_path), "elevenlabs_api_key": "",
+           "elevenlabs_voice_ids": "", "render_api_url": "", "projects_dir": str(tmp_path / "p")}
+    monkeypatch.setattr("circuit_video.service.load_config", lambda: cfg)
+    out = _call("render_tutorial", {"base_url": "https://d.example.com", "tutorial": "t",
+                                    "narration_backend": "elevenlabs"})
+    assert out.get("isError") is True
+    assert "ELEVENLABS_API_KEY" in out["content"][0]["text"]
+    assert not (tmp_path / "p").exists()  # nothing was launched
+
+
+def test_doctor_reports_elevenlabs_backend(monkeypatch, tmp_path):
+    cfg = {**load_config(), "client_dir": str(tmp_path), "base_url": "",
+           "narration_backend": "elevenlabs", "voice_id": "",
+           "elevenlabs_api_key": "sk", "elevenlabs_voice_ids": "en:V1",
+           "elevenlabs_model_id": "", "render_api_url": ""}
+    rep = doctor(cfg)
+    assert rep["narration_backend"] == "elevenlabs"
+    check = next(c for c in rep["checks"] if c["label"] == "elevenlabs narration")
+    assert check["status"] == "ok" and "en" in check["detail"]
+    assert not any(c["label"] == "ttsd narration" for c in rep["checks"])
+    bad = doctor({**cfg, "elevenlabs_api_key": ""})
+    check = next(c for c in bad["checks"] if c["label"] == "elevenlabs narration")
+    assert check["status"] == "fail" and "ELEVENLABS_API_KEY" in check["detail"]

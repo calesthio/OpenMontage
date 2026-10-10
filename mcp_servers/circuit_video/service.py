@@ -21,8 +21,10 @@ from .config import (
     aws_ready,
     load_config,
     validate_base_url,
+    validate_narration_backend,
     validate_render_id,
     validate_tutorial_name,
+    validate_voice_id,
 )
 
 _SLUG = re.compile(r"[^a-z0-9-]+")
@@ -93,14 +95,28 @@ def doctor(cfg: Optional[dict] = None, base_url: Optional[str] = None) -> dict:
         path = shutil.which(b)
         add(b, "ok" if path else "warn", path or "not on PATH (needed for Cypress/Remotion)")
 
-    narr = cfg["narration_url"].rstrip("/")
-    try:
-        body = _http_json(f"{narr}/health", timeout=5)
-        langs = ",".join(body.get("languages", [])) or "none configured"
-        status = "ok" if body.get("voices_configured") else "warn"
-        add("ttsd narration", status, f"{narr} — voices: {langs}")
-    except Exception as e:  # noqa: BLE001
-        add("ttsd narration", "fail", f"{narr} unreachable: {e}")
+    backend = cfg.get("narration_backend") or "ttsd"
+    if backend == "elevenlabs":
+        try:
+            h = _elevenlabs_narrator(cfg).health()
+            langs = ",".join(h["languages"]) or "none"
+            detail = f"model={h['model_id']} voices: {langs}"
+            if h["voice_override"]:
+                detail += f" override={h['voice_override']}"
+            add("elevenlabs narration", "ok", detail)
+        except Exception as e:  # noqa: BLE001
+            add("elevenlabs narration", "fail", f"{e} — see mcp_servers/circuit_video/env.example")
+    else:
+        narr = cfg["narration_url"].rstrip("/")
+        try:
+            body = _http_json(f"{narr}/health", timeout=5)
+            langs = ",".join(body.get("languages", [])) or "none configured"
+            status = "ok" if body.get("voices_configured") else "warn"
+            add("ttsd narration", status, f"{narr} — voices: {langs}")
+        except Exception as e:  # noqa: BLE001
+            add("ttsd narration", "fail",
+                f"{narr} unreachable: {e} (run `tutorialctl up`, or set "
+                "narration_backend=elevenlabs)")
 
     if cfg.get("base_url"):
         status_code, err = _http_status(cfg["base_url"], timeout=8, verify=False)
@@ -147,6 +163,7 @@ def doctor(cfg: Optional[dict] = None, base_url: Optional[str] = None) -> dict:
     return {
         "ready": not fails,
         "runtime": cfg["render_runtime"],
+        "narration_backend": backend,
         "mode": "remote" if cfg.get("render_api_url") else "local",
         "checks": checks,
     }
@@ -188,7 +205,9 @@ def _read_job(cfg: dict, project_id: str) -> Optional[dict]:
 
 def render_argv(cfg: dict, *, tutorial: str, project_id: str, base_url: str,
                 offline: bool = False, music: Optional[str] = None,
-                render_runtime: Optional[str] = None) -> list[str]:
+                render_runtime: Optional[str] = None,
+                narration_backend: Optional[str] = None,
+                voice_id: Optional[str] = None) -> list[str]:
     argv = [
         sys.executable, str(REPO_ROOT / "render_tutorial.py"),
         "--tutorial", tutorial,
@@ -202,6 +221,12 @@ def render_argv(cfg: dict, *, tutorial: str, project_id: str, base_url: str,
         argv.append("--offline-narration")
     if music:
         argv += ["--music", music]
+    backend = narration_backend or cfg.get("narration_backend") or ""
+    if backend:
+        argv += ["--narration-backend", backend]
+    vid = voice_id or cfg.get("voice_id") or ""
+    if vid:
+        argv += ["--voice-id", vid]
     return argv
 
 
@@ -210,6 +235,30 @@ def _truncate(text: str, limit: int = 8000) -> str:
     if len(text) <= limit:
         return text
     return text[:2000] + "\n…\n" + text[-limit + 2200:]
+
+
+_ELEVENLABS_KEYS = (
+    ("elevenlabs_api_key", "ELEVENLABS_API_KEY"),
+    ("elevenlabs_voice_ids", "ELEVENLABS_VOICE_IDS"),
+    ("elevenlabs_model_id", "ELEVENLABS_MODEL_ID"),
+    ("narration_cache_dir", "TUTORIAL_NARRATION_CACHE_DIR"),
+)
+
+
+def elevenlabs_env(cfg: dict) -> dict[str, str]:
+    """ELEVENLABS_* (+ cache dir) to hand to the render subprocess, from MCP config."""
+    return {env_name: cfg[key] for key, env_name in _ELEVENLABS_KEYS if cfg.get(key)}
+
+
+def _elevenlabs_narrator(cfg: dict, voice_id: str = ""):
+    """Build (offline) the ElevenLabs narrator from MCP config; raises NarrationError."""
+    if str(REPO_ROOT) not in sys.path:
+        sys.path.insert(0, str(REPO_ROOT))
+    from tools.audio.elevenlabs_narrator import ElevenLabsNarrator
+
+    return ElevenLabsNarrator.from_env(
+        elevenlabs_env(cfg), voice_id=voice_id or cfg.get("voice_id") or None,
+    )
 
 
 def _maybe_upload(cfg: dict, project_id: str, upload: bool) -> dict:
@@ -243,9 +292,12 @@ def _run_local(cfg: dict, job: dict) -> dict:
         offline=job.get("offline", False),
         music=job.get("music"),
         render_runtime=job.get("render_runtime"),
+        narration_backend=job.get("narration_backend"),
+        voice_id=job.get("voice_id"),
     )
     env = os.environ.copy()
     env["OPENMONTAGE_PROJECTS_DIR"] = cfg["projects_dir"]
+    env.update(elevenlabs_env(cfg))
     if cfg.get("browser"):
         env["TUTORIAL_BROWSER"] = cfg["browser"]
     log_path = _project_dir(cfg, project_id) / "mcp_job.log"
@@ -281,6 +333,9 @@ def _run_remote(cfg: dict, job: dict) -> dict:
         body["music"] = job["music"]
     if job.get("render_runtime"):
         body["render_runtime"] = job["render_runtime"]
+    for key in ("narration_backend", "voice_id"):
+        if job.get(key):
+            body[key] = job[key]  # forwarded; the k8s worker keeps ttsd today
     created = _http_json(f"{api}/renders", method="POST", body=body, timeout=30)
     render_id = created.get("render_id") or job["render_id"]
     payload = {**job, "render_id": render_id, "status": created.get("status", "queued"),
@@ -301,6 +356,8 @@ def render_tutorial(
     render_runtime: Optional[str] = None,
     upload: bool = True,
     wait: bool = True,
+    narration_backend: Optional[str] = None,
+    voice_id: Optional[str] = None,
     cfg: Optional[dict] = None,
 ) -> dict:
     cfg = dict(cfg or load_config())
@@ -318,6 +375,15 @@ def render_tutorial(
         raise ValueError(f"unknown tutorial {tutorial!r}. Available: {', '.join(sorted(names))}")
     if render_runtime and render_runtime not in ("ffmpeg", "remotion"):
         raise ValueError("render_runtime must be ffmpeg or remotion")
+    narration_backend = validate_narration_backend(narration_backend or "")
+    voice_id = validate_voice_id(voice_id or "")
+    effective_backend = narration_backend or cfg.get("narration_backend") or ""
+    if effective_backend == "elevenlabs" and not offline and not cfg.get("render_api_url"):
+        # Fail before a 5–20 minute Cypress capture when the key/voice is missing.
+        try:
+            _elevenlabs_narrator(cfg, voice_id).health()
+        except Exception as e:  # noqa: BLE001
+            raise RuntimeError(f"ElevenLabs narration not ready: {e}") from e
     project_id = project_id or f"{_slug(tutorial)}-{uuid.uuid4().hex[:8]}"
     job = {
         "render_id": project_id,
@@ -326,6 +392,8 @@ def render_tutorial(
         "offline": offline,
         "music": music,
         "render_runtime": render_runtime or cfg["render_runtime"],
+        "narration_backend": narration_backend,
+        "voice_id": voice_id,
         "upload": upload,
         "wait": wait,
         "status": "queued",
@@ -342,6 +410,7 @@ def render_tutorial(
     log_path = _project_dir(cfg, project_id) / "mcp_job.log"
     env = os.environ.copy()
     env["OPENMONTAGE_PROJECTS_DIR"] = cfg["projects_dir"]
+    env.update(elevenlabs_env(cfg))
     with log_path.open("w") as log:
         proc = subprocess.Popen(
             [sys.executable, str(Path(__file__).resolve().parent / "server.py"),

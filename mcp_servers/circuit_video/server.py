@@ -28,7 +28,9 @@ INSTRUCTIONS = (
     "Call list_tutorials, then render_tutorial with the tutorial name and "
     "base_url (the demo app Cypress records against). When AWS credentials "
     "are set, the finished MP4 is uploaded to S3 and a presigned download URL "
-    "is returned. Renders take several minutes; wait=false starts one in the background."
+    "is returned. Renders take several minutes; wait=false starts one in the background. "
+    "Narration comes from the ttsd sidecar by default; pass narration_backend=\"elevenlabs\" "
+    "(and optionally voice_id) to call ElevenLabs directly — run doctor first."
 )
 
 
@@ -55,8 +57,9 @@ TOOLS = [
     ),
     _tool(
         "doctor",
-        "Check that ffmpeg, Cypress/client specs, ttsd narration, the demo app URL, "
-        "and AWS S3 credentials are ready for a Circuit tutorial render.",
+        "Check that ffmpeg, Cypress/client specs, narration (ttsd or ElevenLabs per "
+        "narration_backend), the demo app URL, and AWS S3 credentials are ready for a "
+        "Circuit tutorial render.",
         {
             "base_url": {
                 "type": "string",
@@ -89,6 +92,20 @@ TOOLS = [
             "offline": {
                 "type": "boolean",
                 "description": "Silent placeholder narration (no ttsd / ElevenLabs). Default false.",
+            },
+            "narration_backend": {
+                "type": "string",
+                "enum": ["ttsd", "elevenlabs"],
+                "description": "ttsd (default; sidecar at TUTORIAL_NARRATION_URL) or elevenlabs "
+                               "(direct ElevenLabs API using ELEVENLABS_API_KEY and "
+                               "ELEVENLABS_VOICE_IDS; cached per clip). Recipe narration_backend "
+                               "is used when omitted.",
+            },
+            "voice_id": {
+                "type": "string",
+                "description": "ElevenLabs voice id to narrate with (elevenlabs backend). "
+                               "Omit for the per-language voice from ELEVENLABS_VOICE_IDS "
+                               "or the recipe's voice_id.",
             },
             "music": {
                 "type": "string",
@@ -176,6 +193,8 @@ def _call(name: str, args: dict) -> dict:
                 render_runtime=args.get("render_runtime") or None,
                 upload=bool(args.get("upload", True)),
                 wait=bool(args.get("wait", True)),
+                narration_backend=args.get("narration_backend") or None,
+                voice_id=args.get("voice_id") or None,
             ))
         if name == "get_render":
             return _ok(service.get_render(

@@ -30,6 +30,9 @@ DEFAULTS = {
     "render_api_url": "",
     "render_timeout_sec": "1800",
     "browser": "",
+    "narration_backend": "",   # "" = let render_tutorial.py resolve (recipe/env/ttsd)
+    "voice_id": "",
+    "narration_cache_dir": "",
 }
 
 _ENV = {
@@ -45,6 +48,9 @@ _ENV = {
     "render_api_url": "CIRCUIT_VIDEO_RENDER_API_URL",
     "render_timeout_sec": "CIRCUIT_VIDEO_RENDER_TIMEOUT_SEC",
     "browser": "TUTORIAL_BROWSER",
+    "narration_backend": "TUTORIAL_NARRATION_BACKEND",
+    "voice_id": "TUTORIAL_VOICE_ID",
+    "narration_cache_dir": "TUTORIAL_NARRATION_CACHE_DIR",
 }
 
 
@@ -74,7 +80,7 @@ def load_config() -> dict:
         try:
             data = json.loads(tutorial_cfg.read_text())
             for key in ("narration_url", "base_url", "client_dir", "render_runtime",
-                        "projects_dir", "lang", "browser"):
+                        "projects_dir", "lang", "browser", "narration_backend", "voice_id"):
                 val = data.get(key)
                 if val not in (None, ""):
                     cfg[key] = val
@@ -105,6 +111,9 @@ def load_config() -> dict:
     cfg["aws_access_key_id"] = env("AWS_ACCESS_KEY_ID") or env("CIRCUIT_VIDEO_AWS_ACCESS_KEY_ID")
     cfg["aws_secret_access_key"] = env("AWS_SECRET_ACCESS_KEY") or env("CIRCUIT_VIDEO_AWS_SECRET_ACCESS_KEY")
     cfg["s3_public_base"] = env("CIRCUIT_VIDEO_S3_PUBLIC_BASE").rstrip("/")
+    cfg["elevenlabs_api_key"] = env("ELEVENLABS_API_KEY")
+    cfg["elevenlabs_voice_ids"] = env("ELEVENLABS_VOICE_IDS")
+    cfg["elevenlabs_model_id"] = env("ELEVENLABS_MODEL_ID")
     cfg["render_timeout_sec"] = int(cfg["render_timeout_sec"] or 1800)
     return cfg
 
@@ -133,3 +142,21 @@ def validate_render_id(render_id: str) -> str:
     if not RENDER_ID_RE.match(render_id):
         raise ValueError("render_id must be 1-81 letters, digits, dots, underscores, or hyphens")
     return render_id
+
+
+NARRATION_BACKENDS = ("ttsd", "elevenlabs")
+VOICE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+
+
+def validate_narration_backend(value: str) -> str:
+    value = (value or "").strip()
+    if value and value not in NARRATION_BACKENDS:
+        raise ValueError(f"narration_backend must be one of {', '.join(NARRATION_BACKENDS)}")
+    return value
+
+
+def validate_voice_id(value: str) -> str:
+    value = (value or "").strip()
+    if value and not VOICE_ID_RE.match(value):
+        raise ValueError("voice_id must be 1-64 letters, digits, underscores, or hyphens")
+    return value

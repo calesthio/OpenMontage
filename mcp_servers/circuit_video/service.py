@@ -54,6 +54,20 @@ def _http_status(url: str, timeout: int = 8, verify: bool = True) -> tuple[int, 
         return 0, str(e)
 
 
+def caption_font_installed(family: str) -> Optional[bool]:
+    """True/False via fontconfig; None when fc-list is not available."""
+    if not shutil.which("fc-list"):
+        return None
+    try:
+        r = subprocess.run(["fc-list", ":", "family"], capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if r.returncode != 0:
+        return None
+    families = {part.strip() for line in r.stdout.splitlines() for part in line.split(",")}
+    return family in families
+
+
 def tutorial_specs(client_dir: str) -> list[Path]:
     root = Path(client_dir) / "cypress" / "e2e-tutorials"
     return sorted(root.rglob("*.tutorial.cy.js")) if root.exists() else []
@@ -99,6 +113,14 @@ def doctor(cfg: Optional[dict] = None, base_url: Optional[str] = None,
     for b in ("node", "npx"):
         path = shutil.which(b)
         add(b, "ok" if path else "warn", path or "not on PATH (needed for Cypress/Remotion)")
+
+    font = "Noto Sans"
+    have_font = caption_font_installed(font)
+    if have_font is None:
+        add("caption font", "warn", f"fc-list not available; cannot verify {font!r}")
+    else:
+        add("caption font", "ok" if have_font else "warn",
+            f"{font!r} {'installed' if have_font else 'missing — captions fall back to the default sans (install fonts-noto-core)'}")
 
     backend = cfg.get("narration_backend") or "ttsd"
     if backend == "elevenlabs":

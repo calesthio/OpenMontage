@@ -245,3 +245,20 @@ def test_doctor_tool_accepts_backend_override(monkeypatch, tmp_path):
     assert check["status"] == "ok" and "override=VX" in check["detail"]
     with pytest.raises(ValueError):
         doctor(cfg, narration_backend="piper")
+
+
+from circuit_video.service import caption_font_installed  # noqa: E402
+
+
+def test_caption_font_check(monkeypatch):
+    import subprocess as sp
+
+    class R:
+        returncode = 0
+        stdout = "Noto Sans\nDejaVu Sans\n"
+
+    monkeypatch.setattr(sp, "run", lambda *a, **k: R())
+    assert caption_font_installed("Noto Sans") is True
+    assert caption_font_installed("Inter") is False
+    monkeypatch.setattr("shutil.which", lambda name: None)
+    assert caption_font_installed("Noto Sans") is None

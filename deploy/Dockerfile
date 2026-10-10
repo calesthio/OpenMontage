@@ -25,7 +25,7 @@ FROM cypress/included:15.8.1
 ARG INSTALL_REMOTION=true
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      python3 python3-pip ffmpeg git curl ca-certificates fonts-dejavu-core \
+      python3 python3-pip ffmpeg git curl ca-certificates fonts-dejavu-core fonts-noto-core \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

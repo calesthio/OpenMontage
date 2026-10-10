@@ -156,6 +156,16 @@ def cmd_doctor(args, cfg) -> int:
     for b in ("node", "npx"):
         add(b, "ok" if shutil.which(b) else "warn", shutil.which(b) or "not on PATH (needed for Cypress/Remotion)")
 
+    # Caption font (lib/captions.py defaults to Noto Sans; libass falls back silently).
+    try:
+        r = subprocess.run(["fc-list", ":", "family"], capture_output=True, text=True, timeout=10)
+        families = {part.strip() for line in r.stdout.splitlines() for part in line.split(",")}
+        have = "Noto Sans" in families
+        add("caption font", "ok" if have else "warn",
+            "'Noto Sans' installed" if have else "'Noto Sans' missing — install fonts-noto-core")
+    except (OSError, subprocess.SubprocessError):
+        add("caption font", "warn", "fc-list not available; cannot verify 'Noto Sans'")
+
     backend = cfg.get("narration_backend") or "ttsd"
     if backend == "elevenlabs":
         # Direct ElevenLabs: offline readiness check (key + voice map from shell/.env).

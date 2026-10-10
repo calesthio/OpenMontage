@@ -60,3 +60,14 @@ def test_common_parser_accepts_flags():
     p = TC.build_parser()
     ns = p.parse_args(["doctor", "--narration-backend", "elevenlabs", "--voice-id", "VX"])
     assert ns.narration_backend == "elevenlabs" and ns.voice_id == "VX"
+
+
+def test_env_for_withholds_elevenlabs_keys_when_backend_is_ttsd(tmp_path, monkeypatch):
+    f = tmp_path / "other.env"
+    f.write_text("ELEVENLABS_API_KEY=sk_file\n")
+    monkeypatch.delenv("ELEVENLABS_API_KEY", raising=False)
+    cfg = {**TC.DEFAULTS, "env_file": str(f), "narration_backend": "ttsd"}
+    assert "ELEVENLABS_API_KEY" not in TC._env_for(cfg)
+    # Unset backend: the recipe may still pin elevenlabs, so the key is passed.
+    cfg["narration_backend"] = ""
+    assert TC._env_for(cfg)["ELEVENLABS_API_KEY"] == "sk_file"

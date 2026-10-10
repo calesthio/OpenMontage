@@ -108,9 +108,12 @@ def _env_for(cfg: dict) -> dict:
         env["TUTORIAL_NARRATION_BACKEND"] = cfg["narration_backend"]
     if cfg.get("voice_id"):
         env["TUTORIAL_VOICE_ID"] = cfg["voice_id"]
-    # ELEVENLABS_* from --env-file (shell env already wins inside _narration_env).
-    nenv, _src = _narration_env(cfg)
-    env.update(nenv)
+    # ELEVENLABS_* from --env-file (shell env already wins inside _narration_env),
+    # only when the child may need them: backend elevenlabs, or unset (a recipe
+    # may pin elevenlabs). An explicit ttsd backend never sees the key.
+    if cfg.get("narration_backend") != "ttsd":
+        nenv, _src = _narration_env(cfg)
+        env.update(nenv)
     return env
 
 

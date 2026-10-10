@@ -104,6 +104,27 @@ def resolve_tutorial(client_dir: Path, name: str, lang: Optional[str] = None) ->
     }
 
 
+def prepare_language(tut: dict, steps: list, *, allow_untimed: bool = False) -> tuple[dict, str, list[str]]:
+    """Swap narration/recipe texts for tut['lang']. Returns (recipe, lang, warnings)."""
+    lang = tut["lang"]
+    recipe = dict(tut["recipe"])
+    if lang == tut["source_lang"]:
+        return recipe, lang, []
+    if not tut.get("i18n"):
+        raise FileNotFoundError(
+            f"no translation for {lang!r}: expected {tut['i18n_path']} — create it with "
+            f"translate_tutorial.py --tutorial {tut['name']} --lang {lang}"
+        )
+    warnings = [f"WARN: {w}" for w in I18N.apply_translation(steps, tut["i18n"])]
+    if not (tut.get("timings") or {}).get("steps"):
+        msg = (f"no {lang} timings ({tut['timings_path'].name}): the capture is not paced to the "
+               f"{lang} narration — run author_tutorial.py --tutorial {tut['name']} --lang {lang} --from-timings")
+        if not allow_untimed:
+            raise RuntimeError(msg)
+        warnings.append("WARN: " + msg)
+    return I18N.localized_recipe(recipe, tut["i18n"]), lang, warnings
+
+
 # --- ffmpeg helpers ---------------------------------------------------------
 
 def _run(cmd: list[str], cwd: Optional[str] = None) -> None:
@@ -299,6 +320,10 @@ def build_arg_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(description="Render a tutorial video from a Cypress spec.")
     ap.add_argument("--tutorial", required=True, help="tutorial name (e.g. sales-tour)")
     ap.add_argument("--client-dir", required=True, help="path to circuitauction-backoffice/client")
+    ap.add_argument("--lang", default=None,
+                    help="render in this language (e.g. de): needs <name>.i18n.<lang>.json "
+                         "(translate_tutorial.py) and <name>.timings.<lang>.json (author_tutorial.py --lang). "
+                         "Default: the recipe's source language.")
     ap.add_argument("--project-id", required=True)
     ap.add_argument("--base-url", default=None, help="demo app URL to record against")
     ap.add_argument("--narration-url", default="http://127.0.0.1:5557")
@@ -329,9 +354,25 @@ def main() -> int:
     args = build_arg_parser().parse_args()
 
     client_dir = Path(args.client_dir).resolve()
-    tut = resolve_tutorial(client_dir, args.tutorial)
+    try:
+        tut = resolve_tutorial(client_dir, args.tutorial, lang=args.lang)
+    except ValueError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 2
     recipe = tut["recipe"]
-    lang = recipe.get("lang", "en")
+    lang = tut["lang"]  # render language (== recipe lang unless --lang)
+    if lang != tut["source_lang"] and not args.capture:
+        # Both the translation and its timings must exist BEFORE the capture:
+        # the capture is paced by <name>.timings.<lang>.json.
+        if not tut.get("i18n"):
+            print(f"ERROR: no translation sidecar {tut['i18n_path']} — run translate_tutorial.py "
+                  f"--tutorial {args.tutorial} --lang {lang} first", file=sys.stderr)
+            return 2
+        if not (tut.get("timings") or {}).get("steps") and not args.offline_narration:
+            print(f"ERROR: no {lang} timings {tut['timings_path'].name} — run "
+                  f"author_tutorial.py --tutorial {args.tutorial} --lang {lang} --from-timings first",
+                  file=sys.stderr)
+            return 2
     try:
         CaptionStyle.from_recipe(recipe)  # fail on a recipe typo before the capture
     except ValueError as e:
@@ -387,7 +428,10 @@ def main() -> int:
         manifest = json.loads(Path(args.manifest).read_text())
         raw_video = args.capture
     else:
-        manifest = bridge.run_tutorial_spec(str(client_dir), tut["spec_rel"], base_url=args.base_url)
+        manifest = bridge.run_tutorial_spec(
+            str(client_dir), tut["spec_rel"], base_url=args.base_url,
+            lang=lang if lang != tut["source_lang"] else None,
+        )
         raw_video = manifest.get("video")
         if not raw_video:
             print("ERROR: capture produced no video", file=sys.stderr)
@@ -400,6 +444,15 @@ def main() -> int:
 
     # 3) Steps + timings.
     steps = T.steps_from_manifest(manifest)
+    try:
+        recipe, lang, lang_warnings = prepare_language(
+            tut, steps, allow_untimed=bool(args.offline_narration or args.capture),
+        )
+    except (FileNotFoundError, RuntimeError) as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 2
+    for w in lang_warnings:
+        print(w, file=sys.stderr)
     timings_steps = (tut["timings"] or {}).get("steps", [])
     durations_ms = [0] * (max([s.index for s in steps], default=-1) + 1)
     for ts in timings_steps:

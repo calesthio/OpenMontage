@@ -1,0 +1,392 @@
+{
+  "text-to-video": {
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "prompt": {
+          "type": "string",
+          "maxLength": 5000,
+          "description": "Text prompt describing the desired video content"
+        },
+        "model": {
+          "$ref": "#/$defs/TextToVideoRequestModel",
+          "description": "Model to use for generation. See [Supported Models](/models) for details."
+        },
+        "duration": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "Video duration in seconds. See [Supported Models](/models) for available durations per model. Pass `null` to let `ltx-2-5-fast` or `ltx-2-5-pro` choose the length from your prompt \u00e2\u20ac\u201d see [Automatic duration](/models/ltx-2-5#automatic-duration)."
+        },
+        "fps": {
+          "type": "integer",
+          "default": 24,
+          "description": "Frame rate in frames per second. See [Supported Models](/models) for available FPS per model and resolution."
+        },
+        "resolution": {
+          "type": "string",
+          "description": "Output video resolution. See [Supported Models](/models) for available resolutions per model."
+        },
+        "generate_audio": {
+          "type": "boolean",
+          "default": true,
+          "description": "Generate audio for the video. When true, the generated video will include AI-generated audio matching the scene. When false, only silent video is generated."
+        },
+        "camera_motion": {
+          "$ref": "#/$defs/TextToVideoRequestCameraMotion",
+          "description": "Apply camera motion effects to the generated video."
+        }
+      },
+      "required": [
+        "prompt",
+        "model",
+        "duration",
+        "resolution"
+      ],
+      "title": "TextToVideoRequest",
+      "$defs": {
+        "TextToVideoRequestModel": {
+          "type": "string",
+          "enum": [
+            "ltx-2-3-fast",
+            "ltx-2-3-pro",
+            "ltx-2-5-fast",
+            "ltx-2-5-pro"
+          ],
+          "description": "Model to use for generation. See [Supported Models](/models) for details.",
+          "title": "TextToVideoRequestModel"
+        },
+        "TextToVideoRequestCameraMotion": {
+          "type": "string",
+          "enum": [
+            "dolly_in",
+            "dolly_out",
+            "dolly_left",
+            "dolly_right",
+            "jib_up",
+            "jib_down",
+            "static",
+            "focus_shift"
+          ],
+          "description": "Apply camera motion effects to the generated video.",
+          "title": "TextToVideoRequestCameraMotion"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://docs.ltx.io/openapi.json",
+    "verified_on": "2026-10-03"
+  },
+  "image-to-video": {
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "image_uri": {
+          "type": "string",
+          "description": "Image to be used as the first frame of the video. See [Input Formats](/input-formats#image-input) for supported formats and size limits."
+        },
+        "prompt": {
+          "type": "string",
+          "maxLength": 5000,
+          "description": "Text description of how the image should be animated, can relate to the details in the image"
+        },
+        "model": {
+          "$ref": "#/$defs/ImageToVideoRequestModel",
+          "description": "Model to use for generation. See [Supported Models](/models) for details."
+        },
+        "duration": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "Video duration in seconds. See [Supported Models](/models) for available durations per model. Pass `null` to let `ltx-2-5-fast` or `ltx-2-5-pro` choose the length from your prompt \u00e2\u20ac\u201d see [Automatic duration](/models/ltx-2-5#automatic-duration). Cannot be combined with `last_frame_uri`."
+        },
+        "fps": {
+          "type": "integer",
+          "default": 24,
+          "description": "Frame rate in frames per second. See [Supported Models](/models) for available FPS per model and resolution."
+        },
+        "resolution": {
+          "type": "string",
+          "description": "Output video resolution. See [Supported Models](/models) for available resolutions per model."
+        },
+        "generate_audio": {
+          "type": "boolean",
+          "default": true,
+          "description": "Generate audio for the video. When true, the generated video will include AI-generated audio matching the scene. When false, only silent video is generated."
+        },
+        "last_frame_uri": {
+          "type": "string",
+          "description": "Image to be used as the last frame of the video. When provided, the video will interpolate between the first frame (image_uri) and this last frame. See [Input Formats](/input-formats#image-input) for supported formats and size limits."
+        },
+        "camera_motion": {
+          "$ref": "#/$defs/ImageToVideoRequestCameraMotion",
+          "description": "Apply camera motion effects to the generated video."
+        }
+      },
+      "required": [
+        "image_uri",
+        "prompt",
+        "model",
+        "duration",
+        "resolution"
+      ],
+      "title": "ImageToVideoRequest",
+      "$defs": {
+        "ImageToVideoRequestModel": {
+          "type": "string",
+          "enum": [
+            "ltx-2-3-fast",
+            "ltx-2-3-pro",
+            "ltx-2-5-fast",
+            "ltx-2-5-pro"
+          ],
+          "description": "Model to use for generation. See [Supported Models](/models) for details.",
+          "title": "ImageToVideoRequestModel"
+        },
+        "ImageToVideoRequestCameraMotion": {
+          "type": "string",
+          "enum": [
+            "dolly_in",
+            "dolly_out",
+            "dolly_left",
+            "dolly_right",
+            "jib_up",
+            "jib_down",
+            "static",
+            "focus_shift"
+          ],
+          "description": "Apply camera motion effects to the generated video.",
+          "title": "ImageToVideoRequestCameraMotion"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://docs.ltx.io/openapi.json",
+    "verified_on": "2026-10-03"
+  },
+  "audio-to-video": {
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "audio_uri": {
+          "type": "string",
+          "description": "Audio file to be used as the soundtrack for the video. The audio sets the length of the\ngenerated video, so its duration must not exceed the maximum the selected model supports\nat the chosen resolution.\n\n| Model | Resolution | Maximum audio duration |\n| --- | --- | --- |\n| `ltx-2-5-fast` | 720p, 1080p | 20 seconds |\n| `ltx-2-5-fast` | 1440p, 4K | 10 seconds |\n| `ltx-2-5-pro` | 720p, 1080p | 10 seconds |\n| `ltx-2-5-pro` | 1440p, 4K | 10 seconds |\n| `ltx-2-3-pro` | 720p, 1080p | 20 seconds |\n| `ltx-2-3-pro` | 1440p, 4K | 10 seconds |\n\nSee [Input Formats](/input-formats#audio-input) for supported formats and size limits.\n"
+        },
+        "image_uri": {
+          "type": "string",
+          "description": "Input image to be used as the first frame of the video. Required if prompt is not provided. See [Input Formats](/input-formats#image-input) for supported formats and size limits."
+        },
+        "prompt": {
+          "type": "string",
+          "maxLength": 5000,
+          "description": "Text description of how the video should be generated. Required if image_uri is not provided. Can be empty string when image_uri is provided. If image_uri is provided, this describes how the image should be animated. If no image_uri is provided, this describes the video content."
+        },
+        "resolution": {
+          "type": "string",
+          "description": "The resolution of the generated video in WIDTHxHEIGHT format. When omitted, the resolution is automatically determined based on the input image orientation \u00e2\u20ac\u201d portrait images produce 1080x1920 video, landscape images produce 1920x1080 video. If no image is provided, defaults to 1920x1080.\n\nSupported resolutions depend on the model \u00e2\u20ac\u201d see [Supported Models](/models) for the full matrix. `ltx-2-5-fast`, `ltx-2-5-pro`, and `ltx-2-3-pro` support 720p through 4K.\n"
+        },
+        "model": {
+          "$ref": "#/$defs/AudioToVideoRequestModel",
+          "description": "Model to use for video generation."
+        },
+        "fps": {
+          "type": "integer",
+          "default": 24,
+          "description": "Frame rate in frames per second. See [Supported Models](/models) for available FPS per model and resolution."
+        },
+        "last_frame_uri": {
+          "type": "string",
+          "description": "Image to be used as the last frame of the video. Requires `image_uri`. When provided, the video interpolates between the first and last frame. See [Input Formats](/input-formats#image-input) for supported formats and size limits."
+        },
+        "camera_motion": {
+          "$ref": "#/$defs/AudioToVideoRequestCameraMotion",
+          "description": "Apply camera motion effects to the generated video."
+        }
+      },
+      "required": [
+        "audio_uri"
+      ],
+      "title": "AudioToVideoRequest",
+      "$defs": {
+        "AudioToVideoRequestModel": {
+          "type": "string",
+          "enum": [
+            "ltx-2-3-pro",
+            "ltx-2-5-fast",
+            "ltx-2-5-pro"
+          ],
+          "default": "ltx-2-3-pro",
+          "description": "Model to use for video generation.",
+          "title": "AudioToVideoRequestModel"
+        },
+        "AudioToVideoRequestCameraMotion": {
+          "type": "string",
+          "enum": [
+            "dolly_in",
+            "dolly_out",
+            "dolly_left",
+            "dolly_right",
+            "jib_up",
+            "jib_down",
+            "static",
+            "focus_shift"
+          ],
+          "description": "Apply camera motion effects to the generated video.",
+          "title": "AudioToVideoRequestCameraMotion"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://docs.ltx.io/openapi.json",
+    "verified_on": "2026-10-03"
+  },
+  "retake": {
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "video_uri": {
+          "type": "string",
+          "description": "Input video for editing. See [Input Formats](/input-formats#video-input) for supported formats and codecs.\n\n- Maximum resolution: 3840x2160 (4K)\n- Minimum frame count: 73 (around 3 seconds at 24fps)\n"
+        },
+        "prompt": {
+          "type": "string",
+          "maxLength": 5000,
+          "description": "Describing what needs to happen in the generated video in a section\ndefined by `start_time` and `duration`.\n"
+        },
+        "start_time": {
+          "type": "number",
+          "format": "double",
+          "minimum": 0,
+          "description": "Start time in seconds, defines the section to be edited in the input video.\n\nThe section defined by `start_time` and `duration` should be within the duration of the input video.\nIf the section extends beyond the duration of the video, it will be clamped to the video duration.\n"
+        },
+        "duration": {
+          "type": "number",
+          "format": "double",
+          "minimum": 2,
+          "description": "Duration in seconds, defines the duration of the section to be edited\nin the input video. Must be at least 2 seconds.\n\nThe section defined by `start_time` and `duration` should be within the duration of the input video.\nIf the section extends beyond the duration of the video, it will be clamped to the video duration.\n"
+        },
+        "mode": {
+          "$ref": "#/$defs/EditVideoRequestMode",
+          "description": "Can be any of the following:\n- `replace_audio` - Replace only the audio track\n- `replace_video` - Replace only the video track\n- `replace_audio_and_video` - Replace both audio and video tracks\n\nThe default value is `replace_audio_and_video` if not specified.\n"
+        },
+        "resolution": {
+          "$ref": "#/$defs/EditVideoRequestResolution",
+          "description": "The resolution of the generated video in WIDTHxHEIGHT format. When omitted, the resolution is automatically determined based on the input video orientation \u00e2\u20ac\u201d portrait videos produce 1080x1920 output, landscape videos produce 1920x1080 output.\n"
+        },
+        "model": {
+          "$ref": "#/$defs/EditVideoRequestModel",
+          "description": "Model to use for video generation."
+        }
+      },
+      "required": [
+        "video_uri",
+        "start_time",
+        "duration"
+      ],
+      "title": "EditVideoRequest",
+      "$defs": {
+        "EditVideoRequestMode": {
+          "type": "string",
+          "enum": [
+            "replace_audio",
+            "replace_video",
+            "replace_audio_and_video"
+          ],
+          "default": "replace_audio_and_video",
+          "description": "Can be any of the following:\n- `replace_audio` - Replace only the audio track\n- `replace_video` - Replace only the video track\n- `replace_audio_and_video` - Replace both audio and video tracks\n\nThe default value is `replace_audio_and_video` if not specified.\n",
+          "title": "EditVideoRequestMode"
+        },
+        "EditVideoRequestResolution": {
+          "type": "string",
+          "enum": [
+            "1920x1080",
+            "1080x1920"
+          ],
+          "description": "The resolution of the generated video in WIDTHxHEIGHT format. When omitted, the resolution is automatically determined based on the input video orientation \u00e2\u20ac\u201d portrait videos produce 1080x1920 output, landscape videos produce 1920x1080 output.\n",
+          "title": "EditVideoRequestResolution"
+        },
+        "EditVideoRequestModel": {
+          "type": "string",
+          "enum": [
+            "ltx-2-3-pro"
+          ],
+          "default": "ltx-2-3-pro",
+          "description": "Model to use for video generation.",
+          "title": "EditVideoRequestModel"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://docs.ltx.io/openapi.json",
+    "verified_on": "2026-10-03"
+  },
+  "extend": {
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "video_uri": {
+          "type": "string",
+          "description": "Input video for extending. See [Input Formats](/input-formats#video-input) for supported formats and codecs.\n\n- Supported aspect ratios: 16:9 and 9:16\n- Maximum resolution: 3840x2160 (4K)\n- Minimum frame count: 73 (around 3 seconds at 24fps)\n\nThe output video preserves the input video's resolution.\n"
+        },
+        "prompt": {
+          "type": "string",
+          "maxLength": 5000,
+          "description": "Description of what should happen in the extended portion of the video.\n"
+        },
+        "duration": {
+          "type": "number",
+          "format": "double",
+          "minimum": 2,
+          "maximum": 20,
+          "description": "Duration in seconds to extend the video. Minimum 2 seconds, maximum 20 seconds (480 frames at 24fps).\n"
+        },
+        "mode": {
+          "$ref": "#/$defs/ExtendVideoRequestMode",
+          "description": "Where to extend the video:\n- `end` (default): Extends the video at the end.\n- `start`: Extends the video at the beginning.\n"
+        },
+        "model": {
+          "$ref": "#/$defs/ExtendVideoRequestModel",
+          "description": "Model to use for video generation."
+        },
+        "context": {
+          "type": "number",
+          "format": "double",
+          "minimum": 1,
+          "maximum": 20,
+          "description": "**Advanced parameter:** Number of seconds from the input video to use as context for the extension (maximum 20 seconds).\n\nThe model uses context frames from the input video to generate a more coherent extension.\nThe sum of `context` + `duration` (converted to frames using the input video's FPS) cannot exceed 505 frames (~21 seconds at 24fps). For higher-FPS inputs, the maximum total duration in seconds will be proportionally lower; for lower-FPS inputs, it will be proportionally higher.\n\nIf not provided, defaults to maximize available context within the 505 frame limit while respecting the 20-second cap.\n"
+        }
+      },
+      "required": [
+        "video_uri",
+        "duration"
+      ],
+      "title": "ExtendVideoRequest",
+      "$defs": {
+        "ExtendVideoRequestMode": {
+          "type": "string",
+          "enum": [
+            "start",
+            "end"
+          ],
+          "default": "end",
+          "description": "Where to extend the video:\n- `end` (default): Extends the video at the end.\n- `start`: Extends the video at the beginning.\n",
+          "title": "ExtendVideoRequestMode"
+        },
+        "ExtendVideoRequestModel": {
+          "type": "string",
+          "enum": [
+            "ltx-2-3-pro"
+          ],
+          "default": "ltx-2-3-pro",
+          "description": "Model to use for video generation.",
+          "title": "ExtendVideoRequestModel"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://docs.ltx.io/openapi.json",
+    "verified_on": "2026-10-03"
+  }
+}

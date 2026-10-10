@@ -23,7 +23,9 @@ def test_contract_models_and_cost(monkeypatch):
     assert tool.get_info()["capability"] == "tts"
     assert tool.get_info()["provider"] == "fal.ai"
     assert tool.estimate_cost({"text": "a" * 1000, "model_id": "eleven-v3"}) == 0.1
-    assert tool.estimate_cost({"text": "a" * 1000, "model_id": "multilingual-v2"}) == 0.1
+    assert (
+        tool.estimate_cost({"text": "a" * 1000, "model_id": "multilingual-v2"}) == 0.1
+    )
     assert tool.estimate_cost({"text": "a" * 1000, "model_id": "turbo-v2.5"}) == 0.05
 
 
@@ -71,8 +73,8 @@ def test_execute_submits_once_and_downloads_audio(tmp_path, monkeypatch):
 
     post_response = _response(
         json_data={
-            "status_url": "https://queue.example/status",
-            "response_url": "https://queue.example/result",
+            "status_url": "https://queue.fal.run/status",
+            "response_url": "https://queue.fal.run/result",
         }
     )
     status_response = _response(json_data={"status": "COMPLETED"})

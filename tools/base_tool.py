@@ -33,6 +33,7 @@ def _load_dotenv() -> None:
     if not env_path.is_file():
         return
     import re
+
     with open(env_path, encoding="utf-8", errors="ignore") as f:
         for line in f:
             line = line.strip()
@@ -84,10 +85,11 @@ class ToolStatus(str, Enum):
 
 class ToolRuntime(str, Enum):
     """Where and how a tool executes."""
-    LOCAL = "local"            # Runs entirely on-device, free, no network
-    LOCAL_GPU = "local_gpu"    # Runs on-device but needs GPU (VRAM)
-    API = "api"                # Calls an external API, requires API key, costs money
-    HYBRID = "hybrid"          # Can run locally OR via API (e.g., image_selector)
+
+    LOCAL = "local"  # Runs entirely on-device, free, no network
+    LOCAL_GPU = "local_gpu"  # Runs on-device but needs GPU (VRAM)
+    API = "api"  # Calls an external API, requires API key, costs money
+    HYBRID = "hybrid"  # Can run locally OR via API (e.g., image_selector)
 
 
 class ExecutionMode(str, Enum):
@@ -110,6 +112,7 @@ class ResumeSupport(str, Enum):
 @dataclass
 class ResourceProfile:
     """Hardware resource envelope for a tool."""
+
     cpu_cores: int = 1
     ram_mb: int = 512
     vram_mb: int = 0
@@ -120,6 +123,7 @@ class ResourceProfile:
 @dataclass
 class RetryPolicy:
     """Safe retry behavior for a tool."""
+
     max_retries: int = 0
     backoff_seconds: float = 1.0
     retryable_errors: list[str] = field(default_factory=list)
@@ -128,11 +132,12 @@ class RetryPolicy:
 @dataclass
 class ToolResult:
     """Standard result returned by tool execution."""
+
     success: bool
     data: dict[str, Any] = field(default_factory=dict)
     artifacts: list[str] = field(default_factory=list)
     error: Optional[str] = None
-    cost_usd: float = 0.0
+    cost_usd: Optional[float] = 0.0
     duration_seconds: float = 0.0
     seed: Optional[int] = None
     model: Optional[str] = None
@@ -185,21 +190,29 @@ def _instrument_execute(fn: Callable) -> Callable:
             "depth": depth if depth else None,
         }
         if project_dir is not None:
-            emit_event(project_dir, {
-                **base, "event": "start",
-                "output_path": str(output_path) if output_path else None,
-            })
+            emit_event(
+                project_dir,
+                {
+                    **base,
+                    "event": "start",
+                    "output_path": str(output_path) if output_path else None,
+                },
+            )
 
         started = time.monotonic()
         try:
             result = fn(self, inputs, *args, **kwargs)
         except Exception as exc:
             if project_dir is not None:
-                emit_event(project_dir, {
-                    **base, "event": "error",
-                    "error": str(exc)[:300],
-                    "duration_s": round(time.monotonic() - started, 2),
-                })
+                emit_event(
+                    project_dir,
+                    {
+                        **base,
+                        "event": "error",
+                        "error": str(exc)[:300],
+                        "duration_s": round(time.monotonic() - started, 2),
+                    },
+                )
             raise
         finally:
             depth_state.value = depth
@@ -210,14 +223,18 @@ def _instrument_execute(fn: Callable) -> Callable:
             project_dir = infer_project_dir(inputs)
         if project_dir is not None:
             cost = getattr(result, "cost_usd", None)
-            emit_event(project_dir, {
-                **base, "event": "finish",
-                "output_path": str(output_path) if output_path else None,
-                "success": getattr(result, "success", None),
-                # NOTE: 0.0 is meaningful (ran for free) — only None is dropped.
-                "cost_usd": cost if isinstance(cost, (int, float)) else None,
-                "duration_s": round(time.monotonic() - started, 2),
-            })
+            emit_event(
+                project_dir,
+                {
+                    **base,
+                    "event": "finish",
+                    "output_path": str(output_path) if output_path else None,
+                    "success": getattr(result, "success", None),
+                    # NOTE: 0.0 is meaningful (ran for free) — only None is dropped.
+                    "cost_usd": cost if isinstance(cost, (int, float)) else None,
+                    "duration_s": round(time.monotonic() - started, 2),
+                },
+            )
         return result
 
     wrapper._backlot_instrumented = True  # type: ignore[attr-defined]
@@ -306,7 +323,7 @@ class BaseTool(ABC):
         for dep in self.dependencies:
             if dep.startswith(("cmd:", "binary:")):
                 prefix = "cmd:" if dep.startswith("cmd:") else "binary:"
-                cmd_name = dep[len(prefix):]
+                cmd_name = dep[len(prefix) :]
                 if shutil.which(cmd_name) is None:
                     raise DependencyError(
                         f"Command {cmd_name!r} not found. {self.install_instructions}"
@@ -362,7 +379,8 @@ class BaseTool(ABC):
             "resume_support": self.resume_support.value,
             "side_effects": self.side_effects,
             "fallback": self.fallback,
-            "fallback_tools": self.fallback_tools or ([self.fallback] if self.fallback else []),
+            "fallback_tools": self.fallback_tools
+            or ([self.fallback] if self.fallback else []),
             "agent_skills": self.agent_skills,
             "related_skills": self.agent_skills,
             "user_visible_verification": self.user_visible_verification,
@@ -398,9 +416,19 @@ class BaseTool(ABC):
 
     def dry_run(self, inputs: dict[str, Any]) -> dict[str, Any]:
         """Preflight check without side effects. Override for paid/publishing tools."""
+        from tools.provider_pricing import PriceQuoteRequired
+
+        quote_error = None
+        try:
+            estimated_cost = self.estimate_cost(inputs)
+        except PriceQuoteRequired as exc:
+            estimated_cost = None
+            quote_error = str(exc)
         return {
             "tool": self.name,
-            "estimated_cost_usd": self.estimate_cost(inputs),
+            "estimated_cost_usd": estimated_cost,
+            "cost_status": "quote_required" if quote_error else "estimated",
+            "quote_reason": quote_error,
             "estimated_runtime_seconds": self.estimate_runtime(inputs),
             "status": self.get_status().value,
             "would_execute": True,
@@ -477,4 +505,5 @@ class ToolCommandError(subprocess.CalledProcessError):
 
 class DependencyError(Exception):
     """Raised when a tool's dependency is not satisfied."""
+
     pass

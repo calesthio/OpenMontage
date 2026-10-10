@@ -1,0 +1,184 @@
+{
+  "alibaba/wan-3": {
+    "input_schema": {
+      "type": "object",
+      "title": "Input",
+      "required": [
+        "prompt"
+      ],
+      "properties": {
+        "seed": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "title": "Seed",
+          "x-order": 7,
+          "description": "Random seed for reproducible generation. Range: 0-2147483647"
+        },
+        "image": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Image",
+          "format": "uri",
+          "x-order": 1,
+          "description": "Optional first-frame image to animate into a video (jpg/png/bmp/webp, \u226410MB). When provided, the video is generated from this image guided by the prompt."
+        },
+        "prompt": {
+          "type": "string",
+          "title": "Prompt",
+          "x-order": 0,
+          "description": "Text prompt for video generation"
+        },
+        "duration": {
+          "type": "integer",
+          "title": "Duration",
+          "default": 5,
+          "maximum": 30,
+          "minimum": 2,
+          "x-order": 5,
+          "description": "Duration of the generated video in seconds"
+        },
+        "resolution": {
+          "enum": [
+            "480p",
+            "720p",
+            "1080p"
+          ],
+          "type": "string",
+          "title": "resolution",
+          "description": "Output video resolution",
+          "default": "1080p",
+          "x-order": 3
+        },
+        "aspect_ratio": {
+          "enum": [
+            "adaptive",
+            "16:9",
+            "9:16",
+            "1:1",
+            "4:3",
+            "3:4"
+          ],
+          "type": "string",
+          "title": "aspect_ratio",
+          "description": "Aspect ratio of the generated video. 'adaptive' lets the model choose the best ratio for the prompt. Ignored when an image is provided (the input image's aspect ratio is used).",
+          "default": "adaptive",
+          "x-order": 4
+        },
+        "negative_prompt": {
+          "type": "string",
+          "title": "Negative Prompt",
+          "default": "",
+          "x-order": 2,
+          "description": "Negative prompt \u2014 describes content that should not appear in the video"
+        },
+        "enable_prompt_expansion": {
+          "type": "boolean",
+          "title": "Enable Prompt Expansion",
+          "default": true,
+          "x-order": 6,
+          "description": "Automatically expand and optimize the prompt for better results. Improves quality for short prompts but increases latency."
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://replicate.com/alibaba/wan-3/api/schema",
+    "verified_on": "2026-10-03"
+  },
+  "google/nano-banana-pro": {
+    "input_schema": {
+      "type": "object",
+      "title": "Input",
+      "required": [
+        "prompt"
+      ],
+      "properties": {
+        "prompt": {
+          "type": "string",
+          "title": "Prompt",
+          "x-order": 0,
+          "description": "A text description of the image you want to generate"
+        },
+        "resolution": {
+          "enum": [
+            "1K",
+            "2K",
+            "4K"
+          ],
+          "type": "string",
+          "title": "resolution",
+          "description": "Resolution of the generated image",
+          "default": "2K",
+          "x-order": 3
+        },
+        "image_input": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          },
+          "title": "Image Input",
+          "default": [],
+          "x-order": 1,
+          "description": "Input images to transform or use as reference (supports up to 14 images)"
+        },
+        "aspect_ratio": {
+          "enum": [
+            "match_input_image",
+            "1:1",
+            "2:3",
+            "3:2",
+            "3:4",
+            "4:3",
+            "4:5",
+            "5:4",
+            "9:16",
+            "16:9",
+            "21:9"
+          ],
+          "type": "string",
+          "title": "aspect_ratio",
+          "description": "Aspect ratio of the generated image",
+          "default": "match_input_image",
+          "x-order": 2
+        },
+        "output_format": {
+          "enum": [
+            "jpg",
+            "png"
+          ],
+          "type": "string",
+          "title": "output_format",
+          "description": "Format of the output image",
+          "default": "jpg",
+          "x-order": 4
+        },
+        "safety_filter_level": {
+          "enum": [
+            "block_low_and_above",
+            "block_medium_and_above",
+            "block_only_high"
+          ],
+          "type": "string",
+          "title": "safety_filter_level",
+          "description": "block_low_and_above is strictest, block_medium_and_above blocks some prompts, block_only_high is most permissive but some prompts will still be blocked",
+          "default": "block_only_high",
+          "x-order": 5
+        },
+        "allow_fallback_model": {
+          "type": "boolean",
+          "title": "Allow Fallback Model",
+          "default": false,
+          "x-order": 6,
+          "description": "Fallback to another model (currently bytedance/seedream-5) if Nano Banana Pro is at capacity."
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://replicate.com/google/nano-banana-pro/api/schema",
+    "verified_on": "2026-10-03"
+  }
+}

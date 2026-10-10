@@ -123,7 +123,8 @@ def test_mcp_initialize_and_tools_list():
     listed = _handle({"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}})
     names = {t["name"] for t in listed["result"]["tools"]}
     assert names == {t["name"] for t in TOOLS}
-    assert names == {"list_tutorials", "doctor", "render_tutorial", "get_render", "upload_video"}
+    assert names == {"list_tutorials", "doctor", "render_tutorial", "get_render", "upload_video",
+                     "get_tutorial_text", "save_tutorial_translation", "author_tutorial"}
     render = next(t for t in listed["result"]["tools"] if t["name"] == "render_tutorial")
     assert "base_url" in render["inputSchema"]["required"]
 

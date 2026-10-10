@@ -1,6 +1,6 @@
-# Lyria 3 API and Prompting Reference
+# Lyria API and Prompting Reference
 
-Last verified: 2026-07-18.
+Model, pricing, and adapter guidance verified and updated by andromia3: 2026-10-10. Distributed under the repository's AGPL-3.0 license. Recheck provider limits and pricing before generation.
 
 ## Provider Families
 
@@ -13,14 +13,16 @@ Last verified: 2026-07-18.
 - Duration: always 30 seconds
 - Gemini Developer API price: $0.04 per request; no free tier
 
-### Lyria 3 Pro
+### Lyria 3.5
 
-- Model: `lyria-3-pro-preview`
+- Model: `lyria-3.5`
 - Best for: full songs, vocals, verses, choruses, bridges, longer scores
 - Input: text or up to 10 images through the underlying API
-- Output: MP3 by default; the underlying Pro API can request audio/WAV response format
-- Duration: prompt-influenced, up to roughly three minutes; not an exact media contract
+- Output: MP3 by default; the underlying Lyria 3.5 API can request audio/WAV response format
+- Duration: prompt-influenced full-length songs; not an exact media contract
 - Gemini Developer API price: $0.08 per request; no free tier
+
+`lyria-3-pro-preview` remains an explicit legacy option in the adapter. Google's pricing page labels Lyria 3 Clip and Pro as legacy models; verify availability and choose the model explicitly rather than silently substituting one.
 
 ### Lyria RealTime
 
@@ -38,7 +40,7 @@ from google import genai
 
 client = genai.Client()
 interaction = client.interactions.create(
-    model="lyria-3-pro-preview",
+    model="lyria-3.5",
     input="A structured instrumental score ...",
 )
 
@@ -52,9 +54,11 @@ The OpenMontage adapter currently:
 
 - sends a list containing one text block and optionally one image block;
 - appends `[Target Duration: N seconds]` to the text;
-- calls `client.interactions.create()` with `lyria-3-pro-preview`;
+- calls `client.interactions.create()` with the selected `model`, defaulting to `lyria-3.5`; accepts legacy `lyria-3-pro-preview` explicitly;
 - extracts audio through `output_audio`, then legacy outputs, then step traversal;
-- writes MP3 and reports the requested duration without probing the result.
+- writes MP3 and reports the requested duration without probing the result;
+- validates requested duration against 5–184 seconds; these bounds do not prove the generated file's duration;
+- requires a current quote for Lyria 3.5 cost estimation instead of reusing the legacy Pro estimate.
 
 ## Prompt Template: Video Underscore
 
@@ -78,7 +82,7 @@ spoken samples, lyrical fragments, or recognizable quotations.
 Avoid: [unwanted instruments, clichés, oversized hits, abrupt fade].
 ```
 
-Use timestamps as structural instructions, not as proof that Pro will return an exact-length file.
+Use timestamps as structural instructions, not as proof that a full-song model will return an exact-length file.
 
 ## Prompt Template: Song With Custom Lyrics
 
@@ -159,11 +163,11 @@ The underlying API accepts up to 10 base64-encoded images with MIME types. Promp
 ## Limitations And Safety
 
 - Generation is stochastic; identical prompts can differ.
-- Lyria 3 is single-turn; generated tracks cannot currently be refined through a multi-turn edit chain.
+- The single-turn generation workflow does not establish an audio edit chain; do not assume a returned track can be refined without a separately supported editing path.
 - Safety filters may reject artist-voice imitation, copyrighted lyrics, or other restricted content.
 - All generated audio contains an imperceptible SynthID watermark.
 - Preview models and rate limits can change before stable release.
-- Official pages currently disagree between 44.1 kHz and 48 kHz descriptions. Probe every returned file and record the observed value.
+- The current Gemini music guide describes 44.1 kHz stereo output. Probe every returned file and record the observed value rather than assuming metadata from the prompt or adapter.
 
 ## Failure Triage
 

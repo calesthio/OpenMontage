@@ -187,26 +187,43 @@ def _to_cfr(src: str, dst: str, fps: int = CFR_FPS) -> None:
     )
 
 
-def detect_marker_times(
-    cfr_video: str,
-    marker_height_px: int,
-    fps: int = CFR_FPS,
-) -> list[float]:
-    """Rising-edge times (seconds) of the top drift-marker flashes in a CFR video.
+def _is_marker(r: int, g: int, b: int) -> bool:
+    return r > 200 and g < 90 and b > 200
 
-    Samples a small region inside the top marker strip, averaged to one pixel per
-    frame, and finds frames that transition into the marker colour (magenta).
+
+def _marker_row(cfr_video: str, info: dict, cx: int, cw: int) -> int:
+    """Topmost row that ever turns marker-coloured, or -1.
+
+    The strip is at y=0 of the app viewport, but the recording can include the
+    Cypress runner's own header above the app, which pushes it down.
     """
-    if marker_height_px <= 0:
-        return []
-    info = probe(cfr_video)
-    ch = max(2, min(marker_height_px - 1, info["height"]))
-    cw = 16
-    cx = max(0, info["width"] // 2 - cw // 2)
+    h = info["height"]
     proc = subprocess.run(
         [
             "ffmpeg", "-v", "error", "-i", str(cfr_video),
-            "-vf", f"crop={cw}:{ch}:{cx}:0,scale=1:1:flags=area,format=rgb24",
+            "-vf", f"fps=10,crop={cw}:{h}:{cx}:0,scale=1:{h}:flags=area,format=rgb24",
+            "-f", "rawvideo", "-",
+        ],
+        capture_output=True,
+        check=True,
+    )
+    raw = proc.stdout
+    best = -1
+    for f in range(len(raw) // (3 * h)):
+        base = 3 * h * f
+        for y in range(h if best < 0 else best):
+            o = base + 3 * y
+            if _is_marker(raw[o], raw[o + 1], raw[o + 2]):
+                best = y
+                break
+    return best
+
+
+def _marker_edges(cfr_video: str, cw: int, ch: int, cx: int, y: int, fps: int) -> list[float]:
+    proc = subprocess.run(
+        [
+            "ffmpeg", "-v", "error", "-i", str(cfr_video),
+            "-vf", f"crop={cw}:{ch}:{cx}:{y},scale=1:1:flags=area,format=rgb24",
             "-f", "rawvideo", "-",
         ],
         capture_output=True,
@@ -216,12 +233,64 @@ def detect_marker_times(
     times: list[float] = []
     prev_on = False
     for i in range(len(raw) // 3):
-        r, g, b = raw[3 * i], raw[3 * i + 1], raw[3 * i + 2]
-        on = r > 200 and g < 90 and b > 200
+        on = _is_marker(raw[3 * i], raw[3 * i + 1], raw[3 * i + 2])
         if on and not prev_on:
             times.append(i / fps)
         prev_on = on
     return times
+
+
+def detect_marker_times(
+    cfr_video: str,
+    marker_height_px: int,
+    fps: int = CFR_FPS,
+) -> list[float]:
+    """Rising-edge times (seconds) of the top drift-marker flashes in a CFR video.
+
+    Samples a small region inside the marker strip, averaged to one pixel per
+    frame, and finds frames that transition into the marker colour (magenta).
+    """
+    if marker_height_px <= 0:
+        return []
+    info = probe(cfr_video)
+    ch = max(2, min(marker_height_px - 1, info["height"]))
+    cw = 16
+    cx = max(0, info["width"] // 2 - cw // 2)
+    times = _marker_edges(cfr_video, cw, ch, cx, 0, fps)
+    if not times:
+        row = _marker_row(cfr_video, info, cx, cw)
+        if row > 0:
+            times = _marker_edges(cfr_video, cw, max(2, ch - 2), cx, row + 1, fps)
+    return times
+
+
+def align_marker_times(
+    marker_times: list[float], step_t_s: list[float], tolerance_s: float = 0.75,
+) -> list[float]:
+    """Per-step video times when some marker flashes were not captured.
+
+    The screencast can drop a 140 ms flash while the page is busy. The detected
+    markers still fix the offset between the manifest's wall clock and the
+    video: take the offset most markers agree on, keep each step's own marker
+    when one is within tolerance, and place the rest at wall clock + offset.
+    Returns [] when no offset is supported by at least two markers.
+    """
+    best: tuple[int, float] = (0, 0.0)
+    for m in marker_times:
+        for t in step_t_s:
+            off = m - t
+            hits = sum(1 for t2 in step_t_s
+                       if any(abs(m2 - (t2 + off)) <= tolerance_s for m2 in marker_times))
+            if hits > best[0]:
+                best = (hits, off)
+    hits, off = best
+    if hits < 2:
+        return []
+    out: list[float] = []
+    for t in step_t_s:
+        near = [m for m in marker_times if abs(m - (t + off)) <= tolerance_s]
+        out.append(min(near, key=lambda m: abs(m - (t + off))) if near else t + off)
+    return out
 
 
 def extend_capture(path: str, min_duration_s: float, fps: int = CFR_FPS) -> float:
@@ -280,6 +349,12 @@ def normalize_capture(
     # confident, complete marker read.
     trim_start = 0.0
     rel_times: list[float] = []
+    steps = manifest.get("steps", [])
+    if marker_times and n_marker_steps and len(marker_times) != n_marker_steps \
+            and n_marker_steps == len(steps):
+        # Some flashes were missed: recover the rest from the wall-clock times.
+        marker_times = align_marker_times(
+            marker_times, [float(s.get("t_ms", 0)) / 1000.0 for s in steps])
     if marker_times and n_marker_steps and len(marker_times) == n_marker_steps:
         trim_start = max(0.0, marker_times[0] - preroll_s)
         rel_times = [max(0.0, t - trim_start) for t in marker_times]

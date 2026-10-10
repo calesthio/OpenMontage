@@ -81,3 +81,45 @@ def test_extend_capture_leaves_a_long_enough_clip_alone(tmp_path):
     before = cap.stat().st_mtime_ns
     assert abs(bridge.extend_capture(str(cap), 2.0) - 3.0) < 0.1
     assert cap.stat().st_mtime_ns == before
+
+
+def test_align_marker_times_fills_a_missed_flash():
+    # Steps at wall clock 0, 2, 3, 4 s; the video starts 1 s earlier and the
+    # flash of the third step was not captured.
+    got = bridge.align_marker_times([1.0, 3.02, 5.0], [0.0, 2.0, 3.0, 4.0])
+    assert [round(t, 1) for t in got] == [1.0, 3.0, 4.0, 5.0]
+    assert got[1] == 3.02  # a detected marker wins over the estimate
+
+
+def test_align_marker_times_needs_two_agreeing_markers():
+    assert bridge.align_marker_times([7.0], [0.0, 2.0]) == []
+
+
+def test_normalize_capture_recovers_from_a_missed_marker(tmp_path):
+    raw = tmp_path / "raw.mp4"
+    _make_capture(raw, (1, 5))
+    manifest = {
+        "steps": [
+            {"index": i, "narration": "x", "t_ms": t, "marker": {"heightPx": 6}}
+            for i, t in enumerate((0, 2000, 4000))
+        ]
+    }
+    norm = bridge.normalize_capture(str(raw), manifest, str(tmp_path / "cap.mp4"))
+    assert [round(t) for t in norm["marker_times_s"]] == [1, 3, 5]
+
+
+def test_marker_detected_below_a_runner_header(tmp_path):
+    # The Cypress runner's header sits above the app, so the strip is not at y=0.
+    raw = tmp_path / "raw.mp4"
+    marks = (1, 3, 5)
+    enable = "+".join(f"between(t,{t},{t + 0.15})" for t in marks)
+    subprocess.run(
+        ["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "color=c=0x224466:s=1280x720:d=7:r=30",
+         "-vf", f"drawbox=x=40:y=64:w=1200:h=6:color=magenta@1.0:t=fill:enable='{enable}'",
+         "-c:v", "libx264", "-crf", "23", "-pix_fmt", "yuv420p", str(raw)], check=True)
+    cfr = tmp_path / "cfr.mp4"
+    bridge._to_cfr(str(raw), str(cfr))
+    got = bridge.detect_marker_times(str(cfr), 6)
+    assert len(got) == 3
+    for g, exp in zip(got, marks):
+        assert abs(g - exp) < 0.3

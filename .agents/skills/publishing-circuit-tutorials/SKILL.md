@@ -73,6 +73,8 @@ becomes a video) and `.agents/skills/circuit-video/SKILL.md` (the MCP tools).
 ## Quick checks
 
 - `doctor` not ready → fix `.env` (`TUTORIAL_CLIENT_DIR`, `TUTORIAL_BASE_URL`, narration keys) before anything else.
+- Every spec fails on its first `visitState` and the failure screenshot shows the authenticator setup page → the demo site enforces 2FA (`ddev drush vget server_general_login_totp_enabled` is 1). Set it to 0 for the recording and back to its previous value afterwards; the authenticator tutorial itself records on `backoffice2`.
+- `WARN: the sync markers could not be read` in the render log → step times fell back to the wall clock; check that narration and picture still line up before publishing.
 - Second recording shows a different screen than the first (e.g. a code prompt instead of the setup page) → the flow mutated state; add the `TUTORIAL_PRE_RUN` reset.
 - Narration ahead of the picture by more than ~2 s → put the `cy.get(...).should("be.visible")` wait *before* the `tutorialStep` that describes that screen.
 - Video URL 403 → the object is outside `openmontage/tutorials/` or the key is not `release-<X.Y>-<name>`; re-upload with `upload_video(key=…)`.

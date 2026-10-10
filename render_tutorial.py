@@ -510,6 +510,9 @@ def main() -> int:
     T.apply_durations(steps, durations_ms)
     # Primary: marker times (already relative to the trimmed start). Fallback:
     # manifest t_ms (imprecise for the preamble — see the drift note in the plan).
+    if not norm.get("marker_times_s"):
+        print("WARN: the sync markers could not be read from the capture — step times fall back "
+              "to the wall clock and the narration may run ahead of the picture.", file=sys.stderr)
     T.assign_start_times(steps, norm.get("marker_times_s") or None, lead_offset_s=0.0)
     # A capture that ends on a static screen stops before the last line does.
     needed = T.narrated_body_duration(steps)

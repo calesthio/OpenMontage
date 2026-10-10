@@ -50,7 +50,7 @@ becomes a video) and `.agents/skills/circuit-video/SKILL.md` (the MCP tools).
      cy.wait(1000);
    }
    ```
-   (Labels the PR left untranslated in `locale-de.json` stay English on screen; that is what German users see too, so record it as is and mention it on the PR.) Copy `_demo.js` helpers (`loginDemo`) when the flow starts logged in; drive the real login form (`#username`, `#password`, `#login`) when the login itself is the feature. Narration = spoken line = caption: short, present tense, first line says "New in version X.Y: …", last line ends "Thanks for watching!".
+   **Before the German render, check the PR's German strings.** New UI keys usually land in `client/app/i18n/locale-de.json` as English copies. Compare the keys the branch added against `locale-en.json`; translate every identical one (formal "Sie", app terms per `tools/i18n/glossary/de.md` in the docs repo) by exact line substitution (the file has duplicate keys, so never round-trip it through a JSON parser) and commit on the PR branch. The ddev site serves the built `client/dist`, so copy the file into `<site>/client/dist/i18n/` as well (and `client/app/i18n/`), then confirm with `curl …/app/i18n/locale-de.json` before recording. Copy `_demo.js` helpers (`loginDemo`) when the flow starts logged in; drive the real login form (`#username`, `#password`, `#login`) when the login itself is the feature. Narration = spoken line = caption: short, present tense, first line says "New in version X.Y: …", last line ends "Thanks for watching!".
 4. **Make the run repeatable.** If a beat mutates the account or data (activating 2FA, creating a record), reset it in `before()` via `cy.exec(Cypress.env("TUTORIAL_PRE_RUN"))` and document the exact `ddev drush sql-query …` in the spec header; export `CYPRESS_TUTORIAL_PRE_RUN` for both the authoring and the render run. Secrets the flow needs (a TOTP code, a token) are computed in-browser or fetched from the demo site, never hardcoded from production.
 5. **Write the recipe** `<name>.tutorial.json`: copy a sibling (`title`, `lang`, `intro_text` "What's new in X.Y", `intro_subtitle` = feature, `outro_text`, `subtitle_style`, `notes` with the demo account used).
 6. **Author timings** (synthesizes each line once, measures durations):
@@ -87,4 +87,5 @@ becomes a video) and `.agents/skills/circuit-video/SKILL.md` (the MCP tools).
 - Shipping the video without the feature-page screenshot, or taking the screenshot from `final.mp4` (burned captions, title cards).
 - Rendering only the English video: the German one (`-de`) is part of every tutorial.
 - Rendering German with the UI still in English (missing `tutorialLang` switch in the spec).
+- German render showing English labels on the feature page: the PR's `locale-de.json` entries are English copies, or the ddev site's `client/dist/i18n` was not refreshed.
 - Leaving the demo account mutated (2FA activated, records created) without a documented reset.

@@ -254,6 +254,8 @@ class TTSSelector(BaseTool):
     def _adapt_inputs(tool: BaseTool, inputs: dict[str, Any]) -> dict[str, Any]:
         """Translate capability-level controls to provider-native inputs."""
         adapted = dict(inputs)
+        if tool.name == "sarvam_tts":
+            return TTSSelector._adapt_for_sarvam(inputs)
         if tool.name != "azure_tts":
             return adapted
 
@@ -278,6 +280,50 @@ class TTSSelector(BaseTool):
         if output_format.startswith("mp3"):
             adapted["output_format"] = "mp3"
         elif output_format.startswith(("wav", "riff", "pcm")):
+            adapted["output_format"] = "wav"
+        return adapted
+
+    @staticmethod
+    def _adapt_for_sarvam(inputs: dict[str, Any]) -> dict[str, Any]:
+        """Map shared controls onto Sarvam Bulbul's parameter names and ranges."""
+        adapted = dict(inputs)
+
+        voice = inputs.get("voice") or inputs.get("voice_id")
+        if voice and not inputs.get("speaker"):
+            adapted["speaker"] = str(voice).strip().lower()
+
+        if inputs.get("model_id") and not inputs.get("model"):
+            adapted["model"] = inputs["model_id"]
+
+        language = inputs.get("language_code") or inputs.get("voice_language")
+        if language and not inputs.get("target_language_code"):
+            code = str(language).strip()
+            # "hi" -> "hi-IN"; "en-US" and other non-Indian locales fall back to
+            # Indian English rather than a code Bulbul would reject.
+            if "-" not in code:
+                code = f"{code.lower()}-IN"
+            elif not code.upper().endswith("-IN"):
+                code = "en-IN"
+            adapted["target_language_code"] = code
+
+        speed = inputs.get("speaking_rate", inputs.get("speed"))
+        if speed is not None and inputs.get("pace") is None:
+            adapted["pace"] = float(speed)
+
+        # The selector's pitch scale is -50..50; Bulbul v2 accepts -0.75..0.75
+        # and v3 rejects the field entirely. Only pass a value already in range.
+        pitch = inputs.get("pitch")
+        if not isinstance(pitch, (int, float)) or abs(float(pitch)) > 0.75:
+            adapted.pop("pitch", None)
+
+        # ElevenLabs-shaped controls Bulbul has no equivalent for.
+        for unsupported in ("style", "stability", "similarity_boost", "input_type"):
+            adapted.pop(unsupported, None)
+
+        output_format = str(inputs.get("output_format", ""))
+        if output_format.startswith("mp3"):
+            adapted["output_format"] = "mp3"
+        elif output_format:
             adapted["output_format"] = "wav"
         return adapted
 

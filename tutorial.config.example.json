@@ -6,5 +6,7 @@
   "projects_dir": "",
   "lang": "en",
   "ttsd_image": "circuit-ttsd:local",
-  "narration_repo": "../circuit-bid/redis-bridge"
+  "narration_repo": "../circuit-bid/redis-bridge",
+  "narration_backend": "",
+  "voice_id": ""
 }

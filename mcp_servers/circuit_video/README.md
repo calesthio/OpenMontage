@@ -64,3 +64,19 @@ The tool response includes a 24-hour presigned GET URL.
   app at `base_url`, and usually ttsd on `:5557` — `tutorialctl up`).
 - If `CIRCUIT_VIDEO_RENDER_API_URL` is set, `render_tutorial` POSTs to the
   k8s render-api instead (`deploy/k8s/README.md`).
+
+## Narration
+
+- Default: the `ttsd` sidecar (`tutorialctl up`), one fixed voice per language.
+- `narration_backend: "elevenlabs"` (tool argument, `TUTORIAL_NARRATION_BACKEND`,
+  or `narration_backend` in the tutorial recipe `<name>.tutorial.json`) calls
+  ElevenLabs directly using `ELEVENLABS_API_KEY` + `ELEVENLABS_VOICE_IDS`; pass
+  `voice_id` (tool argument, `TUTORIAL_VOICE_ID`, or recipe `voice_id`) to pick
+  any voice. Precedence: tool/CLI argument > recipe > environment.
+- Clips are cached under `.cache/narration/elevenlabs/` keyed on voice, model,
+  settings and text, so authoring and rendering never pay twice.
+- Changing the voice changes durations: re-run `tutorialctl author <name>` with
+  the same backend/voice before rendering, or the capture pacing drifts (the
+  render prints a WARN when `timings.json` disagrees).
+- The k8s render-api path still uses the ttsd sidecar; `narration_backend` and
+  `voice_id` are forwarded in the request body but not acted on there yet.

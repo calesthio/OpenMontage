@@ -28,11 +28,14 @@ Needs:
 - `ffmpeg` / `ffprobe`
 - Node + Cypress in `circuitauction-backoffice/client`
 - A demo URL Cypress can reach
-- For spoken narration: `ttsd` on `http://127.0.0.1:5557` (`tutorialctl up`)
+- For spoken narration: `ttsd` on `http://127.0.0.1:5557` (`tutorialctl up`), or
+  `narration_backend=elevenlabs` with `ELEVENLABS_API_KEY` + `ELEVENLABS_VOICE_IDS`
+  (or a `voice_id`) to call ElevenLabs directly
 - For S3 upload: AWS keys in the environment (see [S3](#4-s3-upload))
 
 Paths default from `tutorial.config.json`. Override with `TUTORIAL_CLIENT_DIR`,
-`TUTORIAL_BASE_URL`, `TUTORIAL_NARRATION_URL`, `TUTORIAL_RENDER_RUNTIME`.
+`TUTORIAL_BASE_URL`, `TUTORIAL_NARRATION_URL`, `TUTORIAL_RENDER_RUNTIME`,
+`TUTORIAL_NARRATION_BACKEND`, `TUTORIAL_VOICE_ID`.
 
 Smoke-test the protocol (no Cypress):
 

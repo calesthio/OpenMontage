@@ -22,7 +22,8 @@ Deterministic re-render of a locked recipe (no LLM in the render loop):
 
 1. Cypress `*.tutorial.cy.js` records the demo app (CDP screencast + drift markers).
 2. `tools/capture/cypress_bridge.py` normalizes to 1920×1080 CFR.
-3. `ttsd` (circuit-bid sidecar) supplies ElevenLabs narration; `--offline` skips it.
+3. Narration: `ttsd` sidecar (default) or ElevenLabs direct (`narration_backend=elevenlabs`,
+   optional `voice_id`; clip cache in `.cache/narration/`); `--offline` skips it.
 4. `render_tutorial.py` assembles intro/body/outro (`ffmpeg` or Remotion `screencast_scene`).
 5. Output: `projects/<id>/renders/final.mp4`.
 6. k8s path (`deploy/`): render-api Job + ttsd sidecar + **MinIO**.

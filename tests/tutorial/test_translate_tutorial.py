@@ -69,3 +69,17 @@ def test_template_requires_source_timings(tmp_path):
     tut = RT.resolve_tutorial(client, "sales-tour", lang="de")
     with pytest.raises(FileNotFoundError, match="author_tutorial"):
         TT.template_for(tut)
+
+
+def test_write_sidecar_refuses_symlink_target(tmp_path):
+    client = _client(tmp_path)
+    tut = RT.resolve_tutorial(client, "sales-tour", lang="de")
+    outside = tmp_path / "outside.json"
+    outside.write_text("{}")
+    tut["i18n_path"].symlink_to(outside)
+    doc = TT.template_for(tut)
+    for s in doc["steps"]:
+        s["narration"] = "ok"
+    with pytest.raises(ValueError, match="symlink"):
+        TT.write_sidecar(tut, doc)
+    assert outside.read_text() == "{}"

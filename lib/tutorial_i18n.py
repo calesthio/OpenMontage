@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 LANG_RE = re.compile(r"^[a-z]{2}(-[A-Z]{2})?$")
+MAX_NARRATION_CHARS = 1500  # every line is synthesized by a paid TTS API
 TRANSLATABLE_RECIPE_KEYS = (
     "title", "subtitle", "intro_text", "intro_subtitle", "outro_text", "outro_subtitle",
 )
@@ -97,6 +98,8 @@ def validate_translation(doc: dict, *, lang: str, source_steps: list[dict]) -> l
             errs.append(f"step {idx}: narration must be a string")
         elif not text.strip():
             errs.append(f"step {idx}: narration is empty")
+        elif len(text) > MAX_NARRATION_CHARS:
+            errs.append(f"step {idx}: narration too long ({len(text)} > {MAX_NARRATION_CHARS} chars)")
         seen[idx] = s
     wanted = {int(s.get("index", 0)) for s in source_steps if (s.get("narration") or "").strip()}
     missing = sorted(wanted - set(seen))

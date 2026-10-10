@@ -62,6 +62,8 @@ def write_sidecar(tut: dict, doc: dict) -> Path:
         ],
     }
     out: Path = tut["i18n_path"]
+    if out.is_symlink():
+        raise ValueError(f"refusing to write through a symlink: {out}")
     out.write_text(json.dumps(clean, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return out
 

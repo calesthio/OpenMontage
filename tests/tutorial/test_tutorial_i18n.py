@@ -108,3 +108,13 @@ def test_load_sidecar_errors(tmp_path):
     p.write_text("{not json")
     with pytest.raises(ValueError):
         I.load_sidecar(p)
+
+
+def test_validate_translation_caps_line_length():
+    """Every line is sent to a paid TTS API: refuse absurdly long translations."""
+    doc = json.loads(json.dumps(DOC))
+    doc["steps"][0]["narration"] = "x" * (I.MAX_NARRATION_CHARS + 1)
+    errs = I.validate_translation(doc, lang="de", source_steps=SRC)
+    assert any("step 0" in e and "long" in e for e in errs)
+    doc["steps"][0]["narration"] = "x" * I.MAX_NARRATION_CHARS
+    assert I.validate_translation(doc, lang="de", source_steps=SRC) == []

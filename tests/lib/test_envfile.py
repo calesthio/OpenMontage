@@ -23,3 +23,9 @@ def test_parse_env_file_handles_comments_quotes_and_export(tmp_path: Path):
 
 def test_parse_env_file_missing_returns_empty(tmp_path: Path):
     assert parse_env_file(tmp_path / "nope.env") == {}
+
+
+def test_parse_env_file_strips_inline_comments_but_keeps_hashes_in_quotes(tmp_path: Path):
+    p = tmp_path / ".env"
+    p.write_text('A=en:V1,de:V2   # one entry per language\nB="x # not a comment"\nC=v#tight\n')
+    assert parse_env_file(p) == {"A": "en:V1,de:V2", "B": "x # not a comment", "C": "v#tight"}

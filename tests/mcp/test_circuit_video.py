@@ -379,3 +379,10 @@ def test_server_prints_startup_banner_to_stderr_only():
     assert "circuit-video MCP server running" in r.stderr
     assert "stdin" in r.stderr and "tools:" in r.stderr
     assert "render_tutorial" in r.stderr and "narration:" in r.stderr and "client_dir:" in r.stderr
+
+
+def test_config_env_parser_strips_inline_comments(tmp_path):
+    from circuit_video.config import _parse_env_file
+    p = tmp_path / ".env"
+    p.write_text('ELEVENLABS_VOICE_IDS=en:V1,de:V2   # per language\n  TUTORIAL_CLIENT_DIR=/c  # leading space ok\n')
+    assert _parse_env_file(p) == {"ELEVENLABS_VOICE_IDS": "en:V1,de:V2", "TUTORIAL_CLIENT_DIR": "/c"}

@@ -65,7 +65,11 @@ def _parse_env_file(path: Path) -> dict[str, str]:
                 line = line[len("export "):]
             key, _, val = line.partition("=")
             key = key.strip()
-            val = val.strip().strip('"').strip("'")
+            val = val.strip()
+            if val[:1] in ("'", '"') and len(val) >= 2 and val[-1] == val[0]:
+                val = val[1:-1]
+            else:
+                val = re.split(r"\s+#", val, maxsplit=1)[0].rstrip()  # "VAL   # comment"
             if key:
                 out[key] = val
     except OSError:

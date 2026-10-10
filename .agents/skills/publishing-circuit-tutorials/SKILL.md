@@ -66,4 +66,5 @@ becomes a video) and `.agents/skills/circuit-video/SKILL.md` (the MCP tools).
 - Rendering before `author_tutorial.py`: the capture is then not paced to the narration (steps cut off).
 - Using a presigned URL from the render result in the docs: it expires in 24 h; use the public URL pattern.
 - Forgetting `SUMMARY.md` (sidebar only) or the README one-liner in release notes.
+- Shipping the video without the feature-page screenshot, or taking the screenshot from `final.mp4` (burned captions, title cards).
 - Leaving the demo account mutated (2FA activated, records created) without a documented reset.

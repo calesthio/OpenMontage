@@ -10,6 +10,7 @@ from lib.checkpoint import (
     CheckpointValidationError,
     HISTORY_DIRNAME,
     PROJECT_MARKER_FILENAME,
+    get_next_stage,
     init_project,
     read_checkpoint,
     write_checkpoint,
@@ -81,6 +82,85 @@ class TestGateEnforcement:
             human_approved=True,
         )
         assert path.exists()
+
+    def test_proposal_checkpoint_requires_runtime_on_real_approval_transition(
+        self, tmp_path
+    ):
+        from tests.contracts.test_phase0_contracts import sample_artifact
+
+        write_checkpoint(
+            tmp_path,
+            "film",
+            "research",
+            "completed",
+            {"research_brief": sample_artifact("research_brief")},
+            pipeline_type="cinematic",
+        )
+
+        pending_proposal = sample_artifact("proposal_packet")
+        pending_proposal["approval"] = {"status": "pending"}
+        pending_proposal["production_plan"].pop("render_runtime")
+        write_checkpoint(
+            tmp_path,
+            "film",
+            "proposal",
+            "awaiting_human",
+            {"proposal_packet": pending_proposal},
+            pipeline_type="cinematic",
+        )
+        assert (
+            read_checkpoint(tmp_path, "film", "proposal")["status"]
+            == "awaiting_human"
+        )
+        assert get_next_stage(tmp_path, "film", "cinematic") == "proposal"
+
+        # Reproduce the reviewer’s state transition: the checkpoint is marked
+        # approved while the embedded proposal remains pending and has no runtime.
+        with pytest.raises(
+            CheckpointValidationError, match="completed proposal checkpoint"
+        ):
+            write_checkpoint(
+                tmp_path,
+                "film",
+                "proposal",
+                "completed",
+                {"proposal_packet": pending_proposal},
+                pipeline_type="cinematic",
+                human_approved=True,
+            )
+        assert (
+            read_checkpoint(tmp_path, "film", "proposal")["status"]
+            == "awaiting_human"
+        )
+
+        approved_proposal = json.loads(json.dumps(pending_proposal))
+        approved_proposal["approval"] = {"status": "approved"}
+        with pytest.raises(CheckpointValidationError, match="render_runtime"):
+            write_checkpoint(
+                tmp_path,
+                "film",
+                "proposal",
+                "completed",
+                {"proposal_packet": approved_proposal},
+                pipeline_type="cinematic",
+                human_approved=True,
+            )
+
+        approved_proposal["production_plan"]["render_runtime"] = "remotion"
+        write_checkpoint(
+            tmp_path,
+            "film",
+            "proposal",
+            "completed",
+            {"proposal_packet": approved_proposal},
+            pipeline_type="cinematic",
+            human_approved=True,
+        )
+        assert (
+            read_checkpoint(tmp_path, "film", "proposal")["status"]
+            == "completed"
+        )
+        assert get_next_stage(tmp_path, "film", "cinematic") == "script"
 
     def test_assets_stage_now_gates(self, tmp_path):
         """The assets gate flip: every pipeline's assets stage requires approval."""

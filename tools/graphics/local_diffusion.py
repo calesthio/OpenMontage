@@ -20,6 +20,9 @@ from tools.base_tool import (
 )
 
 
+_PIPELINE_CACHE: dict[str, Any] = {}
+
+
 class LocalDiffusion(BaseTool):
     name = "local_diffusion"
     version = "0.1.0"
@@ -103,7 +106,7 @@ class LocalDiffusion(BaseTool):
             )
 
         import torch
-        from diffusers import StableDiffusionPipeline
+        from diffusers import AutoPipelineForText2Image
 
         start = time.time()
         prompt = inputs["prompt"]
@@ -119,8 +122,24 @@ class LocalDiffusion(BaseTool):
             device = "cuda" if torch.cuda.is_available() else "cpu"
             dtype = torch.float16 if device == "cuda" else torch.float32
 
-            pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=dtype)
-            pipe = pipe.to(device)
+            # AutoPipeline picks the right class (SD 1.x/2.x or SDXL) from the model.
+            # Cache it so batch calls don't reload weights for every image.
+            pipe = _PIPELINE_CACHE.get(model_id)
+            if pipe is None:
+                kwargs = {"torch_dtype": dtype}
+                if device == "cuda":
+                    kwargs["variant"] = "fp16"
+                try:
+                    pipe = AutoPipelineForText2Image.from_pretrained(model_id, **kwargs)
+                except (OSError, ValueError):
+                    kwargs.pop("variant", None)
+                    pipe = AutoPipelineForText2Image.from_pretrained(model_id, **kwargs)
+                if device == "cuda":
+                    # Keeps SDXL within 8 GB VRAM by moving idle submodules to RAM.
+                    pipe.enable_model_cpu_offload()
+                else:
+                    pipe = pipe.to(device)
+                _PIPELINE_CACHE[model_id] = pipe
 
             generator = None
             if seed is not None:

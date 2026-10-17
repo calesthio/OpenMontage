@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/alignment_report",
+  "title": "Visual Alignment Report",
+  "description": "Stage 9 output of the business-documentary pipeline. Records whether each candidate clip actually shows what its scene claims. Multi-stage review: several frames sampled, visual class assigned, factual-specificity risk scored, reuse penalized, rejection reason kept for regression review.",
+  "type": "object",
+  "required": ["version", "run_id", "created_at", "scenes", "summary"],
+  "properties": {
+    "version": { "type": "string", "const": "1.0" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "minLength": 1 },
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["scene_id", "verdict", "visual_class", "reasons"],
+        "properties": {
+          "scene_id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Must resolve to a scene in the scene_plan (scene_plan.scenes[].id)."
+          },
+          "script_section": { "type": "string" },
+          "narration_excerpt": {
+            "type": "string",
+            "description": "The narration line the visuals must serve."
+          },
+          "picked_asset_id": {
+            "type": ["string", "null"],
+            "description": "Must resolve to an asset in the asset_manifest (asset_manifest.assets[].id), or null when the scene is blocked."
+          },
+          "visual_class": {
+            "type": "string",
+            "enum": ["literal", "illustrative", "archive", "chart", "map", "diagram"],
+            "description": "An illustrative frame may never be presented in the edit as real footage of the named company or event."
+          },
+          "verdict": {
+            "type": "string",
+            "enum": ["accepted", "rejected", "blocked"],
+            "description": "blocked means no valid asset exists for this scene — the run stops rather than rendering an empty scene."
+          },
+          "frames_inspected": { "type": "integer", "minimum": 0 },
+          "frame_paths": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "observed_objects": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "observed_actions": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "semantic_match": { "type": "number", "minimum": 0, "maximum": 1 },
+          "factual_specificity_risk": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "How likely the clip is to be mistaken for footage of the specific company/event named in the narration."
+          },
+          "visual_quality": { "type": "number", "minimum": 0, "maximum": 1 },
+          "reuse_penalty": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Penalty applied when the same or a near-duplicate clip is already used elsewhere in the film."
+          },
+          "duplicate_of": { "type": ["string", "null"] },
+          "reasons": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string" }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total_scenes", "accepted", "rejected", "blocked"],
+      "properties": {
+        "total_scenes": { "type": "integer", "minimum": 1 },
+        "accepted": { "type": "integer", "minimum": 0 },
+        "rejected": { "type": "integer", "minimum": 0 },
+        "blocked": { "type": "integer", "minimum": 0 },
+        "max_reuse_count": { "type": "integer", "minimum": 0 },
+        "illustrative_scene_count": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "rejected_picks": {
+          "type": "array",
+          "description": "Passes over a candidate, with the reason — kept for regression review.",
+          "items": {
+            "type": "object",
+            "required": ["scene_id", "candidate", "reason"],
+            "properties": {
+              "scene_id": { "type": "string" },
+              "candidate": { "type": "string" },
+              "reason": { "type": "string", "minLength": 1 },
+              "score": { "type": ["number", "null"] }
+            },
+            "additionalProperties": false
+          }
+        },
+        "review_stages": {
+          "type": "array",
+          "description": "Which review stages actually ran (clip ranking, frame sampling, VLM classification...).",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/qa_report",
+  "title": "QA Report",
+  "description": "Stage 11 output of the business-documentary pipeline. Deterministic gates are measured on the final file and block release when they fail; semantic checks are scored and thresholded. QA is never claimed from a partial check.",
+  "type": "object",
+  "required": ["version", "run_id", "created_at", "status", "checks", "summary"],
+  "properties": {
+    "version": { "type": "string", "const": "1.0" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "minLength": 1 },
+    "status": {
+      "type": "string",
+      "enum": ["pass", "fail", "blocked"],
+      "description": "fail = at least one deterministic gate failed. blocked = QA could not run to completion (missing file, missing tool)."
+    },
+    "output_path": {
+      "type": "string",
+      "description": "The final rendered file that was actually inspected."
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["check_id", "category", "name", "measured", "threshold", "status"],
+        "properties": {
+          "check_id": { "type": "string", "minLength": 1 },
+          "category": {
+            "type": "string",
+            "enum": ["schema", "reference", "license", "technical", "audio", "visual", "subtitle", "semantic", "factual"]
+          },
+          "name": { "type": "string", "minLength": 1 },
+          "deterministic": {
+            "type": "boolean",
+            "description": "Deterministic checks block release; semantic checks are thresholded."
+          },
+          "measured": {
+            "description": "The value actually observed. null when the check could not run.",
+            "type": ["string", "number", "boolean", "null"]
+          },
+          "threshold": {
+            "description": "Pass condition for this check.",
+            "type": ["string", "number", "boolean", "null"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pass", "fail", "skipped"]
+          },
+          "evidence": {
+            "type": "string",
+            "description": "Command, artifact path or log line that produced the measurement."
+          },
+          "notes": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total", "passed", "failed", "skipped", "deterministic_failed"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 1 },
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 },
+        "deterministic_failed": { "type": "integer", "minimum": 0 },
+        "semantic_score": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "semantic_threshold": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "blocking_failures": {
+      "type": "array",
+      "description": "check_ids that block release. Non-empty means the run cannot publish.",
+      "items": { "type": "string" }
+    },
+    "metadata": { "type": "object" }
+  },
+  "additionalProperties": false
+}

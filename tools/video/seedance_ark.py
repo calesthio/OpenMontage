@@ -1,4 +1,4 @@
-"""Direct Volcengine Ark adapter for the Seedance 2.0 and 2.5 model families.
+"""Direct BytePlus ModelArk adapter for the Seedance 2.0 and 2.5 model families.
 
 The Ark API is asynchronous: create a task, poll its status, then download the
 24-hour result URL immediately.  This provider is intentionally independent
@@ -37,7 +37,7 @@ from tools.base_tool import (
 
 
 class SeedanceArkVideo(BaseTool):
-    """Generate Seedance 2.0 video through Volcengine Ark's official REST API."""
+    """Generate Seedance video through BytePlus ModelArk's official REST API."""
 
     name = "seedance_ark"
     version = "0.2.0"
@@ -49,12 +49,12 @@ class SeedanceArkVideo(BaseTool):
     determinism = Determinism.STOCHASTIC
     runtime = ToolRuntime.API
 
-    BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"
+    BASE_URL = "https://ark.ap-southeast.bytepluses.com/api/v3"
     MODEL_IDS = {
-        "2.5": "doubao-seedance-2-5-260628",
-        "standard": "doubao-seedance-2-0-260128",
-        "fast": "doubao-seedance-2-0-fast-260128",
-        "mini": "doubao-seedance-2-0-mini-260615",
+        "2.5": "dreamina-seedance-2-5-260628",
+        "standard": "dreamina-seedance-2-0-260128",
+        "fast": "dreamina-seedance-2-0-fast-260128",
+        "mini": "dreamina-seedance-2-0-mini-260615",
     }
     TASK_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$")
     TERMINAL_STATUSES = frozenset({"succeeded", "failed", "cancelled", "expired"})

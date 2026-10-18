@@ -376,7 +376,11 @@ def setup_title(spec: dict, args: argparse.Namespace):
 
 def setup_render(args: argparse.Namespace):
     scene = bpy.context.scene
-    scene.render.engine = "BLENDER_EEVEE_NEXT"
+    engine_ids = set(scene.render.bl_rna.properties["engine"].enum_items.keys())
+    eevee_id = "BLENDER_EEVEE" if "BLENDER_EEVEE" in engine_ids else "BLENDER_EEVEE_NEXT"
+    if eevee_id not in engine_ids:
+        raise RuntimeError(f"This Blender build has no supported EEVEE engine: {sorted(engine_ids)}")
+    scene.render.engine = eevee_id
     scene.eevee.taa_render_samples = args.samples
     scene.render.resolution_x = args.width
     scene.render.resolution_y = args.height
@@ -389,6 +393,7 @@ def setup_render(args: argparse.Namespace):
     scene.render.image_settings.color_mode = "RGBA"
     scene.view_settings.look = "AgX - Medium High Contrast"
     scene.render.filepath = args.output
+    return eevee_id
 
 
 def build(spec: dict, args: argparse.Namespace):
@@ -408,10 +413,10 @@ def build(spec: dict, args: argparse.Namespace):
     report = scatter_assets(spec)
     setup_camera_and_lights(spec, args)
     setup_title(spec, args)
-    setup_render(args)
+    engine = setup_render(args)
     bpy.ops.wm.save_as_mainfile(filepath=args.blend)
     Path(args.blend).with_suffix(".report.json").write_text(json.dumps({
-        "version": "1.0", "engine": "BLENDER_EEVEE_NEXT", "seed": spec.get("seed"), **report,
+        "version": "1.0", "engine": engine, "seed": spec.get("seed"), **report,
     }, indent=2), encoding="utf-8")
     return report
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import time
@@ -34,10 +35,25 @@ def find_blender() -> Path | None:
     configured = os.environ.get("BLENDER_PATH")
     if configured and Path(configured).is_file():
         return Path(configured).resolve()
+    discovered = shutil.which("blender")
+    if discovered:
+        return Path(discovered).resolve()
+    if os.name == "nt":
+        roots = {
+            Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "Blender Foundation",
+            Path(os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")) / "Blender Foundation",
+        }
+        installed = [exe for root in roots for exe in root.glob("Blender */blender.exe")]
+
+        def version_key(exe: Path) -> tuple[int, ...]:
+            match = re.search(r"\d+(?:\.\d+)+", exe.parent.name)
+            return tuple(int(part) for part in match.group(0).split(".")) if match else (0,)
+
+        if installed:
+            return max(installed, key=version_key).resolve()
     if _PORTABLE_BLENDER.is_file():
         return _PORTABLE_BLENDER.resolve()
-    discovered = shutil.which("blender")
-    return Path(discovered).resolve() if discovered else None
+    return None
 
 
 def first_missing_frame(output_prefix: str | Path, start_frame: int, end_frame: int) -> int | None:
@@ -62,8 +78,8 @@ class BlenderWorld(BaseTool):
     runtime = ToolRuntime.LOCAL_GPU
     dependencies: list[str] = []
     install_instructions = (
-        "Install Blender 4.5 LTS, set BLENDER_PATH, or place the portable runtime at "
-        ".runtime/blender/blender-4.5.10-windows-x64/blender.exe."
+        "Install Blender 5.2 LTS or newer. The Windows renderer discovers the standard "
+        "Program Files install automatically; set BLENDER_PATH for a custom installation."
     )
     agent_skills = [
         "3d-asset-generation", "threejs-world-generation", "threejs-loaders", "threejs-materials",
@@ -143,7 +159,7 @@ class BlenderWorld(BaseTool):
                 success=ok,
                 data={"blender_path": str(blender), "version_line": next((line for line in process.stdout.splitlines() if line.startswith("OPENMONTAGE_BLENDER=")), "")},
                 error=None if ok else (process.stderr or process.stdout)[-1000:],
-                model="blender-4.5-lts",
+                model="blender-5.2",
             )
 
         if operation not in {"build", "render_still", "render_animation"}:
@@ -192,7 +208,7 @@ class BlenderWorld(BaseTool):
                         "start_frame": requested_start,
                         "end_frame": requested_end,
                     },
-                    model="blender-4.5-lts-eevee-next",
+                    model="blender-eevee",
                 )
             effective_start = missing
         if inputs.get("start_frame") is not None or operation == "render_animation":
@@ -237,5 +253,5 @@ class BlenderWorld(BaseTool):
             artifacts=artifacts,
             duration_seconds=round(time.time() - started, 2),
             seed=inputs["world_spec"].get("seed"),
-            model="blender-4.5-lts-eevee-next",
+            model="blender-eevee",
         )

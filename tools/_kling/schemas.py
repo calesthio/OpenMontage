@@ -35,13 +35,9 @@ TURBO_STATUSES = [
     "failed",
 ]
 
+# Live-probed against api-singapore.klingai.com on 2026-09-28 (kc-video-system production 01):
+# kling-v1, -v1-5, -v1-6, -v2-master, -v2-1, -v2-1-master answer code 1203 "discontinued".
 VIDEO_MODELS = [
-    "kling-v1",
-    "kling-v1-5",
-    "kling-v1-6",
-    "kling-v2-master",
-    "kling-v2-1",
-    "kling-v2-1-master",
     "kling-v2-5-turbo",
     "kling-v2-6",
     "kling-v3",
@@ -49,12 +45,6 @@ VIDEO_MODELS = [
     "kling-v3-omni",
 ]
 CLASSIC_VIDEO_MODELS = [
-    "kling-v1",
-    "kling-v1-5",
-    "kling-v1-6",
-    "kling-v2-master",
-    "kling-v2-1",
-    "kling-v2-1-master",
     "kling-v2-5-turbo",
     "kling-v2-6",
     "kling-v3",

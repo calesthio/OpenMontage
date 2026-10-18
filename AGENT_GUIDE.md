@@ -48,6 +48,8 @@ If a model misses this distinction, it will often fall back to plain search + gu
 
 ## Rule Zero — All Production Goes Through a Pipeline
 
+For KC Video System V2 music-driven cinematic work, the parent workspace's `video-production/AGENT_RUNBOOK.md` extends this cinematic pipeline with its director tournament, shared shot manifest, music timing, versioned preview, QA and repair gates. Follow this guide's pipeline, approval and budget rules while using that V2 handoff contract.
+
 **Every video production request MUST go through the pipeline system. No exceptions.**
 
 When the user asks to make, create, produce, or generate any video content — a trailer, explainer, clip, animation, or any other video — the agent must:

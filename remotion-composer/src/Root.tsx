@@ -16,6 +16,7 @@ import { ProductReveal, ProductRevealProps } from "./components/ProductReveal";
 import { CaptionOverlay, WordCaption } from "./components/CaptionOverlay";
 import { CollageBurst, CollageBurstProps } from "./CollageBurst";
 import { LyricOverlay, LyricOverlayProps } from "./LyricOverlay";
+import { ProductionV2, ProductionV2Props, calculateProductionV2Metadata } from "./ProductionV2";
 
 // ---------------------------------------------------------------------------
 // Theme System — prevents every video from looking like dark fintech
@@ -329,6 +330,16 @@ export const Root: React.FC = () => {
           fadeOutSeconds: 1.5,
           overlay: true,
         } as EndTagProps}
+      />
+      <Composition
+        id="ProductionV2"
+        component={ProductionV2}
+        durationInFrames={360}
+        fps={30}
+        width={1280}
+        height={720}
+        calculateMetadata={calculateProductionV2Metadata}
+        defaultProps={{shots: [], accent: "#d734a1", duration: 12, fps: 30, width: 1280, height: 720} as ProductionV2Props}
       />
     </>
   );

@@ -55,10 +55,10 @@ class TestContract:
 
     def test_official_model_ids(self):
         assert SeedanceArkVideo.MODEL_IDS == {
-            "2.5": "doubao-seedance-2-5-260628",
-            "standard": "doubao-seedance-2-0-260128",
-            "fast": "doubao-seedance-2-0-fast-260128",
-            "mini": "doubao-seedance-2-0-mini-260615",
+            "2.5": "dreamina-seedance-2-5-260628",
+            "standard": "dreamina-seedance-2-0-260128",
+            "fast": "dreamina-seedance-2-0-fast-260128",
+            "mini": "dreamina-seedance-2-0-mini-260615",
         }
 
     def test_seedance_25_contract_and_limits(self):
@@ -72,7 +72,7 @@ class TestContract:
                 "aspect_ratio": "16:9",
             }
         )
-        assert payload["model"] == "doubao-seedance-2-5-260628"
+        assert payload["model"] == "dreamina-seedance-2-5-260628"
         assert payload["duration"] == 30
         assert payload["generate_audio"] is True
 
@@ -108,11 +108,11 @@ class TestTaskActions:
         assert result.data["task_id"] == "cgt-test-123"
         assert result.data["status"] == "submitted"
         assert captured["url"] == (
-            "https://ark.cn-beijing.volces.com/api/v3/contents/generations/tasks"
+            "https://ark.ap-southeast.bytepluses.com/api/v3/contents/generations/tasks"
         )
         assert captured["headers"]["Authorization"] == "Bearer fake-ark-key"
         assert captured["json"] == {
-            "model": "doubao-seedance-2-0-260128",
+            "model": "dreamina-seedance-2-0-260128",
             "content": [{"type": "text", "text": "A paper bird takes flight"}],
             "duration": 5,
             "ratio": "16:9",
@@ -187,7 +187,7 @@ class TestTaskActions:
                 return _FakeResponse(
                     {
                         "id": "cgt-test-123",
-                        "model": "doubao-seedance-2-0-260128",
+                        "model": "dreamina-seedance-2-0-260128",
                         "status": "succeeded",
                         "content": {
                             "video_url": "https://example.com/result.mp4",
@@ -603,7 +603,7 @@ class TestInputSafety:
                 {
                     "id": "task-query-cost",
                     "status": "succeeded",
-                    "model": "doubao-seedance-2-0-260128",
+                    "model": "dreamina-seedance-2-0-260128",
                     "usage": {"completion_tokens": 108_000},
                 }
             ),
@@ -705,15 +705,15 @@ class TestInputSafety:
         assert result["paid_submission"] is False
         assert result["api_contract"] == {
             "create": (
-                "POST https://ark.cn-beijing.volces.com/api/v3/"
+                "POST https://ark.ap-southeast.bytepluses.com/api/v3/"
                 "contents/generations/tasks"
             ),
             "query": (
-                "GET https://ark.cn-beijing.volces.com/api/v3/"
+                "GET https://ark.ap-southeast.bytepluses.com/api/v3/"
                 "contents/generations/tasks/{task_id}"
             ),
             "cancel": (
-                "DELETE https://ark.cn-beijing.volces.com/api/v3/"
+                "DELETE https://ark.ap-southeast.bytepluses.com/api/v3/"
                 "contents/generations/tasks/{task_id}"
             ),
         }

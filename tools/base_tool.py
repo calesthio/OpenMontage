@@ -29,32 +29,32 @@ def _load_dotenv() -> None:
     even when tools are imported directly without going through the registry.
     Only sets variables that are not already in the environment.
     """
-    env_path = Path(__file__).resolve().parent.parent / ".env"
-    if not env_path.is_file():
-        return
+    component_root = Path(__file__).resolve().parents[1]
+    workspace_root = Path(__file__).resolve().parents[3]
+    env_paths = [component_root / ".env", workspace_root / "brag" / ".env"]
     import re
-    with open(env_path, encoding="utf-8", errors="ignore") as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            key, _, value = line.partition("=")
-            key = key.strip()
-            value = value.strip()
-            # Quoted value: take the content inside the quotes verbatim.
-            if value[:1] in ("'", '"'):
-                quote = value[0]
-                end = value.find(quote, 1)
-                value = value[1:end] if end != -1 else value[1:]
-            else:
-                # Strip an inline comment ('#' at line start or after
-                # whitespace) so "VAR=   # note" yields "" not "# note".
-                match = re.search(r"(^|\s)#", value)
-                if match:
-                    value = value[: match.start()]
+    for env_path in env_paths:
+        if not env_path.is_file():
+            continue
+        with open(env_path, encoding="utf-8", errors="ignore") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, value = line.partition("=")
+                key = key.strip()
                 value = value.strip()
-            if key and key not in os.environ:
-                os.environ[key] = value
+                if value[:1] in ("'", '"'):
+                    quote = value[0]
+                    end = value.find(quote, 1)
+                    value = value[1:end] if end != -1 else value[1:]
+                else:
+                    match = re.search(r"(^|\s)#", value)
+                    if match:
+                        value = value[: match.start()]
+                    value = value.strip()
+                if key and (key not in os.environ or not os.environ[key].strip()):
+                    os.environ[key] = value
 
 
 _load_dotenv()

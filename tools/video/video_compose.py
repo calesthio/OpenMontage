@@ -1046,7 +1046,7 @@ class VideoCompose(BaseTool):
         try:
             # Run from inside the composer dir so npx resolves the local
             # remotion binary (mirrors _remotion_render).
-            self.run_command(cmd, timeout=1800, cwd=composer_dir)
+            self.run_command(cmd, timeout=int(bespoke.get("timeout_seconds", 1800)), cwd=composer_dir)
         except Exception as e:
             return ToolResult(success=False, error=f"Atelier (bespoke) Remotion render failed: {e}")
 

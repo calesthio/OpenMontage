@@ -78,7 +78,7 @@ class MixkitSource:
         out: list[Candidate] = []
 
         # Mixkit lists video cards with preview videos and download links
-        cards = soup.select(".item-grid__item, .video-item, article, [class*='VideoCard']")
+        cards = soup.select(".item-grid-card, .item-grid__item, .video-item, article, [class*='VideoCard']")
         for card in cards[:filters.per_page]:
             link_el = card.select_one("a[href]")
             if not link_el:
@@ -115,13 +115,18 @@ class MixkitSource:
 
             # Extract ID from URL
             clip_id = href.rstrip("/").rsplit("/", 1)[-1] if href else ""
+            numeric_id = clip_id.rsplit("-", 1)[-1]
+            direct_url = (
+                f"https://assets.mixkit.co/videos/{numeric_id}/{numeric_id}-1080.mp4"
+                if numeric_id.isdigit() else href
+            )
 
             out.append(
                 Candidate(
                     source=self.name,
                     source_id=f"mixkit_{clip_id}",
                     source_url=href,
-                    download_url=href,  # Resolved in download()
+                    download_url=direct_url,  # direct 1080p file; 720p fallback in download()
                     kind="video",
                     width=0,
                     height=0,
@@ -146,6 +151,12 @@ class MixkitSource:
 
         out_path = Path(out_path)
         out_path.parent.mkdir(parents=True, exist_ok=True)
+
+        if candidate.download_url.endswith("-1080.mp4"):
+            try:
+                return self._stream_download(candidate.download_url, out_path)
+            except Exception:
+                return self._stream_download(candidate.download_url.replace("-1080.mp4", "-720.mp4"), out_path)
 
         detail_url = candidate.extra.get("detail_url", candidate.download_url)
 

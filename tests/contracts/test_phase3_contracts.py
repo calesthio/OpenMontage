@@ -136,6 +136,26 @@ class TestPiperTTS:
 
         assert PiperTTS().get_status() == ToolStatus.UNAVAILABLE
 
+    def test_sends_text_to_piper_as_utf8(self, monkeypatch, tmp_path):
+        """Piper reads stdin as UTF-8, so the text must not go out in the
+        platform default encoding (cp1252 on Windows breaks accented text)."""
+        calls = []
+        original_which = shutil.which
+
+        def fake_run(cmd, **kwargs):
+            calls.append(kwargs)
+            Path(cmd[cmd.index("--output_file") + 1]).write_bytes(b"RIFF")
+            return SimpleNamespace(returncode=0, stderr="")
+
+        monkeypatch.setattr(shutil, "which", lambda cmd: "piper" if cmd == "piper" else original_which(cmd))
+        monkeypatch.setattr("tools.audio.piper_tts.subprocess.run", fake_run)
+
+        result = PiperTTS().execute({"text": "Olá, coração", "output_path": str(tmp_path / "out.wav")})
+
+        assert result.success
+        assert calls[0]["input"] == "Olá, coração"
+        assert calls[0]["encoding"] == "utf-8"
+
 
 class TestGoogleTTS:
     def test_identity(self):

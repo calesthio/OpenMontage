@@ -132,6 +132,8 @@ class PiperTTS(BaseTool):
             input=inputs["text"],
             capture_output=True,
             text=True,
+            # Piper reads stdin as UTF-8; the Windows default (cp1252) breaks accented text.
+            encoding="utf-8",
             timeout=300,
         )
 

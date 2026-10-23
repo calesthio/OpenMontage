@@ -199,22 +199,27 @@ class GoogleTTS(BaseTool):
         return round(char_count * rate_per_char, 4)
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
-        # Prefer an API key (cheapest path); otherwise mint a Bearer token from
-        # the service-account JSON. This is what makes
-        # GOOGLE_APPLICATION_CREDENTIALS actually work for TTS.
+        # Prefer the service account. Cloud TTS rejects bare API keys outright
+        # ("API keys are not supported by this API. Expected OAuth2 access
+        # token..."), so preferring a key here meant that configuring
+        # GOOGLE_APPLICATION_CREDENTIALS had no effect whenever GOOGLE_API_KEY
+        # was also set — the tool reported AVAILABLE and then failed with 401.
+        # An API key only works when it comes from a Cloud project with the
+        # Text-to-Speech API enabled, so it stays as the fallback.
         api_key = self._get_api_key()
         bearer_token: str | None = None
-        if not api_key:
-            if service_account_configured():
-                try:
-                    bearer_token, _ = get_access_token()
-                except RuntimeError as exc:
+        if service_account_configured():
+            try:
+                bearer_token, _ = get_access_token()
+                api_key = None
+            except RuntimeError as exc:
+                if not api_key:
                     return ToolResult(success=False, error=str(exc))
-            else:
-                return ToolResult(
-                    success=False,
-                    error="No Google credentials found. " + self.install_instructions,
-                )
+        elif not api_key:
+            return ToolResult(
+                success=False,
+                error="No Google credentials found. " + self.install_instructions,
+            )
 
         start = time.time()
         try:

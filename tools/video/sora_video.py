@@ -32,6 +32,14 @@ _ALLOWED_SECONDS = ["4", "8", "12"]
 _MIN_OPENAI_VERSION = (2, 44, 0)
 
 
+_REFERENCE_MIMETYPES = {
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".webp": "image/webp",
+}
+
+
 class SoraVideo(BaseTool):
     name = "sora_video"
     version = "0.1.0"
@@ -174,7 +182,12 @@ class SoraVideo(BaseTool):
             reference = Path(str(reference_path))
             if not reference.exists():
                 return ToolResult(success=False, error=f"Input reference not found: {reference}")
-            payload["input_reference"] = {"image_url": self._file_to_data_uri(reference)}
+            # The OpenAI SDK uploads input_reference as a multipart file, so it
+            # must be bytes / a file object / a (filename, bytes, mimetype) tuple.
+            # Passing a dict raises "Expected entry at `input_reference` to be
+            # bytes, an io.IOBase instance, PathLike or a tuple".
+            mimetype = _REFERENCE_MIMETYPES.get(reference.suffix.lower(), "image/png")
+            payload["input_reference"] = (reference.name, reference.read_bytes(), mimetype)
 
         client = OpenAI()
         try:

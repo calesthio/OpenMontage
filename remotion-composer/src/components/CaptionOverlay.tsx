@@ -111,6 +111,11 @@ const PageRenderer: React.FC<{
             const isActive = w.startMs <= currentMs && w.endMs > currentMs;
             const isPast = w.endMs <= currentMs;
             return (
+              // The separator sits outside the word span on purpose. Inside an
+              // inline-block with white-space: nowrap a trailing space is
+              // collapsed away, which ran every word together ("tellsyouabout").
+              // The parent span uses pre-wrap, so out here the space both
+              // renders and gives the line a legal wrap point.
               <Fragment key={`${w.startMs}-${i}`}>
                 <span
                   style={{

@@ -1,0 +1,34 @@
+name: AO groupe Flutter app
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "ao_groupe_app/**"
+      - ".github/workflows/ao-groupe-app.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "ao_groupe_app/**"
+      - ".github/workflows/ao-groupe-app.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ao_groupe_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: flutter analyze --fatal-infos
+      - run: flutter test
+      - run: flutter build web --release

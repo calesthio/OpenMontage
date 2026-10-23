@@ -114,6 +114,10 @@ class RemotionCaptionBurn(BaseTool):
                 "default": "#22D3EE",
                 "description": "Highlight color for the active word (hex).",
             },
+            "background_color": {
+                "type": "string",
+                "description": "Caption plate color (CSS, e.g. rgba(0,0,0,0.85)). Defaults to the component's translucent slate.",
+            },
             "corrections": {
                 "type": "object",
                 "description": (
@@ -275,6 +279,7 @@ class RemotionCaptionBurn(BaseTool):
         font_size: int,
         highlight_color: str,
         overlays: list[dict] | None = None,
+        background_color: str | None = None,
     ) -> ToolResult:
         root = self._find_remotion_root()
         if root is None:
@@ -321,6 +326,8 @@ class RemotionCaptionBurn(BaseTool):
             "fontSize": font_size,
             "highlightColor": highlight_color,
         }
+        if background_color:
+            props["captionBackgroundColor"] = background_color
         props_dir = root / "public" / "demo-props"
         props_dir.mkdir(parents=True, exist_ok=True)
         props_file = props_dir / f"caption-burn-{Path(input_path).stem}.json"
@@ -486,6 +493,7 @@ class RemotionCaptionBurn(BaseTool):
                 input_path, output_path, captions,
                 words_per_page, font_size, highlight_color,
                 overlays=overlays,
+                background_color=inputs.get("background_color"),
             )
         else:
             result = self._render_ffmpeg(input_path, output_path, captions)

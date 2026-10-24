@@ -19,6 +19,11 @@ from tools.base_tool import (
     ToolTier,
 )
 
+# stabilityai/stable-diffusion-2-1-base was the previous default; that repo is now
+# gated and returns 401 for unauthenticated users, so every call failed. SD 1.5 is
+# public, ~2 GB in fp16, and fits a 4 GB card at 512x512.
+DEFAULT_MODEL = "stable-diffusion-v1-5/stable-diffusion-v1-5"
+
 
 class LocalDiffusion(BaseTool):
     name = "local_diffusion"
@@ -65,7 +70,7 @@ class LocalDiffusion(BaseTool):
             "height": {"type": "integer", "default": 512},
             "model": {
                 "type": "string",
-                "default": "stabilityai/stable-diffusion-2-1-base",
+                "default": DEFAULT_MODEL,
             },
             "seed": {"type": "integer"},
             "num_inference_steps": {"type": "integer", "default": 30},
@@ -111,7 +116,7 @@ class LocalDiffusion(BaseTool):
         width = inputs.get("width", 512)
         height = inputs.get("height", 512)
         seed = inputs.get("seed")
-        model_id = inputs.get("model", "stabilityai/stable-diffusion-2-1-base")
+        model_id = inputs.get("model", DEFAULT_MODEL)
         steps = inputs.get("num_inference_steps", 30)
         guidance = inputs.get("guidance_scale", 7.5)
 

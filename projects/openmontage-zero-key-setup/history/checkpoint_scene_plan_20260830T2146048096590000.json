@@ -1,0 +1,470 @@
+{
+  "version": "1.0",
+  "project_id": "openmontage-zero-key-setup",
+  "pipeline_type": "screen-demo",
+  "stage": "scene_plan",
+  "status": "awaiting_human",
+  "timestamp": "2026-08-30T21:46:04.809659+00:00",
+  "checkpoint_policy": "guided",
+  "human_approval_required": true,
+  "human_approved": false,
+  "artifacts": {
+    "scene_plan": {
+      "version": "1.0",
+      "style_playbook": "clean-professional",
+      "scenes": [
+        {
+          "id": "sc-01",
+          "type": "screen_recording",
+          "description": "One unbroken synthetic terminal session, 1920x1080 at 30fps, rendered by Remotion's TerminalScene. Window chrome with traffic lights, title 'bash - OpenMontage setup', JetBrains Mono, dark code-block surface from the playbook. Five commands type in over 45 seconds, each landing on its narration cue; six pills mark completion events. No cuts, no camera moves, no zooms.",
+          "start_seconds": 0.0,
+          "end_seconds": 45.31,
+          "script_section_id": "s1",
+          "framing": "Full-frame terminal window, 1920x1080, ~6% margin on all sides. Text at 28px equivalent \u2014 every command readable at 1080p without cropping.",
+          "movement": "None. The terminal is static; all motion is typing, output reveal, and pill spring-in.",
+          "transition_in": "fade from black, 0.4s (playbook transition_duration)",
+          "transition_out": "fade to black, 0.4s, starting after the 1.4s closing hold",
+          "overlay_notes": "Six pills, top-right, never more than one on screen: 'no API keys' (amber, 3.0s), 'installed' (green, 13.3s), 'voice ready' (green, 20.2s), 'piper_tts -> available' (green, 28.6s), 'vo.wav written' (green, 34.5s), 'round trip complete' (green, 40.2s). Word-level captions in the lower third, which the terminal's own content never reaches \u2014 the deepest output line sits well above it.",
+          "shot_language": {
+            "shot_size": "medium",
+            "camera_movement": "static",
+            "depth_of_field": "deep",
+            "color_temperature": "cool",
+            "lighting_key": "low_key"
+          },
+          "shot_intent": "Hold one continuous frame so the viewer reads the session as a single real sitting. Cutting between angles would advertise that this is a composition rather than a terminal.",
+          "narrative_role": "evidence",
+          "information_role": "The viewer learns the exact five commands that take a machine from no TTS to narrated video, and watches the registry confirm it.",
+          "hero_moment": true,
+          "texture_keywords": [
+            "clean",
+            "flat",
+            "no grain",
+            "monospace",
+            "high-contrast"
+          ],
+          "required_assets": [
+            {
+              "type": "narration",
+              "description": "Six Piper WAV segments (s1-s6), en_US-lessac-medium, measured durations totalling 41.51s",
+              "source": "generate"
+            },
+            {
+              "type": "terminal_steps",
+              "description": "The verified 24-step TerminalScene timeline in metadata.terminal_step_plan",
+              "source": "generate"
+            },
+            {
+              "type": "captions",
+              "description": "Word-level caption track burned from script text via remotion_caption_burn",
+              "source": "generate"
+            },
+            {
+              "type": "overlay",
+              "description": "Closing repo lower-third: github.com/calesthio/OpenMontage, fades in at 41.0s, out at 45.31s",
+              "source": "generate"
+            }
+          ]
+        }
+      ],
+      "metadata": {
+        "composition_shape": "single_continuous_terminal_scene",
+        "composition_rationale": "The brief's notes_for_scene_planner call for one continuous terminal_scene. The render is a single terminal_scene cut spanning 0-45.31s, so the scene plan carries one scene and expresses the six narrative beats as metadata rather than as separate scenes. Six scenes here would invite the edit stage to emit six cuts and break the single-session illusion.",
+        "beats": [
+          {
+            "id": "b1",
+            "script_section_id": "s1",
+            "start": 0.3,
+            "end": 7.65,
+            "on_screen": "Empty terminal, blinking cursor. One amber pill at 3.0s.",
+            "role": "establish_context"
+          },
+          {
+            "id": "b2",
+            "script_section_id": "s2",
+            "start": 8.15,
+            "end": 14.9,
+            "on_screen": "pip install types in, four real output lines, 'installed' pill.",
+            "role": "deliver_payload"
+          },
+          {
+            "id": "b3",
+            "script_section_id": "s3",
+            "start": 15.4,
+            "end": 23.33,
+            "on_screen": "Voice download command and its INFO line, 'voice ready' pill.",
+            "role": "deliver_payload"
+          },
+          {
+            "id": "b4",
+            "script_section_id": "s4",
+            "start": 23.83,
+            "end": 30.19,
+            "on_screen": "Preflight command; {\"configured\":1,\"total\":10} holds 1.6s, the longest in the video.",
+            "role": "evidence",
+            "hero": true
+          },
+          {
+            "id": "b5",
+            "script_section_id": "s5",
+            "start": 30.69,
+            "end": 38.06,
+            "on_screen": "Piper synthesis command, then the faster-whisper read-back command.",
+            "role": "evidence"
+          },
+          {
+            "id": "b6",
+            "script_section_id": "s6",
+            "start": 38.56,
+            "end": 43.91,
+            "on_screen": "' Two installs, no keys.' prints at 39.13s under the closing line. Repo lower-third fades in.",
+            "role": "resolution"
+          }
+        ],
+        "terminal_step_plan": [
+          {
+            "kind": "pause",
+            "seconds": 3.0
+          },
+          {
+            "kind": "pill",
+            "text": "no API keys",
+            "color": "#F59E0B",
+            "durationSeconds": 2.6
+          },
+          {
+            "kind": "pause",
+            "seconds": 5.15
+          },
+          {
+            "kind": "cmd",
+            "text": "pip install piper-tts faster-whisper",
+            "typeSpeed": 0.045,
+            "holdSeconds": 0.35
+          },
+          {
+            "kind": "out",
+            "text": "Collecting piper-tts",
+            "holdSeconds": 0.45
+          },
+          {
+            "kind": "out",
+            "text": "Collecting faster-whisper",
+            "holdSeconds": 0.45
+          },
+          {
+            "kind": "out",
+            "text": "Installing collected packages: ctranslate2, onnxruntime, tokenizers, piper-tts, faster-whisper",
+            "holdSeconds": 0.7
+          },
+          {
+            "kind": "out",
+            "text": "Successfully installed faster-whisper-1.2.1 piper-tts-1.7.0 ctranslate2-4.8.1 onnxruntime-1.23.2 ...",
+            "holdSeconds": 1.2
+          },
+          {
+            "kind": "pill",
+            "text": "installed",
+            "color": "#10B981",
+            "durationSeconds": 2.4
+          },
+          {
+            "kind": "pause",
+            "seconds": 2.067
+          },
+          {
+            "kind": "cmd",
+            "text": "python -m piper.download_voices --download-dir ~/.piper/models en_US-lessac-medium",
+            "typeSpeed": 0.04,
+            "holdSeconds": 0.35
+          },
+          {
+            "kind": "out",
+            "text": "INFO:__main__:Downloaded: en_US-lessac-medium",
+            "holdSeconds": 1.0
+          },
+          {
+            "kind": "pill",
+            "text": "voice ready",
+            "color": "#10B981",
+            "durationSeconds": 2.4
+          },
+          {
+            "kind": "pause",
+            "seconds": 3.68
+          },
+          {
+            "kind": "cmd",
+            "text": "make -s preflight | tail -n +2 | jq -c '.tts | {configured, total}'",
+            "typeSpeed": 0.04,
+            "holdSeconds": 0.4
+          },
+          {
+            "kind": "out",
+            "text": "{\"configured\":1,\"total\":10}",
+            "holdSeconds": 1.6
+          },
+          {
+            "kind": "pill",
+            "text": "piper_tts -> available",
+            "color": "#10B981",
+            "durationSeconds": 2.8
+          },
+          {
+            "kind": "pause",
+            "seconds": 2.06
+          },
+          {
+            "kind": "cmd",
+            "text": "echo \"Two installs, no keys.\" | piper -m en_US-lessac-medium --data-dir ~/.piper/models -f vo.wav",
+            "typeSpeed": 0.035,
+            "holdSeconds": 0.4
+          },
+          {
+            "kind": "pill",
+            "text": "vo.wav written",
+            "color": "#10B981",
+            "durationSeconds": 2.2
+          },
+          {
+            "kind": "pause",
+            "seconds": 1.11
+          },
+          {
+            "kind": "cmd",
+            "text": "python -c \"from faster_whisper import WhisperModel as M;s,_=M('tiny').transcribe('vo.wav');print(next(s).text)\"",
+            "typeSpeed": 0.028,
+            "holdSeconds": 0.4
+          },
+          {
+            "kind": "out",
+            "text": " Two installs, no keys.",
+            "holdSeconds": 1.0
+          },
+          {
+            "kind": "pill",
+            "text": "round trip complete",
+            "color": "#10B981",
+            "durationSeconds": 2.6
+          },
+          {
+            "kind": "pause",
+            "seconds": 5.076
+          }
+        ],
+        "terminal_step_landmarks": [
+          {
+            "video_time": 3.0,
+            "kind": "PILL",
+            "text": "no API keys"
+          },
+          {
+            "video_time": 8.15,
+            "kind": "CMD",
+            "text": "pip install piper-tts faster-whisper"
+          },
+          {
+            "video_time": 10.13,
+            "kind": "OUT",
+            "text": "Collecting piper-tts"
+          },
+          {
+            "video_time": 10.68,
+            "kind": "OUT",
+            "text": "Collecting faster-whisper"
+          },
+          {
+            "video_time": 11.23,
+            "kind": "OUT",
+            "text": "Installing collected packages: ctranslate2, onnxruntime, tokenizers, piper-tts, faster-whisper"
+          },
+          {
+            "video_time": 12.03,
+            "kind": "OUT",
+            "text": "Successfully installed faster-whisper-1.2.1 piper-tts-1.7.0 ctranslate2-4.8.1 onnxruntime-1.23.2 ..."
+          },
+          {
+            "video_time": 13.33,
+            "kind": "PILL",
+            "text": "installed"
+          },
+          {
+            "video_time": 15.4,
+            "kind": "CMD",
+            "text": "python -m piper.download_voices --download-dir ~/.piper/models en_US-lessac-medium"
+          },
+          {
+            "video_time": 19.05,
+            "kind": "OUT",
+            "text": "INFO:__main__:Downloaded: en_US-lessac-medium"
+          },
+          {
+            "video_time": 20.15,
+            "kind": "PILL",
+            "text": "voice ready"
+          },
+          {
+            "video_time": 23.83,
+            "kind": "CMD",
+            "text": "make -s preflight | tail -n +2 | jq -c '.tts | {configured, total}'"
+          },
+          {
+            "video_time": 26.93,
+            "kind": "OUT",
+            "text": "{\"configured\":1,\"total\":10}"
+          },
+          {
+            "video_time": 28.63,
+            "kind": "PILL",
+            "text": "piper_tts -> available"
+          },
+          {
+            "video_time": 30.69,
+            "kind": "CMD",
+            "text": "echo \"Two installs, no keys.\" | piper -m en_US-lessac-medium --data-dir ~/.piper/models -f vo.wav"
+          },
+          {
+            "video_time": 34.49,
+            "kind": "PILL",
+            "text": "vo.wav written"
+          },
+          {
+            "video_time": 35.6,
+            "kind": "CMD",
+            "text": "python -c \"from faster_whisper import WhisperModel as M;s,_=M('tiny').transcribe('vo.wav');print(next(s).text)\""
+          },
+          {
+            "video_time": 39.13,
+            "kind": "OUT",
+            "text": " Two installs, no keys."
+          },
+          {
+            "video_time": 40.23,
+            "kind": "PILL",
+            "text": "round trip complete"
+          }
+        ],
+        "pacing_verification": {
+          "tool": "lib/verify_scene_pacing.py",
+          "result": "PASS \u2014 assert_alignment(tolerance=1.0) against all five narration cues",
+          "cues_checked": [
+            {
+              "time": 8.15,
+              "cue": "s2 Two packages"
+            },
+            {
+              "time": 15.4,
+              "cue": "s3 one command for the voice model"
+            },
+            {
+              "time": 23.83,
+              "cue": "s4 OpenMontage finds it on its own"
+            },
+            {
+              "time": 30.69,
+              "cue": "s5 Text goes in, a wave file comes out"
+            },
+            {
+              "time": 38.56,
+              "cue": "s6 Every word you just heard"
+            }
+          ],
+          "note": "Every cmd begins typing exactly on its narration cue; the documented failure mode (content burning through in the first 40% of the scene, then a frozen terminal) is ruled out by construction \u2014 the last visible event fires at 40.23s of a 45.31s scene."
+        },
+        "crop_regions": [],
+        "crop_rationale": "None planned, and none needed. The pipeline's zoom heuristics exist because real capture records a 1440p desktop that must be cropped to read. A synthetic terminal is authored at output resolution: the text is already at its final size, so any zoom would be pure decoration and would break the static frame.",
+        "callout_plan": [
+          {
+            "time": 3.0,
+            "type": "pill",
+            "text": "no API keys",
+            "color": "#F59E0B",
+            "duration": 2.6,
+            "rationale": "Gives the eye an anchor during the 7.6s cold open, and states the claim before any command runs."
+          },
+          {
+            "time": 13.33,
+            "type": "pill",
+            "text": "installed",
+            "color": "#10B981",
+            "duration": 2.4,
+            "rationale": "Fires on the Successfully-installed line, standing in for a real shell notification."
+          },
+          {
+            "time": 20.15,
+            "type": "pill",
+            "text": "voice ready",
+            "color": "#10B981",
+            "duration": 2.4,
+            "rationale": "Marks the step the narration just called out as the one people miss."
+          },
+          {
+            "time": 28.63,
+            "type": "pill",
+            "text": "piper_tts -> available",
+            "color": "#10B981",
+            "duration": 2.8,
+            "rationale": "The payoff. Longest pill in the video, over the longest output hold."
+          },
+          {
+            "time": 34.49,
+            "type": "pill",
+            "text": "vo.wav written",
+            "color": "#10B981",
+            "duration": 2.2,
+            "rationale": "Piper prints nothing on success, so the pill is the only confirmation the file exists."
+          },
+          {
+            "time": 40.23,
+            "type": "pill",
+            "text": "round trip complete",
+            "color": "#10B981",
+            "duration": 2.6,
+            "rationale": "Closes the loop as the transcript of the video's own sentence appears."
+          }
+        ],
+        "callout_policy_check": "Never more than one cue on screen at a time (limit is two). Each fires at the moment its event completes and clears within 2.8s.",
+        "subtitle_zone": {
+          "position": "lower third, centered, 12% from bottom",
+          "collision_check": "PASS \u2014 TerminalScene holds the most recent 18 lines and this session never exceeds 7 visible lines, so terminal text never enters the caption band."
+        },
+        "speed_treatment": {
+          "plan": "realtime throughout",
+          "rationale": "There is no captured dead time to compress. The real pip install took roughly 40 seconds; the scene shows its four meaningful output lines across 3.2s, which is a scripting choice, not a speed ramp."
+        },
+        "aspect_ratio_viability": {
+          "16:9": "Primary. Every command reads at full width.",
+          "1:1": "Marginal. The longest command (110 chars) would wrap to three lines and the terminal would need a smaller type size.",
+          "9:16": "Not viable, and the brief already ruled it out. The two long commands cannot survive a vertical crop without dropping below legible type size. Ship landscape only; a vertical cut would need shorter commands and a re-recorded narration."
+        },
+        "color_tokens": {
+          "terminal_background": "#1F2937",
+          "terminal_text": "#E5E7EB",
+          "accent_prompt": "#F59E0B",
+          "success_pill": "#10B981",
+          "source": "clean-professional playbook: overlays.code_block for the surface, visual_language.color_palette.accent for the pills."
+        },
+        "render_target": {
+          "width": 1920,
+          "height": 1080,
+          "fps": 30,
+          "duration_seconds": 45.31,
+          "total_frames": 1360
+        },
+        "budget_usd": 0.0
+      }
+    }
+  },
+  "style_playbook": "clean-professional",
+  "review": {
+    "version": "1.0",
+    "reviewer": "scene-director self-review + EP gate G3",
+    "verdict": "pass",
+    "findings": []
+  },
+  "cost_snapshot": {
+    "spent_usd": 0.0,
+    "budget_usd": 1.0,
+    "remaining_usd": 1.0
+  }
+}

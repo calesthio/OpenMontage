@@ -1,0 +1,109 @@
+{
+  "version": "1.0",
+  "project_id": "openmontage-zero-key-setup",
+  "pipeline_type": "screen-demo",
+  "stage": "edit",
+  "status": "completed",
+  "timestamp": "2026-08-30T21:58:26.881892+00:00",
+  "checkpoint_policy": "guided",
+  "human_approval_required": false,
+  "human_approved": false,
+  "artifacts": {
+    "edit_decisions": {
+      "version": "1.0",
+      "renderer_family": "screen-demo",
+      "render_runtime": "remotion",
+      "composition_mode": "templated",
+      "cuts": [
+        {
+          "id": "sc-01",
+          "source": "remotion-props",
+          "in_seconds": 0.0,
+          "out_seconds": 45.02,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "fade",
+          "transition_out": "fade",
+          "transition_duration": 0.4
+        }
+      ],
+      "audio": {
+        "narration": {
+          "segments": [
+            {
+              "asset_id": "narration-s1",
+              "start_seconds": 0.3,
+              "end_seconds": 7.59
+            },
+            {
+              "asset_id": "narration-s2",
+              "start_seconds": 8.09,
+              "end_seconds": 15.03
+            },
+            {
+              "asset_id": "narration-s3",
+              "start_seconds": 15.53,
+              "end_seconds": 23.37
+            },
+            {
+              "asset_id": "narration-s4",
+              "start_seconds": 23.87,
+              "end_seconds": 29.8
+            },
+            {
+              "asset_id": "narration-s5",
+              "start_seconds": 30.3,
+              "end_seconds": 37.75
+            },
+            {
+              "asset_id": "narration-s6",
+              "start_seconds": 38.25,
+              "end_seconds": 43.62
+            }
+          ]
+        }
+      },
+      "subtitles": {
+        "enabled": true,
+        "style": "word-by-word",
+        "source": "captions-words",
+        "font_size": 42,
+        "color": "#F8FAFC"
+      },
+      "metadata": {
+        "composition_data_path": "artifacts/remotion_props.json",
+        "composition_id": "Explainer",
+        "render_call": "video_compose(operation='remotion_render', composition_data=<artifacts/remotion_props.json>)",
+        "audio_delivery": "Narration reaches the render as the single pre-mixed asset assets/audio/narration_master.wav (referenced in props.audio.narration.src). The per-segment list above is the editorial record of where each line sits; it is not a second mixing pass.",
+        "cut_note": "One cut. The 25-step terminal choreography lives in the props file rather than in cuts[], because edit_decisions.cuts models source segments and there is no source footage \u2014 the scene is synthesized.",
+        "speed_plan": {
+          "applied": "none",
+          "reason": "No captured footage, so nothing to trim or ramp. Pace is authored via per-command typeSpeed."
+        },
+        "crop_keyframes": [],
+        "subtitle_position_overrides": [],
+        "audio_notes": "Single speech track, mono 48kHz, no music, no ducking needed. Verified on the review stills that the caption band clears the terminal window's bottom edge.",
+        "theme_note": "themeConfig is pinned to Remotion's DEFAULT_THEME (flat-motion-graphics: #0F172A ground, #22D3EE caption highlight) \u2014 the theme that produced the approved review stills. video_compose would otherwise inject the clean-professional playbook theme (white ground, dark captions) at render time and silently change the approved look. See decision d-010.",
+        "encode_targets": {
+          "resolution": "1920x1080",
+          "fps": 30,
+          "frames": 1351,
+          "codec": "h264"
+        },
+        "variant_notes": "16:9 only. 9:16 was ruled out at scene planning \u2014 the 110-char verification command cannot survive a vertical crop above legible type size."
+      }
+    }
+  },
+  "style_playbook": "clean-professional",
+  "review": {
+    "version": "1.0",
+    "reviewer": "edit-director self-review + EP gate G5",
+    "verdict": "pass",
+    "findings": []
+  },
+  "cost_snapshot": {
+    "spent_usd": 0.0,
+    "budget_usd": 1.0,
+    "remaining_usd": 1.0
+  }
+}

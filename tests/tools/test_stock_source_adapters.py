@@ -111,7 +111,6 @@ _SOURCE_CREDENTIALS = {
 _STILL_SWALLOWS_TRANSPORT_ERRORS = {
     "archive_org": "#511 follow-up: query cascade continues past a failed strategy",
     "wikimedia": "#511 follow-up: query cascade continues past a failed strategy",
-    "pond5_pd": "#511 follow-up: API failure falls through to the web fallback",
 }
 
 
@@ -137,6 +136,11 @@ class _EmptyOkResponse:
 
     def __exit__(self, *_exc):
         return False
+
+
+class _StatusErrorResponse:
+    def raise_for_status(self):
+        raise TransportError("simulated HTTP 503")
 
 
 class _EmptySoup:
@@ -181,6 +185,40 @@ def _install_fake_transport(monkeypatch, fake_get):
 
 def _adapter_names():
     return [source.name for source in all_sources()]
+
+
+def test_pond5_availability_requires_credentials(monkeypatch):
+    source = get_source("pond5_pd")
+
+    monkeypatch.delenv("POND5_API_KEY", raising=False)
+    assert source.is_available() is False
+
+    monkeypatch.setenv("POND5_API_KEY", "test-pond5")
+    assert source.is_available() is True
+
+
+def test_pond5_search_sends_configured_credentials(monkeypatch):
+    captured = {}
+
+    def fake_get(*_args, **kwargs):
+        captured.update(kwargs)
+        return _EmptyOkResponse()
+
+    _install_fake_transport(monkeypatch, fake_get)
+    get_source("pond5_pd").search(
+        "ocean waves", SearchFilters(kind="video", per_page=5)
+    )
+
+    assert captured["headers"]["Authorization"] == "Bearer test-pond5"
+
+
+def test_pond5_search_propagates_status_errors(monkeypatch):
+    _install_fake_transport(monkeypatch, lambda *_a, **_k: _StatusErrorResponse())
+
+    with pytest.raises(TransportError, match="HTTP 503"):
+        get_source("pond5_pd").search(
+            "ocean waves", SearchFilters(kind="video", per_page=5)
+        )
 
 
 def _transport_error_params():

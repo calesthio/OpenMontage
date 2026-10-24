@@ -200,10 +200,41 @@ def _instrument_execute(fn: Callable) -> Callable:
                 },
             )
 
+        # Budget gate. Only API-runtime tools with a non-zero estimate and an
+        # owning project are governed; see lib/budget.py for the rationale.
+        # A governance refusal (BudgetExceededError / ApprovalRequiredError)
+        # propagates; anything else in this layer is swallowed.
+        entry_id = None
+        tracker = None
+        if project_dir is not None and getattr(self, "runtime", None) == ToolRuntime.API:
+            try:
+                from lib.budget import tracker_for
+                tracker = tracker_for(project_dir)
+            except Exception:
+                tracker = None
+            if tracker is not None:
+                try:
+                    estimated = float(self.estimate_cost(inputs) or 0.0)
+                except Exception:
+                    estimated = 0.0
+                if estimated > 0:
+                    entry_id = tracker.estimate(
+                        tool_name, inputs.get("operation", "execute")
+                        if isinstance(inputs, dict) else "execute",
+                        estimated,
+                    )
+                    # Deliberately outside the try: a refusal must reach the caller.
+                    tracker.reserve(entry_id)
+
         started = time.monotonic()
         try:
             result = fn(self, inputs, *args, **kwargs)
         except Exception as exc:
+            if tracker is not None and entry_id is not None:
+                try:
+                    tracker.refund(entry_id)
+                except Exception:
+                    pass
             if project_dir is not None:
                 emit_event(
                     project_dir,
@@ -217,6 +248,17 @@ def _instrument_execute(fn: Callable) -> Callable:
             raise
         finally:
             depth_state.value = depth
+
+        if tracker is not None and entry_id is not None:
+            try:
+                actual = getattr(result, "cost_usd", None)
+                tracker.reconcile(
+                    entry_id,
+                    float(actual) if isinstance(actual, (int, float)) else 0.0,
+                    success=bool(getattr(result, "success", True)),
+                )
+            except Exception:
+                pass
 
         if project_dir is None:
             # The tool may have created its own project dir during execute

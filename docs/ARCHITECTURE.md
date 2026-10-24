@@ -289,7 +289,12 @@ Checkpoints persist pipeline state as JSON in the project's `pipeline/` director
 
 ## Budget Governance
 
-The `CostTracker` enforces spending controls across the pipeline.
+The `CostTracker` enforces spending controls across the pipeline, wired in by
+`lib/budget.py` through the same `BaseTool` wrapper that emits Backlot events —
+the one place that sees every tool call regardless of what the agent remembers
+to do. Only `ToolRuntime.API` tools with a non-zero estimate and an owning
+project under `projects/` are governed; selectors are `HYBRID` and delegate, so
+a call is never charged twice.
 
 ### Lifecycle
 

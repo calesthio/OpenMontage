@@ -517,6 +517,17 @@ def write_checkpoint(
         checkpoint["style_playbook"] = style_playbook
     if review is not None:
         checkpoint["review"] = review
+    if cost_snapshot is None:
+        # Fill from the live budget tracker so Backlot's cost meter has
+        # numbers behind it. Previously this field was an optional dict the
+        # agent had to assemble by hand, so it was almost never written and
+        # the meter rendered a value nothing produced.
+        try:
+            from lib.budget import cost_snapshot as _live_cost_snapshot
+
+            cost_snapshot = _live_cost_snapshot(pipeline_dir / project_id)
+        except Exception:
+            cost_snapshot = None
     if cost_snapshot is not None:
         checkpoint["cost_snapshot"] = cost_snapshot
     if error is not None:

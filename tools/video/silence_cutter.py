@@ -335,7 +335,7 @@ class SilenceCutter(BaseTool):
             list_path = temp_dir / "concat_list.txt"
             with open(list_path, "w", encoding="utf-8") as f:
                 for sf in seg_files:
-                    safe_path = str(sf.resolve()).replace("\\", "/")
+                    safe_path = str(sf.resolve()).replace("\\", "/").replace("'", "'\\''")
                     f.write(f"file '{safe_path}'\n")
 
             cmd = [
@@ -445,7 +445,7 @@ class SilenceCutter(BaseTool):
             list_path = temp_dir / "concat_list.txt"
             with open(list_path, "w", encoding="utf-8") as f:
                 for sf in seg_files:
-                    safe_path = str(sf.resolve()).replace("\\", "/")
+                    safe_path = str(sf.resolve()).replace("\\", "/").replace("'", "'\\''")
                     f.write(f"file '{safe_path}'\n")
 
             cmd = [

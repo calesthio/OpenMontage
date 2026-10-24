@@ -599,7 +599,7 @@ class VideoStitch(BaseTool):
         temp_files.append(concat_list)
         with open(concat_list, "w", encoding="utf-8") as f:
             for clip in clips:
-                safe_path = str(Path(clip).resolve()).replace("\\", "/")
+                safe_path = str(Path(clip).resolve()).replace("\\", "/").replace("'", "'\\''")
                 f.write(f"file '{safe_path}'\n")
 
         cmd = [

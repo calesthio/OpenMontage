@@ -8,6 +8,7 @@ via the ``workflow_json`` input.
 from __future__ import annotations
 
 import json
+import subprocess
 import time
 from pathlib import Path
 from typing import Any
@@ -586,6 +587,32 @@ class ComfyUIVideo(BaseTool):
                     "duration_seconds": round(num_frames / 16, 2),
                 }
             )
+        coherence = self._assess_coherence(paths[0])
+        if coherence:
+            result_data["coherence"] = coherence
+            if coherence.get("verdict") == "STROBING_STILLS":
+                return ToolResult(
+                    success=False,
+                    error=(
+                        "Generated video is a sequence of unrelated stills, not "
+                        "motion (mean adjacent-frame difference "
+                        f"{coherence['mean_abs_diff']:.1f} with coefficient of "
+                        f"variation {coherence['cv']:.2f}). This is what a video "
+                        "model produces when its latent is an image latent "
+                        "rather than a temporal one -- check that the workflow's "
+                        "latent node is EmptyHunyuanLatentVideo (or the "
+                        "model-appropriate video latent) with `length` set to "
+                        "the frame count and `batch_size` 1. The file itself is "
+                        "structurally valid, which is why ffprobe accepts it."
+                    ),
+                    data=result_data,
+                    artifacts=[str(p) for p in paths],
+                    cost_usd=self.estimate_cost(inputs),
+                    duration_seconds=round(time.time() - start, 2),
+                    seed=seed,
+                    model=model_name,
+                )
+
         return ToolResult(
             success=True,
             data=result_data,
@@ -595,6 +622,63 @@ class ComfyUIVideo(BaseTool):
             seed=seed,
             model=model_name,
         )
+
+    @staticmethod
+    def _assess_coherence(path: Path) -> dict[str, Any] | None:
+        """Is this actually motion, or a strobe of unrelated frames?
+
+        The failure this catches is invisible to every structural check: a
+        workflow whose latent is an image latent emits N independent stills, and
+        the resulting mp4 has the right frame count, the right duration, the
+        right codec and a clean ffprobe. Only the relationship between
+        consecutive frames tells them apart.
+
+        Purely numerical -- it says nothing about what the frames depict.
+        Decode to small greyscale, take the mean absolute difference between
+        each adjacent pair, and look at the distribution: coherent motion gives
+        small, smoothly varying differences, while independent stills give
+        large ones that barely vary, because every pair is equally unrelated.
+
+        Returns None when the check cannot run (no ffmpeg, no numpy, too few
+        frames). A diagnostic that cannot run must never fail a good render.
+        """
+        try:
+            import numpy as np
+        except ImportError:
+            return None
+
+        w, h = 104, 60
+        try:
+            proc = subprocess.run(
+                ["ffmpeg", "-v", "error", "-i", str(path),
+                 "-vf", f"scale={w}:{h},format=gray", "-f", "rawvideo", "-"],
+                capture_output=True, check=False, timeout=120,
+            )
+        except (OSError, subprocess.SubprocessError):
+            return None
+
+        buf = np.frombuffer(proc.stdout, dtype=np.uint8)
+        n = buf.size // (w * h)
+        if n < 3:
+            return None
+        frames = buf[: n * w * h].reshape(n, h, w).astype(np.int16)
+        diffs = np.abs(np.diff(frames, axis=0)).mean(axis=(1, 2))
+        mean = float(diffs.mean())
+        cv = float(diffs.std() / mean) if mean else 0.0
+
+        # Thresholds separate two populations measured on this failure: coherent
+        # WAN 2.2 clips run mean 3.5-9 with cv 0.18-0.59, while 81 independent
+        # stills land far higher with a very low cv -- every pair is equally
+        # unrelated, so the differences barely vary. Both conditions must hold,
+        # so a legitimately busy clip (high mean, high cv) is not condemned.
+        strobing = mean > 25.0 and cv < 0.35
+        return {
+            "frames_analyzed": int(n),
+            "mean_abs_diff": round(mean, 2),
+            "median_abs_diff": round(float(np.median(diffs)), 2),
+            "cv": round(cv, 3),
+            "verdict": "STROBING_STILLS" if strobing else "COHERENT_MOTION",
+        }
 
     # ------------------------------------------------------------------
     # Workflow builders

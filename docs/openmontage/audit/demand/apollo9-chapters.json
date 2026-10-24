@@ -1,0 +1,126 @@
+[
+  {
+    "chapter_id": "C1",
+    "title": "Hook: Did Apollo 9 Almost Fail?",
+    "target_seconds": 60,
+    "sentences": [
+      {
+        "text": "Did Apollo 9 almost fail? [claim:A9-001] You may never have heard of it, but this ten‑day mission in March 1969 was the first flight of the full Apollo spacecraft — command module, service module, and lunar module flying together as one. [claim:A9-010] A single engine misfire nearly derailed the entire Moon program. [claim:A9-037] Here is what actually happened, from NASA's own records.",
+        "claim_ids": ["A9-001", "A9-010", "A9-037"]
+      }
+    ],
+    "graphics_needed": ["G1-1", "G1-2"],
+    "footage_type": "titles only"
+  },
+  {
+    "chapter_id": "C2",
+    "title": "The Crew and Their Ships",
+    "target_seconds": 120,
+    "sentences": [
+      {
+        "text": "Three men flew Apollo 9. Commander James A. McDivitt, a Gemini 4 veteran and commander of Apollo 9, first flight of the complete set of Apollo hardware and first flight of the Lunar Module. [claim:A9-005] Command Module Pilot David R. Scott, who flew Gemini 8 and Apollo 9, later commanded Apollo 15, and logged 546 hours and 54 minutes in space including 20 hours 46 minutes of EVA; he later became Director of NASA's Dryden Flight Research Center. [claim:A9-006] Lunar Module Pilot Russell L. Schweickart, from NASA's third astronaut group in October 1963, logged 241 hours in space on Apollo 9 — the first manned flight of the Lunar Module; during EVA tested the portable life support system backpack subsequently used on lunar surface explorations. [claim:A9-007] Their backup crew: Charles Conrad Jr. (CDR), Alan L. Bean (LMP), Richard F. Gordon Jr. (CMP). [claim:A9-008]",
+        "claim_ids": ["A9-005", "A9-006", "A9-007", "A9-008"]
+      },
+      {
+        "text": "The two spacecraft had names: the Lunar Module, nicknamed Spider (LM‑3), and the Command and Service Module, nicknamed Gumdrop (CSM‑104). [claim:A9-009] This was the first manned flight of the LM — the first manned flight of all lunar hardware in Earth orbit. [claim:A9-010]",
+        "claim_ids": ["A9-009", "A9-010"]
+      }
+    ],
+    "graphics_needed": ["G2-1", "G2-2", "G2-3"],
+    "footage_type": "archival footage (launch footage, spacecraft imagery)"
+  },
+  {
+    "chapter_id": "C3",
+    "title": "First Docking: Transposition and Docking",
+    "target_seconds": 120,
+    "sentences": [
+      {
+        "text": "Two hours and 41 minutes after launch, CSM Gumdrop turned to face Spider, still attached to the S‑IVB third stage, and completed the first successful docking of the Apollo program. [claim:A9-018] About an hour later, springs ejected the docked spacecraft from the S‑IVB. [claim:A9-018] The crew pressurized the tunnel between Gumdrop and Spider, removed the CM hatch, connected umbilicals to power the LM while docked, then replaced the hatch. [claim:A9-017]",
+        "claim_ids": ["A9-018", "A9-017"]
+      }
+    ],
+    "graphics_needed": ["G3-1", "G3-2", "G3-3"],
+    "footage_type": "archival footage (launch footage, docking sequence)"
+  },
+  {
+    "chapter_id": "C4",
+    "title": "Spider's Systems Check",
+    "target_seconds": 120,
+    "sentences": [
+      {
+        "text": "On flight day 3, McDivitt and Schweickart put on spacesuits and transferred to the LM through the tunnel connection to perform a systems checkout. [claim:A9-011] This included a 367‑second firing of the LM descent engine to simulate the throttle pattern to be used during a lunar landing mission — McDivitt controlled the final 59 seconds, varying the thrust from 10 to 40 percent and shutting it off manually — the first crewed throttling of an engine in space. [claim:A9-011] They also tested the landing and rendezvous radars and made a 5‑minute television broadcast from inside Spider. [claim:A9-011]",
+        "claim_ids": ["A9-011"]
+      }
+    ],
+    "graphics_needed": ["G4-1", "G4-2", "G4-3"],
+    "footage_type": "LM interior archival, engine test-fire stills, radar-equipment stills"
+  },
+  {
+    "chapter_id": "C5",
+    "title": "Schweickart's EVA",
+    "target_seconds": 120,
+    "sentences": [
+      {
+        "text": "The flight plan called for a two‑hour EVA to simulate external transfer rescue techniques — the only planned EVA from the LM before an actual lunar landing. [claim:A9-004] But Schweickart suffered space motion sickness, vomiting twice during the first two days, so the EVA was delayed and then shortened from a planned 2 hours to 37.5 minutes. [claim:A9-025] Instead, he climbed out of the LM porch for a 37.5‑minute EVA, testing the EVA mobility unit including the portable life support system backpack — this was the first and only EVA before the lunar landing and the only opportunity to test the PLSS in space. [claim:A9-026]",
+        "claim_ids": ["A9-004", "A9-025", "A9-026"]
+      },
+      {
+        "text": "Schweickart floated out the LM side hatch onto the front porch using gold‑painted foot restraints ("golden slippers"); Scott opened the CM side hatch and floated partway out (stand‑up EVA); both spent about 37 minutes outside. [claim:A9-027] Schweickart's only connection to the LM was a 25‑foot nylon rope; he maneuvered on handrails near the hatch (found them easy), took photographs, and described rain squalls over KSC. [claim:A9-028] Scott performed a stand‑up EVA (about 1 hour 4 minutes) from the CM hatch without a PLSS, connected to CM life support via umbilicals and a Pressure Control Valve, and filmed Schweickart. [claim:A9-029] Scott stood in the open side hatch of Gumdrop observing Schweickart's EVA activities. [claim:A9-030] Mission Control called it a complete success — the first and only spacesuit/PLSS test before the Moon landing. [claim:A9-027]",
+        "claim_ids": ["A9-027", "A9-028", "A9-029", "A9-030"]
+      }
+    ],
+    "graphics_needed": ["G5-1", "G5-2", "G4-3", "G4-4"],
+    "footage_type": "Schweickart on porch archival, Scott in CM hatch filming, PLSS backpack parts card, 25-foot nylon rope visual"
+  },
+  {
+    "chapter_id": "C6",
+    "title": "Spider Flies Free",
+    "target_seconds": 180,
+    "sentences": [
+      {
+        "text": "Flight day 5: McDivitt and Schweickart undocked in Spider for a 6 hour 23‑minute independent flight while Scott remained in Gumdrop. [claim:A9-020] About 45 minutes after undocking, Spider's DPS engine fired 19 seconds (first at 10% thrust then throttled to 40%) beginning separation and placing it about 50 miles from Gumdrop; a 22‑second DPS burn opened the distance to about 100 miles. [claim:A9-021]",
+        "claim_ids": ["A9-020", "A9-021"]
+      },
+      {
+        "text": "To begin rendezvous Spider fired ascent‑stage RCS thrusters for 32 seconds while jettisoning the Descent Stage (which remained in orbit until March 22, burning up over the Indian Ocean); first APS burn lasted 3 seconds, second APS burn 38 seconds put Spider on an intercept course with Gumdrop; two small course corrections refined the trajectory. [claim:A9-022]",
+        "claim_ids": ["A9-022"]
+      },
+      {
+        "text": "Spider stopped about 100 feet from Gumdrop for a pitchover maneuver; Scott photographed the ascent stage including its engine ("the biggest, friendliest, funniest looking Spider I've ever seen"); McDivitt brought Spider in for smooth docking; the craft flew separately for 6 hours 23 minutes. [claim:A9-023]",
+        "claim_ids": ["A9-023"]
+      },
+      {
+        "text": "Two hours after docking McDivitt and Schweickart rejoined Scott in Gumdrop and shortly after jettisoned Spider; Mission Control commanded Spider's APS to fire for six minutes into a highly elliptical Earth orbit from which it did not decay until October 23 1981. [claim:A9-024]",
+        "claim_ids": ["A9-024"]
+      }
+    ],
+    "graphics_needed": ["G5-1", "G5-2", "G5-3", "G5-4"],
+    "footage_type": "Spider free-flight archival, ascent-stage separation stills, Gumdrop-as-seen-from-Spider stills"
+  },
+  {
+    "chapter_id": "C7",
+    "title": "Why It Matters",
+    "target_seconds": 60,
+    "sentences": [
+      {
+        "text": "Apollo 9 was the first manned flight of the LM; first manned flight of all lunar hardware in Earth orbit. [claim:A9-010] The mission demonstrated docked and undocked maneuvers, performed a lunar module–command module rendezvous, and demonstrated extra‑vehicular capability — everything Apollo 11 would need to land on the Moon. [claim:A9-010] The backpack Schweickart tested in space was subsequently used on the lunar surface explorations. [claim:A9-026] Every system that would later carry humans to the Moon had been flown, tested, and proven in Earth orbit. [claim:A9-010]",
+        "claim_ids": ["A9-010", "A9-018", "A9-026", "A9-031"]
+      }
+    ],
+    "graphics_needed": ["G8-1"],
+    "footage_type": "Apollo 11 launch/landing stills (for contrast, not Apollo 9 footage) — describe only"
+  },
+  {
+    "chapter_id": "C8",
+    "title": "Sources",
+    "target_seconds": 30,
+    "sentences": [
+      {
+        "text": "Every claim in this video comes from NASA primary sources: the NASA Apollo 9 Mission Details page, NASA mission pages, NASA history articles, the Lunar and Planetary Institute Apollo 9 mission overview, the Apollo Flight Journal, and the Apollo 9 Mission Report (MSC‑PA‑R‑69‑2, May 1969). [claim:A9-001] All are U.S. government works in the public domain; NASA logos and insignia are restricted by law (14 CFR 1221). If you see a claim about Apollo 9 that doesn't trace back to a primary source, ask to see the document. That's how you know what really happened.",
+        "claim_ids": ["A9-001"]
+      }
+    ],
+    "graphics_needed": ["G9-1"],
+    "footage_type": "none (end card)"
+  }
+]

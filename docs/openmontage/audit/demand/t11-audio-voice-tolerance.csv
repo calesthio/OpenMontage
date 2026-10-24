@@ -1,0 +1,10 @@
+source,type,finding,label,url
+YouTube Help (Disclosing GenAI content),official_policy,"AI narration not banned; disclosure required for realistic synthetic content; cloning own voice doesn't require disclosure; disclosure doesn't limit audience/monetization",MEASURED,https://support.google.com/youtube/answer/14328491
+YouTube Help (Monetization policies),official_policy,"Inauthentic content (mass-produced, templated, repetitive) demonetizable; AI narration alone not grounds for demonetization",MEASURED,https://support.google.com/youtube/answer/1311392
+Retention Rabbit (2025, via Vidrush.ai),study,"AI narration causes 35% higher first-45-second drop-off than human narration (study of 10,000 videos)",ESTIMATE,https://vidrush.ai/blog/faceless-youtube-channel-not-growing
+kveeky.com (2026),creator_test,"30-day test of 5 AI voice engines; mid-tier modulation tools retained 25% more viewers than budget generators",OPINION,https://kveeky.com/blog/ai-voice-tools-youtube-watch-time-test
+Sounds Profitable / APA (2025),survey,"70% of audiobook listeners willing to try AI-narrated audiobook (down from 77% in 2023)",MEASURED,https://soundsprofitable.com/article/how-do-humans-feel-about-ai-voices-in-podcasting
+r/PartneredYoutube (1y ago),anecdote,"Creator with 100k subs: AI-voiced videos (500k+ views) had better retention than human-voiced ones",OPINION,https://www.reddit.com/r/PartneredYoutube/comments/1olk0sk/
+r/youtube (2026),anecdote,"AI voices are so annoying! Instantly makes content unwatchable (164 pts)",OPINION,https://www.reddit.com/r/youtube/comments/1qw9xqs/
+ElevenLabs blog (2026),industry_guide,"Voice consistency matters more than perfection; AI-voiced videos monetizable if original and valuable; disclosure required for synthetic voices",OPINION,https://elevenlabs.io/blog/the-5-best-ai-voices-for-youtube-automation-and-faceless-videos
+ytZolo (2026),industry_analysis,"Inauthentic content policy blocks mass-produced AI videos; personal insight/analysis/humor distinguishes compliant channels",OPINION,https://ytzolo.com/blog/youtube-repetitive-content-policy-ai-slop-2026/

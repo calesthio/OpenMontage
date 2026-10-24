@@ -1,0 +1,81 @@
+version: "1.0"
+niche_id: speculative_evolution
+display_name: "Speculative Evolution / Alien Ecosystems (AI stills only)"
+
+# --- 1. Media policy (AI stills only; no footage, no video generation) ---
+media_policy:
+  allowed: ai_generated_still_illustration
+  excluded: photorealistic_people, photorealistic_events, text_in_image, video_clips
+  rights_basis: ai_generated_illustration
+  generator: AI
+  ai_share: 1.0   # 100% of stills are AI-generated illustrations for this niche
+
+# --- 2. Visual style: field-guide plate ---
+style: field_guide_plate
+description: >
+  Flat-vector field-guide plate style for alien-ecosystem creature and habitat
+  stills. Silhouette-first, minimal detail, no photographic depth, no text,
+  no watermark, not photorealistic.
+
+# --- 3. Palette ---
+palette:
+  deep_teal: "#14455C"
+  bioluminescent_lime: "#A8E06F"
+  basalt_charcoal: "#3B444B"
+  pale_bone: "#EDE7D8"
+
+# --- 4. Prompt template ---
+prompt_template: >
+  {subject}, flat vector illustration, field-guide plate, silhouette-first,
+  {creature_anatomy}, deep teal {palette_deep_teal}, bioluminescent lime
+  {palette_bioluminescent_lime}, basalt charcoal {palette_basalt_charcoal},
+  pale bone {palette_pale_bone}, no text, no watermark, no letters, no
+  numerals, not photorealistic, no people, no logos, --{aspect} --seed {seed}
+
+# --- 5. Anatomy spec rule (every creature) ---
+anatomy_spec:
+  required: true
+  fields:
+    - limb_count      # integer limb count
+    - dominant_feature_1
+    - dominant_feature_2  # optional third: dominant_feature_3
+  canonical_silhouette: >
+    Every creature has ONE canonical silhouette that is reused across all
+    shots of that creature; poses/details vary but the silhouette is fixed.
+
+# --- 6. Editorial overlays (drawn in the editor, never by the image model) ---
+editorial_overlays:
+  - labels
+  - scale_bars
+  - arrows
+  - maps
+  - numbers
+editorial_overlays_rule: >
+  Labels, scale bars, arrows, maps, and numbers are drawn in the editor,
+  never by the image model. The image model must never render legible text.
+
+# --- 7. Label rule (AI share 100% -> persistent "Speculative illustration") ---
+label_rule:
+  label: "Speculative illustration"
+  placement: start_and_description
+  ai_share: 1.0
+  note: >
+    All images carry the persistent "Speculative illustration" label at the
+    start of the cut and in the description; gate requires label present on
+    every AI cut. Other AI_IMAGE_POLICY gates are not weakened.
+
+# --- 8. Motion variety (editor motion on stills) ---
+motion_variety:
+  moves: [pan, zoom, detail_crop, parallax]
+  easing: [easein, easeout, easeinout]
+  rule: >
+    Pan/zoom with differing easing, detail crops, and parallax; no two
+    identical moves in a row (lint_variation).
+
+# --- 9. Excluded content ---
+excluded_content:
+  - photorealistic_people_or_faces
+  - photorealistic_fake_events
+  - text_or_legible_watermark_in_image
+  - real_vehicles_presented_as_photos
+  - emblems_insignia_flags

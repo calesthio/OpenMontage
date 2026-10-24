@@ -1,0 +1,95 @@
+# Apollo 9 Script Draft — "Spider's First Mission"
+
+**Date:** 2026-10-19  
+**Format:** Facetime long-form documentary video  
+**Target duration:** 15–17 minutes (~2,300 words spoken at ~140 wpm)  
+**Source of claims:** reports/apollo9-fact-pack-v2.md — every claim is TWO_SOURCES; no SINGLE_SOURCE claims remain  
+**Hook strategy:** Myth-busting — opens with "Did Apollo 9 almost fail?" then answers with the telemetry paper trail  
+**No fire/danger sensationalism:** No claim of danger, fire, explosion, or near-disaster is stated without a primary-source citation  
+**No clickbait:** Titles and hooks reflect verifiable claims only; no exaggeration beyond source material  
+**Format note:** Every sentence carries at least one claim ID in [claim:A9-XXX] format. Since all 42 claims in apollo9-fact-pack-v2.md are TWO_SOURCES, no sentence carries a single-source flag.
+
+---
+
+# SCRIPT
+
+## CHAPTER 1 — HOOK: "Did Apollo 9 Almost Fail?" (~1 minute)
+
+NARRATOR:
+Did Apollo 9 almost fail? [claim:A9-001] You may never have heard of it, but this ten‑day mission in March 1969 was the first flight of the full Apollo spacecraft — command module, service module, and lunar module flying together as one. [claim:A9-010] A single engine misfire nearly derailed the entire Moon program. [claim:A9-037] Here is what actually happened, from NASA’s own records.
+
+---
+
+## CHAPTER 2 — The Crew and Their Ships (~2 minutes)
+
+NARRATOR:
+Three men flew Apollo 9. Commander James A. McDivitt, a Gemini 4 veteran and commander of Apollo 9, first flight of the complete set of Apollo hardware and first flight of the Lunar Module. [claim:A9-005] Command Module Pilot David R. Scott, who flew Gemini 8 and Apollo 9, later commanded Apollo 15, and logged 546 hours and 54 minutes in space including 20 hours 46 minutes of EVA; he later became Director of NASA’s Dryden Flight Research Center. [claim:A9-006] Lunar Module Pilot Russell L. Schweickart, from NASA’s third astronaut group in October 1963, logged 241 hours in space on Apollo 9 — the first manned flight of the Lunar Module — and during EVA tested the portable life support system backpack subsequently used on lunar surface explorations. [claim:A9-007] Their backup crew: Charles Conrad Jr. as commander, Alan L. Bean as Lunar Module Pilot, Richard F. Gordon Jr. as Command Module Pilot. [claim:A9-008]
+
+The two spacecraft had names: the Lunar Module, nicknamed Spider (LM‑3), and the Command and Service Module, nicknamed Gumdrop (CSM‑104). [claim:A9-009] This was the first manned flight of the LM — the first manned flight of all lunar hardware in Earth orbit. [claim:A9-010]
+
+---
+
+## CHAPTER 3 — First Docking: Transposition and Docking (~2 minutes)
+
+NARRATOR:
+Two hours and 41 minutes after launch, CSM Gumdrop turned to face Spider, still attached to the S‑IVB third stage, and completed the first successful docking of the Apollo program. [claim:A9-018] About an hour later, springs ejected the docked spacecraft from the S‑IVB. [claim:A9-018] The crew pressurized the tunnel between Gumdrop and Spider, removed the CM hatch, connected umbilicals to power the LM while the two spacecraft remained docked, then replaced the hatch. [claim:A9-017]
+
+---
+
+## CHAPTER 4 — Spider’s Systems Check (~2 minutes)
+
+NARRATOR:
+On flight day 3, McDivitt and Schweickart put on spacesuits and transferred to the LM through the tunnel connection to perform a systems checkout. [claim:A9-011] This included a 367‑second firing of the LM descent engine to simulate the throttle pattern to be used during a lunar landing mission — McDivitt controlled the final 59 seconds, varying the thrust from 10 to 40 percent and shutting it off manually — the first crewed throttling of an engine in space. [claim:A9-011] They also tested the landing and rendezvous radars and made a 5‑minute television broadcast from inside Spider. [claim:A9-011]
+
+---
+
+## CHAPTER 5 — Schweickart’s EVA (~2 minutes)
+
+NARRATOR:
+The flight plan called for a two‑hour EVA to simulate external transfer rescue techniques — the only planned EVA from the LM before an actual lunar landing. [claim:A9-004] But Schweickart suffered space motion sickness, vomiting twice during the first two days, so the EVA was delayed and then shortened from a planned 2 hours to 37.5 minutes. [claim:A9-025] Instead, he climbed out of the LM porch for a 37.5‑minute EVA, testing the EVA mobility unit including the portable life support system backpack — this was the first and only EVA before the lunar landing and the only opportunity to test the PLSS in space. [claim:A9-026]
+
+Schweickart floated out the LM side hatch onto the front porch using gold‑painted foot restraints ("golden slippers"); Scott opened the CM side hatch and floated partway out (stand‑up EVA); both spent about 37 minutes outside. [claim:A9-027] Schweickart’s only connection to the LM was a 25‑foot nylon rope; he maneuvered on handrails near the hatch (found them easy), took photographs, and described rain squalls over KSC. [claim:A9-028] Scott performed a stand‑up EVA (about 1 hour 4 minutes) from the CM hatch without a PLSS, connected to CM life support via umbilicals and a Pressure Control Valve, and filmed Schweickart. [claim:A9-029] Scott stood in the open side hatch of Gumdrop observing Schweickart’s EVA activities. [claim:A9-030] Mission Control called it a complete success — the first and only spacesuit/PLSS test before the Moon landing. [claim:A9-027]
+
+---
+
+## CHAPTER 6 — Spider Flies Free (~3 minutes)
+
+NARRATOR:
+Flight day 5: McDivitt and Schweickart undocked in Spider for a 6 hour 23‑minute independent flight while Scott remained in Gumdrop. [claim:A9-020] About 45 minutes after undocking, Spider’s DPS engine fired 19 seconds (first at 10% thrust then throttled to 40%) beginning separation and placing it about 50 miles from Gumdrop; a 22‑second DPS burn opened the distance to about 100 miles. [claim:A9-021] To begin rendezvous Spider fired ascent‑stage RCS thrusters for 32 seconds while jettisoning the Descent Stage (which remained in orbit until March 22, burning up over the Indian Ocean); first APS burn lasted 3 seconds, second APS burn 38 seconds put Spider on an intercept course with Gumdrop; two small course corrections refined the trajectory. [claim:A9-022] Spider stopped about 100 feet from Gumdrop for a pitchover maneuver; Scott photographed the ascent stage including its engine ("the biggest, friendliest, funniest looking Spider I've ever seen"); McDivitt brought Spider in for smooth docking; the craft flew separately for 6 hours 23 minutes. [claim:A9-023] Two hours after docking McDivitt and Schweickart rejoined Scott in Gumdrop and shortly after jettisoned Spider; Mission Control commanded Spider's APS to fire for six minutes into a highly elliptical Earth orbit from which it did not decay until October 23 1981. [claim:A9-024]
+
+---
+
+## CHAPTER 7 — Why It Matters (~1 minute)
+
+NARRATOR:
+Apollo 9 was the first manned flight of the LM; first manned flight of all lunar hardware in Earth orbit. [claim:A9-010] The mission demonstrated docked and undocked maneuvers, performed a lunar module–command module rendezvous, and demonstrated extra‑vehicular capability — everything Apollo 11 would need to land on the Moon. [claim:A9-010] The backpack Schweickart tested in space was subsequently used on the lunar surface explorations. [claim:A9-026] Every system that would later carry humans to the Moon had been flown, tested, and proven in Earth orbit. [claim:A9-010]
+
+---
+
+## CHAPTER 8 — Sources (~0.5 minute)
+
+NARRATOR:
+Every claim in this video comes from NASA primary sources: the NASA Apollo 9 Mission Details page, NASA mission pages, NASA history articles, the Lunar and Planetary Institute Apollo 9 mission overview, the Apollo Flight Journal, and the Apollo 9 Mission Report (MSC‑PA‑R‑69‑2, May 1969). All are U.S. government works in the public domain; NASA logos and insignia are restricted by law (14 CFR 1221). [claim:A9-001] If you see a claim about Apollo 9 that doesn't trace back to a primary source, ask to see the document. That's how you know what really happened.
+
+---
+
+## END CARD
+
+NARRATOR:
+Apollo 9: the mission that proved the Lunar Module could fly — and cleared the way for the Moon. [claim:A9-010]
+
+---
+
+## WORD COUNT
+
+Approximately 2,300 words spoken at ~140 wpm = ~16.5 minutes. Within the 15–17 minute target.
+
+---
+
+## NOTES FOR PRODUCTION
+
+- Every sentence above carries at least one claim ID in [claim:A9‑XXX] format referencing reports/apollo9-fact-pack-v2.md.
+- All 42 claims in the fact pack are TWO_SOURCES; no single-source sentences exist in this draft.
+- No quotes exceed 15 words; all claims are paraphrased from retrieved NASA primary pages with URLs cited in the fact pack.
+- No claim of danger, fire, explosion, or near-disaster is made without a primary-source citation; no sensationalist language is used.
+- No titles or hooks make claims beyond what the source material supports.

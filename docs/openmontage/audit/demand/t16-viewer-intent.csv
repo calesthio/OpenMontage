@@ -1,0 +1,19 @@
+category,count,example,top_terms
+questions_total,449,449 of 1022 Apollo comments are questions,question_word
+technical_questions,160,160 technical questions,comm,landing,roll,pilot,orbit
+why_did_questions,6,6 genuine "why did they" questions,why
+myth_hoax_comments,62,62 myth/hoax-related comments,fake,hoax,staged
+top_technical_term_comm,54,"How did they talk to Houston?",comm
+top_technical_term_landing,48,"How did the landing work?",landing
+top_technical_term_attitude,36,"Roll/pitch/yaw during landing",roll,pitch,yaw
+top_technical_term_fuel,10,"Fuel callouts, how much fuel left?",fuel
+top_technical_term_abort,4,"Abort modes, when to abort?",abort
+top_technical_term_eva,8,"What did Schweickart do outside?",eva
+top_myth_example,744,"Why does everybody think this is fake?" (NASA moonwalk video),fake,hoax
+intent_rank_1,Myth-busting / "was it real?",62 myth comments + 744-like comment,Was Apollo 10's near-crash real?
+intent_rank_2,Communications / how they talked to Houston,54 comments,"How Apollo 10 talked to Houston from 50,000 feet"
+intent_rank_3,Landing procedure / how it worked,48 comments,"How Apollo 11's Eagle actually landed — step by step"
+intent_rank_4,Attitude control (roll/pitch/yaw),36 comments,"How Armstrong flew the LM manually with 1201 alarms"
+intent_rank_5,Fuel / callouts,10 comments,"The fuel callouts that decided Apollo 11's landing"
+intent_rank_6,EVA / Schweickart's spacewalk,8 comments,"Schweickart's stand-up EVA: what he actually tested"
+intent_rank_7,Abort modes / when to abort,4 comments,"Apollo 10's abort guidance — when they almost didn't come home"

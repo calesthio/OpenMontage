@@ -1,0 +1,62 @@
+{
+  "ladder": [],
+  "rungs": [
+    {
+      "rung": 1,
+      "stack": "released_041_x4",
+      "note": "released diffusers 0.41.0 + transformers 4.x + hub <1.0",
+      "pip_args": [
+        "diffusers==0.41.0",
+        "transformers==4.57.6",
+        "huggingface-hub>=0.34,<1.0",
+        "accelerate>=1.10",
+        "safetensors>=0.4"
+      ],
+      "pip_ok": false,
+      "import_found": null,
+      "import_error": "pip failed: ERROR: Cannot install diffusers==0.41.0 and huggingface-hub<1.0 and >=0.34 because these package versions have conflicting dependencies.\nERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts\n",
+      "versions_after": {}
+    },
+    {
+      "rung": 2,
+      "stack": "released_041_x5",
+      "note": "released diffusers 0.41.0 + transformers 5.x + hub 1.x",
+      "pip_args": [
+        "diffusers==0.41.0",
+        "transformers==5.20.2",
+        "huggingface-hub>=1.0,<2.0",
+        "accelerate>=1.10",
+        "safetensors>=0.4"
+      ],
+      "pip_ok": true,
+      "import_found": null,
+      "import_error": "cannot import name 'FqnToConfig' from 'torchao.quantization' (/usr/local/lib/python3.13/dist-packages/torchao/quantization/__init__.py)",
+      "versions_after": {}
+    },
+    {
+      "rung": 3,
+      "stack": "released_036_x4",
+      "note": "older released diffusers 0.36.0 + transformers 4.x",
+      "pip_args": [
+        "diffusers==0.36.0",
+        "transformers==4.57.6",
+        "huggingface-hub>=0.34,<1.0",
+        "accelerate>=1.10",
+        "safetensors>=0.4"
+      ],
+      "pip_ok": true,
+      "import_found": "StableDiffusionXLPipeline",
+      "import_error": null,
+      "versions_after": {
+        "diffusers": "0.36.0",
+        "transformers": "4.57.6",
+        "huggingface_hub": "0.36.2",
+        "accelerate": "1.14.0",
+        "torch": "2.11.0+cu128"
+      }
+    }
+  ],
+  "used_rung": 3,
+  "used_stack": "released_036_x4",
+  "pipeline_class": "StableDiffusionXLPipeline"
+}

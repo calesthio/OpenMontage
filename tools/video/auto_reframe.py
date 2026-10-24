@@ -44,7 +44,7 @@ ASPECT_PRESETS = {
 
 class AutoReframe(BaseTool):
     name = "auto_reframe"
-    version = "0.1.1"
+    version = "0.1.2"
     tier = ToolTier.CORE
     capability = "video_post"
     provider = "ffmpeg"
@@ -191,6 +191,7 @@ class AutoReframe(BaseTool):
                 input_path, output_path, crop_x, crop_y,
                 target_w, target_h, out_w, out_h,
                 src_fps, codec, crf,
+                timestamps=[face["timestamp_seconds"] for face in face_data],
             )
         else:
             # Static crop
@@ -456,15 +457,15 @@ class AutoReframe(BaseTool):
         out_w: int, out_h: int,
         fps: float,
         codec: str, crf: int,
+        timestamps: Optional[list[float]] = None,
     ) -> ToolResult:
         """Render with dynamic crop positions that follow the face.
 
-        Uses FFmpeg's sendcmd filter to update crop position over time.
-        For simplicity and reliability, we interpolate between key positions
-        using FFmpeg expression-based crop.
+        Uses FFmpeg's sendcmd filter to apply crop updates at the recorded
+        tracking times. Internal callers without timestamps retain the nominal
+        sample schedule.
         """
-        # Build a piecewise-linear x(t) and y(t) using FFmpeg expressions
-        # We'll sample at the face tracking rate and interpolate between points
+        # Keep each computed position paired with its tracking timestamp.
         if not crop_xs:
             return ToolResult(success=False, error="No crop positions computed")
 
@@ -489,7 +490,7 @@ class AutoReframe(BaseTool):
 
         lines = []
         for i, (cx, cy) in enumerate(zip(crop_xs, crop_ys)):
-            ts = i * sample_interval
+            ts = timestamps[i] if timestamps is not None else i * sample_interval
             lines.append(f"{ts:.3f} [enter] crop x {cx};")
             lines.append(f"{ts:.3f} [enter] crop y {cy};")
 
@@ -497,7 +498,7 @@ class AutoReframe(BaseTool):
 
         # Use crop with sendcmd for dynamic positioning
         vf = (
-            f"sendcmd=f='{str(sendcmd_path).replace(chr(92), '/')}':flags=enter,"
+            f"sendcmd=f='{str(sendcmd_path).replace(chr(92), '/')}',"
             f"crop={crop_w}:{crop_h}:{crop_xs[0]}:{crop_ys[0]},"
             f"scale={out_w}:{out_h},setsar=1"
         )

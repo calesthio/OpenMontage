@@ -258,8 +258,8 @@ class FrameSampler(BaseTool):
             end = scene.get("end_seconds", 0)
             duration = end - start
 
-            # First frame of scene (offset slightly to avoid black frames)
-            timestamps.append(start + 0.1)
+            # Offset slightly to avoid transition frames, but stay inside short shots.
+            timestamps.append(start + min(0.1, duration / 2))
 
             # Midpoint for scenes > 3 seconds
             if duration > 3.0:

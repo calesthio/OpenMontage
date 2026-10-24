@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: render-api
+  namespace: tutorial-render
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: render-api
+  template:
+    metadata:
+      labels:
+        app: render-api
+    spec:
+      serviceAccountName: render-api
+      containers:
+        - name: render-api
+          image: REGISTRY/render-api:latest
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: render-api-config
+            - secretRef:
+                name: minio-secret   # MINIO_* for presigning download URLs
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: render-api
+  namespace: tutorial-render
+spec:
+  selector:
+    app: render-api
+  ports:
+    - port: 80
+      targetPort: 8080
+---
+# Adjust host / ingressClassName to your cluster (nginx-ingress assumed).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: render-api
+  namespace: tutorial-render
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: tutorials.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: render-api
+                port:
+                  number: 80

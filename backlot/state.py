@@ -423,19 +423,30 @@ def _build_storyboard(
         entry = _asset_entry(project_dir, asset)
         assets_by_scene.setdefault(scene_key(entry.get("scene_id")), []).append(entry)
 
-    # A scene is "generating" if its most recent top-level event is an
+    # A scene is "generating" while any top-level call has an
     # unfinished start. Nested (depth>0) provider events inside a selector
     # call are skipped — the outer call's finish is the real completion.
-    generating: dict[str, dict] = {}
+    active_calls: dict[str, list[dict]] = {}
     for ev in events:
         sid = ev.get("scene_id")
         if sid is None or ev.get("depth"):
             continue
         sid = scene_key(sid)
         if ev.get("event") == "start":
-            generating[sid] = ev
+            active_calls.setdefault(sid, []).append(ev)
         elif ev.get("event") in ("finish", "error"):
-            generating.pop(sid, None)
+            calls = active_calls.get(sid, [])
+            for index, start in enumerate(calls):
+                if ev.get("call_id"):
+                    matches = start.get("call_id") == ev["call_id"]
+                else:
+                    # Historical logs predate call IDs. Pair each completion
+                    # with one legacy start for the same tool, not the scene.
+                    matches = not start.get("call_id") and start.get("tool") == ev.get("tool")
+                if matches:
+                    calls.pop(index)
+                    break
+    generating = {sid: calls[-1] for sid, calls in active_calls.items() if calls}
 
     cards = []
     for scene in scene_plan["scenes"]:

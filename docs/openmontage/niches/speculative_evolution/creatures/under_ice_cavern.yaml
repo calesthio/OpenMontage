@@ -1,0 +1,32 @@
+spec_version: "1.0"
+pilot: "life beneath a frozen alien ocean"
+niche: speculative_evolution
+type: habitat
+name: "under_ice_cavern"
+role: "cavern beneath the frozen ice shell; melt pools and ice ceiling"
+anatomy: null
+environment:
+  - "cavern beneath a thick frozen ice shell"
+  - "melt pools at the ice-ocean interface"
+  - "ice ceiling with fractures/pores; dim light filtering through ice"
+energy_source: "chemosynthesis-derived microbial films at the ice-ocean interface; any chemical energy from water-rock or ice-melt interactions (not sunlight)"
+pressure_temperature_constraint: "ice shell 10-25 km thick (Europa) or 1-5 km south pole / 20-25 km avg (Enceladus); ocean-ice interface near 0 C (273 K at the interface per Europa models); surface far colder (Enceladus surface ~-201 C; Europa surface 50-140 K); pressure at ocean depth hundreds of atm"
+canonical_silhouette: "arched ice ceiling overhead, flat melt-pool floor, faint vertical light gradient from the ice, mineral deposits on cavern walls"
+known_inference_speculation_per_trait:
+  ice_shell_thickness: KNOWN  (Europa 15-25 km; Enceladus 1-5 km south pole / 20-25 km avg — NASA)
+  ocean_ice_interface_near_0C: INFERENCE (Europa ocean-ice interface ~270 K — Nature Astronomy/Juno)
+  surface_extreme_cold: KNOWN (Enceladus surface ~-201 C; Europa 50-140 K — NASA)
+  no_sunlight_below_ice: KNOWN (ice blocks photosynthesis; chemosynthesis only — NOAA/NASA)
+sources:
+  - title: "Europa: Facts (NASA Science)"
+    url: "https://science.nasa.gov/jupiter/jupiter-moons/europa/europa-facts/"
+    accessed: "2026-10-21"
+  - title: "Enceladus (NASA Science)"
+    url: "https://science.nasa.gov/saturn/moons/enceladus/"
+    accessed: "2026-10-21"
+  - title: "Juno measures thickness of Europa's ice shell (NASA/JPL)"
+    url: "https://www.jpl.nasa.gov/news/nasas-juno-measures-thickness-of-europas-ice-shell/"
+    accessed: "2026-10-21"
+  - title: "Europa's ice thickness and subsurface structure (Nature Astronomy)"
+    url: "https://www.nature.com/articles/s41550-025-02718-0"
+    accessed: "2026-10-21"

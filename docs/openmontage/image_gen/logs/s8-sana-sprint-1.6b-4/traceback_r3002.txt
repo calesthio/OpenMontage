@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+  File "/kaggle/src/script.py", line 436, in main
+    img = pipe(**call).images[0]
+          ~~~~^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/sana/pipeline_sana_sprint.py", line 748, in __call__
+    self.check_inputs(
+    ~~~~~~~~~~~~~~~~~^
+        prompt=prompt,
+        ^^^^^^^^^^^^^^
+    ...<8 lines>...
+        prompt_attention_mask=prompt_attention_mask,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/sana/pipeline_sana_sprint.py", line 437, in check_inputs
+    raise ValueError("Intermediate timesteps for SCM is not supported when num_inference_steps != 2.")
+ValueError: Intermediate timesteps for SCM is not supported when num_inference_steps != 2.

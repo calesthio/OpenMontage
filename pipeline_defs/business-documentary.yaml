@@ -1,0 +1,357 @@
+name: business-documentary
+version: "1.0"
+description: >
+  Evidence-first factory pipeline for original English-language business
+  documentaries — "The Hidden Business Behind Everyday Things". Twelve stages
+  carry one claim from topic selection to a manually approved publish package.
+  Every factual claim in the script must resolve to a normalized evidence
+  entry; every footage pick must carry provider, original URL, author and
+  license; the composition, QA and publish stages fail closed rather than
+  shipping an unverifiable scene or asset. Strict zero-cost mode is the
+  default budget: a call with unknown cost or an unknown route is BLOCKED,
+  never treated as free.
+category: documentary
+stability: beta
+default_checkpoint_policy: guided
+
+# No reference-video input: this pipeline originates its own topic.
+reference_input:
+  supported: false
+
+orchestration:
+  mode: executive-producer
+  skill: pipelines/business-documentary/executive-producer
+  budget_default_usd: 0.0
+  max_revisions_per_stage: 3
+  max_send_backs: 2
+  max_wall_time_minutes: 120
+
+extensions:
+  custom_scripts: true
+  custom_playbooks: true
+  custom_skills: true
+  custom_tools: false
+
+required_skills:
+  - pipelines/business-documentary/executive-producer
+  - pipelines/business-documentary/topic-director
+  - pipelines/business-documentary/research-director
+  - pipelines/business-documentary/evidence-director
+  - pipelines/business-documentary/script-director
+  - pipelines/business-documentary/factcheck-director
+  - pipelines/business-documentary/storyboard-director
+  - pipelines/business-documentary/narration-director
+  - pipelines/business-documentary/footage-director
+  - pipelines/business-documentary/editorial-director
+  - pipelines/business-documentary/compose-director
+  - pipelines/business-documentary/qa-director
+  - pipelines/business-documentary/publish-director
+  - meta/reviewer
+  - meta/checkpoint-protocol
+
+compatible_playbooks:
+  custom_allowed: true
+
+stages:
+  - name: topic
+    skill: pipelines/business-documentary/topic-director
+    produces:
+      - topic_brief
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Working angle is ONE sentence and names a real economic mechanism
+      - Unique question is answerable with sources that actually exist
+      - Target duration is 60-90s for the E2E pilot, 6-10min for editorial pilots
+      - Primary-source availability was checked before the angle was locked
+      - No claim, number or company name is asserted before evidence exists
+    success_criteria:
+      - Schema-valid topic_brief artifact
+      - unique_question, audience, target_duration_seconds and language present
+      - constraints list records the strict zero-cost mode
+
+  - name: research
+    skill: pipelines/business-documentary/research-director
+    required_artifacts_in:
+      - topic_brief
+    produces:
+      - research_brief
+    tools_available: []
+    optional_tools:
+      - transcript_fetcher
+      - video_downloader
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Primary sources outnumber secondary ones for the central thesis
+      - Every source records publisher, date, URL and access date
+      - Source conflicts are recorded, not resolved by picking the convenient number
+      - Search gaps are stated explicitly instead of being filled by assumption
+      - HTTP 200 is never treated as proof of a claim
+    success_criteria:
+      - Schema-valid research_brief artifact
+      - metadata.sources[] carries provenance for every source
+      - metadata.gaps[] present (may be empty only with an explicit justification)
+
+  - name: evidence
+    skill: pipelines/business-documentary/evidence-director
+    required_artifacts_in:
+      - research_brief
+    produces:
+      - evidence_ledger
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Each evidence_id is stable and derived from source + claim, never fabricated
+      - Quote or extract is copied verbatim from the source, not paraphrased
+      - Fact, interpretation, estimate, forecast and opinion carry different labels
+      - Exact numbers carry date, unit, geography and methodology where it matters
+      - Quality and caveat fields are filled for every entry
+    success_criteria:
+      - Schema-valid evidence_ledger artifact
+      - Every entry has a non-empty quote/extract and a source_id that resolves
+      - No entry reuses an evidence_id
+
+  - name: script
+    skill: pipelines/business-documentary/script-director
+    required_artifacts_in:
+      - topic_brief
+      - evidence_ledger
+    produces:
+      - script
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Every factual sentence carries evidence_ids that resolve in the ledger
+      - Hook, body and close are separated and the close lands the thesis
+      - Approximate durations sum to total_duration_seconds within tolerance
+      - Brand, acronym and number pronunciation notes are present
+      - The script explains a mechanism, it does not re-narrate sources
+    success_criteria:
+      - Schema-valid script artifact
+      - Every section lists claim evidence_ids
+      - No unresolved evidence_id survives into the script
+
+  - name: fact_check
+    skill: pipelines/business-documentary/factcheck-director
+    required_artifacts_in:
+      - script
+      - evidence_ledger
+    produces:
+      - fact_check_report
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Every script claim is verdicted confirmed / partially_confirmed / disputed /
+        refuted / unverified with the evidence that supports the verdict
+      - Contradictions between sources are surfaced, not smoothed over
+      - Refuted or unverified claims are cut from the script or downgraded to a
+        labelled hypothesis
+      - Legally sensitive accusations are routed to enhanced review
+      - The report blocks the pipeline when the central thesis is unproven
+    success_criteria:
+      - Schema-valid fact_check_report artifact
+      - Every script section has a corresponding verdict entry
+      - status is blocked whenever any refuted/disputed claim remains in the script
+
+  - name: storyboard
+    skill: pipelines/business-documentary/storyboard-director
+    required_artifacts_in:
+      - script
+      - fact_check_report
+    produces:
+      - scene_plan
+    tools_available: []
+    optional_tools:
+      - diagram_gen
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Every scene maps to a script section and carries its own search queries
+      - Scene durations sum within 10% of the script duration
+      - Visual slots are classified literal / illustrative / archive / chart / map / diagram
+      - Illustrative slots may not be described as footage of the named company or event
+      - Diagram slots are justified by data that needs explaining, not decoration
+    success_criteria:
+      - Schema-valid scene_plan artifact
+      - Each scene has 2-4 concrete English search queries
+      - metadata.visual_classes recorded per scene
+
+  - name: narration
+    skill: pipelines/business-documentary/narration-director
+    required_artifacts_in:
+      - script
+    produces:
+      - narration_manifest
+    tools_available:
+      - piper_tts
+    optional_tools:
+      - tts_selector
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Duration comes from the real audio file, never a words-per-minute guess
+      - Input text hash matches the script section that was synthesized
+      - Word or segment timestamps are present for caption generation
+      - Voice model and license are recorded before commercial use
+      - Stage fails closed when no TTS provider is available — silence is never faked
+    success_criteria:
+      - Schema-valid narration_manifest artifact
+      - metadata.tts_provider, metadata.tts_model and metadata.voice_license recorded
+      - Every synthesized file exists on disk with its measured duration
+
+  - name: footage
+    skill: pipelines/business-documentary/footage-director
+    required_artifacts_in:
+      - scene_plan
+    produces:
+      - asset_manifest
+    required_tools:
+      - direct_clip_search
+    optional_tools:
+      - corpus_builder
+      - clip_search
+    tools_available:
+      - direct_clip_search
+      - corpus_builder
+      - clip_search
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Every asset records provider, original URL, author, license and attribution
+      - Search failures are classified no_results / transport_error / auth_error /
+        rate_limited / license_rejected / download_error / invalid_media — never
+        collapsed into an empty list
+      - Downloaded files pass MIME, duration, resolution and decode checks
+      - Archive.org / Wikimedia / NASA material is not assumed public domain
+      - A scene with no valid asset is BLOCKED, not rendered empty
+    success_criteria:
+      - Schema-valid asset_manifest artifact
+      - metadata.search_stats records per-query result class counts
+      - Every asset has provenance and a QA verdict
+
+  - name: editorial
+    skill: pipelines/business-documentary/editorial-director
+    required_artifacts_in:
+      - asset_manifest
+      - scene_plan
+      - script
+    produces:
+      - alignment_report
+    tools_available:
+      - frame_sampler
+      - visual_qa
+    optional_tools:
+      - clip_search
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Several real frames per candidate were inspected, not one thumbnail
+      - Frame similarity is never treated as proof of a specific event or brand
+      - Illustrative material is labelled and never claimed as real coverage
+      - Duplicate and near-duplicate reuse is penalized
+      - Rejected picks keep their reason for regression review
+    success_criteria:
+      - Schema-valid alignment_report artifact
+      - Every scene has an accept/reject verdict with reasons
+      - metadata.rejected_picks records the rejection reason per pass
+
+  - name: compose
+    skill: pipelines/business-documentary/compose-director
+    required_artifacts_in:
+      - alignment_report
+      - asset_manifest
+      - scene_plan
+      - narration_manifest
+    produces:
+      - render_report
+    required_tools:
+      - video_compose
+    optional_tools:
+      - audio_mixer
+      - video_trimmer
+      - video_stitch
+      - color_grade
+      - diagram_gen
+      - subtitle_gen
+      - remotion_caption_burn
+      - music_library
+    tools_available:
+      - video_compose
+      - audio_mixer
+      - video_trimmer
+      - video_stitch
+      - color_grade
+      - diagram_gen
+      - subtitle_gen
+      - remotion_caption_burn
+      - music_library
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - render_runtime locked at proposal is carried through unchanged
+      - Timeline covers the full narration duration with no gaps or overlaps
+      - Diagrams carry titles, units and source references
+      - Music ducks under speech and nothing clips
+      - Subtitles stay inside frame and match the narration timestamps
+    success_criteria:
+      - Schema-valid render_report artifact
+      - Output file exists and passes ffprobe validation
+      - render_report.metadata.render_runtime matches the locked runtime
+
+  - name: qa
+    skill: pipelines/business-documentary/qa-director
+    required_artifacts_in:
+      - render_report
+      - compose_artifacts
+    produces:
+      - qa_report
+    tools_available:
+      - composition_validator
+      - visual_qa
+      - audio_probe
+    optional_tools:
+      - frame_sampler
+      - scene_detect
+      - transcriber
+      - audio_energy
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Deterministic gates are measured on the final file, not on a class or a command
+      - Full decode ran without errors; duration, resolution and FPS are in tolerance
+      - No long black frames, frozen frames or digital silence beyond threshold
+      - Speech level is sufficient and music/voice do not clip
+      - Semantic checks are scored and thresholded, not asserted
+      - "Pass requires every deterministic gate to pass; QA is never claimed from a partial check"
+    success_criteria:
+      - Schema-valid qa_report artifact
+      - Every deterministic check records a measured value and a threshold
+      - status is blocked when any deterministic gate fails
+
+  - name: publish
+    skill: pipelines/business-documentary/publish-director
+    required_artifacts_in:
+      - qa_report
+      - render_report
+    produces:
+      - publish_package
+      - publish_log
+    tools_available:
+      - export_bundle
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Package carries video, thumbnail, title, description, chapters, sources and credits
+      - Manual approval state is recorded; nothing is uploaded automatically
+      - Every asset credit matches its license and attribution requirement
+      - Publish log records who approved, when, and what was approved
+      - Blocked QA status cannot produce a publish package
+    success_criteria:
+      - Schema-valid publish_package and publish_log artifacts
+      - publish_package.metadata.manual_approval.status is explicit
+      - No YouTube upload was attempted

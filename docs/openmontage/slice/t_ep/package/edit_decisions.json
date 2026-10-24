@@ -1,0 +1,207 @@
+{
+  "version": 1,
+  "slice_version": "L-draft",
+  "total_duration_s": 185.43,
+  "resolution": "1920x1080",
+  "fps": 30,
+  "codec": "h264",
+  "audio_codec": "aac",
+  "narration_wav": "projects/slice_artemis_v0/audio/narration_finished.wav",
+  "narration_duration_s": 185.45,
+  "video_duration_s": 185.43,
+  "voice": "af_heart",
+  "engine": "kokoro_82m_cpu",
+  "cuts": [
+    {
+      "cut_id": 1,
+      "start": 0.0,
+      "end": 8.0,
+      "asset_id": "card_title",
+      "role": "graphics_card",
+      "clip": "Title",
+      "layout": "static_card",
+      "rationale": "Opening title card: Artemis I SLS/Orion mission, draft notice, source and claim_ids ARTEMIS-01/05/06. Static by design (informational card).",
+      "rights_basis": "source_policy_us_gov"
+    },
+    {
+      "cut_id": 2,
+      "start": 8.0,
+      "end": 22.0,
+      "asset_id": "card_b1",
+      "role": "graphics_card",
+      "clip": "B1",
+      "layout": "static_card",
+      "rationale": "Beat 1 Preparation: SLS/Orion backbone, Michoud core stage (212 ft, 4x RS-25), rollout to Pad 39B. Static graphics card with claim_ids ARTEMIS-01/02/04; source card shows asset id, center, rights_basis.",
+      "rights_basis": "source_policy_us_gov"
+    },
+    {
+      "cut_id": 3,
+      "start": 22.0,
+      "end": 38.0,
+      "asset_id": "artemis_launch",
+      "role": "archive_insert",
+      "clip": "Launch B-roll",
+      "layout": "1080p_scaled",
+         "source_segment": "40.0-56.0s",
+      "source": "NASA Image and Video Library (GX010506, MSFC), 1920x1080 30fps, used unscaled (>=1080p, frame only if <1080p)",
+      "rationale": "B1/B2 launch B-roll: SLS/Orion Artemis I launch from NASA Causeway slo-mo. Source is 1080p so no framing needed.",
+      "rights_basis": "source_policy_us_gov"
+    },
+    {
+      "cut_id": 4,
+      "start": 38.0,
+      "end": 54.0,
+      "asset_id": "card_b2",
+      "role": "graphics_card",
+      "clip": "B2",
+      "layout": "static_card",
+      "rationale": "Beat 2 Launch: 1:47 a.m. EST Nov 16 2022 Pad 39B, uncrewed flight test, first integrated deep-space test. Static graphics card with claim_ids ARTEMIS-05/06.",
+      "rights_basis": "source_policy_us_gov"
+    },
+    {
+      "cut_id": 5,
+      "start": 54.0,
+      "end": 70.0,
+      "asset_id": "artemis_launch",
+      "role": "archive_insert",
+      "clip": "Launch B-roll",
+      "layout": "1080p_scaled",
+         "source_segment": "56.0-72.0s",
+      "source": "NASA Image and Video Library (GX010506, MSFC), 1920x1080 30fps, used unscaled (>=1080p)",
+      "rationale": "B2/B3 launch B-roll continued. 1080p source, no framing.",
+      "rights_basis": "source_policy_us_gov"
+    },
+    {
+      "cut_id": 6,
+      "start": 70.0,
+      "end": 84.0,
+      "asset_id": "card_b3",
+      "role": "graphics_card",
+      "clip": "B3",
+      "layout": "static_card",
+      "rationale": "Beat 3 Transit: 25.5-day mission, uncrewed flight test to Moon and back. Static graphics card with claim_ids ARTEMIS-05/06/07.",
+      "rights_basis": "source_policy_us_gov"
+    },
+    {
+      "cut_id": 7,
+      "start": 84.0,
+      "end": 102.0,
+      "asset_id": "card_b4",
+      "role": "graphics_card",
+      "clip": "B4",
+      "layout": "static_card",
+      "rationale": "Beat 4 Moon Flybys: two flybys within 80 miles, farthest 270,000 miles. Static graphics card with claim_ids ARTEMIS-07/08.",
+      "rights_basis": "source_policy_us_gov"
+    },
+    {
+      "cut_id": 8,
+      "start": 102.0,
+      "end": 118.0,
+      "asset_id": "artemis_launch",
+      "role": "archive_insert",
+      "clip": "Launch B-roll",
+      "layout": "1080p_scaled",
+         "source_segment": "72.0-88.0s",
+      "source": "NASA Image and Video Library (GX010506, MSFC), 1920x1080 30fps, used unscaled (>=1080p)",
+      "rationale": "B4/B5 B-roll continued. 1080p source, no framing.",
+      "rights_basis": "source_policy_us_gov"
+    },
+    {
+      "cut_id": 9,
+      "start": 118.0,
+      "end": 140.0,
+      "asset_id": "card_b5",
+      "role": "graphics_card",
+      "clip": "B5",
+      "layout": "static_card",
+      "rationale": "Beat 5 Return: Pacific splashdown 9:40 a.m. PST, final milestone, performance records. Static graphics card with claim_ids ARTEMIS-09/10.",
+      "rights_basis": "source_policy_us_gov"
+    },
+    {
+      "cut_id": 10,
+      "start": 140.0,
+      "end": 156.0,
+      "asset_id": "artemis_launch",
+      "role": "archive_insert",
+      "clip": "Launch B-roll",
+      "layout": "1080p_scaled",
+         "source_segment": "88.0-104.0s",
+      "source": "NASA Image and Video Library (GX010506, MSFC), 1920x1080 30fps, used unscaled (>=1080p)",
+      "rationale": "B5/B6 B-roll continued. 1080p source, no framing.",
+      "rights_basis": "source_policy_us_gov"
+    },
+    {
+      "cut_id": 11,
+      "start": 156.0,
+      "end": 178.0,
+      "asset_id": "card_b6",
+      "role": "graphics_card",
+      "clip": "B6",
+      "layout": "static_card",
+      "rationale": "Beat 6 Legacy: Artemis II crewed flyby, first woman and first person of color on the Moon, SLS/Orion/Gateway backbone. Static graphics card with claim_ids ARTEMIS-11/12.",
+      "rights_basis": "source_policy_us_gov"
+    },
+    {
+      "cut_id": 12,
+      "start": 178.0,
+      "end": 185.43,
+      "asset_id": "card_credits",
+      "role": "graphics_card",
+      "clip": "Credits",
+      "layout": "static_card",
+      "rationale": "Closing credits card: sources, Kokoro narration, NOT_PUBLISHABLE notice. Static by design.",
+      "rights_basis": "source_policy_us_gov"
+    }
+  ],
+  "static_segments": [
+    {
+      "start": 0.0,
+      "end": 8.0,
+      "reason": "title graphics card is intentionally static - informational card",
+      "static_by_design": true
+    },
+    {
+      "start": 8.0,
+      "end": 22.0,
+      "reason": "B1 graphics card is intentionally static - informational card",
+      "static_by_design": true
+    },
+    {
+      "start": 38.0,
+      "end": 54.0,
+      "reason": "B2 graphics card is intentionally static - informational card",
+      "static_by_design": true
+    },
+    {
+      "start": 70.0,
+      "end": 84.0,
+      "reason": "B3 graphics card is intentionally static - informational card",
+      "static_by_design": true
+    },
+    {
+      "start": 84.0,
+      "end": 102.0,
+      "reason": "B4 graphics card is intentionally static - informational card",
+      "static_by_design": true
+    },
+    {
+      "start": 118.0,
+      "end": 140.0,
+      "reason": "B5 graphics card is intentionally static - informational card",
+      "static_by_design": true
+    },
+    {
+      "start": 156.0,
+      "end": 178.0,
+      "reason": "B6 graphics card is intentionally static - informational card",
+      "static_by_design": true
+    },
+    {
+      "start": 178.0,
+      "end": 185.43,
+      "reason": "credits graphics card is intentionally static - informational card",
+      "static_by_design": true
+    }
+  ],
+  "notes": "All assets source_policy_us_gov (NASA Image and Video Library) or OpenMontage original graphics. No third-party credit. No identifiable persons. No logos visible (frame review pending -> NEEDS_REVIEW). Media is gitignored; narration + graphics are project artifacts. Draft marks NOT_PUBLISHABLE (see credits.txt)."
+}

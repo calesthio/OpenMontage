@@ -1,0 +1,95 @@
+[
+  {
+    "asset_id": "card_title",
+    "kind": "graphics",
+    "rights_basis": "source_policy_us_gov",
+    "center": "OpenMontage original",
+    "third_party_credit": "no",
+    "identifiable_persons": "no",
+    "logo_visible": "no"
+  },
+  {
+    "asset_id": "card_orbit",
+    "kind": "graphics",
+    "rights_basis": "source_policy_us_gov",
+    "center": "OpenMontage original",
+    "third_party_credit": "no",
+    "identifiable_persons": "no",
+    "logo_visible": "no"
+  },
+  {
+    "asset_id": "card_cupola",
+    "kind": "graphics",
+    "rights_basis": "source_policy_us_gov",
+    "center": "OpenMontage original",
+    "third_party_credit": "no",
+    "identifiable_persons": "no",
+    "logo_visible": "no"
+  },
+  {
+    "asset_id": "card_earthobs",
+    "kind": "graphics",
+    "rights_basis": "source_policy_us_gov",
+    "center": "OpenMontage original",
+    "third_party_credit": "no",
+    "identifiable_persons": "no",
+    "logo_visible": "no"
+  },
+  {
+    "asset_id": "card_daynight",
+    "kind": "graphics",
+    "rights_basis": "source_policy_us_gov",
+    "center": "OpenMontage original",
+    "third_party_credit": "no",
+    "identifiable_persons": "no",
+    "logo_visible": "no"
+  },
+  {
+    "asset_id": "card_crew",
+    "kind": "graphics",
+    "rights_basis": "source_policy_us_gov",
+    "center": "OpenMontage original",
+    "third_party_credit": "no",
+    "identifiable_persons": "no",
+    "logo_visible": "no"
+  },
+  {
+    "asset_id": "card_matters",
+    "kind": "graphics",
+    "rights_basis": "source_policy_us_gov",
+    "center": "OpenMontage original",
+    "third_party_credit": "no",
+    "identifiable_persons": "no",
+    "logo_visible": "no"
+  },
+  {
+    "asset_id": "card_end",
+    "kind": "graphics",
+    "rights_basis": "source_policy_us_gov",
+    "center": "OpenMontage original",
+    "third_party_credit": "no",
+    "identifiable_persons": "no",
+    "logo_visible": "no"
+  },
+  {
+    "asset_id": "card_credits",
+    "kind": "graphics",
+    "rights_basis": "source_policy_us_gov",
+    "center": "OpenMontage original",
+    "third_party_credit": "no",
+    "identifiable_persons": "no",
+    "logo_visible": "no"
+  },
+  {
+    "asset_id": "iss_earth_views",
+    "kind": "footage",
+    "rights_basis": "source_policy_us_gov",
+    "center": "NASA HQ",
+    "source": "NASA Image & Video Library NHQ_2019_0626",
+    "rights": "Public domain (NASA), Creator=None, no NC/ND",
+    "sha256": "248b111940d65e4968950702206d6636eda8e2890f9c29dacdf0ea5e7416c0a5",
+    "third_party_credit": "none",
+    "identifiable_persons": "no",
+    "logo_visible": "unreviewed"
+  }
+]

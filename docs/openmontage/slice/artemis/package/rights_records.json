@@ -1,0 +1,104 @@
+[
+  {
+    "asset_id": "artemis_launch",
+    "role": "archive_insert",
+    "clip": "Launch B-roll inserts (4x 16s)",
+    "rights_basis": "source_policy_us_gov",
+    "center": "NASA/MSFC",
+    "source": "NASA Image and Video Library (images-api.nasa.gov) \u2014 GX010506 Artemis I Launch from NASA Causeway (Slo Mo), 2022-11-16",
+    "archive_item": "GX010506",
+     "used_segment": "40.0-56.0s, 56.0-72.0s, 72.0-88.0s, 88.0-104.0s",
+    "source_resolution": "1920x1080",
+    "third_party_credit": "no (metadata rights=None, NASA center creator)",
+    "identifiable_persons": "unreviewed - NEEDS_REVIEW",
+    "logo_visible": "unreviewed - NEEDS_REVIEW"
+  },
+  {
+    "asset_id": "card_title",
+    "role": "graphics_card",
+    "clip": "Title",
+    "rights_basis": "source_policy_us_gov",
+    "center": "OpenMontage original",
+    "source": "OpenMontage factory pipeline",
+    "third_party_credit": "no",
+    "identifiable_persons": "no",
+    "logo_visible": "no"
+  },
+  {
+    "asset_id": "card_b1",
+    "role": "graphics_card",
+    "clip": "B1",
+    "rights_basis": "source_policy_us_gov",
+    "center": "OpenMontage original",
+    "source": "OpenMontage factory pipeline",
+    "third_party_credit": "no",
+    "identifiable_persons": "no",
+    "logo_visible": "no"
+  },
+  {
+    "asset_id": "card_b2",
+    "role": "graphics_card",
+    "clip": "B2",
+    "rights_basis": "source_policy_us_gov",
+    "center": "OpenMontage original",
+    "source": "OpenMontage factory pipeline",
+    "third_party_credit": "no",
+    "identifiable_persons": "no",
+    "logo_visible": "no"
+  },
+  {
+    "asset_id": "card_b3",
+    "role": "graphics_card",
+    "clip": "B3",
+    "rights_basis": "source_policy_us_gov",
+    "center": "OpenMontage original",
+    "source": "OpenMontage factory pipeline",
+    "third_party_credit": "no",
+    "identifiable_persons": "no",
+    "logo_visible": "no"
+  },
+  {
+    "asset_id": "card_b4",
+    "role": "graphics_card",
+    "clip": "B4",
+    "rights_basis": "source_policy_us_gov",
+    "center": "OpenMontage original",
+    "source": "OpenMontage factory pipeline",
+    "third_party_credit": "no",
+    "identifiable_persons": "no",
+    "logo_visible": "no"
+  },
+  {
+    "asset_id": "card_b5",
+    "role": "graphics_card",
+    "clip": "B5",
+    "rights_basis": "source_policy_us_gov",
+    "center": "OpenMontage original",
+    "source": "OpenMontage factory pipeline",
+    "third_party_credit": "no",
+    "identifiable_persons": "no",
+    "logo_visible": "no"
+  },
+  {
+    "asset_id": "card_b6",
+    "role": "graphics_card",
+    "clip": "B6",
+    "rights_basis": "source_policy_us_gov",
+    "center": "OpenMontage original",
+    "source": "OpenMontage factory pipeline",
+    "third_party_credit": "no",
+    "identifiable_persons": "no",
+    "logo_visible": "no"
+  },
+  {
+    "asset_id": "card_credits",
+    "role": "graphics_card",
+    "clip": "Credits",
+    "rights_basis": "source_policy_us_gov",
+    "center": "OpenMontage original",
+    "source": "OpenMontage factory pipeline",
+    "third_party_credit": "no",
+    "identifiable_persons": "no",
+    "logo_visible": "no"
+  }
+]

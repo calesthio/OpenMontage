@@ -1,0 +1,1027 @@
+{
+  "scenes": [
+    {
+      "scene_id": "s01",
+      "subject": "vent grazer grazing bacterial mats",
+      "variants": {
+        "zimage": {
+          "A_tags": {
+            "target": "zimage",
+            "variant": "A",
+            "prompt": "flat-vector field-guide plate, vent grazer grazing bacterial mats, 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs, hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_prose": {
+            "target": "zimage",
+            "variant": "B",
+            "prompt": "A flat-vector field-guide plate field-guide plate. vent grazer grazing bacterial mats with 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "C_anatomy_first": {
+            "target": "zimage",
+            "variant": "C",
+            "prompt": "6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs on vent grazer grazing bacterial mats. A flat-vector field-guide plate field-guide plate. vent grazer grazing bacterial mats with 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_negation": {
+            "target": "zimage",
+            "variant": "B",
+            "prompt": "A flat-vector field-guide plate field-guide plate. vent grazer grazing bacterial mats with 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. no text, no watermark, no letters, no numerals, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": true
+          },
+          "B_positive": {
+            "target": "zimage",
+            "variant": "B",
+            "prompt": "A flat-vector field-guide plate field-guide plate. vent grazer grazing bacterial mats with 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          }
+        },
+        "klein": {
+          "A_tags": {
+            "target": "klein",
+            "variant": "A",
+            "prompt": "vent grazer grazing bacterial mats, 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs, hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_prose": {
+            "target": "klein",
+            "variant": "B",
+            "prompt": "vent grazer grazing bacterial mats has 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "C_anatomy_first": {
+            "target": "klein",
+            "variant": "C",
+            "prompt": "6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. vent grazer grazing bacterial mats has 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_negation": {
+            "target": "klein",
+            "variant": "B",
+            "prompt": "vent grazer grazing bacterial mats has 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space no text, no watermark, no letters, no numerals, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": true
+          },
+          "B_positive": {
+            "target": "klein",
+            "variant": "B",
+            "prompt": "vent grazer grazing bacterial mats has 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          }
+        },
+        "sdxl": {
+          "A_tags": {
+            "target": "sdxl",
+            "variant": "A",
+            "prompt": "vent grazer grazing bacterial mats, 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs, hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, , deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8, side silhouette, rule-of-thirds, copy space, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_prose": {
+            "target": "sdxl",
+            "variant": "B",
+            "prompt": "vent grazer grazing bacterial mats, 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "C_anatomy_first": {
+            "target": "sdxl",
+            "variant": "C",
+            "prompt": "6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs; vent grazer grazing bacterial mats, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_negation": {
+            "target": "sdxl",
+            "variant": "B",
+            "prompt": "vent grazer grazing bacterial mats, 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. no text, no watermark, no letters, no numerals, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": true
+          },
+          "B_positive": {
+            "target": "sdxl",
+            "variant": "B",
+            "prompt": "vent grazer grazing bacterial mats, 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          }
+        }
+      }
+    },
+    {
+      "scene_id": "s02",
+      "subject": "vent grazer full-body silhouette",
+      "variants": {
+        "zimage": {
+          "A_tags": {
+            "target": "zimage",
+            "variant": "A",
+            "prompt": "flat-vector field-guide plate, vent grazer full-body silhouette, 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs, hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_prose": {
+            "target": "zimage",
+            "variant": "B",
+            "prompt": "A flat-vector field-guide plate field-guide plate. vent grazer full-body silhouette with 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "C_anatomy_first": {
+            "target": "zimage",
+            "variant": "C",
+            "prompt": "6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs on vent grazer full-body silhouette. A flat-vector field-guide plate field-guide plate. vent grazer full-body silhouette with 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_negation": {
+            "target": "zimage",
+            "variant": "B",
+            "prompt": "A flat-vector field-guide plate field-guide plate. vent grazer full-body silhouette with 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. no text, no watermark, no letters, no numerals, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": true
+          },
+          "B_positive": {
+            "target": "zimage",
+            "variant": "B",
+            "prompt": "A flat-vector field-guide plate field-guide plate. vent grazer full-body silhouette with 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          }
+        },
+        "klein": {
+          "A_tags": {
+            "target": "klein",
+            "variant": "A",
+            "prompt": "vent grazer full-body silhouette, 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs, hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_prose": {
+            "target": "klein",
+            "variant": "B",
+            "prompt": "vent grazer full-body silhouette has 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "C_anatomy_first": {
+            "target": "klein",
+            "variant": "C",
+            "prompt": "6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. vent grazer full-body silhouette has 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_negation": {
+            "target": "klein",
+            "variant": "B",
+            "prompt": "vent grazer full-body silhouette has 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space no text, no watermark, no letters, no numerals, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": true
+          },
+          "B_positive": {
+            "target": "klein",
+            "variant": "B",
+            "prompt": "vent grazer full-body silhouette has 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          }
+        },
+        "sdxl": {
+          "A_tags": {
+            "target": "sdxl",
+            "variant": "A",
+            "prompt": "vent grazer full-body silhouette, 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs, hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, , deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8, side silhouette, rule-of-thirds, copy space, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_prose": {
+            "target": "sdxl",
+            "variant": "B",
+            "prompt": "vent grazer full-body silhouette, 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "C_anatomy_first": {
+            "target": "sdxl",
+            "variant": "C",
+            "prompt": "6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs; vent grazer full-body silhouette, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_negation": {
+            "target": "sdxl",
+            "variant": "B",
+            "prompt": "vent grazer full-body silhouette, 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. no text, no watermark, no letters, no numerals, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": true
+          },
+          "B_positive": {
+            "target": "sdxl",
+            "variant": "B",
+            "prompt": "vent grazer full-body silhouette, 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          }
+        }
+      }
+    },
+    {
+      "scene_id": "s03",
+      "subject": "filter drifter in open water",
+      "variants": {
+        "zimage": {
+          "A_tags": {
+            "target": "zimage",
+            "variant": "A",
+            "prompt": "flat-vector field-guide plate, filter drifter in open water, 0 limbs, 2 eyes, 0 horns; undulating fin, wide filter mouth, hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_prose": {
+            "target": "zimage",
+            "variant": "B",
+            "prompt": "A flat-vector field-guide plate field-guide plate. filter drifter in open water with 0 limbs, 2 eyes, 0 horns; undulating fin, wide filter mouth. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "C_anatomy_first": {
+            "target": "zimage",
+            "variant": "C",
+            "prompt": "0 limbs, 2 eyes, 0 horns; undulating fin, wide filter mouth on filter drifter in open water. A flat-vector field-guide plate field-guide plate. filter drifter in open water with 0 limbs, 2 eyes, 0 horns; undulating fin, wide filter mouth. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_negation": {
+            "target": "zimage",
+            "variant": "B",
+            "prompt": "A flat-vector field-guide plate field-guide plate. filter drifter in open water with 0 limbs, 2 eyes, 0 horns; undulating fin, wide filter mouth. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. no text, no watermark, no letters, no numerals, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": true
+          },
+          "B_positive": {
+            "target": "zimage",
+            "variant": "B",
+            "prompt": "A flat-vector field-guide plate field-guide plate. filter drifter in open water with 0 limbs, 2 eyes, 0 horns; undulating fin, wide filter mouth. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          }
+        },
+        "klein": {
+          "A_tags": {
+            "target": "klein",
+            "variant": "A",
+            "prompt": "filter drifter in open water, 0 limbs, 2 eyes, 0 horns; undulating fin, wide filter mouth, hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_prose": {
+            "target": "klein",
+            "variant": "B",
+            "prompt": "filter drifter in open water has 0 limbs, 2 eyes, 0 horns; undulating fin, wide filter mouth. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "C_anatomy_first": {
+            "target": "klein",
+            "variant": "C",
+            "prompt": "0 limbs, 2 eyes, 0 horns; undulating fin, wide filter mouth. filter drifter in open water has 0 limbs, 2 eyes, 0 horns; undulating fin, wide filter mouth. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_negation": {
+            "target": "klein",
+            "variant": "B",
+            "prompt": "filter drifter in open water has 0 limbs, 2 eyes, 0 horns; undulating fin, wide filter mouth. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space no text, no watermark, no letters, no numerals, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": true
+          },
+          "B_positive": {
+            "target": "klein",
+            "variant": "B",
+            "prompt": "filter drifter in open water has 0 limbs, 2 eyes, 0 horns; undulating fin, wide filter mouth. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          }
+        },
+        "sdxl": {
+          "A_tags": {
+            "target": "sdxl",
+            "variant": "A",
+            "prompt": "filter drifter in open water, 0 limbs, 2 eyes, 0 horns; undulating fin, wide filter mouth, hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, , deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8, side silhouette, rule-of-thirds, copy space, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_prose": {
+            "target": "sdxl",
+            "variant": "B",
+            "prompt": "filter drifter in open water, 0 limbs, 2 eyes, 0 horns; undulating fin, wide filter mouth, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "C_anatomy_first": {
+            "target": "sdxl",
+            "variant": "C",
+            "prompt": "0 limbs, 2 eyes, 0 horns; undulating fin, wide filter mouth; filter drifter in open water, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_negation": {
+            "target": "sdxl",
+            "variant": "B",
+            "prompt": "filter drifter in open water, 0 limbs, 2 eyes, 0 horns; undulating fin, wide filter mouth, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. no text, no watermark, no letters, no numerals, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": true
+          },
+          "B_positive": {
+            "target": "sdxl",
+            "variant": "B",
+            "prompt": "filter drifter in open water, 0 limbs, 2 eyes, 0 horns; undulating fin, wide filter mouth, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          }
+        }
+      }
+    },
+    {
+      "scene_id": "s04",
+      "subject": "ice burrower in sediment",
+      "variants": {
+        "zimage": {
+          "A_tags": {
+            "target": "zimage",
+            "variant": "A",
+            "prompt": "flat-vector field-guide plate, ice burrower in sediment, 0 limbs, 2 eyes, 0 horns; tapered head, segmented body, hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_prose": {
+            "target": "zimage",
+            "variant": "B",
+            "prompt": "A flat-vector field-guide plate field-guide plate. ice burrower in sediment with 0 limbs, 2 eyes, 0 horns; tapered head, segmented body. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "C_anatomy_first": {
+            "target": "zimage",
+            "variant": "C",
+            "prompt": "0 limbs, 2 eyes, 0 horns; tapered head, segmented body on ice burrower in sediment. A flat-vector field-guide plate field-guide plate. ice burrower in sediment with 0 limbs, 2 eyes, 0 horns; tapered head, segmented body. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_negation": {
+            "target": "zimage",
+            "variant": "B",
+            "prompt": "A flat-vector field-guide plate field-guide plate. ice burrower in sediment with 0 limbs, 2 eyes, 0 horns; tapered head, segmented body. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. no text, no watermark, no letters, no numerals, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": true
+          },
+          "B_positive": {
+            "target": "zimage",
+            "variant": "B",
+            "prompt": "A flat-vector field-guide plate field-guide plate. ice burrower in sediment with 0 limbs, 2 eyes, 0 horns; tapered head, segmented body. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          }
+        },
+        "klein": {
+          "A_tags": {
+            "target": "klein",
+            "variant": "A",
+            "prompt": "ice burrower in sediment, 0 limbs, 2 eyes, 0 horns; tapered head, segmented body, hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_prose": {
+            "target": "klein",
+            "variant": "B",
+            "prompt": "ice burrower in sediment has 0 limbs, 2 eyes, 0 horns; tapered head, segmented body. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "C_anatomy_first": {
+            "target": "klein",
+            "variant": "C",
+            "prompt": "0 limbs, 2 eyes, 0 horns; tapered head, segmented body. ice burrower in sediment has 0 limbs, 2 eyes, 0 horns; tapered head, segmented body. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_negation": {
+            "target": "klein",
+            "variant": "B",
+            "prompt": "ice burrower in sediment has 0 limbs, 2 eyes, 0 horns; tapered head, segmented body. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space no text, no watermark, no letters, no numerals, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": true
+          },
+          "B_positive": {
+            "target": "klein",
+            "variant": "B",
+            "prompt": "ice burrower in sediment has 0 limbs, 2 eyes, 0 horns; tapered head, segmented body. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          }
+        },
+        "sdxl": {
+          "A_tags": {
+            "target": "sdxl",
+            "variant": "A",
+            "prompt": "ice burrower in sediment, 0 limbs, 2 eyes, 0 horns; tapered head, segmented body, hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, , deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8, side silhouette, rule-of-thirds, copy space, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_prose": {
+            "target": "sdxl",
+            "variant": "B",
+            "prompt": "ice burrower in sediment, 0 limbs, 2 eyes, 0 horns; tapered head, segmented body, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "C_anatomy_first": {
+            "target": "sdxl",
+            "variant": "C",
+            "prompt": "0 limbs, 2 eyes, 0 horns; tapered head, segmented body; ice burrower in sediment, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_negation": {
+            "target": "sdxl",
+            "variant": "B",
+            "prompt": "ice burrower in sediment, 0 limbs, 2 eyes, 0 horns; tapered head, segmented body, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. no text, no watermark, no letters, no numerals, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": true
+          },
+          "B_positive": {
+            "target": "sdxl",
+            "variant": "B",
+            "prompt": "ice burrower in sediment, 0 limbs, 2 eyes, 0 horns; tapered head, segmented body, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          }
+        }
+      }
+    },
+    {
+      "scene_id": "s05",
+      "subject": "vent chimney field habitat",
+      "variants": {
+        "zimage": {
+          "A_tags": {
+            "target": "zimage",
+            "variant": "A",
+            "prompt": "flat-vector field-guide plate, vent chimney field habitat, 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs, hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_prose": {
+            "target": "zimage",
+            "variant": "B",
+            "prompt": "A flat-vector field-guide plate field-guide plate. vent chimney field habitat with 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "C_anatomy_first": {
+            "target": "zimage",
+            "variant": "C",
+            "prompt": "6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs on vent chimney field habitat. A flat-vector field-guide plate field-guide plate. vent chimney field habitat with 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_negation": {
+            "target": "zimage",
+            "variant": "B",
+            "prompt": "A flat-vector field-guide plate field-guide plate. vent chimney field habitat with 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. no text, no watermark, no letters, no numerals, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": true
+          },
+          "B_positive": {
+            "target": "zimage",
+            "variant": "B",
+            "prompt": "A flat-vector field-guide plate field-guide plate. vent chimney field habitat with 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          }
+        },
+        "klein": {
+          "A_tags": {
+            "target": "klein",
+            "variant": "A",
+            "prompt": "vent chimney field habitat, 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs, hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_prose": {
+            "target": "klein",
+            "variant": "B",
+            "prompt": "vent chimney field habitat has 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "C_anatomy_first": {
+            "target": "klein",
+            "variant": "C",
+            "prompt": "6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. vent chimney field habitat has 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_negation": {
+            "target": "klein",
+            "variant": "B",
+            "prompt": "vent chimney field habitat has 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space no text, no watermark, no letters, no numerals, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": true
+          },
+          "B_positive": {
+            "target": "klein",
+            "variant": "B",
+            "prompt": "vent chimney field habitat has 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          }
+        },
+        "sdxl": {
+          "A_tags": {
+            "target": "sdxl",
+            "variant": "A",
+            "prompt": "vent chimney field habitat, 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs, hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, , deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8, side silhouette, rule-of-thirds, copy space, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_prose": {
+            "target": "sdxl",
+            "variant": "B",
+            "prompt": "vent chimney field habitat, 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "C_anatomy_first": {
+            "target": "sdxl",
+            "variant": "C",
+            "prompt": "6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs; vent chimney field habitat, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_negation": {
+            "target": "sdxl",
+            "variant": "B",
+            "prompt": "vent chimney field habitat, 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. no text, no watermark, no letters, no numerals, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": true
+          },
+          "B_positive": {
+            "target": "sdxl",
+            "variant": "B",
+            "prompt": "vent chimney field habitat, 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          }
+        }
+      }
+    },
+    {
+      "scene_id": "s08",
+      "subject": "vent grazer forelimb anatomy crop",
+      "variants": {
+        "zimage": {
+          "A_tags": {
+            "target": "zimage",
+            "variant": "A",
+            "prompt": "flat-vector field-guide plate, vent grazer forelimb anatomy crop, 6 limbs, 2 eyes, 0 horns; spade-like forelimbs, joint detail, hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_prose": {
+            "target": "zimage",
+            "variant": "B",
+            "prompt": "A flat-vector field-guide plate field-guide plate. vent grazer forelimb anatomy crop with 6 limbs, 2 eyes, 0 horns; spade-like forelimbs, joint detail. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "C_anatomy_first": {
+            "target": "zimage",
+            "variant": "C",
+            "prompt": "6 limbs, 2 eyes, 0 horns; spade-like forelimbs, joint detail on vent grazer forelimb anatomy crop. A flat-vector field-guide plate field-guide plate. vent grazer forelimb anatomy crop with 6 limbs, 2 eyes, 0 horns; spade-like forelimbs, joint detail. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_negation": {
+            "target": "zimage",
+            "variant": "B",
+            "prompt": "A flat-vector field-guide plate field-guide plate. vent grazer forelimb anatomy crop with 6 limbs, 2 eyes, 0 horns; spade-like forelimbs, joint detail. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. no text, no watermark, no letters, no numerals, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": true
+          },
+          "B_positive": {
+            "target": "zimage",
+            "variant": "B",
+            "prompt": "A flat-vector field-guide plate field-guide plate. vent grazer forelimb anatomy crop with 6 limbs, 2 eyes, 0 horns; spade-like forelimbs, joint detail. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime. deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": 0.0,
+            "steps": 9,
+            "seed": 4000,
+            "negation_style": false
+          }
+        },
+        "klein": {
+          "A_tags": {
+            "target": "klein",
+            "variant": "A",
+            "prompt": "vent grazer forelimb anatomy crop, 6 limbs, 2 eyes, 0 horns; spade-like forelimbs, joint detail, hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_prose": {
+            "target": "klein",
+            "variant": "B",
+            "prompt": "vent grazer forelimb anatomy crop has 6 limbs, 2 eyes, 0 horns; spade-like forelimbs, joint detail. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "C_anatomy_first": {
+            "target": "klein",
+            "variant": "C",
+            "prompt": "6 limbs, 2 eyes, 0 horns; spade-like forelimbs, joint detail. vent grazer forelimb anatomy crop has 6 limbs, 2 eyes, 0 horns; spade-like forelimbs, joint detail. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_negation": {
+            "target": "klein",
+            "variant": "B",
+            "prompt": "vent grazer forelimb anatomy crop has 6 limbs, 2 eyes, 0 horns; spade-like forelimbs, joint detail. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space no text, no watermark, no letters, no numerals, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": true
+          },
+          "B_positive": {
+            "target": "klein",
+            "variant": "B",
+            "prompt": "vent grazer forelimb anatomy crop has 6 limbs, 2 eyes, 0 horns; spade-like forelimbs, joint detail. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, in a flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": null,
+            "guidance_scale": null,
+            "steps": 4,
+            "seed": 4000,
+            "negation_style": false
+          }
+        },
+        "sdxl": {
+          "A_tags": {
+            "target": "sdxl",
+            "variant": "A",
+            "prompt": "vent grazer forelimb anatomy crop, 6 limbs, 2 eyes, 0 horns; spade-like forelimbs, joint detail, hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, , deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8, side silhouette, rule-of-thirds, copy space, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_prose": {
+            "target": "sdxl",
+            "variant": "B",
+            "prompt": "vent grazer forelimb anatomy crop, 6 limbs, 2 eyes, 0 horns; spade-like forelimbs, joint detail, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "C_anatomy_first": {
+            "target": "sdxl",
+            "variant": "C",
+            "prompt": "6 limbs, 2 eyes, 0 horns; spade-like forelimbs, joint detail; vent grazer forelimb anatomy crop, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          },
+          "B_negation": {
+            "target": "sdxl",
+            "variant": "B",
+            "prompt": "vent grazer forelimb anatomy crop, 6 limbs, 2 eyes, 0 horns; spade-like forelimbs, joint detail, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. no text, no watermark, no letters, no numerals, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": true
+          },
+          "B_positive": {
+            "target": "sdxl",
+            "variant": "B",
+            "prompt": "vent grazer forelimb anatomy crop, 6 limbs, 2 eyes, 0 horns; spade-like forelimbs, joint detail, in hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime, flat-vector field-guide plate, deep teal #14455C, bioluminescent lime #A8E06F, basalt charcoal #3B444B, pale bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+            "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+            "guidance_scale": 7.5,
+            "steps": 50,
+            "seed": 4000,
+            "negation_style": false
+          }
+        }
+      }
+    }
+  ],
+  "assertions": [
+    {
+      "check": "zimage negative_prompt is None",
+      "passed": true
+    },
+    {
+      "check": "zimage guidance_scale is 0.0",
+      "passed": true
+    },
+    {
+      "check": "zimage negation != positive prompt text",
+      "passed": true
+    },
+    {
+      "check": "zimage style stated first",
+      "passed": true
+    },
+    {
+      "check": "klein C != B (anatomy-first vs last)",
+      "passed": true
+    },
+    {
+      "check": "klein negative_prompt is None",
+      "passed": true
+    },
+    {
+      "check": "klein steps == 4",
+      "passed": true
+    },
+    {
+      "check": "klein guidance_scale None (uses diffusers default 3.5)",
+      "passed": true
+    },
+    {
+      "check": "sdxl negative_prompt present",
+      "passed": true
+    },
+    {
+      "check": "sdxl guidance_scale 7.5",
+      "passed": true
+    },
+    {
+      "check": "sdxl steps 50",
+      "passed": true
+    },
+    {
+      "check": "determinism same inputs same output",
+      "passed": true
+    }
+  ],
+  "all_passed": true
+}

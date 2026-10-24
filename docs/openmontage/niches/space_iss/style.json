@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "niche_id": "space_iss",
+  "style_name": "orbital_technical_plate",
+  "display_name": "Space - ISS / Earth-view technical plates (limited AI inserts)",
+  "status": "FINAL",
+  "locked_model": "klein (config/image_engine.json -> model); prompt target klein, variant C",
+  "media_policy": {
+    "allowed": [
+      "ai_generated_still_illustration",
+      "own_graphics_diagram"
+    ],
+    "excluded": [
+      "photorealistic_people",
+      "emblem_or_insignia",
+      "text_in_image",
+      "video_clips"
+    ],
+    "rights_basis": "ai_generated_illustration",
+    "generator": "AI",
+    "ai_share": 0.15,
+    "note": "AI illustrations may cover at most 15% of the runtime; real NASA footage is the primary visual. NASA insignia/emblems are excluded (14 CFR 1221)."
+  },
+  "palette": {
+    "orbital_black": "#0B1622",
+    "earth_blue": "#2E6FA8",
+    "vacuum_grey": "#5A6672",
+    "signal_orange": "#E08A3C"
+  },
+  "line_style": {
+    "name": "technical schematic plate",
+    "prompt_phrase": "technical schematic illustration, thin uniform strokes, flat fills, orthographic diagram",
+    "rules": [
+      "orthographic, no perspective distortion",
+      "thin uniform stroke weight",
+      "flat fills only, no gradients, no reflections",
+      "no photographic background"
+    ]
+  },
+  "light": "even neutral lighting, no reflections",
+  "camera_vocabulary": {
+    "front": "orthographic front elevation, full object centered",
+    "side": "orthographic side elevation, full object centered",
+    "three_quarter": "orthographic three-quarter elevation, near and far faces readable",
+    "detail_crop": "close orthographic crop on one component",
+    "wide_context": "wide schematic view of the assembly, small in frame"
+  },
+  "constraints": [
+    {
+      "id": "no_text",
+      "positive": "clean image without text, text-free, no letters, no numerals, no watermark",
+      "negative": "text, watermark, letters, numerals, label text",
+      "enforced_by": "tools/prompting/builder.py",
+      "inject": false
+    },
+    {
+      "id": "not_photoreal",
+      "positive": "schematic line drawing, not a photograph, not a photorealistic render",
+      "negative": "photorealism, photograph, photorealistic render, cinematic lighting",
+      "enforced_by": "tools/prompting/builder.py",
+      "inject": false
+    },
+    {
+      "id": "no_people",
+      "positive": "uncrewed structure, no human figures",
+      "negative": "people, astronaut, person, human figure",
+      "enforced_by": "tools/prompting/builder.py",
+      "inject": false
+    },
+    {
+      "id": "no_logos",
+      "positive": "no emblems, no insignia, no flags, no logos, no agency marks",
+      "negative": "emblem, insignia, flag, logo, NASA insignia, agency mark",
+      "enforced_by": "tools/prompting/builder.py",
+      "inject": false
+    },
+    {
+      "id": "no_starfield",
+      "positive": "plain flat dark field, empty background",
+      "negative": "starfield, milky way, nebula, dense stars",
+      "enforced_by": "style_kit",
+      "inject": true
+    },
+    {
+      "id": "copy_space",
+      "positive": "wide empty background space",
+      "negative": "cluttered background, busy composition",
+      "enforced_by": "style_kit",
+      "inject": true
+    }
+  ],
+  "label_rule": {
+    "label": "Illustration",
+    "placement": "start_and_description",
+    "ai_share": 0.15,
+    "gate": "every AI cut carries the label; the AI share stays within the niche limit (max 15% of runtime)",
+    "enforced_by": "tools/illustration/illustration_batch.py (IMAGE_LABEL)"
+  },
+  "anatomy_rule": {
+    "required": false,
+    "counts": [],
+    "canonical_silhouette": false,
+    "rule": "no creatures in this niche; structural parts are named in the prompt instead of anatomy counts"
+  },
+  "seed_policy": {
+    "range": [
+      3000,
+      3999
+    ],
+    "base": 3000,
+    "rule": "one fixed seed per plate and view, recorded in the manifest; never reuse a seed for two subjects inside one batch",
+    "source": "docs/openmontage/image_gen/ILLUSTRATION_STYLE_BIBLE.md section 3"
+  },
+  "aspect": {
+    "full_frame": [
+      1344,
+      768
+    ],
+    "card": [
+      1024,
+      1024
+    ],
+    "sheet_square": [
+      1024,
+      1024
+    ]
+  },
+  "editorial_overlays": [
+    "labels",
+    "callouts",
+    "arrows",
+    "dimension_lines",
+    "numbers"
+  ],
+  "editorial_overlays_rule": "labels, callouts, arrows, dimension lines and numbers are drawn in the editor, never by the image model",
+  "provenance": {
+    "source_profile": "docs/openmontage/niches/space_iss.yaml",
+    "style_bible": "docs/openmontage/niches/space_iss/STYLE_BIBLE.md",
+    "citations": [
+      {
+        "title": "FLUX.2 [klein] 4B model card (prompt style sensitivity)",
+        "url": "https://huggingface.co/black-forest-labs/FLUX.2-klein-4B",
+        "accessed": "2026-10-22"
+      }
+    ]
+  }
+}

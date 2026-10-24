@@ -1,0 +1,12 @@
+{
+  "sentences": 20,
+  "raw_duration_s": 185.45,
+  "finished_duration_s": 185.45,
+  "video_duration_s": 185.43,
+  "sample_rate": 44100,
+  "voice": "af_heart",
+  "model": "Kokoro-82M",
+  "engine": "kokoro_82m_cpu",
+  "expected_duration": 185.45,
+  "tolerance": 1.0
+}

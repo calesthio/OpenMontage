@@ -1,0 +1,48 @@
+version: "1.0"
+niche_id: speculative_science
+display_name: "Speculative Science — Hypotheses & Thought Experiments"
+
+# --- 3a. Allowed sources + per-source storage policy ---
+allowed_sources:
+  - name: nasa
+    storage_policy: per_project_asset
+  - name: archive_org
+    storage_policy: per_project_asset
+  - name: wikimedia
+    storage_policy: per_project_asset
+
+# --- 3b. Excluded content (hard reject at footage/editorial) ---
+excluded_content:
+  - presented_as_fact_without_label   # speculation must be labeled speculation
+  - identifiable_private_persons_without_clearance
+  - third_party_credit_required
+
+# --- 3c. Required primary document types ---
+required_primary_doc_types:
+  - NASA_IMAGES_API      # images.nasa.gov record page (reachable)
+  - NASA_NTRS            # NASA Technical Reports Server (if reachable; NTRS blocked in this env — flag)
+  - PEER_REVIEWED_PAPER  # journal article (DOI, citation)
+
+# --- 3d. Viability gate ---
+viability_gate:
+  min_licensed_video_clips: 4
+  min_primary_docs: 2
+
+# --- 3e. Added-value gate ---
+added_value_gate:
+  min_narration_coverage: 0.90
+  min_original_diagrams_per_90s: 1
+  max_unannotated_archive_clip_s: 20
+  max_still_only_sequence_s: 15
+  claim_source_card_policy: every_claim
+  ai_illustration_max_share: 0.15
+  speculation_label_required: true
+
+# --- 3f. Episode templates (>= 3 distinct structures) ---
+episode_templates:
+  - id: hypothesis_evidence
+    description: "One hypothesis: claim, evidence for, evidence against, current consensus, what would change it."
+  - id: thought_experiment
+    description: "One thought experiment: setup, prediction, implication, real-world test if any."
+  - id: frontier_topic
+    description: "One frontier topic: what is known, what is unknown, leading theories, open questions."

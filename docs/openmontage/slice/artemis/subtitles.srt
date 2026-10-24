@@ -1,0 +1,236 @@
+1
+00:00:01,540 --> 00:00:05,040
+NASA's Space Launch System rocket and Orion spacecraft form
+
+2
+00:00:05,040 --> 00:00:08,910
+the backbone for the agency's Artemis missions to the Moon.
+
+3
+00:00:09,320 --> 00:00:09,960
+Over development,
+
+4
+00:00:10,480 --> 00:00:13,720
+the rocket and spacecraft moved from design and manufacturing
+
+5
+00:00:14,400 --> 00:00:15,060
+to testing,
+
+6
+00:00:15,600 --> 00:00:16,200
+assembly,
+
+7
+00:00:16,300 --> 00:00:17,480
+and integration,
+
+8
+00:00:17,620 --> 00:00:20,480
+with some hardware delivered to the launch pad at Kennedy.
+
+9
+00:00:21,120 --> 00:00:24,380
+The SLS core stage was built at Michoud Assembly Facility
+
+10
+00:00:24,980 --> 00:00:28,640
+— the largest rocket stage NASA has built since the Saturn V,
+
+11
+00:00:29,300 --> 00:00:30,520
+212 feet tall,
+
+12
+00:00:31,080 --> 00:00:33,900
+with four RS-25 engines.
+
+13
+00:00:34,020 --> 00:00:37,030
+SLS will be the most powerful rocket ever built,
+
+14
+00:00:37,180 --> 00:00:41,160
+powered by two solid rocket boosters and four RS-25
+
+15
+00:00:41,160 --> 00:00:44,220
+engines providing over 8 million pounds of thrust.
+
+16
+00:00:45,540 --> 00:00:49,900
+SLS rolled out to Launch Complex 39B at Kennedy and was stacked
+
+17
+00:00:49,900 --> 00:00:53,580
+inside the Vehicle Assembly Building ahead of its first flight.
+
+18
+00:00:54,120 --> 00:00:55,800
+At 1:47 a.m.
+
+19
+00:00:56,880 --> 00:01:02,100
+EST (6:47 UTC) on November 16,
+
+20
+00:01:02,320 --> 00:01:02,660
+2022,
+
+21
+00:01:02,760 --> 00:01:05,920
+NASA's Orion spacecraft launched atop the SLS rocket
+
+22
+00:01:05,920 --> 00:01:09,620
+from historic Launch Pad 39B at Kennedy Space Center.
+
+23
+00:01:10,620 --> 00:01:12,600
+The liftoff officially began the Artemis
+
+24
+00:01:12,600 --> 00:01:15,320
+I mission — an uncrewed flight test.
+
+25
+00:01:16,020 --> 00:01:19,140
+Artemis I was the first integrated test of the agency's
+
+26
+00:01:19,220 --> 00:01:23,220
+deep space exploration systems: the SLS rocket,
+
+27
+00:01:23,220 --> 00:01:24,620
+the Orion spacecraft,
+
+28
+00:01:24,820 --> 00:01:25,840
+and supporting ground systems.
+
+29
+00:01:27,140 --> 00:01:28,840
+It was the first in a series of
+
+30
+00:01:28,840 --> 00:01:31,760
+increasingly complex missions to the Moon.
+
+31
+00:01:32,300 --> 00:01:33,990
+Orion was sent on a path to the Moon,
+
+32
+00:01:34,140 --> 00:01:37,620
+beginning a 25.5-day mission around the Moon.
+
+33
+00:01:37,780 --> 00:01:41,800
+This was an uncrewed flight test demonstrating the SLS rocket's
+
+34
+00:01:41,800 --> 00:01:44,980
+ability to carry Orion around the Moon and back to Earth.
+
+35
+00:01:46,100 --> 00:01:47,170
+Over the course of the mission,
+
+36
+00:01:47,700 --> 00:01:49,950
+Orion performed two lunar flybys,
+
+37
+00:01:50,080 --> 00:01:54,340
+coming within 80 miles (129 kilometers) of the lunar surface.
+
+38
+00:01:55,500 --> 00:01:57,550
+At its farthest distance during the mission,
+
+39
+00:01:58,120 --> 00:02:03,660
+Orion traveled nearly 270,000 miles (435,000 kilometers)
+
+40
+00:02:04,300 --> 00:02:05,620
+from Earth.
+
+41
+00:02:05,840 --> 00:02:08,480
+NASA's Orion spacecraft completed a parachute-assisted
+
+42
+00:02:08,560 --> 00:02:11,980
+splashdown in the Pacific Ocean at 9:40 a.m.
+
+43
+00:02:12,780 --> 00:02:15,420
+PST (12:40 p.m.
+
+44
+00:02:15,560 --> 00:02:18,640
+EST). Splashdown marked the final major
+
+45
+00:02:18,640 --> 00:02:21,640
+milestone of the Artemis I mission.
+
+46
+00:02:22,060 --> 00:02:24,360
+Artemis I set new records of performance,
+
+47
+00:02:25,020 --> 00:02:26,620
+exceeded efficiency expectations,
+
+48
+00:02:27,260 --> 00:02:30,880
+and established new safety baselines for humans in deep space.
+
+49
+00:02:31,780 --> 00:02:33,240
+Following Artemis I,
+
+50
+00:02:33,400 --> 00:02:38,040
+human beings will fly around the Moon on Artemis II. Under Artemis,
+
+51
+00:02:38,700 --> 00:02:40,380
+NASA will land the first woman and
+
+52
+00:02:40,380 --> 00:02:42,610
+the first person of color on the Moon.
+
+53
+00:02:43,300 --> 00:02:44,000
+SLS,
+
+54
+00:02:44,000 --> 00:02:44,420
+Orion,
+
+55
+00:02:44,800 --> 00:02:47,130
+and the Gateway in lunar orbit form NASA's
+
+56
+00:02:47,260 --> 00:02:49,150
+backbone for deep space exploration.
+
+57
+00:02:50,400 --> 00:02:53,030
+SLS is the only rocket that can send Orion,
+
+58
+00:02:53,940 --> 00:02:54,440
+astronauts,
+
+59
+00:02:54,500 --> 00:02:56,480
+and supplies to the Moon in a single mission.
+

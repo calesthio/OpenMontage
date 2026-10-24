@@ -1,0 +1,80 @@
+1
+00:00:01,000 --> 00:00:08,975
+NASA's Space Launch System rocket and Orion spacecraft form the backbone for the agency's Artemis missions to the Moon.
+
+2
+00:00:09,475 --> 00:00:21,175
+Over development, the rocket and spacecraft moved from design and manufacturing to testing, assembly, and integration, with some hardware delivered to the launch pad at Kennedy.
+
+3
+00:00:21,675 --> 00:00:34,025
+The SLS core stage was built at Michoud Assembly Facility — the largest rocket stage NASA has built since the Saturn V, 212 feet tall, with four RS-25 engines.
+
+4
+00:00:34,525 --> 00:00:45,850
+SLS will be the most powerful rocket ever built, powered by two solid rocket boosters and four RS-25 engines providing over 8 million pounds of thrust.
+
+5
+00:00:46,350 --> 00:00:54,950
+SLS rolled out to Launch Complex 39B at Kennedy and was stacked inside the Vehicle Assembly Building ahead of its first flight.
+
+6
+00:00:55,450 --> 00:01:11,875
+At 1:47 a.m. EST (6:47 UTC) on November 16, 2022, NASA's Orion spacecraft launched atop the SLS rocket from historic Launch Pad 39B at Kennedy Space Center.
+
+7
+00:01:12,375 --> 00:01:17,500
+The liftoff officially began the Artemis I mission — an uncrewed flight test.
+
+8
+00:01:18,000 --> 00:01:29,125
+Artemis I was the first integrated test of the agency's deep space exploration systems: the SLS rocket, the Orion spacecraft, and supporting ground systems.
+
+9
+00:01:29,625 --> 00:01:34,325
+It was the first in a series of increasingly complex missions to the Moon.
+
+10
+00:01:34,825 --> 00:01:40,975
+Orion was sent on a path to the Moon, beginning a 25.5-day mission around the Moon.
+
+11
+00:01:41,475 --> 00:01:49,775
+This was an uncrewed flight test demonstrating the SLS rocket's ability to carry Orion around the Moon and back to Earth.
+
+12
+00:01:50,275 --> 00:01:59,775
+Over the course of the mission, Orion performed two lunar flybys, coming within 80 miles (129 kilometers) of the lunar surface.
+
+13
+00:02:00,275 --> 00:02:10,200
+At its farthest distance during the mission, Orion traveled nearly 270,000 miles (435,000 kilometers) from Earth.
+
+14
+00:02:10,700 --> 00:02:21,700
+NASA's Orion spacecraft completed a parachute-assisted splashdown in the Pacific Ocean at 9:40 a.m. PST (12:40 p.m. EST).
+
+15
+00:02:22,200 --> 00:02:26,900
+Splashdown marked the final major milestone of the Artemis I mission.
+
+16
+00:02:27,400 --> 00:02:36,850
+Artemis I set new records of performance, exceeded efficiency expectations, and established new safety baselines for humans in deep space.
+
+17
+00:02:37,350 --> 00:02:42,775
+Following Artemis I, human beings will fly around the Moon on Artemis II.
+
+18
+00:02:43,275 --> 00:02:48,975
+Under Artemis, NASA will land the first woman and the first person of color on the Moon.
+
+19
+00:02:49,475 --> 00:02:56,425
+SLS, Orion, and the Gateway in lunar orbit form NASA's backbone for deep space exploration.
+
+20
+00:02:56,925 --> 00:03:04,150
+SLS is the only rocket that can send Orion, astronauts, and supplies to the Moon in a single mission.
+

@@ -1,0 +1,224 @@
+[
+  {
+    "sentence": "High above our planet, a laboratory the size of a football field circles Earth every ninety minutes. That is the International Space Station.",
+    "claim_id": "ISS-002",
+    "source_flags": "SINGLE",
+    "beat": "B1"
+  },
+  {
+    "sentence": "Traveling at about five miles per second, it laps the globe in the time it takes to watch a feature film.",
+    "claim_id": "ISS-002",
+    "source_flags": "SINGLE",
+    "beat": "B1"
+  },
+  {
+    "sentence": "The station flies about two hundred and fifty miles above the surface at seventeen thousand five hundred miles per hour.",
+    "claim_id": "ISS-001",
+    "source_flags": "SINGLE",
+    "beat": "B1"
+  },
+  {
+    "sentence": "Sixteen times each day, the station laps the planet, and from its cupola, Earth looks like a living painting.",
+    "claim_id": "ISS-003",
+    "source_flags": "SINGLE",
+    "beat": "B1"
+  },
+  {
+    "sentence": "It is a home in orbit, continuously occupied since the year two thousand.",
+    "claim_id": "ISS-009",
+    "source_flags": "SINGLE",
+    "beat": "B1"
+  },
+  {
+    "sentence": "More than two hundred and fifty astronauts have lived and worked aboard, representing nearly thirty countries.",
+    "claim_id": "ISS-005",
+    "source_flags": "SINGLE",
+    "beat": "B1"
+  },
+  {
+    "sentence": "Every ninety minutes, the view outside the cupola flips from blazing daylight to the thin blue line of the atmosphere against the black of space.",
+    "claim_id": "ISS-012",
+    "source_flags": "SINGLE",
+    "beat": "B2"
+  },
+  {
+    "sentence": "Astronauts watch the sun rise and set in rapid succession, sixteen sunrises and sixteen sunsets every single day.",
+    "claim_id": "ISS-003, ISS-012",
+    "source_flags": "SINGLE",
+    "beat": "B2"
+  },
+  {
+    "sentence": "It is a rhythm no one on the ground experiences.",
+    "claim_id": "ISS-003",
+    "source_flags": "SINGLE",
+    "beat": "B2"
+  },
+  {
+    "sentence": "The protective shell of our atmosphere looks startlingly thin from up there \u2014 a fragile blue line between life and the void.",
+    "claim_id": "ISS-011",
+    "source_flags": "SINGLE",
+    "beat": "B2"
+  },
+  {
+    "sentence": "You can see the curve of the planet, the thin veil of air, and the endless ocean all at once.",
+    "claim_id": "ISS-010",
+    "source_flags": "SINGLE",
+    "beat": "B2"
+  },
+  {
+    "sentence": "The cupola is the station's window to the world. It is a dome built for observation, with seven windows that look out onto Earth, onto spacewalks, and onto arriving and departing spacecraft.",
+    "claim_id": "ISS-015",
+    "source_flags": "SINGLE",
+    "beat": "B3"
+  },
+  {
+    "sentence": "Those seven windows give the crew a panoramic view few people will ever have.",
+    "claim_id": "ISS-023",
+    "source_flags": "SINGLE",
+    "beat": "B3"
+  },
+  {
+    "sentence": "The cupola was delivered with the Tranquility node on February ninth, twenty-ten.",
+    "claim_id": "ISS-018",
+    "source_flags": "SINGLE",
+    "beat": "B3"
+  },
+  {
+    "sentence": "From there, the crew guide robotics operations, watch spacecraft dock, and photograph our world.",
+    "claim_id": "ISS-019",
+    "source_flags": "SINGLE",
+    "beat": "B3"
+  },
+  {
+    "sentence": "The cupola supports robotics operations, docking, and photography \u2014 a workstation for observing Earth and the vehicle.",
+    "claim_id": "ISS-016",
+    "source_flags": "SINGLE",
+    "beat": "B3"
+  },
+  {
+    "sentence": "Station crew members frequently point their cameras outside the cupola to photograph the planet below.",
+    "claim_id": "ISS-013",
+    "source_flags": "SINGLE",
+    "beat": "B3"
+  },
+  {
+    "sentence": "Over twenty years, cupola photography has built one of the longest continuous visual records of Earth ever made.",
+    "claim_id": "ISS-022",
+    "source_flags": "SINGLE",
+    "beat": "B3"
+  },
+  {
+    "sentence": "Through those windows, astronauts watch hurricanes spin, volcanoes smoke, city lights bloom at night, and glaciers creep across the land.",
+    "claim_id": "ISS-021",
+    "source_flags": "SINGLE",
+    "beat": "B4"
+  },
+  {
+    "sentence": "This is Earth observation from orbit, and it helps scientists understand our changing planet.",
+    "claim_id": "ISS-020",
+    "source_flags": "",
+    "beat": "B4"
+  },
+  {
+    "sentence": "Each image, each observation, adds to a record of Earth that stretches back decades and helps us track how the planet is changing.",
+    "claim_id": "ISS-022",
+    "source_flags": "SINGLE",
+    "beat": "B4"
+  },
+  {
+    "sentence": "Astronauts can use the cupola's robotics workstation to command the Canadarm2 to reach out, grapple, and install spacecraft.",
+    "claim_id": "ISS-017",
+    "source_flags": "SINGLE",
+    "beat": "B4"
+  },
+  {
+    "sentence": "The data feeds climate models, disaster response, and scientists studying forests, farms, and coastlines.",
+    "claim_id": "ISS-006",
+    "source_flags": "SINGLE",
+    "beat": "B4"
+  },
+  {
+    "sentence": "The station is more than a factory in the sky. For about a quarter of a century, it has been a classroom, a laboratory, and a proving ground.",
+    "claim_id": "ISS-004",
+    "source_flags": "SINGLE",
+    "beat": "B5"
+  },
+  {
+    "sentence": "Orbiting our planet while hosting nearly three hundred astronauts from across the globe, the crew have carried out thousands of experiments.",
+    "claim_id": "ISS-005, ISS-006",
+    "source_flags": "SINGLE",
+    "beat": "B5"
+  },
+  {
+    "sentence": "The research done here \u2014 in human health, in materials, in Earth science \u2014 prepares humanity for longer stays in space and for missions farther from home.",
+    "claim_id": "ISS-006, ISS-007",
+    "source_flags": "SINGLE",
+    "beat": "B5"
+  },
+  {
+    "sentence": "It is an enduring platform for international cooperation in orbit, a fragile framework of modules grown into the most enduring platform humans have built.",
+    "claim_id": "ISS-008",
+    "source_flags": "SINGLE",
+    "beat": "B5"
+  },
+  {
+    "sentence": "Experiments on the station have yielded advances in medicine, materials science, and climate resilience.",
+    "claim_id": "ISS-006",
+    "source_flags": "SINGLE",
+    "beat": "B5"
+  },
+  {
+    "sentence": "Astronauts who spend months aboard the station describe something called the overview effect. Seeing Earth without borders, a single fragile sphere hanging in the void, changes how they see home.",
+    "claim_id": "ISS-013",
+    "source_flags": "SINGLE",
+    "beat": "B6"
+  },
+  {
+    "sentence": "National boundaries disappear from this height. What remains is one planet, shared by everyone.",
+    "claim_id": "ISS-014, ISS-024",
+    "source_flags": "SINGLE",
+    "beat": "B6"
+  },
+  {
+    "sentence": "From orbit, Earth is not a collection of separate places.",
+    "claim_id": "ISS-024",
+    "source_flags": "SINGLE",
+    "beat": "B6"
+  },
+  {
+    "sentence": "From this height there are no lines drawn on the surface. There is only land and ocean, cloud and ice, one interconnected system.",
+    "claim_id": "ISS-010",
+    "source_flags": "SINGLE",
+    "beat": "B7"
+  },
+  {
+    "sentence": "The atmosphere is a thin protective shell, a fragile blue line between life and the void.",
+    "claim_id": "ISS-011",
+    "source_flags": "SINGLE",
+    "beat": "B7"
+  },
+  {
+    "sentence": "It reminds us how small and precious our home really is.",
+    "claim_id": "ISS-024",
+    "source_flags": "SINGLE",
+    "beat": "B7"
+  },
+  {
+    "sentence": "The station's continuous presence in orbit \u2014 people living and working in space, day after day \u2014 reminds us that we are capable of looking after our home when we choose to.",
+    "claim_id": "ISS-009",
+    "source_flags": "SINGLE",
+    "beat": "B8"
+  },
+  {
+    "sentence": "Two hundred and fifty miles up. Seventeen thousand five hundred miles per hour. Seven windows on the world.",
+    "claim_id": "ISS-001, ISS-015",
+    "source_flags": "SINGLE",
+    "beat": "B8"
+  },
+  {
+    "sentence": "The International Space Station proves that, seen from orbit, Earth is not a collection of separate places \u2014 it is one home, shared by everyone who has ever lived.",
+    "claim_id": "ISS-024",
+    "source_flags": "SINGLE",
+    "beat": "B8"
+  }
+]

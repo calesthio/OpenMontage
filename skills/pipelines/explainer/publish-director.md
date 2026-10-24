@@ -109,9 +109,14 @@ exports/
       concept.json          # Thumbnail concept (or the copied thumbnail image)
 ```
 
-`export_bundle` is a local, offline packager — it does not upload. A networked
-publisher (e.g. a YouTube uploader) would be a separate `publish`-capability
-provider.
+`export_bundle` is a local, offline packager — it does not upload. The networked
+provider under the same `publish` capability is `youtube_upload` (setup in
+[`docs/YOUTUBE_UPLOAD.md`](../../../docs/YOUTUBE_UPLOAD.md)). It uploads the render to
+the creator's own channel through their own OAuth client, only as `private` or
+`unlisted` (optionally with `publish_at` so YouTube schedules the public flip);
+`public` is refused. Run it with `dry_run: true` first and show the user the request,
+then call it with `confirm: true` only after an explicit yes. Its `data["publish_log"]`
+entry (`status: "draft"`) is schema-valid and is persisted like the export one.
 
 ### Step 6: Build Publish Log
 

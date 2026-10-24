@@ -164,3 +164,13 @@ gh pr create --title "feat(registry): {name}" --body "preview: {hyperframes.dev-
 - [ ] `npx hyperframes publish` run (claim your project URL)
 - [ ] Preview MP4 attached to PR (external) or catalog PNG uploaded (internal)
 - [ ] All IDs unique and prefixed
+
+## Updated Contributing Guidelines
+
+It is critical for all contributors to read and understand the updated contributing guidelines before embarking on any project. Contributors should focus on improving the quality and accessibility of the registry entries by adhering to the following updated practices:
+
+- Review existing registry entries for consistency and quality.
+- Ensure all new submissions align with the established naming conventions.
+- Seek feedback from peers and maintainers during the development process.
+- Document any known issues or limitations within the submitted components or blocks.
+- Be prepared to iterate based on reviewer feedback and maintain an open line of communication throughout the pull request process.

@@ -10,9 +10,20 @@ from __future__ import annotations
 import io
 import json
 import time
+import sys
 from pathlib import Path
 
 import pytest
+
+_LOCAL_SITE_PACKAGES = Path(__file__).resolve().parents[2] / ".venv" / "Lib" / "site-packages"
+if _LOCAL_SITE_PACKAGES.is_dir():
+    local_site = str(_LOCAL_SITE_PACKAGES)
+    try:
+        sys.path.remove(local_site)
+    except ValueError:
+        pass
+    sys.path.insert(0, local_site)
+
 from fastapi.testclient import TestClient
 from PIL import Image
 
@@ -108,6 +119,59 @@ class TestBacklotServerApi:
         assert state_body["project_id"] == "film"
         assert state_body["title"] == "Film"
         assert state_body["stages"]
+
+    def test_create_project_from_prompt(self, client, projects_root):
+        response = client.post(
+            "/api/projects/create",
+            json={
+                "title": "Promo clip",
+                "prompt": "Create a 20-second promo video about a new product launch.",
+                "pipeline_type": "animated-explainer",
+                "style_playbook": "clean-professional",
+            },
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["project_id"].startswith("promo-clip")
+        project = projects_root / body["project_id"]
+        assert (project / "project.json").exists()
+        assert (project / "checkpoint_research.json").exists()
+
+        state = client.get(f"/api/project/{body['project_id']}/state")
+        assert state.status_code == 200
+        state_body = state.json()
+        assert state_body["project_id"] == body["project_id"]
+        assert state_body["stages"][0]["name"] == "research"
+
+    def test_review_gate_can_be_approved_or_reopened(self, client, projects_root):
+        create = client.post(
+            "/api/projects/create",
+            json={
+                "title": "Gate clip",
+                "prompt": "Make a quick onboarding video.",
+                "pipeline_type": "animated-explainer",
+                "style_playbook": "clean-professional",
+            },
+        )
+        project_id = create.json()["project_id"]
+
+        approve = client.post(
+            f"/api/project/{project_id}/stage/research/review",
+            json={"action": "approve", "message": "Looks good, continue."},
+        )
+        assert approve.status_code == 200
+        assert approve.json()["status"] == "completed"
+
+        state = client.get(f"/api/project/{project_id}/state")
+        research = next(stage for stage in state.json()["stages"] if stage["name"] == "research")
+        assert research["status"] == "completed"
+        assert research["human_approved"] is True
+
+        reopen = client.post(
+            f"/api/project/{project_id}/stage/research/review",
+            json={"action": "request_changes", "message": "Please tighten the hook."},
+        )
+        assert reopen.status_code == 409
 
     @pytest.mark.parametrize(
         ("url", "status"),

@@ -2,7 +2,7 @@
 
 import {
   STAGE_ICONS, el, fmtAgo, fmtClock, fmtDuration, fmtMoney,
-  getJSON, mediaURL, subscribe, thumbURL, waveBars,
+  getJSON, mediaURL, postJSON, subscribe, thumbURL, waveBars,
 } from "/ui/lib.js";
 
 const rawProjectPath = location.pathname.split("/p/")[1] || "";
@@ -19,6 +19,8 @@ let selectedStage = null;   // stage drawer open for this stage name
 let activeRender = 0;
 let replay = null;          // {t0, t1, t, playing} — replay mode when non-null
 let firstPaint = true;
+let approvalReplyDraft = "";
+let approvalSubmitting = false;
 
 function applyTheme(theme) {
   currentTheme = theme === "light" ? "light" : "dark";
@@ -108,7 +110,7 @@ function renderSlate(s) {
 // ---------------------------------------------------------------------------
 
 function stageSub(st) {
-  if (st.status === "awaiting_human") return "awaiting your approval\nreply in chat to continue";
+  if (st.status === "awaiting_human") return "awaiting your approval\nreply below to continue";
   if (st.status === "in_progress" && st.stalled) {
     return `stalled? no activity for ${st.stalled_minutes}m\nask the agent for status`;
   }
@@ -197,6 +199,25 @@ function reviewSummaryText(review) {
     nested.review_focus_met ? `review focus ${nested.review_focus_met}` : null,
     nested.schema_validation,
   ].filter(Boolean).join(" · ");
+}
+
+async function submitReviewAction(stageName, action) {
+  if (approvalSubmitting) return;
+  approvalSubmitting = true;
+  render();
+  try {
+    await postJSON(`/api/project/${encodedProjectId}/stage/${encodeURIComponent(stageName)}/review`, {
+      action,
+      message: approvalReplyDraft,
+    });
+    approvalReplyDraft = "";
+    await refresh();
+  } catch (err) {
+    approvalSubmitting = false;
+    render();
+    throw err;
+  }
+  approvalSubmitting = false;
 }
 
 function renderDrawer(s) {
@@ -506,17 +527,43 @@ function renderApprovalReview(s) {
     ));
   }
 
+  const composer = el("div", { class: "approval-composer" },
+    el("label", { class: "approval-composer-label", for: "approval-reply" }, "Reply below"),
+    el("textarea", {
+      id: "approval-reply",
+      class: "approval-reply",
+      rows: 4,
+      placeholder: "Approve it or ask for changes. This is the on-page replacement for the missing chat.",
+      oninput: (e) => { approvalReplyDraft = e.target.value; },
+    }, approvalReplyDraft),
+    el("div", { class: "approval-composer-actions" },
+      el("button", {
+        type: "button",
+        class: "approval-approve",
+        disabled: approvalSubmitting ? "disabled" : null,
+        onclick: () => submitReviewAction(awaiting.name, "approve").catch(console.error),
+      }, approvalSubmitting ? "Saving…" : "APPROVE"),
+      el("button", {
+        type: "button",
+        class: "approval-request",
+        disabled: approvalSubmitting ? "disabled" : null,
+        onclick: () => submitReviewAction(awaiting.name, "request_changes").catch(console.error),
+      }, approvalSubmitting ? "Saving…" : "REQUEST CHANGES"),
+    ),
+  );
+
   return el("section", { class: "approval-review", "data-stage": awaiting.name },
     el("div", { class: "approval-review-head" },
       el("div", {},
         el("div", { class: "approval-eyebrow" }, "REVIEW GATE"),
         el("h2", {}, `${humanize(awaiting.name)} is ready for your review`),
-        el("p", {}, "Review the artifact here, then reply in chat to approve it or request changes."),
+        el("p", {}, "Review the artifact here, then reply below to approve it or request changes."),
       ),
       el("span", { class: "approval-status" }, "PENDING APPROVAL"),
     ),
     reviewSummary ? el("div", { class: "approval-review-note" },
       el("b", {}, "SELF-REVIEW  "), shortText(reviewSummary, 260)) : null,
+    composer,
     el("div", { class: "approval-artifacts" }, artifacts),
     el("div", { class: "approval-review-foot" },
       el("span", {}, nextStage
@@ -882,11 +929,10 @@ function renderAwaitingNotice(s) {
   if (!awaiting) return null;
   return el("div", { class: "notice" },
     el("span", { style: "font-size:calc(16px * var(--fs-scale))" }, "◈"),
-    el("span", {},
+    el("p", {},
       el("b", {}, `The ${awaiting.name} stage is waiting for your review. `),
-      "The agent is paused at this gate — reply ", el("b", {}, "in chat"), " to approve or request changes."));
+      "The agent is paused at this gate — reply ", el("b", {}, "below"), " to approve or request changes."));
 }
-
 // ---------------------------------------------------------------------------
 // replay — scrub a completed run from its timestamps
 // ---------------------------------------------------------------------------

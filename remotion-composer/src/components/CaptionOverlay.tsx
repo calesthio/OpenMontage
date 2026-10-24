@@ -182,7 +182,7 @@ export const CaptionOverlay: React.FC<CaptionOverlayProps> = ({
     <AbsoluteFill>
       {pages.map((page, i) => {
         const fromFrame = Math.round((page.startMs / 1000) * fps);
-        const nextStart = pages[i + 1]?.startMs ?? page.endMs + 500;
+        const nextStart = Math.min(pages[i + 1]?.startMs ?? Infinity, page.endMs + 700);
         const duration = Math.max(
           1,
           Math.round(((nextStart - page.startMs) / 1000) * fps)

@@ -126,3 +126,122 @@ def test_no_timeout_flag_when_not_requested(tool, tmp_path, monkeypatch):
 
     assert not any(str(c).startswith("--timeout") for c in seen["cmd"])
     assert seen["timeout"] == 600
+
+
+def test_remotion_browser_executable_is_passed_through(tool, tmp_path, monkeypatch):
+    seen = {}
+    browser = tmp_path / "custom_chrome.exe"
+    browser.write_text("dummy binary")
+
+    def fake_run_command(cmd, *a, **k):
+        seen["cmd"] = cmd
+        return None
+
+    monkeypatch.setattr(tool, "run_command", fake_run_command)
+    tool._remotion_render(
+        {
+            "composition_data": {"cuts": []},
+            "output_path": str(tmp_path / "out.mp4"),
+            "remotion_browser_executable": str(browser),
+        }
+    )
+
+    assert f"--browser-executable={browser.resolve()}" in seen["cmd"]
+
+
+def test_remotion_browser_executable_fails_on_missing_file(tool, tmp_path):
+    missing = tmp_path / "nonexistent_chrome.exe"
+    result = tool._remotion_render(
+        {
+            "composition_data": {"cuts": []},
+            "output_path": str(tmp_path / "out.mp4"),
+            "remotion_browser_executable": str(missing),
+        }
+    )
+
+    assert result.success is False
+    assert "remotion_browser_executable does not exist or is not a file" in result.error
+
+
+def test_high_level_render_forwards_browser_executable(tool, tmp_path, monkeypatch):
+    captured = {}
+    monkeypatch.setattr(tool, "_pre_compose_validation", lambda *a, **k: None)
+    monkeypatch.setattr(tool, "_needs_remotion", lambda *a, **k: True)
+
+    def fake_remotion_render(inputs):
+        captured.update(inputs)
+        from tools.base_tool import ToolResult
+
+        return ToolResult(success=True, data={}, artifacts=[])
+
+    monkeypatch.setattr(tool, "_remotion_render", fake_remotion_render)
+    monkeypatch.setattr(tool, "_run_final_review", lambda *a, **k: {})
+
+    tool._render(
+        {
+            "edit_decisions": {
+                "render_runtime": "remotion",
+                "renderer_family": "explainer-data",
+                "cuts": [{"id": "c1", "source": "a1", "in_seconds": 0, "out_seconds": 2}],
+            },
+            "asset_manifest": {"assets": [{"id": "a1", "path": "/tmp/a1.mp4"}]},
+            "output_path": str(tmp_path / "out.mp4"),
+            "remotion_browser_executable": "/custom/browser",
+        }
+    )
+
+    assert captured.get("remotion_browser_executable") == "/custom/browser"
+
+
+def test_no_browser_executable_flag_when_not_requested(tool, tmp_path, monkeypatch):
+    seen = {}
+
+    def fake_run_command(cmd, *a, **k):
+        seen["cmd"] = cmd
+        return None
+
+    monkeypatch.setattr(tool, "run_command", fake_run_command)
+    tool._remotion_render(
+        {"composition_data": {"cuts": []}, "output_path": str(tmp_path / "out.mp4")}
+    )
+
+    assert not any(str(c).startswith("--browser-executable") for c in seen["cmd"])
+
+
+def test_atelier_render_appends_browser_executable(tool, tmp_path, monkeypatch):
+    seen = {}
+    browser = tmp_path / "browser_atelier.exe"
+    browser.write_text("dummy binary")
+
+    entry = tmp_path / "entry.tsx"
+    entry.write_text("// dummy")
+
+    def fake_run_command(cmd, *a, **k):
+        seen["cmd"] = cmd
+        return None
+
+    orig_exists = Path.exists
+
+    def fake_exists(self):
+        if "remotion-composer" in str(self):
+            return True
+        return orig_exists(self)
+
+    monkeypatch.setattr(tool, "run_command", fake_run_command)
+    monkeypatch.setattr(Path, "exists", fake_exists)
+
+    tool._render_via_atelier(
+        inputs={
+            "output_path": str(tmp_path / "out.mp4"),
+            "remotion_browser_executable": str(browser),
+        },
+        edit_decisions={
+            "bespoke": {
+                "entry": str(entry),
+                "composition_id": "CompId",
+            }
+        },
+    )
+
+    assert f"--browser-executable={browser.resolve()}" in seen["cmd"]
+

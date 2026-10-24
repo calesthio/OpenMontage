@@ -1,4 +1,42 @@
 {
+  "fal-ai/kling-video/o3/standard/reference-to-video": {
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "prompt": {"type": "string", "minLength": 1, "maxLength": 2500},
+        "start_image_url": {"type": "string", "minLength": 1},
+        "end_image_url": {"type": "string", "minLength": 1},
+        "image_urls": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "duration": {"type": "string", "enum": ["3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"]},
+        "aspect_ratio": {"type": "string", "enum": ["16:9", "9:16", "1:1"]},
+        "generate_audio": {"type": "boolean"},
+        "enable_safety_checker": {"type": "boolean"}
+      },
+      "required": ["prompt"],
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/kling-video/o3/standard/reference-to-video",
+    "verified_on": "2026-10-24"
+  },
+  "fal-ai/kling-video/o3/pro/reference-to-video": {
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "prompt": {"type": "string", "minLength": 1, "maxLength": 2500},
+        "start_image_url": {"type": "string", "minLength": 1},
+        "end_image_url": {"type": "string", "minLength": 1},
+        "image_urls": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "duration": {"type": "string", "enum": ["3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"]},
+        "aspect_ratio": {"type": "string", "enum": ["16:9", "9:16", "1:1"]},
+        "generate_audio": {"type": "boolean"},
+        "enable_safety_checker": {"type": "boolean"}
+      },
+      "required": ["prompt"],
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/kling-video/o3/pro/reference-to-video",
+    "verified_on": "2026-10-24"
+  },
   "alibaba/wan-3.0/image-to-video": {
     "input_schema": {
       "properties": {

@@ -1,0 +1,102 @@
+# Blueprint Reveal: logo construction reels. Distilled from 5 sportswear/tech logo-reveal references (9:16).
+identity:
+  name: "Blueprint Reveal"
+  category: motion-graphics
+  mood: precise, confident, premium-sport, engineered
+  pace: moderate
+  best_for: "Logo reveals, brand identity showcases, sportswear / tech brand launches, Behance/Instagram brand reels (9:16)"
+
+taste_profile:
+  design_read: "The designer's process made cinematic: inspiration source -> construction grid -> mark -> wordmark -> system -> mockups -> end card."
+  visual_variance: 4
+  motion_intensity: 6
+  information_density: 3
+  palette_discipline: "Near-black field + ONE brand accent. White/off-white inverted beats as punctuation. Never more than 2 colors on screen besides neutrals."
+  layout_variation: "Dead-center mark for most frames; break with a full-bleed accent flash, a swatch strip, and edge-cropped mockups (phone corner, hoodie, cap)."
+  reference_strategy: "Lock the mark's vector first; every scene is a different treatment of the same geometry."
+  anti_patterns:
+    - "random particle explosions that do not come from the mark's geometry"
+    - "showing the finished logo before the construction beat earns it"
+    - "multiple accent colors"
+    - "slow linear fades"
+  quality_gates:
+    - "The construction grid must visibly derive the final mark (same angles, same radii)."
+    - "Every transition is a match-cut on the mark's position or a hard cut on the beat."
+
+visual_language:
+  color_palette:
+    primary: ["#000000", "#0B0B0B"]
+    accent: ["#E3173E", "#1A3BE0", "#F8DF08"]
+    background: "#000000"
+    text: "#FFFFFF"
+    muted: "#5E5E5A"
+  composition: "Center-locked mark, generous negative space, thin hairline construction grid (1px, 20-30% white), annotation labels in tiny mono type (angles, 'Letter - P', degrees)"
+  texture: "Flat black; optional chrome/metallic pass of the mark; halftone/dot-matrix dissolve; soft studio-lit apparel mockups"
+
+typography:
+  headings:
+    font: "Inter Tight"
+    weight: 700
+    tracking: "-0.02em"
+  body:
+    font: "Inter"
+    weight: 400
+  code:
+    font: "JetBrains Mono"
+    weight: 400
+  scale_system: "perfect_fourth"
+  weight_matrix:
+    title: 700
+    heading: 600
+    body: 400
+    caption: 400
+
+motion:
+  transitions: [hard-cut-on-beat, match-cut-on-mark, color-flash-invert, mask-wipe, scale-punch]
+  animation_style: "Snappy expo-out (cubic-bezier(0.16,1,0.3,1)); stroke-draw for construction, then shape fill; wordmark letters track/slide out from behind the mark; micro-overshoot only on the final lockup"
+  pacing_rules:
+    min_scene_hold_seconds: 0.6
+    max_scene_hold_seconds: 4.5
+    text_card_hold_seconds: 1.5
+    transition_duration_seconds: 0.25
+  entrance: "stroke-draw path (trim paths 0->100%) led by an arrow/cursor head, then fill flood"
+  exit: "scale-down to 40% + hard cut, or pixel/halftone dissolve"
+
+audio:
+  voice_style: "optional short brand line VO; otherwise SFX-only"
+  music_mood: "none (VO + SFX only, no music)"
+  music_volume: 0
+  sfx_style: "precise, mechanical, designer-tool sounds: pen ticks, grid snaps, metallic tings, sub drops"
+  sfx_map:
+    construction_line_draw: "thin pen/scribe stroke, length = stroke duration"
+    anchor_point_appear: "tiny UI click per point (staggered with the points)"
+    angle_annotation: "soft digital blip"
+    shape_fill_flood: "short airy swell 0.2s"
+    wordmark_slide_out: "fabric/whoosh slide matching letter stagger"
+    chrome_pass: "high metallic shimmer/ting at the specular peak"
+    pixel_halftone_dissolve: "granular digital crackle"
+    color_flash_invert: "single low thump on the flash frame"
+    mockup_cut: "camera shutter or soft cloth rustle (hoodie/cap)"
+    final_lockup: "sub drop + short reverb tail"
+  sfx_rules:
+    - "No music. The voiceover carries rhythm; SFX carry motion."
+    - "Every SFX is semantically matched to what moves or appears (object, material, action), never a generic hit."
+    - "SFX start on the motion's first frame (0 to -1 frame lead); their length matches the move's duration."
+    - "Whooshes follow the move's speed curve: ease-in exit = rising whoosh, ease-out entrance = falling tail."
+    - "Keep SFX under the voice: peaks around -18 to -12 dBFS, never masking a spoken word; duck SFX -6 dB inside speech."
+    - "Use silence: holds between phrases get room tone only, so the next hit lands."
+
+asset_generation:
+  image_prompt_prefix: "minimal brand identity showcase, pure black studio background, single centered logo mark, studio lighting, ultra clean, "
+  image_negative_prompt: "clutter, multiple logos, busy background, text artifacts, gradients"
+  diagram_style: "hairline construction grid with angle annotations and anchor dots"
+  consistency_anchors:
+    - "Same mark geometry in every scene"
+    - "Black field + one accent"
+    - "Mockup set: app icon on phone corner, black hoodie chest print, black cap, business card"
+    - "End card: mark + wordmark, small designer credit at bottom"
+
+quality_rules:
+  - "Structure: inspiration source (eagle/helmet/etc.) -> construction grid -> mark -> wordmark -> color swatches -> mockups -> alt treatments (chrome/halftone) -> lockup"
+  - "Total 12-24s for 9:16 social; cut every 0.6-1.5s after the construction beat"
+  - "The construction beat may hold 3-5s; it is the proof of craft"

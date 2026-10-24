@@ -124,6 +124,7 @@ class PiperTTS(BaseTool):
             [
                 "piper",
                 "--model", inputs.get("model", "en_US-lessac-medium"),
+                "--data-dir", str(Path.home() / ".piper" / "models"),
                 "--speaker", str(inputs.get("speaker_id", 0)),
                 "--length-scale", str(inputs.get("length_scale", 1.0)),
                 "--sentence-silence", str(inputs.get("sentence_silence", 0.3)),

@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import re
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -224,13 +225,7 @@ class PixabayMusic(BaseTool):
         opener = self._build_opener()
 
         # Step 1: Fetch search page HTML (sets cookies)
-        request = urllib.request.Request(search_url)
-        request.add_header("User-Agent", self._USER_AGENT)
-        for key, val in self._BROWSER_HEADERS.items():
-            request.add_header(key, val)
-
-        with opener.open(request, timeout=30) as response:
-            html = response.read().decode("utf-8", errors="replace")
+        html = self._fetch_search_page(opener, search_url)
 
         # Step 2: Extract bootstrap URL and fetch track data
         tracks = self._parse_bootstrap(html, search_url, opener)
@@ -239,6 +234,32 @@ class PixabayMusic(BaseTool):
 
         # Step 3: Fallback — scrape HTML directly (legacy strategies)
         return self._parse_tracks_html(html)
+
+    def _fetch_search_page(
+        self,
+        opener: urllib.request.OpenerDirector,
+        search_url: str,
+    ) -> str:
+        """Fetch the search page HTML, retrying once on a 403 reply.
+
+        Pixabay's bot protection answers the first request made with a fresh
+        cookie jar with HTTP 403 and stores the cookie that lets the next one
+        through, so the retry goes through this opener rather than a new one.
+        """
+        retried = False
+        while True:
+            request = urllib.request.Request(search_url)
+            request.add_header("User-Agent", self._USER_AGENT)
+            for key, val in self._BROWSER_HEADERS.items():
+                request.add_header(key, val)
+
+            try:
+                with opener.open(request, timeout=30) as response:
+                    return response.read().decode("utf-8", errors="replace")
+            except urllib.error.HTTPError as e:
+                if e.code != 403 or retried:
+                    raise
+                retried = True
 
     def _parse_bootstrap(
         self,

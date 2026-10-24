@@ -182,7 +182,10 @@ class AudioMixer(BaseTool):
             "fade_duration": {
                 "type": "number",
                 "default": 0.5,
-                "description": "Duration of fade in/out at segment boundaries (seconds).",
+                "description": (
+                    "Duration of fade in/out at segment boundaries (seconds). "
+                    "Capped at half each segment length for short cues."
+                ),
             },
             "target_duration": {
                 "type": "number",
@@ -749,13 +752,16 @@ class AudioMixer(BaseTool):
         for seg in sorted(segments, key=lambda s: s["start"]):
             s = seg["start"]
             e = seg["end"]
-            fade_in_end = s + fade_dur
-            fade_out_start = e - fade_dur
+            # Short cues still need disjoint fade-in/fade-out intervals.
+            # Otherwise the fade-in branch can keep playing after `e`.
+            segment_fade = min(fade_dur, (e - s) / 2)
+            fade_in_end = s + segment_fade
+            fade_out_start = e - segment_fade
             parts.append(
                 f"if(lt(t,{s}),0,"
-                f"if(lt(t,{fade_in_end}),{music_volume}*(t-{s})/{fade_dur},"
+                f"if(lt(t,{fade_in_end}),{music_volume}*(t-{s})/{segment_fade},"
                 f"if(lt(t,{fade_out_start}),{music_volume},"
-                f"if(lt(t,{e}),{music_volume}*({e}-t)/{fade_dur},"
+                f"if(lt(t,{e}),{music_volume}*({e}-t)/{segment_fade},"
                 f"0))))"
             )
 

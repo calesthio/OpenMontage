@@ -371,6 +371,15 @@ class ToolRegistry:
             for reason in rc.get("reasons") or []:
                 runtime_warnings.append(f"hyperframes: {reason}")
 
+        diagram_gen = self._tools.get("diagram_gen")
+        if diagram_gen is not None:
+            operation_statuses = diagram_gen.get_info().get("operation_statuses") or {}
+            if operation_statuses.get("mermaid") != "available":
+                runtime_warnings.append(
+                    "diagram_gen: Mermaid CLI (mmdc) is unavailable; install with "
+                    "npm install -g @mermaid-js/mermaid-cli"
+                )
+
         # Capabilities rollup (configured/total + provider lists).
         # When a provider has multiple tools (e.g. seedance-fal and
         # seedance-replicate both reporting provider="seedance"), a

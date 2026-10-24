@@ -37,13 +37,17 @@ def step_duration(step: dict[str, Any], fps: int = 30) -> float:
     """
     k = step["kind"]
     if k == "cmd":
-        type_frames = math.ceil(len(step["text"]) * step.get("typeSpeed", 0.035) * fps)
-        return type_frames / fps + step.get("holdSeconds", 0.3)
+        # TerminalScene uses JavaScript text.length (UTF-16 code units).
+        text_length = len(step["text"].encode("utf-16-le", errors="surrogatepass")) // 2
+        type_frames = math.ceil(text_length * step.get("typeSpeed", 0.035) * fps)
+        hold_frames = math.ceil(step.get("holdSeconds", 0.3) * fps)
+        return (type_frames + hold_frames) / fps
     if k == "out":
         reveal_frames = max(2, math.ceil(0.08 * fps))
-        return reveal_frames / fps + step.get("holdSeconds", 0.15)
+        hold_frames = math.ceil(step.get("holdSeconds", 0.15) * fps)
+        return (reveal_frames + hold_frames) / fps
     if k == "pause":
-        return float(step["seconds"])
+        return math.ceil(step["seconds"] * fps) / fps
     if k == "pill":
         return 0.0
     raise ValueError(f"Unknown step kind: {k!r}")

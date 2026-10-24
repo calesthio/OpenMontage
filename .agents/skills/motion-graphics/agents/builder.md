@@ -9,7 +9,7 @@ Default = **compose existing catalog capabilities, not hand-author**:
 - `npx hyperframes add <block>` (registry) → customize in place. Most blocks bake content/data into their own script (only a few expose CSS-var params), so reuse = **add + edit**.
 - `hyperframes-animation` rules / blueprints / transitions for motion; runtime adapters (GSAP default).
 
-Hand-author only (a) gaps no block/rule covers, (b) the `asset-fusion` affordance binding. The Director named the block(s) + customizations in `shot-plan.json` (`content.block` + `content.customize`); see `catalog-map.md`.
+Hand-author only (a) gaps no block/rule covers, (b) the `asset-fusion` affordance binding. The Director named the block(s) + customizations in `shot-plan.json` (`content.block` + `content.customize`); see `../catalog-map.md`.
 
 ## The HF contract (non-negotiable)
 
@@ -21,7 +21,7 @@ Hand-author only (a) gaps no block/rule covers, (b) the `asset-fusion` affordanc
 
 ## Layout before animation
 
-Build the **hero-frame end-state** in CSS first (flex + padding; never absolute offsets on content containers; the root must be sized). Then `gsap.from()` entrances INTO it; exits via transitions or the final scene. Full rules: `references/builder-contract.md`.
+Build the **hero-frame end-state** in CSS first (flex + padding; never absolute offsets on content containers; the root must be sized). Then `gsap.from()` entrances INTO it; exits via transitions or the final scene. Full rules: `../references/builder-contract.md`.
 
 ## IR → composition
 

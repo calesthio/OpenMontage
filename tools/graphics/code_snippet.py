@@ -105,7 +105,10 @@ class CodeSnippet(BaseTool):
     }
 
     resource_profile = ResourceProfile(cpu_cores=1, ram_mb=256, vram_mb=0, disk_mb=50)
-    idempotency_key_fields = ["code", "language", "theme", "font_size"]
+    idempotency_key_fields = [
+        "code", "language", "theme", "font_size",
+        "padding", "line_numbers", "title",
+    ]
     side_effects = ["writes image to output_path"]
     user_visible_verification = [
         "Verify code is readable and syntax highlighting is correct",

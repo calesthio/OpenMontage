@@ -97,7 +97,10 @@ class DiagramGen(BaseTool):
     }
 
     resource_profile = ResourceProfile(cpu_cores=1, ram_mb=256, vram_mb=0, disk_mb=50)
-    idempotency_key_fields = ["diagram_type", "definition", "boxes"]
+    idempotency_key_fields = [
+        "diagram_type", "definition", "boxes", "connections",
+        "title", "theme", "width", "height",
+    ]
     side_effects = ["writes diagram image to output_path"]
     user_visible_verification = [
         "Verify diagram accurately represents the described structure",

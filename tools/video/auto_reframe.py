@@ -145,8 +145,15 @@ class AutoReframe(BaseTool):
         # Determine target crop dimensions (in source pixel space)
         target_w, target_h = self._compute_crop_size(inputs, src_w, src_h, src_sar)
 
-        # If source already matches target aspect, no crop needed
-        if target_w == src_w and target_h == src_h and src_sar == 1.0:
+        # Matching aspect can still require an explicitly requested resize.
+        out_w, out_h = self._compute_output_resolution(inputs, target_w, target_h, src_w, src_h)
+        needs_crop = target_w != src_w or target_h != src_h
+        explicit_size = "target_width" in inputs and "target_height" in inputs
+        if (
+            not needs_crop
+            and src_sar == 1.0
+            and (not explicit_size or (out_w, out_h) == (src_w, src_h))
+        ):
             return ToolResult(
                 success=True,
                 data={"message": "Source already matches target aspect ratio", "output": str(input_path)},
@@ -154,7 +161,7 @@ class AutoReframe(BaseTool):
             )
 
         # Get face tracking data
-        face_data = self._get_face_data(inputs, input_path, src_fps)
+        face_data = self._get_face_data(inputs, input_path, src_fps) if needs_crop else []
 
         # Compute per-frame crop positions
         if face_data and len(face_data) > 0:
@@ -170,9 +177,6 @@ class AutoReframe(BaseTool):
             crop_x = (src_w - target_w) // 2
             crop_y = (src_h - target_h) // 2
             method = "center_crop"
-
-        # Determine output resolution
-        out_w, out_h = self._compute_output_resolution(inputs, target_w, target_h, src_w, src_h)
 
         # Build output path
         aspect_name = inputs.get("target_aspect", "portrait")

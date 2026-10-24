@@ -32,6 +32,49 @@ class ComfyUIError(Exception):
         self.prompt_id = prompt_id
 
 
+def _timestamp_seconds(value: Any) -> float | None:
+    """Normalize a ComfyUI history timestamp to seconds.
+
+    Servers have been observed emitting both seconds and milliseconds.
+    """
+    if not isinstance(value, (int, float)):
+        return None
+    ts = float(value)
+    if ts > 1e11:  # implausibly large for epoch seconds → milliseconds
+        return ts / 1000.0
+    return ts
+
+
+def history_execution_seconds(entry: dict[str, Any]) -> float | None:
+    """Server-side execution time from ``execution_start`` → terminal event.
+
+    Reads the timestamps ComfyUI itself records in the history entry's
+    ``status.messages``, so the number reflects real workflow execution and
+    not queue wait or artifact download.
+    """
+    messages = (entry.get("status") or {}).get("messages") or []
+    if not isinstance(messages, list):
+        return None
+    start_ts = None
+    end_ts = None
+    for item in messages:
+        if not (isinstance(item, (list, tuple)) and len(item) >= 2):
+            continue
+        kind, payload = item[0], item[1]
+        if not isinstance(payload, dict):
+            continue
+        if kind == "execution_start":
+            start_ts = _timestamp_seconds(payload.get("timestamp"))
+        elif kind in {"execution_success", "execution_interrupted", "execution_error"}:
+            end_ts = _timestamp_seconds(payload.get("timestamp"))
+    if start_ts is None or end_ts is None:
+        return None
+    delta = end_ts - start_ts
+    if delta < 0:
+        return None
+    return round(delta, 3)
+
+
 class ComfyUIClient:
     """Client for the ComfyUI REST API.
 
@@ -63,6 +106,9 @@ class ComfyUIClient:
         # Scopes websocket execution events to this client (see wait_ws) and
         # is echoed back on /prompt so the server targets messages to us.
         self.client_id = str(uuid.uuid4())
+        # Populated by generate(): splits queue / execution / download so
+        # callers don't have to treat wall time as GPU time.
+        self.last_timing: dict[str, Any] | None = None
 
     def _capability_url(self) -> str | None:
         if self._capability_env_var:
@@ -429,8 +475,15 @@ class ComfyUIClient:
         detection, optional live ``on_progress`` callback) and transparently
         falls back to REST polling if ``websocket-client`` isn't installed or
         the connection can't be used. See :meth:`_wait`.
+
+        After a successful run, :attr:`last_timing` holds a dict splitting
+        ``submit_s``, ``client_queue_and_poll_s``, ``comfy_prompt_exec_s``
+        (server-side, when history timestamps are present) and ``download_s``.
         """
+        self.last_timing = None
+        t0 = time.perf_counter()
         prompt_id = resume_prompt_id or self.submit(workflow)
+        t_submitted = time.perf_counter()
         if resume_prompt_id:
             # A prompt resumed by a new client instance was submitted with the
             # original instance's client_id, so its websocket events are not
@@ -440,6 +493,7 @@ class ComfyUIClient:
             entry = self._wait(
                 prompt_id, timeout=timeout, interval=interval, on_progress=on_progress
             )
+        t_polled = time.perf_counter()
 
         outputs = entry.get("outputs", {})
         node_output = outputs.get(output_node, {})
@@ -472,6 +526,17 @@ class ComfyUIClient:
                 item.get("type", "output"),
             )
             paths.append(target)
+        t_downloaded = time.perf_counter()
+        exec_s = history_execution_seconds(entry)
+        self.last_timing = {
+            "prompt_id": prompt_id,
+            "submit_s": round(t_submitted - t0, 3),
+            "client_queue_and_poll_s": round(t_polled - t_submitted, 3),
+            "comfy_prompt_exec_s": exec_s,
+            "download_s": round(t_downloaded - t_polled, 3),
+            "poll_interval_s": interval,
+            "timing_source": "history_messages" if exec_s is not None else "poll_wall",
+        }
         return paths
 
     # ------------------------------------------------------------------

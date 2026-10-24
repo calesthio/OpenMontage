@@ -1357,3 +1357,123 @@ class TestCustomWorkflowSelectorEligibility:
                 "workflow_model_stack",
             ):
                 assert field in props, f"{selector.name} missing {field}"
+
+
+class TestComfyUITiming:
+    """Issue #617: split queue / execution / download instead of wall time."""
+
+    _ENTRY = {
+        "status": {
+            "messages": [
+                ["execution_start", {"timestamp": 1000.0}],
+                ["execution_cached", {"nodes": ["1"]}],
+                ["execution_success", {"timestamp": 1042.5}],
+            ]
+        },
+        "outputs": {
+            "9": {"images": [{"filename": "out.mp4", "subfolder": "", "type": "output"}]}
+        },
+    }
+
+    def test_history_execution_seconds_from_server_timestamps(self):
+        from tools._comfyui.client import history_execution_seconds
+
+        assert history_execution_seconds(self._ENTRY) == 42.5
+
+    def test_history_execution_seconds_normalizes_milliseconds(self):
+        from tools._comfyui.client import history_execution_seconds
+
+        entry = {
+            "status": {
+                "messages": [
+                    ["execution_start", {"timestamp": 1700000000000}],
+                    ["execution_success", {"timestamp": 1700000007500}],
+                ]
+            }
+        }
+        assert history_execution_seconds(entry) == 7.5
+
+    def test_history_execution_seconds_missing_or_negative(self):
+        from tools._comfyui.client import history_execution_seconds
+
+        assert history_execution_seconds({"status": {"messages": []}}) is None
+        assert history_execution_seconds({}) is None
+        entry = {
+            "status": {
+                "messages": [
+                    ["execution_start", {"timestamp": 200.0}],
+                    ["execution_success", {"timestamp": 100.0}],
+                ]
+            }
+        }
+        assert history_execution_seconds(entry) is None
+
+    def test_generate_populates_last_timing(self, tmp_path):
+        from tools._comfyui.client import ComfyUIClient
+
+        client = ComfyUIClient("http://localhost:8188")
+        client.submit = lambda workflow: "prompt-1"
+        client._wait = lambda prompt_id, **kw: dict(self._ENTRY)
+        client.download = lambda *a, **k: None
+
+        dest = tmp_path / "out.mp4"
+        paths = client.generate(
+            {"1": {}}, output_node="9", dest=dest, timeout=5, interval=1
+        )
+        assert paths == [dest]
+        timing = client.last_timing
+        assert timing is not None
+        assert timing["prompt_id"] == "prompt-1"
+        assert timing["comfy_prompt_exec_s"] == 42.5
+        assert timing["timing_source"] == "history_messages"
+        for key in ("submit_s", "client_queue_and_poll_s", "download_s"):
+            assert isinstance(timing[key], float) and timing[key] >= 0
+
+    def test_generate_last_timing_without_history_timestamps(self, tmp_path):
+        from tools._comfyui.client import ComfyUIClient
+
+        client = ComfyUIClient("http://localhost:8188")
+        client.submit = lambda workflow: "prompt-2"
+        client._wait = lambda prompt_id, **kw: {
+            "status": {},
+            "outputs": {"9": {"images": [{"filename": "o.mp4", "subfolder": "", "type": "output"}]}},
+        }
+        client.download = lambda *a, **k: None
+
+        client.generate({"1": {}}, output_node="9", dest=tmp_path / "o.mp4")
+        assert client.last_timing["comfy_prompt_exec_s"] is None
+        assert client.last_timing["timing_source"] == "poll_wall"
+
+    def test_video_result_surfaces_timing_split(self, tmp_path):
+        from tools.video.comfyui_video import ComfyUIVideo
+
+        tool = ComfyUIVideo()
+        tool._client.is_available = lambda: True
+        tool._client.check_models = lambda required: (list(required), [])
+
+        def fake_generate(workflow, output_node, dest, **kwargs):
+            Path(dest).write_bytes(b"mp4")
+            tool._client.last_timing = {
+                "prompt_id": "p",
+                "submit_s": 0.1,
+                "client_queue_and_poll_s": 30.0,
+                "comfy_prompt_exec_s": 120.0,
+                "download_s": 1.2,
+                "poll_interval_s": 10,
+                "timing_source": "history_messages",
+            }
+            return [Path(dest)]
+
+        tool._client.generate = fake_generate
+
+        result = tool.execute({
+            "prompt": "test",
+            "workflow_json": json.dumps({"42": {"inputs": {}}}),
+            "output_node": "42",
+            "output_path": str(tmp_path / "video.mp4"),
+        })
+        assert result.success is True
+        timing = result.data["timing"]
+        assert timing["comfy_prompt_exec_s"] == 120.0
+        assert timing["client_queue_and_poll_s"] == 30.0
+        assert timing["wall_s"] >= timing["client_overhead_s"] >= 0

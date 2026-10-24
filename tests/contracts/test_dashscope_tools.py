@@ -22,30 +22,34 @@ from tools.base_tool import (
 )
 from tools.graphics.dashscope_image import DashscopeImage
 from tools.audio.dashscope_tts import DashscopeTTS
+from tools.audio.dashscope_voice_clone import DashscopeVoiceClone
 from tools.analysis.dashscope_asr import DashscopeAsr
 
-TOOLS = [DashscopeImage, DashscopeTTS, DashscopeAsr]
+TOOLS = [DashscopeImage, DashscopeTTS, DashscopeVoiceClone, DashscopeAsr]
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 EXPECTED_TIER = {
     DashscopeImage: ToolTier.GENERATE,
     DashscopeTTS: ToolTier.VOICE,
+    DashscopeVoiceClone: ToolTier.VOICE,
     DashscopeAsr: ToolTier.ANALYZE,
 }
 EXPECTED_CAPABILITY = {
     DashscopeImage: "image_generation",
     DashscopeTTS: "tts",
+    DashscopeVoiceClone: "voice_cloning",
     DashscopeAsr: "analysis",
 }
 EXPECTED_EXECUTION_MODE = {
     DashscopeImage: ExecutionMode.SYNC,
     DashscopeTTS: ExecutionMode.SYNC,
+    DashscopeVoiceClone: ExecutionMode.SYNC,
     DashscopeAsr: ExecutionMode.ASYNC,
 }
 
 
 # ------------------------------------------------------------------
-# Contract compliance (parametrized over all 3 tools)
+# Contract compliance (parametrized over all 4 tools)
 # ------------------------------------------------------------------
 
 @pytest.mark.parametrize("cls", TOOLS, ids=lambda c: c.name)
@@ -170,6 +174,8 @@ class TestContract:
             cost = tool.estimate_cost({"prompt": "test", "n": 1})
         elif cls is DashscopeTTS:
             cost = tool.estimate_cost({"text": "test"})
+        elif cls is DashscopeVoiceClone:
+            cost = tool.estimate_cost({"operation": "create"})
         else:
             cost = tool.estimate_cost({"audio_url": "https://x.com/a.mp3"})
         assert isinstance(cost, float)
@@ -181,6 +187,8 @@ class TestContract:
             result = tool.dry_run({"prompt": "test"})
         elif cls is DashscopeTTS:
             result = tool.dry_run({"text": "test"})
+        elif cls is DashscopeVoiceClone:
+            result = tool.dry_run({"operation": "list"})
         else:
             result = tool.dry_run({"audio_url": "https://x.com/a.mp3"})
         assert isinstance(result, dict)
@@ -691,7 +699,12 @@ class TestDashscopeRegistryDiscovery:
             if t.provider == "dashscope"
         ]
         names = {t.name for t in dashscope_tools}
-        assert names == {"dashscope_image", "dashscope_tts", "dashscope_asr"}
+        assert names == {
+            "dashscope_image",
+            "dashscope_tts",
+            "dashscope_voice_clone",
+            "dashscope_asr",
+        }
 
     def test_image_selector_finds_dashscope(self):
         """image_selector should auto-discover dashscope_image by capability."""

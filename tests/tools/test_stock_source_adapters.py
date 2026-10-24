@@ -3,7 +3,8 @@ import types
 
 import pytest
 
-from tools.video.stock_sources import SearchFilters, all_sources, get_source
+from tools.video.stock_sources import Candidate, SearchFilters, all_sources, get_source
+from tools.video.stock_sources.pexels import PexelsSource
 from tools.video.stock_sources.unsplash import _build_download_url, _orientation_for_unsplash
 from tools.video.stock_sources.wikimedia import (
     _build_search_queries,
@@ -75,6 +76,54 @@ def test_unsplash_helpers_preserve_query_params():
     assert "ixid=abc" in url
     assert "w=1920" in url
     assert "fm=jpg" in url
+
+
+def test_pexels_search_sends_compatible_headers(monkeypatch):
+    calls = []
+
+    def fake_get(url, **kwargs):
+        calls.append((url, kwargs))
+        return _EmptyOkResponse()
+
+    _install_fake_transport(monkeypatch, fake_get)
+
+    assert PexelsSource().search("rain", SearchFilters(kind="any")) == []
+    assert [url for url, _ in calls] == [
+        "https://api.pexels.com/v1/videos/search",
+        "https://api.pexels.com/v1/search",
+    ]
+    for _, kwargs in calls:
+        assert kwargs["headers"]["Authorization"] == "test-pexels"
+        assert kwargs["headers"]["User-Agent"].startswith("Mozilla/5.0 ")
+
+
+def test_pexels_download_sends_compatible_user_agent(monkeypatch, tmp_path):
+    captured = {}
+
+    class DownloadResponse(_EmptyOkResponse):
+        def iter_content(self, chunk_size):
+            assert chunk_size == 1 << 16
+            yield b"video"
+
+    def fake_get(url, **kwargs):
+        captured.update(url=url, **kwargs)
+        return DownloadResponse()
+
+    _install_fake_transport(monkeypatch, fake_get)
+    candidate = Candidate(
+        source="pexels",
+        source_id="1",
+        source_url="https://www.pexels.com/video/1",
+        download_url="https://videos.pexels.com/video-files/1.mp4",
+        kind="video",
+    )
+    output = tmp_path / "clip.mp4"
+
+    assert PexelsSource().download(candidate, output) == output
+    assert output.read_bytes() == b"video"
+    assert captured["url"] == candidate.download_url
+    assert captured["headers"]["User-Agent"].startswith("Mozilla/5.0 ")
+    assert "Authorization" not in captured["headers"]
 
 
 # ---------------------------------------------------------------------

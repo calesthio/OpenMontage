@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import re
+import tempfile
 import time
 from pathlib import Path
 from typing import Any
@@ -113,16 +114,26 @@ class FrameSampler(BaseTool):
         start = time.time()
 
         try:
-            if strategy == "interval":
-                frames = self._extract_interval(input_path, output_dir, fmt, quality, inputs)
-            elif strategy == "count":
-                frames = self._extract_count(input_path, output_dir, fmt, quality, inputs)
-            elif strategy == "timestamps":
-                frames = self._extract_timestamps(input_path, output_dir, fmt, quality, inputs)
-            elif strategy == "scene_guided":
-                frames = self._extract_scene_guided(input_path, output_dir, fmt, quality, inputs)
-            else:
-                return ToolResult(success=False, error=f"Unknown strategy: {strategy}")
+            # Collect from an owned directory so reused output folders cannot
+            # contribute old frames (including when FFmpeg emits none at EOF).
+            with tempfile.TemporaryDirectory(prefix=".frame-sampler-", dir=output_dir) as tmp:
+                extraction_dir = Path(tmp)
+                if strategy == "interval":
+                    frames = self._extract_interval(input_path, extraction_dir, fmt, quality, inputs)
+                elif strategy == "count":
+                    frames = self._extract_count(input_path, extraction_dir, fmt, quality, inputs)
+                elif strategy == "timestamps":
+                    frames = self._extract_timestamps(input_path, extraction_dir, fmt, quality, inputs)
+                elif strategy == "scene_guided":
+                    frames = self._extract_scene_guided(input_path, extraction_dir, fmt, quality, inputs)
+                else:
+                    return ToolResult(success=False, error=f"Unknown strategy: {strategy}")
+
+                for frame in frames:
+                    extracted = Path(frame["path"])
+                    destination = output_dir / extracted.name
+                    extracted.replace(destination)
+                    frame["path"] = str(destination)
         except Exception as e:
             return ToolResult(success=False, error=str(e))
 

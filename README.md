@@ -93,7 +93,7 @@ Turn your AI coding assistant into a full video production studio. Describe what
   <video src="https://github.com/user-attachments/assets/a524f02a-2d18-42ca-a2c4-d3dc09503546" width="100%" controls></video>
 </div>
 
-> **"How Salt Made History"** — a 100-second cinematic documentary about the mineral that funded empires, shaped trade routes, sparked revolutions, and gave us the word “salary.” Real-world footage is woven together with original narration and hand-authored motion graphics for its etched title, etymology reveal, animated maps, historical timeline, and closing thesis.
+> **"How Salt Made History"** — a 100-second cinematic documentary about the mineral that funded empires, shaped trade routes, sparked revolutions, and gave us the word "salary." Real-world footage is woven together with original narration and hand-authored motion graphics for its etched title, etymology reveal, animated maps, historical timeline, and closing thesis.
 
 <div align="center">
   <video src="https://github.com/user-attachments/assets/61919fb8-9dd1-446c-b833-dca82f6a3af8" width="100%" controls></video>
@@ -622,7 +622,7 @@ Playbooks control typography, color palettes, motion styles, audio profiles, and
 Built-in render profiles for every major platform:
 
 | Profile | Resolution | Aspect Ratio |
-|---------|-----------|--------------|
+|---------|-----------|-------------||
 | YouTube Landscape | 1920x1080 | 16:9 |
 | YouTube 4K | 3840x2160 | 16:9 |
 | YouTube Shorts | 1080x1920 | 9:16 |
@@ -686,6 +686,12 @@ OpenMontage works with any AI coding assistant that can read files and execute P
 All platform files point to the shared `AGENT_GUIDE.md` (operating guide and agent contract) and `PROJECT_CONTEXT.md` (architecture reference).
 
 > **Coming soon:** Local LLM support via **Ollama** and **LM Studio** — run the full production pipeline without any cloud LLM.
+
+---
+
+## ☁️ One-Click Deploy
+
+[![Deploy on RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/OpenMontage/)
 
 ---
 

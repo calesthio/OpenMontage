@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/product_delivery",
+  "title": "Product Scene Delivery",
+  "description": "Final provenance and output manifest for one to three approved product style packages.",
+  "type": "object",
+  "required": [
+    "version",
+    "product_name",
+    "selected_styles",
+    "packages",
+    "approvals"
+  ],
+  "properties": {
+    "version": { "type": "string", "const": "1.0" },
+    "product_name": { "type": "string", "minLength": 1 },
+    "selected_styles": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": ["luxury", "nature", "tech", "office"]
+      }
+    },
+    "packages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "style",
+          "images",
+          "selected_image",
+          "video",
+          "music",
+          "music_candidates",
+          "copy",
+          "output"
+        ],
+        "properties": {
+          "style": {
+            "type": "string",
+            "enum": ["luxury", "nature", "tech", "office"]
+          },
+          "images": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/image" }
+          },
+          "selected_image": { "$ref": "#/$defs/image" },
+          "video": {
+            "type": "object",
+            "required": [
+              "path",
+              "task_id",
+              "model",
+              "duration_seconds",
+              "ratio",
+              "resolution",
+              "approved"
+            ],
+            "properties": {
+              "path": { "$ref": "#/$defs/relative_path" },
+              "task_id": { "type": "string", "minLength": 1 },
+              "model": { "type": "string", "minLength": 1 },
+              "duration_seconds": { "type": "number", "exclusiveMinimum": 0 },
+              "ratio": {
+                "type": "string",
+                "enum": ["9:16", "16:9", "1:1"]
+              },
+              "resolution": {
+                "type": "string",
+                "enum": ["480p", "720p", "1080p"]
+              },
+              "approved": { "type": "boolean" }
+            },
+            "additionalProperties": false
+          },
+          "music": {
+            "type": "object",
+            "required": ["path", "title", "artist", "license", "approved"],
+            "properties": {
+              "path": { "$ref": "#/$defs/relative_path" },
+              "title": { "type": "string", "minLength": 1 },
+              "artist": { "type": "string", "minLength": 1 },
+              "license": { "type": "string", "minLength": 1 },
+              "approved": { "type": "boolean" }
+            },
+            "additionalProperties": false
+          },
+          "music_candidates": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "object",
+              "required": [
+                "index",
+                "title",
+                "artist",
+                "duration_seconds",
+                "license",
+                "download_url"
+              ],
+              "properties": {
+                "index": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 10
+                },
+                "title": { "type": "string", "minLength": 1 },
+                "artist": { "type": "string", "minLength": 1 },
+                "duration_seconds": {
+                  "type": ["number", "null"],
+                  "minimum": 0
+                },
+                "license": { "type": "string", "minLength": 1 },
+                "download_url": {
+                  "type": "string",
+                  "pattern": "^https://([^/]+\\.)?pixabay\\.com/"
+                },
+                "pixabay_id": {
+                  "type": ["integer", "null"]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "copy": {
+            "type": "object",
+            "required": ["path", "style"],
+            "properties": {
+              "path": { "$ref": "#/$defs/relative_path" },
+              "style": {
+                "type": "string",
+                "enum": ["luxury", "nature", "tech", "office"]
+              }
+            },
+            "additionalProperties": false
+          },
+          "output": {
+            "type": "object",
+            "required": ["video_path", "copy_path"],
+            "properties": {
+              "video_path": { "$ref": "#/$defs/relative_path" },
+              "copy_path": { "$ref": "#/$defs/relative_path" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "approvals": {
+      "type": "object",
+      "required": [
+        "proposal",
+        "style_selection",
+        "images",
+        "videos",
+        "copy",
+        "music",
+        "delivery"
+      ],
+      "properties": {
+        "proposal": { "type": "boolean" },
+        "style_selection": { "type": "boolean" },
+        "images": { "type": "boolean" },
+        "videos": { "type": "boolean" },
+        "copy": { "type": "boolean" },
+        "music": { "type": "boolean" },
+        "delivery": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "total_estimated_cost_usd": {
+      "type": ["number", "null"],
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "relative_path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)"
+    },
+    "image": {
+      "type": "object",
+      "required": ["path", "candidate_index", "approved"],
+      "properties": {
+        "path": { "$ref": "#/$defs/relative_path" },
+        "candidate_index": { "type": "integer", "minimum": 1, "maximum": 3 },
+        "approved": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -31,6 +31,8 @@ ARTIFACT_NAMES = [
     "final_review",
     "character_qa_report",
     "video_analysis_brief",
+    "product_copy",
+    "product_delivery",
 ]
 
 

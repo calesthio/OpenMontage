@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/tools/seedream_ark_image",
+  "title": "ARK Seedream Product Scene Image Input",
+  "type": "object",
+  "required": ["prompt", "source_image_path", "scene_preset", "output_dir"],
+  "properties": {
+    "prompt": { "type": "string", "minLength": 1 },
+    "source_image_path": { "type": "string", "minLength": 1 },
+    "scene_preset": {
+      "type": "string",
+      "enum": ["luxury", "nature", "tech", "office"]
+    },
+    "product_name": { "type": "string", "default": "产品" },
+    "model": { "type": "string" },
+    "size": { "type": "string", "default": "1024x1024" },
+    "count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3,
+      "default": 3
+    },
+    "output_dir": { "type": "string", "minLength": 1 },
+    "watermark": { "type": "boolean", "default": false }
+  },
+  "additionalProperties": false
+}

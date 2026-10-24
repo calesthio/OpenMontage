@@ -9,8 +9,12 @@ import socket
 
 import pytest
 
+from tools.audio.modelrunner_music import ModelRunnerMusic
+from tools.audio.modelrunner_tts import ModelRunnerTTS
 from tools.graphics.atlas_image import AtlasImage
+from tools.graphics.modelrunner_image import ModelRunnerImage
 from tools.video.atlas_video import AtlasVideo
+from tools.video.modelrunner_video import ModelRunnerVideo
 
 
 class TestGuardBlocksOutbound:
@@ -61,6 +65,26 @@ class TestPaidToolsCannotSpend:
         result = AtlasVideo().execute({
             "prompt": "this must never reach the API",
             "output_path": str(tmp_path / "nope.mp4"),
+        })
+        assert result.success is False
+        assert result.cost_usd == 0.0
+
+    @pytest.mark.parametrize(
+        "cls,suffix",
+        [
+            (ModelRunnerVideo, "mp4"),
+            (ModelRunnerImage, "png"),
+            (ModelRunnerTTS, "wav"),
+            (ModelRunnerMusic, "wav"),
+        ],
+        ids=lambda value: getattr(value, "name", str(value)),
+    )
+    def test_modelrunner_tools_fail_instead_of_billing(self, cls, suffix, monkeypatch, tmp_path):
+        monkeypatch.setenv("MODELRUNNER_KEY", "sk-looks-real-but-must-not-be-used")
+        result = cls().execute({
+            "prompt": "this must never reach the API",
+            "text": "this must never reach the API",
+            "output_path": str(tmp_path / f"nope.{suffix}"),
         })
         assert result.success is False
         assert result.cost_usd == 0.0

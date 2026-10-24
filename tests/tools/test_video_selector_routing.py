@@ -321,3 +321,40 @@ def test_ark_local_reference_routes_without_fal_upload(rankings, monkeypatch, tm
     assert "image_url" not in ark.last_execute_inputs
     assert result.data["selected_tool"] == "seedance_ark"
     assert result.data["selected_provider"] == "ark"
+
+
+def test_modelrunner_local_reference_routes_without_fal_upload(rankings, monkeypatch, tmp_path):
+    """ModelRunner hosts local references itself — the selector must hand the
+    local path through untouched (no FAL_KEY needed, no third-party upload).
+    Uses the real tool's schema so schema drift re-triggering the selector's
+    fal conversion breaks this test.
+    """
+    from tools.video.modelrunner_video import ModelRunnerVideo
+
+    mr = _StubTool("modelrunner_video", "modelrunner")
+    mr.input_schema = ModelRunnerVideo.input_schema
+    rankings.append(_ScoreStub("modelrunner_video", "modelrunner", 0.99))
+
+    def fail_upload(*args, **kwargs):
+        raise AssertionError("ModelRunner local references must never be uploaded via FAL")
+
+    monkeypatch.setattr("tools.video._shared.upload_image_fal", fail_upload)
+    image_path = tmp_path / "anchor.png"
+    image_path.write_bytes(b"not-read-by-selector")
+
+    selector = VideoSelector()
+    selector._providers = lambda: [mr]  # type: ignore[assignment]
+    result = selector.execute({
+        "prompt": "motion",
+        "operation": "image_to_video",
+        "preferred_provider": "modelrunner",
+        "allowed_providers": ["modelrunner"],
+        "reference_image_path": str(image_path),
+    })
+
+    assert result.success is True
+    assert mr.last_execute_inputs is not None
+    assert mr.last_execute_inputs["reference_image_path"] == str(image_path)
+    assert "image_url" not in mr.last_execute_inputs
+    assert result.data["selected_tool"] == "modelrunner_video"
+    assert result.data["selected_provider"] == "modelrunner"

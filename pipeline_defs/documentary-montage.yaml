@@ -96,11 +96,13 @@ stages:
       - corpus_builder
       - clip_search
       - music_gen
+      - modelrunner_music
     tools_available:
       - direct_clip_search
       - corpus_builder
       - clip_search
       - music_gen
+      - modelrunner_music
     checkpoint_required: true
     human_approval_default: true
     review_focus:

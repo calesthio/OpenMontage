@@ -57,7 +57,7 @@ clip with full provenance.
 | Tool (fast path) | `direct_clip_search` | Lightweight multi-provider search + download |
 | Tool (standard path) | `corpus_builder` | Populates the retrieval index with CLIP embeddings |
 | Tool (standard path) | `clip_search` | Ranks clips against slot descriptions |
-| Tool (optional) | `music_gen`, user's `music_library/` | Score bed |
+| Tool (optional) | `music_gen`, `modelrunner_music`, user's `music_library/` | Score bed |
 
 ## Mental Model
 

@@ -171,6 +171,7 @@ make setup
 
 # 图像 + 视频网关:
 FAL_KEY=your-key               # FLUX 图像 + Google Veo、Kling、MiniMax 视频 + Recraft 图像
+MODELRUNNER_KEY=your-key       # ModelRunner — Wan/Seedance 视频 + Seedream/Recraft/SD3.5 图像 + Kokoro/Gemini TTS + Lyria/Stable Audio 音乐
 
 # 免费素材库:
 PEXELS_API_KEY=your-key        # 免费库存视频和图像
@@ -418,7 +419,7 @@ OpenMontage/
 > **包含定价与免费额度的完整设置指南：** [`docs/PROVIDERS.md`](docs/PROVIDERS.md)
 
 <details>
-<summary><strong>视频生成 — 15 家提供商</strong></summary>
+<summary><strong>视频生成 — 16 家提供商</strong></summary>
 
 | 提供商 | 类型 | 备注 |
 |----------|------|-------|
@@ -430,6 +431,7 @@ OpenMontage/
 | **Higgsfield** | 云端 API | 带 Soul ID 以实现角色一致性的多模型编排器 |
 | **MiniMax** | 云端 API | 极具成本效益 |
 | **HeyGen** | 云端 API | 多模型网关 |
+| **ModelRunner** | 云端 API | 单密钥网关：Wan 2.7、Happy Horse（对白唇形同步）、Seedance Mini 低价档 |
 | **WAN 2.1** | 本地 GPU | 免费，提供 1.3B 和 14B 版本 |
 | **Hunyuan (混元)** | 本地 GPU | 免费，高质量 |
 | **CogVideo** | 本地 GPU | 免费，提供 2B 和 5B 版本 |
@@ -441,7 +443,7 @@ OpenMontage/
 </details>
 
 <details>
-<summary><strong>图像生成 — 10 种工具/提供商</strong></summary>
+<summary><strong>图像生成 — 11 种工具/提供商</strong></summary>
 
 | 提供商 | 类型 | 备注 |
 |----------|------|-------|
@@ -450,6 +452,7 @@ OpenMontage/
 | **Grok Imagine Image** | 云端 API | 强大的图像编辑、风格转换和多图合成 |
 | **GPT Image 2** | 云端 API | OpenAI 的图像模型 |
 | **Recraft** | 云端 API | 专注于设计的生成 |
+| **ModelRunner** | 云端 API | 单密钥接入 Seedream 5.0 Lite/Pro、Recraft V4.1、Stable Diffusion 3.5 |
 | **Local Diffusion** | 本地 GPU | Stable Diffusion，免费 |
 | **Pexels** | 素材库 | 免费的库存图片 |
 | **Pixabay** | 素材库 | 免费的库存图片 |
@@ -459,7 +462,7 @@ OpenMontage/
 </details>
 
 <details>
-<summary><strong>文本转语音 (TTS) — 4 家提供商</strong></summary>
+<summary><strong>文本转语音 (TTS) — 5 家提供商</strong></summary>
 
 | 提供商 | 类型 | 备注 |
 |----------|------|-------|
@@ -467,6 +470,7 @@ OpenMontage/
 | **Google TTS** | 云端 API | 700+ 种声音，50+ 种语言 — 最适合本地化 |
 | **OpenAI TTS** | 云端 API | 快速且价格实惠 |
 | **Piper** | 本地 | 完全免费，支持离线 |
+| **ModelRunner TTS** | 云端 API | 单密钥接入 Kokoro（亚美分级）、Gemini TTS（可导演式朗读）、ElevenLabs、Chatterbox |
 
 </details>
 
@@ -480,6 +484,7 @@ OpenMontage/
 | **Suno AI** | 云端 API | 生成带人声、歌词的完整歌曲，涵盖所有流派。长达 8 分钟。 |
 | **ElevenLabs Music** | 云端 API | AI 音乐生成 |
 | **ElevenLabs SFX** | 云端 API | 音效生成 |
+| **ModelRunner Music** | 云端 API | 单密钥接入 Lyria 2/3 音乐片段与 Stable Audio 2.5 长曲目 |
 
 **后期制作（始终可用，完全免费）：**
 

@@ -11,8 +11,10 @@ the structured data; the agent provides the visual interpretation.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -31,7 +33,7 @@ from tools.base_tool import (
 
 class VideoAnalyzer(BaseTool):
     name = "video_analyzer"
-    version = "0.1.0"
+    version = "0.2.0"
     tier = ToolTier.ANALYZE
     capability = "analysis"
     provider = "multi"
@@ -104,17 +106,19 @@ class VideoAnalyzer(BaseTool):
 
     output_schema = {
         "type": "object",
-        "description": "VideoAnalysisBrief artifact — see schemas/artifacts/video_analysis_brief.schema.json",
+        "description": "VideoAnalysisBrief artifact — see the versioned artifact schema.",
     }
+    artifact_schema = {"artifact": "video_analysis_brief", "version": "1.1"}
 
     resource_profile = ResourceProfile(
         cpu_cores=2, ram_mb=2048, vram_mb=0, disk_mb=3000,
         network_required=False,  # Only needed for URL sources
     )
-    idempotency_key_fields = ["source", "analysis_depth"]
+    idempotency_key_fields = ["source", "analysis_depth", "max_keyframes", "output_dir"]
     side_effects = [
         "downloads video to output_dir (if URL)",
         "writes keyframe images to output_dir/keyframes/",
+        "writes normalized source audio to output_dir/source_audio.wav (local sources)",
         "writes analysis JSON to output_dir/video_analysis_brief.json",
     ]
     fallback_tools = []
@@ -146,39 +150,306 @@ class VideoAnalyzer(BaseTool):
     def _is_youtube(self, platform: str) -> bool:
         return platform in ("youtube", "shorts")
 
+    def _source_fingerprint(self, source: str) -> dict[str, str]:
+        """Return a stable content or locator fingerprint for one source."""
+        path = Path(source)
+        if not self._is_url(source) and path.is_file():
+            digest = hashlib.sha256()
+            with path.open("rb") as handle:
+                for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                    digest.update(chunk)
+            return {"kind": "content", "algorithm": "sha256", "value": digest.hexdigest()}
+        digest = hashlib.sha256(source.strip().encode("utf-8")).hexdigest()
+        return {"kind": "locator", "algorithm": "sha256", "value": digest}
+
+    def _source_surface(self, source: str, platform: str) -> tuple[str, str]:
+        """Normalize platform and surface without changing legacy source.type."""
+        if platform == "shorts":
+            return "youtube", "shorts"
+        if platform == "instagram":
+            return "instagram", "reel" if "/reel" in source.lower() else "post"
+        if platform == "tiktok":
+            return "tiktok", "video"
+        if platform == "local_file":
+            return "local", "file"
+        return platform, platform
+
+    def _normalise_transcript_segments(self, segments: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Normalize caption and Whisper segments into one stable time contract."""
+        normalized = []
+        for index, segment in enumerate(segments):
+            start = float(segment.get("start", 0))
+            raw_end = segment.get("end")
+            if raw_end is None:
+                raw_end = start + float(segment.get("duration", 0))
+            end = float(raw_end)
+            if end <= start:
+                end = start + 0.001
+            item: dict[str, Any] = {
+                "id": f"segment-{index:04d}",
+                "start": round(start, 3),
+                "end": round(end, 3),
+                "text": str(segment.get("text", "")).strip(),
+            }
+            for field in ("speaker", "words"):
+                if field in segment:
+                    item[field] = segment[field]
+            normalized.append(item)
+        return normalized
+
+    def _build_five_aspect_observations(self, brief: dict[str, Any]) -> list[dict[str, Any]]:
+        """Create an honest unknown scaffold for agent vision enrichment."""
+        aspects = ("subject", "subject_motion", "scene", "spatial_framing", "camera")
+        observations = []
+        for scene in brief["structure_analysis"].get("scenes", []):
+            scene_index = int(scene["scene_index"])
+            ids = []
+            for aspect in aspects:
+                observation_id = f"obs-scene-{scene_index}-{aspect}"
+                ids.append(observation_id)
+                observations.append({
+                    "id": observation_id,
+                    "scene_index": scene_index,
+                    "aspect": aspect,
+                    "status": "unknown",
+                    "value": "Not enriched by the analyzer; inspect the referenced keyframes.",
+                    "evidence_refs": [],
+                    "confidence": "low",
+                })
+            scene["observation_ids"] = ids
+        return observations
+
+    def _build_evidence(
+        self,
+        brief: dict[str, Any],
+        output_dir: Path,
+        source: str,
+        steps_completed: list[str],
+    ) -> list[dict[str, Any]]:
+        """Build a typed evidence index from tool outputs without claiming vision findings."""
+        evidence: list[dict[str, Any]] = [{
+            "id": "ev-source-metadata",
+            "kind": "source_metadata",
+            "status": "available" if "metadata" in steps_completed else "unavailable",
+            "source_ref": source,
+            "description": "Source locator and technical metadata from the analysis run.",
+        }]
+        for scene in brief["structure_analysis"].get("scenes", []):
+            evidence.append({
+                "id": f"ev-scene-{scene['scene_index']}",
+                "kind": "scene_detection",
+                "status": "available" if "scene_detect" in steps_completed else "unavailable",
+                "source_ref": str(output_dir / "scenes.json"),
+                "start_seconds": scene["start_time"],
+                "end_seconds": scene["end_time"],
+                "scene_index": scene["scene_index"],
+            })
+        for segment in brief.get("narration_transcript", {}).get("segments", []):
+            evidence.append({
+                "id": f"ev-transcript-{segment['id']}",
+                "kind": "transcript_segment",
+                "status": "available",
+                "source_ref": source,
+                "start_seconds": segment["start"],
+                "end_seconds": segment["end"],
+                "excerpt": segment["text"],
+            })
+        for frame in brief.get("keyframes", []):
+            evidence.append({
+                "id": f"ev-keyframe-{frame['id']}",
+                "kind": "keyframe",
+                "status": "available" if "keyframes" in steps_completed or "keyframes_uniform" in steps_completed else "unavailable",
+                "source_ref": frame["path"],
+                "start_seconds": frame["timestamp"],
+                "end_seconds": frame["timestamp"],
+                "scene_index": frame["scene_index"],
+            })
+        if "audio_extract" in steps_completed:
+            evidence.append({
+                "id": "ev-audio-source",
+                "kind": "audio_analysis",
+                "status": "available",
+                "source_ref": str(output_dir / "source_audio.wav"),
+                "description": "Normalized local audio extracted for transcription and analysis.",
+            })
+        if "audio_energy" in steps_completed:
+            evidence.append({
+                "id": "ev-audio-energy",
+                "kind": "audio_analysis",
+                "status": "available",
+                "source_ref": source,
+                "description": "Audio energy profile produced by the local analyzer.",
+            })
+        return evidence
+
+    def _extract_audio(self, video_path: Path, output_dir: Path) -> str:
+        """Extract a stable mono WAV so local videos can use the transcript path."""
+        audio_path = output_dir / "source_audio.wav"
+        self.run_command([
+            "ffmpeg", "-y", "-i", str(video_path),
+            "-vn", "-ac", "1", "-ar", "16000", str(audio_path),
+        ], timeout=120)
+        if not audio_path.is_file():
+            raise RuntimeError(f"FFmpeg did not create audio output: {audio_path}")
+        return str(audio_path)
+
+    def _record_failure(
+        self,
+        steps_failed: list[str],
+        step: str,
+        error: Any,
+    ) -> None:
+        """Record bounded diagnostics without copying raw subprocess logs."""
+        summary = " ".join(str(error or "unknown failure").split())[:500]
+        steps_failed.append(f"{step}: {summary}")
+
+    def _has_transcript_content(self, brief: dict[str, Any]) -> bool:
+        """Return whether transcript extraction yielded actual text or segments."""
+        transcript = brief.get("narration_transcript", {})
+        segments = transcript.get("segments", [])
+        return bool(
+            str(transcript.get("full_text", "")).strip()
+            or any(
+                isinstance(segment, dict) and str(segment.get("text", "")).strip()
+                for segment in segments
+            )
+        )
+
+    def _analysis_status(
+        self,
+        completed: list[str],
+        failed: list[str],
+        depth: str,
+        has_transcript: bool,
+        has_visual_scenes: bool,
+        has_keyframes: bool,
+    ) -> str:
+        """Report completion against the requested depth, not incidental work."""
+        if not completed:
+            return "failed" if failed else "partial"
+        if failed or "metadata" not in completed:
+            return "partial"
+        if depth == "transcript_only":
+            has_transcript_step = any(step.startswith("transcript_") for step in completed)
+            return "complete" if has_transcript and has_transcript_step else "partial"
+        keyframe_steps = {"keyframes", "keyframes_uniform"}
+        if (
+            "scene_detect" not in completed
+            or not keyframe_steps.intersection(completed)
+            or not has_visual_scenes
+            or not has_keyframes
+        ):
+            return "partial"
+        if has_visual_scenes and "visual_enrichment" not in completed:
+            return "partial"
+        return "complete"
+
+    def _finalize_v11_brief(
+        self,
+        brief: dict[str, Any],
+        output_dir: Path,
+        source: str,
+        steps_completed: list[str],
+        steps_failed: list[str],
+        started_at: str,
+        depth: str,
+        has_transcript: bool,
+    ) -> None:
+        """Finalize v1.1 indexes and status before validation and persistence."""
+        brief["five_aspect_observations"] = self._build_five_aspect_observations(brief)
+        brief["evidence"] = self._build_evidence(brief, output_dir, source, steps_completed)
+        brief["analysis_run"].update({
+            "status": self._analysis_status(
+                steps_completed,
+                steps_failed,
+                depth,
+                has_transcript,
+                bool(brief["structure_analysis"].get("scenes")),
+                bool(brief.get("keyframes")),
+            ),
+            "steps_completed": list(steps_completed),
+            "steps_failed": list(steps_failed),
+            "started_at": started_at,
+            "finished_at": datetime.now(timezone.utc).isoformat(),
+        })
+
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
-        source = inputs["source"]
+        source = str(inputs["source"])
         depth = inputs.get("analysis_depth", "standard")
         max_keyframes = inputs.get("max_keyframes", 20)
 
-        # Setup output directory
+        fingerprint = self._source_fingerprint(source)
+        analysis_id = f"analysis-{fingerprint['value'][:24]}"
+        run_id = "run-" + hashlib.sha256(
+            f"{analysis_id}:{depth}:{max_keyframes}:{self.version}".encode("utf-8")
+        ).hexdigest()[:24]
+
+        # Stable by source and analysis configuration. A caller may still
+        # provide an explicit output_dir for a deliberate separate run.
         if inputs.get("output_dir"):
             output_dir = Path(inputs["output_dir"])
         else:
-            output_dir = Path("projects/_analysis") / f"analysis_{int(time.time())}"
+            output_dir = Path("projects/_analysis") / f"{analysis_id}_{depth}_{max_keyframes}"
         output_dir.mkdir(parents=True, exist_ok=True)
 
         platform = self._detect_platform(source)
         is_url = self._is_url(source)
         start = time.time()
+        platform_name, surface = self._source_surface(source, platform)
+        started_at = datetime.now(timezone.utc).isoformat()
 
-        # Initialize brief structure
+        # Initialize the versioned brief. Vision enrichment may replace unknown
+        # aspect values later, but it must never silently omit an aspect.
         brief = {
-            "version": "1.0",
+            "version": "1.1",
+            "analysis_id": analysis_id,
             "source": {
                 "type": platform,
+                "platform": platform_name,
+                "surface": surface,
                 "duration_seconds": 0,
+                "fingerprint": fingerprint,
+                "rights_status": "unknown",
+                "privacy_status": "review_required",
+                "retention_policy": "caller_managed",
             },
+            "analysis_run": {
+                "id": run_id,
+                "depth": depth,
+                "status": "partial",
+                "steps_completed": [],
+                "steps_failed": [],
+                "tool": {"name": self.name, "version": self.version},
+                "config": {"analysis_depth": depth, "max_keyframes": max_keyframes},
+                "started_at": started_at,
+            },
+            "evidence": [],
             "content_analysis": {
                 "summary": "",
                 "topics": [],
-                "target_audience": "general",
+                "target_audience": "unknown",
             },
             "structure_analysis": {
                 "total_scenes": 0,
                 "scenes": [],
                 "pacing_profile": {},
             },
+            "five_aspect_observations": [],
+            "assertions": [],
+            "keyframes": [],
+            "replication_guidance": {
+                "suggested_pipeline": "",
+                "suggested_playbook": "",
+                "key_elements_to_replicate": [],
+                "elements_requiring_custom_work": [],
+                "estimated_complexity": "simple",
+                "motion_required": False,
+                "creative_differentiation_seeds": [],
+                "preserve": [],
+                "change": [],
+                "avoid": [],
+            },
+            "style_profile": {},
         }
 
         if is_url:
@@ -187,8 +458,8 @@ class VideoAnalyzer(BaseTool):
             brief["source"]["local_path"] = source
 
         # Track what succeeded and what failed
-        steps_completed = []
-        steps_failed = []
+        steps_completed: list[str] = []
+        steps_failed: list[str] = []
 
         # ─── STEP 1: Get metadata + download (if URL) ───
         video_path = None
@@ -219,23 +490,23 @@ class VideoAnalyzer(BaseTool):
                     metadata = dl_result.data.get("metadata", {})
                     video_path = dl_result.data.get("video_path")
                     audio_path = dl_result.data.get("audio_path")
-                    brief["source"]["title"] = metadata.get("title", "")
-                    brief["source"]["duration_seconds"] = metadata.get("duration", 0)
-                    brief["source"]["resolution"] = metadata.get("resolution", "")
+                    brief["source"]["title"] = str(metadata.get("title") or "")
+                    brief["source"]["duration_seconds"] = float(metadata.get("duration") or 0)
+                    brief["source"]["resolution"] = str(metadata.get("resolution") or "")
                     brief["source"]["platform_metadata"] = {
-                        "uploader": metadata.get("uploader", ""),
-                        "upload_date": metadata.get("upload_date", ""),
-                        "view_count": metadata.get("view_count", 0),
-                        "like_count": metadata.get("like_count", 0),
-                        "description": metadata.get("description", ""),
+                        "uploader": str(metadata.get("uploader") or ""),
+                        "upload_date": str(metadata.get("upload_date") or ""),
+                        "view_count": int(metadata.get("view_count") or 0),
+                        "like_count": int(metadata.get("like_count") or 0),
+                        "description": str(metadata.get("description") or ""),
                     }
                     steps_completed.append("metadata")
                     if video_path:
                         steps_completed.append("download")
                 else:
-                    steps_failed.append(f"download: {dl_result.error}")
+                    self._record_failure(steps_failed, "download", dl_result.error)
             except Exception as e:
-                steps_failed.append(f"download: {e}")
+                self._record_failure(steps_failed, "download", e)
         else:
             # Local file
             local_path = Path(source)
@@ -252,7 +523,13 @@ class VideoAnalyzer(BaseTool):
                 brief["source"]["title"] = local_path.stem
                 steps_completed.append("metadata")
             except Exception as e:
-                steps_failed.append(f"metadata: {e}")
+                self._record_failure(steps_failed, "metadata", e)
+
+            try:
+                audio_path = self._extract_audio(local_path, output_dir)
+                steps_completed.append("audio_extract")
+            except Exception as e:
+                self._record_failure(steps_failed, "audio_extract", e)
 
         # ─── STEP 2: Get transcript ───
         transcript_data = None
@@ -288,15 +565,19 @@ class VideoAnalyzer(BaseTool):
                 })
                 if tf_result.success:
                     transcript_data = tf_result.data
+                    segments = self._normalise_transcript_segments(
+                        transcript_data.get("transcript", [])
+                    )
                     brief["narration_transcript"] = {
-                        "full_text": transcript_data.get("full_text", ""),
-                        "segments": transcript_data.get("transcript", []),
-                        "language": transcript_data.get("language", "en"),
-                        "word_count": transcript_data.get("word_count", 0),
+                        "full_text": str(transcript_data.get("full_text") or ""),
+                        "segments": segments,
+                        "language": str(transcript_data.get("language") or "en"),
+                        "word_count": int(transcript_data.get("word_count") or 0),
                     }
+                    transcript_data = {**transcript_data, "transcript": segments}
                     steps_completed.append("transcript_youtube")
             except Exception as e:
-                steps_failed.append(f"transcript_youtube: {e}")
+                self._record_failure(steps_failed, "transcript_youtube", e)
 
         # Fallback: If transcript failed and we don't have audio yet,
         # download the video to get audio for Whisper transcription
@@ -318,10 +599,10 @@ class VideoAnalyzer(BaseTool):
                     # Also update metadata if we didn't have it
                     if not metadata:
                         metadata = dl_result.data.get("metadata", {})
-                        brief["source"]["title"] = metadata.get("title", "")
-                        brief["source"]["duration_seconds"] = metadata.get("duration", 0)
+                        brief["source"]["title"] = str(metadata.get("title") or "")
+                        brief["source"]["duration_seconds"] = float(metadata.get("duration") or 0)
             except Exception as e:
-                steps_failed.append(f"download_for_whisper: {e}")
+                self._record_failure(steps_failed, "download_for_whisper", e)
 
         # Fallback: Whisper transcription on audio
         if transcript_data is None and audio_path:
@@ -344,35 +625,33 @@ class VideoAnalyzer(BaseTool):
                 if tr_result.success:
                     segments = tr_result.data.get("segments", [])
                     full_text = " ".join(s.get("text", "") for s in segments)
+                    normalized_segments = self._normalise_transcript_segments(segments)
                     brief["narration_transcript"] = {
                         "full_text": full_text,
-                        "segments": [
-                            {
-                                "start": s.get("start", 0),
-                                "end": s.get("end", 0),
-                                "text": s.get("text", ""),
-                            }
-                            for s in segments
-                        ],
-                        "language": tr_result.data.get("language", "en"),
+                        "segments": normalized_segments,
+                        "language": str(tr_result.data.get("language") or "en"),
                         "word_count": len(full_text.split()),
                     }
                     transcript_data = brief["narration_transcript"]
                     steps_completed.append("transcript_whisper")
             except Exception as e:
-                steps_failed.append(f"transcript_whisper: {e}")
+                self._record_failure(steps_failed, "transcript_whisper", e)
 
         # For transcript_only depth, we're done
         if depth == "transcript_only":
-            brief["_analysis_meta"] = {
-                "depth": depth,
-                "steps_completed": steps_completed,
-                "steps_failed": steps_failed,
-                "duration_seconds": round(time.time() - start, 2),
-            }
+            self._finalize_v11_brief(
+                brief,
+                output_dir,
+                source,
+                steps_completed,
+                steps_failed,
+                started_at,
+                depth,
+                self._has_transcript_content(brief),
+            )
             self._save_brief(brief, output_dir)
             return ToolResult(
-                success=True,
+                success=brief["analysis_run"]["status"] != "failed",
                 data=brief,
                 artifacts=[str(output_dir / "video_analysis_brief.json")],
                 duration_seconds=round(time.time() - start, 2),
@@ -394,7 +673,7 @@ class VideoAnalyzer(BaseTool):
                     scenes = sd_result.data.get("scenes", [])
                     steps_completed.append("scene_detect")
             except Exception as e:
-                steps_failed.append(f"scene_detect: {e}")
+                self._record_failure(steps_failed, "scene_detect", e)
 
         # Build scene list for the brief
         if scenes:
@@ -435,7 +714,7 @@ class VideoAnalyzer(BaseTool):
                     bs["flow_variance"] = mr["flow_variance"]
                 steps_completed.append("motion_classification")
             except Exception as e:
-                steps_failed.append(f"motion_classification: {e}")
+                self._record_failure(steps_failed, "motion_classification", e)
 
         # ─── STEP 4: Keyframe extraction (scene-guided) ───
         keyframes = []
@@ -462,6 +741,7 @@ class VideoAnalyzer(BaseTool):
                             frame["timestamp_seconds"], scenes
                         )
                         keyframes.append({
+                            "id": f"keyframe-{len(keyframes):04d}",
                             "timestamp": frame["timestamp_seconds"],
                             "scene_index": scene_idx,
                             "path": frame["path"],
@@ -469,7 +749,7 @@ class VideoAnalyzer(BaseTool):
                         })
                     steps_completed.append("keyframes")
             except Exception as e:
-                steps_failed.append(f"keyframes: {e}")
+                self._record_failure(steps_failed, "keyframes", e)
         elif video_path and not scenes:
             # No scene detection — fall back to count-based extraction
             try:
@@ -486,6 +766,7 @@ class VideoAnalyzer(BaseTool):
                 if fs_result.success:
                     for frame in fs_result.data.get("frames", []):
                         keyframes.append({
+                            "id": f"keyframe-{len(keyframes):04d}",
                             "timestamp": frame["timestamp_seconds"],
                             "scene_index": 0,
                             "path": frame["path"],
@@ -493,7 +774,7 @@ class VideoAnalyzer(BaseTool):
                         })
                     steps_completed.append("keyframes_uniform")
             except Exception as e:
-                steps_failed.append(f"keyframes_uniform: {e}")
+                self._record_failure(steps_failed, "keyframes_uniform", e)
 
         brief["keyframes"] = keyframes
 
@@ -517,17 +798,20 @@ class VideoAnalyzer(BaseTool):
                     }
                     steps_completed.append("audio_energy")
             except Exception as e:
-                steps_failed.append(f"audio_energy: {e}")
+                self._record_failure(steps_failed, "audio_energy", e)
 
         # ─── STEP 6: Build replication guidance ───
         brief["replication_guidance"] = {
             "suggested_pipeline": self._suggest_pipeline(brief),
-            "suggested_playbook": "flat-motion-graphics",
+            "suggested_playbook": "",  # Agent chooses after visual enrichment
             "key_elements_to_replicate": [],  # Agent fills via analysis
             "elements_requiring_custom_work": [],
             "estimated_complexity": self._estimate_complexity(brief),
             "motion_required": self._needs_motion(brief),
             "creative_differentiation_seeds": [],  # Agent fills
+            "preserve": [],
+            "change": [],
+            "avoid": [],
         }
 
         # ─── STEP 7: Initialize style_profile ───
@@ -556,20 +840,26 @@ class VideoAnalyzer(BaseTool):
         brief["style_profile"].setdefault("transition_types", [])
         brief["style_profile"].setdefault("music_style", "")
         brief["style_profile"].setdefault("subtitle_style", "")
-        brief["style_profile"].setdefault("production_quality", "prosumer")
+        brief["style_profile"].setdefault("production_quality", "unknown")
         brief["style_profile"].setdefault("closest_playbook", "")
         brief["style_profile"].setdefault("playbook_delta", "")
 
         # ─── Finalize ───
-        brief["_analysis_meta"] = {
-            "depth": depth,
-            "steps_completed": steps_completed,
-            "steps_failed": steps_failed,
+        self._finalize_v11_brief(
+            brief,
+            output_dir,
+            source,
+            steps_completed,
+            steps_failed,
+            started_at,
+            depth,
+            transcript_data is not None,
+        )
+        brief["analysis_run"]["config"].update({
             "keyframe_count": len(keyframes),
             "scene_count": len(scenes),
-            "has_transcript": transcript_data is not None,
-            "duration_seconds": round(time.time() - start, 2),
-        }
+            "has_transcript": self._has_transcript_content(brief),
+        })
 
         self._save_brief(brief, output_dir)
 
@@ -579,7 +869,7 @@ class VideoAnalyzer(BaseTool):
             artifacts.append(str(keyframe_dir))
 
         return ToolResult(
-            success=True,
+            success=brief["analysis_run"]["status"] != "failed",
             data=brief,
             artifacts=artifacts,
             duration_seconds=round(elapsed, 2),
@@ -792,7 +1082,10 @@ class VideoAnalyzer(BaseTool):
     def _save_brief(self, brief: dict, output_dir: Path) -> None:
         """Save the VideoAnalysisBrief to disk."""
         out_path = output_dir / "video_analysis_brief.json"
-        # Remove non-serializable items
+        # Validate before writing so a partial or undeclared artifact cannot
+        # masquerade as a grounded analysis.
+        from schemas.artifacts import validate_artifact
         clean_brief = {k: v for k, v in brief.items()}
+        validate_artifact("video_analysis_brief", clean_brief)
         with open(out_path, "w", encoding="utf-8") as f:
             json.dump(clean_brief, f, indent=2, default=str)

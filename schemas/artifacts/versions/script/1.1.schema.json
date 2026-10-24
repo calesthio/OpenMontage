@@ -1,0 +1,295 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/script/1.1",
+  "title": "Production Script@1.1",
+  "description": "Timestamped script produced by the Script Writer agent.",
+  "type": "object",
+  "required": [
+    "version",
+    "title",
+    "total_duration_seconds",
+    "sections"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1.1"
+    },
+    "title": {
+      "type": "string"
+    },
+    "total_duration_seconds": {
+      "type": "number",
+      "minimum": 1
+    },
+    "voice_performance": {
+      "type": "object",
+      "description": "Narration delivery contract used by TTS asset generation.",
+      "properties": {
+        "performance_intent": {
+          "type": "string"
+        },
+        "pacing_profile": {
+          "type": "string",
+          "enum": [
+            "contemplative",
+            "conversational",
+            "energetic",
+            "technical",
+            "cinematic",
+            "custom"
+          ]
+        },
+        "energy_curve": {
+          "type": "string"
+        },
+        "pause_policy": {
+          "type": "string"
+        },
+        "sample_section_id": {
+          "type": "string",
+          "description": "Most performance-sensitive section to use for TTS sample approval."
+        },
+        "provider_notes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "text",
+          "start_seconds",
+          "end_seconds"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "start_seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "end_seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "speaker_directions": {
+            "type": "string"
+          },
+          "delivery_cues": {
+            "type": "object",
+            "description": "Structured voice-performance cues that TTS generation must apply.",
+            "properties": {
+              "pace": {
+                "type": "string",
+                "enum": [
+                  "slow",
+                  "measured",
+                  "conversational",
+                  "brisk",
+                  "fast",
+                  "custom"
+                ]
+              },
+              "energy": {
+                "type": "string"
+              },
+              "emphasis_words": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "pause_before_seconds": {
+                "type": "number",
+                "minimum": 0
+              },
+              "pause_after_seconds": {
+                "type": "number",
+                "minimum": 0
+              },
+              "delivery_note": {
+                "type": "string"
+              },
+              "provider_text": {
+                "type": "string",
+                "description": "Provider-ready narration text, including purposeful punctuation or SSML break tags when supported."
+              }
+            },
+            "additionalProperties": false
+          },
+          "enhancement_cues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "overlay",
+                    "broll",
+                    "diagram",
+                    "stat_card",
+                    "code_snippet",
+                    "animation"
+                  ]
+                },
+                "description": {
+                  "type": "string"
+                },
+                "timestamp_seconds": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "type",
+                "description"
+              ]
+            }
+          },
+          "pronunciation_guides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "word": {
+                  "type": "string"
+                },
+                "phonetic": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "word",
+                "phonetic"
+              ]
+            }
+          },
+          "source_ref": {
+            "type": "string",
+            "description": "Reference to the research_brief data point or URL that supports this claim. Every factual claim should be traceable."
+          },
+          "beat_role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "beat_type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "animation_mode": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "source_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "visual_intent": {
+            "type": "object",
+            "required": [
+              "description"
+            ],
+            "properties": {
+              "description": {
+                "type": "string",
+                "minLength": 1
+              },
+              "information_role": {
+                "type": "string"
+              },
+              "transition": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "audio_intent": {
+            "type": "object",
+            "required": [
+              "description"
+            ],
+            "properties": {
+              "description": {
+                "type": "string",
+                "minLength": 1
+              },
+              "music_role": {
+                "type": "string"
+              },
+              "sound_design": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "text_constraints": {
+            "type": "object",
+            "properties": {
+              "max_words": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "max_lines": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          },
+          "metadata": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "reference_analysis_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "narrative_profile_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)?@[0-9]+(?:\\.[0-9]+)*$"
+      },
+      "uniqueItems": true
+    }
+  },
+  "additionalProperties": false
+}

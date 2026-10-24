@@ -51,6 +51,15 @@ A `render_runtime_selection` decision with only one option considered when both 
 
 ## Process
 
+### Reference-aware v1.1 handoff
+
+When a `video_analysis_brief@1.1` or `video_analysis_bundle@1.1` is present for a reference-driven run, emit a `proposal_packet@1.1` with
+`reference_analysis_refs`, per-concept preserve/change/avoid decisions, evidence refs,
+and composable `narrative_profile_refs`. Keep observations in the analysis artifact and
+recommendations in the proposal; do not create a format-pattern entity. See
+`docs/VIDEO_ANALYSIS_CONTRACT_V1_1.md`.
+
+
 ### Step 0: Check for Reference Video Context
 
 Before starting proposal work, check if a VideoAnalysisBrief exists for this project.

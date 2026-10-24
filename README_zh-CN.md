@@ -427,7 +427,7 @@ OpenMontage/
 | **Runway Gen-4** | 云端 API | 电影级质量，Gen-3 Alpha Turbo / Gen-4 Turbo / Gen-4 Aleph |
 | **Google Veo 3** | 云端 API | 长篇幅，电影级。通过 fal.ai 或 HeyGen 接入。 |
 | **Grok Imagine Video** | 云端 API | 强大的基于参考图的视频和 xAI 原生短视频生成 |
-| **Higgsfield** | 云端 API | 带 Soul ID 以实现角色一致性的多模型编排器 |
+| **Higgsfield** | 已认证 CLI / 云端 API | 带 Soul ID 以实现角色一致性的多模型编排器 |
 | **MiniMax** | 云端 API | 极具成本效益 |
 | **HeyGen** | 云端 API | 多模型网关 |
 | **WAN 2.1** | 本地 GPU | 免费，提供 1.3B 和 14B 版本 |

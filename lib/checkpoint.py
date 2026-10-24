@@ -14,7 +14,11 @@ from typing import Any, Optional
 
 import jsonschema
 
-from schemas.artifacts import ARTIFACT_NAMES, validate_artifact
+from schemas.artifacts import (
+    ARTIFACT_NAMES,
+    validate_artifact,
+    validate_artifact_handoffs,
+)
 
 # All known stages across all pipelines (used only for artifact name lookup).
 ALL_KNOWN_STAGES = frozenset([
@@ -45,6 +49,7 @@ SUPPLEMENTARY_ARTIFACTS = {
     "source_media_review",  # Required before first planning stage when user media exists
     "final_review",         # Required by compose stage before presenting to user
     "video_analysis_brief", # Reference-video grounding artifact carried alongside stages
+    "video_analysis_bundle", # Multiple independently analyzed reference sources
 }
 
 
@@ -155,6 +160,13 @@ def _validate_artifacts_for_stage(
             raise CheckpointValidationError(
                 f"Artifact {artifact_name!r} failed schema validation: {exc}"
             ) from exc
+
+    try:
+        validate_artifact_handoffs(artifacts)
+    except Exception as exc:
+        raise CheckpointValidationError(
+            f"Artifact handoff validation failed: {exc}"
+        ) from exc
 
 
 def validate_checkpoint(checkpoint: dict[str, Any]) -> None:
@@ -419,6 +431,140 @@ def _merge_decision_log(
         json.dump(existing, f, indent=2)
 
 
+
+
+def _analysis_identity_map(artifacts: dict[str, Any]) -> dict[str, Any]:
+    """Return source fingerprints keyed by attached v1.1 analysis ID."""
+    identities: dict[str, Any] = {}
+    candidates: list[dict[str, Any]] = []
+    single = artifacts.get("video_analysis_brief")
+    if isinstance(single, dict) and single.get("version") == "1.1":
+        candidates.append(single)
+    bundle = artifacts.get("video_analysis_bundle")
+    if isinstance(bundle, dict) and bundle.get("version") == "1.1":
+        candidates.extend(
+            item for item in bundle.get("analyses", []) if isinstance(item, dict)
+        )
+    for analysis in candidates:
+        identities[analysis["analysis_id"]] = analysis.get("source", {}).get("fingerprint")
+    return identities
+
+def _effective_lineage_refs(
+    artifact: dict[str, Any], artifact_name: str
+) -> set[str]:
+    """Return the analysis IDs that should continue into the next stage.
+
+    A proposal's top-level refs may be the union of all concept options. Once
+    one option is selected, downstream stages inherit that option's refs;
+    other concept sources must not become mandatory script inputs.
+    """
+    refs = set(artifact.get("reference_analysis_refs", []))
+    if artifact_name == "proposal_packet":
+        selected = artifact.get("selected_concept")
+        selected_refs = selected.get("reference_analysis_refs", []) if isinstance(selected, dict) else []
+        if selected_refs:
+            return set(selected_refs)
+    return refs
+
+
+def _validate_prior_reference_lineage(
+    pipeline_dir: Path,
+    project_id: str,
+    pipeline_type: str | None,
+    stage: str,
+    artifacts: dict[str, Any],
+) -> None:
+    """Keep v1.1 reference IDs consistent with prior pipeline stages."""
+    if not pipeline_type or stage not in {"script", "scene_plan"}:
+        return
+
+    stages = get_pipeline_stages(pipeline_type)
+    if stage not in stages:
+        return
+    stage_index = stages.index(stage)
+    prior_artifact_name = "proposal_packet" if stage == "script" else "script"
+    prior_artifact: dict[str, Any] | None = None
+    prior_checkpoint: dict[str, Any] | None = None
+    for predecessor in reversed(stages[:stage_index]):
+        predecessor_path = _checkpoint_path(pipeline_dir, project_id, predecessor)
+        if not predecessor_path.exists():
+            continue
+        try:
+            with open(predecessor_path, encoding="utf-8") as handle:
+                candidate = json.load(handle)
+        except (OSError, json.JSONDecodeError):
+            continue
+        candidate_artifact = candidate.get("artifacts", {}).get(prior_artifact_name)
+        if (
+            candidate.get("status") in {"completed", "awaiting_human"}
+            and isinstance(candidate_artifact, dict)
+            and candidate_artifact.get("version") == "1.1"
+        ):
+            prior_checkpoint = candidate
+            prior_artifact = candidate_artifact
+            break
+
+    current_name = "script" if stage == "script" else "scene_plan"
+    current = artifacts.get(current_name)
+    if not isinstance(current, dict) or current.get("version") != "1.1":
+        return
+
+    current_refs = set(current.get("reference_analysis_refs", []))
+    prior_refs = (
+        _effective_lineage_refs(prior_artifact, prior_artifact_name)
+        if prior_artifact
+        else set()
+    )
+    if current_refs and prior_artifact is None:
+        raise CheckpointValidationError(
+            f"REFERENCE LINEAGE VIOLATION: {stage!r} has no prior v1.1 {prior_artifact_name} to inherit from"
+        )
+    if prior_artifact is not None and current_refs != prior_refs:
+        dropped = prior_refs - current_refs
+        introduced = current_refs - prior_refs
+        details = []
+        if dropped:
+            details.append(f"dropped prior analysis refs {sorted(dropped)}")
+        if introduced:
+            details.append(
+                f"introduced analysis refs {sorted(introduced)} outside the prior stage"
+            )
+        raise CheckpointValidationError(
+            f"REFERENCE LINEAGE VIOLATION: {stage!r} changed analysis refs ("
+            + "; ".join(details)
+            + ")"
+        )
+
+    if prior_checkpoint is not None and current_refs:
+        prior_identities = _analysis_identity_map(prior_checkpoint.get("artifacts", {}))
+        current_identities = _analysis_identity_map(artifacts)
+        for analysis_id in current_refs & set(prior_identities) & set(current_identities):
+            if prior_identities[analysis_id] != current_identities[analysis_id]:
+                raise CheckpointValidationError(
+                    f"REFERENCE LINEAGE VIOLATION: analysis_id {analysis_id!r} "
+                    "changed source fingerprint between stages"
+                )
+
+    if stage == "scene_plan" and prior_artifact is not None:
+        prior_section_ids = {
+            section["id"]
+            for section in prior_artifact.get("sections", [])
+            if isinstance(section, dict) and isinstance(section.get("id"), str)
+        }
+        for index, scene in enumerate(current.get("scenes", [])):
+            refs = list(scene.get("script_section_ids", []))
+            if scene.get("script_section_id"):
+                refs.append(scene["script_section_id"])
+            if not refs:
+                raise CheckpointValidationError(
+                    f"REFERENCE LINEAGE VIOLATION: scene_plan scene[{index}] has no script section ref"
+                )
+            if not set(refs).issubset(prior_section_ids):
+                raise CheckpointValidationError(
+                    f"REFERENCE LINEAGE VIOLATION: scene_plan scene[{index}] references "
+                    f"script sections outside the prior script"
+                )
+
 def write_checkpoint(
     pipeline_dir: Path,
     project_id: str,
@@ -543,6 +689,9 @@ def write_checkpoint(
                 else:
                     plan_or_top["decision_log_ref"] = log_ref
 
+    _validate_prior_reference_lineage(
+        pipeline_dir, project_id, pipeline_type, stage, artifacts
+    )
     validate_checkpoint(checkpoint)
 
     # Reject invalid stage/artifact payloads before persisting their decisions.

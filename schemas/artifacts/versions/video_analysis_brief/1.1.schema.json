@@ -1,0 +1,1119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "video_analysis_brief@1.1",
+  "description": "Versioned, evidence-linked analysis of one reference video.",
+  "type": "object",
+  "required": [
+    "version",
+    "analysis_id",
+    "source",
+    "analysis_run",
+    "evidence",
+    "content_analysis",
+    "structure_analysis",
+    "five_aspect_observations",
+    "assertions",
+    "replication_guidance"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1.1"
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "type",
+        "duration_seconds",
+        "fingerprint",
+        "rights_status",
+        "privacy_status",
+        "retention_policy"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "youtube",
+            "shorts",
+            "instagram",
+            "tiktok",
+            "local_file",
+            "other_url"
+          ]
+        },
+        "url": {
+          "type": "string"
+        },
+        "local_path": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "duration_seconds": {
+          "type": "number"
+        },
+        "resolution": {
+          "type": "string"
+        },
+        "platform_metadata": {
+          "type": "object",
+          "properties": {
+            "uploader": {
+              "type": "string"
+            },
+            "upload_date": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "view_count": {
+              "type": "integer"
+            },
+            "like_count": {
+              "type": "integer"
+            }
+          }
+        },
+        "platform": {
+          "type": "string",
+          "minLength": 1
+        },
+        "surface": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fingerprint": {
+          "type": "object",
+          "required": [
+            "kind",
+            "algorithm",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "content",
+                "locator",
+                "legacy_locator"
+              ]
+            },
+            "algorithm": {
+              "type": "string",
+              "const": "sha256"
+            },
+            "value": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "rights_status": {
+          "type": "string",
+          "enum": [
+            "unknown",
+            "user_provided",
+            "owned",
+            "licensed",
+            "public_domain",
+            "restricted"
+          ]
+        },
+        "privacy_status": {
+          "type": "string",
+          "enum": [
+            "unknown",
+            "review_required",
+            "redacted",
+            "clear"
+          ]
+        },
+        "retention_policy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "identity_status": {
+          "type": "string",
+          "enum": [
+            "available",
+            "unavailable",
+            "ambiguous"
+          ]
+        }
+      }
+    },
+    "content_analysis": {
+      "type": "object",
+      "required": [
+        "summary",
+        "topics",
+        "target_audience"
+      ],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "description": "2-3 sentence content summary"
+        },
+        "topics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "key_claims": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "target_audience": {
+          "type": "string"
+        },
+        "tone": {
+          "type": "string",
+          "enum": [
+            "educational",
+            "entertaining",
+            "cinematic",
+            "corporate",
+            "casual",
+            "dramatic",
+            "inspirational",
+            "humorous"
+          ]
+        },
+        "hook_technique": {
+          "type": "string",
+          "description": "How the video opens to grab attention"
+        },
+        "call_to_action": {
+          "type": "string"
+        }
+      }
+    },
+    "structure_analysis": {
+      "type": "object",
+      "required": [
+        "total_scenes",
+        "scenes",
+        "pacing_profile"
+      ],
+      "properties": {
+        "total_scenes": {
+          "type": "integer"
+        },
+        "scenes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "scene_index",
+              "start_time",
+              "end_time",
+              "description"
+            ],
+            "properties": {
+              "scene_index": {
+                "type": "integer"
+              },
+              "start_time": {
+                "type": "number"
+              },
+              "end_time": {
+                "type": "number"
+              },
+              "description": {
+                "type": "string"
+              },
+              "narration_text": {
+                "type": "string"
+              },
+              "visual_type": {
+                "type": "string",
+                "enum": [
+                  "talking_head",
+                  "b_roll",
+                  "screen_recording",
+                  "animation",
+                  "text_card",
+                  "stock_footage",
+                  "diagram",
+                  "chart",
+                  "product_shot",
+                  "transition",
+                  "other"
+                ]
+              },
+              "shot_language": {
+                "type": "object",
+                "properties": {
+                  "shot_size": {
+                    "type": "string"
+                  },
+                  "camera_movement": {
+                    "type": "string"
+                  },
+                  "lighting_key": {
+                    "type": "string"
+                  },
+                  "depth_of_field": {
+                    "type": "string"
+                  }
+                }
+              },
+              "dominant_colors": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "on_screen_text": {
+                "type": "string"
+              },
+              "energy_level": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high",
+                  "peak"
+                ]
+              },
+              "motion_type": {
+                "type": "string",
+                "enum": [
+                  "motion_clip",
+                  "animated_still",
+                  "static_image",
+                  "unknown"
+                ]
+              },
+              "flow_variance": {
+                "type": "number"
+              },
+              "observation_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "uniqueItems": true
+              },
+              "legacy_scene_index": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "pacing_profile": {
+          "type": "object",
+          "properties": {
+            "avg_scene_duration_seconds": {
+              "type": "number"
+            },
+            "shortest_scene_seconds": {
+              "type": "number"
+            },
+            "longest_scene_seconds": {
+              "type": "number"
+            },
+            "cuts_per_minute": {
+              "type": "number"
+            },
+            "pacing_style": {
+              "type": "string",
+              "enum": [
+                "slow_contemplative",
+                "steady_educational",
+                "dynamic_social",
+                "rapid_fire",
+                "variable"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "style_profile": {
+      "type": "object",
+      "properties": {
+        "color_palette": {
+          "type": "object",
+          "properties": {
+            "primary_colors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "accent_colors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "overall_mood": {
+              "type": "string"
+            }
+          }
+        },
+        "typography_observed": {
+          "type": "string"
+        },
+        "transition_types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "music_style": {
+          "type": "string"
+        },
+        "narration_style": {
+          "type": "object",
+          "properties": {
+            "has_narration": {
+              "type": "boolean"
+            },
+            "speaker_count": {
+              "type": "integer"
+            },
+            "delivery_style": {
+              "type": "string"
+            },
+            "words_per_minute": {
+              "type": "number"
+            }
+          }
+        },
+        "subtitle_style": {
+          "type": "string"
+        },
+        "production_quality": {
+          "type": "string",
+          "enum": [
+            "unknown",
+            "amateur",
+            "prosumer",
+            "professional",
+            "broadcast"
+          ]
+        },
+        "closest_playbook": {
+          "type": "string"
+        },
+        "playbook_delta": {
+          "type": "string"
+        }
+      }
+    },
+    "narration_transcript": {
+      "type": "object",
+      "properties": {
+        "full_text": {
+          "type": "string"
+        },
+        "segments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "start": {
+                "type": "number"
+              },
+              "end": {
+                "type": "number",
+                "minimum": 0
+              },
+              "text": {
+                "type": "string"
+              },
+              "speaker": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "duration": {
+                "type": "number",
+                "minimum": 0
+              },
+              "words": {
+                "type": "array"
+              }
+            },
+            "required": [
+              "id",
+              "start",
+              "end",
+              "text"
+            ]
+          }
+        },
+        "language": {
+          "type": "string"
+        },
+        "word_count": {
+          "type": "integer"
+        }
+      }
+    },
+    "replication_guidance": {
+      "type": "object",
+      "properties": {
+        "suggested_pipeline": {
+          "type": "string"
+        },
+        "suggested_playbook": {
+          "type": "string"
+        },
+        "key_elements_to_replicate": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "description",
+              "evidence_refs",
+              "assertion_type"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1
+              },
+              "evidence_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "uniqueItems": true
+              },
+              "assertion_type": {
+                "const": "recommended"
+              },
+              "provenance_status": {
+                "type": "string",
+                "enum": [
+                  "grounded",
+                  "unavailable"
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "description": "The 3-5 things that make this video work"
+        },
+        "elements_requiring_custom_work": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "description",
+              "evidence_refs",
+              "assertion_type"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1
+              },
+              "evidence_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "uniqueItems": true
+              },
+              "assertion_type": {
+                "const": "recommended"
+              },
+              "provenance_status": {
+                "type": "string",
+                "enum": [
+                  "grounded",
+                  "unavailable"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "estimated_complexity": {
+          "type": "string",
+          "enum": [
+            "simple",
+            "moderate",
+            "complex",
+            "beyond_current_capability"
+          ]
+        },
+        "motion_required": {
+          "type": "boolean"
+        },
+        "creative_differentiation_seeds": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "description",
+              "evidence_refs",
+              "assertion_type"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1
+              },
+              "evidence_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "uniqueItems": true
+              },
+              "assertion_type": {
+                "const": "recommended"
+              },
+              "provenance_status": {
+                "type": "string",
+                "enum": [
+                  "grounded",
+                  "unavailable"
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "description": "3-5 ways the output should DIFFER from the reference to avoid being a copy"
+        },
+        "playbook_customizations": {
+          "type": "object"
+        },
+        "preserve": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "description",
+              "evidence_refs",
+              "assertion_type"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1
+              },
+              "evidence_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "uniqueItems": true
+              },
+              "assertion_type": {
+                "const": "recommended"
+              },
+              "provenance_status": {
+                "type": "string",
+                "enum": [
+                  "grounded",
+                  "unavailable"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "change": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "description",
+              "evidence_refs",
+              "assertion_type"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1
+              },
+              "evidence_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "uniqueItems": true
+              },
+              "assertion_type": {
+                "const": "recommended"
+              },
+              "provenance_status": {
+                "type": "string",
+                "enum": [
+                  "grounded",
+                  "unavailable"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "avoid": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "description",
+              "evidence_refs",
+              "assertion_type"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1
+              },
+              "evidence_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "uniqueItems": true
+              },
+              "assertion_type": {
+                "const": "recommended"
+              },
+              "provenance_status": {
+                "type": "string",
+                "enum": [
+                  "grounded",
+                  "unavailable"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    "keyframes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "number"
+          },
+          "scene_index": {
+            "type": "integer"
+          },
+          "path": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "legacy_id": {
+            "type": "string"
+          },
+          "legacy_scene_index": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "id",
+          "timestamp",
+          "scene_index",
+          "path",
+          "description"
+        ]
+      }
+    },
+    "analysis_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "analysis_run": {
+      "type": "object",
+      "required": [
+        "id",
+        "depth",
+        "status",
+        "steps_completed",
+        "steps_failed",
+        "tool"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "depth": {
+          "type": "string",
+          "enum": [
+            "transcript_only",
+            "standard",
+            "deep"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "complete",
+            "partial",
+            "failed"
+          ]
+        },
+        "steps_completed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "steps_failed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tool": {
+          "type": "object",
+          "required": [
+            "name",
+            "version"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "config": {
+          "type": "object"
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "finished_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "source_ref"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "source_metadata",
+              "scene_detection",
+              "transcript_segment",
+              "keyframe",
+              "audio_analysis",
+              "tool_output",
+              "visual_observation"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "unavailable",
+              "redacted"
+            ]
+          },
+          "source_ref": {
+            "type": "string",
+            "minLength": 1
+          },
+          "start_seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "end_seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "scene_index": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "excerpt": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "captured_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sha256": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "uniqueItems": true
+    },
+    "five_aspect_observations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "scene_index",
+          "aspect",
+          "status",
+          "value",
+          "evidence_refs",
+          "confidence"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "scene_index": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "aspect": {
+            "type": "string",
+            "enum": [
+              "subject",
+              "subject_motion",
+              "scene",
+              "spatial_framing",
+              "camera"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "observed",
+              "inferred",
+              "unknown",
+              "not_applicable"
+            ]
+          },
+          "value": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "enum": [
+                    "observed",
+                    "inferred"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "evidence_refs": {
+                  "minItems": 1
+                }
+              }
+            }
+          }
+        ],
+        "additionalProperties": false
+      }
+    },
+    "assertions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "statement",
+          "evidence_refs",
+          "confidence"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "observed",
+              "inferred",
+              "recommended"
+            ]
+          },
+          "statement": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "time_range": {
+            "type": "object",
+            "required": [
+              "start_seconds",
+              "end_seconds"
+            ],
+            "properties": {
+              "start_seconds": {
+                "type": "number",
+                "minimum": 0
+              },
+              "end_seconds": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          },
+          "scene_index": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "review_profile": {
+      "type": "object",
+      "required": [
+        "id",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "criteria": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "openmontage/artifacts/video_analysis_brief/1.1"
+}

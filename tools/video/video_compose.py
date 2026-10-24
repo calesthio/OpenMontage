@@ -1995,6 +1995,10 @@ class VideoCompose(BaseTool):
         renderer_family = (composition_data or {}).get("renderer_family", "explainer-data")
         composition_id = self._get_composition_id(renderer_family)
 
+        # Caption look: CaptionOverlay props from edit_decisions, passed through as-is.
+        if isinstance((composition_data.get("subtitles") or {}).get("caption_props"), dict):
+            props["captionProps"] = composition_data["subtitles"]["caption_props"]
+
         if composition_id == "CinematicRenderer":
             if not props.get("scenes") and props.get("cuts"):
                 props["scenes"] = self._cuts_to_cinematic_scenes(props["cuts"])

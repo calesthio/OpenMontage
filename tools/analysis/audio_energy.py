@@ -131,7 +131,7 @@ class AudioEnergy(BaseTool):
                     ffprobe, "-v", "quiet", "-print_format", "json",
                     "-show_format", str(input_path),
                 ],
-                capture_output=True, text=True, timeout=10,
+                capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=10,
             )
             probe_data = json.loads(probe_result.stdout)
             audio_duration = float(probe_data["format"]["duration"])
@@ -149,7 +149,7 @@ class AudioEnergy(BaseTool):
                     "-af", "ebur128",
                     "-f", "null", "-",
                 ],
-                capture_output=True, text=True, timeout=120,
+                capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120,
             )
             stderr = result.stderr
         except subprocess.TimeoutExpired:

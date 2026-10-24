@@ -639,7 +639,7 @@ def _extract_mid_thumbnail(
     try:
         probe_timeout = min(10, remaining_seconds(deadline))
         result = subprocess.run(
-            probe_cmd, capture_output=True, text=True, timeout=probe_timeout
+            probe_cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=probe_timeout
         )
         duration = float(result.stdout.strip() or "0")
     except (ValueError, subprocess.TimeoutExpired, FileNotFoundError):

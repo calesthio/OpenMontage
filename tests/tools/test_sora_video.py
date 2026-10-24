@@ -51,7 +51,7 @@ def test_sora_video_loads_openai_key_from_repo_dotenv_when_process_env_is_empty(
             ],
             cwd=PROJECT_ROOT,
             env=env,
-            text=True,
+            text=True, encoding="utf-8", errors="replace",
             capture_output=True,
             check=False,
         )

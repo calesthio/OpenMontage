@@ -29,6 +29,13 @@ interface ProgressBarProps {
   textColor?: string;
   labelFontSize?: number;
   percentageFontSize?: number;
+  /**
+   * Frames the fill animation should span. Defaults to the composition's
+   * duration, which is only correct when the bar owns the whole composition.
+   * Inside a multi-scene render, pass the scene's own frame length — otherwise
+   * the fill is paced against the entire video and barely advances.
+   */
+  animationDurationInFrames?: number;
 }
 
 export const ProgressBar: React.FC<ProgressBarProps> = ({
@@ -46,9 +53,11 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   textColor = "#1F2937",
   labelFontSize = 36,
   percentageFontSize = 28,
+  animationDurationInFrames,
 }) => {
   const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
+  const { fps, durationInFrames: compositionDurationInFrames } = useVideoConfig();
+  const durationInFrames = animationDurationInFrames ?? compositionDurationInFrames;
 
   const clampedProgress = Math.max(0, Math.min(100, progress));
 

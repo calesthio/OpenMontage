@@ -124,10 +124,25 @@ class DashscopeImage(BaseTool):
         "Inspect generated image for relevance and quality"
     ]
 
-    ENDPOINT = (
-        "https://dashscope.aliyuncs.com/api/v1/services/aigc/"
-        "multimodal-generation/generation"
-    )
+    # DashScope runs two independent deployments with separate accounts and
+    # keys: the mainland China site and the international (Singapore) site.
+    # A key issued by one is rejected by the other, so the host must match
+    # where the key came from. Default stays on the mainland host.
+    CN_BASE_URL = "https://dashscope.aliyuncs.com"
+    INTL_BASE_URL = "https://dashscope-intl.aliyuncs.com"
+    ENDPOINT_PATH = "/api/v1/services/aigc/multimodal-generation/generation"
+
+    @property
+    def ENDPOINT(self) -> str:
+        base = os.environ.get("DASHSCOPE_BASE_URL", "").strip()
+        if not base:
+            region = os.environ.get("DASHSCOPE_REGION", "").strip().lower()
+            base = (
+                self.INTL_BASE_URL
+                if region in ("intl", "international", "singapore")
+                else self.CN_BASE_URL
+            )
+        return base.rstrip("/") + self.ENDPOINT_PATH
 
     def get_status(self) -> ToolStatus:
         if os.environ.get("DASHSCOPE_API_KEY"):

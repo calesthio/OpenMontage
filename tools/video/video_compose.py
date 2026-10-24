@@ -225,7 +225,18 @@ class VideoCompose(BaseTool):
     ]
     retry_policy = RetryPolicy(max_retries=1, retryable_errors=["Conversion failed"])
     resume_support = ResumeSupport.FROM_START
-    idempotency_key_fields = ["operation", "input_path", "edit_decisions"]
+    # Every top-level input execute() reads, declared or not: each one changes
+    # the video, the cached result data, or whether a gate (strict,
+    # skip_contrast) runs. output_path and remotion_timeout_ms do neither.
+    idempotency_key_fields = [
+        "operation", "input_path", "edit_decisions", "composition_data",
+        "asset_manifest", "audio_path", "subtitle_path", "subtitle_style",
+        "overlays", "codec", "crf", "preset", "profile", "output_profile",
+        "options", "proposal_packet", "script_path", "script_text",
+        "narration_transcript_path", "playbook", "playbook_name", "scene_plan",
+        "quality", "fps", "workspace_path", "public_dir", "strict",
+        "strict_check", "skip_contrast", "snapshots",
+    ]
     side_effects = ["writes video file to output_path"]
     user_visible_verification = [
         "Play the composed output and verify cuts, subtitles, and overlays",

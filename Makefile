@@ -1,8 +1,11 @@
 PYTHON_VERSION ?= 3.10
 VENV_DIR ?= .venv
 BASE_PYTHON ?= $(shell command -v python$(PYTHON_VERSION) 2>/dev/null || command -v python3 2>/dev/null || command -v python 2>/dev/null)
+# RUN_PYTHON is quoted at every use below: the checkout path may contain
+# spaces, and unquoted it word-splits in sh, which makes ensure-venv
+# misreport a perfectly good interpreter as a missing one.
 RUN_PYTHON = $(shell for dir in "$$VIRTUAL_ENV" "$$CONDA_PREFIX" "$(VENV_DIR)"; do if [ -n "$$dir" ] && [ -x "$$dir/bin/python" ]; then printf "%s/bin/python" "$$dir"; exit 0; elif [ -n "$$dir" ] && [ -x "$$dir/Scripts/python.exe" ]; then printf "%s/Scripts/python.exe" "$$dir"; exit 0; fi; done; if [ "$(OS)" = "Windows_NT" ]; then printf "%s/Scripts/python.exe" "$(VENV_DIR)"; else printf "%s/bin/python" "$(VENV_DIR)"; fi)
-PIP = $(RUN_PYTHON) -m pip
+PIP = "$(RUN_PYTHON)" -m pip
 
 .DEFAULT_GOAL := setup
 
@@ -36,13 +39,13 @@ ensure-venv:
 			exit 1; \
 		}; \
 	fi
-	@$(RUN_PYTHON) -c "import sys; required=tuple(map(int, '$(PYTHON_VERSION)'.split('.')[:2])); raise SystemExit(0 if sys.version_info[:2] >= required else 1)" || { \
+	@"$(RUN_PYTHON)" -c "import sys; required=tuple(map(int, '$(PYTHON_VERSION)'.split('.')[:2])); raise SystemExit(0 if sys.version_info[:2] >= required else 1)" || { \
 		echo "ERROR: OpenMontage requires Python $(PYTHON_VERSION)+."; \
-		echo "Current interpreter is $$($(RUN_PYTHON) -c 'import sys; print(\".\".join(map(str, sys.version_info[:3])))' 2>/dev/null || echo unavailable): $(RUN_PYTHON)"; \
+		echo "Current interpreter is $$("$(RUN_PYTHON)" -c 'import sys; print(\".\".join(map(str, sys.version_info[:3])))' 2>/dev/null || echo unavailable): $(RUN_PYTHON)"; \
 		echo "Activate a compatible environment or remove it so make can create $(VENV_DIR)."; \
 		exit 1; \
 	}
-	@$(RUN_PYTHON) -m pip --version >/dev/null 2>&1 || $(RUN_PYTHON) -m ensurepip --upgrade >/dev/null
+	@"$(RUN_PYTHON)" -m pip --version >/dev/null 2>&1 || "$(RUN_PYTHON)" -m ensurepip --upgrade >/dev/null
 
 venv: ensure-venv
 	@echo "==> Virtual environment ready."
@@ -65,9 +68,9 @@ setup: ensure-venv
 	@echo "    Pulls the 'hyperframes' npm package into the local npx cache so the"
 	@echo "    first render doesn't pay a 30-60s cold-fetch penalty. ~20MB of disk."
 	@npx --yes hyperframes --version >/dev/null 2>&1 && echo "    HyperFrames CLI cached (npx)" || echo "  [skip] HyperFrames cache-warm failed — offline or npm unavailable; first render will fetch on demand"
-	@$(RUN_PYTHON) -c "from tools.video.hyperframes_compose import HyperFramesCompose; HyperFramesCompose._npm_resolve_cache=None; c=HyperFramesCompose()._runtime_check(); print(f'    HyperFrames runtime_available={c[\"runtime_available\"]}, npm={c.get(\"npm_package_version\") or c.get(\"npm_resolve_error\")}'); [print(f'    note: {r}') for r in c['reasons']]" || echo "  [skip] HyperFrames check failed — runtime can be set up later"
+	@"$(RUN_PYTHON)" -c "from tools.video.hyperframes_compose import HyperFramesCompose; HyperFramesCompose._npm_resolve_cache=None; c=HyperFramesCompose()._runtime_check(); print(f'    HyperFrames runtime_available={c[\"runtime_available\"]}, npm={c.get(\"npm_package_version\") or c.get(\"npm_resolve_error\")}'); [print(f'    note: {r}') for r in c['reasons']]" || echo "  [skip] HyperFrames check failed — runtime can be set up later"
 	@echo ""
-	$(RUN_PYTHON) -c "import shutil, os; e=os.path.exists('.env'); shutil.copy('.env.example','.env') if not e else None; print('==> Created .env from .env.example — add your API keys there.' if not e else '==> .env already exists — skipping.')"
+	"$(RUN_PYTHON)" -c "import shutil, os; e=os.path.exists('.env'); shutil.copy('.env.example','.env') if not e else None; print('==> Created .env from .env.example — add your API keys there.' if not e else '==> .env already exists — skipping.')"
 	@echo ""
 	@echo "Done! Open this project in your AI coding assistant and start creating."
 	@echo "  Optional: add API keys to .env to unlock cloud providers."
@@ -90,19 +93,19 @@ install-gpu: ensure-venv
 # ---- Testing ----
 
 test: ensure-venv
-	$(RUN_PYTHON) -m pytest tests/ -v
+	"$(RUN_PYTHON)" -m pytest tests/ -v
 
 test-contracts: ensure-venv
-	$(RUN_PYTHON) -m pytest tests/contracts/ -v
+	"$(RUN_PYTHON)" -m pytest tests/contracts/ -v
 
 # ---- Utilities ----
 
 preflight: ensure-venv
-	$(RUN_PYTHON) -c "from tools.tool_registry import registry; import json; registry.discover(); print(json.dumps(registry.provider_menu(), indent=2))"
+	"$(RUN_PYTHON)" -c "from tools.tool_registry import registry; import json; registry.discover(); print(json.dumps(registry.provider_menu(), indent=2))"
 
 hyperframes-doctor: ensure-venv
 	@echo "==> Probing HyperFrames runtime (node/ffmpeg/npx + hyperframes doctor)..."
-	$(RUN_PYTHON) -c "from tools.video.hyperframes_compose import HyperFramesCompose; r=HyperFramesCompose().execute({'operation':'doctor'}); import json; print(json.dumps(r.data, indent=2)); print('OK' if r.success else f'FAIL: {r.error}')"
+	"$(RUN_PYTHON)" -c "from tools.video.hyperframes_compose import HyperFramesCompose; r=HyperFramesCompose().execute({'operation':'doctor'}); import json; print(json.dumps(r.data, indent=2)); print('OK' if r.success else f'FAIL: {r.error}')"
 
 hyperframes-warm:
 	@echo "==> Refreshing the HyperFrames npx cache to latest..."
@@ -114,16 +117,16 @@ demo: ensure-venv
 	@echo "==> Rendering zero-key demo videos (no API keys needed)..."
 	@echo "    These use only Remotion components — animated charts, text, data viz."
 	@echo ""
-	$(RUN_PYTHON) render_demo.py
+	"$(RUN_PYTHON)" render_demo.py
 
 demo-list: ensure-venv
-	$(RUN_PYTHON) render_demo.py --list
+	"$(RUN_PYTHON)" render_demo.py --list
 
 lint: ensure-venv
-	$(RUN_PYTHON) -m py_compile tools/base_tool.py
-	$(RUN_PYTHON) -m py_compile tools/tool_registry.py
-	$(RUN_PYTHON) -m py_compile tools/cost_tracker.py
-	$(RUN_PYTHON) -m py_compile tools/analysis/composition_validator.py
+	"$(RUN_PYTHON)" -m py_compile tools/base_tool.py
+	"$(RUN_PYTHON)" -m py_compile tools/tool_registry.py
+	"$(RUN_PYTHON)" -m py_compile tools/cost_tracker.py
+	"$(RUN_PYTHON)" -m py_compile tools/analysis/composition_validator.py
 
 clean:
 	$(BASE_PYTHON) -c "import pathlib, shutil; excluded=[pathlib.Path('$(VENV_DIR)'), pathlib.Path('venv')]; skip=lambda p: any(p == root or root in p.parents for root in excluded); roots=[p for p in pathlib.Path('.').rglob('__pycache__') if not skip(p)]; [shutil.rmtree(p) for p in roots]; files=[p for p in pathlib.Path('.').rglob('*.pyc') if not skip(p)]; [p.unlink() for p in files]"

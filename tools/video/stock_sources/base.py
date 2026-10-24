@@ -35,9 +35,19 @@ Adding a new source
 """
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional, Protocol, runtime_checkable
+
+
+def stable_source_id(value: str) -> str:
+    """Deterministic 8-char hex id from a URL, stable across processes.
+
+    Python's built-in hash() is randomized per process (PYTHONHASHSEED),
+    so it must not be used for ids that have to match across runs.
+    """
+    return hashlib.sha1(value.encode("utf-8")).hexdigest()[:8]
 
 
 @dataclass

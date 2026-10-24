@@ -8,7 +8,7 @@ Render the cinematic piece with careful attention to grade, audio dynamics, and 
 
 Read `edit_decisions.render_runtime`. Cinematic work routes to:
 
-- **`render_runtime="remotion"`** — default for video-led trailers using `CinematicRenderer`. Keeps video clips, transitions, and ambient overlays in one React-based pass.
+- **`render_runtime="remotion"`** — default for video-led trailers using `CinematicRenderer`. Keeps video clips and transitions in one React-based pass. `edit_decisions.overlays` are not supported by `CinematicRenderer`; `video_compose` returns a clear error when the list is non-empty.
 - **`render_runtime="hyperframes"`** — for kinetic title cards, HTML/GSAP-driven trailers, launch-reel-style compositions, or explicit Three.js world fly-throughs. See `skills/core/hyperframes.md`. `hyperframes check` must pass before render.
 - **`render_runtime="ffmpeg"`** — simple source-footage concat with no composition.
 

@@ -61,6 +61,8 @@ class CoverrSource:
             "query": query,
             "page_size": max(1, min(filters.per_page, 25)),
             "page": max(1, filters.page),
+            # Without this the API omits download URLs and every hit is dropped.
+            "urls": "true",
         }
 
         r = requests.get(
@@ -93,8 +95,8 @@ class CoverrSource:
             if not download_url:
                 continue
 
-            width = int(v.get("width") or 1920)
-            height = int(v.get("height") or 1080)
+            width = int(v.get("width") or v.get("max_width") or 1920)
+            height = int(v.get("height") or v.get("max_height") or 1080)
             if filters.min_width and width < filters.min_width:
                 continue
 

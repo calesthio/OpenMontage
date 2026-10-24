@@ -219,3 +219,62 @@ def test_search_returns_empty_when_the_source_has_no_results(
         )
         == []
     )
+
+
+class _JsonResponse(_EmptyOkResponse):
+    def __init__(self, payload=None, text=""):
+        self._payload = payload or {}
+        self.text = text
+
+    def json(self):
+        return self._payload
+
+
+def test_coverr_requests_download_urls_and_reads_max_dimensions(monkeypatch):
+    # The API omits `urls` unless asked, which made every hit drop out.
+    seen = {}
+
+    def fake_get(url, headers=None, params=None, timeout=None):
+        seen["params"] = params
+        return _JsonResponse({"hits": [{
+            "id": "abc", "slug": "taking-vitamins", "title": "Taking vitamins",
+            "duration": "15.39", "max_width": 1920, "max_height": 1080,
+            "urls": {"mp4_download": "https://cdn.coverr.co/v.mp4"},
+        }]})
+
+    _install_fake_transport(monkeypatch, fake_get)
+    results = get_source("coverr").search("medicine", SearchFilters(kind="video", per_page=5))
+
+    assert seen["params"]["urls"] == "true"
+    assert len(results) == 1
+    assert results[0].download_url == "https://cdn.coverr.co/v.mp4"
+    assert (results[0].width, results[0].height) == (1920, 1080)
+
+
+def test_mixkit_falls_back_to_json_ld_video_objects(monkeypatch):
+    # Mixkit's current markup has no result cards, only schema.org JSON-LD.
+    pytest.importorskip("bs4")
+    html = """<html><head><script type="application/ld+json">
+    {"@graph": [
+      {"@type": "BreadcrumbList"},
+      {"@type": "VideoObject",
+       "@id": "https://mixkit.co/free-stock-video/candle-lighting-in-the-dark-3458/#video",
+       "name": "Candle lighting in the dark",
+       "description": "Round candle lit illuminating while it goes out.",
+       "thumbnailUrl": "https://assets.mixkit.co/videos/3458/3458-thumb-720-0.jpg",
+       "contentUrl": "https://assets.mixkit.co/videos/3458/3458-1080.mp4",
+       "embedUrl": "https://assets.mixkit.co/videos/3458/3458-360.mp4"}
+    ]}</script></head><body></body></html>"""
+    requests_stub = types.ModuleType("requests")
+    requests_stub.get = lambda *_a, **_k: _JsonResponse(text=html)
+    monkeypatch.setitem(sys.modules, "requests", requests_stub)
+
+    results = get_source("mixkit").search("candle", SearchFilters(kind="video", per_page=5))
+
+    assert len(results) == 1
+    clip = results[0]
+    assert clip.source_id == "mixkit_3458"
+    assert clip.download_url == "https://assets.mixkit.co/videos/3458/3458-1080.mp4"
+    assert clip.extra["detail_url"] == clip.download_url
+    assert (clip.width, clip.height) == (1920, 1080)
+    assert "Candle lighting in the dark" in clip.source_tags

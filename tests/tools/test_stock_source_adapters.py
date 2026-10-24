@@ -109,8 +109,6 @@ _SOURCE_CREDENTIALS = {
 # defects rather than encoded as expected behavior. `strict=True` means
 # the suite fails the moment one of them is fixed and left in this map.
 _STILL_SWALLOWS_TRANSPORT_ERRORS = {
-    "archive_org": "#511 follow-up: query cascade continues past a failed strategy",
-    "wikimedia": "#511 follow-up: query cascade continues past a failed strategy",
     "pond5_pd": "#511 follow-up: API failure falls through to the web fallback",
 }
 

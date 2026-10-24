@@ -268,7 +268,15 @@ class AudioMixer(BaseTool):
                 "-of", "csv=p=0",
                 track["path"],
             ]
-            duration = float(self.run_command(duration_cmd).stdout.strip().split("\n")[0])
+            raw_duration = self.run_command(duration_cmd).stdout.strip().split("\n")[0]
+            try:
+                duration = float(raw_duration)
+            except ValueError:
+                raise ValueError(
+                    f"Cannot apply fade_out to track {track['path']!r}: ffprobe "
+                    f"could not determine its duration (reported {raw_duration!r}). "
+                    f"The track is likely empty or corrupt."
+                ) from None
             fade_start = max(0.0, duration - float(fade_out))
             filters.append(f"afade=t=out:st={fade_start}:d={fade_out}")
         if delay_ms > 0:

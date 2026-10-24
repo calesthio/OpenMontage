@@ -1,0 +1,477 @@
+{
+  "version": "1.0",
+  "project_id": "us-trip-2026-highlight",
+  "pipeline_type": "cinematic",
+  "stage": "assets",
+  "status": "completed",
+  "timestamp": "2026-07-02T16:04:42.712761+00:00",
+  "checkpoint_policy": "guided",
+  "human_approval_required": false,
+  "human_approved": false,
+  "artifacts": {
+    "asset_manifest": {
+      "version": "1.0",
+      "assets": [
+        {
+          "id": "a001",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_0921.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "s1",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene s1: Looking out a car window at open sky \u2014 establishes the road frame before the title card."
+        },
+        {
+          "id": "a002",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-182_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-01-ch3",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-01-ch3: Van/car interior detail shot"
+        },
+        {
+          "id": "a003",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_0964.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-02-ch4",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-02-ch4: Gym training"
+        },
+        {
+          "id": "a004",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/od_video-754_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-03-ch21",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-03-ch21: Kitchen, stovetop cooking"
+        },
+        {
+          "id": "a005",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1089.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-04-ch16",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-04-ch16: Hardware/DIY store aisle"
+        },
+        {
+          "id": "a006",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-398_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-05-ch9",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-05-ch9: Waterfront, city skyline"
+        },
+        {
+          "id": "a007",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-774_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-06-ch22",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-06-ch22: Driving: hands on wheel"
+        },
+        {
+          "id": "a008",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1098.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-07-ch18",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-07-ch18: Gym training"
+        },
+        {
+          "id": "a009",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-421_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-08-ch36",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-08-ch36: Kitchen, stovetop cooking"
+        },
+        {
+          "id": "a010",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-594_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-09-ch14",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-09-ch14: Van loading / hands-on van work"
+        },
+        {
+          "id": "a011",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-304_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-10-ch7",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-10-ch7: Walking a city sidewalk"
+        },
+        {
+          "id": "a012",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1134.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-11-ch24",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-11-ch24: Driving: hands on wheel"
+        },
+        {
+          "id": "a013",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1028.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-12-ch11",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-12-ch11: Gym training"
+        },
+        {
+          "id": "a014",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-1066_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-13-ch52",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-13-ch52: Kitchen, stovetop cooking"
+        },
+        {
+          "id": "a015",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-52_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-14-ch33",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-14-ch33: Van loading / hands-on van work"
+        },
+        {
+          "id": "a016",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/od_video-403_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-15-ch10",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-15-ch10: Walking a city sidewalk"
+        },
+        {
+          "id": "a017",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/od_video-875_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-16-ch46",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-16-ch46: Van driving past a church"
+        },
+        {
+          "id": "a018",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1246.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-17-ch30",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-17-ch30: Gym training"
+        },
+        {
+          "id": "a019",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-1162_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-18-ch54",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-18-ch54: Kitchen, stovetop cooking"
+        },
+        {
+          "id": "a020",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/od_video-666_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-19-ch15",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-19-ch15: Van loading / hands-on van work"
+        },
+        {
+          "id": "a021",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-702_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-20-ch19",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-20-ch19: Walking a city sidewalk"
+        },
+        {
+          "id": "a022",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/od_video-785_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-21-ch23",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-21-ch23: Driving: hands on wheel"
+        },
+        {
+          "id": "a023",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/od_video-629_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-22-ch42",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-22-ch42: Office conference room meeting"
+        },
+        {
+          "id": "a024",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-426_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-23-ch37",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-23-ch37: Kitchen, stovetop cooking"
+        },
+        {
+          "id": "a025",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-700_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-24-ch17",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-24-ch17: Hands doing domestic DIY (fabric/curtain)"
+        },
+        {
+          "id": "a026",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-1090_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-25-ch53",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-25-ch53: Walking a city sidewalk"
+        },
+        {
+          "id": "a027",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1521.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-26-ch57",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-26-ch57: Motion-blur shot from a moving vehicle"
+        },
+        {
+          "id": "a028",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-547_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-27-ch41",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-27-ch41: Office pantry"
+        },
+        {
+          "id": "a029",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1455.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "esc-28-ch48",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene esc-28-ch48: Night: cyclist crossing a lit bridge"
+        },
+        {
+          "id": "a030",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1163.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "reveal-niagara1",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene reveal-niagara1: Niagara Falls: wide shot of the falls and rising mist \u2014 first hero landmark."
+        },
+        {
+          "id": "a031",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1174.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "reveal-niagara2",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene reveal-niagara2: Niagara Falls: closer angle into the mist and churn."
+        },
+        {
+          "id": "a032",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1176.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "reveal-niagara3",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene reveal-niagara3: Niagara Falls: final held frame before pulling away."
+        },
+        {
+          "id": "a033",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/od_video-1010_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "reveal-fort1",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene reveal-fort1: Historic-reenactor field: costumed figure with musket, open grounds."
+        },
+        {
+          "id": "a034",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-1035_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "reveal-fort2",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene reveal-fort2: Historic-reenactor field: wider establishing shot of the grounds."
+        },
+        {
+          "id": "a035",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1334.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "reveal-field-nature",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene reveal-field-nature: Green field and pond"
+        },
+        {
+          "id": "a036",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-835_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "reveal-park1",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene reveal-park1: Park path, bare spring trees"
+        },
+        {
+          "id": "a037",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-1055_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "reveal-field2",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene reveal-field2: Open grass field"
+        },
+        {
+          "id": "a038",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1487.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "reveal-park2",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene reveal-park2: Park, statue, tree-lined path"
+        },
+        {
+          "id": "a039",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1529.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "reveal-dusk",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene reveal-dusk: Parking lot at dusk \u2014 golden-light transitional breathing shot before the landing beat."
+        },
+        {
+          "id": "a040",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-1568_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "land-laundromat",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene land-laundromat: Laundromat, row of washing machines \u2014 grounding, humanizing beat."
+        },
+        {
+          "id": "a041",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-1448_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "land-fireprep",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene land-fireprep: Hands preparing kindling at a fire pit."
+        },
+        {
+          "id": "a042",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-1517_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "land-campfire",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene land-campfire: Campfire burning at dusk \u2014 warm hero close."
+        },
+        {
+          "id": "a043",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-1597_singular_display.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "land-bridge",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene land-bridge: Van driving across a large bridge at sunset, light glare through the windshield \u2014 final drive."
+        },
+        {
+          "id": "a044",
+          "type": "video",
+          "path": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1540.MOV",
+          "source_tool": "source_footage",
+          "scene_id": "land-portrait",
+          "provider": "user_supplied",
+          "license": "personal footage \u2014 user owns rights",
+          "generation_summary": "User-supplied clip selected from footage inventory for scene land-portrait: Warm closing portrait, held for the title card."
+        },
+        {
+          "id": "a-music-01",
+          "type": "music",
+          "path": "projects/us-trip-2026-highlight/assets/music/trip_theme.mp3",
+          "source_tool": "pixabay_music",
+          "scene_id": "s2",
+          "provider": "pixabay",
+          "license": "Pixabay Content License (free, no attribution required)",
+          "duration_seconds": 154.12,
+          "cost_usd": 0,
+          "generation_summary": "Searched pixabay_music for 'epic cinematic orchestral trailer build', min_duration=145s. Selected 'Epic Cinematic' by NastelBom (154s) \u2014 near-exact length match for the 147.6s edit."
+        }
+      ],
+      "total_cost_usd": 0,
+      "metadata": {
+        "source_selects": "44 source video clips selected from the 282-clip US-trip archive",
+        "music_plan": "Pixabay 'Epic Cinematic' by NastelBom, 154s, free/no attribution \u2014 matches the Epic Build direction's orchestral-hybrid build request.",
+        "generated_support_assets": "None \u2014 100% source-led per delivery_promise.source_required=true",
+        "rights_notes": "All video assets are the user's own personal footage. Music is Pixabay Content License (free commercial use, no attribution required)."
+      }
+    }
+  }
+}

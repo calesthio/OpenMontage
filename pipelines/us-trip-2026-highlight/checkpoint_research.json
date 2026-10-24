@@ -1,0 +1,226 @@
+{
+  "version": "1.0",
+  "project_id": "us-trip-2026-highlight",
+  "pipeline_type": "cinematic",
+  "stage": "research",
+  "status": "completed",
+  "timestamp": "2026-07-02T15:36:10.419860+00:00",
+  "checkpoint_policy": "guided",
+  "human_approval_required": false,
+  "human_approved": false,
+  "artifacts": {
+    "research_brief": {
+      "version": "1.0",
+      "topic": "Cinematic highlight reel of a personal US road trip (Apr\u2013Jun 2026), built from 282 user-supplied phone clips",
+      "research_date": "2026-07-02",
+      "landscape": {
+        "existing_content": [
+          {
+            "title": "5 Easy Steps To Make A Cinematic Travel Film",
+            "url": "https://www.youtube.com/watch?v=zTWCCcJAsA4",
+            "source": "youtube",
+            "angle": "Technique walkthrough: shot list, movement, grade",
+            "what_it_covers": "Practical shot-acquisition and editing steps for turning raw travel footage into a filmic edit.",
+            "what_it_misses": "Doesn't address editing an already-shot, unplanned personal archive (works from a shot-list-first mindset).",
+            "engagement_signal": "Popular creator tutorial, high view count"
+          },
+          {
+            "title": "Travel Video Editing: How to Craft Cinematic & Engaging Footage",
+            "url": "https://blog.powr.io/travel-video-editing-how-to-craft-cinematic-engaging-footage/",
+            "source": "blog",
+            "angle": "Editing-technique roundup",
+            "what_it_covers": "Color grading, pacing, and sound-design guidance for travel edits.",
+            "what_it_misses": "Generic; not specific to long multi-week trips with hundreds of short clips.",
+            "engagement_signal": "n/a"
+          },
+          {
+            "title": "Sam Kolder / Jay Alvarrez style cinematic travel videos",
+            "source": "youtube (creator body of work)",
+            "angle": "Fast-cut, music-led, teal-orange graded highlight reels",
+            "what_it_covers": "The dominant modern reference point for 'epic cinematic travel montage.'",
+            "what_it_misses": "Usually shot with gimbals/drones for a single trip, not phone footage across 7 weeks.",
+            "engagement_signal": "Widely cited as the genre benchmark in nearly every search result"
+          },
+          {
+            "title": "How To END A Travel Video (3 Tricks)",
+            "url": "https://www.youtube.com/watch?v=f9S-8CsZD60",
+            "source": "youtube",
+            "angle": "Closing-shot craft",
+            "what_it_covers": "How to land the final beat of a travel edit so it's memorable.",
+            "what_it_misses": "n/a",
+            "engagement_signal": "n/a"
+          }
+        ],
+        "saturated_angles": [
+          "Generic 'teal and orange' grade with no rationale",
+          "Cutting on every single beat of the music (mechanical, not felt)",
+          "\"Cinematic\" used as a synonym for black bars alone with no shot-language change"
+        ],
+        "underserved_gaps": [
+          "How to build a cinematic edit from a large, chronologically messy personal archive (282 clips, no shot list) rather than a planned single-location shoot",
+          "How to structure a multi-week road trip (not a single destination) into one coherent emotional arc"
+        ]
+      },
+      "data_points": [
+        {
+          "claim": "Viewer retention on YouTube is roughly 70% for videos under 2 minutes and drops below 50% past the 2-minute mark; 2\u20133 minutes is widely described as an awkward retention middle ground \u2014 creators are advised to either stay under ~2 minutes or commit to a longer 6\u201312+ minute format.",
+          "source_url": "https://www.opus.pro/blog/ideal-youtube-shorts-length-format-retention",
+          "source_name": "OpusClip / retention-length aggregated guidance",
+          "credibility": "secondary_source",
+          "surprise_factor": "notable",
+          "usable_as": "flag_for_proposal_stage \u2014 worth surfacing to the user before locking final runtime, even though 2-3min was the initial preference"
+        },
+        {
+          "claim": "Editors recommend using a driving music beat as the pacing base layer, then deliberately breaking from the beat-cut grid for emotional or scenic moments \u2014 cutting on literally every beat reads as mechanical rather than felt.",
+          "source_url": "https://fiveable.me/filmmaking-for-journalists/unit-6/pacing-rhythm-editing/study-guide/3i3GxLL2UeLTrykv",
+          "source_name": "Filmmaking for Journalists \u2014 pacing & rhythm notes",
+          "credibility": "secondary_source",
+          "surprise_factor": "notable",
+          "usable_as": "edit_decisions guidance \u2014 vary cut rhythm around the beat grid"
+        },
+        {
+          "claim": "A cinematic color base is typically built from correction first (accurate exposure/white balance), then creative grading (e.g. lifted shadows, tamed highlights, added midtone contrast, teal-orange or soft split-toning) rather than a single LUT alone.",
+          "source_url": "https://www.surfacedstudio.com/tutorials/after-effects/cinematic-look-colour-correction/",
+          "source_name": "Surfaced Studio \u2014 cinematic color correction tutorial",
+          "credibility": "secondary_source",
+          "surprise_factor": "expected",
+          "usable_as": "compose stage grading direction"
+        },
+        {
+          "claim": "Travel edits commonly vary pace deliberately: fast cuts through transit/landscape coverage, then a deliberate slow-down (longer hold, sometimes slow motion) at the actual landmark or payoff moment.",
+          "source_url": "https://www.insta360.com/blog/tips/travel-videography.html",
+          "source_name": "Insta360 travel videography guide",
+          "credibility": "secondary_source",
+          "surprise_factor": "expected",
+          "usable_as": "scene_plan hero-moment pacing rule"
+        }
+      ],
+      "audience_insights": {
+        "common_questions": [
+          "How do I turn hundreds of random phone clips into one coherent story instead of a random slideshow?",
+          "What music actually fits an 'epic' travel mood without sounding like a generic stock trailer?",
+          "How long should a personal trip recap actually be so people watch the whole thing?"
+        ],
+        "misconceptions": [
+          {
+            "myth": "Adding black bars and a LUT is what makes footage 'cinematic.'",
+            "reality": "Cinematic quality comes from shot selection, pacing, and an emotional arc \u2014 letterboxing and a LUT are surface dressing on top of that.",
+            "source": "https://www.surfacedstudio.com/tutorials/after-effects/cinematic-look-colour-correction/"
+          },
+          {
+            "myth": "Cutting exactly on every beat of the music produces the most 'epic' feeling edit.",
+            "reality": "Constant beat-locked cutting reads as mechanical; the strongest edits break from the grid at meaningful moments.",
+            "source": "https://fiveable.me/filmmaking-for-journalists/unit-6/pacing-rhythm-editing/study-guide/3i3GxLL2UeLTrykv"
+          }
+        ],
+        "knowledge_level": "User is a first-time cinematic editor of their own footage \u2014 comfortable directing high-level creative choices (mood, platform, length) but relying on the agent for genre conventions (grading, pacing, structure).",
+        "pain_points": [
+          "282 raw clips (13GB) with no existing shot list or grouping \u2014 the raw-footage-to-story gap is the main obstacle",
+          "No music track chosen yet"
+        ]
+      },
+      "angles_discovered": [
+        {
+          "name": "Epic Build \u2014 Sam Kolder-style Momentum",
+          "hook": "The road doesn't stop, and neither does the music.",
+          "type": "narrative",
+          "why_now": "This is the dominant genre convention for 'cinematic + epic' travel montages found across every search \u2014 fast, orchestral-hybrid, teal-orange, built for YouTube discovery.",
+          "grounded_in": [
+            "Sam Kolder / Jay Alvarrez style cinematic travel videos",
+            "data_point: beat-grid pacing guidance",
+            "data_point: color correction then creative grade"
+          ]
+        },
+        {
+          "name": "Quiet Wonder \u2014 Contemplative Vista",
+          "hook": "Some places don't need a cut. They need a breath.",
+          "type": "narrative",
+          "why_now": "Directly counters the 'saturated angle' of mechanical beat-cutting; leans into slow holds and wide vistas as an alternative emotional register within the same 'epic' territory the user asked for.",
+          "grounded_in": [
+            "data_point: travel edits vary pace, slow down at payoff moments",
+            "underserved_gaps: chronologically messy archive needs emotional throughline, not just speed"
+          ]
+        },
+        {
+          "name": "Chapters Across America \u2014 Journey Structure",
+          "hook": "Every stop was its own small story. Together, they're one big one.",
+          "type": "narrative",
+          "why_now": "Directly addresses the underserved gap: a multi-week, multi-location trip (not a single destination) benefits from a chaptered structure rather than one continuous mood, while still carrying an overall epic arc from departure to return.",
+          "grounded_in": [
+            "underserved_gaps: multi-week road trip structuring",
+            "How To END A Travel Video (3 Tricks)"
+          ]
+        }
+      ],
+      "visual_references": [
+        {
+          "description": "Teal-and-orange, high-midtone-contrast grade typical of modern cinematic travel edits",
+          "url": "https://filmora.wondershare.com/video-creative-tips/epic-film-color-grading-lut-filter-pack.html",
+          "what_works": "Reads as 'epic' at a glance without looking artificial when correction is done first"
+        },
+        {
+          "description": "2.35:1 letterboxing reserved for key reveal/landmark moments rather than the whole runtime",
+          "url": "https://www.goingthewholehogg.com/how-to-edit-travel-videos/",
+          "what_works": "Signals 'this moment matters' instead of diluting the device across the whole edit"
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=zTWCCcJAsA4",
+          "title": "5 Easy Steps To Make A Cinematic Travel Film",
+          "used_for": "landscape.existing_content",
+          "reliability": "secondary"
+        },
+        {
+          "url": "https://blog.powr.io/travel-video-editing-how-to-craft-cinematic-engaging-footage/",
+          "title": "Travel Video Editing: How to Craft Cinematic & Engaging Footage",
+          "used_for": "landscape.existing_content",
+          "reliability": "secondary"
+        },
+        {
+          "url": "https://www.surfacedstudio.com/tutorials/after-effects/cinematic-look-colour-correction/",
+          "title": "How To Make Your Video Look Cinematic - Colour Correction",
+          "used_for": "data_points, audience_insights.misconceptions",
+          "reliability": "secondary"
+        },
+        {
+          "url": "https://fiveable.me/filmmaking-for-journalists/unit-6/pacing-rhythm-editing/study-guide/3i3GxLL2UeLTrykv",
+          "title": "Pacing and rhythm in editing",
+          "used_for": "data_points, audience_insights.misconceptions",
+          "reliability": "secondary"
+        },
+        {
+          "url": "https://www.insta360.com/blog/tips/travel-videography.html",
+          "title": "How to Make a Travel Video",
+          "used_for": "data_points, angles_discovered",
+          "reliability": "secondary"
+        },
+        {
+          "url": "https://www.opus.pro/blog/ideal-youtube-shorts-length-format-retention",
+          "title": "The Ideal YouTube Shorts Length & Format for Retention",
+          "used_for": "data_points (runtime flag)",
+          "reliability": "secondary"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=f9S-8CsZD60",
+          "title": "How To END A Travel Video (3 Tricks)",
+          "used_for": "landscape.existing_content, angles_discovered",
+          "reliability": "secondary"
+        }
+      ],
+      "research_summary": "The strongest available direction is a hybrid: adopt the genre-standard 'epic cinematic travel' grammar (correction-then-grade color, driving music as the pacing spine, letterboxing reserved for key reveals) but structure it around the trip's actual chaptered, multi-week, multi-location reality rather than a single continuous mood \u2014 and deliberately break from beat-locked cutting at landmark payoffs so it feels felt, not mechanical. One data point worth flagging before locking length: 2\u20133 minutes is a documented retention danger zone on YouTube (steep drop-off vs. sub-2-minute or 6\u201312-minute formats) \u2014 worth a quick gut-check with the user before compose, not a reason to override their stated preference.",
+      "metadata": {
+        "source_footage": {
+          "clip_count": 282,
+          "total_size_gb": 13,
+          "date_range": "2026-04-23 to 2026-06-11",
+          "location": "/Users/prasanthsasikumar/Downloads/USTrip2026"
+        },
+        "mood_selected": "cinematic_epic",
+        "platform_selected": "youtube",
+        "duration_hint": "2-3 minutes",
+        "narration": false
+      }
+    }
+  }
+}

@@ -49,11 +49,38 @@ Store in `publish_log.metadata`:
 - metadata fits the tone,
 - the package is usable without manual cleanup.
 
+## Editorial Hand-off (FCPXML)
+
+`export_bundle` packages the **finished render** for platform upload. When the user
+wants to keep cutting — colour grading, finishing, or reworking the edit in DaVinci
+Resolve or Final Cut Pro — also run `fcpxml_export`, which emits an **editable
+timeline** instead of a locked flat file:
+
+```
+registry.get("fcpxml_export").execute({"project_dir": "projects/<project-id>"})
+```
+
+Offer it whenever the brief mentions grading, finishing, or "I'll edit it myself".
+The two are complementary, not alternatives — a hand-off usually ships both.
+
+Things worth telling the user:
+
+- **Grid scenes survive** as multi-track connected clips, so a 2-up or 3-up stays
+  editable per-cell. Only 2-up and 3-up have verified Resolve transforms — wider
+  grids raise rather than emit a silently-wrong timeline.
+- **The sequence format follows the footage** (frame rate and resolution of the
+  first source clip). Pass `fps`/`width`/`height` to override when the deliverable
+  differs from the source.
+- **Check `sdr_substitutions` in the result.** Any clip listed there points at a
+  transcoded SDR copy rather than the original Dolby Vision file — mention it, since
+  the editor will want to relink to the originals before grading.
+
 ## Common Pitfalls
 
 - Mixing teaser and hero outputs without clear naming.
 - Writing generic metadata that ignores the mood.
 - Treating all cutdowns as interchangeable.
+- Shipping only the flat render when the user asked to finish the edit themselves.
 
 ---
 

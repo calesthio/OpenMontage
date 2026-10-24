@@ -1,0 +1,46 @@
+{
+  "version": "1.0",
+  "project_id": "us-trip-2026-highlight",
+  "pipeline_type": "cinematic",
+  "stage": "compose",
+  "status": "completed",
+  "timestamp": "2026-07-04T03:24:58.304393+00:00",
+  "checkpoint_policy": "guided",
+  "human_approval_required": false,
+  "human_approved": false,
+  "artifacts": {
+    "render_report": {
+      "version": "1.0",
+      "outputs": [
+        {
+          "path": "projects/us-trip-2026-highlight/renders/final.mp4",
+          "format": "mp4",
+          "codec": "h264",
+          "audio_codec": "aac",
+          "resolution": "1920x1080",
+          "fps": 30.0,
+          "duration_seconds": 197.99,
+          "file_size_bytes": 463389529,
+          "platform_target": "personal/private (copyrighted music track)"
+        }
+      ],
+      "render_grammar": "cinematic-trailer",
+      "warnings": [
+        "Music track (Twenty One Pilots - Stressed Out) is a copyrighted commercial recording, not royalty-free. Fine for personal/private viewing; expect a YouTube Content ID claim if uploaded publicly.",
+        "Audio peak -0.4dB (hot master, not clipped; mix_intelligible=true)."
+      ],
+      "verification_notes": [
+        "final_review status: pass (recommended_action: present_to_user)",
+        "Duration matches the music track within 0.05s (202.13s actual vs 202.08s track length)",
+        "Ordering fixed via (capture date from com.apple.quicktime.creationdate/birthtime fallback, numeric ID embedded in filename) \u2014 birthtime alone had 26%% local inconsistency after repeated user trims",
+        "Manually reviewed 4 auto-sampled frames \u2014 confirmed: no cropping in any grid or solo scene, no vignette/color-grade artifacts (natural bright colors), no fade transitions"
+      ],
+      "decision_log_ref": "projects/us-trip-2026-highlight/artifacts/decision_log.json",
+      "final_review_ref": "projects/us-trip-2026-highlight/renders/.final_review_frames/",
+      "metadata": {
+        "revision": "v8 (cut 6) \u2014 rebuilt after user added/removed clips from source folder (193 clips now, was 196; 90 timeline scenes, was 91). Same pipeline: device-interleaved chronological order, beat-synced cuts (100%% hit rate), grid layouts with verified crop/position templates, no crop/grade/fades. Cuts 1-5 archived in renders/archive/.",
+        "v1_superseded": "Original Epic Build cut (mood-arc structure, Pixabay music, 44 of the original 282 clips) \u2014 superseded per user request for strict chronological order."
+      }
+    }
+  }
+}

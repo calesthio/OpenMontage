@@ -1,0 +1,640 @@
+{
+  "version": "1.0",
+  "project_id": "us-trip-2026-highlight",
+  "pipeline_type": "cinematic",
+  "stage": "edit",
+  "status": "completed",
+  "timestamp": "2026-07-02T16:05:28.930604+00:00",
+  "checkpoint_policy": "guided",
+  "human_approval_required": false,
+  "human_approved": false,
+  "artifacts": {
+    "edit_decisions": {
+      "version": "1.0",
+      "cuts": [
+        {
+          "id": "cut-s1",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_0921.MOV",
+          "in_seconds": 0,
+          "out_seconds": 8.0,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Looking out a car window at open sky \u2014 establishes the road frame before the title card."
+        },
+        {
+          "id": "cut-esc-01-ch3",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-182_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Van/car interior detail shot"
+        },
+        {
+          "id": "cut-esc-02-ch4",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_0964.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Gym training"
+        },
+        {
+          "id": "cut-esc-03-ch21",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/od_video-754_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Kitchen, stovetop cooking"
+        },
+        {
+          "id": "cut-esc-04-ch16",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1089.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Hardware/DIY store aisle"
+        },
+        {
+          "id": "cut-esc-05-ch9",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-398_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Waterfront, city skyline"
+        },
+        {
+          "id": "cut-esc-06-ch22",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-774_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Driving: hands on wheel"
+        },
+        {
+          "id": "cut-esc-07-ch18",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1098.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Gym training"
+        },
+        {
+          "id": "cut-esc-08-ch36",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-421_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Kitchen, stovetop cooking"
+        },
+        {
+          "id": "cut-esc-09-ch14",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-594_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Van loading / hands-on van work"
+        },
+        {
+          "id": "cut-esc-10-ch7",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-304_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Walking a city sidewalk"
+        },
+        {
+          "id": "cut-esc-11-ch24",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1134.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Driving: hands on wheel"
+        },
+        {
+          "id": "cut-esc-12-ch11",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1028.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Gym training"
+        },
+        {
+          "id": "cut-esc-13-ch52",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-1066_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Kitchen, stovetop cooking"
+        },
+        {
+          "id": "cut-esc-14-ch33",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-52_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Van loading / hands-on van work"
+        },
+        {
+          "id": "cut-esc-15-ch10",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/od_video-403_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Walking a city sidewalk"
+        },
+        {
+          "id": "cut-esc-16-ch46",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/od_video-875_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Van driving past a church"
+        },
+        {
+          "id": "cut-esc-17-ch30",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1246.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Gym training"
+        },
+        {
+          "id": "cut-esc-18-ch54",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-1162_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Kitchen, stovetop cooking"
+        },
+        {
+          "id": "cut-esc-19-ch15",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/od_video-666_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Van loading / hands-on van work"
+        },
+        {
+          "id": "cut-esc-20-ch19",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-702_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Walking a city sidewalk"
+        },
+        {
+          "id": "cut-esc-21-ch23",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/od_video-785_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Driving: hands on wheel"
+        },
+        {
+          "id": "cut-esc-22-ch42",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/od_video-629_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Office conference room meeting"
+        },
+        {
+          "id": "cut-esc-23-ch37",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-426_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Kitchen, stovetop cooking"
+        },
+        {
+          "id": "cut-esc-24-ch17",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-700_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Hands doing domestic DIY (fabric/curtain)"
+        },
+        {
+          "id": "cut-esc-25-ch53",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-1090_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Walking a city sidewalk"
+        },
+        {
+          "id": "cut-esc-26-ch57",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1521.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Motion-blur shot from a moving vehicle"
+        },
+        {
+          "id": "cut-esc-27-ch41",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-547_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Office pantry"
+        },
+        {
+          "id": "cut-esc-28-ch48",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1455.MOV",
+          "in_seconds": 0,
+          "out_seconds": 2.2,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Night: cyclist crossing a lit bridge"
+        },
+        {
+          "id": "cut-reveal-niagara1",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1163.MOV",
+          "in_seconds": 0,
+          "out_seconds": 6.0,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "dissolve",
+          "transition_out": "dissolve",
+          "transition_duration": 0.4,
+          "reason": "Niagara Falls: wide shot of the falls and rising mist \u2014 first hero landmark."
+        },
+        {
+          "id": "cut-reveal-niagara2",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1174.MOV",
+          "in_seconds": 0,
+          "out_seconds": 5.0,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "dissolve",
+          "transition_out": "dissolve",
+          "transition_duration": 0.4,
+          "reason": "Niagara Falls: closer angle into the mist and churn."
+        },
+        {
+          "id": "cut-reveal-niagara3",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1176.MOV",
+          "in_seconds": 0,
+          "out_seconds": 5.0,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "dissolve",
+          "transition_out": "dissolve",
+          "transition_duration": 0.4,
+          "reason": "Niagara Falls: final held frame before pulling away."
+        },
+        {
+          "id": "cut-reveal-fort1",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/od_video-1010_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 5.0,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Historic-reenactor field: costumed figure with musket, open grounds."
+        },
+        {
+          "id": "cut-reveal-fort2",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-1035_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 5.0,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Historic-reenactor field: wider establishing shot of the grounds."
+        },
+        {
+          "id": "cut-reveal-field-nature",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1334.MOV",
+          "in_seconds": 0,
+          "out_seconds": 5.0,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Green field and pond"
+        },
+        {
+          "id": "cut-reveal-park1",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-835_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 4.0,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Park path, bare spring trees"
+        },
+        {
+          "id": "cut-reveal-field2",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-1055_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 4.0,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Open grass field"
+        },
+        {
+          "id": "cut-reveal-park2",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1487.MOV",
+          "in_seconds": 0,
+          "out_seconds": 4.0,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Park, statue, tree-lined path"
+        },
+        {
+          "id": "cut-reveal-dusk",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1529.MOV",
+          "in_seconds": 0,
+          "out_seconds": 5.0,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Parking lot at dusk \u2014 golden-light transitional breathing shot before the landing beat."
+        },
+        {
+          "id": "cut-land-laundromat",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-1568_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 5.0,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Laundromat, row of washing machines \u2014 grounding, humanizing beat."
+        },
+        {
+          "id": "cut-land-fireprep",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-1448_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 5.0,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Hands preparing kindling at a fire pit."
+        },
+        {
+          "id": "cut-land-campfire",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-1517_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 7.0,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Campfire burning at dusk \u2014 warm hero close."
+        },
+        {
+          "id": "cut-land-bridge",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/video-1597_singular_display.MOV",
+          "in_seconds": 0,
+          "out_seconds": 10.0,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Van driving across a large bridge at sunset, light glare through the windshield \u2014 final drive."
+        },
+        {
+          "id": "cut-land-portrait",
+          "source": "/Users/prasanthsasikumar/Downloads/USTrip2026/IMG_1540.MOV",
+          "in_seconds": 0,
+          "out_seconds": 3.0,
+          "speed": 1.0,
+          "layer": "primary",
+          "transition_in": "cut",
+          "transition_out": "cut",
+          "transition_duration": 0.0,
+          "reason": "Warm closing portrait, held for the title card."
+        }
+      ],
+      "overlays": [
+        {
+          "asset_id": "title-card-open",
+          "start_seconds": 0.5,
+          "end_seconds": 7.0,
+          "position": {
+            "x": 0.5,
+            "y": 0.85,
+            "width": 0.6,
+            "height": 0.08
+          },
+          "animation": "fade-in-hold-fade-out",
+          "opacity": 1.0
+        },
+        {
+          "asset_id": "title-card-close",
+          "start_seconds": 144.9,
+          "end_seconds": 147.6,
+          "position": {
+            "x": 0.5,
+            "y": 0.85,
+            "width": 0.4,
+            "height": 0.08
+          },
+          "animation": "fade-in-hold",
+          "opacity": 1.0
+        }
+      ],
+      "audio": {
+        "music": {
+          "asset_id": "a-music-01",
+          "volume": 0.85,
+          "fade_in_seconds": 1.5,
+          "fade_out_seconds": 2.5,
+          "ducking": false
+        }
+      },
+      "subtitles": {
+        "enabled": false
+      },
+      "renderer_family": "cinematic-trailer",
+      "render_runtime": "remotion",
+      "composition_mode": "templated",
+      "metadata": {
+        "beat_timing": {
+          "hook": [
+            0,
+            8
+          ],
+          "escalation": [
+            8,
+            70
+          ],
+          "reveal": [
+            70,
+            118
+          ],
+          "landing": [
+            118,
+            147.6
+          ]
+        },
+        "audio_turns": [
+          {
+            "at_seconds": 8,
+            "description": "Music enters driving verse energy"
+          },
+          {
+            "at_seconds": 70,
+            "description": "Music breaks from beat-grid \u2014 held emotional beats over Niagara/fort/field"
+          },
+          {
+            "at_seconds": 118,
+            "description": "Music settles toward resolution for the landing"
+          }
+        ],
+        "title_card_windows": [
+          {
+            "asset_id": "title-card-open",
+            "text": "APRIL \u2014 MAY 2026",
+            "start_seconds": 0.5,
+            "end_seconds": 7.0
+          },
+          {
+            "asset_id": "title-card-close",
+            "text": "HOME.",
+            "start_seconds": 144.9,
+            "end_seconds": 147.6
+          }
+        ],
+        "reframe_notes": "Source clips are mixed native aspect ratios (16:9 camera clips + ~40 non-standard portrait-ish ratios from pre-processed clips). Remotion CinematicRenderer center-crops/fits each clip to the 16:9 canvas; 2.35:1 letterbox activates only during reveal (Niagara/fort) and landing (campfire/bridge) hero beats per scene_plan.aspect_ratio_rules.",
+        "color_grade_plan": "Correction pass (exposure/white balance) then creative grade: lifted shadows, tamed highlights, added midtone contrast, soft warm/teal split-tone \u2014 per research_brief data_points on cinematic grading order.",
+        "total_duration_seconds": 147.6
+      }
+    }
+  }
+}

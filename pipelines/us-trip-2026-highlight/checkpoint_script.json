@@ -1,0 +1,114 @@
+{
+  "version": "1.0",
+  "project_id": "us-trip-2026-highlight",
+  "pipeline_type": "cinematic",
+  "stage": "script",
+  "status": "completed",
+  "timestamp": "2026-07-02T15:59:30.516987+00:00",
+  "checkpoint_policy": "guided",
+  "human_approval_required": true,
+  "human_approved": true,
+  "artifacts": {
+    "script": {
+      "version": "1.0",
+      "title": "Life on the Road \u2014 US Trip 2026",
+      "total_duration_seconds": 150,
+      "sections": [
+        {
+          "id": "s1",
+          "label": "hook",
+          "text": "APRIL \u2014 JUNE 2026",
+          "start_seconds": 0,
+          "end_seconds": 8,
+          "speaker_directions": "No narration. Single restrained title card over a strong opening motion shot (van pulling out / hands on the wheel). Card fades before beat 2 starts.",
+          "enhancement_cues": [
+            {
+              "type": "overlay",
+              "description": "Title card, minimal typography, fades in over 1s, holds, fades out by 8s.",
+              "timestamp_seconds": 0.5
+            }
+          ]
+        },
+        {
+          "id": "s2",
+          "label": "escalation",
+          "text": "",
+          "start_seconds": 8,
+          "end_seconds": 70,
+          "speaker_directions": "No narration, no title cards. Fast-cut montage of daily rhythm: gym, cooking, DIY/van work, driving, city walking, the office meeting. Cuts mostly on the beat grid \u2014 this is where the music's driving verse energy lives. Establishes 'life on the road' is the real subject, not just landmarks.",
+          "enhancement_cues": [
+            {
+              "type": "broll",
+              "description": "Recurring driving/hands-on-wheel shots used as a connective motif between daily-life clusters.",
+              "timestamp_seconds": 30
+            }
+          ]
+        },
+        {
+          "id": "s3",
+          "label": "reveal",
+          "text": "",
+          "start_seconds": 70,
+          "end_seconds": 118,
+          "speaker_directions": "No narration, no invented place-name title cards. This is the midpoint turn: pacing slows, holds get longer, letterbox (2.35:1) activates for the run's true landmark moments \u2014 Niagara Falls mist/falls, the field/fort reenactor sequence, open green fields, campfire light. Music breaks from strict beat-grid cutting here per research (deliberate off-beat holds at emotional peaks).",
+          "enhancement_cues": [
+            {
+              "type": "broll",
+              "description": "Niagara Falls clips (Ch26 / IMG_1163-1178) as the visual centerpiece.",
+              "timestamp_seconds": 78
+            },
+            {
+              "type": "broll",
+              "description": "Fort/reenactor field sequence (Ch27) as a second anchor moment.",
+              "timestamp_seconds": 95
+            }
+          ]
+        },
+        {
+          "id": "s4",
+          "label": "landing",
+          "text": "HOME.",
+          "start_seconds": 118,
+          "end_seconds": 150,
+          "speaker_directions": "No narration. Pace settles: laundromat (grounding, humanizing beat), campfire embers, final bridge-crossing drive shot toward the close. Single closing title card 'HOME.' lands in the last 3-4 seconds over the final held frame.",
+          "enhancement_cues": [
+            {
+              "type": "overlay",
+              "description": "Closing title card 'HOME.' minimal, high contrast, holds through the last frame.",
+              "timestamp_seconds": 146
+            }
+          ]
+        }
+      ],
+      "metadata": {
+        "narration": false,
+        "beat_map": [
+          "hook",
+          "escalation",
+          "reveal",
+          "landing"
+        ],
+        "title_card_copy": [
+          "APRIL \u2014 JUNE 2026",
+          "HOME."
+        ],
+        "music_turns": [
+          {
+            "at_seconds": 8,
+            "description": "Track enters driving verse energy as escalation begins"
+          },
+          {
+            "at_seconds": 70,
+            "description": "Music breaks from strict beat-grid at the reveal \u2014 held emotional beats over Niagara/fort/field footage"
+          },
+          {
+            "at_seconds": 118,
+            "description": "Music settles toward resolution for the landing"
+          }
+        ],
+        "silence_windows": [],
+        "dialogue_selects": "None \u2014 no usable source dialogue; music-led, title-card-led piece per proposal (narration explicitly declined)."
+      }
+    }
+  }
+}

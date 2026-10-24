@@ -7,6 +7,6 @@ Read `skills/creative/animated-drawing.md`, then set up and run Meta's open-sour
 
 - Use this only when the user *has* a humanoid drawing/photo to animate. To create a vector doodle from scratch that draws itself → use `/ink-art` instead.
 - Output is **raster** (the original drawing warped) — no vector, no draw-on reveal. Confirm the input is a single humanoid on a plain light background.
-- Prefer the turnkey bundled-character path first; the auto-rig path needs Docker + ~670 MB models.
+- Prefer the turnkey bundled-character path first; the auto-rig path needs Docker + ~670 MB models
 
 Drawing + motion: $ARGUMENTS

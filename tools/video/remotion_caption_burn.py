@@ -40,6 +40,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+from lib.paths import REPO_ROOT
 from tools.base_tool import (
     BaseTool,
     Determinism,
@@ -158,17 +159,13 @@ class RemotionCaptionBurn(BaseTool):
 
     def _find_remotion_root(self) -> Path | None:
         """Find the remotion-composer directory relative to the repo."""
-        candidates = [
-            Path.cwd() / "remotion-composer",
-            Path(__file__).resolve().parent.parent.parent / "remotion-composer",
-        ]
-        for p in candidates:
-            if (
-                p.is_dir()
-                and (p / "package.json").exists()
-                and (p / "node_modules").is_dir()
-            ):
-                return p
+        p = REPO_ROOT / "remotion-composer"
+        if (
+            p.is_dir()
+            and (p / "package.json").exists()
+            and (p / "node_modules").is_dir()
+        ):
+            return p
         return None
 
     def _remotion_available(self) -> bool:

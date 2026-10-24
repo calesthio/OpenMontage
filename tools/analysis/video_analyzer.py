@@ -16,6 +16,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from lib.paths import PROJECTS_DIR
 from tools.base_tool import (
     BaseTool,
     Determinism,
@@ -155,7 +156,7 @@ class VideoAnalyzer(BaseTool):
         if inputs.get("output_dir"):
             output_dir = Path(inputs["output_dir"])
         else:
-            output_dir = Path("projects/_analysis") / f"analysis_{int(time.time())}"
+            output_dir = PROJECTS_DIR / "_analysis" / f"analysis_{int(time.time())}"
         output_dir.mkdir(parents=True, exist_ok=True)
 
         platform = self._detect_platform(source)

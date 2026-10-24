@@ -466,6 +466,7 @@ python -c "from tools.tool_registry import registry; import json; registry.disco
 Key capability families to look for in the output:
 
 - **tts** — Text-to-speech providers. Route via `tts_selector`.
+- **voice_cloning** — Reusable cloned voices: `dashscope_voice_clone` creates/queries/deletes a Qwen voice from a 10-20 s reference recording (local file or URL); `dashscope_tts` then narrates with that `voice_id`.
 - **video_generation** — Video generation providers (cloud, local GPU, stock). Route via `video_selector`.
 - **image_generation** — Image generation providers (cloud, local GPU, stock). Route via `image_selector`.
 - **music_generation** — Music and sound effect generation.
@@ -682,7 +683,7 @@ The `.agents/skills/` directory is large. When you're not coming in through a to
 | **Character animation** | `character-rigging`, `svg-character-animation`, `pose-library-design`, `canvas-procedural-animation`, `character-animation-qa` |
 | **Image generation** | `bfl-api`, `flux-best-practices` |
 | **Video generation** | `seedance-2-0` (preferred premium default — cinematic, trailer, multi-shot, synced audio, lip-sync), `gemini-omni` (conversational video editing, reference tags, timecoded beats), `ai-video-gen`, `ltx2` |
-| **Audio** | `elevenlabs`, `music`, `sound-effects`, `acestep`, `text-to-speech`, `azure-text-to-speech` (optional cloud TTS — tool `azure_tts`, same Speech key as `azure_stt`), `setup-api-key` |
+| **Audio** | `elevenlabs`, `music`, `sound-effects`, `acestep`, `text-to-speech`, `dashscope` (Qwen TTS + voice cloning), `azure-text-to-speech` (optional cloud TTS — tool `azure_tts`, same Speech key as `azure_stt`), `setup-api-key` |
 | **Speech-to-text** | `speech-to-text` (whisper `transcriber` — default, offline), `azure-speech-to-text` (optional cloud STT — tool `azure_stt`, preferred when `AZURE_SPEECH_KEY` is set) |
 | **Avatar / lip-sync** | `avatar-video`, `heygen`, `create-video`, `faceswap`, `video-translate`, `agents` |
 | **Capture** | `playwright-recording` (browser flows), `ffmpeg` (post) |

@@ -279,11 +279,11 @@ Official references: [Seedance model list](https://www.volcengine.com/docs/82379
 
 ---
 
-### Alibaba DashScope — Qwen Image + TTS + ASR
+### Alibaba DashScope — Qwen Image + TTS + Voice Clone + ASR
 
-> **Best for Chinese-language production.** One key unlocks Qwen-Image generation, Qwen-TTS Mandarin narration, and Qwen-ASR with word-level timestamps — the only DashScope path that provides word-level granularity for subtitle alignment.
+> **Best for Chinese-language production.** One key unlocks Qwen-Image generation, Qwen-TTS Mandarin narration, Qwen voice cloning, and Qwen-ASR with word-level timestamps — the only DashScope path that provides word-level granularity for subtitle alignment.
 
-**Tools unlocked:** `dashscope_image`, `dashscope_tts`, `dashscope_asr`
+**Tools unlocked:** `dashscope_image`, `dashscope_tts`, `dashscope_voice_clone`, `dashscope_asr`
 **Env var:** `DASHSCOPE_API_KEY`
 
 #### Setup
@@ -297,12 +297,15 @@ Official references: [Seedance model list](https://www.volcengine.com/docs/82379
 
 - Chinese-language image generation with strong prompt understanding (Qwen-Image)
 - Natural Mandarin narration (Qwen-TTS, Cherry voice)
+- Voice cloning from a 10-20 s reference recording (`dashscope_voice_clone`), then narration through the cloned `voice_id`
 - Word-level timestamp transcription for subtitle alignment (Qwen-ASR filetrans)
 - Replacing the broken `whisperx` slot for ASR
 
 #### API notes
 
 DashScope's `/compatible-mode/v1/` only supports `/chat/completions` and `/embeddings`. Image gen, TTS, and ASR all use DashScope-native endpoints with nested `{model, input, parameters}` request shape — not OpenAI-compatible paths.
+
+Voice clones are created on `services/audio/tts/customization` (`model: voice-enrollment`, actions `create_voice` / `query_voice` / `list_voice` / `delete_voice`) and spoken through `services/audio/tts/SpeechSynthesizer`. A clone is permanently bound to the `target_model` it was enrolled with; `dashscope_tts` reads that model from the `voice_id` prefix so callers only pass `voice_id`. Local reference audio is inlined as a Base64 Data URI — no public URL needed. The endpoint is free; synthesis bills per character.
 
 The ASR tool (`qwen3-asr-flash-filetrans`) uses an async submit-poll pattern. Audio must be at a publicly accessible URL (local files are not supported). Word timestamps are in milliseconds, normalized to seconds by the tool.
 
@@ -312,6 +315,7 @@ The ASR tool (`qwen3-asr-flash-filetrans`) uses an async submit-poll pattern. Au
 |------|-------|
 | `qwen-image-2.0-pro` | ~$0.02 per image (check console for current rates) |
 | `qwen3-tts-flash` | ~$0.000015 per character |
+| `qwen-audio-3.1-tts-flash` | Per-character billing; voice enrollment is free |
 | `qwen3-asr-flash-filetrans` | Per-minute billing (check console) |
 
 ---
@@ -1474,7 +1478,8 @@ How many providers cover each capability:
 |-----------|----------------|-----------------|--------------|
 | **Image Generation** | FLUX, Kling Official, Grok, Google Imagen, GPT Image 2, Recraft | Local Diffusion | Pexels, Pixabay (stock) |
 | **Video Generation** | Grok, Kling Official, fal.ai, Seedance via Volcengine Ark, Runway, Veo, Gemini Omni, Higgsfield, MiniMax, HeyGen, Tencent Hunyuan, ComfyUI Partner Nodes | WAN, Hunyuan, CogVideo, LTX, ComfyUI WAN, ComfyUI MiniMax H3 | Pexels, Pixabay (stock) |
-| **Text-to-Speech** | Azure AI Speech, ElevenLabs, fish.audio, Google TTS, Kling Official, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier, Azure free tier, fish.audio s2.1-pro-free |
+| **Text-to-Speech** | Alibaba DashScope, Azure AI Speech, ElevenLabs, fish.audio, Google TTS, Kling Official, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier, Azure free tier, fish.audio s2.1-pro-free |
+| **Voice Cloning** | Alibaba DashScope, ElevenLabs, fish.audio | — | ElevenLabs free tier, fish.audio free tier |
 | **Music Generation** | ElevenLabs, Suno, Google Lyria | — | ElevenLabs free tier |
 | **Post-Production** | — | FFmpeg (compose, stitch, trim, mix, enhance, grade) | All free |
 | **Analysis** | — | WhisperX, Scene Detect, Frame Sampler, CLIP/BLIP-2 | All free |

@@ -186,6 +186,7 @@ stages:
       - threejs_asset_catalog
       - atlas_3d
       - fal_3d
+      - hunyuan_cloud_3d
       - blender_world
       - music_gen
       - fal_elevenlabs_music
@@ -200,6 +201,7 @@ stages:
       - threejs_asset_catalog
       - atlas_3d
       - fal_3d
+      - hunyuan_cloud_3d
       - blender_world
       - music_gen
       - fal_elevenlabs_music

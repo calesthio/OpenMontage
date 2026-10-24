@@ -203,6 +203,32 @@ class VideoCompose(BaseTool):
                     "networks). The subprocess timeout is widened to match."
                 ),
             },
+            "composition_width": {
+                "type": "integer",
+                "description": (
+                    "Remotion canvas width in px, passed as `--width`. Use together "
+                    "with composition_height; when both are set they take precedence "
+                    "over the profile's dimensions."
+                ),
+            },
+            "composition_height": {
+                "type": "integer",
+                "description": (
+                    "Remotion canvas height in px, passed as `--height`. Use together "
+                    "with composition_width."
+                ),
+            },
+            "render_scale": {
+                "type": "number",
+                "description": (
+                    "Remotion output scale factor, passed as `--scale`. The output "
+                    "size is the canvas size times this factor. The stock Explainer "
+                    "components use pixel sizes tuned for 1920x1080, so for a "
+                    "vertical 1080x1920 render use a 720x1280 canvas with "
+                    "render_scale 1.5: everything is drawn 1.5x larger and the "
+                    "output is still 1080x1920."
+                ),
+            },
         },
     }
 
@@ -1668,6 +1694,10 @@ class VideoCompose(BaseTool):
             # would only take effect on a direct _remotion_render() call.
             if inputs.get("remotion_timeout_ms") is not None:
                 remotion_inputs["remotion_timeout_ms"] = inputs["remotion_timeout_ms"]
+            # Same for the optional canvas size and render scale.
+            for key in ("composition_width", "composition_height", "render_scale"):
+                if inputs.get(key) is not None:
+                    remotion_inputs[key] = inputs[key]
             if inputs.get("public_dir") is not None:
                 remotion_inputs["public_dir"] = inputs["public_dir"]
             render_result = self._remotion_render(remotion_inputs)
@@ -2062,14 +2092,27 @@ class VideoCompose(BaseTool):
             if public_dir is not None:
                 cmd.append(f"--public-dir={public_dir}")
 
-            # Apply media profile dimensions
-            if profile_name:
+            # Optional explicit canvas size + scale. The stock components use
+            # fixed pixel sizes tuned for 1920x1080, so a vertical render at
+            # full 1080x1920 makes text tiny. Rendering a smaller canvas (e.g.
+            # 720x1280) at --scale=1.5 yields 1080x1920 with everything 1.5x
+            # larger and still sharp. An explicit canvas replaces the profile's
+            # dimensions so Remotion never gets two --width/--height pairs.
+            canvas_w = inputs.get("composition_width")
+            canvas_h = inputs.get("composition_height")
+            if canvas_w and canvas_h:
+                cmd.extend(["--width", str(int(canvas_w)), "--height", str(int(canvas_h))])
+            elif profile_name:
+                # Apply media profile dimensions
                 try:
                     from lib.media_profiles import get_profile
                     p = get_profile(profile_name)
                     cmd.extend(["--width", str(p.width), "--height", str(p.height)])
                 except (ImportError, ValueError):
                     pass
+            render_scale = inputs.get("render_scale")
+            if render_scale:
+                cmd.append(f"--scale={float(render_scale)}")
 
             # Optional creator-facing render timeout. Remotion's `--timeout` (ms)
             # governs headless-browser setup and delayRender(); on slow machines or

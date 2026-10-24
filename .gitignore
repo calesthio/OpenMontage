@@ -104,3 +104,11 @@ venv/
 
 # Local Wan / diffusers GPU environment
 .venv-wan/
+
+# npm cache (NPM_CONFIG_CACHE — see .env), keeps npx/HyperFrames writes in-tree
+.npm-cache/
+
+# pytest scratch trees. These land in the repo root when the OS temp/profile
+# dirs are unwritable (see the NPM_CONFIG_CACHE note above), so `make test`
+# can leave pytest-of-<user>/ behind as untracked noise.
+pytest-of-*/

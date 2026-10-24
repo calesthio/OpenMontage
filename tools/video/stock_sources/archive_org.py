@@ -141,6 +141,9 @@ class ArchiveOrgSource:
 
         import requests  # lazy
 
+        strategy_errors: list[str] = []
+        strategies_completed = 0
+
         for _label, solr_q in self._build_queries(query):
             params = [
                 ("q", solr_q),
@@ -161,10 +164,14 @@ class ArchiveOrgSource:
                 r = requests.get(_SEARCH_URL, params=params, timeout=30)
                 r.raise_for_status()
                 data = r.json()
-            except Exception:
+            except Exception as exc:
                 # One strategy's network/parse error shouldn't kill the
-                # whole cascade — try the next one.
+                # whole cascade — try the next one. But it must not be
+                # invisible either: if every strategy dies this way we
+                # fail closed below with the diagnostics attached.
+                strategy_errors.append(f"{_label}: {type(exc).__name__}: {exc}")
                 continue
+            strategies_completed += 1
             docs = (data.get("response") or {}).get("docs", []) or []
             if not docs:
                 continue
@@ -176,6 +183,17 @@ class ArchiveOrgSource:
                     out.append(cand)
             if out:
                 return out
+
+        if strategy_errors and strategies_completed == 0:
+            # Every query strategy failed at the transport layer. Returning
+            # [] here reads as "archive.org has nothing for this query",
+            # which is a lie: direct_clip_search then reports success with
+            # zero clips and an empty error list. Fail closed instead, the
+            # same way corpus_builder does on total candidate failure.
+            raise RuntimeError(
+                "archive_org search failed on every strategy: "
+                + " | ".join(strategy_errors)
+            )
 
         return []
 

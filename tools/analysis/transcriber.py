@@ -26,6 +26,22 @@ from tools.base_tool import (
 )
 
 
+def _is_model_download_error(exc: Exception) -> bool:
+    """True when faster-whisper failed to fetch model files (offline/blocked)."""
+    names = {cls.__name__ for cls in type(exc).__mro__}
+    if names & {
+        "LocalEntryNotFoundError",
+        "HfHubHTTPError",
+        "ConnectionError",
+        "ProxyError",
+        "SSLError",
+        "Timeout",
+    }:
+        return True
+    text = str(exc).lower()
+    return "huggingface" in text or "hf_hub" in text or "snapshot folder" in text
+
+
 class Transcriber(BaseTool):
     name = "transcriber"
     version = "0.1.0"
@@ -58,8 +74,26 @@ class Transcriber(BaseTool):
             "input_path": {"type": "string", "description": "Path to audio or video file"},
             "model_size": {
                 "type": "string",
-                "enum": ["tiny", "base", "small", "medium", "large-v2", "large-v3"],
+                "enum": ["tiny", "base", "small", "medium", "large-v2", "large-v3", "large-v3-turbo"],
                 "default": "base",
+            },
+            "model_path": {
+                "type": "string",
+                "description": (
+                    "Local directory of a CTranslate2 Whisper model. Overrides "
+                    "model_size and skips the Hugging Face download."
+                ),
+            },
+            "initial_prompt": {
+                "type": "string",
+                "description": (
+                    "Context text that biases spelling (names, brands, terms). "
+                    "Use it to steer Azerbaijani orthography."
+                ),
+            },
+            "hotwords": {
+                "type": "string",
+                "description": "Space-separated words to boost during decoding.",
             },
             "language": {"type": "string", "description": "ISO 639-1 language code, or null for auto-detect"},
             "diarize": {"type": "boolean", "default": False},
@@ -116,7 +150,11 @@ class Transcriber(BaseTool):
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         input_path = Path(inputs["input_path"])
         model_size = inputs.get("model_size", "base")
+        model_ref = inputs.get("model_path") or model_size
         language = inputs.get("language")
+        decode_hints = {
+            key: inputs[key] for key in ("initial_prompt", "hotwords") if inputs.get(key)
+        }
         diarize = inputs.get("diarize", False)
         output_dir = Path(inputs.get("output_dir", input_path.parent))
 
@@ -155,7 +193,7 @@ class Transcriber(BaseTool):
 
         def _transcribe_on(selected_device: str, selected_compute_type: str):
             model = WhisperModel(
-                model_size,
+                model_ref,
                 device=selected_device,
                 compute_type=selected_compute_type,
             )
@@ -164,6 +202,7 @@ class Transcriber(BaseTool):
                 language=language,
                 word_timestamps=True,
                 vad_filter=True,
+                **decode_hints,
             )
 
             parsed_segments = []
@@ -200,6 +239,16 @@ class Transcriber(BaseTool):
             segments, word_timestamps, info = _transcribe_on(device, compute_type)
         except Exception as exc:
             if device == "cpu":
+                if _is_model_download_error(exc) and not inputs.get("model_path"):
+                    return ToolResult(
+                        success=False,
+                        error=(
+                            f"Whisper model '{model_size}' could not be downloaded "
+                            f"from huggingface.co ({type(exc).__name__}). Allow "
+                            "huggingface.co in the network policy, or pass "
+                            "model_path to a local CTranslate2 model directory."
+                        ),
+                    )
                 raise
             gpu_fallback_reason = f"{type(exc).__name__}: {exc}"
             device = "cpu"
@@ -223,6 +272,7 @@ class Transcriber(BaseTool):
             "language": detected_language,
             "duration_seconds": round(duration, 3),
             "model_size": model_size,
+            "model_path": inputs.get("model_path"),
             "device": device,
             "compute_type": compute_type,
             "gpu_fallback_reason": gpu_fallback_reason,

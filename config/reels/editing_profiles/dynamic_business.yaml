@@ -1,0 +1,57 @@
+profile_id: dynamic_business
+number: 2
+display_name: Dynamic Business
+for_industries: [marketing, smm, sales, business_mentoring, entrepreneurship]
+intent: Strong first seconds, tighter cuts, selected punch-ins, strong CTA.
+
+pacing:
+  target_duration_s: 45
+  max_duration_s: 60
+  silence:
+    min_silence_s: 0.35
+    keep_pause_s: 0.12
+  remove_fillers: true
+  hook_max_s: 2
+
+cuts:
+  style: dynamic
+  punch_in: {enabled: true, scale: 1.15, max_per_30s: 3}
+  jump_cut_zoom: {enabled: true, scale: 1.08}
+
+transitions:
+  default: cut
+  allowed: [cut, fade]
+  duration_s: 0.15
+  max_per_30s: 2
+
+captions:
+  mode: word_highlight
+  max_chars_per_line: 18
+  max_lines: 2
+  font_size_px: 76
+  bold: true
+  uppercase: false
+  keyword_emphasis: keywords
+  position: lower_safe
+
+color:
+  grade: bright_clean
+  intensity: 0.6
+
+audio:
+  speech_enhance: clean_speech
+  music: {enabled: true, volume_during_speech: 0.15}
+  loudness_lufs: -14
+
+motion:
+  text_blocks: true
+  intensity: medium
+
+cta:
+  end_card_s: 2.5
+  style: strong
+
+export:
+  width: 1080
+  height: 1920
+  fps: 30

@@ -104,3 +104,9 @@ venv/
 
 # Local Wan / diffusers GPU environment
 .venv-wan/
+
+# Reels studio — client data stays out of git (see brand_profiles/README.md)
+brand_profiles/*/
+!brand_profiles/_template/
+!brand_profiles/neutral_test/
+brand_profiles/**/assets/

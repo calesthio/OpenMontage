@@ -4,12 +4,16 @@ Tracks face bounding boxes, landmarks, and head pose across video frames.
 Outputs per-frame face data as JSON — used by auto_reframe, face_enhance,
 and other tools that need to know where the speaker's face is.
 
-Falls back to OpenCV Haar cascade if MediaPipe is not installed.
+Detector order: MediaPipe legacy ``solutions`` API (mediapipe<=0.10.21),
+then the MediaPipe Tasks FaceDetector (mediapipe>=0.10.30, which dropped
+``solutions``; needs the BlazeFace .tflite model on disk), then the OpenCV
+Haar cascade.
 """
 
 from __future__ import annotations
 
 import json
+import os
 import time
 from pathlib import Path
 from typing import Any
@@ -24,6 +28,20 @@ from tools.base_tool import (
     ToolStatus,
     ToolTier,
 )
+
+
+# Official MediaPipe model; fetched by scripts/setup_reels_models.sh.
+MEDIAPIPE_FACE_MODEL_URL = (
+    "https://storage.googleapis.com/mediapipe-models/face_detector/"
+    "blaze_face_short_range/float16/latest/blaze_face_short_range.tflite"
+)
+DEFAULT_FACE_MODEL_PATH = (
+    Path.home() / ".cache" / "openmontage" / "models" / "blaze_face_short_range.tflite"
+)
+
+
+def _face_model_path() -> Path:
+    return Path(os.environ.get("OPENMONTAGE_FACE_MODEL", DEFAULT_FACE_MODEL_PATH))
 
 
 class FaceTracker(BaseTool):
@@ -114,12 +132,26 @@ class FaceTracker(BaseTool):
 
     fallback_tools = []
 
-    def _has_mediapipe(self) -> bool:
+    def _has_mediapipe_solutions(self) -> bool:
         try:
-            import mediapipe  # noqa: F401
-            return True
+            import mediapipe as mp
+            return hasattr(mp, "solutions")
         except ImportError:
             return False
+
+    def _has_mediapipe_tasks(self) -> bool:
+        try:
+            from mediapipe.tasks.python import vision  # noqa: F401
+        except ImportError:
+            return False
+        return _face_model_path().is_file()
+
+    def _detector_method(self) -> str:
+        if self._has_mediapipe_solutions():
+            return "mediapipe"
+        if self._has_mediapipe_tasks():
+            return "mediapipe_tasks"
+        return "opencv_haar"
 
     def _has_opencv(self) -> bool:
         try:
@@ -129,7 +161,7 @@ class FaceTracker(BaseTool):
             return False
 
     def get_status(self) -> ToolStatus:
-        if self._has_mediapipe() and self._has_opencv():
+        if self._has_opencv() and self._detector_method() != "opencv_haar":
             return ToolStatus.AVAILABLE
         if self._has_opencv():
             return ToolStatus.DEGRADED
@@ -156,8 +188,16 @@ class FaceTracker(BaseTool):
 
         start = time.time()
 
-        if self._has_mediapipe():
+        method = self._detector_method()
+        if method == "mediapipe":
             result_data = self._track_mediapipe(input_path, sample_fps, confidence)
+        elif method == "mediapipe_tasks":
+            try:
+                result_data = self._track_mediapipe_tasks(input_path, sample_fps, confidence)
+            except (OSError, RuntimeError):
+                # Native runtime missing (e.g. libEGL.so.1 on headless hosts).
+                method = "opencv_haar"
+                result_data = self._track_opencv(input_path, sample_fps)
         else:
             result_data = self._track_opencv(input_path, sample_fps)
 
@@ -175,7 +215,7 @@ class FaceTracker(BaseTool):
                 "duration_seconds": result_data["duration_seconds"],
                 "frames_sampled": result_data["frame_count"],
                 "faces_detected": result_data["face_detected_count"],
-                "method": "mediapipe" if self._has_mediapipe() else "opencv_haar",
+                "method": method,
             },
             artifacts=[str(output_path)],
             duration_seconds=round(elapsed, 2),
@@ -233,6 +273,75 @@ class FaceTracker(BaseTool):
                                 "y": round(bbox.ymin, 4),
                                 "width": round(bbox.width, 4),
                                 "height": round(bbox.height, 4),
+                            },
+                        })
+
+                frame_idx += 1
+
+        cap.release()
+
+        return {
+            "video_width": video_w,
+            "video_height": video_h,
+            "fps": round(video_fps, 2),
+            "duration_seconds": round(duration, 3),
+            "frame_count": sampled,
+            "face_detected_count": len(faces_data),
+            "faces": faces_data,
+        }
+
+    def _track_mediapipe_tasks(
+        self, input_path: Path, sample_fps: float, confidence: float
+    ) -> dict:
+        """MediaPipe Tasks FaceDetector (BlazeFace short range, selfie distance)."""
+        import cv2
+        import mediapipe as mp
+        from mediapipe.tasks.python import BaseOptions, vision
+
+        options = vision.FaceDetectorOptions(
+            base_options=BaseOptions(model_asset_path=str(_face_model_path())),
+            running_mode=vision.RunningMode.IMAGE,
+            min_detection_confidence=confidence,
+        )
+        cap = cv2.VideoCapture(str(input_path))
+
+        video_fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+        video_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        video_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        duration = total_frames / video_fps if video_fps > 0 else 0
+
+        sample_interval = max(1, int(video_fps / sample_fps))
+
+        faces_data: list[dict] = []
+        frame_idx = 0
+        sampled = 0
+
+        with vision.FaceDetector.create_from_options(options) as detector:
+            while cap.isOpened():
+                ret, frame = cap.read()
+                if not ret:
+                    break
+
+                if frame_idx % sample_interval == 0:
+                    sampled += 1
+                    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+                    detections = detector.detect(image).detections
+
+                    if detections:
+                        # Use the highest-confidence detection
+                        det = max(detections, key=lambda d: d.categories[0].score)
+                        box = det.bounding_box  # absolute pixels
+                        faces_data.append({
+                            "frame_index": frame_idx,
+                            "timestamp_seconds": round(frame_idx / video_fps, 3),
+                            "confidence": round(det.categories[0].score, 3),
+                            "bbox": {
+                                "x": round(box.origin_x / video_w, 4),
+                                "y": round(box.origin_y / video_h, 4),
+                                "width": round(box.width / video_w, 4),
+                                "height": round(box.height / video_h, 4),
                             },
                         })
 

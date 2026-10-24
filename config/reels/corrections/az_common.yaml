@@ -1,0 +1,31 @@
+# Shared Azerbaijani correction lexicon — applies to every client.
+# Client-specific names, brands and terms go in
+# brand_profiles/<client_id>/corrections.yaml (those entries win).
+#
+# Matching is case- and punctuation-insensitive with Azerbaijani I/ı/İ/i
+# rules and works on multi-word phrases. Only add entries you have seen the
+# ASR get wrong on real audio; every replacement is still listed for review.
+
+# Exact spelling enforced whenever the word appears in any casing.
+protected_terms:
+  - Instagram
+  - Reels
+  - TikTok
+  - YouTube
+  - WhatsApp
+  - Facebook
+  - SMM
+
+# wrong (as recognised) -> right
+replacements:
+  instaqram: Instagram
+  insta qram: Instagram
+  rils: Reels
+  tik tok: TikTok
+  vatsap: WhatsApp
+  vatsapp: WhatsApp
+
+# Passed to Whisper as decoding hints (hotwords / initial_prompt).
+hotwords: []
+initial_prompt: >-
+  Salam, əziz dostlar! Bu videoda sizinlə çox önəmli bir mövzunu bölüşəcəyəm.

@@ -1,0 +1,42 @@
+# Copy this folder to brand_profiles/<client_id>/ and fill it in with the
+# client's APPROVED data. Never guess colours, fonts or logos: leave a value
+# empty and keep `approved: false` until the client has confirmed it.
+# Real client folders are git-ignored (see brand_profiles/README.md).
+
+client_id: client_slug          # a-z, 0-9, _ or -; must match the folder name
+brand_name: ""
+approved: false                 # true only after the client confirms everything below
+industry: ""
+target_audience: ""
+brand_positioning: ""
+
+primary_colors: []              # e.g. ["#1A2B3C"] — #RRGGBB, approved values only
+secondary_colors: []
+font_preferences:
+  primary: null                 # must be installed (fc-list) or placed in assets/
+  caption: null
+
+subtitle_style:                 # overrides the editing profile's caption defaults
+  text_color: null              # "#FFFFFF"
+  highlight_color: null         # word_highlight colour
+  outline_color: null
+  box_color: null               # optional background box, "#000000"
+  box_opacity: null             # 0-1
+
+preferred_editing_profile: expert_editorial   # see config/reels/editing_profiles/
+editing_pace: natural           # natural | dynamic | calm
+transition_preferences: [cut]
+music_preferences:
+  mood: null
+  library_folder: null          # music_library/<client_id>/ (licensed tracks only)
+  allow_music: true
+
+logo_asset: null                # path under brand_profiles/<client_id>/assets/
+CTA_preferences:
+  text: null                    # exact approved CTA wording
+  placement: end_card
+forbidden_visual_elements: []   # e.g. ["stock photos of people", "red"]
+export_settings:
+  width: 1080
+  height: 1920
+  fps: 30

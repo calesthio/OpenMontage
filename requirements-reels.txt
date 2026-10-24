@@ -1,0 +1,16 @@
+# OpenMontage Reels studio — pinned extras on top of requirements.txt
+# Verified on Python 3.13 / CPU (no GPU). Install:
+#   uv pip install --python .venv/bin/python -r requirements-reels.txt
+# System package needed by mediapipe Tasks on headless Linux: libegl1
+# Face model (official MediaPipe source) goes to
+#   ~/.cache/openmontage/models/blaze_face_short_range.tflite
+#   sha256 b4578f35940bf5a1a655214a1cce5cab13eba73c1297cd78e1a04c2380b0152f
+-r requirements-dev.txt
+faster-whisper==1.2.1
+ctranslate2==4.8.3
+av==16.1.0  # faster-whisper 1.2.1 passes metadata_errors, removed in av 17+
+huggingface-hub==2.2.0
+mediapipe==1.1.1
+# 4.x keeps the Haar cascades used as the face_tracker fallback (5.0 dropped them)
+opencv-contrib-python==4.12.0.88
+numpy==2.2.6

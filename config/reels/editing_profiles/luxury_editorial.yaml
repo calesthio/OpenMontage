@@ -1,0 +1,57 @@
+profile_id: luxury_editorial
+number: 4
+display_name: Luxury Editorial
+for_industries: [fashion, design, creative, premium_personal_brand]
+intent: Elegant rhythm, aesthetic shot selection, natural colour, minimal animation, clean type.
+
+pacing:
+  target_duration_s: 30
+  max_duration_s: 60
+  silence:
+    min_silence_s: 0.7
+    keep_pause_s: 0.35
+  remove_fillers: true
+  hook_max_s: 3
+
+cuts:
+  style: elegant
+  punch_in: {enabled: false}
+  jump_cut_zoom: {enabled: false}
+
+transitions:
+  default: fade
+  allowed: [cut, fade]
+  duration_s: 0.5
+  max_per_30s: 2
+
+captions:
+  mode: phrase
+  max_chars_per_line: 24
+  max_lines: 2
+  font_size_px: 56
+  bold: false
+  uppercase: false
+  keyword_emphasis: none
+  position: lower_safe
+
+color:
+  grade: neutral
+  intensity: 0.4
+
+audio:
+  speech_enhance: clean_speech
+  music: {enabled: true, volume_during_speech: 0.14}
+  loudness_lufs: -14
+
+motion:
+  text_blocks: false
+  intensity: minimal
+
+cta:
+  end_card_s: 2
+  style: understated
+
+export:
+  width: 1080
+  height: 1920
+  fps: 30

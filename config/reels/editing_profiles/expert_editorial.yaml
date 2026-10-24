@@ -1,0 +1,57 @@
+profile_id: expert_editorial
+number: 1
+display_name: Expert Editorial
+for_industries: [education, pedagogy, psychology, teaching, consulting]
+intent: Natural speaking rhythm; trustworthy, professional, minimal.
+
+pacing:
+  target_duration_s: 60
+  max_duration_s: 90
+  silence:
+    min_silence_s: 0.6        # pauses longer than this are tightened
+    keep_pause_s: 0.25        # breathing room left at each cut
+  remove_fillers: true
+  hook_max_s: 3
+
+cuts:
+  style: natural
+  punch_in: {enabled: false}
+  jump_cut_zoom: {enabled: true, scale: 1.04}   # hides jump cuts, barely visible
+
+transitions:
+  default: cut
+  allowed: [cut, fade]
+  duration_s: 0.25
+  max_per_30s: 1
+
+captions:
+  mode: phrase               # phrase | word_highlight
+  max_chars_per_line: 26
+  max_lines: 2
+  font_size_px: 64
+  bold: true
+  uppercase: false
+  keyword_emphasis: selective   # only terms approved in the edit plan
+  position: lower_safe
+
+color:
+  grade: neutral
+  intensity: 0.5
+
+audio:
+  speech_enhance: clean_speech
+  music: {enabled: true, volume_during_speech: 0.12}
+  loudness_lufs: -14
+
+motion:
+  text_blocks: false
+  intensity: minimal
+
+cta:
+  end_card_s: 2.5
+  style: calm
+
+export:
+  width: 1080
+  height: 1920
+  fps: 30

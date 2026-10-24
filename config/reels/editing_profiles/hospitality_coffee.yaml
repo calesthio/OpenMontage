@@ -1,0 +1,58 @@
+profile_id: hospitality_coffee
+number: 6
+display_name: Hospitality & Coffee Business
+for_industries: [coffee_shop, service_business, hospitality_consulting]
+intent: Real business process, venue and service details, practical tips; dynamic but corporate.
+
+pacing:
+  target_duration_s: 45
+  max_duration_s: 60
+  silence:
+    min_silence_s: 0.45
+    keep_pause_s: 0.15
+  remove_fillers: true
+  hook_max_s: 2
+
+cuts:
+  style: dynamic
+  punch_in: {enabled: true, scale: 1.1, max_per_30s: 2}
+  jump_cut_zoom: {enabled: true, scale: 1.05}
+  broll_from_source: true    # product / venue shots supplied by the client
+
+transitions:
+  default: cut
+  allowed: [cut, fade]
+  duration_s: 0.2
+  max_per_30s: 2
+
+captions:
+  mode: word_highlight
+  max_chars_per_line: 20
+  max_lines: 2
+  font_size_px: 70
+  bold: true
+  uppercase: false
+  keyword_emphasis: tips
+  position: lower_safe
+
+color:
+  grade: bright_clean
+  intensity: 0.4
+
+audio:
+  speech_enhance: clean_speech
+  music: {enabled: true, volume_during_speech: 0.15}
+  loudness_lufs: -14
+
+motion:
+  text_blocks: true
+  intensity: medium
+
+cta:
+  end_card_s: 2.5
+  style: visit
+
+export:
+  width: 1080
+  height: 1920
+  fps: 30

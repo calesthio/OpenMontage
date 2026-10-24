@@ -1,0 +1,5 @@
+# Per-client lexicon example. Add the client's own names, brands and terms.
+protected_terms: []
+replacements: {}
+hotwords: []
+initial_prompt: ""

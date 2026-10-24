@@ -1,0 +1,57 @@
+profile_id: warm_educational
+number: 5
+display_name: Warm Educational
+for_industries: [child_development, parent_education, early_education]
+intent: Warm natural image, soft transitions, calm edit, empathetic, readable educational text.
+
+pacing:
+  target_duration_s: 60
+  max_duration_s: 90
+  silence:
+    min_silence_s: 0.7
+    keep_pause_s: 0.3
+  remove_fillers: true
+  hook_max_s: 3
+
+cuts:
+  style: calm
+  punch_in: {enabled: false}
+  jump_cut_zoom: {enabled: true, scale: 1.03}
+
+transitions:
+  default: fade
+  allowed: [cut, fade]
+  duration_s: 0.4
+  max_per_30s: 2
+
+captions:
+  mode: phrase
+  max_chars_per_line: 24
+  max_lines: 2
+  font_size_px: 66
+  bold: true
+  uppercase: false
+  keyword_emphasis: selective
+  position: lower_safe
+
+color:
+  grade: cinematic_warm
+  intensity: 0.3            # gentle warmth; skin tones stay natural
+
+audio:
+  speech_enhance: clean_speech
+  music: {enabled: true, volume_during_speech: 0.10}
+  loudness_lufs: -14
+
+motion:
+  text_blocks: true
+  intensity: low
+
+cta:
+  end_card_s: 2.5
+  style: calm
+
+export:
+  width: 1080
+  height: 1920
+  fps: 30

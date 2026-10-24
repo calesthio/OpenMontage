@@ -91,6 +91,33 @@ class AutoReframe(BaseTool):
                 "type": "string",
                 "description": "Path to pre-computed face_tracker JSON. If omitted, runs face detection internally.",
             },
+            "crop_center": {
+                "type": "object",
+                "description": (
+                    "Manual crop centre as fractions of the source frame "
+                    "({x: 0-1, y: 0-1}). Skips face detection; use when "
+                    "tracking misses the subject or for product/location shots."
+                ),
+                "properties": {
+                    "x": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+                    "y": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+                },
+            },
+            "min_face_coverage": {
+                "type": "number",
+                "default": 0.3,
+                "minimum": 0.0,
+                "maximum": 1.0,
+                "description": (
+                    "Fraction of sampled frames that must contain a face before "
+                    "tracking is trusted; below it the crop falls back to centre."
+                ),
+            },
+            "min_face_confidence": {
+                "type": "number",
+                "default": 0.5,
+                "description": "Ignore detections below this score (Haar reports 0 and is exempt).",
+            },
             "smoothing_window": {
                 "type": "integer",
                 "default": 15,
@@ -153,11 +180,31 @@ class AutoReframe(BaseTool):
                 artifacts=[str(input_path)],
             )
 
-        # Get face tracking data
-        face_data = self._get_face_data(inputs, input_path, src_fps)
+        manual = inputs.get("crop_center")
+        face_data = [] if manual else self._get_face_data(inputs, input_path, src_fps)
+        face_note = None
+        if face_data:
+            min_conf = float(inputs.get("min_face_confidence", 0.5))
+            trusted = [f for f in face_data if not f.get("confidence") or f["confidence"] >= min_conf]
+            sampled = self._last_sampled_frames or len(face_data)
+            coverage = len(trusted) / sampled if sampled else 0.0
+            if coverage < float(inputs.get("min_face_coverage", 0.3)):
+                face_note = (
+                    f"face found in {coverage:.0%} of sampled frames "
+                    f"(below min_face_coverage); used centre crop"
+                )
+                face_data = []
+            else:
+                face_data = trusted
 
         # Compute per-frame crop positions
-        if face_data and len(face_data) > 0:
+        if manual:
+            crop_x = int(manual.get("x", 0.5) * src_w - target_w / 2)
+            crop_y = int(manual.get("y", 0.5) * src_h - target_h / 2)
+            crop_x = max(0, min(crop_x, src_w - target_w))
+            crop_y = max(0, min(crop_y, src_h - target_h))
+            method = "manual"
+        elif face_data and len(face_data) > 0:
             crop_x, crop_y = self._compute_face_tracked_crop(
                 face_data, src_w, src_h, target_w, target_h,
                 src_fps,
@@ -191,6 +238,7 @@ class AutoReframe(BaseTool):
                 input_path, output_path, crop_x, crop_y,
                 target_w, target_h, out_w, out_h,
                 src_fps, codec, crf,
+                timestamps=[f.get("timestamp_seconds") for f in face_data],
             )
         else:
             # Static crop
@@ -215,6 +263,8 @@ class AutoReframe(BaseTool):
                 "output_resolution": f"{out_w}x{out_h}",
                 "method": method,
                 "target_aspect": inputs.get("target_aspect", "portrait"),
+                **({"face_note": face_note} if face_note else {}),
+                **({"fallback": result.data["fallback"]} if result.data and result.data.get("fallback") else {}),
             },
             artifacts=[str(output_path)],
             duration_seconds=round(elapsed, 2),
@@ -309,16 +359,20 @@ class AutoReframe(BaseTool):
         out_h = out_h - (out_h % 2)
         return out_w, out_h
 
+    _last_sampled_frames = 0
+
     def _get_face_data(
         self, inputs: dict[str, Any], input_path: Path, src_fps: float
     ) -> list[dict]:
         """Get face tracking data — from pre-computed JSON or by running detection."""
+        self._last_sampled_frames = 0
         # Check for pre-computed tracking data
         tracking_json = inputs.get("face_tracking_json")
         if tracking_json:
             p = Path(tracking_json)
             if p.exists():
                 data = json.loads(p.read_text(encoding="utf-8"))
+                self._last_sampled_frames = int(data.get("frame_count") or 0)
                 return data.get("faces", [])
 
         # Try to run face_tracker internally
@@ -337,6 +391,7 @@ class AutoReframe(BaseTool):
                 output_file = result.data.get("output")
                 if output_file:
                     data = json.loads(Path(output_file).read_text(encoding="utf-8"))
+                    self._last_sampled_frames = int(data.get("frame_count") or 0)
                     return data.get("faces", [])
         except Exception:
             pass
@@ -456,6 +511,7 @@ class AutoReframe(BaseTool):
         out_w: int, out_h: int,
         fps: float,
         codec: str, crf: int,
+        timestamps: list[float | None] | None = None,
     ) -> ToolResult:
         """Render with dynamic crop positions that follow the face.
 
@@ -487,17 +543,20 @@ class AutoReframe(BaseTool):
         # The face data was sampled at sample_fps intervals
         sample_interval = 1.0 / (fps / max(1, int(fps / 5)))  # Approximate
 
+        # Prefer the real detection timestamps: frames without a detected face
+        # are skipped by face_tracker, so index * interval drifts out of sync.
+        if not timestamps or len(timestamps) != len(crop_xs) or None in timestamps:
+            timestamps = [i * sample_interval for i in range(len(crop_xs))]
+
         lines = []
-        for i, (cx, cy) in enumerate(zip(crop_xs, crop_ys)):
-            ts = i * sample_interval
-            lines.append(f"{ts:.3f} [enter] crop x {cx};")
-            lines.append(f"{ts:.3f} [enter] crop y {cy};")
+        for ts, cx, cy in zip(timestamps, crop_xs, crop_ys):
+            lines.append(f"{ts:.3f} crop x {cx}, crop y {cy};")
 
         sendcmd_path.write_text("\n".join(lines), encoding="utf-8")
 
         # Use crop with sendcmd for dynamic positioning
         vf = (
-            f"sendcmd=f='{str(sendcmd_path).replace(chr(92), '/')}':flags=enter,"
+            f"sendcmd=f='{str(sendcmd_path).replace(chr(92), '/')}',"
             f"crop={crop_w}:{crop_h}:{crop_xs[0]}:{crop_ys[0]},"
             f"scale={out_w}:{out_h},setsar=1"
         )

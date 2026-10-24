@@ -1,0 +1,40 @@
+# Neutral test profile: used for technical tests and for any client whose
+# brand data is not approved yet. Deliberately brand-free (white captions,
+# black outline, no logo, no CTA wording).
+client_id: neutral_test
+brand_name: Neutral Test
+approved: true
+industry: test
+target_audience: technical testing
+brand_positioning: none
+
+primary_colors: ["#FFFFFF"]
+secondary_colors: ["#000000"]
+font_preferences:
+  primary: Inter
+  caption: Inter
+
+subtitle_style:
+  text_color: "#FFFFFF"
+  highlight_color: "#FFD400"
+  outline_color: "#000000"
+  box_color: null
+  box_opacity: null
+
+preferred_editing_profile: expert_editorial
+editing_pace: natural
+transition_preferences: [cut, fade]
+music_preferences:
+  mood: neutral
+  library_folder: null
+  allow_music: true
+
+logo_asset: null
+CTA_preferences:
+  text: null
+  placement: none
+forbidden_visual_elements: []
+export_settings:
+  width: 1080
+  height: 1920
+  fps: 30

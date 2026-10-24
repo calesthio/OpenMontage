@@ -1,0 +1,57 @@
+profile_id: premium_academy
+number: 3
+display_name: Premium Academy
+for_industries: [training, mentoring, masterclass, course_promotion]
+intent: Academic premium look; structured text blocks; protects trainer authority; clear registration CTA.
+
+pacing:
+  target_duration_s: 60
+  max_duration_s: 90
+  silence:
+    min_silence_s: 0.5
+    keep_pause_s: 0.2
+  remove_fillers: true
+  hook_max_s: 3
+
+cuts:
+  style: structured
+  punch_in: {enabled: true, scale: 1.08, max_per_30s: 1}
+  jump_cut_zoom: {enabled: true, scale: 1.04}
+
+transitions:
+  default: fade
+  allowed: [cut, fade]
+  duration_s: 0.3
+  max_per_30s: 2
+
+captions:
+  mode: phrase
+  max_chars_per_line: 24
+  max_lines: 2
+  font_size_px: 64
+  bold: true
+  uppercase: false
+  keyword_emphasis: topic_terms
+  position: lower_safe
+
+color:
+  grade: neutral
+  intensity: 0.5
+
+audio:
+  speech_enhance: clean_speech
+  music: {enabled: true, volume_during_speech: 0.12}
+  loudness_lufs: -14
+
+motion:
+  text_blocks: true
+  intensity: low
+
+cta:
+  end_card_s: 3
+  style: registration
+
+export:
+  width: 1080
+  height: 1920
+  fps: 30

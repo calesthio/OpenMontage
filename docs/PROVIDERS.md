@@ -296,6 +296,7 @@ Official references: [Seedance model list](https://www.volcengine.com/docs/82379
 #### What it's best for
 
 - Chinese-language image generation with strong prompt understanding (Qwen-Image)
+- Current Qwen-Image 3.0 / 2.1 models (`qwen-image-3.0-pro`, `qwen-image-3.0`, `qwen-image-2.1-pro`, `qwen-image-2.1-turbo`), with the 2.0 series kept as legacy
 - Natural Mandarin narration (Qwen-TTS, Cherry voice)
 - Word-level timestamp transcription for subtitle alignment (Qwen-ASR filetrans)
 - Replacing the broken `whisperx` slot for ASR
@@ -304,6 +305,8 @@ Official references: [Seedance model list](https://www.volcengine.com/docs/82379
 
 DashScope's `/compatible-mode/v1/` only supports `/chat/completions` and `/embeddings`. Image gen, TTS, and ASR all use DashScope-native endpoints with nested `{model, input, parameters}` request shape — not OpenAI-compatible paths.
 
+Qwen-Image spans three parameter generations. The 2.1 and 3.0 series accept `prompt_extend_mode` (`direct` / `agent`), `enable_thinking` (requires `prompt_extend=true`), and `size="auto"`; the 2.1 series does **not** accept `negative_prompt` (the 3.0 and legacy 2.0 series do). `dashscope_image` gates these automatically, and defaults to `qwen-image-2.0-pro` for byte-compatible behavior. The 2.1/3.0 models also support reference-image editing (2.1 up to 10 images, 3.0 up to 3) and 2.1 can emit an alpha channel, but the tool currently exposes text-to-image only.
+
 The ASR tool (`qwen3-asr-flash-filetrans`) uses an async submit-poll pattern. Audio must be at a publicly accessible URL (local files are not supported). Word timestamps are in milliseconds, normalized to seconds by the tool.
 
 #### Pricing
@@ -311,6 +314,8 @@ The ASR tool (`qwen3-asr-flash-filetrans`) uses an async submit-poll pattern. Au
 | Model | Price |
 |------|-------|
 | `qwen-image-2.0-pro` | ~$0.02 per image (check console for current rates) |
+| `qwen-image-3.0-pro` / `qwen-image-3.0` | Per image, billed by 1k/2k output tier (check console) |
+| `qwen-image-2.1-pro` / `qwen-image-2.1-turbo` | Per image (check console) |
 | `qwen3-tts-flash` | ~$0.000015 per character |
 | `qwen3-asr-flash-filetrans` | Per-minute billing (check console) |
 

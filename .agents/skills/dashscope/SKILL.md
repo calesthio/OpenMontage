@@ -1,6 +1,6 @@
 ---
 name: dashscope
-description: DashScope (Alibaba Cloud Bailian / 阿里云百炼) integration — image generation (qwen-image-2.0-pro), text-to-speech (qwen3-tts-flash), and ASR with word-level timestamps (qwen3-asr-flash-filetrans). Use when generating images via Qwen-Image, narrating via Qwen-TTS, or transcribing with word-level timestamps via Qwen-ASR.
+description: DashScope (Alibaba Cloud Bailian / 阿里云百炼) integration — image generation (Qwen-Image 3.0 / 2.1 / 2.0), text-to-speech (qwen3-tts-flash), and ASR with word-level timestamps (qwen3-asr-flash-filetrans). Use when generating images via Qwen-Image, narrating via Qwen-TTS, or transcribing with word-level timestamps via Qwen-ASR.
 ---
 
 # DashScope
@@ -19,10 +19,25 @@ All three tools use `Authorization: Bearer $DASHSCOPE_API_KEY`.
 POST https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation
 ```
 
-- Model: `qwen-image-2.0-pro` (default), `qwen-image-max`, `wan2.7-image`, `z-image-turbo`
+- Models:
+  - Current: `qwen-image-3.0-pro`, `qwen-image-3.0`, `qwen-image-2.1-pro`, `qwen-image-2.1-turbo`
+  - Legacy: `qwen-image-2.0-pro` (tool default), `qwen-image-2.0`
+  - Other: `qwen-image-max`, `wan2.7-image`, `z-image-turbo`
 - Body: `{model, input: {messages: [{role: "user", content: [{text: "prompt"}]}]}, parameters: {size: "W*H", n, prompt_extend, watermark}}`
 - **Size format uses asterisk:** `"1024*1024"` not `"1024x1024"`
 - Response: `output.choices[0].message.content[0].image` (URL, valid ~24h) — must download separately
+
+**Parameter support differs by generation.** `dashscope_image` gates these automatically:
+
+| Parameter | 2.1 series | 3.0 series | Legacy 2.0 |
+|---|---|---|---|
+| `negative_prompt` | ✗ (omitted) | ✓ | ✓ |
+| `prompt_extend_mode` (`direct` / `agent`) | ✓ | ✓ | ✗ |
+| `enable_thinking` (needs `prompt_extend=true`) | ✓ | ✓ | ✗ |
+| `size="auto"` | ✓ | ✓ | ✗ |
+| Prompt length | ~4.5k tokens | ~4.5k tokens | ~1.3k tokens |
+
+The 2.1/3.0 series also accept reference images for editing (2.1: up to 10, 3.0: up to 3) and 2.1 can emit an alpha channel; `dashscope_image` currently exposes **text-to-image only**.
 
 ### Text-to-Speech
 
@@ -99,11 +114,13 @@ result = DashscopeAsr().execute({
 
 ### Image (`dashscope_image`)
 - `prompt` (required): text prompt
-- `model`: default `qwen-image-2.0-pro`
-- `size`: default `"1024*1024"` — **asterisk separator, not "x"**
+- `model`: default `qwen-image-2.0-pro`; current models are `qwen-image-3.0-pro`, `qwen-image-3.0`, `qwen-image-2.1-pro`, `qwen-image-2.1-turbo`
+- `size`: default `"1024*1024"` — **asterisk separator, not "x"**; `"auto"` is accepted by 2.1/3.0 only
 - `n`: 1-6 images
-- `negative_prompt`: things to avoid (max 500 chars)
+- `negative_prompt`: things to avoid (max 500 chars); ignored for 2.1, where the API does not accept it
 - `prompt_extend`: default `true` — auto-rewrite prompt for better results
+- `prompt_extend_mode`: `"direct"` (provider default) or `"agent"` (richer rewrite, text-to-image only); 2.1/3.0 only
+- `enable_thinking`: model reasoning for higher quality at higher latency; 2.1/3.0 only, requires `prompt_extend=true`
 - `watermark`: default `false`
 - `seed`: for reproducibility
 
@@ -124,7 +141,9 @@ result = DashscopeAsr().execute({
 
 ## Troubleshooting
 
-- **Image size error:** Use `"W*H"` with asterisk, not `"WxH"`. Example: `"2048*2048"`.
+- **Image size error:** Use `"W*H"` with asterisk, not `"WxH"`. Example: `"2048*2048"`. `"auto"` only works on 2.1/3.0.
+- **`negative_prompt` rejected on 2.1:** The 2.1 series dropped it. `dashscope_image` omits it automatically; send it only with 3.0 or legacy 2.0.
+- **`prompt_extend_mode` / `enable_thinking` rejected:** These are 2.1/3.0 parameters. `enable_thinking` also requires `prompt_extend=true`.
 - **TTS no audio URL:** Check `output.audio.url` — if empty, the model name or voice may be wrong.
 - **ASR "file not accessible":** `audio_url` must be publicly reachable. DashScope servers fetch the file; local paths and auth-gated URLs don't work.
 - **ASR poll timeout:** Increase `timeout_seconds` (default 300). Long audio files take longer to transcribe.

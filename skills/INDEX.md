@@ -291,6 +291,7 @@ Cross-cutting skills that apply to all pipelines:
 | Checkpoint Protocol | `meta/checkpoint-protocol.md` | When/how to checkpoint and request human approval |
 | Skill Creator | `meta/skill-creator.md` | Dynamically create new skills during pipeline runs |
 | Animation Runtime Selector | `meta/animation-runtime-selector.md` | Choose render runtime + animation library per scene |
+| Buzzback Footage Production | `meta/buzzback-production.md` | Cut dog-walk footage from AI ratings (behavior/collar/stability/match-cuts) |
 | Taste Direction | `meta/taste-direction.md` | Convert a brief into taste dials, anti-patterns, and reference strategy for proposal/playbook/atelier work |
 | Bespoke Composition (Atelier) | `meta/bespoke-composition.md` | Hand-author a composition from scratch (hero work) — no stock scene-types; routes art-direction → motion principles → engine mechanics → atelier render |
 
@@ -327,3 +328,4 @@ Claude Code accesses them via symlinks in `.claude/skills/`.
 | **AI Video/Image/TTS/Avatar (Kling Official)** | `kling-official` - official direct API auth, Classic/Turbo/Omni task protocols, multi-reference Omni syntax, internal Elements/Account Usage helpers, callback notes, TTS voice parameters, avatar/lip-sync face selection, error handling, and cost governance for `kling_official_video` / `kling_official_image` / `kling_tts` / `kling_avatar` / `kling_lip_sync` | Local OpenMontage skill |
 | **AI Video (Premium)** | `seedance-2-0` — preferred premium default (cinematic, trailer, multi-shot, lip-sync, synced audio); accessed via `seedance_video` (fal.ai) or `heygen_video` Avatar Shots; `seedance-2-5` — 4–30 s clips, 50 multimodal references, prompt contract (section order, `Hard cut` breakdown, continuity locks, asset method) | Local OpenMontage skill |
 | **Infrastructure** | `acestep`, `ltx2`, `playwright-recording` | `digitalsamba/claude-code-video-toolkit` |
+| **Video Understanding** | `vlm-footage-rating` | Local OpenMontage skill (VLM clip rating, zoom timestamps, editorial ranking) |

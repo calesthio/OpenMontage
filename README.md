@@ -535,6 +535,7 @@ Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to
 | **OpenAI TTS** | Cloud API | Fast, affordable |
 | **Piper** | Local | Completely free, offline |
 | **Azure Speech** | Cloud API | Fast multilingual speech services |
+| **Deepgram** | Cloud API | Aura-2 voices with regional Spanish accents; Nova-3 STT on the same key |
 | **DashScope / Doubao / Fish Audio** | Cloud API | Additional multilingual and expressive voice options |
 
 </details>

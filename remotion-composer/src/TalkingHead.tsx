@@ -7,6 +7,7 @@ import {
   useVideoConfig,
 } from "remotion";
 import { CaptionOverlay, WordCaption } from "./components/CaptionOverlay";
+import { PhraseCaptions, isPhraseCaptionStyle } from "./components/PhraseCaptions";
 import { resolveAsset } from "./lib/resolveAsset";
 import { TextCard } from "./components/TextCard";
 import { StatCard } from "./components/StatCard";
@@ -308,6 +309,11 @@ export interface TalkingHeadProps {
   captionFontFamily?: string;
   // Pass "" for CJK captions (no inter-word spacing); defaults to " ".
   captionWordSeparator?: string;
+  // "karaoke" renders PhraseCaptions; anything else keeps CaptionOverlay.
+  captionStyle?: string;
+  captionDimColor?: string;
+  captionMaxCharsPerCue?: number;
+  captionHoldSeconds?: number;
 }
 
 export const TalkingHead: React.FC<TalkingHeadProps> = ({
@@ -321,6 +327,10 @@ export const TalkingHead: React.FC<TalkingHeadProps> = ({
   captionBackgroundColor = "rgba(0, 0, 0, 0.65)",
   captionFontFamily,
   captionWordSeparator,
+  captionStyle,
+  captionDimColor,
+  captionMaxCharsPerCue,
+  captionHoldSeconds,
 }) => {
   const { fps } = useVideoConfig();
 
@@ -350,16 +360,27 @@ export const TalkingHead: React.FC<TalkingHeadProps> = ({
       })}
 
       {/* Layer 3: Captions (topmost — always visible above overlays) */}
-      <CaptionOverlay
-        words={captions}
-        wordsPerPage={wordsPerPage}
-        fontSize={fontSize}
-        highlightColor={highlightColor}
-        backgroundColor={captionBackgroundColor}
-        color={captionColor}
-        {...(captionFontFamily ? { fontFamily: captionFontFamily } : {})}
-        {...(captionWordSeparator !== undefined ? { wordSeparator: captionWordSeparator } : {})}
-      />
+      {isPhraseCaptionStyle(captionStyle) ? (
+        <PhraseCaptions
+          words={captions}
+          maxChars={captionMaxCharsPerCue}
+          holdSeconds={captionHoldSeconds}
+          dimColor={captionDimColor}
+          {...(captionFontFamily ? { fontFamily: captionFontFamily } : {})}
+          {...(captionWordSeparator !== undefined ? { wordSeparator: captionWordSeparator } : {})}
+        />
+      ) : (
+        <CaptionOverlay
+          words={captions}
+          wordsPerPage={wordsPerPage}
+          fontSize={fontSize}
+          highlightColor={highlightColor}
+          backgroundColor={captionBackgroundColor}
+          color={captionColor}
+          {...(captionFontFamily ? { fontFamily: captionFontFamily } : {})}
+          {...(captionWordSeparator !== undefined ? { wordSeparator: captionWordSeparator } : {})}
+        />
+      )}
     </AbsoluteFill>
   );
 };

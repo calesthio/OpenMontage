@@ -157,7 +157,7 @@
       "type": "object",
       "properties": {
         "enabled": { "type": "boolean" },
-        "style": { "type": "string", "description": "Display style: sentence, word-by-word, karaoke" },
+        "style": { "type": "string", "description": "Remotion caption renderer. \"karaoke\" = PhraseCaptions (remotion-composer/src/components/PhraseCaptions.tsx): whole phrase on screen, each word turns active at its real start time and stays active, the cue and its box persist through word gaps and are held until the next cue (max hold_seconds). Word timings come from props.captions or subtitles.source (a qwen3_tts timestamps JSON). Any other value (e.g. \"word-by-word\") renders CaptionOverlay: pages of words with the current word highlighted." },
         "source": { "type": "string", "description": "Path to subtitle file or asset ID" },
         "font": { "type": "string" },
         "font_size": { "type": "integer" },
@@ -165,7 +165,10 @@
         "outline_color": { "type": "string" },
         "background": { "type": "string", "description": "Background color with optional alpha (e.g. #00000088)" },
         "position": { "type": "string", "enum": ["top-center", "bottom-center", "center"] },
-        "max_words_per_line": { "type": "integer", "minimum": 1 }
+        "max_words_per_line": { "type": "integer", "minimum": 1 },
+        "dim_color": { "type": "string", "description": "karaoke: color of words not yet spoken (color = spoken words)" },
+        "max_chars_per_cue": { "type": "integer", "minimum": 1, "description": "karaoke: max visible characters per phrase cue (default 26)" },
+        "hold_seconds": { "type": "number", "minimum": 0, "description": "karaoke: max time a cue stays after its last word when the next cue starts later (default 0.6)" }
       },
       "additionalProperties": false
     },

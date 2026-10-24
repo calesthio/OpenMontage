@@ -36,7 +36,9 @@ formatting, and readability for both vertical and horizontal video.
 ### General Rules
 
 - Average viewer reads ~15 characters/second
-- Minimum display time: 0.5 seconds per cue
+- Minimum display time: 0.5 seconds per cue — `subtitle_gen` enforces this via
+  `min_cue_seconds` (default `0.5`), borrowing only the gap before the next cue
+  so cues never overlap. Set `0` to disable.
 - Maximum display time: 5 seconds per cue
 
 ## Styling for Burn-in (ASS force_style)
@@ -93,6 +95,37 @@ The `subtitle_gen` tool groups words respecting `max_words_per_cue` and
 `max_chars_per_line`. When word timestamps are unavailable, it falls back
 to segment-level timing with even distribution.
 
+### CJK (Chinese, Japanese, Korean)
+
+CJK scripts break every assumption the defaults encode, so treat them as a
+separate path rather than trusting the numbers above.
+
+**Why the defaults fail.** CJK has no inter-word spacing, so recognisers emit
+roughly one token per *character* and carry no word boundaries. Counting those
+tokens against `max_words_per_cue` therefore means "characters", and any
+length-based cut lands inside a word (`批` | `改作业`, `接` | `过去`). Joining
+those tokens with a space renders `人 工 智 能`. Subtitles built straight from
+speech-to-text also inherit its homophone errors (`作用` → `做用`,
+`是把` → `时把`) and lose the punctuation that cue splitting depends on.
+
+**Do this instead, every time:**
+
+| Step | Action |
+|------|--------|
+| Transcription | Pass the narration script as `initial_prompt` to `transcriber`. This suppresses homophone errors and restores punctuation. |
+| Cue building | Pass the same script as `script_text` to `subtitle_gen`. The script is authoritative for text; ASR supplies only the timings. |
+| Cue length | Budget in **characters**, not words — 10–16 characters per cue for horizontal, 6–10 for vertical. |
+| Rendering | Pass `wordSeparator: ""` to the caption renderer (`Explainer` / `TalkingHead` accept `captionWordSeparator`, and `captionWordsPerPage` sizes the page). **`video_compose` sets both automatically when it detects CJK captions** — you only need to set them yourself when driving `npx remotion render` directly. |
+
+**Cue boundaries.** With `script_text`, cues break on punctuation first — a
+sentence ender always cuts, a clause separator cuts once the cue is half full.
+When the optional `jieba` package is installed, long unpunctuated clauses are
+also split on word boundaries. Without it, such a clause is emitted as a single
+over-long cue rather than being cut mid-word; prefer the long cue.
+
+**Never** build CJK captions from the raw transcript alone when the script is
+known — the script is always known for generated TTS narration.
+
 ## Quality Checklist
 
 - [ ] Every spoken word appears in a subtitle cue
@@ -102,3 +135,5 @@ to segment-level timing with even distribution.
 - [ ] Timing matches speech — no early or late cues
 - [ ] Cues don't overlap each other
 - [ ] Outline/shadow provides sufficient contrast against all backgrounds
+- [ ] For CJK: `script_text` and `initial_prompt` were passed, and the renderer
+      received `wordSeparator: ""` — no spaces inside a cue, no word cut in half

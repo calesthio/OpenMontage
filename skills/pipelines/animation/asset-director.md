@@ -87,8 +87,6 @@ When `animation_mode == "image_animation"`, each scene needs **2-3 images** for 
 
 **Cost estimation:** 2-3 images per scene × $0.03-0.13/image depending on provider.
 
-**Reference:** See `projects/mori-no-seishin/generate_images.py` for the proven batch generation pattern.
-
 6. **Copy to Remotion public directory** — After generating all images, copy them to `remotion-composer/public/<project-name>/` so Remotion can access them via `staticFile()`. Image paths in the composition JSON are relative to this directory:
    ```
    remotion-composer/public/<project-name>/scene1-a.png   ← Remotion reads from here

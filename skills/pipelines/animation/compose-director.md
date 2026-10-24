@@ -30,7 +30,6 @@ The post-render self-review (final_review) is identical across runtimes — same
 | Tools | `composition_validator` | Pre-render validation (MANDATORY) |
 | Tools | `audio_probe` | Music duration check |
 | Playbook | Active style playbook | Render consistency |
-| Reference | `remotion-composer/public/demo-props/mori-no-seishin.json` | Composition JSON format reference |
 | Reference | `skills/core/remotion.md` | Remotion patterns, anime_scene type, critical constraints |
 
 ## Process
@@ -102,8 +101,6 @@ For `anime_scene` compositions, build a JSON file at `remotion-composer/public/d
 | `vignette` | boolean | Cinematic vignette overlay | No (default: true) |
 | `lightingFrom` | string | Starting gradient color (`rgba(...)` or `transparent`) | No |
 | `lightingTo` | string | Ending gradient color | No |
-
-**References:** See `mori-no-seishin.json` (Ghibli forest) and `deep-ocean.json` (underwater bioluminescence) for complete working examples.
 
 ### 3. Source Music and Find Optimal Offset
 

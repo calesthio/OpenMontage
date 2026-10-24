@@ -6,7 +6,6 @@ Plan how each localized deliverable will handle timing, visible speech, subtitle
 
 ## Reference Inputs
 
-- `docs/localization-dubbing-best-practices.md`
 - `skills/creative/video-editing.md`
 
 ## Process

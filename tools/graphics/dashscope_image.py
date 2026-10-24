@@ -28,7 +28,7 @@ from tools.base_tool import (
 
 class DashscopeImage(BaseTool):
     name = "dashscope_image"
-    version = "0.1.0"
+    version = "0.2.0"
     tier = ToolTier.GENERATE
     capability = "image_generation"
     provider = "dashscope"
@@ -69,30 +69,63 @@ class DashscopeImage(BaseTool):
             "model": {
                 "type": "string",
                 "enum": [
+                    "qwen-image-3.0-pro",
+                    "qwen-image-3.0",
+                    "qwen-image-2.1-pro",
+                    "qwen-image-2.1-turbo",
                     "qwen-image-2.0-pro",
+                    "qwen-image-2.0",
                     "qwen-image-max",
                     "wan2.7-image",
                     "z-image-turbo",
                 ],
                 "default": "qwen-image-2.0-pro",
+                "description": (
+                    "qwen-image-3.0-* and qwen-image-2.1-* are the current "
+                    "generation/editing models; the 2.0 series is legacy. "
+                    "This tool calls text-to-image only."
+                ),
             },
             "size": {
                 "type": "string",
                 "default": "1024*1024",
                 "description": (
                     'Image size as "W*H" (asterisk separator, NOT "x"). '
-                    'Examples: "1024*1024", "2048*2048", "2688*1536".'
+                    'Examples: "1024*1024", "2048*2048", "2688*1536". '
+                    '"auto" lets qwen-image-2.1-*/3.0-* choose a resolution '
+                    "from the prompt; legacy models reject it."
                 ),
             },
             "n": {"type": "integer", "default": 1, "minimum": 1, "maximum": 6},
             "negative_prompt": {
                 "type": "string",
-                "description": "Negative prompt (max 500 chars). Things to avoid in the image.",
+                "description": (
+                    "Negative prompt (max 500 chars). Things to avoid in the "
+                    "image. Supported by qwen-image-3.0-* and the legacy 2.0 "
+                    "series; omitted automatically for qwen-image-2.1-*."
+                ),
             },
             "prompt_extend": {
                 "type": "boolean",
                 "default": True,
                 "description": "Enable DashScope prompt auto-rewrite for better results.",
+            },
+            "prompt_extend_mode": {
+                "type": "string",
+                "enum": ["direct", "agent"],
+                "description": (
+                    "Prompt-rewrite mode for qwen-image-2.1-*/3.0-* only. "
+                    "'direct' is the provider default; 'agent' (text-to-image "
+                    "only) produces more elaborate rewrites."
+                ),
+            },
+            "enable_thinking": {
+                "type": "boolean",
+                "description": (
+                    "qwen-image-2.1-*/3.0-* only. Enables model reasoning for "
+                    "better quality at the cost of latency; requires "
+                    "prompt_extend=true."
+                ),
             },
             "watermark": {"type": "boolean", "default": False},
             "seed": {"type": "integer", "minimum": 0, "maximum": 2147483647},
@@ -129,14 +162,30 @@ class DashscopeImage(BaseTool):
         "multimodal-generation/generation"
     )
 
+    # Parameter support changed across Qwen-Image generations: the 2.1 series
+    # dropped negative_prompt, and only 2.1/3.0 accept prompt_extend_mode,
+    # enable_thinking, and size="auto".
+    V21_PREFIX = "qwen-image-2.1"
+    V30_PREFIX = "qwen-image-3.0"
+    MODERN_FAMILIES = {"v21", "v30"}
+
+    @classmethod
+    def _model_family(cls, model: str) -> str:
+        if model.startswith(cls.V30_PREFIX):
+            return "v30"
+        if model.startswith(cls.V21_PREFIX):
+            return "v21"
+        return "legacy"
+
     def get_status(self) -> ToolStatus:
         if os.environ.get("DASHSCOPE_API_KEY"):
             return ToolStatus.AVAILABLE
         return ToolStatus.UNAVAILABLE
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
-        # Conservative per-image estimate; DashScope bills per image.
-        # Check the DashScope console for actual pricing.
+        # Conservative baseline for the 2.0 series; DashScope bills per image.
+        # The 2.1 and 3.0 series are priced by output tier (1k/2k) — check the
+        # DashScope console, and treat this figure as a floor for those models.
         n = int(inputs.get("n", 1))
         return n * 0.02
 
@@ -199,6 +248,7 @@ class DashscopeImage(BaseTool):
                 "model": payload["model"],
                 "prompt": inputs["prompt"],
                 "size": payload["parameters"]["size"],
+                "parameters": dict(payload["parameters"]),
                 "output": str(output_paths[0]),
                 "outputs": [str(p) for p in output_paths],
                 "images_generated": n_generated,
@@ -242,19 +292,56 @@ class DashscopeImage(BaseTool):
         return [parent / f"{stem}_{i}{suffix}" for i in range(1, count + 1)]
 
     def _build_payload(self, inputs: dict[str, Any]) -> dict[str, Any]:
+        model = inputs.get("model", "qwen-image-2.0-pro")
+        family = self._model_family(model)
+        modern = family in self.MODERN_FAMILIES
+
+        size = inputs.get("size", "1024*1024")
+        if size == "auto" and not modern:
+            raise ValueError(
+                'size="auto" is only supported by qwen-image-2.1-*/3.0-*; '
+                f"pass an explicit W*H size for {model!r}."
+            )
+
+        mode = inputs.get("prompt_extend_mode")
+        if mode and not modern:
+            raise ValueError(
+                "prompt_extend_mode is only supported by qwen-image-2.1-*/"
+                f"3.0-* (got model {model!r})."
+            )
+
+        thinking = inputs.get("enable_thinking")
+        if thinking is not None and not modern:
+            raise ValueError(
+                "enable_thinking is only supported by qwen-image-2.1-*/"
+                f"3.0-* (got model {model!r})."
+            )
+
+        prompt_extend = bool(inputs.get("prompt_extend", True))
+        if thinking and not prompt_extend:
+            raise ValueError(
+                "enable_thinking requires prompt_extend=true."
+            )
+
         parameters: dict[str, Any] = {
-            "size": inputs.get("size", "1024*1024"),
+            "size": size,
             "n": int(inputs.get("n", 1)),
-            "prompt_extend": bool(inputs.get("prompt_extend", True)),
+            "prompt_extend": prompt_extend,
             "watermark": bool(inputs.get("watermark", False)),
         }
-        if inputs.get("negative_prompt"):
+        # The 2.1 series does not accept negative_prompt; 3.0 and legacy 2.0 do.
+        if inputs.get("negative_prompt") and family != "v21":
             parameters["negative_prompt"] = inputs["negative_prompt"]
         if inputs.get("seed") is not None:
             parameters["seed"] = int(inputs["seed"])
+        if modern:
+            if mode:
+                parameters["prompt_extend_mode"] = mode
+            if thinking is not None:
+                parameters["enable_thinking"] = bool(thinking)
 
         return {
-            "model": inputs.get("model", "qwen-image-2.0-pro"),
+            "model": model,
             "input": {
                 "messages": [
                     {

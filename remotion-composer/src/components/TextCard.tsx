@@ -1,4 +1,5 @@
 import { AbsoluteFill, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { arabicFontFamily, isRTLText } from "../lib/rtlText";
 
 interface TextCardProps {
   text: string;
@@ -15,6 +16,7 @@ export const TextCard: React.FC<TextCardProps> = ({
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const isRTL = isRTLText(text);
 
   const opacity = spring({ frame, fps, config: { damping: 20 } });
   const scale = spring({
@@ -34,12 +36,14 @@ export const TextCard: React.FC<TextCardProps> = ({
       }}
     >
       <div
+        dir={isRTL ? "rtl" : "ltr"}
         style={{
           opacity,
           transform: `scale(${scale})`,
           fontSize,
           color,
-          fontFamily: "Inter, system-ui, sans-serif",
+          fontFamily: isRTL ? arabicFontFamily : "Inter, system-ui, sans-serif",
+          wordSpacing: isRTL ? "0.25em" : "normal",
           fontWeight: 700,
           textAlign: "center",
           maxWidth: "80%",

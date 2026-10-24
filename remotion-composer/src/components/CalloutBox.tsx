@@ -5,6 +5,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { arabicFontFamily, isRTLText } from "../lib/rtlText";
 
 type CalloutType = "info" | "warning" | "tip" | "quote";
 
@@ -40,25 +41,27 @@ export const CalloutBox: React.FC<CalloutBoxProps> = ({
   borderColor,
   backgroundColor,
   textColor = "#1F2937",
-  fontFamily = "Inter, system-ui, sans-serif",
+  fontFamily: fontFamilyProp = "Inter, system-ui, sans-serif",
   fontSize = 32,
   titleFontSize = 38,
   containerBackgroundColor = "#FFFFFF",
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const isRTL = isRTLText(text) || isRTLText(title);
+  const fontFamily = isRTL ? arabicFontFamily : fontFamilyProp;
 
   const defaults = TYPE_DEFAULTS[type];
   const resolvedBorder = borderColor || defaults.border;
   const resolvedBg = backgroundColor || defaults.bg;
   const resolvedIcon = icon || defaults.icon;
 
-  // Slide-in from left with slight bounce
+  // Slide-in from the leading edge (left in LTR, right in RTL) with slight bounce
   const slideX = spring({
     frame,
     fps,
     config: { damping: 13, stiffness: 90 },
-    from: -80,
+    from: isRTL ? 80 : -80,
     to: 0,
   });
 
@@ -127,6 +130,7 @@ export const CalloutBox: React.FC<CalloutBoxProps> = ({
       >
         {/* Main box */}
         <div
+          dir={isRTL ? "rtl" : "ltr"}
           style={{
             display: "flex",
             flexDirection: "row",
@@ -139,16 +143,16 @@ export const CalloutBox: React.FC<CalloutBoxProps> = ({
             boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
           }}
         >
-          {/* Left border accent */}
+          {/* Border accent — right edge in RTL, left edge in LTR */}
           <div
             style={{
               position: "absolute",
-              left: 0,
+              [isRTL ? "right" : "left"]: 0,
               top: 0,
               width: 6,
               height: `${borderDraw * 100}%`,
               backgroundColor: resolvedBorder,
-              borderRadius: "12px 0 0 12px",
+              borderRadius: isRTL ? "0 12px 12px 0" : "12px 0 0 12px",
             }}
           />
 
@@ -157,7 +161,8 @@ export const CalloutBox: React.FC<CalloutBoxProps> = ({
             style={{
               fontSize: isQuote ? 72 : 48,
               lineHeight: 1,
-              marginRight: 28,
+              marginRight: isRTL ? 0 : 28,
+              marginLeft: isRTL ? 28 : 0,
               flexShrink: 0,
               opacity: iconOpacity,
               transform: `scale(${iconScale})`,
@@ -178,6 +183,7 @@ export const CalloutBox: React.FC<CalloutBoxProps> = ({
               gap: 12,
               flex: 1,
               opacity: textOpacity,
+              textAlign: isRTL ? "right" : "left",
             }}
           >
             {title && (

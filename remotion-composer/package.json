@@ -2,6 +2,9 @@
   "name": "openmontage-remotion-composer",
   "version": "1.0.0",
   "description": "Remotion composition renderer for OpenMontage animated explainer videos",
+  "engines": {
+    "node": "^22.23.4 || ^24.22.1 || ^26.12.1"
+  },
   "scripts": {
     "start": "npx remotion studio",
     "build": "npx remotion render src/index.tsx Explainer out/video.mp4",

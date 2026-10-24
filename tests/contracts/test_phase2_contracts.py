@@ -1,7 +1,5 @@
 """Phase 2 contract tests — Enhancement Layer tools."""
 
-import json
-import shutil
 import sys
 from pathlib import Path
 

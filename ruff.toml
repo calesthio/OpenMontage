@@ -1,0 +1,43 @@
+# Lint gate for OpenMontage.
+#
+# `make lint` previously ran `py_compile` on four files out of 517 — a syntax
+# check over 0.8% of the codebase — and CI ran nothing else. That gate missed
+# `tools/video/hunyuan_video.py` annotating three signatures with `Any` and
+# never importing it (PEP 563 hid the NameError until something resolved the
+# hints), plus 42 unused imports and two ffmpeg commands built and never run.
+#
+# The selected set is the real-bug subset: syntax errors, undefined names,
+# broken comparisons, unused imports. It is green as of this commit, so it
+# lands as a gate rather than as a cleanup backlog. Style and typing rules
+# (RUF012 mutable class defaults, BLE001 blind excepts, I001 import order)
+# are deliberately out of scope for now — each is a real cleanup with its own
+# review, and bundling them here would have meant merging this gate red.
+
+target-version = "py310"
+line-length = 120
+
+extend-exclude = [
+    ".venv",
+    ".agents",   # vendored third-party skills
+    ".claude",   # symlinks into .agents
+    "remotion-composer/node_modules",
+]
+
+[lint]
+select = [
+    "E9",    # syntax / IO errors
+    "F63",   # comparison bugs (is-literal, ==None on tuples, ...)
+    "F7",    # misplaced statements (break outside loop, ...)
+    "F82",   # undefined names  <- the hunyuan_video.py class of bug
+    "F401",  # unused imports
+    "F811",  # redefinition of unused name
+    "F502",  # percent-format bugs
+    "F522",
+    "F524",
+    "F632",  # `is` on a literal
+]
+
+[lint.per-file-ignores]
+# Availability probes: the import itself is the test.
+"tools/graphics/code_snippet.py" = ["F401"]
+"tools/video/video_compose.py" = ["F401"]

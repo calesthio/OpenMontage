@@ -131,7 +131,14 @@ class PixabayMusic(BaseTool):
     }
 
     def get_status(self) -> ToolStatus:
-        # Always available — no API key required
+        # Pixabay's API rejects unauthenticated requests with 403. This used
+        # to hardcode AVAILABLE ("no API key required"), so the tool advertised
+        # itself in the preflight menu and in music_search fan-out, then failed
+        # on every call. Same class of bug as the Coverr stock source.
+        import os
+
+        if not os.environ.get("PIXABAY_API_KEY"):
+            return ToolStatus.UNAVAILABLE
         return ToolStatus.AVAILABLE
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:

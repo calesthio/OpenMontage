@@ -4,9 +4,12 @@ Wraps the Coverr API (``api.coverr.co``) behind the unified `StockSource`
 protocol. Coverr offers curated, high-quality stock footage (HD and 4K)
 under a free commercial-use licence with no attribution required.
 
-Free API tier: 50 requests per hour. Production tier (with Pro/Ultimate
-subscription): 2,000 requests per hour. The adapter uses the free tier
-by default — no API key required for basic search.
+Requires ``COVERR_API_KEY``. The adapter previously advertised a keyless
+free tier and hardcoded ``is_available() -> True``; `api.coverr.co` now
+answers every unauthenticated request with 401, so the source reported
+itself configured and then failed on every search. `is_available()` is a
+declaration, not a probe, so nothing caught it — see
+`tests/tools/test_stock_source_health.py`.
 
 What Coverr is good for
 -----------------------
@@ -36,14 +39,16 @@ class CoverrSource:
     provider = "coverr"
     priority = 16
     install_instructions = (
-        "Coverr works without an API key (free tier, 50 req/hr). "
-        "Set COVERR_API_KEY in .env for higher rate limits (Pro tier)."
+        "Set COVERR_API_KEY in .env. Get a key at https://coverr.co/ — "
+        "api.coverr.co rejects unauthenticated requests with 401."
     )
     supports = {"video": True, "image": False}
 
     def is_available(self) -> bool:
-        # Coverr works without an API key (free tier)
-        return True
+        # Unauthenticated requests are rejected with 401, so a missing key
+        # means unavailable — claiming otherwise put a dead source into the
+        # preflight menu and into corpus_builder's fan-out.
+        return bool(os.environ.get("COVERR_API_KEY"))
 
     def search(self, query: str, filters: SearchFilters) -> list[Candidate]:
         import requests

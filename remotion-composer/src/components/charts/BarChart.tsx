@@ -251,7 +251,7 @@ export const BarChart: React.FC<BarChartProps> = ({
                     { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
                   )}
                 >
-                  {formatNumber(datum.value)}
+                  {formatValue(datum.value)}
                 </text>
               )}
 
@@ -281,4 +281,10 @@ function formatNumber(n: number): string {
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   if (Number.isInteger(n)) return String(n);
   return n.toFixed(1);
+}
+
+function formatValue(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return String(n);
 }

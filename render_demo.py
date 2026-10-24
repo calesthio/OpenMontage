@@ -1,4 +1,4 @@
-"""Render the curated zero-key Remotion demos.
+
 
 This script is Remotion-specific by design — the demos live in
 `remotion-composer/public/demo-props/` as JSON props for existing React

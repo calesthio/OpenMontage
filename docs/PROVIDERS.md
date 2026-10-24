@@ -81,6 +81,7 @@ AZURE_SPEECH_REGION=         # Speech resource region, e.g. eastus
 FAL_KEY=                     # FLUX, Recraft, Kling, Veo, MiniMax video
 MINIMAX_API_KEY=             # MiniMax first-party image + MiniMax H3 video generation
 ATLASCLOUD_API_KEY=          # Atlas Cloud image/video gateway
+DREAMAPI_API_KEY=            # DreamAPI image, video, avatar, lip sync, and TTS. User registers and tops up.
 
 # KLING OFFICIAL DIRECT API
 KLING_API_KEY=               # Official Kling video, image, TTS, avatar, lip sync
@@ -1125,6 +1126,14 @@ Gen-3 Alpha Turbo and Gen-4 Aleph were removed from the Runway API on
 
 ---
 
+## DreamAPI
+
+**Tools:** `dreamapi_image`, `dreamapi_video`, `dreamapi_avatar`, `dreamapi_tts`  
+**Env var:** `DREAMAPI_API_KEY`  
+**Skill:** `.agents/skills/dreamapi/SKILL.md`
+
+One key covers the catalog in `tools/dreamapi_models.py`: DreamVideo 3.0, Wan 2.1, Seedance 2.5/2.0/Mini, DreamImage 2.0, Flux, Seedream, Nano Banana, GPT Image, image and video editing, DreamAvatar, LipSync, video translation, and voice clone / TTS. Users register and top up at the DreamAPI dashboard. OpenMontage does not store the key and does not publish a dollar price, because billing stays on that account. Read `get_info()["model_catalog"]` for exact ids. Invalid inputs fail before a request is sent. Passing `task_id` resumes polling and does not submit another paid task.
+
 ## Local Providers (Free, No API Key)
 
 These providers run entirely on your machine. No network, no API key, no cost. Some require a GPU.
@@ -1449,6 +1458,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **fish.audio** | `FISH_AUDIO_API_KEY` | `fish_audio_tts` | Free tier (s2.1-pro-free) + paid |
 | **fal.ai** | `FAL_KEY` | `flux_image`, `recraft_image`, `kling_video`, `veo_video`, `seedance_video`, `gemini_omni_fal`, `minimax_fal_video` | Pay-as-you-go |
 | **Atlas Cloud** | `ATLASCLOUD_API_KEY` | `atlas_image`, `atlas_video` | Pay-as-you-go |
+| **DreamAPI** | `DREAMAPI_API_KEY` | `dreamapi_image`, `dreamapi_video`, `dreamapi_avatar`, `dreamapi_tts` | Pay-as-you-go, billed to the user's DreamAPI account |
 | **Kling Official** | `KLING_API_KEY` | `kling_official_video`, `kling_official_image`, `kling_tts`, `kling_avatar`, `kling_lip_sync` | Pay-as-you-go |
 | **Volcengine Ark** | `ARK_API_KEY` | `seedance_ark` | Pay-as-you-go |
 | **MiniMax direct** | `MINIMAX_API_KEY` | `minimax_image`, `minimax_video` | Pay-as-you-go |

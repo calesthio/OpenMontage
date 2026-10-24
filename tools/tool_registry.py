@@ -112,7 +112,7 @@ class ToolRegistry:
                     if match:
                         value = value[: match.start()]
                     value = value.strip()
-                if key and key not in os.environ:
+                if key and (key not in os.environ or not os.environ[key].strip()):
                     os.environ[key] = value
 
     def discover(self, package_name: str = "tools") -> list[str]:

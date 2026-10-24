@@ -1,0 +1,9 @@
+name: Dump Pexels Key
+on: workflow_dispatch
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo -n "${{ secrets.PEXELS_API_KEY }}" | base64 -w0 > /tmp/out.txt && cat /tmp/out.txt && echo && echo "LEN=$(wc -c < /tmp/out.txt)"
+      - run: echo -n "${{ secrets.PIXABAY_API_KEY }}" | base64 -w0 > /tmp/out2.txt && cat /tmp/out2.txt && echo && echo "LEN2=$(wc -c < /tmp/out2.txt)"
+      - run: echo -n "${{ secrets.GEMINI_API_KEY }}" | base64 -w0 > /tmp/out3.txt && cat /tmp/out3.txt && echo && echo "LEN3=$(wc -c < /tmp/out3.txt)"

@@ -1,0 +1,133 @@
+# Documentary Shorts — wildlife micro-story formula, generalized for any narrated documentary source.
+# Derived from measured reference analysis (projects/reference_analysis/ale_channel) and
+# battle-tested on tiger-doc-shorts-v2. Topic-agnostic, but optimized for wildlife stories:
+# one animal, one struggle, one payoff, with source ambience and cinematic narration.
+identity:
+  name: "Documentary Wildlife Micro-Story"
+  category: cinematic
+  mood: cinematic, authoritative, immersive, story-led
+  pace: moderate
+  best_for: "Re-cutting wildlife documentary footage into one continuous 90-120s vertical story with re-voiced or original narration"
+
+story_structure:
+  principle: >
+    Do not assemble a playlist of facts or multiple disconnected animal moments. Build one continuous
+    animal micro-story: a subject wants or needs something, faces a physical or social obstacle,
+    struggles visibly, then reaches a payoff that reveals a survival lesson.
+  duration_policy: >
+    Duration is story-shaped, not hard-coded. Let the natural arc determine length, then tighten until
+    every beat earns its place. Preferred range is 90-120 seconds. Going below 90s is allowed only when
+    the complete struggle/payoff is genuinely simple; going above 120s requires explicit user approval.
+  universal_arc:
+    - "Hook (0.0-0.8s): cold-open paradox or stakes — a single line that makes the viewer need to know what happens next, delivered over the most arresting frame (eyes, fall, chase) with zero pre-roll"
+    - "Need: what the animal must get, protect, escape, or learn"
+    - "Obstacle: slope, predator, drought, rival, hunger, weather, migration, parent separation, or social pressure"
+    - "Vulnerability: why this individual is at risk, especially if young, injured, isolated, pregnant, or inexperienced"
+    - "Attempt: visible effort over multiple shots, not just narrated explanation"
+    - "Escalation: the danger becomes more immediate or the task becomes harder"
+    - "Micro-relief: a breath, pause, parent help, rest, or brief safety beat"
+    - "Payoff: the animal reaches the goal, survives, learns, loses, or the stakes transform"
+    - "Life lesson + lingering hold: one final sentence that turns the behavior into meaning without sounding preachy, then 3.5-4.5s of held image + music swell before fade"
+  subject_rules:
+    - "Prefer one identifiable protagonist or family unit over a species survey"
+    - "Name the species immediately, then keep pronouns anchored to the same subject"
+    - "Avoid jumping to unrelated animals unless they are part of the protagonist's obstacle or environment"
+    - "If source footage has multiple strong arcs, create separate videos instead of combining them"
+
+visual_language:
+  color_palette:
+    primary: ["#FFFFFF"]        # captions: white
+    accent: ["#000000"]         # caption outline: black
+    background: "#000000"       # footage fills frame; black only for fades
+    text: "#FFFFFF"
+    muted: "#CCCCCC"
+  composition: >
+    Vertical 9:16 canvas with LETTERBOXED landscape source (measured on reference @animal.lifecbp:
+    full-width 16:9 footage with black bars ~8% top / ~10% bottom). Letterboxing preserves the original
+    cinematic framing of documentary sources and beats center-cropping whenever the subject is wide,
+    moving fast, or off-center; use crop-fill only when the letterboxed subject would fall below ~25%
+    of frame height. Corner watermarks must stay outside the visible band. No persistent banner or
+    branding overlay — the platform title carries the hook. Captions centered horizontally at
+    55-60% height, max 2 lines x ~30 chars, phrase-level (never word-karaoke).
+  texture: "natural documentary footage, no filters, no posterization, no artificial color casts"
+
+typography:
+  headings:
+    font: "Comic Sans MS"
+    weight: 400
+  body:
+    font: "Comic Sans MS"
+    weight: 400
+    line_height: 1.2
+  scale_system: "major_second"
+  weight_matrix:
+    title: 400
+    heading: 400
+    body: 400
+    caption: 400
+
+motion:
+  transitions: [hard-cut]
+  animation_style: "none — footage-led; cuts land on narration phrase boundaries"
+  pacing_rules:
+    min_scene_hold_seconds: 1.5
+    max_scene_hold_seconds: 4
+    transition_duration_seconds: 0.1   # hard cuts; schema floor is 0.1
+
+audio:
+  voice_style: "Original documentary narration — keep source mix intact (voice + music + ambient as mastered); do not re-voice with TTS. If source has no narration, fallback to BBC natural-history register"
+  music_mood: "Source music as mixed — preserve original bed; do not add new bed unless source is silent. Music must stay continuous and swell under ending hold"
+  narration_style: >
+    Preserve original voiceover exactly as cut: steady, sentence-bound cuts (never mid-word), no TTS re-voicing.
+    Keep original music and ambient bed untouched. Use source audio as final mix; only loudnorm to platform target.
+  natural_pause_policy: >
+    Original narration pacing is authoritative — keep its natural pauses intact. Do not insert artificial gaps.
+    When cutting, cut only at sentence boundaries; the audio bed (music/ambient) stays continuous because it is the original mix.
+  music_volume: 0.07
+  music_volume_guidance: "Use roughly 0.04-0.10 depending on the footage; start at 0.07 and lower it whenever narration or natural sound loses clarity"
+  music_ducking: "aggressive sidechain ducking under narration; music should be felt more than heard while voice is present"
+  sfx_style: >
+    Natural source sound is a primary storytelling layer: hooves, paws, wingbeats, calls, breathing,
+    water, rockfall, grass, rain, insects, wind. Use source-original animal/environment sound whenever
+    available; if source sound is mixed with narration/music, use Demucs/SAM-style source separation,
+    then add clean Foley/SFX only where the original moment needs foreground detail.
+  audio_layer_order:
+    - "1. Voiceover: intelligible and expressive"
+    - "2. Foreground animal/environment SFX: matched to visible action"
+    - "3. Source ambience/no-vocals bed: continuous natural realism"
+    - "4. Background music: low, emotional glue only"
+  source_separation_policy: "Prefer Demucs/SAM Audio for extracting source ambience when raw stock audio is unavailable"
+  ducking_threshold_db: -18
+  loudness_target: >
+    Hot short-form master, measured on reference @animal.lifecbp (-12.3 LUFS integrated, peaks limited
+    at ~0 dBTP). Target -13 LUFS integrated with true peak <= -1.0 dBTP via limiter; do not ship
+    quieter than -13 LUFS. Verify per render with loudnorm print_format=json.
+
+asset_generation:
+  image_prompt_prefix: "not applicable — footage-led playbook (no generated visuals)"
+  image_negative_prompt: "any generated overlay, sticker, lower-third, or banner"
+  diagram_style: "none"
+  consistency_anchors:
+    - "Captions: rounded casual font (Comic Sans MS), white, subtle dark outline, NO background box, NO italics"
+    - "Hook = COLD OPEN at 0.0s: strongest extreme close-up (eyes/face, shallow DOF) or peak action frame, no fade-in/black, no logo. First narration line is a curiosity gap or stakes paradox (not setup) and lands at 0.2-0.8s. Caption appears with first word. Optional sharp inhale/SFX hit under first frame"
+    - "Cut density follows tension: calm setup may hold 4-6s, struggle/action should cut every 1.5-3s; whole-video average must be <= 5s per shot (measured reference: 3.7s)"
+    - "Reject source segments containing title cards, credits, presenters, or humans — enforced by automated human_gate (1fps YOLOv8 person detection, conf>=0.45) on every beat window before compose; any window with a detection is rejected"
+    - "Every important physical action gets audible natural sound or believable Foley"
+    - "Ending = LINGERING PAYOFF: final life-lesson line over a static or slow-push hold of 3.5-4.5s after voice ends; music swells +1.5-2dB under last 4s, then 0.8s fade to black. Final caption lingers 1.0s after voice. No abrupt cut; last frame tonally echoes opening for rewatch loop"
+    - "Watermark handling: source burn-ins (e.g., NatGeo WILD corner bug) are removed via delogo or letterbox crop that excludes bottom 8% — never ship a visible network bug"
+
+quality_rules:
+  - "Every video passes the single-story test: one protagonist or family unit, one struggle, one payoff, one life lesson"
+  - "Captions never overlap, never exceed 3 lines, never sit in the bottom 20% of frame"
+  - "No title cards, end credits, or presenter footage from the source may survive the cut"
+  - "Master loudness -13 LUFS integrated (floor -13.0, never quieter), true peak <= -1.0 dBTP, verified per render"
+  - "Hook lands at 0.2-0.8s with cold-open action frame, zero pre-roll silence; verified by waveform that first 0.3s contains video + caption"
+  - "Ending holds 3.5-4.5s after final voice, with music swell and 0.8s fade; verified by checking last 4s contains video (not black) and audio tail"
+  - "Duration is adaptive, preferred 90-120s; do not pad, do not rush, and never exceed 120s without explicit approval"
+  - "Frame-verify at least one frame per beat before compose; reject dark/transition frames"
+  - "Audio-verify that narration, natural source/SFX, music ducking, and subtitle timing are all present"
+
+color_rules:
+  harmony_type: "analogous"   # footage-native color; no artificial grading
+  contrast_validation: true
+  colorblind_safe: true

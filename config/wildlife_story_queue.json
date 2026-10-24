@@ -1,0 +1,226 @@
+{
+  "current_index": 1,
+  "stories": [
+    {
+      "id": "honey_badger_snake_battle",
+      "animal": "Honey Badger",
+      "title_hook": "WHY VENOMOUS SNAKES CANNOT KILL A HONEY BADGER \ud83d\udc0d",
+      "yt_title": "Why Venomous Snakes Cannot Kill A Honey Badger \ud83d\udc0d #shorts #wildlife",
+      "description": "Witness the fearless biological armor and venom-neutralizing receptors of the Honey Badger in an epic battle against a deadly snake!\n\n\ud83d\udd14 Follow Wild Mechanics for daily wildlife micro-stories.\n\n#shorts #wildlife #honeybadger #nature #animals #documentary #wildmechanics #predator #snake",
+      "source_file": "assets/documentaries/honey_badger/smithsonian_honey_badger_snake_01.mp4",
+      "yt_url": "https://www.youtube.com/watch?v=DkvLCjFiODw",
+      "start": 0.0,
+      "hook_start": 35.0,
+      "duration": 94.5,
+      "crop_mode": "broadcast_crop",
+      "tags": [
+        "shorts",
+        "honey badger",
+        "snake",
+        "wildlife",
+        "nature",
+        "documentary",
+        "animals",
+        "wild mechanics"
+      ]
+    },
+    {
+      "id": "honey_badger_bee_stings",
+      "animal": "Honey Badger",
+      "title_hook": "HOW HONEY BADGERS SURVIVE 1000 BEE STINGS \ud83d\udc1d",
+      "yt_title": "How Honey Badgers Survive 1,000 Deadly Bee Stings \ud83d\udc1d #shorts #wildlife",
+      "description": "Armed with rubbery, thick impenetrable skin and stubborn pain immunity, the Honey Badger raids dangerous killer bee hives without flinching.\n\n\ud83d\udd14 Follow Wild Mechanics for daily wildlife micro-stories.\n\n#shorts #wildlife #honeybadger #animals #nature #documentary #wildmechanics",
+      "source_file": "assets/documentaries/honey_badger/smithsonian_honey_badger_bee_stings_01.mp4",
+      "yt_url": "https://www.youtube.com/watch?v=Wpt1jQMbw3I",
+      "start": 0.0,
+      "hook_start": 20.0,
+      "duration": 85.0,
+      "tags": [
+        "shorts",
+        "honey badger",
+        "bees",
+        "wildlife",
+        "nature",
+        "documentary",
+        "animals",
+        "wild mechanics"
+      ]
+    },
+    {
+      "id": "osprey_aerial_strike",
+      "animal": "Osprey",
+      "title_hook": "THE BIRD THAT SEES THROUGH WATER REFLECTIONS \ud83e\udd85",
+      "yt_title": "The Raptor That Sees Through Water Reflections \ud83e\udd85 #shorts #wildlife",
+      "description": "With specialized polarized eye membranes and reversible talons, the Osprey executes high-speed dives straight into water to snatch fish.\n\n\ud83d\udd14 Follow Wild Mechanics for daily predator mechanics.\n\n#shorts #wildlife #osprey #birds #nature #animals #documentary #wildmechanics",
+      "source_file": "assets/documentaries/osprey/bbc_osprey_doc_source_01.mp4",
+      "yt_url": "https://www.youtube.com/watch?v=nA3LtXnNIto",
+      "start": 0.0,
+      "hook_start": 40.0,
+      "duration": 95.0,
+      "tags": [
+        "shorts",
+        "osprey",
+        "raptor",
+        "birds",
+        "wildlife",
+        "nature",
+        "documentary",
+        "animals",
+        "wild mechanics"
+      ]
+    },
+    {
+      "id": "glass_frog_transparency",
+      "animal": "Glass Frog",
+      "title_hook": "THE INVISIBLE FROG THAT HIDES ITS OWN BLOOD \ud83d\udc38",
+      "yt_title": "The Invisible Frog That Hides Its Own Blood \ud83d\udc38 #shorts #wildlife",
+      "description": "To achieve 100% cloaking against predators, the Glass Frog packs 90% of its red blood cells into its liver while sleeping on leaves.\n\n\ud83d\udd14 Follow Wild Mechanics for daily biological superpowers.\n\n#shorts #wildlife #glassfrog #frogs #nature #animals #documentary #wildmechanics",
+      "source_file": "assets/documentaries/glass_frog/smithsonian_glass_frog_01.mp4",
+      "yt_url": "https://www.youtube.com/watch?v=4YzR-3wAgIA",
+      "start": 0.0,
+      "hook_start": 15.0,
+      "duration": 85.0,
+      "tags": [
+        "shorts",
+        "glass frog",
+        "amphibians",
+        "wildlife",
+        "nature",
+        "documentary",
+        "animals",
+        "wild mechanics"
+      ]
+    },
+    {
+      "id": "mantis_shrimp_strike",
+      "animal": "Mantis Shrimp",
+      "title_hook": "THE FASTEST UNDERWATER PUNCH IN THE UNIVERSE \ud83e\udd4a",
+      "yt_title": "The Fastest Underwater Punch In The Universe \ud83e\udd4a #shorts #wildlife",
+      "description": "Accelerating faster than a .22 caliber bullet, the Mantis Shrimp's club creates cavitation bubbles that vaporize water and shatter crab shells instantly.\n\n\ud83d\udd14 Follow Wild Mechanics for daily predator mechanics.\n\n#shorts #wildlife #mantisshrimp #ocean #nature #animals #documentary #wildmechanics",
+      "source_file": "assets/documentaries/mantis_shrimp/natgeo_mantis_shrimp_punch_01.mp4",
+      "yt_url": "https://www.youtube.com/watch?v=E0Li1k5hGBE",
+      "start": 0.0,
+      "hook_start": 30.0,
+      "duration": 115.0,
+      "tags": [
+        "shorts",
+        "mantis shrimp",
+        "ocean",
+        "wildlife",
+        "nature",
+        "documentary",
+        "animals",
+        "wild mechanics"
+      ]
+    },
+    {
+      "id": "orca_wave_wash",
+      "animal": "Orca",
+      "title_hook": "HOW KILLER WHALES CREATE ARTIFICIAL TSUNAMIS \ud83c\udf0a",
+      "yt_title": "How Killer Whales Create Artificial Tsunamis \ud83c\udf0a #shorts #wildlife",
+      "description": "In Antarctica, transient orca pods synchronize their swimming to generate hydro-wave walls that wash seals off ice floes.\n\n\ud83d\udd14 Follow Wild Mechanics for more ocean apex predator intelligence.\n\n#shorts #wildlife #orca #killerwhale #antarctica #nature #animals #documentary #wildmechanics",
+      "source_file": "assets/documentaries/orca/bbc_orca_doc_source_01.mp4",
+      "yt_url": "https://www.youtube.com/watch?v=p3xmqbNsRSk",
+      "start": 0.0,
+      "duration": 55.5,
+      "tags": [
+        "shorts",
+        "orca",
+        "killer whale",
+        "ocean",
+        "wildlife",
+        "nature",
+        "animals",
+        "wild mechanics"
+      ]
+    },
+    {
+      "id": "great_grey_owl_snow_radar",
+      "animal": "Great Grey Owl",
+      "title_hook": "HOW THIS BIRD HEARS THROUGH 2 FEET OF SNOW \ud83e\udd89",
+      "yt_title": "How This Bird Hears Heartbeats Under 2 Feet of Snow \ud83e\udd89 #shorts #wildlife",
+      "description": "The Great Grey Owl possesses an asymmetrical facial disc acting as an acoustic satellite dish, detecting tiny vole heartbeats beneath frozen snow.\n\n\ud83d\udd14 Follow Wild Mechanics for daily wildlife micro-stories.\n\n#shorts #wildlife #owl #nature #animals #documentary #wildmechanics #bird #winter",
+      "source_file": "assets/documentaries/great_grey_owl/bbc_great_grey_owl_doc_source_01.mp4",
+      "yt_url": "https://www.youtube.com/watch?v=tA_z_eGZ5i4",
+      "start": 0.0,
+      "duration": 55.5,
+      "tags": [
+        "shorts",
+        "great grey owl",
+        "owl",
+        "wildlife",
+        "nature",
+        "documentary",
+        "animals",
+        "wild mechanics"
+      ]
+    },
+    {
+      "id": "peregrine_falcon_dive",
+      "animal": "Peregrine Falcon",
+      "title_hook": "THE ONLY LIVING ANIMAL FASTER THAN A BULLET \ud83e\udd85",
+      "yt_title": "The Only Living Animal Faster Than A Bullet \ud83e\udd85 #shorts #wildlife",
+      "description": "Reaching terminal velocity exceeding 390 km/h in a gravity stoop, the Peregrine Falcon is Earth's ultimate kinetic missile.\n\n\ud83d\udd14 Follow Wild Mechanics for more biological superpower breakdowns.\n\n#shorts #wildlife #falcon #peregrinefalcon #bird #nature #animals #documentary #wildmechanics",
+      "source_file": "assets/documentaries/peregrine_falcon/bbc_peregrine_falcon_doc_source_01.mp4",
+      "yt_url": "https://www.youtube.com/watch?v=ovocT91G1ww",
+      "start": 0.0,
+      "duration": 55.5,
+      "tags": [
+        "shorts",
+        "peregrine falcon",
+        "falcon",
+        "speed",
+        "wildlife",
+        "nature",
+        "animals",
+        "wild mechanics"
+      ]
+    },
+    {
+      "id": "fox_den_nursery_survival",
+      "animal": "Red Fox",
+      "title_hook": "HOW FOX CUBS SURVIVE UNDER MOUNTAIN ROOTS \ud83e\udd8a",
+      "yt_title": "How Fox Cubs Survive Under Mountain Tree Roots \ud83e\udd8a #shorts #wildlife",
+      "description": "Deep beneath alpine pine roots, a lone mother fox raises her vulnerable newborn cubs against mountain predators and harsh spring frost.\n\n\ud83d\udd14 Follow Wild Mechanics for daily wildlife micro-stories.\n\n#shorts #wildlife #fox #canid #animals #nature #documentary #wildmechanics",
+      "source_file": "assets/documentaries/wolf/bbc_wolf_doc_source_01.mp4",
+      "yt_url": "https://www.youtube.com/watch?v=3Rk3x1_p_qM",
+      "start": 34.0,
+      "hook_start": 0.0,
+      "duration": 55.5,
+      "tags": [
+        "shorts",
+        "fox",
+        "cubs",
+        "canid",
+        "wildlife",
+        "nature",
+        "documentary",
+        "animals",
+        "wild mechanics"
+      ]
+    },
+    {
+      "id": "fox_winter_snow_radar",
+      "animal": "Red Fox",
+      "title_hook": "HOW FOXES HEAR PREY UNDER 3 FEET OF SNOW \u2744\ufe0f",
+      "yt_title": "How Foxes Detect Prey Under 3 Feet of Frozen Snow \u2744\ufe0f #shorts #wildlife",
+      "description": "Discover the biological acoustic radar of the red fox, picking up low-frequency subterranean scurries to execute the perfect snow pounce.\n\n\ud83d\udd14 Follow Wild Mechanics for daily predator mechanics.\n\n#shorts #wildlife #fox #winter #snow #nature #animals #documentary #wildmechanics",
+      "source_file": "assets/documentaries/wolf/bbc_wolf_doc_source_01.mp4",
+      "yt_url": "https://www.youtube.com/watch?v=3Rk3x1_p_qM",
+      "start": 275.0,
+      "hook_start": 298.0,
+      "duration": 55.5,
+      "tags": [
+        "shorts",
+        "fox",
+        "winter",
+        "snow pounce",
+        "wildlife",
+        "nature",
+        "documentary",
+        "animals",
+        "wild mechanics"
+      ]
+    }
+  ]
+}

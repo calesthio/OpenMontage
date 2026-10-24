@@ -1,0 +1,192 @@
+# Wild Mechanics — Master Production Pipeline Specification
+# Official Channel Production Standard (WILD_MECHANICS_PRODUCTION_PIPELINE2.docx + Smart Trimming addendum)
+# Encoded: 2026-08-27 — replaces documentary-shorts.yaml for all new shorts
+identity:
+  name: "Wild Mechanics — Ghost Blur + Kinetic Karaoke"
+  category: cinematic
+  mood: cinematic, authoritative, immersive, comic-action, story-led
+  pace: moderate
+  best_for: "Single-documentary wildlife Shorts with 4:5 Ghost Blur, word-level karaoke, smart-trimmed sentence boundaries, and topic-matched CTA"
+
+story_structure:
+  principle: >
+    Build one continuous animal micro-story from a SINGLE documentary source (subject continuity).
+    Cold Hook + Core Hunt Arc. No playlist of facts. One protagonist, one obstacle, one payoff,
+    one biological superpower reveal. Target duration is hard-capped by source type; trim
+    backwards to the last completed sentence boundary — never exceed by cutting mid-word.
+  duration_policy: >
+    BBC Documentary Clips: Exactly 60s Main Story (Cold Hook + Core Subject Hunt Arc) + 2.0-3.0s
+    dedicated dynamic Outro CTA with custom AI voiceover tailored to the topic => 62-63s total.
+    Non-BBC Clips (Smithsonian / Love Nature / Discovery / Terra Mater): >60s Main Story,
+    typically 70-85s to deliver full build-up and climactic strike without rushing or cutting
+    speech + 2.0-3.0s CTA => 72-88s total. Smart Trimming enforces the cap.
+  universal_arc:
+    - "Hook (0.0-0.8s): cold-open paradox on most arresting frame, zero pre-roll, WILD MECHANICS header visible at 0.2s"
+    - "Need: what the animal must get / protect / escape"
+    - "Obstacle: predator / rival / terrain / hunger / weather"
+    - "Vulnerability: why this individual is at risk (young, isolated, injured)"
+    - "Attempt: visible effort across multiple shots"
+    - "Escalation: danger becomes immediate"
+    - "Micro-relief: breath / pause / brief safety"
+    - "Payoff: strike / survive / learn / transform"
+    - "CTA Outro (dedicated 2.5-3.0s): biological superpower punchline + Follow Wild Mechanics — kinetic word bursts, stock clip matched to topic"
+  subject_rules:
+    - "One identifiable protagonist or family unit — no species survey"
+    - "Name species immediately in hook, keep pronouns anchored"
+    - "Only cut to other animals if they are the protagonist's obstacle or environment"
+    - "If source has multiple strong arcs, create separate videos"
+
+visual_language:
+  color_palette:
+    primary: ["#FFFFFF"]
+    accent: ["#FFFF00"]   # Electric Yellow karaoke active
+    background: "#000000"
+    text: "#FFFFFF"
+    muted: "#CCCCCC"
+  composition: >
+    1080x1920 canvas with 4:5 Ghost Blur framing. Foreground Viewbox 1080x1350 (4:5) centered
+    via crop=ih*4/5:ih:(iw-ow)/2:0 then scale 1080:1350, composited at (ow-iw)/2:285 over an ambient
+    1080x1920 background derived from the same frame via scale 1080:1920 + boxblur=30:5 +
+    eq=brightness=-0.08:saturation=1.15. Zero plain black letterbox. The centered 4:5 crop
+    automatically eliminates broadcaster corner watermarks at (iw-1080)/2:(ih-1350)/2.
+  texture: "natural documentary footage, no filters, no posterization, no artificial color casts beyond the ghost-blur background"
+
+typography:
+  headings:
+    font: "Impact"
+    fallback: "Montserrat ExtraBold"
+    weight: 900
+  body:
+    font: "Impact"
+    fallback: "Montserrat ExtraBold"
+    weight: 900
+    line_height: 1.05
+  scale_system: "major_second"
+  weight_matrix:
+    title: 900
+    heading: 900
+    body: 900
+    caption: 900
+
+motion:
+  transitions: [hard-cut]
+  animation_style: "none — footage-led; scene cuts land on sentence boundaries via Smart Trimming. CTA uses kinetic word bursts (FOLLOW -> WILD MECHANICS -> FOR MORE) without boxed cards (u0TVV-v1Skg style)."
+  pacing_rules:
+    min_scene_hold_seconds: 1.5
+    max_scene_hold_seconds: 5
+    transition_duration_seconds: 0.1
+
+# 7. Smart Trimming (AI Sentence Boundaries)
+smart_trimming:
+  enabled: true
+  description: "Uses Whisper word-level timestamps to detect punctuation periods and speech pauses, guaranteeing clips end on a completed thought with zero mid-sentence cuts."
+  policy: >
+    Automatically scores candidate narrative windows in raw documentary footage and trims at the
+    nearest completed sentence boundary BEFORE the target duration limit (60s for BBC, 70-85s for
+    non-BBC). Never exceed the cap by cutting mid-word. Whisper word timestamps are the source of
+    truth; fallback is punctuation-aware text segmentation + TTS duration estimate.
+  implementation:
+    whisper_model: "base"
+    word_timestamp_granularity: "millisecond"
+    sentence_end_markers: [".", "!", "?", "…"]
+    pause_threshold_ms: 350
+    trim_direction: "backward"   # snap back to last boundary before cap, never forward
+
+audio:
+  voice_style: "Authentic high-bitrate documentary audio — retain natural ambience (water splashes, wing flaps, breath). Do not re-voice with generic TTS unless synthesizing CTA or filling gaps. When synthesizing, match BBC natural-history register."
+  music_mood: "Source bed preserved; add low BGM only if source is silent. Music must stay continuous and duck under voice."
+  narration_style: >
+    Preserve original voice where available. When synthesizing, use deep documentary register.
+    Apply subtle frequency/pitch adjustment (e.g., asetrate or rubberband pitch shift ~ ±0.5-1 semitone)
+    to differentiate fingerprint from broadcast masters while keeping natural acoustics.
+  natural_pause_policy: >
+    Keep Whisper-detected pauses intact. Cut only at sentence boundaries identified by Smart Trimming.
+    Audio bed stays continuous.
+  music_volume: 0.07
+  music_volume_guidance: "0.04-0.10; start 0.07 and lower if narration/ambient loses clarity"
+  music_ducking: "aggressive sidechain ducking under narration"
+  sfx_style: "Natural source sound primary: hooves, paws, wingbeats, calls, breath, water, rockfall, grass, rain, insects, wind. Add clean Foley only where foreground detail is missing."
+  audio_layer_order:
+    - "1. Voiceover: intelligible and expressive (pitch-modulated fingerprint)"
+    - "2. Foreground animal/environment SFX: matched to visible action"
+    - "3. Source ambience / no-vocals bed: continuous natural realism"
+    - "4. Background music: low, emotional glue only"
+  source_separation_policy: "Prefer Demucs/SAM Audio for extracting ambience when raw stock audio unavailable"
+  ducking_threshold_db: -18
+  pitch_modulation:
+    enabled: true
+    method: "atempo + asetrate or rubberband"
+    semitones: 0.6
+    preserve_formants: true
+  loudness_target: >
+    EBU R128: -14 LUFS integrated, True Peak <= -1.5 dBTP via 2-pass loudnorm. Verify per render
+    with loudnorm print_format=json. Do not ship louder than -1.5 dBTP or quieter than -14 LUFS.
+
+# Subtitle styling — Word-Level Kinetic Karaoke
+subtitles:
+  format: "Advanced ASS with \\k karaoke timing tags (millisecond)"
+  typography: "Heavy Condensed Bold — Impact primary, Montserrat ExtraBold fallback, FontSize=60"
+  active_highlight: "Electric Yellow #FFFF00 (&H0000FFFF&)"
+  inactive_color: "White &H00FFFFFF&"
+  outline: "Solid 4-5px black outline (&H000000&)"
+  outline_width: 4.5
+  shadow: 1
+  alignment: 2  # bottom-center
+  margin_v: 360
+  max_lines: 2
+  synchronization: "Whisper word-level timestamps, guaranteed 100% time-synced with voiceover. Each word carries \\k duration = (word_end - word_start) * 100 (centiseconds)."
+
+# On-screen layers
+on_screen_layers:
+  top_header_branding:
+    line1: "WILD MECHANICS"
+    line1_style: "White, black outline 4px, Y=180, FontSize=46, Impact"
+    line2: "[SPECIES | EPISODE TITLE]"
+    line2_style: "Electric Yellow #FFFF00, black outline 4px, Y=240, FontSize=42, Impact"
+  dynamic_action_badges:
+    enabled: true
+    description: "Pop-up badges and emojis timed to peak action moments — comic book style. Triggered by SFX keywords (strike, chase, roar)."
+    style: "scale-pop 0.2-0.3s, Impact 46pt, Outline=3, no background box"
+
+# Dynamic Topic-Matched CTA
+cta:
+  duration_seconds: 2.5  # 2.0-3.0 range, default 2.5
+  description: "Dedicated Outro clip stitched at end, after Main Story. Sourced from stock (Pexels/Pixabay) matching the featured animal/topic."
+  sourcing: "Pexels / Pixabay stock video — e.g., snowy owl for Owl, underwater hunt for Shark, savanna sprint for Cheetah. If no API key, synthesize a blurred documentary hold + kinetic text."
+  voiceover_script: >
+    Punchy closing biological superpower statement + channel follow invite. Template:
+    "Nature is full of hidden biological superpowers, just like this one. Follow Wild Mechanics for more."
+    Tailor first sentence to the animal's superpower (e.g., pistol shrimp cavitation bubble, peregrine stoop speed).
+  visual_typography: >
+    Centered bold kinetic word bursts in Electric Yellow (FOLLOW -> WILD MECHANICS -> FOR MORE.) without static boxed cards.
+    u0TVV-v1Skg style: each word pops with scale + opacity, no background plate.
+  stitching: "Hard-cut from last story frame, CTA is its own clip, then 0.4s fade to black"
+
+asset_generation:
+  image_prompt_prefix: "not applicable — footage-led (no generated visuals except CTA stock fallback)"
+  image_negative_prompt: "any generated overlay, sticker, lower-third, or banner beyond spec"
+  diagram_style: "none"
+  consistency_anchors:
+    - "4:5 Ghost Blur is mandatory — never ship plain black letterbox. Verify background is blurred (boxblur 30:5) not black."
+    - "ASS karaoke: white inactive, Electric Yellow active, 4-5px black outline, bottom-center, max 2 lines, word-synced via Whisper."
+    - "Headers pinned: WILD MECHANICS (white, Y=180) + SPECIES|TITLE (yellow, Y=240) — both with black outline, visible in frame 1."
+    - "Smart Trimming: main story NEVER exceeds target cap; last sentence is complete (ends with .!?…). No mid-sentence end."
+    - "Every physical action has audible natural sound or Foley; SFX badges pop on peak action."
+    - "CTA is a dedicated 2.5-3.0s stitched clip with topic-matched stock + yellow kinetic bursts + custom VO. Not an overlay."
+    - "Watermarks eliminated via centered 4:5 crop — verify no broadcaster bug in corners."
+    - "Pitch-modulated voiceprint + -14 LUFS / -1.5 dBTP loudnorm verified per render."
+
+quality_rules:
+  - "Duration: BBC Main exactly 60.0s ±0.3s then +2.5-3.0s CTA; Non-BBC Main 70-85s then +2.5-3.0s CTA. Smart Trimming snapped to sentence boundary before cap."
+  - "Canvas: 1080x1920 with 1080x1350 foreground + blurred 1080x1920 background (boxblur 30:5). No black bars. ffprobe must be 1080x1920."
+  - "Subtitles: ASS file exists, contains \\k tags, Electric Yellow active, 4-5px outline. Burned or muxed, never missing."
+  - "Headers: WILD MECHANICS + SPECIES|TITLE visible at Y=180/240 in first second."
+  - "Smart Trimming: last story sentence ends with punctuation; Whisper word timestamps show no word cut mid-duration."
+  - "CTA: final 2.5-3.0s is a distinct clip with kinetic yellow FOLLOW/WILD MECHANICS/FOR MORE bursts and tailored VO."
+  - "Audio: loudnorm -14 LUFS ±0.5, TP <= -1.5 dBTP, verified via loudnorm JSON. Pitch modulation applied (check asetrate/rubberband in filter graph)."
+  - "No title cards, credits, or presenter footage survives the cut (human_gate 1fps YOLO if enabled)."
+
+color_rules:
+  harmony_type: "analogous"
+  contrast_validation: true
+  colorblind_safe: true

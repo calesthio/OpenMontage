@@ -532,6 +532,14 @@ Music is a critical part of any video. **Surface the music situation to the user
 
 Check music availability in this order and present the options:
 
+**The shortcut is `music_selector`** (capability `music`), which spans all three
+capabilities below and orders them cheapest first. `operation: "plan"` surveys
+everything reachable and costs nothing, so use it at proposal time.
+`operation: "acquire"` walks the tiers and stops at the first success; pass
+`max_cost_tier: "free-api"` to forbid paid generation outright.
+
+If you check the capabilities by hand instead:
+
 1. **User music library:** Check `registry.get_by_capability("music_library")` and inspect `music_library/`. If tracks exist, list durations and let the user pick one.
 2. **Royalty-free search:** Check `registry.get_by_capability("music_search")` for configured search/download tools. Report licensing constraints and whether a key is required.
 3. **Music generation APIs:** Check `registry.get_by_capability("music_generation")`. Report status, quota, cost, and quality tradeoffs honestly.

@@ -36,6 +36,32 @@ Same endpoint as image gen, different body.
 - Body: `{model, input: {text, voice: "Cherry", language_type: "Auto"}}`
 - Response: `output.audio.url` (WAV, valid ~24h) — must download separately
 
+### Voice Cloning (voice-enrollment)
+
+```text
+POST {base}/services/audio/tts/customization
+Header: Authorization: Bearer $DASHSCOPE_API_KEY
+Body:   {model: "voice-enrollment", input: {action: "create_voice", ...}}
+```
+
+- Actions: `create_voice`, `query_voice`, `list_voice`, `delete_voice`, `update_voice`
+- `target_model`: the model that will speak the clone (`qwen-audio-3.1-tts-flash`, `qwen-audio-3.1-tts-plus`, `qwen-audio-3.0-*`, `cosyvoice-v3.5-*`, `cosyvoice-v3-*`). **A clone only works with its enrollment model.**
+- `audio`: public URL **or** Base64 Data URI (`data:audio/wav;base64,...`) — local files need no hosting
+- `prefix`: letters/digits only, ≤10 chars. The returned ID looks like `{target_model}-{prefix}-{hash}`
+- Optional: `language_hints` (single-entry array), `enable_preprocess`, `enable_volume_normalization`, `max_prompt_audio_length`
+- Response: `output.voice_id`; poll `action: "query_voice"` until `status` is `OK` (`DEPLOYING` → `OK`, `UNDEPLOYED` = rejected)
+
+Reference audio: WAV/MP3/M4A, ≤10 MB, 10-20 s recommended (5 s minimum of continuous speech, 60 s max), clean single speaker, no music.
+
+### TTS with a cloned voice
+
+```text
+POST {base}/services/audio/tts/SpeechSynthesizer
+Body: {model: "<target_model>", input: {text, voice: "<voice_id>", format: "wav", sample_rate: 24000}}
+```
+
+This is a **different endpoint from `qwen3-tts-flash`** (which uses multimodal-generation with named voices like `Cherry`). `dashscope_tts` routes by model family, and infers the model from the `voice_id` prefix, so pass `voice_id` alone.
+
 ### ASR with Word-Level Timestamps
 
 ```text
@@ -75,6 +101,31 @@ result = TTSSelector().execute({
 })
 ```
 
+### Clone a voice, then narrate with it
+
+```python
+from tools.audio.dashscope_voice_clone import DashscopeVoiceClone
+from tools.audio.dashscope_tts import DashscopeTTS
+
+clone = DashscopeVoiceClone().execute({
+    "operation": "create",
+    "reference_audio": "path/to/voices/host.mp3",
+    "target_model": "qwen-audio-3.1-tts-flash",
+    "prefix": "narr",
+    "language_hints": ["zh"],
+    "enable_preprocess": True,
+    "output_path": "projects/my-video/assets/audio/voice-enrollment.json",
+})
+
+speech = DashscopeTTS().execute({
+    "text": "这是一段使用克隆音色合成的示例旁白。",
+    "voice_id": clone.data["voice_id"],   # model is inferred
+    "output_path": "projects/my-video/assets/audio/narration.wav",
+})
+```
+
+Reuse an existing voice with `operation="query"` (health check) or `operation="list"`. Deleting is `operation="delete"` — it frees a slot in the 1000-voice account quota.
+
 ### ASR directly (word timestamps for subtitles)
 
 ```python
@@ -91,9 +142,10 @@ result = DashscopeAsr().execute({
 ## Recommended Workflow
 
 1. **Image:** Generate a sample first. Check `prompt_extend: true` (default) — DashScope rewrites your prompt for better results. Disable if you need literal prompt adherence.
-2. **TTS:** Generate a 10-15 second sample before full narration. Approve voice and pacing before committing to full generation.
-3. **ASR:** Audio must be at a **publicly accessible URL**. Upload to any public host (S3, etc.) first. Local paths are rejected with a clear error.
-4. **Subtitles:** Build from `result.data["words"]` — each word has `begin_time_seconds` and `end_time_seconds`. Group words into caption phrases by language semantics, not fixed character count.
+2. **Voice clone:** Enroll once per production, save the voice ID, and reuse it across every narration segment — re-enrolling per line wastes quota and changes the timbre slightly.
+3. **TTS:** Generate a 10-15 second sample before full narration. Approve voice and pacing before committing to full generation.
+4. **ASR:** Audio must be at a **publicly accessible URL**. Upload to any public host (S3, etc.) first. Local paths are rejected with a clear error.
+5. **Subtitles:** Build from `result.data["words"]` — each word has `begin_time_seconds` and `end_time_seconds`. Group words into caption phrases by language semantics, not fixed character count.
 
 ## Parameters
 
@@ -109,10 +161,23 @@ result = DashscopeAsr().execute({
 
 ### TTS (`dashscope_tts`)
 - `text` (required): text to synthesize (max 600 chars for qwen3-tts-flash)
-- `model`: default `qwen3-tts-flash`
+- `model`: default `qwen3-tts-flash`; cloned voices use `qwen-audio-3.1-tts-flash` / `-plus`, `qwen-audio-3.0-*`, or `cosyvoice-v3*`
 - `voice`: default `"Cherry"` — other voices: `"Ethan"`, `"Chelsie"`, etc.
-- `language_type`: default `"Auto"` — `"Chinese"`, `"English"`, `"Japanese"`, `"Korean"`
+- `voice_id`: cloned voice from `dashscope_voice_clone`; wins over `voice` and implies its `target_model`
+- `format` / `sample_rate`: output container and rate for cloned-voice models (`wav`/`mp3`/`pcm`, 16000/24000/48000)
+- `language_type`: default `"Auto"` — `"Chinese"`, `"English"`, `"Japanese"`, `"Korean"` (qwen3 models only)
 - `instructions`: natural language delivery instructions (only for `qwen3-tts-instruct-flash`)
+
+### Voice clone (`dashscope_voice_clone`)
+- `operation` (required): `create` | `query` | `list` | `delete`
+- `reference_audio`: local `.wav`/`.mp3`/`.m4a` (≤10 MB, 10-20 s recommended) or a public URL
+- `target_model`: default `qwen-audio-3.1-tts-flash` — the model the clone will speak with
+- `prefix`: letters/digits only, ≤10 chars (default `omvoice`)
+- `language_hints`: single language hint such as `["zh"]`
+- `enable_preprocess`: denoise/enhance noisy references; leave off for clean studio takes
+- `voice_id`: required for `query` and `delete`
+- `output_path`: optional JSON record for later stages
+- `workspace_id` / `base_url`: switch to a workspace-specific domain if your key requires it
 
 ### ASR (`dashscope_asr`)
 - `audio_url` (required): **must be publicly accessible URL**
@@ -126,6 +191,9 @@ result = DashscopeAsr().execute({
 
 - **Image size error:** Use `"W*H"` with asterisk, not `"WxH"`. Example: `"2048*2048"`.
 - **TTS no audio URL:** Check `output.audio.url` — if empty, the model name or voice may be wrong.
+- **Clone stuck on `DEPLOYING`:** Usually resolves in seconds; if it stays there, `operation="query"` later. `UNDEPLOYED` means the sample was rejected — clean the audio, cut to 10-20 s, or turn on `enable_preprocess`.
+- **Clone rejected on synthesis:** The `voice_id` was enrolled with a different `target_model`. Clones are model-bound; re-enroll with the model you want to use.
+- **Clone endpoint 404 / auth error:** Some keys require the workspace-specific domain — set `DASHSCOPE_WORKSPACE_ID` (or pass `workspace_id`) so calls go to `https://{workspace}.cn-beijing.maas.aliyuncs.com/api/v1`.
 - **ASR "file not accessible":** `audio_url` must be publicly reachable. DashScope servers fetch the file; local paths and auth-gated URLs don't work.
 - **ASR poll timeout:** Increase `timeout_seconds` (default 300). Long audio files take longer to transcribe.
 - **ASR no word timestamps:** Ensure `enable_words: true` and model is `qwen3-asr-flash-filetrans` (not the sync `qwen3-asr-flash`).

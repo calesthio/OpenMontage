@@ -14,6 +14,13 @@ This skill teaches you to run discovery, classify the user's setup, present capa
 
 **Skip onboarding** when the user arrives with a specific, actionable request (e.g., "Make a 60-second explainer about black holes"). Go directly to Rule Zero.
 
+## Autopilot (Unattended) Runs
+
+If you were started headless to produce a video for a recurring channel (for example by
+`.github/workflows/autopilot-short.yml`), read **`skills/meta/autopilot.md`** right after this guide.
+It defines how the gates are answered from `autopilot/channel.yaml`, how blockers fail the run instead of
+waiting for a human, and the upload hand-off. Everything else in this guide still applies.
+
 ## Reference Video Entry Point
 
 When the user provides a **video URL or local video file as inspiration** — for example:

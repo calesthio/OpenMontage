@@ -1,0 +1,21 @@
+# Evergreen explainer topics, one per line. Used when content.mode is evergreen or mix.
+How hackers steal your 2FA codes with SIM swapping — and how to stop it
+Passkeys explained: why passwords are finally dying
+What is a deepfake voice scam and how to spot one in 10 seconds
+Why public Wi-Fi is risky and what a VPN actually protects
+How phishing links trick you — the 3 things to check before clicking
+What is prompt injection and why AI agents are vulnerable to it
+What is ransomware and how companies get hit
+How password managers keep you safe (and which mistake ruins it)
+What happens to your data when an app gets breached
+How AI can detect malware that humans miss
+What is a zero-day vulnerability
+Why you should freeze your credit — explained in 45 seconds
+How QR code scams work
+What is social engineering — the hack that targets humans, not computers
+How to tell if your phone has been hacked
+What is an API key and why leaking one on GitHub costs thousands
+How AI chatbots can leak your private data
+What is MFA fatigue and how attackers abuse push notifications
+Why old routers are a security nightmare
+How hackers use AI to write better scam emails

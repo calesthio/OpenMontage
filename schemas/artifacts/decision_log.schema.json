@@ -40,7 +40,8 @@
               "voice_selection",
               "capability_extension",
               "playbook_override",
-              "visual_accuracy_check"
+              "visual_accuracy_check",
+              "approval_policy"
             ],
             "description": "What class of decision this is"
           },

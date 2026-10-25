@@ -1,0 +1,64 @@
+# OpenMontage Autopilot — channel configuration
+#
+# This file is the channel owner's standing instructions for unattended runs.
+# Editing and committing it IS the human approval for everything marked
+# "pre-approved" below. The autopilot agent records these as decision_log
+# entries citing this file. See skills/meta/autopilot.md and docs/AUTOPILOT.md.
+
+channel:
+  name: CyberBrief
+  handle: "@cyberbrief"
+  niche: Cybersecurity and AI explained for everyday phone and computer users
+  persona: >
+    A sharp friend who works in security. Confident, plain English, zero jargon
+    without a five-word explanation. No hype words, no clickbait the video can't pay off.
+  call_to_action: Follow for one security tip a day.
+
+content:
+  # news = a fresh story from the sources below; evergreen = next unused line in topics.txt;
+  # mix = alternate (based on autopilot/history.json length)
+  mode: mix
+  sources:
+    - https://thehackernews.com/
+    - https://www.bleepingcomputer.com/
+    - https://krebsonsecurity.com/
+    - https://www.darkreading.com/
+    - https://www.theverge.com/ai-artificial-intelligence
+  evergreen_topics_file: autopilot/topics.txt
+  rules:
+    - Defensive framing only. Explain what happened and how to stay safe. Never give step-by-step attack instructions, working commands or exploit code.
+    - News facts come only from cited sources. Never invent numbers, names, dates or victims.
+    - Skip pure enterprise patch notes and funding news. Pick what matters to normal users.
+    - End with what the viewer should DO to protect themselves.
+    - Never repeat a topic listed in autopilot/history.json.
+
+production:
+  pipeline: animated-explainer
+  media_profile: youtube_shorts      # 1080x1920 vertical
+  duration_seconds: [45, 58]         # raise to [65, 80] to qualify for TikTok Creator Rewards (>1 min)
+  playbook: flat-motion-graphics
+  composition_mode: templated        # batch output -> templated (AGENT_GUIDE: Composition Authoring Mode)
+  render_runtime: remotion           # pre-approved; agent must still log both runtimes as considered
+  captions: word_level_burned_in
+  narration: required
+  music: music_library_or_none       # use a track from music_library/ if present, otherwise no music
+  provider_preferences:              # first AVAILABLE in the registry wins; never use an unlisted paid provider
+    tts: [elevenlabs_tts, google_tts, openai_tts, azure_tts, piper_tts]
+    image: [flux_image, google_imagen, openai_image, pexels_image, pixabay_image]
+    video: [pexels_video, pixabay_video]   # stock b-roll only; AI video clips are off by default (cost)
+
+approval_policy:
+  pre_authorized_full_run: true      # set false to make the agent stop at every gate (interactive only)
+  budget_usd_per_video: 3.00         # hard cap also enforced by --max-budget-usd in the workflow
+  on_blocker: fail_run               # never substitute providers/runtimes silently; fail and report
+
+publishing:
+  platforms: [youtube, tiktok]
+  # false = YouTube private + TikTok inbox draft (you review, then post)
+  # true  = YouTube public + TikTok direct post (TikTok stays private until your app is audited)
+  auto_publish: false
+  youtube:
+    category_id: "28"
+    contains_synthetic_media: true
+  tiktok:
+    is_aigc: true

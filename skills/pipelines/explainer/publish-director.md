@@ -109,9 +109,19 @@ exports/
       concept.json          # Thumbnail concept (or the copied thumbnail image)
 ```
 
-`export_bundle` is a local, offline packager — it does not upload. A networked
-publisher (e.g. a YouTube uploader) would be a separate `publish`-capability
-provider.
+`export_bundle` is a local, offline packager — it does not upload. Networked
+publishers are separate `publish`-capability providers:
+
+| Tool | Uploads to | Default | Notes |
+|------|-----------|---------|-------|
+| `youtube_publish` | YouTube / Shorts | `privacy: "private"` | Labels the video as synthetic media. Vertical + ≤3 min = Short. |
+| `tiktok_publish` | TikTok | `mode: "draft"` (creator inbox) | Sets `is_aigc` on direct posts. Unaudited apps post private only. |
+
+Uploading is a **public, hard-to-undo action**. In interactive runs, ask the user
+before calling either tool. Name the platform and visibility, and default to
+private or draft. Each returns a schema-valid `publish_log` entry. Merge it with the
+`export_bundle` entry in Step 6. In **autopilot** runs, never call these tools
+yourself; see `skills/meta/autopilot.md` (a separate job does the upload).
 
 ### Step 6: Build Publish Log
 

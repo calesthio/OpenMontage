@@ -1,0 +1,154 @@
+name: Autopilot short
+
+# Unattended channel: Claude Code drives OpenMontage's pipeline to make one short, then a
+# separate job (no LLM) uploads it. See docs/AUTOPILOT.md.
+#
+# Security model:
+#   produce  - runs the agent. Holds ANTHROPIC + generation keys. NO platform credentials.
+#   publish  - no agent. Holds YouTube/TikTok credentials. Re-validates the agent's output first.
+# A prompt-injected agent therefore cannot reach the channel accounts.
+
+on:
+  schedule:
+    - cron: "23 14 * * *"   # 10:23 AM New York (EDT). Cron is UTC. Add a second line for 2/day.
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Validate the upload without posting"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: autopilot-short
+  cancel-in-progress: false
+
+jobs:
+  produce:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      # Network egress monitoring. Start in "audit", review the endpoint list in the job
+      # summary after a few runs, then switch to "block" with allowed-endpoints.
+      - uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: System packages
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Install OpenMontage
+        run: |
+          pip install -r requirements.txt
+          cd remotion-composer && npm ci && npx remotion browser ensure
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run the autopilot agent
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Generation providers: add whichever you use (names must match .env.example)
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          FAL_KEY: ${{ secrets.FAL_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          mkdir -p projects
+          claude -p "$(cat autopilot/run-prompt.md)" \
+            --model "${{ vars.AUTOPILOT_MODEL || 'claude-sonnet-5-5' }}" \
+            --max-budget-usd "${{ vars.AUTOPILOT_MAX_LLM_USD || '5' }}" \
+            --permission-mode dontAsk \
+            --allowedTools "Read" "Write" "Edit" "Glob" "Grep" "WebSearch" "WebFetch" \
+              "Bash(python *)" "Bash(python3 *)" "Bash(ffprobe *)" "Bash(ffmpeg *)" \
+              "Bash(npx remotion *)" "Bash(npx hyperframes *)" "Bash(cd *)" "Bash(ls *)" "Bash(mkdir *)" \
+            --output-format stream-json --verbose \
+            > projects/autopilot-run.jsonl
+          tail -c 2000 projects/autopilot-run.jsonl
+
+      - name: Check hand-off
+        run: |
+          if ls projects/*/autopilot/publish_request.json >/dev/null 2>&1; then
+            cat projects/*/autopilot/publish_request.json
+          else
+            echo "::error::Agent did not produce a publish_request.json"
+            cat projects/*/autopilot/blocked.json 2>/dev/null || true
+            exit 1
+          fi
+
+      - name: Upload render + run log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: autopilot-${{ github.run_id }}
+          path: |
+            projects/autopilot-run.jsonl
+            projects/*/renders/final.mp4
+            projects/*/autopilot/
+            projects/*/artifacts/
+            projects/*/checkpoint_*.json
+          retention-days: 14
+
+  publish:
+    needs: produce
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    # Add required reviewers to this GitHub Environment (Settings -> Environments) to approve each
+    # upload from your phone before it happens.
+    environment: social-publish
+    permissions:
+      contents: write   # commit autopilot/history.json so topics never repeat
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: System packages
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - run: pip install -r requirements.txt
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: autopilot-${{ github.run_id }}
+          path: projects
+
+      - name: Upload to platforms
+        env:
+          AUTO_PUBLISH: ${{ vars.AUTO_PUBLISH }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+          TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+          TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+        run: python scripts/autopilot_publish.py ${{ inputs.dry_run && '--dry-run' || '' }}
+
+      - name: Remember published topic
+        if: always()
+        run: |
+          git config user.name "openmontage-autopilot"
+          git config user.email "openmontage-autopilot@users.noreply.github.com"
+          git add autopilot/history.json
+          if ! git diff --cached --quiet; then
+            git commit -m "autopilot: record published topic"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi

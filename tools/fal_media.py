@@ -249,16 +249,25 @@ class FalMedia(BaseTool):
             headers = {"Authorization": f"Key {key}"}
             if not job:
                 model, operation, endpoint, payload = self.build_request(inputs)
-                submitted = request_json(
-                    "POST",
-                    f"https://queue.fal.run/{endpoint}",
-                    headers=headers,
-                    json=payload,
-                )
-                job = {
-                    k: submitted[k]
-                    for k in ("request_id", "status_url", "response_url")
-                }
+                try:
+                    submitted = request_json(
+                        "POST",
+                        f"https://queue.fal.run/{endpoint}",
+                        headers=headers,
+                        json=payload,
+                    )
+                    job = {
+                        k: submitted[k]
+                        for k in ("request_id", "status_url", "response_url")
+                    }
+                except Exception as exc:
+                    # The provider may have accepted a paid job before a
+                    # transport/response failure. Without its request_id no
+                    # checkpoint can safely be resumed or resubmitted.
+                    raise RuntimeError(
+                        "fal submission outcome unknown; do not resubmit "
+                        "before checking the fal dashboard: " + str(exc)
+                    ) from exc
                 job.update(
                     model=model, operation=operation, endpoint=endpoint, tool=self.name
                 )

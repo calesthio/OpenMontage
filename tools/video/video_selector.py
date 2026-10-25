@@ -38,7 +38,8 @@ class VideoSelector(BaseTool):
     # Operations that REQUIRE motion: an image-only tool (image_selector) is not
     # an acceptable last-resort fallback for these, so fallback_tools_for() drops it.
     MOTION_REQUIRED_OPERATIONS = frozenset(
-        {"image_to_video", "reference_to_video", "video_edit"}
+        {"image_to_video", "reference_to_video", "video_edit",
+         "video_to_video_edit", "video_to_video_reference"}
     )
     # Default score gap for the preferred_provider override (see input_schema).
     PREFERRED_PROVIDER_GAP = 0.15
@@ -48,6 +49,8 @@ class VideoSelector(BaseTool):
         "image_to_video",
         "reference_to_video",
         "video_edit",
+        "video_to_video_edit",
+        "video_to_video_reference",
         "stock_video",
         "provider_selection",
         "search_video",
@@ -104,6 +107,8 @@ class VideoSelector(BaseTool):
                     "image_to_video",
                     "reference_to_video",
                     "video_edit",
+                    "video_to_video_edit",
+                    "video_to_video_reference",
                     "rank",
                 ],
                 "default": "text_to_video",
@@ -115,6 +120,8 @@ class VideoSelector(BaseTool):
                     "image_to_video",
                     "reference_to_video",
                     "video_edit",
+                    "video_to_video_edit",
+                    "video_to_video_reference",
                 ],
                 "description": "Operation to score when operation='rank'.",
                 "default": "text_to_video",
@@ -406,7 +413,8 @@ class VideoSelector(BaseTool):
         ):
             tool_props = getattr(tool, "input_schema", {}).get("properties", {})
             # If the provider uses image_url (not reference_image_path), upload and convert
-            if "image_url" in tool_props and "image_url" not in adapted:
+            if ("image_url" in tool_props and "image_url" not in adapted
+                    and tool.name != "kling_o3_fal_video"):
                 try:
                     from tools.video._shared import upload_image_fal
 

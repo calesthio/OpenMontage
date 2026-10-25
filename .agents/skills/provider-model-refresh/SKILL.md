@@ -24,6 +24,8 @@ model must fail rather than silently substitute a different model.
 | Ideogram 4.5 / Precise Edit | ideogram_image | ideogram_fal_image |
 | Wan 3.0 | — | wan_fal_video, wan_atlas_video, wan_replicate_video |
 | H3 Max | — | h3_max_video (fal) |
+| Kling O3 video (Standard / Pro / 4K) | kling_official_video is separate | kling_o3_fal_video |
+| Kling Image O3 | kling_official_image is separate | kling_o3_fal_image |
 | LTX-2.5 Fast / Pro | ltx_api_video | — |
 | Eleven v4 / v4 Turbo | elevenlabs_tts | fal_elevenlabs_tts (v4 only) |
 | Gemini 3.8 Flash / Flash-Lite TTS | gemini_tts | — |
@@ -70,6 +72,19 @@ are 24, 25, 48, 50; long durations require Fast at 720p/1080p and 24/25 FPS.
 `duration=null` lets the model choose length, but cannot combine with a last
 frame. H3 Max is separate from the older H3 endpoint.
 
+Kling O3 on fal exposes five video modes on each of `kling-o3-standard`,
+`kling-o3-pro`, and `kling-o3-4k`: `text_to_video`, `image_to_video`,
+`reference_to_video`, `video_to_video_reference`, `video_to_video_edit`.
+The separate `kling-o3-image` supports `text_to_image` and `image_to_image`.
+Select `preferred_tool=kling_o3_fal_video` (or `kling_o3_fal_image`) and an
+exact model/operation; use `FAL_KEY`, not the official Kling credentials.
+For `reference_to_video`, provide `start_image_url` for the first frame and
+`image_urls`/`image_paths` for `@Image1` identity references. `image_url`
+belongs to `image_to_video` (and its local `image_path` alternative); it is
+rejected on the reference route to avoid duplicate references. For V2V,
+specify edit or reference explicitly and pass `video_url`; edit has no
+`duration` or `aspect_ratio`. Never auto-select O3 for a legacy Kling request.
+
 Set `job_path` to persist a checkpoint. On timeout, pass the returned
 `resume_job` to the same tool; this polls the existing job without a second
 paid submission. A submission timeout without an ID is ambiguous: check the
@@ -99,7 +114,8 @@ presenter and preserve HeyGen's consent/account requirements.
 
 ## Evidence and limitations
 
-Contracts were inspected 2026-10-03; each schema records its official source.
+The original refresh contracts were inspected 2026-10-03; each schema records
+its official source. Kling O3 fal video/image schemas were refreshed 2026-10-25.
 See docs/provider-update-plan-2026-10-03.md for release research. Public Kling 4
 generation endpoints remain unverified, so do not invent a model ID. Live voice
 agents require a separate streaming/session integration beyond batch narration.

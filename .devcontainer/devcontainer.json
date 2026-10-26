@@ -1,0 +1,20 @@
+{
+  "$schema": "https://devcontainers.json/schema",
+  "name": "OpenMontage Factory",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-vscode.vscode-node"
+      ]
+    }
+  },
+  "postCreateCommand": "chmod +x .kilo/hooks/pre-push.sh && ln -sf ../../.kilo/hooks/pre-push.sh .git/hooks/pre-push && python3.12 -m venv /tmp/kilo/z1_venv && /tmp/kilo/z1_venv/bin/pip install kokoro==0.2.2 misaki==0.7.4 && pip install -r requirements-pinned.txt && cd remotion-composer && npm install",
+  "workspaceFolder": "/workspaces/OpenMontage"
+}

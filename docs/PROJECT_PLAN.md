@@ -459,10 +459,11 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 | 1 | `pytest` в окружении | ✅ Установлен | pytest 9.1.1, 2578 тестов собраны, 5 ошибок сбора (ожидаемо без тестовых данных/ffmpeg ранее) |
 | 2 | `kaggle` CLI и доступ к аккаунту | ✅ Работает | kaggle CLI 2.2.5 установлен, авторизация подтверждена (kaggle kernels list --mine вернул 15 ядер без ошибки 401/403) |
 | 3 | `ffmpeg`/`ffprobe` | ✅ Установлен | ffmpeg 6.1.1-3ubuntu5, `--enable-gpl` подтвержден |
-| 4 | `node_modules` + решение O1 | ⚠️ Частично | node_modules установлен (201 пакетов), Remotion лицензия требует решения владельца O1 (Free License: до 3 сотрудников, иначе Company License) |
+| 4 | `node_modules` + решение O1 | ✅ Решено | node_modules установлен (201 пакетов), Remotion Free License подтверждена владельцем (соло-проект, 1 человек, подпадает под Free License: individual, ≤3 сотрудников). Company License не требуется. |
 | 5 | `/tmp/kilo/z1_venv` | ✅ Решено | venv создан на Python 3.12.3, kokoro==0.2.2 + misaki==0.7.4 установлены, импорт kokoro.KPipeline подтвержден |
+| 6 | `.devcontainer/devcontainer.json` | ✅ Создан | Базовый образ python:3.12, Node.js LTS, postCreateCommand настраивает pre-push хук, z1_venv, pip install, npm install. Ожидает пересборки codespace для применения. |
 
-**Примечание:** Файл `.devcontainer/devcontainer.json` не существует в репозитории — автоматизация создания символической ссылки pre-push хука для новых codespace не настроена. Это требует отдельного решения владельца.
+**Примечание:** Файл `.devcontainer/devcontainer.json` создан и закоммичен. Для применения в текущем codespace необходимо пересобрать контейнер (Command Palette → "Rebuild Container"). В новых codespace применится автоматически.
 
 ---
 
@@ -471,8 +472,9 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 1. `pytest` в окружении — ✅ установлен (9.1.1), приёмка Фазы 1 возможна.
 2. `kaggle` CLI и доступ к аккаунту — ✅ kaggle CLI 2.2.5 установлен, авторизация подтверждена (список ядер получен без ошибки 401/403)
 3. `ffmpeg`/`ffprobe` — ✅ установлен (6.1.1-3ubuntu5, `--enable-gpl`).
-4. `node_modules` + решение O1 — node_modules установлен, владелец должен принять решение по Remotion лицензии (Free vs Company).
+4. `node_modules` + решение O1 — node_modules установлен, Remotion Free License применена (соло-проект, 1 человек), Company License не требуется.
 5. `/tmp/kilo/z1_venv` — ✅ решено (Python 3.12.3, kokoro==0.2.2, импорт OK)
+6. `.devcontainer/devcontainer.json` — ✅ создан, ожидает пересборки codespace для применения.
 
 ---
 

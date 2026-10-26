@@ -480,6 +480,19 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 
 **Примечание:** Файл `.devcontainer/devcontainer.json` создан и закоммичен. Для применения в текущем codespace необходимо пересобрать контейнер (Command Palette → "Rebuild Container"). В новых codespace применится автоматически.
 
+### 10.5 Исправление несовпадения версий diffusers (Kaggle-ядро vs requirements-pinned.txt)
+
+**Причина провала тестов Б/В/Г:** несоответствие версий diffusers, а не нехватка VRAM.
+- codespace `requirements-pinned.txt`: diffusers==0.37.0, transformers==4.57.6, huggingface_hub==0.36.2
+- Kaggle-ядро `consistency-ab-test`: использовало предустановленную diffusers 0.40.0 (не закреплено)
+- Результат: `h94/IP-Adapter` несовместим с diffusers 0.40 по API `ip_adapter_image_embeds` (размерность 1664 vs 1280, тип list vs Tensor, ранг 2D vs 3D/4D). Тест A прошёл (45/45 картин, пик 5 196 МБ). Тесты Б/В — 0/45 картин, ошибка интеграции адаптера.
+
+**Исправление:** в `tools/kaggle_bridge/jobs/consistency-ab-test/run.py` добавлена функция `_ensure_pinned_versions()` которая устанавливает diffusers==0.37.0, transformers==4.57.6, huggingface_hub==0.36.2 перед импортом. Повторный прогон Б/В запланирован после применения devcontainer (пересборка codespace).
+
+**IP-Adapter совместимость:** интегрирован в diffusers с v0.22.1 (ноябрь 2023, PR #5713). Совместим с 0.37.0 — ошибки с 0.40.0 были вызваны изменениями в формате `ip_adapter_image_embeds`. Код run.py уже содержит workaround (pre-computed embeds, `.unsqueeze(1)`, список тензоров).
+
+**FLUX.2 Klein 4B разведка:** создано ядро `tools/kaggle_bridge/jobs/flux2-klein-test/` (kernel-metadata.json, job.json, run.py, test_protocol.json). Тест: загрузка модели + одна генерация 768×768 fp16 batch=1 с model_cpu_offload, замер пика VRAM. Порог: > 14.0 ГБ = «не влезает на одной T4». Ожидает запуска на Kaggle.
+
 ---
 
 ## 9. Что проверить первым делом в следующей сессии

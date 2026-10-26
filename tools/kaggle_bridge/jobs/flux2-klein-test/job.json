@@ -1,0 +1,15 @@
+{
+  "job_id": "flux2-klein-test",
+  "title": "FLUX.2 Klein 4B baseline VRAM measurement on Kaggle T4",
+  "model_id": "black-forest-labs/FLUX.2-klein-4B",
+  "width": 768,
+  "height": 768,
+  "batch_size": 1,
+  "precision": "fp16",
+  "memory_opts": ["model_cpu_offload"],
+  "steps": 4,
+  "guidance_scale": 1.0,
+  "accelerator": "gpu",
+  "enable_internet": true,
+  "created_at": "2026-10-26T16:00:00Z"
+}

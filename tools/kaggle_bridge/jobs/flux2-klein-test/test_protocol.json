@@ -1,0 +1,13 @@
+{
+  "model_id": "black-forest-labs/FLUX.2-klein-4B",
+  "resolution": "768x768",
+  "batch_size": 1,
+  "precision": "fp16",
+  "memory_opts": ["model_cpu_offload"],
+  "steps": 4,
+  "guidance_scale": 1.0,
+  "test": "baseline: model load + single generation 768x768 fp16 with offload",
+  "vram_limit_gb": 14.56,
+  "vram_warning_gb": 14.0,
+  "oom_policy": "записать пик VRAM; если > 14.0 ГБ — зафиксировать как «не влезает на одной T4»"
+}

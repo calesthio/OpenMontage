@@ -14,13 +14,41 @@ Outputs: /kaggle/working/consistency-ab-test/images/<test>_<seed>_<scenario>.png
 
 from __future__ import annotations
 
+import importlib.metadata as md
 import json
 import os
+import subprocess
+import sys
 import time
 import traceback
 from pathlib import Path
 
-import importlib.metadata as md
+# --- Пин версий (должно совпадать с requirements-pinned.txt в codespace) ---
+PINNED_VERSIONS = [
+    "diffusers==0.37.0",
+    "transformers==4.57.6",
+    "huggingface_hub==0.36.2",
+]
+
+
+def _ensure_pinned_versions():
+    """Установить закреплённые версии перед импортом diffusers/transformers."""
+    for pkg in PINNED_VERSIONS:
+        name = pkg.split("==")[0]
+        try:
+            installed = md.version(name)
+            if installed == pkg.split("==")[1]:
+                continue
+        except Exception:
+            pass
+        print(f"Installing {pkg} ...")
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "--quiet", pkg],
+            check=True,
+        )
+
+
+_ensure_pinned_versions()
 
 import torch
 from PIL import Image

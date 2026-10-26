@@ -252,6 +252,21 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 | P4 | QC-обход порогов «на словах» → фиктивный PASS |
 | P5 | Нет F2-рендера с реальными кадрами — все тайминги расчётные |
 
+### 4.7 Результаты A/B-теста консистентности персонажа (Kaggle T4)
+
+Прогон `tools/kaggle_bridge/jobs/consistency-ab-test/` (ядро `forts845/om-consistency-ab-test`, версия 6, 2026-10-26), протокол `test_protocol.json`. База — **SDXL Base 1.0** (DreamShaper XL не зафиксирован в `docs/openmontage/image_gen/LICENSE_EVIDENCE.md` → не используется как база, см. Шаг 0 протокола). Запрещено: IP-Adapter FaceID, PhotoMaker V2, PuLID (InsightFace), Character LoRA.
+
+| Тест | Конфигурация | OOM | Картин | Пик VRAM | Вердикт |
+|------|-------------|-----|--------|----------|---------|
+| A — baseline | SDXL Base 1.0, 768×768, fp16, vae_slicing+tiling+model_cpu_offload, без адаптера | Нет | 45/45 | 5 196 МБ | **Пройден (контрольная точка)** |
+| B — Plus Face | A + `ip-adapter-plus-face_sdxl_vit-h` (scale 0.7) | Нет | 0/45 | 5 106 МБ | Не пригоден (ошибка интеграции `image_embeds` с diffusers 0.40) |
+| C — Plus full-body | A + `ip-adapter-plus_sdxl_vit-h` (scale 0.7) | Нет | 0/45 | 5 106 МБ | Не пригоден (та же ошибка интеграции) |
+| D — комбинация | A + Plus (0.7) + Plus Face (0.25) | Нет | 0/45 | 9 945,9 МБ | Не пригоден (пик близко к лимиту T4 14,56 ГБ) |
+
+Тесты Б/В не упали с OOM (пик снизился с утренних 13,9 ГБ до 5 106 МБ благодаря оптимизациям памяти), но не выпустили ни одной картинки из-за несовместимости `h94/IP-Adapter` с `diffusers 0.40` (ошибки размерности/типа/ранга `image_embeds`). Тест Г не имеет смысла пока Б/В не отработают.
+
+**Итог:** единственная рабочая конфигурация без OOM — Тест A. Рекомендация для пилота: использовать Тест A как базу, консистентность персонажа — фиксированный seed + единый промпт (O8 вариант «а»); IP-Adapter-консистентность — отдельный timebox после пилота. Детальный отчёт: `tools/kaggle_bridge/jobs/consistency-ab-test/RESULTS.md`.
+
 ---
 
 ## 5. План по фазам

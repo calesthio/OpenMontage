@@ -1,5 +1,3 @@
-curated-transformers==0.1.1
 huggingface_hub==2.3.0
-spacy-curated-transformers==0.3.0
 torch==2.14.1+cpu
 transformers==5.20.2

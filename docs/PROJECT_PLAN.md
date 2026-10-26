@@ -460,7 +460,7 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 | 2 | `kaggle` CLI и доступ к аккаунту | ❌ Блокирован | kaggle CLI не установлен, ~/.kaggle/kaggle.json отсутствует — владелец должен положить ключ сам |
 | 3 | `ffmpeg`/`ffprobe` | ✅ Установлен | ffmpeg 6.1.1-3ubuntu5, `--enable-gpl` подтвержден |
 | 4 | `node_modules` + решение O1 | ⚠️ Частично | node_modules установлен (201 пакетов), Remotion лицензия требует решения владельца O1 (Free License: до 3 сотрудников, иначе Company License) |
-| 5 | `/tmp/kilo/z1_venv` | ⚠️ Частично | venv создан, но kokoro не устанавливается — все версии требуют Python <3.13, окружение Python 3.14.2 |
+| 5 | `/tmp/kilo/z1_venv` | ✅ Решено | venv создан на Python 3.12.3, kokoro==0.2.2 + misaki==0.7.4 установлены, импорт kokoro.KPipeline подтвержден |
 
 **Примечание:** Файл `.devcontainer/devcontainer.json` не существует в репозитории — автоматизация создания символической ссылки pre-push хука для новых codespace не настроена. Это требует отдельного решения владельца.
 
@@ -472,7 +472,7 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 2. `kaggle` CLI и доступ к аккаунту — ❌ не установлен, владелец должен положить `~/.kaggle/kaggle.json` сам (секрет).
 3. `ffmpeg`/`ffprobe` — ✅ установлен (6.1.1-3ubuntu5, `--enable-gpl`).
 4. `node_modules` + решение O1 — node_modules установлен, владелец должен принять решение по Remotion лицензии (Free vs Company).
-5. `/tmp/kilo/z1_venv` — venv создан, kokoro не устанавливается (Python 3.14.2 несовместим с kokoro <3.13).
+5. `/tmp/kilo/z1_venv` — ✅ решено (Python 3.12.3, kokoro==0.2.2, импорт OK)
 
 ---
 

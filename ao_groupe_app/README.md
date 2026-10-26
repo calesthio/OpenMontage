@@ -5,7 +5,10 @@ lighting, and solar products. Arabic is the default locale and uses RTL layout;
 French and English are also available. The app includes onboarding, a
 categorized catalog, product details, favorites, a cart and demo checkout,
 order history, quote-request drafts, planning calculators, and local admin
-preview.
+preview. The catalog also includes the products shown in the supplied AO
+groupe reference images and uses the provided brand mark. Items matched from
+the images remain quote-only until real catalog, pricing, and inventory data
+are verified.
 
 ## Run
 

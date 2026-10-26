@@ -73,23 +73,36 @@ class StoreProductCard extends StatelessWidget {
               child: Stack(
                 children: [
                   Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: AlignmentDirectional.topStart,
-                          end: AlignmentDirectional.bottomEnd,
-                          colors: [
-                            product.color.withValues(alpha: 0.20),
-                            product.color.withValues(alpha: 0.06),
-                          ],
-                        ),
-                      ),
-                      child: Icon(
-                        product.icon,
-                        size: 58,
-                        color: product.color,
-                      ),
-                    ),
+                    child: product.imageAsset == null
+                        ? DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: AlignmentDirectional.topStart,
+                                end: AlignmentDirectional.bottomEnd,
+                                colors: [
+                                  product.color.withValues(alpha: 0.20),
+                                  product.color.withValues(alpha: 0.06),
+                                ],
+                              ),
+                            ),
+                            child: Icon(
+                              product.icon,
+                              size: 58,
+                              color: product.color,
+                            ),
+                          )
+                        : Image.asset(
+                            product.imageAsset!,
+                            fit: BoxFit.cover,
+                            semanticLabel: product.name(languageCode),
+                            errorBuilder: (_, error, stackTrace) =>
+                                DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF2F2F4),
+                              ),
+                              child: Icon(product.icon, color: product.color),
+                            ),
+                          ),
                   ),
                   PositionedDirectional(
                     top: 8,
@@ -337,7 +350,19 @@ class CategoryGrid extends StatelessWidget {
       'switches': strings.text('catSwitches'),
       'pumps': strings.text('catPumps'),
       'tools': strings.text('catTools'),
+      'mounts': strings.text('catMounts'),
+      'storage': strings.text('catStorage'),
+      'ceiling': strings.text('catCeiling'),
+      'supports': strings.text('catSupports'),
       'custom': strings.text('catCustom'),
+    };
+    final images = {
+      'lighting': 'assets/products/wall-lamp-modern.png',
+      'mounts': 'assets/products/tv-wall-mount.png',
+      'storage': 'assets/products/garment-rack.png',
+      'ceiling': 'assets/products/ceiling-lights.png',
+      'supports': 'assets/products/multifunction-supports.png',
+      'custom': 'assets/products/custom-wall-lamp.png',
     };
 
     final children = catalogCategories
@@ -345,6 +370,7 @@ class CategoryGrid extends StatelessWidget {
               category: category,
               label: names[category.id] ?? category.id,
               horizontal: horizontal,
+              imageAsset: images[category.id],
               onTap: () => onSelected(category.id),
             ))
         .toList();
@@ -388,12 +414,14 @@ class _CategoryTile extends StatelessWidget {
     required this.label,
     required this.horizontal,
     required this.onTap,
+    this.imageAsset,
   });
 
   final CatalogCategory category;
   final String label;
   final bool horizontal;
   final VoidCallback onTap;
+  final String? imageAsset;
 
   @override
   Widget build(BuildContext context) {
@@ -419,7 +447,16 @@ class _CategoryTile extends StatelessWidget {
                   color: category.color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(category.icon, color: category.color),
+                clipBehavior: Clip.antiAlias,
+                child: imageAsset == null
+                    ? Icon(category.icon, color: category.color)
+                    : Image.asset(
+                        imageAsset!,
+                        fit: BoxFit.cover,
+                        semanticLabel: label,
+                        errorBuilder: (_, error, stackTrace) =>
+                            Icon(category.icon, color: category.color),
+                      ),
               ),
               const SizedBox(height: 6),
               Text(

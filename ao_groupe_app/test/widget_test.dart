@@ -18,10 +18,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('AO groupe'), findsOneWidget);
-    expect(find.text('كل حلول الكهرباء والطاقة، في مكان واحد'), findsOneWidget);
+    expect(find.text('تفاصيل تضيء مساحتك'), findsOneWidget);
     expect(
       Directionality.of(
-        tester.element(find.text('كل حلول الكهرباء والطاقة، في مكان واحد')),
+        tester.element(find.text('تفاصيل تضيء مساحتك')),
       ),
       TextDirection.rtl,
     );
@@ -38,7 +38,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('أهلاً بك في AO groupe'), findsNothing);
-    expect(find.text('كل حلول الكهرباء والطاقة، في مكان واحد'), findsOneWidget);
+    expect(find.text('تفاصيل تضيء مساحتك'), findsOneWidget);
     expect(
       find.byType(NavigationBar),
       findsOneWidget,

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../l10n/store_strings.dart';
 import '../models/store_controller.dart';
-import '../theme/app_colors.dart';
 import 'account_screens.dart';
 import 'cart_screens.dart';
 import 'catalog_screen.dart';
@@ -107,6 +106,8 @@ class _StoreShellState extends State<StoreShell> {
             ),
             child: NavigationBar(
               selectedIndex: _selectedIndex,
+              labelBehavior:
+                  NavigationDestinationLabelBehavior.onlyShowSelected,
               onDestinationSelected: (index) {
                 setState(() => _selectedIndex = index);
               },
@@ -171,12 +172,17 @@ class _StoreAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onGoHome,
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _BrandMark(),
+            Image.asset(
+              'assets/brand/ao-groupe.png',
+              width: 38,
+              height: 38,
+              semanticLabel: 'AO groupe',
+            ),
             SizedBox(width: 9),
-            Text(
+            const Text(
               'AO groupe',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
@@ -200,23 +206,4 @@ class _StoreAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
-}
-
-class _BrandMark extends StatelessWidget {
-  const _BrandMark();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 34,
-      height: 34,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.primary, AppColors.primaryBright],
-        ),
-        borderRadius: BorderRadius.circular(11),
-      ),
-      child: const Icon(Icons.bolt_rounded, color: AppColors.accent, size: 22),
-    );
-  }
 }

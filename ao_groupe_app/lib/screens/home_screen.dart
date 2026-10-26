@@ -79,9 +79,9 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 25),
                   _PromoTiles(
-                    solar: strings.text('featuredSolar'),
+                    supports: strings.text('featuredSupports'),
                     lighting: strings.text('featuredLighting'),
-                    onSolarTap: () => onCategorySelected('solar'),
+                    onSupportsTap: () => onCategorySelected('mounts'),
                     onLightingTap: () => onCategorySelected('lighting'),
                   ),
                   const SizedBox(height: 25),
@@ -135,7 +135,7 @@ class _SearchEntry extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(Icons.search_rounded, color: AppColors.primaryBright),
+              const Icon(Icons.search_rounded, size: 21),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -145,7 +145,7 @@ class _SearchEntry extends StatelessWidget {
                       ),
                 ),
               ),
-              const Icon(Icons.qr_code_scanner_rounded, size: 21),
+              const Icon(Icons.arrow_forward_rounded, size: 18),
             ],
           ),
         ),
@@ -169,89 +169,80 @@ class _WelcomeHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isWide = MediaQuery.sizeOf(context).width >= 650;
-    return Container(
-      padding: EdgeInsets.all(isWide ? 30 : 22),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: AlignmentDirectional.topStart,
-          end: AlignmentDirectional.bottomEnd,
-          colors: [AppColors.primary, AppColors.primaryBright],
-        ),
-        borderRadius: BorderRadius.circular(26),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 4,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsetsDirectional.fromSTEB(10, 6, 10, 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                  child: Text(
-                    'AO GROUPE  ·  DZ',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1,
-                        ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        height: 1.2,
-                      ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  body,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.85),
-                        height: 1.5,
-                      ),
-                ),
-                const SizedBox(height: 18),
-                FilledButton.icon(
-                  onPressed: onTap,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.accent,
-                    foregroundColor: AppColors.primary,
-                  ),
-                  icon: const Icon(Icons.arrow_forward_rounded),
-                  label: Text(action),
-                ),
-              ],
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 700;
+        final artwork = ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Image.asset(
+            'assets/products/wall-lamp-modern.png',
+            width: double.infinity,
+            height: wide ? 320 : 220,
+            fit: BoxFit.cover,
+            semanticLabel: title,
           ),
-          if (isWide) ...[
-            const SizedBox(width: 20),
-            Expanded(
-              flex: 2,
-              child: Container(
-                height: 170,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(22),
-                ),
-                child: const Icon(
-                  Icons.bolt_rounded,
-                  size: 112,
-                  color: AppColors.accent,
-                ),
+        );
+        final copy = Padding(
+          padding: EdgeInsets.all(wide ? 36 : 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'AO GROUPE  ·  ALGÉRIE',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
+                    ),
               ),
-            ),
-          ],
-        ],
-      ),
+              const SizedBox(height: 18),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontSize: wide ? 38 : 32,
+                      fontWeight: FontWeight.w700,
+                      height: 1.2,
+                    ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                body,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      height: 1.55,
+                    ),
+              ),
+              const SizedBox(height: 22),
+              FilledButton.icon(
+                onPressed: onTap,
+                icon: const Icon(Icons.arrow_forward_rounded, size: 19),
+                label: Text(action),
+              ),
+            ],
+          ),
+        );
+
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: Theme.of(context).dividerColor),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: wide
+              ? Row(
+                  children: [
+                    Expanded(child: copy),
+                    Expanded(child: artwork),
+                  ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [artwork, copy],
+                ),
+        );
+      },
     );
   }
 }
@@ -266,19 +257,17 @@ class _DeliveryStrip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: AppColors.accent.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(16),
+        color: const Color(0xFFF3F3F5),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
         children: [
-          const Icon(Icons.local_shipping_outlined, color: AppColors.primary),
+          const Icon(Icons.local_shipping_outlined, size: 19),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               label,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: AppColors.primary,
-                  ),
+              style: Theme.of(context).textTheme.labelLarge,
             ),
           ),
         ],
@@ -320,15 +309,15 @@ class _ProductRail extends StatelessWidget {
 
 class _PromoTiles extends StatelessWidget {
   const _PromoTiles({
-    required this.solar,
+    required this.supports,
     required this.lighting,
-    required this.onSolarTap,
+    required this.onSupportsTap,
     required this.onLightingTap,
   });
 
-  final String solar;
+  final String supports;
   final String lighting;
-  final VoidCallback onSolarTap;
+  final VoidCallback onSupportsTap;
   final VoidCallback onLightingTap;
 
   @override
@@ -338,15 +327,13 @@ class _PromoTiles extends StatelessWidget {
         final wide = constraints.maxWidth > 620;
         final children = [
           _PromoTile(
-            title: solar,
-            icon: Icons.solar_power_rounded,
-            colors: const [Color(0xFF166534), Color(0xFF22C55E)],
-            onTap: onSolarTap,
+            title: supports,
+            imageAsset: 'assets/products/media-shelf.png',
+            onTap: onSupportsTap,
           ),
           _PromoTile(
             title: lighting,
-            icon: Icons.lightbulb_outline_rounded,
-            colors: const [Color(0xFF92400E), Color(0xFFF59E0B)],
+            imageAsset: 'assets/products/wall-lamp-classic.png',
             onTap: onLightingTap,
           ),
         ];
@@ -374,47 +361,66 @@ class _PromoTiles extends StatelessWidget {
 class _PromoTile extends StatelessWidget {
   const _PromoTile({
     required this.title,
-    required this.icon,
-    required this.colors,
+    required this.imageAsset,
     required this.onTap,
   });
 
   final String title;
-  final IconData icon;
-  final List<Color> colors;
+  final String imageAsset;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: colors.first,
+      color: Theme.of(context).colorScheme.surface,
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
         child: Container(
-          height: 118,
-          padding: const EdgeInsets.all(18),
+          height: 174,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: AlignmentDirectional.topStart,
-              end: AlignmentDirectional.bottomEnd,
-              colors: colors,
-            ),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Row(
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            fit: StackFit.expand,
             children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                      ),
+              Image.asset(imageAsset, fit: BoxFit.cover, semanticLabel: title),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: AlignmentDirectional.topCenter,
+                    end: AlignmentDirectional.bottomCenter,
+                    colors: [Colors.transparent, Color(0xB8000000)],
+                    stops: [0.35, 1],
+                  ),
                 ),
               ),
-              Icon(icon, size: 46, color: Colors.white.withValues(alpha: 0.88)),
+              PositionedDirectional(
+                start: 18,
+                end: 18,
+                bottom: 17,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                      ),
+                    ),
+                    const Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 20,
+                      color: Colors.white,
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -562,6 +568,7 @@ class _ProductArtwork extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final artwork = product.imageAsset;
     return Container(
       width: double.infinity,
       height: MediaQuery.sizeOf(context).width > 760 ? 410 : 270,
@@ -576,7 +583,18 @@ class _ProductArtwork extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(28),
       ),
-      child: Icon(product.icon, size: 124, color: product.color),
+      clipBehavior: Clip.antiAlias,
+      child: artwork == null
+          ? Center(
+              child: Icon(product.icon, size: 124, color: product.color),
+            )
+          : Image.asset(
+              artwork,
+              fit: BoxFit.cover,
+              semanticLabel: product.name(
+                Localizations.localeOf(context).languageCode,
+              ),
+            ),
     );
   }
 }

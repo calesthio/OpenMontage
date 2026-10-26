@@ -101,7 +101,9 @@ class _AoGroupeAppState extends State<AoGroupeApp> {
       darkTheme: AppTheme.dark(),
       themeMode: _themeMode,
       home: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 350),
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 350),
         child: _startupError != null
             ? _StartupError(
                 key: const ValueKey('startup-error'),
@@ -138,27 +140,11 @@ class _SplashScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 88,
-              height: 88,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF0B1F4B), Color(0xFF1D4ED8)],
-                ),
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF1D4ED8).withValues(alpha: 0.22),
-                    blurRadius: 32,
-                    offset: const Offset(0, 12),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.bolt_rounded,
-                color: Color(0xFFFFB800),
-                size: 52,
-              ),
+            Image.asset(
+              'assets/brand/ao-groupe.png',
+              width: 84,
+              height: 84,
+              semanticLabel: 'AO groupe',
             ),
             const SizedBox(height: 18),
             Text(

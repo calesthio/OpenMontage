@@ -207,6 +207,10 @@ class _CatalogScreenState extends State<CatalogScreen> {
         'switches' => 'Switches',
         'pumps' => 'Pumps',
         'tools' => 'Tools',
+        'mounts' => 'Mounts',
+        'storage' => 'Storage',
+        'ceiling' => 'Ceiling',
+        'supports' => 'Supports',
         'custom' => 'Custom',
         _ => 'Cables',
       };

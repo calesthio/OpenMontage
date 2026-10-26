@@ -29,11 +29,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       strings.text('onboardingCatalogBody'),
       strings.text('onboardingOrdersBody'),
     ];
-    final icons = [
-      Icons.bolt_rounded,
-      Icons.grid_view_rounded,
-      Icons.checklist_rounded,
+    final artwork = [
+      'assets/products/wall-lamp-modern.png',
+      'assets/products/tv-wall-mount.png',
+      'assets/products/custom-wall-lamp.png',
     ];
+    final motionDuration = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : const Duration(milliseconds: 280);
 
     return Scaffold(
       body: SafeArea(
@@ -67,52 +70,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       const Spacer(),
                       AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 320),
+                        duration: motionDuration,
                         child: Row(
                           key: ValueKey(_step),
                           children: [
                             Expanded(
-                              child: Container(
-                                height: artHeight,
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    begin: AlignmentDirectional.topStart,
-                                    end: AlignmentDirectional.bottomEnd,
-                                    colors: [
-                                      AppColors.primary,
-                                      AppColors.primaryBright,
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(32),
-                                ),
-                                child: Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    PositionedDirectional(
-                                      top: 18,
-                                      start: 18,
-                                      child: Icon(
-                                        icons[_step],
-                                        color: Colors.white
-                                            .withValues(alpha: 0.18),
-                                        size: 62,
-                                      ),
-                                    ),
-                                    Container(
-                                      width: wide ? 156 : 130,
-                                      height: wide ? 156 : 130,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white
-                                            .withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(40),
-                                      ),
-                                      child: Icon(
-                                        icons[_step],
-                                        color: AppColors.accent,
-                                        size: wide ? 88 : 72,
-                                      ),
-                                    ),
-                                  ],
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(28),
+                                child: Image.asset(
+                                  artwork[_step],
+                                  width: double.infinity,
+                                  height: artHeight,
+                                  fit: BoxFit.cover,
+                                  semanticLabel: titles[_step],
                                 ),
                               ),
                             ),
@@ -121,7 +91,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       const SizedBox(height: 28),
                       AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 220),
+                        duration: motionDuration,
                         child: Column(
                           key: ValueKey('copy-$_step'),
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,7 +116,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         children: List.generate(
                           titles.length,
                           (index) => AnimatedContainer(
-                            duration: const Duration(milliseconds: 180),
+                            duration: motionDuration,
                             margin: const EdgeInsetsDirectional.only(end: 7),
                             width: _step == index ? 26 : 8,
                             height: 8,
@@ -216,16 +186,11 @@ class _OnboardingBrand extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppColors.primary, AppColors.primaryBright],
-            ),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Icon(Icons.bolt_rounded, color: AppColors.accent),
+        Image.asset(
+          'assets/brand/ao-groupe.png',
+          width: 40,
+          height: 40,
+          semanticLabel: 'AO groupe',
         ),
         const SizedBox(width: 10),
         Text('AO groupe',

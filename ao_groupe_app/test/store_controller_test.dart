@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:ao_groupe_app/models/algeria_wilaya.dart';
+import 'package:ao_groupe_app/models/catalog.dart';
 import 'package:ao_groupe_app/models/store_controller.dart';
 
 void main() {
@@ -66,5 +67,33 @@ void main() {
     expect(algerianWilayaByCode('16')?.label('ar'), 'الجزائر العاصمة');
     expect(algerianWilayaByCode('16')?.label('fr'), 'Alger');
     expect(algerianWilayaByCode('00'), isNull);
+  });
+
+  test('lists pictured AO groupe items as quote-only until verified', () {
+    final picturedProducts = catalogProducts
+        .where((product) =>
+            product.id.startsWith('ceiling-') ||
+            product.id == 'custom-wall-lamp' ||
+            product.id == 'tv-wall-mount' ||
+            product.id == 'media-shelf' ||
+            product.id == 'laundry-organizer' ||
+            product.id == 'bathroom-organizer' ||
+            product.id == 'garment-rack' ||
+            product.id == 'multifunction-supports' ||
+            product.id.startsWith('wall-lamp-'))
+        .toList();
+
+    expect(picturedProducts, hasLength(14));
+    expect(
+      picturedProducts.every(
+        (product) =>
+            product.quoteOnly &&
+            product.imageAsset != null &&
+            product.price == 0 &&
+            product.wholesalePrice == 0 &&
+            product.stock == 0,
+      ),
+      isTrue,
+    );
   });
 }

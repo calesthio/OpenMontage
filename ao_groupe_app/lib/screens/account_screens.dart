@@ -39,22 +39,17 @@ class AccountScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppColors.primary, AppColors.primaryBright],
-            ),
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Theme.of(context).dividerColor),
           ),
           child: Row(
             children: [
-              Container(
+              Image.asset(
+                'assets/brand/ao-groupe.png',
                 width: 56,
                 height: 56,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: const Icon(Icons.bolt_rounded,
-                    color: AppColors.accent, size: 32),
+                semanticLabel: 'AO groupe',
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -63,15 +58,14 @@ class AccountScreen extends StatelessWidget {
                   children: [
                     Text(
                       strings.text('accountTitle'),
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                          ),
+                      style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 5),
                     Text(
                       strings.text('accountBody'),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.82),
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                     ),
                   ],

@@ -52,11 +52,18 @@ These risks do not block the weights-level license (Apache-2.0), but they mean t
 
 ---
 
-## Open owner / guardian decision
+## Owner decision — pilot approval (recorded 2026-10-24)
 
-**Decision requested:** accept Kokoro-82M (Apache-2.0 weights, documented CC BY + synthetic-data caveats) as the narration voice for published/monetized videos, or require further clearance (attribution log, synthetic-data provenance, or a different fully-cleared voice) before milestone D/Q publication.
+**Decision:** Kokoro-82M voice `af_heart` is **owner-approved for the pilot** as the narration voice for published/monetized videos.
 
-Until decided: **voice license gate = NOT PASSED** for Piper lessac (blocked); Kokoro = **provisionally known (Apache-2.0 weights + documented caveats), owner sign-off required.**
+- Voice engine: Kokoro-82M (hexgrad/Kokoro-82M), Apache-2.0 weights — CLEAR.
+- Voice id: `af_heart` (default; no silent substitution).
+- Training data: weights are Apache-2.0, but the v1.0 dataset includes CC BY attribution items (Koniwa `tnc` <1 h, CC BY 3.0; SIWIS <11 h, CC BY 4.0) and synthetic audio of undisclosed origin (UNKNOWN).
+- **Attribution required:** every pilot video using Kokoro `af_heart` narration must carry the attribution line in its YouTube video description:
+  `Narration: Kokoro-82M voice af_heart (Apache-2.0 weights, hexgrad). Training data includes CC BY material (Koniwa tnc CC BY 3.0, SIWIS CC BY 4.0) and synthetic audio of undisclosed origin.`
+- Piper `en_US-lessac-medium` remains **blocked** (voice license UNKNOWN).
+
+Until the owner revisits the synthetic-data caveats, Kokoro is approved for the pilot with the attribution above; full/unconditional clearance for broader monetized publication remains pending.
 
 ---
 

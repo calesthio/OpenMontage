@@ -47,6 +47,39 @@ from typing import Any, Dict, List, Optional, Tuple
 OUT = Path("/kaggle/working")
 JOB_EMBEDDED = None
 
+#: The only FLUX-family repo id this factory may download.
+#: Verified before every weight pull. Confirmed Apache-2.0 with commercial use
+#: on the HF card (docs/openmontage/image_gen/LICENSE_EVIDENCE.md).
+FLUX_ALLOWED_REPO = "black-forest-labs/FLUX.2-klein-4B"
+
+#: FLUX-family repo ids that are commercially blocked (FLUX Non-Commercial
+#: License). Never downloaded, regardless of how similar the name looks.
+FLUX_BLOCKED_REPOS = (
+    "black-forest-labs/FLUX.2-klein-9B",
+    "black-forest-labs/FLUX.2-klein-base-9B",
+    "black-forest-labs/FLUX.2-dev",
+)
+
+
+def _flux_guard(model_id: str) -> None:
+    """Fail-closed: only black-forest-labs/FLUX.2-klein-4B may be downloaded.
+
+    Called before every `from_pretrained` pull of FLUX weights. Any other FLUX
+    repo id (klein-9B, klein-base-9B, dev) ships under the FLUX Non-Commercial
+    License and is commercially blocked.
+    """
+    mid = str(model_id or "")
+    if "flux" not in mid.lower():
+        return  # not a FLUX download — nothing to guard
+    if mid != FLUX_ALLOWED_REPO:
+        raise RuntimeError(
+            "FLUX download blocked: {!r} is not permitted. Only {!r} "
+            "(Apache-2.0, commercial use confirmed) may be downloaded. "
+            "{!r} ship under the FLUX Non-Commercial License and are "
+            "commercially blocked, regardless of how similar the name looks."
+            .format(mid, FLUX_ALLOWED_REPO, ", ".join(FLUX_BLOCKED_REPOS)))
+
+
 # Per-model wall-clock cap (S7: 90 minutes per model).
 MAX_WALL_SECONDS = 5400
 
@@ -299,6 +332,50 @@ def install_and_probe(model: str, ladder: List[str],
     return False, log
 
 
+def _model_revision(model_id: Optional[str]) -> Optional[str]:
+    """Resolved HF commit sha for the model, so a run is reproducible."""
+    if not model_id:
+        return None
+    try:
+        from huggingface_hub import HfApi
+        return HfApi().model_info(model_id).sha
+    except Exception:  # noqa: BLE001 - revision is provenance, never fatal
+        return None
+
+
+def _write_done(errors: Optional[List[str]] = None) -> None:
+    """Write /kaggle/working/DONE.json (waiting rule: every kernel, always).
+
+    Reads the manifest when it exists so counts are real; never raises, so a
+    failure here can never mask the run's own error.
+    """
+    payload: Dict[str, Any] = {
+        "status": "error", "n_images": None, "n_black": None,
+        "seconds_total": None, "errors": list(errors or []),
+    }
+    try:
+        man_path = OUT / "manifest.json"
+        if man_path.exists():
+            man = json.loads(man_path.read_text(encoding="utf-8"))
+            payload["n_images"] = man.get("generated")
+            payload["n_black"] = man.get("black_count")
+            payload["seconds_total"] = man.get("gpu_seconds")
+            ok = man.get("generated") == man.get("requested")
+            payload["status"] = "ok" if ok else "error"
+            if not ok:
+                payload["errors"].append(
+                    f"partial: {man.get('generated')}/{man.get('requested')}")
+        else:
+            payload["errors"].append("manifest.json missing")
+    except Exception as exc:  # noqa: BLE001
+        payload["errors"].append(f"done.json could not read manifest: {exc}")
+    try:
+        (Path("/kaggle/working") / "DONE.json").write_text(
+            json.dumps(payload, indent=2), encoding="utf-8")
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def _black_or_nan(img) -> Tuple[bool, bool]:
     import numpy as np
     arr = np.asarray(img.convert("RGB"), dtype=np.float32)
@@ -309,6 +386,8 @@ def _black_or_nan(img) -> Tuple[bool, bool]:
 
 def _load_pipeline(job: Dict[str, Any], model: str, pipe_cls, cfg: Dict[str, Any]):
     """Load the pipeline. Returns (pipeline, load_notes)."""
+    # FLUX guardrail: verify the exact repo id before any weight pull.
+    _flux_guard(job["model_id"])
     import torch
     kwargs: Dict[str, Any] = {"torch_dtype": torch.float16}
     if cfg.get("low_cpu_mem_usage") is not None:
@@ -591,8 +670,10 @@ def main() -> None:
     gpu_seconds = time.perf_counter() - t_total0
     try:
         peak_vram_mb = round(torch.cuda.max_memory_allocated() / (1024 * 1024), 2)
+        peak_vram_reserved_mb = round(torch.cuda.max_memory_reserved() / (1024 * 1024), 2)
     except Exception:  # noqa: BLE001
         peak_vram_mb = None
+        peak_vram_reserved_mb = None
 
     times = [i["seconds"] for i in images if i.get("file")]
     warmup_excluded = times[1:] if len(times) > 1 else times
@@ -603,10 +684,12 @@ def main() -> None:
                       if times and gpu_seconds > 0 else None)
 
     versions = _versions()
+    resolved_revision = job.get("revision") or _model_revision(job.get("model_id"))
     manifest = {
         "job_id": job.get("job_id"),
         "model": model,
         "model_id": job.get("model_id"),
+        "model_revision": resolved_revision,
         "pipeline_class": declared,
         "dtype": "float16",
         "bitsandbytes": False,
@@ -623,6 +706,7 @@ def main() -> None:
         "usable_images_per_minute": usable_per_min,
         "gpu_seconds": round(gpu_seconds, 2),
         "peak_vram_mb": peak_vram_mb,
+        "peak_vram_reserved_mb": peak_vram_reserved_mb,
         "oom_count": oom_count,
         "black_count": black_count,
         "nan_count": nan_count,
@@ -650,12 +734,16 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    _done_errors: List[str] = []
     try:
         main()
-    except SystemExit:
+    except SystemExit as exc:
+        if exc.code not in (0, None):
+            _done_errors.append(f"exit code {exc.code}")
         raise
     except Exception:  # noqa: BLE001 - full traceback saved to kernel output
         tb = traceback.format_exc()
+        _done_errors.append(tb.strip().splitlines()[-1] if tb.strip() else "exception")
         try:
             OUT.mkdir(parents=True, exist_ok=True)
             (OUT / "traceback_fatal.txt").write_text(tb, encoding="utf-8")
@@ -664,3 +752,5 @@ if __name__ == "__main__":
             pass
         print(tb, file=sys.stderr)
         sys.exit(1)
+    finally:
+        _write_done(_done_errors)

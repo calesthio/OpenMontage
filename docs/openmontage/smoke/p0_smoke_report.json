@@ -1,0 +1,182 @@
+{
+  "schema_version": "1.0",
+  "milestone": "P0-v2",
+  "started_utc": "2026-10-23T10:07:46Z",
+  "environment": {
+    "tts_used": "system espeak-ng (repo TTS providers all unavailable)",
+    "music_bed": "MISSING",
+    "renderer": "ffmpeg zoompan (Remotion not installed)"
+  },
+  "sentences": [
+    {
+      "index": 1,
+      "text": "Two hundred metres beneath the ice, the vent field glows in total darkness.",
+      "audio": "s01.wav",
+      "duration_seconds": 4.7537,
+      "image": "projects/se_pilot/assets/illustrations/filter_drifter_r0001.png",
+      "motion": "zoom_in",
+      "segment_frames": 143,
+      "segment_duration_media": 4.7667
+    },
+    {
+      "index": 2,
+      "text": "Bacteria turn the mineral plume into food, and the whole web begins there.",
+      "audio": "s02.wav",
+      "duration_seconds": 4.8548,
+      "image": "projects/se_pilot/assets/illustrations/frozen_ocean_food_web_r0025.png",
+      "motion": "pan_right",
+      "segment_frames": 146,
+      "segment_duration_media": 4.8667
+    },
+    {
+      "index": 3,
+      "text": "Nothing in this world has ever seen the sun.",
+      "audio": "s03.wav",
+      "duration_seconds": 2.8235,
+      "image": "projects/se_pilot/assets/illustrations/ice_burrower_r0033.png",
+      "motion": "zoom_out",
+      "segment_frames": 85,
+      "segment_duration_media": 2.8333
+    }
+  ],
+  "steps": {
+    "1_tts": {
+      "status": "PASS",
+      "files": [
+        "s01.wav",
+        "s02.wav",
+        "s03.wav"
+      ],
+      "durations": [
+        4.7537,
+        4.8548,
+        2.8235
+      ],
+      "wall_seconds": 0.21
+    },
+    "3_srt": {
+      "status": "PASS",
+      "tool": "tools/subtitle/subtitle_gen.py (SubtitleGen)",
+      "cues": 3,
+      "text": "1\n00:00:00,000 --> 00:00:04,754\nTwo hundred metres beneath the ice, the vent field glows in total darkness.\n\n2\n00:00:04,754 --> 00:00:09,608\nBacteria turn the mineral plume into food, and the whole web begins there.\n\n3\n00:00:09,608 --> 00:00:12,432\nNothing in this world has ever seen the sun.\n"
+    },
+    "4_music": {
+      "status": "MISSING",
+      "detail": "music_library/ does not exist and the repo contains no local royalty-free music file (only narration wavs). No bed was invented or downloaded; the delivered mp4 is voice-only."
+    },
+    "2_video": {
+      "status": "PASS",
+      "per_sentence": [
+        {
+          "index": 1,
+          "image": "projects/se_pilot/assets/illustrations/filter_drifter_r0001.png",
+          "motion": "zoom_in",
+          "audio_seconds": 4.7537,
+          "segment_media_seconds": 4.7667,
+          "delta_seconds": 0.013
+        },
+        {
+          "index": 2,
+          "image": "projects/se_pilot/assets/illustrations/frozen_ocean_food_web_r0025.png",
+          "motion": "pan_right",
+          "audio_seconds": 4.8548,
+          "segment_media_seconds": 4.8667,
+          "delta_seconds": 0.012
+        },
+        {
+          "index": 3,
+          "image": "projects/se_pilot/assets/illustrations/ice_burrower_r0033.png",
+          "motion": "zoom_out",
+          "audio_seconds": 2.8235,
+          "segment_media_seconds": 2.8333,
+          "delta_seconds": 0.01
+        }
+      ]
+    },
+    "5_mux": {
+      "status": "PASS",
+      "command": "ffmpeg -i video_silent.mp4 -i voice.wav -c:v copy -c:a aac -b:a 192k -ar 48000 -shortest",
+      "output": "/tmp/p0_smoke/p0_smoke.mp4",
+      "probe": {
+        "duration": 12.432,
+        "size_bytes": 1384868,
+        "bit_rate": 891163,
+        "streams": [
+          {
+            "type": "video",
+            "codec": "h264",
+            "width": 1920,
+            "height": 1080,
+            "fps": "30/1",
+            "sample_rate": null,
+            "channels": null
+          },
+          {
+            "type": "audio",
+            "codec": "aac",
+            "width": null,
+            "height": null,
+            "fps": "0/0",
+            "sample_rate": "48000",
+            "channels": 2
+          }
+        ]
+      }
+    }
+  },
+  "verification": {
+    "audio_durations": [
+      4.7537,
+      4.8548,
+      2.8235
+    ],
+    "audio_sum_seconds": 12.432,
+    "video_duration_seconds": 12.432,
+    "duration_delta_seconds": 0.0,
+    "srt_cues": 3,
+    "srt_last_cue_end": "00:00:12,432",
+    "subtitle_stream_present": false,
+    "motion": [
+      {
+        "segment": "seg01.mp4",
+        "mean_abs_diff": 18.6687,
+        "max_abs_diff": 237.0
+      },
+      {
+        "segment": "seg02.mp4",
+        "mean_abs_diff": 12.5023,
+        "max_abs_diff": 226.0
+      },
+      {
+        "segment": "seg03.mp4",
+        "mean_abs_diff": 2.4372,
+        "max_abs_diff": 191.0
+      }
+    ],
+    "integrated_lufs": -21.3,
+    "silence_events_0_4s": 1,
+    "black_events_0_2s": 0
+  },
+  "measurement": {
+    "video_seconds": 12.432,
+    "render_seconds": 14.21,
+    "render_ratio_seconds_per_video_second": 1.143,
+    "estimate_18_min_seconds": 1234.5,
+    "estimate_18_min_minutes": 20.57,
+    "crf": 20,
+    "preset": "veryfast",
+    "fps": 30,
+    "size": "1920x1080",
+    "timed_scope": "segment renders + concat + subtitle + mux"
+  },
+  "copied": [
+    "docs/openmontage/smoke/p0_smoke.mp4",
+    "docs/openmontage/smoke/p0_smoke.srt"
+  ],
+  "disk": {
+    "work_dir_bytes": 4687554,
+    "final_mp4_bytes": 1384868,
+    "srt_bytes": 294
+  },
+  "finished_utc": "2026-10-23T10:08:08Z"
+}

@@ -1,0 +1,74 @@
+{
+  "gpu": {
+    "diffusers": "0.40.0",
+    "transformers": "5.16.1",
+    "huggingface_hub": "1.29.0",
+    "torch": "2.11.0+cu128",
+    "accelerate": "1.14.0",
+    "safetensors": "0.8.0",
+    "insightface": null,
+    "opencv-python": "4.14.0.94",
+    "numpy": "2.1.3",
+    "pillow": "13.0.0",
+    "torch_cuda": "12.8",
+    "gpu": "Tesla T4",
+    "vram_total_gb": 14.56
+  },
+  "vram_total_gb": 16.0,
+  "candidates": {
+    "instantid": {
+      "candidate": "instantid",
+      "license": "Apache-2.0 (code); checkpoints research-only",
+      "peak_vram_mb": 156.36,
+      "load_seconds": 174.237,
+      "gen_seconds_per_image": null,
+      "oom": false,
+      "fits_t4": null,
+      "error": "Traceback (most recent call last):\n  File \"/kaggle/src/script.py\", line 247, in _instantid_test\n    ref_img = pipe(prompt=ref_prompt, height=1024, width=1024,\n              ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                   num_inference_steps=20,\n                   ^^^^^^^^^^^^^^^^^^^^^^^\n                   generator=torch.Generator(\"cuda\").manual_seed(1111)).\\\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n    return func(*args, **kwargs)\n  File \"/tmp/InstantID/pipeline_stable_diffusion_xl_instantid_full.py\", line 842, in __call__\n    self.check_inputs(\n    ~~~~~~~~~~~~~~~~~^\n        prompt=prompt,\n        ^^^^^^^^^^^^^^\n    ...<12 lines>...\n        callback_on_step_end_tensor_inputs=callback_on_step_end_tensor_inputs,\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/controlnet/pipeline_controlnet_sd_xl.py\", line 724, in check_inputs\n    self.check_image(image, prompt, prompt_embeds)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/controlnet/pipeline_controlnet_sd_xl.py\", line 832, in check_image\n    raise TypeError(\n        f\"image must be passed and be one of PIL image, numpy array, torch tensor, list of PIL images, list of numpy arrays or list of torch tensors, but is {type(image)}\"\n    )\nTypeError: image must be passed and be one of PIL image, numpy array, torch tensor, list of PIL images, list of numpy arrays or list of torch tensors, but is <class 'NoneType'>\n",
+      "generations": [],
+      "face_tool": "clip"
+    },
+    "consistentid": {
+      "candidate": "consistentid",
+      "license": "MIT",
+      "peak_vram_mb": null,
+      "fits_t4": null,
+      "load_seconds": null,
+      "gen_seconds_per_image": null,
+      "oom": false,
+      "error": "not loaded: face-parsing BiSeNet checkpoint is a Google Drive blob, not pip-installable in a zero-cost, no-secrets run; needs manual download + license review",
+      "generations": []
+    }
+  },
+  "generations": [],
+  "consistency": {
+    "candidate": "instantid",
+    "face_tool": "clip",
+    "n_comparisons": 0,
+    "mean_face_sim": null,
+    "min_face_sim": null,
+    "max_face_sim": null,
+    "note": "cosine similarity of identity embedding vs reference face (1.0 = identical)"
+  },
+  "license_notes": {
+    "instantid": "Apache-2.0 code; checkpoints 'research purposes only' per upstream disclaimer -> RIGHTS BLOCKER for production",
+    "consistentid": "MIT (JackAILab/ConsistentID)",
+    "photomaker": "Apache-2.0 (TencentARC/PhotoMaker); README states minimum 11GB VRAM -> cannot fit on 16GB T4 alongside a 10-12.8GB base; not loaded",
+    "calliope": "MIT (benjiyaya/Calliope); ComfyUI story-to-video studio, different category (not a face adapter), not tested"
+  },
+  "versions": {
+    "diffusers": "0.37.0",
+    "transformers": "4.57.6",
+    "huggingface_hub": "0.36.2",
+    "torch": "2.11.0+cu128",
+    "accelerate": "1.14.0",
+    "safetensors": "0.8.0",
+    "insightface": "2.1",
+    "opencv-python": "4.14.0.94",
+    "numpy": "2.1.3",
+    "pillow": "13.0.0",
+    "torch_cuda": "12.8",
+    "gpu": "Tesla T4",
+    "vram_total_gb": 14.56
+  }
+}

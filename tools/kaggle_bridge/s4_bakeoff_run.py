@@ -37,6 +37,38 @@ IMAGES_DIR = OUT / "images"
 # (Kaggle copies only run.py -> /kaggle/src/script.py, not the job config).
 JOB_EMBEDDED = None
 
+#: The only FLUX-family repo id this factory may download.
+#: Verified before every weight pull. Confirmed Apache-2.0 with commercial use
+#: on the HF card (docs/openmontage/image_gen/LICENSE_EVIDENCE.md).
+FLUX_ALLOWED_REPO = "black-forest-labs/FLUX.2-klein-4B"
+
+#: FLUX-family repo ids that are commercially blocked (FLUX Non-Commercial
+#: License). Never downloaded, regardless of how similar the name looks.
+FLUX_BLOCKED_REPOS = (
+    "black-forest-labs/FLUX.2-klein-9B",
+    "black-forest-labs/FLUX.2-klein-base-9B",
+    "black-forest-labs/FLUX.2-dev",
+)
+
+
+def _flux_guard(model_id: str) -> None:
+    """Fail-closed: only black-forest-labs/FLUX.2-klein-4B may be downloaded.
+
+    Called before every `from_pretrained` pull of FLUX weights. Any other FLUX
+    repo id (klein-9B, klein-base-9B, dev) ships under the FLUX Non-Commercial
+    License and is commercially blocked.
+    """
+    mid = str(model_id or "")
+    if "flux" not in mid.lower():
+        return  # not a FLUX download — nothing to guard
+    if mid != FLUX_ALLOWED_REPO:
+        raise RuntimeError(
+            "FLUX download blocked: {!r} is not permitted. Only {!r} "
+            "(Apache-2.0, commercial use confirmed) may be downloaded. "
+            "{!r} ship under the FLUX Non-Commercial License and are "
+            "commercially blocked, regardless of how similar the name looks."
+            .format(mid, FLUX_ALLOWED_REPO, ", ".join(FLUX_BLOCKED_REPOS)))
+
 
 def now_utc() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -190,6 +222,8 @@ def main() -> None:
             kwargs["vae"] = AutoencoderKL.from_pretrained(
                 vae_model_id, torch_dtype=torch.float16, revision=revision
             )
+        # FLUX guardrail: verify the exact repo id before any weight pull.
+        _flux_guard(model_id)
         pipe = pipe_cls.from_pretrained(model_id, torch_dtype=torch.float16, **kwargs)
         pipe.to("cuda")
     except Exception:

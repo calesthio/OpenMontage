@@ -1,0 +1,40 @@
+{
+  "job_id": "stick4-ipadapter-fixed-2",
+  "model_id": "Lykon/dreamshaper-xl-1-0",
+  "width": 1024,
+  "height": 1024,
+  "scale": 0.5,
+  "renders": [
+    {
+      "render_id": "scene_pointing",
+      "scene_id": "s01",
+      "prompt": "vent grazer grazing bacterial mats on a vent chimney, side silhouette, pointing at vent chimney, comic ink style, bold black outlines, flat hatching, limited color palette, deep teal, bioluminescent lime, basalt charcoal, pale bone, high contrast, graphic novel illustration, vector art, clean line work",
+      "negative_prompt": "photorealistic, 3d, realistic, blurry, low quality, watermark, text, letters, numbers",
+      "guidance_scale": 7.5,
+      "steps": 25,
+      "seed": 2222,
+      "reference_render_id": "ref_face"
+    },
+    {
+      "render_id": "scene_confused",
+      "scene_id": "s03",
+      "prompt": "vent grazer, confused expression, three-quarter view, floating in mid-water, comic ink style, bold outlines, hatching, deep teal, bioluminescent lime, basalt charcoal, pale bone",
+      "negative_prompt": "photorealistic, 3d, realistic, blurry, low quality, watermark, text, letters, numbers",
+      "guidance_scale": 7.5,
+      "steps": 25,
+      "seed": 3333,
+      "reference_render_id": "ref_face"
+    },
+    {
+      "render_id": "scene_talking",
+      "scene_id": "s05",
+      "prompt": "vent grazer talking, mouth open, wide establishing shot, low angle, comic ink style, bold contours, clean line work, deep teal, bioluminescent lime, basalt charcoal, pale bone",
+      "negative_prompt": "photorealistic, 3d, realistic, blurry, low quality, watermark, text, letters, numbers",
+      "guidance_scale": 7.5,
+      "steps": 25,
+      "seed": 4444,
+      "reference_render_id": "ref_face"
+    }
+  ],
+  "created_at": "2026-10-25T00:34:14Z"
+}

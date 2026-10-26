@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/kaggle/src/script.py", line 200, in main
+    clip_processor = CLIPImageProcessor.from_pretrained(encoder_dir)
+  File "/usr/local/lib/python3.13/dist-packages/transformers/image_processing_base.py", line 179, in from_pretrained
+    image_processor_dict, kwargs = cls.get_image_processor_dict(pretrained_model_name_or_path, **kwargs)
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/transformers/image_processing_base.py", line 334, in get_image_processor_dict
+    raise OSError(
+    ...<4 lines>...
+    )
+OSError: Can't load image processor for '/root/.cache/huggingface/hub/models--h94--IP-Adapter/snapshots/018e402774aeeddd60609b4ecdb7e298259dc729/models/image_encoder'. If you were trying to load it from 'https://huggingface.co/models', make sure you don't have a local directory with the same name. Otherwise, make sure '/root/.cache/huggingface/hub/models--h94--IP-Adapter/snapshots/018e402774aeeddd60609b4ecdb7e298259dc729/models/image_encoder' is the correct path to a directory containing a preprocessor_config.json file

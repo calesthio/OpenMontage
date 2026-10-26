@@ -1,0 +1,9 @@
+{
+  "status": "error",
+  "n_images": null,
+  "n_black": null,
+  "seconds_total": null,
+  "errors": [
+    "RuntimeError: Input type (torch.cuda.HalfTensor) and weight type (torch.HalfTensor) should be the same"
+  ]
+}

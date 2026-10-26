@@ -34,6 +34,39 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, Tuple
 
+#: The only FLUX-family repo id this factory may download.
+#: Verified before every weight pull. Confirmed Apache-2.0 with commercial use
+#: on the HF card (docs/openmontage/image_gen/LICENSE_EVIDENCE.md).
+FLUX_ALLOWED_REPO = "black-forest-labs/FLUX.2-klein-4B"
+
+#: FLUX-family repo ids that are commercially blocked (FLUX Non-Commercial
+#: License). Never downloaded, regardless of how similar the name looks.
+FLUX_BLOCKED_REPOS = (
+    "black-forest-labs/FLUX.2-klein-9B",
+    "black-forest-labs/FLUX.2-klein-base-9B",
+    "black-forest-labs/FLUX.2-dev",
+)
+
+
+def _flux_guard(model_id: str) -> None:
+    """Fail-closed: only black-forest-labs/FLUX.2-klein-4B may be downloaded.
+
+    Called before every `from_pretrained` pull of FLUX weights. Any other FLUX
+    repo id (klein-9B, klein-base-9B, dev) ships under the FLUX Non-Commercial
+    License and is commercially blocked.
+    """
+    mid = str(model_id or "")
+    if "flux" not in mid.lower():
+        return  # not a FLUX download — nothing to guard
+    if mid != FLUX_ALLOWED_REPO:
+        raise RuntimeError(
+            "FLUX download blocked: {!r} is not permitted. Only {!r} "
+            "(Apache-2.0, commercial use confirmed) may be downloaded. "
+            "{!r} ship under the FLUX Non-Commercial License and are "
+            "commercially blocked, regardless of how similar the name looks."
+            .format(mid, FLUX_ALLOWED_REPO, ", ".join(FLUX_BLOCKED_REPOS)))
+
+
 # The engine module: when this file is appended to the engine source, this is
 # the __main__ module itself; when it is imported locally, it is the engine.
 _ENGINE = sys.modules.get(__name__)
@@ -92,6 +125,8 @@ _ENGINE.DEFAULT_LADDERS.update({
 def _load_pipeline(job: Dict[str, Any], model: str, pipe_cls,
                    cfg: Dict[str, Any]) -> Tuple[Any, Dict[str, Any]]:
     """S8 loader: base loader + distilled-UNet swap + scheduler override."""
+    # FLUX guardrail: verify the exact repo id before any weight pull.
+    _flux_guard(job["model_id"])
     import torch
 
     notes: Dict[str, Any] = {}

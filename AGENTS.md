@@ -132,3 +132,15 @@ If a check cannot be performed, mark it NOT_CHECKED, never PASS.
 
 ### Completion response
 Report: files changed, commands run, tests and results, skipped checks, rights/security risks, and the next smallest useful step. Distinguish implemented code from plans and unverified assumptions.
+
+## WAITING RULE (every long-running job: Kaggle kernels, downloads, batches)
+- NEVER wait with a single fixed sleep/wake-up (no 900 s, no 28 min timers).
+- Poll the real status every 30-60 s in a loop and exit THE MOMENT it is terminal:
+  `kaggle kernels status <owner/slug>`; stop on COMPLETE, ERROR, CANCEL_ACKNOWLEDGED or any terminal state.
+- Every kernel must write /kaggle/working/DONE.json at the very end AND in a try/finally on failure:
+  {status: ok|error, n_images, n_black, seconds_total, errors: []}. Fetch outputs as soon as status is terminal; read DONE.json first.
+- A hard upper limit (45 min) is only a safety stop, not the wait time. If hit: report, do not retry blindly.
+- If status stays "running" and no new output files appear for 10 min, read the logs for OOM or black frames and report.
+- If one tool call is capped (e.g. 900 s), poll in a loop of 5-10 min per call instead of one long wait.
+- While waiting, do useful offline work (tests, CSV schema, contact-sheet script).
+- Never continue silently after an error: report the error text and stop.

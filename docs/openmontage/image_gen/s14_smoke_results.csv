@@ -1,0 +1,4 @@
+model,model_id,license,revision,seed,output_file,seconds,warm_sec_per_image,black_or_nan,error,sha256,bytes
+zimage-base,Tongyi-MAI/Z-Image,apache-2.0,04cc4abb7c5069926f75c9bfde9ef43d49423021,101,101.png,88.443,,True,,e9c4a470ad900801f7de4f9402eb27af8a1cc00eac80d618ef16bac39fb27d33,842
+zimage-base,Tongyi-MAI/Z-Image,apache-2.0,04cc4abb7c5069926f75c9bfde9ef43d49423021,202,202.png,87.7098,87.7098,True,,e9c4a470ad900801f7de4f9402eb27af8a1cc00eac80d618ef16bac39fb27d33,842
+zimage-base,Tongyi-MAI/Z-Image,apache-2.0,04cc4abb7c5069926f75c9bfde9ef43d49423021,303,303.png,85.1893,85.1893,True,,e9c4a470ad900801f7de4f9402eb27af8a1cc00eac80d618ef16bac39fb27d33,842

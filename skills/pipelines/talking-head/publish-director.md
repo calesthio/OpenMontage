@@ -20,6 +20,7 @@ Create platform-specific metadata:
 - **Description**: Summary of the content with relevant keywords
 - **Tags**: Derived from brief's key_points
 - **Chapters**: From script section timestamps
+- **Comment-keyword CTA** (only when the script asks viewers to comment a word, e.g. "comment GUIDE for the checklist"): repeat the exact on-screen word in the first caption line, before the "more" cut. Record it in `publish_log.metadata.engagement_cta`: `keyword` (required), `promise`, `caption_line`, `dm_message` (a draft message that delivers the promise), `public_reply`, `platforms`. Nothing is sent from this stage; if the creator automates the DM with a comment-to-DM tool, list that as a follow-up in the approval summary.
 
 ### Step 2: Thumbnail Concept
 

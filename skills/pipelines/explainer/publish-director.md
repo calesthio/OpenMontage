@@ -47,6 +47,11 @@ Collect everything needed for metadata:
 - 3-5 relevant hashtags
 - Mix trending and niche
 
+**Comment-keyword CTA** (only when the script asks viewers to comment a word, e.g. "comment GUIDE for the checklist"):
+- Repeat the exact on-screen word in the first line of the Reels/TikTok/Shorts caption, before the "more" cut
+- Record it as `engagement_cta`: `keyword` (required), `promise`, `caption_line`, `dm_message` (a draft message that delivers the promise), `public_reply`, `platforms`
+- Don't invent a CTA the script doesn't have
+
 ### Step 3: Generate Thumbnail Concept
 
 Describe a thumbnail that:
@@ -88,10 +93,12 @@ Each chapter maps to a script section's `start_seconds`.
 Use the `export_bundle` tool (capability `publish`) to do the packaging
 deterministically — pass it the final `video_path` (from `render_report`), the
 `title`, and the metadata you prepared (`description`, `tags`, `hashtags`,
-`chapters`, optional `subtitles_path` and `thumbnail_path`/`thumbnail_concept`).
+`chapters`, optional `subtitles_path` and `thumbnail_path`/`thumbnail_concept`,
+and `engagement_cta` when Step 2 recorded one).
 It lays out the export directory, writes the metadata files, and returns a
 schema-valid `publish_log` (`status: "exported"`) in `data["publish_log"]` that
-you persist as the stage artifact.
+you persist as the stage artifact. Fix anything listed in `data["warnings"]`
+(for example a CTA keyword missing from the caption) before the approval gate.
 
 It produces this structure:
 
@@ -105,17 +112,20 @@ exports/
       chapters.txt          # Chapter markers
       description.txt       # Ready-to-paste description (+ chapters)
       tags.txt              # One tag per line
+      engagement_cta.json   # Only when an engagement_cta was passed
     thumbnails/
       concept.json          # Thumbnail concept (or the copied thumbnail image)
 ```
 
 `export_bundle` is a local, offline packager — it does not upload. A networked
 publisher (e.g. a YouTube uploader) would be a separate `publish`-capability
-provider.
+provider. It also sends no messages: an `engagement_cta` is recorded so the
+overlay, caption and DM agree. If the creator automates the DM with a
+comment-to-DM tool, list that as a follow-up in the approval summary.
 
 ### Step 6: Build Publish Log
 
-`export_bundle` already returns a schema-valid `publish_log` in `data["publish_log"]` — persist that directly rather than hand-building one. Do **not** add extra entry fields (the schema sets `additionalProperties: false`; only `platform`, `status`, `url`, `video_id`, `visibility`, `export_path`, `timestamp`, `metadata_used`, `error` are allowed). The shape it returns:
+`export_bundle` already returns a schema-valid `publish_log` in `data["publish_log"]` — persist that directly rather than hand-building one. Do **not** add extra entry fields (the schema sets `additionalProperties: false`; only `platform`, `status`, `url`, `video_id`, `visibility`, `export_path`, `timestamp`, `metadata_used`, `error` are allowed). A recorded CTA lives at the top level in `metadata.engagement_cta`, not in an entry. The shape it returns:
 
 ```json
 {

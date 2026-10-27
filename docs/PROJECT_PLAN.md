@@ -313,6 +313,39 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 
 ---
 
+## 7.5 Все 10 разделов пилота — сгенерировано (реальный результат, 2026-10-27)
+
+Сгенерировано по одному кадру на каждый из 10 разделов сценария пилота методом консистентности из `docs/openmontage/image_gen/EPISODE_IMAGE_PIPELINE.md` §10 (baseline SDXL Base 1.0 + фиксированный text-prompt, без IP-Adapter).
+
+| Раздел | Файл | Заголовок | Статус | Время (с) | Пик VRAM (MB) |
+|--------|------|-----------|--------|-----------|---------------|
+| §1 | `tools/kaggle_bridge/jobs/pilot-render/images/section_01.png` | Hook and the question | OK | 19.700 | 5196 |
+| §2 | `tools/kaggle_bridge/jobs/pilot-render/images/section_02.png` | The world: an ocean with no shores | OK | 18.188 | 5196 |
+| §3 | `tools/kaggle_bridge/jobs/pilot-render/images/section_03.png` | Energy: no sunlight, two answers | OK | 17.169 | 5196 |
+| §4 | `tools/kaggle_bridge/jobs/pilot-render/images/section_04.png` | Life near the ice: mats and filter-feeders | OK | 17.695 | 5196 |
+| §5 | `tools/kaggle_bridge/jobs/pilot-render/images/section_05.png` | Predators, and the logic of an arms race | OK | 18.347 | 5196 |
+| §6 | `tools/kaggle_bridge/jobs/pilot-render/images/section_06.png` | The deep, the vents, and the animals that stay | OK | 19.198 | 5196 |
+| §7 | `tools/kaggle_bridge/jobs/pilot-render/images/section_07.png` | Chance and law: would this world repeat? | OK | 19.509 | 5196 |
+| §8 | `tools/kaggle_bridge/jobs/pilot-render/images/section_08.png` | What blocks technology without land or fire | OK | 18.750 | 5196 |
+| §9 | `tools/kaggle_bridge/jobs/pilot-render/images/section_09.png` | What is science, and what is a guess | OK | 18.608 | 5196 |
+| §10 | `tools/kaggle_bridge/jobs/pilot-render/images/section_10.png` | Closing and a question for you | OK | 18.787 | 5196 |
+
+**Ядро:** `forts845/om-pilot-render` (v2), Kaggle T4, diffusers 0.37.0  
+**Модель:** `stabilityai/stable-diffusion-xl-base-1.0` (SDXL Base 1.0)  
+**Параметры:** 768×768, 25 steps, CFG 7.5, seed 42, fp16  
+**Стиль:** bold graphic-novel ink, night ink/deep sea teal/pale bone/coral accent, fixed prefix + tail per script.md recipe  
+**Итого:** 10/10 OK, 0 failed, ~4.5 мин GPU времени  
+**Отчёт:** `tools/kaggle_bridge/jobs/pilot-render/RESULTS.md`
+
+**Важное замечание:** klein 4B не используется — заблокирован на diffusers 0.37.0 (отсутствуют компоненты модели). SDXL Base 1.0 — зафиксированная модель по EPISODE_IMAGE_PIPELINE.md.
+
+**Известные риски консистентности:**
+- Кросс-секционная визуальная консистентность (дизайн созданий: гразер 6 конечностей,дрифтер-лента, норатор-сегмент; палитра) не проверялась программно — требуется визуальная проверка владельцем.
+- Один кадр на раздел (10 всего) — при негодности кадра требуется перегенерация с новым сидом.
+- В сценарии пилота нет человеческого персонажа — консистентность поддерживается через фиксированный стильプレфикс/хвост и описания созданий, а не через описание человека.
+
+---
+
 ## 8. Фазовый план — только оставшиеся шаги до готового пилота
 
 Уже сделано (не повторять как TODO): окружение закрыто (pytest, kaggle CLI, ffmpeg, Kokoro venv, node_modules, Remotion Free License), закреплены версии diffusers/transformers/huggingface_hub, проведён полный цикл тестирования консистентности (v1–v6), выбран fallback-метод консистентности, собран первый кадр пилота §1.

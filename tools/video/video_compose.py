@@ -422,6 +422,24 @@ class VideoCompose(BaseTool):
         except Exception:
             return False
 
+    @staticmethod
+    def _probe_duration(path: Path) -> float | None:
+        """Return media duration in seconds, or None if it cannot be probed."""
+        try:
+            out = subprocess.check_output(
+                [
+                    "ffprobe", "-v", "error",
+                    "-show_entries", "format=duration",
+                    "-of", "default=nw=1:nk=1",
+                    str(path),
+                ],
+                stderr=subprocess.STDOUT,
+                text=True,
+            ).strip()
+            return float(out) if out else None
+        except Exception:
+            return None
+
     def _mux_external_audio(self, video_path: Path, audio_path: str | Path) -> ToolResult:
         """Atomically replace a rendered video's audio with the approved mix."""
 
@@ -432,21 +450,44 @@ class VideoCompose(BaseTool):
         temp_output = video_path.with_name(
             f".{video_path.stem}.audio-mux-{time.time_ns()}{video_path.suffix}"
         )
+        # Pad/trim the replacement audio to the video's exact duration.
+        #
+        # The previous form used an unbounded `apad` plus `-shortest`. With
+        # `-c:v copy` that pair deadlocks: apad emits audio forever, the copied
+        # video stream never signals EOF to the filter graph, and `-shortest`
+        # has nothing to stop on — ffmpeg spins at 100% CPU until killed and the
+        # temp output never gets written. Bounding apad with whole_dur+atrim
+        # makes the length explicit so the filter graph terminates on its own.
+        video_duration = self._probe_duration(video_path)
+
+        cmd = [
+            "ffmpeg", "-y",
+            "-i", str(video_path),
+            "-i", str(audio),
+            "-map", "0:v:0",
+            "-map", "1:a:0",
+            "-c:v", "copy",
+            "-c:a", "aac",
+            "-b:a", "192k",
+        ]
+        if video_duration is not None and video_duration > 0:
+            cmd += [
+                "-af",
+                f"apad=whole_dur={video_duration},"
+                f"atrim=duration={video_duration},asetpts=PTS-STARTPTS",
+            ]
+        else:
+            # Duration unknown: leave the audio as-is rather than risk the
+            # unbounded-apad deadlock. -shortest is safe here (audio finite).
+            cmd += ["-shortest"]
+        cmd += [
+            "-movflags", "+faststart",
+            str(temp_output),
+        ]
         try:
-            self.run_command([
-                "ffmpeg", "-y",
-                "-i", str(video_path),
-                "-i", str(audio),
-                "-map", "0:v:0",
-                "-map", "1:a:0",
-                "-c:v", "copy",
-                "-c:a", "aac",
-                "-b:a", "192k",
-                "-af", "apad",
-                "-shortest",
-                "-movflags", "+faststart",
-                str(temp_output),
-            ])
+            # Hard cap so a wedged encoder can never orphan a CPU-burning
+            # process again; run_command raises TimeoutExpired, caught below.
+            self.run_command(cmd, timeout=600)
             if not temp_output.is_file():
                 return ToolResult(
                     success=False,

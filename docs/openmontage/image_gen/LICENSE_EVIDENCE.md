@@ -17,7 +17,7 @@
 
 ## Verdict
 
-SDXL-Lightning + its required base (stabilityai/stable-diffusion-xl-base-1.0) are both clearly commercial-OK (OpenRAIL++ / Open RAIL++-M). FLUX.1-schnell is apache-2.0 and clearly commercial-OK. Z-Image-Turbo (apache-2.0) and FLUX.2-klein-4B (apache-2.0) are both clearly commercial-OK and eligible for the G2 bake-off.
+SDXL-Lightning + its required base (stabilityai/stable-diffusion-xl-base-1.0) are both clearly commercial-OK (OpenRAIL++ / Open RAIL++-M). SDXL Base 1.0 remains the **reserve** model for the pilot. FLUX.1-schnell is apache-2.0 and clearly commercial-OK. Z-Image-Turbo (apache-2.0) is clearly commercial-OK. **FLUX.2-klein-4B (apache-2.0) is the pilot's base model** — fully open under Apache 2.0, commercial use permitted, eligible for the pilot pipeline.
 
 **No component is BLOCKED on license grounds.**
 

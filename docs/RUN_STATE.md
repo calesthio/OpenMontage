@@ -22,9 +22,16 @@
 
 ## Примечания
 
-- **Модель:** SDXL Base 1.0 (klein 4B заблокирован на diffusers 0.37.0)
-- **Консистентность:** фиксированный text-prompt (без IP-Adapter)
+- **Модель:** FLUX.2-klein-4B (базовая модель пилота, Apache-2.0), SDXL Base 1.0 = резерв
+- **Консистентность:** нативный multi-reference Klein 4B (до 4 референсов), IP-Adapter не нужен
 - **Голос:** af_heart (только этот, без замен)
 - **Все артефакты:** `tools/kaggle_bridge/jobs/pilot-render/`
 - **Видео:** `remotion-composer/out/pilot-draft.mp4` (26.4 MB, без встроенных субтитров — только в коде Remotion, без музыки)
 - **Ожидает владельца:** S5 (подтверждение кадров), S8 (выбор музыки)
+
+| Этап | Статус | Доказательство | Дата |
+|------|--------|----------------|------|
+| K0 | PENDING | Исправить PROJECT_PLAN.md, LICENSE_EVIDENCE.md, RUN_STATE.md; перенести SDXL-кадры в pilot-render/images_sdxl/ | — |
+| K1+K2 | PENDING | Kaggle-ядро: signature Flux2KleinPipeline, 8 кандидатов ведущего 1280×720, contact_sheet_master.jpg 2x4, логирование времени/VRAM/dtype, bf16→float16 фолбэк | — |
+| K3 | PENDING | Второй Kaggle-ядро: 10 кадров пилота 1280×720, prompts.json, референс master.png | — |
+| K4 | PENDING | contact_sheet_frames.jpg 2x5, WAITING_OWNER | — |

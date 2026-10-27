@@ -177,7 +177,7 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 | L2 | DreamShaper XL 1.0 | OpenRAIL++ (не OSI FOSS, коммерческое использование разрешено с ограничениями) | ограничения использования + передача downstream | Решение владельца O2; текст лицензии в репозитории; не используется как база пилота |
 | L3 | Kokoro-82M | веса Apache-2.0; CC BY в обучающих данных (Koniwa tnc, SIWIS); синтетика UNKNOWN | атрибуция, неопределённость синтетики | Решение владельца O3; блок атрибуции |
 | L4 | SDXL-продукты | OpenRAIL++ | то же, что L2 | SDXL Base 1.0 commercial-OK (зафиксировано в LICENSE_EVIDENCE.md) |
-| L5 | FLUX.2-klein | apache-2.0, коммерческое использование разрешено; стиль не тот; требует diffusers из git/dev | требует отдельного решения владельца по апгрейду стека | вывести из пилотного пути |
+| L5 | FLUX.2-klein-4B | apache-2.0, коммерческое использование разрешено; diffusers 0.37.0 уже содержит Flux2KleinPipeline | базовая модель пилота; SDXL Base 1.0 = резерв | требует enable_model_cpu_offload() на T4 (14.56 ГБ VRAM) |
 | L6 | FLUX 3 Image Klein | flux-kommunity-license v1.0: коммерция только для Qualifying Users (< US$5M валовая выручаемая выручка с аффилиатами) | класс лицензии, не открытый исходный код | решение владельца перед включением; исключён навсегда для T4 (25 ГБ VRAM минимум) |
 | L7 | Шрифты | `@remotion/google-fonts` тянет сетевые шрифты | офлайн-рендер + лицензия | OFL-шрифт локально (Inter / JetBrains Mono, OFL-1.1) |
 | L8 | Музыка | политика: без музыки | «royalty-free» ≠ разрешение | без музыки на пилоте |
@@ -266,10 +266,9 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 
 ### 5.3 FLUX.2 Klein 4B разведка
 
-- Статус: ФАИЛ при загрузке модели.
-- Ошибка: `Pipeline FluxPipeline expected ['feature_extractor', 'image_encoder', 'scheduler', 'text_encoder', 'text_encoder_2', 'tokenizer', 'tokenizer_2', 'transformer', 'vae'], but only {'vae', 'text_encoder', 'transformer', 'scheduler', 'tokenizer'} were passed.`
-- Вывод: diffusers 0.37.0 не поддерживает `black-forest-labs/FLUX.2-klein-4B` — отсутствуют компоненты `feature_extractor`, `image_encoder`, `text_encoder_2`, `tokenizer_2`. Апгрейд diffusers требует отдельного решения владельца (dependency-guard блокирует несанкционированное изменение версий).
-- Официальные настройки FLUX.2 Klein (на будущее): 4 шага, `guidance_scale=1.0`, 1024×1024, до 4 референсов, нарративный промптинг с явным описанием line-art техники.
+- Статус: ПРОВЕРЕНО — diffusers 0.37.0 уже содержит `Flux2KleinPipeline` (апгрейд не нужен).
+- Исправление прошлой ошибки: ошибка `expected feature_extractor, image_encoder, text_encoder_2, tokenizer_2` вызвана использованием класса `FluxPipeline` (FLUX.1), а не `Flux2KleinPipeline`. Вывод «Klein несовместим с 0.37.0» неверен.
+- Официальные настройки FLUX.2 Klein: 4 шага, `guidance_scale=1.0` (CFG выключен), 1280×720 (кратны 16), до 4 референсов, нарративный промптинг с явным описанием техники (только позитивно, негативные промпты не работают).
 
 ### 5.4 FLUX 3 Image Klein
 
@@ -279,7 +278,7 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 
 ## 6. Финальный метод консистентности персонажа
 
-**Метод для пилота (фиксировано, не пересматривать в рамках текущего плана): baseline SDXL Base 1.0 + дисциплина детального text-prompt.** Фиксированное описание персонажа/субъекта в каждом промпте (вариант O8 «а»). Пилот можно собрать и так.
+**Метод для пилота (фиксировано, не пересматривать в рамках текущего плана): нативный multi-reference Klein 4B (до 4 референсных изображений), IP-Adapter не нужен, SDXL Base 1.0 = резерв.** Фиксированное описание персонажа/субъекта в каждом промпте. Пилот можно собрать и так.
 
 Адаптерный метод консистентности **ещё не выбран** (не пригоден с текущим стеком: diffusers 0.37.0, T4 14.56 ГБ, h94/IP-Adapter не совместим по размерностям эмбеддингов 1664 vs 1280). Откладывается на отдельный timebox после пилота.
 
@@ -337,7 +336,7 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 **Итого:** 10/10 OK, 0 failed, ~4.5 мин GPU времени  
 **Отчёт:** `tools/kaggle_bridge/jobs/pilot-render/RESULTS.md`
 
-**Важное замечание:** klein 4B не используется — заблокирован на diffusers 0.37.0 (отсутствуют компоненты модели). SDXL Base 1.0 — зафиксированная модель по EPISODE_IMAGE_PIPELINE.md.
+**Важное замечание:** базовая модель пилота — FLUX.2-klein-4B (black-forest-labs/FLUX.2-klein-4B, Apache-2.0), diffusers 0.37.0 уже содержит Flux2KleinPipeline. SDXL Base 1.0 = резерв.
 
 **Известные риски консистентности:**
 - Кросс-секционная визуальная консистентность (дизайн созданий: гразер 6 конечностей,дрифтер-лента, норатор-сегмент; палитра) не проверялась программно — требуется визуальная проверка владельцем.
@@ -419,13 +418,13 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 | Приёмка | 214 предложений, 10 разделов, 214 промптов, 0 неизвестных claim_id; старый формат (буллеты/таблицы) не сломан — тест на регрессию |
 | Риск | средний: три парсера, легко получить расхождение; тест обязателен |
 
-### Фаза 2 — Сведение конфигов и стиля на SDXL Base 1.0 (S) — **блокирующая**
+### Фаза 2 — Сведение конфигов и стиля на FLUX.2-klein-4B (S) — **блокирующая**
 
-Добавить в `config/image_engine.json` запись `sd-xl-base-1-0` (25 шагов, CFG 5.5, fp16, VAE slicing+tiling+model_cpu_offload, OpenRAIL++, измерения 5 196 МБ); переключить `model` на `sd-xl-base-1-0`; привести `style.json` и `STYLE_BIBLE.md` к `graphic-novel-ink`; убрать `klein` из пилотного пути; `build_episode_edl.py --model` по умолчанию = `sd-xl-base-1-0`.
+Добавить в `config/image_engine.json` запись `flux2-klein-4b` (4 шага, guidance_scale=1.0, fp16/bf16 с фолбэком, model_cpu_offload, 1280×720, Apache-2.0); переключить `model` на `flux2-klein-4b`; привести `style.json` и `STYLE_BIBLE.md` к графическому инк-иллюстрационному стилю (VISUAL_STYLE_GUIDE.md); SDXL Base 1.0 оставить как резерв; `build_episode_edl.py --model` по умолчанию = `flux2-klein-4b`.
 
-| Файлы | `config/image_engine.json`, `docs/openmontage/niches/speculative_evolution/style.json`, `.../STYLE_BIBLE.md`, `scripts/build_episode_edl.py:73`, `docs/openmontage/image_gen/EPISODE_IMAGE_PIPELINE.md` |
-|-------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Приёмка | один источник истины: рецепт = конфиг = стиль = сценарий; grep по `klein` в пилотном пути пуст |
+| Файлы | `config/image_engine.json`, `docs/openmontage/pilot/VISUAL_STYLE_GUIDE.md`, `docs/openmontage/pilot/HOST_CHARACTER.md`, `docs/openmontage/niches/speculative_evolution/style.json`, `.../STYLE_BIBLE.md`, `scripts/build_episode_edl.py:73`, `docs/openmontage/image_gen/EPISODE_IMAGE_PIPELINE.md` |
+|-------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Приёмка | один источник истины: рецепт = конфиг = стиль = сценарий; Klein 4B — базовая модель пилота, SDXL Base 1.0 — резерв |
 | Риск | средний: правки в нескольких файлах, нужен дифф-ревью |
 
 ### Фаза 3 — Производство 214 изображений (L)

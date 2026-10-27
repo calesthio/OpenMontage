@@ -21,16 +21,16 @@ Per `EPISODE_IMAGE_PIPELINE.md` §10: baseline SDXL Base 1.0 + детальны�
 
 | Section | File | Title | Status | Gen time (s) | Peak VRAM (MB) |
 |---------|------|-------|--------|--------------|----------------|
-| §1 | `images/section_01.png` | Hook and the question | OK | 19.700 | 5196 |
-| §2 | `images/section_02.png` | The world: an ocean with no shores | OK | 18.188 | 5196 |
-| §3 | `images/section_03.png` | Energy: no sunlight, two answers | OK | 17.169 | 5196 |
-| §4 | `images/section_04.png` | Life near the ice: mats and filter-feeders | OK | 17.695 | 5196 |
-| §5 | `images/section_05.png` | Predators, and the logic of an arms race | OK | 18.347 | 5196 |
-| §6 | `images/section_06.png` | The deep, the vents, and the animals that stay | OK | 19.198 | 5196 |
-| §7 | `images/section_07.png` | Chance and law: would this world repeat? | OK | 19.509 | 5196 |
-| §8 | `images/section_08.png` | What blocks technology without land or fire | OK | 18.750 | 5196 |
-| §9 | `images/section_09.png` | What is science, and what is a guess | OK | 18.608 | 5196 |
-| §10 | `images/section_10.png` | Closing and a question for you | OK | 18.787 | 5196 |
+| §1 | `images_sdxl/section_01.png` | Hook and the question | OK | 19.700 | 5196 |
+| §2 | `images_sdxl/section_02.png` | The world: an ocean with no shores | OK | 18.188 | 5196 |
+| §3 | `images_sdxl/section_03.png` | Energy: no sunlight, two answers | OK | 17.169 | 5196 |
+| §4 | `images_sdxl/section_04.png` | Life near the ice: mats and filter-feeders | OK | 17.695 | 5196 |
+| §5 | `images_sdxl/section_05.png` | Predators, and the logic of an arms race | OK | 18.347 | 5196 |
+| §6 | `images_sdxl/section_06.png` | The deep, the vents, and the animals that stay | OK | 19.198 | 5196 |
+| §7 | `images_sdxl/section_07.png` | Chance and law: would this world repeat? | OK | 19.509 | 5196 |
+| §8 | `images_sdxl/section_08.png` | What blocks technology without land or fire | OK | 18.750 | 5196 |
+| §9 | `images_sdxl/section_09.png` | What is science, and what is a guess | OK | 18.608 | 5196 |
+| §10 | `images_sdxl/section_10.png` | Closing and a question for you | OK | 18.787 | 5196 |
 
 **Summary: 10/10 OK, 0 failed.**
 
@@ -46,6 +46,6 @@ Per `EPISODE_IMAGE_PIPELINE.md` §10: baseline SDXL Base 1.0 + детальны�
 
 ## Local paths
 
-All images: `tools/kaggle_bridge/jobs/pilot-render/images/section_01.png` … `section_10.png`  
+All images: `tools/kaggle_bridge/jobs/pilot-render/images_sdxl/section_01.png` … `section_10.png`  
 Full results (with prompts): `tools/kaggle_bridge/jobs/pilot-render/output/pilot-render/results.json`  
 Kernel log: `tools/kaggle_bridge/jobs/pilot-render/output/om-pilot-render.log`

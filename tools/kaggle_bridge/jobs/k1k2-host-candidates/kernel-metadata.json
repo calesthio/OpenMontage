@@ -1,0 +1,16 @@
+{
+  "id": "forts845/k1k2-host-candidates",
+  "title": "K1+K2 host candidates FLUX.2-klein-4B",
+  "code_file": "run.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": "false",
+  "enable_internet": true,
+  "machine_shape": "",
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}

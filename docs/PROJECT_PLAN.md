@@ -346,6 +346,64 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 
 ---
 
+## 7.6 Озвучка всех 10 разделов — Kokoro TTS (af_heart) (2026-10-27)
+
+Сгенерировано аудио для каждого из 10 разделов через Kokoro 0.2.2, голос `af_heart`, 24 кГц.
+
+| Раздел | Файл | Заголовок | Слова | Длительность (с) | Ожидается (с) | Разница (с) | Статус |
+|--------|------|-----------|-------|-----------------|---------------|-------------|--------|
+| §1 | `audio/section_01.wav` | Hook and the question | 229 | 83.0 | 91 | −8.0 | OK |
+| §2 | `audio/section_02.wav` | The world: an ocean with no shores | 384 | 129.4 | 153 | −23.6 | OK |
+| §3 | `audio/section_03.wav` | Energy: no sunlight, two answers | 377 | 148.6 | 150 | −1.4 | OK |
+| §4 | `audio/section_04.wav` | Life near the ice: mats and filter-feeders | 381 | 135.5 | 155 | −19.5 | OK |
+| §5 | `audio/section_05.wav` | Predators, and the logic of an arms race | 383 | 132.9 | 149 | −16.1 | OK |
+| §6 | `audio/section_06.wav` | The deep, the vents, and the animals that stay | 390 | 137.8 | 152 | −14.2 | OK |
+| §7 | `audio/section_07.wav` | Chance and law: would this world repeat? | 302 | 99.9 | 118 | −18.1 | OK |
+| §8 | `audio/section_08.wav` | What blocks technology without land or fire | 332 | 101.4 | 120 | −18.6 | OK |
+| §9 | `audio/section_09.wav` | What is science, and what is a guess | 268 | 83.6 | 87 | −3.4 | OK |
+| §10 | `audio/section_10.wav` | Closing and a question for you | 208 | 47.8 | 57 | −9.2 | OK |
+
+**Всего:** 1099.9с (18:20) фактически vs 1232с (20:32) ожидается (−132.1с, −10.7%)
+
+**Ядро:** `/tmp/kilo/z1_venv` (Python 3.14.2, kokoro==0.2.2), голос `af_heart`  
+**Генерация:** секции 3–10 построчно в отдельных процессах (избежать накопления памяти)  
+**Отчёт:** `tools/kaggle_bridge/jobs/pilot-render/audio/RESULTS.md`
+
+**Примечание:** все секции короче ожидаемого времени из `script.md` (150 wpm человеческий темп). Kokoro читает быстрее без естественных пауз между предложениями — паузы добавляются в пост-продакшене.
+
+---
+
+## 7.7 Черновой рендер пилота через Remotion (2026-10-27)
+
+Собрана композиция `PilotDraft` (`remotion-composer/src/PilotDraft.tsx`), зарегистрированная в `remotion-composer/src/Root.tsx`:
+- 10 секций, по одному сгенерированному изображению на раздел, full-bleed
+- Каждая секция синхронизирована со своим аудио-файлом (Kokoro af_heart)
+- Без переходов/эффектов — черновик для проверки владельцем
+- TypeScript компилируется без ошибок
+
+**Пути:**
+- Композиция: `remotion-composer/src/PilotDraft.tsx`
+- Регистрация: `remotion-composer/src/Root.tsx` (Composition id `PilotDraft`)
+- Изображения: `remotion-composer/public/pilot/section_*.png` (скопированы из `tools/kaggle_bridge/jobs/pilot-render/images/`)
+- Аудио: `remotion-composer/public/pilot/section_*.wav` (скопированы из `tools/kaggle_bridge/jobs/pilot-render/audio/`)
+- Выход: `remotion-composer/out/pilot-draft.mp4` (рендер не завершён в этой сессии — Remotion рендерит ~33 000 кадров через Chrome headless, оценка ~2.5 часа)
+
+**Статус рендера:** запущен и остановлен на ~920/32 994 кадра (~3%). Нужно дореNDERить отдельно.
+
+---
+
+## 7.8 Что ещё нужно для финальной версии пилота
+
+| Пункт | Статус | Комментарий |
+|-------|--------|-------------|
+| Переходы между секциями | НЕ СДЕЛАНО | Черновик без переходов |
+| Субтитры (SRT) | НЕ СДЕЛАНО | `scripts/fw_subtitles.py` не проверялся |
+| Музыкальная подложка | ОТКРЫТЫЙ ПУНКТ | Согласно HANDOFF-документу, музыкальная подложка ещё не выбрана. Требуется решение владельца. |
+| Полный рендер 20:30 | НЕ СДЕЛАНО | Черновик ~18:20, нужен финальный монтаж |
+| QA и гейт выпуска | НЕ СДЕЛАНО | `tools/qa/qc.py`, пороги требуют override-файла |
+
+---
+
 ## 8. Фазовый план — только оставшиеся шаги до готового пилота
 
 Уже сделано (не повторять как TODO): окружение закрыто (pytest, kaggle CLI, ffmpeg, Kokoro venv, node_modules, Remotion Free License), закреплены версии diffusers/transformers/huggingface_hub, проведён полный цикл тестирования консистентности (v1–v6), выбран fallback-метод консистентности, собран первый кадр пилота §1.

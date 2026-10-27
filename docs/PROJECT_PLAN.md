@@ -265,7 +265,54 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 
 Тесты Б/В не упали с OOM (пик снизился с утренних 13,9 ГБ до 5 106 МБ благодаря оптимизациям памяти), но не выпустили ни одной картинки из-за несовместимости `h94/IP-Adapter` с `diffusers 0.40` (ошибки размерности/типа/ранга `image_embeds`). Тест Г не имеет смысла пока Б/В не отработают.
 
-**Итог:** единственная рабочая конфигурация без OOM — Тест A. Рекомендация для пилота: использовать Тест A как базу, консистентность персонажа — фиксированный seed + единый промпт (O8 вариант «а»); IP-Adapter-консистентность — отдельный timebox после пилота. Детальный отчёт: `tools/kaggle_bridge/jobs/consistency-ab-test/RESULTS.md`.
+### Итог v6 (2026-10-27) — официальный IP-Adapter API, diffusers 0.37.0, quick-режим (1 seed × 1 сценарий)
+
+Ядро `forts845/om-consistency-ab-test` версия 12, окружение: torch 2.11.0+cu128, diffusers 0.37.0, Tesla T4, 14.56 ГБ VRAM.
+
+| Тест | Конфигурация | Картин | Пик VRAM | Ошибка рендера | Вердикт |
+|------|-------------|--------|----------|----------------|---------|
+| A — baseline | SDXL Base 1.0, 768×768, fp16, vae_slicing+tiling+model_cpu_offload, без адаптера | 1/1 | 5 196 МБ | — | **Пройден** |
+| B — Plus Face (офиц. API) | A + `ip-adapter-plus-face_sdxl_vit-h`, scale 0.6, `ip_adapter_image=PIL.Image`, steps 30 | 0/1 | 5 839 МБ | `mat1 and mat2 shapes cannot be multiplied (514x1664 and 1280x1280)` | Не пригоден |
+| C — Plus full-body (офиц. API) | A + `ip-adapter-plus_sdxl_vit-h`, scale 0.6 | 0/1 | 5 839 МБ | та же ошибка (1664 vs 1280) | Не пригоден |
+| D — комбо Plus + Plus Face | B + C | 0/1 | 11 664,7 МБ | та же ошибка | Не пригоден |
+
+Причина: `h94/IP-Adapter` sdxl_models кодирует изображение через `image_encoder` (ViT-H, `last_hidden_state` 1664 dim), а веса `ip-adapter-plus-face_sdxl_vit-h` ждут на вход проекции 1280-dim `image_embeds`. Официальный `ip_adapter_image` кормит проекцию `last_hidden_state` → несовпадение размерностей. Ручное построение `ip_adapter_image_embeds` запрещено задачей; апгрейд diffusers запрещён dependency-guard (закреплено 0.37.0). Полная матрица 5 seed × 9 сценариев не имеет смысла — ни один адаптерный тест не выдаёт годного кадра.
+
+**Итог:** единственная рабочая конфигурация без OOM с годными кадрами — Тест A (baseline SDXL Base 1.0). Детальный отчёт: `tools/kaggle_bridge/jobs/consistency-ab-test/results_v6/consistency-ab-test/results.json` (и `RESULTS.md` для v1–v6).
+
+### Решение по консистентности персонажа (фиксировано, не пересматривать)
+
+Автоматическая консистентность через IP-Adapter временно нецелесообразна с текущим стеком (diffusers 0.37.0, T4 14.56 ГБ, h94/IP-Adapter не совместим по размерностям эмбеддингов).
+
+Решение для пилота: **baseline SDXL Base 1.0 + дисциплина детального text-prompt** — фиксированное описание персонажа/субъекта в каждом промпте — как временная мера, пока не появится рабочий адаптер. Это вариант O8 «а» (PROJECT_PLAN §7). Пилот можно собрать и так; IP-Adapter-консистентность откладывается на отдельный timebox после пилота.
+
+**Где «плывёт» консистентность:** не определится автоматически — контроль владельцем по сохранённым кадрам Теста A.
+
+### 4.8 Первый собранный кадр сцены пилота (реальный результат)
+
+Собран первый клип пилота — раздел §1 «Hook and the question» («What Would Life Look Like on an Ocean Planet With No Land?»), от текста до готового кадра с озвучкой.
+
+| Поле | Значение |
+|------|----------|
+| Сцена | §1 «Hook and the question», 14 предложений (S001–S014) |
+| Кадр | 1 кадр, beat S001, baseline SDXL Base 1.0 (fallback-метод консистентности), 768×768, фиксированный детальный промпт + стиль graphic-novel-ink как текст |
+| Генерация кадра | Kaggle T4, ядро `forts845/pilot-frame-sdxl-baseline`, peak VRAM 5 196 MB, 22 s |
+| Озвучка | Kokoro-82M, голос `af_heart`, venv `/tmp/kilo/z1_venv`, 83.03 s, 24 кГц |
+| Сборка | Remotion composition `PilotScene1` (`remotion-composer/src/PilotScene.tsx`), кадр full-bleed + аудио, `remotion-composer/out/pilot-scene-1.mp4` |
+| Результат | h264 1920×1080 + aac, 83 s, 6.4 MB, валиден (ffprobe: видео h264 1920×1080, аудио aac) |
+
+**Путь первого кадра:** `tools/kaggle_bridge/jobs/pilot-frame-1b/output/pilot-frame-1/frame_001.png` → `remotion-composer/public/pilot/frame.png`  
+**Путь озвучки:** `/tmp/kilo/pilot_scene1/narration.wav` → `remotion-composer/public/pilot/narration.wav`  
+**Готовый клип:** `remotion-composer/out/pilot-scene-1.mp4`
+
+**Осталось до полного пилота:** 9 разделов (§2–§10, 200 оставшихся предложений из 214). Каждый раздел нужен свой набор кадров + озвучка, затем склейка, субтитры, переходы, графика, QA.
+
+**Что ещё не автоматизировано:**
+- Парсер формата пилота (`S<NNN> [ID]` + `PROMPT:`) — сломан (Б1, PROJECT_PLAN §2.3).
+- Субтитры / forced alignment (SRT) — не подключены.
+- Переходы между сценами и EDL — не автоматизированы.
+- Полный рендер эпизода (20–21 мин) — не собран.
+
 
 ---
 

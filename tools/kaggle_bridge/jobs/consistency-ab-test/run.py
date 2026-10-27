@@ -2,18 +2,22 @@
 
 Tests (protocol: tools/kaggle_bridge/jobs/consistency-ab-test/test_protocol.json):
   A - SDXL Base 1.0, 768x768, fp16, vae slicing/tiling, model CPU offload, NO IP-Adapter (control/gate)
-  B - A + ip-adapter-plus-face_sdxl_vit-h only
-  C - A + ip-adapter-plus_sdxl_vit-h (full-body) only
-  D - B + C combined (only if B and C both pass without OOM)
+  B - A + ip-adapter-plus-face_sdxl_vit-h via OFFICIAL diffusers API
+        (pipe.load_ip_adapter + pipe.set_ip_adapter_scale + ip_adapter_image=PIL.Image)
 
-Banned: DreamShaper XL base, IP-Adapter FaceID, PhotoMaker V2, PuLID, Character LoRA training.
+Banned: DreamShaper XL base, IP-Adapter FaceID, PhotoMaker V2, PuLID, Character LoRA training,
+manual ip_adapter_image_embeds construction.
 OOM policy: record exact operation / resolution / scenario; never mask by lowering quality.
 Outputs: /kaggle/working/consistency-ab-test/images/<test>_<seed>_<scenario>.png
          /kaggle/working/consistency-ab-test/results.json
+
+Default run = QUICK test (1 seed x 1 scenario) to confirm the official IP-Adapter path works.
+Pass --full-matrix to run the full 5-seed x 9-scenario matrix for tests A and B.
 """
 
 from __future__ import annotations
 
+import argparse
 import importlib.metadata as md
 import json
 import os
@@ -53,7 +57,6 @@ _ensure_pinned_versions()
 import torch
 from PIL import Image
 from diffusers import StableDiffusionXLPipeline
-from transformers import CLIPVisionModelWithProjection, CLIPImageProcessor
 
 OUT = Path("/kaggle/working/consistency-ab-test")
 IMG_DIR = OUT / "images"
@@ -66,7 +69,7 @@ IP_FACE_WEIGHT = "ip-adapter-plus-face_sdxl_vit-h.safetensors"
 IP_PLUS_WEIGHT = "ip-adapter-plus_sdxl_vit-h.safetensors"
 
 W = H = 768
-STEPS = 25
+STEPS = 30
 GUIDANCE = 7.5
 SEEDS = [42, 123, 777, 2026, 9001]
 
@@ -96,6 +99,9 @@ REF_PROMPT = (
     f"portrait of {CHARACTER}, clean light gray background, soft studio lighting, "
     "highly detailed, 8k"
 )
+
+QUICK_SEEDS = [42]
+QUICK_SCENARIOS = [SCENARIOS[0]]
 
 
 def now():
@@ -146,41 +152,28 @@ def load_base_pipe(apply_cpu_offload=True):
     return pipe
 
 
-def add_ip_adapter(pipe, weight_name, scale, apply_cpu_offload_after=True):
-    image_encoder = CLIPVisionModelWithProjection.from_pretrained(
-        IP_REPO, subfolder=f"{IP_SUB}/image_encoder", torch_dtype=torch.float16
-    )
-    pipe.image_encoder = image_encoder
-    if not hasattr(pipe, "load_ip_adapter"):
-        raise RuntimeError("load_ip_adapter not available in this diffusers version")
+def add_ip_adapter(pipe, weight_name, scale=0.6, apply_cpu_offload_after=True):
+    """Load one IP-Adapter weight via OFFICIAL diffusers API."""
     pipe.load_ip_adapter(IP_REPO, subfolder=IP_SUB, weight_name=weight_name)
-    if hasattr(pipe, "set_ip_adapter_scale"):
-        pipe.set_ip_adapter_scale(scale)
-    # cpu_offload MUST be applied AFTER IP-Adapter modules are registered so the
-    # offload hook captures them too (avoids CPU/CUDA weight mismatch).
+    pipe.set_ip_adapter_scale(scale)
     if apply_cpu_offload_after and hasattr(pipe, "enable_model_cpu_offload"):
         pipe.enable_model_cpu_offload()
     return pipe
 
 
-def compute_ref_embeds(pipe, ref_image):
-    """Pre-compute 1280-dim CLIP image_embeds for the reference character.
-
-    h94/IP-Adapter sdxl_models/image_encoder exposes hidden_size=1664
-    (last_hidden_state) but projection_dim=1280 (image_embeds). IP-Adapter
-    vit-h weights expect 1280-dim input, so we feed pre-computed image_embeds
-    via ip_adapter_image_embeds and bypass the pipeline's image-encoder re-run
-    (which would otherwise feed the 1664-dim last_hidden_state and shape-error).
-    """
-    processor = CLIPImageProcessor()
-    inputs = processor(images=ref_image, return_tensors="pt")
-    pixel_values = inputs.pixel_values.to(device="cuda", dtype=torch.float16)
-    with torch.no_grad():
-        out = pipe.image_encoder(pixel_values)
-    return out.image_embeds  # (1, 1280)
+def add_ip_adapter_plus_face(pipe, scale=0.6, apply_cpu_offload_after=True):
+    """IP-Adapter Plus Face via OFFICIAL diffusers API."""
+    return add_ip_adapter(pipe, IP_FACE_WEIGHT, scale=scale,
+                          apply_cpu_offload_after=apply_cpu_offload_after)
 
 
-def generate(pipe, prompt, seed, ref_embeds_list=None):
+def add_ip_adapter_plus(pipe, scale=0.6, apply_cpu_offload_after=True):
+    """IP-Adapter Plus (full-body) via OFFICIAL diffusers API."""
+    return add_ip_adapter(pipe, IP_PLUS_WEIGHT, scale=scale,
+                          apply_cpu_offload_after=apply_cpu_offload_after)
+
+
+def generate(pipe, prompt, seed, ip_adapter_image=None):
     kwargs = dict(
         prompt=prompt,
         negative_prompt=NEGATIVE,
@@ -190,8 +183,8 @@ def generate(pipe, prompt, seed, ref_embeds_list=None):
         guidance_scale=GUIDANCE,
         generator=torch.manual_seed(seed),
     )
-    if ref_embeds_list is not None:
-        kwargs["ip_adapter_image_embeds"] = ref_embeds_list
+    if ip_adapter_image is not None:
+        kwargs["ip_adapter_image"] = ip_adapter_image
     t0 = time.time()
     try:
         image = pipe(**kwargs).images[0]
@@ -201,8 +194,9 @@ def generate(pipe, prompt, seed, ref_embeds_list=None):
     return image, round(time.time() - t0, 3)
 
 
-def run_test(test_name, make_pipe, ref_image=None, scenarios=None, ip_adapter_count=1):
+def run_test(test_name, make_pipe, ref_image=None, scenarios=None, seeds=None, ip_adapter_image=None):
     scenarios = scenarios or SCENARIOS
+    seeds = seeds or SEEDS
     reset_peak()
     t_load = time.time()
     try:
@@ -223,28 +217,12 @@ def run_test(test_name, make_pipe, ref_image=None, scenarios=None, ip_adapter_co
     peak_after_load = peak_mb()
     reset_peak()
 
-    # Pre-compute reference image_embeds once per pipe; replicate per adapter.
-    ref_embeds_list = None
-    if ref_image is not None and hasattr(pipe, "image_encoder"):
-        ref_embeds_pos = compute_ref_embeds(pipe, ref_image)  # (1, 1280)
-        # diffusers 0.37.0 SDXL IP-Adapter с CFG ожидает каждый элемент
-        # ip_adapter_image_embeds как тензор [2, seq_len, embed_dim]:
-        #   [0] = negative (unconditional) image_embeds
-        #   [1] = positive (conditional) image_embeds
-        # chunk(2) в prepare_ip_adapter_image_embeds разделяет их обратно.
-        ref_embeds_neg = torch.zeros_like(ref_embeds_pos)  # (1, 1280) — пустой негатив
-        ref_embeds = torch.cat([ref_embeds_neg, ref_embeds_pos], dim=0)  # (2, 1280)
-        ref_embeds = ref_embeds.unsqueeze(1)  # (2, 1, 1280) — 3D для проверки ndim
-        ref_embeds_list = [ref_embeds] * ip_adapter_count
-        print(f"[{test_name}] ref image_embeds: {tuple(ref_embeds.shape)} "
-              f"x{ip_adapter_count} adapters (neg,pos)")
-
     renders = []
     oom = None
     passed = True
     for scen_key, scen_desc in scenarios:
         prompt = f"{CHARACTER}, {scen_desc}, {STYLE_SUFFIX}"
-        for seed in SEEDS:
+        for seed in seeds:
             fname = f"{test_name}_{seed}_{scen_key}.png"
             fpath = IMG_DIR / fname
             rec = {
@@ -252,7 +230,7 @@ def run_test(test_name, make_pipe, ref_image=None, scenarios=None, ip_adapter_co
                 "scenario_desc": scen_desc, "file": fname,
             }
             try:
-                image, dt = generate(pipe, prompt, seed, ref_embeds_list=ref_embeds_list)
+                image, dt = generate(pipe, prompt, seed, ip_adapter_image=ip_adapter_image)
                 image.save(fpath)
                 rec.update({
                     "status": "ok", "seconds": dt,
@@ -272,6 +250,7 @@ def run_test(test_name, make_pipe, ref_image=None, scenarios=None, ip_adapter_co
                 renders.append(rec)
                 break
             except Exception as exc:  # noqa: BLE001
+                passed = False
                 rec.update({"status": "error", "error": str(exc)[:200]})
             renders.append(rec)
             if oom:
@@ -293,15 +272,20 @@ def run_test(test_name, make_pipe, ref_image=None, scenarios=None, ip_adapter_co
     }
 
 
-def main():
+def main(full_matrix=False):
+    seeds = SEEDS if full_matrix else QUICK_SEEDS
+    scenarios = SCENARIOS if full_matrix else QUICK_SCENARIOS
     results = {
         "protocol": "tools/kaggle_bridge/jobs/consistency-ab-test/test_protocol.json",
+        "mode": "full-matrix" if full_matrix else "quick",
         "started_utc": now(),
         "environment": env_info(),
         "tests": [],
         "conclusion": {},
     }
     print("ENV:", json.dumps(results["environment"], ensure_ascii=False))
+    print(f"MODE: {'full-matrix' if full_matrix else 'quick'} "
+          f"({len(seeds)} seed(s) x {len(scenarios)} scenario(s))")
 
     # --- reference character image (clean background) ---------------------
     ref_image = None
@@ -339,7 +323,9 @@ def main():
     # --- Test A: baseline, no adapter -------------------------------------
     results["tests"].append(_try_test("A_baseline",
                                       lambda: run_test("A_baseline",
-                                                       lambda: load_base_pipe(apply_cpu_offload=True))))
+                                                       lambda: load_base_pipe(apply_cpu_offload=True),
+                                                       ref_image=None,
+                                                       scenarios=scenarios, seeds=seeds)))
     ta = results["tests"][-1]
     print(f"TEST A baseline: passed={ta.get('passed')} peak_vram={ta.get('peak_vram_mb_overall')} MB "
           f"oom={ta.get('oom')} error={ta.get('error')}")
@@ -349,49 +335,54 @@ def main():
         print("GATE: bare SDXL Base did not pass. Stopping per protocol.")
         return
 
-    # --- Test B: IP-Adapter Plus Face -------------------------------------
-    results["tests"].append(_try_test("B_plus_face",
-        lambda: run_test("B_plus_face",
-                         lambda: add_ip_adapter(load_base_pipe(apply_cpu_offload=False),
-                                                IP_FACE_WEIGHT, 0.7),
-                         ref_image=ref_image)))
+    # --- Test B: IP-Adapter Plus Face (OFFICIAL API) ----------------------
+    results["tests"].append(_try_test("B_plus_face_official",
+        lambda: run_test("B_plus_face_official",
+                         lambda: add_ip_adapter_plus_face(load_base_pipe(apply_cpu_offload=False),
+                                                          scale=0.6),
+                         ref_image=ref_image,
+                         scenarios=scenarios, seeds=seeds,
+                         ip_adapter_image=ref_image)))
     tb = results["tests"][-1]
-    print(f"TEST B plus-face: passed={tb.get('passed')} peak_vram={tb.get('peak_vram_mb_overall')} MB "
+    print(f"TEST B plus-face (official): passed={tb.get('passed')} peak_vram={tb.get('peak_vram_mb_overall')} MB "
           f"oom={tb.get('oom')} error={tb.get('error')}")
 
-    # --- Test C: IP-Adapter Plus full-body --------------------------------
-    results["tests"].append(_try_test("C_plus_fullbody",
-        lambda: run_test("C_plus_fullbody",
-                         lambda: add_ip_adapter(load_base_pipe(apply_cpu_offload=False),
-                                                IP_PLUS_WEIGHT, 0.7),
-                         ref_image=ref_image)))
+    # --- Test C: IP-Adapter Plus full-body (OFFICIAL API) -----------------
+    results["tests"].append(_try_test("C_plus_fullbody_official",
+        lambda: run_test("C_plus_fullbody_official",
+                         lambda: add_ip_adapter_plus(load_base_pipe(apply_cpu_offload=False),
+                                                     scale=0.6),
+                         ref_image=ref_image,
+                         scenarios=scenarios, seeds=seeds,
+                         ip_adapter_image=ref_image)))
     tc = results["tests"][-1]
-    print(f"TEST C plus-fullbody: passed={tc.get('passed')} peak_vram={tc.get('peak_vram_mb_overall')} MB "
+    print(f"TEST C plus-fullbody (official): passed={tc.get('passed')} peak_vram={tc.get('peak_vram_mb_overall')} MB "
           f"oom={tc.get('oom')} error={tc.get('error')}")
 
     # --- Test D: combination ----------------------------------------------
     td = None
     if tb.get("passed") and tc.get("passed"):
         td = run_test(
-            "D_plus_plusface_combo",
-            lambda: add_ip_adapter(
-                add_ip_adapter(load_base_pipe(apply_cpu_offload=False),
-                               IP_PLUS_WEIGHT, 0.7, apply_cpu_offload_after=False),
-                IP_FACE_WEIGHT, 0.25, apply_cpu_offload_after=True,
+            "D_plus_plusface_combo_official",
+            lambda: add_ip_adapter_plus_face(
+                add_ip_adapter_plus(load_base_pipe(apply_cpu_offload=False),
+                                    scale=0.6, apply_cpu_offload_after=False),
+                scale=0.6, apply_cpu_offload_after=True,
             ),
             ref_image=ref_image,
-            ip_adapter_count=2,
+            scenarios=scenarios, seeds=seeds,
+            ip_adapter_image=ref_image,
         )
         results["tests"].append(td)
-        print(f"TEST D combo: passed={td.get('passed')} peak_vram={td.get('peak_vram_mb_overall')} MB "
+        print(f"TEST D combo (official): passed={td.get('passed')} peak_vram={td.get('peak_vram_mb_overall')} MB "
               f"oom={td.get('oom')} error={td.get('error')}")
     else:
         results["tests"].append({
-            "test_name": "D_plus_plusface_combo",
+            "test_name": "D_plus_plusface_combo_official",
             "skipped": True,
-            "reason": "Test B or C failed with OOM; combination not attempted per protocol.",
+            "reason": "Test B or C failed with OOM/error; combination not attempted per protocol.",
         })
-        print("TEST D combo: SKIPPED (B or C failed with OOM)")
+        print("TEST D combo: SKIPPED (B or C failed)")
 
     # --- conclusion -------------------------------------------------------
     passing = [t for t in results["tests"] if t.get("passed")]
@@ -409,7 +400,7 @@ def main():
     else:
         results["conclusion"] = {
             "best_test": None,
-            "note": "No test passed without OOM.",
+            "note": "No test passed without OOM/error.",
         }
 
     (OUT / "results.json").write_text(json.dumps(results, indent=2, ensure_ascii=False))
@@ -418,4 +409,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--full-matrix", action="store_true",
+                        help="Run full 5-seed x 9-scenario matrix (default: quick 1x1 test)")
+    args = parser.parse_args()
+    main(full_matrix=args.full_matrix)

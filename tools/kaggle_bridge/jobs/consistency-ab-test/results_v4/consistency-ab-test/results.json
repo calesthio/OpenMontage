@@ -1,0 +1,1731 @@
+{
+  "protocol": "tools/kaggle_bridge/jobs/consistency-ab-test/test_protocol.json",
+  "started_utc": "2026-10-27T01:13:29Z",
+  "environment": {
+    "torch": "2.11.0+cu128",
+    "cuda_available": true,
+    "diffusers": "0.37.0",
+    "device": "Tesla T4",
+    "total_vram_gb": 14.56
+  },
+  "tests": [
+    {
+      "test_name": "A_baseline",
+      "load_seconds": 15.7,
+      "peak_vram_mb_after_load": 9.1,
+      "peak_vram_mb_overall": 5196.0,
+      "oom": null,
+      "passed": true,
+      "renders": [
+        {
+          "test": "A_baseline",
+          "seed": 42,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "A_baseline_42_crowd_portrait_close_up.png",
+          "status": "ok",
+          "seconds": 18.444,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 123,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "A_baseline_123_crowd_portrait_close_up.png",
+          "status": "ok",
+          "seconds": 18.816,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 777,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "A_baseline_777_crowd_portrait_close_up.png",
+          "status": "ok",
+          "seconds": 19.522,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 2026,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "A_baseline_2026_crowd_portrait_close_up.png",
+          "status": "ok",
+          "seconds": 20.977,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 9001,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "A_baseline_9001_crowd_portrait_close_up.png",
+          "status": "ok",
+          "seconds": 21.358,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 42,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "A_baseline_42_side_profile.png",
+          "status": "ok",
+          "seconds": 19.919,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 123,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "A_baseline_123_side_profile.png",
+          "status": "ok",
+          "seconds": 19.831,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 777,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "A_baseline_777_side_profile.png",
+          "status": "ok",
+          "seconds": 20.771,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 2026,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "A_baseline_2026_side_profile.png",
+          "status": "ok",
+          "seconds": 20.66,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 9001,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "A_baseline_9001_side_profile.png",
+          "status": "ok",
+          "seconds": 20.285,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 42,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "A_baseline_42_full_body_standing.png",
+          "status": "ok",
+          "seconds": 20.216,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 123,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "A_baseline_123_full_body_standing.png",
+          "status": "ok",
+          "seconds": 20.626,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 777,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "A_baseline_777_full_body_standing.png",
+          "status": "ok",
+          "seconds": 20.565,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 2026,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "A_baseline_2026_full_body_standing.png",
+          "status": "ok",
+          "seconds": 20.312,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 9001,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "A_baseline_9001_full_body_standing.png",
+          "status": "ok",
+          "seconds": 20.226,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 42,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "A_baseline_42_dynamic_action_pose.png",
+          "status": "ok",
+          "seconds": 20.392,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 123,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "A_baseline_123_dynamic_action_pose.png",
+          "status": "ok",
+          "seconds": 20.489,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 777,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "A_baseline_777_dynamic_action_pose.png",
+          "status": "ok",
+          "seconds": 20.476,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 2026,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "A_baseline_2026_dynamic_action_pose.png",
+          "status": "ok",
+          "seconds": 20.402,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 9001,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "A_baseline_9001_dynamic_action_pose.png",
+          "status": "ok",
+          "seconds": 20.349,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 42,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "A_baseline_42_different_lighting.png",
+          "status": "ok",
+          "seconds": 20.407,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 123,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "A_baseline_123_different_lighting.png",
+          "status": "ok",
+          "seconds": 20.51,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 777,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "A_baseline_777_different_lighting.png",
+          "status": "ok",
+          "seconds": 20.467,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 2026,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "A_baseline_2026_different_lighting.png",
+          "status": "ok",
+          "seconds": 20.39,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 9001,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "A_baseline_9001_different_lighting.png",
+          "status": "ok",
+          "seconds": 20.427,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 42,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "A_baseline_42_different_emotion.png",
+          "status": "ok",
+          "seconds": 20.574,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 123,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "A_baseline_123_different_emotion.png",
+          "status": "ok",
+          "seconds": 20.483,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 777,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "A_baseline_777_different_emotion.png",
+          "status": "ok",
+          "seconds": 20.432,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 2026,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "A_baseline_2026_different_emotion.png",
+          "status": "ok",
+          "seconds": 20.278,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 9001,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "A_baseline_9001_different_emotion.png",
+          "status": "ok",
+          "seconds": 20.404,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 42,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "A_baseline_42_different_outfit_detail.png",
+          "status": "ok",
+          "seconds": 20.424,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 123,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "A_baseline_123_different_outfit_detail.png",
+          "status": "ok",
+          "seconds": 20.427,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 777,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "A_baseline_777_different_outfit_detail.png",
+          "status": "ok",
+          "seconds": 20.325,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 2026,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "A_baseline_2026_different_outfit_detail.png",
+          "status": "ok",
+          "seconds": 20.263,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 9001,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "A_baseline_9001_different_outfit_detail.png",
+          "status": "ok",
+          "seconds": 20.37,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 42,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "A_baseline_42_different_background.png",
+          "status": "ok",
+          "seconds": 20.51,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 123,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "A_baseline_123_different_background.png",
+          "status": "ok",
+          "seconds": 20.45,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 777,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "A_baseline_777_different_background.png",
+          "status": "ok",
+          "seconds": 20.29,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 2026,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "A_baseline_2026_different_background.png",
+          "status": "ok",
+          "seconds": 20.366,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 9001,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "A_baseline_9001_different_background.png",
+          "status": "ok",
+          "seconds": 20.454,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 42,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "A_baseline_42_group_scene_other_character.png",
+          "status": "ok",
+          "seconds": 20.498,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 123,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "A_baseline_123_group_scene_other_character.png",
+          "status": "ok",
+          "seconds": 20.338,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 777,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "A_baseline_777_group_scene_other_character.png",
+          "status": "ok",
+          "seconds": 20.169,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 2026,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "A_baseline_2026_group_scene_other_character.png",
+          "status": "ok",
+          "seconds": 20.363,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 9001,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "A_baseline_9001_group_scene_other_character.png",
+          "status": "ok",
+          "seconds": 20.489,
+          "peak_vram_mb": 5196.0
+        }
+      ]
+    },
+    {
+      "test_name": "B_plus_face",
+      "load_seconds": 71.42,
+      "peak_vram_mb_after_load": 9.1,
+      "peak_vram_mb_overall": 3540.1,
+      "oom": null,
+      "passed": true,
+      "renders": [
+        {
+          "test": "B_plus_face",
+          "seed": 42,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "B_plus_face_42_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 123,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "B_plus_face_123_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 777,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "B_plus_face_777_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 2026,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "B_plus_face_2026_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 9001,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "B_plus_face_9001_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 42,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "B_plus_face_42_side_profile.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 123,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "B_plus_face_123_side_profile.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 777,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "B_plus_face_777_side_profile.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 2026,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "B_plus_face_2026_side_profile.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 9001,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "B_plus_face_9001_side_profile.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 42,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "B_plus_face_42_full_body_standing.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 123,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "B_plus_face_123_full_body_standing.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 777,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "B_plus_face_777_full_body_standing.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 2026,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "B_plus_face_2026_full_body_standing.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 9001,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "B_plus_face_9001_full_body_standing.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 42,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "B_plus_face_42_dynamic_action_pose.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 123,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "B_plus_face_123_dynamic_action_pose.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 777,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "B_plus_face_777_dynamic_action_pose.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 2026,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "B_plus_face_2026_dynamic_action_pose.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 9001,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "B_plus_face_9001_dynamic_action_pose.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 42,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "B_plus_face_42_different_lighting.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 123,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "B_plus_face_123_different_lighting.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 777,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "B_plus_face_777_different_lighting.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 2026,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "B_plus_face_2026_different_lighting.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 9001,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "B_plus_face_9001_different_lighting.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 42,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "B_plus_face_42_different_emotion.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 123,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "B_plus_face_123_different_emotion.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 777,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "B_plus_face_777_different_emotion.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 2026,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "B_plus_face_2026_different_emotion.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 9001,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "B_plus_face_9001_different_emotion.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 42,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "B_plus_face_42_different_outfit_detail.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 123,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "B_plus_face_123_different_outfit_detail.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 777,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "B_plus_face_777_different_outfit_detail.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 2026,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "B_plus_face_2026_different_outfit_detail.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 9001,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "B_plus_face_9001_different_outfit_detail.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 42,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "B_plus_face_42_different_background.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 123,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "B_plus_face_123_different_background.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 777,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "B_plus_face_777_different_background.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 2026,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "B_plus_face_2026_different_background.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 9001,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "B_plus_face_9001_different_background.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 42,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "B_plus_face_42_group_scene_other_character.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 123,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "B_plus_face_123_group_scene_other_character.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 777,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "B_plus_face_777_group_scene_other_character.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 2026,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "B_plus_face_2026_group_scene_other_character.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 9001,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "B_plus_face_9001_group_scene_other_character.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        }
+      ]
+    },
+    {
+      "test_name": "C_plus_fullbody",
+      "load_seconds": 53.7,
+      "peak_vram_mb_after_load": 3528.2,
+      "peak_vram_mb_overall": 3540.1,
+      "oom": null,
+      "passed": true,
+      "renders": [
+        {
+          "test": "C_plus_fullbody",
+          "seed": 42,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "C_plus_fullbody_42_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 123,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "C_plus_fullbody_123_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 777,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "C_plus_fullbody_777_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 2026,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "C_plus_fullbody_2026_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 9001,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "C_plus_fullbody_9001_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 42,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "C_plus_fullbody_42_side_profile.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 123,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "C_plus_fullbody_123_side_profile.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 777,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "C_plus_fullbody_777_side_profile.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 2026,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "C_plus_fullbody_2026_side_profile.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 9001,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "C_plus_fullbody_9001_side_profile.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 42,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "C_plus_fullbody_42_full_body_standing.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 123,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "C_plus_fullbody_123_full_body_standing.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 777,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "C_plus_fullbody_777_full_body_standing.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 2026,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "C_plus_fullbody_2026_full_body_standing.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 9001,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "C_plus_fullbody_9001_full_body_standing.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 42,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "C_plus_fullbody_42_dynamic_action_pose.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 123,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "C_plus_fullbody_123_dynamic_action_pose.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 777,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "C_plus_fullbody_777_dynamic_action_pose.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 2026,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "C_plus_fullbody_2026_dynamic_action_pose.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 9001,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "C_plus_fullbody_9001_dynamic_action_pose.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 42,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "C_plus_fullbody_42_different_lighting.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 123,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "C_plus_fullbody_123_different_lighting.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 777,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "C_plus_fullbody_777_different_lighting.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 2026,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "C_plus_fullbody_2026_different_lighting.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 9001,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "C_plus_fullbody_9001_different_lighting.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 42,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "C_plus_fullbody_42_different_emotion.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 123,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "C_plus_fullbody_123_different_emotion.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 777,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "C_plus_fullbody_777_different_emotion.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 2026,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "C_plus_fullbody_2026_different_emotion.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 9001,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "C_plus_fullbody_9001_different_emotion.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 42,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "C_plus_fullbody_42_different_outfit_detail.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 123,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "C_plus_fullbody_123_different_outfit_detail.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 777,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "C_plus_fullbody_777_different_outfit_detail.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 2026,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "C_plus_fullbody_2026_different_outfit_detail.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 9001,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "C_plus_fullbody_9001_different_outfit_detail.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 42,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "C_plus_fullbody_42_different_background.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 123,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "C_plus_fullbody_123_different_background.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 777,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "C_plus_fullbody_777_different_background.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 2026,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "C_plus_fullbody_2026_different_background.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 9001,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "C_plus_fullbody_9001_different_background.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 42,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "C_plus_fullbody_42_group_scene_other_character.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 123,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "C_plus_fullbody_123_group_scene_other_character.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 777,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "C_plus_fullbody_777_group_scene_other_character.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 2026,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "C_plus_fullbody_2026_group_scene_other_character.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 9001,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "C_plus_fullbody_9001_group_scene_other_character.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        }
+      ]
+    },
+    {
+      "test_name": "D_plus_plusface_combo",
+      "load_seconds": 48.0,
+      "peak_vram_mb_after_load": 3528.2,
+      "peak_vram_mb_overall": 7059.2,
+      "oom": null,
+      "passed": true,
+      "renders": [
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 42,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "D_plus_plusface_combo_42_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 123,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "D_plus_plusface_combo_123_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 777,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "D_plus_plusface_combo_777_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 2026,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "D_plus_plusface_combo_2026_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 9001,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "D_plus_plusface_combo_9001_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 42,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "D_plus_plusface_combo_42_side_profile.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 123,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "D_plus_plusface_combo_123_side_profile.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 777,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "D_plus_plusface_combo_777_side_profile.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 2026,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "D_plus_plusface_combo_2026_side_profile.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 9001,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "D_plus_plusface_combo_9001_side_profile.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 42,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "D_plus_plusface_combo_42_full_body_standing.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 123,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "D_plus_plusface_combo_123_full_body_standing.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 777,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "D_plus_plusface_combo_777_full_body_standing.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 2026,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "D_plus_plusface_combo_2026_full_body_standing.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 9001,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "D_plus_plusface_combo_9001_full_body_standing.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 42,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "D_plus_plusface_combo_42_dynamic_action_pose.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 123,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "D_plus_plusface_combo_123_dynamic_action_pose.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 777,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "D_plus_plusface_combo_777_dynamic_action_pose.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 2026,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "D_plus_plusface_combo_2026_dynamic_action_pose.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 9001,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "D_plus_plusface_combo_9001_dynamic_action_pose.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 42,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "D_plus_plusface_combo_42_different_lighting.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 123,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "D_plus_plusface_combo_123_different_lighting.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 777,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "D_plus_plusface_combo_777_different_lighting.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 2026,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "D_plus_plusface_combo_2026_different_lighting.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 9001,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "D_plus_plusface_combo_9001_different_lighting.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 42,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "D_plus_plusface_combo_42_different_emotion.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 123,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "D_plus_plusface_combo_123_different_emotion.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 777,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "D_plus_plusface_combo_777_different_emotion.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 2026,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "D_plus_plusface_combo_2026_different_emotion.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 9001,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "D_plus_plusface_combo_9001_different_emotion.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 42,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "D_plus_plusface_combo_42_different_outfit_detail.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 123,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "D_plus_plusface_combo_123_different_outfit_detail.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 777,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "D_plus_plusface_combo_777_different_outfit_detail.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 2026,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "D_plus_plusface_combo_2026_different_outfit_detail.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 9001,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "D_plus_plusface_combo_9001_different_outfit_detail.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 42,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "D_plus_plusface_combo_42_different_background.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 123,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "D_plus_plusface_combo_123_different_background.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 777,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "D_plus_plusface_combo_777_different_background.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 2026,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "D_plus_plusface_combo_2026_different_background.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 9001,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "D_plus_plusface_combo_9001_different_background.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 42,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "D_plus_plusface_combo_42_group_scene_other_character.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 123,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "D_plus_plusface_combo_123_group_scene_other_character.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 777,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "D_plus_plusface_combo_777_group_scene_other_character.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 2026,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "D_plus_plusface_combo_2026_group_scene_other_character.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 9001,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "D_plus_plusface_combo_9001_group_scene_other_character.png",
+          "status": "error",
+          "error": "'tuple' object has no attribute 'ndim'"
+        }
+      ]
+    }
+  ],
+  "conclusion": {
+    "best_test": "B_plus_face",
+    "best_peak_vram_mb": 3540.1,
+    "passed_tests": [
+      "A_baseline",
+      "B_plus_face",
+      "C_plus_fullbody",
+      "D_plus_plusface_combo"
+    ],
+    "failed_tests": [],
+    "note": "Human visual scoring (6 categories x 5 scenarios, 1-5) pending on saved images."
+  },
+  "finished_utc": "2026-10-27T01:34:23Z"
+}

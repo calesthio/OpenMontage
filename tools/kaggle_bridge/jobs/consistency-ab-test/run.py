@@ -227,7 +227,7 @@ def run_test(test_name, make_pipe, ref_image=None, scenarios=None, ip_adapter_co
     ref_embeds_list = None
     if ref_image is not None and hasattr(pipe, "image_encoder"):
         ref_embeds = compute_ref_embeds(pipe, ref_image)  # (1, 1280)
-        # IP-Adapter on diffusers 0.40 wants a list of 3D/4D tensors:
+        # diffusers 0.37.0 expects ip_adapter_image_embeds as list of 3D tensors:
         # (batch, 1 image, embed_dim) -> (1, 1, 1280).
         ref_embeds = ref_embeds.unsqueeze(1)
         ref_embeds_list = [ref_embeds] * ip_adapter_count

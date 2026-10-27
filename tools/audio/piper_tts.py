@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import time
@@ -132,6 +133,10 @@ class PiperTTS(BaseTool):
             input=inputs["text"],
             capture_output=True,
             text=True,
+            # Pin both ends of the pipe to UTF-8: on Windows the defaults are the
+            # ANSI codepage, which mangles accented/non-Latin text before Piper sees it.
+            encoding="utf-8",
+            env={**os.environ, "PYTHONIOENCODING": "utf-8"},
             timeout=300,
         )
 

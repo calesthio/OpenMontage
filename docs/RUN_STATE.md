@@ -27,11 +27,11 @@
 - **Голос:** af_heart (только этот, без замен)
 - **Все артефакты:** `tools/kaggle_bridge/jobs/pilot-render/`
 - **Видео:** `remotion-composer/out/pilot-draft.mp4` (26.4 MB, без встроенных субтитров — только в коде Remotion, без музыки)
-- **Ожидает владельца:** S5 (подтверждение кадров), S8 (выбор музыки)
+- **Ожидает владельца:** S5 (подтверждение кадров), S8 (выбор музыки), K1+K2 (номер кандидата ведущего 1-8 -> master.png)
 
 | Этап | Статус | Доказательство | Дата |
 |------|--------|----------------|------|
-| K0 | PENDING | Исправить PROJECT_PLAN.md, LICENSE_EVIDENCE.md, RUN_STATE.md; перенести SDXL-кадры в pilot-render/images_sdxl/ | — |
-| K1+K2 | PENDING | Kaggle-ядро: signature Flux2KleinPipeline, 8 кандидатов ведущего 1280×720, contact_sheet_master.jpg 2x4, логирование времени/VRAM/dtype, bf16→float16 фолбэк | — |
+| K0 | DONE | PROJECT_PLAN.md (Klein 4B не исключена, консистентность = нативный multi-reference Klein 4B, IP-Adapter не нужен, SDXL Base = резерв), LICENSE_EVIDENCE.md (FLUX.2-klein-4B Apache-2.0 = базовая модель), RUN_STATE.md, SDXL-кадры перенесены в pilot-render/images_sdxl/, HOST_CHARACTER.md + VISUAL_STYLE_GUIDE.md созданы | 2026-10-27 |
+| K1+K2 | DONE | Kaggle-ядро `forts845/k1-k2-host-candidates-flux-2-klein-4b` (COMPLETE 2026-10-27T10:32:41Z). 8 кандидатов ведущего 1280×720, 4 шага, guidance_scale=1.0, bfloat16 (peak VRAM 11.15 ГБ / 14.56 ГБ T4). contact_sheet_master.jpg 2x4 с номерами (58.98 KB < 2 МБ). Все 8 OK (без NaN/чёрных кадров). Время загрузки 78.97с, генерация ~90с на кадр. Signature Flux2KleinPipeline зафиксировано. Вывод: `/tmp/k1k2_output/k1k2-host-candidates/results.json`, ядро: `https://www.kaggle.com/code/forts845/k1-k2-host-candidates-flux-2-klein-4b` | 2026-10-27 |
 | K3 | PENDING | Второй Kaggle-ядро: 10 кадров пилота 1280×720, prompts.json, референс master.png | — |
 | K4 | PENDING | contact_sheet_frames.jpg 2x5, WAITING_OWNER | — |

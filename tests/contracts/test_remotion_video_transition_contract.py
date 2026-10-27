@@ -28,6 +28,15 @@ def test_cinematic_fades_are_bounded_by_each_scene_duration() -> None:
     assert "durationInFrames - fadeOutFrames" in source
 
 
+def test_cinematic_custom_playback_rate_omits_trim_after() -> None:
+    source = (REPO_ROOT / "remotion-composer/src/CinematicRenderer.tsx").read_text(
+        encoding="utf-8"
+    )
+
+    assert "scene.playbackRate === undefined ||" in source
+    assert "Math.abs(scene.playbackRate - 1)" in source
+
+
 def _jsx_block(source: str, component: str) -> str:
     """Return the JSX element text for <Component ... /> in the source."""
     start = source.index(f"<{component}")

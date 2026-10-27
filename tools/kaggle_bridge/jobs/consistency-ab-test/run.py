@@ -226,13 +226,18 @@ def run_test(test_name, make_pipe, ref_image=None, scenarios=None, ip_adapter_co
     # Pre-compute reference image_embeds once per pipe; replicate per adapter.
     ref_embeds_list = None
     if ref_image is not None and hasattr(pipe, "image_encoder"):
-        ref_embeds = compute_ref_embeds(pipe, ref_image)  # (1, 1280)
-        # diffusers 0.37.0 expects ip_adapter_image_embeds as list of 3D tensors:
-        # (batch, 1 image, embed_dim) -> (1, 1, 1280).
-        ref_embeds = ref_embeds.unsqueeze(1)
+        ref_embeds_pos = compute_ref_embeds(pipe, ref_image)  # (1, 1280)
+        # diffusers 0.37.0 SDXL IP-Adapter с CFG ожидает каждый элемент
+        # ip_adapter_image_embeds как тензор [2, seq_len, embed_dim]:
+        #   [0] = negative (unconditional) image_embeds
+        #   [1] = positive (conditional) image_embeds
+        # chunk(2) в prepare_ip_adapter_image_embeds разделяет их обратно.
+        ref_embeds_neg = torch.zeros_like(ref_embeds_pos)  # (1, 1280) — пустой негатив
+        ref_embeds = torch.cat([ref_embeds_neg, ref_embeds_pos], dim=0)  # (2, 1280)
+        ref_embeds = ref_embeds.unsqueeze(1)  # (2, 1, 1280) — 3D для проверки ndim
         ref_embeds_list = [ref_embeds] * ip_adapter_count
         print(f"[{test_name}] ref image_embeds: {tuple(ref_embeds.shape)} "
-              f"x{ip_adapter_count} adapters")
+              f"x{ip_adapter_count} adapters (neg,pos)")
 
     renders = []
     oom = None

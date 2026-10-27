@@ -480,22 +480,23 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 
 **Примечание:** Файл `.devcontainer/devcontainer.json` создан и закоммичен. Для применения в текущем codespace необходимо пересобрать контейнер (Command Palette → "Rebuild Container"). В новых codespace применится автоматически.
 
-### 10.5 Исправление несовпадения версий diffusers (Kaggle-ядро vs requirements-pinned.txt) — РЕАЛЬНЫЕ РЕЗУЛЬТАТЫ
+### 10.5 Исправление несовпадения версий diffusers (Kaggle-ядро vs requirements-pinned.txt) — РЕАЛЬНЫЕ РЕЗУЛЬТАТЫ (5 запусков на Kaggle T4)
 
-**Причина провала тестов Б/В/Г:** несоответствие версий diffusers БЫЛО частью проблемы, но после pinning на 0.37.0 тесты Б/В/Г всё ещё не проходят — есть более глубокая несовместимость IP-Adapter с diffusers 0.37.0.
+**Причина провала тестов Б/В/Г:** несоответствие версий diffusers БЫЛО частью проблемы, но после pinning на 0.37.0 тесты Б/В/Г всё ещё не проходят — есть более глубокая несовместимость h94/IP-Adapter с diffusers 0.37.0 при использовании `ip_adapter_image_embeds` с CFG (classifier-free guidance).
 
-**Кодирование ядра consistency-ab-test (4 запуска на Kaggle T4):**
+**Кодирование ядра consistency-ab-test (5 запуска на Kaggle T4):**
 
 | Запуск | diffusers | ip_adapter_image_embeds формат | Тест A | Тест B (face) | Тест C (fullbody) | Тест D (комбо) |
 |--------|-----------|-------------------------------|--------|---------------|-------------------|----------------|
-| #1 | 0.40.0 (предустановлено) | 3D (с .unsqueeze(1)) | 45/45, 5196 MB | 0/45, ошибка интеграции | 0/45, ошибка интеграции | — |
-| #2 | 0.37.0 (закреплено) | 3D (с .unsqueeze(1)) | 45/45, 5196 MB | 0/45, "not enough values to unpack (expected 2, got 1)" | 0/45, та же ошибка | 0/45, та же ошибка, пик 9946 MB |
-| #3 | 0.37.0 (закреплено) | 2D (без .unsqueeze(1)) | 45/45, 5196 MB | 0/45, "ip_adapter_image_embeds has to be a list of 3D or 4D tensors but is 2D" | та же ошибка | та же ошибка |
-| #4 | 0.37.0 (закреплено) | 3D + кортежи (key,value) | 45/45, 5196 MB | 0/45, "'tuple' object has no attribute 'ndim'" | та же ошибка | та же ошибка |
+| #1 | 0.40.0 | 3D (с .unsqueeze(1)) | 45/45, 5196 MB | 0/45, ошибка интеграции | 0/45, ошибка интеграции | — |
+| #2 | 0.37.0 | 3D (с .unsqueeze(1)) | 45/45, 5196 MB | 0/45, "unpack (expected 2, got 1)" | 0/45, та же ошибка | 0/45, та же ошибка, пик 9946 MB |
+| #3 | 0.37.0 | 2D (без .unsqueeze(1)) | 45/45, 5196 MB | 0/45, "has to be 3D or 4D tensors but is 2D" | та же ошибка | та же ошибка |
+| #4 | 0.37.0 | 3D + кортежи (key,value) | 45/45, 5196 MB | 0/45, "'tuple' object has no attribute 'ndim'" | та же ошибка | та же ошибка |
+| #5 | 0.37.0 | 3D + [neg,pos] конкатенация | 45/45, 5196 MB | 0/45, "Tensors must have same number of dimensions: got 2 and 3" | та же ошибка | OOM, пик 14160 MB |
 
-**Вывод:** Version pinning на diffusers 0.37.0 НЕ исправил IP-Adapter. Проблема глубже — внутренний код diffusers 0.37.0 при обработке `ip_adapter_image_embeds` пытается одновременно получить `.ndim` у тензора и распаковать его как `(key, value)`, что несовместимо с одним тензором. IP-Adapter Plus с h94/IP-Adapter не работает с diffusers 0.37.0 в текущей кодовой базе run.py.
+**Вывод:** Version pinning на diffusers 0.37.0 НЕ исправил IP-Adapter. Проблема глубже — внутренний код diffusers 0.37.0 при обработке `ip_adapter_image_embeds` с CFG несовместим с тем, как run.py передаёт эмбеддинги, независимо от формата (3D, 2D, кортежи, neg+pos).
 
-**Тест A (базовый SDXL без IP-Adapter):** 45/45 картинок, пик VRAM 5196 МБ — работает стабильно во всех запусках.
+**Тест A (базовый SDXL без IP-Adapter):** 45/45 картинок, пик VRAM 5196 МБ — работает стабильно во всех 5 запусках.
 
 **FLUX.2 Klein 4B разведка (ядро flux2-klein-test):**
 - Статус: ФАИЛ при загрузке модели
@@ -503,7 +504,7 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 - Вывод: diffusers 0.37.0 не поддерживает `black-forest-labs/FLUX.2-klein-4B` — отсутствуют компоненты `feature_extractor`, `image_encoder`, `text_encoder_2`, `tokenizer_2`. FLUX.2 Klein не может быть использован с diffusers 0.37.0.
 
 **Файлы результатов:**
-- `tools/kaggle_bridge/jobs/consistency-ab-test/results_v*/consistency-ab-test/results.json` — результаты всех 4 запусков
+- `tools/kaggle_bridge/jobs/consistency-ab-test/results_v*/consistency-ab-test/results.json` — результаты всех 5 запусков
 - `tools/kaggle_bridge/jobs/flux2-klein-test/results/flux2-klein-test/results.json` — результат FLUX.2 Klein теста
 
 ---
@@ -519,8 +520,8 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 6. `.devcontainer/devcontainer.json` — ✅ создан, требует пересборки codespace для применения
 
 **Новые блокирующие задачи:**
-- IP-Adapter Plus с h94/IP-Adapter не работает с diffusers 0.37.0 — 4 запуска на Kaggle T4, все тесты Б/В/Д дают 0/45 картинок. Требуется альтернативный подход к консистентности персонажа (например, только seed+промпт, или другая модель адаптера).
-- FLUX.2 Klein 4B не загружается на diffusers 0.37.0 (отсутствуют компоненты модели).
+- IP-Adapter Plus с h94/IP-Adapter не работает с diffusers 0.37.0 — 5 запусков на Kaggle T4, все тесты Б/В/Д дают 0/45 картинок с ошибками формата тензоров. Требуется альтернативный подход к консистентности персонажа (только seed+промпт, или другая модель адаптера, или другой подход к передаче ip_adapter_image_embeds).
+- FLUX.2 Klein 4B не загружается на diffusers 0.37.0 (отсутствуют компоненты модели: feature_extractor, image_encoder, text_encoder_2, tokenizer_2).
 
 ---
 

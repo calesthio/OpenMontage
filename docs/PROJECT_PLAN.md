@@ -1,9 +1,9 @@
 # PROJECT_PLAN — YouTube канал "Образование и наука" (science-grounded speculation)
 
-**Пилот:** «What Would Life Look Like on an Ocean Planet With No Land?», 20–21 мин, 10 разделов, одна иллюстрация на предложение.
-**Репозиторий:** OpenMontage (форк calesthio/OpenMontage), ветка `kilo/mega-100`.
-**Режим:** только чтение, аудит. Ничего не устанавливается, не коммитится, не запускается на GPU.
+**Пилот:** «What Would Life Look Like on an Ocean Planet With No Land?», ~20–21 мин, 10 разделов, одна иллюстрация на предложение.
+**Репозиторий:** OpenMontage (форк calesthio/OpenMontage), ветка `kilo/mega-100`, remote `origin = https://github.com/sora73636-stack/OpenMontage`.
 **Лицензия репозитория:** GNU AGPL v3 (LICENSE, корень).
+**Режим:** разработка пилота — установка разрешена, коммиты на `kilo/mega-100` через pre-push хук (блокировка файлов >90 МБ и секретов).
 
 ---
 
@@ -11,39 +11,39 @@
 
 ### 1.1 Компоненты и где что запускается
 
-| Уровень | Компонент | Путь | Где запускается | Назначение |
-|---------|-----------|------|-----------------|------------|
-| Вход | Сценарий пилота | `docs/openmontage/pilot/script.md` | Codespace (чтение) | 214 предложений, 214 PROMPT, 10 разделов, 20:36 |
-| Вход | Реестр утверждений | `docs/openmontage/evidence/S1_SPECULATIVE_CLAIM_LEDGER.md` | Codespace (чтение) | SE-01 … SE-13 |
-| Вход | Стиль ниши | `docs/openmontage/niches/speculative_evolution/style.json`, `STYLE_BIBLE.md` | Codespace (чтение) | Префикс/хвост/негатив |
-| Вход | Рецепт картинок | `docs/openmontage/image_gen/recipe_dreamshaper_xl_1_0.json` | Codespace (чтение) | DreamShaper XL 1.0, 25 шагов, CFG 5.5, fp16 |
-| Оркестрация | Episode runner | `scripts/run_episode.py` | Codespace | 13 стадий, state-файл, гейты |
-| Оркестрация | EDL builder | `scripts/build_episode_edl.py` | Codespace | edit_decisions.json + render_manifest + rights/credits |
-| Оркестрация | Images driver | `scripts/run_episode_images.py` | Codespace | Батчи, resume, retry, манифест |
-| Оркестрация | Zero-cost gate | `lib/zero_cost_gate.py` | Codespace | Запрет необъявленных/неоплаченных маршрутов |
-| Изображения | Image brief | `tools/illustration/image_brief.py` | Codespace | Script -> brief (по битам) |
-| Изображения | Episode run | `tools/illustration/episode_run.py` | Codespace (планирование) / Kaggle T4 (генерация) | Бюджет, батчи 40–100, resume, retry, манифест |
-| Изображения | Illustration QC | `tools/illustration/illustration_qc.py` | Codespace | Чёрные/NaN/блюр/текст/дубли/палитра |
-| Изображения | Style kit | `tools/illustration/style_kit.py` | Codespace | Префикс/хвост/негатив стиля |
-| Изображения | Pilot EDL | `tools/illustration/pilot_edl.py` | Codespace | EDL из скрипта + манифеста картинок |
-| Изображения | Kaggle bridge | `tools/kaggle_bridge/kaggle_bridge.py` | Codespace (CLI) / Kaggle T4 (ядро) | Submit / poll / fetch / verify / qc |
-| Изображения | Jobs | `tools/kaggle_bridge/jobs/` (stick4-*) | Kaggle T4 | Зарегистрированные ядра |
-| Аудио | Kokoro TTS | `tools/audio/kokoro_tts.py` | Codespace (CPU) | Kokoro-82M, af_heart, 24 кГц |
-| Аудио | Finish audio | `tools/audio/finish_audio.py` | Codespace (CPU) | −14 LUFS / −1.5 dBTP |
-| Аудио | Narrate helper | `scripts/kokoro_torch_narrate.py` | Codespace (CPU) | Вызывается из run_episode |
-| Субтитры | Forced alignment | `scripts/fw_subtitles.py` | Codespace | SRT |
-| Монтаж А | Video compose (ffmpeg) | `tools/video/video_compose.py` | Codespace | Используется run_episode.cmd_render |
-| Монтаж Б | Remotion | `remotion-composer/` | Codespace (Node) | Используется отдельными скриптами, в run_episode НЕ подключён |
-| QA | QC checks | `tools/qa/qc.py` | Codespace | 16 проверок |
-| QA | Thresholds | `config/qc_thresholds.json` | Codespace | Пороги (initial guesses) |
-| Гейты | Speculative gate, release gate, package draft | `run_episode` | Codespace | Гейты перед публикацией |
+| Уровень | Компонент | Путь | Где запускается | Статус | Назначение |
+|---------|-----------|------|-----------------|--------|------------|
+| Вход | Сценарий пилота | `docs/openmontage/pilot/script.md` | Codespace (чтение) | ГОТОВО | 214 предложений, 214 `PROMPT:`, 10 разделов, ~20:36 |
+| Вход | Реестр утверждений | `docs/openmontage/evidence/S1_SPECULATIVE_CLAIM_LEDGER.md` | Codespace (чтение) | ГОТОВО | SE-01 … SE-13 |
+| Вход | Стиль ниши | `docs/openmontage/niches/speculative_evolution/style.json`, `STYLE_BIBLE.md` | Codespace (чтение) | СЛОМАНО (устарел) | `field_guide_plate`, не `graphic-novel-ink` |
+| Вход | Рецепт картинок | `docs/openmontage/image_gen/recipe_dreamshaper_xl_1_0.json` | Codespace (чтение) | ГОТОВО ( tekst) | 25 шагов, CFG 5.5, DEIS, fp16; ссылка на DreamShaper XL 1.0 не зарегистрирована в реестре моделей |
+| Оркестрация | Episode runner | `scripts/run_episode.py` | Codespace | ЧАСТИЧНО | 13 стадий, state-файл, гейты; парсер сломан |
+| Оркестрация | EDL builder | `scripts/build_episode_edl.py` | Codespace | КОД ЕСТЬ, не прогонялся | `edit_decisions.json` + `render_manifest` + права/кредиты |
+| Оркестрация | Images driver | `scripts/run_episode_images.py` | Codespace | КОД ЕСТЬ, не прогонялся | Батчи, resume, retry, манифест |
+| Оркестрация | Zero-cost gate | `lib/zero_cost_gate.py` | Codespace | ГОТОВО | Запрет необъявленных/неоплаченных маршрутов |
+| Изображения | Image brief | `tools/illustration/image_brief.py` | Codespace | СЛОМАНО | Ожидает буллеты/таблицы, не `S001 [ID]` + `PROMPT:` |
+| Изображения | Episode run | `tools/illustration/episode_run.py` | Codespace (планирование) / Kaggle T4 (генерация) | ГОТОВО по коду + ПРОВЕРЕНО запуском | Бюджет, батчи 40–100, resume по sha256, retry упавших |
+| Изображения | Illustration QC | `tools/illustration/illustration_qc.py` | Codespace | КОД ЕСТЬ | Чёрные/NaN/блюр/текст/дубли/палитра |
+| Изображения | Style kit | `tools/illustration/style_kit.py` | Codespace | КОД ЕСТЬ | Префикс/хвост/негатив стиля |
+| Изображения | Pilot EDL | `tools/illustration/pilot_edl.py` | Codespace | СЛОМАНО | Ожидает другой формат сценария |
+| Изображения | Kaggle bridge | `tools/kaggle_bridge/kaggle_bridge.py` | Codespace (CLI) / Kaggle T4 (ядро) | ГОТОВО + ПРОВЕРЕНО | submit/poll/fetch/output/logs; ядра `om-consistency-ab-test` (v12) и `pilot-frame-sdxl-baseline` выполнены на T4 |
+| Изображения | Jobs | `tools/kaggle_bridge/jobs/` | Kaggle T4 | ГОТОВО | `consistency-ab-test/`, `pilot-frame-1b/`, `flux2-klein-test/` |
+| Аудио | Kokoro TTS | `tools/audio/kokoro_tts.py` | Codespace (CPU) | ГОТОВО + ПРОВЕРЕНО | venv `/tmp/kilo/z1_venv`, `af_heart`, 24 кГц; синтезирован `narration.wav` §1 (83 с) |
+| Аудио | Finish audio | `tools/audio/finish_audio.py` | Codespace (CPU) | КОД ЕСТЬ | −14 LUFS / −1.5 dBTP |
+| Аудио | Narrate helper | `scripts/kokoro_torch_narrate.py` | Codespace (CPU) | КОД ЕСТЬ | Вызывается из `run_episode` |
+| Субтитры | Forced alignment | `scripts/fw_subtitles.py` | Codespace | НЕ ПРОВЕРЕНО | SRT |
+| Монтаж А | Video compose (ffmpeg) | `tools/video/video_compose.py` | Codespace | ffmpeg УСТАНОВЛЕН, не прогонялся на полном эпизоде | Используется `run_episode.cmd_render` |
+| Монтаж Б | Remotion | `remotion-composer/` | Codespace (Node) | ГОТОВО + ПРОВЕРЕНО | `node_modules` установлен (201 пакетов); Remotion Free License подтверждена владельцем (соло-проект); составлен первый клип `out/pilot-scene-1.mp4`; в `run_episode` НЕ подключён |
+| QA | QC checks | `tools/qa/qc.py` | Codespace | КОД ЕСТЬ, пороги конфликтуют | 16 проверок |
+| QA | Thresholds | `config/qc_thresholds.json` | Codespace | КОНФЛИКТ | `ai_label_max_share: 0.15`, `graphics_per_90s_min: 1.0` — 100% AI видео не пройдёт |
+| Гейты | Speculative gate, release gate, package draft | `run_episode` | Codespace | НЕ РЕАЛИЗОВАНО полностью | Гейты перед публикацией |
 
 ### 1.2 Поток данных (canonical path, `scripts/run_episode.py`)
 
 ```
 script.md ──parse──► beats/sentences ──► image_brief.json ──► план батчей
                                                             │
-                                                    Kaggle T4 (3 ядра) │
+                                                     Kaggle T4 (3 ядра) │
                                                             ▼
                                                     PNG + manifest.json (sha256, seeds, VRAM)
                                                             │
@@ -57,115 +57,93 @@ subtitles.srt                                             │
 build_episode_edl.py ──► edit_decisions.json + render_manifest.json
                                                             │
                                                             ▼
-video_compose (ffmpeg) ──► final_<topic>_draft.mp4
-                                                            │
+video_compose (ffmpeg) ──► final_<topic>_draft.mp4            Remotion ветка (отдельно):
+                                                            │                                             кадр + аудио ──► out/pilot-scene-1.mp4
                                                             ▼
 qc.py ──► qa_report.json ──► release_gate ──► package_draft (метаданные, БЕЗ публикации)
 ```
 
 ### 1.3 Расхождения «заявленное vs реализованное»
 
-| Заявлено владельцем | Что в коде |
-|---------------------|------------|
-| DreamShaper XL 1.0 | `config/image_engine.json` → `model: "klein"` (FLUX.2-klein-4B); записи `dreamshaper-xl-1-0` в `models` нет |
-| Bold ink стиль | `niches/speculative_evolution/style.json` → `field_guide_plate`, «flat vector» |
-| Remotion монтаж | `run_episode.cmd_render` использует `video_compose.py` (ffmpeg); Remotion в `run_episode` не подключён |
-| 214 иллюстраций | `episode_run.py` лимит 6–8 изображений/мин → 123–165, а не 214 |
-| 100% AI-видео | `qc.py` по умолчанию `ai_label_max_share: 0.15` — 100% AI не проходит |
+| Заявлено владельцем | Что в коде / что реально |
+|---------------------|--------------------------|
+| DreamShaper XL 1.0 как база | `config/image_engine.json` → `model: "klein"`; записи `dreamshaper-xl-1-0` в `models` нет. Реальная рабочая база — **SDXL Base 1.0** (45/45 картинок, 5.2 ГБ пик VRAM на T4). DreamShaper не используется (лицензия не зафиксирована в `LICENSE_EVIDENCE.md`). |
+| Bold ink стиль | `style.json` → `field_guide_plate`, «flat vector»; требуется `graphic-novel-ink`. |
+| Remotion монтаж | `run_episode.cmd_render` использует `video_compose.py` (ffmpeg). Remotion подключён отдельно: собран первый клип `pilot-scene-1.mp4`, в эпизодный раннер не встроен. |
+| 214 иллюстраций | Сгенерировано 1 кадр пилота (S001, §1). Остальные 213 не сгенерированы. |
+| 100% AI-видео | `qc.py` по умолчанию `ai_label_max_share: 0.15` — 100% AI не проходит; требуется override-файл с подписью владельца. |
 
 ---
 
-## 2. Текущее состояние
-
-### 2.1 Сводная таблица по стадиям
+## 2. Текущее состояние по стадиям
 
 | # | Стадия | Статус | Доказательство (путь) |
 |---|--------|--------|----------------------|
-| 1 | Сценарий | ГОТОВО (как текст) | `docs/openmontage/pilot/script.md`: 214 предложений, 3 090 слов, 20:36 @150 wpm, 214 PROMPT, SE-01…SE-13 |
+| 1 | Сценарий | ГОТОВО (как текст) | `docs/openmontage/pilot/script.md`: 214 предложений, 3 090 слов, ~20:36 @150 wpm, 214 `PROMPT:`, SE-01…SE-13 |
 | 2 | Реестр утверждений | ГОТОВО | `docs/openmontage/evidence/S1_SPECULATIVE_CLAIM_LEDGER.md` |
-| 3 | Парсер сценария | **СЛОМАНО** | `tools/illustration/image_brief.py:96`, `tools/illustration/pilot_edl.py:228,263`, `scripts/run_episode.py:407` — ждут буллеты/таблицы, не `S001 [ID]` + `PROMPT:` |
-| 4 | Конфиг модели | **СЛОМАНО** | `config/image_engine.json` (model=klein, нет dreamshaper-xl-1-0 в `models`) |
-| 5 | Стиль | **СЛОМАНО** (устарел) | `niches/speculative_evolution/style.json`, `STYLE_BIBLE.md` — `field_guide_plate`, не `graphic-novel-ink` |
-| 6 | Рецепт картинок | ГОТОВО | `docs/openmontage/image_gen/recipe_dreamshaper_xl_1_0.json` (25 steps, CFG 5.5, DEIS, fp16) |
-| 7 | Измерения модели | ГОТОВО | S12: 18/18 годных, 0 black/NaN, 25.5 s/img, 9 968 MB alloc / 12 828 MB reserved |
-| 8 | Пакетная генерация | ГОТОВО по коду | `tools/illustration/episode_run.py`, `tools/illustration/kaggle_episode_bridge.py` |
-| 9 | Kaggle-мост | ГОТОВО по коду, НЕ ПРОВЕРЕНО запуском | `tools/kaggle_bridge/kaggle_bridge.py` |
-| 10 | Narration (Kokoro) | КОД ЕСТЬ, окружение отсутствует | `tools/audio/kokoro_tts.py`, `/tmp/kilo` пуст |
+| 3 | Парсер сценария | **СЛОМАНО** (блокирующая) | `tools/illustration/image_brief.py:96`, `tools/illustration/pilot_edl.py:228,263`, `scripts/run_episode.py:407` — ждут буллеты/таблицы, не `S001 [ID]` + `PROMPT:` |
+| 4 | Конфиг модели | **СЛОМАНО** (требует переключения на SDXL Base 1.0) | `config/image_engine.json` (model=klein, dreamshaper-xl-1-0 не зарегистрирован) |
+| 5 | Стиль | **СЛОМАНО** (устарел) | `style.json`, `STYLE_BIBLE.md` — `field_guide_plate`, не `graphic-novel-ink` |
+| 6 | Рецепт картинок | ГОТОВО | `docs/openmontage/image_gen/recipe_dreamshaper_xl_1_0.json` |
+| 7 | Измерения модели | ГОТОВО | SDXL Base 1.0 baseline: 45/45 годных, 0 black/NaN, пик VRAM 5 196 MB на 768×768 (4 независимых прогона на Kaggle T4) |
+| 8 | Пакетная генерация | ГОТОВО по коду + ПРОВЕРЕНО запуском | `tools/illustration/episode_run.py`, `tools/illustration/kaggle_episode_bridge.py`; Kaggle ядра запускались и завершались |
+| 9 | Kaggle-мост | ГОТОВО + ПРОВЕРЕНО | `tools/kaggle_bridge/kaggle_bridge.py`; push/status/fetch/output/logs работают; аккаунт forts845 (FORTS_FACTORY) авторизован, 15 ядер видны |
+| 10 | Narration (Kokoro) | ГОТОВО + ПРОВЕРЕНО | `/tmp/kilo/z1_venv` (kokoro==0.2.2, KPipeline импортируется), `af_heart`; §1 синтезирован: `narration.wav`, 83.03 с, 24 кГц |
 | 11 | Субтитры | НЕ ПРОВЕРЕНО | `scripts/fw_subtitles.py` |
 | 12 | EDL | КОД ЕСТЬ, зависит от парсера | `scripts/build_episode_edl.py`, `tools/illustration/pilot_edl.py` |
-| 13 | Рендер ffmpeg | НЕ ПРОВЕРЕНО (нет ffmpeg) | `tools/video/video_compose.py` |
-| 14 | Рендер Remotion | НЕ ПРОВЕРЕНО (нет node_modules) | `remotion-composer/` |
+| 13 | Рендер ffmpeg | ffmpeg УСТАНОВЛЕН (6.1.1-3ubuntu5, `--enable-gpl`), не прогонялся на полном эпизоде | `tools/video/video_compose.py` |
+| 14 | Рендер Remotion | ГОТОВО + ПРОВЕРЕНО (proof-of-concept) | `remotion-composer/out/pilot-scene-1.mp4`: h264 1920×1080 + aac, 83 с, 6.4 МБ, ffprobe-валиден |
 | 15 | QA | КОД ЕСТЬ, пороги конфликтуют | `tools/qa/qc.py`, `config/qc_thresholds.json` |
-| 16 | Права/лицензии | ЧАСТИЧНО | `docs/openmontage/image_gen/LICENSE_EVIDENCE.md`, `licenses/` |
+| 16 | Права/лицензии | ЧАСТИЧНО | `docs/openmontage/image_gen/LICENSE_EVIDENCE.md` актуализировано (SDXL Base 1.0 + SDXL-Lightning commercial-OK OpenRAIL++; FLUX.2-klein-4B apache-2.0 commercial-OK; FLUX 3 Image Klein flux-kommunity-license только для Qualifying Users) |
 | 17 | Музыка | ПОЛИТИКА: без музыки | `docs/openmontage/MUSIC_POLICY.md` |
 | 18 | Публикация | НЕ РЕАЛИЗОВАНО | `docs/openmontage/youtube-publishing-analytics-STUB.md` |
 
-### 2.2 Что работает (проверено чтением кода/измерениями)
+### 2.1 Что работает (подтверждено запуском/измерением)
 
 - Сценарий: 10 разделов, 214 предложений, 214 уникальных `PROMPT:`, `[NARRATIVE]` в §5, §7, §8.
-- Рецепт и измерения: `recipe_dreamshaper_xl_1_0.json` — DreamShaper XL 1.0, revision `41e6644…`, DEIS, 25 шагов, CFG 5.5, fp16. S12: 18/18 без чёрных/NaN; S15: 42/42, 0 NaN, 1344×768.
-- Kaggle-мост: `kaggle_bridge.py` реализует submit/poll/fetch/verify, `_scrub_token` чистит токен.
+- SDXL Base 1.0 baseline стабилен: 45/45 картинок, пик VRAM 5 196 МБ на 768×768, 4 независимых прогона на Kaggle T4 без OOM.
+- Kaggle-мост: `kaggle_bridge.py` реализует submit/poll/fetch/output/logs, `_scrub_token` чистит токен. Ядра `om-consistency-ab-test` v12 и `pilot-frame-sdxl-baseline` выполнены на T4.
 - Пакетная логика: `episode_run.py` — батчи 40–100, resume по sha256, повтор только упавших, hard fail при недоборе.
 - Права: `rights_basis=ai_generated_illustration`, метка «Speculative illustration» с первого кадра.
 - Zero-cost gate: `lib/zero_cost_gate.py` блокирует необъявленные маршруты.
+- Окружение закрыто: pytest 9.1.1 (2578 тестов собраны), kaggle CLI 2.2.5 авторизован, ffmpeg 6.1.1 с `--enable-gpl`, node_modules (201 пакета), Kokoro venv с `af_heart` работает, Remotion Free License подтверждена.
+- Infrastructure (Фаза B): 6 субагентов (`.kilo/agents/`), `niche-researcher` перенесён из `.opencode`, pre-push хук, `.kilo/kilo.jsonc`, `.devcontainer/devcontainer.json`.
 
-### 2.3 Что сломано (с точными местами)
+### 2.2 Что сломано (с точными местами)
 
-**Б1. Парсер не понимает формат пилота.**
-Все три парсера ждут `- предложение [id]` или markdown-таблицу, а не `S001 [ID]` + `PROMPT:`:
+**Б1. Парсер не понимает формат пилота.** Все три парсера ждут `- предложение [id]` или markdown-таблицу, а не `S001 [ID]` + `PROMPT:`:
 - `scripts/run_episode.py:407` `_parse_script_rows`
 - `tools/illustration/pilot_edl.py:228` `sentence_rows`
 - `tools/illustration/pilot_edl.py:263` `script_sections`
 - `tools/illustration/image_brief.py:96` `parse_script`
 Следствие: `rows=[]` → 0 предложений в манифесте, 0 битов в EDL, 0 промптов в brief. Требуется новый адаптер формата.
 
-**Б2. Реестр моделей не знает DreamShaper XL 1.0.**
-`config/image_engine.json`: `"model": "klein"`, `models` = klein, sdxl-lightning, dreamshaper-xl-lightning, sdxl, zimage. Записи `dreamshaper-xl-1-0` нет. `scripts/build_episode_edl.py:73` по умолчанию `--model klein`.
+**Б2. Реестр моделей не знает DreamShaper XL 1.0.** `config/image_engine.json`: `"model": "klein"`, `models` = klein, sdxl-lightning, dreamshaper-xl-lightning, sdxl, zimage. Записи `dreamshaper-xl-1-0` нет. `scripts/build_episode_edl.py:73` по умолчанию `--model klein`.
 
-**Б3. Стиль противоречит S15.**
-`style.json`: `field_guide_plate`, `flat-vector`, `locked_model=klein`. Требуется `graphic-novel-ink` (S15 winner).
+**Б3. Стиль противоречит S15.** `style.json`: `field_guide_plate`, `flat-vector`, `locked_model=klein`. Требуется `graphic-novel-ink` (S15 winner).
 
-**Б4. Бюджет изображений несовместим с 214 картинками.**
-`tools/illustration/episode_run.py:38-40`: 6–8 img/min → 123–165 для 20.6 мин. 214 картинок = 10.4 img/min → `BudgetError` (строка 200).
+**Б4. Бюджет изображений несовместим с 214 картинками.** `tools/illustration/episode_run.py:38-40`: 6–8 img/min → 123–165 для 20.6 мин. 214 картинок = 10.4 img/min → `BudgetError` (строка 200).
 
 **Б5. QA-пороги гарантированно валят пилот.**
 - `tools/qa/qc.py:401` и `:1135`: `ai_label_max_share` = 0.15 → 100% AI видео → FAIL.
 - `scripts/run_episode.py:876`: `cmd_qc` не передаёт `ai_label_max_share`.
 - `config/qc_thresholds.json`: `graphics_per_90s_min: 1.0` → 0.73 на 1 236 с → FAIL.
 
-**Б6. `import soundfile` ломает `registry.discover()`.**
-`tools/audio/kokoro_tts.py:23` — верхнеуровневый импорт. Без `soundfile` падает весь реестр инструментов.
+**Б6. `import soundfile` ломает `registry.discover()`.** `tools/audio/kokoro_tts.py:23` — верхнеуровневый импорт.
 
-**Б7. Окружение не готово.**
-| Компонент | Факт |
-|-----------|------|
-| ffmpeg, ffprobe | отсутствуют |
-| kaggle CLI | отсутствует |
-| pytest | отсутствует |
-| soundfile, kokoro | отсутствуют |
-| remotion-composer/node_modules | отсутствует |
-| /tmp/kilo (venv) | пуст |
-| Python | 3.14.2 (рецепт: 3.13.15) |
-| torch локально | 2.14.1+cpu (рецепт: 2.11.0+cu128) |
-| diffusers / transformers | 0.37.0 / 4.57.6 — совпадают |
-| Node / npm | 24.21.0 / 11.19.0 — есть |
-| Диск | 32 ГБ всего, 15 ГБ свободно |
-| KAGGLE_API_TOKEN | приStringствет (имя только) |
+**Б7. Нет `projects/` и F2-рендера с реальными кадрами.** Единственный видеоартефакт — `docs/openmontage/smoke/p0_smoke.mp4` (espeak-ng) и proof-of-concept `remotion-composer/out/pilot-scene-1.mp4`. Полного прогона эпизода не было.
 
-**Б8. Нет пайплайна под научную спекуляцию.**
-В `pipeline_defs/` нет `science-explainer` или `speculative-science`. Ближайший — `animated-explainer.yaml`.
+**Б8. Нет пайплайна под научную спекуляцию.** В `pipeline_defs/` нет `science-explainer` или `speculative-science`.
 
-**Б9. Remotion не подключён к эпизодному раннеру.**
-`run_episode.cmd_render` → `video_compose.py` (ffmpeg). Remotion только отдельными скриптами.
+**Б9. Remotion не подключён к эпизодному раннеру.** `run_episode.cmd_render` → `video_compose.py` (ffmpeg). Remotion только отдельными скриптами.
 
-**Б10. Нет `projects/` и F2-рендера с реальными кадрами.**
-Единственный видеоартефакт — `docs/openmontage/smoke/p0_smoke.mp4` (espeak-ng, не Kokoro). Полного прогона не было.
+**Б10. Python 3.14.2 vs рецепт 3.13.15.** Локальные бинарные колёса (torch, kokoro) могут отсутствовать; Kokoro venv развёрнут отдельно в `/tmp/kilo/z1_venv`.
 
 ---
 
 ## 3. Цель и критерии готовности пилота
 
-**Цель:** YouTube-канал в нише Education & Science, позиционирование "science-grounded speculation". Пилот: 20–21 мин, 10 разделов, DreamShaper XL 1.0 (bold ink), Kokoro af_heart, Remotion/ffmpeg монтаж, тяжёлая генерация на Kaggle T4. Только FOSS и коммерчески разрешённые лицензии.
+**Цель:** YouTube-канал в нише Education & Science, позиционирование "science-grounded speculation". Пилот: 20–21 мин, 10 разделов, стиль bold ink illustration (graphic-novel-ink), Kokoro af_heart, монтаж Remotion/ffmpeg, генерация на Kaggle T4. Только FOSS и коммерчески разрешённые лицензии.
 
 Пилот считается готовым, когда **все** пункты D1–D15 выполнены и подтверждены артефактом. Любой невыполненный пункт = NOT_READY, отсутствие проверки = NOT_CHECKED (не PASS).
 
@@ -195,21 +173,22 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 
 | ID | Объект | Факт | Риск | Что делать |
 |----|--------|------|------|------------|
-| L1 | Remotion | кастомная лицензия, не FOSS (бесплатно для физлиц, ≤3 сотрудников, некоммерческих) | противоречие «только FOSS» | Решение владельца O1; альтернатива — ffmpeg или HyperFrames (Apache-2.0) |
-| L2 | DreamShaper XL 1.0 | OpenRAIL++ (не OSI FOSS, коммерческое использование разрешено с ограничениями) | ограничения использования + передача downstream | Решение владельца O2; текст лицензии в репозитории |
+| L1 | Remotion | кастомная лицензия, не FOSS (бесплатно для физлиц, ≤3 сотрудников, некоммерческих); Free License подтверждена владельцем для соло-проекта | противоречие «только FOSS» | Решение владельца O1; альтернатива — ffmpeg или HyperFrames (Apache-2.0) |
+| L2 | DreamShaper XL 1.0 | OpenRAIL++ (не OSI FOSS, коммерческое использование разрешено с ограничениями) | ограничения использования + передача downstream | Решение владельца O2; текст лицензии в репозитории; не используется как база пилота |
 | L3 | Kokoro-82M | веса Apache-2.0; CC BY в обучающих данных (Koniwa tnc, SIWIS); синтетика UNKNOWN | атрибуция, неопределённость синтетики | Решение владельца O3; блок атрибуции |
-| L4 | SDXL-продукты | OpenRAIL++ | то же, что L2 | не использовать в пилоте |
-| L5 | FLUX.2-klein | Apache-2.0, стиль не тот | — | вывести из пилотного пути |
-| L6 | Шрифты | `@remotion/google-fonts` тянет сетевые шрифты | офлайн-рендер + лицензия | OFL-шрифт локально (Inter / JetBrains Mono, OFL-1.1) |
-| L7 | Музыка | политика: без музыки | «royalty-free» ≠ разрешение | без музыки на пилоте |
-| L8 | FFmpeg | LGPL vs GPL в зависимости от сборки | несовместимость с FOSS маловероятна | зафиксировать `ffmpeg -version` |
+| L4 | SDXL-продукты | OpenRAIL++ | то же, что L2 | SDXL Base 1.0 commercial-OK (зафиксировано в LICENSE_EVIDENCE.md) |
+| L5 | FLUX.2-klein | apache-2.0, коммерческое использование разрешено; стиль не тот; требует diffusers из git/dev | требует отдельного решения владельца по апгрейду стека | вывести из пилотного пути |
+| L6 | FLUX 3 Image Klein | flux-kommunity-license v1.0: коммерция только для Qualifying Users (< US$5M валовая выручаемая выручка с аффилиатами) | класс лицензии, не открытый исходный код | решение владельца перед включением; исключён навсегда для T4 (25 ГБ VRAM минимум) |
+| L7 | Шрифты | `@remotion/google-fonts` тянет сетевые шрифты | офлайн-рендер + лицензия | OFL-шрифт локально (Inter / JetBrains Mono, OFL-1.1) |
+| L8 | Музыка | политика: без музыки | «royalty-free» ≠ разрешение | без музыки на пилоте |
+| L9 | FFmpeg | LGPL-2.1+ / GPL-2.0+ (в зависимости от сборки), `--enable-gpl` подтвержден | несовместимость с FOSS маловероятна | зафиксировать `ffmpeg -version` |
 
 ### 4.2 VRAM и железо (Kaggle T4, ~14.56 ГБ доступных)
 
 | ID | Риск | Данные | Митигация |
 |----|------|--------|-----------|
-| V1 | Голова под адаптеры отсутствует | DreamShaper: 9 968 MB alloc / 12 828 MB reserved | не ставить IP-Adapter/InstantID; консистентность — seed+промпт |
-| V2 | VAE-decode OOM | IP-Adapter Plus: пик 13.9 ГБ → 0/3 | `vae_fallback` только при black/NaN; без tiling |
+| V1 | Голова под адаптеры отсутствует | DreamShaper: 9 968 MB alloc / 12 828 MB reserved | не ставить IP-Adapter/InstantID на пилоте; консистентность — seed+промпт |
+| V2 | VAE-decode OOM | IP-Adapter Plus пик ~13.9 ГБ → OOM | не ставить адаптер на пилоте |
 | V3 | Batch > 100 не поддержан | `episode_run.py:52` | 3 батча по 72/71/71 |
 | V4 | Лимит ядра 90 мин | `MAX_WALL_SECONDS = 5400` | 3 отдельных ядра, resume по манифесту |
 
@@ -228,19 +207,19 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 |----|------|--------|
 | K1 | `KAGGLE_API_TOKEN` в окружении | присутствует, значение не читалось |
 | K2 | `.env` в git | `.gitignore` исключает — ок |
-| K3 | Токен в артефактах ядра | `kaggle_bridge._scrub_token` чистит; требует проверки |
+| K3 | Токен в артефактах ядра | `kaggle_bridge._scrub_token` чистит |
 | K4 | OAuth YouTube | не настроен, не нужен на пилоте |
 
-### 4.5 Версии и зависимости
+### 4.5 Версии и зависимости (закреплены, не менять без решения владельца)
 
-| Пакет | Рецепт (GPU) | Локально | Совместимость |
-|-------|-------------|----------|---------------|
+| Пакет | Закреплённая версия | Локально | Статус |
+|-------|---------------------|----------|--------|
 | diffusers | 0.37.0 | 0.37.0 | ок |
 | transformers | 4.57.6 | 4.57.6 | ок |
 | huggingface_hub | 0.36.2 | не проверено | — |
-| torch | 2.11.0+cu128 | 2.14.1+cpu | **расхождение** |
-| Python | 3.13.15 | 3.14.2 | **расхождение** |
-| Node | — | 24.21.0 | ок |
+| torch | 2.11.0+cu128 | 2.14.1+cpu | расхождение (GPU только на Kaggle) |
+| Python | 3.13.15 | 3.14.2 | расхождение |
+| Node / npm | — | 24.21.0 / 11.19.0 | ок |
 
 ### 4.6 Процессные риски
 
@@ -250,45 +229,70 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 | P2 | Заголовок в файле не совпадает с темой владельца |
 | P3 | `projects/` отсутствует — нет канонического корня проекта |
 | P4 | QC-обход порогов «на словах» → фиктивный PASS |
-| P5 | Нет F2-рендера с реальными кадрами — все тайминги расчётные |
+| P5 | Нет F2-рендера с реальными кадрами — все тайминги расчётные (proof-of-concept §1 есть) |
 
-### 4.7 Результаты A/B-теста консистентности персонажа (Kaggle T4)
+---
 
-Прогон `tools/kaggle_bridge/jobs/consistency-ab-test/` (ядро `forts845/om-consistency-ab-test`, версия 6, 2026-10-26), протокол `test_protocol.json`. База — **SDXL Base 1.0** (DreamShaper XL не зафиксирован в `docs/openmontage/image_gen/LICENSE_EVIDENCE.md` → не используется как база, см. Шаг 0 протокола). Запрещено: IP-Adapter FaceID, PhotoMaker V2, PuLID (InsightFace), Character LoRA.
+## 5. Итоги тестирования консистентности персонажа (Kaggle T4)
 
-| Тест | Конфигурация | OOM | Картин | Пик VRAM | Вердикт |
-|------|-------------|-----|--------|----------|---------|
-| A — baseline | SDXL Base 1.0, 768×768, fp16, vae_slicing+tiling+model_cpu_offload, без адаптера | Нет | 45/45 | 5 196 МБ | **Пройден (контрольная точка)** |
-| B — Plus Face | A + `ip-adapter-plus-face_sdxl_vit-h` (scale 0.7) | Нет | 0/45 | 5 106 МБ | Не пригоден (ошибка интеграции `image_embeds` с diffusers 0.40) |
-| C — Plus full-body | A + `ip-adapter-plus_sdxl_vit-h` (scale 0.7) | Нет | 0/45 | 5 106 МБ | Не пригоден (та же ошибка интеграции) |
-| D — комбинация | A + Plus (0.7) + Plus Face (0.25) | Нет | 0/45 | 9 945,9 МБ | Не пригоден (пик близко к лимиту T4 14,56 ГБ) |
+Ядро `forts845/om-consistency-ab-test`, протокол `test_protocol.json`. База — **SDXL Base 1.0** (DreamShaper XL не зафиксирован в `LICENSE_EVIDENCE.md` → не используется как база). Запрещено: IP-Adapter FaceID, PhotoMaker V2, PuLID (InsightFace), Character LoRA. Ручное построение `ip_adapter_image_embeds` запрещено.
 
-Тесты Б/В не упали с OOM (пик снизился с утренних 13,9 ГБ до 5 106 МБ благодаря оптимизациям памяти), но не выпустили ни одной картинки из-за несовместимости `h94/IP-Adapter` с `diffusers 0.40` (ошибки размерности/типа/ранга `image_embeds`). Тест Г не имеет смысла пока Б/В не отработают.
+### 5.1 Пять ранних запусков (v1–v5, diffusers 0.37.0)
 
-### Итог v6 (2026-10-27) — официальный IP-Adapter API, diffusers 0.37.0, quick-режим (1 seed × 1 сценарий)
+| Запуск | diffusers | Формат `ip_adapter_image_embeds` | Тест A (baseline) | Тест B (Plus Face) | Тест C (Plus full-body) | Тест D (комбо) |
+|--------|-----------|----------------------------------|-------------------|--------------------|-------------------------|----------------|
+| #1 | 0.40.0 | 3D (с `.unsqueeze(1)`) | 45/45, 5196 MB | 0/45, ошибка интеграции | 0/45, ошибка интеграции | — |
+| #2 | 0.37.0 | 3D (с `.unsqueeze(1)`) | 45/45, 5196 MB | 0/45, "unpack (expected 2, got 1)" | 0/45, та же ошибка | 0/45, та же ошибка, пик 9946 MB |
+| #3 | 0.37.0 | 2D (без `.unsqueeze(1)`) | 45/45, 5196 MB | 0/45, "has to be 3D or 4D tensors but is 2D" | та же ошибка | та же ошибка |
+| #4 | 0.37.0 | 3D + кортежи (key,value) | 45/45, 5196 MB | 0/45, "'tuple' object has no attribute 'ndim'" | та же ошибка | та же ошибка |
+| #5 | 0.37.0 | 3D + [neg,pos] конкатенация | 45/45, 5196 MB | 0/45, "Tensors must have same number of dimensions: got 2 and 3" | та же ошибка | OOM, пик 14160 MB |
 
-Ядро `forts845/om-consistency-ab-test` версия 12, окружение: torch 2.11.0+cu128, diffusers 0.37.0, Tesla T4, 14.56 ГБ VRAM.
+**Вывод:** Pinning diffusers на 0.37.0 НЕ исправил IP-Adapter. Внутренний код diffusers 0.37.0 при обработке `ip_adapter_image_embeds` с CFG несовместим с форматами эмбеддингов. Тест A (базовый SDXL без IP-Adapter): 45/45 картинок, пик VRAM 5 196 МБ — стабильно во всех запусках.
+
+### 5.2 Запуск v6 — официальный IP-Adapter API (quick-режим, 1 seed × 1 сценарий, 2026-10-27)
+
+Ядро `forts845/om-consistency-ab-test` версия 12. Окружение: torch 2.11.0+cu128, diffusers 0.37.0, Tesla T4, 14.56 ГБ VRAM. Код: `pipe.load_ip_adapter("h94/IP-Adapter", subfolder="sdxl_models", weight_name="ip-adapter-plus-face_sdxl_vit-h.safetensors")`, `pipe.set_ip_adapter_scale(0.6)`, `ip_adapter_image=PIL.Image`.
 
 | Тест | Конфигурация | Картин | Пик VRAM | Ошибка рендера | Вердикт |
 |------|-------------|--------|----------|----------------|---------|
 | A — baseline | SDXL Base 1.0, 768×768, fp16, vae_slicing+tiling+model_cpu_offload, без адаптера | 1/1 | 5 196 МБ | — | **Пройден** |
-| B — Plus Face (офиц. API) | A + `ip-adapter-plus-face_sdxl_vit-h`, scale 0.6, `ip_adapter_image=PIL.Image`, steps 30 | 0/1 | 5 839 МБ | `mat1 and mat2 shapes cannot be multiplied (514x1664 and 1280x1280)` | Не пригоден |
+| B — Plus Face (офиц. API) | A + `ip-adapter-plus-face_sdxl_vit-h`, scale 0.6 | 0/1 | 5 839 МБ | `mat1 and mat2 shapes cannot be multiplied (514x1664 and 1280x1280)` | Не пригоден |
 | C — Plus full-body (офиц. API) | A + `ip-adapter-plus_sdxl_vit-h`, scale 0.6 | 0/1 | 5 839 МБ | та же ошибка (1664 vs 1280) | Не пригоден |
 | D — комбо Plus + Plus Face | B + C | 0/1 | 11 664,7 МБ | та же ошибка | Не пригоден |
 
-Причина: `h94/IP-Adapter` sdxl_models кодирует изображение через `image_encoder` (ViT-H, `last_hidden_state` 1664 dim), а веса `ip-adapter-plus-face_sdxl_vit-h` ждут на вход проекции 1280-dim `image_embeds`. Официальный `ip_adapter_image` кормит проекцию `last_hidden_state` → несовпадение размерностей. Ручное построение `ip_adapter_image_embeds` запрещено задачей; апгрейд diffusers запрещён dependency-guard (закреплено 0.37.0). Полная матрица 5 seed × 9 сценариев не имеет смысла — ни один адаптерный тест не выдаёт годного кадра.
+Причина: `h94/IP-Adapter` sdxl_models кодирует изображение через `image_encoder` (ViT-H, `last_hidden_state` 1664 dim), а веса `ip-adapter-plus-face_sdxl_vit-h` ждут на вход проекции 1280-dim `image_embeds`. Официальный `ip_adapter_image` кормит проекцию `last_hidden_state` → несовпадение размерностей. Полная матрица 5 seed × 9 сценариев не имеет смысла — ни один адаптерный тест не выдаёт годного кадра.
 
-**Итог:** единственная рабочая конфигурация без OOM с годными кадрами — Тест A (baseline SDXL Base 1.0). Детальный отчёт: `tools/kaggle_bridge/jobs/consistency-ab-test/results_v6/consistency-ab-test/results.json` (и `RESULTS.md` для v1–v6).
+**Детальный отчёт:** `tools/kaggle_bridge/jobs/consistency-ab-test/results_v6/consistency-ab-test/results.json`.
 
-### Решение по консистентности персонажа (фиксировано, не пересматривать)
+### 5.3 FLUX.2 Klein 4B разведка
 
-Автоматическая консистентность через IP-Adapter временно нецелесообразна с текущим стеком (diffusers 0.37.0, T4 14.56 ГБ, h94/IP-Adapter не совместим по размерностям эмбеддингов).
+- Статус: ФАИЛ при загрузке модели.
+- Ошибка: `Pipeline FluxPipeline expected ['feature_extractor', 'image_encoder', 'scheduler', 'text_encoder', 'text_encoder_2', 'tokenizer', 'tokenizer_2', 'transformer', 'vae'], but only {'vae', 'text_encoder', 'transformer', 'scheduler', 'tokenizer'} were passed.`
+- Вывод: diffusers 0.37.0 не поддерживает `black-forest-labs/FLUX.2-klein-4B` — отсутствуют компоненты `feature_extractor`, `image_encoder`, `text_encoder_2`, `tokenizer_2`. Апгрейд diffusers требует отдельного решения владельца (dependency-guard блокирует несанкционированное изменение версий).
+- Официальные настройки FLUX.2 Klein (на будущее): 4 шага, `guidance_scale=1.0`, 1024×1024, до 4 референсов, нарративный промптинг с явным описанием line-art техники.
 
-Решение для пилота: **baseline SDXL Base 1.0 + дисциплина детального text-prompt** — фиксированное описание персонажа/субъекта в каждом промпте — как временная мера, пока не появится рабочий адаптер. Это вариант O8 «а» (PROJECT_PLAN §7). Пилот можно собрать и так; IP-Adapter-консистентность откладывается на отдельный timebox после пилота.
+### 5.4 FLUX 3 Image Klein
 
-**Где «плывёт» консистентность:** не определится автоматически — контроль владельцем по сохранённым кадрам Теста A.
+Исключён навсегда: минимальный официальный VRAM 25 ГБ (NVFP4), T4 имеет 14.56 ГБ.
 
-### 4.8 Первый собранный кадр сцены пилота (реальный результат)
+---
+
+## 6. Финальный метод консистентности персонажа
+
+**Метод для пилота (фиксировано, не пересматривать в рамках текущего плана): baseline SDXL Base 1.0 + дисциплина детального text-prompt.** Фиксированное описание персонажа/субъекта в каждом промпте (вариант O8 «а»). Пилот можно собрать и так.
+
+Адаптерный метод консистентности **ещё не выбран** (не пригоден с текущим стеком: diffusers 0.37.0, T4 14.56 ГБ, h94/IP-Adapter не совместим по размерностям эмбеддингов 1664 vs 1280). Откладывается на отдельный timebox после пилота.
+
+**Два кандидата на адаптерный метод (post-pilot timebox):**
+
+1. **X — IP-Adapter Plus Face с исправлением размерности эмбеддингов.** Требует либо изменения внутреннего кода diffusers 0.37.0, либо ручной сборки `ip_adapter_image_embeds` (запрещено ограничениями текущего плана), либо апгрейда diffusers (заблокировано dependency-guard без решения владельца).
+2. **Y — альтернативная модель адаптера/подход** (например, другой IP-Adapter вес с совместимой размерностью проекции или Character LoRA — при условии одобрения владельцем, см. перечень «не рассматриваются»).
+
+Контроль консистентности на пилоте — визуальный, владельцем, по сохранённым кадрам Теста A.
+
+---
+
+## 7. Первый собранный кадр сцены пилота (реальный результат, 2026-10-27)
 
 Собран первый клип пилота — раздел §1 «Hook and the question» («What Would Life Look Like on an Ocean Planet With No Land?»), от текста до готового кадра с озвучкой.
 
@@ -296,139 +300,111 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 |------|----------|
 | Сцена | §1 «Hook and the question», 14 предложений (S001–S014) |
 | Кадр | 1 кадр, beat S001, baseline SDXL Base 1.0 (fallback-метод консистентности), 768×768, фиксированный детальный промпт + стиль graphic-novel-ink как текст |
-| Генерация кадра | Kaggle T4, ядро `forts845/pilot-frame-sdxl-baseline`, peak VRAM 5 196 MB, 22 s |
-| Озвучка | Kokoro-82M, голос `af_heart`, venv `/tmp/kilo/z1_venv`, 83.03 s, 24 кГц |
+| Генерация кадра | Kaggle T4, ядро `forts845/pilot-frame-sdxl-baseline`, peak VRAM 5 196 MB, 22 с |
+| Озвучка | Kokoro-82M, голос `af_heart`, venv `/tmp/kilo/z1_venv`, 83.03 с, 24 кГц |
 | Сборка | Remotion composition `PilotScene1` (`remotion-composer/src/PilotScene.tsx`), кадр full-bleed + аудио, `remotion-composer/out/pilot-scene-1.mp4` |
-| Результат | h264 1920×1080 + aac, 83 s, 6.4 MB, валиден (ffprobe: видео h264 1920×1080, аудио aac) |
+| Результат | h264 1920×1080 + aac, 83 с, 6.4 MB, валиден (ffprobe: видео h264 1920×1080, аудио aac) |
 
 **Путь первого кадра:** `tools/kaggle_bridge/jobs/pilot-frame-1b/output/pilot-frame-1/frame_001.png` → `remotion-composer/public/pilot/frame.png`  
 **Путь озвучки:** `/tmp/kilo/pilot_scene1/narration.wav` → `remotion-composer/public/pilot/narration.wav`  
-**Готовый клип:** `remotion-composer/out/pilot-scene-1.mp4`
+**Готовый клип:** `remotion-composer/out/pilot-scene-1.mp4` (не коммитится в git — артефакт сборки)
 
 **Осталось до полного пилота:** 9 разделов (§2–§10, 200 оставшихся предложений из 214). Каждый раздел нужен свой набор кадров + озвучка, затем склейка, субтитры, переходы, графика, QA.
 
-**Что ещё не автоматизировано:**
-- Парсер формата пилота (`S<NNN> [ID]` + `PROMPT:`) — сломан (Б1, PROJECT_PLAN §2.3).
-- Субтитры / forced alignment (SRT) — не подключены.
-- Переходы между сценами и EDL — не автоматизированы.
-- Полный рендер эпизода (20–21 мин) — не собран.
-
-
 ---
 
-## 5. План по фазам
+## 8. Фазовый план — только оставшиеся шаги до готового пилота
+
+Уже сделано (не повторять как TODO): окружение закрыто (pytest, kaggle CLI, ffmpeg, Kokoro venv, node_modules, Remotion Free License), закреплены версии diffusers/transformers/huggingface_hub, проведён полный цикл тестирования консистентности (v1–v6), выбран fallback-метод консистентности, собран первый кадр пилота §1.
 
 Размеры: **S** ≤ 0.5 дня, **M** 0.5–1.5 дня, **L** > 1.5 дня (включая ожидание GPU).
 
-### Фаза 0 — Фиксация базовой линии (S)
-
-| Поле | Значение |
-|------|----------|
-| Задачи | Зафиксировать версии и хеши: сценарий, рецепт, S15-манифест, `qc_thresholds.json`, `image_engine.json`; записать матрицу окружения |
-| Файлы | Новый `docs/openmontage/pilot/BASELINE.md` |
-| Приёмка | все пины и sha256 записаны; матрица «локально / Kaggle» заполнена; 0 изменений в коде |
-| Субагент | `evidence-checker` (сверка фактов), проверка — `qa-reviewer` |
-| Риск | нет |
-
 ### Фаза 1 — Адаптер формата пилота (M) — **блокирующая**
 
-| Поле | Значение |
-|------|----------|
-| Задачи | Новый модуль `tools/illustration/pilot_script.py`: парсит `S<NNN> [ID]` + `PROMPT:`; отдаёт `{sections, sentences, prompts, claim_ids}`; валидирует нумерацию, уникальность промптов, резолв claim_id в леджере |
+Новый модуль `tools/illustration/pilot_script.py`: парсит `S<NNN> [ID]` + `PROMPT:`; отдаёт `{sections, sentences, prompts, claim_ids}`; валидирует нумерацию, уникальность промптов, резолв claim_id в леджере.
+
 | Файлы | `tools/illustration/pilot_script.py` (новый), `tests/illustration/test_pilot_script.py` (новый), подключение: `scripts/run_episode.py:407`, `tools/illustration/pilot_edl.py:228,263`, `tools/illustration/image_brief.py:96` |
+|-------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Приёмка | 214 предложений, 10 разделов, 214 промптов, 0 неизвестных claim_id; старый формат (буллеты/таблицы) не сломан — тест на регрессию |
-| Субагент | оркестратор (нет субагента с правом писать `tools/**`); приёмка — `qa-reviewer` |
 | Риск | средний: три парсера, легко получить расхождение; тест обязателен |
 
-### Фаза 2 — Сведение конфигов и стиля (S) — **блокирующая**
+### Фаза 2 — Сведение конфигов и стиля на SDXL Base 1.0 (S) — **блокирующая**
 
-| Поле | Значение |
-|------|----------|
-| Задачи | Добавить в `config/image_engine.json` запись `dreamshaper-xl-1-0` (revision, DEIS, 25/5.5, fp16, VAE stock, лицензия, измерения S12/S15); переключить `model`; привести `style.json` и `STYLE_BIBLE.md` к `graphic-novel-ink`; убрать `klein` из пилотного пути; `build_episode_edl.py --model` по умолчанию = `dreamshaper-xl-1-0` |
-| Файлы | `config/image_engine.json`, `docs/openmontage/niches/speculative_evolution/style.json`, `.../STYLE_BIBLE.md`, `scripts/build_episode_edl.py:73`, `docs/openmontage/image_gen/EPISODE_IMAGE_PIPELINE.md`, `IMAGE_MODULE_SPEC.md` |
-| Приёмка | один источник истины: рецепт = конфиг = стиль = сценарий; `python scripts/image_engine.py status` показывает `dreamshaper-xl-1-0`; grep по `klein` в пилотном пути пуст |
-| Субагент | оркестратор; независимая сверка — `qa-reviewer` |
-| Риск | средний: правки в 6 файлах, нужен дифф-ревью |
+Добавить в `config/image_engine.json` запись `sd-xl-base-1-0` (25 шагов, CFG 5.5, fp16, VAE slicing+tiling+model_cpu_offload, OpenRAIL++, измерения 5 196 МБ); переключить `model` на `sd-xl-base-1-0`; привести `style.json` и `STYLE_BIBLE.md` к `graphic-novel-ink`; убрать `klein` из пилотного пути; `build_episode_edl.py --model` по умолчанию = `sd-xl-base-1-0`.
+
+| Файлы | `config/image_engine.json`, `docs/openmontage/niches/speculative_evolution/style.json`, `.../STYLE_BIBLE.md`, `scripts/build_episode_edl.py:73`, `docs/openmontage/image_gen/EPISODE_IMAGE_PIPELINE.md` |
+|-------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Приёмка | один источник истины: рецепт = конфиг = стиль = сценарий; grep по `klein` в пилотном пути пуст |
+| Риск | средний: правки в нескольких файлах, нужен дифф-ревью |
 
 ### Фаза 3 — Производство 214 изображений (L)
 
-| Поле | Значение |
-|------|----------|
-| Задачи | job-файл на базе `s15_style_lock_run.py` с `model_config` из рецепта; 3 батча 72/71/71; seed-лог на каждую картинку; `DONE.json` в `finally`; fetch + verify sha256; `illustration_qc`; ретраи только упавших (≤ 2 на картинку) |
-| Файлы | `tools/kaggle_bridge/jobs/pilot-ds-xl-1-0-{1,2,3}/`, `scripts/run_episode_images.py`, состояние в `projects/<pilot>/` |
+Job-файл на базе проверенного baseline с `model_config` из рецепта; 3 батча 72/71/71; seed-лог на каждую картинку; `DONE.json` в `finally`; fetch + verify sha256; `illustration_qc`; ретраи только упавших (≤ 2 на картинку).
+
+| Файлы | `tools/kaggle_bridge/jobs/pilot-sd-xl-1-0-{1,2,3}/`, `scripts/run_episode_images.py`, состояние в `projects/<pilot>/` |
+|-------|-------------------------------------------------------------------------------------------------|
 | Приёмка | 214/214 verified; 0 black/NaN; ≥ 190 (≥89%) проходят QC с первой попытки; суммарно ≤ 110 мин GPU; манифест содержит model/revision/seed/sha256 |
-| Субагент | оркестратор (запуск), `qa-reviewer` (сверка манифеста и QC), `footage-scout` — не нужен (нет внешних ассетов) |
 | Риск | высокий: OOM, чёрные кадры, квоты, обрыв ядра |
 
 ### Фаза 4 — Narration и субтитры (M) — параллельна фазе 3
 
-| Поле | Значение |
-|------|----------|
-| Задачи | Поднять venv `/tmp/kilo/z1_venv` по `docs/openmontage/z1_voice_venv.requirements.txt`; 214 предложений через `kokoro_tts` (`af_heart`, CPU); `finish_audio` до −14 LUFS; forced alignment → SRT |
+214 предложений через `kokoro_tts` (`af_heart`, CPU); `finish_audio` до −14 LUFS; forced alignment → SRT.
+
 | Файлы | `scripts/run_episode.py:311` (`cmd_narration`), `tools/audio/kokoro_tts.py`, `scripts/kokoro_torch_narrate.py`, `scripts/fw_subtitles.py` |
+|-------|-------------------------------------------------------------------------------------------------------------------------------|
 | Приёмка | WAV 24 кГц; −14 ± 2 LUFS; TP ≤ −1.5 dBTP; 214 реплик; дрейф ≤ 0.5 с; 20 контрольных терминов проверено вручную |
-| Субагент | оркестратор; замеры — `qa-reviewer` |
 | Риск | средний: Python 3.14 + бинарные колёса; `af_heart` может спотыкаться на латинице/числах |
 
 ### Фаза 5 — EDL и монтаж (L)
 
-| Поле | Значение |
-|------|----------|
-| Задачи | `build_episode_edl.py` на реальном манифесте; 10 карточек разделов + ≥ 4 доп. графических события (для D8); чередование движений; per-cut rationale + claim_id; затем рендер |
-| Файлы | `scripts/build_episode_edl.py`, `tools/illustration/pilot_edl.py`, `tools/video/video_compose.py` |
+`build_episode_edl.py` на реальном манифесте; 10 карточек разделов + ≥ 4 доп. графических события (для D8); чередование движений; per-cut rationale + claim_id; затем рендер ffmpeg или Remotion (по решению O1/O10).
+
+| Файлы | `scripts/build_episode_edl.py`, `tools/illustration/pilot_edl.py`, `tools/video/video_compose.py`, `remotion-composer/` |
+|-------|---------------------------------------------------------------------------------------------------|
 | Приёмка | D1, D7, D8; каждое решение о склейке имеет rationale; ни одного still-only > 15 с |
-| Субагент | `editor` (пишет только `projects/**/edit/**` и EDL) |
 | Риск | средний: длительность 20:36 в ±6 с |
 
 ### Фаза 6 — QA и пакет (M)
 
-| Поле | Значение |
-|------|----------|
-| Задачи | Прогон 16 проверок; **файл-обход** порогов (`config/qc_pilot_override.json`) с подписью владельца: `ai_label_max_share: 1.0`, `graphics_per_90s_min: 0.73` — только если O5 выбран вариант «обход»; собрать `credits.txt`, `rights_records.json`, метаданные |
+Прогон 16 проверок; **файл-обход** порогов (`config/qc_pilot_override.json`) с подписью владельца: `ai_label_max_share: 1.0`, `graphics_per_90s_min: 0.73` — только если O5 выбран вариант «обход»; собрать `credits.txt`, `rights_records.json`, метаданные.
+
 | Файлы | `tools/qa/qc.py`, `config/qc_thresholds.json` / новый override, `scripts/run_episode.py:870` |
+|-------|-----------------------------------------------------------------------------------|
 | Приёмка | D9–D13, D15; `qa_report.json` без `NOT_RUN`/`BLOCKED` |
-| Субагент | `qa-reviewer` (единственный, кто пишет `qa_report.json`) |
 | Риск | высокий: любой NOT_RUN = BLOCKED, а не PASS |
 
-### Фаза 7 — Опционально: консистентность персонажа (M, timebox 1 ядро)
+### Фаза 7 — Опционально: консистентность персонажа (M, timebox 1 ядро, после пилота)
 
-| Поле | Значение |
-|------|----------|
-| Задачи | Одно ядро-эксперимент: 9 референсов, замер VRAM; сравнить 3 подхода только на 3 сценах |
+Одно ядро-эксперимент: 9 референсов, замер VRAM; сравнить кандидатов X и Y только на 3 сценах.
+
 | Приёмка | go/no-go с измеренным пиком VRAM; при OOM — ветка закрывается навсегда |
-| Субагент | оркестратор + `qa-reviewer` |
-| Риск | высокий; IP-Adapter Plus давал 13.9/14.56 ГБ (OOM) |
+|---------|------------------------------------------------------------------------|
+| Риск | высокий; IP-Adapter Plus давал 13.9/14.56 ГБ (OOM risk) |
 
 ---
 
-## 6. Параллельно vs строго последовательно
+## 9. Параллельность и правила конфликтов
 
-### 6.1 Жёсткая последовательность
+### 9.1 Жёсткая последовательность
 
 ```
-Фаза 0 → Фаза 1 → Фаза 2 → Фаза 3 ─┐
-                                   ├→ Фаза 5 → Фаза 6 → пакет
-                        Фаза 4 ────┘
+Фаза 1 → Фаза 2 → Фаза 3 ─┐
+                         ├→ Фаза 5 → Фаза 6 → пакет
+Фаза 4 ─────────────────┘ (параллельна фазе 3)
 ```
 
-Обоснование:
-- **1 → 2**: без парсера нельзя проверить применение конфига к 214 промптам.
-- **2 → 3**: генерация с `klein` даст 214 картинок не в той модели/стиле — деньги/время впустую.
-- **3 и 4 → 5**: EDL требует и длительности озвучки, и реальные файлы картинок.
-- **5 → 6**: QA проверяет готовый MP4; раньше запускать нечего.
-- **6 → пакет**: метаданные должны ссылаться на проверенный рендер.
+Обоснование: без парсера нельзя применить конфиг к 214 промптам; генерация не в той модели тратит квоту GPU; EDL требует длительности озвучки и реальные файлы картинок; QA проверяет готовый MP4.
 
-### 6.2 Параллельно
+### 9.2 Параллельно
 
 | Задача A | Задача B | Почему безопасно |
 |----------|----------|------------------|
 | Фаза 3 (GPU) | Фаза 4 (CPU, Kokoro) | независимые ресурсы и файлы |
-| Фаза 3 | Пакет атрибуции/лицензий (L1–L3) | только текст, не влияет на рендер |
+| Фаза 3 | Пакет атрибуции/лицензий (L1–L3) | только текст |
 | Фаза 4 | Черновик title/description/thumbnail | опирается на замороженный сценарий |
-| Фаза 5 (ffmpeg) | Спайк Remotion в отдельном worktree | не пересекаются по файлам |
-| Фаза 6 | Расширение QA (override-файл) | разные файлы; вердикт — только после рендера |
+| Фаза 5 | Спайк Remotion/ffmpeg в отдельном worktree | не пересекаются по файлам |
 
-### 6.3 Правила конфликтов
+### 9.3 Правила конфликтов
 
 1. Один файл — один писатель. `config/image_engine.json` правит только оркестратор (фаза 2).
 2. `qa_report.json` пишет только `qa-reviewer`.
@@ -438,53 +414,30 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 
 ---
 
-## 7. Решения, которые должен принять владелец
-
-(ни одно не принято — не принимаю их за владельца)
+## 10. Решения, которые должен принять владелец
 
 | ID | Вопрос | Варианты | Влияние | Рекомендация |
 |----|--------|----------|---------|--------------|
-| O1 | Remotion не FOSS. Принимаем? | (а) принять (физлицо/≤3 сотрудников); (б) заменить на ffmpeg; (в) заменить на HyperFrames (Apache-2.0) | Фаза 5, юридическая чистота | (а), если применимо; иначе (б) |
-| O2 | DreamShaper XL 1.0 — OpenRAIL++, не OSI | (а) принять как «commercially permitted, not FOSS»; (б) искать OSI-модель | Лицензионный режим пилота | (а) + текст лицензии в репозитории |
+| O1 | Remotion не FOSS. Принимаем для пилота? | (а) принять (Free License, физлицо/≤3 сотрудника); (б) заменить на ffmpeg; (в) заменить на HyperFrames (Apache-2.0) | Фаза 5, юридическая чистота | (а) — уже подтверждено для соло-проекта, использовано для proof-of-concept клипа |
+| O2 | DreamShaper XL 1.0 — OpenRAIL++, не OSI. База пилота — SDXL Base 1.0 (commercial-OK). Принимаем? | (а) SDXL Base 1.0 + OpenRAIL++; (б) DreamShaper XL 1.0 + текст лицензии | Лицензионный режим пилота | (а) — SDXL Base 1.0 уже протестирован, 5 196 МБ пик на T4 |
 | O3 | Kokoro: CC BY в данных + неизвестная синтетика | (а) подписать + атрибуция; (б) сменить голос | Описание видео, юридический риск | (а) + блок атрибуции |
 | O4 | 214 картинок vs бюджет 6–8 img/min | (а) поднять до 10.4; (б) сократить до 165; (в) оставить 214 + расширить лимит | Объём GPU, ритм монтажа | (а) — «одна на предложение» |
 | O5 | QA: 100% AI + плотность графики | (а) override-файл `ai_label_max_share=1.0` + 4 события; (б) override и по плотности | Честность гейта | (а): метку оставить, плотность событиями |
 | O6 | Заголовок | (а) «What Would Life Look Like on an Ocean Planet With No Land?»; (б) текущий в файле | Метаданные, thumbnail, сценарий | (а) как тема канала, (б) как подзаголовок |
 | O7 | Музыка | (а) без музыки; (б) лицензированный трек | Тон, права | (а) на пилоте |
-| O8 | Консистентность персонажа | (а) только seed+промпт; (б) timebox на 1 ядро | Качество, риск OOM | (а) сейчас, (б) после пилота |
+| O8 | Консистентность персонажа | (а) только seed+промпт (принято для пилота); (б) timebox на 1 ядро после пилота | Качество, риск OOM | (а) сейчас, (б) после пилота |
 | O9 | Голос | `af_heart` единственный | Единообразие | подтвердить `af_heart` |
-| O10 | Канонический рендер | (а) ffmpeg `video_compose` (подключён); (б) Remotion | Сроки, лицензия | (а) для пилота, (б) второй путь после O1 |
+| O10 | Канонический рендер | (а) ffmpeg `video_compose` (подключён); (б) Remotion (proof-of-concept есть) | Сроки, лицензия | (а) для пилота, (б) второй путь |
 | O11 | Квоты Kaggle | 3 ядра / ~96 мин GPU в неделю | Сроки | подтвердить доступ и окно |
 | O12 | Раскрытие AI | (а) метка на каждом кадре + в описании; (б) только в описании | Политика YouTube, доверие | (а) |
 
 ---
 
-## 8. Кандидатные скиллы/плагины/MCP (только список, ничего не устанавливать)
-
-| Кандидат | URL | Лицензия (проверена по LICENSE) | Что даёт | Вердикт |
-|----------|-----|---------------------------------|----------|---------|
-| Remotion | https://github.com/remotion-dev/remotion | кастомная Remotion License (LICENSE в репо), не FOSS | Motion-графика, уже в репо | Использовать только после O1 |
-| HyperFrames | https://www.npmjs.com/package/hyperframes | Apache-2.0 (LICENSE в npm-пакете) | HTML→MP4, замена Remotion при лицензионном блоке | Кандидат-страховка |
-| OpenTimelineIO | https://github.com/AcademySoftwareFoundation/OpenTimelineIO | Apache-2.0 (LICENSE) | Обмен EDL/OTIO с `editor` | Кандидат, не обязателен |
-| auto-editor | https://github.com/WyattBlue/auto-editor | Unlicense (LICENSE) | Авто-трим тишины, анализ темпа | Не нужен: озвучка синтезируется точно |
-| stable-ts | https://github.com/jianfch/stable-ts | MIT (LICENSE) | Запасной путь субтитров, если forced alignment упадёт | Кандидат |
-| WhisperX | https://github.com/m-bain/whisperX | BSD-2-Clause (LICENSE) | Word-level timestamps | Кандидат, тяжелее stable-ts |
-| faster-whisper | https://github.com/SYSTRAN/faster-whisper | MIT (LICENSE) | Локальная проверка субтитров | Кандидат для QA |
-| Silero VAD | https://github.com/snakers4/silero-vad | MIT (LICENSE) | Детект пауз для `silencedetect`-альтернативы | Кандидат |
-| Kokoro-82M | https://huggingface.co/hexgrad/Kokoro-82M | Apache-2.0 (LICENSE на HF) + оговорки по данным | Уже выбран | Принят с оговоркой O3 |
-| Inter / JetBrains Mono | https://github.com/rsms/inter, https://github.com/JetBrains/JetBrainsMono | OFL-1.1 (LICENSE) | Локальные шрифты вместо `@remotion/google-fonts` | Кандидат: убрать сетевую зависимость |
-| FFmpeg | https://ffmpeg.org/legal.html | LGPL-2.1+ / GPL-2.0+ (в зависимости от сборки) | Рендер | Проверить `ffmpeg -version` на `--enable-gpl` |
-
-**Не рассматриваются:** insightface, ArcFace, antelopev2, buffalo_l, InstantID, IP-Adapter-FaceID, PuLID, ConsiStory, StoryDiffusion, Z-Image-Turbo, FLUX (non-commercial) — исключены владельцем (PROJECT_PLAN §2.5, B5).
-
----
-
-## 10. Статус внедрения Фазы B (субагенты и инфраструктура)
+## 11. Инфраструктура (Фаза B, внедрена и протестирована)
 
 **Дата внедрения:** 2026-10-26
-**Статус:** Внедрено и протестировано
 
-### 10.1 Созданные субагенты (.kilo/agents/)
+### 11.1 Субагенты (`.kilo/agents/`, mode: subagent)
 
 | Агент | Файл | Mode | Статус |
 |-------|------|------|--------|
@@ -494,81 +447,37 @@ qc.py ──► qa_report.json ──► release_gate ──► package_draft (�
 | git-hygiene | `.kilo/agents/git-hygiene.md` | subagent | Создан, YAML frontmatter валиден |
 | plan-keeper | `.kilo/agents/plan-keeper.md` | subagent | Создан, YAML frontmatter валиден |
 | code-reviewer | `.kilo/agents/code-reviewer.md` | subagent | Создан, YAML frontmatter валиден |
-| niche-researcher | `.kilo/agents/niche-researcher.md` | subagent | Скопирован из `.opencode/agent/` (оригинал нетронут) |
+| niche-researcher | `.kilo/agents/niche-researcher.md` | subagent | Скопирован из `.opencode/agent/` |
 
-### 10.2 Инфраструктурные защиты
+### 11.2 Инфраструктурные защиты
 
 | Компонент | Файл | Статус | Тест |
 |-----------|------|--------|------|
-| Pre-push хук | `.kilo/hooks/pre-push.sh` + `.git/hooks/pre-push` (symlink) | Создан, исполняем | ✅ Блокирует файл >90 МБ (exit code 1) |
+| Pre-push хук | `.kilo/hooks/pre-push.sh` + `.git/hooks/pre-push` (symlink) | Создан, исполняем | Блокирует файл >90 МБ (exit code 1) |
 | Права агентов | `.kilo/kilo.jsonc` | Создан | Config validation OK |
+| Devcontainer | `.devcontainer/devcontainer.json` | Создан | python:3.12 + Node.js LTS, postCreateCommand настраивает хук, venv, pip, npm. Требует пересборки codespace для применения. |
 
-### 10.3 Результаты тестов (раздел B5 из AGENT_BUILD_PROPOSAL.md)
+### 11.3 Результаты тестов агентов
 
 | Агент | Тест | Результат |
 |-------|------|-----------|
-| license-checker | Проверка на кейсе Cheyenne (style1/manifest.json) | Файл валиден, правила требуют точного имени проекта |
-| kaggle-test-runner | Проверка синтаксиса YAML frontmatter | ✅ Валидно |
-| dependency-guard | Проверка конфликта diffusers==0.40.0 vs закреплённое 0.37.0 | ✅ Конфликт обнаружен, будет заблокирован |
-| git-hygiene | Тест 95 МБ файла через pre-push хук | ✅ Заблокирован (exit code 1), файл удалён после теста |
-| code-reviewer | Проверка синтаксиса YAML frontmatter | ✅ Валидно |
-| plan-keeper | Проверка синтаксиса YAML frontmatter | ✅ Валидно |
-
-### 10.4 Статус пунктов из раздела 9 (проверка окружения)
-
-| # | Пункт | Статус | Детали |
-|---|-------|--------|--------|
-| 1 | `pytest` в окружении | ✅ Установлен | pytest 9.1.1, 2578 тестов собраны, 5 ошибок сбора (ожидаемо без тестовых данных/ffmpeg ранее) |
-| 2 | `kaggle` CLI и доступ к аккаунту | ✅ Работает | kaggle CLI 2.2.5 установлен, авторизация подтверждена (kaggle kernels list --mine вернул 15 ядер без ошибки 401/403) |
-| 3 | `ffmpeg`/`ffprobe` | ✅ Установлен | ffmpeg 6.1.1-3ubuntu5, `--enable-gpl` подтвержден |
-| 4 | `node_modules` + решение O1 | ✅ Решено | node_modules установлен (201 пакетов), Remotion Free License подтверждена владельцем (соло-проект, 1 человек, подпадает под Free License: individual, ≤3 сотрудников). Company License не требуется. |
-| 5 | `/tmp/kilo/z1_venv` | ✅ Решено | venv создан на Python 3.12.3, kokoro==0.2.2 + misaki==0.7.4 установлены, импорт kokoro.KPipeline подтвержден |
-| 6 | `.devcontainer/devcontainer.json` | ✅ Создан | Базовый образ python:3.12, Node.js LTS, postCreateCommand настраивает pre-push хук, z1_venv, pip install, npm install. Ожидает пересборки codespace для применения. |
-
-**Примечание:** Файл `.devcontainer/devcontainer.json` создан и закоммичен. Для применения в текущем codespace необходимо пересобрать контейнер (Command Palette → "Rebuild Container"). В новых codespace применится автоматически.
-
-### 10.5 Исправление несовпадения версий diffusers (Kaggle-ядро vs requirements-pinned.txt) — РЕАЛЬНЫЕ РЕЗУЛЬТАТЫ (5 запусков на Kaggle T4)
-
-**Причина провала тестов Б/В/Г:** несоответствие версий diffusers БЫЛО частью проблемы, но после pinning на 0.37.0 тесты Б/В/Г всё ещё не проходят — есть более глубокая несовместимость h94/IP-Adapter с diffusers 0.37.0 при использовании `ip_adapter_image_embeds` с CFG (classifier-free guidance).
-
-**Кодирование ядра consistency-ab-test (5 запуска на Kaggle T4):**
-
-| Запуск | diffusers | ip_adapter_image_embeds формат | Тест A | Тест B (face) | Тест C (fullbody) | Тест D (комбо) |
-|--------|-----------|-------------------------------|--------|---------------|-------------------|----------------|
-| #1 | 0.40.0 | 3D (с .unsqueeze(1)) | 45/45, 5196 MB | 0/45, ошибка интеграции | 0/45, ошибка интеграции | — |
-| #2 | 0.37.0 | 3D (с .unsqueeze(1)) | 45/45, 5196 MB | 0/45, "unpack (expected 2, got 1)" | 0/45, та же ошибка | 0/45, та же ошибка, пик 9946 MB |
-| #3 | 0.37.0 | 2D (без .unsqueeze(1)) | 45/45, 5196 MB | 0/45, "has to be 3D or 4D tensors but is 2D" | та же ошибка | та же ошибка |
-| #4 | 0.37.0 | 3D + кортежи (key,value) | 45/45, 5196 MB | 0/45, "'tuple' object has no attribute 'ndim'" | та же ошибка | та же ошибка |
-| #5 | 0.37.0 | 3D + [neg,pos] конкатенация | 45/45, 5196 MB | 0/45, "Tensors must have same number of dimensions: got 2 and 3" | та же ошибка | OOM, пик 14160 MB |
-
-**Вывод:** Version pinning на diffusers 0.37.0 НЕ исправил IP-Adapter. Проблема глубже — внутренний код diffusers 0.37.0 при обработке `ip_adapter_image_embeds` с CFG несовместим с тем, как run.py передаёт эмбеддинги, независимо от формата (3D, 2D, кортежи, neg+pos).
-
-**Тест A (базовый SDXL без IP-Adapter):** 45/45 картинок, пик VRAM 5196 МБ — работает стабильно во всех 5 запусках.
-
-**FLUX.2 Klein 4B разведка (ядро flux2-klein-test):**
-- Статус: ФАИЛ при загрузке модели
-- Ошибка: `Pipeline FluxPipeline expected ['feature_extractor', 'image_encoder', 'scheduler', 'text_encoder', 'text_encoder_2', 'tokenizer', 'tokenizer_2', 'transformer', 'vae'], but only {'vae', 'text_encoder', 'transformer', 'scheduler', 'tokenizer'} were passed.`
-- Вывод: diffusers 0.37.0 не поддерживает `black-forest-labs/FLUX.2-klein-4B` — отсутствуют компоненты `feature_extractor`, `image_encoder`, `text_encoder_2`, `tokenizer_2`. FLUX.2 Klein не может быть использован с diffusers 0.37.0.
-
-**Файлы результатов:**
-- `tools/kaggle_bridge/jobs/consistency-ab-test/results_v*/consistency-ab-test/results.json` — результаты всех 5 запусков
-- `tools/kaggle_bridge/jobs/flux2-klein-test/results/flux2-klein-test/results.json` — результат FLUX.2 Klein теста
+| license-checker | Кейс Cheyenne (style1/manifest.json) | Файл валиден, правила требуют точного имени проекта |
+| kaggle-test-runner | Синтаксис YAML frontmatter | ✅ Валидно |
+| dependency-guard | Конфликт diffusers==0.40.0 vs 0.37.0 | ✅ Конфликт обнаружен, будет заблокирован |
+| git-hygiene | 95 МБ файл через pre-push хук | ✅ Заблокирован (exit code 1) |
+| code-reviewer | Синтаксис YAML frontmatter | ✅ Валидно |
+| plan-keeper | Синтаксис YAML frontmatter | ✅ Валидно |
 
 ---
 
-## 9. Что проверить первым делом в следующей сессии
+## 12. Что проверить первым делом в следующей сессии
 
-Все 6 пунктов проверки окружения закрыты:
-1. `pytest` — ✅ установлен (9.1.1), 2578 тестов собраны
-2. `kaggle` CLI — ✅ авторизован (15 ядер получены без ошибки)
-3. `ffmpeg`/`ffprobe` — ✅ установлен (6.1.1-3ubuntu5, `--enable-gpl`)
-4. `node_modules` + Remotion Free License — ✅ установлена, владелец подтвердил Free License (соло-проект)
-5. `/tmp/kilo/z1_venv` — ✅ Python 3.12.3, kokoro==0.2.2, импорт OK
-6. `.devcontainer/devcontainer.json` — ✅ создан, требует пересборки codespace для применения
-
-**Новые блокирующие задачи:**
-- IP-Adapter Plus с h94/IP-Adapter не работает с diffusers 0.37.0 — 5 запусков на Kaggle T4, все тесты Б/В/Д дают 0/45 картинок с ошибками формата тензоров. Требуется альтернативный подход к консистентности персонажа (только seed+промпт, или другая модель адаптера, или другой подход к передаче ip_adapter_image_embeds).
-- FLUX.2 Klein 4B не загружается на diffusers 0.37.0 (отсутствуют компоненты модели: feature_extractor, image_encoder, text_encoder_2, tokenizer_2).
+1. Окружение закрыто (все 6 пунктов §11.3 и §2.1 подтверждены запуском).
+2. Консистентность: fallback-метод зафиксирован (§6); адаптер X/Y не выбран, timebox после пилота.
+3. Первая реальная scena собрана (§7) — `remotion-composer/out/pilot-scene-1.mp4`.
+4. Следующий реальный шаг: **Фаза 1** — адаптер формата пилота (`tools/illustration/pilot_script.py`), без него нельзя перейти к генерации 214 изображений.
+5. После fáзы 1: Фаза 2 (конфиги на SDXL Base 1.0 + стиль graphic-novel-ink), затем Фаза 3 (генерация 214 изображений на Kaggle T4) параллельно Фазе 4 (озвучка 214 предложений Kokoro af_heart).
+6. Осталось не автоматизировано: парсер формата пилота (Б1), субтитры/forced alignment, переходы между сценами и EDL, полный рендер эпизода (20–21 мин).
 
 ---
 

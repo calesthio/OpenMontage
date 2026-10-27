@@ -1,7 +1,8 @@
 # EPISODE IMAGE PIPELINE — brief, budget, batches, resume (P3)
 
-**Locked model:** `klein` → `black-forest-labs/FLUX.2-klein-4B`
+**Locked model:** SDXL Base 1.0 → `stabilityai/stable-diffusion-xl-base-1.0`
 (`config/image_engine.json` → `model`, status `OWNER_GATED`).
+**Character consistency method (фиксировано):** baseline SDXL Base 1.0 + детальный фиксированный text-prompt персонажа в каждом кадре (без IP-Adapter). Адаптерная консистентность (h94/IP-Adapter Plus/Plus Face) протестирована на Kaggle T4 (diffusers 0.37.0, официальный API `pipe.load_ip_adapter` + `ip_adapter_image=PIL.Image`) — не пригодна (ошибка размерности эмбеддингов 1664 vs 1280, 0 годных кадров, тесты B/C/D). Адаптер — улучшение на будущее, не блокер для текущего пилота. См. раздел «Консистентность персонажа» ниже.
 **Code:** `tools/illustration/image_brief.py` (the brief step),
 `tools/illustration/episode_run.py` (the run), `tools/illustration/kaggle_episode_bridge.py`
 (the bridge), driver `scripts/run_episode_images.py`.
@@ -154,3 +155,37 @@ python scripts/run_episode_images.py approve --render-id r0027
   material) is a separate track and is not touched here.
 - Nothing in this pipeline judges the images; the usable share is a
   technical measure (fetched, hash-verified, non-black, QC-passed).
+
+## 10. Консистентность персонажа — фиксированный метод для пилота
+
+**Метод (FINAL):** baseline SDXL Base 1.0 + детальный фиксированный text-prompt персонажа в каждом кадре.
+
+### 10.1 Почему этот метод
+
+IP-Adapter Plus/Plus Face (h94/IP-Adapter) протестирован на Kaggle T4 через
+официальный diffusers API (`pipe.load_ip_adapter` + `set_ip_adapter_scale(0.6)` +
+`ip_adapter_image=PIL.Image`, diffusers 0.37.0). Результат: все адаптерные
+тесты (Plus Face, Plus full-body, комбо) завершились с ошибкой
+`mat1 and mat2 shapes cannot be multiplied (514x1664 and 1280x1280)` — несовпадение
+размерности эмбеддингов (`last_hidden_state` ViT-H 1664 dim vs проекция адаптера 1280 dim).
+0 годных кадров. Апгрейд diffusers заблокирован dependency-guard (закреплено 0.37.0).
+Ручная сборка `ip_adapter_image_embeds` запрещена.
+
+Базовый SDXL Base 1.0 без адаптера: 45/45 картинок, пик VRAM 5 196 MB на 768×768,
+стабильно в 4 независимых прогона. Остаётся ~9 ГБ запаса под Future-адаптер.
+
+### 10.2 Как реализовать
+
+В каждом промпте персонажа зафиксировано детальное описание внешности:
+"young woman with short curly auburn hair and freckles, wearing a blue denim
+jacket and a silver chain necklace". Описание не меняется между кадрами;
+вариация вносится только через позу/освещение/сеттинг (раздел сценария).
+
+Контроль консистентности — визуальный, владельцем, по сохранённым кадрам.
+
+### 10.3 Будущее улучшение (не блокер)
+
+Адаптерная консистентность откладывается на отдельный timebox после пилота.
+Кандидаты: (X) IP-Adapter Plus Face с исправлением размерности эмбеддингов;
+(Y) альтернативная модель адаптера / Character LoRA — по одобрению владельца.
+Пока не решено, пилот собирается методом §10.1.

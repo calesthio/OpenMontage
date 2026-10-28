@@ -34,7 +34,25 @@
         "additionalProperties": false
       }
     },
-    "metadata": { "type": "object" }
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "engagement_cta": {
+          "type": "object",
+          "description": "Comment-keyword call to action (\"Comment GUIDE and I'll send you the checklist\") when the video asks viewers to comment a word. Recorded so the overlay, caption and any comment-to-DM automation use the same word; recording it sends nothing.",
+          "required": ["keyword"],
+          "properties": {
+            "keyword": { "type": "string", "minLength": 1, "maxLength": 100, "pattern": "\\S", "description": "The exact word viewers are asked to comment, as shown on screen." },
+            "promise": { "type": "string", "description": "What commenters receive, e.g. 'the free checklist'." },
+            "caption_line": { "type": "string", "description": "First caption line repeating the CTA, before the platform's 'more' cut." },
+            "dm_message": { "type": "string", "description": "Draft direct message that delivers the promise, for whichever comment-to-DM automation the creator uses." },
+            "public_reply": { "type": "string", "description": "Optional draft public reply under the comment." },
+            "platforms": { "type": "array", "items": { "type": "string" }, "description": "Platforms where the CTA appears, e.g. ['instagram_reels', 'tiktok']." }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
   },
   "additionalProperties": false
 }

@@ -46,6 +46,7 @@ Recommended metadata keys:
 - `guest_tags`
 - `posting_schedule`
 - `clip_to_episode_map`
+- `engagement_cta` (only when a clip asks viewers to comment a word, e.g. "comment GUIDE for the show notes"): `keyword` (required), `promise`, `caption_line`, `dm_message`, `public_reply`, `platforms`. Repeat the exact word in the first caption line. Nothing is sent from this stage; if the creator automates the DM with a comment-to-DM tool, list that as a follow-up in the approval summary.
 
 ### 5. Quality Gate
 

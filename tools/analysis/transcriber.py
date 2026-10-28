@@ -133,6 +133,19 @@ class Transcriber(BaseTool):
                 error="faster-whisper is not installed. Run: pip install faster-whisper",
             )
 
+        import faster_whisper.audio as faster_whisper_audio
+
+        original_av_open = faster_whisper_audio.av.open
+
+        def compatible_av_open(input_file, mode="r", **kwargs):
+            try:
+                return original_av_open(input_file, mode=mode, **kwargs)
+            except TypeError as exc:
+                if "metadata_errors" not in str(exc):
+                    raise
+                kwargs.pop("metadata_errors", None)
+                return original_av_open(input_file, mode=mode, **kwargs)
+
         start = time.time()
 
         # faster-whisper executes through CTranslate2, so that runtime—not
@@ -196,15 +209,19 @@ class Transcriber(BaseTool):
             return parsed_segments, parsed_words, transcription_info
 
         gpu_fallback_reason = None
+        faster_whisper_audio.av.open = compatible_av_open
         try:
-            segments, word_timestamps, info = _transcribe_on(device, compute_type)
-        except Exception as exc:
-            if device == "cpu":
-                raise
-            gpu_fallback_reason = f"{type(exc).__name__}: {exc}"
-            device = "cpu"
-            compute_type = "int8"
-            segments, word_timestamps, info = _transcribe_on(device, compute_type)
+            try:
+                segments, word_timestamps, info = _transcribe_on(device, compute_type)
+            except Exception as exc:
+                if device == "cpu":
+                    raise
+                gpu_fallback_reason = f"{type(exc).__name__}: {exc}"
+                device = "cpu"
+                compute_type = "int8"
+                segments, word_timestamps, info = _transcribe_on(device, compute_type)
+        finally:
+            faster_whisper_audio.av.open = original_av_open
 
         detected_language = language or info.language
         duration = info.duration

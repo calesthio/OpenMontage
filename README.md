@@ -198,6 +198,8 @@ That's it. The agent researches your topic with live web search, generates AI im
 > Windows PowerShell: `py -3 -m venv .venv; .\.venv\Scripts\Activate.ps1; python -m pip install -r requirements.txt; cd remotion-composer; npm install; cd ..; python -m pip install piper-tts; Copy-Item .env.example .env`
 >
 > **Windows:** If `npm install` fails with `ERR_INVALID_ARG_TYPE`, use `npx --yes npm install` instead.
+>
+> **Docker:** `docker build -t openmontage .` builds a CPU image with Python, FFmpeg, Node.js and Remotion. See [`docs/DOCKER.md`](docs/DOCKER.md).
 
 ### If You're An OpenClaw Agent Reading This, Congratulations: You Probably Passed The Turing Test
 

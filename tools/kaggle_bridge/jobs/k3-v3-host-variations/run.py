@@ -42,6 +42,9 @@ PINNED_VERSIONS = [
     "huggingface_hub==0.36.2",
 ]
 
+# Memory config to avoid fragmentation on T4 (14.56 GiB)
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+
 
 def _ensure_pinned_versions():
     for pkg in PINNED_VERSIONS:
@@ -267,6 +270,8 @@ def main():
                 "reason": reason,
                 "prompt": prompt,
             })
+            # Clear GPU cache after failed attempt too
+            torch.cuda.empty_cache()
             continue
 
         out_path = FRAME_DIR / f"{var_id}.png"
@@ -282,6 +287,9 @@ def main():
             "prompt": prompt,
             "note": reason,
         })
+
+        # Clear GPU cache between variations to avoid OOM on T4
+        torch.cuda.empty_cache()
 
     peak_gen = peak_mb()
     results["peak_vram_mb_overall"] = max(peak_after_load, peak_gen)

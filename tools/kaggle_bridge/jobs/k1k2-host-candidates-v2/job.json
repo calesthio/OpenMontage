@@ -1,0 +1,20 @@
+{
+  "job_id": "k1k2-host-candidates-v2",
+  "title": "K1+K2 v2 — FLUX.2-klein-4B host candidates, updated style (chibi, eyes, wear texture), 8 x 1280x720, contact sheet 2x4",
+  "model_id": "black-forest-labs/FLUX.2-klein-4B",
+  "width": 1280,
+  "height": 720,
+  "batch_size": 1,
+  "precision": "bfloat16 with float16 fallback",
+  "memory_opts": ["model_cpu_offload"],
+  "num_candidates": 8,
+  "steps": 4,
+  "guidance_scale": 1.0,
+  "seeds": [1001, 2027, 777, 42, 2026, 9001, 123, 555],
+  "output_dir": "/kaggle/working/k1k2-host-candidates-v2/images",
+  "contact_sheet": "/kaggle/working/k1k2-host-candidates-v2/contact_sheet_master_v2.jpg",
+  "note": "Regeneration with updated VISUAL_STYLE_GUIDE.md: chibi proportions (head 1:2 body), large round eyes with highlight, light wear texture on clothing only. Does not overwrite contact_sheet_master.jpg (v1). WAITING_OWNER: choose from v2 sheet.",
+  "accelerator": "gpu",
+  "enable_internet": true,
+  "created_at": "2026-10-28T00:00:00Z"
+}

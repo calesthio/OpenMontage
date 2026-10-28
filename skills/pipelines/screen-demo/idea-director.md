@@ -40,7 +40,6 @@ Screen-demo best practices are consistent:
 - optimize for legibility before style.
 
 Reference docs:
-- `docs/screen-demo-best-practices.md`
 - `skills/creative/screen-recording.md`
 
 ## Process

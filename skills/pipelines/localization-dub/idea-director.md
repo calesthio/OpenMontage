@@ -14,7 +14,6 @@ Per AGENT_GUIDE.md → "Present Both Composition Runtimes (HARD RULE)": do NOT s
 
 ## Reference Inputs
 
-- `docs/localization-dubbing-best-practices.md`
 - `skills/creative/short-form.md`
 - `skills/creative/long-form.md`
 

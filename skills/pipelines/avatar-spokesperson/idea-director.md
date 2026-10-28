@@ -14,7 +14,6 @@ Per AGENT_GUIDE.md → "Present Both Composition Runtimes (HARD RULE)": do NOT s
 
 ## Reference Inputs
 
-- `docs/avatar-spokesperson-best-practices.md`
 - `skills/creative/storytelling.md`
 - `skills/creative/short-form.md`
 

@@ -75,8 +75,6 @@ The `anime_scene` type renders 1-4 images with smooth crossfade transitions, cin
 
 **Multi-image crossfade math:** Each image owns an equal time segment. Fade-out of image N and fade-in of image N+1 OVERLAP by `crossfadeDur` (~1.2s) so there's never a dead frame. Generate 2-3 images per scene from the same visual system, but vary the shot, subject, and lighting per beat. Nearby seeds help create subtle motion without flattening the whole sequence into one repeated prompt.
 
-**Reference composition:** `remotion-composer/public/demo-props/mori-no-seishin.json` — 6 anime scenes, 30 seconds, with particles, lighting, overlays, and ambient music.
-
 **Style playbook:** `styles/anime-ghibli.yaml` — Ghibli-inspired aesthetic with color palette, typography, motion parameters, and FLUX prompt prefix.
 
 **Zero-key video strategy:** When no image or video generation is available, build
@@ -115,8 +113,8 @@ animations at least 4 seconds to complete. Hero title needs only 4 seconds.
 them consistently across charts, overlays, and accents. Use the same chartColors array
 across bar/pie/line scenes for visual unity.
 
-**Reference compositions:** See `remotion-composer/public/demo-props/climate-dashboard.json`
-as the gold standard, and other demo files for additional patterns.
+**Reference composition:** See `remotion-composer/public/demo-props/world-in-numbers.json`
+as a working data-driven example, and other demo files for additional patterns.
 
 ### Pre-Render Validation (mandatory)
 

@@ -12,9 +12,17 @@
 - Фон: светлый нейтральный (серый / бежевый / оффвайт), без деталей
 - Размер кадра: 1280×720
 
+## Якорь-референс (Кандидат №6 из contact_sheet_master_v2.jpg)
+Сохранён как `pilot-render/ref/master_v3_anchor.png`. Это становится обязательным описанием в КАЖДОМ промпте дальше, не опционально:
+- Волосы: короткая стрижка-ёжик тёмно-серого/чёрного цвета
+- Кожа: светлый тон
+- Одежда: серая футболка с лёгкими пятнами потёртости
+- Фон: нейтральный светло-серый, без деталей
+- Позы для вариаций: анфас, профиль, 3/4, крупный план лица
+
 ## Текст персонажа (используется в K3, если ведущий в кадре)
 Фиксированный блок, вставляется в каждый промпт K3 вместе со сценой раздела:
-" neutral host character, short hair, simple neutral clothing with light wear texture (dirt, scratches, signs of use) on fabric only, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration, chibi proportions head larger than body roughly 1:2 short limbs, large round expressive eyes with visible highlight, simple readable facial expression not dots, light neutral background without details "
+" neutral host character, short spiky dark gray/black buzz-cut hair, light skin tone, gray t-shirt with light wear texture dirt scratches signs of use on fabric only, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration, chibi proportions head larger than body roughly 1:2 short limbs, large round expressive eyes with visible highlight, simple readable facial expression not dots, neutral light gray background without details "
 
 ## Ограничения
 - Никаких фотографических деталей, кожи с порами, реалистичного освещения

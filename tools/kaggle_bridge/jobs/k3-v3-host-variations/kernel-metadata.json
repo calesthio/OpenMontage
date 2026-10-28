@@ -1,0 +1,16 @@
+{
+  "id": "forts845/k3-v3-host-variations-flux-2-klein-4b",
+  "title": "K3 V3 host variations flux 2 klein 4b",
+  "code_file": "run.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": "false",
+  "enable_internet": true,
+  "machine_shape": "",
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}

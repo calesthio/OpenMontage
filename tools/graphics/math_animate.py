@@ -71,6 +71,16 @@ def _is_blocked_dunder(attr: str) -> bool:
     )
 
 
+def _attr_root_name(node: ast.Attribute) -> Optional[str]:
+    """Root Name of an attribute chain (`zipfile` for `zipfile.os`, and for
+    longer chains like `a.b.os`), or None when the chain does not start with
+    a bare Name (e.g. `self.add(...)` or `super().__init__()`)."""
+    cur: ast.AST = node.value
+    while isinstance(cur, ast.Attribute):
+        cur = cur.value
+    return cur.id if isinstance(cur, ast.Name) else None
+
+
 # Quality presets mapping to Manim CLI flags
 QUALITY_PRESETS = {
     "low": {"flag": "-ql", "resolution": "854x480", "fps": 15},
@@ -223,6 +233,7 @@ class MathAnimate(BaseTool):
         return result
 
     @staticmethod
+    @staticmethod
     def _scan_scene_code(code: str) -> list[str]:
         """Static safety scan of caller-supplied Manim scene code (issue #219).
 
@@ -230,11 +241,59 @@ class MathAnimate(BaseTool):
         imports, builtins, and sandbox-escape dunders). Empty list means the
         scan found nothing to block — which is NOT a guarantee the code is safe.
         A syntax error is left for Manim to report, so it returns no violations.
+
+        Also blocks reaching a blocked module through an imported module
+        (issue #864): the denylist alone cannot see `zipfile.os`, because
+        `zipfile` is not blocked and `.os` is not a dunder. Any attribute
+        access whose name is itself a blocked module, rooted on a name bound
+        by an import (including through plain rebinding assignments), is
+        therefore a violation, as is importing a blocked name from any
+        module (`from zipfile import os`) or star-importing from a module
+        other than `manim`.
         """
         try:
             tree = ast.parse(code)
         except SyntaxError:
             return []
+
+        # Names bound by import statements, including aliases
+        # (`import zipfile as z` binds `z`). Taint propagates through plain
+        # rebinding assignments (`x = zipfile`), so rebinding does not hide
+        # the module from the attribute rule below.
+        tainted: set[str] = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    tainted.add(alias.asname or alias.name.split(".")[0])
+            elif isinstance(node, ast.ImportFrom):
+                for alias in node.names:
+                    if alias.name != "*":
+                        tainted.add(alias.asname or alias.name)
+        assignments = [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, (ast.Assign, ast.AnnAssign))
+        ]
+        changed = True
+        while changed:
+            changed = False
+            for node in assignments:
+                targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+                value = node.value
+                if value is None:
+                    continue
+                value_tainted = (
+                    isinstance(value, ast.Name) and value.id in tainted
+                ) or (
+                    isinstance(value, ast.Attribute)
+                    and _attr_root_name(value) in tainted
+                )
+                if not value_tainted:
+                    continue
+                for target in targets:
+                    if isinstance(target, ast.Name) and target.id not in tainted:
+                        tainted.add(target.id)
+                        changed = True
 
         violations: list[str] = []
         for node in ast.walk(tree):
@@ -247,6 +306,17 @@ class MathAnimate(BaseTool):
                 root = (node.module or "").split(".")[0]
                 if root in _BLOCKED_IMPORTS:
                     violations.append(f"from '{node.module}' import ...")
+                else:
+                    dangerous = sorted(
+                        {a.name for a in node.names if a.name in _BLOCKED_IMPORTS}
+                    )
+                    if dangerous:
+                        violations.append(
+                            f"from '{node.module}' import dangerous name(s): "
+                            + ", ".join(dangerous)
+                        )
+                    elif any(a.name == "*" for a in node.names) and root != "manim":
+                        violations.append(f"from '{node.module}' import *")
             elif isinstance(node, ast.Name):
                 # Blocks direct calls (eval(...)) and indirection alike:
                 # `__builtins__['open']`, `f = open`, `getattr(o, '__class__')`.
@@ -255,6 +325,13 @@ class MathAnimate(BaseTool):
             elif isinstance(node, ast.Attribute):
                 if _is_blocked_dunder(node.attr):
                     violations.append(f"dunder attribute access '.{node.attr}'")
+                elif (
+                    node.attr in _BLOCKED_IMPORTS
+                    and _attr_root_name(node) in tainted
+                ):
+                    violations.append(
+                        f"imported module attribute '.{node.attr}'"
+                    )
 
         seen: set[str] = set()
         deduped: list[str] = []
@@ -263,7 +340,6 @@ class MathAnimate(BaseTool):
                 seen.add(v)
                 deduped.append(v)
         return deduped
-
     def _render(self, inputs: dict[str, Any]) -> ToolResult:
         scene_code = inputs["scene_code"]
         scene_name = inputs.get("scene_name")

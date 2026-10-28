@@ -188,3 +188,82 @@ def test_allow_unsafe_code_bypasses_scan(monkeypatch):
     result = MathAnimate().execute({"scene_code": dangerous, "allow_unsafe_code": True})
     assert result.success is False
     assert "safety scan" not in (result.error or "")
+
+
+# --- Regression tests for issue #864: a blocked module reached through an
+# imported module's attribute (denylist evasion via re-export). The old scan
+# saw only the import root (`zipfile` is not blocked) and the attribute name
+# (`.os` is not a dunder), so all of these passed with zero violations.
+
+
+def test_blocks_os_via_reexported_module():
+    code = (
+        "from manim import *\n"
+        "import zipfile\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        zipfile.os.system('id')\n"
+    )
+    assert "imported module attribute '.os'" in MathAnimate._scan_scene_code(code)
+
+
+def test_blocks_os_via_reexport_inside_construct():
+    code = (
+        "from manim import *\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        import tarfile\n"
+        "        tarfile.os.popen('id').read()\n"
+    )
+    assert "imported module attribute '.os'" in MathAnimate._scan_scene_code(code)
+
+
+def test_blocks_aliased_reexport():
+    code = (
+        "from manim import *\n"
+        "import zipfile as z\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        z.os.system('id')\n"
+    )
+    assert "imported module attribute '.os'" in MathAnimate._scan_scene_code(code)
+
+
+def test_blocks_reexport_via_rebinding():
+    code = (
+        "from manim import *\n"
+        "import zipfile\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        x = zipfile\n"
+        "        x.os.system('id')\n"
+    )
+    assert "imported module attribute '.os'" in MathAnimate._scan_scene_code(code)
+
+
+def test_blocks_from_import_of_blocked_name():
+    code = (
+        "from manim import *\n"
+        "from zipfile import os\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        os.system('id')\n"
+    )
+    violations = MathAnimate._scan_scene_code(code)
+    assert any("dangerous name(s): os" in v for v in violations)
+
+
+def test_blocks_star_import_from_non_manim():
+    code = (
+        "from manim import *\n"
+        "from zipfile import *\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        pass\n"
+    )
+    assert "from 'zipfile' import *" in MathAnimate._scan_scene_code(code)
+
+
+def test_safe_scene_attribute_access_still_passes():
+    # numpy/math attribute access used by the safe scene must keep passing.
+    assert MathAnimate._scan_scene_code(SAFE_SCENE) == []

@@ -21,7 +21,7 @@ Layer 2: skills/                          "How OpenMontage uses these tools"
 
 Layer 3: .agents/skills/                  "How the technology itself works"
          Generic API knowledge from        Correct import paths, code patterns,
-         skills.sh (47 installed skills)   constraints, parameters â€" tech-agnostic
+         skills.sh (92 installed skills)   constraints, parameters â€" tech-agnostic
 ```
 
 **How the agent uses this:**
@@ -280,6 +280,19 @@ Stage director skills teach the agent HOW to execute each pipeline stage. Each s
 | Compose Director | `pipelines/localization-dub/compose-director.md` | `compose` | Per-locale rendering, subtitle-fit checks, output labeling |
 | Publish Director | `pipelines/localization-dub/publish-director.md` | `publish` | Locale packaging, metadata precision, QA-note retention |
 
+### Documentary Montage Pipeline (`pipelines/documentary-montage/`)
+
+Retrieval-first montage of real footage from free stock and open archives (beta). Unlike most pipelines it gates `edit` for human approval; `compose` auto-proceeds.
+
+| Skill | File | Stage | Key Capabilities |
+|-------|------|-------|-----------------|
+| **Executive Producer** | `pipelines/documentary-montage/executive-producer.md` | `all` | **Serial orchestration idea → scene_plan → assets → edit → compose, gate enforcement, send-back** |
+| Idea Director | `pipelines/documentary-montage/idea-director.md` | `idea` | One-sentence thematic question, tone register, concrete duration and shape, music plan |
+| Scene Director | `pipelines/documentary-montage/scene-director.md` | `scene_plan` | Slot descriptions in concrete noun-and-adjective language, 2-3 search queries per slot, hero slots |
+| Asset Director | `pipelines/documentary-montage/asset-director.md` | `assets` | Corpus build and CLIP retrieval, exactly one picked clip per slot, provenance (provider, URL, license) on every asset |
+| Edit Director | `pipelines/documentary-montage/edit-director.md` | `edit` | Beat arrangement (hero slots hold longest), subject/scale alternation between cuts, music sync |
+| Compose Director | `pipelines/documentary-montage/compose-director.md` | `compose` | Duration and canvas verification, uniform LUT across the timeline |
+
 ## Meta Skills
 
 Cross-cutting skills that apply to all pipelines:
@@ -304,12 +317,16 @@ Style playbooks (`styles/*.yaml`) define visual language, typography, motion, au
 | `premium-minimalist` | minimalist | calm, editorial | Investor updates, expert explainers, product narratives |
 | `flat-motion-graphics` | motion-graphics | energetic, bold | Social media, TikTok, startups |
 | `minimalist-diagram` | whiteboard | focused, technical | Technical deep-dives, architecture |
+| `anime-ghibli` | custom | warm, whimsical, contemplative | Narrative animations, nature-themed stories, emotional storytelling, fantasy visuals |
 
-Load via `styles/playbook_loader.py`: `load_playbook("clean-professional")`
+Load via `styles/playbook_loader.py`: `load_playbook("clean-professional")`. `list_playbooks()` is the authoritative list.
+
+`ink-sketch` (Ink Theater) is a **style id** handled by `creative/ink-theater.md` and the `ink-theater/` engine, not a YAML playbook.
 
 ## Installed Agent Skills (Layer 3)
 
 All agent skills live in `.agents/skills/` and are managed via `npx skills add`.
+`ls .agents/skills` is the authoritative list (92 skill directories as of 2026-10-25); the table below groups them by what they are for.
 Claude Code accesses them via symlinks in `.claude/skills/`.
 
 | Category | Installed Skills | Source |
@@ -327,3 +344,9 @@ Claude Code accesses them via symlinks in `.claude/skills/`.
 | **AI Video/Image/TTS/Avatar (Kling Official)** | `kling-official` - official direct API auth, Classic/Turbo/Omni task protocols, multi-reference Omni syntax, internal Elements/Account Usage helpers, callback notes, TTS voice parameters, avatar/lip-sync face selection, error handling, and cost governance for `kling_official_video` / `kling_official_image` / `kling_tts` / `kling_avatar` / `kling_lip_sync` | Local OpenMontage skill |
 | **AI Video (Premium)** | `seedance-2-0` — preferred premium default (cinematic, trailer, multi-shot, lip-sync, synced audio); accessed via `seedance_video` (fal.ai) or `heygen_video` Avatar Shots; `seedance-2-5` — 4–30 s clips, 50 multimodal references, prompt contract (section order, `Hard cut` breakdown, continuity locks, asset method) | Local OpenMontage skill |
 | **Infrastructure** | `acestep`, `ltx2`, `playwright-recording` | `digitalsamba/claude-code-video-toolkit` |
+| **Animation (GSAP)** | `gsap` (router), `gsap-core`, `gsap-timeline`, `gsap-plugins`, `gsap-utils`, `gsap-react`, `gsap-performance`, `gsap-scrolltrigger`, `gsap-frameworks` | See each skill's `SKILL.md` |
+| **Character Animation** | `character-rigging`, `svg-character-animation`, `pose-library-design`, `canvas-procedural-animation`, `character-animation-qa` | Local OpenMontage skill |
+| **3D Assets** | `3d-asset-generation`, `atlas-cloud` | Local OpenMontage skill |
+| **Providers (video / image / TTS / music)** | `gemini-omni`, `minimax-h3`, `comfyui`, `dashscope`, `doubao-tts`, `azure-text-to-speech`, `lyria` | Local OpenMontage skill; see each skill's `SKILL.md` |
+| **Screen Capture** | `synthetic-screen-recording` (Remotion TerminalScene demos) | Local OpenMontage skill |
+| **Maintenance** | `provider-model-refresh`, `provider-refresh-oct23` (provider/model refresh procedures) | Local OpenMontage skill |

@@ -39,6 +39,15 @@ def run_ffmpeg_filter(path: Path, vf: str) -> str:
     return r.stderr
 
 
+def run_ffmpeg_filter_audio(path: Path, af: str) -> str:
+    r = subprocess.run(
+        ["ffmpeg", "-v", "info", "-i", str(path),
+         "-af", af, "-f", "null", "-"],
+        capture_output=True, text=True,
+    )
+    return r.stderr
+
+
 def parse_duration(text: str) -> float | None:
     for line in text.splitlines():
         m = re.search(r"duration:\s*([\d.]+)", line)
@@ -123,12 +132,12 @@ def main() -> int:
     sil_count = len(re.findall(r"silence_start:", sil_txt))
     check(sil_count == 0, f"длительных тишины (>2s, -30dB): {sil_count} (цель 0)", results)
 
-    # --- Loudness (ebur128) ---
-    loud_txt = run_ffmpeg_filter(video, "ebur128=peak=true")
+    # --- Loudness (ebur128) — аудио-фильтр, применяется через -af ---
+    loud_txt = run_ffmpeg_filter_audio(video, "ebur128=peak=true")
     i_match = re.search(r"I:\s*([\d.-]+)\s*LUFS", loud_txt)
-    tp_match = re.search(r"TP:\s*([\d.-]+)\s*dBTP", loud_txt)
+    tp_matches = re.findall(r"TPK:\s*([\d.-]+)\s*dBFS", loud_txt)
     loudness = float(i_match.group(1)) if i_match else None
-    true_peak = float(tp_match.group(1)) if tp_match else None
+    true_peak = max(float(m) for m in tp_matches) if tp_matches else None
     if loudness is not None:
         check(-20 <= loudness <= -10, f" loudness I={loudness:.1f} LUFS (цель -20..-10)", results)
     else:

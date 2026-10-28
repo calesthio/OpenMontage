@@ -4,6 +4,11 @@ import types
 import pytest
 
 from tools.video.stock_sources import SearchFilters, all_sources, get_source
+from tools.video.stock_sources.openverse import (
+    _license_label,
+    _matches_orientation,
+    _result_to_candidate,
+)
 from tools.video.stock_sources.unsplash import _build_download_url, _orientation_for_unsplash
 from tools.video.stock_sources.wikimedia import (
     _build_search_queries,
@@ -16,6 +21,7 @@ def test_stock_source_autodiscovery_includes_new_sources():
     names = {source.name for source in all_sources()}
     assert "wikimedia" in names
     assert "unsplash" in names
+    assert "openverse" in names
 
 
 def test_wikimedia_search_query_respects_kind():
@@ -75,6 +81,80 @@ def test_unsplash_helpers_preserve_query_params():
     assert "ixid=abc" in url
     assert "w=1920" in url
     assert "fm=jpg" in url
+
+
+def test_openverse_is_image_only():
+    # Openverse has no video endpoint; a video query must short-circuit
+    # without touching the network.
+    source = get_source("openverse")
+    assert source.supports == {"video": False, "image": True}
+    assert source.search("rain city", SearchFilters(kind="video", per_page=5)) == []
+
+
+def test_openverse_maps_result_to_candidate():
+    cand = _result_to_candidate(
+        {
+            "id": "b6829a2c",
+            "title": "Illuminated London – The Rain City",
+            "url": "https://live.staticflickr.com/5098/5584905187_b.jpg",
+            "foreign_landing_url": "https://www.flickr.com/photos/x/5584905187",
+            "width": 680,
+            "height": 1024,
+            "creator": "Sprengben",
+            "license": "by-sa",
+            "license_version": "2.0",
+            "license_url": "https://creativecommons.org/licenses/by-sa/2.0/",
+            "source": "flickr",
+            "tags": [{"name": "rain"}, {"name": "london"}],
+        },
+        SearchFilters(kind="image"),
+    )
+
+    assert cand is not None
+    assert cand.clip_id == "openverse_b6829a2c"
+    assert cand.kind == "image"
+    assert cand.width == 680 and cand.height == 1024
+    assert cand.creator == "Sprengben"
+    assert cand.license == "CC BY-SA 2.0"
+    assert cand.source_url.startswith("https://www.flickr.com/")
+    assert "rain" in cand.source_tags and "london" in cand.source_tags
+    assert cand.extra["provider"] == "flickr"
+
+
+def test_openverse_drops_results_without_a_file_url():
+    assert _result_to_candidate({"id": "x"}, SearchFilters(kind="image")) is None
+
+
+def test_openverse_respects_min_width_and_orientation():
+    narrow = {"url": "https://x/y.jpg", "width": 320, "height": 200}
+    assert (
+        _result_to_candidate(narrow, SearchFilters(kind="image", min_width=1200))
+        is None
+    )
+    landscape = {"url": "https://x/y.jpg", "width": 1920, "height": 1080}
+    assert (
+        _result_to_candidate(landscape, SearchFilters(kind="image", orientation="portrait"))
+        is None
+    )
+    assert (
+        _result_to_candidate(landscape, SearchFilters(kind="image", orientation="landscape"))
+        is not None
+    )
+
+
+def test_openverse_license_labels():
+    assert _license_label({"license": "cc0", "license_version": "1.0"}) == "CC0 1.0"
+    assert _license_label({"license": "by-nc", "license_version": "4.0"}) == "CC BY-NC 4.0"
+    assert _license_label({"license": "pdm"}) == "Public Domain Mark"
+    assert _license_label({"license_url": "https://example.org/lic"}) == "https://example.org/lic"
+
+
+def test_openverse_orientation_helper():
+    assert _matches_orientation("landscape", 1920, 1080)
+    assert _matches_orientation("portrait", 1080, 1920)
+    assert _matches_orientation("square", 1000, 1000)
+    assert not _matches_orientation("portrait", 1920, 1080)
+
 
 
 # ---------------------------------------------------------------------

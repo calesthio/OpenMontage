@@ -165,7 +165,8 @@
         "outline_color": { "type": "string" },
         "background": { "type": "string", "description": "Background color with optional alpha (e.g. #00000088)" },
         "position": { "type": "string", "enum": ["top-center", "bottom-center", "center"] },
-        "max_words_per_line": { "type": "integer", "minimum": 1 }
+        "max_words_per_line": { "type": "integer", "minimum": 1 },
+        "caption_props": { "type": "object", "description": "Remotion CaptionOverlay props passed through as-is (captionProps)" }
       },
       "additionalProperties": false
     },

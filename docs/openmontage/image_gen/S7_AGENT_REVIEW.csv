@@ -1,0 +1,31 @@
+render_id,scene_id,model,anatomy,geometry,count_relation,texture,text,usefulness,notes
+r0001,s01,sdxl,0,1,0,2,0,0,poster collage of many creatures; no single 6-limbed grazer; heavy garbled text blocks
+r0002,s01,klein,1,2,0,2,2,1,"flat-vector silhouette grazer on lime mats, on-palette, no text; 4 legs not 6, plain hooved legs not spade-like"
+r0003,s01,zimage,,,,,,,
+r0004,s03,sdxl,1,1,1,1,2,1,"painterly glowing jellyfish scene; not flat-vector, no single filter drifter, no text"
+r0005,s03,klein,1,2,0,0,2,1,"photoreal 3D green fish with wide open mouth, light rays; not flat-vector, visible eye contradicts 0 eyes"
+r0006,s03,zimage,,,,,,,
+r0007,s04,sdxl,0,1,0,2,2,0,"flat-vector fish shoal; wrong subject, no segmented burrower or sediment"
+r0008,s04,klein,1,2,0,1,2,1,"segmented tapered burrower on dim sediment, stylized vector; visible eye contradicts 0 eyes, no ice ceiling"
+r0009,s04,zimage,,,,,,,
+r0010,s05,sdxl,2,1,2,0,2,1,"chimney field with plumes; correct subject but painterly neon glow, off-palette magenta/orange, not flat-vector"
+r0011,s05,klein,2,2,2,2,2,2,"flat-vector black smoker field with plumes and lime vent glow; on-palette, no text, directly on brief"
+r0012,s05,zimage,,,,,,,
+r0013,s06,sdxl,2,1,2,0,2,1,"under-ice cavern with melt pool; subject ok, photoreal 3D render not flat-vector"
+r0014,s06,klein,2,1,2,2,2,1,flat-vector teal ice/rock mass with lime glow patches; on-brief palette but cavern ceiling/melt pool ambiguous
+r0015,s06,zimage,,,,,,,
+r0016,s08,sdxl,0,1,0,0,2,0,"radial spiky teal blob on brown rock; no forelimb, no 6 limbs/2 eyes, photoreal, off-palette"
+r0017,s08,klein,1,2,1,2,2,1,"flat-vector macro of spade-like digits with lime highlight; style match, but no body context and digit count ambiguous"
+r0018,s08,zimage,,,,,,,
+r0019,s09,sdxl,0,0,0,1,2,0,abstract organic mesh with green blob; no drifter mouth or subject at all
+r0020,s09,klein,1,2,1,1,2,1,"abstract glowing ring/funnel as filter mouth, soft gradients, no body context"
+r0021,s09,zimage,,,,,,,
+r0022,s10,sdxl,1,1,0,2,1,1,"strong flat-vector plate with inset panels; central grazer has many limbs (not 6) and one eye spot, small illegible labels"
+r0023,s10,klein,1,2,1,2,0,1,"flat-vector food-web plate, 6-limbed grazer ok; garbled labels everywhere and filter drifter has eyes/legs"
+r0024,s10,zimage,,,,,,,
+r0025,s11,sdxl,1,1,1,2,0,1,"flat-vector specimen plate, on-palette; garbled caption text lines present, subject mix not the segmented burrower"
+r0026,s11,klein,1,2,2,2,0,1,flat-vector plate with glowing segmented specimen; extensive garbled title/labels/hex codes
+r0027,s11,zimage,,,,,,,
+r0028,s12,sdxl,2,1,2,0,2,1,"glowing fissures on ochre cratered surface; photoreal not flat-vector, reads desert not ice"
+r0029,s12,klein,2,2,2,1,2,1,"teal ice plain with lime plume glow through fractures; right subject, gradient 3D shading not flat-vector"
+r0030,s12,zimage,,,,,,,

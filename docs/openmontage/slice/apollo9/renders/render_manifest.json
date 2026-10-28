@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "topic_id": "apollo9",
+  "resolution": "1920x1080",
+  "fps": 30,
+  "assets": {
+    "card_title": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/apollo9/graphics/card_title.png"
+    },
+    "card_mission": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/apollo9/graphics/card_mission.png"
+    },
+    "card_crew": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/apollo9/graphics/card_crew.png"
+    },
+    "card_callsigns": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/apollo9/graphics/card_callsigns.png"
+    },
+    "card_docking_1": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/apollo9/graphics/card_docking_1.png"
+    },
+    "card_docking_2": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/apollo9/graphics/card_docking_2.png"
+    },
+    "card_docking_3": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/apollo9/graphics/card_docking_3.png"
+    },
+    "card_systems_1": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/apollo9/graphics/card_systems_1.png"
+    },
+    "card_systems_2": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/apollo9/graphics/card_systems_2.png"
+    },
+    "card_eva": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/apollo9/graphics/card_eva.png"
+    },
+    "card_undock": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/apollo9/graphics/card_undock.png"
+    },
+    "card_dps": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/apollo9/graphics/card_dps.png"
+    },
+    "card_rendezvous": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/apollo9/graphics/card_rendezvous.png"
+    },
+    "card_dockback": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/apollo9/graphics/card_dockback.png"
+    },
+    "card_ascent": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/apollo9/graphics/card_ascent.png"
+    },
+    "card_end": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/apollo9/graphics/card_end.png"
+    },
+    "card_sources": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/apollo9/graphics/card_sources.png"
+    },
+    "AS09-21-3199_LM": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/apollo9/stills/AS09-21-3199_LM.jpg"
+    },
+    "GPN-2000-001283_splashdown": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/apollo9/stills/GPN-2000-001283_splashdown.jpg"
+    }
+  }
+}

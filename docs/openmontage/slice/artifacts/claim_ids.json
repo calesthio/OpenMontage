@@ -1,0 +1,42 @@
+[
+  {
+    "beat": "B1",
+    "claim_id": "ISS-001",
+    "source_flags": "SINGLE"
+  },
+  {
+    "beat": "B2",
+    "claim_id": "ISS-002, ISS-003",
+    "source_flags": "SINGLE"
+  },
+  {
+    "beat": "B3",
+    "claim_id": "ISS-001",
+    "source_flags": "SINGLE"
+  },
+  {
+    "beat": "B4",
+    "claim_id": "ISS-004",
+    "source_flags": "SINGLE"
+  },
+  {
+    "beat": "B5",
+    "claim_id": "ISS-003",
+    "source_flags": ""
+  },
+  {
+    "beat": "B6",
+    "claim_id": "ISS-002, ISS-003",
+    "source_flags": "SINGLE"
+  },
+  {
+    "beat": "B7",
+    "claim_id": "ISS-004",
+    "source_flags": "SINGLE"
+  },
+  {
+    "beat": "B8",
+    "claim_id": "ISS-001, ISS-002",
+    "source_flags": "SINGLE"
+  }
+]

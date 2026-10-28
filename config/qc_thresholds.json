@@ -1,0 +1,10 @@
+{
+  "black_ratio_max": 0.05,
+  "freeze_duration_max": 2.0,
+  "silence_ratio_max": 0.10,
+  "lufs_target": -14.0,
+  "lufs_tolerance": 2.0,
+  "true_peak_max": -1.5,
+  "duration_tolerance": 1.0,
+  "subtitle_drift_max": 0.5
+}

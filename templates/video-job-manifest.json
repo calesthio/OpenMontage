@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0",
+  "job_id": "example-001",
+  "channel_id": "local-placeholder",
+  "format": "long-form",
+  "language": "en",
+  "target": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "container": "mp4"
+  },
+  "script_path": "script/script.md",
+  "assets_manifest": "assets/asset-rights-ledger.csv",
+  "timeline_path": "timeline/edl.json",
+  "render": {
+    "backend": "ffmpeg",
+    "preset": "review",
+    "output_path": "output/review.mp4"
+  },
+  "qa": {
+    "status": "NOT_CHECKED",
+    "report_path": "reports/qa.json"
+  },
+  "publishing": {
+    "status": "DRAFT",
+    "requires_human_approval": true
+  },
+  "provenance": {
+    "tool_versions": {},
+    "created_at_utc": null
+  }
+}

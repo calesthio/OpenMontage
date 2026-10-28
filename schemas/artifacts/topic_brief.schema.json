@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/topic_brief",
+  "title": "Topic Brief",
+  "description": "Stage 1 output of the business-documentary pipeline. Locks the working angle BEFORE any research or claim exists, so no downstream stage can quietly redefine the subject.",
+  "type": "object",
+  "required": ["version", "run_id", "created_at", "working_title", "niche", "unique_question", "audience", "language", "target_duration_seconds", "constraints"],
+  "properties": {
+    "version": { "type": "string", "const": "1.0" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "minLength": 1 },
+    "working_title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Working title only. The publish title is written at the publish stage."
+    },
+    "niche": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The hidden-business domain, e.g. 'commercial laundry services'."
+    },
+    "unique_question": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The ONE question the film answers. Must name an economic mechanism."
+    },
+    "audience": {
+      "type": "object",
+      "required": ["description"],
+      "properties": {
+        "description": { "type": "string", "minLength": 1 },
+        "prior_knowledge": { "type": "string", "enum": ["none", "general", "industry_adjacent", "expert"] },
+        "platform": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "language": { "type": "string", "const": "en-US" },
+    "target_duration_seconds": {
+      "type": "integer",
+      "minimum": 30,
+      "description": "60-90 for the E2E pilot; 360-600 for editorial pilots."
+    },
+    "format": {
+      "type": "object",
+      "properties": {
+        "aspect_ratio": { "type": "string", "enum": ["16:9", "9:16", "1:1"] },
+        "resolution": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "why_it_works": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Reasons the topic earns a film: mechanism, stakes, surprise, scale."
+    },
+    "primary_source_expectations": {
+      "type": "array",
+      "description": "Source classes the angle NEEDS before it can be told (filings, regulators, court records, patents...).",
+      "items": { "type": "string" }
+    },
+    "constraints": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Binding constraints for the run. Must include the strict zero-cost mode statement.",
+      "items": { "type": "string" }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "proposed_by": { "type": "string" },
+        "zero_cost_mode": { "type": "boolean", "const": true },
+        "pipeline_version": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

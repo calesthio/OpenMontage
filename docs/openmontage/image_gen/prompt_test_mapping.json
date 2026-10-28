@@ -1,0 +1,1514 @@
+{
+  "r0001": {
+    "scene_id": "s01",
+    "scene_label": "Vent grazer single silhouette on vent chimney",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4000
+  },
+  "r0002": {
+    "scene_id": "s01",
+    "scene_label": "Vent grazer single silhouette on vent chimney",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4000
+  },
+  "r0003": {
+    "scene_id": "s01",
+    "scene_label": "Vent grazer single silhouette on vent chimney",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4000
+  },
+  "r0004": {
+    "scene_id": "s01",
+    "scene_label": "Vent grazer single silhouette on vent chimney",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4000
+  },
+  "r0005": {
+    "scene_id": "s01",
+    "scene_label": "Vent grazer single silhouette on vent chimney",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4000
+  },
+  "r0006": {
+    "scene_id": "s01",
+    "scene_label": "Vent grazer single silhouette on vent chimney",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4000
+  },
+  "r0007": {
+    "scene_id": "s01",
+    "scene_label": "Vent grazer single silhouette on vent chimney",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4000
+  },
+  "r0008": {
+    "scene_id": "s01",
+    "scene_label": "Vent grazer single silhouette on vent chimney",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4000
+  },
+  "r0009": {
+    "scene_id": "s01",
+    "scene_label": "Vent grazer single silhouette on vent chimney",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4000
+  },
+  "r0010": {
+    "scene_id": "s01",
+    "scene_label": "Vent grazer single silhouette on vent chimney",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4001
+  },
+  "r0011": {
+    "scene_id": "s01",
+    "scene_label": "Vent grazer single silhouette on vent chimney",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4001
+  },
+  "r0012": {
+    "scene_id": "s01",
+    "scene_label": "Vent grazer single silhouette on vent chimney",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4001
+  },
+  "r0013": {
+    "scene_id": "s01",
+    "scene_label": "Vent grazer single silhouette on vent chimney",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4001
+  },
+  "r0014": {
+    "scene_id": "s01",
+    "scene_label": "Vent grazer single silhouette on vent chimney",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4001
+  },
+  "r0015": {
+    "scene_id": "s01",
+    "scene_label": "Vent grazer single silhouette on vent chimney",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4001
+  },
+  "r0016": {
+    "scene_id": "s01",
+    "scene_label": "Vent grazer single silhouette on vent chimney",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4001
+  },
+  "r0017": {
+    "scene_id": "s01",
+    "scene_label": "Vent grazer single silhouette on vent chimney",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4001
+  },
+  "r0018": {
+    "scene_id": "s01",
+    "scene_label": "Vent grazer single silhouette on vent chimney",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4001
+  },
+  "r0019": {
+    "scene_id": "s02",
+    "scene_label": "Vent grazer full-body silhouette",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4002
+  },
+  "r0020": {
+    "scene_id": "s02",
+    "scene_label": "Vent grazer full-body silhouette",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4002
+  },
+  "r0021": {
+    "scene_id": "s02",
+    "scene_label": "Vent grazer full-body silhouette",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4002
+  },
+  "r0022": {
+    "scene_id": "s02",
+    "scene_label": "Vent grazer full-body silhouette",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4002
+  },
+  "r0023": {
+    "scene_id": "s02",
+    "scene_label": "Vent grazer full-body silhouette",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4002
+  },
+  "r0024": {
+    "scene_id": "s02",
+    "scene_label": "Vent grazer full-body silhouette",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4002
+  },
+  "r0025": {
+    "scene_id": "s02",
+    "scene_label": "Vent grazer full-body silhouette",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4002
+  },
+  "r0026": {
+    "scene_id": "s02",
+    "scene_label": "Vent grazer full-body silhouette",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4002
+  },
+  "r0027": {
+    "scene_id": "s02",
+    "scene_label": "Vent grazer full-body silhouette",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4002
+  },
+  "r0028": {
+    "scene_id": "s02",
+    "scene_label": "Vent grazer full-body silhouette",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4003
+  },
+  "r0029": {
+    "scene_id": "s02",
+    "scene_label": "Vent grazer full-body silhouette",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4003
+  },
+  "r0030": {
+    "scene_id": "s02",
+    "scene_label": "Vent grazer full-body silhouette",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4003
+  },
+  "r0031": {
+    "scene_id": "s02",
+    "scene_label": "Vent grazer full-body silhouette",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4003
+  },
+  "r0032": {
+    "scene_id": "s02",
+    "scene_label": "Vent grazer full-body silhouette",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4003
+  },
+  "r0033": {
+    "scene_id": "s02",
+    "scene_label": "Vent grazer full-body silhouette",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4003
+  },
+  "r0034": {
+    "scene_id": "s02",
+    "scene_label": "Vent grazer full-body silhouette",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4003
+  },
+  "r0035": {
+    "scene_id": "s02",
+    "scene_label": "Vent grazer full-body silhouette",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4003
+  },
+  "r0036": {
+    "scene_id": "s02",
+    "scene_label": "Vent grazer full-body silhouette",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4003
+  },
+  "r0037": {
+    "scene_id": "s03",
+    "scene_label": "Filter drifter in open water",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4004
+  },
+  "r0038": {
+    "scene_id": "s03",
+    "scene_label": "Filter drifter in open water",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4004
+  },
+  "r0039": {
+    "scene_id": "s03",
+    "scene_label": "Filter drifter in open water",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4004
+  },
+  "r0040": {
+    "scene_id": "s03",
+    "scene_label": "Filter drifter in open water",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4004
+  },
+  "r0041": {
+    "scene_id": "s03",
+    "scene_label": "Filter drifter in open water",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4004
+  },
+  "r0042": {
+    "scene_id": "s03",
+    "scene_label": "Filter drifter in open water",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4004
+  },
+  "r0043": {
+    "scene_id": "s03",
+    "scene_label": "Filter drifter in open water",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4004
+  },
+  "r0044": {
+    "scene_id": "s03",
+    "scene_label": "Filter drifter in open water",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4004
+  },
+  "r0045": {
+    "scene_id": "s03",
+    "scene_label": "Filter drifter in open water",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4004
+  },
+  "r0046": {
+    "scene_id": "s03",
+    "scene_label": "Filter drifter in open water",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4005
+  },
+  "r0047": {
+    "scene_id": "s03",
+    "scene_label": "Filter drifter in open water",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4005
+  },
+  "r0048": {
+    "scene_id": "s03",
+    "scene_label": "Filter drifter in open water",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4005
+  },
+  "r0049": {
+    "scene_id": "s03",
+    "scene_label": "Filter drifter in open water",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4005
+  },
+  "r0050": {
+    "scene_id": "s03",
+    "scene_label": "Filter drifter in open water",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4005
+  },
+  "r0051": {
+    "scene_id": "s03",
+    "scene_label": "Filter drifter in open water",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4005
+  },
+  "r0052": {
+    "scene_id": "s03",
+    "scene_label": "Filter drifter in open water",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4005
+  },
+  "r0053": {
+    "scene_id": "s03",
+    "scene_label": "Filter drifter in open water",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4005
+  },
+  "r0054": {
+    "scene_id": "s03",
+    "scene_label": "Filter drifter in open water",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4005
+  },
+  "r0055": {
+    "scene_id": "s04",
+    "scene_label": "Ice burrower in sediment",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4006
+  },
+  "r0056": {
+    "scene_id": "s04",
+    "scene_label": "Ice burrower in sediment",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4006
+  },
+  "r0057": {
+    "scene_id": "s04",
+    "scene_label": "Ice burrower in sediment",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4006
+  },
+  "r0058": {
+    "scene_id": "s04",
+    "scene_label": "Ice burrower in sediment",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4006
+  },
+  "r0059": {
+    "scene_id": "s04",
+    "scene_label": "Ice burrower in sediment",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4006
+  },
+  "r0060": {
+    "scene_id": "s04",
+    "scene_label": "Ice burrower in sediment",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4006
+  },
+  "r0061": {
+    "scene_id": "s04",
+    "scene_label": "Ice burrower in sediment",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4006
+  },
+  "r0062": {
+    "scene_id": "s04",
+    "scene_label": "Ice burrower in sediment",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4006
+  },
+  "r0063": {
+    "scene_id": "s04",
+    "scene_label": "Ice burrower in sediment",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4006
+  },
+  "r0064": {
+    "scene_id": "s04",
+    "scene_label": "Ice burrower in sediment",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4007
+  },
+  "r0065": {
+    "scene_id": "s04",
+    "scene_label": "Ice burrower in sediment",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4007
+  },
+  "r0066": {
+    "scene_id": "s04",
+    "scene_label": "Ice burrower in sediment",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4007
+  },
+  "r0067": {
+    "scene_id": "s04",
+    "scene_label": "Ice burrower in sediment",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4007
+  },
+  "r0068": {
+    "scene_id": "s04",
+    "scene_label": "Ice burrower in sediment",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4007
+  },
+  "r0069": {
+    "scene_id": "s04",
+    "scene_label": "Ice burrower in sediment",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4007
+  },
+  "r0070": {
+    "scene_id": "s04",
+    "scene_label": "Ice burrower in sediment",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4007
+  },
+  "r0071": {
+    "scene_id": "s04",
+    "scene_label": "Ice burrower in sediment",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4007
+  },
+  "r0072": {
+    "scene_id": "s04",
+    "scene_label": "Ice burrower in sediment",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4007
+  },
+  "r0073": {
+    "scene_id": "s05",
+    "scene_label": "Vent chimney field habitat",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4008
+  },
+  "r0074": {
+    "scene_id": "s05",
+    "scene_label": "Vent chimney field habitat",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4008
+  },
+  "r0075": {
+    "scene_id": "s05",
+    "scene_label": "Vent chimney field habitat",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4008
+  },
+  "r0076": {
+    "scene_id": "s05",
+    "scene_label": "Vent chimney field habitat",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4008
+  },
+  "r0077": {
+    "scene_id": "s05",
+    "scene_label": "Vent chimney field habitat",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4008
+  },
+  "r0078": {
+    "scene_id": "s05",
+    "scene_label": "Vent chimney field habitat",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4008
+  },
+  "r0079": {
+    "scene_id": "s05",
+    "scene_label": "Vent chimney field habitat",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4008
+  },
+  "r0080": {
+    "scene_id": "s05",
+    "scene_label": "Vent chimney field habitat",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4008
+  },
+  "r0081": {
+    "scene_id": "s05",
+    "scene_label": "Vent chimney field habitat",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4008
+  },
+  "r0082": {
+    "scene_id": "s05",
+    "scene_label": "Vent chimney field habitat",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4009
+  },
+  "r0083": {
+    "scene_id": "s05",
+    "scene_label": "Vent chimney field habitat",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4009
+  },
+  "r0084": {
+    "scene_id": "s05",
+    "scene_label": "Vent chimney field habitat",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4009
+  },
+  "r0085": {
+    "scene_id": "s05",
+    "scene_label": "Vent chimney field habitat",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4009
+  },
+  "r0086": {
+    "scene_id": "s05",
+    "scene_label": "Vent chimney field habitat",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4009
+  },
+  "r0087": {
+    "scene_id": "s05",
+    "scene_label": "Vent chimney field habitat",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4009
+  },
+  "r0088": {
+    "scene_id": "s05",
+    "scene_label": "Vent chimney field habitat",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4009
+  },
+  "r0089": {
+    "scene_id": "s05",
+    "scene_label": "Vent chimney field habitat",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4009
+  },
+  "r0090": {
+    "scene_id": "s05",
+    "scene_label": "Vent chimney field habitat",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4009
+  },
+  "r0091": {
+    "scene_id": "s06",
+    "scene_label": "Under-ice cavern habitat",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4010
+  },
+  "r0092": {
+    "scene_id": "s06",
+    "scene_label": "Under-ice cavern habitat",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4010
+  },
+  "r0093": {
+    "scene_id": "s06",
+    "scene_label": "Under-ice cavern habitat",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4010
+  },
+  "r0094": {
+    "scene_id": "s06",
+    "scene_label": "Under-ice cavern habitat",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4010
+  },
+  "r0095": {
+    "scene_id": "s06",
+    "scene_label": "Under-ice cavern habitat",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4010
+  },
+  "r0096": {
+    "scene_id": "s06",
+    "scene_label": "Under-ice cavern habitat",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4010
+  },
+  "r0097": {
+    "scene_id": "s06",
+    "scene_label": "Under-ice cavern habitat",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4010
+  },
+  "r0098": {
+    "scene_id": "s06",
+    "scene_label": "Under-ice cavern habitat",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4010
+  },
+  "r0099": {
+    "scene_id": "s06",
+    "scene_label": "Under-ice cavern habitat",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4010
+  },
+  "r0100": {
+    "scene_id": "s06",
+    "scene_label": "Under-ice cavern habitat",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4011
+  },
+  "r0101": {
+    "scene_id": "s06",
+    "scene_label": "Under-ice cavern habitat",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4011
+  },
+  "r0102": {
+    "scene_id": "s06",
+    "scene_label": "Under-ice cavern habitat",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4011
+  },
+  "r0103": {
+    "scene_id": "s06",
+    "scene_label": "Under-ice cavern habitat",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4011
+  },
+  "r0104": {
+    "scene_id": "s06",
+    "scene_label": "Under-ice cavern habitat",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4011
+  },
+  "r0105": {
+    "scene_id": "s06",
+    "scene_label": "Under-ice cavern habitat",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4011
+  },
+  "r0106": {
+    "scene_id": "s06",
+    "scene_label": "Under-ice cavern habitat",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4011
+  },
+  "r0107": {
+    "scene_id": "s06",
+    "scene_label": "Under-ice cavern habitat",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4011
+  },
+  "r0108": {
+    "scene_id": "s06",
+    "scene_label": "Under-ice cavern habitat",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4011
+  },
+  "r0109": {
+    "scene_id": "s07",
+    "scene_label": "Abyssal plain habitat",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4012
+  },
+  "r0110": {
+    "scene_id": "s07",
+    "scene_label": "Abyssal plain habitat",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4012
+  },
+  "r0111": {
+    "scene_id": "s07",
+    "scene_label": "Abyssal plain habitat",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4012
+  },
+  "r0112": {
+    "scene_id": "s07",
+    "scene_label": "Abyssal plain habitat",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4012
+  },
+  "r0113": {
+    "scene_id": "s07",
+    "scene_label": "Abyssal plain habitat",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4012
+  },
+  "r0114": {
+    "scene_id": "s07",
+    "scene_label": "Abyssal plain habitat",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4012
+  },
+  "r0115": {
+    "scene_id": "s07",
+    "scene_label": "Abyssal plain habitat",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4012
+  },
+  "r0116": {
+    "scene_id": "s07",
+    "scene_label": "Abyssal plain habitat",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4012
+  },
+  "r0117": {
+    "scene_id": "s07",
+    "scene_label": "Abyssal plain habitat",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4012
+  },
+  "r0118": {
+    "scene_id": "s07",
+    "scene_label": "Abyssal plain habitat",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4013
+  },
+  "r0119": {
+    "scene_id": "s07",
+    "scene_label": "Abyssal plain habitat",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4013
+  },
+  "r0120": {
+    "scene_id": "s07",
+    "scene_label": "Abyssal plain habitat",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4013
+  },
+  "r0121": {
+    "scene_id": "s07",
+    "scene_label": "Abyssal plain habitat",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4013
+  },
+  "r0122": {
+    "scene_id": "s07",
+    "scene_label": "Abyssal plain habitat",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4013
+  },
+  "r0123": {
+    "scene_id": "s07",
+    "scene_label": "Abyssal plain habitat",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4013
+  },
+  "r0124": {
+    "scene_id": "s07",
+    "scene_label": "Abyssal plain habitat",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4013
+  },
+  "r0125": {
+    "scene_id": "s07",
+    "scene_label": "Abyssal plain habitat",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4013
+  },
+  "r0126": {
+    "scene_id": "s07",
+    "scene_label": "Abyssal plain habitat",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4013
+  },
+  "r0127": {
+    "scene_id": "s08",
+    "scene_label": "Vent grazer forelimb anatomy crop",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4014
+  },
+  "r0128": {
+    "scene_id": "s08",
+    "scene_label": "Vent grazer forelimb anatomy crop",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4014
+  },
+  "r0129": {
+    "scene_id": "s08",
+    "scene_label": "Vent grazer forelimb anatomy crop",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4014
+  },
+  "r0130": {
+    "scene_id": "s08",
+    "scene_label": "Vent grazer forelimb anatomy crop",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4014
+  },
+  "r0131": {
+    "scene_id": "s08",
+    "scene_label": "Vent grazer forelimb anatomy crop",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4014
+  },
+  "r0132": {
+    "scene_id": "s08",
+    "scene_label": "Vent grazer forelimb anatomy crop",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4014
+  },
+  "r0133": {
+    "scene_id": "s08",
+    "scene_label": "Vent grazer forelimb anatomy crop",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4014
+  },
+  "r0134": {
+    "scene_id": "s08",
+    "scene_label": "Vent grazer forelimb anatomy crop",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4014
+  },
+  "r0135": {
+    "scene_id": "s08",
+    "scene_label": "Vent grazer forelimb anatomy crop",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4014
+  },
+  "r0136": {
+    "scene_id": "s08",
+    "scene_label": "Vent grazer forelimb anatomy crop",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4015
+  },
+  "r0137": {
+    "scene_id": "s08",
+    "scene_label": "Vent grazer forelimb anatomy crop",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4015
+  },
+  "r0138": {
+    "scene_id": "s08",
+    "scene_label": "Vent grazer forelimb anatomy crop",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4015
+  },
+  "r0139": {
+    "scene_id": "s08",
+    "scene_label": "Vent grazer forelimb anatomy crop",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4015
+  },
+  "r0140": {
+    "scene_id": "s08",
+    "scene_label": "Vent grazer forelimb anatomy crop",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4015
+  },
+  "r0141": {
+    "scene_id": "s08",
+    "scene_label": "Vent grazer forelimb anatomy crop",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4015
+  },
+  "r0142": {
+    "scene_id": "s08",
+    "scene_label": "Vent grazer forelimb anatomy crop",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4015
+  },
+  "r0143": {
+    "scene_id": "s08",
+    "scene_label": "Vent grazer forelimb anatomy crop",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4015
+  },
+  "r0144": {
+    "scene_id": "s08",
+    "scene_label": "Vent grazer forelimb anatomy crop",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4015
+  },
+  "r0145": {
+    "scene_id": "s09",
+    "scene_label": "Filter drifter filter-mouth anatomy crop",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4016
+  },
+  "r0146": {
+    "scene_id": "s09",
+    "scene_label": "Filter drifter filter-mouth anatomy crop",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4016
+  },
+  "r0147": {
+    "scene_id": "s09",
+    "scene_label": "Filter drifter filter-mouth anatomy crop",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4016
+  },
+  "r0148": {
+    "scene_id": "s09",
+    "scene_label": "Filter drifter filter-mouth anatomy crop",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4016
+  },
+  "r0149": {
+    "scene_id": "s09",
+    "scene_label": "Filter drifter filter-mouth anatomy crop",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4016
+  },
+  "r0150": {
+    "scene_id": "s09",
+    "scene_label": "Filter drifter filter-mouth anatomy crop",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4016
+  },
+  "r0151": {
+    "scene_id": "s09",
+    "scene_label": "Filter drifter filter-mouth anatomy crop",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4016
+  },
+  "r0152": {
+    "scene_id": "s09",
+    "scene_label": "Filter drifter filter-mouth anatomy crop",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4016
+  },
+  "r0153": {
+    "scene_id": "s09",
+    "scene_label": "Filter drifter filter-mouth anatomy crop",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4016
+  },
+  "r0154": {
+    "scene_id": "s09",
+    "scene_label": "Filter drifter filter-mouth anatomy crop",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4017
+  },
+  "r0155": {
+    "scene_id": "s09",
+    "scene_label": "Filter drifter filter-mouth anatomy crop",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4017
+  },
+  "r0156": {
+    "scene_id": "s09",
+    "scene_label": "Filter drifter filter-mouth anatomy crop",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4017
+  },
+  "r0157": {
+    "scene_id": "s09",
+    "scene_label": "Filter drifter filter-mouth anatomy crop",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4017
+  },
+  "r0158": {
+    "scene_id": "s09",
+    "scene_label": "Filter drifter filter-mouth anatomy crop",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4017
+  },
+  "r0159": {
+    "scene_id": "s09",
+    "scene_label": "Filter drifter filter-mouth anatomy crop",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4017
+  },
+  "r0160": {
+    "scene_id": "s09",
+    "scene_label": "Filter drifter filter-mouth anatomy crop",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4017
+  },
+  "r0161": {
+    "scene_id": "s09",
+    "scene_label": "Filter drifter filter-mouth anatomy crop",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4017
+  },
+  "r0162": {
+    "scene_id": "s09",
+    "scene_label": "Filter drifter filter-mouth anatomy crop",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4017
+  },
+  "r0163": {
+    "scene_id": "s10",
+    "scene_label": "Food-web plate: bacteria, vent grazer, filter drifter",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4018
+  },
+  "r0164": {
+    "scene_id": "s10",
+    "scene_label": "Food-web plate: bacteria, vent grazer, filter drifter",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4018
+  },
+  "r0165": {
+    "scene_id": "s10",
+    "scene_label": "Food-web plate: bacteria, vent grazer, filter drifter",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4018
+  },
+  "r0166": {
+    "scene_id": "s10",
+    "scene_label": "Food-web plate: bacteria, vent grazer, filter drifter",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4018
+  },
+  "r0167": {
+    "scene_id": "s10",
+    "scene_label": "Food-web plate: bacteria, vent grazer, filter drifter",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4018
+  },
+  "r0168": {
+    "scene_id": "s10",
+    "scene_label": "Food-web plate: bacteria, vent grazer, filter drifter",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4018
+  },
+  "r0169": {
+    "scene_id": "s10",
+    "scene_label": "Food-web plate: bacteria, vent grazer, filter drifter",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4018
+  },
+  "r0170": {
+    "scene_id": "s10",
+    "scene_label": "Food-web plate: bacteria, vent grazer, filter drifter",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4018
+  },
+  "r0171": {
+    "scene_id": "s10",
+    "scene_label": "Food-web plate: bacteria, vent grazer, filter drifter",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4018
+  },
+  "r0172": {
+    "scene_id": "s10",
+    "scene_label": "Food-web plate: bacteria, vent grazer, filter drifter",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4019
+  },
+  "r0173": {
+    "scene_id": "s10",
+    "scene_label": "Food-web plate: bacteria, vent grazer, filter drifter",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4019
+  },
+  "r0174": {
+    "scene_id": "s10",
+    "scene_label": "Food-web plate: bacteria, vent grazer, filter drifter",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4019
+  },
+  "r0175": {
+    "scene_id": "s10",
+    "scene_label": "Food-web plate: bacteria, vent grazer, filter drifter",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4019
+  },
+  "r0176": {
+    "scene_id": "s10",
+    "scene_label": "Food-web plate: bacteria, vent grazer, filter drifter",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4019
+  },
+  "r0177": {
+    "scene_id": "s10",
+    "scene_label": "Food-web plate: bacteria, vent grazer, filter drifter",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4019
+  },
+  "r0178": {
+    "scene_id": "s10",
+    "scene_label": "Food-web plate: bacteria, vent grazer, filter drifter",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4019
+  },
+  "r0179": {
+    "scene_id": "s10",
+    "scene_label": "Food-web plate: bacteria, vent grazer, filter drifter",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4019
+  },
+  "r0180": {
+    "scene_id": "s10",
+    "scene_label": "Food-web plate: bacteria, vent grazer, filter drifter",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4019
+  },
+  "r0181": {
+    "scene_id": "s11",
+    "scene_label": "Food-web plate: ice burrower, bacteria, detritus",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4020
+  },
+  "r0182": {
+    "scene_id": "s11",
+    "scene_label": "Food-web plate: ice burrower, bacteria, detritus",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4020
+  },
+  "r0183": {
+    "scene_id": "s11",
+    "scene_label": "Food-web plate: ice burrower, bacteria, detritus",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4020
+  },
+  "r0184": {
+    "scene_id": "s11",
+    "scene_label": "Food-web plate: ice burrower, bacteria, detritus",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4020
+  },
+  "r0185": {
+    "scene_id": "s11",
+    "scene_label": "Food-web plate: ice burrower, bacteria, detritus",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4020
+  },
+  "r0186": {
+    "scene_id": "s11",
+    "scene_label": "Food-web plate: ice burrower, bacteria, detritus",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4020
+  },
+  "r0187": {
+    "scene_id": "s11",
+    "scene_label": "Food-web plate: ice burrower, bacteria, detritus",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4020
+  },
+  "r0188": {
+    "scene_id": "s11",
+    "scene_label": "Food-web plate: ice burrower, bacteria, detritus",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4020
+  },
+  "r0189": {
+    "scene_id": "s11",
+    "scene_label": "Food-web plate: ice burrower, bacteria, detritus",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4020
+  },
+  "r0190": {
+    "scene_id": "s11",
+    "scene_label": "Food-web plate: ice burrower, bacteria, detritus",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4021
+  },
+  "r0191": {
+    "scene_id": "s11",
+    "scene_label": "Food-web plate: ice burrower, bacteria, detritus",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4021
+  },
+  "r0192": {
+    "scene_id": "s11",
+    "scene_label": "Food-web plate: ice burrower, bacteria, detritus",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4021
+  },
+  "r0193": {
+    "scene_id": "s11",
+    "scene_label": "Food-web plate: ice burrower, bacteria, detritus",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4021
+  },
+  "r0194": {
+    "scene_id": "s11",
+    "scene_label": "Food-web plate: ice burrower, bacteria, detritus",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4021
+  },
+  "r0195": {
+    "scene_id": "s11",
+    "scene_label": "Food-web plate: ice burrower, bacteria, detritus",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4021
+  },
+  "r0196": {
+    "scene_id": "s11",
+    "scene_label": "Food-web plate: ice burrower, bacteria, detritus",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4021
+  },
+  "r0197": {
+    "scene_id": "s11",
+    "scene_label": "Food-web plate: ice burrower, bacteria, detritus",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4021
+  },
+  "r0198": {
+    "scene_id": "s11",
+    "scene_label": "Food-web plate: ice burrower, bacteria, detritus",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4021
+  },
+  "r0199": {
+    "scene_id": "s12",
+    "scene_label": "Planet-surface wide with vent plumes",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4022
+  },
+  "r0200": {
+    "scene_id": "s12",
+    "scene_label": "Planet-surface wide with vent plumes",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4022
+  },
+  "r0201": {
+    "scene_id": "s12",
+    "scene_label": "Planet-surface wide with vent plumes",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4022
+  },
+  "r0202": {
+    "scene_id": "s12",
+    "scene_label": "Planet-surface wide with vent plumes",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4022
+  },
+  "r0203": {
+    "scene_id": "s12",
+    "scene_label": "Planet-surface wide with vent plumes",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4022
+  },
+  "r0204": {
+    "scene_id": "s12",
+    "scene_label": "Planet-surface wide with vent plumes",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4022
+  },
+  "r0205": {
+    "scene_id": "s12",
+    "scene_label": "Planet-surface wide with vent plumes",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4022
+  },
+  "r0206": {
+    "scene_id": "s12",
+    "scene_label": "Planet-surface wide with vent plumes",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4022
+  },
+  "r0207": {
+    "scene_id": "s12",
+    "scene_label": "Planet-surface wide with vent plumes",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4022
+  },
+  "r0208": {
+    "scene_id": "s12",
+    "scene_label": "Planet-surface wide with vent plumes",
+    "model": "sdxl",
+    "variant": "A",
+    "seed": 4023
+  },
+  "r0209": {
+    "scene_id": "s12",
+    "scene_label": "Planet-surface wide with vent plumes",
+    "model": "sdxl",
+    "variant": "B",
+    "seed": 4023
+  },
+  "r0210": {
+    "scene_id": "s12",
+    "scene_label": "Planet-surface wide with vent plumes",
+    "model": "sdxl",
+    "variant": "C",
+    "seed": 4023
+  },
+  "r0211": {
+    "scene_id": "s12",
+    "scene_label": "Planet-surface wide with vent plumes",
+    "model": "zimage",
+    "variant": "A",
+    "seed": 4023
+  },
+  "r0212": {
+    "scene_id": "s12",
+    "scene_label": "Planet-surface wide with vent plumes",
+    "model": "zimage",
+    "variant": "B",
+    "seed": 4023
+  },
+  "r0213": {
+    "scene_id": "s12",
+    "scene_label": "Planet-surface wide with vent plumes",
+    "model": "zimage",
+    "variant": "C",
+    "seed": 4023
+  },
+  "r0214": {
+    "scene_id": "s12",
+    "scene_label": "Planet-surface wide with vent plumes",
+    "model": "klein",
+    "variant": "A",
+    "seed": 4023
+  },
+  "r0215": {
+    "scene_id": "s12",
+    "scene_label": "Planet-surface wide with vent plumes",
+    "model": "klein",
+    "variant": "B",
+    "seed": 4023
+  },
+  "r0216": {
+    "scene_id": "s12",
+    "scene_label": "Planet-surface wide with vent plumes",
+    "model": "klein",
+    "variant": "C",
+    "seed": 4023
+  }
+}

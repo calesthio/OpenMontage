@@ -1,0 +1,9 @@
+{
+  "expected_duration": 195.725,
+  "tolerance": 1.0,
+  "sample_rate": 44100,
+  "voice": "af_heart",
+  "engine": "kokoro_onnx_82m_cpu",
+  "sentences": 8,
+  "source": "/workspaces/OpenMontage/docs/openmontage/slice/iss/audio/narration_finished.wav"
+}

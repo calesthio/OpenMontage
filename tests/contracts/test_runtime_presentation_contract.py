@@ -47,12 +47,23 @@ _CONVERSATION_TOKENS = [
 
 
 def _planning_stages(manifest: dict[str, Any]) -> list[dict[str, Any]]:
-    """Return every 'proposal' or 'idea' stage (a pipeline may have one or both)."""
+    """Return every 'proposal' or 'idea' stage (a pipeline may have one or both).
+
+    A pipeline that names its planning stage something else would otherwise
+    escape this contract entirely — its agent would read a planning skill with
+    no runtime guidance and silently default to Remotion, which is exactly the
+    failure the contract exists to prevent. `business-documentary` names its
+    planning stage `topic` (Master Plan section 4), so when a manifest declares
+    no proposal/idea stage its FIRST stage is treated as the planning stage.
+    """
+
     out: list[dict[str, Any]] = []
     for stage in manifest.get("stages", []):
         if stage.get("name") in {"proposal", "idea"}:
             out.append(stage)
-    return out
+    if out:
+        return out
+    return manifest.get("stages", [])[:1]
 
 
 def _load_manifest(path: Path) -> dict[str, Any]:

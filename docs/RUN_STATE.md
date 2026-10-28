@@ -19,7 +19,7 @@
 | S9 | DONE | Финальный рендер через ffmpeg: `remotion-composer/out/pilot-draft.mp4` (1280×720, h264+aac, 1099.8s, 26.4 MB). Меньше 90 МБ — можно коммитить, но видео не добавляется в git (артефакт сборки). | 2026-10-27 |
 | S10 | DONE | `docs/openmontage/pilot/PUBLISH.md` создан: 5 вариантов заголовка, описание, теги, промпт для превью, главы по таймкодам, метаданные. | 2026-10-27 |
 | S11 | DONE | Проверка через ffprobe/ffmpeg: файл существует (26.4 MB), h264 1280×720@30fps, aac 24kHz mono, длительность 1099.8s, чёрных кадров нет, тишины нет. Замороженные кадры на границах секций (361.4s, 369.7s) — ожидаемо для статичных изображений без переходов. Критических проблем не найдено. | 2026-10-27 |
-| S12 | DONE | Финальная сборка через ffmpeg (без Remotion): `scripts/assemble_pilot_final.py`. 10 клипов 1280×720 (zoompan 3-5%, чередующееся направление, вход увеличён 2x), xfade=fade 0.5с на стыках, субтитры srt встроены фильтром subtitles (крупный без засечек, нижняя треть). Музыка: в assets/music/ файла нет → финал без музыки. Выход: `remotion-composer/out/pilot-final.mp4` (не в git). ffprobe: 1099.8s, h264 1280×720@30fps, aac 24kHz mono, 59 MB. Аудио пик ~-89 dB (без клиппинга). 3 кадра на стыках извлечены (не чёрные). Субтитры встроены в видео (нет отдельного потока subtitles). | 2026-10-27 |
+| S12 | DONE | Финальная сборка v4 через ffmpeg (без Remotion): `scripts/assemble_pilot_final_v4.py`. 78 клипов Klein 1280×720 (один на бит 12-18с, zoompan 3-5%, вход увеличён 2x, жёсткая склейка concat), субтитры subtitles_bits.srt (324 блока, 2-5с, ≤42 симв./стр, шрифт 38px, нижняя треть, обводка 2px, original_size=1280x720). Аудио: мастеринг acompressor(thr=-24dB,ratio=3)+alimiter+loudnorm(I=-16:TP=-1.5:LRA=7), ebur128 до I=-25.6 LUFS/TPK=-4.9, после I=-15.7 LUFS/TPK=-1.5. Музыка: assets/music/ пуст → без музыки. Выход: `remotion-composer/out/pilot-final.mp4` (не в git). ffprobe: 1099.8s, h264 1280×720@30fps, aac 96000Hz mono, 58.6 MB. max_volume -0.7 dB (без клиппинга). 5 кадров с субтитрами: /tmp/subtitle_frames/sub_01-03.jpg | 2026-10-28 |
 
 ## Примечания
 
@@ -27,12 +27,13 @@
 - **Консистентность:** нативный multi-reference Klein 4B (до 4 референсов), IP-Adapter не нужен
 - **Голос:** af_heart (только этот, без замен)
 - **Все артефакты:** `tools/kaggle_bridge/jobs/pilot-render/`
-- **Видео:** `remotion-composer/out/pilot-final.mp4` (59 MB, 1099.8s, h264 1280×720@30fps, aac 24kHz mono, субтитры встроены, без музыки — файл assets/music/ отсутствует). Не в git (артефакт сборки). Черновик `pilot-draft.mp4` оставлен.
-- **Ожидает владельца:** S5 (подтверждение кадров), S8 (выбор музыки), K1+K2 (номер кандидата ведущего 1-8 -> master.png), K3 (генерация 10 кадров пилота), K4 (контакт-шит кадров)
+- **Видео:** `remotion-composer/out/pilot-final.mp4` (58.6 MB, 1099.8s, h264 1280×720@30fps, aac 96000Hz mono, субтитры встроены, без музыки — файл assets/music/ отсутствует). Не в git (артефакт сборки). Черновик `pilot-draft.mp4` оставлен.
+- **Ожидает владельца:** S5 (подтверждение кадров), S8 (выбор музыки), K1+K2 (номер кандидата ведущего 1-8 -> master.png). K3 и K4 выполнены, ожидают подтверждения владельца контактных листов.
 
 | Этап | Статус | Доказательство | Дата |
 |------|--------|----------------|------|
 | K0 | DONE | PROJECT_PLAN.md (Klein 4B не исключена, консистентность = нативный multi-reference Klein 4B, IP-Adapter не нужен, SDXL Base = резерв), LICENSE_EVIDENCE.md (FLUX.2-klein-4B Apache-2.0 = базовая модель), RUN_STATE.md, SDXL-кадры перенесены в pilot-render/images_sdxl/, HOST_CHARACTER.md + VISUAL_STYLE_GUIDE.md созданы | 2026-10-27 |
 | K1+K2 | DONE | Kaggle-ядро `forts845/k1-k2-host-candidates-flux-2-klein-4b` (COMPLETE 2026-10-27T10:32:41Z). 8 кандидатов ведущего 1280×720, 4 шага, guidance_scale=1.0, bfloat16 (peak VRAM 11.15 ГБ / 14.56 ГБ T4). contact_sheet_master.jpg 2x4 с номерами (58.98 KB < 2 МБ). Все 8 OK (без NaN/чёрных кадров). Время загрузки 78.97с, генерация ~90с на кадр. Signature Flux2KleinPipeline зафиксировано. Вывод: `/tmp/k1k2_output/k1k2-host-candidates/results.json`, ядро: `https://www.kaggle.com/code/forts845/k1-k2-host-candidates-flux-2-klein-4b` | 2026-10-27 |
-| K3 | PENDING | Второй Kaggle-ядро: 10 кадров пилота 1280×720, prompts.json, референс master.png | — |
-| K4 | PENDING | contact_sheet_frames.jpg 2x5, WAITING_OWNER | — |
+| K3 | DONE | shot_list.json: 78 битов по 12-18с на 10 разделов (≈60-90 кадров). 3 Kaggle ядра (секции 1-4: 35 кадров, 5-7: 26, 8-10: 17), все COMPLETE. bfloat16, peak VRAM 11.15 ГБ, ~90с/кадр, общее GPU ~117 мин (<2ч). Все 78 кадров OK (без NaN/чёрных). Кадры: `tools/kaggle_bridge/jobs/pilot-render/frames_klein/sNN_BNNN.png` | 2026-10-28 |
+| K4 | DONE | 7 контактных листов 4x3 с номерами (кадры 1-78), каждый <2 МБ: `tools/kaggle_bridge/jobs/pilot-render/contact_sheets_klein/contact_sheet_klein_01-07.jpg` | 2026-10-28 |
+| K5 | DONE | Финальная сборка v4 (см. S12). Субтитры переработаны: 324 блока вместо 10, тайминг пропорционально символам, шрифт 38px, нижняя треть, обводка 2px. Аудио мастеринг: I=-25.6→-15.7 LUFS, TPK=-4.9→-1.5 dBFS. | 2026-10-28 |

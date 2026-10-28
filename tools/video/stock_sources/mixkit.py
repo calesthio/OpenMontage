@@ -29,6 +29,20 @@ _SEARCH_URL = "https://mixkit.co/free-stock-video/"
 _LICENSE = "Mixkit License (free for commercial and personal use, no attribution required)"
 
 
+def _ld_dimension(value: Any) -> int:
+    """Pixel size from a schema.org width/height (number, "1920", "1920 px",
+    or a QuantitativeValue). Returns 0 when absent or unparseable."""
+    if isinstance(value, dict):
+        value = value.get("value")
+    if isinstance(value, (int, float)):
+        return max(0, int(value))
+    if isinstance(value, str):
+        match = re.match(r"\s*(\d+)", value)
+        if match:
+            return int(match.group(1))
+    return 0
+
+
 class MixkitSource:
     """Mixkit video adapter. Satisfies `StockSource`."""
 
@@ -137,6 +151,54 @@ class MixkitSource:
                 )
             )
 
+        if not out:
+            out = self._parse_json_ld(soup, query, filters)
+        return out
+
+    def _parse_json_ld(self, soup, query: str, filters: SearchFilters) -> list[Candidate]:
+        """Read results from the page's schema.org VideoObject entries.
+
+        Mixkit's current markup no longer exposes the card classes above, but
+        every result is still described in JSON-LD with a direct contentUrl.
+        """
+        import json
+
+        out: list[Candidate] = []
+        for script in soup.select('script[type="application/ld+json"]'):
+            try:
+                data = json.loads(script.string or "")
+            except (ValueError, TypeError):
+                continue
+            nodes = data.get("@graph", [data]) if isinstance(data, dict) else data
+            for node in nodes if isinstance(nodes, list) else []:
+                if not isinstance(node, dict) or node.get("@type") != "VideoObject":
+                    continue
+                content_url = node.get("contentUrl") or ""
+                if not content_url.lower().endswith(".mp4"):
+                    continue
+                href = (node.get("@id") or "").split("#", 1)[0]
+                clip_id = href.rstrip("/").rsplit("-", 1)[-1] if href else content_url
+                out.append(
+                    Candidate(
+                        source=self.name,
+                        source_id=f"mixkit_{clip_id}",
+                        source_url=href or content_url,
+                        download_url=content_url,
+                        kind="video",
+                        # Only trust declared dimensions; the "-1080" filename suffix
+                        # says nothing about orientation. 0 = unknown until probed.
+                        width=_ld_dimension(node.get("width")),
+                        height=_ld_dimension(node.get("height")),
+                        duration=0.0,
+                        creator="Mixkit",
+                        license=_LICENSE,
+                        source_tags=f"{node.get('name', '')} {node.get('description', '')} {query}".strip(),
+                        thumbnail_url=node.get("thumbnailUrl", ""),
+                        extra={"detail_url": content_url, "preview_url": node.get("embedUrl", "")},
+                    )
+                )
+                if len(out) >= filters.per_page:
+                    return out
         return out
 
     def download(self, candidate: Candidate, out_path: Path) -> Path:

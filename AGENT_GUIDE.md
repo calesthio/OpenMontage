@@ -256,6 +256,7 @@ If the folder has tracks, the proposal and asset stages should present them as o
 | `hybrid` | Source footage plus support visuals | production |
 | `avatar-spokesperson` | Presenter-led avatar or lip-sync videos | production |
 | `localization-dub` | Subtitle, dub, and translated variants | beta |
+| `documentary-montage` | Real-footage thematic montage via corpus retrieval | beta |
 | `framework-smoke` | Test: minimal 2-stage smoke test | test |
 
 > **Beta pipelines** have not been fully audited. They work, but expect rough edges. Mention this when the user selects one.
@@ -491,7 +492,7 @@ All tool classes use **PascalCase without a "Tool" suffix**. When importing tool
 | `tools.audio.music_gen` | `MusicGen` | ~~MusicGenTool~~ |
 | `tools.video.video_compose` | `VideoCompose` | ~~VideoComposeTool~~ |
 | `tools.audio.audio_mixer` | `AudioMixer` | ~~AudioMixerTool~~ |
-| `tools.tts.elevenlabs_tts` | `ElevenLabsTTS` | ~~ElevenLabsTTSTool~~ |
+| `tools.audio.elevenlabs_tts` | `ElevenLabsTTS` | ~~ElevenLabsTTSTool~~ |
 | `tools.analysis.transcriber` | `Transcriber` | ~~TranscriberTool~~ |
 | `tools.subtitle.subtitle_gen` | `SubtitleGen` | ~~SubtitleGenTool~~ |
 

@@ -127,7 +127,13 @@ class ToolRegistry:
         for module_info in pkgutil.walk_packages(package_paths, f"{package.__name__}."):
             if module_info.name.endswith(".base_tool") or module_info.name.endswith(".tool_registry"):
                 continue
-            module = importlib.import_module(module_info.name)
+            try:
+                module = importlib.import_module(module_info.name)
+            except ModuleNotFoundError:
+                # Some tools have optional heavy dependencies (for example,
+                # numpy/opencv). Discovery should continue so preflight can
+                # still report the rest of the toolchain.
+                continue
             discovered.extend(self.register_module(module))
 
         self._discovered_packages.add(package_name)

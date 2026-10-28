@@ -238,6 +238,8 @@ interface Cut {
   color?: string;
   accentColor?: string;
   fontSize?: number;
+  statFontSize?: number; // stat_card
+  subtitleFontSize?: number; // stat_card
   // Animation & transitions
   animation?: string;
   transition_in?: string;
@@ -595,7 +597,10 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
   }
   if (cut.type === "stat_card" && cut.stat) {
     return maybeWrapWithBg(
-      <StatCard stat={cut.stat} subtitle={cut.subtitle} accentColor={accent} backgroundColor={bgColor} />
+      <StatCard
+        stat={cut.stat} subtitle={cut.subtitle} accentColor={accent} backgroundColor={bgColor}
+        statFontSize={cut.statFontSize} subtitleFontSize={cut.subtitleFontSize}
+      />
     );
   }
   if (cut.type === "callout" && cut.text) {

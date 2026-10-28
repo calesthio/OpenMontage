@@ -393,7 +393,7 @@ class AssetCache:
         do not move or mutate it; the caller keeps its file and the cache
         holds a second reference via hard link (or copy on cross-drive).
         Returns ``True`` if stored (or already present), ``False`` on failure
-        (missing/empty source, lock timeout, link/copy failure).
+        (missing/empty or oversized source, lock timeout, link/copy failure).
         """
         source_path = Path(source_path)
         if not source_path.exists():
@@ -417,6 +417,11 @@ class AssetCache:
                 entries[key].last_access_at = time.time()
                 self._write_manifest(entries)
                 return True
+
+            # An existing content key is still a hit; a new artifact that can
+            # never fit must not evict usable entries or exceed the cache cap.
+            if size_bytes > self.max_total_bytes:
+                return False
 
             self._evict_to_fit_locked(entries, size_bytes)
 

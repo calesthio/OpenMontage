@@ -151,7 +151,7 @@ Selectors route based on: user preference when explicitly set, then scored ranki
 
 ### Tool Inventory by Category
 
-**Analysis (5):** transcriber (WhisperX), azure_stt, scene_detect, frame_sampler, video_understand (CLIP/BLIP-2)
+**Analysis (6):** transcriber (WhisperX), azure_stt, gemini_stt, scene_detect, frame_sampler, video_understand (CLIP/BLIP-2)
 
 **Audio (9):** elevenlabs_tts, google_tts, openai_tts, piper_tts, azure_tts, tts_selector, music_gen, audio_mixer, audio_enhance
 

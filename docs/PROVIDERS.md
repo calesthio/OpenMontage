@@ -62,7 +62,7 @@ PEXELS_API_KEY=              # Stock photos + videos
 PIXABAY_API_KEY=             # Stock photos + videos
 
 # GOOGLE (one key, multiple tools, generous TTS free tier)
-GOOGLE_API_KEY=              # Google TTS + Imagen + Lyria music + Gemini Omni/Veo video
+GOOGLE_API_KEY=              # Google TTS + Imagen + Lyria music + Gemini Omni/Veo video + Gemini STT (gemini_stt)
 
 # VOICE + MUSIC
 ELEVENLABS_API_KEY=          # TTS, music, sound effects (10K chars/month free)
@@ -790,7 +790,7 @@ costs about $0.015. OpenMontage estimates cost from character count. See
 
 > **One key, five tools.** Google Cloud TTS has 700+ voices in 50+ languages — the strongest localization option. `google_imagen` supports both Imagen 4 and Gemini 2.5 Flash Image, including projects without Imagen catalog access. Google Lyria generates high-quality background music. Gemini Omni Flash supports conversational video editing, and direct Veo generation covers premium short video clips.
 
-**Tools unlocked:** `google_tts`, `google_imagen`, `google_music`, `gemini_omni_video`, `veo_video`
+**Tools unlocked:** `google_tts`, `google_imagen`, `google_music`, `gemini_omni_video`, `veo_video`, `gemini_stt`
 **Env var:** `GOOGLE_API_KEY` (or `GEMINI_API_KEY` — either works; `GEMINI_API_KEY` takes precedence)
 
 #### Setup
@@ -832,6 +832,30 @@ The free tiers apply *independently* — you get 1M Standard AND 1M WaveNet AND 
 | Gemini 2.5 Flash Image (`gemini-2.5-flash-image`) | $0.039 |
 
 **Free tier for Imagen:** None. Paid tier only.
+
+#### Gemini Speech-to-Text (`gemini_stt`)
+
+`gemini_stt` transcribes local audio/video with **Gemini 3.5 Transcribe**
+(`gemini-3.5-transcribe`): word-level timestamps, automatic language detection
+(85+ languages, code-switching) and optional speaker diarization. Output matches
+the `transcriber` schema, so it feeds `subtitle_gen` directly — the same role as
+`azure_stt`.
+
+- **Free tier:** available on a Google AI Studio key without billing (free-tier
+  content may be used to improve Google's products — do not send confidential
+  audio).
+- **Paid tier:** roughly $0.003/min audio input + $0.002/min text output.
+- **Limits:** with word timestamps or diarization, up to 30 minutes per file.
+
+```text
+interactions.create(model="gemini-3.5-transcribe",
+  input=[{"type": "audio", "uri": <Files API uri>, "mime_type": ...}],
+  generation_config={"transcription_config": {
+    "mode": {"type": "verbatim", "timestamp_granularities": ["word"]},
+    "language_codes": ["es-AR"]}})
+```
+
+See the `gemini-speech-to-text` skill for parameters and limits.
 
 To select the Gemini backend through the governed `image_selector`, pass
 `preferred_provider: "google_imagen"` and

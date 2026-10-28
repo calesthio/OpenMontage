@@ -244,7 +244,8 @@ def main():
     anchor_image = Image.open(ANCHOR_PATH).convert("RGB")
     print(f"Loaded anchor reference: {ANCHOR_PATH} ({anchor_image.size})")
 
-    # Generate variations    for var_id, pose_desc, prompt in VARIATIONS:
+    # Generate variations
+    for var_id, pose_desc, prompt in VARIATIONS:
         seed = SEEDS[len(results["variations"])]
         print(f"Generating {var_id} ({pose_desc}, seed={seed}, dtype={selected_dtype}) ...")
         dtype = torch.bfloat16 if selected_dtype == "bfloat16" else torch.float16

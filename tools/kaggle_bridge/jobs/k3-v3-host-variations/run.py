@@ -208,14 +208,14 @@ def main():
     selected_dtype = None
     load_error = None
 
-    for dtype_name, dtype in [("bfloat16", torch.bfloat16), ("float16", torch.float16)]:
+    for dtype_name, dtype in [("float16", torch.float16), ("bfloat16", torch.bfloat16)]:
         try:
             print(f"Attempting load with {dtype_name} ...")
             pipe = Flux2KleinPipeline.from_pretrained(
                 MODEL_ID,
                 torch_dtype=dtype,
             )
-            pipe.enable_model_cpu_offload()
+            pipe.enable_sequential_cpu_offload()
             selected_dtype = dtype_name
             print(f"Model loaded with {dtype_name}")
             break
@@ -254,11 +254,11 @@ def main():
         dtype = torch.bfloat16 if selected_dtype == "bfloat16" else torch.float16
         image, ok, reason = try_generate(pipe, prompt, seed, anchor_image, selected_dtype, dtype)
 
-        if not ok and selected_dtype == "bfloat16":
-            print(f"  bf16 failed ({reason}), retrying with float16 ...")
-            image, ok, reason = try_generate(pipe, prompt, seed, anchor_image, "float16", torch.float16)
+        if not ok and selected_dtype == "float16":
+            print(f"  float16 failed ({reason}), retrying with bfloat16 ...")
+            image, ok, reason = try_generate(pipe, prompt, seed, anchor_image, "bfloat16", torch.bfloat16)
             if ok:
-                print(f"  float16 succeeded")
+                print(f"  bfloat16 succeeded")
 
         if not ok:
             print(f"  {var_id} FAILED: {reason}")

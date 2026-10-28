@@ -1,0 +1,44 @@
+{
+  "theme": "flat-motion-graphics",
+  "cuts": [
+    {
+      "id": "scene-1",
+      "source": "",
+      "type": "hero_title",
+      "in_seconds": 0,
+      "out_seconds": 4,
+      "text": "Stop scrolling. Do this instead.",
+      "subtitle": "Small actions create big momentum.",
+      "accentColor": "#FACC15",
+      "color": "#F8FAFC",
+      "backgroundColor": "#0B1020"
+    },
+    {
+      "id": "scene-2",
+      "source": "",
+      "type": "hero_title",
+      "in_seconds": 4,
+      "out_seconds": 11,
+      "text": "The 2-Minute Rule",
+      "subtitle": "Reply to that email • Organize your desk • Start the task",
+      "accentColor": "#38BDF8",
+      "color": "#F8FAFC",
+      "backgroundColor": "#111827"
+    },
+    {
+      "id": "scene-3",
+      "source": "",
+      "type": "hero_title",
+      "in_seconds": 11,
+      "out_seconds": 20,
+      "text": "Build Momentum 🚀",
+      "subtitle": "Stop overthinking. Start now. Follow for more AI and career tips.",
+      "accentColor": "#34D399",
+      "color": "#F8FAFC",
+      "backgroundColor": "#0B1020"
+    }
+  ],
+  "overlays": [],
+  "captions": [],
+  "audio": {}
+}

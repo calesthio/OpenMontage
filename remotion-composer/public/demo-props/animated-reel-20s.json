@@ -1,0 +1,49 @@
+{
+  "theme": "flat-motion-graphics",
+  "cuts": [
+    {
+      "id": "hook",
+      "source": "",
+      "type": "hero_title",
+      "in_seconds": 0,
+      "out_seconds": 4,
+      "text": "OpenMontage",
+      "subtitle": "20-second animated reel",
+      "backgroundColor": "#0B1020"
+    },
+    {
+      "id": "momentum",
+      "source": "",
+      "type": "stat_card",
+      "in_seconds": 4,
+      "out_seconds": 8,
+      "stat": "20s",
+      "subtitle": "Fast motion for quick story arcs",
+      "accentColor": "#7DD3FC",
+      "backgroundColor": "#0B1020"
+    },
+    {
+      "id": "story",
+      "source": "",
+      "type": "text_card",
+      "in_seconds": 8,
+      "out_seconds": 13,
+      "text": "One prompt. Multiple scenes. Cohesive motion.",
+      "color": "#F8FAFC",
+      "backgroundColor": "#111827"
+    },
+    {
+      "id": "final",
+      "source": "",
+      "type": "hero_title",
+      "in_seconds": 13,
+      "out_seconds": 20,
+      "text": "Built for motion stories",
+      "subtitle": "Render-ready and ready to share",
+      "backgroundColor": "#0B1020"
+    }
+  ],
+  "overlays": [],
+  "captions": [],
+  "audio": {}
+}

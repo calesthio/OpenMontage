@@ -1282,7 +1282,7 @@ class VideoCompose(BaseTool):
         playbook: dict[str, Any] = {}
         if playbook_name:
             try:
-                from styles.playbook_loader import load_playbook
+                from styles.playbook_loader import load_playbook, _relative_luminance
                 playbook = load_playbook(playbook_name)
             except Exception as exc:
                 logging.getLogger(__name__).warning(
@@ -1333,10 +1333,16 @@ class VideoCompose(BaseTool):
 
             # Derive caption colors from the palette
             theme["captionHighlightColor"] = primary
-            # Caption background: semi-transparent version of the bg color
+            # Caption background must contrast with the derived TEXT color, not
+            # merely match a hardcoded whitelist of "white-ish" background hexes.
+            # Regression: a light-but-not-pure-white background (e.g. warm cream
+            # #F4EFE4) fell through to the dark branch, pairing dark playbook text
+            # with a dark caption bar and failing WCAG AA (2.1:1, see
+            # test_theme_text_contrast_contract.py). Base it on text luminance
+            # instead: dark text needs a light bar, light text needs a dark bar.
             theme["captionBackgroundColor"] = (
-                f"rgba(255, 255, 255, 0.85)" if bg.upper() in ("#FFFFFF", "#FAFAFA", "#F9FAFB")
-                else f"rgba(15, 23, 42, 0.75)"
+                "rgba(255, 255, 255, 0.85)" if _relative_luminance(text) < 0.5
+                else "rgba(15, 23, 42, 0.75)"
             )
 
             # Motion style from playbook. `pace` is an identity field in the

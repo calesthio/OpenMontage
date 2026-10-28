@@ -183,7 +183,7 @@ def test_hyperframes_render_existing_preserves_authored_entry(tmp_path, monkeypa
     monkeypatch.setattr(tool, "_runtime_check", lambda: {"runtime_available": True})
     monkeypatch.setattr(tool, "_check", lambda inputs: ToolResult(success=True, data={"ok": True}))
 
-    def fake_run(args, *, cwd, timeout, check):
+    def fake_run(args, *, cwd, timeout, check, env=None):
         output = Path(args[args.index("--output") + 1])
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_bytes(b"rendered")

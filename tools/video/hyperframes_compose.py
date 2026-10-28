@@ -216,6 +216,34 @@ class HyperFramesCompose(BaseTool):
                 "default": False,
                 "description": "Save representative quality-check snapshots.",
             },
+            "render_timeout_s": {
+                "type": "integer",
+                "description": (
+                    "Hard wall-clock ceiling for the `hyperframes render` "
+                    "subprocess, in seconds. Overrides the duration-scaled "
+                    "default (and the HYPERFRAMES_RENDER_TIMEOUT_S env var). "
+                    "Used by render and render_existing."
+                ),
+            },
+            "chunked_encode": {
+                "type": "boolean",
+                "default": True,
+                "description": (
+                    "Encode captured frames in independently-finalized chunks "
+                    "concatenated with `-c copy`, rather than one monolithic "
+                    "ffmpeg run. Far more resilient for long compositions. Set "
+                    "false to restore the CLI's monolithic-encode default."
+                ),
+            },
+            "chunk_size_frames": {
+                "type": "integer",
+                "minimum": 120,
+                "description": (
+                    "Frames per encode chunk when chunked_encode is on "
+                    "(default 600, ~20s at 30fps). Smaller recovers faster "
+                    "from a stall but adds concat overhead."
+                ),
+            },
         },
     }
 
@@ -248,6 +276,27 @@ class HyperFramesCompose(BaseTool):
     # (get_info spam from the registry) are free.
     _npm_resolve_cache: Optional[dict[str, str]] = None
     _cli_probe_cache: Optional[dict[str, str]] = None
+
+    # ---- Render timeout -------------------------------------------------
+    # A long composition on the screenshot-capture path runs 3-4x realtime
+    # for frame capture plus a monolithic final encode — well over an hour
+    # for an 18-minute piece. The old flat 1800s ceiling SIGKILLed those
+    # renders mid-capture, leaving a truncated video-only.mp4 with no moov
+    # atom that the assemble stage then failed to probe. Scale the ceiling
+    # to the finished-video duration instead, with a floor and a runaway cap.
+    _RENDER_TIMEOUT_FLOOR_S = 3600        # never wait less than 1h
+    _RENDER_TIMEOUT_PER_OUTPUT_S = 12     # + 12s wall-clock per second of output
+    _RENDER_TIMEOUT_CEIL_S = 21600        # ...capped at 6h
+    # Override precedence: inputs["render_timeout_s"] > env > duration-scaled.
+    _RENDER_TIMEOUT_ENV = "HYPERFRAMES_RENDER_TIMEOUT_S"
+
+    # ---- Chunked encode ----------------------------------------------------
+    # Encode the captured frames in independently-finalized chunks that are
+    # concatenated with `-c copy`, instead of one monolithic ffmpeg run. A
+    # stalled or slow encode can no longer orphan the whole output file, and
+    # each chunk stays inside ffmpeg's own per-process timeout. Consumed by
+    # the HyperFrames CLI via these env vars (PRODUCER_* engine config).
+    _CHUNK_SIZE_FRAMES_DEFAULT = 600      # ~20s chunks at 30fps (CLI min is 120)
 
     @classmethod
     def _node_major_version(cls) -> Optional[int]:
@@ -837,9 +886,18 @@ class HyperFramesCompose(BaseTool):
             "--fps", str(fps),
             "--quality", quality,
         ]
-        proc = self._run_hf(args, cwd=workspace, timeout=1800, check=False)
+        duration_s = None
+        if isinstance(scaffold.data, dict):
+            duration_s = scaffold.data.get("total_duration_seconds")
+        render_timeout = self._render_timeout_s(inputs, duration_s)
+        render_env = self._render_env(inputs)
+        proc = self._run_hf(
+            args, cwd=workspace, timeout=render_timeout, check=False, env=render_env
+        )
         steps["render"] = {
             "exit_code": proc.returncode,
+            "timeout_s": render_timeout,
+            "engine_env": render_env,
             "stdout_tail": (proc.stdout or "")[-4000:],
             "stderr_tail": (proc.stderr or "")[-4000:],
         }
@@ -935,9 +993,17 @@ class HyperFramesCompose(BaseTool):
             "--quality", quality,
             "--strict",
         ]
-        proc = self._run_hf(args, cwd=workspace, timeout=1800, check=False)
+        duration_s = self._authored_duration_s(entry)
+        render_timeout = self._render_timeout_s(inputs, duration_s)
+        render_env = self._render_env(inputs)
+        proc = self._run_hf(
+            args, cwd=workspace, timeout=render_timeout, check=False, env=render_env
+        )
         steps["render"] = {
             "exit_code": proc.returncode,
+            "timeout_s": render_timeout,
+            "engine_env": render_env,
+            "authored_duration_s": duration_s,
             "stdout_tail": (proc.stdout or "")[-4000:],
             "stderr_tail": (proc.stderr or "")[-4000:],
         }
@@ -1346,6 +1412,78 @@ class HyperFramesCompose(BaseTool):
     # Utilities
     # ------------------------------------------------------------------
 
+    def _render_timeout_s(
+        self, inputs: dict[str, Any], duration_s: Optional[float]
+    ) -> int:
+        """Resolve the `hyperframes render` subprocess timeout.
+
+        Precedence: explicit ``render_timeout_s`` input > env override >
+        duration-scaled estimate > floor.
+        """
+        override = inputs.get("render_timeout_s")
+        if override is None:
+            override = os.environ.get(self._RENDER_TIMEOUT_ENV)
+        if override is not None:
+            try:
+                val = int(float(override))
+                if val > 0:
+                    return val
+                log.warning("ignoring non-positive render timeout override: %r", override)
+            except (TypeError, ValueError):
+                log.warning("ignoring non-numeric render timeout override: %r", override)
+        if duration_s and duration_s > 0:
+            scaled = int(duration_s * self._RENDER_TIMEOUT_PER_OUTPUT_S)
+            return max(
+                self._RENDER_TIMEOUT_FLOOR_S,
+                min(scaled, self._RENDER_TIMEOUT_CEIL_S),
+            )
+        return self._RENDER_TIMEOUT_FLOOR_S
+
+    def _render_env(self, inputs: dict[str, Any]) -> dict[str, str]:
+        """Engine-config env vars for the render subprocess.
+
+        Chunked encode is on by default: it makes long renders resilient to
+        a stalled monolithic encode (which previously left a headerless
+        video-only.mp4 that broke the assemble stage).
+        """
+        env: dict[str, str] = {}
+        if inputs.get("chunked_encode", True):
+            size = inputs.get("chunk_size_frames") or self._CHUNK_SIZE_FRAMES_DEFAULT
+            try:
+                size = max(120, int(size))
+            except (TypeError, ValueError):
+                size = self._CHUNK_SIZE_FRAMES_DEFAULT
+            # The CLI's envBool accepts ONLY the exact string "true".
+            env["PRODUCER_ENABLE_CHUNKED_ENCODE"] = "true"
+            env["PRODUCER_CHUNK_SIZE_FRAMES"] = str(size)
+        return env
+
+    @staticmethod
+    def _authored_duration_s(entry: Path) -> Optional[float]:
+        """Best-effort finished-video duration from an authored index.html.
+
+        Reads the root composition's ``data-duration`` (attribute order
+        tolerant); falls back to the largest ``data-duration`` on the page.
+        Returns None if nothing parseable is found.
+        """
+        try:
+            html = entry.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            return None
+        root = re.search(
+            r'data-composition-id="root"[^>]*?data-duration="([\d.]+)"'
+            r'|data-duration="([\d.]+)"[^>]*?data-composition-id="root"',
+            html,
+        )
+        if root:
+            raw = root.group(1) or root.group(2)
+            try:
+                return float(raw)
+            except (TypeError, ValueError):
+                pass
+        vals = [float(m) for m in re.findall(r'data-duration="([\d.]+)"', html)]
+        return max(vals) if vals else None
+
     def _run_hf(
         self,
         args: list[str],
@@ -1353,12 +1491,16 @@ class HyperFramesCompose(BaseTool):
         cwd: Optional[Path],
         timeout: int,
         check: bool,
+        env: Optional[dict[str, str]] = None,
     ) -> subprocess.CompletedProcess:
         """Invoke `npx hyperframes <args>` with the right Windows quirks.
 
         We intentionally bypass `self.run_command` here because we do NOT
         want to raise CalledProcessError on non-zero exits — the caller
         parses lint/validate/render exit codes itself.
+
+        ``env``, when given, is merged over (not replacing) the current
+        environment so the child still inherits PATH etc.
         """
         cmd = ["npx", "--yes", "hyperframes", *args]
         # On Windows, resolve the .cmd wrapper so subprocess can find it
@@ -1367,6 +1509,7 @@ class HyperFramesCompose(BaseTool):
             resolved = shutil.which(cmd[0])
             if resolved:
                 cmd[0] = resolved
+        run_env = {**os.environ, **env} if env else None
         try:
             return subprocess.run(
                 cmd,
@@ -1375,6 +1518,7 @@ class HyperFramesCompose(BaseTool):
                 timeout=timeout,
                 cwd=str(cwd) if cwd else None,
                 check=False,
+                env=run_env,
             )
         except subprocess.TimeoutExpired as e:
             # Surface timeouts as a failed CompletedProcess so callers get a

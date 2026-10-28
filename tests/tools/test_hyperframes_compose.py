@@ -398,7 +398,7 @@ def test_hyperframes_render_resolves_relative_output_path_once(tmp_path, monkeyp
     monkeypatch.setattr(tool, "_lint", lambda inputs: ToolResult(success=True, data={}))
     monkeypatch.setattr(tool, "_validate", lambda inputs: ToolResult(success=True, data={}))
 
-    def run_render(args, *, cwd, timeout, check):
+    def run_render(args, *, cwd, timeout, check, env=None):
         output = Path(args[args.index("--output") + 1])
         rendered_output = output if output.is_absolute() else cwd / output
         rendered_output.parent.mkdir(parents=True, exist_ok=True)

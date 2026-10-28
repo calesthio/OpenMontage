@@ -1357,3 +1357,77 @@ class TestCustomWorkflowSelectorEligibility:
                 "workflow_model_stack",
             ):
                 assert field in props, f"{selector.name} missing {field}"
+
+
+class TestCompactExecutionError:
+    """Issue #615: surface one actionable line instead of raw message dumps."""
+
+    _EXEC_ERROR_MESSAGES = [
+        "execution_interrupt",
+        [
+            "execution_error",
+            {
+                "prompt_id": "abc",
+                "node_id": "3",
+                "node_type": "KSampler",
+                "exception_type": "ValueError",
+                "exception_message": "expected float tensor\n<hundreds of lines of latent tensor repr>",
+                "traceback": ["tb line 1", "tb line 2"],
+            },
+        ],
+    ]
+
+    def test_extracts_node_type_and_first_line(self):
+        from tools._comfyui.client import compact_execution_error
+
+        text = compact_execution_error(self._EXEC_ERROR_MESSAGES)
+        assert text == "KSampler: ValueError: expected float tensor"
+        assert "latent tensor repr" not in text
+
+    def test_falls_back_to_node_id_when_node_type_missing(self):
+        from tools._comfyui.client import compact_execution_error
+
+        msgs = [["execution_error", {"node_id": "7", "exception_message": "boom"}]]
+        assert compact_execution_error(msgs) == "7: Error: boom"
+
+    def test_truncates_at_limit(self):
+        from tools._comfyui.client import compact_execution_error
+
+        msgs = [["execution_error", {"node_type": "N", "exception_message": "x" * 5000}]]
+        assert len(compact_execution_error(msgs)) == 1500
+        assert len(compact_execution_error(msgs, limit=50)) == 50
+
+    def test_non_exec_error_payloads_json_fallback(self):
+        from tools._comfyui.client import compact_execution_error
+
+        assert compact_execution_error("plain string") == "plain string"
+        text = compact_execution_error([["other_event", {"k": "v"}]])
+        assert "other_event" in text
+
+    def test_history_entry_raises_compact_error_with_prompt_id(self, monkeypatch):
+        from tools._comfyui import client as client_module
+        from tools._comfyui.client import ComfyUIClient, ComfyUIError
+
+        class FakeResponse:
+            def raise_for_status(self):
+                return None
+
+            def json(self):
+                return {
+                    "abc": {
+                        "status": {
+                            "status_str": "error",
+                            "messages": TestCompactExecutionError._EXEC_ERROR_MESSAGES,
+                        }
+                    }
+                }
+
+        monkeypatch.setattr(
+            "tools._comfyui.client.requests.get", lambda *a, **k: FakeResponse()
+        )
+        c = ComfyUIClient("http://localhost:8188")
+        with pytest.raises(ComfyUIError) as exc_info:
+            c._history_entry("abc")
+        assert exc_info.value.prompt_id == "abc"
+        assert "KSampler: ValueError: expected float tensor" in str(exc_info.value)
+        assert "latent tensor repr" not in str(exc_info.value)

@@ -6,12 +6,22 @@ All HTTP calls are mocked.  This suite must never create a paid task.
 from __future__ import annotations
 
 import base64
+import json
 import wave
 
 import pytest
 
+from lib.seedance_config import SeedanceConfigError
 from tools.base_tool import BaseTool, ToolRuntime, ToolStatus
 from tools.video.seedance_ark import SeedanceArkVideo
+
+
+@pytest.fixture(autouse=True)
+def _isolate_seedance_config(monkeypatch, tmp_path):
+    """Keep developer credentials from changing contract-test model behavior."""
+    monkeypatch.setenv("SEEDANCE_CONFIG_PATH", str(tmp_path / "seedance-missing.json"))
+    for name in ("ARK_BASE_URL", "ARK_SEEDANCE_MODEL"):
+        monkeypatch.delenv(name, raising=False)
 
 
 class _FakeResponse:
@@ -47,11 +57,52 @@ class TestContract:
         assert tool.supports["reference_to_video"] is True
         assert "env:ARK_API_KEY" in tool.dependencies
 
-    def test_status_requires_ark_api_key(self, monkeypatch):
+    def test_status_requires_ark_api_key(self, monkeypatch, tmp_path):
         monkeypatch.delenv("ARK_API_KEY", raising=False)
+        monkeypatch.setenv("SEEDANCE_CONFIG_PATH", str(tmp_path / "missing.json"))
         assert SeedanceArkVideo().get_status() == ToolStatus.UNAVAILABLE
         monkeypatch.setenv("ARK_API_KEY", "fake-ark-key")
         assert SeedanceArkVideo().get_status() == ToolStatus.AVAILABLE
+
+    def test_status_uses_local_seedance_config(self, monkeypatch, tmp_path):
+        config_path = tmp_path / "config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "api_key": "ark-config-key",
+                    "api_base": "https://ark.config.example/api/v3",
+                    "video_model": "doubao-seedance-2-5-260628",
+                }
+            ),
+            encoding="utf-8",
+        )
+        monkeypatch.delenv("ARK_API_KEY", raising=False)
+        monkeypatch.delenv("ARK_BASE_URL", raising=False)
+        monkeypatch.delenv("ARK_SEEDANCE_MODEL", raising=False)
+        monkeypatch.setenv("SEEDANCE_CONFIG_PATH", str(config_path))
+
+        tool = SeedanceArkVideo()
+
+        assert tool.get_status() == ToolStatus.AVAILABLE
+        assert tool._get_api_key() == "ark-config-key"
+        assert tool._get_base_url() == "https://ark.config.example/api/v3"
+        assert tool._resolve_model({}) == ("doubao-seedance-2-5-260628", "2.5")
+
+    def test_malformed_local_config_error_does_not_include_key(
+        self, monkeypatch, tmp_path
+    ):
+        config_path = tmp_path / "config.json"
+        config_path.write_text(
+            '{"api_key": "ark-sensitive-value",}',
+            encoding="utf-8",
+        )
+        monkeypatch.delenv("ARK_API_KEY", raising=False)
+        monkeypatch.setenv("SEEDANCE_CONFIG_PATH", str(config_path))
+
+        with pytest.raises(SeedanceConfigError) as caught:
+            SeedanceArkVideo()._get_api_key()
+
+        assert "ark-sensitive-value" not in str(caught.value)
 
     def test_official_model_ids(self):
         assert SeedanceArkVideo.MODEL_IDS == {

@@ -340,6 +340,14 @@ Want more? See the full **[Prompt Gallery](PROMPT_GALLERY.md)** for tested promp
 
 ## Pipelines
 
+### Product scenes with Volcengine Ark
+
+The `seedance-product-scene` pipeline turns one product image into four style
+previews, then 1–3 user-selected packages with three Seedream images, a
+three-shot Seedance video, three Codex-authored copy variants, and one approved
+Pixabay track. Every creative choice stops at a human gate. See
+[`docs/seedance-product-scene.md`](docs/seedance-product-scene.md).
+
 Each pipeline is a complete production workflow, from idea to finished video.
 
 | Pipeline | What It Produces | Best For |

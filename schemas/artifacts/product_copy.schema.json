@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/product_copy",
+  "title": "Product Copy",
+  "description": "Codex-generated product marketing copy with three variants per selected style.",
+  "type": "object",
+  "required": [
+    "version",
+    "product_name",
+    "generation_source",
+    "assumptions",
+    "styles"
+  ],
+  "properties": {
+    "version": { "type": "string", "const": "1.0" },
+    "product_name": { "type": "string", "minLength": 1 },
+    "generation_source": {
+      "type": "string",
+      "const": "codex_active_session"
+    },
+    "assumptions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "styles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["style", "variants"],
+        "properties": {
+          "style": {
+            "type": "string",
+            "enum": ["luxury", "nature", "tech", "office"]
+          },
+          "variants": {
+            "type": "object",
+            "required": ["grassroots", "premium", "conversion"],
+            "properties": {
+              "grassroots": { "$ref": "#/$defs/copy_variant" },
+              "premium": { "$ref": "#/$defs/copy_variant" },
+              "conversion": { "$ref": "#/$defs/copy_variant" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "copy_variant": {
+      "type": "object",
+      "required": ["title", "subtitle", "highlights", "social_copy"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "subtitle": { "type": "string", "minLength": 1 },
+        "highlights": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 4,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "social_copy": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    }
+  }
+}

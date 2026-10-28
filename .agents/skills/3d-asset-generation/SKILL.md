@@ -1,6 +1,6 @@
 ---
 name: 3d-asset-generation
-description: Generate, reconstruct, inspect, and route production 3D assets for OpenMontage worlds using Atlas Cloud, fal.ai, licensed catalogs, and Blender.
+description: Generate, reconstruct, rig, inspect, and route production 3D assets for OpenMontage worlds using Atlas Cloud, fal.ai, licensed catalogs, and Blender.
 ---
 
 # 3D Asset Generation
@@ -17,6 +17,7 @@ this skill owns how unique and repeated meshes enter the world with provenance.
 | Unique object described in words | `atlas_3d` | `tripo-h3.1/text-to-3d` | Direct textured/PBR GLB with seeds and face limit |
 | Object matching a concept image | `fal_3d` | Hunyuan 3D v3.1 Rapid image-to-3D | Better silhouette/style conditioning from one image |
 | Several objects extracted from one regional composition | `fal_3d` | SAM 3D Objects | Individual and combined GLBs plus placement metadata |
+| Rig a humanoid character and get preset clips (walk, wave, idle) | `fal_rig` | Meshy auto-rigging + animation library via fal.ai | Skeleton-fitted GLB + FBX, walking/running basics, one clip per library ID; no Mixamo browser session |
 | Terrain, composition, lighting, camera, final frames | `blender_world` | Blender 4.5 LTS / Eevee Next | Scene-level control; generated-asset APIs are not world renderers |
 
 Never ask a text-to-3D model to generate a whole cinematic world in one mesh.
@@ -33,6 +34,8 @@ a batch. As of 2026-08-13:
   textures; detailed geometry adds $0.22; quad mesh adds $0.055.
 - fal Hunyuan 3D v3.1 Rapid: $0.225 per generation; PBR adds $0.15.
 - fal SAM 3D Objects: $0.02 per reconstruction.
+- fal Meshy rigging (multi-animation): $0.20 per request plus $0.12 per distinct
+  animation clip (3 clips = $0.56); checked 2026-10-11.
 
 Pricing changes. Confirm the provider page before quoting or running a batch.
 
@@ -48,6 +51,18 @@ Each request describes one isolated object, not a shot:
 
 For image-to-3D, use a simple background and make the object occupy more than
 half the frame. Request PBR only for assets close enough to benefit from it.
+
+## Rigging a humanoid character
+
+`fal_rig` takes a T- or A-pose humanoid GLB (Hunyuan, Meshy or Trellis output, local path or
+URL) and returns the rigged mesh as GLB + FBX, the walking/running basics, and one clip per
+`animation_action_ids` entry. IDs are Meshy animation-library IDs (0-696, at most 10 distinct per
+call, de-duplicated and billed once; catalog at https://docs.meshy.ai/en/api/animation-library);
+`fal_rig.PRESETS` names the common ones (`idle` 0, `walk` 30, `walk_inplace` 613, `wave_hello` 28)
+and the `*_inplace` variants are for scenes that key the character's position themselves.
+Humanoid only: animals, vehicles and multi-limbed characters are rejected, and the rig carries
+no facial animation. Pass `height_meters` so locomotion is scaled to the character, and import
+the FBX into Blender before batching a cast.
 
 ## Mandatory mesh QA
 

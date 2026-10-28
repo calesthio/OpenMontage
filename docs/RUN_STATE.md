@@ -43,3 +43,6 @@
 | K5c | BLOCKED | Замеры: длина видео, слов/мин, средняя длина главы/блока мысли → `docs/openmontage/research/competitor_notes.md` | — |
 | K5d | BLOCKED | Сравнение с pilot-final.mp4 (1099.8 с, 78 битов по 12-18 с), вывод числами о корректировке темпа | — |
 | K5e | BLOCKED | Рекомендация числами владельцу; shot_list.json не меняется без подтверждения | — |
+| S13 | DONE | Категория A инфраструктура: `scripts/audit_pilot_artifacts.py` (PASS: 78 кадров, 10 аудио, 324 субтитров, 7 контакт-листов, mastered_full.wav), `scripts/assemble_pilot_final.py` (canonical, без hardcoded /tmp путей), `scripts/package_youtube.py` (youtube_package.json с 5 заголовками, 19 тегами, 10 главами), `tools/qa/qc_pilot_final.py` (ffprobe, full_decode, blackdetect, silencedetect, ebur128) | 2026-10-28 |
+| S14 | DONE | `projects/pilot/` структура: frames/, audio/, subtitles/, manifests/, rights/, output/ | 2026-10-28 |
+| S15 | DONE | `docs/PROJECT_PLAN.md` раздел 13 "Путь к автономной фабрике": категории A (агент сам), B (одно решение владельца → агент), C (постоянное участие владельца, никогда не автоматизируется) | 2026-10-28 |

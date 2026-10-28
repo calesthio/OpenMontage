@@ -1,5 +1,9 @@
 {
   "$schema": "https://app.kilo.ai/config.json",
+  // Ponytail (DietrichGebert/ponytail, MIT, v5.3.2): lazy senior dev mode.
+  // Active for code-editing tasks only; NOT for research/testing/model tasks.
+  // Enable per-session with /ponytail full; default mode is off.
+  "plugin": ["@dietrichgebert/ponytail"],
   "autoApproval": {
     "enabled": true,
     "read": {

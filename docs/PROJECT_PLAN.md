@@ -558,6 +558,18 @@ Job-файл на базе проверенного baseline с `model_config` �
 | code-reviewer | Синтаксис YAML frontmatter | ✅ Валидно |
 | plan-keeper | Синтаксис YAML frontmatter | ✅ Валидно |
 
+### 11.4 Плагин Ponytail (DietrichGebert/ponytail, MIT, v5.3.2)
+
+**Установлено:** `{ "plugin": ["@dietrichgebert/ponytail"] }` в `.kilo/kilo.jsonc` (официальный способ для Kilo/OpenCode, см. INSTALL.md репозитория ponytail).
+
+**Версия:** 5.3.2 (закреплена, не latest). Источник: `DietrichGebert/ponytail` на GitHub, лицензия MIT (подтверждена по официальному LICENSE-файлу).
+
+**Техническое поветие:** плагин добавляет `hooks/` (JS lifecycle хуки: `pre_llm_call`, `pre_gateway_dispatch`) и `skills/` (6 навыков: ponytail, ponytail-review, ponytail-audit, ponytail-debt, ponytail-gain, ponytail-help). При активном режиме хук `pre_llm_call` инжектит содержимое `skills/ponytail/SKILL.md` в контекст перед каждым вызовом LLM. Сетевой доступ в рантайме не требуется — все файлы локальные. Скриптов при установке не выполняется.
+
+**Область применения:** только задачи редактирования существующего кода (точечные правки, рефакторинг, ревью диффа). НЕ для исследовательских задач (тестирование моделей, написание новых Kaggle-пайплайнов, изучение новых инструментов). Режим по умолчанию: `off` (`~/.config/ponytail/config.json` с `{"defaultMode": "off"}`). Включается вручную для сессии редактирования кодом: `/ponytail full`.
+
+**Не включать обязательно для всех задач.**
+
 ---
 
 ## 12. Что проверить первым делом в следующей сессии

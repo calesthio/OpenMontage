@@ -34,6 +34,16 @@ def filter_explicit_route(inputs, candidates):
                 if operation == "generate" and tool.capability == "video_generation"
                 else operation
             )
+            if tool.capability == "image_generation":
+                if normalized == "generate" and "text_to_image" in model_routes:
+                    has_references = any(inputs.get(key) for key in (
+                        "image_url", "image_urls", "image_path", "image_paths"
+                    ))
+                    normalized = "image_to_image" if has_references else "text_to_image"
+                elif normalized == "edit" and "image_to_image" in model_routes:
+                    normalized = "image_to_image"
+            if normalized == "video_edit" and "video_to_video_edit" in model_routes:
+                normalized = "video_to_video_edit"
             if normalized not in model_routes:
                 continue
         if tool.capability == "image_generation":

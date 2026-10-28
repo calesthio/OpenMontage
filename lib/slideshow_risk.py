@@ -235,9 +235,12 @@ def _score_cinematic_claims(
     if hero_count == 0:
         issues.append("Claims cinematic but has no hero_moment defined")
 
+    # Same non-moving values as _score_weak_motion: "unspecified" and an explicit
+    # null are not camera movement, so they must not back a cinematic claim.
     has_movement = sum(
         1 for s in scenes
-        if s.get("shot_language", {}).get("camera_movement", "static") != "static"
+        if s.get("shot_language", {}).get("camera_movement", "static")
+        not in ("static", "unspecified", None)
     )
     if has_movement < len(scenes) * 0.3:
         issues.append(f"Claims cinematic but only {has_movement}/{len(scenes)} scenes have camera movement")

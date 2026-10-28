@@ -48,7 +48,7 @@ def test_delayed_track_fades_use_the_source_timeline(tmp_path, monkeypatch, oper
     ffmpeg_cmd = next(cmd for cmd in commands if cmd[0] == "ffmpeg")
     filter_graph = ffmpeg_cmd[ffmpeg_cmd.index("-filter_complex") + 1]
     assert (
-        "afade=t=in:d=0.25,afade=t=out:st=1.5:d=0.5,adelay=1000|1000"
+        "afade=t=in:d=0.25,afade=t=out:st=1.5:d=0.5,adelay=1000:all=1"
         in filter_graph
     )
 

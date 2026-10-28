@@ -121,3 +121,66 @@ def test_sora_video_executes_with_current_create_and_poll_sdk_surface(monkeypatc
     assert calls["payload"]["model"] == "sora-2"
     assert calls["payload"]["seconds"] == "4"
     assert calls["download"] == ("video_test", "video")
+
+
+def test_sora_video_image_to_video_sends_input_reference_as_file_upload(monkeypatch, tmp_path):
+    """input_reference must be an SDK file upload, not a dict.
+
+    The OpenAI SDK rejects a dict for this multipart field with
+    "Expected entry at `input_reference` to be bytes, an io.IOBase instance,
+    PathLike or a tuple", so image_to_video failed for every caller.
+    """
+    from tools.video.sora_video import SoraVideo
+
+    calls = {}
+
+    class FakeContent:
+        def write_to_file(self, path):
+            Path(path).write_bytes(b"fake mp4")
+
+    class FakeVideo:
+        id = "video_test"
+        status = "completed"
+
+    class FakeVideos:
+        def create_and_poll(self, **payload):
+            calls["payload"] = payload
+            return FakeVideo()
+
+        def download_content(self, video_id, variant):
+            return FakeContent()
+
+    class FakeOpenAI:
+        def __init__(self):
+            self.videos = FakeVideos()
+
+    fake_openai = types.ModuleType("openai")
+    fake_openai.__version__ = "2.44.0"
+    fake_openai.OpenAI = FakeOpenAI
+    monkeypatch.setitem(sys.modules, "openai", fake_openai)
+    monkeypatch.setenv("OPENAI_API_KEY", "test-openai-key")
+
+    reference = tmp_path / "seed.png"
+    reference.write_bytes(b"\x89PNG\r\n\x1a\nfake-png-bytes")
+    output_path = tmp_path / "sample.mp4"
+
+    result = SoraVideo().execute(
+        {
+            "operation": "image_to_video",
+            "input_reference_path": str(reference),
+            "prompt": "The illustration comes to life",
+            "model": "sora-2",
+            "size": "1280x720",
+            "seconds": "4",
+            "output_path": str(output_path),
+        }
+    )
+
+    assert result.success, result.error
+    sent = calls["payload"]["input_reference"]
+    assert not isinstance(sent, dict), "input_reference must not be a dict; the SDK rejects it"
+    assert isinstance(sent, tuple) and len(sent) == 3
+    filename, payload_bytes, mime = sent
+    assert filename == "seed.png"
+    assert payload_bytes == reference.read_bytes()
+    assert mime == "image/png"

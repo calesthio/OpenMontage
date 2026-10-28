@@ -31,6 +31,21 @@ class TestGuardBlocksOutbound:
         with pytest.raises(Exception):
             requests.get("https://api.atlascloud.ai/api/v1/model/prediction/x", timeout=5)
 
+    def test_requests_blocked_even_with_loopback_proxy_in_play(self, monkeypatch):
+        """Issue #722 regression: a loopback proxy must not tunnel past the guard.
+
+        A proxy whose TCP peer is 127.0.0.1 (env-set here; a macOS system
+        proxy in the wild) passes the loopback rule, so the guard waved the
+        connection through and the proxy forwarded TLS to the real provider.
+        The session fixture must keep proxy discovery dead.
+        """
+        requests = pytest.importorskip("requests")
+        monkeypatch.setenv("HTTPS_PROXY", "http://127.0.0.1:9")
+        monkeypatch.setenv("https_proxy", "http://127.0.0.1:9")
+        with pytest.raises(Exception) as exc:
+            requests.get("https://api.atlascloud.ai/api/v1/model/prediction/x", timeout=5)
+        assert "Blocked a network connection" in str(exc.value)
+
     def test_loopback_still_permitted(self):
         """Local servers and fixtures must keep working."""
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

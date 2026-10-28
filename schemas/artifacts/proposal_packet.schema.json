@@ -66,7 +66,7 @@
     },
     "production_plan": {
       "type": "object",
-      "required": ["pipeline", "stages", "render_runtime"],
+      "required": ["pipeline", "stages"],
       "properties": {
         "pipeline": { "type": "string", "description": "Pipeline manifest name, e.g., 'animated-explainer'" },
         "playbook": { "type": "string", "description": "Selected style playbook" },
@@ -374,5 +374,24 @@
       "additionalProperties": false
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "approval": {
+            "properties": {
+              "status": { "enum": ["approved", "approved_with_changes"] }
+            },
+            "required": ["status"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "production_plan": { "required": ["render_runtime"] }
+        }
+      }
+    }
+  ],
   "additionalProperties": false
 }

@@ -6,13 +6,15 @@
 ## Внешность (фиксируется на этапе K1, выбирается владельцем из 8 кандидатов)
 - Пол: не указать явно (нейтральный, обратимый)
 - Волосы: короткие, нейтрального оттенка
-- Одежда: простая, без логотипов и надписей, светлый нейтральный цвет
+- Одежда: простая, без логотипов и надписей, светлый нейтральный цвет; плоская заливка как основа, но с лёгкой текстурой пятён потёртости (грязь, царапины, следы использования) на одежде только — не на коже/лице/фоне
+- Пропорции: чиби — голова заметно крупнее тела (примерно 1:2), короткие конечности
+- Глаза: крупные, круглые, с явным бликом (highlight), простая читаемая мимика — не точки
 - Фон: светлый нейтральный (серый / бежевый / оффвайт), без деталей
 - Размер кадра: 1280×720
 
 ## Текст персонажа (используется в K3, если ведущий в кадре)
 Фиксированный блок, вставляется в каждый промпт K3 вместе со сценой раздела:
-" neutral host character, short hair, simple neutral clothing, light neutral background, thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration "
+" neutral host character, short hair, simple neutral clothing with light wear texture (dirt, scratches, signs of use) on fabric only, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration, chibi proportions head larger than body roughly 1:2 short limbs, large round expressive eyes with visible highlight, simple readable facial expression not dots, light neutral background without details "
 
 ## Ограничения
 - Никаких фотографических деталей, кожи с порами, реалистичного освещения

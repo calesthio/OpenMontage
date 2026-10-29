@@ -127,6 +127,7 @@ stages:
       - diagram_gen
       - code_snippet
       - music_gen
+      - modelrunner_music
       - audio_enhance
     tools_available:
       - subtitle_gen
@@ -136,6 +137,7 @@ stages:
       - diagram_gen
       - code_snippet
       - music_gen
+      - modelrunner_music
       - audio_enhance
     checkpoint_required: true
     human_approval_default: true

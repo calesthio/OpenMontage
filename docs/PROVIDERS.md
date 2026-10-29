@@ -81,6 +81,7 @@ AZURE_SPEECH_REGION=         # Speech resource region, e.g. eastus
 FAL_KEY=                     # FLUX, Recraft, Kling, Veo, MiniMax video
 MINIMAX_API_KEY=             # MiniMax first-party image + MiniMax H3 video generation
 ATLASCLOUD_API_KEY=          # Atlas Cloud image/video gateway
+MODELRUNNER_KEY=             # ModelRunner video + image + TTS + music gateway
 
 # KLING OFFICIAL DIRECT API
 KLING_API_KEY=               # Official Kling video, image, TTS, avatar, lip sync
@@ -453,6 +454,43 @@ suffixes or parameter names as interchangeable.
 Inspect `get_info()["model_catalog"]` for exact IDs, operations, media shapes,
 durations, and resolutions. Prices are estimates sourced from each model's
 machine-readable Atlas page and should be reconfirmed before a paid batch.
+
+---
+
+### ModelRunner — Video, Image, TTS, and Music Gateway
+
+**Tools:** `modelrunner_video`, `modelrunner_image`, `modelrunner_tts`, `modelrunner_music`
+**Env var:** `MODELRUNNER_KEY` (aliases: `MODELRUNNER_API_KEY`, `MRUN_API_KEY`)
+**Skill:** `.agents/skills/modelrunner/SKILL.md`
+
+ModelRunner ([modelrunner.ai](https://modelrunner.ai)) exposes hosted model
+families through one key and one async queue contract, covering all four
+generation capabilities (video, image, TTS, music). OpenMontage encodes
+each route's real schema and rate table; several video routes bill per second
+at a rate that depends on the chosen `resolution`, so the tables keep both
+tiers visible.
+
+| Route | Capability | Current ModelRunner rate |
+|---|---|---:|
+| Wan 2.7 text/image to video (audio included) | video | $0.10/sec @720P, $0.15/sec @1080P |
+| Happy Horse 1.1 text to video (lip-synced dialogue) | video | $0.14/sec @720P, $0.18/sec @1080P |
+| Seedance 2.0 Mini text/image to video (budget tier) | video | $0.053/sec @480p, $0.113/sec @720p |
+| Seedream 5.0 Lite / Pro text to image | image | $0.035 flat / $0.045–0.09 by size |
+| Recraft V4.1 / V4.1 Pro text to image | image | $0.035 / $0.21 per image |
+| Stable Diffusion 3.5 Large | image | $0.065 per output megapixel |
+| Kokoro-82M TTS (46 voices, 6 languages) | tts | GPU compute time — fractions of a cent per clip |
+| Gemini 3.1 Flash TTS (directable delivery) | tts | $0.0006 per audio second |
+| ElevenLabs Multilingual v2 / Chatterbox Multilingual | tts | $0.0015 / $0.000375 per audio second |
+| Lyria 2 / Lyria 3 Clip (~30s music) | music | $0.06 / $0.04 per clip |
+| Stable Audio 2.5 (1–190s music and ambience) | music | $0.20 per generation |
+
+Inspect each tool's `get_info()["model_catalog"]` for exact endpoint ids,
+rate tables, durations, sizes, and voices. A request can report COMPLETED and
+still carry an error (a normalized provider failure); the tools treat that as
+failure, and a post-submit failure returns the request id and status URL with
+`billing_status: "possibly_billed"` instead of pretending the spend didn't
+happen. Rates were verified 2026-08-28 — reconfirm on the live model page
+before a paid batch.
 
 ---
 
@@ -1449,6 +1487,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **fish.audio** | `FISH_AUDIO_API_KEY` | `fish_audio_tts` | Free tier (s2.1-pro-free) + paid |
 | **fal.ai** | `FAL_KEY` | `flux_image`, `recraft_image`, `kling_video`, `veo_video`, `seedance_video`, `gemini_omni_fal`, `minimax_fal_video` | Pay-as-you-go |
 | **Atlas Cloud** | `ATLASCLOUD_API_KEY` | `atlas_image`, `atlas_video` | Pay-as-you-go |
+| **ModelRunner** | `MODELRUNNER_KEY` | `modelrunner_video`, `modelrunner_image`, `modelrunner_tts`, `modelrunner_music` | Pay-as-you-go |
 | **Kling Official** | `KLING_API_KEY` | `kling_official_video`, `kling_official_image`, `kling_tts`, `kling_avatar`, `kling_lip_sync` | Pay-as-you-go |
 | **Volcengine Ark** | `ARK_API_KEY` | `seedance_ark` | Pay-as-you-go |
 | **MiniMax direct** | `MINIMAX_API_KEY` | `minimax_image`, `minimax_video` | Pay-as-you-go |
@@ -1472,10 +1511,10 @@ How many providers cover each capability:
 
 | Capability | Cloud Providers | Local Providers | Free Options |
 |-----------|----------------|-----------------|--------------|
-| **Image Generation** | FLUX, Kling Official, Grok, Google Imagen, GPT Image 2, Recraft | Local Diffusion | Pexels, Pixabay (stock) |
-| **Video Generation** | Grok, Kling Official, fal.ai, Seedance via Volcengine Ark, Runway, Veo, Gemini Omni, Higgsfield, MiniMax, HeyGen, Tencent Hunyuan, ComfyUI Partner Nodes | WAN, Hunyuan, CogVideo, LTX, ComfyUI WAN, ComfyUI MiniMax H3 | Pexels, Pixabay (stock) |
-| **Text-to-Speech** | Azure AI Speech, ElevenLabs, fish.audio, Google TTS, Kling Official, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier, Azure free tier, fish.audio s2.1-pro-free |
-| **Music Generation** | ElevenLabs, Suno, Google Lyria | — | ElevenLabs free tier |
+| **Image Generation** | FLUX, Kling Official, Grok, Google Imagen, GPT Image 2, Recraft, ModelRunner (Seedream, Recraft, SD 3.5) | Local Diffusion | Pexels, Pixabay (stock) |
+| **Video Generation** | Grok, Kling Official, fal.ai, Seedance via Volcengine Ark, Runway, Veo, Gemini Omni, Higgsfield, MiniMax, HeyGen, Tencent Hunyuan, ModelRunner (Wan, Happy Horse, Seedance Mini), ComfyUI Partner Nodes | WAN, Hunyuan, CogVideo, LTX, ComfyUI WAN, ComfyUI MiniMax H3 | Pexels, Pixabay (stock) |
+| **Text-to-Speech** | Azure AI Speech, ElevenLabs, fish.audio, Google TTS, Kling Official, OpenAI, ModelRunner (Kokoro, Gemini TTS, ElevenLabs, Chatterbox) | Piper | Piper, Google free tier, ElevenLabs free tier, Azure free tier, fish.audio s2.1-pro-free |
+| **Music Generation** | ElevenLabs, Suno, Google Lyria, ModelRunner (Lyria, Stable Audio) | — | ElevenLabs free tier |
 | **Post-Production** | — | FFmpeg (compose, stitch, trim, mix, enhance, grade) | All free |
 | **Analysis** | — | WhisperX, Scene Detect, Frame Sampler, CLIP/BLIP-2 | All free |
 | **Enhancement** | — | Upscale, BG Remove, Face Enhance, Face Restore | All free |

@@ -32,6 +32,7 @@ from tools.base_tool import (
     ToolStatus,
     ToolTier,
 )
+from tools.graphics.local_diffusion import DEFAULT_MODEL
 
 
 class ImageGen(BaseTool):
@@ -241,7 +242,7 @@ class ImageGen(BaseTool):
         width = inputs.get("width", 512)
         height = inputs.get("height", 512)
         seed = inputs.get("seed")
-        model_id = inputs.get("model", "stabilityai/stable-diffusion-2-1-base")
+        model_id = inputs.get("model", DEFAULT_MODEL)
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
         dtype = torch.float16 if device == "cuda" else torch.float32

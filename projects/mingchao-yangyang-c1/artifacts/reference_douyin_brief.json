@@ -1,0 +1,73 @@
+{
+  "version": "1.0",
+  "source": {
+    "type": "url_metadata_only",
+    "url": "https://v.douyin.com/VO-L3VKu_0Y/",
+    "douyin_video_id": "7660619322873057764",
+    "author": "良阿公",
+    "published": "2026-07-10",
+    "download_status": "failed — Fresh cookies required; Edge cookie DB locked"
+  },
+  "content_analysis": {
+    "summary": "粉丝向鸣潮秧秧·玄翎上线竖屏情绪混剪。以杜牧《过华清宫》名句「霓裳一曲千峰上，尽日欢娱忘岁年」作 hook，借纣王/霓裳古典意象包装现代 3D 角色营销。",
+    "topics": ["鸣潮", "秧秧玄翎", "竖屏混剪", "古风文案", "角色上线"],
+    "target_audience": "抖音鸣潮玩家与二次元手游受众"
+  },
+  "structure_analysis": {
+    "total_scenes": 5,
+    "scenes": [
+      {"index": 1, "motion_type": "animated_still", "description": "黑场+古诗字幕定调"},
+      {"index": 2, "motion_type": "motion_clip", "description": "环境/宫殿大景 establishing"},
+      {"index": 3, "motion_type": "motion_clip", "description": "秧秧玄翎水中或光晕亮相"},
+      {"index": 4, "motion_type": "motion_clip", "description": "舞蹈/对视情绪高点+卡点"},
+      {"index": 5, "motion_type": "animated_still", "description": "hashtag/上线落版"}
+    ],
+    "pacing_profile": {"estimated_duration_s": 30, "style": "slow_burn_to_beat_drop"}
+  },
+  "style_profile": {
+    "color_palette": {
+      "primary_colors": ["deep black", "gold text", "teal character glow"],
+      "accent_colors": ["warm skin", "cyan particle"],
+      "overall_mood": "poetic, cinematic, vertical game fan edit"
+    },
+    "typography_observed": "细宋/明朝体古诗字幕，白金字，居中渐显",
+    "transition_types": ["fade", "dissolve", "beat_cut"],
+    "music_style": "古风器乐或钢琴前奏铺底，鼓点进入高燃段",
+    "production_quality": "prosumer fan edit",
+    "closest_playbook": "cinematic"
+  },
+  "five_aspect_breakdown": [
+    {
+      "shot_group": "S1 开场字幕",
+      "subject": "无角色 — 纯文字 hook",
+      "subject_motion": "N/A",
+      "scene": "全黑底；overlay「霓裳一曲千峰上」居中渐显；无 UI",
+      "spatial_framing": "竖屏满幅；文字 upper-center",
+      "camera": "locked-off；real-time；高对比低照度"
+    },
+    {
+      "shot_group": "S2–S4 角色高光",
+      "subject": "秧秧·玄翎；玄翎雀羽发饰；水墨风服装",
+      "subject_motion": "旋舞、回眸、水中起身；与镜头对视",
+      "scene": "游戏实录；宫殿/山峦夜景；粒子风效",
+      "spatial_framing": "MS→CU 交替；主体居中或 rule-of-thirds",
+      "camera": "游戏镜头；慢动作段落；浅景深光晕"
+    }
+  ],
+  "replication_guidance": {
+    "suggested_pipeline": "cinematic",
+    "key_elements_to_replicate": [
+      "古诗一句定调",
+      "无旁白纯 BGM",
+      "水中/光晕角色 reveal",
+      "青金电影调色",
+      "竖屏 9:16"
+    ],
+    "creative_differentiation_seeds": [
+      "使用机核实机演示素材而非二次搬运",
+      "更克制 dissolve，减少纣王话题梗",
+      "结尾落「玄翎上线」品牌字卡"
+    ],
+    "engagement_signal": "17.8万赞 · 3.4万转 · 3.1万藏"
+  }
+}

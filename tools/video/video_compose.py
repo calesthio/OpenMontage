@@ -1941,6 +1941,43 @@ class VideoCompose(BaseTool):
 
         return render_result
 
+    # CJK ranges — Han, kana, Hangul. Mirrors subtitle_gen's table.
+    _CJK_JOIN_RANGES = (
+        (0x3040, 0x30FF), (0x3400, 0x4DBF), (0x4E00, 0x9FFF),
+        (0xF900, 0xFAFF), (0xAC00, 0xD7AF), (0xFF00, 0xFFEF),
+    )
+
+    @classmethod
+    def _looks_cjk(cls, text: str) -> bool:
+        return any(
+            any(lo <= ord(ch) <= hi for lo, hi in cls._CJK_JOIN_RANGES)
+            for ch in text
+        )
+
+    def _apply_caption_script_defaults(self, props: dict[str, Any]) -> None:
+        """Set CJK caption spacing automatically so the documented path is correct.
+
+        `CaptionOverlay` joins tokens with a space by default and `Explainer`
+        pages them six at a time -- both right for space-delimited scripts, both
+        wrong for CJK, where a space between every character is visible damage.
+        An agent following compose-director.md has no way to know that, and the
+        skill never mentions these props. So detect the script here instead of
+        hoping every caller remembers.
+        """
+        captions = props.get("captions")
+        if not isinstance(captions, list) or not captions:
+            return
+        sample = "".join(
+            str(c.get("word", "")) for c in captions[:40] if isinstance(c, dict)
+        )
+        if not self._looks_cjk(sample):
+            return
+        # Only fill in what the caller did not decide explicitly.
+        if props.get("captionWordSeparator") is None:
+            props["captionWordSeparator"] = ""
+        if props.get("captionWordsPerPage") is None:
+            props["captionWordsPerPage"] = 14
+
     def _remotion_render(self, inputs: dict[str, Any]) -> ToolResult:
         """Render via Remotion (requires Node.js + npx).
 
@@ -1968,6 +2005,7 @@ class VideoCompose(BaseTool):
 
         # Deep-copy props so we don't mutate the original
         props = json.loads(json.dumps(composition_data))
+        self._apply_caption_script_defaults(props)
 
         # Build a custom themeConfig from the playbook's actual colors.
         # This ensures every video gets a unique visual identity derived

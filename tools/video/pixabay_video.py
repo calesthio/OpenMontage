@@ -32,7 +32,7 @@ class PixabayVideo(BaseTool):
     determinism = Determinism.DETERMINISTIC
     runtime = ToolRuntime.API
 
-    dependencies = []
+    dependencies = ["env:PIXABAY_API_KEY"]
     install_instructions = (
         "Set PIXABAY_API_KEY to your Pixabay API key.\n"
         "  Get one free at https://pixabay.com/api/docs/"
@@ -107,15 +107,13 @@ class PixabayVideo(BaseTool):
     user_visible_verification = ["Watch downloaded clip to verify it matches the intended scene"]
 
     def get_status(self) -> ToolStatus:
-        if os.environ.get("PIXABAY_API_KEY"):
-            return ToolStatus.AVAILABLE
-        return ToolStatus.UNAVAILABLE
+        return super().get_status()
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         return 0.0
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
-        api_key = os.environ.get("PIXABAY_API_KEY")
+        api_key = os.environ.get("PIXABAY_API_KEY", "").strip()
         if not api_key:
             return ToolResult(
                 success=False,

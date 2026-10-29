@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from dotenv import load_dotenv
+from dotenv import dotenv_values
 
 
 def load_env(project_root: Optional[Path] = None) -> None:
@@ -18,7 +18,9 @@ def load_env(project_root: Optional[Path] = None) -> None:
         project_root = Path(__file__).resolve().parent.parent
     env_path = project_root / ".env"
     if env_path.exists():
-        load_dotenv(env_path)
+        for key, value in dotenv_values(env_path).items():
+            if key and value is not None and not os.environ.get(key, "").strip():
+                os.environ[key] = value
 
 
 def get_env(key: str, default: Optional[str] = None) -> Optional[str]:

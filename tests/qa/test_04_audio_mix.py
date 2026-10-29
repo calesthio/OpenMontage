@@ -118,7 +118,7 @@ for name in ["mix_basic.wav", "mix_fades.wav", "mix_ducked.wav", "mix_delayed.wa
     if os.path.exists(path):
         probe = subprocess.run(
             ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", path],
-            capture_output=True, text=True,
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
         )
         info = json.loads(probe.stdout)
         fmt = info.get("format", {})
@@ -133,7 +133,7 @@ for name in ["mix_basic.wav", "mix_fades.wav", "mix_ducked.wav", "mix_delayed.wa
         # Check for clipping via loudnorm stats
         loud = subprocess.run(
             ["ffmpeg", "-i", path, "-af", "loudnorm=print_format=json", "-f", "null", "-"],
-            capture_output=True, text=True,
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
         )
         # Parse loudnorm JSON from stderr (ffmpeg writes it there)
         stderr = loud.stderr

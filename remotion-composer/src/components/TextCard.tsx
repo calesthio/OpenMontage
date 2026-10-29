@@ -44,6 +44,9 @@ export const TextCard: React.FC<TextCardProps> = ({
           textAlign: "center",
           maxWidth: "80%",
           lineHeight: 1.3,
+          // Honour newlines in the text prop — multi-line copy is written with
+          // "\n" in the edit decisions and must not collapse into one run-on line.
+          whiteSpace: "pre-line",
         }}
       >
         {text}

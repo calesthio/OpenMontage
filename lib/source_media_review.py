@@ -65,7 +65,7 @@ def _probe_video(path: Path, tool_registry: Any) -> dict[str, Any]:
                 "ffprobe", "-v", "quiet", "-print_format", "json",
                 "-show_format", "-show_streams", str(path),
             ]
-            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            proc = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=30)
             if proc.returncode == 0:
                 probe_data = json.loads(proc.stdout)
                 fmt = probe_data.get("format", {})
@@ -157,7 +157,7 @@ def _probe_audio(path: Path, tool_registry: Any) -> dict[str, Any]:
                 "ffprobe", "-v", "quiet", "-print_format", "json",
                 "-show_format", "-show_streams", str(path),
             ]
-            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            proc = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=30)
             if proc.returncode == 0:
                 probe_data = json.loads(proc.stdout)
                 fmt = probe_data.get("format", {})

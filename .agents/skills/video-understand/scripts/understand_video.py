@@ -65,7 +65,7 @@ def _run(cmd, check=True, capture=True):
     """Run a subprocess command, logging it and returning the result."""
     log(f"  $ {' '.join(cmd)}")
     return subprocess.run(
-        cmd, capture_output=capture, text=True, check=check,
+        cmd, capture_output=capture, text=True, encoding="utf-8", errors="replace", check=check,
     )
 
 

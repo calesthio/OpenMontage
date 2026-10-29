@@ -86,7 +86,7 @@ def test_delayed_track_with_fade_out_remains_audible_after_its_start(tmp_path):
             "-vn", "-af", "volumedetect", "-f", "null", "-",
         ],
         capture_output=True,
-        text=True,
+        text=True, encoding="utf-8", errors="replace",
         check=True,
         timeout=30,
     )

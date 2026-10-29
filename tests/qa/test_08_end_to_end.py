@@ -528,7 +528,7 @@ if os.path.exists(final_video):
     probe = subprocess.run(
         ["ffprobe", "-v", "quiet", "-print_format", "json",
          "-show_format", "-show_streams", final_video],
-        capture_output=True, text=True,
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
     )
     info = json.loads(probe.stdout)
     fmt = info.get("format", {})

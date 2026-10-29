@@ -36,7 +36,7 @@ def _duration(path: Path) -> float:
         ],
         capture_output=True,
         check=True,
-        text=True,
+        text=True, encoding="utf-8", errors="replace",
         timeout=30,
     )
     return float(result.stdout.strip())

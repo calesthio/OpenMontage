@@ -103,7 +103,7 @@ def main(argv: list[str] | None = None) -> int:
             f"--public-dir={public_dir.resolve()}",
         ]
         try:
-            subprocess.run(cmd, cwd=COMPOSER_DIR, check=True, capture_output=True, text=True, timeout=600)
+            subprocess.run(cmd, cwd=COMPOSER_DIR, check=True, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=600)
             ok += 1
             print(f"  {sid}: frame {frame} -> {out.relative_to(REPO_ROOT)}")
         except subprocess.CalledProcessError as e:

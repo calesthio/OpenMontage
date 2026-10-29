@@ -47,7 +47,7 @@ def probe_duration(file_path: str | Path) -> float | None:
                 str(file_path),
             ],
             capture_output=True,
-            text=True,
+            text=True, encoding="utf-8", errors="replace",
             timeout=10,
         )
         data = json.loads(result.stdout)
@@ -130,7 +130,7 @@ class AudioProbe(BaseTool):
                     str(input_path),
                 ],
                 capture_output=True,
-                text=True,
+                text=True, encoding="utf-8", errors="replace",
                 timeout=15,
             )
 

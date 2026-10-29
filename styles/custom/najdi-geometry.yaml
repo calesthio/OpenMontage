@@ -1,0 +1,90 @@
+# Najdi Geometry: Saudi heritage geometric identity. Distilled from 3 Saudi identity references + a palette board.
+identity:
+  name: "Najdi Geometry"
+  category: minimalist
+  mood: elegant, rooted, calm, prestigious
+  pace: deliberate
+  best_for: "Saudi / Gulf real-estate, hospitality, government & cultural brands, bilingual (Arabic/English) identities"
+
+taste_profile:
+  design_read: "Islamic-geometry construction meets modern bilingual typography; Najdi heritage palette with jewel teal."
+  visual_variance: 4
+  motion_intensity: 3
+  information_density: 4
+  palette_discipline: "Three palette families from the board: Nature & Elegance (teal), Al Methaq Al Salmani & Tradition (mud brown/sand), Urban & People (charcoal/mist). One family leads per scene."
+  layout_variation: "Construction on pale mist -> mark + bilingual wordmark on spacing grid -> type-specimen bento grid -> material close-ups (embroidery, stone, jewel)."
+  reference_strategy: "Derive the mark from an 8-fold geometric construction (circles + diagonals) and keep the construction visible during reveals."
+  anti_patterns:
+    - "generic arabesque clip-art"
+    - "Arabic set in a Latin-only font / broken letter shaping"
+    - "neon or saturated gradients"
+  quality_gates:
+    - "Arabic and Latin wordmarks are optically balanced (Arabic slightly larger)."
+    - "Geometry lines are hairline and draw in sequence, never all at once."
+
+visual_language:
+  color_palette:
+    primary: ["#0D2630", "#074349"]
+    accent: ["#BBDADA", "#B7A695", "#C9A24A"]
+    background: "#D9DFDE"
+    text: "#0D2630"
+    muted: "#51483E"
+  composition: "Centered symmetric mark; clear-space/spacing grid with dimension ticks; bento type-specimen tiles; slow macro on materials"
+  texture: "Matte paper-like fields, gold thread embroidery on black fabric, crystal/jewel bokeh, adobe/mud wall texture"
+
+typography:
+  headings:
+    font: "Cairo"
+    weight: 600
+    tracking: "0em"
+  body:
+    font: "Cairo"
+    weight: 400
+  scale_system: "major_third"
+
+motion:
+  transitions: [geometry-draw-on, dissolve, grid-slide, tile-reflow]
+  animation_style: "Calm ease-in-out (cubic-bezier(0.65,0,0.35,1)); stroke-draw construction lines; shapes fill from the geometry; bento tiles reflow with stagger; typewriter caret for specimens; stitch-trail draw for embroidery"
+  pacing_rules:
+    min_scene_hold_seconds: 2
+    max_scene_hold_seconds: 8
+    text_card_hold_seconds: 3
+    transition_duration_seconds: 0.6
+  entrance: "construction lines draw from center outward, then the mark fills"
+  exit: "slow dissolve or grid slide"
+
+audio:
+  voice_style: "calm, dignified Arabic VO (Gulf/Najdi or MSA), slow pace ~2 words/sec"
+  music_mood: "none (VO + SFX only, no music)"
+  music_volume: 0
+  sfx_style: "refined, tactile, material: pen on paper, thread, stone, glass"
+  sfx_map:
+    geometry_line_draw: "fine pen-on-paper stroke, length = line draw"
+    circle_draw: "compass/drafting stroke"
+    mark_fill: "soft paper swell"
+    embroidery_stitch: "thread pull + needle pierce per stitch"
+    gold_shine: "delicate metallic shimmer"
+    bento_tile_reflow: "soft stone/tile slide, staggered"
+    typewriter_specimen: "quiet key ticks"
+    jewel_reveal: "crystal glint"
+    final_lockup: "warm low resonance"
+  sfx_rules:
+    - "No music. The voiceover carries rhythm; SFX carry motion."
+    - "Every SFX is semantically matched to what moves or appears (object, material, action), never a generic hit."
+    - "SFX start on the motion's first frame (0 to -1 frame lead); their length matches the move's duration."
+    - "Whooshes follow the move's speed curve: ease-in exit = rising whoosh, ease-out entrance = falling tail."
+    - "Keep SFX under the voice: peaks around -18 to -12 dBFS, never masking a spoken word; duck SFX -6 dB inside speech."
+    - "Use silence: holds between phrases get room tone only, so the next hit lands."
+
+asset_generation:
+  image_prompt_prefix: "elegant Saudi heritage brand, Najdi architecture, jewel teal and sand palette, refined minimal, "
+  image_negative_prompt: "kitsch, clip-art arabesque, broken arabic letters, neon"
+  diagram_style: "8-fold geometric construction: circles and diagonals, hairline gray"
+  consistency_anchors:
+    - "Palette families: #0D2630/#074349/#BBDADA, #51483E/#B7A695/#DCDCD5, #262828/#C4CECD/#D9DFDE"
+    - "Cairo for Arabic + Latin"
+    - "Mark built from visible geometry"
+
+quality_rules:
+  - "Arabic text must render with proper shaping (RTL, ligatures); verify in a frame grab"
+  - "Contrast 4.5:1 for all text"

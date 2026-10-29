@@ -1,0 +1,90 @@
+# Thunder Launch: bold agency brand-launch films. Distilled from 2 brand unveil films (coffee, car care).
+identity:
+  name: "Thunder Launch"
+  category: cinematic
+  mood: loud, proud, kinetic, premium-retail
+  pace: fast
+  best_for: "Agency brand-identity unveil films, product-line launches, packaging reveals, 60-110s hero films (16:9)"
+
+taste_profile:
+  design_read: "Agency case-study film: story footage + the full brand system (logo grid, type specimen, palette, packaging, signage) cut to music."
+  visual_variance: 8
+  motion_intensity: 8
+  information_density: 6
+  palette_discipline: "One signature color owns the film (yellow #FADF40 or neon lime #DFFF1F) + black + one secondary (electric blue). Full-bleed color frames act as rhythm beats."
+  layout_variation: "Rotate: cinematic footage -> full-bleed giant cropped type -> logo on grid -> type specimen -> packaging hero -> top-down product grid -> environment (building sign, cups, bags)."
+  reference_strategy: "Build the brand system first (logo, type, palette, pattern), then stage it across 8-12 mockup scenes."
+  anti_patterns:
+    - "equal-weight pacing with no build"
+    - "small, timid type"
+    - "more than 3 brand colors"
+  quality_gates:
+    - "Open on mood/story (desert, horse, car at night) before the logo appears."
+    - "At least 3 oversized-type frames where letters crop off-screen."
+
+visual_language:
+  color_palette:
+    primary: ["#0A0A0A", "#141414"]
+    accent: ["#FADF40", "#DFFF1F", "#3A1FF0"]
+    background: "#0A0A0A"
+    text: "#FFFFFF"
+    muted: "#95864E"
+  composition: "Full-bleed; giant cropped type; centered logo on construction grid; product heroes on a seamless brand-color sweep; top-down product grids; architectural signage"
+  texture: "Cinematic graded footage (teal-orange night / warm desert), matte packaging, glossy bottles, chevron/arrow brand patterns"
+
+typography:
+  headings:
+    font: "Eurostile Extended"
+    weight: 800
+    tracking: "-0.01em"
+  body:
+    font: "Inter"
+    weight: 500
+  scale_system: "golden"
+
+motion:
+  transitions: [hard-cut-on-beat, color-flash, glitch-type-scramble, whip-pan, chevron-wipe, mask-reveal-through-letter]
+  animation_style: "Aggressive expo-in/out; kinetic type (scramble, split, scale-slam); speed ramps on footage; looping brand patterns (scrolling chevrons)"
+  pacing_rules:
+    min_scene_hold_seconds: 0.5
+    max_scene_hold_seconds: 4
+    text_card_hold_seconds: 1.2
+    transition_duration_seconds: 0.15
+  entrance: "scale-slam from 140% with motion blur, or letter-scramble resolve"
+  exit: "hard cut on beat or a single color-flash frame"
+
+audio:
+  voice_style: "bold manifesto VO in 2-3 word lines, confident pauses"
+  music_mood: "none (VO + SFX only, no music)"
+  music_volume: 0
+  sfx_style: "big, physical, cinematic: impacts, engines, mechanical foley"
+  sfx_map:
+    scale_slam_type: "heavy impact hit on the landing frame"
+    glitch_scramble: "digital glitch burst, length = scramble"
+    color_flash: "short sub thump"
+    whip_pan: "fast whoosh shaped to the speed ramp"
+    chevron_wipe: "rhythmic mechanical ratchet"
+    packaging_hero: "matte bag crinkle / bottle clink by material"
+    car_footage: "engine rev / tire / door foley from the shot"
+    signage_reveal: "deep reverb boom"
+    final_lockup: "big impact + long tail"
+  sfx_rules:
+    - "No music. The voiceover carries rhythm; SFX carry motion."
+    - "Every SFX is semantically matched to what moves or appears (object, material, action), never a generic hit."
+    - "SFX start on the motion's first frame (0 to -1 frame lead); their length matches the move's duration."
+    - "Whooshes follow the move's speed curve: ease-in exit = rising whoosh, ease-out entrance = falling tail."
+    - "Keep SFX under the voice: peaks around -18 to -12 dBFS, never masking a spoken word; duck SFX -6 dB inside speech."
+    - "Use silence: holds between phrases get room tone only, so the next hit lands."
+
+asset_generation:
+  image_prompt_prefix: "premium brand packaging photography, bold signature color, dramatic studio lighting, editorial, "
+  image_negative_prompt: "muted, pastel, cluttered, cheap, misprinted logo"
+  diagram_style: "logo on construction grid with measurement lines"
+  consistency_anchors:
+    - "One signature color dominates"
+    - "Same logo + wordmark in every product shot"
+    - "Manifesto words in heavy italic or extended sans"
+
+quality_rules:
+  - "Act 1 mood footage (10-15%) -> Act 2 logo & system (30%) -> Act 3 applications/packaging (45%) -> Act 4 lockup (10%)"
+  - "Average shot 1.4-2.4s; accelerate toward the end"

@@ -1,0 +1,87 @@
+# Specimen Editorial: experimental editorial motion. Distilled from 2 specimen-style motion studies.
+identity:
+  name: "Specimen Editorial"
+  category: motion-graphics
+  mood: art-directed, scientific, curious, high-fashion
+  pace: rapid
+  best_for: "AI/research brands, fashion/beauty teasers, art-led product teasers, short loops (6-12s)"
+
+taste_profile:
+  design_read: "A single hero subject (flower, butterfly) analysed like a specimen: tracking boxes, labels, crop windows, typographic collage."
+  visual_variance: 8
+  motion_intensity: 7
+  information_density: 5
+  palette_discipline: "Strict duo: one saturated hue (crimson #CB082B or icy blue #689ACA) + black/white."
+  layout_variation: "Specimen centered -> sliced crop windows with labels -> giant word splitting around the subject -> full-bleed color field."
+  reference_strategy: "Pick one hero object; every frame is a different lens on it."
+  anti_patterns:
+    - "multiple unrelated subjects"
+    - "soft generic fades"
+  quality_gates:
+    - "Annotation UI (boxes, labels like 'Surface_01') must track the subject."
+    - "Typography interacts with the subject (letters part around it, or it sits inside a letter gap)."
+
+visual_language:
+  color_palette:
+    primary: ["#000000", "#F6F0F4"]
+    accent: ["#CB082B", "#689ACA"]
+    background: "#000000"
+    text: "#FFFFFF"
+    muted: "#7A93A8"
+  composition: "Swiss grid hairlines, tiny mono labels, square crop windows revealing alternate textures, giant sans word spanning the frame"
+  texture: "Specimen photography / volumetric 3D, x-ray/inverted passes, grayscale passes, glow"
+
+typography:
+  headings:
+    font: "Inter Display"
+    weight: 500
+    tracking: "0.02em"
+  body:
+    font: "IBM Plex Mono"
+    weight: 400
+  scale_system: "golden"
+
+motion:
+  transitions: [hard-cut, crop-window-pop, letter-split-reveal, color-field-flash, invert]
+  animation_style: "Staccato: elements pop on (0-2 frame) with tracking boxes; letters slide apart with expo-out; the subject constantly rotates/breathes"
+  pacing_rules:
+    min_scene_hold_seconds: 0.5
+    max_scene_hold_seconds: 2
+    text_card_hold_seconds: 1
+    transition_duration_seconds: 0.1
+  entrance: "box-pop with label, or letters split from center"
+  exit: "cut to a color field"
+
+audio:
+  voice_style: "optional whispered/clinical VO labels; otherwise SFX-only"
+  music_mood: "none (VO + SFX only, no music)"
+  music_volume: 0
+  sfx_style: "clinical, data-like: blips, shutter clicks, scanner sweeps"
+  sfx_map:
+    tracking_box_pop: "short data blip per box"
+    label_type_on: "tiny teletype ticks"
+    crop_window_pop: "camera shutter click"
+    letter_split_reveal: "soft tearing/air split"
+    color_field_flash: "low hum swell cut short"
+    invert_xray_pass: "scanner sweep"
+    subject_rotation: "faint servo whirr"
+  sfx_rules:
+    - "No music. The voiceover carries rhythm; SFX carry motion."
+    - "Every SFX is semantically matched to what moves or appears (object, material, action), never a generic hit."
+    - "SFX start on the motion's first frame (0 to -1 frame lead); their length matches the move's duration."
+    - "Whooshes follow the move's speed curve: ease-in exit = rising whoosh, ease-out entrance = falling tail."
+    - "Keep SFX under the voice: peaks around -18 to -12 dBFS, never masking a spoken word; duck SFX -6 dB inside speech."
+    - "Use silence: holds between phrases get room tone only, so the next hit lands."
+
+asset_generation:
+  image_prompt_prefix: "specimen photography of a single subject on pure black, scientific editorial, high detail, "
+  image_negative_prompt: "busy background, multiple subjects, text"
+  diagram_style: "thin tracking boxes with mono labels and anchor points"
+  consistency_anchors:
+    - "Single hero subject"
+    - "Two-color discipline"
+    - "Mono annotation labels"
+
+quality_rules:
+  - "Under 12s and loopable"
+  - "One cut every 0.3-1s"

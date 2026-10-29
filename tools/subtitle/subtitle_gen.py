@@ -23,6 +23,57 @@ from tools.base_tool import (
 )
 
 
+# Scripts written without inter-word spaces. Han ideographs (including the
+# Extension blocks that carry rarer Traditional forms), kana, Hangul, and the
+# CJK punctuation / fullwidth blocks — the latter matter because a closing
+# mark like "。" must stay glued to the word it follows.
+_CJK_RANGES: tuple[tuple[int, int], ...] = (
+    (0x3000, 0x303F),    # CJK symbols and punctuation
+    (0x3040, 0x30FF),    # Hiragana, Katakana
+    (0x3400, 0x4DBF),    # CJK Unified Ideographs Extension A
+    (0x4E00, 0x9FFF),    # CJK Unified Ideographs
+    (0xAC00, 0xD7AF),    # Hangul syllables
+    (0xF900, 0xFAFF),    # CJK Compatibility Ideographs
+    (0xFF00, 0xFFEF),    # Fullwidth and halfwidth forms
+    (0x20000, 0x2FA1F),  # CJK Unified Ideographs Extension B and later
+)
+
+
+def _is_cjk(char: str) -> bool:
+    code = ord(char)
+    return any(low <= code <= high for low, high in _CJK_RANGES)
+
+
+def join_caption_tokens(
+    tokens: list[str], rendered: list[str] | None = None
+) -> str:
+    """Join caption tokens the way each script actually writes them.
+
+    Whisper emits one token per word, and joining them with a space is right
+    for space-delimited languages but wrong for CJK, where it puts a gap
+    between every character. The space is dropped only when *both* sides are
+    CJK, so mixed text such as "使用 OpenMontage 製作" keeps the space that
+    separates the scripts.
+
+    ``rendered`` supplies substitute forms to emit — a karaoke highlighter
+    passes ``<b>word</b>`` — while spacing is still decided from the plain
+    tokens.
+    """
+    out = tokens if rendered is None else rendered
+    if not tokens:
+        return ""
+    result = out[0]
+    for i in range(1, len(tokens)):
+        previous, current = tokens[i - 1], tokens[i]
+        glue = (
+            ""
+            if previous and current and _is_cjk(previous[-1]) and _is_cjk(current[0])
+            else " "
+        )
+        result += glue + out[i]
+    return result
+
+
 class SubtitleGen(BaseTool):
     name = "subtitle_gen"
     version = "0.1.0"
@@ -152,7 +203,7 @@ class SubtitleGen(BaseTool):
                     w["word"] = corr[stripped] + trailing
             # Also fix segment-level text
             if "text" in seg and words:
-                seg["text"] = " ".join(w["word"] for w in words)
+                seg["text"] = join_caption_tokens([w["word"] for w in words])
             elif "text" in seg:
                 for wrong, right in corr.items():
                     import re as _re
@@ -190,9 +241,12 @@ class SubtitleGen(BaseTool):
         buf: list[dict] = []
         buf_text = ""
 
+        def buffer_text(entries: list[dict]) -> str:
+            return join_caption_tokens([e["word"].strip() for e in entries])
+
         for w in all_words:
             word_text = w["word"].strip()
-            candidate = f"{buf_text} {word_text}".strip() if buf_text else word_text
+            candidate = buffer_text(buf + [w])
 
             if buf and (len(buf) >= max_words or len(candidate) > max_chars):
                 cues.append({
@@ -209,7 +263,7 @@ class SubtitleGen(BaseTool):
                 buf_text = ""
 
             buf.append(w)
-            buf_text = f"{buf_text} {word_text}".strip() if buf_text else word_text
+            buf_text = buffer_text(buf)
 
         # Flush remaining
         if buf:
@@ -255,13 +309,12 @@ class SubtitleGen(BaseTool):
                     lines.append(
                         f"{self._ts_srt(word_info['start'])} --> {self._ts_srt(word_info['end'])}"
                     )
-                    parts = []
-                    for wj, w in enumerate(words):
-                        if wj == wi:
-                            parts.append(f"<b>{w['word']}</b>")
-                        else:
-                            parts.append(w["word"])
-                    lines.append(" ".join(parts))
+                    plain = [w["word"] for w in words]
+                    parts = [
+                        f"<b>{word}</b>" if wj == wi else word
+                        for wj, word in enumerate(plain)
+                    ]
+                    lines.append(join_caption_tokens(plain, parts))
                     lines.append("")
         else:
             for cue in cues:
@@ -293,13 +346,12 @@ class SubtitleGen(BaseTool):
                     lines.append(
                         f"{self._ts_vtt(word_info['start'])} --> {self._ts_vtt(word_info['end'])}"
                     )
-                    parts = []
-                    for wj, w in enumerate(words):
-                        if wj == wi:
-                            parts.append(f"<b>{w['word']}</b>")
-                        else:
-                            parts.append(w["word"])
-                    lines.append(" ".join(parts))
+                    plain = [w["word"] for w in words]
+                    parts = [
+                        f"<b>{word}</b>" if wj == wi else word
+                        for wj, word in enumerate(plain)
+                    ]
+                    lines.append(join_caption_tokens(plain, parts))
                     lines.append("")
         else:
             for cue in cues:

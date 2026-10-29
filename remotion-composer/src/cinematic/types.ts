@@ -44,15 +44,24 @@ export interface CinematicWordCaption {
   word: string;
   startMs: number;
   endMs: number;
+  pageBreakAfter?: boolean;
 }
 
 export interface CinematicCaptionConfig {
   words: CinematicWordCaption[];
+  // "karaoke" renders PhraseCaptions; anything else keeps CaptionOverlay.
+  style?: string;
   wordsPerPage?: number;
   fontSize?: number;
   color?: string;
   highlightColor?: string;
   backgroundColor?: string;
+  // PhraseCaptions only
+  fontFamily?: string;
+  dimColor?: string;
+  maxCharsPerCue?: number;
+  holdSeconds?: number;
+  position?: "bottom-center" | "top-center" | "center";
 }
 
 export interface CinematicRendererProps {

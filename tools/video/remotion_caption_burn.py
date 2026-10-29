@@ -104,6 +104,25 @@ class RemotionCaptionBurn(BaseTool):
                 "default": 4,
                 "description": "Words shown at once in the caption overlay.",
             },
+            "caption_style": {
+                "type": "string",
+                "description": (
+                    "\"karaoke\" renders PhraseCaptions: short phrase cues shown whole, "
+                    "words turn active at their real start and stay active, no flicker "
+                    "between words. Needs real word timings (e.g. qwen3_tts timestamps). "
+                    "Any other value keeps the word-by-word CaptionOverlay."
+                ),
+            },
+            "max_chars_per_cue": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "karaoke: max visible characters per phrase cue (default 26).",
+            },
+            "hold_seconds": {
+                "type": "number",
+                "minimum": 0,
+                "description": "karaoke: max time a cue stays after its last word (default 0.6).",
+            },
             "font_size": {
                 "type": "integer",
                 "default": 52,
@@ -182,13 +201,21 @@ class RemotionCaptionBurn(BaseTool):
     # ------------------------------------------------------------------ #
 
     def _segments_to_word_captions(
-        self, segments: list[dict], corrections: dict[str, str] | None = None
+        self,
+        segments: list[dict],
+        corrections: dict[str, str] | None = None,
+        mark_segment_ends: bool = False,
     ) -> list[dict]:
-        """Convert transcriber segments to [{word, startMs, endMs}, ...]."""
+        """Convert transcriber segments to [{word, startMs, endMs}, ...].
+
+        ``mark_segment_ends`` sets ``pageBreakAfter`` on each segment's last word
+        so phrase captions never join two segments into one cue.
+        """
         captions: list[dict] = []
         corr = {k.lower(): v for k, v in (corrections or {}).items()}
 
         for seg in segments:
+            count_before = len(captions)
             words = seg.get("words", [])
             if words:
                 for w in words:
@@ -216,6 +243,8 @@ class RemotionCaptionBurn(BaseTool):
                         "startMs": int((seg["start"] + i * per_word) * 1000),
                         "endMs": int((seg["start"] + (i + 1) * per_word) * 1000),
                     })
+            if mark_segment_ends and len(captions) > count_before:
+                captions[-1]["pageBreakAfter"] = True
         return captions
 
     def _srt_to_word_captions(
@@ -275,6 +304,9 @@ class RemotionCaptionBurn(BaseTool):
         font_size: int,
         highlight_color: str,
         overlays: list[dict] | None = None,
+        caption_style: str | None = None,
+        max_chars_per_cue: int | None = None,
+        hold_seconds: float | None = None,
     ) -> ToolResult:
         root = self._find_remotion_root()
         if root is None:
@@ -321,6 +353,12 @@ class RemotionCaptionBurn(BaseTool):
             "fontSize": font_size,
             "highlightColor": highlight_color,
         }
+        if caption_style:
+            props["captionStyle"] = caption_style
+        if max_chars_per_cue is not None:
+            props["captionMaxCharsPerCue"] = max_chars_per_cue
+        if hold_seconds is not None:
+            props["captionHoldSeconds"] = hold_seconds
         props_dir = root / "public" / "demo-props"
         props_dir.mkdir(parents=True, exist_ok=True)
         props_file = props_dir / f"caption-burn-{Path(input_path).stem}.json"
@@ -454,6 +492,8 @@ class RemotionCaptionBurn(BaseTool):
         words_per_page = inputs.get("words_per_page", 4)
         font_size = inputs.get("font_size", 52)
         highlight_color = inputs.get("highlight_color", "#22D3EE")
+        caption_style = inputs.get("caption_style")
+        phrase_captions = str(caption_style or "").strip().lower() == "karaoke"
 
         if not Path(input_path).exists():
             return ToolResult(success=False, error=f"Input video not found: {input_path}")
@@ -466,7 +506,9 @@ class RemotionCaptionBurn(BaseTool):
         srt_path = inputs.get("srt_path")
 
         if segments:
-            captions = self._segments_to_word_captions(segments, corrections)
+            captions = self._segments_to_word_captions(
+                segments, corrections, mark_segment_ends=phrase_captions
+            )
         elif srt_path:
             captions = self._srt_to_word_captions(srt_path, corrections)
         else:
@@ -486,6 +528,9 @@ class RemotionCaptionBurn(BaseTool):
                 input_path, output_path, captions,
                 words_per_page, font_size, highlight_color,
                 overlays=overlays,
+                caption_style=caption_style,
+                max_chars_per_cue=inputs.get("max_chars_per_cue"),
+                hold_seconds=inputs.get("hold_seconds"),
             )
         else:
             result = self._render_ffmpeg(input_path, output_path, captions)

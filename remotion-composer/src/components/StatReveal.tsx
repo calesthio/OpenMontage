@@ -12,7 +12,7 @@ interface StatRevealProps {
   accentColor?: string;
   /** Label color. Defaults to near-white; pass the theme's textColor on light themes. */
   textColor?: string;
-  position?: "center" | "bottom-right" | "right";
+  position?: "center" | "bottom-right" | "right" | "top-left" | "top-right";
 }
 
 export const StatReveal: React.FC<StatRevealProps> = ({
@@ -49,11 +49,17 @@ export const StatReveal: React.FC<StatRevealProps> = ({
 
   const opacity = Math.min(spring({ frame, fps, config: { damping: 20 } }), fadeOut);
 
+  // top-left/top-right added for portrait formats: the vertical centre lands
+  // on faces there, and the bottom-right corner collides with the caption band.
   const positionStyles: React.CSSProperties =
     position === "center"
       ? { justifyContent: "center", alignItems: "center" }
       : position === "right"
       ? { justifyContent: "center", alignItems: "flex-end", paddingRight: 80 }
+      : position === "top-left"
+      ? { justifyContent: "flex-start", alignItems: "flex-start", padding: 80 }
+      : position === "top-right"
+      ? { justifyContent: "flex-start", alignItems: "flex-end", padding: 80 }
       : { justifyContent: "flex-end", alignItems: "flex-end", padding: 80 };
 
   return (
@@ -62,7 +68,8 @@ export const StatReveal: React.FC<StatRevealProps> = ({
         style={{
           opacity,
           transform: `scale(${scale})`,
-          textAlign: position === "center" ? "center" : "right",
+          textAlign:
+            position === "center" ? "center" : position === "top-left" ? "left" : "right",
         }}
       >
         <div

@@ -6,13 +6,12 @@ type scale computation, type hierarchy validation, font pairing suggestions,
 and full accessibility audit across all 3 playbooks.
 """
 
-import sys, os, json
+import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from styles.playbook_loader import (
     load_playbook,
-    validate_playbook,
     list_playbooks,
     validate_contrast,
     check_color_blind_safety,

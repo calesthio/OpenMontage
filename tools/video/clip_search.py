@@ -35,7 +35,7 @@ from __future__ import annotations
 import time
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from tools.base_tool import (
     BaseTool,

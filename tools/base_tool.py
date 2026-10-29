@@ -22,14 +22,21 @@ from pathlib import Path
 from typing import Any, Callable, Optional
 
 
-def _load_dotenv() -> None:
-    """Load .env into os.environ once at import time.
+def load_dotenv(env_path: Optional[Path] = None) -> None:
+    """Load .env into os.environ. The one .env parser in the project.
 
-    This ensures API keys are available before any tool is instantiated,
-    even when tools are imported directly without going through the registry.
-    Only sets variables that are not already in the environment.
+    Runs once at import time so API keys are available before any tool is
+    instantiated, even when tools are imported directly without going through
+    the registry. Only sets variables not already in the environment, so a
+    real shell export always wins over the file.
+
+    `lib.env_loader.load_env` delegates here. Two byte-identical copies of this
+    function previously lived in `base_tool` and `ToolRegistry`, with a third
+    python-dotenv-based variant in `lib/env_loader`; they parsed quoting and
+    inline comments differently, so which one ran changed the value you got.
     """
-    env_path = Path(__file__).resolve().parent.parent / ".env"
+    if env_path is None:
+        env_path = Path(__file__).resolve().parent.parent / ".env"
     if not env_path.is_file():
         return
     import re
@@ -58,7 +65,7 @@ def _load_dotenv() -> None:
                 os.environ[key] = value
 
 
-_load_dotenv()
+load_dotenv()
 
 
 class ToolTier(str, Enum):

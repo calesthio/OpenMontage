@@ -204,7 +204,6 @@ def test_local_gpu_tool_mentions_apple_silicon(module_path, class_name):
 def test_upscale_build_upsampler_uses_signature_guard(monkeypatch):
     """_build_upsampler must use inspect to check if RealESRGANer accepts device=."""
     import importlib
-    import inspect
 
     fake_torch = MagicMock()
     fake_torch.device = lambda x: f"device({x})"

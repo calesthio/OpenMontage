@@ -44,3 +44,31 @@ jobs:
 
       - name: Run test suite
         run: make test
+
+  compose:
+    name: Typecheck Remotion composer
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: remotion-composer/package-lock.json
+
+      - name: Install composer dependencies
+        run: npm ci
+        working-directory: remotion-composer
+
+      # 8,444 lines of TS/TSX render the actual video and were previously
+      # outside CI entirely: no test files, no typecheck script, and the
+      # Python-only workflow never installed Node. A type error here fails at
+      # render time, after the agent has already paid for the assets it was
+      # about to compose.
+      - name: Typecheck
+        run: npm run typecheck
+        working-directory: remotion-composer

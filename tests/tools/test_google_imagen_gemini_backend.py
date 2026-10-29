@@ -7,7 +7,6 @@ Imagen catalog access, where it is the only working Google image path.
 """
 
 import sys
-import types as pytypes
 from pathlib import Path
 
 import pytest

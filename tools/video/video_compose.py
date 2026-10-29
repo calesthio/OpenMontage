@@ -1948,17 +1948,28 @@ class VideoCompose(BaseTool):
         types, and transitions using React-based frame-accurate rendering.
         Accepts edit_decisions (with resolved file paths) or raw composition_data.
         """
-        if not shutil.which("npx"):
-            return ToolResult(
-                success=False,
-                error="npx not found. Install Node.js to use Remotion rendering.",
-            )
-
         composition_data = inputs.get("edit_decisions") or inputs.get("composition_data")
         if not composition_data:
             return ToolResult(
                 success=False,
                 error="edit_decisions or composition_data required for remotion_render",
+            )
+
+        renderer_family = composition_data.get("renderer_family", "explainer-data")
+        composition_id = self._get_composition_id(renderer_family)
+        if composition_id == "CinematicRenderer" and composition_data.get("overlays"):
+            return ToolResult(
+                success=False,
+                error=(
+                    "CinematicRenderer does not support non-empty overlays; remove overlays "
+                    "or use a composition that supports them."
+                ),
+            )
+
+        if not shutil.which("npx"):
+            return ToolResult(
+                success=False,
+                error="npx not found. Install Node.js to use Remotion rendering.",
             )
 
         output_path = Path(inputs.get("output_path", "renders/remotion_output.mp4"))
@@ -1992,9 +2003,6 @@ class VideoCompose(BaseTool):
 
         # Route to the correct Remotion composition based on renderer_family.
         # This prevents all pipelines from collapsing into the Explainer visual grammar.
-        renderer_family = (composition_data or {}).get("renderer_family", "explainer-data")
-        composition_id = self._get_composition_id(renderer_family)
-
         if composition_id == "CinematicRenderer":
             if not props.get("scenes") and props.get("cuts"):
                 props["scenes"] = self._cuts_to_cinematic_scenes(props["cuts"])

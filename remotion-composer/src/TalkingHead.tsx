@@ -221,10 +221,10 @@ const OverlayContent: React.FC<{ overlay: TalkingHeadOverlay }> = ({
   if (overlay.type === "hero_title" && overlay.text) {
     return <HeroTitle title={overlay.text} subtitle={overlay.subtitle} />;
   }
-  if (overlay.type === "section_title" && overlay.text) {
+  if (overlay.type === "section_title" && (overlay.text || overlay.subtitle)) {
     return (
       <SectionTitle
-        title={overlay.text}
+        title={overlay.text ?? ""}
         subtitle={overlay.subtitle}
         accentColor={overlay.accentColor}
         position="top-left"

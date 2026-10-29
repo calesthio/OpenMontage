@@ -33,11 +33,14 @@
     },
     "cost_snapshot": {
       "type": "object",
+      "description": "Spend meter for the Backlot board. Use CostTracker.cost_snapshot() rather than hand-writing it; the board reads total_spent_usd and budget_remaining_usd by name.",
+      "required": ["total_spent_usd"],
       "properties": {
         "total_spent_usd": { "type": "number" },
         "total_reserved_usd": { "type": "number" },
         "budget_remaining_usd": { "type": "number" }
-      }
+      },
+      "additionalProperties": false
     },
     "error": { "type": "string" },
     "metadata": { "type": "object" }

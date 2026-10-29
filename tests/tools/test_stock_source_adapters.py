@@ -219,3 +219,126 @@ def test_search_returns_empty_when_the_source_has_no_results(
         )
         == []
     )
+
+
+# ---------------------------------------------------------------------
+# NARA — the v2 catalog API.
+#
+# The adapter used to call `/api/v2/search` with `rows`/`offset` and read
+# `results[]`. That path now serves the catalog's HTML app rather than
+# JSON, so every search raised on `.json()`. These tests pin the shape of
+# the working endpoint so a silent regression back to v1 is caught here
+# rather than as an empty corpus.
+# ---------------------------------------------------------------------
+
+_NARA_RECORD = {
+    "naId": 7500,
+    "title": "APOLLO 8 NASA MOON FOOTAGE",
+    "generalNotes": ["Following is a general summary of scenes in the roll."],
+    "shotList": "CU Radar antenna. Overall view of earth.",
+    "subjects": [{"heading": "National Aeronautics and Space Administration."}],
+    "digitalObjects": [
+        {
+            "objectId": "14869152",
+            "objectFilename": "33050.mp4",
+            "objectType": "Audio/Visual File (MP4)",
+            "objectUrl": "https://catalog.archives.gov/media/33050.mp4",
+            "objectFileSize": 12345,
+        },
+        {
+            "objectId": "14869153",
+            "objectFilename": "97-445.jpg",
+            "objectType": "Image (JPG)",
+            "objectUrl": "https://catalog.archives.gov/media/97-445.jpg",
+        },
+    ],
+}
+
+
+class _NARAResponse:
+    """A 200 carrying one record in the v2 envelope."""
+
+    status_code = 200
+
+    def raise_for_status(self):
+        return None
+
+    def json(self):
+        return {"body": {"hits": {"hits": [{"_source": {"record": _NARA_RECORD}}]}}}
+
+
+def _nara_search(monkeypatch, kind, page=1):
+    seen = {}
+
+    def fake_get(url, headers=None, params=None, timeout=None):
+        seen["url"] = url
+        seen["headers"] = headers or {}
+        seen["params"] = params or {}
+        return _NARAResponse()
+
+    _install_fake_transport(monkeypatch, fake_get)
+    results = get_source("nara").search(
+        "apollo", SearchFilters(kind=kind, per_page=5, page=page)
+    )
+    return seen, results
+
+
+def test_nara_requires_a_key():
+    # v2 serves HTML without x-api-key, so "no key" is unavailable, not
+    # merely rate-limited.
+    source = get_source("nara")
+    assert source.is_available() is False
+
+
+def test_nara_calls_the_v2_records_endpoint(monkeypatch):
+    seen, _ = _nara_search(monkeypatch, "video", page=3)
+
+    assert seen["url"].endswith("/api/v2/records/search")
+    assert seen["headers"]["x-api-key"] == "test-nara"
+    # v2 paginates by 1-based `page`; offset/from/start are ignored.
+    assert seen["params"]["page"] == 3
+    assert "offset" not in seen["params"]
+    assert seen["params"]["limit"] == 5
+    assert seen["params"]["availableOnline"] == "true"
+
+
+def test_nara_pushes_the_kind_filter_server_side(monkeypatch):
+    seen, _ = _nara_search(monkeypatch, "video")
+    assert seen["params"]["typeOfMaterials"] == "Moving Images"
+
+    seen, _ = _nara_search(monkeypatch, "image")
+    assert seen["params"]["typeOfMaterials"] == "Photographs and other Graphic Materials"
+
+    # "any" must not constrain the search to one material type.
+    seen, _ = _nara_search(monkeypatch, "any")
+    assert "typeOfMaterials" not in seen["params"]
+
+
+def test_nara_extracts_objects_from_the_v2_envelope(monkeypatch):
+    _, videos = _nara_search(monkeypatch, "video")
+
+    assert len(videos) == 1
+    clip = videos[0]
+    assert clip.download_url == "https://catalog.archives.gov/media/33050.mp4"
+    assert clip.kind == "video"
+    assert clip.source_url == "https://catalog.archives.gov/id/7500"
+    assert clip.source_id == "7500_14869152"
+    # v2 reports no dimensions or duration; the Candidate says so rather
+    # than inventing them.
+    assert (clip.width, clip.height, clip.duration) == (0, 0, 0.0)
+
+    _, images = _nara_search(monkeypatch, "image")
+    assert [i.kind for i in images] == ["image"]
+    assert images[0].download_url.endswith("97-445.jpg")
+
+
+def test_nara_tags_flatten_the_scattered_prose_fields(monkeypatch):
+    # v2 dropped scopeAndContentNote; the description now lives across
+    # generalNotes, shotList and subjects.
+    _, videos = _nara_search(monkeypatch, "video")
+    tags = videos[0].source_tags
+
+    assert "APOLLO 8 NASA MOON FOOTAGE" in tags
+    assert "general summary of scenes" in tags
+    assert "Radar antenna" in tags
+    assert "National Aeronautics" in tags

@@ -10,6 +10,9 @@ google-auth>=2.0       # service-account auth for Google TTS + Imagen (Vertex AI
 google-genai>=1.0.0    # Gemini Developer API clients for Lyria, Veo, and Gemini Omni
 openai>=2.44.0         # Videos API support for Sora 2
 
+# MCP server for ChatGPT integration
+mcp[cli]>=1.9.0,<2.0.0
+
 # Backlot - the living storyboard (local board server)
 fastapi>=0.110
 uvicorn>=0.29

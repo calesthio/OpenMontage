@@ -157,14 +157,9 @@ class ArchiveOrgSource:
                 ("output", "json"),
             ]
 
-            try:
-                r = requests.get(_SEARCH_URL, params=params, timeout=30)
-                r.raise_for_status()
-                data = r.json()
-            except Exception:
-                # One strategy's network/parse error shouldn't kill the
-                # whole cascade — try the next one.
-                continue
+            r = requests.get(_SEARCH_URL, params=params, timeout=30)
+            r.raise_for_status()
+            data = r.json()
             docs = (data.get("response") or {}).get("docs", []) or []
             if not docs:
                 continue
@@ -328,9 +323,8 @@ class ArchiveOrgSource:
             meta = r.json()
         except Exception:
             # Swallow per-item fetch failures — one bad item shouldn't
-            # poison the whole search. Alternative would be to raise and
-            # have corpus_builder catch per-source, but at this layer we
-            # can keep going.
+            # poison the whole search. Search-level failures above still
+            # propagate so corpus_builder can report a broken source.
             return None
 
         files = meta.get("files") or []

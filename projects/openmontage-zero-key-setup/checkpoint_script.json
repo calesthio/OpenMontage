@@ -1,0 +1,416 @@
+{
+  "version": "1.0",
+  "project_id": "openmontage-zero-key-setup",
+  "pipeline_type": "screen-demo",
+  "stage": "script",
+  "status": "completed",
+  "timestamp": "2026-08-30T21:50:46.517345+00:00",
+  "checkpoint_policy": "guided",
+  "human_approval_required": true,
+  "human_approved": true,
+  "artifacts": {
+    "script": {
+      "version": "1.0",
+      "title": "Narrated Video With Zero API Keys",
+      "total_duration_seconds": 45.02,
+      "voice_performance": {
+        "performance_intent": "A competent engineer showing the shortest path. No enthusiasm markers, no sell. The self-referential close only lands if the preceding 40 seconds sound utterly ordinary.",
+        "pacing_profile": "technical",
+        "energy_curve": "Flat and low through s1-s3, a single lift on s4 when the registry flips, settling to a quiet landing on s6.",
+        "pause_policy": "0.5s between every section; 1.4s closing hold after s6 so the final terminal state is readable after narration ends.",
+        "sample_section_id": "s4",
+        "provider_notes": {
+          "piper_tts": "Timings are measured from the shipped WAVs. Do NOT re-synthesize without re-running the layout: Piper is stochastic and the same text comes back a different length each time."
+        }
+      },
+      "sections": [
+        {
+          "id": "s1",
+          "label": "Cold open \u2014 empty terminal",
+          "text": "The voice you're hearing was made on this machine, by the tool in this video. No API key. Nothing sent to a cloud.",
+          "start_seconds": 0.3,
+          "end_seconds": 7.59,
+          "speaker_directions": "Piper en_US-lessac-medium, default length_scale 1.0, sentence_silence 0.35. Do not add SSML \u2014 Piper ignores it.",
+          "delivery_cues": {
+            "pace": "measured",
+            "energy": "low, matter-of-fact \u2014 the claim carries itself",
+            "emphasis_words": [
+              "this machine",
+              "no API key"
+            ],
+            "pause_after_seconds": 0.5,
+            "provider_text": "The voice you're hearing was made on this machine, by the tool in this video. No API key. Nothing sent to a cloud."
+          },
+          "enhancement_cues": [
+            {
+              "type": "animation",
+              "description": "Empty terminal window, blinking cursor, no text. Pill 'no API keys' springs in at 3.0s and out at 5.6s.",
+              "timestamp_seconds": 0.0
+            }
+          ],
+          "source_ref": "Verified in-session: every command and output in this script was executed on this machine on 2026-08-31."
+        },
+        {
+          "id": "s2",
+          "label": "Install the two packages",
+          "text": "Two packages. Piper for speech, faster whisper for transcription. That is the entire cost of entry.",
+          "start_seconds": 8.09,
+          "end_seconds": 15.03,
+          "speaker_directions": "Piper en_US-lessac-medium, default length_scale 1.0, sentence_silence 0.35. Do not add SSML \u2014 Piper ignores it.",
+          "delivery_cues": {
+            "pace": "conversational",
+            "energy": "even",
+            "emphasis_words": [
+              "Two packages",
+              "entire cost of entry"
+            ],
+            "pause_after_seconds": 0.5,
+            "provider_text": "Two packages. Piper for speech, faster whisper for transcription. That is the entire cost of entry."
+          },
+          "enhancement_cues": [
+            {
+              "type": "code_snippet",
+              "description": "cmd: pip install piper-tts faster-whisper \u2014 types from 8.15s. Real captured output follows: Collecting lines, Installing collected packages, Successfully installed faster-whisper-1.2.1 piper-tts-1.7.0. Pill 'installed' at 13.9s.",
+              "timestamp_seconds": 8.15
+            }
+          ],
+          "source_ref": "Verified in-session: every command and output in this script was executed on this machine on 2026-08-31."
+        },
+        {
+          "id": "s3",
+          "label": "Download the voice model",
+          "text": "Then one command for the voice model. This is the step people miss. Without it, Piper reports that it cannot find a voice.",
+          "start_seconds": 15.53,
+          "end_seconds": 23.37,
+          "speaker_directions": "Piper en_US-lessac-medium, default length_scale 1.0, sentence_silence 0.35. Do not add SSML \u2014 Piper ignores it.",
+          "delivery_cues": {
+            "pace": "measured",
+            "energy": "slight warning lean on the miss",
+            "emphasis_words": [
+              "step people miss",
+              "cannot find a voice"
+            ],
+            "pause_after_seconds": 0.5,
+            "provider_text": "Then one command for the voice model. This is the step people miss. Without it, Piper reports that it cannot find a voice."
+          },
+          "enhancement_cues": [
+            {
+              "type": "code_snippet",
+              "description": "cmd: python -m piper.download_voices --download-dir ~/.piper/models en_US-lessac-medium \u2014 types from 15.4s. Output: INFO:__main__:Downloaded: en_US-lessac-medium. Pill 'voice ready' at 21.0s.",
+              "timestamp_seconds": 15.4
+            }
+          ],
+          "source_ref": "Verified in-session: every command and output in this script was executed on this machine on 2026-08-31."
+        },
+        {
+          "id": "s4",
+          "label": "Registry detects the new tools",
+          "text": "Now OpenMontage finds it on its own. Text to speech goes from zero of ten configured, to one.",
+          "start_seconds": 23.87,
+          "end_seconds": 29.8,
+          "speaker_directions": "Piper en_US-lessac-medium, default length_scale 1.0, sentence_silence 0.35. Do not add SSML \u2014 Piper ignores it.",
+          "delivery_cues": {
+            "pace": "conversational",
+            "energy": "lifts \u2014 this is the payoff",
+            "emphasis_words": [
+              "on its own",
+              "zero of ten",
+              "to one"
+            ],
+            "pause_after_seconds": 0.5,
+            "provider_text": "Now OpenMontage finds it on its own. Text to speech goes from zero of ten configured, to one."
+          },
+          "enhancement_cues": [
+            {
+              "type": "code_snippet",
+              "description": "cmd: make -s preflight | tail -n +2 | jq -c '.tts | {configured, total}' \u2014 types from 23.83s. Output: {\"configured\":1,\"total\":10}. Pill 'piper_tts -> available' at 27.6s. Longest hold in the video \u2014 this is the payoff beat.",
+              "timestamp_seconds": 23.83
+            }
+          ],
+          "source_ref": "Verified in-session: every command and output in this script was executed on this machine on 2026-08-31."
+        },
+        {
+          "id": "s5",
+          "label": "Round trip \u2014 speak it, then read it back",
+          "text": "Text goes in, a wave file comes out, and whisper reads it back with word level timing. That is what drives the captions.",
+          "start_seconds": 30.3,
+          "end_seconds": 37.75,
+          "speaker_directions": "Piper en_US-lessac-medium, default length_scale 1.0, sentence_silence 0.35. Do not add SSML \u2014 Piper ignores it.",
+          "delivery_cues": {
+            "pace": "conversational",
+            "energy": "even, procedural",
+            "emphasis_words": [
+              "word level timing",
+              "captions"
+            ],
+            "pause_after_seconds": 0.5,
+            "provider_text": "Text goes in, a wave file comes out, and whisper reads it back with word level timing. That is what drives the captions."
+          },
+          "enhancement_cues": [
+            {
+              "type": "code_snippet",
+              "description": "cmd A at 30.69s: echo \"Two installs, no keys.\" | piper -m en_US-lessac-medium --data-dir ~/.piper/models -f vo.wav (silent, pill 'vo.wav written' at 34.4s). cmd B at 35.6s: the faster_whisper one-liner, typed faster (0.028) because it is long.",
+              "timestamp_seconds": 30.69
+            }
+          ],
+          "source_ref": "Verified in-session: every command and output in this script was executed on this machine on 2026-08-31."
+        },
+        {
+          "id": "s6",
+          "label": "Close \u2014 the proof",
+          "text": "Every word you just heard came out of that command. That is two installs, and no keys.",
+          "start_seconds": 38.25,
+          "end_seconds": 43.62,
+          "speaker_directions": "Piper en_US-lessac-medium, default length_scale 1.0, sentence_silence 0.35. Do not add SSML \u2014 Piper ignores it.",
+          "delivery_cues": {
+            "pace": "measured",
+            "energy": "settles, lands",
+            "emphasis_words": [
+              "that command",
+              "two installs",
+              "no keys"
+            ],
+            "pause_after_seconds": 1.4,
+            "provider_text": "Every word you just heard came out of that command. That is two installs, and no keys."
+          },
+          "enhancement_cues": [
+            {
+              "type": "code_snippet",
+              "description": "Output of cmd B lands at 39.3s, exactly under the narration line: ' Two installs, no keys.' \u2014 the transcript of this video's own closing sentence. Pill 'round trip complete' at 40.0s, then hold to 45.31s.",
+              "timestamp_seconds": 39.3
+            }
+          ],
+          "source_ref": "Verified in-session: every command and output in this script was executed on this machine on 2026-08-31."
+        }
+      ],
+      "metadata": {
+        "script_mode": "silent_source_tts_narration",
+        "script_mode_note": "No source recording exists (synthetic_terminal). Narration is authored for TTS, and TTS is confirmed available \u2014 this script does not depend on a provider that might not be there.",
+        "timing_provenance": "Measured from the shipped narration WAVs in assets/audio/. Speech total 40.82s, plus a 0.3s lead-in, five 0.5s gaps, and a 1.4s closing hold = 45.02s.",
+        "measured_section_durations_seconds": {
+          "s1": 7.294,
+          "s2": 6.935,
+          "s3": 7.84,
+          "s4": 5.934,
+          "s5": 7.444,
+          "s6": 5.377
+        },
+        "interaction_map": [
+          {
+            "timestamp_seconds": 0.0,
+            "action_type": "hold",
+            "target": "empty terminal, blinking cursor",
+            "importance": "medium",
+            "suggested_treatment": "realtime",
+            "note": "Design rule: >=2s of empty terminal before anything types."
+          },
+          {
+            "timestamp_seconds": 3.0,
+            "action_type": "pill",
+            "target": "no API keys",
+            "importance": "medium",
+            "suggested_treatment": "highlight"
+          },
+          {
+            "timestamp_seconds": 8.15,
+            "action_type": "type",
+            "target": "pip install piper-tts faster-whisper",
+            "importance": "critical",
+            "suggested_treatment": "realtime",
+            "type_speed": 0.045
+          },
+          {
+            "timestamp_seconds": 10.1,
+            "action_type": "output",
+            "target": "pip collecting + installing + Successfully installed",
+            "importance": "high",
+            "suggested_treatment": "realtime"
+          },
+          {
+            "timestamp_seconds": 13.9,
+            "action_type": "pill",
+            "target": "installed",
+            "importance": "medium",
+            "suggested_treatment": "highlight"
+          },
+          {
+            "timestamp_seconds": 15.4,
+            "action_type": "type",
+            "target": "python -m piper.download_voices --download-dir ~/.piper/models en_US-lessac-medium",
+            "importance": "critical",
+            "suggested_treatment": "realtime",
+            "type_speed": 0.04
+          },
+          {
+            "timestamp_seconds": 19.8,
+            "action_type": "output",
+            "target": "INFO:__main__:Downloaded: en_US-lessac-medium",
+            "importance": "high",
+            "suggested_treatment": "realtime"
+          },
+          {
+            "timestamp_seconds": 21.0,
+            "action_type": "pill",
+            "target": "voice ready",
+            "importance": "medium",
+            "suggested_treatment": "highlight"
+          },
+          {
+            "timestamp_seconds": 23.83,
+            "action_type": "type",
+            "target": "make -s preflight | tail -n +2 | jq -c '.tts | {configured, total}'",
+            "importance": "critical",
+            "suggested_treatment": "realtime",
+            "type_speed": 0.04
+          },
+          {
+            "timestamp_seconds": 27.0,
+            "action_type": "output",
+            "target": "{\"configured\":1,\"total\":10}",
+            "importance": "critical",
+            "suggested_treatment": "realtime",
+            "note": "Longest hold in the video."
+          },
+          {
+            "timestamp_seconds": 27.6,
+            "action_type": "pill",
+            "target": "piper_tts -> available",
+            "importance": "high",
+            "suggested_treatment": "highlight"
+          },
+          {
+            "timestamp_seconds": 30.69,
+            "action_type": "type",
+            "target": "echo \"Two installs, no keys.\" | piper -m en_US-lessac-medium --data-dir ~/.piper/models -f vo.wav",
+            "importance": "critical",
+            "suggested_treatment": "realtime",
+            "type_speed": 0.035
+          },
+          {
+            "timestamp_seconds": 34.4,
+            "action_type": "pill",
+            "target": "vo.wav written",
+            "importance": "medium",
+            "suggested_treatment": "highlight"
+          },
+          {
+            "timestamp_seconds": 35.6,
+            "action_type": "type",
+            "target": "python -c \"from faster_whisper import WhisperModel as M;s,_=M('tiny').transcribe('vo.wav');print(next(s).text)\"",
+            "importance": "critical",
+            "suggested_treatment": "realtime",
+            "type_speed": 0.028,
+            "note": "Typed faster than the others because it is long; still legible, and the eye only needs the shape."
+          },
+          {
+            "timestamp_seconds": 39.3,
+            "action_type": "output",
+            "target": " Two installs, no keys.",
+            "importance": "critical",
+            "suggested_treatment": "realtime",
+            "note": "Lands under the s6 narration line. This is the whole video in one frame."
+          },
+          {
+            "timestamp_seconds": 40.0,
+            "action_type": "pill",
+            "target": "round trip complete",
+            "importance": "high",
+            "suggested_treatment": "highlight"
+          },
+          {
+            "timestamp_seconds": 43.91,
+            "action_type": "hold",
+            "target": "final terminal state",
+            "importance": "high",
+            "suggested_treatment": "realtime",
+            "note": "1.4s readable hold after narration ends."
+          }
+        ],
+        "speed_plan": {
+          "note": "No source footage means no speed ramps. The equivalent lever is per-command typeSpeed, listed in interaction_map.",
+          "type_speed_range": "0.028-0.045 s/char \u2014 slower for the two commands the viewer should actually copy, faster for the long verification one-liner.",
+          "no_dead_time": "Every pause step exists to reach a narration cue, not to wait on a process."
+        },
+        "chapter_candidates": [
+          {
+            "time": 0.0,
+            "title": "The claim"
+          },
+          {
+            "time": 8.15,
+            "title": "Install"
+          },
+          {
+            "time": 15.4,
+            "title": "Voice model"
+          },
+          {
+            "time": 23.83,
+            "title": "Registry picks it up"
+          },
+          {
+            "time": 30.69,
+            "title": "Round trip"
+          }
+        ],
+        "callout_candidates": [
+          "no API keys",
+          "installed",
+          "voice ready",
+          "piper_tts -> available",
+          "vo.wav written",
+          "round trip complete"
+        ],
+        "callout_policy": "One pill on screen at a time, each fired at the moment its event completes. Six across 45s.",
+        "sections_needing_zoom": [],
+        "zoom_note": "None. A synthetic terminal is authored at final resolution \u2014 every character is already crisp at 1080p, so the pipeline's usual crop-legibility risk does not apply.",
+        "pronunciation_guides": [
+          {
+            "word": "piper-tts",
+            "phonetic": "written as 'Piper' in narration \u2014 the hyphenated package name reads badly aloud"
+          },
+          {
+            "word": "faster-whisper",
+            "phonetic": "written as 'faster whisper', unhyphenated"
+          },
+          {
+            "word": "jq",
+            "phonetic": "never spoken; appears on screen only"
+          }
+        ],
+        "intelligibility_check": {
+          "method": "Every synthesized line was transcribed back with faster-whisper (base) and diffed against intent.",
+          "fixes_applied": [
+            "'Three tools flip to available' came back as 'Free tools' \u2014 rewritten, then rewritten again to name the actual on-screen numbers ('zero of ten configured, to one').",
+            "'Two installs' came back as 'To installs' in s6 \u2014 rewritten to 'That is two installs, and no keys.', which transcribes correctly."
+          ],
+          "residual": "'faster whisper' occasionally returns as 'Taster Whisper' and 'wave file' as 'way file' under the base ASR model. These are recognizer errors on clean audio, not synthesis defects \u2014 captions are burned from this script's text, never from ASR, so they cannot reach the screen."
+        },
+        "verbatim_output_policy": "Every output line was captured from a real run on this machine. pip output came from a clean throwaway venv install; the Successfully-installed line is elided with a trailing ellipsis because the true line lists 30 packages.",
+        "budget_usd": 0.0,
+        "revision_note": "REVISED after asset generation. Piper's duration predictor is stochastic (noise_w=0.8 in the voice config), so identical text re-synthesizes to a different length \u2014 measured spread was 4.83 / 4.61 / 4.60s on one line across three runs. The pre-generation probe therefore could not be authoritative. These timings are measured from the exact WAV files that ship in assets/audio/, and the compose stage must use those files rather than regenerate them. Wording, order, and every creative choice are unchanged from the approved version; only numeric boundaries moved."
+      }
+    }
+  },
+  "style_playbook": "clean-professional",
+  "review": {
+    "version": "1.0",
+    "reviewer": "asset-director send-back (timing only)",
+    "verdict": "pass",
+    "findings": [
+      {
+        "severity": "info",
+        "note": "REVISED after asset generation. Piper's duration predictor is stochastic (noise_w=0.8 in the voice config), so identical text re-synthesizes to a different length \u2014 measured spread was 4.83 / 4.61 / 4.60s on one line across three runs. The pre-generation probe therefore could not be authoritative. These timings are measured from the exact WAV files that ship in assets/audio/, and the compose stage must use those files rather than regenerate them. Wording, order, and every creative choice are unchanged from the approved version; only numeric boundaries moved."
+      }
+    ]
+  },
+  "cost_snapshot": {
+    "spent_usd": 0.0,
+    "budget_usd": 1.0,
+    "remaining_usd": 1.0
+  },
+  "metadata": {
+    "revised_after_approval": "timing_only",
+    "revision_reason": "piper non-determinism"
+  }
+}

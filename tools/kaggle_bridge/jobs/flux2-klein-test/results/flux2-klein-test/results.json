@@ -1,0 +1,16 @@
+{
+  "protocol": "tools/kaggle_bridge/jobs/flux2-klein-test/test_protocol.json",
+  "started_utc": "2026-10-27T00:26:50Z",
+  "environment": {
+    "torch": "2.11.0+cu128",
+    "cuda_available": true,
+    "diffusers": "0.37.0",
+    "device": "Tesla T4",
+    "total_vram_gb": 14.56
+  },
+  "test": {
+    "status": "failed",
+    "stage": "load",
+    "error": "Pipeline <class 'diffusers.pipelines.flux.pipeline_flux.FluxPipeline'> expected ['feature_extractor', 'image_encoder', 'scheduler', 'text_encoder', 'text_encoder_2', 'tokenizer', 'tokenizer_2', 'transformer', 'vae'], but only {'vae', 'text_encoder', 'transformer', 'scheduler', 'tokenizer'} were passed."
+  }
+}

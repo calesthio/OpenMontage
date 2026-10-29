@@ -1,0 +1,26 @@
+[{"stream_name":"stderr","time":1.756936246,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stderr","time":1.808122745,"data":"  File \"/kaggle/src/script.py\", line 740, in \u003cmodule\u003e\n"}
+,{"stream_name":"stderr","time":1.808153501,"data":"    sys.exit(main())\n"}
+,{"stream_name":"stderr","time":1.808158436,"data":"             ~~~~^^\n"}
+,{"stream_name":"stderr","time":1.808162759,"data":"  File \"/kaggle/src/script.py\", line 736, in main\n"}
+,{"stream_name":"stderr","time":1.808166952,"data":"    return _ENGINE.main()\n"}
+,{"stream_name":"stderr","time":1.80817078,"data":"           ~~~~~~~~~~~~^^\n"}
+,{"stream_name":"stderr","time":1.808174996,"data":"  File \"/kaggle/src/script.py\", line 736, in main\n"}
+,{"stream_name":"stderr","time":1.808178647,"data":"    return _ENGINE.main()\n"}
+,{"stream_name":"stderr","time":1.808182084,"data":"           ~~~~~~~~~~~~^^\n"}
+,{"stream_name":"stderr","time":1.808185537,"data":"  File \"/kaggle/src/script.py\", line 736, in main\n"}
+,{"stream_name":"stderr","time":1.808189085,"data":"    return _ENGINE.main()\n"}
+,{"stream_name":"stderr","time":1.808192607,"data":"           ~~~~~~~~~~~~^^\n"}
+,{"stream_name":"stderr","time":1.808196187,"data":"  [Previous line repeated 993 more times]\n"}
+,{"stream_name":"stderr","time":1.8081995690000001,"data":"  File \"/kaggle/src/script.py\", line 726, in main\n"}
+,{"stream_name":"stderr","time":1.808209006,"data":"    raw = os.environ.get(\"S8_JOB_JSON\")\n"}
+,{"stream_name":"stderr","time":1.808211806,"data":"  File \"\u003cfrozen _collections_abc\u003e\", line 811, in get\n"}
+,{"stream_name":"stderr","time":1.808214429,"data":"  File \"\u003cfrozen os\u003e\", line 714, in __getitem__\n"}
+,{"stream_name":"stderr","time":1.808216992,"data":"RecursionError: maximum recursion depth exceeded\n"}
+,{"stream_name":"stderr","time":4.777605622,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":4.777645899,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":5.496940468,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":5.496965993,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":8.305756235,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":9.905098184,"data":"[NbConvertApp] Writing 424597 bytes to __results__.html\n"}
+]

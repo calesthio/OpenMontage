@@ -1,0 +1,35 @@
+spec_version: "1.0"
+pilot: "life beneath a frozen alien ocean"
+niche: speculative_evolution
+type: species
+name: "filter drifter"
+role: "sieves suspended microbes and organic particles from the water column"
+anatomy:
+  limb_count: 0
+  eye_count: 0
+  horn_count: 0
+  dominant_features:
+    - name: "undulating fin"
+      function: "maintains neutral buoyancy and position in the current without swimming against it"
+      evidence: "INFERENCE"
+      source: "deep-sea animals conserve energy; neutral buoyancy in darkness (NOAA deep-ocean notes)"
+    - name: "wide filter mouth"
+      function: "filters suspended microbes/organic particles from passing water"
+      evidence: "SPECULATION"
+      source: "filter-feeding analogues (mussels, clams, shrimp at vents); no direct alien analogue"
+energy_source: "chemosynthesis-derived: consumes free-living chemosynthetic bacteria and organic particles suspended in the water (not sunlight)"
+pressure_temperature_constraint: "adapted to total darkness below ~200 m (no photosynthesis), average deep-water temp ~4 C, pressure hundreds of atm; soft, pressure-resistant body with no air spaces (would collapse)"
+canonical_silhouette: "ribbon-like, horizontally flattened body with a broad undulating fin along the edges and a wide frontal filter mouth; no limbs, no eyes, no horns; neutral-buoyancy drifter shape"
+known_inference_speculation_per_trait:
+  limb_count_0: KNOWN  (limbs useless in open water; drifters are limbless like many deep-water jellies/larvaceans)
+  eye_count_0: KNOWN   (below ~200 m no sunlight reaches; eyes provide no advantage — NOAA deep-ocean)
+  horn_count_0: KNOWN  (no display function in darkness)
+  undulating_fin: INFERENCE
+  wide_filter_mouth: SPECULATION
+sources:
+  - title: "Wild and Bizarre Marine Life — pressure, light, chemosynthesis (NOAA Ocean Explorer)"
+    url: "https://oceanexplorer.noaa.gov/explainers/marine-life/"
+    accessed: "2026-10-21"
+  - title: "Life on a Hydrothermal Vent (NOAA Ocean Explorer)"
+    url: "https://oceanexplorer.noaa.gov/wp-content/uploads/2025/04/life-on-hydrothermal-vent-investigation.pdf"
+    accessed: "2026-10-21"

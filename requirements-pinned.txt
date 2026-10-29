@@ -1,0 +1,9 @@
+# Note: torch intentionally excluded. Heavy generation runs on Kaggle T4
+# (see tools/kaggle_bridge/jobs/*), where torch is installed separately
+# inside the kernel environment via kaggle kernels push.
+# If codespace-local torch usage is ever added outside kaggle_bridge/jobs/,
+# pin torch==2.14.1+cpu via:
+# pip install torch==2.14.1 --index-url https://download.pytorch.org/whl/cpu
+diffusers==0.37.0
+transformers==4.57.6
+huggingface_hub==0.36.2

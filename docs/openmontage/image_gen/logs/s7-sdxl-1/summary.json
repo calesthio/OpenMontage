@@ -1,0 +1,459 @@
+{
+  "model": "sdxl",
+  "job_id": "s7-sdxl-1",
+  "status": "COMPLETE",
+  "verify_verdict": "PASS",
+  "verify": {
+    "manifest_valid": true,
+    "sha256_match": true,
+    "data_file": null,
+    "sha256": null,
+    "manifest": {
+      "job_id": "s7-sdxl-1",
+      "model": "sdxl",
+      "model_id": "stabilityai/stable-diffusion-xl-base-1.0",
+      "pipeline_class": "StableDiffusionXLPipeline",
+      "dtype": "float16",
+      "bitsandbytes": false,
+      "cpu_fallback": false,
+      "cpu_offload_used": false,
+      "width": 1024,
+      "height": 1024,
+      "requested": 10,
+      "generated": 10,
+      "load_seconds": 86.233,
+      "steady_state_sec_per_image": 41.4,
+      "steady_median_sec_per_image": 41.676,
+      "mean_sec_per_image": 41.286,
+      "usable_images_per_minute": 1.42,
+      "gpu_seconds": 421.37,
+      "peak_vram_mb": 9169.58,
+      "oom_count": 0,
+      "black_count": 0,
+      "nan_count": 0,
+      "wall_cap_seconds": 5400,
+      "wall_cap_hit": false,
+      "load_notes": {
+        "vae": "madebyollin/sdxl-vae-fp16-fix",
+        "model_cpu_offload": false
+      },
+      "versions": {
+        "diffusers": "0.36.0",
+        "transformers": "4.57.6",
+        "huggingface_hub": "0.36.2",
+        "torch": "2.11.0+cu128",
+        "accelerate": "1.14.0",
+        "safetensors": "0.8.0",
+        "numpy": "2.1.3",
+        "pillow": "12.3.0",
+        "torch_cuda": "12.8",
+        "gpu": "Tesla T4",
+        "python": "3.13.15"
+      },
+      "install_log": {
+        "ladder": [],
+        "rungs": [
+          {
+            "rung": 1,
+            "stack": "released_041_x4",
+            "note": "released diffusers 0.41.0 + transformers 4.x + hub <1.0",
+            "pip_args": [
+              "diffusers==0.41.0",
+              "transformers==4.57.6",
+              "huggingface-hub>=0.34,<1.0",
+              "accelerate>=1.10",
+              "safetensors>=0.4"
+            ],
+            "pip_ok": false,
+            "import_found": null,
+            "import_error": "pip failed: ERROR: Cannot install diffusers==0.41.0 and huggingface-hub<1.0 and >=0.34 because these package versions have conflicting dependencies.\nERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts\n",
+            "versions_after": {}
+          },
+          {
+            "rung": 2,
+            "stack": "released_041_x5",
+            "note": "released diffusers 0.41.0 + transformers 5.x + hub 1.x",
+            "pip_args": [
+              "diffusers==0.41.0",
+              "transformers==5.20.2",
+              "huggingface-hub>=1.0,<2.0",
+              "accelerate>=1.10",
+              "safetensors>=0.4"
+            ],
+            "pip_ok": true,
+            "import_found": null,
+            "import_error": "cannot import name 'FqnToConfig' from 'torchao.quantization' (/usr/local/lib/python3.13/dist-packages/torchao/quantization/__init__.py)",
+            "versions_after": {}
+          },
+          {
+            "rung": 3,
+            "stack": "released_036_x4",
+            "note": "older released diffusers 0.36.0 + transformers 4.x",
+            "pip_args": [
+              "diffusers==0.36.0",
+              "transformers==4.57.6",
+              "huggingface-hub>=0.34,<1.0",
+              "accelerate>=1.10",
+              "safetensors>=0.4"
+            ],
+            "pip_ok": true,
+            "import_found": "StableDiffusionXLPipeline",
+            "import_error": null,
+            "versions_after": {
+              "diffusers": "0.36.0",
+              "transformers": "4.57.6",
+              "huggingface_hub": "0.36.2",
+              "accelerate": "1.14.0",
+              "torch": "2.11.0+cu128"
+            }
+          }
+        ],
+        "used_rung": 3,
+        "used_stack": "released_036_x4",
+        "pipeline_class": "StableDiffusionXLPipeline"
+      },
+      "created_utc": "2026-10-21T11:04:39Z",
+      "images": [
+        {
+          "render_id": "r0001",
+          "scene_id": "s01",
+          "variant": "A",
+          "file": "r0001.png",
+          "sha256": "ff417f8ba6cef48a7a17c206d8b487637711aae6425047138f50928deb71eee9",
+          "bytes": 1810287,
+          "width": 1024,
+          "height": 1024,
+          "seed": 4000,
+          "steps": 50,
+          "guidance_scale": 7.5,
+          "prompt": "vent grazer grazing bacterial mats on a vent chimney, 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs, hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime bioluminescence, flat-vector field-guide plate, , deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8, side silhouette, rule-of-thirds, copy space, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+          "seconds": 40.2588,
+          "black": false,
+          "nonfinite": false
+        },
+        {
+          "render_id": "r0004",
+          "scene_id": "s03",
+          "variant": "A",
+          "file": "r0004.png",
+          "sha256": "6724a06d152fb47a4423bece7ede17605eb87a84b562f160f2dd59cdc3425278",
+          "bytes": 1931056,
+          "width": 1024,
+          "height": 1024,
+          "seed": 4004,
+          "steps": 50,
+          "guidance_scale": 7.5,
+          "prompt": "filter drifter sieving suspended microbes, 0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth, open water column of the frozen alien ocean, diffuse bioluminescent glow, neutral buoyancy, flat-vector field-guide plate, , deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8, three-quarter view, floating in mid-water, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+          "seconds": 39.2474,
+          "black": false,
+          "nonfinite": false
+        },
+        {
+          "render_id": "r0007",
+          "scene_id": "s04",
+          "variant": "A",
+          "file": "r0007.png",
+          "sha256": "204779135ec0465ca333cb899a9a0e4b5ad1a9f08a9d6b7f39850405bef81160",
+          "bytes": 1747288,
+          "width": 1024,
+          "height": 1024,
+          "seed": 4006,
+          "steps": 50,
+          "guidance_scale": 7.5,
+          "prompt": "ice burrower peristaltic burrowing through sediment, 0 limbs, 0 eyes, 0 horns; tapered head, segmented body, deep ocean sediment beneath the ice, very dim bioluminescence, near darkness, flat-vector field-guide plate, , deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8, side view, half-submerged in sediment, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+          "seconds": 41.7399,
+          "black": false,
+          "nonfinite": false
+        },
+        {
+          "render_id": "r0010",
+          "scene_id": "s05",
+          "variant": "A",
+          "file": "r0010.png",
+          "sha256": "55dd2cd733c03582a9e12ff96b6fb492c7b79ce8898e71e819aa5e53f8c72805",
+          "bytes": 1858399,
+          "width": 1024,
+          "height": 1024,
+          "seed": 4008,
+          "steps": 50,
+          "guidance_scale": 7.5,
+          "prompt": "vent chimney field with black smokers, 0 limbs, 0 eyes, 0 horns, field of hydrothermal vent chimneys on the ocean floor, vent glow illuminating black smoker plumes, flat-vector field-guide plate, , deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8, wide establishing shot, low angle, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+          "seconds": 41.7474,
+          "black": false,
+          "nonfinite": false
+        },
+        {
+          "render_id": "r0013",
+          "scene_id": "s06",
+          "variant": "A",
+          "file": "r0013.png",
+          "sha256": "f0d26052323067ea45c6fe568c1e922d0aeea23d5ec343217d48e8c720e530d8",
+          "bytes": 1751078,
+          "width": 1024,
+          "height": 1024,
+          "seed": 4010,
+          "steps": 50,
+          "guidance_scale": 7.5,
+          "prompt": "under-ice cavern ceiling with melt pools, 0 limbs, 0 eyes, 0 horns, cavern beneath the frozen ice shell, faint light filtering through ice, bioluminescent patches, flat-vector field-guide plate, , deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8, looking up at the ice ceiling, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+          "seconds": 41.5251,
+          "black": false,
+          "nonfinite": false
+        },
+        {
+          "render_id": "r0016",
+          "scene_id": "s08",
+          "variant": "A",
+          "file": "r0016.png",
+          "sha256": "1c536d1ccd122172b8713d493b08f68ebb0c2f43c6a7fdf3d806d6ca8f5c1bc7",
+          "bytes": 1985245,
+          "width": 1024,
+          "height": 1024,
+          "seed": 4014,
+          "steps": 50,
+          "guidance_scale": 7.5,
+          "prompt": "vent grazer spade-like forelimb anatomy detail, 6 limbs, 2 eyes, 0 horns; spade-like forelimb close-up, close-up on basalt vent rock, bioluminescent lime highlight on the forelimb, flat-vector field-guide plate, , deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8, macro detail crop, tight framing, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+          "seconds": 41.7418,
+          "black": false,
+          "nonfinite": false
+        },
+        {
+          "render_id": "r0019",
+          "scene_id": "s09",
+          "variant": "A",
+          "file": "r0019.png",
+          "sha256": "41d585a5e87630974780378dd3067a287c0e6f7b92efff236d716430158ef81c",
+          "bytes": 2084859,
+          "width": 1024,
+          "height": 1024,
+          "seed": 4016,
+          "steps": 50,
+          "guidance_scale": 7.5,
+          "prompt": "filter drifter wide filter mouth anatomy detail, 0 limbs, 0 eyes, 0 horns; wide filter mouth close-up, close-up in mid-water, diffuse bioluminescent backlight, flat-vector field-guide plate, , deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8, macro detail crop, front-facing, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+          "seconds": 41.4844,
+          "black": false,
+          "nonfinite": false
+        },
+        {
+          "render_id": "r0022",
+          "scene_id": "s10",
+          "variant": "A",
+          "file": "r0022.png",
+          "sha256": "8def1ce2c2915fd2eea9b4c7f0bd2074b122c543e1e9df760957d5ae5c8d260a",
+          "bytes": 1637397,
+          "width": 1024,
+          "height": 1024,
+          "seed": 4018,
+          "steps": 50,
+          "guidance_scale": 7.5,
+          "prompt": "food-web plate: chemosynthetic bacteria, vent grazer, filter drifter, 6 limbs, 2 eyes, 0 horns, vent field with bacterial mat base of the food web, vent glow, bioluminescent lime bacteria, flat-vector field-guide plate, , deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8, wide plate with copy space for labels, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+          "seconds": 41.676,
+          "black": false,
+          "nonfinite": false
+        },
+        {
+          "render_id": "r0025",
+          "scene_id": "s11",
+          "variant": "A",
+          "file": "r0025.png",
+          "sha256": "b15313ba1186c090c463f8497352be5ba9b550d87f3ff6539e6eddcafe4e22cc",
+          "bytes": 1599819,
+          "width": 1024,
+          "height": 1024,
+          "seed": 4020,
+          "steps": 50,
+          "guidance_scale": 7.5,
+          "prompt": "food-web plate: ice burrower, bacteria, detritus, 0 limbs, 0 eyes, 0 horns; segmented body, sediment with bacterial films and detritus, very dim bioluminescence, flat-vector field-guide plate, , deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8, wide plate with copy space for labels, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+          "seconds": 41.8391,
+          "black": false,
+          "nonfinite": false
+        },
+        {
+          "render_id": "r0028",
+          "scene_id": "s12",
+          "variant": "A",
+          "file": "r0028.png",
+          "sha256": "839c1cae1aa60d2ecda0be5e85d2a2834fdbad5cebbb20a3968121ba5a06d3cc",
+          "bytes": 1993045,
+          "width": 1024,
+          "height": 1024,
+          "seed": 4022,
+          "steps": 50,
+          "guidance_scale": 7.5,
+          "prompt": "frozen planet surface with vent plumes breaking through ice, 0 limbs, 0 eyes, 0 horns, ice crust surface with plume fractures, dim surface light, plume glow from below, flat-vector field-guide plate, , deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8, planet-surface wide, high angle, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+          "seconds": 41.6013,
+          "black": false,
+          "nonfinite": false
+        }
+      ]
+    },
+    "images": [
+      {
+        "file": "r0001.png",
+        "actual_sha256": "ff417f8ba6cef48a7a17c206d8b487637711aae6425047138f50928deb71eee9",
+        "manifest_sha256": "ff417f8ba6cef48a7a17c206d8b487637711aae6425047138f50928deb71eee9",
+        "actual_bytes": 1810287,
+        "manifest_bytes": 1810287,
+        "sha256_match": true
+      },
+      {
+        "file": "r0004.png",
+        "actual_sha256": "6724a06d152fb47a4423bece7ede17605eb87a84b562f160f2dd59cdc3425278",
+        "manifest_sha256": "6724a06d152fb47a4423bece7ede17605eb87a84b562f160f2dd59cdc3425278",
+        "actual_bytes": 1931056,
+        "manifest_bytes": 1931056,
+        "sha256_match": true
+      },
+      {
+        "file": "r0007.png",
+        "actual_sha256": "204779135ec0465ca333cb899a9a0e4b5ad1a9f08a9d6b7f39850405bef81160",
+        "manifest_sha256": "204779135ec0465ca333cb899a9a0e4b5ad1a9f08a9d6b7f39850405bef81160",
+        "actual_bytes": 1747288,
+        "manifest_bytes": 1747288,
+        "sha256_match": true
+      },
+      {
+        "file": "r0010.png",
+        "actual_sha256": "55dd2cd733c03582a9e12ff96b6fb492c7b79ce8898e71e819aa5e53f8c72805",
+        "manifest_sha256": "55dd2cd733c03582a9e12ff96b6fb492c7b79ce8898e71e819aa5e53f8c72805",
+        "actual_bytes": 1858399,
+        "manifest_bytes": 1858399,
+        "sha256_match": true
+      },
+      {
+        "file": "r0013.png",
+        "actual_sha256": "f0d26052323067ea45c6fe568c1e922d0aeea23d5ec343217d48e8c720e530d8",
+        "manifest_sha256": "f0d26052323067ea45c6fe568c1e922d0aeea23d5ec343217d48e8c720e530d8",
+        "actual_bytes": 1751078,
+        "manifest_bytes": 1751078,
+        "sha256_match": true
+      },
+      {
+        "file": "r0016.png",
+        "actual_sha256": "1c536d1ccd122172b8713d493b08f68ebb0c2f43c6a7fdf3d806d6ca8f5c1bc7",
+        "manifest_sha256": "1c536d1ccd122172b8713d493b08f68ebb0c2f43c6a7fdf3d806d6ca8f5c1bc7",
+        "actual_bytes": 1985245,
+        "manifest_bytes": 1985245,
+        "sha256_match": true
+      },
+      {
+        "file": "r0019.png",
+        "actual_sha256": "41d585a5e87630974780378dd3067a287c0e6f7b92efff236d716430158ef81c",
+        "manifest_sha256": "41d585a5e87630974780378dd3067a287c0e6f7b92efff236d716430158ef81c",
+        "actual_bytes": 2084859,
+        "manifest_bytes": 2084859,
+        "sha256_match": true
+      },
+      {
+        "file": "r0022.png",
+        "actual_sha256": "8def1ce2c2915fd2eea9b4c7f0bd2074b122c543e1e9df760957d5ae5c8d260a",
+        "manifest_sha256": "8def1ce2c2915fd2eea9b4c7f0bd2074b122c543e1e9df760957d5ae5c8d260a",
+        "actual_bytes": 1637397,
+        "manifest_bytes": 1637397,
+        "sha256_match": true
+      },
+      {
+        "file": "r0025.png",
+        "actual_sha256": "b15313ba1186c090c463f8497352be5ba9b550d87f3ff6539e6eddcafe4e22cc",
+        "manifest_sha256": "b15313ba1186c090c463f8497352be5ba9b550d87f3ff6539e6eddcafe4e22cc",
+        "actual_bytes": 1599819,
+        "manifest_bytes": 1599819,
+        "sha256_match": true
+      },
+      {
+        "file": "r0028.png",
+        "actual_sha256": "839c1cae1aa60d2ecda0be5e85d2a2834fdbad5cebbb20a3968121ba5a06d3cc",
+        "manifest_sha256": "839c1cae1aa60d2ecda0be5e85d2a2834fdbad5cebbb20a3968121ba5a06d3cc",
+        "actual_bytes": 1993045,
+        "manifest_bytes": 1993045,
+        "sha256_match": true
+      }
+    ]
+  },
+  "generated": 10,
+  "requested": 10,
+  "load_seconds": 86.233,
+  "steady_state_sec_per_image": 41.4,
+  "usable_images_per_minute": 1.42,
+  "peak_vram_mb": 9169.58,
+  "black_count": 0,
+  "nan_count": 0,
+  "oom_count": 0,
+  "pipeline_class": "StableDiffusionXLPipeline",
+  "versions": {
+    "diffusers": "0.36.0",
+    "transformers": "4.57.6",
+    "huggingface_hub": "0.36.2",
+    "torch": "2.11.0+cu128",
+    "accelerate": "1.14.0",
+    "safetensors": "0.8.0",
+    "numpy": "2.1.3",
+    "pillow": "12.3.0",
+    "torch_cuda": "12.8",
+    "gpu": "Tesla T4",
+    "python": "3.13.15"
+  },
+  "install_log": {
+    "ladder": [],
+    "rungs": [
+      {
+        "rung": 1,
+        "stack": "released_041_x4",
+        "note": "released diffusers 0.41.0 + transformers 4.x + hub <1.0",
+        "pip_args": [
+          "diffusers==0.41.0",
+          "transformers==4.57.6",
+          "huggingface-hub>=0.34,<1.0",
+          "accelerate>=1.10",
+          "safetensors>=0.4"
+        ],
+        "pip_ok": false,
+        "import_found": null,
+        "import_error": "pip failed: ERROR: Cannot install diffusers==0.41.0 and huggingface-hub<1.0 and >=0.34 because these package versions have conflicting dependencies.\nERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts\n",
+        "versions_after": {}
+      },
+      {
+        "rung": 2,
+        "stack": "released_041_x5",
+        "note": "released diffusers 0.41.0 + transformers 5.x + hub 1.x",
+        "pip_args": [
+          "diffusers==0.41.0",
+          "transformers==5.20.2",
+          "huggingface-hub>=1.0,<2.0",
+          "accelerate>=1.10",
+          "safetensors>=0.4"
+        ],
+        "pip_ok": true,
+        "import_found": null,
+        "import_error": "cannot import name 'FqnToConfig' from 'torchao.quantization' (/usr/local/lib/python3.13/dist-packages/torchao/quantization/__init__.py)",
+        "versions_after": {}
+      },
+      {
+        "rung": 3,
+        "stack": "released_036_x4",
+        "note": "older released diffusers 0.36.0 + transformers 4.x",
+        "pip_args": [
+          "diffusers==0.36.0",
+          "transformers==4.57.6",
+          "huggingface-hub>=0.34,<1.0",
+          "accelerate>=1.10",
+          "safetensors>=0.4"
+        ],
+        "pip_ok": true,
+        "import_found": "StableDiffusionXLPipeline",
+        "import_error": null,
+        "versions_after": {
+          "diffusers": "0.36.0",
+          "transformers": "4.57.6",
+          "huggingface_hub": "0.36.2",
+          "accelerate": "1.14.0",
+          "torch": "2.11.0+cu128"
+        }
+      }
+    ],
+    "used_rung": 3,
+    "used_stack": "released_036_x4",
+    "pipeline_class": "StableDiffusionXLPipeline"
+  },
+  "log_dir": "docs/openmontage/image_gen/logs/s7-sdxl-1",
+  "images_dir": "/tmp/kilo/s7_out/sdxl/s7_bakeoff_sdxl/images"
+}

@@ -1,0 +1,339 @@
+{
+  "schema_version": "1.0",
+  "milestone": "S7-9",
+  "label": "agent opinion, not independent; a vision model can miss anatomy errors and misread flat art",
+  "rubric": "OpenCode rubric (scripts/score_rubric.py): 0-2 per dimension",
+  "dimensions": [
+    "anatomy",
+    "geometry",
+    "count_relation",
+    "texture",
+    "text",
+    "usefulness"
+  ],
+  "agent_pick": "klein",
+  "confidence": "medium",
+  "ranking_severe_then_usable_then_speed": [
+    "klein",
+    "sdxl"
+  ],
+  "per_model": {
+    "sdxl": {
+      "n_images": 10,
+      "severe_artifact_scores": 20,
+      "images_with_severe_artifact": 9,
+      "usable_images": 1,
+      "usable_share": 0.1,
+      "repair_burden": 1.05,
+      "mean_score": 0.95,
+      "sec_per_image": 41.4
+    },
+    "klein": {
+      "n_images": 10,
+      "severe_artifact_scores": 6,
+      "images_with_severe_artifact": 5,
+      "usable_images": 5,
+      "usable_share": 0.5,
+      "repair_burden": 0.5833,
+      "mean_score": 1.417,
+      "sec_per_image": 24.691
+    }
+  },
+  "weakest_scenes": {
+    "sdxl": [
+      "s10",
+      "s11",
+      "s05"
+    ],
+    "klein": [
+      "s04",
+      "s10",
+      "s01"
+    ],
+    "zimage": []
+  },
+  "images": [
+    {
+      "render_id": "r0001",
+      "scene_id": "s01",
+      "model": "sdxl",
+      "scores": {
+        "anatomy": 0,
+        "geometry": 1,
+        "count_relation": 0,
+        "texture": 2,
+        "text": 0,
+        "usefulness": 0
+      },
+      "notes": "poster collage of many creatures; no single 6-limbed grazer; heavy garbled text blocks"
+    },
+    {
+      "render_id": "r0002",
+      "scene_id": "s01",
+      "model": "klein",
+      "scores": {
+        "anatomy": 1,
+        "geometry": 2,
+        "count_relation": 0,
+        "texture": 2,
+        "text": 2,
+        "usefulness": 1
+      },
+      "notes": "flat-vector silhouette grazer on lime mats, on-palette, no text; 4 legs not 6, plain hooved legs not spade-like"
+    },
+    {
+      "render_id": "r0004",
+      "scene_id": "s03",
+      "model": "sdxl",
+      "scores": {
+        "anatomy": 1,
+        "geometry": 1,
+        "count_relation": 1,
+        "texture": 1,
+        "text": 2,
+        "usefulness": 1
+      },
+      "notes": "painterly glowing jellyfish scene; not flat-vector, no single filter drifter, no text"
+    },
+    {
+      "render_id": "r0005",
+      "scene_id": "s03",
+      "model": "klein",
+      "scores": {
+        "anatomy": 1,
+        "geometry": 2,
+        "count_relation": 0,
+        "texture": 0,
+        "text": 2,
+        "usefulness": 1
+      },
+      "notes": "photoreal 3D green fish with wide open mouth, light rays; not flat-vector, visible eye contradicts 0 eyes"
+    },
+    {
+      "render_id": "r0007",
+      "scene_id": "s04",
+      "model": "sdxl",
+      "scores": {
+        "anatomy": 0,
+        "geometry": 1,
+        "count_relation": 0,
+        "texture": 2,
+        "text": 2,
+        "usefulness": 0
+      },
+      "notes": "flat-vector fish shoal; wrong subject, no segmented burrower or sediment"
+    },
+    {
+      "render_id": "r0008",
+      "scene_id": "s04",
+      "model": "klein",
+      "scores": {
+        "anatomy": 1,
+        "geometry": 2,
+        "count_relation": 0,
+        "texture": 1,
+        "text": 2,
+        "usefulness": 1
+      },
+      "notes": "segmented tapered burrower on dim sediment, stylized vector; visible eye contradicts 0 eyes, no ice ceiling"
+    },
+    {
+      "render_id": "r0010",
+      "scene_id": "s05",
+      "model": "sdxl",
+      "scores": {
+        "anatomy": 2,
+        "geometry": 1,
+        "count_relation": 2,
+        "texture": 0,
+        "text": 2,
+        "usefulness": 1
+      },
+      "notes": "chimney field with plumes; correct subject but painterly neon glow, off-palette magenta/orange, not flat-vector"
+    },
+    {
+      "render_id": "r0011",
+      "scene_id": "s05",
+      "model": "klein",
+      "scores": {
+        "anatomy": 2,
+        "geometry": 2,
+        "count_relation": 2,
+        "texture": 2,
+        "text": 2,
+        "usefulness": 2
+      },
+      "notes": "flat-vector black smoker field with plumes and lime vent glow; on-palette, no text, directly on brief"
+    },
+    {
+      "render_id": "r0013",
+      "scene_id": "s06",
+      "model": "sdxl",
+      "scores": {
+        "anatomy": 2,
+        "geometry": 1,
+        "count_relation": 2,
+        "texture": 0,
+        "text": 2,
+        "usefulness": 1
+      },
+      "notes": "under-ice cavern with melt pool; subject ok, photoreal 3D render not flat-vector"
+    },
+    {
+      "render_id": "r0014",
+      "scene_id": "s06",
+      "model": "klein",
+      "scores": {
+        "anatomy": 2,
+        "geometry": 1,
+        "count_relation": 2,
+        "texture": 2,
+        "text": 2,
+        "usefulness": 1
+      },
+      "notes": "flat-vector teal ice/rock mass with lime glow patches; on-brief palette but cavern ceiling/melt pool ambiguous"
+    },
+    {
+      "render_id": "r0016",
+      "scene_id": "s08",
+      "model": "sdxl",
+      "scores": {
+        "anatomy": 0,
+        "geometry": 1,
+        "count_relation": 0,
+        "texture": 0,
+        "text": 2,
+        "usefulness": 0
+      },
+      "notes": "radial spiky teal blob on brown rock; no forelimb, no 6 limbs/2 eyes, photoreal, off-palette"
+    },
+    {
+      "render_id": "r0017",
+      "scene_id": "s08",
+      "model": "klein",
+      "scores": {
+        "anatomy": 1,
+        "geometry": 2,
+        "count_relation": 1,
+        "texture": 2,
+        "text": 2,
+        "usefulness": 1
+      },
+      "notes": "flat-vector macro of spade-like digits with lime highlight; style match, but no body context and digit count ambiguous"
+    },
+    {
+      "render_id": "r0019",
+      "scene_id": "s09",
+      "model": "sdxl",
+      "scores": {
+        "anatomy": 0,
+        "geometry": 0,
+        "count_relation": 0,
+        "texture": 1,
+        "text": 2,
+        "usefulness": 0
+      },
+      "notes": "abstract organic mesh with green blob; no drifter mouth or subject at all"
+    },
+    {
+      "render_id": "r0020",
+      "scene_id": "s09",
+      "model": "klein",
+      "scores": {
+        "anatomy": 1,
+        "geometry": 2,
+        "count_relation": 1,
+        "texture": 1,
+        "text": 2,
+        "usefulness": 1
+      },
+      "notes": "abstract glowing ring/funnel as filter mouth, soft gradients, no body context"
+    },
+    {
+      "render_id": "r0022",
+      "scene_id": "s10",
+      "model": "sdxl",
+      "scores": {
+        "anatomy": 1,
+        "geometry": 1,
+        "count_relation": 0,
+        "texture": 2,
+        "text": 1,
+        "usefulness": 1
+      },
+      "notes": "strong flat-vector plate with inset panels; central grazer has many limbs (not 6) and one eye spot, small illegible labels"
+    },
+    {
+      "render_id": "r0023",
+      "scene_id": "s10",
+      "model": "klein",
+      "scores": {
+        "anatomy": 1,
+        "geometry": 2,
+        "count_relation": 1,
+        "texture": 2,
+        "text": 0,
+        "usefulness": 1
+      },
+      "notes": "flat-vector food-web plate, 6-limbed grazer ok; garbled labels everywhere and filter drifter has eyes/legs"
+    },
+    {
+      "render_id": "r0025",
+      "scene_id": "s11",
+      "model": "sdxl",
+      "scores": {
+        "anatomy": 1,
+        "geometry": 1,
+        "count_relation": 1,
+        "texture": 2,
+        "text": 0,
+        "usefulness": 1
+      },
+      "notes": "flat-vector specimen plate, on-palette; garbled caption text lines present, subject mix not the segmented burrower"
+    },
+    {
+      "render_id": "r0026",
+      "scene_id": "s11",
+      "model": "klein",
+      "scores": {
+        "anatomy": 1,
+        "geometry": 2,
+        "count_relation": 2,
+        "texture": 2,
+        "text": 0,
+        "usefulness": 1
+      },
+      "notes": "flat-vector plate with glowing segmented specimen; extensive garbled title/labels/hex codes"
+    },
+    {
+      "render_id": "r0028",
+      "scene_id": "s12",
+      "model": "sdxl",
+      "scores": {
+        "anatomy": 2,
+        "geometry": 1,
+        "count_relation": 2,
+        "texture": 0,
+        "text": 2,
+        "usefulness": 1
+      },
+      "notes": "glowing fissures on ochre cratered surface; photoreal not flat-vector, reads desert not ice"
+    },
+    {
+      "render_id": "r0029",
+      "scene_id": "s12",
+      "model": "klein",
+      "scores": {
+        "anatomy": 2,
+        "geometry": 2,
+        "count_relation": 2,
+        "texture": 1,
+        "text": 2,
+        "usefulness": 1
+      },
+      "notes": "teal ice plain with lime plume glow through fractures; right subject, gradient 3D shading not flat-vector"
+    }
+  ],
+  "owner_decides": "The owner's blind CSV (projects/s7_blind/results.csv) decides the winner; scripts/s7_tally.py compares it with this advisory pick.",
+  "note": "Z-Image-Turbo is absent: BLOCKED after 4 attempts with 0 usable images (all frames black), so there is nothing to score. Ranking covers SDXL and klein only."
+}

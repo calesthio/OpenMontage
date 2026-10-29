@@ -10,6 +10,15 @@ import {
   TitledVideo,
   calculateTitledVideoMetadata,
 } from "./TitledVideo";
+import {
+  PilotScene1,
+  calculatePilotScene1Metadata,
+} from "./PilotScene";
+import {
+  PilotDraft,
+  calculatePilotDraftMetadata,
+  PILOT_DRAFT_PROPS,
+} from "./PilotDraft";
 import { EndTag, EndTagProps } from "./components/EndTag";
 import { HeroTitle } from "./components/HeroTitle";
 import { ProductReveal, ProductRevealProps } from "./components/ProductReveal";
@@ -208,6 +217,29 @@ export const Root: React.FC = () => {
           accentColor: "#F5C470",
         }}
         calculateMetadata={calculateTitledVideoMetadata}
+      />
+      <Composition
+        id="PilotScene1"
+        component={PilotScene1}
+        durationInFrames={30 * 90}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          frameSrc: "pilot/frame.png",
+          audioSrc: "pilot/narration.wav",
+        }}
+        calculateMetadata={calculatePilotScene1Metadata}
+      />
+      <Composition
+        id="PilotDraft"
+        component={PilotDraft}
+        durationInFrames={30 * (30 * 60 + 40)}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={PILOT_DRAFT_PROPS}
+        calculateMetadata={calculatePilotDraftMetadata}
       />
       <Composition
         id="HeroTitle"

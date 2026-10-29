@@ -1,0 +1,216 @@
+[{"stream_name":"stderr","time":93.868780583,"data":"Flax classes are deprecated and will be removed in Diffusers v1.0.0. We recommend migrating to PyTorch classes or pinning your version of Diffusers.\n"}
+,{"stream_name":"stderr","time":93.86959947,"data":"Flax classes are deprecated and will be removed in Diffusers v1.0.0. We recommend migrating to PyTorch classes or pinning your version of Diffusers.\n"}
+,{"stream_name":"stderr","time":129.805417274,"data":"\rFetching 14 files:   0%|          | 0/14 [00:00\u003c?, ?it/s]\rFetching 14 files:  14%|█▍        | 2/14 [00:00\u003c00:01,  6.64it/s]\rFetching 14 files:  29%|██▊       | 4/14 [00:35\u003c01:43, 10.37s/it]\rFetching 14 files: 100%|██████████| 14/14 [00:35\u003c00:00,  2.53s/it]\n"}
+,{"stream_name":"stderr","time":145.079972082,"data":"\rLoading pipeline components...:   0%|          | 0/5 [00:00\u003c?, ?it/s]\rLoading pipeline components...:  20%|██        | 1/5 [00:01\u003c00:07,  1.79s/it]\rLoading pipeline components...:  40%|████      | 2/5 [00:15\u003c00:25,  8.63s/it]\n"}
+,{"stream_name":"stderr","time":148.243224891,"data":"\rLoading checkpoint shards:   0%|          | 0/2 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":148.398644881,"data":"\rLoading checkpoint shards:  50%|█████     | 1/2 [00:03\u003c00:03,  3.16s/it]\u001b[A\n"}
+,{"stream_name":"stderr","time":148.398912564,"data":"\rLoading checkpoint shards: 100%|██████████| 2/2 [00:03\u003c00:00,  1.39s/it]\u001b[A\rLoading checkpoint shards: 100%|██████████| 2/2 [00:03\u003c00:00,  1.66s/it]\n"}
+,{"stream_name":"stderr","time":151.681090976,"data":"\rLoading pipeline components...:  60%|██████    | 3/5 [00:18\u003c00:12,  6.24s/it]\rLoading pipeline components...:  80%|████████  | 4/5 [00:19\u003c00:04,  4.06s/it]\rLoading pipeline components...: 100%|██████████| 5/5 [00:21\u003c00:00,  3.52s/it]\rLoading pipeline components...: 100%|██████████| 5/5 [00:21\u003c00:00,  4.37s/it]\n"}
+,{"stream_name":"stderr","time":156.242641514,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stderr","time":156.242673824,"data":"  File \"/kaggle/src/script.py\", line 436, in main\n"}
+,{"stream_name":"stderr","time":156.242678262,"data":"    img = pipe(**call).images[0]\n"}
+,{"stream_name":"stderr","time":156.242702922,"data":"          ~~~~^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.242708244,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stderr","time":156.242713334,"data":"    return func(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":156.242718283,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/sana/pipeline_sana_sprint.py\", line 748, in __call__\n"}
+,{"stream_name":"stderr","time":156.242723426,"data":"    self.check_inputs(\n"}
+,{"stream_name":"stderr","time":156.242727716,"data":"    ~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stderr","time":156.242731798,"data":"        prompt=prompt,\n"}
+,{"stream_name":"stderr","time":156.242736013,"data":"        ^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.24274012,"data":"    ...\u003c8 lines\u003e...\n"}
+,{"stream_name":"stderr","time":156.242745026,"data":"        prompt_attention_mask=prompt_attention_mask,\n"}
+,{"stream_name":"stderr","time":156.242752375,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.242755442,"data":"    )\n"}
+,{"stream_name":"stderr","time":156.242758204,"data":"    ^\n"}
+,{"stream_name":"stderr","time":156.242760929,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/sana/pipeline_sana_sprint.py\", line 437, in check_inputs\n"}
+,{"stream_name":"stderr","time":156.242772626,"data":"    raise ValueError(\"Intermediate timesteps for SCM is not supported when num_inference_steps != 2.\")\n"}
+,{"stream_name":"stderr","time":156.242775396,"data":"ValueError: Intermediate timesteps for SCM is not supported when num_inference_steps != 2.\n"}
+,{"stream_name":"stderr","time":156.242777817,"data":"\n"}
+,{"stream_name":"stderr","time":156.243878797,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stderr","time":156.243891794,"data":"  File \"/kaggle/src/script.py\", line 436, in main\n"}
+,{"stream_name":"stderr","time":156.243894861,"data":"    img = pipe(**call).images[0]\n"}
+,{"stream_name":"stderr","time":156.243897108,"data":"          ~~~~^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.243899257,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stderr","time":156.243901614,"data":"    return func(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":156.243903932,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/sana/pipeline_sana_sprint.py\", line 748, in __call__\n"}
+,{"stream_name":"stderr","time":156.24390638,"data":"    self.check_inputs(\n"}
+,{"stream_name":"stderr","time":156.243908586,"data":"    ~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stderr","time":156.243910761,"data":"        prompt=prompt,\n"}
+,{"stream_name":"stderr","time":156.24391296,"data":"        ^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.243915867,"data":"    ...\u003c8 lines\u003e...\n"}
+,{"stream_name":"stderr","time":156.243922457,"data":"        prompt_attention_mask=prompt_attention_mask,\n"}
+,{"stream_name":"stderr","time":156.243935768,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.243939781,"data":"    )\n"}
+,{"stream_name":"stderr","time":156.243943638,"data":"    ^\n"}
+,{"stream_name":"stderr","time":156.243947356,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/sana/pipeline_sana_sprint.py\", line 437, in check_inputs\n"}
+,{"stream_name":"stderr","time":156.24395137,"data":"    raise ValueError(\"Intermediate timesteps for SCM is not supported when num_inference_steps != 2.\")\n"}
+,{"stream_name":"stderr","time":156.243955394,"data":"ValueError: Intermediate timesteps for SCM is not supported when num_inference_steps != 2.\n"}
+,{"stream_name":"stderr","time":156.243959046,"data":"\n"}
+,{"stream_name":"stderr","time":156.245131853,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stderr","time":156.24514223,"data":"  File \"/kaggle/src/script.py\", line 436, in main\n"}
+,{"stream_name":"stderr","time":156.245162362,"data":"    img = pipe(**call).images[0]\n"}
+,{"stream_name":"stderr","time":156.245167225,"data":"          ~~~~^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.245171047,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stderr","time":156.245174783,"data":"    return func(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":156.245178088,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/sana/pipeline_sana_sprint.py\", line 748, in __call__\n"}
+,{"stream_name":"stderr","time":156.245182045,"data":"    self.check_inputs(\n"}
+,{"stream_name":"stderr","time":156.245185349,"data":"    ~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stderr","time":156.245188596,"data":"        prompt=prompt,\n"}
+,{"stream_name":"stderr","time":156.245191923,"data":"        ^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.245203899,"data":"    ...\u003c8 lines\u003e...\n"}
+,{"stream_name":"stderr","time":156.245206482,"data":"        prompt_attention_mask=prompt_attention_mask,\n"}
+,{"stream_name":"stderr","time":156.245208852,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.245211072,"data":"    )\n"}
+,{"stream_name":"stderr","time":156.245213187,"data":"    ^\n"}
+,{"stream_name":"stderr","time":156.24521534,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/sana/pipeline_sana_sprint.py\", line 437, in check_inputs\n"}
+,{"stream_name":"stderr","time":156.24521782,"data":"    raise ValueError(\"Intermediate timesteps for SCM is not supported when num_inference_steps != 2.\")\n"}
+,{"stream_name":"stderr","time":156.2452202,"data":"ValueError: Intermediate timesteps for SCM is not supported when num_inference_steps != 2.\n"}
+,{"stream_name":"stderr","time":156.245222561,"data":"\n"}
+,{"stream_name":"stderr","time":156.246373182,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stderr","time":156.246383355,"data":"  File \"/kaggle/src/script.py\", line 436, in main\n"}
+,{"stream_name":"stderr","time":156.246387648,"data":"    img = pipe(**call).images[0]\n"}
+,{"stream_name":"stderr","time":156.246391025,"data":"          ~~~~^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.246394245,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stderr","time":156.246397899,"data":"    return func(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":156.246401292,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/sana/pipeline_sana_sprint.py\", line 748, in __call__\n"}
+,{"stream_name":"stderr","time":156.246404878,"data":"    self.check_inputs(\n"}
+,{"stream_name":"stderr","time":156.246408125,"data":"    ~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stderr","time":156.24641146,"data":"        prompt=prompt,\n"}
+,{"stream_name":"stderr","time":156.246418843,"data":"        ^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.246431691,"data":"    ...\u003c8 lines\u003e...\n"}
+,{"stream_name":"stderr","time":156.246435897,"data":"        prompt_attention_mask=prompt_attention_mask,\n"}
+,{"stream_name":"stderr","time":156.24643971,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.246443542,"data":"    )\n"}
+,{"stream_name":"stderr","time":156.246447267,"data":"    ^\n"}
+,{"stream_name":"stderr","time":156.246450485,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/sana/pipeline_sana_sprint.py\", line 437, in check_inputs\n"}
+,{"stream_name":"stderr","time":156.246454049,"data":"    raise ValueError(\"Intermediate timesteps for SCM is not supported when num_inference_steps != 2.\")\n"}
+,{"stream_name":"stderr","time":156.246457607,"data":"ValueError: Intermediate timesteps for SCM is not supported when num_inference_steps != 2.\n"}
+,{"stream_name":"stderr","time":156.246461072,"data":"\n"}
+,{"stream_name":"stderr","time":156.24760973,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stderr","time":156.247619394,"data":"  File \"/kaggle/src/script.py\", line 436, in main\n"}
+,{"stream_name":"stderr","time":156.247623413,"data":"    img = pipe(**call).images[0]\n"}
+,{"stream_name":"stderr","time":156.247627217,"data":"          ~~~~^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.247631061,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stderr","time":156.247639869,"data":"    return func(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":156.247643216,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/sana/pipeline_sana_sprint.py\", line 748, in __call__\n"}
+,{"stream_name":"stderr","time":156.247646795,"data":"    self.check_inputs(\n"}
+,{"stream_name":"stderr","time":156.247650026,"data":"    ~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stderr","time":156.247653341,"data":"        prompt=prompt,\n"}
+,{"stream_name":"stderr","time":156.247669985,"data":"        ^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.247674301,"data":"    ...\u003c8 lines\u003e...\n"}
+,{"stream_name":"stderr","time":156.247678659,"data":"        prompt_attention_mask=prompt_attention_mask,\n"}
+,{"stream_name":"stderr","time":156.247688513,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.247692023,"data":"    )\n"}
+,{"stream_name":"stderr","time":156.247695256,"data":"    ^\n"}
+,{"stream_name":"stderr","time":156.247698504,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/sana/pipeline_sana_sprint.py\", line 437, in check_inputs\n"}
+,{"stream_name":"stderr","time":156.247702149,"data":"    raise ValueError(\"Intermediate timesteps for SCM is not supported when num_inference_steps != 2.\")\n"}
+,{"stream_name":"stderr","time":156.247705764,"data":"ValueError: Intermediate timesteps for SCM is not supported when num_inference_steps != 2.\n"}
+,{"stream_name":"stderr","time":156.247709262,"data":"\n"}
+,{"stream_name":"stderr","time":156.248886804,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stderr","time":156.248896491,"data":"  File \"/kaggle/src/script.py\", line 436, in main\n"}
+,{"stream_name":"stderr","time":156.248904001,"data":"    img = pipe(**call).images[0]\n"}
+,{"stream_name":"stderr","time":156.248907372,"data":"          ~~~~^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.248910657,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stderr","time":156.248914248,"data":"    return func(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":156.248917529,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/sana/pipeline_sana_sprint.py\", line 748, in __call__\n"}
+,{"stream_name":"stderr","time":156.248921168,"data":"    self.check_inputs(\n"}
+,{"stream_name":"stderr","time":156.248928765,"data":"    ~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stderr","time":156.248940276,"data":"        prompt=prompt,\n"}
+,{"stream_name":"stderr","time":156.248944109,"data":"        ^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.248947985,"data":"    ...\u003c8 lines\u003e...\n"}
+,{"stream_name":"stderr","time":156.248951775,"data":"        prompt_attention_mask=prompt_attention_mask,\n"}
+,{"stream_name":"stderr","time":156.248955645,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.248959008,"data":"    )\n"}
+,{"stream_name":"stderr","time":156.248962249,"data":"    ^\n"}
+,{"stream_name":"stderr","time":156.248965506,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/sana/pipeline_sana_sprint.py\", line 437, in check_inputs\n"}
+,{"stream_name":"stderr","time":156.248969209,"data":"    raise ValueError(\"Intermediate timesteps for SCM is not supported when num_inference_steps != 2.\")\n"}
+,{"stream_name":"stderr","time":156.248972716,"data":"ValueError: Intermediate timesteps for SCM is not supported when num_inference_steps != 2.\n"}
+,{"stream_name":"stderr","time":156.248976287,"data":"\n"}
+,{"stream_name":"stderr","time":156.25023293,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stderr","time":156.25025442,"data":"  File \"/kaggle/src/script.py\", line 436, in main\n"}
+,{"stream_name":"stderr","time":156.250259912,"data":"    img = pipe(**call).images[0]\n"}
+,{"stream_name":"stderr","time":156.250264188,"data":"          ~~~~^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.250267557,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stderr","time":156.250271881,"data":"    return func(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":156.250275275,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/sana/pipeline_sana_sprint.py\", line 748, in __call__\n"}
+,{"stream_name":"stderr","time":156.250279045,"data":"    self.check_inputs(\n"}
+,{"stream_name":"stderr","time":156.250282282,"data":"    ~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stderr","time":156.250285578,"data":"        prompt=prompt,\n"}
+,{"stream_name":"stderr","time":156.250288784,"data":"        ^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.250292077,"data":"    ...\u003c8 lines\u003e...\n"}
+,{"stream_name":"stderr","time":156.250295774,"data":"        prompt_attention_mask=prompt_attention_mask,\n"}
+,{"stream_name":"stderr","time":156.250303504,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.250306047,"data":"    )\n"}
+,{"stream_name":"stderr","time":156.250308272,"data":"    ^\n"}
+,{"stream_name":"stderr","time":156.250310418,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/sana/pipeline_sana_sprint.py\", line 437, in check_inputs\n"}
+,{"stream_name":"stderr","time":156.250312883,"data":"    raise ValueError(\"Intermediate timesteps for SCM is not supported when num_inference_steps != 2.\")\n"}
+,{"stream_name":"stderr","time":156.250315354,"data":"ValueError: Intermediate timesteps for SCM is not supported when num_inference_steps != 2.\n"}
+,{"stream_name":"stderr","time":156.250317819,"data":"\n"}
+,{"stream_name":"stderr","time":156.251503389,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stderr","time":156.251515032,"data":"  File \"/kaggle/src/script.py\", line 436, in main\n"}
+,{"stream_name":"stderr","time":156.251519795,"data":"    img = pipe(**call).images[0]\n"}
+,{"stream_name":"stderr","time":156.251523462,"data":"          ~~~~^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.251526935,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stderr","time":156.251531082,"data":"    return func(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":156.25153894,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/sana/pipeline_sana_sprint.py\", line 748, in __call__\n"}
+,{"stream_name":"stderr","time":156.251551678,"data":"    self.check_inputs(\n"}
+,{"stream_name":"stderr","time":156.251556094,"data":"    ~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stderr","time":156.251560142,"data":"        prompt=prompt,\n"}
+,{"stream_name":"stderr","time":156.251563781,"data":"        ^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.2515681,"data":"    ...\u003c8 lines\u003e...\n"}
+,{"stream_name":"stderr","time":156.251572069,"data":"        prompt_attention_mask=prompt_attention_mask,\n"}
+,{"stream_name":"stderr","time":156.251575697,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.251579271,"data":"    )\n"}
+,{"stream_name":"stderr","time":156.251590797,"data":"    ^\n"}
+,{"stream_name":"stderr","time":156.251598446,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/sana/pipeline_sana_sprint.py\", line 437, in check_inputs\n"}
+,{"stream_name":"stderr","time":156.251601421,"data":"    raise ValueError(\"Intermediate timesteps for SCM is not supported when num_inference_steps != 2.\")\n"}
+,{"stream_name":"stderr","time":156.251603935,"data":"ValueError: Intermediate timesteps for SCM is not supported when num_inference_steps != 2.\n"}
+,{"stream_name":"stderr","time":156.25160638,"data":"\n"}
+,{"stream_name":"stderr","time":156.252812513,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stderr","time":156.252822845,"data":"  File \"/kaggle/src/script.py\", line 436, in main\n"}
+,{"stream_name":"stderr","time":156.252827406,"data":"    img = pipe(**call).images[0]\n"}
+,{"stream_name":"stderr","time":156.252830749,"data":"          ~~~~^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.252834715,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stderr","time":156.252838868,"data":"    return func(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":156.252842941,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/sana/pipeline_sana_sprint.py\", line 748, in __call__\n"}
+,{"stream_name":"stderr","time":156.252846888,"data":"    self.check_inputs(\n"}
+,{"stream_name":"stderr","time":156.252850695,"data":"    ~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stderr","time":156.252854,"data":"        prompt=prompt,\n"}
+,{"stream_name":"stderr","time":156.252857211,"data":"        ^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.252860496,"data":"    ...\u003c8 lines\u003e...\n"}
+,{"stream_name":"stderr","time":156.252864053,"data":"        prompt_attention_mask=prompt_attention_mask,\n"}
+,{"stream_name":"stderr","time":156.252870735,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.252873037,"data":"    )\n"}
+,{"stream_name":"stderr","time":156.252875147,"data":"    ^\n"}
+,{"stream_name":"stderr","time":156.252877275,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/sana/pipeline_sana_sprint.py\", line 437, in check_inputs\n"}
+,{"stream_name":"stderr","time":156.25287972,"data":"    raise ValueError(\"Intermediate timesteps for SCM is not supported when num_inference_steps != 2.\")\n"}
+,{"stream_name":"stderr","time":156.252882086,"data":"ValueError: Intermediate timesteps for SCM is not supported when num_inference_steps != 2.\n"}
+,{"stream_name":"stderr","time":156.252884371,"data":"\n"}
+,{"stream_name":"stderr","time":156.254082195,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stderr","time":156.254092593,"data":"  File \"/kaggle/src/script.py\", line 436, in main\n"}
+,{"stream_name":"stderr","time":156.25409702,"data":"    img = pipe(**call).images[0]\n"}
+,{"stream_name":"stderr","time":156.254100366,"data":"          ~~~~^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.254103668,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stderr","time":156.254107402,"data":"    return func(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":156.254110903,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/sana/pipeline_sana_sprint.py\", line 748, in __call__\n"}
+,{"stream_name":"stderr","time":156.254117786,"data":"    self.check_inputs(\n"}
+,{"stream_name":"stderr","time":156.254129161,"data":"    ~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stderr","time":156.25413907,"data":"        prompt=prompt,\n"}
+,{"stream_name":"stderr","time":156.25414308,"data":"        ^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.254146456,"data":"    ...\u003c8 lines\u003e...\n"}
+,{"stream_name":"stderr","time":156.254150119,"data":"        prompt_attention_mask=prompt_attention_mask,\n"}
+,{"stream_name":"stderr","time":156.254169086,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":156.25417323,"data":"    )\n"}
+,{"stream_name":"stderr","time":156.254176585,"data":"    ^\n"}
+,{"stream_name":"stderr","time":156.254179797,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/sana/pipeline_sana_sprint.py\", line 437, in check_inputs\n"}
+,{"stream_name":"stderr","time":156.254183595,"data":"    raise ValueError(\"Intermediate timesteps for SCM is not supported when num_inference_steps != 2.\")\n"}
+,{"stream_name":"stderr","time":156.254187196,"data":"ValueError: Intermediate timesteps for SCM is not supported when num_inference_steps != 2.\n"}
+,{"stream_name":"stderr","time":156.254190733,"data":"\n"}
+,{"stream_name":"stderr","time":156.26671243,"data":"s7 sana-sprint-1.6b PARTIAL: 0/10 (some images failed)\n"}
+,{"stream_name":"stderr","time":163.462742462,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":163.462775308,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":163.688947082,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":163.688980249,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":164.449453217,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":165.033325559,"data":"[NbConvertApp] Writing 425676 bytes to __results__.html\n"}
+]

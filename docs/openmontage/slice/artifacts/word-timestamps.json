@@ -1,0 +1,1944 @@
+{
+  "audio": "projects/slice_artemis_v0/audio/narration_finished.wav",
+  "duration_s": 185.45,
+  "model": "whisper-tiny (stable-ts alignment)",
+  "engine": "stable_whisper 2.19.1",
+  "word_count": 387,
+  "words": [
+    {
+      "word": " NASA's",
+      "start": 1.76,
+      "end": 1.92
+    },
+    {
+      "word": " Space",
+      "start": 1.92,
+      "end": 2.18
+    },
+    {
+      "word": " Launch",
+      "start": 2.18,
+      "end": 2.46
+    },
+    {
+      "word": " System",
+      "start": 2.46,
+      "end": 2.82
+    },
+    {
+      "word": " rocket",
+      "start": 2.82,
+      "end": 3.26
+    },
+    {
+      "word": " and",
+      "start": 3.54,
+      "end": 3.66
+    },
+    {
+      "word": " Orion",
+      "start": 3.66,
+      "end": 4.06
+    },
+    {
+      "word": " spacecraft",
+      "start": 4.06,
+      "end": 4.66
+    },
+    {
+      "word": " form",
+      "start": 5.24,
+      "end": 5.48
+    },
+    {
+      "word": " the",
+      "start": 5.48,
+      "end": 5.64
+    },
+    {
+      "word": " backbone",
+      "start": 5.64,
+      "end": 6.02
+    },
+    {
+      "word": " for",
+      "start": 6.02,
+      "end": 6.32
+    },
+    {
+      "word": " the",
+      "start": 6.32,
+      "end": 6.52
+    },
+    {
+      "word": " agency's",
+      "start": 6.52,
+      "end": 7.18
+    },
+    {
+      "word": " Artemis",
+      "start": 7.18,
+      "end": 7.52
+    },
+    {
+      "word": " missions",
+      "start": 7.52,
+      "end": 7.86
+    },
+    {
+      "word": " to",
+      "start": 7.86,
+      "end": 8.12
+    },
+    {
+      "word": " the",
+      "start": 8.12,
+      "end": 8.26
+    },
+    {
+      "word": " Moon.",
+      "start": 8.26,
+      "end": 8.36
+    },
+    {
+      "word": " Over",
+      "start": 10.02,
+      "end": 10.02
+    },
+    {
+      "word": " development,",
+      "start": 10.02,
+      "end": 10.66
+    },
+    {
+      "word": " the",
+      "start": 11.14,
+      "end": 11.14
+    },
+    {
+      "word": " rocket",
+      "start": 11.14,
+      "end": 11.48
+    },
+    {
+      "word": " and",
+      "start": 11.64,
+      "end": 11.74
+    },
+    {
+      "word": " spacecraft",
+      "start": 11.74,
+      "end": 12.2
+    },
+    {
+      "word": " moved",
+      "start": 12.2,
+      "end": 12.7
+    },
+    {
+      "word": " from",
+      "start": 12.74,
+      "end": 12.98
+    },
+    {
+      "word": " design",
+      "start": 12.98,
+      "end": 13.42
+    },
+    {
+      "word": " and",
+      "start": 13.42,
+      "end": 13.7
+    },
+    {
+      "word": " manufacturing",
+      "start": 13.7,
+      "end": 14.26
+    },
+    {
+      "word": " to",
+      "start": 14.26,
+      "end": 14.94
+    },
+    {
+      "word": " testing,",
+      "start": 14.94,
+      "end": 15.9
+    },
+    {
+      "word": " assembly,",
+      "start": 16.04,
+      "end": 16.58
+    },
+    {
+      "word": " and",
+      "start": 16.66,
+      "end": 16.66
+    },
+    {
+      "word": " integration,",
+      "start": 16.66,
+      "end": 17.88
+    },
+    {
+      "word": " with",
+      "start": 18.0,
+      "end": 18.02
+    },
+    {
+      "word": " some",
+      "start": 18.02,
+      "end": 18.28
+    },
+    {
+      "word": " hardware",
+      "start": 18.28,
+      "end": 18.66
+    },
+    {
+      "word": " delivered",
+      "start": 18.66,
+      "end": 19.06
+    },
+    {
+      "word": " to",
+      "start": 19.06,
+      "end": 19.38
+    },
+    {
+      "word": " the",
+      "start": 19.38,
+      "end": 19.5
+    },
+    {
+      "word": " launch",
+      "start": 19.5,
+      "end": 19.76
+    },
+    {
+      "word": " pad",
+      "start": 19.76,
+      "end": 20.12
+    },
+    {
+      "word": " at",
+      "start": 20.26,
+      "end": 20.36
+    },
+    {
+      "word": " Kennedy.",
+      "start": 20.36,
+      "end": 20.58
+    },
+    {
+      "word": " The",
+      "start": 22.22,
+      "end": 22.22
+    },
+    {
+      "word": " SLS",
+      "start": 22.3,
+      "end": 22.72
+    },
+    {
+      "word": " core",
+      "start": 22.76,
+      "end": 23.02
+    },
+    {
+      "word": " stage",
+      "start": 23.02,
+      "end": 23.34
+    },
+    {
+      "word": " was",
+      "start": 23.34,
+      "end": 23.56
+    },
+    {
+      "word": " built",
+      "start": 23.72,
+      "end": 23.82
+    },
+    {
+      "word": " at",
+      "start": 23.82,
+      "end": 24.1
+    },
+    {
+      "word": " Michoud",
+      "start": 24.34,
+      "end": 24.44
+    },
+    {
+      "word": " Assembly",
+      "start": 24.44,
+      "end": 24.92
+    },
+    {
+      "word": " Facility",
+      "start": 24.92,
+      "end": 25.44
+    },
+    {
+      "word": " \u2014",
+      "start": 26.04,
+      "end": 26.14
+    },
+    {
+      "word": " the",
+      "start": 26.14,
+      "end": 26.24
+    },
+    {
+      "word": " largest",
+      "start": 26.24,
+      "end": 26.64
+    },
+    {
+      "word": " rocket",
+      "start": 26.64,
+      "end": 27.1
+    },
+    {
+      "word": " stage",
+      "start": 27.16,
+      "end": 27.44
+    },
+    {
+      "word": " NASA",
+      "start": 27.44,
+      "end": 27.84
+    },
+    {
+      "word": " has",
+      "start": 27.84,
+      "end": 28.14
+    },
+    {
+      "word": " built",
+      "start": 28.14,
+      "end": 28.4
+    },
+    {
+      "word": " since",
+      "start": 28.54,
+      "end": 28.64
+    },
+    {
+      "word": " the",
+      "start": 28.64,
+      "end": 28.86
+    },
+    {
+      "word": " Saturn",
+      "start": 28.86,
+      "end": 29.14
+    },
+    {
+      "word": " V,",
+      "start": 29.14,
+      "end": 29.58
+    },
+    {
+      "word": " 212",
+      "start": 30.12,
+      "end": 30.64
+    },
+    {
+      "word": " feet",
+      "start": 30.68,
+      "end": 30.94
+    },
+    {
+      "word": " tall,",
+      "start": 30.94,
+      "end": 31.7
+    },
+    {
+      "word": " with",
+      "start": 31.8,
+      "end": 31.8
+    },
+    {
+      "word": " four",
+      "start": 31.82,
+      "end": 32.16
+    },
+    {
+      "word": " RS-25",
+      "start": 32.16,
+      "end": 32.98
+    },
+    {
+      "word": " engines.",
+      "start": 32.98,
+      "end": 34.28
+    },
+    {
+      "word": " SLS",
+      "start": 35.12,
+      "end": 35.42
+    },
+    {
+      "word": " will",
+      "start": 35.46,
+      "end": 35.6
+    },
+    {
+      "word": " be",
+      "start": 35.6,
+      "end": 35.78
+    },
+    {
+      "word": " the",
+      "start": 35.78,
+      "end": 35.86
+    },
+    {
+      "word": " most",
+      "start": 35.86,
+      "end": 36.12
+    },
+    {
+      "word": " powerful",
+      "start": 36.18,
+      "end": 36.62
+    },
+    {
+      "word": " rocket",
+      "start": 36.62,
+      "end": 37.04
+    },
+    {
+      "word": " ever",
+      "start": 37.1,
+      "end": 37.4
+    },
+    {
+      "word": " built,",
+      "start": 37.4,
+      "end": 38.15
+    },
+    {
+      "word": " powered",
+      "start": 38.26,
+      "end": 38.48
+    },
+    {
+      "word": " by",
+      "start": 38.48,
+      "end": 38.76
+    },
+    {
+      "word": " two",
+      "start": 38.76,
+      "end": 39.06
+    },
+    {
+      "word": " solid",
+      "start": 39.06,
+      "end": 39.44
+    },
+    {
+      "word": " rocket",
+      "start": 39.44,
+      "end": 39.8
+    },
+    {
+      "word": " boosters",
+      "start": 39.92,
+      "end": 40.16
+    },
+    {
+      "word": " and",
+      "start": 40.16,
+      "end": 40.88
+    },
+    {
+      "word": " four",
+      "start": 40.96,
+      "end": 41.32
+    },
+    {
+      "word": " RS-25",
+      "start": 41.32,
+      "end": 42.18
+    },
+    {
+      "word": " engines",
+      "start": 42.18,
+      "end": 42.82
+    },
+    {
+      "word": " providing",
+      "start": 43.02,
+      "end": 43.42
+    },
+    {
+      "word": " over",
+      "start": 43.42,
+      "end": 43.84
+    },
+    {
+      "word": " 8",
+      "start": 43.84,
+      "end": 44.16
+    },
+    {
+      "word": " million",
+      "start": 44.16,
+      "end": 44.48
+    },
+    {
+      "word": " pounds",
+      "start": 44.48,
+      "end": 44.86
+    },
+    {
+      "word": " of",
+      "start": 44.86,
+      "end": 45.06
+    },
+    {
+      "word": " thrust.",
+      "start": 45.06,
+      "end": 45.16
+    },
+    {
+      "word": " SLS",
+      "start": 46.96,
+      "end": 47.28
+    },
+    {
+      "word": " rolled",
+      "start": 47.28,
+      "end": 47.58
+    },
+    {
+      "word": " out",
+      "start": 47.58,
+      "end": 47.84
+    },
+    {
+      "word": " to",
+      "start": 47.84,
+      "end": 47.98
+    },
+    {
+      "word": " Launch",
+      "start": 47.98,
+      "end": 48.26
+    },
+    {
+      "word": " Complex",
+      "start": 48.32,
+      "end": 48.76
+    },
+    {
+      "word": " 39B",
+      "start": 48.76,
+      "end": 49.66
+    },
+    {
+      "word": " at",
+      "start": 49.74,
+      "end": 49.84
+    },
+    {
+      "word": " Kennedy",
+      "start": 49.84,
+      "end": 50.18
+    },
+    {
+      "word": " and",
+      "start": 50.68,
+      "end": 50.82
+    },
+    {
+      "word": " was",
+      "start": 50.82,
+      "end": 51.04
+    },
+    {
+      "word": " stacked",
+      "start": 51.04,
+      "end": 51.32
+    },
+    {
+      "word": " inside",
+      "start": 51.32,
+      "end": 51.76
+    },
+    {
+      "word": " the",
+      "start": 51.76,
+      "end": 51.94
+    },
+    {
+      "word": " Vehicle",
+      "start": 51.94,
+      "end": 52.18
+    },
+    {
+      "word": " Assembly",
+      "start": 52.18,
+      "end": 52.64
+    },
+    {
+      "word": " Building",
+      "start": 52.64,
+      "end": 53.26
+    },
+    {
+      "word": " ahead",
+      "start": 53.26,
+      "end": 53.58
+    },
+    {
+      "word": " of",
+      "start": 53.58,
+      "end": 53.72
+    },
+    {
+      "word": " its",
+      "start": 53.72,
+      "end": 53.9
+    },
+    {
+      "word": " first",
+      "start": 53.9,
+      "end": 54.14
+    },
+    {
+      "word": " flight.",
+      "start": 54.14,
+      "end": 54.94
+    },
+    {
+      "word": " At",
+      "start": 55.96,
+      "end": 55.96
+    },
+    {
+      "word": " 1:47",
+      "start": 55.96,
+      "end": 56.98
+    },
+    {
+      "word": " a.m.",
+      "start": 56.98,
+      "end": 57.66
+    },
+    {
+      "word": " EST",
+      "start": 59.26,
+      "end": 59.26
+    },
+    {
+      "word": " (6:47",
+      "start": 59.7,
+      "end": 60.2
+    },
+    {
+      "word": " UTC)",
+      "start": 60.2,
+      "end": 61.66
+    },
+    {
+      "word": " on",
+      "start": 61.72,
+      "end": 61.72
+    },
+    {
+      "word": " November",
+      "start": 61.72,
+      "end": 62.08
+    },
+    {
+      "word": " 16,",
+      "start": 62.08,
+      "end": 63.16
+    },
+    {
+      "word": " 2022,",
+      "start": 63.3,
+      "end": 64.3
+    },
+    {
+      "word": " NASA's",
+      "start": 64.46,
+      "end": 64.76
+    },
+    {
+      "word": " Orion",
+      "start": 64.76,
+      "end": 65.04
+    },
+    {
+      "word": " spacecraft",
+      "start": 65.04,
+      "end": 65.72
+    },
+    {
+      "word": " launched",
+      "start": 65.72,
+      "end": 66.28
+    },
+    {
+      "word": " atop",
+      "start": 66.28,
+      "end": 66.64
+    },
+    {
+      "word": " the",
+      "start": 66.78,
+      "end": 66.9
+    },
+    {
+      "word": " SLS",
+      "start": 66.9,
+      "end": 67.34
+    },
+    {
+      "word": " rocket",
+      "start": 67.34,
+      "end": 67.72
+    },
+    {
+      "word": " from",
+      "start": 67.96,
+      "end": 68.12
+    },
+    {
+      "word": " historic",
+      "start": 68.12,
+      "end": 68.58
+    },
+    {
+      "word": " Launch",
+      "start": 68.58,
+      "end": 68.92
+    },
+    {
+      "word": " Pad",
+      "start": 68.96,
+      "end": 69.22
+    },
+    {
+      "word": " 39B",
+      "start": 69.26,
+      "end": 70.14
+    },
+    {
+      "word": " at",
+      "start": 70.14,
+      "end": 70.42
+    },
+    {
+      "word": " Kennedy",
+      "start": 70.42,
+      "end": 70.66
+    },
+    {
+      "word": " Space",
+      "start": 70.66,
+      "end": 71.08
+    },
+    {
+      "word": " Center.",
+      "start": 71.08,
+      "end": 71.93
+    },
+    {
+      "word": " The",
+      "start": 72.82,
+      "end": 72.82
+    },
+    {
+      "word": " liftoff",
+      "start": 72.82,
+      "end": 73.24
+    },
+    {
+      "word": " officially",
+      "start": 73.24,
+      "end": 73.74
+    },
+    {
+      "word": " began",
+      "start": 73.74,
+      "end": 74.14
+    },
+    {
+      "word": " the",
+      "start": 74.14,
+      "end": 74.38
+    },
+    {
+      "word": " Artemis",
+      "start": 74.38,
+      "end": 74.7
+    },
+    {
+      "word": " I",
+      "start": 74.7,
+      "end": 74.98
+    },
+    {
+      "word": " mission",
+      "start": 74.98,
+      "end": 75.22
+    },
+    {
+      "word": " \u2014",
+      "start": 75.6,
+      "end": 75.72
+    },
+    {
+      "word": " an",
+      "start": 75.72,
+      "end": 75.92
+    },
+    {
+      "word": " uncrewed",
+      "start": 75.92,
+      "end": 76.5
+    },
+    {
+      "word": " flight",
+      "start": 76.5,
+      "end": 76.66
+    },
+    {
+      "word": " test.",
+      "start": 76.66,
+      "end": 77.26
+    },
+    {
+      "word": " Artemis",
+      "start": 78.62,
+      "end": 78.84
+    },
+    {
+      "word": " I",
+      "start": 78.84,
+      "end": 79.12
+    },
+    {
+      "word": " was",
+      "start": 79.12,
+      "end": 79.32
+    },
+    {
+      "word": " the",
+      "start": 79.42,
+      "end": 79.52
+    },
+    {
+      "word": " first",
+      "start": 79.52,
+      "end": 79.86
+    },
+    {
+      "word": " integrated",
+      "start": 79.86,
+      "end": 80.26
+    },
+    {
+      "word": " test",
+      "start": 80.26,
+      "end": 80.78
+    },
+    {
+      "word": " of",
+      "start": 80.78,
+      "end": 81.0
+    },
+    {
+      "word": " the",
+      "start": 81.0,
+      "end": 81.18
+    },
+    {
+      "word": " agency's",
+      "start": 81.18,
+      "end": 81.84
+    },
+    {
+      "word": " deep",
+      "start": 81.84,
+      "end": 82.08
+    },
+    {
+      "word": " space",
+      "start": 82.1,
+      "end": 82.4
+    },
+    {
+      "word": " exploration",
+      "start": 82.4,
+      "end": 82.94
+    },
+    {
+      "word": " systems:",
+      "start": 82.94,
+      "end": 84.18
+    },
+    {
+      "word": " the",
+      "start": 84.4,
+      "end": 84.4
+    },
+    {
+      "word": " SLS",
+      "start": 84.5,
+      "end": 84.86
+    },
+    {
+      "word": " rocket,",
+      "start": 84.86,
+      "end": 85.72
+    },
+    {
+      "word": " the",
+      "start": 85.84,
+      "end": 85.84
+    },
+    {
+      "word": " Orion",
+      "start": 85.84,
+      "end": 86.24
+    },
+    {
+      "word": " spacecraft,",
+      "start": 86.24,
+      "end": 87.24
+    },
+    {
+      "word": " and",
+      "start": 87.34,
+      "end": 87.42
+    },
+    {
+      "word": " supporting",
+      "start": 87.42,
+      "end": 87.78
+    },
+    {
+      "word": " ground",
+      "start": 88.12,
+      "end": 88.12
+    },
+    {
+      "word": " systems.",
+      "start": 88.12,
+      "end": 88.28
+    },
+    {
+      "word": " It",
+      "start": 90.06,
+      "end": 90.06
+    },
+    {
+      "word": " was",
+      "start": 90.06,
+      "end": 90.26
+    },
+    {
+      "word": " the",
+      "start": 90.26,
+      "end": 90.38
+    },
+    {
+      "word": " first",
+      "start": 90.38,
+      "end": 90.7
+    },
+    {
+      "word": " in",
+      "start": 90.7,
+      "end": 90.9
+    },
+    {
+      "word": " a",
+      "start": 90.9,
+      "end": 91.06
+    },
+    {
+      "word": " series",
+      "start": 91.06,
+      "end": 91.32
+    },
+    {
+      "word": " of",
+      "start": 91.32,
+      "end": 91.58
+    },
+    {
+      "word": " increasingly",
+      "start": 91.7,
+      "end": 92.12
+    },
+    {
+      "word": " complex",
+      "start": 92.66,
+      "end": 92.76
+    },
+    {
+      "word": " missions",
+      "start": 92.76,
+      "end": 93.14
+    },
+    {
+      "word": " to",
+      "start": 93.38,
+      "end": 93.48
+    },
+    {
+      "word": " the",
+      "start": 93.48,
+      "end": 93.64
+    },
+    {
+      "word": " Moon.",
+      "start": 93.64,
+      "end": 93.74
+    },
+    {
+      "word": " Orion",
+      "start": 95.58,
+      "end": 95.58
+    },
+    {
+      "word": " was",
+      "start": 95.58,
+      "end": 95.9
+    },
+    {
+      "word": " sent",
+      "start": 95.9,
+      "end": 96.08
+    },
+    {
+      "word": " on",
+      "start": 96.08,
+      "end": 96.26
+    },
+    {
+      "word": " a",
+      "start": 96.26,
+      "end": 96.46
+    },
+    {
+      "word": " path",
+      "start": 96.46,
+      "end": 96.58
+    },
+    {
+      "word": " to",
+      "start": 96.62,
+      "end": 96.76
+    },
+    {
+      "word": " the",
+      "start": 96.76,
+      "end": 96.9
+    },
+    {
+      "word": " Moon,",
+      "start": 96.9,
+      "end": 97.0
+    },
+    {
+      "word": " beginning",
+      "start": 97.64,
+      "end": 97.7
+    },
+    {
+      "word": " a",
+      "start": 97.88,
+      "end": 97.98
+    },
+    {
+      "word": " 25.5-day",
+      "start": 97.98,
+      "end": 99.4
+    },
+    {
+      "word": " mission",
+      "start": 99.4,
+      "end": 99.74
+    },
+    {
+      "word": " around",
+      "start": 99.74,
+      "end": 100.08
+    },
+    {
+      "word": " the",
+      "start": 100.08,
+      "end": 100.26
+    },
+    {
+      "word": " Moon.",
+      "start": 100.26,
+      "end": 100.36
+    },
+    {
+      "word": " This",
+      "start": 101.98,
+      "end": 102.0
+    },
+    {
+      "word": " was",
+      "start": 102.02,
+      "end": 102.3
+    },
+    {
+      "word": " an",
+      "start": 102.3,
+      "end": 102.56
+    },
+    {
+      "word": " uncrewed",
+      "start": 102.56,
+      "end": 103.2
+    },
+    {
+      "word": " flight",
+      "start": 103.2,
+      "end": 103.42
+    },
+    {
+      "word": " test",
+      "start": 103.44,
+      "end": 103.96
+    },
+    {
+      "word": " demonstrating",
+      "start": 104.18,
+      "end": 104.84
+    },
+    {
+      "word": " the",
+      "start": 105.08,
+      "end": 105.18
+    },
+    {
+      "word": " SLS",
+      "start": 105.18,
+      "end": 105.58
+    },
+    {
+      "word": " rocket's",
+      "start": 105.58,
+      "end": 106.08
+    },
+    {
+      "word": " ability",
+      "start": 106.08,
+      "end": 106.38
+    },
+    {
+      "word": " to",
+      "start": 106.54,
+      "end": 106.64
+    },
+    {
+      "word": " carry",
+      "start": 106.64,
+      "end": 106.92
+    },
+    {
+      "word": " Orion",
+      "start": 106.92,
+      "end": 107.32
+    },
+    {
+      "word": " around",
+      "start": 107.32,
+      "end": 107.76
+    },
+    {
+      "word": " the",
+      "start": 107.76,
+      "end": 107.94
+    },
+    {
+      "word": " Moon",
+      "start": 107.94,
+      "end": 108.16
+    },
+    {
+      "word": " and",
+      "start": 108.46,
+      "end": 108.64
+    },
+    {
+      "word": " back",
+      "start": 108.64,
+      "end": 108.92
+    },
+    {
+      "word": " to",
+      "start": 108.92,
+      "end": 109.08
+    },
+    {
+      "word": " Earth.",
+      "start": 109.08,
+      "end": 109.18
+    },
+    {
+      "word": " Over",
+      "start": 110.8,
+      "end": 110.8
+    },
+    {
+      "word": " the",
+      "start": 110.8,
+      "end": 110.98
+    },
+    {
+      "word": " course",
+      "start": 110.98,
+      "end": 111.16
+    },
+    {
+      "word": " of",
+      "start": 111.16,
+      "end": 111.34
+    },
+    {
+      "word": " the",
+      "start": 111.34,
+      "end": 111.4
+    },
+    {
+      "word": " mission,",
+      "start": 111.4,
+      "end": 111.85
+    },
+    {
+      "word": " Orion",
+      "start": 112.26,
+      "end": 112.5
+    },
+    {
+      "word": " performed",
+      "start": 112.5,
+      "end": 113.0
+    },
+    {
+      "word": " two",
+      "start": 113.0,
+      "end": 113.42
+    },
+    {
+      "word": " lunar",
+      "start": 113.42,
+      "end": 113.74
+    },
+    {
+      "word": " flybys,",
+      "start": 113.74,
+      "end": 114.79
+    },
+    {
+      "word": " coming",
+      "start": 114.8,
+      "end": 114.88
+    },
+    {
+      "word": " within",
+      "start": 114.88,
+      "end": 115.24
+    },
+    {
+      "word": " 80",
+      "start": 115.26,
+      "end": 115.56
+    },
+    {
+      "word": " miles",
+      "start": 115.56,
+      "end": 116.04
+    },
+    {
+      "word": " (129",
+      "start": 116.44,
+      "end": 117.34
+    },
+    {
+      "word": " kilometers)",
+      "start": 118.08,
+      "end": 118.38
+    },
+    {
+      "word": " of",
+      "start": 118.38,
+      "end": 118.38
+    },
+    {
+      "word": " the",
+      "start": 118.38,
+      "end": 118.58
+    },
+    {
+      "word": " lunar",
+      "start": 118.58,
+      "end": 118.74
+    },
+    {
+      "word": " surface.",
+      "start": 118.74,
+      "end": 119.2
+    },
+    {
+      "word": " At",
+      "start": 120.68,
+      "end": 120.7
+    },
+    {
+      "word": " its",
+      "start": 120.7,
+      "end": 120.94
+    },
+    {
+      "word": " farthest",
+      "start": 120.94,
+      "end": 121.3
+    },
+    {
+      "word": " distance",
+      "start": 121.3,
+      "end": 121.74
+    },
+    {
+      "word": " during",
+      "start": 121.74,
+      "end": 121.98
+    },
+    {
+      "word": " the",
+      "start": 121.98,
+      "end": 122.14
+    },
+    {
+      "word": " mission,",
+      "start": 122.14,
+      "end": 122.74
+    },
+    {
+      "word": " Orion",
+      "start": 123.24,
+      "end": 123.36
+    },
+    {
+      "word": " traveled",
+      "start": 123.36,
+      "end": 123.82
+    },
+    {
+      "word": " nearly",
+      "start": 123.82,
+      "end": 124.22
+    },
+    {
+      "word": " 270,000",
+      "start": 124.22,
+      "end": 125.72
+    },
+    {
+      "word": " miles",
+      "start": 125.72,
+      "end": 126.2
+    },
+    {
+      "word": " (435,000",
+      "start": 126.66,
+      "end": 128.32
+    },
+    {
+      "word": " kilometers)",
+      "start": 128.32,
+      "end": 128.94
+    },
+    {
+      "word": " from",
+      "start": 129.3,
+      "end": 129.4
+    },
+    {
+      "word": " Earth.",
+      "start": 129.4,
+      "end": 129.6
+    },
+    {
+      "word": " NASA's",
+      "start": 131.42,
+      "end": 131.72
+    },
+    {
+      "word": " Orion",
+      "start": 131.72,
+      "end": 131.98
+    },
+    {
+      "word": " spacecraft",
+      "start": 131.98,
+      "end": 132.52
+    },
+    {
+      "word": " completed",
+      "start": 132.52,
+      "end": 133.2
+    },
+    {
+      "word": " a",
+      "start": 133.2,
+      "end": 133.5
+    },
+    {
+      "word": " parachute-assisted",
+      "start": 133.5,
+      "end": 134.22
+    },
+    {
+      "word": " splashdown",
+      "start": 134.34,
+      "end": 134.88
+    },
+    {
+      "word": " in",
+      "start": 134.88,
+      "end": 135.08
+    },
+    {
+      "word": " the",
+      "start": 135.08,
+      "end": 135.16
+    },
+    {
+      "word": " Pacific",
+      "start": 135.16,
+      "end": 135.48
+    },
+    {
+      "word": " Ocean",
+      "start": 135.5,
+      "end": 135.84
+    },
+    {
+      "word": " at",
+      "start": 135.84,
+      "end": 136.16
+    },
+    {
+      "word": " 9:40",
+      "start": 136.16,
+      "end": 137.18
+    },
+    {
+      "word": " a.m.",
+      "start": 137.18,
+      "end": 137.84
+    },
+    {
+      "word": " PST",
+      "start": 137.86,
+      "end": 138.26
+    },
+    {
+      "word": " (12:40",
+      "start": 138.26,
+      "end": 140.02
+    },
+    {
+      "word": " p.m.",
+      "start": 140.02,
+      "end": 140.66
+    },
+    {
+      "word": " EST).",
+      "start": 140.66,
+      "end": 140.92
+    },
+    {
+      "word": " Splashdown",
+      "start": 142.88,
+      "end": 143.22
+    },
+    {
+      "word": " marked",
+      "start": 143.22,
+      "end": 143.46
+    },
+    {
+      "word": " the",
+      "start": 143.56,
+      "end": 143.66
+    },
+    {
+      "word": " final",
+      "start": 143.66,
+      "end": 143.96
+    },
+    {
+      "word": " major",
+      "start": 143.96,
+      "end": 144.26
+    },
+    {
+      "word": " milestone",
+      "start": 144.26,
+      "end": 144.8
+    },
+    {
+      "word": " of",
+      "start": 144.8,
+      "end": 145.34
+    },
+    {
+      "word": " the",
+      "start": 145.34,
+      "end": 145.52
+    },
+    {
+      "word": " Artemis",
+      "start": 145.52,
+      "end": 145.88
+    },
+    {
+      "word": " I",
+      "start": 145.88,
+      "end": 146.08
+    },
+    {
+      "word": " mission.",
+      "start": 146.08,
+      "end": 146.26
+    },
+    {
+      "word": " Artemis",
+      "start": 148.02,
+      "end": 148.24
+    },
+    {
+      "word": " I",
+      "start": 148.24,
+      "end": 148.52
+    },
+    {
+      "word": " set",
+      "start": 148.52,
+      "end": 148.7
+    },
+    {
+      "word": " new",
+      "start": 148.7,
+      "end": 149.0
+    },
+    {
+      "word": " records",
+      "start": 149.0,
+      "end": 149.3
+    },
+    {
+      "word": " of",
+      "start": 149.3,
+      "end": 149.56
+    },
+    {
+      "word": " performance,",
+      "start": 149.56,
+      "end": 149.94
+    },
+    {
+      "word": " exceeded",
+      "start": 150.9,
+      "end": 151.0
+    },
+    {
+      "word": " efficiency",
+      "start": 151.0,
+      "end": 151.56
+    },
+    {
+      "word": " expectations,",
+      "start": 151.56,
+      "end": 152.52
+    },
+    {
+      "word": " and",
+      "start": 152.9,
+      "end": 153.06
+    },
+    {
+      "word": " established",
+      "start": 153.06,
+      "end": 153.56
+    },
+    {
+      "word": " new",
+      "start": 153.56,
+      "end": 153.98
+    },
+    {
+      "word": " safety",
+      "start": 153.98,
+      "end": 154.32
+    },
+    {
+      "word": " baselines",
+      "start": 154.32,
+      "end": 154.86
+    },
+    {
+      "word": " for",
+      "start": 155.02,
+      "end": 155.12
+    },
+    {
+      "word": " humans",
+      "start": 155.12,
+      "end": 155.5
+    },
+    {
+      "word": " in",
+      "start": 155.5,
+      "end": 155.8
+    },
+    {
+      "word": " deep",
+      "start": 155.8,
+      "end": 155.98
+    },
+    {
+      "word": " space.",
+      "start": 155.98,
+      "end": 156.16
+    },
+    {
+      "word": " Following",
+      "start": 158.02,
+      "end": 158.02
+    },
+    {
+      "word": " Artemis",
+      "start": 158.02,
+      "end": 158.58
+    },
+    {
+      "word": " I,",
+      "start": 158.58,
+      "end": 159.38
+    },
+    {
+      "word": " human",
+      "start": 159.38,
+      "end": 159.6
+    },
+    {
+      "word": " beings",
+      "start": 159.6,
+      "end": 159.96
+    },
+    {
+      "word": " will",
+      "start": 159.96,
+      "end": 160.22
+    },
+    {
+      "word": " fly",
+      "start": 160.22,
+      "end": 160.44
+    },
+    {
+      "word": " around",
+      "start": 160.44,
+      "end": 160.74
+    },
+    {
+      "word": " the",
+      "start": 160.74,
+      "end": 160.9
+    },
+    {
+      "word": " Moon",
+      "start": 160.9,
+      "end": 161.14
+    },
+    {
+      "word": " on",
+      "start": 161.14,
+      "end": 161.48
+    },
+    {
+      "word": " Artemis",
+      "start": 161.48,
+      "end": 161.86
+    },
+    {
+      "word": " II.",
+      "start": 161.86,
+      "end": 162.02
+    },
+    {
+      "word": " Under",
+      "start": 163.86,
+      "end": 163.86
+    },
+    {
+      "word": " Artemis,",
+      "start": 163.86,
+      "end": 164.51
+    },
+    {
+      "word": " NASA",
+      "start": 165.0,
+      "end": 165.18
+    },
+    {
+      "word": " will",
+      "start": 165.18,
+      "end": 165.44
+    },
+    {
+      "word": " land",
+      "start": 165.44,
+      "end": 165.66
+    },
+    {
+      "word": " the",
+      "start": 165.66,
+      "end": 165.88
+    },
+    {
+      "word": " first",
+      "start": 165.88,
+      "end": 166.08
+    },
+    {
+      "word": " woman",
+      "start": 166.12,
+      "end": 166.44
+    },
+    {
+      "word": " and",
+      "start": 166.44,
+      "end": 166.72
+    },
+    {
+      "word": " the",
+      "start": 166.72,
+      "end": 166.9
+    },
+    {
+      "word": " first",
+      "start": 166.9,
+      "end": 167.2
+    },
+    {
+      "word": " person",
+      "start": 167.22,
+      "end": 167.48
+    },
+    {
+      "word": " of",
+      "start": 167.48,
+      "end": 167.72
+    },
+    {
+      "word": " color",
+      "start": 167.72,
+      "end": 167.92
+    },
+    {
+      "word": " on",
+      "start": 167.92,
+      "end": 168.16
+    },
+    {
+      "word": " the",
+      "start": 168.16,
+      "end": 168.24
+    },
+    {
+      "word": " Moon.",
+      "start": 168.24,
+      "end": 168.36
+    },
+    {
+      "word": " SLS,",
+      "start": 170.08,
+      "end": 170.8
+    },
+    {
+      "word": " Orion,",
+      "start": 170.9,
+      "end": 171.6
+    },
+    {
+      "word": " and",
+      "start": 171.6,
+      "end": 171.74
+    },
+    {
+      "word": " the",
+      "start": 171.74,
+      "end": 171.86
+    },
+    {
+      "word": " Gateway",
+      "start": 171.86,
+      "end": 172.1
+    },
+    {
+      "word": " in",
+      "start": 172.1,
+      "end": 172.38
+    },
+    {
+      "word": " lunar",
+      "start": 172.38,
+      "end": 172.62
+    },
+    {
+      "word": " orbit",
+      "start": 172.62,
+      "end": 172.98
+    },
+    {
+      "word": " form",
+      "start": 173.04,
+      "end": 173.44
+    },
+    {
+      "word": " NASA's",
+      "start": 173.44,
+      "end": 174.0
+    },
+    {
+      "word": " backbone",
+      "start": 174.0,
+      "end": 174.34
+    },
+    {
+      "word": " for",
+      "start": 174.34,
+      "end": 174.68
+    },
+    {
+      "word": " deep",
+      "start": 174.68,
+      "end": 174.94
+    },
+    {
+      "word": " space",
+      "start": 174.98,
+      "end": 175.26
+    },
+    {
+      "word": " exploration.",
+      "start": 175.26,
+      "end": 175.9
+    },
+    {
+      "word": " SLS",
+      "start": 177.5,
+      "end": 177.76
+    },
+    {
+      "word": " is",
+      "start": 177.76,
+      "end": 178.04
+    },
+    {
+      "word": " the",
+      "start": 178.04,
+      "end": 178.26
+    },
+    {
+      "word": " only",
+      "start": 178.26,
+      "end": 178.5
+    },
+    {
+      "word": " rocket",
+      "start": 178.5,
+      "end": 178.88
+    },
+    {
+      "word": " that",
+      "start": 178.98,
+      "end": 179.2
+    },
+    {
+      "word": " can",
+      "start": 179.28,
+      "end": 179.38
+    },
+    {
+      "word": " send",
+      "start": 179.38,
+      "end": 179.6
+    },
+    {
+      "word": " Orion,",
+      "start": 179.6,
+      "end": 180.2
+    },
+    {
+      "word": " astronauts,",
+      "start": 180.84,
+      "end": 181.62
+    },
+    {
+      "word": " and",
+      "start": 181.68,
+      "end": 181.68
+    },
+    {
+      "word": " supplies",
+      "start": 181.68,
+      "end": 182.06
+    },
+    {
+      "word": " to",
+      "start": 182.06,
+      "end": 182.38
+    },
+    {
+      "word": " the",
+      "start": 182.38,
+      "end": 182.42
+    },
+    {
+      "word": " Moon",
+      "start": 182.42,
+      "end": 182.68
+    },
+    {
+      "word": " in",
+      "start": 182.68,
+      "end": 182.92
+    },
+    {
+      "word": " a",
+      "start": 182.92,
+      "end": 183.02
+    },
+    {
+      "word": " single",
+      "start": 183.02,
+      "end": 183.26
+    },
+    {
+      "word": " mission.",
+      "start": 183.26,
+      "end": 183.6
+    }
+  ]
+}

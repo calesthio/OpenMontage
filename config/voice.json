@@ -1,0 +1,13 @@
+{
+  "engine": "kokoro_82m",
+  "voice": "af_heart",
+  "license_status": "Apache-2.0 (weights), cleared with training-data caveats (owner sign-off required; CC BY items Koniwa/SIWIS; synthetic-data origin UNKNOWN)",
+  "fallback": "local_kokoro_cpu",
+  "blocked_engines": ["piper_en_US-lessac-medium"],
+  "engines": {
+    "kokoro_82m": {"license": "Apache-2.0", "status": "cleared_with_caveats", "vendor": "hexgrad", "note": "training-data caveats; owner sign-off required"},
+    "chatterbox_turbo": {"license": "MIT", "status": "cleared", "vendor": "Resemble AI", "note": "Perth watermark present in output"},
+    "maya1": {"license": "Apache-2.0", "status": "cleared", "vendor": "Maya Research", "note": "3B, 16GB+ VRAM; training-data provenance caveat"},
+    "piper_en_US-lessac-medium": {"license": "UNKNOWN", "status": "blocked", "vendor": "Resemble AI", "note": "MODEL_CARD has no license field; manifest CC-BY-4.0 assertion unverified"}
+  }
+}

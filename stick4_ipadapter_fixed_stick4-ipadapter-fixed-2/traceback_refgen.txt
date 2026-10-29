@@ -1,0 +1,39 @@
+Traceback (most recent call last):
+  File "/kaggle/src/script.py", line 185, in main
+    ref_img = pipe(
+              ~~~~^
+        prompt=ref_prompt,
+        ^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        generator=torch.Generator("cuda").manual_seed(1111),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ).images[0]
+    ^
+  File "/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl.py", line 1212, in __call__
+    noise_pred = self.unet(
+                 ~~~~~~~~~^
+        latent_model_input,
+        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+        return_dict=False,
+        ^^^^^^^^^^^^^^^^^^
+    )[0]
+    ^
+  File "/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.13/dist-packages/diffusers/utils/peft_utils.py", line 323, in wrapper
+    result = forward_fn(self, *args, **kwargs)
+  File "/usr/local/lib/python3.13/dist-packages/diffusers/models/unets/unet_2d_condition.py", line 1103, in forward
+    encoder_hidden_states = self.process_encoder_hidden_states(
+        encoder_hidden_states=encoder_hidden_states, added_cond_kwargs=added_cond_kwargs
+    )
+  File "/usr/local/lib/python3.13/dist-packages/diffusers/models/unets/unet_2d_condition.py", line 966, in process_encoder_hidden_states
+    raise ValueError(
+        f"{self.__class__} has the config param `encoder_hid_dim_type` set to 'ip_image_proj' which requires the keyword argument `image_embeds` to be passed in `added_cond_kwargs`"
+    )
+ValueError: <class 'diffusers.models.unets.unet_2d_condition.UNet2DConditionModel'> has the config param `encoder_hid_dim_type` set to 'ip_image_proj' which requires the keyword argument `image_embeds` to be passed in `added_cond_kwargs`

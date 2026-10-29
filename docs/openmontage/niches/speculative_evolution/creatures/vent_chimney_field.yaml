@@ -1,0 +1,30 @@
+spec_version: "1.0"
+pilot: "life beneath a frozen alien ocean"
+niche: speculative_evolution
+type: habitat
+name: "vent chimney field"
+role: "hydrothermal vent field with black-smoker chimneys; chemosynthetic oasis"
+anatomy: null
+environment:
+  - "field of hydrothermal vent chimneys on the ocean floor"
+  - "black smokers (iron-sulfide chimneys) and white smokers (barium/calcium/silicon)"
+  - "basalt rock, bacterial mats on chimney surfaces"
+energy_source: "chemosynthesis: microbes oxidize sulfides/methane from vent fluid (not sunlight); vent fluid >400 C held liquid by pressure (boiling suppressed ~370 C at 2500 m)"
+pressure_temperature_constraint: "vent depth ~2500 m => pressure ~250 atm (hundreds of times sea level); ambient deep water ~2 C; vent fluid up to >400 C; sharp thermal gradient across chimney wall"
+canonical_silhouette: "cluster of tall, narrow chimney towers (black smokers dark, white smokers pale) rising from a flat basalt floor, with diffuse glowing bacterial mats at the bases"
+known_inference_speculation_per_trait:
+  vent_depth_2500m: KNOWN  (first vents sighted at 2500 m — NOAA)
+  fluid_over_400C: KNOWN   (vent fluid can exceed 400 C — NOAA)
+  pressure_suppresses_boiling: KNOWN (high pressure prevents boiling ~370 C at 2500 m — NOAA/Univ. Hawaii)
+  chemosynthesis_not_sunlight: KNOWN (vent microbes use chemicals, not sunlight — NOAA)
+  chimney_minerals: KNOWN (black smokers iron sulfide; white smokers barium/calcium/silicon — NOAA)
+sources:
+  - title: "Hydrothermal Vents (NOAA fact sheet)"
+    url: "https://www.noaa.gov/hydrothermal-vents-fact-sheet"
+    accessed: "2026-10-21"
+  - title: "Weird Science: Hydrothermal Vents and Cold Seeps (Univ. Hawaii)"
+    url: "https://manoa.hawaii.edu/exploringourfluidearth/biological/aquatic-plants-and-algae/energy-acquisition/weird-science-hydrothermal-vents-and-cold-seeps"
+    accessed: "2026-10-21"
+  - title: "Wild and Bizarre Marine Life (NOAA Ocean Explorer)"
+    url: "https://oceanexplorer.noaa.gov/explainers/marine-life/"
+    accessed: "2026-10-21"

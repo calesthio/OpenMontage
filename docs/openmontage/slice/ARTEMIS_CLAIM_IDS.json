@@ -1,0 +1,23 @@
+[
+  {"text": "NASA's Space Launch System rocket and Orion spacecraft form the backbone for the agency's Artemis missions to the Moon.", "claim_id": "ARTEMIS-01", "source_flags": ""},
+  {"text": "Over development, the rocket and spacecraft moved from design and manufacturing to testing, assembly, and integration, with some hardware delivered to the launch pad at Kennedy.", "claim_id": "ARTEMIS-01", "source_flags": ""},
+  {"text": "The SLS core stage was built at Michoud Assembly Facility — the largest rocket stage NASA has built since the Saturn V, 212 feet tall, with four RS-25 engines.", "claim_id": "ARTEMIS-02", "source_flags": "SINGLE (one NASA record: MAF, 2019-09-17)"},
+  {"text": "SLS will be the most powerful rocket ever built, powered by two solid rocket boosters and four RS-25 engines providing over 8 million pounds of thrust.", "claim_id": "ARTEMIS-03", "source_flags": ""},
+  {"text": "SLS rolled out to Launch Complex 39B at Kennedy and was stacked inside the Vehicle Assembly Building ahead of its first flight.", "claim_id": "ARTEMIS-04", "source_flags": "SINGLE (one NASA record: MSFC, 2022-08-18)"},
+  {"text": "At 1:47 a.m. EST (6:47 UTC) on November 16, 2022, NASA's Orion spacecraft launched atop the SLS rocket from historic Launch Pad 39B at Kennedy Space Center.", "claim_id": "ARTEMIS-05", "source_flags": ""},
+  {"text": "The liftoff officially began the Artemis I mission — an uncrewed flight test.", "claim_id": "ARTEMIS-06", "source_flags": ""},
+  {"text": "Artemis I was the first integrated test of the agency's deep space exploration systems: the SLS rocket, the Orion spacecraft, and supporting ground systems.", "claim_id": "ARTEMIS-06", "source_flags": ""},
+  {"text": "It was the first in a series of increasingly complex missions to the Moon.", "claim_id": "ARTEMIS-06", "source_flags": ""},
+  {"text": "Orion was sent on a path to the Moon, beginning a 25.5-day mission around the Moon.", "claim_id": "ARTEMIS-05", "source_flags": ""},
+  {"text": "Orion was sent on a path to the Moon, beginning a 25.5-day mission around the Moon.", "claim_id": "ARTEMIS-07", "source_flags": ""},
+  {"text": "This was an uncrewed flight test demonstrating the SLS rocket's ability to carry Orion around the Moon and back to Earth.", "claim_id": "ARTEMIS-06", "source_flags": ""},
+  {"text": "Over the course of the mission, Orion performed two lunar flybys, coming within 80 miles (129 kilometers) of the lunar surface.", "claim_id": "ARTEMIS-07", "source_flags": ""},
+  {"text": "At its farthest distance during the mission, Orion traveled nearly 270,000 miles (435,000 kilometers) from Earth.", "claim_id": "ARTEMIS-08", "source_flags": ""},
+  {"text": "NASA's Orion spacecraft completed a parachute-assisted splashdown in the Pacific Ocean at 9:40 a.m. PST (12:40 p.m. EST).", "claim_id": "ARTEMIS-09", "source_flags": ""},
+  {"text": "Splashdown marked the final major milestone of the Artemis I mission.", "claim_id": "ARTEMIS-09", "source_flags": ""},
+  {"text": "Artemis I set new records of performance, exceeded efficiency expectations, and established new safety baselines for humans in deep space.", "claim_id": "ARTEMIS-10", "source_flags": ""},
+  {"text": "Following Artemis I, human beings will fly around the Moon on Artemis II.", "claim_id": "ARTEMIS-11", "source_flags": ""},
+  {"text": "Under Artemis, NASA will land the first woman and the first person of color on the Moon.", "claim_id": "ARTEMIS-11", "source_flags": ""},
+  {"text": "SLS, Orion, and the Gateway in lunar orbit form NASA's backbone for deep space exploration.", "claim_id": "ARTEMIS-12", "source_flags": "SINGLE (one NASA record: MSFC, 2023-04-12)"},
+  {"text": "SLS is the only rocket that can send Orion, astronauts, and supplies to the Moon in a single mission.", "claim_id": "ARTEMIS-12", "source_flags": "SINGLE (one NASA record: MSFC, 2023-04-12)"}
+]

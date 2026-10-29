@@ -1,0 +1,17 @@
+{
+  "job_id": "character-benchmark",
+  "title": "Character consistency benchmark — FLUX.2 Klein 4B (then Qwen-Image-Edit-2511 if T4-compatible)",
+  "model_id": "black-forest-labs/FLUX.2-klein-4B",
+  "precision": "fp16",
+  "resolution": "512x512",
+  "batch_size": 1,
+  "steps": 4,
+  "guidance_scale": 1.0,
+  "strength": 0.75,
+  "memory_opts": ["vae_slicing", "vae_tiling", "model_cpu_offload"],
+  "banned": ["IP-Adapter", "PhotoMaker", "PuLID", "InstantID", "FaceID", "InsightFace", "ArcFace", "non-commercial license models"],
+  "qwen_allowed": false,
+  "accelerator": "gpu",
+  "enable_internet": true,
+  "created_at": "2026-10-26T16:11:00Z"
+}

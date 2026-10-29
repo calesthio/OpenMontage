@@ -1,0 +1,164 @@
+{
+  "protocol_version": "1.0",
+  "model_id": "black-forest-labs/FLUX.2-klein-4B",
+  "blocker": "diffusers 0.37.0 не поддерживает FLUX.2-klein-4B (отсутствуют компоненты feature_extractor, image_encoder, text_encoder_2, tokenizer_2). Запуск возможен только после перехода на diffusers git/dev-версию, который остаётся открытым решением владельца. Реальный Kaggle-прогон НЕ запускать в рамках этой задачи.",
+  "official_settings": {
+    "num_inference_steps": 4,
+    "guidance_scale": 1.0,
+    "resolution_start": "1024x1024",
+    "resolution_wide": "1792x1024",
+    "max_references": 4,
+    "max_references_note": "Официальный лимит для klein — 4 референса, НЕ путать с max: 10.",
+    "precision": "fp16",
+    "memory_opts": ["model_cpu_offload"],
+    "prompt_style": "нарративный, детальный, без prompt upsampling; техника line-art описывается явно в каждом промпте: 'thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette'",
+    "prompt_upsampling": false
+  },
+  "master_character": {
+    "description": "young woman with short curly auburn hair and freckles, wearing a blue denim jacket and a silver chain necklace",
+    "reference_image": "pilot/master_character_ref.png",
+    "pass_rule": "Передавать мастер-референс персонажа заново в КАЖДОМ кадре (каждый вызов pipe). Не переиспользовать кэш между вызовами pipe — явная рекомендация из аудита.",
+    "image_encoder": "ViT-H (image_encoder из sdxl_models / FLUX.2 klein image encoder), last_hidden_state кодируется через pipe"
+  },
+  "resolutions": [
+    {
+      "name": "1024x1024",
+      "width": 1024,
+      "height": 1024,
+      "purpose": "стартовое разрешение, базовые тесты 1-3"
+    },
+    {
+      "name": "1792x1024",
+      "width": 1792,
+      "height": 1024,
+      "purpose": "отдельно протестировать широкие кадры"
+    }
+  ],
+  "steps_variants": [4, 8],
+  "seed": 42,
+  "vram_limit_gb": 14.56,
+  "vram_warning_gb": 14.0,
+  "oom_policy": "записать пик VRAM; если > 14.0 ГБ — зафиксировать как «не влезает на одной T4»",
+  "consistency_categories": [
+    "character_identity",
+    "clothing_accessories",
+    "color_palette",
+    "line_art_style",
+    "contour_anatomy",
+    "composition_framing"
+  ],
+  "line_art_quality_criteria": [
+    "contour_cleanliness",
+    "absence_of_gradients",
+    "crisp_black_outer_contours",
+    "controlled_interior_linework",
+    "flat_matte_color_fills",
+    "two_tone_cel_shading",
+    "restrained_palette"
+  ],
+  "tests": [
+    {
+      "id": "test_1",
+      "name": "Мастер-референс персонажа (1 изображение) + промпт — baseline",
+      "purpose": "Базовая генерация с одним мастер-референсом персонажа, проверка загрузки модели и соответствия стилю line-art",
+      "resolution": "1024x1024",
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "num_references": 1,
+      "references": ["master_character_ref"],
+      "prompt": "Portrait of young woman with short curly auburn hair and freckles, wearing a blue denim jacket and a silver chain necklace, thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, comic line-art style, bold black outlines",
+      "pass_rule": "Передать мастер-референс заново в этом кадре (не переиспользовать кэш).",
+      "log": ["peak_vram_mb", "generate_seconds", "consistency_6_categories_1-5", "line_art_quality_subjective"]
+    },
+    {
+      "id": "test_2",
+      "name": "4 vs 8 шагов, одинаковый seed и промпт",
+      "purpose": "Сравнить контур, анатомию, палитру и сходство персонажа между 4 и 8 шагами",
+      "resolution": "1024x1024",
+      "steps_variants": [4, 8],
+      "guidance_scale": 1.0,
+      "num_references": 1,
+      "references": ["master_character_ref"],
+      "prompt": "Portrait of young woman with short curly auburn hair and freckles, wearing a blue denim jacket and a silver chain necklace, thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, comic line-art style, bold black outlines",
+      "seed": 42,
+      "pass_rule": "Передать мастер-референс заново в КАЖДОМ кадре (и для 4, и для 8 шагов). Не переиспользовать кэш между вызовами pipe.",
+      "compare": ["contour", "anatomy", "palette", "character_similarity"],
+      "log": ["peak_vram_mb", "generate_seconds", "consistency_6_categories_1-5_per_variant", "line_art_quality_subjective_per_variant"]
+    },
+    {
+      "id": "test_3",
+      "name": "1 референс vs 2 (мастер + style-референс) vs 3-4, добавляя по одному",
+      "purpose": "Сравнить консистентность персонажа при росте числа референсов от 1 до 4",
+      "resolution": "1024x1024",
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "reference_variants": [1, 2, 3, 4],
+      "references": ["master_character_ref", "style_ref_lineart", "ref_3", "ref_4"],
+      "reference_note": "max_references = 4 (официальный лимит для klein). Добавлять референсы по одному, не переиспользовать кэш между вызовами pipe.",
+      "prompt": "Portrait of young woman with short curly auburn hair and freckles, wearing a blue denim jacket and a silver chain necklace, thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, comic line-art style, bold black outlines",
+      "seed": 42,
+      "pass_rule": "Передать мастер-референс персонажа заново в КАЖДОМ кадре (все варианты 1/2/3/4 референсов). Не переиспользовать кэш между вызовами pipe.",
+      "compare": ["character_consistency_vs_reference_count"],
+      "log": ["peak_vram_mb", "generate_seconds", "consistency_6_categories_1-5_per_variant", "line_art_quality_subjective_per_variant"]
+    },
+    {
+      "id": "test_4",
+      "name": "fp32 baseline vs community FP8/bnb-4bit сборка",
+      "purpose": "Только после выбора рабочего режима из тестов 1-3 — сравнить fp32 baseline против community FP8/bnb-4bit сборки (если блокер diffusers решится в пользу этого пути)",
+      "condition": "Запускать только после выбора рабочего режима из тестов 1-3",
+      "resolution": "1024x1024",
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "num_references": 1,
+      "references": ["master_character_ref"],
+      "precision_variants": ["fp32", "fp8_community", "bnb-4bit_community"],
+      "prompt": "Portrait of young woman with short curly auburn hair and freckles, wearing a blue denim jacket and a silver chain necklace, thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, comic line-art style, bold black outlines",
+      "seed": 42,
+      "pass_rule": "Передать мастер-референс заново в КАЖДОМ кадре (все варианты точности). Не переиспользовать кэш между вызовами pipe.",
+      "compare": ["fp32_vs_fp8_vs_bnb4bit", "peak_vram", "quality", "speed"],
+      "log": ["peak_vram_mb", "generate_seconds", "consistency_6_categories_1-5_per_variant", "line_art_quality_subjective_per_variant"]
+    }
+  ],
+  "logging": {
+    "per_test_fields": [
+      "test_id",
+      "test_name",
+      "resolution",
+      "steps",
+      "guidance_scale",
+      "num_references",
+      "references_used",
+      "seed",
+      "precision",
+      "peak_vram_mb",
+      "generate_seconds",
+      "load_seconds",
+      "consistency_categories_scores_1_5",
+      "line_art_quality_subjective",
+      "oom",
+      "error",
+      "status"
+    ],
+    "consistency_categories_scores_1_5": {
+      "character_identity": "1-5",
+      "clothing_accessories": "1-5",
+      "color_palette": "1-5",
+      "line_art_style": "1-5",
+      "contour_anatomy": "1-5",
+      "composition_framing": "1-5"
+    },
+    "line_art_quality_subjective_fields": [
+      "contour_cleanliness",
+      "absence_of_gradients",
+      "crisp_black_outer_contours",
+      "controlled_interior_linework",
+      "flat_matte_color_fills",
+      "two_tone_cel_shading",
+      "restrained_palette"
+    ],
+    "outputs": [
+      "/kaggle/working/flux2-klein-test/results.json",
+      "/kaggle/working/flux2-klein-test/images/test_<id>_<variant>.png"
+    ]
+  }
+}

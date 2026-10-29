@@ -1,0 +1,18 @@
+[{"stream_name":"stderr","time":85.959870213,"data":"Flax classes are deprecated and will be removed in Diffusers v1.0.0. We recommend migrating to PyTorch classes or pinning your version of Diffusers.\n"}
+,{"stream_name":"stderr","time":85.960691937,"data":"Flax classes are deprecated and will be removed in Diffusers v1.0.0. We recommend migrating to PyTorch classes or pinning your version of Diffusers.\n"}
+,{"stream_name":"stderr","time":128.933981089,"data":"\rFetching 14 files:   0%|          | 0/14 [00:00\u003c?, ?it/s]\rFetching 14 files:  14%|█▍        | 2/14 [00:00\u003c00:02,  5.42it/s]\rFetching 14 files:  29%|██▊       | 4/14 [00:42\u003c02:03, 12.35s/it]\rFetching 14 files: 100%|██████████| 14/14 [00:42\u003c00:00,  3.01s/it]\n"}
+,{"stream_name":"stderr","time":139.440744976,"data":"\rLoading pipeline components...:   0%|          | 0/5 [00:00\u003c?, ?it/s]\rLoading pipeline components...:  20%|██        | 1/5 [00:01\u003c00:06,  1.57s/it]\rLoading pipeline components...:  40%|████      | 2/5 [00:10\u003c00:17,  5.87s/it]\n"}
+,{"stream_name":"stderr","time":142.636628125,"data":"\rLoading checkpoint shards:   0%|          | 0/2 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":142.797010196,"data":"\rLoading checkpoint shards:  50%|█████     | 1/2 [00:03\u003c00:03,  3.20s/it]\u001b[A\n"}
+,{"stream_name":"stderr","time":142.797352517,"data":"\rLoading checkpoint shards: 100%|██████████| 2/2 [00:03\u003c00:00,  1.41s/it]\u001b[A\rLoading checkpoint shards: 100%|██████████| 2/2 [00:03\u003c00:00,  1.68s/it]\n"}
+,{"stream_name":"stderr","time":145.183237663,"data":"\rLoading pipeline components...:  80%|████████  | 4/5 [00:13\u003c00:03,  3.26s/it]\rLoading pipeline components...: 100%|██████████| 5/5 [00:16\u003c00:00,  2.99s/it]\rLoading pipeline components...: 100%|██████████| 5/5 [00:16\u003c00:00,  3.25s/it]\n"}
+,{"stream_name":"stderr","time":158.46163412,"data":"/usr/local/lib/python3.13/dist-packages/diffusers/image_processor.py:142: RuntimeWarning: invalid value encountered in cast\n"}
+,{"stream_name":"stderr","time":158.461666218,"data":"  images = (images * 255).round().astype(\"uint8\")\n"}
+,{"stream_name":"stdout","time":240.365513429,"data":"s7 sana-sprint-1.6b done: 10 images, 9.027 s/img steady, peak VRAM 5085.2 MB, load 59.1s\n"}
+,{"stream_name":"stderr","time":247.057422826,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":247.05745712,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":247.256332024,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":247.25637261,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":247.980728165,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":248.557175295,"data":"[NbConvertApp] Writing 423487 bytes to __results__.html\n"}
+]

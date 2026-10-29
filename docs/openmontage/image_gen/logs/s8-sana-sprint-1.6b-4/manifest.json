@@ -1,0 +1,136 @@
+{
+  "job_id": "s8-sana-sprint-1.6b-4",
+  "model": "sana-sprint-1.6b",
+  "model_id": "Efficient-Large-Model/Sana_Sprint_1.6B_1024px_diffusers",
+  "pipeline_class": "SanaSprintPipeline",
+  "dtype": "float16",
+  "bitsandbytes": false,
+  "cpu_fallback": false,
+  "cpu_offload_used": true,
+  "width": 1024,
+  "height": 1024,
+  "requested": 10,
+  "generated": 0,
+  "load_seconds": 62.168,
+  "steady_state_sec_per_image": null,
+  "steady_median_sec_per_image": null,
+  "mean_sec_per_image": null,
+  "usable_images_per_minute": null,
+  "gpu_seconds": 0.01,
+  "peak_vram_mb": 0.0,
+  "oom_count": 0,
+  "black_count": 0,
+  "nan_count": 0,
+  "wall_cap_seconds": 5400,
+  "wall_cap_hit": false,
+  "load_notes": {
+    "text_encoder_fp32": true,
+    "model_cpu_offload": true
+  },
+  "versions": {
+    "diffusers": "0.37.0",
+    "transformers": "4.57.6",
+    "huggingface_hub": "0.36.2",
+    "torch": "2.11.0+cu128",
+    "accelerate": "1.14.0",
+    "safetensors": "0.8.0",
+    "numpy": "2.1.3",
+    "pillow": "12.3.0",
+    "torch_cuda": "12.8",
+    "gpu": "Tesla T4",
+    "python": "3.13.15"
+  },
+  "install_log": {
+    "ladder": [],
+    "rungs": [
+      {
+        "rung": 1,
+        "stack": "released_037_x4",
+        "note": "released diffusers 0.37.0 + transformers 4.x + hub <1.0 (ships Flux2KleinPipeline and ZImagePipeline)",
+        "pip_args": [
+          "diffusers==0.37.0",
+          "transformers==4.57.6",
+          "huggingface-hub>=0.34,<1.0",
+          "accelerate>=1.10",
+          "safetensors>=0.4"
+        ],
+        "pip_ok": true,
+        "import_found": "SanaSprintPipeline",
+        "import_error": null,
+        "versions_after": {
+          "diffusers": "0.37.0",
+          "transformers": "4.57.6",
+          "huggingface_hub": "0.36.2",
+          "accelerate": "1.14.0",
+          "torch": "2.11.0+cu128"
+        }
+      }
+    ],
+    "used_rung": 1,
+    "used_stack": "released_037_x4",
+    "pipeline_class": "SanaSprintPipeline"
+  },
+  "created_utc": "2026-10-22T02:12:44Z",
+  "images": [
+    {
+      "render_id": "r3001",
+      "file": null,
+      "seed": 4000,
+      "error": "generation_exception"
+    },
+    {
+      "render_id": "r3002",
+      "file": null,
+      "seed": 4004,
+      "error": "generation_exception"
+    },
+    {
+      "render_id": "r3003",
+      "file": null,
+      "seed": 4006,
+      "error": "generation_exception"
+    },
+    {
+      "render_id": "r3004",
+      "file": null,
+      "seed": 4008,
+      "error": "generation_exception"
+    },
+    {
+      "render_id": "r3005",
+      "file": null,
+      "seed": 4010,
+      "error": "generation_exception"
+    },
+    {
+      "render_id": "r3006",
+      "file": null,
+      "seed": 4014,
+      "error": "generation_exception"
+    },
+    {
+      "render_id": "r3007",
+      "file": null,
+      "seed": 4016,
+      "error": "generation_exception"
+    },
+    {
+      "render_id": "r3008",
+      "file": null,
+      "seed": 4018,
+      "error": "generation_exception"
+    },
+    {
+      "render_id": "r3009",
+      "file": null,
+      "seed": 4020,
+      "error": "generation_exception"
+    },
+    {
+      "render_id": "r3010",
+      "file": null,
+      "seed": 4022,
+      "error": "generation_exception"
+    }
+  ]
+}

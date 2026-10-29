@@ -1,0 +1,19 @@
+{
+  "job_id": "pilot-render",
+  "title": "Pilot render — 10 section images, SDXL Base 1.0, fixed text-prompt consistency",
+  "model_id": "stabilityai/stable-diffusion-xl-base-1.0",
+  "width": 768,
+  "height": 768,
+  "batch_size": 1,
+  "precision": "fp16",
+  "memory_opts": ["vae_slicing", "vae_tiling", "model_cpu_offload"],
+  "seed": 42,
+  "steps": 25,
+  "guidance_scale": 7.5,
+  "num_sections": 10,
+  "output_dir": "/kaggle/working/pilot-render/images",
+  "note": "klein 4B is BLOCKED on diffusers 0.37.0 (missing components: feature_extractor, image_encoder, text_encoder_2, tokenizer_2). Using SDXL Base 1.0 per EPISODE_IMAGE_PIPELINE.md locked model. No IP-Adapter; consistency via fixed text-prompt + style prefix/tail per section.",
+  "accelerator": "gpu",
+  "enable_internet": true,
+  "created_at": "2026-10-27T06:30:00Z"
+}

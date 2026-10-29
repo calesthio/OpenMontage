@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/fact_check_report",
+  "title": "Fact Check Report",
+  "description": "Stage 5 output of the business-documentary pipeline. Every script claim is verdicted against the evidence ledger. status=blocked prevents the pipeline from advancing.",
+  "type": "object",
+  "required": ["version", "run_id", "created_at", "status", "claims", "summary"],
+  "properties": {
+    "version": { "type": "string", "const": "1.0" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "minLength": 1 },
+    "status": {
+      "type": "string",
+      "enum": ["pass", "revise", "blocked"],
+      "description": "blocked stops the pipeline: the script must be rewritten or the thesis downgraded to a labelled hypothesis."
+    },
+    "claims": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["claim_id", "claim_text", "script_section", "verdict", "evidence_ids", "action"],
+        "properties": {
+          "claim_id": {
+            "type": "string",
+            "pattern": "^CLM-[a-z0-9][a-z0-9_-]{2,63}$"
+          },
+          "claim_text": { "type": "string", "minLength": 1 },
+          "script_section": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The script section this claim appears in."
+          },
+          "verdict": {
+            "type": "string",
+            "enum": ["confirmed", "partially_confirmed", "disputed", "refuted", "unverified"]
+          },
+          "evidence_ids": {
+            "type": "array",
+            "description": "Evidence entries supporting the verdict. Must resolve to evidence_ledger entries.",
+            "items": { "type": "string", "pattern": "^EV-" }
+          },
+          "checked_against": {
+            "type": "array",
+            "description": "Independent sources consulted beyond the cited evidence.",
+            "items": { "type": "string" }
+          },
+          "conflicts": {
+            "type": "array",
+            "description": "Where sources disagree, the disagreement is recorded — not resolved by picking the convenient number.",
+            "items": {
+              "type": "object",
+              "required": ["description"],
+              "properties": {
+                "description": { "type": "string" },
+                "source_a": { "type": "string" },
+                "source_b": { "type": "string" },
+                "resolution": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "legally_sensitive": {
+            "type": "boolean",
+            "description": "Accusation, fraud, liability or safety allegation — routes to enhanced review."
+          },
+          "enhanced_review_required": { "type": "boolean" },
+          "action": {
+            "type": "string",
+            "enum": ["keep", "reword", "downgrade_to_hypothesis", "cut", "escalate"],
+            "description": "What happens to this claim in the next script revision."
+          },
+          "reviewer_note": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total_claims", "confirmed", "partially_confirmed", "disputed", "refuted", "unverified"],
+      "properties": {
+        "total_claims": { "type": "integer", "minimum": 1 },
+        "confirmed": { "type": "integer", "minimum": 0 },
+        "partially_confirmed": { "type": "integer", "minimum": 0 },
+        "disputed": { "type": "integer", "minimum": 0 },
+        "refuted": { "type": "integer", "minimum": 0 },
+        "unverified": { "type": "integer", "minimum": 0 },
+        "central_thesis_status": {
+          "type": "string",
+          "enum": ["supported", "partially_supported", "unsupported"],
+          "description": "unsupported blocks publish regardless of individual claim counts."
+        }
+      },
+      "additionalProperties": false
+    },
+    "metadata": { "type": "object" }
+  },
+  "additionalProperties": false
+}

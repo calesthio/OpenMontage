@@ -1,0 +1,210 @@
+[{"stream_name":"stderr","time":43.121742846,"data":"/usr/local/lib/python3.13/dist-packages/diffusers/utils/deprecation_utils.py:23: FutureWarning: `torch_dtype` is deprecated and will be removed in version 1.0.0. Please use `dtype` instead.\n"}
+,{"stream_name":"stderr","time":43.121784175,"data":"  deprecate(\"torch_dtype\", \"1.0.0\", _TORCH_DTYPE_DEPRECATION_MESSAGE)\n"}
+,{"stream_name":"stderr","time":43.64230458,"data":"\rFetching 18 files:   0%|          | 0/18 [00:00\u003c?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stderr","time":43.642339434,"data":"WARNING:huggingface_hub.utils._http:Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stderr","time":99.422693011,"data":"\rFetching 18 files:  11%|█         | 2/18 [00:00\u003c00:00, 18.33it/s]\rFetching 18 files:  39%|███▉      | 7/18 [00:00\u003c00:00, 33.04it/s]\rFetching 18 files:  78%|███████▊  | 14/18 [00:00\u003c00:00, 43.27it/s]\rFetching 18 files:  89%|████████▉ | 16/18 [00:19\u003c00:00, 43.27it/s]\rFetching 18 files:  94%|█████████▍| 17/18 [00:24\u003c00:02,  2.19s/it]\rFetching 18 files: 100%|██████████| 18/18 [00:55\u003c00:00,  5.55s/it]\rFetching 18 files: 100%|██████████| 18/18 [00:55\u003c00:00,  3.10s/it]\n"}
+,{"stream_name":"stderr","time":115.717340916,"data":"\rLoading pipeline components...:   0%|          | 0/7 [00:00\u003c?, ?it/s]\rLoading pipeline components...:  14%|█▍        | 1/7 [00:14\u003c01:27, 14.53s/it]\rLoading pipeline components...:  43%|████▎     | 3/7 [00:16\u003c00:17,  4.37s/it]\n"}
+,{"stream_name":"stderr","time":117.445408889,"data":"\rLoading weights:   0%|          | 0/196 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":117.54339179,"data":"\rLoading weights:   1%|          | 2/196 [00:01\u003c02:47,  1.16it/s]\u001b[A\rLoading weights: 100%|██████████| 196/196 [00:01\u003c00:00, 107.36it/s]\n"}
+,{"stream_name":"stderr","time":117.8329878,"data":"\rLoading pipeline components...:  57%|█████▋    | 4/7 [00:18\u003c00:10,  3.54s/it]\rLoading pipeline components...:  71%|███████▏  | 5/7 [00:18\u003c00:04,  2.41s/it]\n"}
+,{"stream_name":"stderr","time":120.97409416,"data":"\rLoading weights:   0%|          | 0/517 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":121.188977673,"data":"\rLoading weights:   0%|          | 2/517 [00:03\u003c13:28,  1.57s/it]\u001b[A\n"}
+,{"stream_name":"stderr","time":121.826739765,"data":"\rLoading weights:  23%|██▎       | 120/517 [00:03\u003c00:08, 49.47it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":122.184594119,"data":"\rLoading weights:  30%|██▉       | 153/517 [00:03\u003c00:07, 50.09it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":122.480059739,"data":"\rLoading weights:  33%|███▎      | 173/517 [00:04\u003c00:06, 51.14it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":122.79015747,"data":"\rLoading weights:  36%|███▋      | 188/517 [00:04\u003c00:06, 51.07it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":123.033795576,"data":"\rLoading weights:  39%|███▊      | 200/517 [00:04\u003c00:06, 48.50it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":123.403503257,"data":"\rLoading weights:  42%|████▏     | 216/517 [00:05\u003c00:05, 51.75it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":123.708363799,"data":"\rLoading weights:  45%|████▍     | 232/517 [00:05\u003c00:05, 49.28it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":124.022845439,"data":"\rLoading weights:  48%|████▊     | 248/517 [00:05\u003c00:05, 50.10it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":124.317892439,"data":"\rLoading weights:  51%|█████     | 264/517 [00:06\u003c00:05, 50.31it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":124.68511331,"data":"\rLoading weights:  54%|█████▍    | 280/517 [00:06\u003c00:04, 51.36it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":124.925809653,"data":"\rLoading weights:  57%|█████▋    | 296/517 [00:06\u003c00:04, 48.85it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":125.297194937,"data":"\rLoading weights:  60%|██████    | 312/517 [00:07\u003c00:03, 52.94it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":125.526949239,"data":"\rLoading weights:  63%|██████▎   | 328/517 [00:07\u003c00:03, 49.60it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":125.92022331,"data":"\rLoading weights:  67%|██████▋   | 344/517 [00:07\u003c00:03, 54.22it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":126.161863929,"data":"\rLoading weights:  70%|██████▉   | 360/517 [00:08\u003c00:03, 49.34it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":126.534800135,"data":"\rLoading weights:  73%|███████▎  | 376/517 [00:08\u003c00:02, 53.39it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":126.791974506,"data":"\rLoading weights:  76%|███████▌  | 392/517 [00:08\u003c00:02, 49.76it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":127.180229427,"data":"\rLoading weights:  79%|███████▉  | 408/517 [00:08\u003c00:02, 52.93it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":127.426828951,"data":"\rLoading weights:  82%|████████▏ | 424/517 [00:09\u003c00:01, 48.78it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":127.804786644,"data":"\rLoading weights:  85%|████████▌ | 440/517 [00:09\u003c00:01, 52.70it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":128.068377424,"data":"\rLoading weights:  88%|████████▊ | 456/517 [00:09\u003c00:01, 49.09it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":128.418852658,"data":"\rLoading weights:  91%|█████████▏| 472/517 [00:10\u003c00:00, 52.08it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":128.684280349,"data":"\rLoading weights:  94%|█████████▍| 488/517 [00:10\u003c00:00, 49.97it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":128.694896841,"data":"\rLoading weights:  97%|█████████▋| 504/517 [00:10\u003c00:00, 52.67it/s]\u001b[A\rLoading weights: 100%|██████████| 517/517 [00:10\u003c00:00, 47.60it/s]\n"}
+,{"stream_name":"stderr","time":128.807882635,"data":"\rLoading pipeline components...:  86%|████████▌ | 6/7 [00:29\u003c00:05,  5.19s/it]\rLoading pipeline components...: 100%|██████████| 7/7 [00:29\u003c00:00,  4.20s/it]\n"}
+,{"stream_name":"stderr","time":150.351556048,"data":"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl.py:748: FutureWarning: `upcast_vae` is deprecated and will be removed in version 1.0.0. `upcast_vae` is deprecated. Please use `pipe.vae.to(torch.float32)`. For more details, please refer to: https://github.com/huggingface/diffusers/pull/12619#issue-3606633695.\n"}
+,{"stream_name":"stderr","time":150.351600658,"data":"  deprecate(\n"}
+,{"stream_name":"stderr","time":150.351612698,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":150.785573729,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":184.237728591,"data":"\rLoading weights:   0%|          | 0/776 [00:00\u003c?, ?it/s]\rLoading weights:  28%|██▊       | 214/776 [00:00\u003c00:00, 2137.44it/s]\rLoading weights:  55%|█████▌    | 429/776 [00:00\u003c00:00, 2144.04it/s]\rLoading weights:  86%|████████▌ | 667/776 [00:00\u003c00:00, 2249.22it/s]\rLoading weights: 100%|██████████| 776/776 [00:00\u003c00:00, 2257.53it/s]\n"}
+,{"stream_name":"stderr","time":187.831633914,"data":"There are modules in UNet2DConditionModel that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":198.834745017,"data":"\rLoading weights:   0%|          | 0/520 [00:00\u003c?, ?it/s]\rLoading weights:  21%|██        | 107/520 [00:00\u003c00:00, 1051.54it/s]\rLoading weights:  45%|████▍     | 233/520 [00:00\u003c00:00, 1157.80it/s]\rLoading weights:  67%|██████▋   | 349/520 [00:00\u003c00:00, 977.41it/s] \rLoading weights:  87%|████████▋ | 450/520 [00:00\u003c00:00, 866.52it/s]\rLoading weights: 100%|██████████| 520/520 [00:00\u003c00:00, 915.56it/s]\n"}
+,{"stream_name":"stderr","time":206.089543057,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stderr","time":206.089576889,"data":"  File \"/kaggle/src/script.py\", line 234, in main\n"}
+,{"stream_name":"stderr","time":206.089582918,"data":"    img = pipe(**call).images[0]\n"}
+,{"stream_name":"stderr","time":206.089587542,"data":"          ~~~~^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.089592211,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stderr","time":206.089603435,"data":"    return func(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.089606982,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl.py\", line 1212, in __call__\n"}
+,{"stream_name":"stderr","time":206.089610305,"data":"    noise_pred = self.unet(\n"}
+,{"stream_name":"stderr","time":206.089613386,"data":"                 ~~~~~~~~~^\n"}
+,{"stream_name":"stderr","time":206.089616361,"data":"        latent_model_input,\n"}
+,{"stream_name":"stderr","time":206.089619409,"data":"        ^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.089622337,"data":"    ...\u003c5 lines\u003e...\n"}
+,{"stream_name":"stderr","time":206.089625694,"data":"        return_dict=False,\n"}
+,{"stream_name":"stderr","time":206.089628803,"data":"        ^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.089632559,"data":"    )[0]\n"}
+,{"stream_name":"stderr","time":206.089650572,"data":"    ^\n"}
+,{"stream_name":"stderr","time":206.089655888,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
+,{"stream_name":"stderr","time":206.089661401,"data":"    return self._call_impl(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.089666585,"data":"           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.089671291,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
+,{"stream_name":"stderr","time":206.089676061,"data":"    return forward_call(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.089680832,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/utils/peft_utils.py\", line 323, in wrapper\n"}
+,{"stream_name":"stderr","time":206.089697149,"data":"    result = forward_fn(self, *args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.089700793,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/models/unets/unet_2d_condition.py\", line 1103, in forward\n"}
+,{"stream_name":"stderr","time":206.089704495,"data":"    encoder_hidden_states = self.process_encoder_hidden_states(\n"}
+,{"stream_name":"stderr","time":206.089708181,"data":"        encoder_hidden_states=encoder_hidden_states, added_cond_kwargs=added_cond_kwargs\n"}
+,{"stream_name":"stderr","time":206.089713903,"data":"    )\n"}
+,{"stream_name":"stderr","time":206.089721258,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/models/unets/unet_2d_condition.py\", line 974, in process_encoder_hidden_states\n"}
+,{"stream_name":"stderr","time":206.089724072,"data":"    image_embeds = self.encoder_hid_proj(image_embeds)\n"}
+,{"stream_name":"stderr","time":206.089726501,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
+,{"stream_name":"stderr","time":206.089729083,"data":"    return self._call_impl(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.089732389,"data":"           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.089747747,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
+,{"stream_name":"stderr","time":206.089752225,"data":"    return forward_call(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.089756292,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/models/embeddings.py\", line 2606, in forward\n"}
+,{"stream_name":"stderr","time":206.089762365,"data":"    image_embed = image_projection_layer(image_embed)\n"}
+,{"stream_name":"stderr","time":206.089766369,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
+,{"stream_name":"stderr","time":206.089770216,"data":"    return self._call_impl(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.089773671,"data":"           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.089777135,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
+,{"stream_name":"stderr","time":206.089780841,"data":"    return forward_call(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.089784299,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/models/embeddings.py\", line 2303, in forward\n"}
+,{"stream_name":"stderr","time":206.089788023,"data":"    x = self.proj_in(x)\n"}
+,{"stream_name":"stderr","time":206.0897917,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
+,{"stream_name":"stderr","time":206.089795572,"data":"    return self._call_impl(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.089799048,"data":"           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.089802521,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
+,{"stream_name":"stderr","time":206.089806203,"data":"    return forward_call(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.089809661,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/linear.py\", line 134, in forward\n"}
+,{"stream_name":"stderr","time":206.089813451,"data":"    return F.linear(input, self.weight, self.bias)\n"}
+,{"stream_name":"stderr","time":206.089817027,"data":"           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.089822308,"data":"RuntimeError: mat1 and mat2 shapes cannot be multiplied (1x1024 and 1280x1280)\n"}
+,{"stream_name":"stderr","time":206.089847579,"data":"\n"}
+,{"stream_name":"stderr","time":206.130678841,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stderr","time":206.130717715,"data":"  File \"/kaggle/src/script.py\", line 234, in main\n"}
+,{"stream_name":"stderr","time":206.130723527,"data":"    img = pipe(**call).images[0]\n"}
+,{"stream_name":"stderr","time":206.130727483,"data":"          ~~~~^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.130731302,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stderr","time":206.130735517,"data":"    return func(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.130739014,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl.py\", line 1212, in __call__\n"}
+,{"stream_name":"stderr","time":206.130742908,"data":"    noise_pred = self.unet(\n"}
+,{"stream_name":"stderr","time":206.130746247,"data":"                 ~~~~~~~~~^\n"}
+,{"stream_name":"stderr","time":206.130749389,"data":"        latent_model_input,\n"}
+,{"stream_name":"stderr","time":206.130752607,"data":"        ^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.130755814,"data":"    ...\u003c5 lines\u003e...\n"}
+,{"stream_name":"stderr","time":206.130758998,"data":"        return_dict=False,\n"}
+,{"stream_name":"stderr","time":206.130763772,"data":"        ^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.130783107,"data":"    )[0]\n"}
+,{"stream_name":"stderr","time":206.130785665,"data":"    ^\n"}
+,{"stream_name":"stderr","time":206.130787944,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
+,{"stream_name":"stderr","time":206.130790554,"data":"    return self._call_impl(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.130792867,"data":"           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.130795158,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
+,{"stream_name":"stderr","time":206.130797913,"data":"    return forward_call(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.130800296,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/utils/peft_utils.py\", line 323, in wrapper\n"}
+,{"stream_name":"stderr","time":206.130803245,"data":"    result = forward_fn(self, *args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.130805624,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/models/unets/unet_2d_condition.py\", line 1103, in forward\n"}
+,{"stream_name":"stderr","time":206.130808092,"data":"    encoder_hidden_states = self.process_encoder_hidden_states(\n"}
+,{"stream_name":"stderr","time":206.130810478,"data":"        encoder_hidden_states=encoder_hidden_states, added_cond_kwargs=added_cond_kwargs\n"}
+,{"stream_name":"stderr","time":206.130812817,"data":"    )\n"}
+,{"stream_name":"stderr","time":206.130815028,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/models/unets/unet_2d_condition.py\", line 974, in process_encoder_hidden_states\n"}
+,{"stream_name":"stderr","time":206.130817498,"data":"    image_embeds = self.encoder_hid_proj(image_embeds)\n"}
+,{"stream_name":"stderr","time":206.13081976,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
+,{"stream_name":"stderr","time":206.130822158,"data":"    return self._call_impl(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.130832956,"data":"           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.130835587,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
+,{"stream_name":"stderr","time":206.130838145,"data":"    return forward_call(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.130840391,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/models/embeddings.py\", line 2606, in forward\n"}
+,{"stream_name":"stderr","time":206.130843508,"data":"    image_embed = image_projection_layer(image_embed)\n"}
+,{"stream_name":"stderr","time":206.130845927,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
+,{"stream_name":"stderr","time":206.130848338,"data":"    return self._call_impl(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.130850562,"data":"           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.130852789,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
+,{"stream_name":"stderr","time":206.130857793,"data":"    return forward_call(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.130860139,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/models/embeddings.py\", line 2303, in forward\n"}
+,{"stream_name":"stderr","time":206.130862566,"data":"    x = self.proj_in(x)\n"}
+,{"stream_name":"stderr","time":206.130864834,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
+,{"stream_name":"stderr","time":206.130867255,"data":"    return self._call_impl(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.130869565,"data":"           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.130871809,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
+,{"stream_name":"stderr","time":206.130874195,"data":"    return forward_call(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.130876422,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/linear.py\", line 134, in forward\n"}
+,{"stream_name":"stderr","time":206.130878906,"data":"    return F.linear(input, self.weight, self.bias)\n"}
+,{"stream_name":"stderr","time":206.130881177,"data":"           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.130883534,"data":"RuntimeError: mat1 and mat2 shapes cannot be multiplied (1x1024 and 1280x1280)\n"}
+,{"stream_name":"stderr","time":206.130885878,"data":"\n"}
+,{"stream_name":"stderr","time":206.170644569,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stderr","time":206.170668163,"data":"  File \"/kaggle/src/script.py\", line 234, in main\n"}
+,{"stream_name":"stderr","time":206.17067373,"data":"    img = pipe(**call).images[0]\n"}
+,{"stream_name":"stderr","time":206.170677883,"data":"          ~~~~^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.170681915,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n"}
+,{"stream_name":"stderr","time":206.170686315,"data":"    return func(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.170690153,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl.py\", line 1212, in __call__\n"}
+,{"stream_name":"stderr","time":206.170694398,"data":"    noise_pred = self.unet(\n"}
+,{"stream_name":"stderr","time":206.170697895,"data":"                 ~~~~~~~~~^\n"}
+,{"stream_name":"stderr","time":206.17071232,"data":"        latent_model_input,\n"}
+,{"stream_name":"stderr","time":206.170716513,"data":"        ^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.170731923,"data":"    ...\u003c5 lines\u003e...\n"}
+,{"stream_name":"stderr","time":206.170736,"data":"        return_dict=False,\n"}
+,{"stream_name":"stderr","time":206.170739718,"data":"        ^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.170742973,"data":"    )[0]\n"}
+,{"stream_name":"stderr","time":206.170746186,"data":"    ^\n"}
+,{"stream_name":"stderr","time":206.17074935,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
+,{"stream_name":"stderr","time":206.170752971,"data":"    return self._call_impl(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.17075783,"data":"           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.170765734,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
+,{"stream_name":"stderr","time":206.17076844,"data":"    return forward_call(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.170770766,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/utils/peft_utils.py\", line 323, in wrapper\n"}
+,{"stream_name":"stderr","time":206.170773256,"data":"    result = forward_fn(self, *args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.170775623,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/models/unets/unet_2d_condition.py\", line 1103, in forward\n"}
+,{"stream_name":"stderr","time":206.170778067,"data":"    encoder_hidden_states = self.process_encoder_hidden_states(\n"}
+,{"stream_name":"stderr","time":206.170780382,"data":"        encoder_hidden_states=encoder_hidden_states, added_cond_kwargs=added_cond_kwargs\n"}
+,{"stream_name":"stderr","time":206.17078281,"data":"    )\n"}
+,{"stream_name":"stderr","time":206.170785009,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/models/unets/unet_2d_condition.py\", line 974, in process_encoder_hidden_states\n"}
+,{"stream_name":"stderr","time":206.170787552,"data":"    image_embeds = self.encoder_hid_proj(image_embeds)\n"}
+,{"stream_name":"stderr","time":206.170789808,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
+,{"stream_name":"stderr","time":206.170792211,"data":"    return self._call_impl(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.170794451,"data":"           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.170796686,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
+,{"stream_name":"stderr","time":206.170799097,"data":"    return forward_call(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.17080137,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/models/embeddings.py\", line 2606, in forward\n"}
+,{"stream_name":"stderr","time":206.170804628,"data":"    image_embed = image_projection_layer(image_embed)\n"}
+,{"stream_name":"stderr","time":206.170806986,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
+,{"stream_name":"stderr","time":206.1708094,"data":"    return self._call_impl(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.170811641,"data":"           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.170813879,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
+,{"stream_name":"stderr","time":206.170819695,"data":"    return forward_call(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.170822043,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/models/embeddings.py\", line 2303, in forward\n"}
+,{"stream_name":"stderr","time":206.170824467,"data":"    x = self.proj_in(x)\n"}
+,{"stream_name":"stderr","time":206.170827156,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
+,{"stream_name":"stderr","time":206.170830816,"data":"    return self._call_impl(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.170834327,"data":"           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.17083662,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
+,{"stream_name":"stderr","time":206.170839016,"data":"    return forward_call(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":206.170841239,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/linear.py\", line 134, in forward\n"}
+,{"stream_name":"stderr","time":206.170843634,"data":"    return F.linear(input, self.weight, self.bias)\n"}
+,{"stream_name":"stderr","time":206.170846018,"data":"           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":206.170848286,"data":"RuntimeError: mat1 and mat2 shapes cannot be multiplied (1x1024 and 1280x1280)\n"}
+,{"stream_name":"stderr","time":206.170850639,"data":"\n"}
+,{"stream_name":"stderr","time":206.176654938,"data":"stick4 ipadapter PARTIAL: 0/3\n"}
+,{"stream_name":"stderr","time":214.820610354,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":214.820638654,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":215.155283269,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":215.155309728,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":216.176575312,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":217.250049545,"data":"[NbConvertApp] Writing 346911 bytes to __results__.html\n"}
+]

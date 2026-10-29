@@ -1,0 +1,5193 @@
+{
+  "audio": "docs/openmontage/slice/apollo9/narration_finished.wav",
+  "model": "whisper-tiny (stable-ts alignment)",
+  "engine": "stable_whisper 2.19.1",
+  "word_count": 1037,
+  "words": [
+    {
+      "word": " Did",
+      "start": 1.18,
+      "end": 1.18
+    },
+    {
+      "word": " Apollo",
+      "start": 1.18,
+      "end": 1.48
+    },
+    {
+      "word": " 9",
+      "start": 1.48,
+      "end": 1.9
+    },
+    {
+      "word": " almost",
+      "start": 1.9,
+      "end": 2.36
+    },
+    {
+      "word": " fail?",
+      "start": 2.36,
+      "end": 3.12
+    },
+    {
+      "word": " You",
+      "start": 3.24,
+      "end": 3.24
+    },
+    {
+      "word": " may",
+      "start": 3.24,
+      "end": 3.4
+    },
+    {
+      "word": " never",
+      "start": 3.4,
+      "end": 3.6
+    },
+    {
+      "word": " have",
+      "start": 3.6,
+      "end": 3.82
+    },
+    {
+      "word": " heard",
+      "start": 3.82,
+      "end": 4.0
+    },
+    {
+      "word": " of",
+      "start": 4.0,
+      "end": 4.16
+    },
+    {
+      "word": " it,",
+      "start": 4.16,
+      "end": 4.38
+    },
+    {
+      "word": " but",
+      "start": 4.48,
+      "end": 4.5
+    },
+    {
+      "word": " this",
+      "start": 4.5,
+      "end": 4.74
+    },
+    {
+      "word": " ten\u2011day",
+      "start": 4.78,
+      "end": 5.24
+    },
+    {
+      "word": " mission",
+      "start": 5.24,
+      "end": 5.58
+    },
+    {
+      "word": " in",
+      "start": 5.58,
+      "end": 5.8
+    },
+    {
+      "word": " March",
+      "start": 5.8,
+      "end": 6.1
+    },
+    {
+      "word": " 1969",
+      "start": 6.1,
+      "end": 6.85
+    },
+    {
+      "word": " was",
+      "start": 7.8,
+      "end": 7.9
+    },
+    {
+      "word": " the",
+      "start": 7.96,
+      "end": 8.06
+    },
+    {
+      "word": " first",
+      "start": 8.06,
+      "end": 8.38
+    },
+    {
+      "word": " flight",
+      "start": 8.38,
+      "end": 8.7
+    },
+    {
+      "word": " of",
+      "start": 8.7,
+      "end": 8.84
+    },
+    {
+      "word": " the",
+      "start": 8.84,
+      "end": 9.1
+    },
+    {
+      "word": " full",
+      "start": 9.1,
+      "end": 9.2
+    },
+    {
+      "word": " Apollo",
+      "start": 9.2,
+      "end": 9.6
+    },
+    {
+      "word": " spacecraft",
+      "start": 9.6,
+      "end": 10.24
+    },
+    {
+      "word": " \u2014",
+      "start": 10.76,
+      "end": 10.86
+    },
+    {
+      "word": " command",
+      "start": 10.86,
+      "end": 11.14
+    },
+    {
+      "word": " module,",
+      "start": 11.14,
+      "end": 11.84
+    },
+    {
+      "word": " service",
+      "start": 12.32,
+      "end": 12.32
+    },
+    {
+      "word": " module,",
+      "start": 12.32,
+      "end": 12.78
+    },
+    {
+      "word": " and",
+      "start": 13.12,
+      "end": 13.28
+    },
+    {
+      "word": " lunar",
+      "start": 13.28,
+      "end": 13.52
+    },
+    {
+      "word": " module",
+      "start": 13.52,
+      "end": 13.9
+    },
+    {
+      "word": " flying",
+      "start": 14.0,
+      "end": 14.4
+    },
+    {
+      "word": " together",
+      "start": 14.4,
+      "end": 14.8
+    },
+    {
+      "word": " as",
+      "start": 14.8,
+      "end": 15.08
+    },
+    {
+      "word": " one.",
+      "start": 15.08,
+      "end": 15.18
+    },
+    {
+      "word": " A",
+      "start": 16.18,
+      "end": 16.18
+    },
+    {
+      "word": " single",
+      "start": 16.18,
+      "end": 16.5
+    },
+    {
+      "word": " engine",
+      "start": 16.5,
+      "end": 16.86
+    },
+    {
+      "word": " misfire",
+      "start": 16.86,
+      "end": 17.38
+    },
+    {
+      "word": " nearly",
+      "start": 17.38,
+      "end": 17.76
+    },
+    {
+      "word": " derailed",
+      "start": 17.76,
+      "end": 18.26
+    },
+    {
+      "word": " the",
+      "start": 18.26,
+      "end": 18.56
+    },
+    {
+      "word": " entire",
+      "start": 18.56,
+      "end": 18.9
+    },
+    {
+      "word": " Moon",
+      "start": 18.9,
+      "end": 19.14
+    },
+    {
+      "word": " program.",
+      "start": 19.14,
+      "end": 19.52
+    },
+    {
+      "word": " Here",
+      "start": 20.26,
+      "end": 20.44
+    },
+    {
+      "word": " is",
+      "start": 20.44,
+      "end": 20.72
+    },
+    {
+      "word": " what",
+      "start": 20.72,
+      "end": 20.9
+    },
+    {
+      "word": " actually",
+      "start": 20.9,
+      "end": 21.32
+    },
+    {
+      "word": " happened,",
+      "start": 21.32,
+      "end": 21.78
+    },
+    {
+      "word": " from",
+      "start": 22.04,
+      "end": 22.2
+    },
+    {
+      "word": " NASA\u2019s",
+      "start": 22.2,
+      "end": 22.78
+    },
+    {
+      "word": " own",
+      "start": 22.78,
+      "end": 22.78
+    },
+    {
+      "word": " records.",
+      "start": 22.78,
+      "end": 22.92
+    },
+    {
+      "word": " Three",
+      "start": 24.36,
+      "end": 24.38
+    },
+    {
+      "word": " men",
+      "start": 24.38,
+      "end": 24.74
+    },
+    {
+      "word": " flew",
+      "start": 24.8,
+      "end": 25.02
+    },
+    {
+      "word": " Apollo",
+      "start": 25.02,
+      "end": 25.38
+    },
+    {
+      "word": " 9.",
+      "start": 25.38,
+      "end": 26.44
+    },
+    {
+      "word": " Commander",
+      "start": 26.8,
+      "end": 26.8
+    },
+    {
+      "word": " James",
+      "start": 26.8,
+      "end": 27.22
+    },
+    {
+      "word": " A.",
+      "start": 27.22,
+      "end": 27.56
+    },
+    {
+      "word": " McDivitt,",
+      "start": 27.62,
+      "end": 28.52
+    },
+    {
+      "word": " a",
+      "start": 28.78,
+      "end": 28.86
+    },
+    {
+      "word": " Gemini",
+      "start": 28.86,
+      "end": 29.3
+    },
+    {
+      "word": " 4",
+      "start": 29.3,
+      "end": 29.68
+    },
+    {
+      "word": " veteran",
+      "start": 29.68,
+      "end": 30.08
+    },
+    {
+      "word": " and",
+      "start": 30.08,
+      "end": 30.38
+    },
+    {
+      "word": " commander",
+      "start": 30.38,
+      "end": 30.74
+    },
+    {
+      "word": " of",
+      "start": 30.74,
+      "end": 30.98
+    },
+    {
+      "word": " Apollo",
+      "start": 30.98,
+      "end": 31.26
+    },
+    {
+      "word": " 9,",
+      "start": 31.26,
+      "end": 32.16
+    },
+    {
+      "word": " first",
+      "start": 32.46,
+      "end": 32.46
+    },
+    {
+      "word": " flight",
+      "start": 32.48,
+      "end": 32.76
+    },
+    {
+      "word": " of",
+      "start": 32.76,
+      "end": 33.0
+    },
+    {
+      "word": " the",
+      "start": 33.0,
+      "end": 33.14
+    },
+    {
+      "word": " complete",
+      "start": 33.14,
+      "end": 33.46
+    },
+    {
+      "word": " set",
+      "start": 33.46,
+      "end": 33.8
+    },
+    {
+      "word": " of",
+      "start": 33.8,
+      "end": 33.9
+    },
+    {
+      "word": " Apollo",
+      "start": 33.98,
+      "end": 34.28
+    },
+    {
+      "word": " hardware",
+      "start": 34.28,
+      "end": 34.76
+    },
+    {
+      "word": " and",
+      "start": 34.76,
+      "end": 35.3
+    },
+    {
+      "word": " first",
+      "start": 35.3,
+      "end": 35.6
+    },
+    {
+      "word": " flight",
+      "start": 35.64,
+      "end": 35.96
+    },
+    {
+      "word": " of",
+      "start": 35.98,
+      "end": 36.18
+    },
+    {
+      "word": " the",
+      "start": 36.18,
+      "end": 36.32
+    },
+    {
+      "word": " Lunar",
+      "start": 36.32,
+      "end": 36.54
+    },
+    {
+      "word": " Module.",
+      "start": 36.54,
+      "end": 37.34
+    },
+    {
+      "word": " Command",
+      "start": 38.04,
+      "end": 38.04
+    },
+    {
+      "word": " Module",
+      "start": 38.04,
+      "end": 38.52
+    },
+    {
+      "word": " Pilot",
+      "start": 38.52,
+      "end": 38.94
+    },
+    {
+      "word": " David",
+      "start": 38.96,
+      "end": 39.26
+    },
+    {
+      "word": " R.",
+      "start": 39.26,
+      "end": 40.08
+    },
+    {
+      "word": " Scott,",
+      "start": 40.4,
+      "end": 40.62
+    },
+    {
+      "word": " who",
+      "start": 40.74,
+      "end": 40.74
+    },
+    {
+      "word": " flew",
+      "start": 40.74,
+      "end": 40.96
+    },
+    {
+      "word": " Gemini",
+      "start": 40.96,
+      "end": 41.5
+    },
+    {
+      "word": " 8",
+      "start": 41.5,
+      "end": 41.86
+    },
+    {
+      "word": " and",
+      "start": 41.94,
+      "end": 42.14
+    },
+    {
+      "word": " Apollo",
+      "start": 42.14,
+      "end": 42.42
+    },
+    {
+      "word": " 9,",
+      "start": 42.42,
+      "end": 43.12
+    },
+    {
+      "word": " later",
+      "start": 43.42,
+      "end": 43.52
+    },
+    {
+      "word": " commanded",
+      "start": 43.52,
+      "end": 43.98
+    },
+    {
+      "word": " Apollo",
+      "start": 43.98,
+      "end": 44.4
+    },
+    {
+      "word": " 15,",
+      "start": 44.4,
+      "end": 45.48
+    },
+    {
+      "word": " and",
+      "start": 45.48,
+      "end": 45.7
+    },
+    {
+      "word": " logged",
+      "start": 45.7,
+      "end": 45.92
+    },
+    {
+      "word": " 546",
+      "start": 46.04,
+      "end": 47.16
+    },
+    {
+      "word": " hours",
+      "start": 47.26,
+      "end": 47.72
+    },
+    {
+      "word": " and",
+      "start": 47.92,
+      "end": 48.12
+    },
+    {
+      "word": " 54",
+      "start": 48.12,
+      "end": 48.54
+    },
+    {
+      "word": " minutes",
+      "start": 48.54,
+      "end": 48.88
+    },
+    {
+      "word": " in",
+      "start": 48.88,
+      "end": 49.14
+    },
+    {
+      "word": " space",
+      "start": 49.16,
+      "end": 49.48
+    },
+    {
+      "word": " including",
+      "start": 49.68,
+      "end": 50.06
+    },
+    {
+      "word": " 20",
+      "start": 50.06,
+      "end": 50.56
+    },
+    {
+      "word": " hours",
+      "start": 50.56,
+      "end": 50.9
+    },
+    {
+      "word": " 46",
+      "start": 50.9,
+      "end": 51.46
+    },
+    {
+      "word": " minutes",
+      "start": 51.46,
+      "end": 51.78
+    },
+    {
+      "word": " of",
+      "start": 51.78,
+      "end": 51.98
+    },
+    {
+      "word": " EVA;",
+      "start": 51.98,
+      "end": 52.82
+    },
+    {
+      "word": " he",
+      "start": 52.82,
+      "end": 52.88
+    },
+    {
+      "word": " later",
+      "start": 52.88,
+      "end": 53.12
+    },
+    {
+      "word": " became",
+      "start": 53.12,
+      "end": 53.48
+    },
+    {
+      "word": " Director",
+      "start": 53.48,
+      "end": 53.96
+    },
+    {
+      "word": " of",
+      "start": 54.0,
+      "end": 54.24
+    },
+    {
+      "word": " NASA\u2019s",
+      "start": 54.24,
+      "end": 54.94
+    },
+    {
+      "word": " Dryden",
+      "start": 54.94,
+      "end": 55.14
+    },
+    {
+      "word": " Flight",
+      "start": 55.18,
+      "end": 55.44
+    },
+    {
+      "word": " Research",
+      "start": 55.74,
+      "end": 55.84
+    },
+    {
+      "word": " Center.",
+      "start": 55.84,
+      "end": 56.49
+    },
+    {
+      "word": " Lunar",
+      "start": 57.24,
+      "end": 57.36
+    },
+    {
+      "word": " Module",
+      "start": 57.36,
+      "end": 57.8
+    },
+    {
+      "word": " Pilot",
+      "start": 57.84,
+      "end": 58.26
+    },
+    {
+      "word": " Russell",
+      "start": 58.28,
+      "end": 58.62
+    },
+    {
+      "word": " L.",
+      "start": 58.62,
+      "end": 58.8
+    },
+    {
+      "word": " Schweickart,",
+      "start": 59.5,
+      "end": 59.8
+    },
+    {
+      "word": " from",
+      "start": 60.18,
+      "end": 60.18
+    },
+    {
+      "word": " NASA\u2019s",
+      "start": 60.18,
+      "end": 60.9
+    },
+    {
+      "word": " third",
+      "start": 60.9,
+      "end": 60.9
+    },
+    {
+      "word": " astronaut",
+      "start": 60.9,
+      "end": 61.28
+    },
+    {
+      "word": " group",
+      "start": 61.28,
+      "end": 61.68
+    },
+    {
+      "word": " in",
+      "start": 61.68,
+      "end": 61.86
+    },
+    {
+      "word": " October",
+      "start": 61.86,
+      "end": 62.2
+    },
+    {
+      "word": " 1963,",
+      "start": 62.2,
+      "end": 63.15
+    },
+    {
+      "word": " logged",
+      "start": 64.02,
+      "end": 64.22
+    },
+    {
+      "word": " 241",
+      "start": 64.26,
+      "end": 65.34
+    },
+    {
+      "word": " hours",
+      "start": 65.34,
+      "end": 65.7
+    },
+    {
+      "word": " in",
+      "start": 65.7,
+      "end": 65.98
+    },
+    {
+      "word": " space",
+      "start": 65.98,
+      "end": 66.26
+    },
+    {
+      "word": " on",
+      "start": 66.3,
+      "end": 66.48
+    },
+    {
+      "word": " Apollo",
+      "start": 66.6,
+      "end": 66.86
+    },
+    {
+      "word": " 9",
+      "start": 66.86,
+      "end": 67.48
+    },
+    {
+      "word": " \u2014",
+      "start": 67.48,
+      "end": 67.54
+    },
+    {
+      "word": " the",
+      "start": 67.54,
+      "end": 67.88
+    },
+    {
+      "word": " first",
+      "start": 67.9,
+      "end": 68.24
+    },
+    {
+      "word": " manned",
+      "start": 68.24,
+      "end": 68.68
+    },
+    {
+      "word": " flight",
+      "start": 68.68,
+      "end": 68.88
+    },
+    {
+      "word": " of",
+      "start": 68.92,
+      "end": 69.08
+    },
+    {
+      "word": " the",
+      "start": 69.08,
+      "end": 69.22
+    },
+    {
+      "word": " Lunar",
+      "start": 69.22,
+      "end": 69.42
+    },
+    {
+      "word": " Module",
+      "start": 69.42,
+      "end": 69.8
+    },
+    {
+      "word": " \u2014",
+      "start": 69.8,
+      "end": 70.4
+    },
+    {
+      "word": " and",
+      "start": 70.4,
+      "end": 70.5
+    },
+    {
+      "word": " during",
+      "start": 70.5,
+      "end": 70.76
+    },
+    {
+      "word": " EVA",
+      "start": 70.76,
+      "end": 71.12
+    },
+    {
+      "word": " tested",
+      "start": 71.14,
+      "end": 71.48
+    },
+    {
+      "word": " the",
+      "start": 71.48,
+      "end": 71.68
+    },
+    {
+      "word": " portable",
+      "start": 71.68,
+      "end": 72.0
+    },
+    {
+      "word": " life",
+      "start": 72.0,
+      "end": 72.32
+    },
+    {
+      "word": " support",
+      "start": 72.32,
+      "end": 72.68
+    },
+    {
+      "word": " system",
+      "start": 72.7,
+      "end": 73.04
+    },
+    {
+      "word": " backpack",
+      "start": 73.04,
+      "end": 73.6
+    },
+    {
+      "word": " subsequently",
+      "start": 73.88,
+      "end": 74.38
+    },
+    {
+      "word": " used",
+      "start": 74.38,
+      "end": 74.8
+    },
+    {
+      "word": " on",
+      "start": 74.8,
+      "end": 75.06
+    },
+    {
+      "word": " lunar",
+      "start": 75.06,
+      "end": 75.38
+    },
+    {
+      "word": " surface",
+      "start": 75.38,
+      "end": 75.78
+    },
+    {
+      "word": " explorations.",
+      "start": 75.78,
+      "end": 76.83
+    },
+    {
+      "word": " Their",
+      "start": 77.58,
+      "end": 77.58
+    },
+    {
+      "word": " backup",
+      "start": 77.58,
+      "end": 77.88
+    },
+    {
+      "word": " crew:",
+      "start": 77.88,
+      "end": 78.58
+    },
+    {
+      "word": " Charles",
+      "start": 78.92,
+      "end": 78.92
+    },
+    {
+      "word": " Conrad",
+      "start": 79.0,
+      "end": 79.4
+    },
+    {
+      "word": " Jr.",
+      "start": 79.4,
+      "end": 80.4
+    },
+    {
+      "word": " as",
+      "start": 80.52,
+      "end": 80.62
+    },
+    {
+      "word": " commander,",
+      "start": 80.62,
+      "end": 81.54
+    },
+    {
+      "word": " Alan",
+      "start": 81.64,
+      "end": 81.66
+    },
+    {
+      "word": " L.",
+      "start": 81.66,
+      "end": 81.86
+    },
+    {
+      "word": " Bean",
+      "start": 82.36,
+      "end": 82.52
+    },
+    {
+      "word": " as",
+      "start": 82.52,
+      "end": 82.78
+    },
+    {
+      "word": " Lunar",
+      "start": 82.78,
+      "end": 83.04
+    },
+    {
+      "word": " Module",
+      "start": 83.04,
+      "end": 83.36
+    },
+    {
+      "word": " Pilot,",
+      "start": 83.36,
+      "end": 84.01
+    },
+    {
+      "word": " Richard",
+      "start": 84.2,
+      "end": 84.3
+    },
+    {
+      "word": " F.",
+      "start": 84.3,
+      "end": 84.5
+    },
+    {
+      "word": " Gordon",
+      "start": 84.96,
+      "end": 85.14
+    },
+    {
+      "word": " Jr.",
+      "start": 85.14,
+      "end": 85.7
+    },
+    {
+      "word": " as",
+      "start": 86.0,
+      "end": 86.1
+    },
+    {
+      "word": " Command",
+      "start": 86.12,
+      "end": 86.5
+    },
+    {
+      "word": " Module",
+      "start": 86.6,
+      "end": 86.78
+    },
+    {
+      "word": " Pilot.",
+      "start": 86.78,
+      "end": 87.28
+    },
+    {
+      "word": " The",
+      "start": 87.9,
+      "end": 87.9
+    },
+    {
+      "word": " two",
+      "start": 88.02,
+      "end": 88.12
+    },
+    {
+      "word": " spacecraft",
+      "start": 88.14,
+      "end": 88.52
+    },
+    {
+      "word": " had",
+      "start": 88.52,
+      "end": 88.9
+    },
+    {
+      "word": " names:",
+      "start": 88.9,
+      "end": 89.74
+    },
+    {
+      "word": " the",
+      "start": 89.78,
+      "end": 89.78
+    },
+    {
+      "word": " Lunar",
+      "start": 89.78,
+      "end": 90.08
+    },
+    {
+      "word": " Module,",
+      "start": 90.08,
+      "end": 90.76
+    },
+    {
+      "word": " nicknamed",
+      "start": 90.96,
+      "end": 91.2
+    },
+    {
+      "word": " Spider",
+      "start": 91.2,
+      "end": 91.64
+    },
+    {
+      "word": " (LM\u20113),",
+      "start": 91.64,
+      "end": 92.44
+    },
+    {
+      "word": " and",
+      "start": 92.88,
+      "end": 93.08
+    },
+    {
+      "word": " the",
+      "start": 93.08,
+      "end": 93.16
+    },
+    {
+      "word": " Command",
+      "start": 93.16,
+      "end": 93.5
+    },
+    {
+      "word": " and",
+      "start": 93.5,
+      "end": 93.76
+    },
+    {
+      "word": " Service",
+      "start": 93.76,
+      "end": 94.04
+    },
+    {
+      "word": " Module,",
+      "start": 94.04,
+      "end": 94.74
+    },
+    {
+      "word": " nicknamed",
+      "start": 94.9,
+      "end": 95.22
+    },
+    {
+      "word": " Gumdrop",
+      "start": 95.22,
+      "end": 95.76
+    },
+    {
+      "word": " (CSM\u2011104).",
+      "start": 95.76,
+      "end": 97.11
+    },
+    {
+      "word": " This",
+      "start": 98.42,
+      "end": 98.44
+    },
+    {
+      "word": " was",
+      "start": 98.44,
+      "end": 98.68
+    },
+    {
+      "word": " the",
+      "start": 98.68,
+      "end": 98.84
+    },
+    {
+      "word": " first",
+      "start": 98.84,
+      "end": 99.12
+    },
+    {
+      "word": " manned",
+      "start": 99.12,
+      "end": 99.5
+    },
+    {
+      "word": " flight",
+      "start": 99.5,
+      "end": 99.68
+    },
+    {
+      "word": " of",
+      "start": 99.8,
+      "end": 99.9
+    },
+    {
+      "word": " the",
+      "start": 99.9,
+      "end": 100.1
+    },
+    {
+      "word": " LM",
+      "start": 100.1,
+      "end": 100.44
+    },
+    {
+      "word": " \u2014",
+      "start": 100.44,
+      "end": 100.88
+    },
+    {
+      "word": " the",
+      "start": 100.88,
+      "end": 100.98
+    },
+    {
+      "word": " first",
+      "start": 100.98,
+      "end": 101.28
+    },
+    {
+      "word": " manned",
+      "start": 101.28,
+      "end": 101.66
+    },
+    {
+      "word": " flight",
+      "start": 101.66,
+      "end": 101.86
+    },
+    {
+      "word": " of",
+      "start": 101.86,
+      "end": 102.1
+    },
+    {
+      "word": " all",
+      "start": 102.1,
+      "end": 102.36
+    },
+    {
+      "word": " lunar",
+      "start": 102.36,
+      "end": 102.58
+    },
+    {
+      "word": " hardware",
+      "start": 102.58,
+      "end": 102.96
+    },
+    {
+      "word": " in",
+      "start": 102.96,
+      "end": 103.3
+    },
+    {
+      "word": " Earth",
+      "start": 103.3,
+      "end": 103.52
+    },
+    {
+      "word": " orbit.",
+      "start": 103.52,
+      "end": 103.76
+    },
+    {
+      "word": " Two",
+      "start": 104.86,
+      "end": 104.86
+    },
+    {
+      "word": " hours",
+      "start": 104.86,
+      "end": 105.22
+    },
+    {
+      "word": " and",
+      "start": 105.22,
+      "end": 105.5
+    },
+    {
+      "word": " 41",
+      "start": 105.5,
+      "end": 105.8
+    },
+    {
+      "word": " minutes",
+      "start": 106.04,
+      "end": 106.14
+    },
+    {
+      "word": " after",
+      "start": 106.14,
+      "end": 106.5
+    },
+    {
+      "word": " launch,",
+      "start": 106.5,
+      "end": 107.25
+    },
+    {
+      "word": " CSM",
+      "start": 107.42,
+      "end": 107.86
+    },
+    {
+      "word": " Gumdrop",
+      "start": 107.86,
+      "end": 108.32
+    },
+    {
+      "word": " turned",
+      "start": 108.36,
+      "end": 108.54
+    },
+    {
+      "word": " to",
+      "start": 108.54,
+      "end": 108.72
+    },
+    {
+      "word": " face",
+      "start": 108.72,
+      "end": 108.9
+    },
+    {
+      "word": " Spider,",
+      "start": 108.9,
+      "end": 109.32
+    },
+    {
+      "word": " still",
+      "start": 109.72,
+      "end": 109.94
+    },
+    {
+      "word": " attached",
+      "start": 109.94,
+      "end": 110.3
+    },
+    {
+      "word": " to",
+      "start": 110.38,
+      "end": 110.56
+    },
+    {
+      "word": " the",
+      "start": 110.56,
+      "end": 110.76
+    },
+    {
+      "word": " S\u2011IVB",
+      "start": 110.76,
+      "end": 111.42
+    },
+    {
+      "word": " third",
+      "start": 111.62,
+      "end": 111.72
+    },
+    {
+      "word": " stage,",
+      "start": 111.72,
+      "end": 112.27
+    },
+    {
+      "word": " and",
+      "start": 112.6,
+      "end": 112.6
+    },
+    {
+      "word": " completed",
+      "start": 112.6,
+      "end": 112.98
+    },
+    {
+      "word": " the",
+      "start": 112.98,
+      "end": 113.2
+    },
+    {
+      "word": " first",
+      "start": 113.2,
+      "end": 113.48
+    },
+    {
+      "word": " successful",
+      "start": 113.48,
+      "end": 113.94
+    },
+    {
+      "word": " docking",
+      "start": 113.94,
+      "end": 114.5
+    },
+    {
+      "word": " of",
+      "start": 114.5,
+      "end": 114.62
+    },
+    {
+      "word": " the",
+      "start": 114.62,
+      "end": 114.74
+    },
+    {
+      "word": " Apollo",
+      "start": 114.88,
+      "end": 115.04
+    },
+    {
+      "word": " program.",
+      "start": 115.04,
+      "end": 115.74
+    },
+    {
+      "word": " About",
+      "start": 116.52,
+      "end": 116.52
+    },
+    {
+      "word": " an",
+      "start": 116.52,
+      "end": 116.74
+    },
+    {
+      "word": " hour",
+      "start": 116.74,
+      "end": 116.88
+    },
+    {
+      "word": " later,",
+      "start": 116.88,
+      "end": 117.43
+    },
+    {
+      "word": " springs",
+      "start": 117.64,
+      "end": 117.82
+    },
+    {
+      "word": " ejected",
+      "start": 117.82,
+      "end": 118.4
+    },
+    {
+      "word": " the",
+      "start": 118.4,
+      "end": 118.52
+    },
+    {
+      "word": " docked",
+      "start": 118.52,
+      "end": 118.92
+    },
+    {
+      "word": " spacecraft",
+      "start": 118.92,
+      "end": 119.2
+    },
+    {
+      "word": " from",
+      "start": 119.2,
+      "end": 119.68
+    },
+    {
+      "word": " the",
+      "start": 119.68,
+      "end": 119.92
+    },
+    {
+      "word": " S\u2011IVB.",
+      "start": 119.92,
+      "end": 120.58
+    },
+    {
+      "word": " The",
+      "start": 121.36,
+      "end": 121.4
+    },
+    {
+      "word": " crew",
+      "start": 121.4,
+      "end": 121.66
+    },
+    {
+      "word": " pressurized",
+      "start": 121.68,
+      "end": 122.22
+    },
+    {
+      "word": " the",
+      "start": 122.36,
+      "end": 122.46
+    },
+    {
+      "word": " tunnel",
+      "start": 122.46,
+      "end": 122.66
+    },
+    {
+      "word": " between",
+      "start": 122.66,
+      "end": 122.96
+    },
+    {
+      "word": " Gumdrop",
+      "start": 123.38,
+      "end": 123.48
+    },
+    {
+      "word": " and",
+      "start": 123.62,
+      "end": 123.72
+    },
+    {
+      "word": " Spider,",
+      "start": 123.72,
+      "end": 124.37
+    },
+    {
+      "word": " removed",
+      "start": 124.58,
+      "end": 124.78
+    },
+    {
+      "word": " the",
+      "start": 124.78,
+      "end": 125.2
+    },
+    {
+      "word": " CM",
+      "start": 125.2,
+      "end": 125.48
+    },
+    {
+      "word": " hatch,",
+      "start": 125.48,
+      "end": 126.34
+    },
+    {
+      "word": " connected",
+      "start": 126.5,
+      "end": 126.6
+    },
+    {
+      "word": " umbilicals",
+      "start": 126.6,
+      "end": 127.32
+    },
+    {
+      "word": " to",
+      "start": 127.4,
+      "end": 127.5
+    },
+    {
+      "word": " power",
+      "start": 127.5,
+      "end": 127.78
+    },
+    {
+      "word": " the",
+      "start": 127.78,
+      "end": 128.08
+    },
+    {
+      "word": " LM",
+      "start": 128.08,
+      "end": 128.42
+    },
+    {
+      "word": " while",
+      "start": 128.42,
+      "end": 128.76
+    },
+    {
+      "word": " the",
+      "start": 128.76,
+      "end": 128.86
+    },
+    {
+      "word": " two",
+      "start": 128.86,
+      "end": 129.04
+    },
+    {
+      "word": " spacecraft",
+      "start": 129.04,
+      "end": 129.52
+    },
+    {
+      "word": " remained",
+      "start": 129.52,
+      "end": 130.0
+    },
+    {
+      "word": " docked,",
+      "start": 130.0,
+      "end": 130.24
+    },
+    {
+      "word": " then",
+      "start": 130.76,
+      "end": 130.98
+    },
+    {
+      "word": " replaced",
+      "start": 130.98,
+      "end": 131.32
+    },
+    {
+      "word": " the",
+      "start": 131.32,
+      "end": 131.6
+    },
+    {
+      "word": " hatch.",
+      "start": 131.6,
+      "end": 131.7
+    },
+    {
+      "word": " On",
+      "start": 132.88,
+      "end": 132.9
+    },
+    {
+      "word": " flight",
+      "start": 132.9,
+      "end": 133.14
+    },
+    {
+      "word": " day",
+      "start": 133.14,
+      "end": 133.42
+    },
+    {
+      "word": " 3,",
+      "start": 133.42,
+      "end": 134.12
+    },
+    {
+      "word": " McDivitt",
+      "start": 134.42,
+      "end": 134.64
+    },
+    {
+      "word": " and",
+      "start": 134.64,
+      "end": 134.86
+    },
+    {
+      "word": " Schweickart",
+      "start": 134.86,
+      "end": 135.32
+    },
+    {
+      "word": " put",
+      "start": 135.4,
+      "end": 135.52
+    },
+    {
+      "word": " on",
+      "start": 135.52,
+      "end": 135.78
+    },
+    {
+      "word": " spacesuits",
+      "start": 135.78,
+      "end": 136.32
+    },
+    {
+      "word": " and",
+      "start": 136.62,
+      "end": 136.82
+    },
+    {
+      "word": " transferred",
+      "start": 136.82,
+      "end": 137.18
+    },
+    {
+      "word": " to",
+      "start": 137.18,
+      "end": 137.4
+    },
+    {
+      "word": " the",
+      "start": 137.4,
+      "end": 137.54
+    },
+    {
+      "word": " LM",
+      "start": 137.54,
+      "end": 138.06
+    },
+    {
+      "word": " through",
+      "start": 138.06,
+      "end": 138.32
+    },
+    {
+      "word": " the",
+      "start": 138.32,
+      "end": 138.48
+    },
+    {
+      "word": " tunnel",
+      "start": 138.48,
+      "end": 138.7
+    },
+    {
+      "word": " connection",
+      "start": 138.7,
+      "end": 139.18
+    },
+    {
+      "word": " to",
+      "start": 139.18,
+      "end": 139.68
+    },
+    {
+      "word": " perform",
+      "start": 139.68,
+      "end": 140.08
+    },
+    {
+      "word": " a",
+      "start": 140.08,
+      "end": 140.34
+    },
+    {
+      "word": " systems",
+      "start": 140.34,
+      "end": 140.62
+    },
+    {
+      "word": " checkout.",
+      "start": 140.62,
+      "end": 141.06
+    },
+    {
+      "word": " This",
+      "start": 141.76,
+      "end": 141.76
+    },
+    {
+      "word": " included",
+      "start": 141.76,
+      "end": 142.12
+    },
+    {
+      "word": " a",
+      "start": 142.12,
+      "end": 142.44
+    },
+    {
+      "word": " 367\u2011second",
+      "start": 142.44,
+      "end": 144.08
+    },
+    {
+      "word": " firing",
+      "start": 144.12,
+      "end": 144.5
+    },
+    {
+      "word": " of",
+      "start": 144.5,
+      "end": 144.84
+    },
+    {
+      "word": " the",
+      "start": 144.84,
+      "end": 145.02
+    },
+    {
+      "word": " LM",
+      "start": 145.02,
+      "end": 145.26
+    },
+    {
+      "word": " descent",
+      "start": 145.26,
+      "end": 145.6
+    },
+    {
+      "word": " engine",
+      "start": 145.6,
+      "end": 146.2
+    },
+    {
+      "word": " to",
+      "start": 146.4,
+      "end": 146.6
+    },
+    {
+      "word": " simulate",
+      "start": 146.6,
+      "end": 146.94
+    },
+    {
+      "word": " the",
+      "start": 146.94,
+      "end": 147.18
+    },
+    {
+      "word": " throttle",
+      "start": 147.18,
+      "end": 147.42
+    },
+    {
+      "word": " pattern",
+      "start": 147.42,
+      "end": 147.9
+    },
+    {
+      "word": " to",
+      "start": 147.9,
+      "end": 148.12
+    },
+    {
+      "word": " be",
+      "start": 148.12,
+      "end": 148.3
+    },
+    {
+      "word": " used",
+      "start": 148.3,
+      "end": 148.56
+    },
+    {
+      "word": " during",
+      "start": 148.56,
+      "end": 148.84
+    },
+    {
+      "word": " a",
+      "start": 148.84,
+      "end": 149.0
+    },
+    {
+      "word": " lunar",
+      "start": 149.0,
+      "end": 149.22
+    },
+    {
+      "word": " landing",
+      "start": 149.22,
+      "end": 149.56
+    },
+    {
+      "word": " mission",
+      "start": 149.56,
+      "end": 150.22
+    },
+    {
+      "word": " \u2014",
+      "start": 150.62,
+      "end": 150.88
+    },
+    {
+      "word": " McDivitt",
+      "start": 150.88,
+      "end": 151.16
+    },
+    {
+      "word": " controlled",
+      "start": 151.2,
+      "end": 151.62
+    },
+    {
+      "word": " the",
+      "start": 151.72,
+      "end": 151.82
+    },
+    {
+      "word": " final",
+      "start": 151.82,
+      "end": 152.14
+    },
+    {
+      "word": " 59",
+      "start": 152.14,
+      "end": 152.62
+    },
+    {
+      "word": " seconds,",
+      "start": 152.62,
+      "end": 153.47
+    },
+    {
+      "word": " varying",
+      "start": 153.9,
+      "end": 153.92
+    },
+    {
+      "word": " the",
+      "start": 153.92,
+      "end": 154.26
+    },
+    {
+      "word": " thrust",
+      "start": 154.26,
+      "end": 154.5
+    },
+    {
+      "word": " from",
+      "start": 154.56,
+      "end": 154.78
+    },
+    {
+      "word": " 10",
+      "start": 154.82,
+      "end": 155.04
+    },
+    {
+      "word": " to",
+      "start": 155.04,
+      "end": 155.18
+    },
+    {
+      "word": " 40",
+      "start": 155.18,
+      "end": 155.48
+    },
+    {
+      "word": " percent",
+      "start": 155.48,
+      "end": 156.1
+    },
+    {
+      "word": " and",
+      "start": 156.24,
+      "end": 156.48
+    },
+    {
+      "word": " shutting",
+      "start": 156.48,
+      "end": 156.68
+    },
+    {
+      "word": " it",
+      "start": 156.68,
+      "end": 156.9
+    },
+    {
+      "word": " off",
+      "start": 156.9,
+      "end": 157.08
+    },
+    {
+      "word": " manually",
+      "start": 157.08,
+      "end": 157.48
+    },
+    {
+      "word": " \u2014",
+      "start": 157.48,
+      "end": 158.12
+    },
+    {
+      "word": " the",
+      "start": 158.12,
+      "end": 158.2
+    },
+    {
+      "word": " first",
+      "start": 158.46,
+      "end": 158.56
+    },
+    {
+      "word": " crewed",
+      "start": 158.56,
+      "end": 158.96
+    },
+    {
+      "word": " throttling",
+      "start": 158.96,
+      "end": 159.32
+    },
+    {
+      "word": " of",
+      "start": 159.32,
+      "end": 159.56
+    },
+    {
+      "word": " an",
+      "start": 159.56,
+      "end": 159.74
+    },
+    {
+      "word": " engine",
+      "start": 159.74,
+      "end": 159.98
+    },
+    {
+      "word": " in",
+      "start": 159.98,
+      "end": 160.28
+    },
+    {
+      "word": " space.",
+      "start": 160.28,
+      "end": 160.44
+    },
+    {
+      "word": " They",
+      "start": 161.5,
+      "end": 161.5
+    },
+    {
+      "word": " also",
+      "start": 161.5,
+      "end": 161.78
+    },
+    {
+      "word": " tested",
+      "start": 161.78,
+      "end": 162.06
+    },
+    {
+      "word": " the",
+      "start": 162.06,
+      "end": 162.28
+    },
+    {
+      "word": " landing",
+      "start": 162.28,
+      "end": 162.6
+    },
+    {
+      "word": " and",
+      "start": 162.6,
+      "end": 162.92
+    },
+    {
+      "word": " rendezvous",
+      "start": 162.92,
+      "end": 163.3
+    },
+    {
+      "word": " radars",
+      "start": 163.3,
+      "end": 164.0
+    },
+    {
+      "word": " and",
+      "start": 164.14,
+      "end": 164.3
+    },
+    {
+      "word": " made",
+      "start": 164.3,
+      "end": 164.46
+    },
+    {
+      "word": " a",
+      "start": 164.46,
+      "end": 164.66
+    },
+    {
+      "word": " 5\u2011minute",
+      "start": 164.66,
+      "end": 165.2
+    },
+    {
+      "word": " television",
+      "start": 165.2,
+      "end": 165.62
+    },
+    {
+      "word": " broadcast",
+      "start": 165.62,
+      "end": 166.22
+    },
+    {
+      "word": " from",
+      "start": 166.22,
+      "end": 166.6
+    },
+    {
+      "word": " inside",
+      "start": 166.6,
+      "end": 167.06
+    },
+    {
+      "word": " Spider.",
+      "start": 167.08,
+      "end": 168.23
+    },
+    {
+      "word": " The",
+      "start": 168.54,
+      "end": 168.54
+    },
+    {
+      "word": " flight",
+      "start": 168.54,
+      "end": 168.8
+    },
+    {
+      "word": " plan",
+      "start": 168.86,
+      "end": 169.22
+    },
+    {
+      "word": " called",
+      "start": 169.22,
+      "end": 169.46
+    },
+    {
+      "word": " for",
+      "start": 169.56,
+      "end": 169.74
+    },
+    {
+      "word": " a",
+      "start": 169.74,
+      "end": 169.82
+    },
+    {
+      "word": " two\u2011hour",
+      "start": 169.82,
+      "end": 170.32
+    },
+    {
+      "word": " EVA",
+      "start": 170.6,
+      "end": 170.7
+    },
+    {
+      "word": " to",
+      "start": 170.7,
+      "end": 170.9
+    },
+    {
+      "word": " simulate",
+      "start": 170.9,
+      "end": 171.26
+    },
+    {
+      "word": " external",
+      "start": 171.26,
+      "end": 171.76
+    },
+    {
+      "word": " transfer",
+      "start": 171.76,
+      "end": 172.3
+    },
+    {
+      "word": " rescue",
+      "start": 172.3,
+      "end": 172.66
+    },
+    {
+      "word": " techniques",
+      "start": 172.66,
+      "end": 173.22
+    },
+    {
+      "word": " \u2014",
+      "start": 173.66,
+      "end": 173.76
+    },
+    {
+      "word": " the",
+      "start": 173.76,
+      "end": 173.86
+    },
+    {
+      "word": " only",
+      "start": 173.86,
+      "end": 174.24
+    },
+    {
+      "word": " planned",
+      "start": 174.24,
+      "end": 174.6
+    },
+    {
+      "word": " EVA",
+      "start": 174.6,
+      "end": 174.82
+    },
+    {
+      "word": " from",
+      "start": 174.82,
+      "end": 175.1
+    },
+    {
+      "word": " the",
+      "start": 175.1,
+      "end": 175.34
+    },
+    {
+      "word": " LM",
+      "start": 175.34,
+      "end": 175.7
+    },
+    {
+      "word": " before",
+      "start": 175.7,
+      "end": 176.1
+    },
+    {
+      "word": " an",
+      "start": 176.1,
+      "end": 176.36
+    },
+    {
+      "word": " actual",
+      "start": 176.36,
+      "end": 176.7
+    },
+    {
+      "word": " lunar",
+      "start": 176.7,
+      "end": 176.96
+    },
+    {
+      "word": " landing.",
+      "start": 176.96,
+      "end": 177.81
+    },
+    {
+      "word": " But",
+      "start": 178.22,
+      "end": 178.22
+    },
+    {
+      "word": " Schweickart",
+      "start": 178.22,
+      "end": 178.72
+    },
+    {
+      "word": " suffered",
+      "start": 178.78,
+      "end": 179.08
+    },
+    {
+      "word": " space",
+      "start": 179.22,
+      "end": 179.52
+    },
+    {
+      "word": " motion",
+      "start": 179.52,
+      "end": 179.86
+    },
+    {
+      "word": " sickness,",
+      "start": 179.86,
+      "end": 180.71
+    },
+    {
+      "word": " vomiting",
+      "start": 181.16,
+      "end": 181.22
+    },
+    {
+      "word": " twice",
+      "start": 181.22,
+      "end": 181.76
+    },
+    {
+      "word": " during",
+      "start": 181.76,
+      "end": 182.0
+    },
+    {
+      "word": " the",
+      "start": 182.08,
+      "end": 182.18
+    },
+    {
+      "word": " first",
+      "start": 182.18,
+      "end": 182.4
+    },
+    {
+      "word": " two",
+      "start": 182.42,
+      "end": 182.58
+    },
+    {
+      "word": " days,",
+      "start": 182.58,
+      "end": 182.84
+    },
+    {
+      "word": " so",
+      "start": 183.32,
+      "end": 183.5
+    },
+    {
+      "word": " the",
+      "start": 183.5,
+      "end": 183.68
+    },
+    {
+      "word": " EVA",
+      "start": 183.68,
+      "end": 183.82
+    },
+    {
+      "word": " was",
+      "start": 183.82,
+      "end": 184.1
+    },
+    {
+      "word": " delayed",
+      "start": 184.1,
+      "end": 184.5
+    },
+    {
+      "word": " and",
+      "start": 184.82,
+      "end": 185.06
+    },
+    {
+      "word": " then",
+      "start": 185.06,
+      "end": 185.34
+    },
+    {
+      "word": " shortened",
+      "start": 185.34,
+      "end": 185.58
+    },
+    {
+      "word": " from",
+      "start": 185.58,
+      "end": 185.88
+    },
+    {
+      "word": " a",
+      "start": 185.88,
+      "end": 186.0
+    },
+    {
+      "word": " planned",
+      "start": 186.0,
+      "end": 186.26
+    },
+    {
+      "word": " 2",
+      "start": 186.3,
+      "end": 186.58
+    },
+    {
+      "word": " hours",
+      "start": 186.58,
+      "end": 186.96
+    },
+    {
+      "word": " to",
+      "start": 187.14,
+      "end": 187.28
+    },
+    {
+      "word": " 37.5",
+      "start": 187.28,
+      "end": 188.52
+    },
+    {
+      "word": " minutes.",
+      "start": 188.52,
+      "end": 189.27
+    },
+    {
+      "word": " Instead,",
+      "start": 189.48,
+      "end": 190.04
+    },
+    {
+      "word": " he",
+      "start": 190.22,
+      "end": 190.22
+    },
+    {
+      "word": " climbed",
+      "start": 190.22,
+      "end": 190.44
+    },
+    {
+      "word": " out",
+      "start": 190.44,
+      "end": 190.64
+    },
+    {
+      "word": " of",
+      "start": 190.64,
+      "end": 190.8
+    },
+    {
+      "word": " the",
+      "start": 190.8,
+      "end": 190.92
+    },
+    {
+      "word": " LM",
+      "start": 190.92,
+      "end": 191.22
+    },
+    {
+      "word": " porch",
+      "start": 191.22,
+      "end": 191.6
+    },
+    {
+      "word": " for",
+      "start": 191.86,
+      "end": 191.96
+    },
+    {
+      "word": " a",
+      "start": 191.96,
+      "end": 192.14
+    },
+    {
+      "word": " 37.5\u2011minute",
+      "start": 192.14,
+      "end": 193.72
+    },
+    {
+      "word": " EVA,",
+      "start": 193.72,
+      "end": 194.22
+    },
+    {
+      "word": " testing",
+      "start": 194.66,
+      "end": 194.82
+    },
+    {
+      "word": " the",
+      "start": 194.82,
+      "end": 195.0
+    },
+    {
+      "word": " EVA",
+      "start": 195.0,
+      "end": 195.32
+    },
+    {
+      "word": " mobility",
+      "start": 195.32,
+      "end": 195.72
+    },
+    {
+      "word": " unit",
+      "start": 195.72,
+      "end": 196.28
+    },
+    {
+      "word": " including",
+      "start": 196.42,
+      "end": 196.88
+    },
+    {
+      "word": " the",
+      "start": 197.08,
+      "end": 197.18
+    },
+    {
+      "word": " portable",
+      "start": 197.18,
+      "end": 197.48
+    },
+    {
+      "word": " life",
+      "start": 197.48,
+      "end": 197.86
+    },
+    {
+      "word": " support",
+      "start": 197.86,
+      "end": 198.24
+    },
+    {
+      "word": " system",
+      "start": 198.26,
+      "end": 198.6
+    },
+    {
+      "word": " backpack",
+      "start": 198.6,
+      "end": 199.14
+    },
+    {
+      "word": " \u2014",
+      "start": 199.74,
+      "end": 200.02
+    },
+    {
+      "word": " this",
+      "start": 200.02,
+      "end": 200.06
+    },
+    {
+      "word": " was",
+      "start": 200.18,
+      "end": 200.4
+    },
+    {
+      "word": " the",
+      "start": 200.4,
+      "end": 200.58
+    },
+    {
+      "word": " first",
+      "start": 200.58,
+      "end": 200.9
+    },
+    {
+      "word": " and",
+      "start": 200.9,
+      "end": 201.12
+    },
+    {
+      "word": " only",
+      "start": 201.12,
+      "end": 201.46
+    },
+    {
+      "word": " EVA",
+      "start": 201.46,
+      "end": 201.78
+    },
+    {
+      "word": " before",
+      "start": 201.8,
+      "end": 202.1
+    },
+    {
+      "word": " the",
+      "start": 202.1,
+      "end": 202.28
+    },
+    {
+      "word": " lunar",
+      "start": 202.28,
+      "end": 202.42
+    },
+    {
+      "word": " landing",
+      "start": 202.42,
+      "end": 202.88
+    },
+    {
+      "word": " and",
+      "start": 202.88,
+      "end": 203.44
+    },
+    {
+      "word": " the",
+      "start": 203.44,
+      "end": 203.7
+    },
+    {
+      "word": " only",
+      "start": 203.7,
+      "end": 203.9
+    },
+    {
+      "word": " opportunity",
+      "start": 203.9,
+      "end": 204.36
+    },
+    {
+      "word": " to",
+      "start": 204.36,
+      "end": 204.72
+    },
+    {
+      "word": " test",
+      "start": 204.72,
+      "end": 204.98
+    },
+    {
+      "word": " the",
+      "start": 205.14,
+      "end": 205.24
+    },
+    {
+      "word": " PLSS",
+      "start": 205.24,
+      "end": 205.94
+    },
+    {
+      "word": " in",
+      "start": 206.02,
+      "end": 206.24
+    },
+    {
+      "word": " space.",
+      "start": 206.24,
+      "end": 206.44
+    },
+    {
+      "word": " Schweickart",
+      "start": 207.22,
+      "end": 207.44
+    },
+    {
+      "word": " floated",
+      "start": 207.52,
+      "end": 207.76
+    },
+    {
+      "word": " out",
+      "start": 207.76,
+      "end": 208.04
+    },
+    {
+      "word": " the",
+      "start": 208.04,
+      "end": 208.16
+    },
+    {
+      "word": " LM",
+      "start": 208.16,
+      "end": 208.4
+    },
+    {
+      "word": " side",
+      "start": 208.4,
+      "end": 208.7
+    },
+    {
+      "word": " hatch",
+      "start": 208.7,
+      "end": 209.0
+    },
+    {
+      "word": " onto",
+      "start": 209.0,
+      "end": 209.14
+    },
+    {
+      "word": " the",
+      "start": 209.14,
+      "end": 209.34
+    },
+    {
+      "word": " front",
+      "start": 209.34,
+      "end": 209.5
+    },
+    {
+      "word": " porch",
+      "start": 209.52,
+      "end": 209.8
+    },
+    {
+      "word": " using",
+      "start": 209.84,
+      "end": 210.14
+    },
+    {
+      "word": " gold\u2011painted",
+      "start": 210.14,
+      "end": 210.88
+    },
+    {
+      "word": " foot",
+      "start": 211.08,
+      "end": 211.18
+    },
+    {
+      "word": " restraints",
+      "start": 211.18,
+      "end": 211.92
+    },
+    {
+      "word": " (\"golden",
+      "start": 212.12,
+      "end": 212.46
+    },
+    {
+      "word": " slippers\");",
+      "start": 212.46,
+      "end": 213.74
+    },
+    {
+      "word": " Scott",
+      "start": 213.74,
+      "end": 213.82
+    },
+    {
+      "word": " opened",
+      "start": 213.82,
+      "end": 214.18
+    },
+    {
+      "word": " the",
+      "start": 214.18,
+      "end": 214.42
+    },
+    {
+      "word": " CM",
+      "start": 214.42,
+      "end": 214.66
+    },
+    {
+      "word": " side",
+      "start": 214.66,
+      "end": 215.0
+    },
+    {
+      "word": " hatch",
+      "start": 215.0,
+      "end": 215.3
+    },
+    {
+      "word": " and",
+      "start": 215.3,
+      "end": 215.52
+    },
+    {
+      "word": " floated",
+      "start": 215.52,
+      "end": 215.76
+    },
+    {
+      "word": " partway",
+      "start": 215.8,
+      "end": 216.2
+    },
+    {
+      "word": " out",
+      "start": 216.52,
+      "end": 216.62
+    },
+    {
+      "word": " (stand\u2011up",
+      "start": 216.62,
+      "end": 217.06
+    },
+    {
+      "word": " EVA);",
+      "start": 217.72,
+      "end": 217.82
+    },
+    {
+      "word": " both",
+      "start": 217.82,
+      "end": 218.12
+    },
+    {
+      "word": " spent",
+      "start": 218.12,
+      "end": 218.3
+    },
+    {
+      "word": " about",
+      "start": 218.3,
+      "end": 218.62
+    },
+    {
+      "word": " 37",
+      "start": 218.64,
+      "end": 219.12
+    },
+    {
+      "word": " minutes",
+      "start": 219.12,
+      "end": 219.48
+    },
+    {
+      "word": " outside.",
+      "start": 219.48,
+      "end": 220.28
+    },
+    {
+      "word": " Schweickart\u2019s",
+      "start": 220.86,
+      "end": 221.34
+    },
+    {
+      "word": " only",
+      "start": 221.52,
+      "end": 221.52
+    },
+    {
+      "word": " connection",
+      "start": 221.52,
+      "end": 221.9
+    },
+    {
+      "word": " to",
+      "start": 221.9,
+      "end": 222.16
+    },
+    {
+      "word": " the",
+      "start": 222.16,
+      "end": 222.32
+    },
+    {
+      "word": " LM",
+      "start": 222.32,
+      "end": 222.62
+    },
+    {
+      "word": " was",
+      "start": 222.62,
+      "end": 222.82
+    },
+    {
+      "word": " a",
+      "start": 222.82,
+      "end": 223.02
+    },
+    {
+      "word": " 25\u2011foot",
+      "start": 223.02,
+      "end": 223.82
+    },
+    {
+      "word": " nylon",
+      "start": 223.82,
+      "end": 224.14
+    },
+    {
+      "word": " rope;",
+      "start": 224.14,
+      "end": 224.89
+    },
+    {
+      "word": " he",
+      "start": 224.96,
+      "end": 225.04
+    },
+    {
+      "word": " maneuvered",
+      "start": 225.04,
+      "end": 225.48
+    },
+    {
+      "word": " on",
+      "start": 225.48,
+      "end": 225.62
+    },
+    {
+      "word": " handrails",
+      "start": 225.62,
+      "end": 226.06
+    },
+    {
+      "word": " near",
+      "start": 226.06,
+      "end": 226.28
+    },
+    {
+      "word": " the",
+      "start": 226.28,
+      "end": 226.5
+    },
+    {
+      "word": " hatch",
+      "start": 226.5,
+      "end": 226.84
+    },
+    {
+      "word": " (found",
+      "start": 227.0,
+      "end": 227.14
+    },
+    {
+      "word": " them",
+      "start": 227.14,
+      "end": 227.44
+    },
+    {
+      "word": " easy),",
+      "start": 227.44,
+      "end": 227.82
+    },
+    {
+      "word": " took",
+      "start": 228.38,
+      "end": 228.38
+    },
+    {
+      "word": " photographs,",
+      "start": 228.38,
+      "end": 229.44
+    },
+    {
+      "word": " and",
+      "start": 229.44,
+      "end": 229.58
+    },
+    {
+      "word": " described",
+      "start": 229.58,
+      "end": 229.96
+    },
+    {
+      "word": " rain",
+      "start": 229.96,
+      "end": 230.36
+    },
+    {
+      "word": " squalls",
+      "start": 230.36,
+      "end": 230.78
+    },
+    {
+      "word": " over",
+      "start": 230.78,
+      "end": 231.06
+    },
+    {
+      "word": " KSC.",
+      "start": 231.06,
+      "end": 231.62
+    },
+    {
+      "word": " Scott",
+      "start": 232.36,
+      "end": 232.36
+    },
+    {
+      "word": " performed",
+      "start": 232.4,
+      "end": 232.78
+    },
+    {
+      "word": " a",
+      "start": 232.78,
+      "end": 233.08
+    },
+    {
+      "word": " stand\u2011up",
+      "start": 233.08,
+      "end": 233.4
+    },
+    {
+      "word": " EVA",
+      "start": 233.4,
+      "end": 233.8
+    },
+    {
+      "word": " (about",
+      "start": 233.96,
+      "end": 234.3
+    },
+    {
+      "word": " 1",
+      "start": 234.3,
+      "end": 234.6
+    },
+    {
+      "word": " hour",
+      "start": 234.6,
+      "end": 234.82
+    },
+    {
+      "word": " 4",
+      "start": 234.84,
+      "end": 235.06
+    },
+    {
+      "word": " minutes)",
+      "start": 235.06,
+      "end": 235.22
+    },
+    {
+      "word": " from",
+      "start": 235.76,
+      "end": 235.9
+    },
+    {
+      "word": " the",
+      "start": 235.9,
+      "end": 236.14
+    },
+    {
+      "word": " CM",
+      "start": 236.14,
+      "end": 236.42
+    },
+    {
+      "word": " hatch",
+      "start": 236.66,
+      "end": 236.76
+    },
+    {
+      "word": " without",
+      "start": 236.76,
+      "end": 237.0
+    },
+    {
+      "word": " a",
+      "start": 237.0,
+      "end": 237.28
+    },
+    {
+      "word": " PLSS,",
+      "start": 237.28,
+      "end": 237.88
+    },
+    {
+      "word": " connected",
+      "start": 238.62,
+      "end": 238.72
+    },
+    {
+      "word": " to",
+      "start": 238.72,
+      "end": 239.06
+    },
+    {
+      "word": " CM",
+      "start": 239.06,
+      "end": 239.38
+    },
+    {
+      "word": " life",
+      "start": 239.38,
+      "end": 239.7
+    },
+    {
+      "word": " support",
+      "start": 239.7,
+      "end": 240.1
+    },
+    {
+      "word": " via",
+      "start": 240.18,
+      "end": 240.4
+    },
+    {
+      "word": " umbilicals",
+      "start": 240.44,
+      "end": 241.14
+    },
+    {
+      "word": " and",
+      "start": 241.14,
+      "end": 241.26
+    },
+    {
+      "word": " a",
+      "start": 241.26,
+      "end": 241.36
+    },
+    {
+      "word": " Pressure",
+      "start": 241.36,
+      "end": 241.64
+    },
+    {
+      "word": " Control",
+      "start": 241.64,
+      "end": 241.94
+    },
+    {
+      "word": " Valve,",
+      "start": 241.94,
+      "end": 242.14
+    },
+    {
+      "word": " and",
+      "start": 242.66,
+      "end": 242.9
+    },
+    {
+      "word": " filmed",
+      "start": 242.9,
+      "end": 243.2
+    },
+    {
+      "word": " Schweickart.",
+      "start": 243.2,
+      "end": 243.7
+    },
+    {
+      "word": " Scott",
+      "start": 244.82,
+      "end": 244.82
+    },
+    {
+      "word": " stood",
+      "start": 244.86,
+      "end": 245.08
+    },
+    {
+      "word": " in",
+      "start": 245.08,
+      "end": 245.3
+    },
+    {
+      "word": " the",
+      "start": 245.34,
+      "end": 245.46
+    },
+    {
+      "word": " open",
+      "start": 245.46,
+      "end": 245.72
+    },
+    {
+      "word": " side",
+      "start": 245.74,
+      "end": 246.04
+    },
+    {
+      "word": " hatch",
+      "start": 246.04,
+      "end": 246.32
+    },
+    {
+      "word": " of",
+      "start": 246.32,
+      "end": 246.48
+    },
+    {
+      "word": " Gumdrop",
+      "start": 246.48,
+      "end": 246.9
+    },
+    {
+      "word": " observing",
+      "start": 247.0,
+      "end": 247.44
+    },
+    {
+      "word": " Schweickart\u2019s",
+      "start": 247.44,
+      "end": 248.28
+    },
+    {
+      "word": " EVA",
+      "start": 248.28,
+      "end": 248.48
+    },
+    {
+      "word": " activities.",
+      "start": 248.48,
+      "end": 249.86
+    },
+    {
+      "word": " Mission",
+      "start": 250.0,
+      "end": 250.0
+    },
+    {
+      "word": " Control",
+      "start": 250.0,
+      "end": 250.56
+    },
+    {
+      "word": " called",
+      "start": 250.62,
+      "end": 250.9
+    },
+    {
+      "word": " it",
+      "start": 250.96,
+      "end": 251.06
+    },
+    {
+      "word": " a",
+      "start": 251.08,
+      "end": 251.2
+    },
+    {
+      "word": " complete",
+      "start": 251.2,
+      "end": 251.5
+    },
+    {
+      "word": " success",
+      "start": 251.7,
+      "end": 252.1
+    },
+    {
+      "word": " \u2014",
+      "start": 252.42,
+      "end": 252.52
+    },
+    {
+      "word": " the",
+      "start": 252.52,
+      "end": 252.6
+    },
+    {
+      "word": " first",
+      "start": 252.86,
+      "end": 252.96
+    },
+    {
+      "word": " and",
+      "start": 252.96,
+      "end": 253.16
+    },
+    {
+      "word": " only",
+      "start": 253.16,
+      "end": 253.54
+    },
+    {
+      "word": " spacesuit/PLSS",
+      "start": 253.56,
+      "end": 255.4
+    },
+    {
+      "word": " test",
+      "start": 255.4,
+      "end": 255.76
+    },
+    {
+      "word": " before",
+      "start": 256.02,
+      "end": 256.14
+    },
+    {
+      "word": " the",
+      "start": 256.14,
+      "end": 256.32
+    },
+    {
+      "word": " Moon",
+      "start": 256.32,
+      "end": 256.52
+    },
+    {
+      "word": " landing.",
+      "start": 256.52,
+      "end": 256.94
+    },
+    {
+      "word": " Flight",
+      "start": 258.0,
+      "end": 258.0
+    },
+    {
+      "word": " day",
+      "start": 258.0,
+      "end": 258.28
+    },
+    {
+      "word": " 5:",
+      "start": 258.28,
+      "end": 258.58
+    },
+    {
+      "word": " McDivitt",
+      "start": 259.36,
+      "end": 259.48
+    },
+    {
+      "word": " and",
+      "start": 259.48,
+      "end": 259.7
+    },
+    {
+      "word": " Schweickart",
+      "start": 259.7,
+      "end": 260.14
+    },
+    {
+      "word": " undocked",
+      "start": 260.14,
+      "end": 260.76
+    },
+    {
+      "word": " in",
+      "start": 260.82,
+      "end": 260.92
+    },
+    {
+      "word": " Spider",
+      "start": 260.92,
+      "end": 261.22
+    },
+    {
+      "word": " for",
+      "start": 261.22,
+      "end": 261.5
+    },
+    {
+      "word": " a",
+      "start": 261.5,
+      "end": 261.64
+    },
+    {
+      "word": " 6",
+      "start": 261.64,
+      "end": 261.8
+    },
+    {
+      "word": " hour",
+      "start": 261.8,
+      "end": 261.98
+    },
+    {
+      "word": " 23\u2011minute",
+      "start": 261.98,
+      "end": 262.74
+    },
+    {
+      "word": " independent",
+      "start": 262.74,
+      "end": 263.12
+    },
+    {
+      "word": " flight",
+      "start": 263.12,
+      "end": 263.64
+    },
+    {
+      "word": " while",
+      "start": 263.82,
+      "end": 264.02
+    },
+    {
+      "word": " Scott",
+      "start": 264.08,
+      "end": 264.36
+    },
+    {
+      "word": " remained",
+      "start": 264.36,
+      "end": 264.72
+    },
+    {
+      "word": " in",
+      "start": 264.72,
+      "end": 264.98
+    },
+    {
+      "word": " Gumdrop.",
+      "start": 264.98,
+      "end": 265.28
+    },
+    {
+      "word": " About",
+      "start": 266.32,
+      "end": 266.32
+    },
+    {
+      "word": " 45",
+      "start": 266.32,
+      "end": 266.88
+    },
+    {
+      "word": " minutes",
+      "start": 266.88,
+      "end": 267.2
+    },
+    {
+      "word": " after",
+      "start": 267.2,
+      "end": 267.54
+    },
+    {
+      "word": " undocking,",
+      "start": 267.54,
+      "end": 268.39
+    },
+    {
+      "word": " Spider\u2019s",
+      "start": 268.74,
+      "end": 269.06
+    },
+    {
+      "word": " DPS",
+      "start": 269.06,
+      "end": 269.5
+    },
+    {
+      "word": " engine",
+      "start": 269.5,
+      "end": 269.82
+    },
+    {
+      "word": " fired",
+      "start": 269.82,
+      "end": 270.24
+    },
+    {
+      "word": " 19",
+      "start": 270.24,
+      "end": 270.68
+    },
+    {
+      "word": " seconds",
+      "start": 270.68,
+      "end": 271.12
+    },
+    {
+      "word": " (first",
+      "start": 271.32,
+      "end": 271.64
+    },
+    {
+      "word": " at",
+      "start": 271.64,
+      "end": 271.9
+    },
+    {
+      "word": " 10%",
+      "start": 271.94,
+      "end": 272.5
+    },
+    {
+      "word": " thrust",
+      "start": 272.52,
+      "end": 272.94
+    },
+    {
+      "word": " then",
+      "start": 273.2,
+      "end": 273.42
+    },
+    {
+      "word": " throttled",
+      "start": 273.42,
+      "end": 273.84
+    },
+    {
+      "word": " to",
+      "start": 273.94,
+      "end": 274.04
+    },
+    {
+      "word": " 40%)",
+      "start": 274.04,
+      "end": 275.26
+    },
+    {
+      "word": " beginning",
+      "start": 275.42,
+      "end": 275.42
+    },
+    {
+      "word": " separation",
+      "start": 275.42,
+      "end": 276.08
+    },
+    {
+      "word": " and",
+      "start": 276.08,
+      "end": 276.74
+    },
+    {
+      "word": " placing",
+      "start": 276.74,
+      "end": 277.02
+    },
+    {
+      "word": " it",
+      "start": 277.02,
+      "end": 277.28
+    },
+    {
+      "word": " about",
+      "start": 277.28,
+      "end": 277.52
+    },
+    {
+      "word": " 50",
+      "start": 277.72,
+      "end": 277.86
+    },
+    {
+      "word": " miles",
+      "start": 277.86,
+      "end": 278.24
+    },
+    {
+      "word": " from",
+      "start": 278.24,
+      "end": 278.48
+    },
+    {
+      "word": " Gumdrop;",
+      "start": 278.74,
+      "end": 279.64
+    },
+    {
+      "word": " a",
+      "start": 279.64,
+      "end": 279.72
+    },
+    {
+      "word": " 22\u2011second",
+      "start": 279.72,
+      "end": 280.56
+    },
+    {
+      "word": " DPS",
+      "start": 280.56,
+      "end": 281.08
+    },
+    {
+      "word": " burn",
+      "start": 281.1,
+      "end": 281.42
+    },
+    {
+      "word": " opened",
+      "start": 281.5,
+      "end": 281.8
+    },
+    {
+      "word": " the",
+      "start": 281.8,
+      "end": 281.98
+    },
+    {
+      "word": " distance",
+      "start": 281.98,
+      "end": 282.34
+    },
+    {
+      "word": " to",
+      "start": 282.46,
+      "end": 282.62
+    },
+    {
+      "word": " about",
+      "start": 282.62,
+      "end": 282.88
+    },
+    {
+      "word": " 100",
+      "start": 282.88,
+      "end": 283.26
+    },
+    {
+      "word": " miles.",
+      "start": 283.26,
+      "end": 283.82
+    },
+    {
+      "word": " To",
+      "start": 284.38,
+      "end": 284.38
+    },
+    {
+      "word": " begin",
+      "start": 284.38,
+      "end": 284.66
+    },
+    {
+      "word": " rendezvous",
+      "start": 284.66,
+      "end": 285.26
+    },
+    {
+      "word": " Spider",
+      "start": 285.42,
+      "end": 285.74
+    },
+    {
+      "word": " fired",
+      "start": 285.74,
+      "end": 286.14
+    },
+    {
+      "word": " ascent\u2011stage",
+      "start": 286.14,
+      "end": 286.9
+    },
+    {
+      "word": " RCS",
+      "start": 286.9,
+      "end": 287.5
+    },
+    {
+      "word": " thrusters",
+      "start": 287.52,
+      "end": 288.02
+    },
+    {
+      "word": " for",
+      "start": 288.34,
+      "end": 288.46
+    },
+    {
+      "word": " 32",
+      "start": 288.46,
+      "end": 288.96
+    },
+    {
+      "word": " seconds",
+      "start": 288.96,
+      "end": 289.6
+    },
+    {
+      "word": " while",
+      "start": 289.86,
+      "end": 290.04
+    },
+    {
+      "word": " jettisoning",
+      "start": 290.04,
+      "end": 290.56
+    },
+    {
+      "word": " the",
+      "start": 290.56,
+      "end": 290.7
+    },
+    {
+      "word": " Descent",
+      "start": 290.7,
+      "end": 290.96
+    },
+    {
+      "word": " Stage",
+      "start": 291.04,
+      "end": 291.42
+    },
+    {
+      "word": " (which",
+      "start": 291.92,
+      "end": 292.18
+    },
+    {
+      "word": " remained",
+      "start": 292.18,
+      "end": 292.46
+    },
+    {
+      "word": " in",
+      "start": 292.46,
+      "end": 292.74
+    },
+    {
+      "word": " orbit",
+      "start": 292.74,
+      "end": 293.02
+    },
+    {
+      "word": " until",
+      "start": 293.3,
+      "end": 293.54
+    },
+    {
+      "word": " March",
+      "start": 293.54,
+      "end": 293.82
+    },
+    {
+      "word": " 22,",
+      "start": 293.82,
+      "end": 294.52
+    },
+    {
+      "word": " burning",
+      "start": 295.16,
+      "end": 295.16
+    },
+    {
+      "word": " up",
+      "start": 295.16,
+      "end": 295.4
+    },
+    {
+      "word": " over",
+      "start": 295.4,
+      "end": 295.62
+    },
+    {
+      "word": " the",
+      "start": 295.62,
+      "end": 295.76
+    },
+    {
+      "word": " Indian",
+      "start": 295.76,
+      "end": 295.98
+    },
+    {
+      "word": " Ocean);",
+      "start": 295.98,
+      "end": 297.22
+    },
+    {
+      "word": " first",
+      "start": 297.26,
+      "end": 297.58
+    },
+    {
+      "word": " APS",
+      "start": 297.66,
+      "end": 298.32
+    },
+    {
+      "word": " burn",
+      "start": 298.32,
+      "end": 298.58
+    },
+    {
+      "word": " lasted",
+      "start": 298.58,
+      "end": 298.98
+    },
+    {
+      "word": " 3",
+      "start": 298.98,
+      "end": 299.36
+    },
+    {
+      "word": " seconds,",
+      "start": 299.36,
+      "end": 299.76
+    },
+    {
+      "word": " second",
+      "start": 300.6,
+      "end": 300.64
+    },
+    {
+      "word": " APS",
+      "start": 300.64,
+      "end": 301.1
+    },
+    {
+      "word": " burn",
+      "start": 301.34,
+      "end": 301.6
+    },
+    {
+      "word": " 38",
+      "start": 301.6,
+      "end": 302.06
+    },
+    {
+      "word": " seconds",
+      "start": 302.06,
+      "end": 302.52
+    },
+    {
+      "word": " put",
+      "start": 302.54,
+      "end": 302.78
+    },
+    {
+      "word": " Spider",
+      "start": 302.88,
+      "end": 303.16
+    },
+    {
+      "word": " on",
+      "start": 303.16,
+      "end": 303.46
+    },
+    {
+      "word": " an",
+      "start": 303.46,
+      "end": 303.66
+    },
+    {
+      "word": " intercept",
+      "start": 303.66,
+      "end": 304.02
+    },
+    {
+      "word": " course",
+      "start": 304.18,
+      "end": 304.46
+    },
+    {
+      "word": " with",
+      "start": 304.64,
+      "end": 304.74
+    },
+    {
+      "word": " Gumdrop;",
+      "start": 304.74,
+      "end": 305.8
+    },
+    {
+      "word": " two",
+      "start": 305.8,
+      "end": 306.04
+    },
+    {
+      "word": " small",
+      "start": 306.04,
+      "end": 306.34
+    },
+    {
+      "word": " course",
+      "start": 306.52,
+      "end": 306.62
+    },
+    {
+      "word": " corrections",
+      "start": 306.62,
+      "end": 307.14
+    },
+    {
+      "word": " refined",
+      "start": 307.14,
+      "end": 307.68
+    },
+    {
+      "word": " the",
+      "start": 307.68,
+      "end": 307.96
+    },
+    {
+      "word": " trajectory.",
+      "start": 307.96,
+      "end": 308.98
+    },
+    {
+      "word": " Spider",
+      "start": 309.2,
+      "end": 309.2
+    },
+    {
+      "word": " stopped",
+      "start": 309.44,
+      "end": 309.54
+    },
+    {
+      "word": " about",
+      "start": 309.54,
+      "end": 309.9
+    },
+    {
+      "word": " 100",
+      "start": 309.9,
+      "end": 310.3
+    },
+    {
+      "word": " feet",
+      "start": 310.3,
+      "end": 310.7
+    },
+    {
+      "word": " from",
+      "start": 310.74,
+      "end": 310.96
+    },
+    {
+      "word": " Gumdrop",
+      "start": 310.96,
+      "end": 311.48
+    },
+    {
+      "word": " for",
+      "start": 311.62,
+      "end": 311.78
+    },
+    {
+      "word": " a",
+      "start": 311.78,
+      "end": 311.96
+    },
+    {
+      "word": " pitchover",
+      "start": 311.96,
+      "end": 312.38
+    },
+    {
+      "word": " maneuver;",
+      "start": 312.38,
+      "end": 313.52
+    },
+    {
+      "word": " Scott",
+      "start": 313.52,
+      "end": 313.66
+    },
+    {
+      "word": " photographed",
+      "start": 313.74,
+      "end": 314.08
+    },
+    {
+      "word": " the",
+      "start": 314.08,
+      "end": 314.42
+    },
+    {
+      "word": " ascent",
+      "start": 314.42,
+      "end": 314.68
+    },
+    {
+      "word": " stage",
+      "start": 314.68,
+      "end": 315.04
+    },
+    {
+      "word": " including",
+      "start": 315.04,
+      "end": 315.44
+    },
+    {
+      "word": " its",
+      "start": 315.44,
+      "end": 315.84
+    },
+    {
+      "word": " engine",
+      "start": 315.84,
+      "end": 316.22
+    },
+    {
+      "word": " (\"the",
+      "start": 316.22,
+      "end": 316.78
+    },
+    {
+      "word": " biggest,",
+      "start": 316.78,
+      "end": 317.58
+    },
+    {
+      "word": " friendliest,",
+      "start": 317.8,
+      "end": 318.04
+    },
+    {
+      "word": " funniest",
+      "start": 318.56,
+      "end": 318.72
+    },
+    {
+      "word": " looking",
+      "start": 318.72,
+      "end": 319.12
+    },
+    {
+      "word": " Spider",
+      "start": 319.12,
+      "end": 319.52
+    },
+    {
+      "word": " I've",
+      "start": 319.52,
+      "end": 319.86
+    },
+    {
+      "word": " ever",
+      "start": 319.86,
+      "end": 320.06
+    },
+    {
+      "word": " seen\");",
+      "start": 320.06,
+      "end": 321.18
+    },
+    {
+      "word": " McDivitt",
+      "start": 321.2,
+      "end": 321.5
+    },
+    {
+      "word": " brought",
+      "start": 321.54,
+      "end": 321.8
+    },
+    {
+      "word": " Spider",
+      "start": 321.9,
+      "end": 322.26
+    },
+    {
+      "word": " in",
+      "start": 322.42,
+      "end": 322.52
+    },
+    {
+      "word": " for",
+      "start": 322.52,
+      "end": 322.72
+    },
+    {
+      "word": " smooth",
+      "start": 322.72,
+      "end": 323.0
+    },
+    {
+      "word": " docking;",
+      "start": 323.0,
+      "end": 324.08
+    },
+    {
+      "word": " the",
+      "start": 324.08,
+      "end": 324.14
+    },
+    {
+      "word": " craft",
+      "start": 324.14,
+      "end": 324.42
+    },
+    {
+      "word": " flew",
+      "start": 324.48,
+      "end": 324.7
+    },
+    {
+      "word": " separately",
+      "start": 324.72,
+      "end": 325.12
+    },
+    {
+      "word": " for",
+      "start": 325.12,
+      "end": 325.42
+    },
+    {
+      "word": " 6",
+      "start": 325.44,
+      "end": 325.7
+    },
+    {
+      "word": " hours",
+      "start": 325.7,
+      "end": 326.04
+    },
+    {
+      "word": " 23",
+      "start": 326.04,
+      "end": 326.54
+    },
+    {
+      "word": " minutes.",
+      "start": 326.54,
+      "end": 326.84
+    },
+    {
+      "word": " Two",
+      "start": 327.58,
+      "end": 327.58
+    },
+    {
+      "word": " hours",
+      "start": 327.58,
+      "end": 327.98
+    },
+    {
+      "word": " after",
+      "start": 327.98,
+      "end": 328.34
+    },
+    {
+      "word": " docking",
+      "start": 328.34,
+      "end": 328.76
+    },
+    {
+      "word": " McDivitt",
+      "start": 328.76,
+      "end": 329.22
+    },
+    {
+      "word": " and",
+      "start": 329.22,
+      "end": 329.48
+    },
+    {
+      "word": " Schweickart",
+      "start": 329.72,
+      "end": 330.06
+    },
+    {
+      "word": " rejoined",
+      "start": 330.28,
+      "end": 330.84
+    },
+    {
+      "word": " Scott",
+      "start": 330.84,
+      "end": 331.24
+    },
+    {
+      "word": " in",
+      "start": 331.24,
+      "end": 331.46
+    },
+    {
+      "word": " Gumdrop",
+      "start": 331.46,
+      "end": 331.96
+    },
+    {
+      "word": " and",
+      "start": 332.3,
+      "end": 332.54
+    },
+    {
+      "word": " shortly",
+      "start": 332.54,
+      "end": 332.92
+    },
+    {
+      "word": " after",
+      "start": 332.92,
+      "end": 333.26
+    },
+    {
+      "word": " jettisoned",
+      "start": 333.26,
+      "end": 333.96
+    },
+    {
+      "word": " Spider;",
+      "start": 333.96,
+      "end": 334.98
+    },
+    {
+      "word": " Mission",
+      "start": 334.98,
+      "end": 335.12
+    },
+    {
+      "word": " Control",
+      "start": 335.12,
+      "end": 335.7
+    },
+    {
+      "word": " commanded",
+      "start": 335.78,
+      "end": 336.2
+    },
+    {
+      "word": " Spider's",
+      "start": 336.2,
+      "end": 336.98
+    },
+    {
+      "word": " APS",
+      "start": 336.98,
+      "end": 337.6
+    },
+    {
+      "word": " to",
+      "start": 337.6,
+      "end": 337.78
+    },
+    {
+      "word": " fire",
+      "start": 337.78,
+      "end": 338.08
+    },
+    {
+      "word": " for",
+      "start": 338.08,
+      "end": 338.28
+    },
+    {
+      "word": " six",
+      "start": 338.28,
+      "end": 338.54
+    },
+    {
+      "word": " minutes",
+      "start": 338.54,
+      "end": 339.0
+    },
+    {
+      "word": " into",
+      "start": 339.14,
+      "end": 339.38
+    },
+    {
+      "word": " a",
+      "start": 339.38,
+      "end": 339.64
+    },
+    {
+      "word": " highly",
+      "start": 339.64,
+      "end": 339.96
+    },
+    {
+      "word": " elliptical",
+      "start": 339.96,
+      "end": 340.52
+    },
+    {
+      "word": " Earth",
+      "start": 340.52,
+      "end": 340.8
+    },
+    {
+      "word": " orbit",
+      "start": 340.8,
+      "end": 341.22
+    },
+    {
+      "word": " from",
+      "start": 341.46,
+      "end": 341.68
+    },
+    {
+      "word": " which",
+      "start": 341.68,
+      "end": 341.82
+    },
+    {
+      "word": " it",
+      "start": 341.82,
+      "end": 341.9
+    },
+    {
+      "word": " did",
+      "start": 341.9,
+      "end": 342.08
+    },
+    {
+      "word": " not",
+      "start": 342.08,
+      "end": 342.24
+    },
+    {
+      "word": " decay",
+      "start": 342.4,
+      "end": 342.8
+    },
+    {
+      "word": " until",
+      "start": 343.08,
+      "end": 343.32
+    },
+    {
+      "word": " October",
+      "start": 343.32,
+      "end": 343.78
+    },
+    {
+      "word": " 23",
+      "start": 343.78,
+      "end": 344.34
+    },
+    {
+      "word": " 1981.",
+      "start": 344.34,
+      "end": 345.62
+    },
+    {
+      "word": " Apollo",
+      "start": 346.84,
+      "end": 346.84
+    },
+    {
+      "word": " 9",
+      "start": 346.84,
+      "end": 347.34
+    },
+    {
+      "word": " was",
+      "start": 347.34,
+      "end": 347.7
+    },
+    {
+      "word": " the",
+      "start": 347.7,
+      "end": 347.9
+    },
+    {
+      "word": " first",
+      "start": 347.9,
+      "end": 348.2
+    },
+    {
+      "word": " manned",
+      "start": 348.2,
+      "end": 348.58
+    },
+    {
+      "word": " flight",
+      "start": 348.58,
+      "end": 348.72
+    },
+    {
+      "word": " of",
+      "start": 348.72,
+      "end": 349.0
+    },
+    {
+      "word": " the",
+      "start": 349.0,
+      "end": 349.24
+    },
+    {
+      "word": " LM;",
+      "start": 350.12,
+      "end": 350.22
+    },
+    {
+      "word": " first",
+      "start": 350.22,
+      "end": 350.48
+    },
+    {
+      "word": " manned",
+      "start": 350.48,
+      "end": 350.88
+    },
+    {
+      "word": " flight",
+      "start": 351.0,
+      "end": 351.1
+    },
+    {
+      "word": " of",
+      "start": 351.1,
+      "end": 351.38
+    },
+    {
+      "word": " all",
+      "start": 351.38,
+      "end": 351.62
+    },
+    {
+      "word": " lunar",
+      "start": 351.62,
+      "end": 351.88
+    },
+    {
+      "word": " hardware",
+      "start": 351.88,
+      "end": 352.3
+    },
+    {
+      "word": " in",
+      "start": 352.3,
+      "end": 352.72
+    },
+    {
+      "word": " Earth",
+      "start": 352.72,
+      "end": 352.94
+    },
+    {
+      "word": " orbit.",
+      "start": 352.94,
+      "end": 353.22
+    },
+    {
+      "word": " The",
+      "start": 354.04,
+      "end": 354.04
+    },
+    {
+      "word": " mission",
+      "start": 354.04,
+      "end": 354.38
+    },
+    {
+      "word": " demonstrated",
+      "start": 354.38,
+      "end": 355.04
+    },
+    {
+      "word": " docked",
+      "start": 355.04,
+      "end": 355.8
+    },
+    {
+      "word": " and",
+      "start": 355.8,
+      "end": 355.92
+    },
+    {
+      "word": " undocked",
+      "start": 355.92,
+      "end": 356.46
+    },
+    {
+      "word": " maneuvers,",
+      "start": 356.46,
+      "end": 357.62
+    },
+    {
+      "word": " performed",
+      "start": 357.76,
+      "end": 357.76
+    },
+    {
+      "word": " a",
+      "start": 357.76,
+      "end": 358.06
+    },
+    {
+      "word": " lunar",
+      "start": 358.06,
+      "end": 358.28
+    },
+    {
+      "word": " module\u2013command",
+      "start": 358.28,
+      "end": 359.1
+    },
+    {
+      "word": " module",
+      "start": 359.1,
+      "end": 359.44
+    },
+    {
+      "word": " rendezvous,",
+      "start": 359.66,
+      "end": 359.76
+    },
+    {
+      "word": " and",
+      "start": 360.5,
+      "end": 360.5
+    },
+    {
+      "word": " demonstrated",
+      "start": 360.5,
+      "end": 361.12
+    },
+    {
+      "word": " extra\u2011vehicular",
+      "start": 361.12,
+      "end": 362.12
+    },
+    {
+      "word": " capability",
+      "start": 362.12,
+      "end": 362.68
+    },
+    {
+      "word": " \u2014",
+      "start": 363.42,
+      "end": 363.52
+    },
+    {
+      "word": " everything",
+      "start": 363.52,
+      "end": 363.9
+    },
+    {
+      "word": " Apollo",
+      "start": 363.9,
+      "end": 364.4
+    },
+    {
+      "word": " 11",
+      "start": 364.4,
+      "end": 364.8
+    },
+    {
+      "word": " would",
+      "start": 364.8,
+      "end": 365.18
+    },
+    {
+      "word": " need",
+      "start": 365.18,
+      "end": 365.4
+    },
+    {
+      "word": " to",
+      "start": 365.4,
+      "end": 365.56
+    },
+    {
+      "word": " land",
+      "start": 365.56,
+      "end": 365.78
+    },
+    {
+      "word": " on",
+      "start": 365.78,
+      "end": 366.0
+    },
+    {
+      "word": " the",
+      "start": 366.0,
+      "end": 366.12
+    },
+    {
+      "word": " Moon.",
+      "start": 366.12,
+      "end": 366.67
+    },
+    {
+      "word": " The",
+      "start": 366.84,
+      "end": 366.84
+    },
+    {
+      "word": " backpack",
+      "start": 366.84,
+      "end": 367.22
+    },
+    {
+      "word": " Schweickart",
+      "start": 367.22,
+      "end": 367.88
+    },
+    {
+      "word": " tested",
+      "start": 367.92,
+      "end": 368.28
+    },
+    {
+      "word": " in",
+      "start": 368.28,
+      "end": 368.54
+    },
+    {
+      "word": " space",
+      "start": 368.54,
+      "end": 368.92
+    },
+    {
+      "word": " was",
+      "start": 369.18,
+      "end": 369.4
+    },
+    {
+      "word": " subsequently",
+      "start": 369.4,
+      "end": 369.86
+    },
+    {
+      "word": " used",
+      "start": 369.86,
+      "end": 370.4
+    },
+    {
+      "word": " on",
+      "start": 370.4,
+      "end": 370.62
+    },
+    {
+      "word": " the",
+      "start": 370.62,
+      "end": 370.72
+    },
+    {
+      "word": " lunar",
+      "start": 370.72,
+      "end": 371.06
+    },
+    {
+      "word": " surface",
+      "start": 371.06,
+      "end": 371.48
+    },
+    {
+      "word": " explorations.",
+      "start": 371.48,
+      "end": 372.53
+    },
+    {
+      "word": " Every",
+      "start": 373.36,
+      "end": 373.36
+    },
+    {
+      "word": " system",
+      "start": 373.36,
+      "end": 373.84
+    },
+    {
+      "word": " that",
+      "start": 373.84,
+      "end": 373.98
+    },
+    {
+      "word": " would",
+      "start": 373.98,
+      "end": 374.16
+    },
+    {
+      "word": " later",
+      "start": 374.16,
+      "end": 374.38
+    },
+    {
+      "word": " carry",
+      "start": 374.4,
+      "end": 374.72
+    },
+    {
+      "word": " humans",
+      "start": 374.76,
+      "end": 375.1
+    },
+    {
+      "word": " to",
+      "start": 375.1,
+      "end": 375.32
+    },
+    {
+      "word": " the",
+      "start": 375.32,
+      "end": 375.44
+    },
+    {
+      "word": " Moon",
+      "start": 375.44,
+      "end": 375.72
+    },
+    {
+      "word": " had",
+      "start": 375.88,
+      "end": 376.06
+    },
+    {
+      "word": " been",
+      "start": 376.06,
+      "end": 376.28
+    },
+    {
+      "word": " flown,",
+      "start": 376.28,
+      "end": 376.83
+    },
+    {
+      "word": " tested,",
+      "start": 377.28,
+      "end": 377.86
+    },
+    {
+      "word": " and",
+      "start": 377.86,
+      "end": 378.04
+    },
+    {
+      "word": " proven",
+      "start": 378.04,
+      "end": 378.34
+    },
+    {
+      "word": " in",
+      "start": 378.34,
+      "end": 378.74
+    },
+    {
+      "word": " Earth",
+      "start": 378.74,
+      "end": 378.94
+    },
+    {
+      "word": " orbit.",
+      "start": 378.94,
+      "end": 379.22
+    },
+    {
+      "word": " Every",
+      "start": 380.44,
+      "end": 380.44
+    },
+    {
+      "word": " claim",
+      "start": 380.44,
+      "end": 380.68
+    },
+    {
+      "word": " in",
+      "start": 380.68,
+      "end": 380.84
+    },
+    {
+      "word": " this",
+      "start": 380.84,
+      "end": 380.98
+    },
+    {
+      "word": " video",
+      "start": 381.0,
+      "end": 381.34
+    },
+    {
+      "word": " comes",
+      "start": 381.4,
+      "end": 381.62
+    },
+    {
+      "word": " from",
+      "start": 381.62,
+      "end": 381.88
+    },
+    {
+      "word": " NASA",
+      "start": 381.88,
+      "end": 382.18
+    },
+    {
+      "word": " primary",
+      "start": 382.18,
+      "end": 382.54
+    },
+    {
+      "word": " sources:",
+      "start": 382.82,
+      "end": 383.82
+    },
+    {
+      "word": " the",
+      "start": 383.86,
+      "end": 383.86
+    },
+    {
+      "word": " NASA",
+      "start": 383.86,
+      "end": 384.26
+    },
+    {
+      "word": " Apollo",
+      "start": 384.26,
+      "end": 384.62
+    },
+    {
+      "word": " 9",
+      "start": 384.62,
+      "end": 385.02
+    },
+    {
+      "word": " Mission",
+      "start": 385.02,
+      "end": 385.38
+    },
+    {
+      "word": " Details",
+      "start": 385.38,
+      "end": 385.78
+    },
+    {
+      "word": " page,",
+      "start": 385.78,
+      "end": 386.78
+    },
+    {
+      "word": " NASA",
+      "start": 386.88,
+      "end": 387.08
+    },
+    {
+      "word": " mission",
+      "start": 387.08,
+      "end": 387.38
+    },
+    {
+      "word": " pages,",
+      "start": 387.38,
+      "end": 388.13
+    },
+    {
+      "word": " NASA",
+      "start": 388.96,
+      "end": 388.96
+    },
+    {
+      "word": " history",
+      "start": 388.96,
+      "end": 388.96
+    },
+    {
+      "word": " articles,",
+      "start": 388.96,
+      "end": 390.0
+    },
+    {
+      "word": " the",
+      "start": 390.12,
+      "end": 390.12
+    },
+    {
+      "word": " Lunar",
+      "start": 390.12,
+      "end": 390.48
+    },
+    {
+      "word": " and",
+      "start": 390.48,
+      "end": 390.68
+    },
+    {
+      "word": " Planetary",
+      "start": 390.68,
+      "end": 391.2
+    },
+    {
+      "word": " Institute",
+      "start": 391.2,
+      "end": 391.62
+    },
+    {
+      "word": " Apollo",
+      "start": 391.62,
+      "end": 392.02
+    },
+    {
+      "word": " 9",
+      "start": 392.02,
+      "end": 392.48
+    },
+    {
+      "word": " mission",
+      "start": 392.48,
+      "end": 392.86
+    },
+    {
+      "word": " overview,",
+      "start": 392.86,
+      "end": 393.7
+    },
+    {
+      "word": " the",
+      "start": 393.7,
+      "end": 393.8
+    },
+    {
+      "word": " Apollo",
+      "start": 394.02,
+      "end": 394.2
+    },
+    {
+      "word": " Flight",
+      "start": 394.2,
+      "end": 394.56
+    },
+    {
+      "word": " Journal,",
+      "start": 394.56,
+      "end": 394.92
+    },
+    {
+      "word": " and",
+      "start": 395.24,
+      "end": 395.44
+    },
+    {
+      "word": " the",
+      "start": 395.44,
+      "end": 395.54
+    },
+    {
+      "word": " Apollo",
+      "start": 395.54,
+      "end": 395.9
+    },
+    {
+      "word": " 9",
+      "start": 395.9,
+      "end": 396.22
+    },
+    {
+      "word": " Mission",
+      "start": 396.22,
+      "end": 396.66
+    },
+    {
+      "word": " Report",
+      "start": 396.66,
+      "end": 397.1
+    },
+    {
+      "word": " (MSC\u2011PA\u2011R\u201169\u20112,",
+      "start": 397.94,
+      "end": 400.1
+    },
+    {
+      "word": " May",
+      "start": 400.34,
+      "end": 400.34
+    },
+    {
+      "word": " 1969).",
+      "start": 400.34,
+      "end": 402.04
+    },
+    {
+      "word": " All",
+      "start": 402.24,
+      "end": 402.24
+    },
+    {
+      "word": " are",
+      "start": 402.24,
+      "end": 402.5
+    },
+    {
+      "word": " U.S.",
+      "start": 402.5,
+      "end": 403.74
+    },
+    {
+      "word": " government",
+      "start": 404.12,
+      "end": 404.12
+    },
+    {
+      "word": " works",
+      "start": 404.12,
+      "end": 404.52
+    },
+    {
+      "word": " in",
+      "start": 404.52,
+      "end": 404.74
+    },
+    {
+      "word": " the",
+      "start": 404.74,
+      "end": 404.84
+    },
+    {
+      "word": " public",
+      "start": 404.84,
+      "end": 405.08
+    },
+    {
+      "word": " domain;",
+      "start": 405.14,
+      "end": 406.1
+    },
+    {
+      "word": " NASA",
+      "start": 406.1,
+      "end": 406.32
+    },
+    {
+      "word": " logos",
+      "start": 406.32,
+      "end": 406.72
+    },
+    {
+      "word": " and",
+      "start": 406.72,
+      "end": 407.04
+    },
+    {
+      "word": " insignia",
+      "start": 407.04,
+      "end": 407.7
+    },
+    {
+      "word": " are",
+      "start": 407.7,
+      "end": 407.96
+    },
+    {
+      "word": " restricted",
+      "start": 407.96,
+      "end": 408.32
+    },
+    {
+      "word": " by",
+      "start": 408.32,
+      "end": 408.7
+    },
+    {
+      "word": " law",
+      "start": 408.7,
+      "end": 409.06
+    },
+    {
+      "word": " (14",
+      "start": 409.22,
+      "end": 409.62
+    },
+    {
+      "word": " CFR",
+      "start": 409.62,
+      "end": 410.42
+    },
+    {
+      "word": " 1221).",
+      "start": 410.42,
+      "end": 412.18
+    },
+    {
+      "word": " If",
+      "start": 413.02,
+      "end": 413.02
+    },
+    {
+      "word": " you",
+      "start": 413.02,
+      "end": 413.14
+    },
+    {
+      "word": " see",
+      "start": 413.14,
+      "end": 413.3
+    },
+    {
+      "word": " a",
+      "start": 413.3,
+      "end": 413.44
+    },
+    {
+      "word": " claim",
+      "start": 413.44,
+      "end": 413.66
+    },
+    {
+      "word": " about",
+      "start": 413.66,
+      "end": 413.94
+    },
+    {
+      "word": " Apollo",
+      "start": 413.94,
+      "end": 414.34
+    },
+    {
+      "word": " 9",
+      "start": 414.34,
+      "end": 414.76
+    },
+    {
+      "word": " that",
+      "start": 414.76,
+      "end": 414.96
+    },
+    {
+      "word": " doesn't",
+      "start": 414.96,
+      "end": 415.26
+    },
+    {
+      "word": " trace",
+      "start": 415.26,
+      "end": 415.56
+    },
+    {
+      "word": " back",
+      "start": 415.56,
+      "end": 415.86
+    },
+    {
+      "word": " to",
+      "start": 415.86,
+      "end": 416.0
+    },
+    {
+      "word": " a",
+      "start": 416.0,
+      "end": 416.1
+    },
+    {
+      "word": " primary",
+      "start": 416.1,
+      "end": 416.38
+    },
+    {
+      "word": " source,",
+      "start": 416.38,
+      "end": 417.08
+    },
+    {
+      "word": " ask",
+      "start": 417.38,
+      "end": 417.6
+    },
+    {
+      "word": " to",
+      "start": 417.6,
+      "end": 417.76
+    },
+    {
+      "word": " see",
+      "start": 417.78,
+      "end": 417.92
+    },
+    {
+      "word": " the",
+      "start": 417.92,
+      "end": 418.08
+    },
+    {
+      "word": " document.",
+      "start": 418.08,
+      "end": 418.48
+    },
+    {
+      "word": " That's",
+      "start": 419.3,
+      "end": 419.48
+    },
+    {
+      "word": " how",
+      "start": 419.48,
+      "end": 419.58
+    },
+    {
+      "word": " you",
+      "start": 419.58,
+      "end": 419.7
+    },
+    {
+      "word": " know",
+      "start": 419.7,
+      "end": 419.88
+    },
+    {
+      "word": " what",
+      "start": 419.88,
+      "end": 420.14
+    },
+    {
+      "word": " really",
+      "start": 420.14,
+      "end": 420.42
+    },
+    {
+      "word": " happened.",
+      "start": 420.42,
+      "end": 420.82
+    },
+    {
+      "word": " Apollo",
+      "start": 422.08,
+      "end": 422.08
+    },
+    {
+      "word": " 9:",
+      "start": 422.08,
+      "end": 423.0
+    },
+    {
+      "word": " the",
+      "start": 423.04,
+      "end": 423.08
+    },
+    {
+      "word": " mission",
+      "start": 423.08,
+      "end": 423.34
+    },
+    {
+      "word": " that",
+      "start": 423.34,
+      "end": 423.68
+    },
+    {
+      "word": " proved",
+      "start": 423.68,
+      "end": 423.9
+    },
+    {
+      "word": " the",
+      "start": 423.9,
+      "end": 424.14
+    },
+    {
+      "word": " Lunar",
+      "start": 424.14,
+      "end": 424.36
+    },
+    {
+      "word": " Module",
+      "start": 424.36,
+      "end": 424.68
+    },
+    {
+      "word": " could",
+      "start": 424.8,
+      "end": 425.04
+    },
+    {
+      "word": " fly",
+      "start": 425.04,
+      "end": 425.42
+    },
+    {
+      "word": " \u2014",
+      "start": 425.42,
+      "end": 425.72
+    },
+    {
+      "word": " and",
+      "start": 425.74,
+      "end": 425.96
+    },
+    {
+      "word": " cleared",
+      "start": 425.96,
+      "end": 426.14
+    },
+    {
+      "word": " the",
+      "start": 426.14,
+      "end": 426.34
+    },
+    {
+      "word": " way",
+      "start": 426.34,
+      "end": 426.48
+    },
+    {
+      "word": " for",
+      "start": 426.5,
+      "end": 426.7
+    },
+    {
+      "word": " the",
+      "start": 426.7,
+      "end": 426.8
+    },
+    {
+      "word": " Moon.",
+      "start": 426.8,
+      "end": 427.0
+    }
+  ]
+}

@@ -1,0 +1,436 @@
+{
+  "schema_version": 1,
+  "updated_utc": "2026-10-22T09:40:00Z",
+  "source_of_truth": "docs/openmontage/RUN_RULES.md + FACTORY_100_SPEC.md (never edited)",
+  "status": "OWNER_GATED",
+  "model": "klein",
+  "scheduler": {
+    "class": null,
+    "kwargs": {},
+    "note": "pipeline default - the measured S7 run applied no scheduler override"
+  },
+  "steps": 4,
+  "guidance": 1.0,
+  "dtype": "float16",
+  "prompt_variant": "C",
+  "seed_policy": {
+    "range": [
+      3000,
+      3999
+    ],
+    "reserved_for": "AI illustrations (1000-1099 and 2000-2009 were used by G1/G2)",
+    "rule": "one fixed seed per niche+subject, recorded in the illustration manifest; never reuse a seed for two subjects inside one batch",
+    "measured_base": 4000,
+    "source": "docs/openmontage/image_gen/ILLUSTRATION_STYLE_BIBLE.md section 3 + docs/openmontage/image_gen/S7_TEST_SET.json (seeds s01=4000 ... s12=4022)"
+  },
+  "selection": {
+    "decision": "klein",
+    "basis": "agent advisory pick (S7_AGENT_ASSESSMENT.json + S8_AGENT_ASSESSMENT.json); the owner's blind CSV is NOT filled, so no owner winner exists yet",
+    "owner_csv_state": {
+      "projects/s7_blind/results.csv": "0/10 scenes filled",
+      "projects/s8_blind/results.csv": "0/10 scenes filled"
+    },
+    "tally": "python scripts/s7_tally.py --csv projects/s8_blind/results.csv --mapping projects/s8_blind/mapping.json",
+    "next_owner_action": "fill projects/s8_blind/results.csv (10 sheets, 4 panels) or projects/s7_blind/results.csv (2 panels), then run python scripts/image_engine.py select --write",
+    "owner_scoring_note": "image quality is judged by the owner, not by the agents"
+  },
+  "fallback": {
+    "model": "sdxl-lightning",
+    "role": "FAST_FALLBACK",
+    "status": "DECLARED",
+    "scope": "draft renders only (NOT_PUBLISHABLE drafts until the owner confirms the model)",
+    "reason": "measured 3.943 s/image vs 24.691 s/image for klein on the same Kaggle T4 - the fastest model with 10/10 verified, non-black images",
+    "swap": "edit \"model\" in this file; no code change is needed"
+  },
+  "models": {
+    "klein": {
+      "status": "OWNER_GATED",
+      "display_name": "FLUX.2-klein-4B",
+      "model_id": "black-forest-labs/FLUX.2-klein-4B",
+      "pipeline_class": "Flux2KleinPipeline",
+      "pipeline_candidates": [
+        "Flux2KleinPipeline"
+      ],
+      "prompt_target": "klein",
+      "prompt_variant": "C",
+      "prompt_rules": {
+        "target": "klein",
+        "variant": "C",
+        "negative_prompt": false,
+        "builder_steps": 4,
+        "source": "tools/prompting/builder.py (OpenCode-owned, read only)",
+        "rule": "prose, subject + anatomy counts in the first sentence, constraints phrased positively, NO negative prompt",
+        "evidence": "docs/openmontage/image_gen/S7_TEST_SET.json (variant_by_model klein=C) + docs/openmontage/image_gen/PROMPTING_FACTS.md"
+      },
+      "steps": 4,
+      "guidance": 1.0,
+      "scheduler": {
+        "class": null,
+        "kwargs": {}
+      },
+      "dtype": "float16",
+      "vae_model_id": null,
+      "unet_checkpoint": null,
+      "cpu_offload": true,
+      "extra_kwargs": {},
+      "install_ladder": [
+        "released_037_x4",
+        "released_037_x5",
+        "released_041_x5_ao",
+        "git_main_x5_ao"
+      ],
+      "versions": {
+        "diffusers": "0.37.0",
+        "transformers": "4.57.6",
+        "huggingface_hub": "0.36.2",
+        "torch": "2.11.0+cu128",
+        "accelerate": "1.14.0",
+        "safetensors": "0.8.0",
+        "numpy": "2.1.3",
+        "pillow": "12.3.0",
+        "torch_cuda": "12.8",
+        "gpu": "Tesla T4",
+        "python": "3.13.15"
+      },
+      "measured": {
+        "job_id": "s7-klein-1",
+        "source": "docs/openmontage/image_gen/logs/s7-klein-1/manifest.json",
+        "measured_utc": "2026-10-21",
+        "load_seconds": 133.852,
+        "steady_state_sec_per_image": 24.691,
+        "steady_median_sec_per_image": 24.669,
+        "mean_sec_per_image": 25.154,
+        "usable_images_per_minute": 2.17,
+        "gpu_seconds": 276.46,
+        "peak_vram_mb": 7995.02,
+        "images_requested": 10,
+        "images_generated": 10,
+        "images_usable": 10,
+        "black_count": 0,
+        "nan_count": 0,
+        "oom_count": 0
+      },
+      "license": {
+        "id": "apache-2.0",
+        "commercial_use": "YES (card: fully open under Apache 2.0, open weights for commercial use)",
+        "card": "https://huggingface.co/black-forest-labs/FLUX.2-klein-4B",
+        "evidence": "docs/openmontage/image_gen/LICENSE_EVIDENCE.md (2026-10-20)"
+      },
+      "notes": "agent advisory pick in S7 and S8; the owner has not blind-scored it yet",
+      "low_cpu_mem_usage": null
+    },
+    "sdxl-lightning": {
+      "status": "OWNER_GATED",
+      "display_name": "SDXL-Lightning (8-step distilled UNet on SDXL Base 1.0)",
+      "model_id": "stabilityai/stable-diffusion-xl-base-1.0",
+      "pipeline_class": "StableDiffusionXLPipeline",
+      "pipeline_candidates": [
+        "StableDiffusionXLPipeline"
+      ],
+      "prompt_target": "sdxl",
+      "prompt_variant": "A",
+      "prompt_rules": {
+        "target": "sdxl",
+        "variant": "A",
+        "negative_prompt": true,
+        "builder_steps": 50,
+        "source": "tools/prompting/builder.py (OpenCode-owned, read only)",
+        "rule": "SDXL family: structured keyword phrases + a short negative prompt; the config lock overrides the builder's 50 steps / 7.5 guidance with the distilled recipe (8 steps / guidance 0)",
+        "evidence": "docs/openmontage/image_gen/S8_TEST_SET.json (model_spec.sdxl-lightning) + docs/openmontage/image_gen/PROMPTING_FACTS.md"
+      },
+      "steps": 8,
+      "guidance": 0.0,
+      "scheduler": {
+        "class": "EulerDiscreteScheduler",
+        "kwargs": {
+          "timestep_spacing": "trailing"
+        }
+      },
+      "dtype": "float16",
+      "vae_model_id": "madebyollin/sdxl-vae-fp16-fix",
+      "unet_checkpoint": {
+        "repo": "ByteDance/SDXL-Lightning",
+        "file": "sdxl_lightning_8step_unet.safetensors"
+      },
+      "cpu_offload": false,
+      "extra_kwargs": {
+        "variant": "fp16"
+      },
+      "install_ladder": [
+        "released_037_x4",
+        "released_037_x5",
+        "released_036_x4"
+      ],
+      "versions": {
+        "diffusers": "0.37.0",
+        "transformers": "4.57.6",
+        "huggingface_hub": "0.36.2",
+        "torch": "2.11.0+cu128",
+        "accelerate": "1.14.0",
+        "safetensors": "0.8.0",
+        "numpy": "2.1.3",
+        "pillow": "12.3.0",
+        "torch_cuda": "12.8",
+        "gpu": "Tesla T4",
+        "python": "3.13.15"
+      },
+      "measured": {
+        "job_id": "s8-sdxl-lightning-2",
+        "source": "docs/openmontage/image_gen/logs/s8-sdxl-lightning-2/manifest.json",
+        "measured_utc": "2026-10-22",
+        "load_seconds": 73.471,
+        "steady_state_sec_per_image": 3.943,
+        "steady_median_sec_per_image": 3.957,
+        "mean_sec_per_image": 4.079,
+        "usable_images_per_minute": 12.51,
+        "gpu_seconds": 47.95,
+        "peak_vram_mb": 9168.6,
+        "images_requested": 10,
+        "images_generated": 10,
+        "images_usable": 10,
+        "black_count": 0,
+        "nan_count": 0,
+        "oom_count": 0
+      },
+      "license": {
+        "id": "openrail++",
+        "commercial_use": "YES (OpenRAIL++ family; use-based restrictions apply). The distilled UNet requires stabilityai/stable-diffusion-xl-base-1.0 (CreativeML Open RAIL++-M)",
+        "card": "https://huggingface.co/ByteDance/SDXL-Lightning",
+        "evidence": "docs/openmontage/image_gen/LICENSE_EVIDENCE.md (2026-10-20)"
+      },
+      "notes": "declared FAST FALLBACK for drafts: fastest verified model (12.51 usable img/min) and the only one that needs no owner sign-off on style",
+      "low_cpu_mem_usage": null
+    },
+    "dreamshaper-xl-lightning": {
+      "status": "OWNER_GATED",
+      "display_name": "DreamShaper XL Lightning",
+      "model_id": "Lykon/dreamshaper-xl-lightning",
+      "pipeline_class": "StableDiffusionXLPipeline",
+      "pipeline_candidates": [
+        "StableDiffusionXLPipeline"
+      ],
+      "prompt_target": "sdxl",
+      "prompt_variant": "A",
+      "prompt_rules": {
+        "target": "sdxl",
+        "variant": "A",
+        "negative_prompt": true,
+        "builder_steps": 50,
+        "source": "tools/prompting/builder.py (OpenCode-owned, read only)",
+        "rule": "SDXL family: structured keyword phrases + a short negative prompt; the config lock overrides the builder's 50 steps / 7.5 guidance with the Lightning recipe (4 steps / guidance 2)",
+        "evidence": "docs/openmontage/image_gen/S8_TEST_SET.json (model_spec.dreamshaper-xl) + docs/openmontage/image_gen/CANDIDATES_S8.md"
+      },
+      "steps": 4,
+      "guidance": 2.0,
+      "scheduler": {
+        "class": "DPMSolverMultistepScheduler",
+        "kwargs": {}
+      },
+      "dtype": "float16",
+      "vae_model_id": null,
+      "unet_checkpoint": null,
+      "cpu_offload": false,
+      "extra_kwargs": {
+        "variant": "fp16"
+      },
+      "install_ladder": [
+        "released_037_x4",
+        "released_037_x5",
+        "released_036_x4"
+      ],
+      "versions": {
+        "diffusers": "0.37.0",
+        "transformers": "4.57.6",
+        "huggingface_hub": "0.36.2",
+        "torch": "2.11.0+cu128",
+        "accelerate": "1.14.0",
+        "safetensors": "0.8.0",
+        "numpy": "2.1.3",
+        "pillow": "12.3.0",
+        "torch_cuda": "12.8",
+        "gpu": "Tesla T4",
+        "python": "3.13.15"
+      },
+      "measured": {
+        "job_id": "s8-dreamshaper-xl-1",
+        "source": "docs/openmontage/image_gen/logs/s8-dreamshaper-xl-1/manifest.json",
+        "measured_utc": "2026-10-22",
+        "load_seconds": 38.511,
+        "steady_state_sec_per_image": 5.112,
+        "steady_median_sec_per_image": 5.059,
+        "mean_sec_per_image": 5.277,
+        "usable_images_per_minute": 10.12,
+        "gpu_seconds": 59.31,
+        "peak_vram_mb": 9968.01,
+        "images_requested": 10,
+        "images_generated": 10,
+        "images_usable": 10,
+        "black_count": 0,
+        "nan_count": 0,
+        "oom_count": 0
+      },
+      "license": {
+        "id": "openrail++",
+        "commercial_use": "YES (OpenRAIL++ family; use-based restrictions apply)",
+        "card": "https://huggingface.co/Lykon/dreamshaper-xl-lightning",
+        "evidence": "docs/openmontage/image_gen/S8_CANDIDATE_FACTS.json (official card frontmatter, 2026-10-22)"
+      },
+      "notes": "second fastest verified model; 10/10 images, no black frames",
+      "low_cpu_mem_usage": null
+    },
+    "sdxl": {
+      "status": "OWNER_GATED",
+      "display_name": "SDXL Base 1.0 (+ madebyollin/sdxl-vae-fp16-fix)",
+      "model_id": "stabilityai/stable-diffusion-xl-base-1.0",
+      "pipeline_class": "StableDiffusionXLPipeline",
+      "pipeline_candidates": [
+        "StableDiffusionXLPipeline"
+      ],
+      "prompt_target": "sdxl",
+      "prompt_variant": "A",
+      "prompt_rules": {
+        "target": "sdxl",
+        "variant": "A",
+        "negative_prompt": true,
+        "builder_steps": 50,
+        "source": "tools/prompting/builder.py (OpenCode-owned, read only)",
+        "rule": "SDXL family: structured keyword phrases + a short negative prompt; 50 steps, guidance 7.5",
+        "evidence": "docs/openmontage/image_gen/S7_TEST_SET.json (variant_by_model sdxl=A) + docs/openmontage/image_gen/PROMPTING_FACTS.md"
+      },
+      "steps": 50,
+      "guidance": 7.5,
+      "scheduler": {
+        "class": null,
+        "kwargs": {}
+      },
+      "dtype": "float16",
+      "vae_model_id": "madebyollin/sdxl-vae-fp16-fix",
+      "unet_checkpoint": null,
+      "cpu_offload": false,
+      "extra_kwargs": {
+        "add_watermarker": false
+      },
+      "install_ladder": [
+        "released_036_x4",
+        "released_037_x4",
+        "released_041_x5_ao",
+        "git_main_x4"
+      ],
+      "versions": {
+        "diffusers": "0.36.0",
+        "transformers": "4.57.6",
+        "huggingface_hub": "0.36.2",
+        "torch": "2.11.0+cu128",
+        "accelerate": "1.14.0",
+        "safetensors": "0.8.0",
+        "numpy": "2.1.3",
+        "pillow": "12.3.0",
+        "torch_cuda": "12.8",
+        "gpu": "Tesla T4",
+        "python": "3.13.15"
+      },
+      "measured": {
+        "job_id": "s7-sdxl-1",
+        "source": "docs/openmontage/image_gen/logs/s7-sdxl-1/manifest.json",
+        "measured_utc": "2026-10-21",
+        "load_seconds": 86.233,
+        "steady_state_sec_per_image": 41.4,
+        "steady_median_sec_per_image": 41.676,
+        "mean_sec_per_image": 41.286,
+        "usable_images_per_minute": 1.42,
+        "gpu_seconds": 421.37,
+        "peak_vram_mb": 9169.58,
+        "images_requested": 10,
+        "images_generated": 10,
+        "images_usable": 10,
+        "black_count": 0,
+        "nan_count": 0,
+        "oom_count": 0
+      },
+      "license": {
+        "id": "openrail++",
+        "commercial_use": "YES (CreativeML Open RAIL++-M; use-based restrictions apply)",
+        "card": "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/main/LICENSE.md",
+        "evidence": "docs/openmontage/image_gen/LICENSE_EVIDENCE.md (2026-10-20)"
+      },
+      "notes": "the reference model of the S7/S8 bake-off; the media re-run s7-sdxl-2 reproduced s7-sdxl-1 bit-for-bit (10/10 sha256 identical)",
+      "low_cpu_mem_usage": null
+    },
+    "zimage": {
+      "status": "BLOCKED",
+      "display_name": "Z-Image-Turbo",
+      "model_id": "Tongyi-MAI/Z-Image-Turbo",
+      "pipeline_class": "ZImagePipeline",
+      "pipeline_candidates": [
+        "ZImagePipeline"
+      ],
+      "prompt_target": "zimage",
+      "prompt_variant": "B",
+      "prompt_rules": {
+        "target": "zimage",
+        "variant": "B",
+        "negative_prompt": false,
+        "builder_steps": 9,
+        "source": "tools/prompting/builder.py (OpenCode-owned, read only)",
+        "rule": "prose, style first, no negative prompt",
+        "evidence": "docs/openmontage/image_gen/S7_TEST_SET.json (variant_by_model zimage=B)"
+      },
+      "steps": 9,
+      "guidance": 0.0,
+      "scheduler": {
+        "class": null,
+        "kwargs": {}
+      },
+      "dtype": "float16",
+      "vae_model_id": null,
+      "unet_checkpoint": null,
+      "cpu_offload": false,
+      "extra_kwargs": {},
+      "install_ladder": [
+        "released_037_x4",
+        "released_037_x5",
+        "released_041_x5_ao",
+        "git_main_x5_ao"
+      ],
+      "versions": {
+        "diffusers": "0.37.0",
+        "transformers": "4.57.6",
+        "huggingface_hub": "0.36.2",
+        "torch": "2.11.0+cu128",
+        "accelerate": "1.14.0",
+        "safetensors": "0.8.0",
+        "numpy": "2.1.3",
+        "pillow": "12.3.0",
+        "torch_cuda": "12.8",
+        "gpu": "Tesla T4",
+        "python": "3.13.15"
+      },
+      "measured": {
+        "job_id": "s7-zimage-4",
+        "source": "docs/openmontage/image_gen/logs/s7-zimage-4/manifest.json",
+        "measured_utc": "2026-10-21",
+        "load_seconds": 277.644,
+        "steady_state_sec_per_image": 51.908,
+        "steady_median_sec_per_image": null,
+        "mean_sec_per_image": null,
+        "usable_images_per_minute": 0.0,
+        "gpu_seconds": 522.08,
+        "peak_vram_mb": 12355.12,
+        "images_requested": 10,
+        "images_generated": 10,
+        "images_usable": 0,
+        "black_count": 10,
+        "nan_count": 0,
+        "oom_count": 0
+      },
+      "license": {
+        "id": "apache-2.0",
+        "commercial_use": "YES (card: apache-2.0)",
+        "card": "https://huggingface.co/Tongyi-MAI/Z-Image-Turbo",
+        "evidence": "docs/openmontage/image_gen/LICENSE_EVIDENCE.md (2026-10-20)"
+      },
+      "notes": "BLOCKED after 4 attempts in S7 (fp16 -> NaN -> 10/10 black frames, 0 usable images). The card asks for bfloat16; the S7 brief mandates fp16, so unblocking needs an owner decision. No timing projection can be claimed for it.",
+      "low_cpu_mem_usage": false
+    }
+  }
+}

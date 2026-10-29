@@ -153,17 +153,17 @@ Selectors route based on: user preference when explicitly set, then scored ranki
 
 **Analysis (5):** transcriber (WhisperX), azure_stt, scene_detect, frame_sampler, video_understand (CLIP/BLIP-2)
 
-**Audio (9):** elevenlabs_tts, google_tts, openai_tts, piper_tts, azure_tts, tts_selector, music_gen, audio_mixer, audio_enhance
+**Audio (12):** elevenlabs_tts, google_tts, openai_tts, piper_tts, azure_tts, tts_selector, music_gen, magnific_music, magnific_sound_effects, magnific_audio_isolation, audio_mixer, audio_enhance
 
 **Avatar (2):** talking_head (SadTalker/MuseTalk), lip_sync (Wav2Lip)
 
-**Enhancement (5):** upscale (Real-ESRGAN), bg_remove (rembg/U2Net), face_enhance, face_restore (CodeFormer/GFPGAN), color_grade (FFmpeg LUTs)
+**Enhancement (6):** upscale (Real-ESRGAN), magnific_upscale (Magnific Creative/Precision), bg_remove (rembg/U2Net), face_enhance, face_restore (CodeFormer/GFPGAN), color_grade (FFmpeg LUTs)
 
-**Graphics (13):** flux_image, grok_image, google_imagen, openai_image, recraft_image, local_diffusion, pexels_image, pixabay_image, image_selector, code_snippet, diagram_gen, math_animate (ManimCE), image_gen (deprecated)
+**Graphics (14):** flux_image, magnific_image, grok_image, google_imagen, openai_image, recraft_image, local_diffusion, pexels_image, pixabay_image, image_selector, code_snippet, diagram_gen, math_animate (ManimCE), image_gen (deprecated)
 
 **Subtitle (1):** subtitle_gen
 
-**Video (18):** grok_video, heygen_video, higgsfield_video, veo_video, kling_video, runway_video, minimax_video, wan_video, hunyuan_video, cogvideo_video, ltx_video_local, ltx_video_modal, pexels_video, pixabay_video, video_selector, video_compose (FFmpeg), video_stitch, video_trimmer
+**Video (19):** grok_video, heygen_video, higgsfield_video, magnific_video, veo_video, kling_video, runway_video, minimax_video, wan_video, hunyuan_video, cogvideo_video, ltx_video_local, ltx_video_modal, pexels_video, pixabay_video, video_selector, video_compose (FFmpeg), video_stitch, video_trimmer
 
 ---
 
@@ -396,6 +396,7 @@ All config is validated via Pydantic models in `lib/config_model.py`.
 | `GOOGLE_API_KEY` | google_imagen, google_tts | Google Imagen images, Google Cloud TTS |
 | `RUNWAY_API_KEY` | runway_video | Runway Gen-3/Gen-4 direct |
 | `HIGGSFIELD_API_KEY` + `HIGGSFIELD_API_SECRET` | higgsfield_video | Higgsfield multi-model video |
+| `MAGNIFIC_API_KEY` | magnific_image, magnific_video, magnific_upscale, magnific_music, magnific_sound_effects, magnific_audio_isolation | Magnific multi-modal suite (Business tier+) |
 | `MODAL_LTX2_ENDPOINT_URL` | ltx_video_modal | Self-hosted LTX-2 |
 | `VIDEO_GEN_LOCAL_ENABLED` | local video tools | Enable local GPU generation |
 | `VIDEO_GEN_LOCAL_MODEL` | wan, hunyuan, ltx, cogvideo | Select local model |

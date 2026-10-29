@@ -490,6 +490,7 @@ Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to
 | **Google Veo 3.1** | Cloud API | Premium cinematic video via Google GenAI or fal.ai |
 | **Grok Imagine Video** | Cloud API | Strong reference-image video and xAI-native short-form generation |
 | **Higgsfield** | Cloud API | Multi-model orchestrator with Soul ID for character consistency |
+| **Magnific** | Cloud API | One key across Seedance 2, Kling v3, Veo 3.1, WAN, LTX, Runway, Hailuo — plus image, upscaling, and audio |
 | **MiniMax / H3** | Cloud API | Cost-effective generation, including text, image, and reference-driven H3 workflows |
 | **HeyGen** | Cloud API | Multi-model gateway |
 | **WAN 2.1 / 2.2** | Local GPU | Free local variants plus accelerated ComfyUI workflows |

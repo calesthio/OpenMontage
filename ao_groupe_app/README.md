@@ -1,14 +1,12 @@
 # AO groupe Flutter storefront prototype
 
-An independent Flutter 3 / Material 3 storefront prototype for electrical,
-lighting, and solar products. Arabic is the default locale and uses RTL layout;
+An independent Flutter 3 / Material 3 storefront prototype for the products in
+the AO groupe reference images. Arabic is the default locale and uses RTL layout;
 French and English are also available. The app includes onboarding, a
-categorized catalog, product details, favorites, a cart and demo checkout,
-order history, quote-request drafts, planning calculators, and local admin
-preview. The catalog also includes the products shown in the supplied AO
-groupe reference images and uses the provided brand mark. Items matched from
-the images remain quote-only until real catalog, pricing, and inventory data
-are verified.
+categorized catalog with an automatically transitioning, pauseable product
+showcase, product details, favorites, quote-request drafts, and the supplied
+brand mark. The catalog contains only the 14 pictured references; they remain
+quote-only until real product, pricing, and inventory data are verified.
 
 ## Run
 
@@ -39,14 +37,11 @@ this app changes.
 
 ## Prototype limitations
 
-This is an offline prototype, not a production commerce service. Catalog,
-brands, prices, discounts, stock, delivery estimates, and branch labels are
-illustrative. Cart, favorites, orders, and inventory adjustments are in-memory
-demo state; checkout does not submit an order. CCP and Edahabia payment are
-disabled, and there is no authentication, backend, real branch contact data,
-or secure administrative access. Do not use the displayed electrical or solar
-calculations as installation guidance; a qualified professional must verify
-all designs.
+This is an offline prototype, not a production commerce service. Pictured
+products are references only; prices and stock are intentionally not shown.
+Quote requests remain local drafts and are not submitted to the store. Delivery
+and branch details must be confirmed before launch. The app has no
+authentication, backend, payment processing, or secure administrative access.
 
 Production release requires verified business catalog and branch data,
 backend and authentication setup, secure order/inventory APIs, a payment

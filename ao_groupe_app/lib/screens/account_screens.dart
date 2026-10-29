@@ -973,9 +973,13 @@ class _InventoryTile extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        subtitle: Text('${strings.text('stockCount')}: $stock'),
+        subtitle: Text(
+          product.quoteOnly
+              ? strings.text('quoteOnly')
+              : '${strings.text('stockCount')}: $stock',
+        ),
         trailing: product.quoteOnly
-            ? Text(strings.text('quoteOnly'))
+            ? null
             : IconButton(
                 tooltip: strings.text('edit'),
                 onPressed: () => _editStock(context, stock, strings),

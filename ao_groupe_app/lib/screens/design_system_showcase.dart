@@ -65,16 +65,15 @@ class _BrandLockup extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppColors.primary, AppColors.primaryBright],
-            ),
-            borderRadius: BorderRadius.circular(10),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.asset(
+            'assets/brand/ao-groupe.png',
+            width: 34,
+            height: 34,
+            fit: BoxFit.cover,
+            semanticLabel: 'AO groupe',
           ),
-          child: const Icon(Icons.bolt_rounded, color: AppColors.accent),
         ),
         const SizedBox(width: 10),
         Text(
@@ -335,17 +334,12 @@ class _PalettePreview extends StatelessWidget {
         _ColorSwatch(
           color: AppColors.primary,
           name: strings.primary,
-          hex: '#0B1F4B',
+          hex: '#17181C',
         ),
         _ColorSwatch(
           color: AppColors.primaryBright,
-          name: strings.gradient,
-          hex: '#1D4ED8',
-        ),
-        _ColorSwatch(
-          color: AppColors.accent,
           name: strings.accent,
-          hex: '#FFB800',
+          hex: '#E50914',
         ),
         _ColorSwatch(
           color: AppColors.lightBackground,
@@ -460,16 +454,13 @@ class _ComponentPreviews extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: AppColors.accent.withValues(alpha: 0.16),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Icon(
-                      Icons.lightbulb_outline_rounded,
-                      color: AppColors.primaryBright,
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.asset(
+                      'assets/products/tv-wall-mount.png',
+                      width: 52,
+                      height: 52,
+                      fit: BoxFit.cover,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -494,12 +485,11 @@ class _ComponentPreviews extends StatelessWidget {
                   Expanded(
                     child: Text(
                       strings.samplePrice,
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: AppColors.primaryBright,
+                            fontWeight: FontWeight.w700,
+                          ),
                     ),
-                  ),
-                  AppStatusBadge(
-                    label: strings.available,
-                    status: AppStockStatus.available,
                   ),
                 ],
               ),

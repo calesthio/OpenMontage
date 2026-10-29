@@ -4,15 +4,15 @@
   "start_url": ".",
   "display": "standalone",
   "background_color": "#F6F8FC",
-  "theme_color": "#0B1F4B",
-  "description": "AO groupe electrical and solar storefront prototype",
+  "theme_color": "#E50914",
+  "description": "AO groupe product catalog and quote requests",
   "lang": "ar",
   "dir": "rtl",
   "icons": [
     {
-      "src": "icons/app_icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "icons/ao-groupe.png",
+      "sizes": "160x160",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]

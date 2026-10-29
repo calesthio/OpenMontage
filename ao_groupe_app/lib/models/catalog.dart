@@ -54,41 +54,23 @@ class CatalogProduct {
 
 const catalogCategories = [
   CatalogCategory(
-      id: 'cables', icon: Icons.cable_rounded, color: Color(0xFF55565D)),
-  CatalogCategory(
-      id: 'breakers',
-      icon: Icons.electrical_services_rounded,
-      color: Color(0xFF55565D)),
+      id: 'mounts',
+      icon: Icons.desktop_windows_outlined,
+      color: Color(0xFFE50914)),
+  CatalogCategory(id: 'storage', icon: Icons.shelves, color: Color(0xFF17181C)),
   CatalogCategory(
       id: 'lighting',
       icon: Icons.lightbulb_outline_rounded,
-      color: Color(0xFF55565D)),
-  CatalogCategory(
-      id: 'solar', icon: Icons.solar_power_rounded, color: Color(0xFF55565D)),
-  CatalogCategory(
-      id: 'switches', icon: Icons.toggle_on_rounded, color: Color(0xFF55565D)),
-  CatalogCategory(
-      id: 'pumps', icon: Icons.water_drop_outlined, color: Color(0xFF55565D)),
-  CatalogCategory(
-      id: 'tools', icon: Icons.handyman_outlined, color: Color(0xFF55565D)),
-  CatalogCategory(
-      id: 'mounts',
-      icon: Icons.desktop_windows_outlined,
-      color: Color(0xFF64748B)),
-  CatalogCategory(id: 'storage', icon: Icons.shelves, color: Color(0xFF78716C)),
+      color: Color(0xFFE50914)),
   CatalogCategory(
       id: 'ceiling',
       icon: Icons.lightbulb_outline_rounded,
-      color: Color(0xFFB8A68A)),
+      color: Color(0xFF17181C)),
   CatalogCategory(
-      id: 'supports', icon: Icons.settings_outlined, color: Color(0xFF475569)),
-  CatalogCategory(
-      id: 'custom',
-      icon: Icons.precision_manufacturing_outlined,
-      color: Color(0xFF475569)),
+      id: 'supports', icon: Icons.settings_outlined, color: Color(0xFFE50914)),
 ];
 
-const catalogProducts = [
+const _catalogEntries = [
   CatalogProduct(
     id: 'cable-25',
     categoryId: 'cables',
@@ -652,6 +634,12 @@ const catalogProducts = [
     quoteOnly: true,
   ),
 ];
+
+final catalogProducts = List<CatalogProduct>.unmodifiable(
+  _catalogEntries.where(
+    (product) => product.quoteOnly && product.imageAsset != null,
+  ),
+);
 
 String formatDzd(int amount) {
   final digits = amount.toString();

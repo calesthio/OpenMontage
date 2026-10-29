@@ -19,10 +19,10 @@ abstract final class AppTheme {
       seedColor: AppColors.primary,
       brightness: brightness,
     ).copyWith(
-      primary: isDark ? AppColors.primaryBright : AppColors.primary,
+      primary: AppColors.primaryBright,
       onPrimary: Colors.white,
       secondary: AppColors.accent,
-      onSecondary: AppColors.primary,
+      onSecondary: Colors.white,
       surface: surface,
       onSurface: foreground,
       error: AppColors.outOfStock,
@@ -82,8 +82,7 @@ abstract final class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor:
-              isDark ? AppColors.primaryBright : const Color(0xFF17181C),
+          backgroundColor: AppColors.primaryBright,
           foregroundColor: Colors.white,
           minimumSize: const Size(0, 50),
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 13),

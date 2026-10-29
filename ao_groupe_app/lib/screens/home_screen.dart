@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../l10n/store_strings.dart';
@@ -21,10 +23,6 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = StoreStrings.of(context);
-    final popular =
-        catalogProducts.where((product) => product.isPopular).toList();
-    final newArrivals =
-        catalogProducts.where((product) => product.isNew).toList();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -58,7 +56,7 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(height: 26),
                   StoreSectionTitle(
                     title: strings.text('moreCategories'),
-                    actionLabel: strings.text('showMore'),
+                    actionLabel: strings.text('allProducts'),
                     onAction: () => onOpenTab(1),
                   ),
                   const SizedBox(height: 10),
@@ -68,36 +66,18 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 26),
                   StoreSectionTitle(
-                    title: strings.text('bestSellers'),
+                    title: strings.text('curatedProducts'),
                     actionLabel: strings.text('allProducts'),
                     onAction: () => onOpenTab(1),
                   ),
                   const SizedBox(height: 10),
                   _ProductRail(
-                    products: popular,
-                    controller: controller,
-                  ),
-                  const SizedBox(height: 25),
-                  _PromoTiles(
-                    supports: strings.text('featuredSupports'),
-                    lighting: strings.text('featuredLighting'),
-                    onSupportsTap: () => onCategorySelected('mounts'),
-                    onLightingTap: () => onCategorySelected('lighting'),
-                  ),
-                  const SizedBox(height: 25),
-                  StoreSectionTitle(
-                    title: strings.text('newArrivals'),
-                    actionLabel: strings.text('allProducts'),
-                    onAction: () => onOpenTab(1),
-                  ),
-                  const SizedBox(height: 10),
-                  _ProductRail(
-                    products: newArrivals,
+                    products: catalogProducts,
                     controller: controller,
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    strings.text('stockDemo'),
+                    strings.text('quoteCatalogNotice'),
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -154,7 +134,7 @@ class _SearchEntry extends StatelessWidget {
   }
 }
 
-class _WelcomeHero extends StatelessWidget {
+class _WelcomeHero extends StatefulWidget {
   const _WelcomeHero({
     required this.title,
     required this.body,
@@ -168,19 +148,71 @@ class _WelcomeHero extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
+  State<_WelcomeHero> createState() => _WelcomeHeroState();
+}
+
+class _WelcomeHeroState extends State<_WelcomeHero> {
+  static const _slides = [
+    _HeroSlide('assets/products/tv-wall-mount.png', 'catMounts'),
+    _HeroSlide('assets/products/laundry-organizer.png', 'catStorage'),
+    _HeroSlide('assets/products/wall-lamp-modern.png', 'catLighting'),
+    _HeroSlide('assets/products/ceiling-light-sculpted.png', 'catCeiling'),
+    _HeroSlide('assets/products/multifunction-supports.png', 'catSupports'),
+  ];
+
+  Timer? _rotationTimer;
+  int _slideIndex = 0;
+  bool _paused = false;
+  bool _animationsDisabled = false;
+  bool _rotationConfigured = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final animationsDisabled = MediaQuery.of(context).disableAnimations;
+    if (!_rotationConfigured || animationsDisabled != _animationsDisabled) {
+      _animationsDisabled = animationsDisabled;
+      _rotationConfigured = true;
+      _configureRotation();
+    }
+  }
+
+  @override
+  void dispose() {
+    _rotationTimer?.cancel();
+    super.dispose();
+  }
+
+  void _configureRotation() {
+    _rotationTimer?.cancel();
+    if (_paused || _animationsDisabled) return;
+    _rotationTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (mounted) {
+        setState(() => _slideIndex = (_slideIndex + 1) % _slides.length);
+      }
+    });
+  }
+
+  void _showNextSlide() {
+    setState(() => _slideIndex = (_slideIndex + 1) % _slides.length);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= 700;
-        final artwork = ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: Image.asset(
-            'assets/products/wall-lamp-modern.png',
-            width: double.infinity,
-            height: wide ? 320 : 220,
-            fit: BoxFit.cover,
-            semanticLabel: title,
-          ),
+        final artwork = _HeroArtwork(
+          slide: _slides[_slideIndex],
+          slideIndex: _slideIndex,
+          slideCount: _slides.length,
+          animationsDisabled: _animationsDisabled,
+          paused: _paused,
+          onNext: _showNextSlide,
+          onPauseChanged: (paused) {
+            setState(() => _paused = paused);
+            _configureRotation();
+          },
         );
         final copy = Padding(
           padding: EdgeInsets.all(wide ? 36 : 24),
@@ -191,33 +223,34 @@ class _WelcomeHero extends StatelessWidget {
               Text(
                 'AO GROUPE  ·  ALGÉRIE',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      color: const Color(0xFFFF737A),
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.2,
                     ),
               ),
               const SizedBox(height: 18),
               Text(
-                title,
+                widget.title,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontSize: wide ? 38 : 32,
                       fontWeight: FontWeight.w700,
                       height: 1.2,
+                      color: Colors.white,
                     ),
               ),
               const SizedBox(height: 12),
               Text(
-                body,
+                widget.body,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      color: const Color(0xFFE1E1E3),
                       height: 1.55,
                     ),
               ),
               const SizedBox(height: 22),
               FilledButton.icon(
-                onPressed: onTap,
+                onPressed: widget.onTap,
                 icon: const Icon(Icons.arrow_forward_rounded, size: 19),
-                label: Text(action),
+                label: Text(widget.action),
               ),
             ],
           ),
@@ -225,9 +258,13 @@ class _WelcomeHero extends StatelessWidget {
 
         return Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
+            gradient: const LinearGradient(
+              begin: AlignmentDirectional.topStart,
+              end: AlignmentDirectional.bottomEnd,
+              colors: [Color(0xFF17181C), Color(0xFF2A1013)],
+            ),
             borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: Theme.of(context).dividerColor),
+            border: Border.all(color: const Color(0xFF4A2528)),
           ),
           clipBehavior: Clip.antiAlias,
           child: wide
@@ -247,6 +284,131 @@ class _WelcomeHero extends StatelessWidget {
   }
 }
 
+class _HeroSlide {
+  const _HeroSlide(this.imageAsset, this.labelKey);
+
+  final String imageAsset;
+  final String labelKey;
+}
+
+class _HeroArtwork extends StatelessWidget {
+  const _HeroArtwork({
+    required this.slide,
+    required this.slideIndex,
+    required this.slideCount,
+    required this.animationsDisabled,
+    required this.paused,
+    required this.onNext,
+    required this.onPauseChanged,
+  });
+
+  final _HeroSlide slide;
+  final int slideIndex;
+  final int slideCount;
+  final bool animationsDisabled;
+  final bool paused;
+  final VoidCallback onNext;
+  final ValueChanged<bool> onPauseChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = StoreStrings.of(context);
+    final transitionDuration =
+        animationsDisabled ? Duration.zero : const Duration(milliseconds: 750);
+
+    return Padding(
+      padding: const EdgeInsets.all(14),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: ColoredBox(
+          color: const Color(0xFFF7F7F8),
+          child: SizedBox(
+            height: 286,
+            child: Column(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: AnimatedSwitcher(
+                      duration: transitionDuration,
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: (child, animation) => FadeTransition(
+                        opacity: animation,
+                        child: ScaleTransition(
+                          scale: Tween<double>(begin: 0.98, end: 1)
+                              .animate(animation),
+                          child: child,
+                        ),
+                      ),
+                      child: Image.asset(
+                        slide.imageAsset,
+                        key: ValueKey(slide.imageAsset),
+                        fit: BoxFit.contain,
+                        semanticLabel: strings.text(slide.labelKey),
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(10, 0, 10, 6),
+                  child: Row(
+                    children: [
+                      if (!animationsDisabled)
+                        IconButton.filledTonal(
+                          tooltip: strings.text(
+                            paused ? 'resumeSlideshow' : 'pauseSlideshow',
+                          ),
+                          onPressed: () => onPauseChanged(!paused),
+                          icon: Icon(
+                            paused
+                                ? Icons.play_arrow_rounded
+                                : Icons.pause_rounded,
+                          ),
+                        ),
+                      IconButton.filled(
+                        tooltip: strings.text('nextSlide'),
+                        onPressed: onNext,
+                        icon: const Icon(Icons.arrow_forward_rounded),
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Semantics(
+                          label:
+                              '${strings.text('slide')} ${slideIndex + 1}/$slideCount',
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: List.generate(
+                              slideCount,
+                              (index) => AnimatedContainer(
+                                duration: transitionDuration,
+                                margin:
+                                    const EdgeInsetsDirectional.only(start: 4),
+                                width: index == slideIndex ? 18 : 5,
+                                height: 5,
+                                decoration: BoxDecoration(
+                                  color: index == slideIndex
+                                      ? AppColors.primaryBright
+                                      : const Color(0xFFB7B7BC),
+                                  borderRadius: BorderRadius.circular(99),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _DeliveryStrip extends StatelessWidget {
   const _DeliveryStrip({required this.label});
 
@@ -262,7 +424,11 @@ class _DeliveryStrip extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.local_shipping_outlined, size: 19),
+          const Icon(
+            Icons.local_shipping_outlined,
+            size: 20,
+            color: AppColors.primaryBright,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -302,128 +468,6 @@ class _ProductRail extends StatelessWidget {
             onTap: () => openProduct(context, controller, product),
           );
         },
-      ),
-    );
-  }
-}
-
-class _PromoTiles extends StatelessWidget {
-  const _PromoTiles({
-    required this.supports,
-    required this.lighting,
-    required this.onSupportsTap,
-    required this.onLightingTap,
-  });
-
-  final String supports;
-  final String lighting;
-  final VoidCallback onSupportsTap;
-  final VoidCallback onLightingTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final wide = constraints.maxWidth > 620;
-        final children = [
-          _PromoTile(
-            title: supports,
-            imageAsset: 'assets/products/media-shelf.png',
-            onTap: onSupportsTap,
-          ),
-          _PromoTile(
-            title: lighting,
-            imageAsset: 'assets/products/wall-lamp-classic.png',
-            onTap: onLightingTap,
-          ),
-        ];
-        if (wide) {
-          return Row(
-            children: [
-              Expanded(child: children[0]),
-              const SizedBox(width: 12),
-              Expanded(child: children[1]),
-            ],
-          );
-        }
-        return Column(
-          children: [
-            children[0],
-            const SizedBox(height: 12),
-            children[1],
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _PromoTile extends StatelessWidget {
-  const _PromoTile({
-    required this.title,
-    required this.imageAsset,
-    required this.onTap,
-  });
-
-  final String title;
-  final String imageAsset;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          height: 174,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Image.asset(imageAsset, fit: BoxFit.cover, semanticLabel: title),
-              const DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: AlignmentDirectional.topCenter,
-                    end: AlignmentDirectional.bottomCenter,
-                    colors: [Colors.transparent, Color(0xB8000000)],
-                    stops: [0.35, 1],
-                  ),
-                ),
-              ),
-              PositionedDirectional(
-                start: 18,
-                end: 18,
-                bottom: 17,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                      ),
-                    ),
-                    const Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 20,
-                      color: Colors.white,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

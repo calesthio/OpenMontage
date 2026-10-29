@@ -128,12 +128,6 @@ class StoreProductCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (product.badge != null)
-                    PositionedDirectional(
-                      top: 10,
-                      start: 10,
-                      child: _ProductBadge(label: strings.text(product.badge!)),
-                    ),
                 ],
               ),
             ),
@@ -192,7 +186,7 @@ class StoreProductCard extends StatelessWidget {
                   const SizedBox(height: 5),
                   Text(
                     product.quoteOnly
-                        ? strings.text('requestQuote')
+                        ? strings.text('quoteOnly')
                         : isUnavailable
                             ? strings.text('outOfStock')
                             : stock < 10
@@ -200,7 +194,9 @@ class StoreProductCard extends StatelessWidget {
                                 : strings.text('available'),
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: product.quoteOnly || stock >= 10
-                              ? AppColors.available
+                              ? (product.quoteOnly
+                                  ? Theme.of(context).colorScheme.primary
+                                  : AppColors.available)
                               : stock == 0
                                   ? AppColors.outOfStock
                                   : AppColors.lowStock,
@@ -210,31 +206,6 @@ class StoreProductCard extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ProductBadge extends StatelessWidget {
-  const _ProductBadge({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsetsDirectional.fromSTEB(9, 5, 9, 5),
-      decoration: BoxDecoration(
-        color: AppColors.accent,
-        borderRadius: BorderRadius.circular(99),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: AppColors.primary,
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
         ),
       ),
     );
@@ -343,18 +314,11 @@ class CategoryGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final strings = StoreStrings.of(context);
     final names = {
-      'cables': strings.text('catCables'),
-      'breakers': strings.text('catBreakers'),
-      'lighting': strings.text('catLighting'),
-      'solar': strings.text('catSolar'),
-      'switches': strings.text('catSwitches'),
-      'pumps': strings.text('catPumps'),
-      'tools': strings.text('catTools'),
       'mounts': strings.text('catMounts'),
       'storage': strings.text('catStorage'),
+      'lighting': strings.text('catLighting'),
       'ceiling': strings.text('catCeiling'),
       'supports': strings.text('catSupports'),
-      'custom': strings.text('catCustom'),
     };
     final images = {
       'lighting': 'assets/products/wall-lamp-modern.png',

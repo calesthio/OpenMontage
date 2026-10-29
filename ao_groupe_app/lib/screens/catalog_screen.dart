@@ -27,7 +27,6 @@ class CatalogScreen extends StatefulWidget {
 class _CatalogScreenState extends State<CatalogScreen> {
   late String? _selectedCategory = widget.initialCategoryId;
   String _query = '';
-  bool _ascendingPrice = false;
 
   @override
   Widget build(BuildContext context) {
@@ -49,14 +48,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
       return product.name(locale).toLowerCase().contains(normalizedQuery) ||
           product.brand.toLowerCase().contains(normalizedQuery) ||
           categoryName.toLowerCase().contains(normalizedQuery);
-    }).toList()
-      ..sort((a, b) {
-        if (_ascendingPrice) return a.price.compareTo(b.price);
-        final popular = (b.isPopular ? 1 : 0).compareTo(a.isPopular ? 1 : 0);
-        if (popular != 0) return popular;
-        final newArrival = (b.isNew ? 1 : 0).compareTo(a.isNew ? 1 : 0);
-        return newArrival != 0 ? newArrival : a.price.compareTo(b.price);
-      });
+    }).toList();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -129,20 +121,9 @@ class _CatalogScreenState extends State<CatalogScreen> {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      Expanded(
-                        child: Text(
-                          '${strings.text('allProducts')} · ${products.length}',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ),
-                      TextButton.icon(
-                        onPressed: () => setState(
-                          () => _ascendingPrice = !_ascendingPrice,
-                        ),
-                        icon: const Icon(Icons.swap_vert_rounded),
-                        label: Text(strings.text(
-                          _ascendingPrice ? 'sortByPrice' : 'sortRecommended',
-                        )),
+                      Text(
+                        '${strings.text('allProducts')} · ${products.length}',
+                        style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ],
                   ),
@@ -200,19 +181,12 @@ class _CatalogScreenState extends State<CatalogScreen> {
   }
 
   String _categoryTitleSuffix(String id) => switch (id) {
-        'cables' => 'Cables',
-        'breakers' => 'Breakers',
         'lighting' => 'Lighting',
-        'solar' => 'Solar',
-        'switches' => 'Switches',
-        'pumps' => 'Pumps',
-        'tools' => 'Tools',
         'mounts' => 'Mounts',
         'storage' => 'Storage',
         'ceiling' => 'Ceiling',
         'supports' => 'Supports',
-        'custom' => 'Custom',
-        _ => 'Cables',
+        _ => 'Mounts',
       };
 }
 

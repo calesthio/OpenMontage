@@ -1,11 +1,13 @@
 ---
 name: lyria
-description: Generate and validate music with Google Lyria 3 through the Gemini Interactions API. Use before calling OpenMontage `google_music`, designing Lyria 3 Clip or Pro prompts, using image-to-music or custom lyrics, choosing between Lyria 3 and Lyria RealTime, diagnosing Google music-generation failures, or preparing exact-duration music for a video.
+description: Generate and validate music with Google Lyria through the Gemini Interactions API. Use before calling OpenMontage `google_music`, designing Lyria 3.5 or Clip prompts, using image-to-music or custom lyrics, choosing between single-turn Lyria and Lyria RealTime, diagnosing Google music-generation failures, or preparing exact-duration music for a video.
 ---
 
-# Google Lyria 3
+# Google Lyria
 
-Use Lyria 3 as a single-turn music generator. Keep it distinct from Lyria RealTime, which is an experimental WebSocket model for continuously steered instrumental performance.
+Model and adapter guidance updated by andromia3 on 2026-10-10; distributed under the repository's AGPL-3.0 license.
+
+Use Lyria 3.5 or Clip as a single-turn music generator. Keep them distinct from Lyria RealTime, which is an experimental WebSocket model for continuously steered instrumental performance.
 
 Read [references/api-and-prompting.md](references/api-and-prompting.md) when choosing a model, designing vocals or custom lyrics, using image inputs, debugging the response, or checking current limits and pricing.
 
@@ -25,12 +27,13 @@ Read [references/api-and-prompting.md](references/api-and-prompting.md) when cho
 | Need | Model | Contract |
 |---|---|---|
 | Prompt iteration, preview, loop, exact 30-second source | `lyria-3-clip-preview` | Always generates a 30-second MP3; currently $0.04/request |
-| Full song, vocals, longer structure, image-conditioned score | `lyria-3-pro-preview` | Prompt-influenced duration up to roughly three minutes; currently $0.08/request |
+| Full song, vocals, longer structure, image-conditioned score | `lyria-3.5` | Prompt-influenced duration; currently $0.08/request |
+| Explicitly requested legacy Pro workflow | `lyria-3-pro-preview` | Legacy model; verify availability before use; currently $0.08/request |
 | Live, continuously steered instrumental performance | `lyria-realtime-exp` | Separate WebSocket workflow; do not route through `google_music` |
 
-The current OpenMontage `google_music` adapter is locked to `lyria-3-pro-preview`. It does not expose Clip, WAV response selection, multiple images, or RealTime controls. Surface that limitation rather than implying those options are available through the adapter.
+The current OpenMontage `google_music` adapter accepts `model="lyria-3.5"` (default) or `model="lyria-3-pro-preview"`. It does not expose Clip, WAV response selection, multiple images, or RealTime controls. Its Lyria 3.5 cost estimator requires a current price quote; do not assume the legacy estimate supplies that quote. Prices above are Gemini Developer API prices checked on 2026-10-10, not a guarantee for every backend or future request.
 
-Do not change models silently. For a 30-second video, either obtain approval for Pro plus exact-duration mastering or use Clip through an explicitly supported path.
+Do not change models silently. For a 30-second video, either use the approved full-song model plus exact-duration mastering or use Clip through an explicitly supported path.
 
 ## Build The Prompt
 
@@ -71,7 +74,7 @@ Treat the returned vocal as untrusted until auditioned. Check lyric adherence, l
 
 ## Treat Duration As Untrusted Until Probed
 
-Lyria 3 Pro duration is controlled through prompt instructions and timestamps, not an exact API parameter. The OpenMontage adapter appends a target-duration instruction, but its returned `duration_seconds` field is the request, not a media probe.
+Full-song duration is controlled through prompt instructions and timestamps, not an exact API parameter. The OpenMontage adapter appends a target-duration instruction and bounds its requested duration to 5–184 seconds, but its returned `duration_seconds` field is the request, not a media probe. Treat those bounds as adapter validation, not proof of the returned duration.
 
 Always inspect the generated file:
 
@@ -96,7 +99,7 @@ The Gemini API commonly uses `GEMINI_API_KEY`. OpenMontage also supports `GOOGLE
 - Use one known credential path per run.
 - Never print keys or edit credential files while debugging.
 - Do not assume a rejected first key will fall through to a second configured key.
-- In the current OpenMontage resolver, `GOOGLE_API_KEY` takes precedence over `GEMINI_API_KEY` when both are non-empty.
+- In the API-key path, `GOOGLE_API_KEY` takes precedence over `GEMINI_API_KEY` when both are non-empty. `GOOGLE_GENAI_USE_VERTEXAI=true`/`1` or `GOOGLE_GENAI_USE_ENTERPRISE=true`/`1` selects Vertex instead; a configured service-account file also selects Vertex when neither API key is present.
 - Treat `403`, `API_KEY_SERVICE_BLOCKED`, and project/service restrictions as authentication or Google-project configuration failures, not prompt-quality failures.
 - Do not spend retries on permission failures. Resolve the credential/project path first.
 - Retry only transient rate-limit or timeout failures within the approved retry and budget policy.

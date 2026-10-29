@@ -64,6 +64,7 @@ Key capability families to look for in the output:
 | `3d_asset_generation` | — | Atlas/fal textured mesh generation and reconstruction for unique scene assets |
 | `3d_world_rendering` | — | Blender assembly and production rendering of detailed worlds |
 | `graphics` | — | Local rendering tools |
+| `music` | `music_selector` | Spans the three music capabilities below, cheapest tier first |
 | `music_library` | — | Discovers user-provided local tracks |
 | `music_search` | — | Discovers royalty-free search/download providers |
 | `music_generation` | — | Discovers paid/local generation providers |

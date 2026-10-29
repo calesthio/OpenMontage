@@ -39,6 +39,8 @@ def discover_demos() -> dict[str, Path]:
 
 
 def find_command(*names: str) -> str | None:
+    if sys.platform != "win32":
+        names = tuple(n for n in names if not n.endswith((".cmd", ".exe")))
     for name in names:
         resolved = shutil.which(name)
         if resolved:

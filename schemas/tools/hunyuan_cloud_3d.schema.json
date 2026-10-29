@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/tools/hunyuan_cloud_3d",
+  "title": "Tencent Hunyuan Cloud 3D Generation Input",
+  "type": "object",
+  "required": ["operation", "output_path"],
+  "properties": {
+    "operation": {"type": "string", "enum": ["text_to_3d", "image_to_3d"]},
+    "model": {"type": "string", "enum": ["hy-3d-3.1"]},
+    "prompt": {"type": "string", "minLength": 3, "maxLength": 1024},
+    "image_url": {"type": "string"},
+    "image_path": {"type": "string"},
+    "multi_view_images": {
+      "type": "array",
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "required": ["view"],
+        "properties": {
+          "view": {"type": "string", "enum": ["left", "right", "back", "top", "bottom", "left_front", "right_front"]},
+          "image_url": {"type": "string"},
+          "image_path": {"type": "string"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "enable_pbr": {"type": "boolean"},
+    "face_count": {"type": "integer", "minimum": 3000, "maximum": 1500000},
+    "generate_type": {"type": "string", "enum": ["Normal", "Geometry"]},
+    "result_format": {"type": "string", "enum": ["STL", "USDZ", "FBX"]},
+    "output_path": {"type": "string"},
+    "poll_timeout_seconds": {"type": "integer", "minimum": 30, "maximum": 1800}
+  },
+  "additionalProperties": false
+}

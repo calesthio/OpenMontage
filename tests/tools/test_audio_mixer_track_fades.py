@@ -93,3 +93,42 @@ def test_delayed_track_with_fade_out_remains_audible_after_its_start(tmp_path):
     mean_line = next(line for line in measured.stderr.splitlines() if "mean_volume" in line)
     mean_db = float(mean_line.split("mean_volume:")[1].strip().split(" ")[0])
     assert mean_db > -60, f"delayed tone was unexpectedly silent: {mean_db} dB"
+
+
+@pytest.mark.parametrize("operation", ["mix", "full_mix"])
+@pytest.mark.parametrize("probed", ["N/A", "", "nan", "inf", "0", "-1.5"])
+def test_fade_out_rejects_unusable_probed_duration(
+    tmp_path, monkeypatch, operation, probed
+):
+    """A track whose ffprobe duration is unusable gets a track-specific error."""
+    tone = tmp_path / "empty.wav"
+    tone.write_bytes(b"stub")
+    commands = []
+
+    def fake_run(self, cmd, **kwargs):
+        commands.append(list(cmd))
+        if cmd[0] == "ffprobe":
+            return SimpleNamespace(stdout=f"{probed}\n", stderr="")
+        return SimpleNamespace(stdout="", stderr="")
+
+    monkeypatch.setattr(AudioMixer, "run_command", fake_run)
+    result = AudioMixer().execute(
+        {
+            "operation": operation,
+            "tracks": [{
+                "path": str(tone),
+                "role": "speech",
+                "fade_out_seconds": 0.2,
+            }],
+            "ducking": {"enabled": False},
+            "normalize": False,
+            "output_path": str(tmp_path / "out.wav"),
+        }
+    )
+
+    assert not result.success
+    assert str(tone) in result.error
+    assert "duration" in result.error
+    assert "regenerate" in result.error
+    assert "could not convert" not in result.error
+    assert not any(cmd[0] == "ffmpeg" for cmd in commands)

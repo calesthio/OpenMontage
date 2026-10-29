@@ -36,6 +36,8 @@ quality require live validation in the intended environment.
 
 | Step | Cost | What to set up | What it unlocks |
 |------|------|----------------|-----------------|
+| 0 | **$0, no key** | Codex CLI (if you already pay for ChatGPT) | gpt-image-2 image generation billed to your ChatGPT subscription — see [Codex ChatGPT subscription](#codex-chatgpt-subscription-no-api-key) |
+| 0 | **$0, no key** | Google Flow (if you already pay for Flow) | Veo 3 video generation billed to your Flow subscription — see [Google Flow subscription](#google-flow-subscription-no-api-key) |
 | 1 | **$0** | Pexels + Pixabay | Stock photos and videos — enough to produce basic videos |
 | 2 | **$0** | Google API key | TTS with 700+ voices (1M chars/month free) + $300 new account credit |
 | 3 | **$0** | ElevenLabs | Premium TTS + music + SFX (10K chars/month free) |
@@ -56,6 +58,13 @@ quality require live validation in the intended environment.
 
 ```bash
 # .env — add your keys here
+
+# NO KEY AT ALL — codex_image uses your signed-in Codex CLI (paid ChatGPT plan).
+# Nothing to put in .env; just `codex login`. CODEX_HOME only if state isn't in ~/.codex.
+
+# NO KEY AT ALL — flow_video drives your signed-in Google Flow tab (paid Flow plan).
+# Nothing to put in .env; run the bridge + load the extension. FLOW_BRIDGE_PORT only
+# if 8765 is taken.
 
 # FREE (no cost, ever)
 PEXELS_API_KEY=              # Stock photos + videos
@@ -1128,6 +1137,165 @@ Gen-3 Alpha Turbo and Gen-4 Aleph were removed from the Runway API on
 ## Local Providers (Free, No API Key)
 
 These providers run entirely on your machine. No network, no API key, no cost. Some require a GPU.
+
+### Codex ChatGPT Subscription (No API Key)
+
+> **The only image provider that costs no money and needs no key.** If you already pay for
+> ChatGPT, the locally-installed Codex CLI can generate `gpt-image-2` images against your
+> subscription. Useful on a machine with no provider keys and no GPU — the situation where
+> every other image tool reports `unavailable`.
+
+**Tool:** `codex_image`
+**Model:** `gpt-image-2` (same model as `openai_image`)
+**Runtime:** local CLI (reaches the network on your behalf)
+**Env var:** none — optionally `CODEX_HOME` if Codex state is not in `~/.codex`
+
+#### Setup
+
+```bash
+# 1. Install the Codex CLI — https://developers.openai.com/codex/cli
+# 2. Sign in with a PAID ChatGPT plan (free tier has no image generation)
+codex login
+
+# 3. Verify the capability is on for your account
+codex features list | grep image_generation      # must read: stable  true
+```
+
+Check OpenMontage sees it:
+
+```bash
+python -c "from tools.tool_registry import registry; registry.discover(); \
+  print(registry.support_envelope()['codex_image']['status'])"
+```
+
+| Status | Meaning |
+|--------|---------|
+| `available` | signed in with ChatGPT — generations bill your subscription |
+| `degraded` | signed in with an API key instead — generations bill **API credit**, not the subscription |
+| `unavailable` | `codex` not on PATH, or `auth.json` unreadable → run `codex login` |
+
+#### Cost — $0.00 in money, not free
+
+Generations draw on your ChatGPT plan's **rolling 5-hour and weekly quota**, roughly 3–5×
+faster than a normal Codex turn. A 20-image batch can leave you unable to use Codex for
+coding. `estimate_cost()` reports `0.0` because no money moves — always state the quota
+cost alongside it when proposing a batch.
+
+| | `codex_image` | `flux_image` (fal.ai) |
+|---|---|---|
+| Money per image | $0.00 | ~$0.03 |
+| Wall time per image | 30–60s | 5–10s |
+| Real cost | ChatGPT quota | API credit |
+| Sizes | `1024x1024`, `1024x1536`, `1536x1024` | arbitrary |
+
+#### Limits
+
+- **Three aspect ratios only.** For a 1080×1920 short, generate `1024x1536` and crop with
+  `auto_reframe` / `video_compose`.
+- **Runs are serialized.** Codex keeps global state on disk, so the tool takes a lock in
+  `$CODEX_HOME`; concurrent calls fail fast rather than corrupt state.
+- **No stable contract.** This drives an undocumented internal capability of the Codex CLI.
+  A Codex update can break it — hence `stability = EXPERIMENTAL` and a two-tier result
+  lookup (structured response first, Codex's own `generated_images/<session_id>/` second).
+- **Text-to-image only** in this version. Codex accepts input images, but image editing is
+  not wired up yet.
+
+**Prompting guide:** [`.agents/skills/codex-image/SKILL.md`](../.agents/skills/codex-image/SKILL.md)
+
+---
+
+### Google Flow Subscription (No API Key)
+
+> **Veo 3 video with no API key.** If you already pay for Google Flow, `flow_video`
+> generates Veo 3 clips against your subscription's credits instead of billing an API.
+> Flow has no public API, so this drives the Flow web UI inside your own signed-in
+> Chrome via a small browser extension and a local bridge.
+
+**Tool:** `flow_video`
+**Model:** Veo 3 — `Lite` / `Fast` / `Quality`
+**Runtime:** LOCAL (browser on this machine; reaches Google through your own session)
+**Env var:** none — optionally `FLOW_BRIDGE_PORT` if 8765 is taken
+
+#### Setup
+
+Three parts, all local. All three must hold for a generation to work.
+
+```bash
+# 1. The Playwright client (no browser download needed — it attaches to yours)
+pip install playwright
+
+# 2. Start Chrome with a debugging port on a DEDICATED profile. Since Chrome 136
+#    the port is silently ignored on the default profile, so the separate
+#    --user-data-dir is required, not a nicety.
+chrome.exe --remote-debugging-port=9222 ^
+           --user-data-dir="%USERPROFILE%\.openmontage\chrome-flow"
+
+# 3. Sign in to https://labs.google/fx/tools/flow once in that window.
+#    The profile keeps the session for later runs.
+```
+
+Verify the provider is registered:
+
+```bash
+python -c "from tools.tool_registry import registry; registry.discover();   print(registry.support_envelope()['flow_video']['status'])"
+```
+
+Verify a browser is attachable (the status above only reports installation):
+
+```bash
+curl http://127.0.0.1:9222/json/version
+```
+
+| Status | Meaning |
+|--------|---------|
+| `available` | Playwright is installed |
+| `unavailable` | `pip install playwright` |
+
+`available` deliberately means **installed**, not **ready**. `video_selector` silently
+drops any provider that is not `available`, so reporting liveness here would hide the
+provider on every machine where Chrome happens to be closed — and you would never reach
+the point of being told to start it. Readiness is checked when the tool runs, and
+failures come back naming the exact next step.
+
+Optional: `FLOW_CDP_URL` (default `http://127.0.0.1:9222`) and `FLOW_PROJECT_URL` to pin
+a specific Flow project instead of letting the tool create one.
+
+#### Cost — $0.00 cash, real credits
+
+Generation spends your Flow plan's **daily credit allowance**. Unlike an API balance you
+cannot top it up: running out ends video generation until the allowance resets.
+
+| | `flow_video` | `veo_video` (fal.ai / Google) |
+|---|---|---|
+| Cash per clip | $0.00 | ~$3.20 for 8s |
+| Real cost | Flow daily credits | API credit |
+| Throughput | one clip at a time, ~1-3 min each | parallel, ~1-2 min each |
+| Runs unattended | no — needs an open, signed-in browser tab | yes |
+| Models | Veo 3.1 (Lite/Fast/Quality) and Omni 1.1 Flash | Veo 3 |
+
+`estimate_cost()` returns `0.0`, which is true about money and misleading about cost.
+Always state both halves in a proposal.
+
+#### Limits
+
+- **One clip at a time.** There is a single browser tab and a single prompt editor, so the
+  tool takes a lock at `~/.openmontage/flow_video.lock`. Concurrent calls fail rather
+  than interleave.
+- **Not usable headless.** No signed-in Chrome, no generation — this rules out CI and
+  unattended servers.
+- **Duration and resolution are Omni-only.** The Veo tiers run at their own fixed
+  length and resolution; asking for a duration on one fails before any credit is
+  spent rather than quietly returning a clip of a different length.
+- **No stable contract.** This drives an undocumented web UI that ships changes weekly —
+  hence `stability = EXPERIMENTAL`. Selectors have fallbacks, but a Flow redesign can
+  break generation until they are updated.
+- **Terms of service.** Automating Flow plausibly violates Google's terms and carries a
+  risk of account suspension. This drives your own account in your own browser and has no
+  multi-account, proxy, or detection-evasion machinery, and none is planned.
+
+**Prompting guide:** [`.agents/skills/flow-video/SKILL.md`](../.agents/skills/flow-video/SKILL.md)
+
+---
 
 ### Remotion — Programmatic Video Composition
 

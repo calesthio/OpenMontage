@@ -132,6 +132,8 @@ class PiperTTS(BaseTool):
             input=inputs["text"],
             capture_output=True,
             text=True,
+            encoding="utf-8",  # non-ASCII scripts (vi, CJK) break on Windows' ANSI default
+            errors="replace",
             timeout=300,
         )
 

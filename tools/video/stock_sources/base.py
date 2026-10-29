@@ -35,6 +35,7 @@ Adding a new source
 """
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional, Protocol, runtime_checkable
@@ -78,6 +79,15 @@ class Candidate:
         directly when it materialises the row.
         """
         return f"{self.source}_{self.source_id}"
+
+
+def stable_url_id(url: str) -> str:
+    """Return a process-independent identifier for a URL-backed result.
+
+    Python's built-in ``hash`` is randomized between interpreter processes, so
+    it cannot identify cached media or corpus rows across separate runs.
+    """
+    return hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
 
 
 @dataclass

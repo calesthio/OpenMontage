@@ -93,20 +93,46 @@ class DiagramGen(BaseTool):
             "width": {"type": "integer", "default": 1200},
             "height": {"type": "integer", "default": 800},
             "output_path": {"type": "string"},
+            "allow_text_fallback": {
+                "type": "boolean",
+                "default": False,
+                "description": "Render Mermaid source as a text card when Mermaid CLI is unavailable",
+            },
         },
     }
 
     resource_profile = ResourceProfile(cpu_cores=1, ram_mb=256, vram_mb=0, disk_mb=50)
-    idempotency_key_fields = ["diagram_type", "definition", "boxes"]
+    idempotency_key_fields = ["diagram_type", "definition", "boxes", "allow_text_fallback"]
     side_effects = ["writes diagram image to output_path"]
     user_visible_verification = [
         "Verify diagram accurately represents the described structure",
     ]
 
     def get_status(self) -> ToolStatus:
-        if self._has_mermaid() or self._has_pillow():
+        statuses = self.operation_statuses()
+        if all(status == "available" for status in statuses.values()):
             return ToolStatus.AVAILABLE
+        if any(status == "available" for status in statuses.values()):
+            return ToolStatus.DEGRADED
         return ToolStatus.UNAVAILABLE
+
+    def operation_statuses(self) -> dict[str, str]:
+        """Return backend availability for each supported diagram type."""
+        return {
+            "mermaid": "available" if self._has_mermaid() else "unavailable",
+            "flowchart": "available" if self._has_pillow() else "unavailable",
+            "boxes": "available" if self._has_pillow() else "unavailable",
+        }
+
+    def get_info(self) -> dict[str, Any]:
+        info = super().get_info()
+        info["operation_statuses"] = self.operation_statuses()
+        return info
+
+    def idempotency_key(self, inputs: dict[str, Any]) -> str:
+        return super().idempotency_key(
+            {**inputs, "allow_text_fallback": inputs.get("allow_text_fallback", False)}
+        )
 
     def _has_mermaid(self) -> bool:
         return shutil.which("mmdc") is not None
@@ -176,9 +202,16 @@ class DiagramGen(BaseTool):
                 },
                 artifacts=[str(output_path)],
             )
-        else:
-            # Fallback: render mermaid text as a styled text card
+        if inputs.get("allow_text_fallback", False):
             return self._render_text_card(definition, inputs)
+
+        return ToolResult(
+            success=False,
+            error=(
+                "Mermaid CLI (mmdc) is not available. "
+                "Install it with: npm install -g @mermaid-js/mermaid-cli"
+            ),
+        )
 
     def _render_boxes(self, inputs: dict[str, Any]) -> ToolResult:
         """Render a box-and-arrow diagram using Pillow."""

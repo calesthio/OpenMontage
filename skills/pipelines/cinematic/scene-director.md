@@ -8,10 +8,21 @@ You are deciding how each cinematic beat will look and transition. This is where
 
 | Layer | Resource | Purpose |
 |-------|----------|---------|
-| Schema | `schemas/artifacts/scene_plan.schema.json` | Artifact validation |
+| Schema | `schemas/artifacts/scene_plan.schema.json` (legacy) or `schemas/artifacts/versions/scene_plan/1.1.schema.json` (reference-aware) | Artifact validation |
 | Prior artifacts | `state.artifacts["script"]["script"]`, `state.artifacts["proposal"]["proposal_packet"]` | Beat map and source truth |
 | Tools | `frame_sampler`, `scene_detect` | Source inspection and reframing checks |
 | Playbook | Active style playbook | Color and typography consistency |
+
+
+### Reference-aware v1.1 handoff
+
+When a `video_analysis_brief@1.1` or `video_analysis_bundle@1.1` is present for a reference-driven run, carry the brief's `analysis_id`. For a bundle, carry the IDs in the selected concept's `reference_analysis_refs` (a non-empty subset is valid), not every member by default, in
+`reference_analysis_refs` and emit a `scene_plan@1.1` artifact. Use plural
+`script_section_ids` when a scene realizes more than one script section. Populate the
+five visual plan fields (`subject`, `subject_motion`, `scene`, `spatial_framing`, and
+`camera`) explicitly; write `N/A — ...` rather than silently omitting an aspect. Keep
+reference evidence in `evidence_refs`; do not treat timing overlap as a substitute for a
+dangling explicit ID. See `docs/VIDEO_ANALYSIS_CONTRACT_V1_1.md`.
 
 ## Process
 

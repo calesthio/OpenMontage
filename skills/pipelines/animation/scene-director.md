@@ -8,9 +8,17 @@ You are converting the script into a feasible animation plan. This is the stage 
 
 | Layer | Resource | Purpose |
 |-------|----------|---------|
-| Schema | `schemas/artifacts/scene_plan.schema.json` | Artifact validation |
+| Schema | `schemas/artifacts/scene_plan.schema.json` (legacy) or `schemas/artifacts/versions/scene_plan/1.1.schema.json` (reference-aware) | Artifact validation |
 | Prior artifacts | `state.artifacts["script"]["script"]`, `state.artifacts["proposal"]["proposal_packet"]` | Beat map and tool path |
 | Playbook | Active style playbook | Palette, typography, motion consistency |
+
+### Reference-aware v1.1 handoff
+
+When a `video_analysis_brief@1.1` or `video_analysis_bundle@1.1` is present for a reference-driven run, carry the brief's `analysis_id`. For a bundle, carry the IDs in the selected concept's `reference_analysis_refs` (a non-empty subset is valid), not every member by default, and emit `scene_plan@1.1`. Use
+plural `script_section_ids` when a scene realizes multiple beats. Populate `subject`,
+`subject_motion`, `scene`, `spatial_framing`, and `camera` explicitly; use `N/A — ...`
+when an aspect does not apply. Reference-derived scenes declare `evidence_refs`. See
+`docs/VIDEO_ANALYSIS_CONTRACT_V1_1.md`.
 
 ## Process
 

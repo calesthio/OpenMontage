@@ -489,7 +489,7 @@ Each tool declares which Layer 3 skills it relies on. The agent reads Layer 1 to
 | **Runway Gen-4** | Cloud API | Cinematic quality, Gen-3 Alpha Turbo / Gen-4 Turbo / Gen-4 Aleph |
 | **Google Veo 3.1** | Cloud API | Premium cinematic video via Google GenAI or fal.ai |
 | **Grok Imagine Video** | Cloud API | Strong reference-image video and xAI-native short-form generation |
-| **Higgsfield** | Cloud API | Multi-model orchestrator with Soul ID for character consistency |
+| **Higgsfield** | Authenticated CLI / Cloud API | Multi-model orchestrator with Soul ID for character consistency |
 | **MiniMax / H3** | Cloud API | Cost-effective generation, including text, image, and reference-driven H3 workflows |
 | **HeyGen** | Cloud API | Multi-model gateway |
 | **WAN 2.1 / 2.2** | Local GPU | Free local variants plus accelerated ComfyUI workflows |

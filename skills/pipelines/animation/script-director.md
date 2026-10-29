@@ -8,11 +8,22 @@ This stage turns the approved proposal into animation-ready beats. The script mu
 
 | Layer | Resource | Purpose |
 |-------|----------|---------|
-| Schema | `schemas/artifacts/script.schema.json` | Artifact validation |
+| Schema | `schemas/artifacts/script.schema.json` (legacy) or `schemas/artifacts/versions/script/1.1.schema.json` (reference-aware) | Artifact validation |
 | Prior artifact | `proposal_packet` from Proposal Director | Selected concept, animation mode, target duration, reuse strategy |
 | Optional artifact | `research_brief` from Research Director | Data points, audience insights, accuracy constraints |
 | Meta skill | `skills/meta/voice-performance-director.md` | Structured TTS delivery cues for natural, expressive narration |
 | Tools | `transcriber` | Optional source transcript support |
+
+
+### Reference-aware v1.1 handoff
+
+When a `video_analysis_brief@1.1` or `video_analysis_bundle@1.1` is present for a reference-driven run, carry the brief's `analysis_id`. For a bundle, carry the IDs in the selected concept's `reference_analysis_refs` (a non-empty subset is valid), not every member by default, in
+`reference_analysis_refs` and emit a `script@1.1` artifact. Use plural
+`narrative_profile_refs` because profiles compose; use namespaced `beat_role` values
+rather than inventing a universal beat enum. Each section should expose `evidence_refs`
+(even when empty for purely original material), semantic `visual_intent`, and
+`audio_intent`. Camera, framing, and asset execution belong in `scene_plan`, not in the
+script's semantic intent. See `docs/VIDEO_ANALYSIS_CONTRACT_V1_1.md`.
 
 ## Process
 

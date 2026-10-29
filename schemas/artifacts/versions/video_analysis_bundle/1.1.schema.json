@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/video_analysis_bundle/1.1",
+  "title": "video_analysis_bundle@1.1",
+  "description": "Multiple independently analyzed reference videos with explicit IDs.",
+  "type": "object",
+  "required": [
+    "version",
+    "bundle_id",
+    "analyses"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1.1"
+    },
+    "bundle_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "analyses": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object"
+      }
+    },
+    "metadata": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

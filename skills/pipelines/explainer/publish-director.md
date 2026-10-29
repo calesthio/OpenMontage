@@ -83,7 +83,7 @@ From the script sections, generate YouTube-style chapters:
 
 Each chapter maps to a script section's `start_seconds`.
 
-### Step 5: Package Export
+### Step 5a: Package Export (Local / YouTube / Generic)
 
 Use the `export_bundle` tool (capability `publish`) to do the packaging
 deterministically — pass it the final `video_path` (from `render_report`), the
@@ -112,6 +112,46 @@ exports/
 `export_bundle` is a local, offline packager — it does not upload. A networked
 publisher (e.g. a YouTube uploader) would be a separate `publish`-capability
 provider.
+
+### Step 5b: Publish to Xiaohongshu (XHS / RED)
+
+When the target platform is Xiaohongshu (小红书), use the `xhs_publisher` tool
+(capability `publish`, provider `xiaohongshu`) instead of `export_bundle`.
+
+`xhs_publisher` controls an Android phone via ADB + uiautomator2 to post the
+video automatically. It handles the full XHS UI flow: open app, select video,
+add title/content/hashtags, and publish.
+
+**Prerequisites:**
+- Android phone connected via USB or WiFi with USB debugging enabled
+- `uiautomator2` Python package installed
+- ADB binary in PATH or `ADB_PATH` set in `.env`
+- XHS app (com.xingin.xhs) installed on the phone
+
+**Inputs to pass (from stage context):**
+- `video_path` — from `render_report.outputs[].path`
+- `title` — from proposal packet, keep under 20 chars
+- `content` — the video description body (can include hashtags inline)
+- `hashtags` — array of strings without `#`
+- `style` — cover style (种草/干货/攻略/避坑/测评)
+- `cover_path` — optional pre-generated cover image path
+
+**Publish Log entry** (`status: "published"`):
+```json
+{
+  "platform": "xiaohongshu",
+  "status": "published",
+  "timestamp": "2026-01-15T10:30:00+00:00",
+  "metadata_used": {
+    "title": "Vector Databases Explained in 60 Seconds",
+    "description": "What they are and when to use them.\n\n#AI #VectorDB",
+    "hashtags": ["AI", "VectorDB"]
+  }
+}
+```
+
+If `xhs_publisher` is not available (no phone connected), fall back to
+`export_bundle` and tell the user the video is ready for manual XHS upload.
 
 ### Step 6: Build Publish Log
 

@@ -32,6 +32,15 @@ import re
 import sys
 from pathlib import Path
 
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
+def _rel(path: Path) -> Path:
+    try:
+        return path.relative_to(Path.cwd())
+    except ValueError:
+        return path
+
 
 def to_camel(slug: str) -> str:
     parts = re.split(r"[\s_\-]+", slug.strip())
@@ -41,10 +50,10 @@ def to_camel(slug: str) -> str:
 def write(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
-        print(f"  skip (exists)  {path.relative_to(Path.cwd())}")
+        print(f"  skip (exists)  {_rel(path)}")
         return
     path.write_text(content, encoding="utf-8")
-    print(f"  wrote          {path.relative_to(Path.cwd())}")
+    print(f"  wrote          {_rel(path)}")
 
 
 def scaffold(slug: str, comp_id: str, root: Path) -> Path:
@@ -213,7 +222,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("slug", help="kebab-case project name, e.g. 'compound-snowball'")
     ap.add_argument("--composition-id", help="React composition id (default: CamelCase of slug)")
-    ap.add_argument("--root", default=".", help="Repo root (default: cwd)")
+    ap.add_argument("--root", default=str(REPO_ROOT), help="Repo root (default: this repo)")
     args = ap.parse_args(argv)
 
     slug = args.slug.strip().lower()

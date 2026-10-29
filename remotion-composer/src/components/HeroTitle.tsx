@@ -5,6 +5,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { arabicFontFamily, isRTLText } from "../lib/rtlText";
 
 type HeroTitleProps = {
   title: string;
@@ -37,8 +38,18 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Staggered letter-by-letter spring
-  const titleChars = title.split("");
+  // Arabic/Hebrew and other RTL scripts must not be split per-character: that
+  // breaks Arabic letter joining (isolated-form glyphs) and, under flexbox,
+  // reverses word order (flex lays children out LTR regardless of script).
+  // Split by whole words instead — shaping survives, and `direction: rtl`
+  // below makes the browser place them in correct reading order.
+  const isRTL = isRTLText(title);
+  const titleUnits = isRTL
+    ? title.split(/(\s+)/).filter((u) => u.length > 0)
+    : title.split("");
+  const firstWordEnd = isRTL
+    ? titleUnits.findIndex((u) => /\s/.test(u))
+    : 8;
 
   return (
     <AbsoluteFill
@@ -49,12 +60,15 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
       }}
     >
       <div style={{ textAlign: "center", maxWidth: "85%" }}>
-        {/* Main title with per-character spring */}
+        {/* Main title with per-character (LTR) or per-word (RTL) spring */}
         <div
+          dir={isRTL ? "rtl" : "ltr"}
           style={{
             fontSize: 72,
             fontWeight: 800,
-            fontFamily: "Space Grotesk, Inter, system-ui, sans-serif",
+            fontFamily: isRTL
+              ? arabicFontFamily
+              : "Space Grotesk, Inter, system-ui, sans-serif",
             lineHeight: 1.2,
             display: "flex",
             justifyContent: "center",
@@ -62,27 +76,33 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
             gap: 0,
           }}
         >
-          {titleChars.map((char, i) => {
-            const delay = i * 1.2;
-            const charSpring = spring({
+          {titleUnits.map((unit, i) => {
+            const delay = i * (isRTL ? 4 : 1.2);
+            const unitSpring = spring({
               frame: frame - delay,
               fps,
               config: { damping: 12, stiffness: 150 },
             });
+            const isSpace = /^\s+$/.test(unit);
+            const isAccent =
+              firstWordEnd === -1 ? true : i <= firstWordEnd;
 
             return (
               <span
                 key={i}
                 style={{
                   display: "inline-block",
-                  opacity: charSpring,
-                  transform: `translateY(${interpolate(charSpring, [0, 1], [30, 0])}px)`,
-                  color: i < 8 ? accentColor : textColor, // Accent first word
-                  whiteSpace: char === " " ? "pre" : undefined,
-                  minWidth: char === " " ? "0.3em" : undefined,
+                  opacity: unitSpring,
+                  transform: `translateY(${interpolate(unitSpring, [0, 1], [30, 0])}px)`,
+                  color: isAccent ? accentColor : textColor, // Accent first word
+                  whiteSpace: isSpace ? "pre" : undefined,
+                  // Light word-spacing for Arabic display type — improves
+                  // legibility/rhythm without letter-spacing, which would
+                  // break Arabic letter joining.
+                  minWidth: isSpace ? (isRTL ? "0.55em" : "0.3em") : undefined,
                 }}
               >
-                {char}
+                {unit}
               </span>
             );
           })}
@@ -91,19 +111,22 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
         {/* Subtitle */}
         {subtitle && (
           <div
+            dir={isRTL ? "rtl" : "ltr"}
             style={{
               marginTop: 20,
               opacity: spring({
-                frame: frame - titleChars.length * 1.2 - 5,
+                frame: frame - titleUnits.length * (isRTL ? 4 : 1.2) - 5,
                 fps,
                 config: { damping: 20 },
               }),
               fontSize: 28,
               fontWeight: 400,
               color: subtitleColor,
-              fontFamily: "Space Grotesk, Inter, system-ui, sans-serif",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
+              fontFamily: isRTL
+                ? arabicFontFamily
+                : "Space Grotesk, Inter, system-ui, sans-serif",
+              letterSpacing: isRTL ? "normal" : "0.1em",
+              textTransform: isRTL ? "none" : "uppercase",
             }}
           >
             {subtitle}

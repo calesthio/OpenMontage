@@ -1245,6 +1245,27 @@ the ComfyUI machine. MiniMax H3 is available as an official open-weight local
 workflow; pass the official workflow exported in API format using
 `workflow_json` or `workflow_path`, plus its `output_node`.
 
+Local video generations are checked for frame coherence before they are
+reported as successful. The result carries `data.coherence` (mean
+adjacent-frame difference, its coefficient of variation, and a verdict), and a
+`STROBING_STILLS` verdict fails the call: the output is a structurally valid
+MP4 whose frames are unrelated stills rather than motion. That is what a video
+workflow produces when its empty-latent node is an image latent
+(`EmptyLatentImage`) instead of a temporal one (`EmptyHunyuanLatentVideo` and
+friends), so it is a workflow bug rather than a bad seed. The check is skipped,
+rather than failing the call, when `numpy` or `ffmpeg` is unavailable.
+
+The verdict is `STROBING_STILLS` only when **both** measurements agree: a mean
+adjacent-frame difference above `25.0` (on 8-bit greyscale frames decoded at
+104x60) **and** a coefficient of variation below `0.35`. Independent stills sit
+far above the first and far below the second, because every adjacent pair is
+equally unrelated. Requiring both is what spares a legitimately busy clip --
+hard cuts and fast action raise the mean but also raise the variation, so they
+are ruled coherent. The thresholds live in `ComfyUIVideo._assess_coherence` and
+are pinned by `tests/tools/test_comfyui_video_coherence.py`, which exercises
+coherent motion, strobing stills, a high-motion clip, and every way the check
+can fail to run.
+
 The MiniMax H3 local stack includes the pruned INT8 diffusion model, Qwen3-VL
 text encoder, video VAE, and audio VAE. OpenMontage exposes the official
 download URLs and destination folders in tool metadata rather than silently

@@ -9,6 +9,8 @@ build/
 # Local model downloads (e.g. Piper TTS voices, fetched at runtime — not source)
 *.onnx
 *.onnx.json
+*.part
+*.ytdl
 
 # Test/IDE
 .pytest_cache/
@@ -97,6 +99,7 @@ venv/
 
 # Backlot local cache (thumbnails)
 .backlot/
+releases/**/*.mp4
 
 # Workspace-local third-party runtimes (for example the portable Blender LTS
 # used by blender_world). These are checksum-verified but never committed.
@@ -104,3 +107,4 @@ venv/
 
 # Local Wan / diffusers GPU environment
 .venv-wan/
+

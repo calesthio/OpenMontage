@@ -230,6 +230,26 @@ def build_fcpxml(
                     f'<asset-clip ref="{rid}" offset="{offset}" duration="{dur}" '
                     f'start="{start_time}" name={quoteattr(name)}/>'
                 )
+        elif s.get("layout") == "stack":
+            # Compositing stack, not a grid: every cell is full-frame and the
+            # layers above the base carry their own alpha (ProRes 4444 stems
+            # from a motion-graphics render, for example). These must land with
+            # NO crop, conform, or transform — the grid recipe's <adjust-crop>
+            # + position would shove each stem sideways and break registration
+            # with the layer beneath it. Lane order is manifest order, so the
+            # base plate is required to be first in required_assets.
+            anchor_path = assets[0]["path"]
+            stacked = [
+                f'<asset-clip ref="{asset_ids[ra["path"]]}" lane="{i}" offset="0s" '
+                f'duration="{dur}" start="0s" name={quoteattr(Path(ra["path"]).stem)}/>'
+                for i, ra in enumerate(assets[1:], start=1)
+            ]
+            spine_items.append(
+                f'<asset-clip ref="{asset_ids[anchor_path]}" offset="{offset}" '
+                f'duration="{dur}" start="0s" name={quoteattr(Path(anchor_path).stem)}>'
+                + "".join(stacked)
+                + "</asset-clip>"
+            )
         else:
             template = GRID_TEMPLATES.get(n)
             if template is None:
@@ -240,7 +260,9 @@ def build_fcpxml(
                 raise ValueError(
                     f"scene {s['id']!r} has {n} grid cells, but only "
                     f"{sorted(GRID_TEMPLATES)}-up layouts have verified Resolve "
-                    "transforms. Split the scene or measure a new template."
+                    "transforms. Split the scene, measure a new template, or — if "
+                    'the cells are full-frame alpha layers rather than a grid — set '
+                    '"layout": "stack" on the scene.'
                 )
 
             def cell_adjustments(i: int) -> str:
@@ -289,7 +311,14 @@ def build_fcpxml(
                 + "</asset-clip>"
             )
 
-    total_dur = fcp_time(scenes[-1]["end_seconds"] if scenes else 0)
+    # The sequence has to be at least as long as its longest element. A music
+    # bed longer than the picture cut is normal on hand-off (the editor trims
+    # or extends the tail in the NLE), but declaring the sequence at the last
+    # scene's out-point leaves a clip hanging past the stated duration.
+    total_seconds = scenes[-1]["end_seconds"] if scenes else 0
+    if music_rid:
+        total_seconds = max(total_seconds, music_duration or 0)
+    total_dur = fcp_time(total_seconds)
 
     music_clip = ""
     if music_rid:

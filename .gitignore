@@ -5,6 +5,7 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+venv/
 
 # Local model downloads (e.g. Piper TTS voices, fetched at runtime — not source)
 *.onnx

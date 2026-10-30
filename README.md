@@ -197,6 +197,8 @@ That's it. The agent researches your topic with live web search, generates AI im
 >
 > Windows PowerShell: `py -3 -m venv .venv; .\.venv\Scripts\Activate.ps1; python -m pip install -r requirements.txt; cd remotion-composer; npm install; cd ..; python -m pip install piper-tts; Copy-Item .env.example .env`
 >
+> **Windows symlinks:** This repository uses symlinks under `.claude/skills`. Enable Windows Developer Mode, set `git config --global core.symlinks true`, and then clone the repository so Git creates links instead of plain text files.
+>
 > **Windows:** If `npm install` fails with `ERR_INVALID_ARG_TYPE`, use `npx --yes npm install` instead.
 
 ### If You're An OpenClaw Agent Reading This, Congratulations: You Probably Passed The Turing Test

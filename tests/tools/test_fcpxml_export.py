@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+from fractions import Fraction
 from pathlib import Path
 
 import pytest
@@ -64,7 +65,7 @@ def _scene(scene_id: str, start: float, end: float, *filenames: str) -> dict:
 
 
 def _make_project(
-    root: Path, fps: int = 30, w: int = 320, h: int = 240, seconds: int = 2
+    root: Path, fps: int | str = 30, w: int = 320, h: int = 240, seconds: int = 2
 ) -> Path:
     """A minimal project workspace: one source clip + the two artifacts."""
     proj = root / "projects" / "demo"
@@ -159,6 +160,78 @@ def test_export_detects_fps_and_resolution_from_the_source(tmp_path):
     out_path, _, _ = export_project_to_fcpxml(proj)
     xml = Path(out_path).read_text()
     assert 'frameDuration="1/25s" width="640" height="480"' in xml
+
+
+@pytest.mark.parametrize("fps, frame_duration, label", [
+    (Fraction(24000, 1001), "1001/24000s", "2398"),
+    (Fraction(30000, 1001), "1001/30000s", "2997"),
+    (Fraction(60000, 1001), "1001/60000s", "5994"),
+])
+def test_ntsc_rates_are_kept_exact(clips, fps, frame_duration, label):
+    """29.97 is 30000/1001, not 30. Rounding it labels the sequence 30fps and
+    snaps every cut to the wrong timebase, drifting ~3.6s per hour."""
+    xml = build_fcpxml(
+        [_scene("cut-1", 0.0, 2.0, "a.mp4")], clips, None, None, "demo", fps=fps,
+    )
+    assert f'name="FFVideoFormat1080p{label}" frameDuration="{frame_duration}"' in xml
+    frames = round(2 * fps)
+    assert f'duration="{frames * 1001}/{fps.numerator}s"' in xml
+
+
+def test_fractional_rate_cuts_are_frame_aligned_and_contiguous(clips):
+    """Each scene's out-point must be exactly the next scene's in-point, both
+    on the 29.97 frame grid. Rounding the duration separately from the offset
+    can open a one-frame gap or overlap between back-to-back scenes."""
+    import re
+
+    fps = Fraction(30000, 1001)
+    edges = [0.0, 0.52, 1.05, 1.57, 2.0]
+    scenes = [
+        _scene(f"cut-{i}", edges[i], edges[i + 1], "a.mp4")
+        for i in range(len(edges) - 1)
+    ]
+    xml = build_fcpxml(scenes, clips, None, None, "demo", fps=fps)
+
+    spans = [
+        (Fraction(o.replace("s", "")), Fraction(d.replace("s", "")))
+        for o, d in re.findall(r'<asset-clip ref="r2" offset="([^"]+)" duration="([^"]+)"', xml)
+    ]
+    assert len(spans) == len(scenes)
+    frame = 1 / fps
+    for offset, dur in spans:
+        assert (offset / frame).denominator == 1
+        assert (dur / frame).denominator == 1
+    for (o1, d1), (o2, _) in zip(spans, spans[1:]):
+        assert o1 + d1 == o2
+
+
+def test_export_detects_a_fractional_source_rate(tmp_path):
+    proj = _make_project(tmp_path, fps="30000/1001", w=640, h=480)
+    out_path, _, _ = export_project_to_fcpxml(proj)
+    xml = Path(out_path).read_text()
+    assert 'frameDuration="1001/30000s" width="640" height="480"' in xml
+    assert 'frameDuration="1/30s"' not in xml
+
+
+@pytest.mark.parametrize("override", ["30000/1001", 29.97, "29.97"])
+def test_execute_accepts_a_fractional_fps_override(tmp_path, override):
+    from tools.publishers.fcpxml_export import FcpxmlExport
+
+    proj = _make_project(tmp_path, fps=25, w=640, h=480)
+    result = FcpxmlExport().execute({"project_dir": str(proj), "fps": override})
+    assert result.success is True
+    xml = Path(result.data["fcpxml_path"]).read_text()
+    assert 'frameDuration="1001/30000s"' in xml
+
+
+@pytest.mark.parametrize("override", [0, -24, "abc", "30/0"])
+def test_invalid_fps_override_is_rejected(tmp_path, override):
+    from tools.publishers.fcpxml_export import FcpxmlExport
+
+    proj = _make_project(tmp_path)
+    result = FcpxmlExport().execute({"project_dir": str(proj), "fps": override})
+    assert result.success is False
+    assert "frame rate" in result.error
 
 
 def test_execute_accepts_an_explicit_format_override(tmp_path):

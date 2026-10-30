@@ -70,7 +70,9 @@ Things worth telling the user:
   grids raise rather than emit a silently-wrong timeline.
 - **The sequence format follows the footage** (frame rate and resolution of the
   first source clip). Pass `fps`/`width`/`height` to override when the deliverable
-  differs from the source.
+  differs from the source. NTSC rates stay exact — 29.97 footage gets a
+  `1001/30000s` frame duration, not a rounded 30fps — and `fps` accepts
+  `"30000/1001"` or `29.97` alike.
 - **Check `sdr_substitutions` in the result.** Any clip listed there points at a
   transcoded SDR copy rather than the original Dolby Vision file — mention it, since
   the editor will want to relink to the originals before grading.

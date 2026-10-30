@@ -35,6 +35,7 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+from fractions import Fraction
 from pathlib import Path
 from typing import Any
 from xml.sax.saxutils import quoteattr
@@ -50,16 +51,59 @@ from tools.base_tool import (
     ToolTier,
 )
 
-DEFAULT_FPS = 30
+DEFAULT_FPS = Fraction(30)
 DEFAULT_WIDTH = 1920
 DEFAULT_HEIGHT = 1080
 FORMAT_ID = "r1"
 
 
-def _seconds_to_fcp_time(seconds: float, fps: int = DEFAULT_FPS) -> str:
-    """Rational time snapped to whole frames at `fps`, e.g. '60/30s'."""
-    frames = round(seconds * fps)
-    return f"{frames}/{fps}s"
+def parse_fps(value: Any) -> Fraction:
+    """Normalise a frame rate to an exact rational.
+
+    NTSC rates are not whole numbers: 29.97 is really 30000/1001, and rounding
+    it to 30 mislabels the sequence and snaps every cut to the wrong timebase.
+    Accepts an int, a Fraction, a rational string ("30000/1001", "25/1"), or a
+    decimal (29.97, "23.976"), which is mapped to its exact N*1000/1001 rate.
+    """
+    if isinstance(value, bool):
+        raise ValueError(f"invalid frame rate: {value!r}")
+    try:
+        if isinstance(value, str) and "/" in value:
+            num, _, den = value.partition("/")
+            fps = Fraction(int(num), int(den))
+        else:
+            fps = Fraction(str(value)) if isinstance(value, (str, float)) else Fraction(value)
+    except (ValueError, TypeError, ZeroDivisionError) as exc:
+        raise ValueError(f"invalid frame rate: {value!r}") from exc
+    if fps <= 0:
+        raise ValueError(f"invalid frame rate: {value!r}")
+    if fps.denominator not in (1, 1001):
+        # A decimal approximation of an NTSC rate (29.97, 23.976, 59.94).
+        ntsc_base = round(fps * Fraction(1001, 1000))
+        if ntsc_base and abs(fps - Fraction(ntsc_base * 1000, 1001)) < Fraction(1, 100):
+            fps = Fraction(ntsc_base * 1000, 1001)
+    return fps
+
+
+def _seconds_to_frames(seconds: float, fps: Fraction) -> int:
+    return round(Fraction(seconds) * fps)
+
+
+def _frames_to_fcp_time(frames: int, fps: Fraction) -> str:
+    """Rational time for a whole frame count, e.g. '60/30s' or '60060/30000s'."""
+    return f"{frames * fps.denominator}/{fps.numerator}s"
+
+
+def _seconds_to_fcp_time(seconds: float, fps: Fraction = DEFAULT_FPS) -> str:
+    """Rational time snapped to whole frames at `fps`."""
+    return _frames_to_fcp_time(_seconds_to_frames(seconds, fps), fps)
+
+
+def _format_rate_label(fps: Fraction) -> str:
+    """FCP's format-name rate suffix: 30 -> '30', 30000/1001 -> '2997'."""
+    if fps.denominator == 1:
+        return str(fps.numerator)
+    return f"{float(fps):.2f}".replace(".", "")
 
 
 class FcpxmlExportError(RuntimeError):
@@ -106,17 +150,17 @@ def _probe_media(path: Path) -> tuple[float, bool]:
     return duration, has_audio
 
 
-def _probe_video_format(path: Path) -> tuple[int, int, int] | None:
+def _probe_video_format(path: Path) -> tuple[Fraction, int, int] | None:
     """Return (fps, width, height) of the first video stream, or None."""
     streams = _run_ffprobe(path, "-show_streams", "-select_streams", "v:0").get("streams", [])
     if not streams:
         return None
     s = streams[0]
-    # r_frame_rate is a rational string like "30000/1001" (29.97) or "25/1".
-    num, _, den = s.get("r_frame_rate", "").partition("/")
+    # r_frame_rate is a rational string like "30000/1001" (29.97) or "25/1",
+    # kept exact — rounding 29.97 to 30 would retime the whole sequence.
     try:
-        fps = round(int(num) / int(den))
-    except (ValueError, ZeroDivisionError):
+        fps = parse_fps(s.get("r_frame_rate", ""))
+    except ValueError:
         return None
     if not fps or not s.get("width") or not s.get("height"):
         return None
@@ -131,10 +175,11 @@ def build_fcpxml(
     project_name: str,
     clip_rotations: dict[str, float] | None = None,
     clip_in_overrides: dict[str, dict[str, float]] | None = None,
-    fps: int = DEFAULT_FPS,
+    fps: Fraction | int | float | str = DEFAULT_FPS,
     width: int = DEFAULT_WIDTH,
     height: int = DEFAULT_HEIGHT,
 ) -> str:
+    fps = parse_fps(fps)
     clip_rotations = clip_rotations or {}
     clip_in_overrides = clip_in_overrides or {}
 
@@ -147,8 +192,8 @@ def build_fcpxml(
     # height. Derived rather than hardcoded so a vertical or non-30fps
     # sequence isn't mislabelled as 1080p30 in the NLE's format dropdown.
     resource_xml: list[str] = [
-        f'<format id="{FORMAT_ID}" name="FFVideoFormat{height}p{fps}" '
-        f'frameDuration="1/{fps}s" width="{width}" height="{height}"/>'
+        f'<format id="{FORMAT_ID}" name="FFVideoFormat{height}p{_format_rate_label(fps)}" '
+        f'frameDuration="{_frames_to_fcp_time(1, fps)}" width="{width}" height="{height}"/>'
     ]
 
     def get_or_create_asset(filename: str) -> str:
@@ -207,8 +252,14 @@ def build_fcpxml(
 
     spine_items: list[str] = []
     for s in scenes:
-        dur = fcp_time(s["end_seconds"] - s["start_seconds"])
-        offset = fcp_time(s["start_seconds"])
+        # Snap both edges to the frame grid and take the duration as their
+        # difference: rounding the length separately can leave a one-frame
+        # gap or overlap against the next scene, more often at 29.97 where
+        # whole seconds don't land on frame boundaries.
+        start_frame = _seconds_to_frames(s["start_seconds"], fps)
+        end_frame = _seconds_to_frames(s["end_seconds"], fps)
+        dur = _frames_to_fcp_time(end_frame - start_frame, fps)
+        offset = _frames_to_fcp_time(start_frame, fps)
         assets = s["required_assets"]
         n = len(assets)
 
@@ -356,7 +407,7 @@ def export_project_to_fcpxml(
     project_dir: str | Path,
     out: str | Path | None = None,
     limit: int | None = None,
-    fps: int | None = None,
+    fps: Fraction | int | float | str | None = None,
     width: int | None = None,
     height: int | None = None,
 ) -> tuple[Path, int, list[str]]:
@@ -367,6 +418,8 @@ def export_project_to_fcpxml(
     item names any source files redirected to their transcoded SDR copies.
     """
     proj = Path(project_dir)
+    if fps is not None:
+        fps = parse_fps(fps)  # reject a bad override before probing anything
     scene_plan = json.loads((proj / "artifacts/scene_plan.json").read_text())
     asset_manifest = json.loads((proj / "artifacts/asset_manifest.json").read_text())
 
@@ -486,8 +539,12 @@ class FcpxmlExport(BaseTool):
                 "description": "Only export the first N scenes (for a quick test import into Resolve).",
             },
             "fps": {
-                "type": "integer",
-                "description": "Sequence frame rate. Defaults to the frame rate of the first source clip.",
+                "type": ["number", "string"],
+                "description": (
+                    "Sequence frame rate. Defaults to the frame rate of the first source clip. "
+                    'Fractional rates are kept exact: pass "30000/1001" or 29.97, "24000/1001" '
+                    'or 23.976, "60000/1001" or 59.94.'
+                ),
             },
             "width": {
                 "type": "integer",

@@ -1283,7 +1283,13 @@ Official references: [Partner Node overview](https://docs.comfy.org/tutorials/pa
 # 1. Install the GPU stack
 make install-gpu
 # Or manually:
-pip install diffusers transformers accelerate torch pillow requests
+pip install diffusers transformers accelerate torch pillow requests \
+    imageio imageio-ffmpeg sentencepiece protobuf
+# On Windows the PyPI torch wheel is CPU-only; install CUDA torch from
+# https://download.pytorch.org/whl/cu128 instead.
+# bitsandbytes is needed for hunyuan-1.5 below 24GB VRAM and ltx2-local below 48GB
+# (they load 4-bit there):
+pip install bitsandbytes
 
 # 2. Enable local generation in .env
 VIDEO_GEN_LOCAL_ENABLED=true
@@ -1292,8 +1298,8 @@ VIDEO_GEN_LOCAL_ENABLED=true
 VIDEO_GEN_LOCAL_MODEL=wan2.2-ti2v-5b   # 12GB+ VRAM (default; 720p @ 24fps, T2V+I2V+V2V)
 VIDEO_GEN_LOCAL_MODEL=wan2.1-1.3b      # 6GB+ VRAM (entry-level, text-to-video only)
 VIDEO_GEN_LOCAL_MODEL=wan2.1-14b       # 24GB+ VRAM (best Wan 2.1 quality)
-VIDEO_GEN_LOCAL_MODEL=hunyuan-1.5      # 12GB+ VRAM
-VIDEO_GEN_LOCAL_MODEL=ltx2-local       # 8GB+ VRAM (fastest)
+VIDEO_GEN_LOCAL_MODEL=hunyuan-1.5      # 16GB+ VRAM (4-bit below 24GB; T2V+I2V)
+VIDEO_GEN_LOCAL_MODEL=ltx2-local       # 24GB+ VRAM (4-bit below 48GB; generates audio)
 VIDEO_GEN_LOCAL_MODEL=cogvideo-5b      # 10GB+ VRAM
 VIDEO_GEN_LOCAL_MODEL=cogvideo-2b      # 6GB+ VRAM (lightest)
 ```
@@ -1305,8 +1311,8 @@ VIDEO_GEN_LOCAL_MODEL=cogvideo-2b      # 6GB+ VRAM (lightest)
 | **WAN 2.2 TI2V (5B)** | 12GB | Excellent | Medium | Default. 720p @ 24fps, one checkpoint for T2V/I2V/V2V |
 | **WAN 2.1 (1.3B)** | 6GB | Good | Fast | Entry-level GPU, quick iteration (text-to-video only) |
 | **WAN 2.1 (14B)** | 24GB | Excellent | Slow | Best Wan 2.1 quality |
-| **Hunyuan 1.5** | 12GB | Very good | Medium | Mid-range GPUs |
-| **LTX-2** | 8GB | Good | Fastest | Quick drafts, lowest latency |
+| **Hunyuan 1.5** | 16GB (4-bit) / 24GB (bf16) | Very good | Medium | Mid-range GPUs, T2V + I2V |
+| **LTX-2 (19B)** | 24GB (4-bit) / 48GB (bf16) | Very good | Medium | Clips with synchronized generated audio, T2V + I2V |
 | **CogVideo (5B)** | 10GB | Good | Medium | Balanced option |
 | **CogVideo (2B)** | 6GB | Fair | Fast | Low-VRAM experimentation |
 

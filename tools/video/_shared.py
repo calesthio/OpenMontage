@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import os
 import shutil
 import subprocess
@@ -166,11 +167,23 @@ WAN_VARIANTS = {
     },
 }
 
+# Optional variant keys used by generate_local_video / load_diffusers_pipeline:
+#   hf_i2v_id / i2v_pipeline_class — separate checkpoint / pipeline for image_to_video
+#   bf16_vram_mb — below this much total VRAM, the transformer (transformer_class)
+#       and text encoder (text_encoder_class) are loaded 4-bit so they fit
+#   text_encoder_class — transformers class; the text encoder is loaded on its own
+#   generates_audio — pipeline returns (video, audio); audio is muxed into the mp4
 HUNYUAN_VARIANTS = {
     "hunyuan-1.5": {
         "name": "HunyuanVideo 1.5",
-        "hf_id": "tencent/HunyuanVideo-1.5",
-        "pipeline_class": "HunyuanVideoPipeline",
+        # tencent/HunyuanVideo-1.5 is the original (non-diffusers) release; these
+        # are the official diffusers conversions.
+        "hf_id": "hunyuanvideo-community/HunyuanVideo-1.5-Diffusers-480p_t2v",
+        "hf_i2v_id": "hunyuanvideo-community/HunyuanVideo-1.5-Diffusers-480p_i2v",
+        "pipeline_class": "HunyuanVideo15Pipeline",
+        "i2v_pipeline_class": "HunyuanVideo15ImageToVideoPipeline",
+        "transformer_class": "HunyuanVideo15Transformer3DModel",
+        "bf16_vram_mb": 24000,
         "vram_mb": 14000,
         "quality": "high",
         "speed": "medium",
@@ -188,8 +201,14 @@ LTX_LOCAL_VARIANTS = {
     "ltx2-local": {
         "name": "LTX-2 (Local)",
         "hf_id": "Lightricks/LTX-2",
-        "pipeline_class": "LTXPipeline",
-        "vram_mb": 12000,
+        "pipeline_class": "LTX2Pipeline",
+        "i2v_pipeline_class": "LTX2ImageToVideoPipeline",
+        "transformer_class": "LTX2VideoTransformer3DModel",
+        "text_encoder_class": "Gemma3ForConditionalGeneration",
+        # 19B transformer (~38GB bf16) + Gemma 3 12B text encoder (~24GB bf16).
+        "bf16_vram_mb": 48000,
+        "generates_audio": True,
+        "vram_mb": 24000,
         "quality": "high",
         "speed": "medium",
         "t2v": True,
@@ -206,7 +225,9 @@ COGVIDEO_VARIANTS = {
     "cogvideo-5b": {
         "name": "CogVideoX 1.5 (5B)",
         "hf_id": "THUDM/CogVideoX-5b",
+        "hf_i2v_id": "THUDM/CogVideoX-5b-I2V",
         "pipeline_class": "CogVideoXPipeline",
+        "i2v_pipeline_class": "CogVideoXImageToVideoPipeline",
         "vram_mb": 12000,
         "quality": "medium",
         "speed": "medium",
@@ -298,10 +319,15 @@ def local_install_instructions() -> str:
     return (
         "Enable local video generation and install the diffusers stack:\n"
         "  export VIDEO_GEN_LOCAL_ENABLED=true\n"
-        "  uv pip install diffusers transformers accelerate torch pillow requests\n"
+        "  uv pip install diffusers transformers accelerate torch pillow requests \\\n"
+        "      imageio imageio-ffmpeg sentencepiece protobuf\n"
+        "  # large models (hunyuan-1.5, ltx2-local) load 4-bit on smaller GPUs:\n"
+        "  uv pip install bitsandbytes\n"
         "\n"
         "GPU support — pick what matches your hardware:\n"
-        "  NVIDIA CUDA    — works out of the box with the above\n"
+        "  NVIDIA CUDA    — works out of the box on Linux; on Windows the PyPI torch\n"
+        "                   wheel is CPU-only, install from the CUDA index instead:\n"
+        "                   uv pip install torch --index-url https://download.pytorch.org/whl/cu128\n"
         "  Apple Silicon (MPS, macOS >= 12.3) — works out of the box; no extra build\n"
         "  CPU fallback   — slow but functional on any machine\n"
         "\n"
@@ -327,18 +353,25 @@ def estimate_local_runtime(speed: str) -> float:
     return {"fast": 120.0, "medium": 240.0, "slow": 600.0}.get(speed, 240.0)
 
 
-def load_diffusers_pipeline(pipeline_class: str, model_id: str, enable_offload: bool):
+def _cuda_total_vram_mb() -> int:
+    import torch
+
+    return int(torch.cuda.get_device_properties(0).total_memory // (1024 * 1024))
+
+
+def load_diffusers_pipeline(
+    pipeline_class: str,
+    model_id: str,
+    enable_offload: bool,
+    *,
+    transformer_class: str | None = None,
+    text_encoder_class: str | None = None,
+    bf16_vram_mb: int | None = None,
+):
     import diffusers
     import torch
 
-    pipeline_map = {
-        "WanPipeline": "WanPipeline",
-        "HunyuanVideoPipeline": "HunyuanVideoPipeline",
-        "LTXPipeline": "LTXPipeline",
-        "CogVideoXPipeline": "CogVideoXPipeline",
-    }
-    pipeline_name = pipeline_map.get(pipeline_class, pipeline_class)
-    pipeline_class_obj = getattr(diffusers, pipeline_name)
+    pipeline_class_obj = getattr(diffusers, pipeline_class)
 
     device = get_torch_device()
     # bfloat16 is only reliable on CUDA; MPS uses float16 for inference,
@@ -350,7 +383,42 @@ def load_diffusers_pipeline(pipeline_class: str, model_id: str, enable_offload: 
     else:
         dtype = torch.float16
 
-    pipeline = pipeline_class_obj.from_pretrained(model_id, torch_dtype=dtype)
+    # Below bf16_vram_mb the transformer and text encoder are quantized to
+    # 4-bit while loading. bitsandbytes quantizes shard by shard on the GPU, so
+    # neither VRAM nor host RAM ever holds the full bf16 weights.
+    quantize = bool(
+        bf16_vram_mb
+        and device == "cuda"
+        and dtype == torch.bfloat16
+        and _cuda_total_vram_mb() < bf16_vram_mb
+    )
+
+    kwargs: dict[str, Any] = {"torch_dtype": dtype}
+    if quantize and transformer_class:
+        kwargs["transformer"] = getattr(diffusers, transformer_class).from_pretrained(
+            model_id,
+            subfolder="transformer",
+            torch_dtype=dtype,
+            quantization_config=diffusers.BitsAndBytesConfig(
+                load_in_4bit=True, bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=dtype
+            ),
+        )
+    if text_encoder_class:
+        # Loaded separately even when not quantizing: some repos (LTX-2) ship a
+        # second copy of the text encoder weights in the same folder, which the
+        # pipeline loader would otherwise download as well.
+        import transformers
+
+        te_kwargs: dict[str, Any] = {"subfolder": "text_encoder", "torch_dtype": dtype}
+        if quantize:
+            te_kwargs["quantization_config"] = transformers.BitsAndBytesConfig(
+                load_in_4bit=True, bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=dtype
+            )
+        kwargs["text_encoder"] = getattr(transformers, text_encoder_class).from_pretrained(
+            model_id, **te_kwargs
+        )
+
+    pipeline = pipeline_class_obj.from_pretrained(model_id, **kwargs)
 
     if enable_offload:
         if device == "cuda":
@@ -429,8 +497,19 @@ def generate_local_video(
     height = inputs.get("height", meta["default_height"])
     num_frames = inputs.get("num_frames", meta["default_num_frames"])
     fps = meta["fps"]
-    model_id = meta.get("hf_i2v_id") if operation == "image_to_video" and meta.get("hf_i2v_id") else meta["hf_id"]
-    pipeline = load_diffusers_pipeline(meta["pipeline_class"], model_id, enable_offload)
+    is_i2v = operation == "image_to_video"
+    model_id = meta.get("hf_i2v_id") if is_i2v and meta.get("hf_i2v_id") else meta["hf_id"]
+    pipeline_class = (
+        meta.get("i2v_pipeline_class") if is_i2v and meta.get("i2v_pipeline_class") else meta["pipeline_class"]
+    )
+    pipeline = load_diffusers_pipeline(
+        pipeline_class,
+        model_id,
+        enable_offload,
+        transformer_class=meta.get("transformer_class"),
+        text_encoder_class=meta.get("text_encoder_class"),
+        bf16_vram_mb=meta.get("bf16_vram_mb"),
+    )
 
     generation_args: dict[str, Any] = {
         "prompt": prompt,
@@ -438,10 +517,11 @@ def generate_local_video(
         "width": width,
         "height": height,
         "num_inference_steps": inputs.get("num_inference_steps", 30),
+        "frame_rate": fps,
     }
     if seed is not None:
         generation_args["generator"] = torch.Generator(device="cpu").manual_seed(seed)
-    if operation == "image_to_video":
+    if is_i2v:
         image = load_reference_image(inputs, width, height)
         if isinstance(image, ToolResult):
             return image
@@ -449,12 +529,31 @@ def generate_local_video(
     if meta["pipeline_class"] == "CogVideoXPipeline":
         generation_args["negative_prompt"] = "worst quality, low quality, blurry, distorted, watermark"
 
-    output = pipeline(**generation_args)
-    frames = output.frames[0] if hasattr(output, "frames") else output.images
+    # Pipelines differ in what they accept (e.g. HunyuanVideo 1.5 i2v derives
+    # its size from the image; only LTX-2 takes frame_rate), so pass only the
+    # arguments the selected pipeline's __call__ declares.
+    accepted = inspect.signature(pipeline.__call__).parameters
+    if not any(p.kind is inspect.Parameter.VAR_KEYWORD for p in accepted.values()):
+        generation_args = {k: v for k, v in generation_args.items() if k in accepted}
 
     output_path = Path(inputs.get("output_path", f"{tool_name}_{variant}.mp4"))
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    export_to_video(frames, str(output_path), fps=fps)
+
+    if meta.get("generates_audio"):
+        from diffusers.utils import encode_video
+
+        video, audio = pipeline(**generation_args, output_type="np", return_dict=False)
+        encode_video(
+            video[0],
+            fps=fps,
+            audio=audio[0].float().cpu(),
+            audio_sample_rate=pipeline.vocoder.config.output_sampling_rate,
+            output_path=str(output_path),
+        )
+    else:
+        output = pipeline(**generation_args)
+        frames = output.frames[0] if hasattr(output, "frames") else output.images
+        export_to_video(frames, str(output_path), fps=fps)
 
     return ToolResult(
         success=True,

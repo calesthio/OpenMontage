@@ -615,6 +615,12 @@ class TestMediaProfiles:
         assert p.width == 1920
         assert p.height == 1080
 
+    def test_social_vertical_profile_is_platform_neutral(self):
+        profile = get_profile("social_vertical")
+        assert (profile.width, profile.height, profile.fps) == (1080, 1920, 30)
+        assert profile.max_duration_seconds is None
+        assert profile.max_file_size_mb is None
+
     def test_ffmpeg_args(self):
         args = ffmpeg_output_args(get_profile("tiktok"))
         assert "-c:v" in args

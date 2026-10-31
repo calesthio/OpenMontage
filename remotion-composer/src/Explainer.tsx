@@ -92,6 +92,11 @@ const AnimatedBackground: React.FC<{ theme: ThemeConfig }> = ({ theme }) => {
   const surface = theme.surfaceColor;
   const light = isLightColor(bg);
 
+  // Flat newsroom field: a single matte color, no ambient motion.
+  if (theme.backgroundEffect === "flat") {
+    return <AbsoluteFill style={{ background: bg }} />;
+  }
+
   // Slow-moving gradient angles
   const angle1 = 135 + Math.sin(frame / (fps * 8)) * 30;
 

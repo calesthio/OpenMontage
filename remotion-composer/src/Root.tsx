@@ -36,6 +36,7 @@ export interface ThemeConfig {
   transitionDuration: number;
   captionHighlightColor: string;
   captionBackgroundColor: string;
+  backgroundEffect?: "ambient" | "flat";
 }
 
 export const THEMES: Record<string, ThemeConfig> = {

@@ -41,7 +41,13 @@
           "additionalProperties": false
         },
         "composition": { "type": "string" },
-        "texture": { "type": "string" }
+        "texture": { "type": "string" },
+        "background_effect": {
+          "type": "string",
+          "enum": ["ambient", "flat"],
+          "default": "ambient",
+          "description": "ambient = animated gradients/orbs (existing default); flat = single flat field with no ambient motion."
+        }
       },
       "additionalProperties": false
     },

@@ -78,6 +78,30 @@ def test_compose_vertical_profile(tmp_path):
     assert _dims(out) == (1080, 1920)
 
 
+def test_social_and_desktop_profiles_render_to_separate_dimensions(tmp_path):
+    src = tmp_path / "in.mp4"
+    _make_clip(src)
+    social = tmp_path / "story-social.mp4"
+    desktop = tmp_path / "story-desktop.mp4"
+
+    for profile, output in (
+        ("social_vertical", social),
+        ("youtube_landscape", desktop),
+    ):
+        result = VideoCompose().execute(
+            {
+                "operation": "compose",
+                "edit_decisions": _edit_decisions(src),
+                "profile": profile,
+                "output_path": str(output),
+            }
+        )
+        assert result.success, result.error
+
+    assert _dims(social) == (1080, 1920)
+    assert _dims(desktop) == (1920, 1080)
+
+
 def test_compose_target_override_cover(tmp_path):
     """metadata.compose_target with fit='cover' → exact requested dims, cropped to fill."""
     src = tmp_path / "in.mp4"

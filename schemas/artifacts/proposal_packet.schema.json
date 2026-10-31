@@ -69,6 +69,17 @@
       "required": ["pipeline", "stages", "render_runtime"],
       "properties": {
         "pipeline": { "type": "string", "description": "Pipeline manifest name, e.g., 'animated-explainer'" },
+        "output_profiles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["social_vertical", "youtube_landscape"]
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "default": ["social_vertical", "youtube_landscape"],
+          "description": "Approved delivery profiles; select either or both formats. New proposals default to both."
+        },
         "playbook": { "type": "string", "description": "Selected style playbook" },
         "stages": {
           "type": "array",

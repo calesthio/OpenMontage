@@ -86,3 +86,21 @@ def test_derived_theme_only_reads_documented_palette_keys(name: str) -> None:
     assert theme["accentColor"] == (accent[0] if isinstance(accent, list) else accent)
     assert theme["backgroundColor"] == palette["background"]
     assert theme["textColor"] == palette["text"]
+
+
+def test_editorial_playbook_maps_chart_palette_and_flat_background() -> None:
+    raw = _raw("editorial-data-explainer")
+    theme = _theme("editorial-data-explainer")
+
+    assert theme["chartColors"] == raw["chart_palette"]
+    assert theme["backgroundEffect"] == "flat"
+    assert theme["backgroundColor"] == raw["visual_language"]["color_palette"]["background"]
+    assert theme["textColor"] == raw["visual_language"]["color_palette"]["text"]
+
+
+def test_ambient_playbooks_do_not_request_flat_background() -> None:
+    for name in PLAYBOOK_NAMES:
+        if name == "editorial-data-explainer":
+            continue
+        theme = _theme(name)
+        assert theme.get("backgroundEffect", "ambient") == "ambient"

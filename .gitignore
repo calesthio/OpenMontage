@@ -104,3 +104,6 @@ venv/
 
 # Local Wan / diffusers GPU environment
 .venv-wan/
+
+# GFPGAN/facexlib download face-detection weights to ./gfpgan/weights at runtime
+gfpgan/

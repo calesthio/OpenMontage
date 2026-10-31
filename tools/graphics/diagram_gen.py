@@ -7,11 +7,14 @@ diagrams via Pillow as fallback.
 
 from __future__ import annotations
 
+import functools
 import json
+import re
 import shutil
+import subprocess
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from tools.base_tool import (
     BaseTool,
@@ -23,6 +26,28 @@ from tools.base_tool import (
     ToolStatus,
     ToolTier,
 )
+
+
+@functools.lru_cache(maxsize=None)
+def _mmdc_major_version(mmdc_path: str) -> Optional[int]:
+    """Return the installed mermaid-cli major version, or None if unknown."""
+    try:
+        proc = subprocess.run(
+            [mmdc_path, "--version"], capture_output=True, text=True, timeout=30
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    match = re.search(r"(\d+)\.\d+", proc.stdout or "")
+    return int(match.group(1)) if match else None
+
+
+def _mmdc_width_args(width: int) -> list[str]:
+    """mermaid-cli 12 replaced ``-w/--width`` with ``--size``."""
+    mmdc_path = shutil.which("mmdc")
+    major = _mmdc_major_version(mmdc_path) if mmdc_path else None
+    if major is not None and major >= 12:
+        return ["--size", str(width)]
+    return ["-w", str(width)]
 
 
 class DiagramGen(BaseTool):
@@ -159,7 +184,7 @@ class DiagramGen(BaseTool):
                 "-o", str(output_path),
                 "-c", str(config_path),
                 "-b", "transparent",
-                "-w", str(inputs.get("width", 1200)),
+                *_mmdc_width_args(inputs.get("width", 1200)),
             ]
 
             try:

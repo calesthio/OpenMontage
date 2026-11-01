@@ -135,50 +135,76 @@ class Transcriber(BaseTool):
 
         start = time.time()
 
-        # Load model (CPU by default, CUDA if available)
+        # faster-whisper executes through CTranslate2, so that runtime—not
+        # PyTorch—is authoritative for CUDA availability and compute types.
+        device = "cpu"
+        compute_type = "int8"
         try:
-            import torch
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-            compute_type = "float16" if device == "cuda" else "int8"
-        except ImportError:
+            import ctranslate2
+
+            if ctranslate2.get_cuda_device_count() > 0:
+                supported = ctranslate2.get_supported_compute_types("cuda")
+                for candidate in ("float16", "int8_float16", "float32"):
+                    if candidate in supported:
+                        device = "cuda"
+                        compute_type = candidate
+                        break
+        except Exception:
+            # Probing is advisory. CPU remains a safe deterministic baseline.
+            pass
+
+        def _transcribe_on(selected_device: str, selected_compute_type: str):
+            model = WhisperModel(
+                model_size,
+                device=selected_device,
+                compute_type=selected_compute_type,
+            )
+            segments_iter, transcription_info = model.transcribe(
+                str(input_path),
+                language=language,
+                word_timestamps=True,
+                vad_filter=True,
+            )
+
+            parsed_segments = []
+            parsed_words = []
+            # faster-whisper evaluates lazily. Draining the iterator here keeps
+            # missing CUDA runtime libraries inside the fallback boundary.
+            for seg in segments_iter:
+                seg_data = {
+                    "id": seg.id,
+                    "start": round(seg.start, 3),
+                    "end": round(seg.end, 3),
+                    "text": seg.text.strip(),
+                }
+
+                if seg.words:
+                    words = []
+                    for word in seg.words:
+                        word_entry = {
+                            "word": word.word,
+                            "start": round(word.start, 3),
+                            "end": round(word.end, 3),
+                            "probability": round(word.probability, 3),
+                        }
+                        words.append(word_entry)
+                        parsed_words.append(word_entry)
+                    seg_data["words"] = words
+
+                parsed_segments.append(seg_data)
+
+            return parsed_segments, parsed_words, transcription_info
+
+        gpu_fallback_reason = None
+        try:
+            segments, word_timestamps, info = _transcribe_on(device, compute_type)
+        except Exception as exc:
+            if device == "cpu":
+                raise
+            gpu_fallback_reason = f"{type(exc).__name__}: {exc}"
             device = "cpu"
             compute_type = "int8"
-
-        model = WhisperModel(model_size, device=device, compute_type=compute_type)
-
-        # Transcribe
-        segments_iter, info = model.transcribe(
-            str(input_path),
-            language=language,
-            word_timestamps=True,
-            vad_filter=True,
-        )
-
-        segments = []
-        word_timestamps = []
-
-        for seg in segments_iter:
-            seg_data = {
-                "id": seg.id,
-                "start": round(seg.start, 3),
-                "end": round(seg.end, 3),
-                "text": seg.text.strip(),
-            }
-
-            if seg.words:
-                words = []
-                for w in seg.words:
-                    word_entry = {
-                        "word": w.word,
-                        "start": round(w.start, 3),
-                        "end": round(w.end, 3),
-                        "probability": round(w.probability, 3),
-                    }
-                    words.append(word_entry)
-                    word_timestamps.append(word_entry)
-                seg_data["words"] = words
-
-            segments.append(seg_data)
+            segments, word_timestamps, info = _transcribe_on(device, compute_type)
 
         detected_language = language or info.language
         duration = info.duration
@@ -198,6 +224,8 @@ class Transcriber(BaseTool):
             "duration_seconds": round(duration, 3),
             "model_size": model_size,
             "device": device,
+            "compute_type": compute_type,
+            "gpu_fallback_reason": gpu_fallback_reason,
         }
 
         # Write transcript JSON

@@ -27,7 +27,6 @@ from tools.base_tool import (
 from tools.google_credentials import (
     get_access_token,
     service_account_configured,
-    has_google_credentials,
 )
 
 
@@ -44,7 +43,8 @@ class GoogleTTS(BaseTool):
 
     dependencies = []
     install_instructions = (
-        "Auth option A — API key: set GOOGLE_API_KEY (or GEMINI_API_KEY) to a\n"
+        "Auth option A — TTS-only API key: set GOOGLE_TTS_API_KEY.\n"
+        "  GOOGLE_API_KEY or GEMINI_API_KEY remain supported for broader Google setups.\n"
         "  Google Cloud API key with Text-to-Speech enabled.\n"
         "  Enable the API at https://console.cloud.google.com/apis/library/texttospeech.googleapis.com\n"
         "Auth option B — service account: set GOOGLE_APPLICATION_CREDENTIALS to the\n"
@@ -93,10 +93,13 @@ class GoogleTTS(BaseTool):
                 "default": "en-US-Chirp3-HD-Orus",
                 "description": "Voice name. Default tier is Chirp 3 HD (2024, most natural). Examples: en-US-Chirp3-HD-Orus (male, rich/cinematic), en-US-Chirp3-HD-Aoede (female, warm). Legacy tiers: en-US-Studio-O, en-US-Neural2-D, en-US-Journey-D.",
             },
+            "voice_id": {
+                "type": "string",
+                "description": "Alias for 'voice' — accepted so tts_selector's provider-agnostic voice_id passes through. 'voice' wins when both are set.",
+            },
             "language_code": {
                 "type": "string",
-                "default": "en-US",
-                "description": "BCP-47 language code (e.g. en-US, es-ES, ja-JP, fr-FR)",
+                "description": "BCP-47 language code (e.g. en-US, es-ES, ja-JP, fr-FR). Defaults to the locale prefix of the voice name (e.g. ja-JP for ja-JP-Chirp3-HD-Kore), falling back to en-US.",
             },
             "speaking_rate": {
                 "type": "number",
@@ -132,6 +135,7 @@ class GoogleTTS(BaseTool):
         "text",
         "input_type",
         "voice",
+        "voice_id",
         "language_code",
         "speaking_rate",
         "pitch",
@@ -149,12 +153,16 @@ class GoogleTTS(BaseTool):
     }
 
     def _get_api_key(self) -> str | None:
-        return os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
+        return (
+            os.environ.get("GOOGLE_TTS_API_KEY")
+            or os.environ.get("GOOGLE_API_KEY")
+            or os.environ.get("GEMINI_API_KEY")
+        )
 
     def get_status(self) -> ToolStatus:
         # Available via either an API key or a service-account JSON. Both paths
         # are honoured by execute() — so this no longer over-reports.
-        if has_google_credentials():
+        if self._get_api_key() or service_account_configured():
             return ToolStatus.AVAILABLE
         return ToolStatus.UNAVAILABLE
 
@@ -165,10 +173,18 @@ class GoogleTTS(BaseTool):
         """Check if voice requires the v1beta1 endpoint."""
         return any(prefix in voice for prefix in self._BETA_VOICE_PREFIXES)
 
+    @staticmethod
+    def _locale_from_voice(voice_name: str) -> str:
+        """Derive the BCP-47 locale from a voice name like ja-JP-Chirp3-HD-Kore."""
+        import re
+
+        match = re.match(r"^([a-z]{2,3}-[A-Z]{2})-", voice_name)
+        return match.group(1) if match else "en-US"
+
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         text = inputs.get("text", "")
         char_count = len(text)
-        voice = inputs.get("voice", "en-US-Chirp3-HD-Orus")
+        voice = inputs.get("voice") or inputs.get("voice_id") or "en-US-Chirp3-HD-Orus"
         # Pricing per million characters (approximate)
         if "Chirp3-HD" in voice:
             rate_per_char = 0.000030  # $30/1M chars
@@ -204,7 +220,11 @@ class GoogleTTS(BaseTool):
         try:
             result = self._generate(inputs, api_key=api_key, bearer_token=bearer_token)
         except Exception as exc:
-            return ToolResult(success=False, error=f"Google TTS failed: {exc}")
+            safe_error = str(exc)
+            for credential in (api_key, bearer_token):
+                if credential:
+                    safe_error = safe_error.replace(credential, "[REDACTED]")
+            return ToolResult(success=False, error=f"Google TTS failed: {safe_error}")
 
         result.duration_seconds = round(time.time() - start, 2)
         result.cost_usd = self.estimate_cost(inputs)
@@ -220,8 +240,8 @@ class GoogleTTS(BaseTool):
 
         text = inputs["text"]
         input_type = inputs.get("input_type", "text")
-        voice_name = inputs.get("voice", "en-US-Chirp3-HD-Orus")
-        language_code = inputs.get("language_code", "en-US")
+        voice_name = inputs.get("voice") or inputs.get("voice_id") or "en-US-Chirp3-HD-Orus"
+        language_code = inputs.get("language_code") or self._locale_from_voice(voice_name)
         speaking_rate = inputs.get("speaking_rate", 1.0)
         pitch = inputs.get("pitch", 0.0)
         audio_encoding = inputs.get("audio_encoding", "MP3")
@@ -266,16 +286,14 @@ class GoogleTTS(BaseTool):
         url = f"https://texttospeech.googleapis.com/{api_version}/text:synthesize"
 
         headers = {"Content-Type": "application/json"}
-        params: dict[str, str] = {}
         if bearer_token:
             headers["Authorization"] = f"Bearer {bearer_token}"
         elif api_key:
-            params["key"] = api_key
+            headers["x-goog-api-key"] = api_key
 
         response = requests.post(
             url,
             headers=headers,
-            params=params,
             json=payload,
             timeout=120,
         )

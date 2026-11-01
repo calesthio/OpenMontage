@@ -125,9 +125,11 @@ projects/<project-name>/
     └── final.mp4
 ```
 
-The workspace is generated at compose time by `hyperframes_compose` from
-`edit_decisions` + `asset_manifest` + the active playbook. It's regenerable
-and gitignored along with the rest of `projects/`.
+Templated workspaces are generated at compose time by `hyperframes_compose`
+from `edit_decisions` + `asset_manifest` + the active playbook. Atelier
+workspaces are authored during assets and passed through unchanged via
+`hyperframes_compose.render_existing`. Both live under `projects/` and are
+gitignored with the rest of the production workspace.
 
 ### Why a dedicated workspace per project
 

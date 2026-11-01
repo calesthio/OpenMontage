@@ -9,7 +9,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from tools.base_tool import BaseTool, ToolResult, ToolRuntime, ToolStability, ToolTier, ToolStatus
+from tools.base_tool import (
+    BaseTool,
+    ToolResult,
+    ToolRuntime,
+    ToolStability,
+    ToolTier,
+    ToolStatus,
+)
 
 
 class TTSSelector(BaseTool):
@@ -20,7 +27,7 @@ class TTSSelector(BaseTool):
     provider = "selector"
     stability = ToolStability.BETA
     runtime = ToolRuntime.HYBRID
-    agent_skills = ["text-to-speech", "elevenlabs", "openai-docs"]
+    agent_skills = ["text-to-speech", "elevenlabs"]
 
     capabilities = [
         "text_to_speech",
@@ -40,10 +47,22 @@ class TTSSelector(BaseTool):
         "type": "object",
         "required": ["text"],
         "properties": {
+            "preferred_tool": {
+                "type": "string",
+                "description": "Exact tool name; never falls back.",
+            },
+            "hosting_provider": {
+                "type": "string",
+                "description": "Required API host, e.g. fal.ai, atlascloud, replicate.",
+            },
             "text": {"type": "string"},
             "voice_id": {
                 "type": "string",
                 "description": "Provider-specific voice ID. Passed through to the selected TTS provider.",
+            },
+            "voice": {
+                "type": "string",
+                "description": "Provider-specific voice name or ID. fal.ai ElevenLabs accepts names such as Rachel.",
             },
             "voice_language": {
                 "type": "string",
@@ -58,18 +77,22 @@ class TTSSelector(BaseTool):
             },
             "model_id": {
                 "type": "string",
-                "description": "TTS model to use (e.g. eleven_multilingual_v2). Passed through to provider.",
+                "description": "TTS model to use (e.g. eleven-v3 or eleven_multilingual_v2). Passed through to provider.",
             },
             "stability": {
-                "type": "number", "minimum": 0, "maximum": 1,
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
                 "description": "Voice stability (ElevenLabs). Lower = more expressive.",
             },
             "similarity_boost": {
-                "type": "number", "minimum": 0, "maximum": 1,
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
                 "description": "Voice similarity boost (ElevenLabs).",
             },
             "style": {
-                "type": "number", "minimum": 0, "maximum": 1,
+                "type": ["number", "string"],
                 "description": "Style exaggeration (ElevenLabs). Higher = more expressive.",
             },
             "instructions": {
@@ -100,6 +123,24 @@ class TTSSelector(BaseTool):
                 "default": "text",
                 "description": "Use 'ssml' only when the selected provider supports tags such as <break>.",
             },
+            "language_code": {
+                "type": "string",
+                "description": "Provider-specific language code, such as en-US for Google or en for fal.ai ElevenLabs.",
+            },
+            "timestamps": {
+                "type": "boolean",
+                "default": False,
+                "description": "Request word timestamps when the selected provider supports them.",
+            },
+            "apply_text_normalization": {
+                "type": "string",
+                "enum": ["auto", "on", "off"],
+                "description": "Text normalization mode for providers that support it.",
+            },
+            "seed": {
+                "type": "integer",
+                "description": "Optional generation seed for providers that support reproducible speech.",
+            },
             "voice_performance": {
                 "type": "object",
                 "description": "Structured voice-performance plan or section delivery cues from the script artifact.",
@@ -110,7 +151,7 @@ class TTSSelector(BaseTool):
                 "description": "True when generating an approval sample before batch narration.",
             },
             "output_format": {
-                "type": "string",
+                "type": ["string", "object"],
                 "description": "Audio output format (e.g. mp3_44100_128). Passed through to provider.",
             },
             "preferred_provider": {
@@ -135,9 +176,9 @@ class TTSSelector(BaseTool):
     def _providers(self) -> list[BaseTool]:
         """Auto-discover TTS providers from the registry."""
         from tools.tool_registry import registry
+
         registry.ensure_discovered()
-        return [t for t in registry.get_by_capability("tts")
-                if t.name != self.name]
+        return [t for t in registry.get_by_capability("tts") if t.name != self.name]
 
     @property
     def fallback_tools(self) -> list[str]:
@@ -162,14 +203,18 @@ class TTSSelector(BaseTool):
         candidates = self._providers()
         if not candidates:
             return 0.0
-        tool, _ = self._select_best_tool(inputs, candidates, self._prepare_task_context(inputs))
+        tool, _ = self._select_best_tool(
+            inputs, candidates, self._prepare_task_context(inputs)
+        )
         return tool.estimate_cost(inputs) if tool else 0.0
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         from lib.scoring import rank_providers
 
         task_context = self._prepare_task_context(inputs)
-        candidates = self._providers()
+        from tools.provider_routing import filter_explicit_route
+
+        candidates = filter_explicit_route(inputs, self._providers())
 
         # Rank mode — return scored provider rankings without generating
         if inputs.get("operation") == "rank":
@@ -188,19 +233,63 @@ class TTSSelector(BaseTool):
         if tool is None:
             return ToolResult(success=False, error="No TTS provider available.")
 
-        result = tool.execute(inputs)
+        try:
+            adapted = self._adapt_inputs(tool, inputs)
+        except (ValueError, TypeError) as exc:
+            return ToolResult(success=False, error=str(exc))
+        result = tool.execute(adapted)
         if result.success:
             result.data.setdefault("selected_tool", tool.name)
             result.data["selected_provider"] = tool.provider
-            result.data["selection_reason"] = score.explain() if score else f"Selected {tool.provider} ({tool.name})"
+            result.data["selection_reason"] = (
+                score.explain() if score else f"Selected {tool.provider} ({tool.name})"
+            )
             if score:
                 result.data["provider_score"] = score.to_dict()
             result.data.update(self._tool_context_payload(tool))
             result.data["alternatives_considered"] = [
-                t.name for t in candidates
+                t.name
+                for t in candidates
                 if t.name != tool.name and t.get_status().value == "available"
             ]
         return result
+
+    @staticmethod
+    def _adapt_inputs(tool: BaseTool, inputs: dict[str, Any]) -> dict[str, Any]:
+        """Translate capability-level controls to provider-native inputs."""
+        adapted = dict(inputs)
+        props = tool.input_schema.get("properties", {})
+        if inputs.get("model") and "model_id" in props and "model" not in props:
+            if inputs.get("model_id") and inputs["model_id"] != inputs["model"]:
+                raise ValueError("model and model_id disagree")
+            adapted["model_id"] = inputs["model"]
+            adapted.pop("model", None)
+        if tool.name not in {"azure_tts", "mai_tts"}:
+            return adapted
+
+        if inputs.get("voice_id") and not inputs.get("voice"):
+            adapted["voice"] = inputs["voice_id"]
+
+        speed = inputs.get("speaking_rate", inputs.get("speed"))
+        if speed is not None and "rate" not in inputs:
+            percent = round((float(speed) - 1.0) * 100)
+            adapted["rate"] = f"{percent:+d}%" if percent else "0%"
+
+        pitch = inputs.get("pitch")
+        if isinstance(pitch, (int, float)):
+            adapted["pitch"] = f"{pitch:+g}st" if pitch else "0%"
+
+        # The selector's numeric style is ElevenLabs-specific. Azure's style
+        # is a named express-as value such as "calm" or "newscast".
+        if not isinstance(inputs.get("style"), str):
+            adapted.pop("style", None)
+
+        output_format = str(inputs.get("output_format", ""))
+        if output_format.startswith("mp3"):
+            adapted["output_format"] = "mp3"
+        elif output_format.startswith(("wav", "riff", "pcm")):
+            adapted["output_format"] = "wav"
+        return adapted
 
     def _select_best_tool(
         self,
@@ -211,6 +300,9 @@ class TTSSelector(BaseTool):
         """Select the best TTS provider using scored ranking."""
         from lib.scoring import rank_providers
 
+        from tools.provider_routing import filter_explicit_route
+
+        candidates = filter_explicit_route(inputs, candidates)
         preferred = inputs.get("preferred_provider", "auto")
         allowed = set(inputs.get("allowed_providers") or [])
         if allowed:
@@ -218,19 +310,25 @@ class TTSSelector(BaseTool):
 
         rankings = rank_providers(candidates, task_context)
 
-        tool_by_provider: dict[str, BaseTool] = {}
+        tool_by_name: dict[str, BaseTool] = {}
         for tool in candidates:
-            if tool.provider not in tool_by_provider and tool.get_status() == ToolStatus.AVAILABLE:
-                tool_by_provider[tool.provider] = tool
+            if (
+                tool.name not in tool_by_name
+                and tool.get_status() == ToolStatus.AVAILABLE
+            ):
+                tool_by_name[tool.name] = tool
 
         if preferred != "auto":
             for score_item in rankings:
-                if score_item.provider == preferred and score_item.provider in tool_by_provider:
-                    return tool_by_provider[score_item.provider], score_item
+                if (
+                    score_item.provider == preferred
+                    and score_item.tool_name in tool_by_name
+                ):
+                    return tool_by_name[score_item.tool_name], score_item
 
         for score_item in rankings:
-            if score_item.provider in tool_by_provider:
-                return tool_by_provider[score_item.provider], score_item
+            if score_item.tool_name in tool_by_name:
+                return tool_by_name[score_item.tool_name], score_item
 
         return None, None
 
@@ -254,7 +352,9 @@ class TTSSelector(BaseTool):
             "selected_tool_best_for": info.get("best_for", []),
         }
 
-    def _serialize_rankings(self, candidates: list[BaseTool], rankings: list[object]) -> list[dict[str, Any]]:
+    def _serialize_rankings(
+        self, candidates: list[BaseTool], rankings: list[object]
+    ) -> list[dict[str, Any]]:
         tool_by_name = {tool.name: tool for tool in candidates}
         serialized: list[dict[str, Any]] = []
         for score in rankings:

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/tools/fal_3d",
+  "title": "fal.ai 3D Generation Input",
+  "type": "object",
+  "required": ["operation", "output_path"],
+  "properties": {
+    "operation": {"type": "string", "enum": ["text_to_3d", "image_to_3d", "reconstruct_objects"]},
+    "prompt": {"type": "string"},
+    "image_url": {"type": "string"},
+    "image_path": {"type": "string"},
+    "output_path": {"type": "string"},
+    "enable_pbr": {"type": "boolean"},
+    "seed": {"type": "integer"},
+    "export_textured_glb": {"type": "boolean"},
+    "detection_threshold": {"type": "number", "minimum": 0.1, "maximum": 1.0},
+    "poll_timeout_seconds": {"type": "integer", "minimum": 30, "maximum": 1800}
+  },
+  "additionalProperties": false
+}

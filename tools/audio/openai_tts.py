@@ -40,7 +40,10 @@ class OpenAITTS(BaseTool):
     )
     fallback = "piper_tts"
     fallback_tools = ["piper_tts"]
-    agent_skills = ["openai-docs"]
+    # No Layer 3 skill is vendored for the OpenAI speech API. The nearest
+    # candidate, `text-to-speech`, documents HeyGen's Starfish endpoints and
+    # would send the agent at the wrong provider, so this stays empty rather
+    # than pointing somewhere misleading.
 
     capabilities = [
         "text_to_speech",

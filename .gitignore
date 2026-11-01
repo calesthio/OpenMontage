@@ -98,3 +98,10 @@ venv/
 # Backlot local cache (thumbnails)
 .backlot/
 .vercel
+
+# Workspace-local third-party runtimes (for example the portable Blender LTS
+# used by blender_world). These are checksum-verified but never committed.
+.runtime/
+
+# Local Wan / diffusers GPU environment
+.venv-wan/

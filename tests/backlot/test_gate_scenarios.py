@@ -7,7 +7,11 @@ import pytest
 
 from backlot import state as state_mod
 from backlot.state import load_board_state
-from lib.checkpoint import CheckpointValidationError, write_checkpoint
+from lib.checkpoint import (
+    CANONICAL_STAGE_ARTIFACTS,
+    CheckpointValidationError,
+    write_checkpoint,
+)
 
 
 def _script_artifact() -> dict:
@@ -21,6 +25,22 @@ def _script_artifact() -> dict:
 
 def _manifest_artifact() -> dict:
     return {"version": "1.0", "assets": [], "total_cost_usd": 0.0}
+
+
+def _approve_predecessors(tmp_path, project_id, pipeline_type, *stages) -> None:
+    from tests.contracts.test_phase0_contracts import sample_artifact
+
+    for stage in stages:
+        artifact_name = CANONICAL_STAGE_ARTIFACTS[stage]
+        write_checkpoint(
+            tmp_path,
+            project_id,
+            stage,
+            "completed",
+            {artifact_name: sample_artifact(artifact_name)},
+            pipeline_type=pipeline_type,
+            human_approved=True,
+        )
 
 
 def _write(path: Path, data: dict) -> None:
@@ -73,6 +93,15 @@ def test_handwritten_completed_checkpoint_surfaces_gate_skip(tmp_path, monkeypat
 
 
 def test_awaiting_then_approved_archives_history_without_gate_skip(tmp_path):
+    _approve_predecessors(
+        tmp_path,
+        "film",
+        "cinematic",
+        "research",
+        "proposal",
+        "script",
+        "scene_plan",
+    )
     write_checkpoint(
         tmp_path,
         "film",

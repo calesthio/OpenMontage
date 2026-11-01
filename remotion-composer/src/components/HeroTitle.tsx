@@ -6,13 +6,29 @@ import {
   useVideoConfig,
 } from "remotion";
 
-interface HeroTitleProps {
+type HeroTitleProps = {
   title: string;
   subtitle?: string;
   accentColor?: string;
   textColor?: string;
   subtitleColor?: string;
 }
+  /** Color of the leading accent characters and the underline. */
+  accentColor?: string;
+  /** Color of the remaining title characters. Pass the theme's textColor. */
+  textColor?: string;
+  /** Subtitle color. */
+  subtitleColor?: string;
+  /**
+   * Scrim painted behind the title so it separates from whatever is underneath.
+   * Defaults to a dark wash; a light theme must pass a light one, otherwise the
+   * scrim darkens the backdrop and cancels out the theme's dark text.
+   */
+  scrimBackground?: string;
+};
+
+const DEFAULT_SCRIM =
+  "radial-gradient(ellipse at center, rgba(15,23,42,0.35) 0%, rgba(15,23,42,0.55) 100%)";
 
 export const HeroTitle: React.FC<HeroTitleProps> = ({
   title,
@@ -20,6 +36,7 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
   accentColor = "#22D3EE",
   textColor = "#F8FAFC",
   subtitleColor = "#A78BFA",
+  scrimBackground = DEFAULT_SCRIM,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -32,8 +49,7 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
       style={{
         justifyContent: "center",
         alignItems: "center",
-        background:
-          "radial-gradient(ellipse at center, rgba(15,23,42,0.35) 0%, rgba(15,23,42,0.55) 100%)",
+        background: scrimBackground,
       }}
     >
       <div style={{ textAlign: "center", maxWidth: "85%" }}>

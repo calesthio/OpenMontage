@@ -209,10 +209,11 @@ registry (`src/components`, `src/Explainer`, etc.), and warns if `art_direction`
 - Verify before render: `npx hyperframes lint . && npx hyperframes validate . && npx hyperframes snapshot . --at <times>`.
   Snapshot is HF's native visual-spotcheck (contact-sheet of PNG frames at chosen
   timestamps) — use it the same way an atelier `final_review.visual_spotcheck` would.
-- **Render**: `npx hyperframes render . --output renders/<name>.mp4`.
-  > Known gap (F13): `hyperframes_compose.render` currently requires `edit_decisions.cuts[]`
-  > from the templated path. For hand-authored HF compositions it errors; call `npx` directly
-  > until the tool grows a bespoke branch.
+- **Render**: call `video_compose` with `render_runtime: "hyperframes"`,
+  `composition_mode: "atelier"`, and the authored `workspace_path`. It routes to
+  `hyperframes_compose.render_existing`, which preserves `index.html` and runs
+  the unified check gate, strict render, and post-render review. Call `npx
+  hyperframes render` directly only while debugging the runtime outside a pipeline.
 
 ## Guardrails so this doesn't backfire
 

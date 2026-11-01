@@ -44,7 +44,7 @@ class VeoVideo(BaseTool):
     dependencies = []
     install_instructions = (
         "Configure at least one backend API key:\n"
-        "  - Direct Google GenAI backend: Set GEMINI_API_KEY (or GOOGLE_API_KEY).\n"
+        "  - Direct Google backend: Configure Vertex AI service-account credentials.\n"
         "    Get a key at https://aistudio.google.com/\n"
         "    Or set GOOGLE_APPLICATION_CREDENTIALS for Vertex AI service account.\n"
         "  - FAL.ai backend: Set FAL_KEY (or FAL_AI_API_KEY).\n"
@@ -169,10 +169,13 @@ class VeoVideo(BaseTool):
     ]
 
     def _get_google_credentials_status(self) -> bool:
-        """Check whether Google API keys or Vertex AI service account credentials are set."""
-        from tools.google_credentials import has_google_credentials
+        """Check whether Vertex AI service account credentials are set."""
+        from tools.google_credentials import service_account_configured
 
-        return has_google_credentials()
+        return service_account_configured() or any(
+            os.getenv(name, "").lower() in {"true", "1"}
+            for name in ("GOOGLE_GENAI_USE_VERTEXAI", "GOOGLE_GENAI_USE_ENTERPRISE")
+        )
 
     def _get_fal_api_key(self) -> str | None:
         """Retrieve the FAL API key from environment variables."""
@@ -290,7 +293,10 @@ class VeoVideo(BaseTool):
             from tools.google_credentials import get_genai_client, GOOGLE_API_TIMEOUT_MS
 
             http_options = types.HttpOptions(timeout=GOOGLE_API_TIMEOUT_MS)
-            client = get_genai_client(http_options=http_options)
+            client = get_genai_client(
+                http_options=http_options,
+                force_vertex=self._get_google_credentials_status(),
+            )
         except ImportError as e:
             return ToolResult(
                 success=False,
@@ -308,11 +314,10 @@ class VeoVideo(BaseTool):
                 client._api_client, "vertexai", False
             )
 
-        if is_vertex:
+        if not is_vertex:
             return ToolResult(
                 success=False,
-                error="Google Veo video generation via google-genai is only supported using the Gemini Developer API (API key) backend. "
-                "Please configure GEMINI_API_KEY/GOOGLE_API_KEY or use the FAL.ai backend.",
+                error="Veo on the Gemini API retired on 2026-10-22. Select gemini_omni_video explicitly, or use Vertex AI / fal Veo.",
             )
 
         prompt = inputs["prompt"]
@@ -323,7 +328,11 @@ class VeoVideo(BaseTool):
         # Map to the official preview model unless a custom model name is provided
         if model_variant in {"veo3", "veo3/fast", "veo3.1", "veo3.1/fast"}:
             if is_vertex:
-                model_name = "veo-3.1-generate-001"
+                model_name = (
+                    "veo-3.1-fast-generate-001"
+                    if "fast" in model_variant
+                    else "veo-3.1-generate-001"
+                )
             else:
                 model_name = "veo-3.1-generate-preview"
         else:
@@ -501,7 +510,19 @@ class VeoVideo(BaseTool):
                     success=False,
                     error="No video asset returned in the response.",
                 )
-            client.files.download(file=video_asset)
+            if not is_vertex:
+                # The Files service is a Gemini Developer API feature. Vertex
+                # returns bytes inline when no GCS output URI is requested.
+                client.files.download(file=video_asset)
+            elif not getattr(video_asset, "video_bytes", None):
+                return ToolResult(
+                    success=False,
+                    error=(
+                        "Vertex AI returned a video without inline bytes "
+                        f"(uri={getattr(video_asset, 'uri', None)!r}). Configure "
+                        "the request without an output GCS URI so bytes are returned inline."
+                    ),
+                )
 
             output_path = Path(inputs.get("output_path", "veo_output.mp4"))
             output_path.parent.mkdir(parents=True, exist_ok=True)

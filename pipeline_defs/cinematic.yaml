@@ -1,7 +1,8 @@
 name: cinematic
 version: "2.0"
 description: >
-  Mood-led cinematic pipeline for trailers, brand films, montages, and short-form dramatic edits.
+  Mood-led cinematic pipeline for trailers, brand films, montages, explicit 3D-world fly-throughs,
+  and short-form dramatic edits.
   Works best with supplied footage, stills, or source media, and can optionally use generated
   support visuals for gap filling or concept-led inserts. EP orchestration adds quality gates
   for emotional pacing, color consistency, and audio dynamics.
@@ -171,6 +172,11 @@ stages:
       - audio_enhance
       - image_selector
       - video_selector
+      - threejs_world
+      - threejs_asset_catalog
+      - atlas_3d
+      - fal_3d
+      - blender_world
       - pixabay_music
       - freesound_music
       - music_gen
@@ -179,6 +185,11 @@ stages:
       - audio_enhance
       - image_selector
       - video_selector
+      - threejs_world
+      - threejs_asset_catalog
+      - atlas_3d
+      - fal_3d
+      - blender_world
       - pixabay_music
       - freesound_music
       - music_gen
@@ -189,6 +200,8 @@ stages:
       - Motion-required beats use actual video clips rather than still-image substitutes
       - Music and ambience plan matches the beat map
       - Optional generated inserts stay limited and justified
+      - Explicit 3D worlds preserve one coherent scene graph across global, regional, and walk views
+      - Hero 3D worlds use the production fidelity tier with licensed textured models and PBR terrain layers; primitive-only blockouts cannot pass
     success_criteria:
       - Schema-valid asset_manifest artifact
       - All referenced asset files exist on disk
@@ -231,6 +244,7 @@ stages:
       - video_trimmer
       - color_grade
       - audio_enhance
+      - bgm_montage_lite
     tools_available:
       - video_compose
       - hyperframes_compose
@@ -239,6 +253,7 @@ stages:
       - video_trimmer
       - color_grade
       - audio_enhance
+      - bgm_montage_lite
     checkpoint_required: true
     human_approval_default: false
     review_focus:

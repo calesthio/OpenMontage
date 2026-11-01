@@ -7,6 +7,7 @@ import {
   useVideoConfig,
 } from "remotion";
 import { CaptionOverlay, WordCaption } from "./components/CaptionOverlay";
+import { resolveAsset } from "./lib/resolveAsset";
 import { TextCard } from "./components/TextCard";
 import { StatCard } from "./components/StatCard";
 import { CalloutBox } from "./components/CalloutBox";
@@ -302,6 +303,11 @@ export interface TalkingHeadProps {
   wordsPerPage?: number;
   fontSize?: number;
   highlightColor?: string;
+  captionColor?: string;
+  captionBackgroundColor?: string;
+  captionFontFamily?: string;
+  // Pass "" for CJK captions (no inter-word spacing); defaults to " ".
+  captionWordSeparator?: string;
 }
 
 export const TalkingHead: React.FC<TalkingHeadProps> = ({
@@ -311,6 +317,10 @@ export const TalkingHead: React.FC<TalkingHeadProps> = ({
   wordsPerPage = 4,
   fontSize = 52,
   highlightColor = "#22D3EE",
+  captionColor = "#FFFFFF",
+  captionBackgroundColor = "rgba(0, 0, 0, 0.65)",
+  captionFontFamily,
+  captionWordSeparator,
 }) => {
   const { fps } = useVideoConfig();
 
@@ -318,7 +328,7 @@ export const TalkingHead: React.FC<TalkingHeadProps> = ({
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
       {/* Layer 1: Video background */}
       <OffthreadVideo
-        src={videoSrc}
+        src={resolveAsset(videoSrc)}
         style={{ width: "100%", height: "100%", objectFit: "cover" }}
       />
 
@@ -345,8 +355,10 @@ export const TalkingHead: React.FC<TalkingHeadProps> = ({
         wordsPerPage={wordsPerPage}
         fontSize={fontSize}
         highlightColor={highlightColor}
-        backgroundColor="rgba(0, 0, 0, 0.65)"
-        color="#FFFFFF"
+        backgroundColor={captionBackgroundColor}
+        color={captionColor}
+        {...(captionFontFamily ? { fontFamily: captionFontFamily } : {})}
+        {...(captionWordSeparator !== undefined ? { wordSeparator: captionWordSeparator } : {})}
       />
     </AbsoluteFill>
   );

@@ -352,6 +352,16 @@ class CorpusBuilder(BaseTool):
                         if len(added_ids) >= max_new:
                             break
 
+                        clip_id = getattr(cand, "clip_id", "")
+                        if not _is_safe_clip_id(clip_id):
+                            failed += 1
+                            errors.append({
+                                "phase": "process",
+                                "clip_id": clip_id or "unknown",
+                                "error": f"ValueError: Unsafe clip_id: {clip_id!r}",
+                            })
+                            continue
+
                         if skip_existing and corp.has(cand.clip_id):
                             skipped += 1
                             continue
@@ -391,6 +401,46 @@ class CorpusBuilder(BaseTool):
                 cache_snapshot = cache.stats()
             except Exception as e:
                 cache_snapshot = {"error": f"{type(e).__name__}: {e}"}
+
+            # Per-candidate tolerance is useful only while at least one item
+            # survives. If every candidate we processed fails, reporting success
+            # persists an index with no new rows and hides a systemic codec/CLIP
+            # failure until retrieval. Keyed on `failed`, not on `skipped`:
+            # already-present clips say nothing about whether processing worked,
+            # so a run that skips one clip and fails the other nine is still a
+            # total failure. A no-result or skip-only run (failed == 0) is valid.
+            total_failure = bool(candidates_seen) and not added_ids and failed > 0
+            if total_failure:
+                first_errors = "; ".join(
+                    item["error"]
+                    for item in errors
+                    if item.get("phase") == "process"
+                )[:400]
+                index_state = (
+                    "corpus index is empty"
+                    if not skipped
+                    else f"no clips added ({skipped} already present)"
+                )
+                return ToolResult(
+                    success=False,
+                    error=(
+                        f"All {failed} processed candidate(s) failed, of "
+                        f"{candidates_seen} seen; {index_state}. Check the media "
+                        "decoder and the CLIP `transformers`/`torch` compatibility. "
+                        f"First errors: {first_errors or '(none recorded)'}"
+                    ),
+                    data={
+                        "corpus_dir": str(corpus_dir),
+                        "queries_run": len(queries),
+                        "candidates_seen": candidates_seen,
+                        "clips_added": 0,
+                        "clips_skipped_existing": skipped,
+                        "clips_failed": failed,
+                        "total_corpus_size": len(corp),
+                        "errors": errors[:25],
+                    },
+                    duration_seconds=round(elapsed, 2),
+                )
 
             return ToolResult(
                 success=True,
@@ -455,6 +505,9 @@ class CorpusBuilder(BaseTool):
         next run benefits. Cache faults never block the pipeline —
         they degrade gracefully to normal downloads.
         """
+        if not _is_safe_clip_id(cand.clip_id):
+            raise ValueError(f"Unsafe clip_id: {cand.clip_id!r}")
+
         import cv2
 
         from lib.clip_embedder import embed_images, embed_texts, pool_frames
@@ -462,9 +515,12 @@ class CorpusBuilder(BaseTool):
 
         # Pick file extension from the URL path (sources give us
         # stable .mp4/.jpg/.png URLs) with a kind-aware fallback.
+
         ext = _guess_ext(cand)
         local_rel = Path("clips") / f"{cand.clip_id}{ext}"
-        local_abs = corp.corpus_dir / local_rel
+        local_abs = _safe_child_path(corp.corpus_dir, local_rel)
+        if local_abs is None:
+            raise ValueError(f"Unsafe clip path resolved for {cand.clip_id!r}")
 
         # Try the shared cache first. A hit links the cached blob
         # into local_abs (same filesystem → hard link, cross-drive
@@ -520,7 +576,9 @@ class CorpusBuilder(BaseTool):
                 pass
 
         thumb_dir_rel = Path("thumbnails") / cand.clip_id
-        thumb_dir_abs = corp.corpus_dir / thumb_dir_rel
+        thumb_dir_abs = _safe_child_path(corp.corpus_dir, thumb_dir_rel)
+        if thumb_dir_abs is None:
+            raise ValueError(f"Unsafe thumbnail path resolved for {cand.clip_id!r}")
         thumb_dir_abs.mkdir(parents=True, exist_ok=True)
 
         width = cand.width
@@ -585,6 +643,34 @@ class CorpusBuilder(BaseTool):
 # ----------------------------------------------------------------------
 # Module-level helpers (kept outside the class so tests can hit them)
 # ----------------------------------------------------------------------
+
+
+def _is_safe_clip_id(clip_id: str) -> bool:
+    """Validate that clip_id cannot cause path traversal or filesystem escapes."""
+    if not clip_id or not isinstance(clip_id, str):
+        return False
+    if "\x00" in clip_id:
+        return False
+    if any(sep in clip_id for sep in ("/", "\\", ":")) or ".." in clip_id:
+        return False
+    if any(ord(c) < 32 or ord(c) == 127 for c in clip_id):
+        return False
+    stripped = clip_id.strip()
+    if not stripped or stripped in {".", ".."}:
+        return False
+    return True
+
+
+def _safe_child_path(parent_dir: Path, rel_path: Path | str) -> Optional[Path]:
+    """Resolve a child path within parent_dir, guaranteeing no traversal."""
+    try:
+        resolved_parent = Path(parent_dir).resolve()
+        candidate = (Path(parent_dir) / rel_path).resolve()
+        if candidate.is_relative_to(resolved_parent) and candidate != resolved_parent:
+            return candidate
+    except (ValueError, RuntimeError, OSError):
+        return None
+    return None
 
 
 def _guess_ext(cand) -> str:

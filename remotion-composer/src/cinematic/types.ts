@@ -12,6 +12,7 @@ export interface CinematicVideoScene extends CinematicBaseScene {
   tone?: CinematicTone;
   trimBeforeSeconds?: number;
   trimAfterSeconds?: number;
+  playbackRate?: number;
   filter?: string;
   fadeInFrames?: number;
   fadeOutFrames?: number;

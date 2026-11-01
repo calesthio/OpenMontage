@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import re
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional
 
@@ -59,6 +60,7 @@ def _rel(project_dir: Path, path: Path) -> str:
 # Pipeline / stages
 # ---------------------------------------------------------------------------
 
+@lru_cache(maxsize=32)
 def _load_pipeline_meta(pipeline_type: Optional[str]) -> dict[str, Any]:
     """Stage order + gate flags from the manifest; graceful fallback."""
     if pipeline_type and pipeline_type != "unknown":

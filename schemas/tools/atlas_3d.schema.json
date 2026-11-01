@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/tools/atlas_3d",
+  "title": "Atlas Cloud Text-to-3D Input",
+  "type": "object",
+  "required": ["prompt", "output_path"],
+  "properties": {
+    "prompt": {"type": "string", "minLength": 3, "maxLength": 1024},
+    "negative_prompt": {"type": "string"},
+    "output_path": {"type": "string"},
+    "texture": {"type": "boolean"},
+    "pbr": {"type": "boolean"},
+    "texture_quality": {"type": "string", "enum": ["standard", "detailed"]},
+    "geometry_quality": {"type": "string", "enum": ["standard", "detailed"]},
+    "face_limit": {"type": "integer", "minimum": 1000, "maximum": 2000000},
+    "model_seed": {"type": "integer"},
+    "image_seed": {"type": "integer"},
+    "texture_seed": {"type": "integer"},
+    "auto_size": {"type": "boolean"},
+    "quad": {"type": "boolean"},
+    "poll_timeout_seconds": {"type": "integer", "minimum": 30, "maximum": 1800}
+  },
+  "additionalProperties": false
+}

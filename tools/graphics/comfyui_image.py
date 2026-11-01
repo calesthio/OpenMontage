@@ -58,7 +58,9 @@ class ComfyUIImage(BaseTool):
     install_instructions = (
         "Start a ComfyUI server and set COMFYUI_SERVER_URL "
         "(default http://localhost:8188).\n"
-        "See https://github.com/comfyanonymous/ComfyUI for setup."
+        "See https://github.com/comfyanonymous/ComfyUI for setup.\n"
+        "Running a separate ComfyUI instance for images? Set COMFYUI_IMAGE_SERVER_URL "
+        "instead -- it takes priority over COMFYUI_SERVER_URL for this tool only."
     )
     agent_skills = ["comfyui", "flux-best-practices"]
 
@@ -133,7 +135,7 @@ class ComfyUIImage(BaseTool):
     user_visible_verification = ["Inspect generated image for quality and prompt adherence"]
 
     def __init__(self) -> None:
-        self._client = ComfyUIClient()
+        self._client = ComfyUIClient(capability="image")
 
     def get_status(self) -> ToolStatus:
         if not self._client.is_available():

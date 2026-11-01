@@ -184,6 +184,15 @@ def stage_project(pid: str, title: str, palette: str, scenes: list, *,
     brief["topic"] = title
     cp("research", "completed", {"research_brief": brief})
 
+    proposal = sample_artifact("proposal_packet")
+    cp("proposal", "awaiting_human", {"proposal_packet": proposal})
+    cp(
+        "proposal",
+        "completed",
+        {"proposal_packet": proposal},
+        human_approved=True,
+    )
+
     script = script_artifact(title, scenes)
     plan = scene_plan_artifact(scenes, hero)
     (art_dir / "decision_log.json").write_text(json.dumps(decision_log(pid), indent=2))

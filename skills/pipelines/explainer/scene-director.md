@@ -63,9 +63,17 @@ Transform each script section into 1-3 visual scenes. Each scene is a distinct v
 }
 ```
 
-#### Scene Types and When to Use Them
+#### Render Templates and Scene Types
 
-| Type | Best For | Available Tools | Duration Guidance |
+The canonical `scene_plan.scenes[].type` vocabulary is `talking_head`, `broll`,
+`animation`, `character_scene`, `diagram`, `text_card`, `transition`,
+`generated`, and `screen_recording`. Names such as `hero_title`, `stat_card`,
+and chart/card variants below are downstream Remotion `cut.type` templates,
+not valid scene-plan types. During scene planning, use `text_card` or
+`animation` as appropriate and state the intended render template in the scene
+description; the Edit stage converts that intent into `cut.type`.
+
+| Render template or scene type | Best For | Available Tools | Duration Guidance |
 |------|----------|-----------------|-------------------|
 | `hero_title` | Opening titles, dramatic reveals | Remotion HeroTitle (theme-driven title treatment) | 3-5s |
 | `stat_card` | Big dramatic numbers, impactful metrics | Remotion StatCard (large stat + subtitle) | 4-6s |
@@ -84,7 +92,11 @@ Transform each script section into 1-3 visual scenes. Each scene is a distinct v
 | `broll` | Context, real-world examples | Stock or generated footage | 3-6s |
 | `screen_recording` | Code demos, UI walkthroughs | Recorded or simulated | 5-15s |
 
-**Zero-key scene selection:** When no image/video generation is available, prefer `hero_title`, `stat_card`, `bar_chart`, `line_chart`, `pie_chart`, `kpi_grid`, `comparison`, `callout`, `progress_bar`, and `text_card`. These render entirely from Remotion components with zero external dependencies and can still feel distinct if you derive color, typography, and pacing from the subject instead of defaulting to a generic dashboard aesthetic.
+**Zero-key scene selection:** When no image/video generation is available,
+plan `text_card`, `animation`, or `diagram` scenes and name an appropriate
+downstream template (`hero_title`, `stat_card`, charts, `comparison`,
+`callout`, or `progress_bar`) in each description. These render entirely from
+Remotion components with zero external dependencies.
 
 ### Step 4: Apply the Visual Technique Library
 
@@ -226,7 +238,9 @@ If any dimension scores below 3, revise.
 
 ### Step 8: Submit
 
-Call `handle_explainer_scene_plan(state, {"scene_plan": scene_plan_json})` to validate and persist.
+Validate `scene_plan_json` against the canonical scene-plan schema, persist it
+through the checkpoint protocol, and attach the stage review. There is no
+separate explainer submit function.
 
 ## Common Pitfalls
 

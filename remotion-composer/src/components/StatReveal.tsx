@@ -10,6 +10,8 @@ interface StatRevealProps {
   stat: string;
   label?: string;
   accentColor?: string;
+  /** Label color. Defaults to near-white; pass the theme's textColor on light themes. */
+  textColor?: string;
   position?: "center" | "bottom-right" | "right";
 }
 
@@ -17,6 +19,7 @@ export const StatReveal: React.FC<StatRevealProps> = ({
   stat,
   label,
   accentColor = "#A78BFA",
+  textColor = "#F8FAFC",
   position = "bottom-right",
 }) => {
   const frame = useCurrentFrame();
@@ -79,7 +82,7 @@ export const StatReveal: React.FC<StatRevealProps> = ({
             style={{
               fontSize: 22,
               fontWeight: 500,
-              color: "#F8FAFC",
+              color: textColor,
               fontFamily: "Space Grotesk, Inter, system-ui, sans-serif",
               marginTop: 8,
               opacity: spring({

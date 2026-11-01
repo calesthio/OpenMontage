@@ -1,19 +1,19 @@
 identity:
   name: "Anime Ghibli"
-  category: anime-illustration
+  category: custom
   mood: warm, whimsical, contemplative, magical
-  pace: gentle
+  pace: slow
   best_for: "Narrative animations, nature-themed stories, emotional storytelling, fantasy visuals, educational content with wonder"
 
 visual_language:
   color_palette:
     primary: ["#2D5016", "#1B4332"]       # Deep forest greens
-    accent: ["#FFB347", "#FF6B9D"]        # Warm golden, soft cherry blossom pink
+    # Warm golden, soft cherry blossom pink, spirit glow (magical elements),
+    # golden-hour light. The last two are referenced by name in consistency_anchors.
+    accent: ["#FFB347", "#FF6B9D", "#A8E6CF", "#FFF3B0"]
     background: "#0A0A1A"                  # Deep night sky
     text: "#F5F0E8"                        # Warm parchment white
     muted: "#8B9A7E"                       # Mossy sage
-    spirit_glow: "#A8E6CF"                 # Soft teal glow for magical elements
-    golden_hour: "#FFF3B0"                 # Warm golden hour light
   composition: centered subjects, rule of thirds for landscapes, generous negative space, layered depth
   texture: soft watercolor edges, painterly brushstrokes, organic shapes, no hard geometric lines
 

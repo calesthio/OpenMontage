@@ -2,7 +2,7 @@ name: animation
 version: "2.0"
 description: >
   Animation-first pipeline for motion graphics, diagram-led explainers, kinetic typography,
-  math visuals, and stylized illustrative sequences. Features a research-first pre-production
+  math visuals, explicit Three.js worlds, and stylized illustrative sequences. Features a research-first pre-production
   phase: the agent researches the topic and animation techniques, proposes concepts with
   animation mode selection and cost estimates, and gets explicit user approval before any
   assets are generated.
@@ -175,15 +175,20 @@ stages:
       - proposal_packet
     produces:
       - asset_manifest
-    required_tools:
-      - tts_selector
     optional_tools:
+      - tts_selector
       - image_selector
       - video_selector
       - math_animate
       - diagram_gen
       - code_snippet
+      - threejs_world
+      - threejs_asset_catalog
+      - atlas_3d
+      - fal_3d
+      - blender_world
       - music_gen
+      - fal_elevenlabs_music
     tools_available:
       - tts_selector
       - image_selector
@@ -191,7 +196,13 @@ stages:
       - math_animate
       - diagram_gen
       - code_snippet
+      - threejs_world
+      - threejs_asset_catalog
+      - atlas_3d
+      - fal_3d
+      - blender_world
       - music_gen
+      - fal_elevenlabs_music
     checkpoint_required: true
     human_approval_default: true
     review_focus:
@@ -208,6 +219,7 @@ stages:
       - Schema-valid asset_manifest artifact
       - All referenced asset files exist on disk
       - layer3_skills_read list is present and includes all tools used for generation
+      - Real 3D-world briefs include semantic or wireframe diagnostic review before compose
 
   - name: edit
     skill: pipelines/animation/edit-director

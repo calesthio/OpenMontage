@@ -61,6 +61,20 @@ def model_info() -> dict:
     }
 
 
+def _as_feature_tensor(features):
+    """Normalize CLIP feature return values across transformers versions.
+
+    Transformers 4 returned the projected tensor directly. Transformers 5 may
+    wrap that tensor in a model-output object whose ``pooler_output`` contains
+    the same shared-space embedding. Do not project it again: the vision
+    projection expects the pre-projection width, while ``pooler_output`` is
+    already the final CLIP width.
+    """
+
+    pooled = getattr(features, "pooler_output", None)
+    return features if pooled is None else pooled
+
+
 def embed_images(image_paths: Sequence[Union[str, Path]]) -> np.ndarray:
     """Embed a list of image files into a (N, 512) float32 matrix.
 
@@ -82,7 +96,7 @@ def embed_images(image_paths: Sequence[Union[str, Path]]) -> np.ndarray:
 
     inputs = _PROCESSOR(images=images, return_tensors="pt").to(_DEVICE)
     with torch.no_grad():
-        features = _MODEL.get_image_features(**inputs)
+        features = _as_feature_tensor(_MODEL.get_image_features(**inputs))
     features = features / features.norm(dim=-1, keepdim=True).clamp_min(1e-8)
     arr = features.cpu().numpy().astype(np.float32, copy=False)
     # Close PIL handles to avoid leaking file handles on Windows
@@ -116,7 +130,7 @@ def embed_texts(texts: Sequence[str]) -> np.ndarray:
         max_length=77,
     ).to(_DEVICE)
     with torch.no_grad():
-        features = _MODEL.get_text_features(**inputs)
+        features = _as_feature_tensor(_MODEL.get_text_features(**inputs))
     features = features / features.norm(dim=-1, keepdim=True).clamp_min(1e-8)
     return features.cpu().numpy().astype(np.float32, copy=False)
 

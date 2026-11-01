@@ -76,8 +76,10 @@ class JAXASource:
             )
             r.raise_for_status()
         except Exception as e:
+            # Contract: an empty list means "nothing matched", so a
+            # transport failure has to propagate. See `base.StockSource`.
             _log.warning("JAXA search failed: %s", e)
-            return []
+            raise
 
         soup = BeautifulSoup(r.text, "html.parser")
         out: list[Candidate] = []

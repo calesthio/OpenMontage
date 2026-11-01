@@ -6,6 +6,7 @@ import json
 import pytest
 
 from lib.checkpoint import (
+    CANONICAL_STAGE_ARTIFACTS,
     CheckpointValidationError,
     HISTORY_DIRNAME,
     PROJECT_MARKER_FILENAME,
@@ -27,6 +28,22 @@ def _minimal_script() -> dict:
     }
 
 
+def _approve_predecessors(tmp_path, project_id, pipeline_type, *stages) -> None:
+    from tests.contracts.test_phase0_contracts import sample_artifact
+
+    for stage in stages:
+        artifact_name = CANONICAL_STAGE_ARTIFACTS[stage]
+        write_checkpoint(
+            tmp_path,
+            project_id,
+            stage,
+            "completed",
+            artifacts={artifact_name: sample_artifact(artifact_name)},
+            pipeline_type=pipeline_type,
+            human_approved=True,
+        )
+
+
 class TestGateEnforcement:
     """GI-4: gated stages cannot be completed without approval evidence."""
 
@@ -39,6 +56,9 @@ class TestGateEnforcement:
             )
 
     def test_awaiting_human_is_the_correct_gate_state(self, tmp_path):
+        _approve_predecessors(
+            tmp_path, "proj", "animated-explainer", "research", "proposal"
+        )
         path = write_checkpoint(
             tmp_path, "proj", "script", "awaiting_human",
             artifacts={"script": _minimal_script()},
@@ -51,6 +71,9 @@ class TestGateEnforcement:
         assert cp["human_approval_required"] is True
 
     def test_completed_with_approval_passes(self, tmp_path):
+        _approve_predecessors(
+            tmp_path, "proj", "animated-explainer", "research", "proposal"
+        )
         path = write_checkpoint(
             tmp_path, "proj", "script", "completed",
             artifacts={"script": _minimal_script()},
@@ -84,6 +107,9 @@ class TestCheckpointHistory:
     """Superseded checkpoints are archived, not destroyed."""
 
     def test_overwrite_archives_previous(self, tmp_path):
+        _approve_predecessors(
+            tmp_path, "proj", "animated-explainer", "research", "proposal"
+        )
         write_checkpoint(
             tmp_path, "proj", "script", "awaiting_human",
             artifacts={"script": _minimal_script()},

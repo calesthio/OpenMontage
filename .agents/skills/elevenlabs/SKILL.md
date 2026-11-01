@@ -5,7 +5,29 @@ description: Generate AI voiceovers, sound effects, and music using ElevenLabs A
 
 # ElevenLabs Audio Generation
 
-Requires `ELEVENLABS_API_KEY` in `.env`.
+## Current v4 transports
+
+For v4, v4 Turbo, Instant Soundtracks and realtime models, read
+[the October integration guide](../provider-refresh-oct23/SKILL.md).
+v4 uses Text to Dialogue; Turbo uses the dialogue WebSocket.
+Do not send those models to the legacy text-to-speech endpoint.
+
+## OpenMontage provider routing
+
+Inspect the OpenMontage registry before choosing an authentication path.
+
+- Prefer `fal_elevenlabs_tts` when it is available. It provides Eleven v3,
+  Multilingual v2, and Turbo v2.5 through the centrally managed fal.ai
+  connection; no separate ElevenLabs credential is needed.
+- Use `elevenlabs_tts` only when that direct provider is already reported as
+  available by the registry.
+- In a shared installation, never tell the user to create a `.env`, export a
+  key, or paste a credential. Report missing direct-provider access as an
+  administrator setup request.
+
+The direct API examples below require a centrally configured
+`ELEVENLABS_API_KEY`; they are not the default path when the fal.ai provider is
+available.
 
 ## Text-to-Speech
 
@@ -263,6 +285,34 @@ export const sceneDurations = manifest.scenes.reduce((acc, scene) => {
 // Usage in composition:
 // <Series.Sequence durationInFrames={sceneDurations.title}>
 ```
+
+### Word-Level Timings (direct `elevenlabs_tts`)
+
+When captions, word-synced headlines or animation cues must follow the real
+speech, pass `with_timestamps: true` to the direct `elevenlabs_tts` tool instead
+of transcribing the audio afterwards:
+
+```python
+result = ElevenLabsTTS().execute({
+    "text": paragraph,
+    "voice_id": voice_id,
+    "previous_text": prev_paragraph,   # continuity across separately synthesized paragraphs
+    "next_text": next_paragraph,
+    "with_timestamps": True,
+    "output_path": "projects/<id>/assets/audio/tts/para_03.mp3",
+})
+result.data["word_timestamps"]   # [{"word": "Доверие.", "start": 0.12, "end": 0.71}, ...]
+result.data["alignment_path"]    # para_03.mp3.alignment.json (raw character alignment)
+```
+
+- Times are seconds from the start of that audio file. When paragraphs are placed
+  on one timeline, add each paragraph's placement offset.
+- Words are whitespace-delimited and keep their punctuation, so they line up with
+  `text.split()` of the script.
+- `alignment_matches_text` is `false` when the service normalised the text
+  (numbers, symbols); timings then follow the spoken form in the alignment.
+- Synthesizing per paragraph gives exact paragraph boundaries for scene cuts;
+  the word timings place captions and cues inside each paragraph.
 
 ### Audio Timing Patterns
 

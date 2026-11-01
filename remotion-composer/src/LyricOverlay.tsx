@@ -3,34 +3,14 @@ import {
   Audio,
   OffthreadVideo,
   interpolate,
-  staticFile,
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
 import React from "react";
-import { loadFont as loadPlayfair } from "@remotion/google-fonts/PlayfairDisplay";
+import { loadPlayfair } from "./lib/localFonts";
+import { resolveAsset } from "./lib/resolveAsset";
 
-const { fontFamily: playfairItalic } = loadPlayfair("italic", {
-  weights: ["400", "700"],
-  subsets: ["latin"],
-});
-
-function resolveAsset(src: string): string {
-  if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("data:")) return src;
-  const clean = src.replace(/^file:\/\/\/?/, "");
-  if (clean.startsWith("/") || /^[A-Za-z]:[\\/]/.test(clean)) {
-    const posix = clean.replace(/\\/g, "/");
-    // POSIX absolute paths already have a leading "/" — file:// + posix
-    // gives exactly three slashes. Windows drive paths (C:/...) need the
-    // extra slash added explicitly. Do not merge these branches — adding
-    // "file:///" unconditionally double-slashes POSIX paths (file:////...).
-    if (posix.startsWith("/")) {
-      return `file://${posix}`;
-    }
-    return `file:///${posix}`;
-  }
-  return staticFile(clean);
-}
+const { fontFamily: playfairItalic } = loadPlayfair("italic", ["400", "700"]);
 
 export interface Lyric {
   text: string;
@@ -38,11 +18,11 @@ export interface Lyric {
   outSeconds: number;
 }
 
-export interface LyricOverlayProps {
+export type LyricOverlayProps = {
   videoSrc: string;
   lyrics: Lyric[];
   bottomY?: number; // 0..1, vertical center of subtitle band
-}
+};
 
 const LyricLine: React.FC<{ lyric: Lyric; bottomY: number }> = ({ lyric, bottomY }) => {
   const frame = useCurrentFrame();

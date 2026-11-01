@@ -206,7 +206,9 @@ If any dimension scores below 3, revise before submitting.
 
 ### Step 7: Submit
 
-Call `handle_explainer_script(state, {"script": script_json})` to validate and persist.
+Validate `script_json` against the canonical script schema, persist it through
+the checkpoint protocol, and attach the stage review. There is no separate
+explainer submit function.
 
 ### Mid-Production Fact Verification
 

@@ -88,23 +88,26 @@ Cinematic videos live and die by their audio. **Surface the music situation befo
 
 Check availability in this order:
 
-1. **User music library (`music_library/`):** Check if this folder exists and contains tracks. List available tracks with durations and moods. Let the user choose.
-2. **Music generation APIs:** Check `registry.get_by_capability("music_generation")`. Report status, quota, and cost per track.
-3. **Royalty-free sources:** Note that the user can provide a track from YouTube Audio Library, Jamendo, or other free sources by dropping it in `music_library/`.
+1. **User music library:** Check `registry.get_by_capability("music_library")` and inspect `music_library/`. List available tracks with durations and moods.
+2. **Royalty-free search:** Check `registry.get_by_capability("music_search")`. Report available providers, licensing constraints, and any key requirement.
+3. **Music generation APIs:** Check `registry.get_by_capability("music_generation")`. Report status, quota, cost, and quality tradeoffs.
+4. **Bring your own:** The user can drop a track from another licensed source into `music_library/`.
 
 Present explicit options:
 
 ```
 MUSIC PLAN
 ├── Your music library: [N tracks / empty]
+├── Royalty-free search: [providers / unavailable]
 ├── AI generation: [provider] — [AVAILABLE/UNAVAILABLE] [cost]
 └── Bring your own: Drop a track in music_library/ before asset stage
 
 Options:
   (a) Use a library track (which one?)
-  (b) Provide your own track
-  (c) Generate via API (if available)
-  (d) Proceed without music (not recommended for cinematic)
+  (b) Search a royalty-free provider
+  (c) Provide your own track
+  (d) Generate via API (if available)
+  (e) Proceed without music (not recommended for cinematic)
 ```
 
 Record the decision in `brief.metadata.music_strategy` with the chosen source and path/prompt.

@@ -35,7 +35,11 @@ class ScreenCaptureSelector(BaseTool):
     determinism = Determinism.DETERMINISTIC
     runtime = ToolRuntime.HYBRID
 
-    agent_skills = ["screen-demo"]
+    # `screen-demo` named the Layer 2 pipeline directory, not a Layer 3 skill,
+    # so it never resolved. No Layer 3 skill covers OS screen capture — the
+    # capture guidance this selector needs lives in the pipeline manifest's
+    # per-stage `skill:` entries (skills/pipelines/screen-demo/), which the
+    # agent already reads.
 
     capabilities = [
         "screen_recording",

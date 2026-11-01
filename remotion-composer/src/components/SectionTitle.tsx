@@ -10,6 +10,8 @@ interface SectionTitleProps {
   title: string;
   subtitle?: string;
   accentColor?: string;
+  /** Title color. Defaults to near-white; pass the theme's textColor on light themes. */
+  textColor?: string;
   position?: "top-left" | "bottom-left" | "center";
 }
 
@@ -17,6 +19,7 @@ export const SectionTitle: React.FC<SectionTitleProps> = ({
   title,
   subtitle,
   accentColor = "#22D3EE",
+  textColor = "#F8FAFC",
   position = "top-left",
 }) => {
   const frame = useCurrentFrame();
@@ -67,7 +70,7 @@ export const SectionTitle: React.FC<SectionTitleProps> = ({
           style={{
             fontSize: 28,
             fontWeight: 700,
-            color: "#F8FAFC",
+            color: textColor,
             fontFamily: "Space Grotesk, Inter, system-ui, sans-serif",
             letterSpacing: "0.05em",
             textTransform: "uppercase",

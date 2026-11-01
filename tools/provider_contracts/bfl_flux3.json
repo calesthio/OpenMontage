@@ -1,0 +1,138 @@
+{
+  "properties": {
+    "user": {
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^[^\\x00]*$"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "User",
+      "description": "Opaque identifier for the end user supplied by the calling platform."
+    },
+    "prompt": {
+      "type": "string",
+      "title": "Prompt",
+      "description": "Free-form prompt describing the image."
+    },
+    "images": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Images",
+      "description": "Optional reference image(s) the prompt edits or draws from; each is an http(s) URL or base64, one to 10 total."
+    },
+    "aspect_ratio": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "21:9",
+            "2:1",
+            "16:9",
+            "3:2",
+            "7:5",
+            "4:3",
+            "5:4",
+            "1:1",
+            "4:5",
+            "3:4",
+            "5:7",
+            "2:3",
+            "9:16",
+            "1:2",
+            "9:21"
+          ]
+        },
+        {
+          "type": "string",
+          "const": "auto"
+        }
+      ],
+      "title": "Aspect Ratio",
+      "description": "Output aspect ratio. Under `auto` a ratio the prompt asks for wins, otherwise the output keeps the first reference image's framing; without references the prompt decides, else 1:1.",
+      "default": "auto"
+    },
+    "resolution": {
+      "type": "string",
+      "enum": [
+        "768sq",
+        "1k",
+        "1.5k",
+        "2k",
+        "4k",
+        "match_input"
+      ],
+      "title": "Resolution",
+      "description": "Image resolution class, an equal-pixel-area tier: `768sq`, `1k` (default), `1.5k`, `2k`, or `4k`. Exact dimensions vary with the aspect ratio. `match_input` (edits only): the output keeps the first reference's own size (shrunk to 4 MP when larger), or its nearest tier when aspect_ratio is set. Ignored when width and height are set.",
+      "default": "1k"
+    },
+    "width": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Width",
+      "description": "Exact output width in pixels, [256, 6256]; set together with height. Overrides resolution and aspect_ratio."
+    },
+    "height": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Height",
+      "description": "Exact output height in pixels, [256, 6256]; width x height at most 16822272 pixels, and at most 4194304 with reference images."
+    },
+    "safety_tolerance": {
+      "type": "integer",
+      "maximum": 7,
+      "minimum": 0,
+      "title": "Safety Tolerance",
+      "description": "Harm moderation tolerance from 0 to 7, with 0 the strictest. The route and organization determine the approved maximum and per-category ceilings. Unapproved levels return 422 with approved levels.",
+      "default": 2
+    },
+    "grounding": {
+      "type": "boolean",
+      "title": "Grounding",
+      "description": "When true (default) the prompt may be grounded in external research: web search and image search. When false, both are off.",
+      "default": true
+    },
+    "version": {
+      "type": "string",
+      "const": "latest",
+      "title": "Version",
+      "description": "Endpoint version. `latest` (default) serves the current release; dated pinnable release tags are added here as they are published.",
+      "default": "latest"
+    }
+  },
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "prompt"
+  ],
+  "title": "Flux3ImageInputs"
+}

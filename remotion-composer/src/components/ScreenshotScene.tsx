@@ -3,10 +3,10 @@ import {
   Img,
   interpolate,
   spring,
-  staticFile,
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { resolveAsset } from "../lib/resolveAsset";
 
 /**
  * ScreenshotScene — approach-1 synthetic UI demo.
@@ -83,25 +83,6 @@ interface ScreenshotSceneProps {
 }
 
 // ---------- Helpers ----------
-
-function resolveAsset(src: string): string {
-  if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("data:")) {
-    return src;
-  }
-  const clean = src.replace(/^file:\/\/\/?/, "");
-  if (clean.startsWith("/") || /^[A-Za-z]:[\\/]/.test(clean)) {
-    const posix = clean.replace(/\\/g, "/");
-    // POSIX absolute paths already have a leading "/" — file:// + posix
-    // gives exactly three slashes. Windows drive paths (C:/...) need the
-    // extra slash added explicitly. Do not merge these branches — adding
-    // "file:///" unconditionally double-slashes POSIX paths (file:////...).
-    if (posix.startsWith("/")) {
-      return `file://${posix}`;
-    }
-    return `file:///${posix}`;
-  }
-  return staticFile(clean);
-}
 
 /** Compute the rendered bounding box of the backdrop inside a canvas,
  *  using object-fit: contain semantics. Returns pixel offsets/sizes. */

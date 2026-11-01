@@ -297,6 +297,11 @@ class Upscale(BaseTool):
             "model": model,
             "dni_weight": denoise_strength,
             "half": half,
+            # Full-frame x4 inference can terminate the process on low-memory
+            # CPU/MPS hosts before Python can raise an exception. Bound the
+            # working set there; keep CUDA on the faster single-pass path.
+            "tile": 0 if _device == "cuda" else 256,
+            "tile_pad": 10,
         }
         # Guard: only pass device= if the installed version accepts it
         if "device" in inspect.signature(RealESRGANer.__init__).parameters:

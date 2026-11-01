@@ -38,7 +38,7 @@ def client(projects_root, monkeypatch):
         return None
 
     monkeypatch.setattr(server_mod, "_watch_projects", no_watch)
-    with TestClient(server_mod.create_app()) as c:
+    with TestClient(server_mod.create_app(), base_url="http://127.0.0.1:4750") as c:
         yield c
 
 
@@ -151,6 +151,57 @@ class TestBacklotServerApi:
         passthrough = client.get("/thumb/film/artifacts/note.txt")
         assert passthrough.status_code == 200
         assert passthrough.content == b"hello"
+
+
+class TestBacklotHostValidation:
+    @pytest.mark.parametrize(
+        "host",
+        ["127.0.0.1", "127.0.0.1:4750", "127.0.0.1:8080", "localhost", "localhost:4750"],
+    )
+    def test_accepts_local_hosts(self, client, host):
+        response = client.get("/api/health", headers={"Host": host})
+        assert response.status_code == 200
+        assert response.json() == {"ok": True, "app": "backlot"}
+
+    @pytest.mark.parametrize(
+        "host",
+        ["attacker.example", "attacker.example:4750", "127.0.0.1.attacker.example", "evil.localhost"],
+    )
+    def test_rejects_foreign_hosts(self, client, host):
+        response = client.get("/api/health", headers={"Host": host})
+        assert response.status_code == 400
+        assert response.text == "Invalid host header"
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "/",
+            "/p/film",
+            "/ui/board.js",
+            "/api/projects",
+            "/api/project/film/state",
+            "/api/project/film/events",
+            "/api/library/events",
+            "/media/film/artifacts/note.txt",
+            "/thumb/film/assets/images/sc1.png",
+        ],
+    )
+    def test_rejects_foreign_host_across_routes(self, client, projects_root, url):
+        project = _make_project(projects_root, "film")
+        (project / "artifacts" / "note.txt").write_text("private", encoding="utf-8")
+        _write_png(project / "assets" / "images" / "sc1.png")
+
+        response = client.get(url, headers={"Host": "attacker.example:4750"})
+
+        assert response.status_code == 400
+        assert response.text == "Invalid host header"
+
+    def test_forwarded_host_does_not_bypass_validation(self, client):
+        response = client.get(
+            "/api/health",
+            headers={"Host": "attacker.example", "X-Forwarded-Host": "localhost"},
+        )
+        assert response.status_code == 400
 
 
 class TestBacklotPerformanceBudgets:

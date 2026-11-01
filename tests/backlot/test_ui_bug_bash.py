@@ -10,7 +10,8 @@ import urllib.request
 
 import pytest
 
-from lib.checkpoint import init_project, write_checkpoint
+from lib.checkpoint import CANONICAL_STAGE_ARTIFACTS, init_project, write_checkpoint
+from lib.pipeline_loader import get_stage_order, load_pipeline
 from scripts import backlot_screenshot_stage
 from tests.contracts.test_phase0_contracts import sample_artifact
 
@@ -30,6 +31,28 @@ APPROVAL_CASES = [
     ("gate-compose", "cinematic", "compose", "render_report", "renders/output.mp4"),
     ("gate-publish", "cinematic", "publish", "publish_log", "youtube"),
 ]
+
+
+def _complete_predecessors(root, project_id: str, pipeline_type: str, stage: str) -> None:
+    order = get_stage_order(load_pipeline(pipeline_type))
+    for predecessor in order[: order.index(stage)]:
+        artifact_name = CANONICAL_STAGE_ARTIFACTS.get(predecessor)
+        if artifact_name:
+            artifact = sample_artifact(artifact_name)
+            if artifact_name == "edit_decisions":
+                artifact["render_runtime"] = "ffmpeg"
+            artifacts = {artifact_name: artifact}
+        else:
+            artifacts = {}
+        write_checkpoint(
+            root,
+            project_id,
+            predecessor,
+            "completed",
+            artifacts,
+            pipeline_type=pipeline_type,
+            human_approved=True,
+        )
 
 
 def _build_approval_projects() -> None:
@@ -55,6 +78,7 @@ def _build_approval_projects() -> None:
             pipeline_type=pipeline_type,
             pipeline_dir=root,
         )
+        _complete_predecessors(root, project_id, pipeline_type, stage)
         write_checkpoint(
             root,
             project_id,
@@ -79,6 +103,12 @@ def _build_approval_projects() -> None:
         title="Approval fixture: character design",
         pipeline_type="character-animation",
         pipeline_dir=root,
+    )
+    _complete_predecessors(
+        root,
+        "gate-character-design",
+        "character-animation",
+        "character_design",
     )
     write_checkpoint(
         root,

@@ -6,7 +6,7 @@ import {
   useVideoConfig,
 } from "remotion";
 
-export interface EndTagProps {
+export type EndTagProps = {
   text: string;
   palette?: "cool_offwhite_on_black" | "warm_ivory_on_black";
   // Optional extra fade hold controls (all in seconds)
@@ -19,7 +19,7 @@ export interface EndTagProps {
   // AbsoluteFill drops its background fill — caller is responsible for
   // rendering with an alpha-capable codec (VP9/WebM or ProRes 4444).
   overlay?: boolean;
-}
+};
 
 const PALETTES = {
   cool_offwhite_on_black: {

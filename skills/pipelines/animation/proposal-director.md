@@ -31,6 +31,7 @@ Fit cheat-sheet for the recommendation (NOT an auto-decision):
 | Kinetic typography, product promo, launch reel, HTML/GSAP-native motion | HyperFrames |
 | Website-to-video or UI-driven composition | HyperFrames |
 | Registry blocks needed (data-chart, grain-overlay, shader transitions) | HyperFrames |
+| Real 3D terrain, semantic regions, editable landmarks, free-viewpoint camera | HyperFrames + `threejs_world` |
 | Word-level/karaoke caption burn required | Remotion (HyperFrames caption parity deferred) |
 | Simple source-footage concat, no composition | ffmpeg |
 

@@ -250,6 +250,11 @@ def test_runtime_check_succeeds_when_npm_resolves(monkeypatch):
         "_resolve_npm_package",
         classmethod(lambda cls: {"version": "0.4.5"}),
     )
+    monkeypatch.setattr(
+        HyperFramesCompose,
+        "_probe_cli",
+        classmethod(lambda cls: {"status": "ok"}),
+    )
     rc = HyperFramesCompose()._runtime_check()
     # Local binaries must still pass for this to go green.
     if rc["node_major"] is None or not rc["ffmpeg_available"] or not rc["npx_available"]:
@@ -257,6 +262,31 @@ def test_runtime_check_succeeds_when_npm_resolves(monkeypatch):
     assert rc["runtime_available"] is True
     assert rc["npm_package_version"] == "0.4.5"
     assert rc["reasons"] == []
+
+
+def test_runtime_check_fails_when_published_cli_crashes(monkeypatch):
+    monkeypatch.setattr(
+        HyperFramesCompose,
+        "_resolve_npm_package",
+        classmethod(lambda cls: {"version": "0.7.89"}),
+    )
+    monkeypatch.setattr(
+        HyperFramesCompose,
+        "_probe_cli",
+        classmethod(
+            lambda cls: {
+                "error": 'doctor failed: The "file" argument must be of type string'
+            }
+        ),
+    )
+
+    rc = HyperFramesCompose()._runtime_check()
+
+    if rc["node_major"] is None or not rc["ffmpeg_available"] or not rc["npx_available"]:
+        pytest.skip("Local runtime floor not met on this machine")
+    assert rc["runtime_available"] is False
+    assert rc["cli_probe_error"] is not None
+    assert any("not executable" in reason for reason in rc["reasons"])
 
 
 def test_video_compose_render_engines_follow_hyperframes_runtime_check(monkeypatch):

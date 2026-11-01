@@ -1,0 +1,4 @@
+interface:
+  display_name: "3D Asset Generation"
+  short_description: "Generate and assemble production 3D assets"
+  default_prompt: "Use $3d-asset-generation to source, generate, validate, and assemble production-ready 3D assets for this world."

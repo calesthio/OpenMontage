@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/tools/threejs_asset_catalog",
+  "title": "Three.js Asset Catalog Input",
+  "type": "object",
+  "required": ["operation"],
+  "properties": {
+    "operation": {"type": "string", "enum": ["list", "install", "inspect"]},
+    "catalog_id": {
+      "type": "string",
+      "enum": ["kenney-nature-kit", "kenney-fantasy-town-kit", "kenney-survival-kit"]
+    },
+    "output_path": {"type": "string"}
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/tools/threejs_world",
+  "title": "Three.js World Tool Input",
+  "type": "object",
+  "required": ["operation", "world_spec"],
+  "properties": {
+    "operation": {"type": "string", "enum": ["build", "validate"]},
+    "output_path": {"type": "string"},
+    "duration_seconds": {"type": "number", "minimum": 1, "maximum": 600, "default": 60},
+    "width": {"type": "integer", "minimum": 320, "maximum": 7680, "default": 1920},
+    "height": {"type": "integer", "minimum": 240, "maximum": 4320, "default": 1080},
+    "render_mode": {"type": "string", "enum": ["cinematic", "semantic", "wireframe"], "default": "cinematic"},
+    "quality_tier": {"type": "string", "enum": ["blockout", "production"], "default": "blockout"},
+    "asset_catalog_paths": {"type": "array", "items": {"type": "string"}, "default": []},
+    "world_spec": {
+      "type": "object",
+      "required": ["regions", "camera_path"],
+      "properties": {
+        "version": {"type": "string"},
+        "title": {"type": "string"},
+        "seed": {"type": "integer"},
+        "explicit_constraints": {"type": "array", "items": {"type": "string"}},
+        "inferred_details": {"type": "array", "items": {"type": "string"}},
+        "world": {"type": "object"},
+        "atmosphere": {"type": "object"},
+        "terrain_materials": {"type": "array", "items": {"type": "object"}},
+        "asset_palette": {"type": "array", "items": {"type": "object"}},
+        "regions": {"type": "array", "minItems": 1, "maxItems": 12, "items": {"type": "object"}},
+        "landmarks": {"type": "array", "items": {"type": "object"}},
+        "camera_path": {"type": "array", "minItems": 2, "items": {"type": "object"}}
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

@@ -53,7 +53,7 @@ export const ProviderChip: React.FC<ProviderChipProps> = ({
   const translateY = interpolate(springIn, [0, 1], [12, 0]);
 
   return (
-    <AbsoluteFill pointerEvents="none">
+    <AbsoluteFill style={{ pointerEvents: "none" }}>
       <div
         style={{
           position: "absolute",

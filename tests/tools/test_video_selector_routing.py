@@ -23,7 +23,7 @@ from typing import Any
 
 import pytest
 
-from tools.base_tool import ToolStatus
+from tools.base_tool import ToolResult, ToolStatus
 from tools.video.video_selector import VideoSelector
 
 
@@ -54,6 +54,7 @@ class _StubTool:
         self._status = status
         self._cost = cost
         self._runtime = runtime
+        self.last_execute_inputs: dict[str, Any] | None = None
 
     # --- BaseTool surface used by the selector -------------------------------
     def get_status(self) -> ToolStatus:
@@ -77,6 +78,10 @@ class _StubTool:
 
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         return self._runtime
+
+    def execute(self, inputs: dict[str, Any]) -> ToolResult:
+        self.last_execute_inputs = dict(inputs)
+        return ToolResult(success=True, data={})
 
 
 # ProviderScore.weighted_score is a read-only computed property, so we can't
@@ -279,3 +284,40 @@ def test_estimate_cost_zero_when_no_providers():
     sel = VideoSelector()
     sel._providers = lambda: []  # type: ignore[assignment]
     assert sel.estimate_cost({"prompt": "x"}) == 0.0
+
+
+def test_ark_local_reference_routes_without_fal_upload(rankings, monkeypatch, tmp_path):
+    """An explicit Ark route preserves the local path for Ark's own encoder."""
+    ark = _StubTool("seedance_ark", "ark")
+    ark.input_schema = {
+        "properties": {
+            "prompt": {},
+            "reference_image_path": {},
+            "reference_image_url": {},
+        }
+    }
+    rankings.append(_ScoreStub("seedance_ark", "ark", 0.99))
+
+    def fail_upload(*args, **kwargs):
+        raise AssertionError("Ark local references must never be uploaded via FAL")
+
+    monkeypatch.setattr("tools.video._shared.upload_image_fal", fail_upload)
+    image_path = tmp_path / "anchor.png"
+    image_path.write_bytes(b"not-read-by-selector")
+
+    selector = VideoSelector()
+    selector._providers = lambda: [ark]  # type: ignore[assignment]
+    result = selector.execute({
+        "prompt": "motion",
+        "operation": "image_to_video",
+        "preferred_provider": "ark",
+        "allowed_providers": ["ark"],
+        "reference_image_path": str(image_path),
+    })
+
+    assert result.success is True
+    assert ark.last_execute_inputs is not None
+    assert ark.last_execute_inputs["reference_image_path"] == str(image_path)
+    assert "image_url" not in ark.last_execute_inputs
+    assert result.data["selected_tool"] == "seedance_ark"
+    assert result.data["selected_provider"] == "ark"

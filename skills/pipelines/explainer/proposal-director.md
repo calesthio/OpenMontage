@@ -369,9 +369,9 @@ Music is a critical part of the video's feel. **Surface the music situation to t
 
 **Check music availability in this order:**
 
-1. **User music library (`music_library/`):** Check if this folder exists and contains tracks. If so, list available tracks with durations and let the user pick one.
-2. **Music generation APIs:** Check which music tools are available via the registry (`registry.get_by_capability("music_generation")`). Report their status honestly.
-3. **Stock music sources:** Note if stock music is available via any provider.
+1. **User music library:** Check `registry.get_by_capability("music_library")` and inspect `music_library/`. List tracks with durations.
+2. **Royalty-free search:** Check `registry.get_by_capability("music_search")`. Report providers, licensing constraints, and key requirements.
+3. **Music generation APIs:** Check `registry.get_by_capability("music_generation")`. Report status, quota, cost, and quality tradeoffs honestly.
 
 **Present to the user:**
 
@@ -381,15 +381,17 @@ MUSIC PLAN
 │   ├── cosmic_interstellar_space.mp3 (3:13) — ambient, cosmic
 │   ├── cinematic_epic.mp3 (2:45) — dramatic, building
 │   └── lofi_beat.mp3 (4:00) — chill, electronic
+├── Royalty-free search: [providers / unavailable]
 ├── AI generation: music_gen (ElevenLabs) — UNAVAILABLE (plan limit)
 └── Recommendation: Use "cosmic_interstellar_space.mp3" from your library
     OR provide a different track before asset generation
 
 Would you like to:
   (a) Use a track from your library (which one?)
-  (b) Provide a different track (drop it in music_library/)
-  (c) Generate one via API (if available)
-  (d) Proceed without music
+  (b) Search a royalty-free provider
+  (c) Provide a different track (drop it in music_library/)
+  (d) Generate one via API (if available)
+  (e) Proceed without music
 ```
 
 **If no music source is available:** Tell the user explicitly. Do NOT let this surface as a surprise at the asset stage. Offer the `music_library/` path so they can add a track before production starts.

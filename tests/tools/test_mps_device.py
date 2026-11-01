@@ -213,8 +213,9 @@ def test_upscale_build_upsampler_uses_signature_guard(monkeypatch):
 
     # Build a fake RealESRGANer whose __init__ DOES accept device=
     class FakeRealESRGANer:
-        def __init__(self, *, scale, model_path, model, dni_weight, half, device=None):
+        def __init__(self, *, scale, model_path, model, dni_weight, half, tile=0, tile_pad=10, device=None):
             self.called_with_device = device
+            self.called_with_tile = tile
     fake_realesrganer_cls = FakeRealESRGANer
 
     monkeypatch.setitem(sys.modules, "torch", fake_torch)
@@ -239,6 +240,7 @@ def test_upscale_build_upsampler_uses_signature_guard(monkeypatch):
     tool = upscale.Upscale()
     result = tool._build_upsampler(scale=4, model_name="RealESRGAN_x4plus", denoise_strength=0.5, face_enhance=False)
     assert result.called_with_device == "device(mps)"
+    assert result.called_with_tile == 256
 
 
 def test_upscale_build_upsampler_skips_device_when_unsupported(monkeypatch):
@@ -252,8 +254,9 @@ def test_upscale_build_upsampler_skips_device_when_unsupported(monkeypatch):
 
     # Build a fake RealESRGANer whose __init__ does NOT accept device=
     class FakeRealESRGANerNoDevice:
-        def __init__(self, *, scale, model_path, model, dni_weight, half):
+        def __init__(self, *, scale, model_path, model, dni_weight, half, tile=0, tile_pad=10):
             self.called_with_device = None  # no device param
+            self.called_with_tile = tile
     fake_realesrganer_cls = FakeRealESRGANerNoDevice
 
     monkeypatch.setitem(sys.modules, "torch", fake_torch)
@@ -279,6 +282,7 @@ def test_upscale_build_upsampler_skips_device_when_unsupported(monkeypatch):
     # Should NOT raise TypeError about unexpected keyword argument 'device'
     result = tool._build_upsampler(scale=4, model_name="RealESRGAN_x4plus", denoise_strength=0.5, face_enhance=False)
     assert result.called_with_device is None
+    assert result.called_with_tile == 256
 
 
 # ------------------------------------------------------------------

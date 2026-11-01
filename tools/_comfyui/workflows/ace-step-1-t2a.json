@@ -1,0 +1,80 @@
+{
+  "1": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {
+      "ckpt_name": "ace_step_v1_3.5b.safetensors"
+    }
+  },
+  "2": {
+    "class_type": "TextEncodeAceStepAudio",
+    "inputs": {
+      "clip": ["1", 1],
+      "tags": "",
+      "lyrics": "",
+      "lyrics_strength": 0.99
+    }
+  },
+  "3": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+      "conditioning": ["2", 0]
+    }
+  },
+  "4": {
+    "class_type": "EmptyAceStepLatentAudio",
+    "inputs": {
+      "seconds": 120,
+      "batch_size": 1
+    }
+  },
+  "5": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+      "model": ["1", 0],
+      "shift": 5.0
+    }
+  },
+  "6": {
+    "class_type": "LatentOperationTonemapReinhard",
+    "inputs": {
+      "multiplier": 1.0
+    }
+  },
+  "7": {
+    "class_type": "LatentApplyOperationCFG",
+    "inputs": {
+      "model": ["5", 0],
+      "operation": ["6", 0]
+    }
+  },
+  "8": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["7", 0],
+      "positive": ["2", 0],
+      "negative": ["3", 0],
+      "latent_image": ["4", 0],
+      "seed": 0,
+      "steps": 50,
+      "cfg": 5.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1.0
+    }
+  },
+  "9": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": ["8", 0],
+      "vae": ["1", 2]
+    }
+  },
+  "10": {
+    "class_type": "SaveAudioMP3",
+    "inputs": {
+      "audio": ["9", 0],
+      "filename_prefix": "openmontage",
+      "quality": "V0"
+    }
+  }
+}

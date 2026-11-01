@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>__TITLE__</title>
+    <link rel="stylesheet" href="./world.css" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  </head>
+  <body>
+    <main
+      id="world-root"
+      data-composition-id="world"
+      data-start="0"
+      data-duration="__DURATION__"
+      data-width="__WIDTH__"
+      data-height="__HEIGHT__"
+      data-render-mode="__RENDER_MODE__"
+      style="--world-width: __WIDTH__px; --world-height: __HEIGHT__px"
+      aria-label="__TITLE__ cinematic three-dimensional world"
+    >
+      <section
+        id="world-stage"
+        class="clip world-stage"
+        data-start="0"
+        data-duration="__DURATION__"
+        data-track-index="0"
+      >
+        <canvas id="world-canvas" width="__WIDTH__" height="__HEIGHT__"></canvas>
+        <div id="world-vignette" aria-hidden="true"></div>
+        <div id="world-grain" aria-hidden="true"></div>
+
+        <header id="world-title-card" class="world-title-card">
+          <div class="eyebrow">OPENMONTAGE · EXPLICIT WORLD 01</div>
+          <h1>__TITLE__</h1>
+          <p>ONE CONTINUOUS WORLD · FREE VIEWPOINT · SEEDED &amp; EDITABLE</p>
+        </header>
+
+        <aside id="world-hud" class="world-hud" aria-label="World telemetry">
+          <div class="hud-rule"></div>
+          <div class="hud-label">REGION</div>
+          <div id="world-region-name" class="hud-value">GLOBAL FOUNDATION</div>
+          <div class="hud-grid">
+            <span>PASS</span><strong id="world-pass-name">__RENDER_MODE__</strong>
+            <span>TIME</span><strong id="world-timecode">00:00.0</strong>
+            <span>ALT</span><strong id="world-altitude">000.0</strong>
+          </div>
+        </aside>
+
+        <div id="world-status" role="status">BUILDING WORLD GRAPH…</div>
+      </section>
+    </main>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const worldTimeline = gsap.timeline({ paused: true });
+      worldTimeline
+        .fromTo("#world-title-card", { opacity: 0, y: 34 }, { opacity: 1, y: 0, duration: 1.2, ease: "power3.out" }, 0.35)
+        .to("#world-title-card", { opacity: 0, y: -24, duration: 1.0, ease: "power2.in" }, 5.6)
+        .fromTo("#world-hud", { opacity: 0, x: 24 }, { opacity: 1, x: 0, duration: 0.9, ease: "power2.out" }, 3.4);
+      window.__timelines["world"] = worldTimeline;
+    </script>
+    <script>window.__WORLD_QUALITY_TIER__ = "__QUALITY_TIER__";</script>
+    <script type="module" src="./world-runtime.js"></script>
+  </body>
+</html>

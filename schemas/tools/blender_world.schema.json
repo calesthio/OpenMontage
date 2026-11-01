@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/tools/blender_world",
+  "title": "Blender World Input",
+  "type": "object",
+  "required": ["operation"],
+  "properties": {
+    "operation": {"type": "string", "enum": ["doctor", "build", "render_still", "render_animation"]},
+    "world_spec": {"type": "object"},
+    "output_path": {"type": "string"},
+    "blend_path": {"type": "string"},
+    "width": {"type": "integer", "minimum": 320, "maximum": 7680},
+    "height": {"type": "integer", "minimum": 240, "maximum": 4320},
+    "samples": {"type": "integer", "minimum": 1, "maximum": 256},
+    "fps": {"type": "integer", "minimum": 1, "maximum": 120},
+    "duration_seconds": {"type": "number", "minimum": 1, "maximum": 600},
+    "start_frame": {"type": "integer", "minimum": 1},
+    "end_frame": {"type": "integer", "minimum": 1},
+    "frame": {"type": "integer", "minimum": 1},
+    "resume": {"type": "boolean", "default": false}
+  },
+  "additionalProperties": false
+}

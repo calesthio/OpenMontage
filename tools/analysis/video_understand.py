@@ -252,48 +252,81 @@ class VideoUnderstand(BaseTool):
 
         return self._extract_video_frames(input_path, frame_indices, max_frames)
 
+    @staticmethod
+    def _video_duration_seconds(video_path: Path) -> float | None:
+        """Duration via ffprobe, or None when it cannot be determined."""
+        try:
+            out = subprocess.run(
+                ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                 "-of", "default=noprint_wrappers=1:nokey=1", str(video_path)],
+                capture_output=True, text=True, timeout=30,
+            ).stdout.strip()
+            duration = float(out)
+            return duration if duration > 0 else None
+        except (ValueError, OSError, subprocess.SubprocessError):
+            return None
+
     def _extract_video_frames(
         self,
         video_path: Path,
         frame_indices: list[int] | None,
         max_frames: int,
     ) -> list:
-        """Extract frames from a video file using ffmpeg."""
+        """Extract frames from a video file using ffmpeg.
+
+        Without explicit frame_indices, frames are sampled by TIMESTAMP across
+        the whole clip. The obvious spelling, `-vf thumbnail=N -frames:v N`,
+        looks like even sampling and is not: thumbnail=N picks the most
+        representative frame out of each consecutive N-frame batch, so paired
+        with -frames:v N it stops after the opening seconds and never sees the
+        rest. A four-second clip that is solid red for 2s then solid blue for
+        2s yielded four red frames, and the caption pass then described it as
+        a video in which nothing changes.
+        """
         from PIL import Image
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             tmp = Path(tmp_dir)
 
             if frame_indices:
-                # Extract specific frames using select filter
+                # Explicit indices: the select filter is exactly right here.
                 frames_to_extract = frame_indices[:max_frames]
                 select_expr = "+".join(
                     f"eq(n\\,{idx})" for idx in frames_to_extract
                 )
-                cmd = [
-                    "ffmpeg", "-i", str(video_path),
-                    "-vf", f"select='{select_expr}'",
-                    "-vsync", "vfr",
-                    str(tmp / "frame_%04d.png"),
-                    "-y", "-loglevel", "error",
-                ]
+                subprocess.run(
+                    ["ffmpeg", "-i", str(video_path),
+                     "-vf", f"select='{select_expr}'",
+                     "-vsync", "vfr",
+                     str(tmp / "frame_%04d.png"),
+                     "-y", "-loglevel", "error"],
+                    capture_output=True, text=True, timeout=60,
+                )
+            elif (duration := self._video_duration_seconds(video_path)) is not None:
+                # Land inside each 1/N slice rather than on its edge, so a cut
+                # exactly on a boundary does not sample the frame before or
+                # after it depending on rounding.
+                for index in range(max_frames):
+                    stamp = duration * (index + 0.5) / max_frames
+                    # -ss ahead of -i seeks by keyframe: fast, and accurate
+                    # enough for sampling, which is not frame-exact anyway.
+                    subprocess.run(
+                        ["ffmpeg", "-ss", f"{stamp:.3f}", "-i", str(video_path),
+                         "-frames:v", "1",
+                         str(tmp / f"frame_{index:04d}.png"),
+                         "-y", "-loglevel", "error"],
+                        capture_output=True, text=True, timeout=60,
+                    )
             else:
-                # Get total frame count first
-                probe_cmd = [
-                    "ffmpeg", "-i", str(video_path),
-                    "-map", "0:v:0", "-c", "copy", "-f", "null", "-",
-                ]
-                # Sample at even intervals using fps filter
-                # Use a select filter that picks frames at even intervals
-                cmd = [
-                    "ffmpeg", "-i", str(video_path),
-                    "-frames:v", str(max_frames),
-                    "-vf", f"thumbnail={max_frames}",
-                    str(tmp / "frame_%04d.png"),
-                    "-y", "-loglevel", "error",
-                ]
-
-            subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+                # No duration — a stream, or no ffprobe on PATH. Fall back to
+                # an even pass over the file rather than returning nothing.
+                subprocess.run(
+                    ["ffmpeg", "-i", str(video_path),
+                     "-vsync", "vfr", "-frames:v", str(max_frames),
+                     str(tmp / "frame_%04d.png"),
+                     "-y", "-loglevel", "error"],
+                    capture_output=True, text=True, timeout=60,
+                )
 
             # Load extracted frames
             frame_files = sorted(tmp.glob("frame_*.png"))

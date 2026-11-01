@@ -9,14 +9,14 @@ import {
   Easing,
 } from "remotion";
 
-export interface ProductRevealProps {
+export type ProductRevealProps = {
   productImage: string;
   productName: string;
   price: string;
   tagline: string;
   closer: string;
   accentColor?: string;
-}
+};
 
 export const ProductReveal: React.FC<ProductRevealProps> = ({
   productImage,

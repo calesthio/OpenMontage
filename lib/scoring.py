@@ -9,7 +9,7 @@ Scores are normalized 0-1. Higher is better.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict, field
+from dataclasses import dataclass, asdict
 import re
 from typing import Any
 
@@ -18,19 +18,20 @@ from typing import Any
 # Provider Score
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class ProviderScore:
     """Scored evaluation of a provider against a specific task context."""
 
     tool_name: str
     provider: str
-    task_fit: float = 0.0       # 0-1: best fit for this exact asset class
+    task_fit: float = 0.0  # 0-1: best fit for this exact asset class
     output_quality: float = 0.0  # 0-1: expected fidelity for the brief
-    control: float = 0.0        # 0-1: reference/style directability
-    reliability: float = 0.0    # 0-1: runtime confidence
+    control: float = 0.0  # 0-1: reference/style directability
+    reliability: float = 0.0  # 0-1: runtime confidence
     cost_efficiency: float = 0.0  # 0-1: quality per dollar
-    latency: float = 0.0        # 0-1: acceptable turnaround
-    continuity: float = 0.0     # 0-1: fits already locked decisions
+    latency: float = 0.0  # 0-1: acceptable turnaround
+    continuity: float = 0.0  # 0-1: fits already locked decisions
 
     @property
     def weighted_score(self) -> float:
@@ -74,6 +75,7 @@ class ProviderScore:
 # Production Path Score
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class ProductionPathScore:
     """Scored evaluation of an entire production path."""
@@ -111,6 +113,7 @@ class ProductionPathScore:
 # Scoring Functions
 # ---------------------------------------------------------------------------
 
+
 def _keyword_overlap(set_a: set[str], set_b: set[str]) -> float:
     """Overlap coefficient between two keyword sets.
 
@@ -147,7 +150,10 @@ _SYNONYM_CLUSTERS: list[set[str]] = [
     {"music", "soundtrack", "background-music", "score", "ambient"},
 ]
 
-_TOKEN_RE = re.compile(r"[a-z0-9](?:[a-z0-9+._-]*[a-z0-9])?")
+# Letters/digits of any script (e.g. Hebrew prompts), not just ASCII.
+_TOKEN_RE = re.compile(r"[^\W_](?:[\w+.-]*[^\W_])?")
+# Hebrew niqqud/cantillation marks; stripped so pointed and unpointed words match.
+_HEBREW_MARKS_RE = re.compile(r"[\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7]")
 _GENERATED_VISUAL_TERMS = {
     "animated",
     "animation",
@@ -191,7 +197,8 @@ _IMAGE_EDIT_TERMS = {
 
 
 def _tokenize_text(value: str) -> list[str]:
-    return _TOKEN_RE.findall((value or "").lower())
+    return _TOKEN_RE.findall(_HEBREW_MARKS_RE.sub("", value or "").lower())
+
 
 def _expand_synonyms(words: set[str]) -> set[str]:
     """Expand a word set with synonyms from known clusters."""
@@ -349,11 +356,11 @@ def normalize_task_context(
 
     text_tokens = set(_tokenize_text(combined_text))
     context["prefers_generated_visuals"] = bool(text_tokens & _GENERATED_VISUAL_TERMS)
-    context["wants_reference_conditioning"] = (
-        operation == "reference_to_video" or bool(text_tokens & _REFERENCE_TERMS)
+    context["wants_reference_conditioning"] = operation == "reference_to_video" or bool(
+        text_tokens & _REFERENCE_TERMS
     )
-    context["wants_image_editing"] = (
-        operation == "edit" or bool(text_tokens & _IMAGE_EDIT_TERMS)
+    context["wants_image_editing"] = operation == "edit" or bool(
+        text_tokens & _IMAGE_EDIT_TERMS
     )
 
     return context
@@ -416,9 +423,13 @@ def score_provider(tool, task_context: dict[str, Any]) -> ProviderScore:
     try:
         estimated_cost = tool.estimate_cost(task_context)
     except Exception:
-        estimated_cost = 0.0
-    cost_efficiency = _compute_cost_efficiency(
-        estimated_cost, task_context.get("budget_remaining_usd")
+        estimated_cost = None
+    cost_efficiency = (
+        _compute_cost_efficiency(
+            estimated_cost, task_context.get("budget_remaining_usd")
+        )
+        if estimated_cost is not None
+        else 0.0
     )
 
     # Latency: uses measured p50 latency if available, else runtime class heuristic.
@@ -465,7 +476,10 @@ def score_provider(tool, task_context: dict[str, Any]) -> ProviderScore:
             output_quality = min(1.0, output_quality + 0.05)
 
     # Motion-required penalty: if task needs motion but tool is image-only
-    if task_context.get("motion_required") and task_context.get("asset_type") == "video":
+    if (
+        task_context.get("motion_required")
+        and task_context.get("asset_type") == "video"
+    ):
         cap = info.get("capability", "")
         if "video" not in cap:
             task_fit *= 0.2  # Heavy penalty
@@ -474,19 +488,31 @@ def score_provider(tool, task_context: dict[str, Any]) -> ProviderScore:
     stock_like = _is_stock_like_provider(info)
     asset_type = task_context.get("asset_type")
 
-    if task_context.get("prefers_generated_visuals") and stock_like and asset_type in {"video", "image"}:
+    if (
+        task_context.get("prefers_generated_visuals")
+        and stock_like
+        and asset_type in {"video", "image"}
+    ):
         task_fit *= 0.55
         output_quality *= 0.85
 
     if task_context.get("wants_reference_conditioning") and asset_type == "video":
-        if supports.get("reference_to_video") or supports.get("reference_image") or supports.get("multiple_reference_images"):
+        if (
+            supports.get("reference_to_video")
+            or supports.get("reference_image")
+            or supports.get("multiple_reference_images")
+        ):
             task_fit = min(1.0, task_fit + 0.18)
             control = min(1.0, control + 0.12)
         else:
             task_fit *= 0.7
 
     if task_context.get("wants_image_editing") and asset_type == "image":
-        if supports.get("image_edit") or supports.get("style_transfer") or supports.get("multiple_reference_images"):
+        if (
+            supports.get("image_edit")
+            or supports.get("style_transfer")
+            or supports.get("multiple_reference_images")
+        ):
             task_fit = min(1.0, task_fit + 0.18)
             control = min(1.0, control + 0.10)
         else:
@@ -498,9 +524,21 @@ def score_provider(tool, task_context: dict[str, Any]) -> ProviderScore:
     # lip-sync from quoted dialogue. This is what makes Seedance 2.0 (and
     # peer premium APIs) meaningfully better than generic clip providers.
     if asset_type == "video":
-        intent_words = _expand_synonyms(set(_tokenize_text(intent))) | set(style_keywords)
+        intent_words = _expand_synonyms(set(_tokenize_text(intent))) | set(
+            style_keywords
+        )
         cinematic_signal = bool(
-            intent_words & {"cinematic", "film", "movie", "trailer", "teaser", "dramatic", "epic", "premium"}
+            intent_words
+            & {
+                "cinematic",
+                "film",
+                "movie",
+                "trailer",
+                "teaser",
+                "dramatic",
+                "epic",
+                "premium",
+            }
         )
         if cinematic_signal:
             premium_features = [

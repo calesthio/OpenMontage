@@ -1,0 +1,19 @@
+{
+  "name": "openmontage",
+  "description": "OpenMontage as a Claude Code plugin: make videos from any folder, switch it on or off with /plugin.",
+  "owner": {
+    "name": "calesthio",
+    "url": "https://github.com/calesthio"
+  },
+  "plugins": [
+    {
+      "name": "openmontage",
+      "source": "./plugins/openmontage",
+      "description": "Make videos with OpenMontage from any folder. Finds or sets up your checkout, then follows its agent guide.",
+      "homepage": "https://github.com/calesthio/OpenMontage",
+      "repository": "https://github.com/calesthio/OpenMontage",
+      "license": "AGPL-3.0",
+      "keywords": ["video", "video-production", "remotion", "ffmpeg", "agents"]
+    }
+  ]
+}

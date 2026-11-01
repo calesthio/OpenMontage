@@ -36,6 +36,9 @@ type CaptionOverlayProps = {
   // without an explicit direction RTL words are laid out left-to-right and
   // the sentence reads backwards.
   direction?: "ltr" | "rtl" | "auto";
+  // Distance from the bottom edge in px. Vertical shorts want captions
+  // well above the platform UI (e.g. ~35% of frame height).
+  bottomOffset?: number;
 };
 
 const RTL_CHAR = /[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]/;
@@ -88,7 +91,8 @@ const PageRenderer: React.FC<{
   fontFamily: string;
   wordSeparator: string;
   direction: "ltr" | "rtl";
-}> = ({ page, fontSize, color, highlightColor, backgroundColor, fontFamily, wordSeparator, direction }) => {
+  bottomOffset: number;
+}> = ({ page, fontSize, color, highlightColor, backgroundColor, fontFamily, wordSeparator, direction, bottomOffset }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -106,7 +110,7 @@ const PageRenderer: React.FC<{
       style={{
         justifyContent: "flex-end",
         alignItems: "center",
-        paddingBottom: 80,
+        paddingBottom: bottomOffset,
       }}
     >
       <div
@@ -172,6 +176,7 @@ export const CaptionOverlay: React.FC<CaptionOverlayProps> = ({
   fontFamily = "Space Grotesk, Inter, system-ui, sans-serif",
   wordSeparator = " ",
   direction = "auto",
+  bottomOffset = 80,
 }) => {
   const { fps } = useVideoConfig();
   const pages = buildPages(words, wordsPerPage);
@@ -199,6 +204,7 @@ export const CaptionOverlay: React.FC<CaptionOverlayProps> = ({
               fontFamily={fontFamily}
               wordSeparator={wordSeparator}
               direction={resolvedDirection}
+              bottomOffset={bottomOffset}
             />
           </Sequence>
         );

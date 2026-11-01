@@ -304,6 +304,12 @@ export interface ExplainerProps {
   cuts: Cut[];
   overlays?: Overlay[];
   captions?: WordCaption[];
+  // Optional caption layout overrides (e.g. bigger, fewer words, raised for 9:16 shorts)
+  captionStyle?: {
+    wordsPerPage?: number;
+    fontSize?: number;
+    bottomOffset?: number;
+  };
   audio?: AudioConfig;
 }
 
@@ -873,8 +879,9 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
       {captions && captions.length > 0 && (
         <CaptionOverlay
           words={captions}
-          wordsPerPage={6}
-          fontSize={42}
+          wordsPerPage={props.captionStyle?.wordsPerPage ?? 6}
+          fontSize={props.captionStyle?.fontSize ?? 42}
+          bottomOffset={props.captionStyle?.bottomOffset ?? 80}
           color={theme.textColor}
           highlightColor={theme.captionHighlightColor}
           backgroundColor={theme.captionBackgroundColor}

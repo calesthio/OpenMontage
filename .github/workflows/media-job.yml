@@ -25,7 +25,7 @@ jobs:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
         run: |
-          files=$(git diff --name-only HEAD~1 HEAD -- 'jobs/*.json' || true)
+          files=$(git diff --name-only --diff-filter=AM HEAD~1 HEAD -- 'jobs/*.json' || true)
           [ -z "$files" ] && files=$(ls jobs/*.json)
           echo "jobs: $files"
           python scripts/run_job.py $files

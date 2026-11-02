@@ -6,6 +6,8 @@ schemas, status reporting, and cost estimates.
 """
 
 import json
+import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -829,6 +831,70 @@ class TestCustomWorkflowContract:
         provenance = result.data["workflow_provenance"]
         assert provenance["model_stack"] == [{"role": "lora", "name": "style.safetensors"}]
         assert provenance["model_stack_source"] == "caller_supplied"
+
+    @staticmethod
+    def _render_tiny_clip(workflow, output_node, dest, **kwargs):
+        # 64x112, 13 frames at 24 fps: nothing like the WAN 832x480/81/16 defaults.
+        subprocess.run(
+            [
+                "ffmpeg", "-y", "-v", "error",
+                "-f", "lavfi", "-i", "testsrc=size=64x112:rate=24",
+                "-frames:v", "13", "-pix_fmt", "yuv420p", str(dest),
+            ],
+            check=True,
+        )
+        return [Path(dest)]
+
+    @pytest.mark.skipif(
+        not shutil.which("ffmpeg") or not shutil.which("ffprobe"),
+        reason="FFmpeg required",
+    )
+    def test_video_custom_workflow_reports_probed_output_metadata(self, tmp_path):
+        tool = ComfyUIVideo()
+        tool._client.is_available = lambda: True
+        tool._client.generate = self._render_tiny_clip
+
+        result = tool.execute({
+            "prompt": "test",
+            "model_family": "ltx_2.5_local",
+            "workflow_json": json.dumps({"3": {"inputs": {}}}),
+            "output_node": "3",
+            "output_path": str(tmp_path / "clip.mp4"),
+        })
+
+        assert result.success is True
+        assert result.data["metadata_source"] == "ffprobe"
+        assert result.data["width"] == 64
+        assert result.data["height"] == 112
+        assert result.data["fps"] == 24
+        assert result.data["num_frames"] == 13
+        assert result.data["duration_seconds"] == pytest.approx(13 / 24, abs=0.01)
+        assert "metadata_warning" not in result.data
+
+    @pytest.mark.skipif(not shutil.which("ffmpeg"), reason="FFmpeg required")
+    def test_video_metadata_falls_back_to_request_when_probe_fails(
+        self, tmp_path, monkeypatch
+    ):
+        tool = ComfyUIVideo()
+        tool._client.is_available = lambda: True
+        tool._client.generate = self._render_tiny_clip
+        monkeypatch.setattr("tools.video._shared.shutil.which", lambda name: None)
+
+        result = tool.execute({
+            "prompt": "test",
+            "workflow_json": json.dumps({"3": {"inputs": {}}}),
+            "output_node": "3",
+            "num_frames": 49,
+            "output_path": str(tmp_path / "clip.mp4"),
+        })
+
+        assert result.success is True
+        assert result.data["metadata_source"] == "requested"
+        assert "not the output file" in result.data["metadata_warning"]
+        assert result.data["width"] == 832
+        assert result.data["height"] == 480
+        assert result.data["num_frames"] == 49
+        assert result.data["fps"] == 16
 
     def test_video_timeout_surfaces_resumable_prompt_id(self, tmp_path):
         from tools._comfyui.client import ComfyUIError

@@ -19,8 +19,9 @@ sys.path.insert(0, str(ROOT))
 
 from tools.audio.elevenlabs_tts import ElevenLabsTTS  # noqa: E402
 from tools.audio.pixabay_music import PixabayMusic  # noqa: E402
+from tools.video.pixabay_video import PixabayVideo  # noqa: E402
 
-TOOLS = {"elevenlabs_tts": ElevenLabsTTS, "pixabay_music": PixabayMusic}
+TOOLS = {"elevenlabs_tts": ElevenLabsTTS, "pixabay_music": PixabayMusic, "pixabay_video": PixabayVideo}
 
 
 def main(job_path):

@@ -1,0 +1,137 @@
+[
+ {
+  "out": "vo/narration.mp3",
+  "status": "ok",
+  "error": null,
+  "data": {
+   "provider": "elevenlabs",
+   "model": "eleven_multilingual_v2",
+   "voice_id": "GxGSne3qX4QsbtuEIkbJ",
+   "text_length": 438,
+   "output": "/home/runner/work/OpenMontage/OpenMontage/renders/aislebird-promo/vo/narration.mp3",
+   "format": "mp3_44100_128",
+   "request_id": "Wy4zZ2A2Qox2md6eZbe2",
+   "cost_status": "estimated"
+  }
+ },
+ {
+  "out": "footage/01_lost_aisle.mp4",
+  "status": "ok",
+  "error": null,
+  "data": {
+   "provider": "pixabay",
+   "video_id": 1735,
+   "user": "Buvrix27",
+   "tags": "supermarket, cart, market, mall, buy, retail, buyer, price, shopping, consumer, store, purchase, customer, time lapse",
+   "duration_seconds": 18,
+   "width": 1280,
+   "height": 720,
+   "query": "supermarket aisle shopping cart",
+   "output": "/home/runner/work/OpenMontage/OpenMontage/renders/aislebird-promo/footage/01_lost_aisle.mp4",
+   "total_results": 505,
+   "results_returned": 10,
+   "license": "Pixabay Content License (free, no attribution required)",
+   "page_url": "https://pixabay.com/videos/id-1735/"
+  }
+ },
+ {
+  "out": "footage/02_woman_phone.mp4",
+  "status": "ok",
+  "error": null,
+  "data": {
+   "provider": "pixabay",
+   "video_id": 38084,
+   "user": "mephala1980",
+   "tags": "woman, phone, smartphone, technology, mobile, telephone, cellphone, person, female, wireless, device, media, communication, people, holding, business",
+   "duration_seconds": 8,
+   "width": 1920,
+   "height": 1080,
+   "query": "woman smartphone supermarket",
+   "output": "/home/runner/work/OpenMontage/OpenMontage/renders/aislebird-promo/footage/02_woman_phone.mp4",
+   "total_results": 3303,
+   "results_returned": 10,
+   "license": "Pixabay Content License (free, no attribution required)",
+   "page_url": "https://pixabay.com/videos/id-38084/"
+  }
+ },
+ {
+  "out": "footage/03_produce.mp4",
+  "status": "ok",
+  "error": null,
+  "data": {
+   "provider": "pixabay",
+   "video_id": 4730,
+   "user": "Coverr-Free-Footage",
+   "tags": "indoor market, vegetable market, groceries, market, food, vegetable, organic, lifestyle, store, retail, supermarket, shop, healthy, consumerism, customer, shopping, caucasian, purchasing, natural, fresh",
+   "duration_seconds": 14,
+   "width": 1920,
+   "height": 1080,
+   "query": "fresh vegetables grocery",
+   "output": "/home/runner/work/OpenMontage/OpenMontage/renders/aislebird-promo/footage/03_produce.mp4",
+   "total_results": 2220,
+   "results_returned": 10,
+   "license": "Pixabay Content License (free, no attribution required)",
+   "page_url": "https://pixabay.com/videos/id-4730/"
+  }
+ },
+ {
+  "out": "footage/04_dairy.mp4",
+  "status": "ok",
+  "error": null,
+  "data": {
+   "provider": "pixabay",
+   "video_id": 186195,
+   "user": "NickyPe",
+   "tags": "cow, ruminant, pasture, meadow, nature, animals on the farm, dairy cows, group, landscape",
+   "duration_seconds": 15,
+   "width": 3840,
+   "height": 2160,
+   "query": "supermarket refrigerator dairy",
+   "output": "/home/runner/work/OpenMontage/OpenMontage/renders/aislebird-promo/footage/04_dairy.mp4",
+   "total_results": 77,
+   "results_returned": 10,
+   "license": "Pixabay Content License (free, no attribution required)",
+   "page_url": "https://pixabay.com/videos/id-186195/"
+  }
+ },
+ {
+  "out": "footage/05_family_kitchen.mp4",
+  "status": "ok",
+  "error": null,
+  "data": {
+   "provider": "pixabay",
+   "video_id": 266893,
+   "user": "SYG_Anime",
+   "tags": "family, kitchen, cooking, meal prep, togetherness, love, happiness, joy, laughter, warmth, children, father, home, domestic, family time, bonding, memories, art, illustration art, kitchen art, family art, serenity, ai created",
+   "duration_seconds": 10,
+   "width": 3840,
+   "height": 2160,
+   "query": "family cooking kitchen",
+   "output": "/home/runner/work/OpenMontage/OpenMontage/renders/aislebird-promo/footage/05_family_kitchen.mp4",
+   "total_results": 1495,
+   "results_returned": 10,
+   "license": "Pixabay Content License (free, no attribution required)",
+   "page_url": "https://pixabay.com/videos/id-266893/"
+  }
+ },
+ {
+  "out": "footage/06_checkout.mp4",
+  "status": "ok",
+  "error": null,
+  "data": {
+   "provider": "pixabay",
+   "video_id": 137247,
+   "user": "julientromeur",
+   "tags": "cartoon, 3d, shop, shopping, commerce, business, sale, walk, fruit, strawberry, food, grocery, groceries, supermarket, store",
+   "duration_seconds": 6,
+   "width": 1920,
+   "height": 1080,
+   "query": "grocery bags shopping happy",
+   "output": "/home/runner/work/OpenMontage/OpenMontage/renders/aislebird-promo/footage/06_checkout.mp4",
+   "total_results": 2491,
+   "results_returned": 10,
+   "license": "Pixabay Content License (free, no attribution required)",
+   "page_url": "https://pixabay.com/videos/id-137247/"
+  }
+ }
+]

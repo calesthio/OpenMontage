@@ -1,0 +1,83 @@
+{
+ "name": "bmd-agent-promo",
+ "steps": [
+  {
+   "tool": "elevenlabs_tts",
+   "out": "vo/01.mp3",
+   "inputs": {
+    "text": "Hi. I'm the new Beauty Me MD AI beauty advisor. And this is your new website.",
+    "voice_id": "GxGSne3qX4QsbtuEIkbJ",
+    "model_id": "eleven_multilingual_v2",
+    "stability": 0.6,
+    "similarity_boost": 0.8,
+    "speed": 0.97
+   }
+  },
+  {
+   "tool": "elevenlabs_tts",
+   "out": "vo/02.mp3",
+   "inputs": {
+    "text": "Every page opens like a film. Every treatment, explained clearly: how it works, the downtime, and what to expect.",
+    "voice_id": "GxGSne3qX4QsbtuEIkbJ",
+    "model_id": "eleven_multilingual_v2",
+    "stability": 0.6,
+    "similarity_boost": 0.8,
+    "speed": 0.97
+   }
+  },
+  {
+   "tool": "elevenlabs_tts",
+   "out": "vo/03.mp3",
+   "inputs": {
+    "text": "Not sure where to start? The treatment finder suggests options in about sixty seconds.",
+    "voice_id": "GxGSne3qX4QsbtuEIkbJ",
+    "model_id": "eleven_multilingual_v2",
+    "stability": 0.6,
+    "similarity_boost": 0.8,
+    "speed": 0.97
+   }
+  },
+  {
+   "tool": "elevenlabs_tts",
+   "out": "vo/04.mp3",
+   "inputs": {
+    "text": "And I'm here day and night, by text or voice, in English, Spanish, Farsi and more. Ask me anything. I'll answer honestly, then help you book your free consultation.",
+    "voice_id": "GxGSne3qX4QsbtuEIkbJ",
+    "model_id": "eleven_multilingual_v2",
+    "stability": 0.6,
+    "similarity_boost": 0.8,
+    "speed": 0.97
+   }
+  },
+  {
+   "tool": "elevenlabs_tts",
+   "out": "vo/05.mp3",
+   "inputs": {
+    "text": "Beauty Me MD. Your new website. Launching soon.",
+    "voice_id": "GxGSne3qX4QsbtuEIkbJ",
+    "model_id": "eleven_multilingual_v2",
+    "stability": 0.6,
+    "similarity_boost": 0.8,
+    "speed": 0.97
+   }
+  },
+  {
+   "tool": "pixabay_music",
+   "out": "music/bed-a.mp3",
+   "inputs": {
+    "query": "elegant luxury spa",
+    "min_duration": 40,
+    "max_duration": 240
+   }
+  },
+  {
+   "tool": "pixabay_music",
+   "out": "music/bed-b.mp3",
+   "inputs": {
+    "query": "soft piano ambient",
+    "min_duration": 40,
+    "max_duration": 240
+   }
+  }
+ ]
+}

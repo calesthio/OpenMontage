@@ -1,0 +1,44 @@
+[
+ {
+  "out": "vo/01.mp3",
+  "status": "failed",
+  "error": "No ElevenLabs API key. Set the ELEVENLABS_API_KEY environment variable:\n  export ELEVENLABS_API_KEY=your_key_here\nGet a key at https://elevenlabs.io\nIf fal_elevenlabs_tts is available, use it instead to access ElevenLabs speech through fal.ai without a separate ElevenLabs key.",
+  "data": {}
+ },
+ {
+  "out": "vo/02.mp3",
+  "status": "failed",
+  "error": "No ElevenLabs API key. Set the ELEVENLABS_API_KEY environment variable:\n  export ELEVENLABS_API_KEY=your_key_here\nGet a key at https://elevenlabs.io\nIf fal_elevenlabs_tts is available, use it instead to access ElevenLabs speech through fal.ai without a separate ElevenLabs key.",
+  "data": {}
+ },
+ {
+  "out": "vo/03.mp3",
+  "status": "failed",
+  "error": "No ElevenLabs API key. Set the ELEVENLABS_API_KEY environment variable:\n  export ELEVENLABS_API_KEY=your_key_here\nGet a key at https://elevenlabs.io\nIf fal_elevenlabs_tts is available, use it instead to access ElevenLabs speech through fal.ai without a separate ElevenLabs key.",
+  "data": {}
+ },
+ {
+  "out": "vo/04.mp3",
+  "status": "failed",
+  "error": "No ElevenLabs API key. Set the ELEVENLABS_API_KEY environment variable:\n  export ELEVENLABS_API_KEY=your_key_here\nGet a key at https://elevenlabs.io\nIf fal_elevenlabs_tts is available, use it instead to access ElevenLabs speech through fal.ai without a separate ElevenLabs key.",
+  "data": {}
+ },
+ {
+  "out": "vo/05.mp3",
+  "status": "failed",
+  "error": "No ElevenLabs API key. Set the ELEVENLABS_API_KEY environment variable:\n  export ELEVENLABS_API_KEY=your_key_here\nGet a key at https://elevenlabs.io\nIf fal_elevenlabs_tts is available, use it instead to access ElevenLabs speech through fal.ai without a separate ElevenLabs key.",
+  "data": {}
+ },
+ {
+  "out": "music/bed-a.mp3",
+  "status": "failed",
+  "error": "Pixabay music search failed: HTTP Error 403: Forbidden",
+  "data": {}
+ },
+ {
+  "out": "music/bed-b.mp3",
+  "status": "failed",
+  "error": "Pixabay music search failed: HTTP Error 403: Forbidden",
+  "data": {}
+ }
+]

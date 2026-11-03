@@ -49,6 +49,12 @@
 
 ---
 
+> **Something new is taking shape.**
+>
+> We're building something new for creatives, and we're looking for curious minds to try it early.
+>
+> **[Curious? Take a first look and join the early users.](https://github.com/calesthio/OpenMontage/discussions/892)**
+
 Turn your AI coding assistant into a full video production studio. Describe what you want in plain language — your agent handles research, scripting, asset generation, editing, and final composition.
 
 **Important distinction:** OpenMontage can make image-based videos, but it can also make a real **video video** for free/open-source workflows: the agent builds a corpus from free stock footage and open archives, retrieves actual motion clips, edits them into a timeline, and renders a finished piece. That is not the usual "animate a handful of stills and call it video" trick.

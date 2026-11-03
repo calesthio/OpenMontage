@@ -514,11 +514,26 @@ class ToolRegistry:
 # Singleton registry instance
 registry = ToolRegistry()
 
-# Budget governance is on whenever config.yaml carries a budget block, so the
-# documented caps and approval thresholds are enforced by the shipped code
-# instead of being inert. A project without a budget block keeps today's
-# behavior (gate inactive); `budget.mode: observe` records without blocking.
-_loaded_config = OpenMontageConfig.load()
-if "budget" in _loaded_config.model_fields_set:
-    _repo_root = Path(__file__).resolve().parent.parent
-    registry.enable_budget(_loaded_config.budget, cost_log_path=_repo_root / "cost_log.json")
+def enable_budget_from_config(
+    tool_registry: Optional["ToolRegistry"] = None,
+    repo_root: Optional[Path] = None,
+) -> Optional[CostGate]:
+    """Activate budget governance from config.yaml's budget block, if declared.
+
+    Production entry points call this once at startup. When config.yaml
+    carries a ``budget:`` block, the gate is installed on the registry
+    (already-registered tools are re-wrapped) and cost entries persist to
+    ``cost_log.json`` at the repo root; without a budget block, nothing
+    changes and None is returned.
+
+    Importing this module has no side effects, so tests and library consumers
+    keep today's behavior unless they opt in — enforcement happens where
+    production execution starts, not at import time.
+    """
+    target = tool_registry or registry
+    if repo_root is None:
+        repo_root = Path(__file__).resolve().parent.parent
+    loaded = OpenMontageConfig.load(repo_root / "config.yaml")
+    if "budget" not in loaded.model_fields_set:
+        return None
+    return target.enable_budget(loaded.budget, cost_log_path=repo_root / "cost_log.json")

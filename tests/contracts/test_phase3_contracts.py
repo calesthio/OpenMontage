@@ -133,7 +133,7 @@ class TestPiperTTS:
             return original_import(name, *args, **kwargs)
 
         monkeypatch.setattr(
-            shutil, "which", lambda cmd: None if cmd == "piper" else original_which(cmd)
+            shutil, "which", lambda cmd: None if Path(cmd).name == "piper" else original_which(cmd)
         )
         monkeypatch.setattr(builtins, "__import__", fake_import)
 

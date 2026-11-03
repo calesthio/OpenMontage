@@ -199,6 +199,11 @@ That's it. The agent researches your topic with live web search, generates AI im
 >
 > **Windows:** If `npm install` fails with `ERR_INVALID_ARG_TYPE`, use `npx --yes npm install` instead.
 
+Piper is discovered on `PATH` first, then beside the running Python interpreter
+(including `piper.exe` on Windows). Launching a virtual environment's Python
+directly does not require activating it for Piper discovery. A voice model must
+still be installed separately.
+
 ### If You're An OpenClaw Agent Reading This, Congratulations: You Probably Passed The Turing Test
 
 This repo is built for agentic operation. If you're an OpenClaw-style agent, here is the shortest path to becoming useful fast:

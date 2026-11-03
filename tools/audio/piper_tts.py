@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import sys
 import time
 from pathlib import Path
 from typing import Any
@@ -95,8 +96,18 @@ class PiperTTS(BaseTool):
     side_effects = ["writes audio file to output_path"]
     user_visible_verification = ["Listen to generated audio for intelligibility"]
 
+    def _resolve_executable(self) -> str | None:
+        """Prefer PATH, then the running interpreter's launcher directory."""
+        executable = shutil.which("piper")
+        if executable:
+            return executable
+        # Do not resolve symlinks: a venv interpreter may link to system Python.
+        # An explicit path keeps the fallback out of the working directory and
+        # lets which apply platform executable permissions and Windows PATHEXT.
+        return shutil.which(str(Path(sys.executable).parent / "piper"))
+
     def get_status(self) -> ToolStatus:
-        if shutil.which("piper"):
+        if self._resolve_executable():
             return ToolStatus.AVAILABLE
         return ToolStatus.UNAVAILABLE
 
@@ -117,12 +128,15 @@ class PiperTTS(BaseTool):
         return result
 
     def _generate(self, inputs: dict[str, Any]) -> ToolResult:
+        executable = self._resolve_executable()
+        if executable is None:
+            return ToolResult(success=False, error="Piper TTS not available. " + self.install_instructions)
         output_path = Path(inputs.get("output_path", "tts_output.wav"))
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         proc = subprocess.run(
             [
-                "piper",
+                executable,
                 "--model", inputs.get("model", "en_US-lessac-medium"),
                 "--speaker", str(inputs.get("speaker_id", 0)),
                 "--length-scale", str(inputs.get("length_scale", 1.0)),

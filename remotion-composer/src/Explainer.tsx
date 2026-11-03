@@ -602,6 +602,7 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
     return maybeWrapWithBg(
       <CalloutBox
         text={cut.text} type={cut.callout_type} title={cut.title}
+        fontSize={cut.fontSize}
         borderColor={accent} backgroundColor={cut.backgroundColor || theme.surfaceColor}
         textColor={textColor} containerBackgroundColor={bgColor}
       />

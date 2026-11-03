@@ -9,10 +9,13 @@ from __future__ import annotations
 import importlib
 import inspect
 import pkgutil
+from pathlib import Path
 from types import ModuleType
 from typing import Any, Optional
 
+from lib.config_model import BudgetConfig, OpenMontageConfig
 from tools.base_tool import BaseTool, ToolStatus, ToolTier, ToolStability
+from tools.cost_gate import CostGate
 
 
 # Unicode punctuation that breaks on Windows cp1252 stdout. Map each to an
@@ -58,12 +61,32 @@ class ToolRegistry:
     def __init__(self) -> None:
         self._tools: dict[str, BaseTool] = {}
         self._discovered_packages: set[str] = set()
+        self.cost_gate: Optional[CostGate] = None
 
     def register(self, tool: BaseTool) -> None:
         """Register a tool instance."""
         if not tool.name:
             raise ValueError("Tool must have a non-empty name")
         self._tools[tool.name] = tool
+        if self.cost_gate is not None:
+            self.cost_gate.wrap(tool)
+
+    def enable_budget(
+        self,
+        config: BudgetConfig,
+        cost_log_path: Optional[Path] = None,
+    ) -> CostGate:
+        """Activate budget governance on this registry.
+
+        Installs a CostGate that estimates, reserves, approves, and
+        reconciles every paid tool call. Idempotent in effect: a later call
+        replaces the previous gate and re-wraps registered tools.
+        """
+        gate = CostGate(config, cost_log_path=cost_log_path)
+        self.cost_gate = gate
+        for tool in list(self._tools.values()):
+            gate.wrap(tool)
+        return gate
 
     def clear(self) -> None:
         """Clear registered tools and discovery state."""
@@ -490,3 +513,12 @@ class ToolRegistry:
 
 # Singleton registry instance
 registry = ToolRegistry()
+
+# Budget governance is on whenever config.yaml carries a budget block, so the
+# documented caps and approval thresholds are enforced by the shipped code
+# instead of being inert. A project without a budget block keeps today's
+# behavior (gate inactive); `budget.mode: observe` records without blocking.
+_loaded_config = OpenMontageConfig.load()
+if "budget" in _loaded_config.model_fields_set:
+    _repo_root = Path(__file__).resolve().parent.parent
+    registry.enable_budget(_loaded_config.budget, cost_log_path=_repo_root / "cost_log.json")

@@ -246,6 +246,13 @@ class HyperFramesCompose(BaseTool):
     #   {"error": "<short>"}   → resolution failed (offline, unpublished, etc.)
     # We cache per-process so the first call pays ~2-5s and subsequent calls
     # (get_info spam from the registry) are free.
+    # npm on Windows costs ~6s of startup before it does any work, and the
+    # doctor command runs a dozen subprocess probes (ffmpeg, chrome, docker...).
+    # The former 5s/20s budgets were unreachable here and reported a healthy
+    # runtime as unavailable. Measured: npm view ~7.5s, doctor ~26s warm.
+    _NPM_RESOLVE_TIMEOUT = 20
+    _CLI_PROBE_TIMEOUT = 60
+
     _npm_resolve_cache: Optional[dict[str, str]] = None
     _cli_probe_cache: Optional[dict[str, str]] = None
 
@@ -276,8 +283,8 @@ class HyperFramesCompose(BaseTool):
         on PATH, which meant `runtime_available: True` on any machine with
         Node + FFmpeg — even offline, even if npm was down, even if the
         package was unpublished. This method performs a cheap
-        `npm view hyperframes version` (5s timeout) and caches the answer
-        for the rest of the process.
+        `npm view hyperframes version` (see `_NPM_RESOLVE_TIMEOUT`) and caches
+        the answer for the rest of the process.
 
         Returns {"version": "X.Y.Z"} on success, {"error": "<short>"} on any
         failure (404, timeout, network error, npm missing). Never raises.
@@ -295,10 +302,12 @@ class HyperFramesCompose(BaseTool):
                 [npm, "view", cls._NPM_PACKAGE, "version"],
                 capture_output=True,
                 text=True,
-                timeout=5,
+                timeout=cls._NPM_RESOLVE_TIMEOUT,
             )
         except subprocess.TimeoutExpired:
-            cls._npm_resolve_cache = {"error": "timeout (5s) — offline or slow registry"}
+            cls._npm_resolve_cache = {
+                "error": f"timeout ({cls._NPM_RESOLVE_TIMEOUT}s) — offline or slow registry"
+            }
             return cls._npm_resolve_cache
         except (OSError, subprocess.SubprocessError) as e:
             cls._npm_resolve_cache = {"error": f"npm view failed: {type(e).__name__}"}
@@ -345,10 +354,12 @@ class HyperFramesCompose(BaseTool):
                 [npx, "--yes", cls._NPM_PACKAGE, "doctor", "--json"],
                 capture_output=True,
                 text=True,
-                timeout=20,
+                timeout=cls._CLI_PROBE_TIMEOUT,
             )
         except subprocess.TimeoutExpired:
-            cls._cli_probe_cache = {"error": "doctor timed out after 20s"}
+            cls._cli_probe_cache = {
+                "error": f"doctor timed out after {cls._CLI_PROBE_TIMEOUT}s"
+            }
             return cls._cli_probe_cache
         except (OSError, subprocess.SubprocessError) as exc:
             cls._cli_probe_cache = {"error": f"doctor failed: {type(exc).__name__}"}

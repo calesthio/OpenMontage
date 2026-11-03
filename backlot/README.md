@@ -11,9 +11,21 @@ python -m backlot open                # library view (all projects)
 python -m backlot serve --port 4750   # run the server in the foreground
 ```
 
-Backlot binds to `127.0.0.1` and accepts HTTP requests only for `127.0.0.1`
-or `localhost`, on the selected port. Other `Host` headers receive HTTP 400
-to protect local project data from DNS rebinding.
+Backlot defaults to binding `127.0.0.1` and accepts HTTP requests only for
+`127.0.0.1` or `localhost` (plus optional extra hosts below). Other `Host`
+headers receive HTTP 400 to protect local project data from DNS rebinding.
+
+Optional environment variables (defaults preserve local-only behavior):
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `BACKLOT_HOST` | `127.0.0.1` | Uvicorn bind address (e.g. `0.0.0.0` behind a reverse proxy) |
+| `BACKLOT_LOG_LEVEL` | `warning` | Uvicorn log level |
+| `BACKLOT_ALLOWED_HOSTS` | *(unset → loopback only)* | Comma-separated `Host` values allowed by `TrustedHostMiddleware` |
+| `BACKLOT_PORT` | `4750` | Port when not passing `--port` |
+
+When setting `BACKLOT_ALLOWED_HOSTS`, include every hostname clients use
+(including `127.0.0.1` and `localhost` if you still open the board locally).
 
 ## How it stays live
 

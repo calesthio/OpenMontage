@@ -1,0 +1,137 @@
+[
+ {
+  "out": "vo/narration_v2.mp3",
+  "status": "ok",
+  "error": null,
+  "data": {
+   "provider": "elevenlabs",
+   "model": "eleven_multilingual_v2",
+   "voice_id": "W2cdBod56VIbm57Ma8I9",
+   "text_length": 677,
+   "output": "/home/runner/work/OpenMontage/OpenMontage/renders/orchamind-promo/vo/narration_v2.mp3",
+   "format": "mp3_44100_128",
+   "request_id": "r3WsQU8AKCwjaSKV7nL0",
+   "cost_status": "estimated"
+  }
+ },
+ {
+  "out": "footage/01_site.mp4",
+  "status": "ok",
+  "error": null,
+  "data": {
+   "provider": "pixabay",
+   "video_id": 42923,
+   "user": "chuduyen215",
+   "tags": "construction site, construction workers, construction, worker, site, builder, build, job, truck, man, housebuilding, skyscraper",
+   "duration_seconds": 15,
+   "width": 1920,
+   "height": 1080,
+   "query": "construction site workers",
+   "output": "/home/runner/work/OpenMontage/OpenMontage/renders/orchamind-promo/footage/01_site.mp4",
+   "total_results": 846,
+   "results_returned": 10,
+   "license": "Pixabay Content License (free, no attribution required)",
+   "page_url": "https://pixabay.com/videos/id-42923/"
+  }
+ },
+ {
+  "out": "footage/02_electrician.mp4",
+  "status": "ok",
+  "error": null,
+  "data": {
+   "provider": "pixabay",
+   "video_id": 159674,
+   "user": "CreativeCommonsCentral",
+   "tags": "electrician, factory, circuits",
+   "duration_seconds": 8,
+   "width": 1920,
+   "height": 1080,
+   "query": "electrician wiring",
+   "output": "/home/runner/work/OpenMontage/OpenMontage/renders/orchamind-promo/footage/02_electrician.mp4",
+   "total_results": 50,
+   "results_returned": 10,
+   "license": "Pixabay Content License (free, no attribution required)",
+   "page_url": "https://pixabay.com/videos/id-159674/"
+  }
+ },
+ {
+  "out": "footage/03_roof.mp4",
+  "status": "ok",
+  "error": null,
+  "data": {
+   "provider": "pixabay",
+   "video_id": 202987,
+   "user": "Natures_Embrace",
+   "tags": "phone, smartphone, mobile, portable, screen, digital, communication, texting, business, work",
+   "duration_seconds": 15,
+   "width": 3840,
+   "height": 2160,
+   "query": "roofer roof work",
+   "output": "/home/runner/work/OpenMontage/OpenMontage/renders/orchamind-promo/footage/03_roof.mp4",
+   "total_results": 1171,
+   "results_returned": 10,
+   "license": "Pixabay Content License (free, no attribution required)",
+   "page_url": "https://pixabay.com/videos/id-202987/"
+  }
+ },
+ {
+  "out": "footage/04_timelapse.mp4",
+  "status": "ok",
+  "error": null,
+  "data": {
+   "provider": "pixabay",
+   "video_id": 92443,
+   "user": "NickyPe",
+   "tags": "bridge, railroad bridge, linz, flow, danube, light and shadow, new bridge, construction, transition, bridge construction, building, bridge elements, austria, steel construction, stole, timelapse",
+   "duration_seconds": 15,
+   "width": 3840,
+   "height": 2160,
+   "query": "construction timelapse building",
+   "output": "/home/runner/work/OpenMontage/OpenMontage/renders/orchamind-promo/footage/04_timelapse.mp4",
+   "total_results": 4404,
+   "results_returned": 10,
+   "license": "Pixabay Content License (free, no attribution required)",
+   "page_url": "https://pixabay.com/videos/id-92443/"
+  }
+ },
+ {
+  "out": "footage/05_tools.mp4",
+  "status": "ok",
+  "error": null,
+  "data": {
+   "provider": "pixabay",
+   "video_id": 166809,
+   "user": "AndyWolares",
+   "tags": "carpenter, saw, handmade, wood, woodworking, tool, construction, work, industry, factory, hands",
+   "duration_seconds": 12,
+   "width": 1920,
+   "height": 1080,
+   "query": "carpenter saw wood",
+   "output": "/home/runner/work/OpenMontage/OpenMontage/renders/orchamind-promo/footage/05_tools.mp4",
+   "total_results": 1138,
+   "results_returned": 10,
+   "license": "Pixabay Content License (free, no attribution required)",
+   "page_url": "https://pixabay.com/videos/id-166809/"
+  }
+ },
+ {
+  "out": "footage/06_hvac.mp4",
+  "status": "ok",
+  "error": null,
+  "data": {
+   "provider": "pixabay",
+   "video_id": 4973,
+   "user": "klimkin",
+   "tags": "jigsaw, board, construction, repair, square, pencil, to nag, saw, sawdust, cut off, close-up, carpenter, work",
+   "duration_seconds": 17,
+   "width": 1920,
+   "height": 1080,
+   "query": "plumber pipe repair",
+   "output": "/home/runner/work/OpenMontage/OpenMontage/renders/orchamind-promo/footage/06_hvac.mp4",
+   "total_results": 108,
+   "results_returned": 10,
+   "license": "Pixabay Content License (free, no attribution required)",
+   "page_url": "https://pixabay.com/videos/id-4973/"
+  }
+ }
+]

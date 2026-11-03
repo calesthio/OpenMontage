@@ -189,6 +189,35 @@ class CostGateTests(unittest.TestCase):
             with self.assertRaises(BudgetExceededError):
                 registry.get("fake_paid").execute({})
 
+    def test_enable_budget_from_config_activates_only_with_budget_block(self) -> None:
+        from tools.tool_registry import enable_budget_from_config
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            # No config.yaml: activation is a no-op.
+            gate = enable_budget_from_config(ToolRegistry(), repo_root=root)
+            self.assertIsNone(gate)
+            # With a budget block: the gate is installed and enforces.
+            (root / "config.yaml").write_text(
+                "budget:\n"
+                "  mode: cap\n"
+                "  total_usd: 1.0\n"
+                "  single_action_approval_usd: 99.0\n"
+                "  require_approval_for_new_paid_tool: false\n"
+            )
+            registry = ToolRegistry()
+            registry.register(_PaidTool())
+            gate = enable_budget_from_config(registry, repo_root=root)
+            self.assertIsNotNone(gate)
+            self.assertEqual(gate.tracker.mode, BudgetMode.CAP)
+            with self.assertRaises(BudgetExceededError):
+                registry.get("fake_paid").execute({})
+
+    def test_importing_tool_registry_has_no_side_effect(self) -> None:
+        # The module import must not activate governance on its own.
+        import tools.tool_registry as tr
+        self.assertIsNone(tr.registry.cost_gate)
+
 
 if __name__ == "__main__":
     unittest.main()

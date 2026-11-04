@@ -478,6 +478,7 @@ def test_polling_timeout_is_bounded_and_preserves_task_id(monkeypatch, model):
         "get",
         lambda *args, **kwargs: pytest.fail("deadline must stop polling"),
     )
+
     class _ExpiredClock:
         def __init__(self):
             self._ticks = iter([0.0, 2.0])

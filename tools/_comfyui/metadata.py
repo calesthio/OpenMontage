@@ -30,6 +30,34 @@ COMFYUI_SETUP_OFFER: dict[str, Any] = {
 
 
 BUNDLED_MODEL_STACKS: dict[str, list[dict[str, Any]]] = {
+    "minimax-h3-local": [
+        {
+            "role": "diffusion_model",
+            "name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+            "quantization": "INT8 ConvRot",
+            "destination_hint": "ComfyUI/models/diffusion_models/",
+            "download_url": "https://huggingface.co/Comfy-Org/MiniMax-H3/tree/main/diffusion_models",
+        },
+        {
+            "role": "text_encoder",
+            "name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+            "quantization": "NVFP4 AWQ",
+            "destination_hint": "ComfyUI/models/text_encoders/",
+            "download_url": "https://huggingface.co/Comfy-Org/MiniMax-H3/tree/main/text_encoders",
+        },
+        {
+            "role": "video_vae",
+            "name": "minimax_h3_video_vae_fp16.safetensors",
+            "destination_hint": "ComfyUI/models/vae/",
+            "download_url": "https://huggingface.co/Comfy-Org/MiniMax-H3/tree/main/vae",
+        },
+        {
+            "role": "audio_vae",
+            "name": "minimax_h3_audio_vae_fp32.safetensors",
+            "destination_hint": "ComfyUI/models/vae/",
+            "download_url": "https://huggingface.co/Comfy-Org/MiniMax-H3/tree/main/vae",
+        },
+    ],
     "flux2-txt2img": [
         {
             "role": "diffusion_model",
@@ -204,7 +232,9 @@ def workflow_hash(workflow: dict[str, Any]) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
-def model_stack(workflow_key: str | None, inputs: dict[str, Any]) -> list[dict[str, Any]]:
+def model_stack(
+    workflow_key: str | None, inputs: dict[str, Any]
+) -> list[dict[str, Any]]:
     """Return bundled or caller-supplied model stack metadata."""
     if workflow_key:
         return [dict(item) for item in BUNDLED_MODEL_STACKS[workflow_key]]
@@ -228,7 +258,9 @@ def missing_models_payload(
         meta = dict(stack_by_name.get(name, {}))
         meta.setdefault("name", name)
         meta.setdefault("role", "unknown")
-        meta.setdefault("destination_hint", "ComfyUI/models/ matching the workflow node")
+        meta.setdefault(
+            "destination_hint", "ComfyUI/models/ matching the workflow node"
+        )
         meta.setdefault("download_url", None)
         items.append(meta)
 

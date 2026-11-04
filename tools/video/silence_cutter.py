@@ -33,7 +33,7 @@ from tools.base_tool import (
 
 class SilenceCutter(BaseTool):
     name = "silence_cutter"
-    version = "0.1.0"
+    version = "0.1.1"
     tier = ToolTier.CORE
     capability = "video_post"
     provider = "ffmpeg"
@@ -99,8 +99,8 @@ class SilenceCutter(BaseTool):
     retry_policy = RetryPolicy(max_retries=1, retryable_errors=["FFmpeg error"])
     resume_support = ResumeSupport.FROM_START
     idempotency_key_fields = [
-        "input_path", "mode", "silence_threshold_db",
-        "min_silence_duration", "padding_seconds",
+        "input_path", "mode", "silence_threshold_db", "min_silence_duration",
+        "padding_seconds", "silence_speed_factor", "codec", "crf",
     ]
     side_effects = ["writes cut video to output_path"]
     user_visible_verification = [
@@ -382,14 +382,18 @@ class SilenceCutter(BaseTool):
             # Build a timeline of segments: speech at 1x, silence at Nx
             all_segments = []
 
+            cursor = 0.0
             for seg in speech_segments:
-                all_segments.append({"start": seg["start"], "end": seg["end"], "speed": 1.0})
-
-            for sil in silences:
-                all_segments.append({"start": sil["start"], "end": sil["end"], "speed": speed_factor})
-
-            # Sort by start time and merge overlaps
-            all_segments.sort(key=lambda s: s["start"])
+                if seg["start"] > cursor:
+                    all_segments.append({
+                        "start": cursor, "end": seg["start"], "speed": speed_factor
+                    })
+                all_segments.append({**seg, "speed": 1.0})
+                cursor = seg["end"]
+            if cursor < total_duration:
+                all_segments.append({
+                    "start": cursor, "end": total_duration, "speed": speed_factor
+                })
 
             # Process each segment
             seg_files = []
@@ -417,10 +421,14 @@ class SilenceCutter(BaseTool):
                     cmd = [
                         "ffmpeg", "-y",
                         "-i", str(input_path),
-                        "-ss", f"{seg['start']:.3f}",
-                        "-to", f"{seg['end']:.3f}",
-                        "-filter:v", f"setpts={pts:.4f}*PTS",
-                        "-filter:a", atempo_chain,
+                        "-filter:v", (
+                            f"trim=start={seg['start']:.6f}:end={seg['end']:.6f},"
+                            f"setpts={pts:.8f}*(PTS-STARTPTS)"
+                        ),
+                        "-filter:a", (
+                            f"atrim=start={seg['start']:.6f}:end={seg['end']:.6f},"
+                            f"asetpts=PTS-STARTPTS,{atempo_chain}"
+                        ),
                         "-c:v", codec, "-crf", str(crf), "-preset", "fast",
                         "-c:a", "aac", "-b:a", "192k",
                         str(seg_path),

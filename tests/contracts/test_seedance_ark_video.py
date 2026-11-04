@@ -55,10 +55,29 @@ class TestContract:
 
     def test_official_model_ids(self):
         assert SeedanceArkVideo.MODEL_IDS == {
+            "2.5": "doubao-seedance-2-5-260628",
             "standard": "doubao-seedance-2-0-260128",
             "fast": "doubao-seedance-2-0-fast-260128",
             "mini": "doubao-seedance-2-0-mini-260615",
         }
+
+    def test_seedance_25_contract_and_limits(self):
+        tool = SeedanceArkVideo()
+        payload = tool._build_payload(
+            {
+                "prompt": "A continuous cinematic chase with synchronized sound",
+                "model_variant": "2.5",
+                "duration": 30,
+                "resolution": "720p",
+                "aspect_ratio": "16:9",
+            }
+        )
+        assert payload["model"] == "doubao-seedance-2-5-260628"
+        assert payload["duration"] == 30
+        assert payload["generate_audio"] is True
+
+        with pytest.raises(ValueError, match="custom_price_cny_per_million_tokens"):
+            tool.estimate_cost(payload)
 
 
 class TestTaskActions:
@@ -310,9 +329,7 @@ class TestInputSafety:
             ),
         ],
     )
-    def test_invalid_input_never_reaches_network(
-        self, inputs, message, monkeypatch
-    ):
+    def test_invalid_input_never_reaches_network(self, inputs, message, monkeypatch):
         monkeypatch.setenv("ARK_API_KEY", "fake-ark-key")
 
         def fail_network(*args, **kwargs):
@@ -333,16 +350,12 @@ class TestInputSafety:
             raise RuntimeError(f"request failed using {api_key}")
 
         monkeypatch.setattr("requests.post", failing_post)
-        result = SeedanceArkVideo().execute(
-            {"task_action": "create", "prompt": "x"}
-        )
+        result = SeedanceArkVideo().execute({"task_action": "create", "prompt": "x"})
         assert result.success is False
         assert api_key not in result.error
         assert "[redacted]" in result.error
 
-    def test_download_errors_redact_signed_url_and_preserve_task_id(
-        self, monkeypatch
-    ):
+    def test_download_errors_redact_signed_url_and_preserve_task_id(self, monkeypatch):
         monkeypatch.setenv("ARK_API_KEY", "fake-ark-key")
 
         def fake_post(*args, **kwargs):
@@ -439,9 +452,7 @@ class TestInputSafety:
         assert tiny_result.success is False
         assert "300 to 6000" in tiny_result.error
 
-    def test_corrupt_or_tiny_image_data_uri_never_reaches_network(
-        self, monkeypatch
-    ):
+    def test_corrupt_or_tiny_image_data_uri_never_reaches_network(self, monkeypatch):
         from io import BytesIO
 
         from PIL import Image
@@ -465,10 +476,9 @@ class TestInputSafety:
 
         buffer = BytesIO()
         Image.new("RGB", (1, 1), "white").save(buffer, format="PNG")
-        tiny_uri = (
-            "data:image/png;base64,"
-            + base64.b64encode(buffer.getvalue()).decode("ascii")
-        )
+        tiny_uri = "data:image/png;base64," + base64.b64encode(
+            buffer.getvalue()
+        ).decode("ascii")
         tiny = SeedanceArkVideo().execute(
             {
                 "task_action": "create",
@@ -487,15 +497,11 @@ class TestInputSafety:
             raise AssertionError("invalid API Key config must not call network")
 
         monkeypatch.setattr("requests.post", fail_network)
-        result = SeedanceArkVideo().execute(
-            {"task_action": "create", "prompt": "x"}
-        )
+        result = SeedanceArkVideo().execute({"task_action": "create", "prompt": "x"})
         assert result.success is False
         assert "remove the 'Bearer ' prefix" in result.error
 
-    def test_rejects_local_reference_video_before_network(
-        self, monkeypatch, tmp_path
-    ):
+    def test_rejects_local_reference_video_before_network(self, monkeypatch, tmp_path):
         monkeypatch.setenv("ARK_API_KEY", "fake-ark-key")
         video = tmp_path / "reference.mp4"
         video.write_bytes(b"not-a-real-video")
@@ -533,9 +539,7 @@ class TestInputSafety:
         assert result.success is False
         assert "only 480p or 720p" in result.error
 
-    def test_short_local_audio_never_reaches_network(
-        self, monkeypatch, tmp_path
-    ):
+    def test_short_local_audio_never_reaches_network(self, monkeypatch, tmp_path):
         monkeypatch.setenv("ARK_API_KEY", "fake-ark-key")
         audio = tmp_path / "short.wav"
         with wave.open(str(audio), "wb") as writer:
@@ -568,9 +572,7 @@ class TestInputSafety:
             raise AssertionError("local cost config error must precede paid POST")
 
         monkeypatch.setattr("requests.post", fail_network)
-        result = SeedanceArkVideo().execute(
-            {"task_action": "create", "prompt": "x"}
-        )
+        result = SeedanceArkVideo().execute({"task_action": "create", "prompt": "x"})
         assert result.success is False
         assert result.data == {}
 
@@ -585,9 +587,7 @@ class TestInputSafety:
             raise AssertionError("non-finite exchange rate reached paid POST")
 
         monkeypatch.setattr("requests.post", fail_network)
-        result = SeedanceArkVideo().execute(
-            {"task_action": "create", "prompt": "x"}
-        )
+        result = SeedanceArkVideo().execute({"task_action": "create", "prompt": "x"})
         assert result.success is False
         assert "finite" in result.error
 
@@ -640,9 +640,7 @@ class TestInputSafety:
         assert result.success is False
         assert "finite" in result.error
 
-    def test_custom_query_without_price_reports_unknown_not_zero(
-        self, monkeypatch
-    ):
+    def test_custom_query_without_price_reports_unknown_not_zero(self, monkeypatch):
         monkeypatch.setenv("ARK_API_KEY", "fake-ark-key")
         monkeypatch.setattr(
             "requests.get",
@@ -679,9 +677,7 @@ class TestInputSafety:
                     {"error": {"code": "InternalError"}},
                     status_code=503,
                 )
-            return _FakeResponse(
-                {"id": "cgt-test-123", "status": "running"}
-            )
+            return _FakeResponse({"id": "cgt-test-123", "status": "running"})
 
         monkeypatch.setattr("requests.get", fake_get)
         monkeypatch.setattr("time.sleep", lambda *_: None)
@@ -782,9 +778,7 @@ class TestOfficialCostFormula:
         assert dry["valid"] is False
         assert "pricing is unknown" in dry["error"]
 
-    def test_custom_endpoint_requires_price_before_paid_post(
-        self, monkeypatch
-    ):
+    def test_custom_endpoint_requires_price_before_paid_post(self, monkeypatch):
         monkeypatch.setenv("ARK_API_KEY", "fake-ark-key")
 
         def fail_network(*args, **kwargs):
@@ -836,9 +830,7 @@ class TestOfficialCostFormula:
         assert result.success is False
         assert "finite" in result.error
 
-    def test_valid_audio_data_uri_reaches_mocked_create(
-        self, monkeypatch, tmp_path
-    ):
+    def test_valid_audio_data_uri_reaches_mocked_create(self, monkeypatch, tmp_path):
         monkeypatch.setenv("ARK_API_KEY", "fake-ark-key")
         audio = tmp_path / "two-seconds.wav"
         with wave.open(str(audio), "wb") as writer:
@@ -846,10 +838,9 @@ class TestOfficialCostFormula:
             writer.setsampwidth(2)
             writer.setframerate(8_000)
             writer.writeframes(b"\x00\x00" * 16_000)
-        audio_uri = (
-            "data:audio/wav;base64,"
-            + base64.b64encode(audio.read_bytes()).decode("ascii")
-        )
+        audio_uri = "data:audio/wav;base64," + base64.b64encode(
+            audio.read_bytes()
+        ).decode("ascii")
         observed = {}
 
         def fake_post(url, **kwargs):

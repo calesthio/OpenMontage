@@ -1,0 +1,4743 @@
+{
+  "alibaba/wan-3.0/image-to-video": {
+    "input_schema": {
+      "properties": {
+        "aspect_ratio": {
+          "default": "adaptive",
+          "type": "string",
+          "title": "Aspect Ratio",
+          "enum": [
+            "adaptive",
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16"
+          ],
+          "description": "Output aspect ratio, or adaptive selection."
+        },
+        "enable_prompt_expansion": {
+          "type": "boolean",
+          "title": "Enable Prompt Expansion",
+          "description": "Enable intelligent prompt rewriting. Disabling it can save roughly 20-60 seconds of latency but is likely to degrade generation quality.",
+          "default": true
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Seed"
+        },
+        "duration": {
+          "anyOf": [
+            {
+              "maximum": 30,
+              "minimum": 2,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 5,
+          "title": "Duration",
+          "description": "Output duration in seconds. Set to null for smart duration, which lets the model pick a length from the prompt and reference media."
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "title": "Enable Safety Checker",
+          "description": "Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked.",
+          "default": true
+        },
+        "end_image_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "End Image Url",
+          "description": "Last frame of the generated video. Requires start_image_url."
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Prompt",
+          "description": "Text prompt describing the motion to generate."
+        },
+        "audio": {
+          "default": true,
+          "type": "boolean",
+          "title": "Audio",
+          "description": "Include generated audio."
+        },
+        "enable_thinking": {
+          "default": false,
+          "type": "boolean",
+          "title": "Enable Thinking",
+          "description": "Enable enhanced reasoning before generation."
+        },
+        "resolution": {
+          "default": "1080p",
+          "type": "string",
+          "title": "Resolution",
+          "enum": [
+            "480p",
+            "720p",
+            "1080p"
+          ],
+          "description": "Output video resolution tier."
+        },
+        "start_image_url": {
+          "type": "string",
+          "title": "Start Image Url",
+          "description": "First frame of the generated video."
+        }
+      },
+      "required": [
+        "start_image_url"
+      ],
+      "title": "Wan30ImageToVideoInput",
+      "type": "object",
+      "x-fal-order-properties": [
+        "prompt",
+        "resolution",
+        "aspect_ratio",
+        "duration",
+        "audio",
+        "enable_prompt_expansion",
+        "enable_thinking",
+        "seed",
+        "enable_safety_checker",
+        "start_image_url",
+        "end_image_url"
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=alibaba/wan-3.0/image-to-video",
+    "verified_on": "2026-10-03"
+  },
+  "alibaba/wan-3.0/reference-to-video": {
+    "input_schema": {
+      "properties": {
+        "file_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "File Url",
+          "description": "Document URL to base the video on. Requires enable_thinking=true."
+        },
+        "enable_prompt_expansion": {
+          "type": "boolean",
+          "title": "Enable Prompt Expansion",
+          "description": "Enable intelligent prompt rewriting. Disabling it can save roughly 20-60 seconds of latency but is likely to degrade generation quality.",
+          "default": true
+        },
+        "reference_video_urls": {
+          "maxItems": 5,
+          "type": "array",
+          "title": "Reference Video Urls",
+          "description": "Up to 5 reference video URLs totaling at most 15 seconds. Each clip must be at least 16 fps. Input video duration is billed in addition to output duration.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Seed"
+        },
+        "duration": {
+          "anyOf": [
+            {
+              "maximum": 30,
+              "minimum": 2,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 5,
+          "title": "Duration",
+          "description": "Output duration in seconds. Set to null for smart duration, which lets the model pick a length from the prompt and reference media."
+        },
+        "web_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Web Url",
+          "description": "Public webpage URL to base the video on. Requires enable_thinking=true. Only pages that do not require login can be read."
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Prompt",
+          "description": "Text prompt directing how the reference media is used. Reference media can be addressed positionally, e.g. 'the subject in Image 1 walks past Video 1'."
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "title": "Enable Safety Checker",
+          "description": "Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked.",
+          "default": true
+        },
+        "reference_image_urls": {
+          "maxItems": 10,
+          "type": "array",
+          "title": "Reference Image Urls",
+          "description": "Up to 10 reference image URLs.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "audio": {
+          "default": true,
+          "type": "boolean",
+          "title": "Audio",
+          "description": "Include generated audio."
+        },
+        "enable_thinking": {
+          "default": false,
+          "type": "boolean",
+          "title": "Enable Thinking",
+          "description": "Enable enhanced reasoning before generation."
+        },
+        "resolution": {
+          "default": "1080p",
+          "type": "string",
+          "title": "Resolution",
+          "enum": [
+            "480p",
+            "720p",
+            "1080p"
+          ],
+          "description": "Output video resolution tier."
+        },
+        "reference_audio_urls": {
+          "maxItems": 5,
+          "type": "array",
+          "title": "Reference Audio Urls",
+          "description": "Up to 5 reference audio URLs totaling at most 15 seconds.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "aspect_ratio": {
+          "default": "adaptive",
+          "type": "string",
+          "title": "Aspect Ratio",
+          "enum": [
+            "adaptive",
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16"
+          ],
+          "description": "Output aspect ratio, or adaptive selection."
+        }
+      },
+      "type": "object",
+      "title": "Wan30ReferenceToVideoInput",
+      "x-fal-order-properties": [
+        "prompt",
+        "resolution",
+        "aspect_ratio",
+        "duration",
+        "audio",
+        "enable_prompt_expansion",
+        "enable_thinking",
+        "seed",
+        "enable_safety_checker",
+        "reference_image_urls",
+        "reference_video_urls",
+        "reference_audio_urls",
+        "file_url",
+        "web_url"
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=alibaba/wan-3.0/reference-to-video",
+    "verified_on": "2026-10-03"
+  },
+  "alibaba/wan-3.0/text-to-video": {
+    "input_schema": {
+      "properties": {
+        "seed": {
+          "anyOf": [
+            {
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Seed"
+        },
+        "enable_prompt_expansion": {
+          "type": "boolean",
+          "title": "Enable Prompt Expansion",
+          "description": "Enable intelligent prompt rewriting. Disabling it can save roughly 20-60 seconds of latency but is likely to degrade generation quality.",
+          "default": true
+        },
+        "duration": {
+          "anyOf": [
+            {
+              "maximum": 30,
+              "minimum": 2,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 5,
+          "title": "Duration",
+          "description": "Output duration in seconds. Set to null for smart duration, which lets the model pick a length from the prompt and reference media."
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "title": "Enable Safety Checker",
+          "description": "Enable content moderation for input and output. Disabling it requires account authorization; unauthorized requests are always checked.",
+          "default": true
+        },
+        "prompt": {
+          "type": "string",
+          "title": "Prompt",
+          "maxLength": 20000,
+          "examples": [
+            "A red panda walking through a bamboo forest at sunrise"
+          ],
+          "description": "Text prompt for the generated video.",
+          "minLength": 1
+        },
+        "enable_thinking": {
+          "default": false,
+          "type": "boolean",
+          "title": "Enable Thinking",
+          "description": "Enable enhanced reasoning before generation."
+        },
+        "audio": {
+          "default": true,
+          "type": "boolean",
+          "title": "Audio",
+          "description": "Include generated audio."
+        },
+        "resolution": {
+          "default": "1080p",
+          "type": "string",
+          "title": "Resolution",
+          "enum": [
+            "480p",
+            "720p",
+            "1080p"
+          ],
+          "description": "Output video resolution tier."
+        },
+        "aspect_ratio": {
+          "default": "adaptive",
+          "type": "string",
+          "title": "Aspect Ratio",
+          "enum": [
+            "adaptive",
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16"
+          ],
+          "description": "Output aspect ratio, or adaptive selection."
+        }
+      },
+      "required": [
+        "prompt"
+      ],
+      "title": "Wan30TextToVideoInput",
+      "type": "object",
+      "x-fal-order-properties": [
+        "prompt",
+        "resolution",
+        "aspect_ratio",
+        "duration",
+        "audio",
+        "enable_prompt_expansion",
+        "enable_thinking",
+        "seed",
+        "enable_safety_checker"
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=alibaba/wan-3.0/text-to-video",
+    "verified_on": "2026-10-03"
+  },
+  "elevenlabs/tts/eleven-v4": {
+    "input_schema": {
+      "x-fal-order-properties": [
+        "text",
+        "voice",
+        "stability",
+        "similarity_boost",
+        "seed",
+        "language_code",
+        "output_format",
+        "apply_text_normalization",
+        "timestamps"
+      ],
+      "required": [
+        "text"
+      ],
+      "type": "object",
+      "properties": {
+        "timestamps": {
+          "description": "Whether to return character-level timing information with the generated audio.",
+          "type": "boolean",
+          "default": false,
+          "title": "Timestamps"
+        },
+        "apply_text_normalization": {
+          "description": "Whether to normalize text such as numbers and dates before generation.",
+          "enum": [
+            "auto",
+            "on",
+            "off"
+          ],
+          "type": "string",
+          "default": "auto",
+          "title": "Apply Text Normalization"
+        },
+        "output_format": {
+          "description": "Output format of the generated audio. Formatted as codec_sample_rate_bitrate.",
+          "enum": [
+            "mp3_22050_32",
+            "mp3_44100_32",
+            "mp3_44100_64",
+            "mp3_44100_96",
+            "mp3_44100_128",
+            "mp3_44100_192",
+            "pcm_8000",
+            "pcm_16000",
+            "pcm_22050",
+            "pcm_24000",
+            "pcm_44100",
+            "pcm_48000",
+            "ulaw_8000",
+            "alaw_8000",
+            "opus_48000_32",
+            "opus_48000_64",
+            "opus_48000_96",
+            "opus_48000_128",
+            "opus_48000_192"
+          ],
+          "type": "string",
+          "default": "mp3_44100_128",
+          "title": "Output Format"
+        },
+        "language_code": {
+          "description": "Language code (ISO 639-1) for speech generation and text normalization.",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Language Code"
+        },
+        "text": {
+          "description": "The text to convert to speech. Supports audio tags such as [whispering] and IPA pronunciation enclosed in forward slashes.",
+          "minLength": 1,
+          "maxLength": 5000,
+          "type": "string",
+          "examples": [
+            "[excited] Hello! Welcome to Eleven v4."
+          ],
+          "title": "Text"
+        },
+        "stability": {
+          "maximum": 1,
+          "description": "Voice stability. Lower values allow more expressive delivery; higher values make delivery more consistent.",
+          "type": "number",
+          "minimum": 0,
+          "default": 0.5,
+          "title": "Stability"
+        },
+        "voice": {
+          "description": "The voice to use for speech generation",
+          "type": "string",
+          "default": "Rachel",
+          "examples": [
+            "Aria",
+            "Roger",
+            "Sarah",
+            "Laura",
+            "Charlie",
+            "George",
+            "Callum",
+            "River",
+            "Liam",
+            "Charlotte",
+            "Alice",
+            "Matilda",
+            "Will",
+            "Jessica",
+            "Eric",
+            "Chris",
+            "Brian",
+            "Daniel",
+            "Lily",
+            "Bill"
+          ],
+          "title": "Voice"
+        },
+        "similarity_boost": {
+          "maximum": 1,
+          "description": "How closely the output follows the reference voice. Higher values increase similarity but may reduce naturalness.",
+          "type": "number",
+          "minimum": 0,
+          "default": 0.75,
+          "title": "Similarity Boost"
+        },
+        "seed": {
+          "description": "Seed for best-effort reproducibility. Identical output is not guaranteed.",
+          "anyOf": [
+            {
+              "maximum": 4294967295,
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Seed"
+        }
+      },
+      "title": "TextToSpeechRequestV4",
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=elevenlabs/tts/eleven-v4",
+    "verified_on": "2026-10-03"
+  },
+  "fal-ai/nano-banana-pro": {
+    "input_schema": {
+      "x-fal-order-properties": [
+        "prompt",
+        "num_images",
+        "seed",
+        "aspect_ratio",
+        "output_format",
+        "safety_tolerance",
+        "sync_mode",
+        "system_prompt",
+        "resolution",
+        "limit_generations",
+        "enable_web_search"
+      ],
+      "required": [
+        "prompt"
+      ],
+      "type": "object",
+      "title": "NanoBananaTextToImageInput",
+      "properties": {
+        "limit_generations": {
+          "default": true,
+          "type": "boolean",
+          "title": "Limit Generations",
+          "description": "Experimental parameter to limit the number of generations from each round of prompting to 1. Set to `True` to to disregard any instructions in the prompt regarding the number of images to generate."
+        },
+        "num_images": {
+          "minimum": 1,
+          "default": 1,
+          "type": "integer",
+          "title": "Number of Images",
+          "maximum": 4,
+          "description": "The number of images to generate."
+        },
+        "aspect_ratio": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "auto",
+                "21:9",
+                "16:9",
+                "3:2",
+                "4:3",
+                "5:4",
+                "1:1",
+                "4:5",
+                "3:4",
+                "2:3",
+                "9:16"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "1:1",
+          "title": "Aspect Ratio",
+          "description": "The aspect ratio of the generated image."
+        },
+        "system_prompt": {
+          "maxLength": 50000,
+          "default": "",
+          "type": "string",
+          "title": "System Prompt",
+          "description": "Optional system instruction that steers the model's persona and output style across the request. Leave blank to omit; when provided, it is sent as the system instruction to Gemini (or as a system message on OpenAI-compatible providers)."
+        },
+        "prompt": {
+          "maxLength": 50000,
+          "description": "The text prompt to generate an image from.",
+          "examples": [
+            "An action shot of a black lab swimming in an inground suburban swimming pool. The camera is placed meticulously on the water line, dividing the image in half, revealing both the dogs head above water holding a tennis ball in it's mouth, and it's paws paddling underwater."
+          ],
+          "minLength": 3,
+          "title": "Prompt",
+          "type": "string"
+        },
+        "sync_mode": {
+          "default": false,
+          "type": "boolean",
+          "title": "Sync Mode",
+          "description": "If `True`, the media will be returned as a data URI and the output data won't be available in the request history."
+        },
+        "resolution": {
+          "description": "The resolution of the image to generate.",
+          "default": "1K",
+          "type": "string",
+          "enum": [
+            "1K",
+            "2K",
+            "4K"
+          ],
+          "title": "Resolution"
+        },
+        "safety_tolerance": {
+          "description": "The safety tolerance level for content moderation. 1 is the most strict (blocks most content), 6 is the least strict.",
+          "default": "4",
+          "type": "string",
+          "enum": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6"
+          ],
+          "title": "Safety Tolerance"
+        },
+        "output_format": {
+          "default": "png",
+          "type": "string",
+          "title": "Output Format",
+          "enum": [
+            "jpeg",
+            "png",
+            "webp"
+          ],
+          "description": "The format of the generated image."
+        },
+        "enable_web_search": {
+          "default": false,
+          "type": "boolean",
+          "title": "Enable Web Search",
+          "description": "Enable web search for the image generation task. This will allow the model to use the latest information from the web to generate the image."
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The seed for the random number generator.",
+          "title": "Seed"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/nano-banana-pro",
+    "verified_on": "2026-10-03"
+  },
+  "fal-ai/nano-banana-pro/edit": {
+    "input_schema": {
+      "x-fal-order-properties": [
+        "prompt",
+        "num_images",
+        "seed",
+        "aspect_ratio",
+        "output_format",
+        "safety_tolerance",
+        "sync_mode",
+        "image_urls",
+        "system_prompt",
+        "resolution",
+        "limit_generations",
+        "enable_web_search"
+      ],
+      "required": [
+        "prompt",
+        "image_urls"
+      ],
+      "type": "object",
+      "title": "NanoBananaImageToImageInput",
+      "properties": {
+        "limit_generations": {
+          "default": true,
+          "type": "boolean",
+          "title": "Limit Generations",
+          "description": "Experimental parameter to limit the number of generations from each round of prompting to 1. Set to `True` to to disregard any instructions in the prompt regarding the number of images to generate."
+        },
+        "num_images": {
+          "minimum": 1,
+          "default": 1,
+          "type": "integer",
+          "title": "Number of Images",
+          "maximum": 4,
+          "description": "The number of images to generate."
+        },
+        "aspect_ratio": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "auto",
+                "21:9",
+                "16:9",
+                "3:2",
+                "4:3",
+                "5:4",
+                "1:1",
+                "4:5",
+                "3:4",
+                "2:3",
+                "9:16"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "auto",
+          "title": "Aspect Ratio",
+          "description": "The aspect ratio of the generated image."
+        },
+        "image_urls": {
+          "description": "The URLs of the images to use for image-to-image generation or image editing.",
+          "examples": [
+            [
+              "https://storage.googleapis.com/falserverless/example_inputs/nano-banana-edit-input.png",
+              "https://storage.googleapis.com/falserverless/example_inputs/nano-banana-edit-input-2.png"
+            ]
+          ],
+          "type": "array",
+          "title": "Image URLs",
+          "items": {
+            "type": "string"
+          }
+        },
+        "system_prompt": {
+          "maxLength": 50000,
+          "default": "",
+          "type": "string",
+          "title": "System Prompt",
+          "description": "Optional system instruction that steers the model's persona and output style across the request. Leave blank to omit; when provided, it is sent as the system instruction to Gemini (or as a system message on OpenAI-compatible providers)."
+        },
+        "prompt": {
+          "maxLength": 50000,
+          "description": "The prompt for image editing.",
+          "examples": [
+            "make a photo of the man driving the car down the california coastline"
+          ],
+          "minLength": 3,
+          "title": "Prompt",
+          "type": "string"
+        },
+        "sync_mode": {
+          "default": false,
+          "type": "boolean",
+          "title": "Sync Mode",
+          "description": "If `True`, the media will be returned as a data URI and the output data won't be available in the request history."
+        },
+        "resolution": {
+          "description": "The resolution of the image to generate.",
+          "default": "1K",
+          "type": "string",
+          "enum": [
+            "1K",
+            "2K",
+            "4K"
+          ],
+          "title": "Resolution"
+        },
+        "output_format": {
+          "default": "png",
+          "type": "string",
+          "title": "Output Format",
+          "enum": [
+            "jpeg",
+            "png",
+            "webp"
+          ],
+          "description": "The format of the generated image."
+        },
+        "safety_tolerance": {
+          "description": "The safety tolerance level for content moderation. 1 is the most strict (blocks most content), 6 is the least strict.",
+          "default": "4",
+          "type": "string",
+          "enum": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6"
+          ],
+          "title": "Safety Tolerance"
+        },
+        "enable_web_search": {
+          "default": false,
+          "type": "boolean",
+          "title": "Enable Web Search",
+          "description": "Enable web search for the image generation task. This will allow the model to use the latest information from the web to generate the image."
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The seed for the random number generator.",
+          "title": "Seed"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/nano-banana-pro/edit",
+    "verified_on": "2026-10-03"
+  },
+  "ideogram/v4.5": {
+    "input_schema": {
+      "properties": {
+        "seed": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Seed",
+          "description": "Random seed. Omit to choose automatically."
+        },
+        "sync_mode": {
+          "default": false,
+          "description": "Return image data directly in the response.",
+          "title": "Sync Mode",
+          "type": "boolean"
+        },
+        "num_images": {
+          "minimum": 1,
+          "default": 1,
+          "description": "Number of images to generate.",
+          "maximum": 8,
+          "type": "integer",
+          "title": "Number of Images"
+        },
+        "enable_prompt_expansion": {
+          "default": true,
+          "description": "Enable partner prompt expansion.",
+          "title": "Enable Prompt Expansion",
+          "type": "boolean"
+        },
+        "quality": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "default": "medium",
+          "description": "Text-to-image quality.",
+          "title": "Quality",
+          "type": "string"
+        },
+        "prompt": {
+          "examples": [
+            "A colorful storefront with a sign reading hello"
+          ],
+          "type": "string",
+          "title": "Prompt",
+          "description": "The generation or editing prompt.",
+          "maxLength": 10000,
+          "minLength": 1
+        },
+        "image_size": {
+          "default": "square_hd",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ImageSize"
+            },
+            {
+              "enum": [
+                "square_hd",
+                "square",
+                "portrait_4_3",
+                "portrait_16_9",
+                "landscape_4_3",
+                "landscape_16_9"
+              ],
+              "type": "string"
+            }
+          ],
+          "description": "Output size. square is promoted to square_hd (1024x1024). 4:3 presets use 1152x864 or 864x1152; 16:9 presets use 1280x720 or 720x1280. Explicit dimensions must match a supported size: 1024x1024, 1024x3072, 1120x896, 1152x2944, 1152x864, 1248x3328, 1248x832, 1280x3072, 1280x720, 1280x800, 1296x3168, 1440x2560, 1440x2880, 1440x720, 1600x2560, 1664x2496, 1728x2304, 1792x2240, 2048x2048, 2240x1792, 2304x1728, 2496x1664, 2560x1440, 2560x1600, 2880x1440, 2944x1152, 3072x1024, 3072x1280, 3168x1296, 3328x1248, 720x1280, 720x1440, 800x1280, 832x1248, 864x1152, 896x1120",
+          "title": "Image Size"
+        }
+      },
+      "x-fal-order-properties": [
+        "prompt",
+        "image_size",
+        "quality",
+        "enable_prompt_expansion",
+        "num_images",
+        "seed",
+        "sync_mode"
+      ],
+      "title": "GenerateInputV45",
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "prompt"
+      ],
+      "$defs": {
+        "ImageSize": {
+          "properties": {
+            "width": {
+              "default": 512,
+              "exclusiveMinimum": 0,
+              "description": "The width of the generated image.",
+              "maximum": 14142,
+              "type": "integer",
+              "title": "Width"
+            },
+            "height": {
+              "default": 512,
+              "exclusiveMinimum": 0,
+              "description": "The height of the generated image.",
+              "maximum": 14142,
+              "type": "integer",
+              "title": "Height"
+            }
+          },
+          "x-fal-order-properties": [
+            "width",
+            "height"
+          ],
+          "title": "ImageSize",
+          "type": "object"
+        }
+      }
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=ideogram/v4.5",
+    "verified_on": "2026-10-03"
+  },
+  "ideogram/v4.5/edit": {
+    "input_schema": {
+      "properties": {
+        "image_size": {
+          "default": "auto",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ImageSize"
+            },
+            {
+              "enum": [
+                "auto",
+                "square",
+                "square_hd",
+                "portrait_4_3",
+                "landscape_4_3",
+                "portrait_16_9",
+                "landscape_16_9"
+              ],
+              "type": "string"
+            }
+          ],
+          "description": "auto preserves source geometry, downscaled by the provider if needed. Only unmasked regular edits accept named presets or custom sizes: dimensions >=256, multiples of 32, area <=4194304, ratio <=6:1. Named presets use standard fal dimensions.",
+          "title": "Image Size"
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Seed",
+          "description": "Random seed. Omit to choose automatically."
+        },
+        "mask_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Mask URL",
+          "description": "Mask matching the source dimensions. Black edits, white preserves. Must contain both regions after rounding."
+        },
+        "reference_image_urls": {
+          "description": "Up to four references plus the primary source, or three references plus the primary source and mask.",
+          "title": "Reference Image URLs",
+          "maxItems": 4,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "edit_precision": {
+          "enum": [
+            "regular",
+            "high"
+          ],
+          "default": "regular",
+          "description": "regular uses Generate; high uses Precise Edit with unchanged-pixel restoration. Both always prepare structured edit instructions.",
+          "title": "Edit Precision",
+          "type": "string"
+        },
+        "num_images": {
+          "minimum": 1,
+          "default": 1,
+          "description": "Number of images to generate.",
+          "maximum": 8,
+          "type": "integer",
+          "title": "Number of Images"
+        },
+        "image_url": {
+          "title": "Image URL",
+          "description": "Primary source image to edit.",
+          "type": "string"
+        },
+        "quality": {
+          "enum": [
+            "very_low",
+            "low",
+            "medium",
+            "high"
+          ],
+          "default": "medium",
+          "description": "Quality tier for either edit precision. Defaults to medium.",
+          "title": "Quality",
+          "type": "string"
+        },
+        "prompt": {
+          "examples": [
+            "A colorful storefront with a sign reading hello"
+          ],
+          "type": "string",
+          "title": "Prompt",
+          "description": "The generation or editing prompt.",
+          "maxLength": 10000,
+          "minLength": 1
+        },
+        "sync_mode": {
+          "default": false,
+          "description": "Return image data directly in the response.",
+          "title": "Sync Mode",
+          "type": "boolean"
+        }
+      },
+      "x-fal-order-properties": [
+        "prompt",
+        "image_url",
+        "reference_image_urls",
+        "mask_url",
+        "edit_precision",
+        "quality",
+        "image_size",
+        "num_images",
+        "seed",
+        "sync_mode"
+      ],
+      "title": "EditInputV45",
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "prompt",
+        "image_url"
+      ],
+      "$defs": {
+        "ImageSize": {
+          "properties": {
+            "width": {
+              "default": 512,
+              "exclusiveMinimum": 0,
+              "description": "The width of the generated image.",
+              "maximum": 14142,
+              "type": "integer",
+              "title": "Width"
+            },
+            "height": {
+              "default": 512,
+              "exclusiveMinimum": 0,
+              "description": "The height of the generated image.",
+              "maximum": 14142,
+              "type": "integer",
+              "title": "Height"
+            }
+          },
+          "x-fal-order-properties": [
+            "width",
+            "height"
+          ],
+          "title": "ImageSize",
+          "type": "object"
+        }
+      }
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=ideogram/v4.5/edit",
+    "verified_on": "2026-10-03"
+  },
+  "minimax/h3-max/image-to-video": {
+    "input_schema": {
+      "properties": {
+        "image_url": {
+          "title": "Image URL",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "examples": [
+            "https://storage.googleapis.com/falserverless/example_inputs/hailuo23/pro_i2v_in.jpg"
+          ],
+          "description": "Optional URL of the image to use as the first frame. When provided, the output canvas follows this image. If only end_image_url is provided, the canvas follows that last frame instead. If both images are omitted, the request is handled as text-to-video (16:9 by default)."
+        },
+        "prompt": {
+          "title": "Prompt",
+          "description": "Text prompt for video generation",
+          "type": "string",
+          "maxLength": 50000,
+          "minLength": 1,
+          "examples": [
+            "The camera slowly pulls back from the scene, revealing the full landscape as clouds drift overhead and light shifts across the terrain."
+          ]
+        },
+        "target_audio_url": {
+          "title": "Target Audio Url",
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "\\S",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional URL of an audio clip at least 2 seconds long (maximum 15 MB) to pin to the generated soundtrack. Longer clips are trimmed to the requested video duration, keeping the beginning. The original audio replaces the output soundtrack, padded with silence if shorter than the video, without changing playback speed. Exceptionally high sample rates may be resampled to 96 kHz. Accepts an HTTP(S) URL or a base64 data URI."
+        },
+        "prompt_expansion_mode": {
+          "title": "Prompt Expansion Mode",
+          "type": "string",
+          "default": "balanced",
+          "examples": [
+            "disabled",
+            "balanced",
+            "quality"
+          ],
+          "description": "How much effort to spend rewriting the prompt before generation. 'disabled' skips prompt expansion. 'balanced' returns in about a second. 'quality' spends up to ~30s on a richer prompt."
+        },
+        "enable_safety_checker": {
+          "title": "Enable Safety Checker",
+          "type": "boolean",
+          "default": true,
+          "description": "If set to true, the safety checker will be enabled."
+        },
+        "resolution": {
+          "title": "Resolution",
+          "type": "string",
+          "default": "768P",
+          "enum": [
+            "480P",
+            "768P",
+            "1080P"
+          ],
+          "description": "The native generation resolution, or 1080P latent refinement from a native 768P source."
+        },
+        "duration": {
+          "title": "Duration",
+          "minimum": 0.92,
+          "type": "number",
+          "default": 5,
+          "maximum": 15,
+          "description": "Video length in seconds. The output can run up to about 0.7 s longer than requested. Use at least 2 s with target_audio_url."
+        },
+        "seed": {
+          "title": "Seed",
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Random seed. A random seed is selected when omitted."
+        },
+        "end_image_url": {
+          "title": "End Image URL",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional URL of the image to use as the last frame. It may be provided alone for end-only keyframe generation; in that case the output canvas follows this image."
+        },
+        "sync_mode": {
+          "title": "Sync Mode",
+          "type": "boolean",
+          "default": false,
+          "description": "Return the generated video as base64 instead of a CDN URL."
+        }
+      },
+      "title": "TurboImageToVideoHailuo03Input",
+      "type": "object",
+      "required": [
+        "prompt",
+        "prompt_expansion_mode"
+      ],
+      "x-fal-order-properties": [
+        "prompt",
+        "duration",
+        "resolution",
+        "seed",
+        "enable_safety_checker",
+        "sync_mode",
+        "prompt_expansion_mode",
+        "target_audio_url",
+        "image_url",
+        "end_image_url"
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=minimax/h3-max/image-to-video",
+    "verified_on": "2026-10-03"
+  },
+  "minimax/h3-max/reference-to-video": {
+    "input_schema": {
+      "properties": {
+        "middle_image_url": {
+          "title": "Middle Image",
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional image to guide the video at middle_frame_time. Requires start and end images and native 480P or 768P resolution."
+        },
+        "reference_image_urls": {
+          "title": "Reference Image URLs",
+          "description": "URLs of subject/style reference images, referenced in the prompt as Image 1, Image 2, and so on. Reference images, videos, and audio clips must add up to at most 12 files.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "examples": [
+            [
+              "https://storage.googleapis.com/falserverless/example_inputs/hailuo23/pro_i2v_in.jpg"
+            ]
+          ],
+          "maxItems": 9
+        },
+        "aspect_ratio": {
+          "title": "Aspect Ratio",
+          "type": "string",
+          "default": "adaptive",
+          "enum": [
+            "adaptive",
+            "21:9",
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16"
+          ],
+          "description": "The aspect ratio of the generated video."
+        },
+        "prompt": {
+          "title": "Prompt",
+          "description": "Text prompt for video generation. Refer to reference assets by their modality and order in the reference lists: Image 1, Image 2, Video 1, Audio 1, and so on.",
+          "type": "string",
+          "maxLength": 50000,
+          "minLength": 1,
+          "examples": [
+            "Image 1 is the female protagonist. Image 2 is her small dog. Keep the woman and dog consistent with their respective reference images while they walk together through a sunlit garden."
+          ]
+        },
+        "prompt_expansion_mode": {
+          "title": "Prompt Expansion Mode",
+          "type": "string",
+          "default": "balanced",
+          "examples": [
+            "disabled",
+            "balanced",
+            "quality"
+          ],
+          "description": "How much effort to spend rewriting the prompt before generation. 'disabled' skips prompt expansion. 'balanced' returns in about a second. 'quality' spends up to ~30s on a richer prompt."
+        },
+        "enable_safety_checker": {
+          "title": "Enable Safety Checker",
+          "type": "boolean",
+          "default": true,
+          "description": "If set to true, the safety checker will be enabled."
+        },
+        "resolution": {
+          "title": "Resolution",
+          "type": "string",
+          "default": "768P",
+          "enum": [
+            "480P",
+            "768P",
+            "1080P"
+          ],
+          "description": "The native generation resolution, or 1080P latent refinement from a native 768P source."
+        },
+        "seed": {
+          "title": "Seed",
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Random seed. A random seed is selected when omitted."
+        },
+        "reference_audio_urls": {
+          "title": "Reference Audio URLs",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "URLs of reference audio clips (2-15 seconds each, combined duration at most 15 seconds), referenced in the prompt as Audio 1, Audio 2, and so on. Images, videos, and audio can be provided individually or together. Reference images, videos, and audio clips must add up to at most 12 files.",
+          "maxItems": 3
+        },
+        "sync_mode": {
+          "title": "Sync Mode",
+          "type": "boolean",
+          "default": false,
+          "description": "Return the generated video as base64 instead of a CDN URL."
+        },
+        "image_url": {
+          "title": "Start Image URL",
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional URL of the image to use as the first frame. The video opens exactly on this image while the references keep the subjects consistent; the output canvas follows this image."
+        },
+        "middle_frame_time": {
+          "title": "Time (seconds)",
+          "anyOf": [
+            {
+              "exclusiveMaximum": 15,
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "examples": [
+            2.5
+          ],
+          "description": "Target time for the middle image, in seconds from the start. Rounded to the nearest frame at 24 fps; it must fall strictly between the first and last frames of the requested duration. Requires middle_image_url."
+        },
+        "reference_video_urls": {
+          "title": "Reference Video URLs",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "URLs of motion/reference video clips (2-15 seconds each, combined duration at most 15 seconds), referenced in the prompt as Video 1, Video 2, and so on. Reference images, videos, and audio clips must add up to at most 12 files.",
+          "maxItems": 3
+        },
+        "duration": {
+          "title": "Duration",
+          "minimum": 0.92,
+          "type": "number",
+          "default": 5,
+          "maximum": 15,
+          "description": "Video length in seconds. The output can run up to about 0.7 s longer than requested."
+        },
+        "end_image_url": {
+          "title": "End Image URL",
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional URL of the image to use as the last frame. The video ends exactly on this image."
+        }
+      },
+      "title": "TurboReferenceToVideoHailuo03Input",
+      "type": "object",
+      "required": [
+        "prompt",
+        "prompt_expansion_mode"
+      ],
+      "x-fal-order-properties": [
+        "prompt",
+        "reference_image_urls",
+        "reference_video_urls",
+        "reference_audio_urls",
+        "image_url",
+        "middle_image_url",
+        "middle_frame_time",
+        "end_image_url",
+        "duration",
+        "resolution",
+        "seed",
+        "enable_safety_checker",
+        "sync_mode",
+        "prompt_expansion_mode",
+        "aspect_ratio"
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=minimax/h3-max/reference-to-video",
+    "verified_on": "2026-10-03"
+  },
+  "minimax/h3-max/text-to-video": {
+    "input_schema": {
+      "properties": {
+        "prompt": {
+          "title": "Prompt",
+          "description": "Text prompt for video generation",
+          "type": "string",
+          "maxLength": 50000,
+          "minLength": 1,
+          "examples": [
+            "A white kitten chases a butterfly across a sunlit garden. Gentle camera tracking, natural movement, soft afternoon light filtering through the leaves."
+          ]
+        },
+        "aspect_ratio": {
+          "title": "Aspect Ratio",
+          "type": "string",
+          "default": "16:9",
+          "enum": [
+            "21:9",
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16"
+          ],
+          "description": "The aspect ratio of the generated video."
+        },
+        "target_audio_url": {
+          "title": "Target Audio Url",
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "\\S",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional URL of an audio clip at least 2 seconds long (maximum 15 MB) to pin to the generated soundtrack. Longer clips are trimmed to the requested video duration, keeping the beginning. The original audio replaces the output soundtrack, padded with silence if shorter than the video, without changing playback speed. Exceptionally high sample rates may be resampled to 96 kHz. Accepts an HTTP(S) URL or a base64 data URI."
+        },
+        "resolution": {
+          "title": "Resolution",
+          "type": "string",
+          "default": "768P",
+          "enum": [
+            "480P",
+            "768P",
+            "1080P"
+          ],
+          "description": "The native generation resolution, or 1080P latent refinement from a native 768P source."
+        },
+        "enable_safety_checker": {
+          "title": "Enable Safety Checker",
+          "type": "boolean",
+          "default": true,
+          "description": "If set to true, the safety checker will be enabled."
+        },
+        "prompt_expansion_mode": {
+          "title": "Prompt Expansion Mode",
+          "type": "string",
+          "default": "balanced",
+          "examples": [
+            "disabled",
+            "balanced",
+            "quality"
+          ],
+          "description": "How much effort to spend rewriting the prompt before generation. 'disabled' skips prompt expansion. 'balanced' returns in about a second. 'quality' spends up to ~30s on a richer prompt."
+        },
+        "duration": {
+          "title": "Duration",
+          "minimum": 0.92,
+          "type": "number",
+          "default": 5,
+          "maximum": 15,
+          "description": "Video length in seconds. The output can run up to about 0.7 s longer than requested. Use at least 2 s with target_audio_url."
+        },
+        "seed": {
+          "title": "Seed",
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Random seed. A random seed is selected when omitted."
+        },
+        "sync_mode": {
+          "title": "Sync Mode",
+          "type": "boolean",
+          "default": false,
+          "description": "Return the generated video as base64 instead of a CDN URL."
+        }
+      },
+      "title": "TurboTextToVideoHailuo03Input",
+      "type": "object",
+      "required": [
+        "prompt",
+        "prompt_expansion_mode"
+      ],
+      "x-fal-order-properties": [
+        "prompt",
+        "duration",
+        "resolution",
+        "seed",
+        "enable_safety_checker",
+        "sync_mode",
+        "prompt_expansion_mode",
+        "target_audio_url",
+        "aspect_ratio"
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=minimax/h3-max/text-to-video",
+    "verified_on": "2026-10-03"
+  },
+  "openai/gpt-image-2.5/flare/edit": {
+    "input_schema": {
+      "title": "GPTImage25EditImageRequest",
+      "type": "object",
+      "properties": {
+        "mask_url": {
+          "title": "Mask URL",
+          "description": "The URL of the mask image to use for the generation. This indicates what part of the image to edit.",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "background": {
+          "title": "Background",
+          "enum": [
+            "auto",
+            "transparent",
+            "opaque"
+          ],
+          "type": "string",
+          "description": "Background for the generated image",
+          "default": "auto"
+        },
+        "output_compression": {
+          "title": "Output Compression",
+          "description": "Compression level from 0 to 100. Only supported when output_format is 'jpeg' or 'webp'.",
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer",
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "image_urls": {
+          "title": "Image URLs",
+          "type": "array",
+          "examples": [
+            [
+              "https://v3b.fal.media/files/b/0a8691af/9Se_1_VX1wzTjjTOpWbs9_bb39c2eb-1a41-4749-b1d0-cf134abc8bbf.png"
+            ]
+          ],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 16,
+          "description": "The URLs of the images to use as a reference for the generation. A maximum of 16 images are allowed."
+        },
+        "output_format": {
+          "title": "Output Format",
+          "enum": [
+            "jpeg",
+            "png",
+            "webp"
+          ],
+          "type": "string",
+          "description": "Output format for the images",
+          "default": "png"
+        },
+        "num_images": {
+          "title": "Number of Images",
+          "minimum": 1,
+          "type": "integer",
+          "examples": [
+            1
+          ],
+          "description": "Number of images to generate",
+          "maximum": 10,
+          "default": 1
+        },
+        "quality": {
+          "enum": [
+            "auto",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "type": "string",
+          "title": "Quality",
+          "description": "Quality for the generated image. Higher settings increase detail, latency, and token usage. Use 'auto' to let the model choose.",
+          "default": "high"
+        },
+        "sync_mode": {
+          "title": "Sync Mode",
+          "type": "boolean",
+          "description": "If `True`, the media will be returned as a data URI and the output data won't be available in the request history.",
+          "default": false
+        },
+        "image_size": {
+          "title": "Image Size",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ImageSize"
+            },
+            {
+              "enum": [
+                "square_hd",
+                "square",
+                "portrait_4_3",
+                "portrait_16_9",
+                "landscape_4_3",
+                "landscape_16_9",
+                "auto"
+              ],
+              "type": "string"
+            }
+          ],
+          "description": "The size of the generated image. Use 'auto' to infer from input images.",
+          "default": "auto"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "minLength": 1,
+          "type": "string",
+          "examples": [
+            "Same workers, same beam, same lunch boxes - but they're all on their phones now. One is taking a selfie. One is on a call looking annoyed. Same danger, new priorities. A hard hat has AirPods."
+          ],
+          "maxLength": 32000,
+          "description": "The prompt for image generation"
+        }
+      },
+      "x-fal-order-properties": [
+        "prompt",
+        "image_urls",
+        "mask_url",
+        "image_size",
+        "background",
+        "quality",
+        "num_images",
+        "output_format",
+        "output_compression",
+        "sync_mode"
+      ],
+      "description": "GPT Image 2.5 edit inputs with model-specific quality and compression.",
+      "required": [
+        "prompt",
+        "image_urls"
+      ],
+      "additionalProperties": false,
+      "$defs": {
+        "ImageSize": {
+          "title": "ImageSize",
+          "type": "object",
+          "properties": {
+            "width": {
+              "title": "Width",
+              "exclusiveMinimum": 0,
+              "type": "integer",
+              "description": "The width of the generated image.",
+              "maximum": 14142,
+              "default": 512
+            },
+            "height": {
+              "title": "Height",
+              "exclusiveMinimum": 0,
+              "type": "integer",
+              "description": "The height of the generated image.",
+              "maximum": 14142,
+              "default": 512
+            }
+          },
+          "x-fal-order-properties": [
+            "width",
+            "height"
+          ]
+        }
+      }
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=openai/gpt-image-2.5/flare/edit",
+    "verified_on": "2026-10-03"
+  },
+  "openai/gpt-image-2.5/flare/text-to-image": {
+    "input_schema": {
+      "title": "GPTImage25TextToImageRequest",
+      "type": "object",
+      "properties": {
+        "background": {
+          "title": "Background",
+          "enum": [
+            "auto",
+            "transparent",
+            "opaque"
+          ],
+          "type": "string",
+          "description": "Background for the generated image",
+          "default": "auto"
+        },
+        "output_compression": {
+          "title": "Output Compression",
+          "description": "Compression level from 0 to 100. Only supported when output_format is 'jpeg' or 'webp'.",
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer",
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quality": {
+          "enum": [
+            "auto",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "type": "string",
+          "title": "Quality",
+          "description": "Quality for the generated image. Higher settings increase detail, latency, and token usage. Use 'auto' to let the model choose.",
+          "default": "high"
+        },
+        "output_format": {
+          "title": "Output Format",
+          "enum": [
+            "jpeg",
+            "png",
+            "webp"
+          ],
+          "type": "string",
+          "description": "Output format for the images",
+          "default": "png"
+        },
+        "sync_mode": {
+          "title": "Sync Mode",
+          "type": "boolean",
+          "description": "If `True`, the media will be returned as a data URI and the output data won't be available in the request history.",
+          "default": false
+        },
+        "num_images": {
+          "title": "Number of Images",
+          "minimum": 1,
+          "type": "integer",
+          "examples": [
+            1
+          ],
+          "description": "Number of images to generate",
+          "maximum": 10,
+          "default": 1
+        },
+        "image_size": {
+          "title": "Image Size",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ImageSize"
+            },
+            {
+              "enum": [
+                "square_hd",
+                "square",
+                "portrait_4_3",
+                "portrait_16_9",
+                "landscape_4_3",
+                "landscape_16_9",
+                "auto"
+              ],
+              "type": "string"
+            }
+          ],
+          "description": "The size of the generated image. Supports preset names, explicit {width, height}, or 'auto' to let the model pick the best size. Concrete sizes must have both dimensions as multiples of 16, max edge 3840px, aspect ratio <= 3:1, total pixels between 655,360 and 8,294,400.",
+          "default": "landscape_4_3"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "minLength": 1,
+          "type": "string",
+          "examples": [
+            "create a realistic image taken with iphone at these coordinates 41\u00b043\u203232\u2033N 49\u00b056\u203249\u2033W 15 April 1912"
+          ],
+          "maxLength": 32000,
+          "description": "The prompt for image generation"
+        }
+      },
+      "x-fal-order-properties": [
+        "prompt",
+        "image_size",
+        "background",
+        "quality",
+        "num_images",
+        "output_format",
+        "output_compression",
+        "sync_mode"
+      ],
+      "description": "GPT Image 2.5 generation inputs, kept separate from GPT Image 2.",
+      "required": [
+        "prompt"
+      ],
+      "additionalProperties": false,
+      "$defs": {
+        "ImageSize": {
+          "title": "ImageSize",
+          "type": "object",
+          "properties": {
+            "width": {
+              "title": "Width",
+              "exclusiveMinimum": 0,
+              "type": "integer",
+              "description": "The width of the generated image.",
+              "maximum": 14142,
+              "default": 512
+            },
+            "height": {
+              "title": "Height",
+              "exclusiveMinimum": 0,
+              "type": "integer",
+              "description": "The height of the generated image.",
+              "maximum": 14142,
+              "default": 512
+            }
+          },
+          "x-fal-order-properties": [
+            "width",
+            "height"
+          ]
+        }
+      }
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=openai/gpt-image-2.5/flare/text-to-image",
+    "verified_on": "2026-10-03"
+  },
+  "openai/gpt-image-2.5/sunburst/edit": {
+    "input_schema": {
+      "title": "GPTImage25EditImageRequest",
+      "type": "object",
+      "properties": {
+        "mask_url": {
+          "title": "Mask URL",
+          "description": "The URL of the mask image to use for the generation. This indicates what part of the image to edit.",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "background": {
+          "title": "Background",
+          "enum": [
+            "auto",
+            "transparent",
+            "opaque"
+          ],
+          "type": "string",
+          "description": "Background for the generated image",
+          "default": "auto"
+        },
+        "output_compression": {
+          "title": "Output Compression",
+          "description": "Compression level from 0 to 100. Only supported when output_format is 'jpeg' or 'webp'.",
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer",
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "image_urls": {
+          "title": "Image URLs",
+          "type": "array",
+          "examples": [
+            [
+              "https://v3b.fal.media/files/b/0a8691af/9Se_1_VX1wzTjjTOpWbs9_bb39c2eb-1a41-4749-b1d0-cf134abc8bbf.png"
+            ]
+          ],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 16,
+          "description": "The URLs of the images to use as a reference for the generation. A maximum of 16 images are allowed."
+        },
+        "output_format": {
+          "title": "Output Format",
+          "enum": [
+            "jpeg",
+            "png",
+            "webp"
+          ],
+          "type": "string",
+          "description": "Output format for the images",
+          "default": "png"
+        },
+        "num_images": {
+          "title": "Number of Images",
+          "minimum": 1,
+          "type": "integer",
+          "examples": [
+            1
+          ],
+          "description": "Number of images to generate",
+          "maximum": 10,
+          "default": 1
+        },
+        "quality": {
+          "enum": [
+            "auto",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "type": "string",
+          "title": "Quality",
+          "description": "Quality for the generated image. Higher settings increase detail, latency, and token usage. Use 'auto' to let the model choose.",
+          "default": "high"
+        },
+        "sync_mode": {
+          "title": "Sync Mode",
+          "type": "boolean",
+          "description": "If `True`, the media will be returned as a data URI and the output data won't be available in the request history.",
+          "default": false
+        },
+        "image_size": {
+          "title": "Image Size",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ImageSize"
+            },
+            {
+              "enum": [
+                "square_hd",
+                "square",
+                "portrait_4_3",
+                "portrait_16_9",
+                "landscape_4_3",
+                "landscape_16_9",
+                "auto"
+              ],
+              "type": "string"
+            }
+          ],
+          "description": "The size of the generated image. Use 'auto' to infer from input images.",
+          "default": "auto"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "minLength": 1,
+          "type": "string",
+          "examples": [
+            "Same workers, same beam, same lunch boxes - but they're all on their phones now. One is taking a selfie. One is on a call looking annoyed. Same danger, new priorities. A hard hat has AirPods."
+          ],
+          "maxLength": 32000,
+          "description": "The prompt for image generation"
+        }
+      },
+      "x-fal-order-properties": [
+        "prompt",
+        "image_urls",
+        "mask_url",
+        "image_size",
+        "background",
+        "quality",
+        "num_images",
+        "output_format",
+        "output_compression",
+        "sync_mode"
+      ],
+      "description": "GPT Image 2.5 edit inputs with model-specific quality and compression.",
+      "required": [
+        "prompt",
+        "image_urls"
+      ],
+      "additionalProperties": false,
+      "$defs": {
+        "ImageSize": {
+          "title": "ImageSize",
+          "type": "object",
+          "properties": {
+            "width": {
+              "title": "Width",
+              "exclusiveMinimum": 0,
+              "type": "integer",
+              "description": "The width of the generated image.",
+              "maximum": 14142,
+              "default": 512
+            },
+            "height": {
+              "title": "Height",
+              "exclusiveMinimum": 0,
+              "type": "integer",
+              "description": "The height of the generated image.",
+              "maximum": 14142,
+              "default": 512
+            }
+          },
+          "x-fal-order-properties": [
+            "width",
+            "height"
+          ]
+        }
+      }
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=openai/gpt-image-2.5/sunburst/edit",
+    "verified_on": "2026-10-03"
+  },
+  "openai/gpt-image-2.5/sunburst/text-to-image": {
+    "input_schema": {
+      "title": "GPTImage25TextToImageRequest",
+      "type": "object",
+      "properties": {
+        "background": {
+          "title": "Background",
+          "enum": [
+            "auto",
+            "transparent",
+            "opaque"
+          ],
+          "type": "string",
+          "description": "Background for the generated image",
+          "default": "auto"
+        },
+        "output_compression": {
+          "title": "Output Compression",
+          "description": "Compression level from 0 to 100. Only supported when output_format is 'jpeg' or 'webp'.",
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer",
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quality": {
+          "enum": [
+            "auto",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "type": "string",
+          "title": "Quality",
+          "description": "Quality for the generated image. Higher settings increase detail, latency, and token usage. Use 'auto' to let the model choose.",
+          "default": "high"
+        },
+        "output_format": {
+          "title": "Output Format",
+          "enum": [
+            "jpeg",
+            "png",
+            "webp"
+          ],
+          "type": "string",
+          "description": "Output format for the images",
+          "default": "png"
+        },
+        "sync_mode": {
+          "title": "Sync Mode",
+          "type": "boolean",
+          "description": "If `True`, the media will be returned as a data URI and the output data won't be available in the request history.",
+          "default": false
+        },
+        "num_images": {
+          "title": "Number of Images",
+          "minimum": 1,
+          "type": "integer",
+          "examples": [
+            1
+          ],
+          "description": "Number of images to generate",
+          "maximum": 10,
+          "default": 1
+        },
+        "image_size": {
+          "title": "Image Size",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ImageSize"
+            },
+            {
+              "enum": [
+                "square_hd",
+                "square",
+                "portrait_4_3",
+                "portrait_16_9",
+                "landscape_4_3",
+                "landscape_16_9",
+                "auto"
+              ],
+              "type": "string"
+            }
+          ],
+          "description": "The size of the generated image. Supports preset names, explicit {width, height}, or 'auto' to let the model pick the best size. Concrete sizes must have both dimensions as multiples of 16, max edge 3840px, aspect ratio <= 3:1, total pixels between 655,360 and 8,294,400.",
+          "default": "landscape_4_3"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "minLength": 1,
+          "type": "string",
+          "examples": [
+            "create a realistic image taken with iphone at these coordinates 41\u00b043\u203232\u2033N 49\u00b056\u203249\u2033W 15 April 1912"
+          ],
+          "maxLength": 32000,
+          "description": "The prompt for image generation"
+        }
+      },
+      "x-fal-order-properties": [
+        "prompt",
+        "image_size",
+        "background",
+        "quality",
+        "num_images",
+        "output_format",
+        "output_compression",
+        "sync_mode"
+      ],
+      "description": "GPT Image 2.5 generation inputs, kept separate from GPT Image 2.",
+      "required": [
+        "prompt"
+      ],
+      "additionalProperties": false,
+      "$defs": {
+        "ImageSize": {
+          "title": "ImageSize",
+          "type": "object",
+          "properties": {
+            "width": {
+              "title": "Width",
+              "exclusiveMinimum": 0,
+              "type": "integer",
+              "description": "The width of the generated image.",
+              "maximum": 14142,
+              "default": 512
+            },
+            "height": {
+              "title": "Height",
+              "exclusiveMinimum": 0,
+              "type": "integer",
+              "description": "The height of the generated image.",
+              "maximum": 14142,
+              "default": 512
+            }
+          },
+          "x-fal-order-properties": [
+            "width",
+            "height"
+          ]
+        }
+      }
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=openai/gpt-image-2.5/sunburst/text-to-image",
+    "verified_on": "2026-10-03"
+  },
+  "google/nano-banana-2.1": {
+    "input_schema": {
+      "required": [
+        "prompt"
+      ],
+      "title": "NanoBanana21TextToImageInput",
+      "properties": {
+        "seed": {
+          "title": "Seed",
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The seed for the random number generator."
+        },
+        "sync_mode": {
+          "title": "Sync Mode",
+          "default": false,
+          "description": "If `True`, the media will be returned as a data URI and the output data won't be available in the request history.",
+          "type": "boolean"
+        },
+        "safety_tolerance": {
+          "description": "The safety tolerance level for content moderation. 1 is the most strict (blocks most content), 6 is the least strict.",
+          "title": "Safety Tolerance",
+          "enum": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6"
+          ],
+          "default": "4",
+          "type": "string"
+        },
+        "num_images": {
+          "maximum": 4,
+          "title": "Number of Images",
+          "minimum": 1,
+          "default": 1,
+          "description": "The number of images to generate.",
+          "type": "integer"
+        },
+        "resolution": {
+          "description": "The resolution of the image to generate.",
+          "title": "Resolution",
+          "enum": [
+            "1K",
+            "2K",
+            "4K"
+          ],
+          "default": "1K",
+          "type": "string"
+        },
+        "aspect_ratio": {
+          "title": "Aspect Ratio",
+          "anyOf": [
+            {
+              "enum": [
+                "auto",
+                "21:9",
+                "16:9",
+                "3:2",
+                "4:3",
+                "5:4",
+                "1:1",
+                "4:5",
+                "3:4",
+                "2:3",
+                "9:16",
+                "4:1",
+                "1:4",
+                "8:1",
+                "1:8"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "auto",
+          "description": "The aspect ratio of the generated image. Supports extreme ratios: 4:1, 1:4, 8:1, 1:8. Use \"auto\" to let the model decide based on the prompt."
+        },
+        "prompt": {
+          "maxLength": 50000,
+          "title": "Prompt",
+          "examples": [
+            "An action shot of a black lab swimming in an inground suburban swimming pool. The camera is placed meticulously on the water line, dividing the image in half, revealing both the dogs head above water holding a tennis ball in it's mouth, and it's paws paddling underwater."
+          ],
+          "description": "The text prompt to generate an image from.",
+          "minLength": 3,
+          "type": "string"
+        },
+        "thinking_level": {
+          "title": "Thinking Level",
+          "anyOf": [
+            {
+              "enum": [
+                "minimal",
+                "medium",
+                "high"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "medium",
+          "description": "How much the model reasons before generating. Higher levels can improve complex compositions and use more thinking tokens."
+        },
+        "limit_generations": {
+          "description": "Experimental parameter to limit the number of generations from each round of prompting to 1. Set to `True` to to disregard any instructions in the prompt regarding the number of images to generate and ignore any intermediate images generated by the model. This may affect generation quality.",
+          "title": "Limit Generations",
+          "default": true,
+          "type": "boolean"
+        },
+        "system_prompt": {
+          "maxLength": 50000,
+          "title": "System Prompt",
+          "default": "",
+          "description": "Optional system instruction that steers the model's persona and output style across the request. Leave blank to omit; when provided, it is sent as the system instruction to Gemini (or as a system message on OpenAI-compatible providers).",
+          "type": "string"
+        },
+        "enable_web_search": {
+          "title": "Enable Web Search",
+          "default": false,
+          "description": "Enable web search for the image generation task. This will allow the model to use the latest information from the web to generate the image.",
+          "type": "boolean"
+        },
+        "output_format": {
+          "title": "Output Format",
+          "enum": [
+            "jpeg",
+            "png",
+            "webp"
+          ],
+          "default": "png",
+          "description": "The format of the generated image.",
+          "type": "string"
+        }
+      },
+      "x-fal-order-properties": [
+        "prompt",
+        "num_images",
+        "seed",
+        "aspect_ratio",
+        "output_format",
+        "safety_tolerance",
+        "sync_mode",
+        "system_prompt",
+        "resolution",
+        "limit_generations",
+        "enable_web_search",
+        "thinking_level"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=google/nano-banana-2.1",
+    "verified_on": "2026-10-23"
+  },
+  "google/nano-banana-2.1/edit": {
+    "input_schema": {
+      "required": [
+        "prompt"
+      ],
+      "title": "NanoBanana21ImageToImageInput",
+      "properties": {
+        "output_format": {
+          "title": "Output Format",
+          "enum": [
+            "jpeg",
+            "png",
+            "webp"
+          ],
+          "default": "png",
+          "description": "The format of the generated image.",
+          "type": "string"
+        },
+        "resolution": {
+          "description": "The resolution of the image to generate.",
+          "title": "Resolution",
+          "enum": [
+            "1K",
+            "2K",
+            "4K"
+          ],
+          "default": "1K",
+          "type": "string"
+        },
+        "pdf_url": {
+          "title": "PDF URL",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional PDF document to use as input context. Accepts an http(s)/data URL (downloaded and sent inline, max 15MB)."
+        },
+        "thinking_level": {
+          "title": "Thinking Level",
+          "anyOf": [
+            {
+              "enum": [
+                "minimal",
+                "medium",
+                "high"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "medium",
+          "description": "How much the model reasons before generating. Higher levels can improve complex compositions and use more thinking tokens."
+        },
+        "enable_web_search": {
+          "title": "Enable Web Search",
+          "default": false,
+          "description": "Enable web search for the image generation task. This will allow the model to use the latest information from the web to generate the image.",
+          "type": "boolean"
+        },
+        "image_urls": {
+          "title": "Image URLs",
+          "examples": [
+            [
+              "https://storage.googleapis.com/falserverless/example_inputs/nano-banana-edit-input.png",
+              "https://storage.googleapis.com/falserverless/example_inputs/nano-banana-edit-input-2.png"
+            ]
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "The URLs of the images to use for image-to-image generation or image editing. Optional when `video_url` or `pdf_url` is provided.",
+          "type": "array"
+        },
+        "seed": {
+          "title": "Seed",
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The seed for the random number generator."
+        },
+        "safety_tolerance": {
+          "description": "The safety tolerance level for content moderation. 1 is the most strict (blocks most content), 6 is the least strict.",
+          "title": "Safety Tolerance",
+          "enum": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6"
+          ],
+          "default": "4",
+          "type": "string"
+        },
+        "video_url": {
+          "title": "Video URL",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional video to use as input context. Accepts an http(s)/data URL to a video file (downloaded and sent inline, max 15MB) or a YouTube URL (passed through to the model without downloading)."
+        },
+        "aspect_ratio": {
+          "title": "Aspect Ratio",
+          "anyOf": [
+            {
+              "enum": [
+                "auto",
+                "21:9",
+                "16:9",
+                "3:2",
+                "4:3",
+                "5:4",
+                "1:1",
+                "4:5",
+                "3:4",
+                "2:3",
+                "9:16",
+                "4:1",
+                "1:4",
+                "8:1",
+                "1:8"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "auto",
+          "description": "The aspect ratio of the generated image. Supports extreme ratios: 4:1, 1:4, 8:1, 1:8."
+        },
+        "prompt": {
+          "maxLength": 50000,
+          "title": "Prompt",
+          "examples": [
+            "make a photo of the man driving the car down the california coastline"
+          ],
+          "description": "The prompt for image editing.",
+          "minLength": 3,
+          "type": "string"
+        },
+        "system_prompt": {
+          "maxLength": 50000,
+          "title": "System Prompt",
+          "default": "",
+          "description": "Optional system instruction that steers the model's persona and output style across the request. Leave blank to omit; when provided, it is sent as the system instruction to Gemini (or as a system message on OpenAI-compatible providers).",
+          "type": "string"
+        },
+        "sync_mode": {
+          "title": "Sync Mode",
+          "default": false,
+          "description": "If `True`, the media will be returned as a data URI and the output data won't be available in the request history.",
+          "type": "boolean"
+        },
+        "limit_generations": {
+          "description": "Experimental parameter to limit the number of generations from each round of prompting to 1. Set to `True` to to disregard any instructions in the prompt regarding the number of images to generate and ignore any intermediate images generated by the model. This may affect generation quality.",
+          "title": "Limit Generations",
+          "default": true,
+          "type": "boolean"
+        },
+        "num_images": {
+          "maximum": 4,
+          "title": "Number of Images",
+          "minimum": 1,
+          "default": 1,
+          "description": "The number of images to generate.",
+          "type": "integer"
+        }
+      },
+      "x-fal-order-properties": [
+        "prompt",
+        "num_images",
+        "seed",
+        "aspect_ratio",
+        "output_format",
+        "safety_tolerance",
+        "sync_mode",
+        "image_urls",
+        "system_prompt",
+        "resolution",
+        "video_url",
+        "pdf_url",
+        "limit_generations",
+        "enable_web_search",
+        "thinking_level"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=google/nano-banana-2.1/edit",
+    "verified_on": "2026-10-23"
+  },
+  "blackforestlabs/flux-3/text-to-image": {
+    "input_schema": {
+      "x-fal-order-properties": [
+        "prompt",
+        "aspect_ratio",
+        "resolution",
+        "enable_prompt_expansion",
+        "safety_tolerance",
+        "output_format",
+        "sync_mode",
+        "version"
+      ],
+      "properties": {
+        "output_format": {
+          "enum": [
+            "jpeg",
+            "png"
+          ],
+          "description": "The format of the generated image.",
+          "title": "Output Format",
+          "default": "jpeg",
+          "type": "string"
+        },
+        "prompt": {
+          "description": "The prompt to generate an image from.",
+          "title": "Prompt",
+          "examples": [
+            "A red fox leaping over a stream in a pine forest, low-angle wildlife photograph."
+          ],
+          "type": "string"
+        },
+        "aspect_ratio": {
+          "enum": [
+            "auto",
+            "21:9",
+            "2:1",
+            "16:9",
+            "3:2",
+            "7:5",
+            "4:3",
+            "5:4",
+            "1:1",
+            "4:5",
+            "3:4",
+            "5:7",
+            "2:3",
+            "9:16",
+            "1:2"
+          ],
+          "description": "Output aspect ratio. Auto uses the first reference image when editing.",
+          "title": "Aspect Ratio",
+          "default": "auto",
+          "type": "string"
+        },
+        "resolution": {
+          "enum": [
+            "768sq",
+            "1k",
+            "1.5k",
+            "2k",
+            "4k"
+          ],
+          "description": "Output resolution tier. 4k can take several minutes.",
+          "title": "Resolution",
+          "default": "1k",
+          "type": "string"
+        },
+        "version": {
+          "type": "string",
+          "description": "The model version.",
+          "title": "Version",
+          "default": "latest",
+          "const": "latest"
+        },
+        "sync_mode": {
+          "description": "Return the image as a data URI instead of storing it in request history.",
+          "title": "Sync Mode",
+          "default": false,
+          "type": "boolean"
+        },
+        "safety_tolerance": {
+          "type": "integer",
+          "description": "Safety tolerance, from 0 (strictest) to 4.",
+          "maximum": 4,
+          "title": "Safety Tolerance",
+          "default": 2,
+          "minimum": 0
+        },
+        "enable_prompt_expansion": {
+          "description": "Expand the prompt while preserving its intent and reference roles.",
+          "title": "Enable Prompt Expansion",
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "title": "Flux3ImageInput",
+      "required": [
+        "prompt"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=blackforestlabs/flux-3/text-to-image",
+    "verified_on": "2026-10-23"
+  },
+  "blackforestlabs/flux-3/edit-image": {
+    "input_schema": {
+      "x-fal-order-properties": [
+        "prompt",
+        "image_urls",
+        "aspect_ratio",
+        "resolution",
+        "enable_prompt_expansion",
+        "safety_tolerance",
+        "output_format",
+        "sync_mode",
+        "version"
+      ],
+      "properties": {
+        "output_format": {
+          "enum": [
+            "jpeg",
+            "png"
+          ],
+          "description": "The format of the generated image.",
+          "title": "Output Format",
+          "default": "jpeg",
+          "type": "string"
+        },
+        "prompt": {
+          "description": "The prompt to generate an image from.",
+          "title": "Prompt",
+          "examples": [
+            "A red fox leaping over a stream in a pine forest, low-angle wildlife photograph."
+          ],
+          "type": "string"
+        },
+        "aspect_ratio": {
+          "enum": [
+            "auto",
+            "21:9",
+            "2:1",
+            "16:9",
+            "3:2",
+            "7:5",
+            "4:3",
+            "5:4",
+            "1:1",
+            "4:5",
+            "3:4",
+            "5:7",
+            "2:3",
+            "9:16",
+            "1:2"
+          ],
+          "description": "Output aspect ratio. Auto uses the first reference image when editing.",
+          "title": "Aspect Ratio",
+          "default": "auto",
+          "type": "string"
+        },
+        "resolution": {
+          "enum": [
+            "768sq",
+            "1k",
+            "1.5k",
+            "2k",
+            "4k"
+          ],
+          "description": "Output resolution tier. 4k can take several minutes.",
+          "title": "Resolution",
+          "default": "1k",
+          "type": "string"
+        },
+        "image_urls": {
+          "maxItems": 10,
+          "description": "Reference image URLs or data URIs, in image 1 through image 10 order. Each must be at least 256 pixels per dimension. Oversized images are automatically downscaled to at most 4 megapixels while preserving aspect ratio. The first controls auto aspect ratio.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Image Urls",
+          "type": "array",
+          "examples": [
+            [
+              "https://storage.googleapis.com/falserverless/example_inputs/flux2_pro_edit_input.png"
+            ]
+          ],
+          "minItems": 1
+        },
+        "version": {
+          "type": "string",
+          "description": "The model version.",
+          "title": "Version",
+          "default": "latest",
+          "const": "latest"
+        },
+        "sync_mode": {
+          "description": "Return the image as a data URI instead of storing it in request history.",
+          "title": "Sync Mode",
+          "default": false,
+          "type": "boolean"
+        },
+        "safety_tolerance": {
+          "type": "integer",
+          "description": "Safety tolerance, from 0 (strictest) to 4.",
+          "maximum": 4,
+          "title": "Safety Tolerance",
+          "default": 2,
+          "minimum": 0
+        },
+        "enable_prompt_expansion": {
+          "description": "Expand the prompt while preserving its intent and reference roles.",
+          "title": "Enable Prompt Expansion",
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "title": "Flux3ImageEditInput",
+      "required": [
+        "prompt",
+        "image_urls"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=blackforestlabs/flux-3/edit-image",
+    "verified_on": "2026-10-23"
+  },
+  "blackforestlabs/flux-3-max/text-to-video": {
+    "input_schema": {
+      "x-fal-order-properties": [
+        "prompt",
+        "duration",
+        "resolution",
+        "reasoning_level",
+        "aspect_ratio",
+        "generate_audio",
+        "seed"
+      ],
+      "type": "object",
+      "properties": {
+        "aspect_ratio": {
+          "default": "auto",
+          "type": "string",
+          "enum": [
+            "auto",
+            "21:9",
+            "2:1",
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16"
+          ],
+          "description": "Aspect ratio of the generated video. `auto` uses 16:9 for text prompts and follows the first image otherwise.",
+          "title": "Aspect Ratio"
+        },
+        "prompt": {
+          "type": "string",
+          "minLength": 1,
+          "examples": [
+            "A red panda walks along a mossy log in a sunlit forest, pausing to sniff the air before climbing over a fallen branch. Soft morning light filters through the canopy. Ambient birdsong and rustling leaves."
+          ],
+          "title": "Prompt",
+          "description": "The text prompt describing the video you want to generate."
+        },
+        "reasoning_level": {
+          "default": "high",
+          "type": "string",
+          "enum": [
+            "low",
+            "high"
+          ],
+          "description": "How much effort the harness spends reasoning about the given prompt. Higher reasoning effort means slower generation time.",
+          "title": "Reasoning Level"
+        },
+        "generate_audio": {
+          "default": true,
+          "type": "boolean",
+          "description": "Whether to generate audio for the video.",
+          "title": "Generate Audio"
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The seed to use for the generation. Random when not provided.",
+          "title": "Seed"
+        },
+        "duration": {
+          "default": 5,
+          "type": "integer",
+          "enum": [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20
+          ],
+          "description": "Duration of the generated video in seconds.",
+          "title": "Duration"
+        },
+        "resolution": {
+          "default": "720p",
+          "type": "string",
+          "enum": [
+            "720p",
+            "1080p"
+          ],
+          "description": "Resolution of the generated video.",
+          "title": "Resolution"
+        }
+      },
+      "title": "AlligatorTextToVideoInput",
+      "required": [
+        "prompt"
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=blackforestlabs/flux-3-max/text-to-video",
+    "verified_on": "2026-10-23"
+  },
+  "blackforestlabs/flux-3-max/image-to-video": {
+    "input_schema": {
+      "x-fal-order-properties": [
+        "prompt",
+        "image_url",
+        "end_image_url",
+        "duration",
+        "resolution",
+        "reasoning_level",
+        "aspect_ratio",
+        "generate_audio",
+        "seed"
+      ],
+      "type": "object",
+      "properties": {
+        "seed": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The seed to use for the generation. Random when not provided.",
+          "title": "Seed"
+        },
+        "duration": {
+          "default": 5,
+          "type": "integer",
+          "enum": [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20
+          ],
+          "description": "Duration of the generated video in seconds.",
+          "title": "Duration"
+        },
+        "end_image_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional URL of the image used as the last frame of the video (PNG, JPEG, or WebP).",
+          "title": "End Image URL"
+        },
+        "prompt": {
+          "type": "string",
+          "minLength": 1,
+          "examples": [
+            "The monkey leans into his microphone and says, \"Welcome back to the show!\" The polar bear laughs and nods along, tapping the desk. Jungle birdsong on the left, a cold wind on the right."
+          ],
+          "title": "Prompt",
+          "description": "The text prompt describing how the video unfolds from the image."
+        },
+        "reasoning_level": {
+          "default": "high",
+          "type": "string",
+          "enum": [
+            "low",
+            "high"
+          ],
+          "description": "How much effort the harness spends reasoning about the given prompt. Higher reasoning effort means slower generation time.",
+          "title": "Reasoning Level"
+        },
+        "generate_audio": {
+          "default": true,
+          "type": "boolean",
+          "description": "Whether to generate audio for the video.",
+          "title": "Generate Audio"
+        },
+        "resolution": {
+          "default": "720p",
+          "type": "string",
+          "enum": [
+            "720p",
+            "1080p"
+          ],
+          "description": "Resolution of the generated video.",
+          "title": "Resolution"
+        },
+        "aspect_ratio": {
+          "default": "auto",
+          "type": "string",
+          "enum": [
+            "auto",
+            "21:9",
+            "2:1",
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16"
+          ],
+          "description": "Aspect ratio of the generated video. `auto` uses 16:9 for text prompts and follows the first image otherwise.",
+          "title": "Aspect Ratio"
+        },
+        "image_url": {
+          "type": "string",
+          "examples": [
+            "https://storage.googleapis.com/falserverless/example_inputs/veo31_i2v_input.jpg"
+          ],
+          "title": "Image URL",
+          "description": "URL of the image the video starts from (PNG, JPEG, or WebP)."
+        }
+      },
+      "title": "AlligatorImageToVideoInput",
+      "required": [
+        "prompt",
+        "image_url"
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=blackforestlabs/flux-3-max/image-to-video",
+    "verified_on": "2026-10-23"
+  },
+  "fal-ai/vidu/q4/image-to-video": {
+    "input_schema": {
+      "x-fal-order-properties": [
+        "prompt",
+        "image_url",
+        "duration",
+        "seed",
+        "resolution",
+        "enable_safety_checker"
+      ],
+      "properties": {
+        "duration": {
+          "default": 5,
+          "maximum": 16,
+          "minimum": 3,
+          "title": "Duration",
+          "description": "Duration of the video in seconds (3-16)",
+          "type": "integer"
+        },
+        "prompt": {
+          "default": "",
+          "examples": [
+            "The woman turns toward the camera and smiles, then the shot cuts to a close-up as she says: \"Let's go.\""
+          ],
+          "maxLength": 5000,
+          "description": "Text prompt for video generation, max 5000 characters",
+          "type": "string",
+          "title": "Prompt"
+        },
+        "image_url": {
+          "title": "Image Url",
+          "description": "URL or base64 data URI of the image to use as the first frame. Supports png, jpeg, jpg and webp up to 50 MB.",
+          "type": "string",
+          "examples": [
+            "https://storage.googleapis.com/falserverless/web-examples/vidu/stylish_woman.webp"
+          ]
+        },
+        "enable_safety_checker": {
+          "default": true,
+          "title": "Enable Safety Checker",
+          "description": "Authorized callers may set false to request relaxed screening.",
+          "type": "boolean"
+        },
+        "resolution": {
+          "default": "720p",
+          "enum": [
+            "540p",
+            "720p",
+            "1080p",
+            "2K",
+            "4K"
+          ],
+          "title": "Resolution",
+          "description": "Output video resolution",
+          "type": "string"
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Seed",
+          "description": "Random seed for reproducibility. If None, a random seed is chosen."
+        }
+      },
+      "required": [
+        "image_url"
+      ],
+      "title": "Q4ImageToVideoRequest",
+      "type": "object",
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/vidu/q4/image-to-video",
+    "verified_on": "2026-10-23"
+  },
+  "fal-ai/vidu/q4/reference-to-video": {
+    "input_schema": {
+      "x-fal-order-properties": [
+        "prompt",
+        "reference_image_urls",
+        "reference_audio_urls",
+        "duration",
+        "seed",
+        "aspect_ratio",
+        "resolution",
+        "audio",
+        "enable_safety_checker"
+      ],
+      "properties": {
+        "duration": {
+          "default": 5,
+          "maximum": 16,
+          "minimum": 3,
+          "title": "Duration",
+          "description": "Duration of the video in seconds (3-16)",
+          "type": "integer"
+        },
+        "prompt": {
+          "minLength": 1,
+          "title": "Prompt",
+          "maxLength": 5000,
+          "description": "Text prompt for video generation, max 5000 characters. Refer to references by their position in the lists: [@reference_image_1], [@reference_image_2], ... for images and [reference_audio_1], [reference_audio_2], ... for audio clips.",
+          "type": "string",
+          "examples": [
+            "[@reference_image_1] walks along the beach at sunset holding [@reference_image_2], then turns to the camera and speaks in the voice of [reference_audio_1]."
+          ]
+        },
+        "resolution": {
+          "default": "720p",
+          "enum": [
+            "540p",
+            "720p",
+            "1080p",
+            "2K",
+            "4K"
+          ],
+          "title": "Resolution",
+          "description": "Output video resolution",
+          "type": "string"
+        },
+        "aspect_ratio": {
+          "default": "16:9",
+          "enum": [
+            "16:9",
+            "9:16",
+            "4:3",
+            "3:4",
+            "1:1"
+          ],
+          "title": "Aspect Ratio",
+          "description": "The aspect ratio of the output video",
+          "type": "string"
+        },
+        "reference_audio_urls": {
+          "title": "Reference Audio Urls",
+          "description": "URLs or base64 data URIs of up to 3 mp3 reference audio clips (3-12 seconds each, max 50 MB) used to keep voices consistent.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reference_image_urls": {
+          "examples": [
+            [
+              "https://storage.googleapis.com/falserverless/web-examples/vidu/new-examples/reference1.png",
+              "https://storage.googleapis.com/falserverless/web-examples/vidu/new-examples/reference2.png"
+            ]
+          ],
+          "title": "Reference Image Urls",
+          "description": "URLs or base64 data URIs of up to 12 reference images (png, jpeg, jpg, webp) used to keep subjects consistent.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "audio": {
+          "default": false,
+          "title": "Audio",
+          "description": "Whether to generate audio (dialogue and sound effects) with the video. When false, the output video is silent.",
+          "type": "boolean"
+        },
+        "enable_safety_checker": {
+          "default": true,
+          "title": "Enable Safety Checker",
+          "description": "Authorized callers may set false to request relaxed screening.",
+          "type": "boolean"
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Seed",
+          "description": "Random seed for reproducibility. If None, a random seed is chosen."
+        }
+      },
+      "required": [
+        "prompt"
+      ],
+      "title": "Q4ReferenceToVideoRequest",
+      "type": "object",
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/vidu/q4/reference-to-video",
+    "verified_on": "2026-10-23"
+  },
+  "bria/fibo-2/generate": {
+    "input_schema": {
+      "title": "GenerateInputModel",
+      "type": "object",
+      "x-fal-order-properties": [
+        "prompt",
+        "style",
+        "image_url",
+        "vgl",
+        "seed",
+        "aspect_ratio",
+        "sync_mode"
+      ],
+      "properties": {
+        "image_url": {
+          "title": "Image Url",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A reference image (inspire mode). With 'prompt', VGL uses it as a visual reference for the prompt's scene and generates a new image of that scene, not the image. Alone, the VGL describes the image itself, so the result is a close variation of it. Not with 'vgl'."
+        },
+        "vgl": {
+          "title": "Vgl",
+          "examples": [
+            {
+              "aesthetics": {
+                "composition": "low angle shot, medium-tight framing cropped mid-thigh at the bottom, dynamic off-center placement following the rule of thirds",
+                "mood_atmosphere": "Y2K action-editorial energy, dynamic, confident, edgy, and cinematic",
+                "color_scheme": "high contrast palette featuring saturated cobalt blues, warm golden-orange sunset tones, and neutral greys and whites"
+              },
+              "background_setting": "Flat scrubby desert featuring sparse dry bushes, subtle footprints in the sand, and low dark silhouetted mountains along the horizon. The sky is a deep cobalt-blue with streaks of grey-violet clouds and a glowing orange and gold sunset band stretching along the left horizon.",
+              "objects": [
+                {
+                  "relative_size": "large within frame",
+                  "pose": "twisting mid-motion, turning body away while looking back over shoulder",
+                  "action": "twisting and looking back over her shoulder while swinging right arm",
+                  "orientation": "tilted dynamically, facing slightly left while head turns back",
+                  "relationship": "main subject of the photograph, commanding the frame",
+                  "clothing": "fitted white ribbed tank top, loose light-grey cargo pants with large side pockets sitting low on hips, heavy silver chain necklace, wraparound mirrored silver sport sunglasses",
+                  "appearance_details": "glossy highlights on skin, windswept hair flying across her face, right arm swinging out behind with fingers spread",
+                  "texture": "mixed textures of soft skin, ribbed cotton, heavy metallic links, and smooth synthetic sunglasses",
+                  "expression": "confident, intense gaze with lips slightly parted",
+                  "shape_and_color": "dynamic human silhouette in white and grey with metallic accents",
+                  "location": "center-right",
+                  "gender": "female",
+                  "skin_tone_and_texture": "warm skin tone with glossy highlights from the flash",
+                  "description": "A young woman with shoulder-length dark brown hair, twisting mid-motion with her body turning away while looking back over her shoulder at the camera with slightly parted lips. She wears wraparound mirrored silver sport sunglasses, a heavy silver chain necklace, a fitted white ribbed tank top, and loose light-grey cargo pants with large side pockets."
+                },
+                {
+                  "relative_size": "medium",
+                  "number_of_objects": 1,
+                  "orientation": "scattered horizontally and vertically",
+                  "relationship": "interacts with the model's movement, emphasizing action",
+                  "shape_and_color": "cloud-like amorphous cluster of sandy beige and golden-brown particles",
+                  "appearance_details": "individual sand grains sparkling under the hard flash light",
+                  "texture": "grainy, particulate, and sharp",
+                  "location": "bottom-left foreground and surrounding legs",
+                  "action": "billowing and suspended in the air",
+                  "description": "A burst of kicked-up sand billowing around her legs and to the lower left, with individual grains sharply frozen in mid-air by the flash."
+                }
+              ],
+              "photographic_characteristics": {
+                "depth_of_field": "moderately shallow, keeping the subject in sharp focus while the distant background mountains have a soft falloff",
+                "camera_angle": "low angle",
+                "focus": "crisp, ultra-sharp focus on the ribbed fabric texture, chain links, sunglasses, and suspended sand grains",
+                "lens_focal_length": "wide-angle lens"
+              },
+              "context": "This is a concept for an early-2000s retro-futuristic fashion editorial photograph intended for a high-end style magazine spread.",
+              "artistic_style": "realistic",
+              "lighting": {
+                "direction": "front-lit from the front-left by the flash, contrasting with the backlit ambient sky",
+                "shadows": "a long, sharp shadow cast by the subject across the sand to the right",
+                "conditions": "strong off-camera flash combined with ambient dusk twilight"
+              },
+              "style_medium": "photograph",
+              "short_description": "An early-2000s fashion editorial photograph capturing a young woman dynamically twisting in a desert at dusk. Lit by a strong off-camera flash against a deep cobalt-blue and orange sunset sky, she wears Y2K-inspired streetwear including mirrored silver sunglasses, a white ribbed tank top, and loose cargo pants, surrounded by kicked-up sand."
+            }
+          ],
+          "anyOf": [
+            {
+              "title": "Vgl",
+              "type": "object",
+              "x-fal-order-properties": [
+                "short_description",
+                "objects",
+                "background_setting",
+                "lighting",
+                "aesthetics",
+                "photographic_characteristics",
+                "style_medium",
+                "text_render",
+                "context",
+                "artistic_style"
+              ],
+              "properties": {
+                "aesthetics": {
+                  "anyOf": [
+                    {
+                      "title": "Aesthetics",
+                      "type": "object",
+                      "x-fal-order-properties": [
+                        "composition",
+                        "color_scheme",
+                        "mood_atmosphere"
+                      ],
+                      "properties": {
+                        "composition": {
+                          "title": "Composition",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "The composition of the image to be generated."
+                        },
+                        "mood_atmosphere": {
+                          "title": "Mood Atmosphere",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "The mood and atmosphere of the image to be generated."
+                        },
+                        "color_scheme": {
+                          "title": "Color Scheme",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "The color scheme of the image to be generated."
+                        }
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The aesthetics of the image to be generated."
+                },
+                "background_setting": {
+                  "title": "Background Setting",
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The background setting of the image to be generated."
+                },
+                "objects": {
+                  "title": "Objects",
+                  "default": [],
+                  "anyOf": [
+                    {
+                      "items": {
+                        "title": "PromptObject",
+                        "type": "object",
+                        "required": [
+                          "relationship"
+                        ],
+                        "x-fal-order-properties": [
+                          "description",
+                          "location",
+                          "relationship",
+                          "relative_size",
+                          "shape_and_color",
+                          "texture",
+                          "appearance_details",
+                          "number_of_objects",
+                          "pose",
+                          "expression",
+                          "clothing",
+                          "action",
+                          "gender",
+                          "skin_tone_and_texture",
+                          "orientation"
+                        ],
+                        "properties": {
+                          "number_of_objects": {
+                            "title": "Number Of Objects",
+                            "anyOf": [
+                              {
+                                "type": "integer"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The number of objects in the image."
+                          },
+                          "clothing": {
+                            "title": "Clothing",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The clothing of the object in the image."
+                          },
+                          "location": {
+                            "title": "Location",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The location of the object in the image."
+                          },
+                          "texture": {
+                            "title": "Texture",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The texture of the object."
+                          },
+                          "gender": {
+                            "title": "Gender",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The gender of the object in the image."
+                          },
+                          "action": {
+                            "title": "Action",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The action of the object in the image."
+                          },
+                          "pose": {
+                            "title": "Pose",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The pose of the object in the image."
+                          },
+                          "relative_size": {
+                            "title": "Relative Size",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The relative size of the object in the image."
+                          },
+                          "description": {
+                            "title": "Description",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "A description of the object to be generated."
+                          },
+                          "orientation": {
+                            "title": "Orientation",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The orientation of the object in the image."
+                          },
+                          "relationship": {
+                            "title": "Relationship",
+                            "type": "string",
+                            "description": "The relationship of the object to other objects in the image."
+                          },
+                          "shape_and_color": {
+                            "title": "Shape And Color",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The shape and color of the object."
+                          },
+                          "appearance_details": {
+                            "title": "Appearance Details",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The appearance details of the object."
+                          },
+                          "expression": {
+                            "title": "Expression",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The expression of the object in the image."
+                          },
+                          "skin_tone_and_texture": {
+                            "title": "Skin Tone And Texture",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The skin tone and texture of the object in the image."
+                          }
+                        }
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "A list of objects in the image to be generated, along with their attributes and relationships to other objects in the image."
+                },
+                "text_render": {
+                  "title": "Text Render",
+                  "default": [],
+                  "anyOf": [
+                    {
+                      "items": {
+                        "title": "TextRender",
+                        "type": "object",
+                        "required": [
+                          "text"
+                        ],
+                        "x-fal-order-properties": [
+                          "text",
+                          "location",
+                          "size",
+                          "color",
+                          "font",
+                          "appearance_details"
+                        ],
+                        "properties": {
+                          "location": {
+                            "title": "Location",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Where the text sits in the image."
+                          },
+                          "appearance_details": {
+                            "title": "Appearance Details",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Any other notable visual details of the text."
+                          },
+                          "color": {
+                            "title": "Color",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The color of the text."
+                          },
+                          "text": {
+                            "title": "Text",
+                            "type": "string",
+                            "description": "The text to render. fibo-2 is also shown an image of it, so it renders as written."
+                          },
+                          "size": {
+                            "title": "Size",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The size of the text in the image."
+                          },
+                          "font": {
+                            "title": "Font",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The style of the font."
+                          }
+                        }
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "A list of text to be rendered in the image."
+                },
+                "photographic_characteristics": {
+                  "anyOf": [
+                    {
+                      "title": "PhotographicCharacteristics",
+                      "type": "object",
+                      "x-fal-order-properties": [
+                        "depth_of_field",
+                        "focus",
+                        "camera_angle",
+                        "lens_focal_length"
+                      ],
+                      "properties": {
+                        "depth_of_field": {
+                          "title": "Depth Of Field",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "The depth of field in the image to be generated."
+                        },
+                        "camera_angle": {
+                          "title": "Camera Angle",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "The angle of the camera in the image to be generated."
+                        },
+                        "focus": {
+                          "title": "Focus",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "The focus in the image to be generated."
+                        },
+                        "lens_focal_length": {
+                          "title": "Lens Focal Length",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "The focal length of the lens in the image to be generated."
+                        }
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The photographic characteristics of the image to be generated."
+                },
+                "context": {
+                  "title": "Context",
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The context of the image to be generated."
+                },
+                "artistic_style": {
+                  "title": "Artistic Style",
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The artistic style of the image to be generated."
+                },
+                "style_medium": {
+                  "title": "Style Medium",
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The style medium of the image to be generated."
+                },
+                "lighting": {
+                  "anyOf": [
+                    {
+                      "title": "Lighting",
+                      "type": "object",
+                      "x-fal-order-properties": [
+                        "conditions",
+                        "direction",
+                        "shadows"
+                      ],
+                      "properties": {
+                        "direction": {
+                          "title": "Direction",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "The direction of the lighting in the image to be generated."
+                        },
+                        "shadows": {
+                          "title": "Shadows",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "The shadows in the image to be generated."
+                        },
+                        "conditions": {
+                          "title": "Conditions",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "The conditions of the lighting in the image to be generated."
+                        }
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The lighting of the image to be generated."
+                },
+                "short_description": {
+                  "title": "Short Description",
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "A short description of the image to be generated."
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A VGL (Visual Generation Language) document: the structured JSON description of the scene. Alone, the model renders it as-is. With 'prompt', VGL changes it by the prompt (refine) and the result is rendered. Accepts what a previous request returned. Not with 'image_url' or 'style'."
+        },
+        "sync_mode": {
+          "title": "Sync Mode",
+          "default": false,
+          "type": "boolean",
+          "description": "If true, returns the image directly in the response (increases latency)."
+        },
+        "seed": {
+          "maximum": 2147483647,
+          "title": "Seed",
+          "default": 5555,
+          "description": "Random seed for reproducibility, 0 to 2147483647.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "aspect_ratio": {
+          "title": "Aspect Ratio",
+          "enum": [
+            "1:1",
+            "1:2",
+            "1:3",
+            "1:4",
+            "1:5",
+            "2:1",
+            "2:3",
+            "3:1",
+            "3:2",
+            "3:4",
+            "4:1",
+            "4:3",
+            "4:5",
+            "5:1",
+            "5:4",
+            "9:16",
+            "9:21",
+            "10:16",
+            "16:9",
+            "16:10",
+            "21:9"
+          ],
+          "default": "1:1",
+          "type": "string",
+          "description": "Aspect ratio of the image, at about one megapixel. Options: 1:1, 1:2, 1:3, 1:4, 1:5, 2:1, 2:3, 3:1, 3:2, 3:4, 4:1, 4:3, 4:5, 5:1, 5:4, 9:16, 9:21, 10:16, 16:9, 16:10, 21:9"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What to generate, in free-form text. It is expanded into a VGL, which is returned. With 'vgl', the change to make to it."
+        },
+        "style": {
+          "title": "Style",
+          "anyOf": [
+            {
+              "enum": [
+                "Kodak Film",
+                "Hard Flash",
+                "Hazy Dreamy",
+                "Rough Realism"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A style for the generated image. Requires 'prompt'; not with 'image_url', 'vgl' or 'negative_prompt'."
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=bria/fibo-2/generate",
+    "verified_on": "2026-10-23"
+  },
+  "bria/fibo-2/edit": {
+    "input_schema": {
+      "title": "EditInputModel",
+      "type": "object",
+      "required": [
+        "image_urls"
+      ],
+      "x-fal-order-properties": [
+        "image_urls",
+        "instruction",
+        "aspect_ratio",
+        "seed",
+        "mask_url",
+        "sync_mode",
+        "vgl"
+      ],
+      "properties": {
+        "instruction": {
+          "title": "Instruction",
+          "examples": [
+            "Create a luxury fragrance poster by placing the perfume bottle from <image_2> upright on the grey boulder in the misty water from <image_3>, and add the minimalist typography from <image_1> in the upper sky."
+          ],
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The edit, in free-form text. It is expanded into a VGL, which is returned. With 'vgl', the change to make to it. 'prompt' is accepted as an alias."
+        },
+        "vgl": {
+          "title": "Vgl",
+          "anyOf": [
+            {
+              "title": "VglEdit",
+              "type": "object",
+              "x-fal-order-properties": [
+                "short_description",
+                "objects",
+                "background_setting",
+                "lighting",
+                "aesthetics",
+                "photographic_characteristics",
+                "style_medium",
+                "text_render",
+                "context",
+                "artistic_style",
+                "edit_instruction"
+              ],
+              "additionalProperties": true,
+              "properties": {
+                "aesthetics": {
+                  "anyOf": [
+                    {
+                      "title": "Aesthetics",
+                      "type": "object",
+                      "x-fal-order-properties": [
+                        "composition",
+                        "color_scheme",
+                        "mood_atmosphere"
+                      ],
+                      "properties": {
+                        "composition": {
+                          "title": "Composition",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "The composition of the image to be generated."
+                        },
+                        "mood_atmosphere": {
+                          "title": "Mood Atmosphere",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "The mood and atmosphere of the image to be generated."
+                        },
+                        "color_scheme": {
+                          "title": "Color Scheme",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "The color scheme of the image to be generated."
+                        }
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The aesthetics of the image to be generated."
+                },
+                "background_setting": {
+                  "title": "Background Setting",
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The background setting of the image to be generated."
+                },
+                "objects": {
+                  "title": "Objects",
+                  "default": [],
+                  "anyOf": [
+                    {
+                      "items": {
+                        "title": "PromptObject",
+                        "type": "object",
+                        "required": [
+                          "relationship"
+                        ],
+                        "x-fal-order-properties": [
+                          "description",
+                          "location",
+                          "relationship",
+                          "relative_size",
+                          "shape_and_color",
+                          "texture",
+                          "appearance_details",
+                          "number_of_objects",
+                          "pose",
+                          "expression",
+                          "clothing",
+                          "action",
+                          "gender",
+                          "skin_tone_and_texture",
+                          "orientation"
+                        ],
+                        "properties": {
+                          "number_of_objects": {
+                            "title": "Number Of Objects",
+                            "anyOf": [
+                              {
+                                "type": "integer"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The number of objects in the image."
+                          },
+                          "clothing": {
+                            "title": "Clothing",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The clothing of the object in the image."
+                          },
+                          "location": {
+                            "title": "Location",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The location of the object in the image."
+                          },
+                          "texture": {
+                            "title": "Texture",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The texture of the object."
+                          },
+                          "gender": {
+                            "title": "Gender",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The gender of the object in the image."
+                          },
+                          "action": {
+                            "title": "Action",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The action of the object in the image."
+                          },
+                          "pose": {
+                            "title": "Pose",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The pose of the object in the image."
+                          },
+                          "relative_size": {
+                            "title": "Relative Size",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The relative size of the object in the image."
+                          },
+                          "description": {
+                            "title": "Description",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "A description of the object to be generated."
+                          },
+                          "orientation": {
+                            "title": "Orientation",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The orientation of the object in the image."
+                          },
+                          "relationship": {
+                            "title": "Relationship",
+                            "type": "string",
+                            "description": "The relationship of the object to other objects in the image."
+                          },
+                          "shape_and_color": {
+                            "title": "Shape And Color",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The shape and color of the object."
+                          },
+                          "appearance_details": {
+                            "title": "Appearance Details",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The appearance details of the object."
+                          },
+                          "expression": {
+                            "title": "Expression",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The expression of the object in the image."
+                          },
+                          "skin_tone_and_texture": {
+                            "title": "Skin Tone And Texture",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The skin tone and texture of the object in the image."
+                          }
+                        }
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "A list of objects in the image to be generated, along with their attributes and relationships to other objects in the image."
+                },
+                "text_render": {
+                  "title": "Text Render",
+                  "default": [],
+                  "anyOf": [
+                    {
+                      "items": {
+                        "title": "TextRender",
+                        "type": "object",
+                        "required": [
+                          "text"
+                        ],
+                        "x-fal-order-properties": [
+                          "text",
+                          "location",
+                          "size",
+                          "color",
+                          "font",
+                          "appearance_details"
+                        ],
+                        "properties": {
+                          "location": {
+                            "title": "Location",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Where the text sits in the image."
+                          },
+                          "appearance_details": {
+                            "title": "Appearance Details",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Any other notable visual details of the text."
+                          },
+                          "color": {
+                            "title": "Color",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The color of the text."
+                          },
+                          "text": {
+                            "title": "Text",
+                            "type": "string",
+                            "description": "The text to render. fibo-2 is also shown an image of it, so it renders as written."
+                          },
+                          "size": {
+                            "title": "Size",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The size of the text in the image."
+                          },
+                          "font": {
+                            "title": "Font",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "The style of the font."
+                          }
+                        }
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "A list of text to be rendered in the image."
+                },
+                "photographic_characteristics": {
+                  "anyOf": [
+                    {
+                      "title": "PhotographicCharacteristics",
+                      "type": "object",
+                      "x-fal-order-properties": [
+                        "depth_of_field",
+                        "focus",
+                        "camera_angle",
+                        "lens_focal_length"
+                      ],
+                      "properties": {
+                        "depth_of_field": {
+                          "title": "Depth Of Field",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "The depth of field in the image to be generated."
+                        },
+                        "camera_angle": {
+                          "title": "Camera Angle",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "The angle of the camera in the image to be generated."
+                        },
+                        "focus": {
+                          "title": "Focus",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "The focus in the image to be generated."
+                        },
+                        "lens_focal_length": {
+                          "title": "Lens Focal Length",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "The focal length of the lens in the image to be generated."
+                        }
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The photographic characteristics of the image to be generated."
+                },
+                "edit_instruction": {
+                  "title": "Edit Instruction",
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The edit instruction for the image."
+                },
+                "context": {
+                  "title": "Context",
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The context of the image to be generated."
+                },
+                "artistic_style": {
+                  "title": "Artistic Style",
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The artistic style of the image to be generated."
+                },
+                "style_medium": {
+                  "title": "Style Medium",
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The style medium of the image to be generated."
+                },
+                "lighting": {
+                  "anyOf": [
+                    {
+                      "title": "Lighting",
+                      "type": "object",
+                      "x-fal-order-properties": [
+                        "conditions",
+                        "direction",
+                        "shadows"
+                      ],
+                      "properties": {
+                        "direction": {
+                          "title": "Direction",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "The direction of the lighting in the image to be generated."
+                        },
+                        "shadows": {
+                          "title": "Shadows",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "The shadows in the image to be generated."
+                        },
+                        "conditions": {
+                          "title": "Conditions",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "The conditions of the lighting in the image to be generated."
+                        }
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The lighting of the image to be generated."
+                },
+                "short_description": {
+                  "title": "Short Description",
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "A short description of the image to be generated."
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A VGL (Visual Generation Language) document. Alone, it is the edit as-is and must carry its 'edit_instruction'. With 'instruction', it is the first image's VGL, the baseline the edit is written from. Accepts what a previous request returned."
+        },
+        "sync_mode": {
+          "title": "Sync Mode",
+          "default": false,
+          "type": "boolean",
+          "description": "If true, returns the image directly in the response (increases latency)."
+        },
+        "seed": {
+          "maximum": 2147483647,
+          "title": "Seed",
+          "default": 5555,
+          "description": "Random seed for reproducibility, 0 to 2147483647.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "aspect_ratio": {
+          "title": "Aspect Ratio",
+          "anyOf": [
+            {
+              "enum": [
+                "1:1",
+                "1:2",
+                "1:3",
+                "1:4",
+                "1:5",
+                "2:1",
+                "2:3",
+                "3:1",
+                "3:2",
+                "3:4",
+                "4:1",
+                "4:3",
+                "4:5",
+                "5:1",
+                "5:4",
+                "9:16",
+                "9:21",
+                "10:16",
+                "16:9",
+                "16:10",
+                "21:9"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Output aspect ratio, at about one megapixel. Left unset, the output keeps the ratio of the first image. A single image always keeps its own ratio."
+        },
+        "image_urls": {
+          "minItems": 1,
+          "examples": [
+            [
+              "https://v3b.fal.media/files/b/0aaf2399/7tuRY3UT9tpKwYE1wX_SP_still-logo.png",
+              "https://v3b.fal.media/files/b/0aaf2399/T8kchxC_KKNEEkl-sK-Ge_still-perfume.png",
+              "https://v3b.fal.media/files/b/0aaf2399/9GKzb93bJ0SDaxAQlG0mr_still-background.png"
+            ]
+          ],
+          "title": "Image Urls",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 4,
+          "type": "array",
+          "description": "1-4 images to edit (files or URLs). The instruction refers to them as <image_1>, <image_2> and so on, in the order they are sent."
+        },
+        "mask_url": {
+          "title": "Mask Url",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Mask (file or URL) marking the region to regenerate: white where the model should edit, black elsewhere. Single-image requests only, at that image's size. A masked edit comes back at the image's own size, with its own pixels outside the mask."
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=bria/fibo-2/edit",
+    "verified_on": "2026-10-23"
+  }
+}

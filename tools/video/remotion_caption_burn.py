@@ -35,6 +35,8 @@ import math
 import re
 import shutil
 import time
+import os
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -312,7 +314,7 @@ class RemotionCaptionBurn(BaseTool):
 
         # Build props JSON
         props = {
-            "videoSrc": f"public/talking-head/{video_filename}",
+            "videoSrc": f"talking-head/{video_filename}",
             "captions": captions,
             "overlays": overlays or [],
             "wordsPerPage": words_per_page,
@@ -367,8 +369,7 @@ class RemotionCaptionBurn(BaseTool):
     ) -> ToolResult:
         """Fall back to FFmpeg subtitle burning at bottom of frame."""
         # Generate temporary SRT from word captions
-        tmp_srt = Path(output_path).parent / f"_tmp_captions_{int(time.time())}.srt"
-        tmp_srt.parent.mkdir(parents=True, exist_ok=True)
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
 
         srt_lines = []
         idx = 1
@@ -387,32 +388,37 @@ class RemotionCaptionBurn(BaseTool):
             srt_lines.append("")
             idx += 1
 
-        tmp_srt.write_text("\n".join(srt_lines), encoding="utf-8")
-
-        # Escape path for FFmpeg subtitles filter (Windows colon issue)
-        srt_escaped = str(tmp_srt).replace("\\", "/").replace(":", "\\:")
-
-        cmd = [
-            "ffmpeg", "-y",
-            "-i", input_path,
-            "-vf", (
-                f"subtitles='{srt_escaped}'"
-                ":force_style='FontName=Segoe UI,FontSize=24,Bold=1,"
-                "PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,"
-                "Outline=3,Shadow=2,Alignment=2,MarginV=100'"
-            ),
-            "-c:v", "libx264", "-preset", "fast", "-crf", "18",
-            "-pix_fmt", "yuv420p",
-            "-c:a", "copy",
-            output_path,
-        ]
-        self.run_command(cmd)
-
-        # Clean up temp SRT
+        tmp_fd, tmp_name = tempfile.mkstemp(
+            prefix="_tmp_captions_", suffix=".srt", dir=Path(output_path).parent
+        )
+        tmp_srt = Path(tmp_name)
         try:
-            tmp_srt.unlink()
-        except OSError:
-            pass
+            with os.fdopen(tmp_fd, "w", encoding="utf-8") as handle:
+                handle.write("\n".join(srt_lines))
+            # Escape path for FFmpeg subtitles filter (Windows colon issue)
+            srt_escaped = str(tmp_srt).replace("\\", "/").replace(":", "\\:")
+
+            cmd = [
+                "ffmpeg", "-y",
+                "-i", input_path,
+                "-vf", (
+                    f"subtitles='{srt_escaped}'"
+                    ":force_style='FontName=Segoe UI,FontSize=24,Bold=1,"
+                    "PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,"
+                    "Outline=3,Shadow=2,Alignment=2,MarginV=100'"
+                ),
+                "-c:v", "libx264", "-preset", "fast", "-crf", "18",
+                "-pix_fmt", "yuv420p",
+                "-c:a", "copy",
+                output_path,
+            ]
+            self.run_command(cmd)
+
+        finally:
+            try:
+                tmp_srt.unlink()
+            except OSError:
+                pass
 
         if not Path(output_path).exists():
             return ToolResult(success=False, error="FFmpeg subtitle burn produced no output")

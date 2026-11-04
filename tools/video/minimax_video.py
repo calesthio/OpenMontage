@@ -74,7 +74,7 @@ class MiniMaxVideo(BaseTool):
         "  Optionally set MINIMAX_REGION=cn to route to the mainland China host, "
         "or MINIMAX_BASE_URL to override the endpoint entirely."
     )
-    agent_skills = ["ai-video-gen"]
+    agent_skills = ["minimax-h3", "ai-video-gen"]
 
     capabilities = [
         "text_to_video",
@@ -538,7 +538,9 @@ class MiniMaxVideo(BaseTool):
                 while True:
                     if time.monotonic() >= poll_deadline:
                         return _timeout_result()
-                    time.sleep(min(poll_interval, max(poll_deadline - time.monotonic(), 0)))
+                    time.sleep(
+                        min(poll_interval, max(poll_deadline - time.monotonic(), 0))
+                    )
                     if time.monotonic() >= poll_deadline:
                         return _timeout_result()
                     status_resp = requests.get(
@@ -569,7 +571,9 @@ class MiniMaxVideo(BaseTool):
                 while True:
                     if time.monotonic() >= poll_deadline:
                         return _timeout_result()
-                    time.sleep(min(poll_interval, max(poll_deadline - time.monotonic(), 0)))
+                    time.sleep(
+                        min(poll_interval, max(poll_deadline - time.monotonic(), 0))
+                    )
                     if time.monotonic() >= poll_deadline:
                         return _timeout_result()
                     status_resp = requests.get(
@@ -629,7 +633,9 @@ class MiniMaxVideo(BaseTool):
                     "model": model,
                     "api_version": api_version,
                     "task_id": task_id,
-                } if task_id else {},
+                }
+                if task_id
+                else {},
                 model=model,
             )
 

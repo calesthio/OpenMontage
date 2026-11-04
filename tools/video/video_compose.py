@@ -30,9 +30,11 @@ the agent to re-ask the user rather than substituting a different engine.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import hashlib
 import logging
+import secrets
 import shutil
 import subprocess
 import time
@@ -824,6 +826,67 @@ class VideoCompose(BaseTool):
         return scenes
 
     @staticmethod
+    def _file_uri_to_raw_path(uri: str) -> str:
+        """Convert a ``file:`` URI to a raw filesystem path string.
+
+        Handles the forms agents and tooling actually produce:
+
+        - POSIX:                  ``file:///Users/me/voice.mp3``
+        - Windows RFC:            ``file:///C:/Users/me/voice.mp3``
+        - Windows drive authority:``file://C:/Users/me/voice.mp3``
+        - Windows naive concat:   ``file://C:\\Users\\me\\voice.mp3``
+
+        The naive form is what a bare ``f"file://{path}"`` produces on Windows.
+        It has no ``/`` after the scheme, so urlsplit puts the *entire* drive
+        path in ``netloc`` and leaves ``path`` empty — treating that as a UNC
+        authority (``//C:\\Users\\...``) yields a path that never resolves, so
+        the asset is silently skipped.
+        """
+        parsed = urlsplit(uri)
+        decoded_path = unquote(parsed.path)
+        netloc = unquote(parsed.netloc)
+        # Both "C:" (drive as authority) and "C:\Users\..." (naive concat)
+        # start with "<letter>:" — neither is a real network authority.
+        if len(netloc) >= 2 and netloc[0].isalpha() and netloc[1] == ":":
+            raw_path = f"{netloc}{decoded_path}"
+        elif netloc and netloc.lower() != "localhost":
+            raw_path = f"//{netloc}{decoded_path}"
+        else:
+            raw_path = decoded_path
+        # Standard Windows file URIs use file:///C:/...; pathlib on
+        # Windows needs the drive path without the URI's leading slash.
+        if len(raw_path) >= 3 and raw_path[0] == "/" and raw_path[2] == ":":
+            raw_path = raw_path[1:]
+        return raw_path
+
+    @staticmethod
+    def _mirror_public_dir(source_root: Path, staging_root: Path) -> None:
+        """Link the real ``public/`` tree into a render-scoped ``--public-dir``.
+
+        ``--public-dir`` REPLACES Remotion's default public dir for the render.
+        Assets that earlier pipeline stages already staged into
+        ``remotion-composer/public/`` — ``anime_scene.images[]``,
+        ``screenshot_scene.backgroundImage``, demo-props fixtures, all
+        documented as public/-relative ``staticFile()`` paths — would therefore
+        404 as soon as we point the render at our own dir. Symlink each
+        top-level entry in (read-only; nothing is written back to
+        *source_root*), falling back to a copy where symlinks aren't permitted
+        (e.g. Windows without developer mode).
+        """
+        if not source_root.is_dir():
+            return
+        staging_root.mkdir(parents=True, exist_ok=True)
+        for entry in source_root.iterdir():
+            link = staging_root / entry.name
+            if link.exists() or link.is_symlink():
+                continue
+            try:
+                link.symlink_to(entry, target_is_directory=entry.is_dir())
+            except OSError:
+                with contextlib.suppress(OSError):
+                    (shutil.copytree if entry.is_dir() else shutil.copy2)(entry, link)
+
+    @staticmethod
     def _stage_remotion_media(value: Any, public_dir: Path) -> int:
         """Copy local media references into a Remotion public dir in-place.
 
@@ -833,7 +896,7 @@ class VideoCompose(BaseTool):
         """
 
         staged_by_source: dict[Path, str] = {}
-        media_keys = {"source", "src", "backgroundSrc"}
+        media_keys = {"source", "src", "backgroundSrc", "backgroundImage", "backgroundVideo", "images"}
 
         def visit(node: Any, parent_key: str | None = None) -> Any:
             if isinstance(node, dict):
@@ -850,18 +913,7 @@ class VideoCompose(BaseTool):
                 return node
 
             if node.lower().startswith("file://"):
-                parsed = urlsplit(node)
-                decoded_path = unquote(parsed.path)
-                if len(parsed.netloc) == 2 and parsed.netloc[1] == ":":
-                    raw_path = f"{parsed.netloc}{decoded_path}"
-                elif parsed.netloc and parsed.netloc.lower() != "localhost":
-                    raw_path = f"//{parsed.netloc}{decoded_path}"
-                else:
-                    raw_path = decoded_path
-                # Standard Windows file URIs use file:///C:/...; pathlib on
-                # Windows needs the drive path without the URI's leading slash.
-                if len(raw_path) >= 3 and raw_path[0] == "/" and raw_path[2] == ":":
-                    raw_path = raw_path[1:]
+                raw_path = VideoCompose._file_uri_to_raw_path(node)
             else:
                 raw_path = node
             source = Path(raw_path).resolve()
@@ -1253,7 +1305,7 @@ class VideoCompose(BaseTool):
             bg = palette.get("background", "#FFFFFF")
             text = palette.get("text", "#1F2937")
             surface = palette.get("surface", bg)
-            muted = palette.get("muted_text", "#6B7280")
+            muted = palette.get("muted", "#6B7280")
 
             # Build chart colors from all palette entries
             chart_colors = []
@@ -1271,7 +1323,7 @@ class VideoCompose(BaseTool):
                 "surfaceColor": surface,
                 "textColor": text,
                 "mutedTextColor": muted,
-                "headingFont": typo.get("heading", {}).get("font", "Inter"),
+                "headingFont": typo.get("headings", {}).get("font", "Inter"),
                 "bodyFont": typo.get("body", {}).get("font", "Inter"),
                 "monoFont": typo.get("code", {}).get("font", "JetBrains Mono"),
                 "chartColors": chart_colors[:6],
@@ -1287,9 +1339,9 @@ class VideoCompose(BaseTool):
                 else f"rgba(15, 23, 42, 0.75)"
             )
 
-            # Motion style from playbook
-            motion = playbook.get("motion", {})
-            pace = motion.get("pace", "moderate")
+            # Motion style from playbook. `pace` is an identity field in the
+            # playbook schema; motion carries pacing_rules, not a pace enum.
+            pace = playbook.get("identity", {}).get("pace", "moderate")
             if pace == "fast":
                 theme["springConfig"] = {"damping": 12, "stiffness": 80, "mass": 1}
                 theme["transitionDuration"] = 0.3
@@ -1964,60 +2016,77 @@ class VideoCompose(BaseTool):
                     error=f"Remotion public_dir does not exist or is not a directory: {public_dir}",
                 )
         else:
-            public_dir = output_path.parent / f".remotion-public-{output_path.stem}"
+            # Unique per render. A name derived only from the output stem is
+            # shared by every render of that output: concurrent renders
+            # overwrite each other's staged media and the first to finish
+            # deletes the other's inputs, and cleanup would also erase a
+            # pre-existing directory that happened to match. The random suffix
+            # means the dir we delete is always one this invocation created.
+            public_dir = output_path.parent / f".remotion-public-{output_path.stem}-{secrets.token_hex(4)}"
             cleanup_public_dir = True
 
-        staged_count = self._stage_remotion_media(props, public_dir)
-        if not staged_count and cleanup_public_dir:
-            public_dir = None
-
-        # Write the fully adapted/staged props, never the original cut payload.
+        # Everything from staging onward is guarded, so a failure during props
+        # writing or command setup — not just during the render — still removes
+        # the staged user media instead of leaving it on disk.
         props_path = output_path.parent / ".remotion_props.json"
-        with open(props_path, "w", encoding="utf-8") as f:
-            json.dump(props, f)
-
-        cmd = [
-            "npx", "remotion", "render",
-            str(composer_dir / "src" / "index.tsx"),
-            composition_id,
-            str(output_path),
-            # Use the `--props=<path>` equals form rather than two separate
-            # args. On Windows, passing `--props` and the path separately makes
-            # Remotion mis-parse the value (quote escaping differs), failing
-            # with "neither valid JSON nor a file path". The equals form is the
-            # API Remotion recommends for file paths and is cross-platform safe.
-            f"--props={props_path}",
-        ]
-        if public_dir is not None:
-            cmd.append(f"--public-dir={public_dir}")
-
-        # Apply media profile dimensions
+        staged_count = 0
         profile_name = inputs.get("profile")
-        if profile_name:
-            try:
-                from lib.media_profiles import get_profile
-                p = get_profile(profile_name)
-                cmd.extend(["--width", str(p.width), "--height", str(p.height)])
-            except (ImportError, ValueError):
-                pass
-
-        # Optional creator-facing render timeout. Remotion's `--timeout` (ms)
-        # governs headless-browser setup and delayRender(); on slow machines or
-        # restricted networks the default 30s browser setup times out with an
-        # opaque failure. Pass it through and give the subprocess enough headroom
-        # so run_command() does not kill Remotion before its own timeout fires.
-        remotion_timeout_ms = inputs.get("remotion_timeout_ms")
-        scene_count = len(props.get("scenes") or props.get("cuts") or [])
-        subprocess_timeout = max(600, scene_count * 15)
-        if remotion_timeout_ms:
-            try:
-                ms = int(remotion_timeout_ms)
-                cmd.append(f"--timeout={ms}")
-                subprocess_timeout = max(subprocess_timeout, ms // 1000 + 60)
-            except (TypeError, ValueError):
-                pass
-
         try:
+            staged_count = self._stage_remotion_media(props, public_dir)
+            if not staged_count and cleanup_public_dir:
+                public_dir = None
+            elif cleanup_public_dir:
+                # We are about to override Remotion's public dir with our own, so
+                # mirror the real one in — otherwise assets already staged into
+                # remotion-composer/public/ by earlier pipeline stages 404.
+                # Only for the dir we created and will delete; a caller-supplied
+                # public_dir is their contract to populate, so leave it untouched.
+                self._mirror_public_dir(composer_dir / "public", public_dir)
+
+            # Write the fully adapted/staged props, never the original cut payload.
+            with open(props_path, "w", encoding="utf-8") as f:
+                json.dump(props, f)
+
+            cmd = [
+                "npx", "remotion", "render",
+                str(composer_dir / "src" / "index.tsx"),
+                composition_id,
+                str(output_path),
+                # Use the `--props=<path>` equals form rather than two separate
+                # args. On Windows, passing `--props` and the path separately makes
+                # Remotion mis-parse the value (quote escaping differs), failing
+                # with "neither valid JSON nor a file path". The equals form is the
+                # API Remotion recommends for file paths and is cross-platform safe.
+                f"--props={props_path}",
+            ]
+            if public_dir is not None:
+                cmd.append(f"--public-dir={public_dir}")
+
+            # Apply media profile dimensions
+            if profile_name:
+                try:
+                    from lib.media_profiles import get_profile
+                    p = get_profile(profile_name)
+                    cmd.extend(["--width", str(p.width), "--height", str(p.height)])
+                except (ImportError, ValueError):
+                    pass
+
+            # Optional creator-facing render timeout. Remotion's `--timeout` (ms)
+            # governs headless-browser setup and delayRender(); on slow machines or
+            # restricted networks the default 30s browser setup times out with an
+            # opaque failure. Pass it through and give the subprocess enough headroom
+            # so run_command() does not kill Remotion before its own timeout fires.
+            remotion_timeout_ms = inputs.get("remotion_timeout_ms")
+            scene_count = len(props.get("scenes") or props.get("cuts") or [])
+            subprocess_timeout = max(600, scene_count * 15)
+            if remotion_timeout_ms:
+                try:
+                    ms = int(remotion_timeout_ms)
+                    cmd.append(f"--timeout={ms}")
+                    subprocess_timeout = max(subprocess_timeout, ms // 1000 + 60)
+                except (TypeError, ValueError):
+                    pass
+
             # Invoke from inside the composer dir so npx can resolve the
             # local remotion binary via node_modules/.bin. Without this,
             # Windows npx cannot locate the CLI and returns "could not
@@ -2100,9 +2169,13 @@ class VideoCompose(BaseTool):
         stripped, numeric-word-aware). Empty tokens dropped."""
         import re
 
+        # Strip Hebrew niqqud/cantillation so pointed and unpointed text match;
+        # maqaf acts as a hyphen and geresh as an apostrophe.
+        text = re.sub(r"[\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7]", "", text)
+        text = text.replace("\u05BE", "-").replace("\u05F3", "'")
         # Preserve hyphenated words as single tokens ("many-worlds" -> "many-worlds").
-        # Drop everything except letters, digits, hyphens, apostrophes.
-        cleaned = re.sub(r"[^A-Za-z0-9\-' ]+", " ", text.lower())
+        # Drop everything except letters/digits of any script, hyphens, apostrophes.
+        cleaned = re.sub(r"[^\w\-' ]+|_", " ", text.lower())
         return [t for t in cleaned.split() if t and t != "-"]
 
     @classmethod
@@ -2842,22 +2915,28 @@ class VideoCompose(BaseTool):
     @staticmethod
     def _build_subtitle_style(style: dict) -> str:
         """Build ASS force_style string from style dict."""
+
+        def _safe(val: Any) -> str:
+            # Every value below ends up inside -vf "...force_style='...'". Drop the
+            # characters that let a value close the quoted literal or start a new filter.
+            return "".join(c for c in str(val) if c not in "'\\:,;[]=")
+
         parts = []
-        parts.append(f"FontName={style.get('font', 'Inter')}")
-        parts.append(f"FontSize={style.get('font_size', 28)}")
+        parts.append(f"FontName={_safe(style.get('font', 'Inter'))}")
+        parts.append(f"FontSize={_safe(style.get('font_size', 28))}")
         parts.append(f"Bold={1 if style.get('bold', True) else 0}")
         if style.get("primary_color"):
-            parts.append(f"PrimaryColour={style['primary_color']}")
+            parts.append(f"PrimaryColour={_safe(style['primary_color'])}")
         if style.get("outline_color"):
-            parts.append(f"OutlineColour={style['outline_color']}")
+            parts.append(f"OutlineColour={_safe(style['outline_color'])}")
         if style.get("back_color"):
-            parts.append(f"BackColour={style['back_color']}")
+            parts.append(f"BackColour={_safe(style['back_color'])}")
         border_style = style.get("border_style", 1)
-        parts.append(f"BorderStyle={border_style}")
-        parts.append(f"Outline={style.get('outline_width', 2)}")
-        parts.append(f"Shadow={style.get('shadow', 0)}")
-        parts.append(f"MarginV={style.get('margin_v', 40)}")
-        parts.append(f"Alignment={style.get('alignment', 2)}")
+        parts.append(f"BorderStyle={_safe(border_style)}")
+        parts.append(f"Outline={_safe(style.get('outline_width', 2))}")
+        parts.append(f"Shadow={_safe(style.get('shadow', 0))}")
+        parts.append(f"MarginV={_safe(style.get('margin_v', 40))}")
+        parts.append(f"Alignment={_safe(style.get('alignment', 2))}")
         return ",".join(parts)
 
     @staticmethod

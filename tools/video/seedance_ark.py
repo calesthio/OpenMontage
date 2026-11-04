@@ -1,4 +1,4 @@
-"""Direct Volcengine Ark adapter for the Seedance 2.0 model family.
+"""Direct Volcengine Ark adapter for the Seedance 2.0 and 2.5 model families.
 
 The Ark API is asynchronous: create a task, poll its status, then download the
 24-hour result URL immediately.  This provider is intentionally independent
@@ -40,7 +40,7 @@ class SeedanceArkVideo(BaseTool):
     """Generate Seedance 2.0 video through Volcengine Ark's official REST API."""
 
     name = "seedance_ark"
-    version = "0.1.0"
+    version = "0.2.0"
     tier = ToolTier.GENERATE
     capability = "video_generation"
     provider = "ark"
@@ -51,14 +51,13 @@ class SeedanceArkVideo(BaseTool):
 
     BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"
     MODEL_IDS = {
+        "2.5": "doubao-seedance-2-5-260628",
         "standard": "doubao-seedance-2-0-260128",
         "fast": "doubao-seedance-2-0-fast-260128",
         "mini": "doubao-seedance-2-0-mini-260615",
     }
     TASK_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$")
-    TERMINAL_STATUSES = frozenset(
-        {"succeeded", "failed", "cancelled", "expired"}
-    )
+    TERMINAL_STATUSES = frozenset({"succeeded", "failed", "cancelled", "expired"})
     IMAGE_SUFFIX_TO_MIME = {
         ".jpg": "image/jpeg",
         ".jpeg": "image/jpeg",
@@ -142,7 +141,7 @@ class SeedanceArkVideo(BaseTool):
         "Set ARK_API_KEY to the API Key body from Volcengine Ark (without "
         "the 'Bearer ' prefix). Optional: ARK_SEEDANCE_MODEL and ARK_BASE_URL."
     )
-    agent_skills = ["seedance-2-0", "ai-video-gen"]
+    agent_skills = ["seedance-2-0", "seedance-2-5", "ai-video-gen"]
 
     capabilities = [
         "text_to_video",
@@ -200,7 +199,7 @@ class SeedanceArkVideo(BaseTool):
             },
             "model_variant": {
                 "type": "string",
-                "enum": ["standard", "fast", "mini"],
+                "enum": ["2.5", "standard", "fast", "mini"],
                 "default": "standard",
             },
             "model": {
@@ -369,14 +368,14 @@ class SeedanceArkVideo(BaseTool):
 
     def estimate_token_usage(self, inputs: dict[str, Any]) -> int:
         """Estimate billable completion tokens using Ark's published formula."""
-        duration = self._normalize_duration(inputs.get("duration", 5))
-        output_seconds = 15 if duration == -1 else duration
+        _, variant = self._resolve_model(inputs)
+        max_duration = 30 if variant == "2.5" else 15
+        duration = self._normalize_duration(inputs.get("duration", 5), max_duration)
+        output_seconds = max_duration if duration == -1 else duration
         video_refs = list(inputs.get("reference_video_urls") or [])
         if inputs.get("reference_video_url"):
             video_refs.append(inputs["reference_video_url"])
-        video_durations = list(
-            inputs.get("reference_video_durations") or []
-        )
+        video_durations = list(inputs.get("reference_video_durations") or [])
         # A video reference changes both the token formula and the price tier.
         # When duration metadata is absent, use the official 15-second combined
         # maximum as a conservative preflight upper bound instead of reporting
@@ -391,17 +390,13 @@ class SeedanceArkVideo(BaseTool):
             ratio = "16:9"
         width, height = self.OUTPUT_DIMENSIONS[resolution][ratio]
         return round(
-            (input_video_seconds + output_seconds)
-            * width
-            * height
-            * 24
-            / 1024
+            (input_video_seconds + output_seconds) * width * height * 24 / 1024
         )
 
     def estimate_cost_cny(self, inputs: dict[str, Any]) -> float:
         model, variant = self._resolve_model(inputs)
         del model
-        if variant is None:
+        if variant is None or variant == "2.5":
             rate = self._get_custom_price(inputs, required=True)
             return round(
                 self.estimate_token_usage(inputs) * rate / 1_000_000,
@@ -409,8 +404,7 @@ class SeedanceArkVideo(BaseTool):
             )
         resolution = str(inputs.get("resolution", "720p")).lower()
         with_video = bool(
-            inputs.get("reference_video_url")
-            or inputs.get("reference_video_urls")
+            inputs.get("reference_video_url") or inputs.get("reference_video_urls")
         )
         condition = "with_video" if with_video else "without_video"
         try:
@@ -426,9 +420,7 @@ class SeedanceArkVideo(BaseTool):
         return round(self.estimate_cost_cny(inputs) / cny_per_usd, 4)
 
     @staticmethod
-    def _get_custom_price(
-        inputs: dict[str, Any], *, required: bool
-    ) -> float:
+    def _get_custom_price(inputs: dict[str, Any], *, required: bool) -> float:
         try:
             raw = inputs["custom_price_cny_per_million_tokens"]
         except KeyError as exc:
@@ -461,9 +453,7 @@ class SeedanceArkVideo(BaseTool):
                 "ARK_CNY_PER_USD must be a finite number greater than 0"
             ) from exc
         if not math.isfinite(value) or value <= 0:
-            raise ValueError(
-                "ARK_CNY_PER_USD must be a finite number greater than 0"
-            )
+            raise ValueError("ARK_CNY_PER_USD must be a finite number greater than 0")
         return value
 
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
@@ -482,12 +472,10 @@ class SeedanceArkVideo(BaseTool):
             "api_contract": {
                 "create": f"POST {self.BASE_URL}/contents/generations/tasks",
                 "query": (
-                    f"GET {self.BASE_URL}/contents/generations/tasks/"
-                    "{task_id}"
+                    f"GET {self.BASE_URL}/contents/generations/tasks/{{task_id}}"
                 ),
                 "cancel": (
-                    f"DELETE {self.BASE_URL}/contents/generations/tasks/"
-                    "{task_id}"
+                    f"DELETE {self.BASE_URL}/contents/generations/tasks/{{task_id}}"
                 ),
             },
         }
@@ -500,17 +488,9 @@ class SeedanceArkVideo(BaseTool):
                     "the 'Bearer ' prefix"
                 )
             result["api_contract"] = {
-                "create": (
-                    f"POST {base_url}/contents/generations/tasks"
-                ),
-                "query": (
-                    f"GET {base_url}/contents/generations/tasks/"
-                    "{task_id}"
-                ),
-                "cancel": (
-                    f"DELETE {base_url}/contents/generations/tasks/"
-                    "{task_id}"
-                ),
+                "create": (f"POST {base_url}/contents/generations/tasks"),
+                "query": (f"GET {base_url}/contents/generations/tasks/{{task_id}}"),
+                "cancel": (f"DELETE {base_url}/contents/generations/tasks/{{task_id}}"),
             }
             if action in {"query", "cancel"}:
                 self._validate_task_id(inputs.get("task_id"))
@@ -519,15 +499,11 @@ class SeedanceArkVideo(BaseTool):
                 result.update(
                     {
                         "model": payload["model"],
-                        "operation": inputs.get(
-                            "operation", "text_to_video"
-                        ),
+                        "operation": inputs.get("operation", "text_to_video"),
                         "resolution": payload.get("resolution", "720p"),
                         "ratio": payload.get("ratio", "16:9"),
                         "duration": payload.get("duration", 5),
-                        "generate_audio": payload.get(
-                            "generate_audio", True
-                        ),
+                        "generate_audio": payload.get("generate_audio", True),
                         "media_counts": self._media_counts(payload["content"]),
                         "estimated_tokens": self.estimate_token_usage(inputs),
                         "estimated_cost_cny": self.estimate_cost_cny(inputs),
@@ -638,9 +614,7 @@ class SeedanceArkVideo(BaseTool):
             if status != "succeeded":
                 detail = self._task_error(task)
                 safe_detail = (
-                    self._safe_error(RuntimeError(detail), api_key)
-                    if detail
-                    else ""
+                    self._safe_error(RuntimeError(detail), api_key) if detail else ""
                 )
                 return ToolResult(
                     success=False,
@@ -656,12 +630,8 @@ class SeedanceArkVideo(BaseTool):
             content = task.get("content") or {}
             video_url = content.get("video_url")
             if not video_url:
-                raise RuntimeError(
-                    "Ark task succeeded without content.video_url"
-                )
-            output_path = Path(
-                inputs.get("output_path", "seedance_ark_output.mp4")
-            )
+                raise RuntimeError("Ark task succeeded without content.video_url")
+            output_path = Path(inputs.get("output_path", "seedance_ark_output.mp4"))
             self._download_video(str(video_url), output_path)
 
             from tools.video._shared import probe_output
@@ -676,28 +646,18 @@ class SeedanceArkVideo(BaseTool):
                     "status": status,
                     "model": task.get("model") or model,
                     "prompt": inputs.get("prompt"),
-                    "operation": inputs.get(
-                        "operation", "text_to_video"
-                    ),
+                    "operation": inputs.get("operation", "text_to_video"),
                     "video_url": video_url,
                     "last_frame_url": content.get("last_frame_url"),
                     "output": str(output_path),
                     "output_path": str(output_path),
                     "format": "mp4",
-                    "resolution": task.get(
-                        "resolution", payload.get("resolution")
-                    ),
-                    "aspect_ratio": task.get(
-                        "ratio", payload.get("ratio")
-                    ),
-                    "duration": task.get(
-                        "duration", payload.get("duration")
-                    ),
+                    "resolution": task.get("resolution", payload.get("resolution")),
+                    "aspect_ratio": task.get("ratio", payload.get("ratio")),
+                    "duration": task.get("duration", payload.get("duration")),
                     "generate_audio": task.get("generate_audio"),
                     "usage": task.get("usage") or {},
-                    "estimated_cost_cny": self._cost_from_task_cny(
-                        task, inputs
-                    ),
+                    "estimated_cost_cny": self._cost_from_task_cny(task, inputs),
                     **probed,
                 },
                 artifacts=[str(output_path)],
@@ -719,8 +679,7 @@ class SeedanceArkVideo(BaseTool):
                 success=False,
                 data=error_data,
                 error=(
-                    "Ark Seedance request failed: "
-                    f"{self._safe_error(exc, api_key)}"
+                    f"Ark Seedance request failed: {self._safe_error(exc, api_key)}"
                 ),
                 duration_seconds=round(time.time() - started, 2),
             )
@@ -733,23 +692,18 @@ class SeedanceArkVideo(BaseTool):
             "reference_to_video",
         }:
             raise ValueError(
-                "operation must be text_to_video, image_to_video, or "
-                "reference_to_video"
+                "operation must be text_to_video, image_to_video, or reference_to_video"
             )
 
         model, variant = self._resolve_model(inputs)
         resolution = str(inputs.get("resolution", "720p")).lower()
         if resolution not in self.OUTPUT_DIMENSIONS:
-            raise ValueError(
-                "resolution must be 480p, 720p, 1080p, or 4k"
-            )
-        if variant in {"fast", "mini"} and resolution not in {
+            raise ValueError("resolution must be 480p, 720p, 1080p, or 4k")
+        if variant in {"2.5", "fast", "mini"} and resolution not in {
             "480p",
             "720p",
         }:
-            raise ValueError(
-                f"{variant} supports only 480p or 720p resolution"
-            )
+            raise ValueError(f"{variant} supports only 480p or 720p resolution")
 
         ratio = str(inputs.get("aspect_ratio", "16:9"))
         valid_ratios = {
@@ -763,11 +717,11 @@ class SeedanceArkVideo(BaseTool):
         }
         if ratio not in valid_ratios:
             raise ValueError(
-                "aspect_ratio must be adaptive, 21:9, 16:9, 4:3, "
-                "1:1, 3:4, or 9:16"
+                "aspect_ratio must be adaptive, 21:9, 16:9, 4:3, 1:1, 3:4, or 9:16"
             )
 
-        duration = self._normalize_duration(inputs.get("duration", 5))
+        max_duration = 30 if variant == "2.5" else 15
+        duration = self._normalize_duration(inputs.get("duration", 5), max_duration)
         prompt = str(inputs.get("prompt") or "").strip()
         content: list[dict[str, Any]] = []
         if prompt:
@@ -790,12 +744,8 @@ class SeedanceArkVideo(BaseTool):
         elif operation == "image_to_video":
             first_refs = self._single_image_refs(inputs)
             if len(first_refs) != 1:
-                raise ValueError(
-                    "image_to_video requires exactly one reference image"
-                )
-            content.append(
-                self._image_content(first_refs[0], role="first_frame")
-            )
+                raise ValueError("image_to_video requires exactly one reference image")
+            content.append(self._image_content(first_refs[0], role="first_frame"))
             end_refs = [
                 value
                 for value in (
@@ -805,13 +755,9 @@ class SeedanceArkVideo(BaseTool):
                 if value
             ]
             if len(end_refs) > 1:
-                raise ValueError(
-                    "provide only one of end_image_url/end_image_path"
-                )
+                raise ValueError("provide only one of end_image_url/end_image_path")
             if end_refs:
-                content.append(
-                    self._image_content(end_refs[0], role="last_frame")
-                )
+                content.append(self._image_content(end_refs[0], role="last_frame"))
         else:
             image_refs = list(inputs.get("reference_image_urls") or [])
             image_refs.extend(inputs.get("reference_image_paths") or [])
@@ -819,22 +765,24 @@ class SeedanceArkVideo(BaseTool):
                 image_refs.append(inputs["reference_image_url"])
             if inputs.get("reference_image_path"):
                 image_refs.append(inputs["reference_image_path"])
-            if len(image_refs) > 9:
+            max_images = 30 if variant == "2.5" else 9
+            max_videos = 10 if variant == "2.5" else 3
+            max_audios = 10 if variant == "2.5" else 3
+            max_reference_seconds = 30 if variant == "2.5" else 15
+            if len(image_refs) > max_images:
                 raise ValueError(
-                    "reference_to_video accepts at most 9 reference images"
+                    f"reference_to_video accepts at most {max_images} reference images"
                 )
 
             video_refs = list(inputs.get("reference_video_urls") or [])
             if inputs.get("reference_video_url"):
                 video_refs.append(inputs["reference_video_url"])
-            if len(video_refs) > 3:
+            if len(video_refs) > max_videos:
                 raise ValueError(
-                    "reference_to_video accepts at most 3 reference videos"
+                    f"reference_to_video accepts at most {max_videos} reference videos"
                 )
             self._validate_remote_refs(video_refs, "reference video")
-            video_durations = list(
-                inputs.get("reference_video_durations") or []
-            )
+            video_durations = list(inputs.get("reference_video_durations") or [])
             if video_durations:
                 if len(video_durations) != len(video_refs):
                     raise ValueError(
@@ -842,16 +790,19 @@ class SeedanceArkVideo(BaseTool):
                         "reference videos"
                     )
                 if any(
-                    float(value) < 2 or float(value) > 15
+                    float(value) < 2 or float(value) > max_reference_seconds
                     for value in video_durations
                 ):
                     raise ValueError(
-                        "each reference video duration must be 2 to 15 seconds"
+                        f"each reference video duration must be 2 to {max_reference_seconds} seconds"
                     )
-                if sum(float(value) for value in video_durations) > 15:
+                if (
+                    sum(float(value) for value in video_durations)
+                    > max_reference_seconds
+                ):
                     raise ValueError(
                         "all reference videos together must be at most "
-                        "15 seconds"
+                        f"{max_reference_seconds} seconds"
                     )
 
             audio_refs = list(inputs.get("reference_audio_urls") or [])
@@ -860,14 +811,12 @@ class SeedanceArkVideo(BaseTool):
                 audio_refs.append(inputs["reference_audio_url"])
             if inputs.get("reference_audio_path"):
                 audio_refs.append(inputs["reference_audio_path"])
-            if len(audio_refs) > 3:
+            if len(audio_refs) > max_audios:
                 raise ValueError(
                     "reference_to_video accepts at most 3 reference audio "
-                    "clips"
+                    f"clips (maximum {max_audios})"
                 )
-            audio_durations = list(
-                inputs.get("reference_audio_durations") or []
-            )
+            audio_durations = list(inputs.get("reference_audio_durations") or [])
             if audio_durations:
                 if len(audio_durations) != len(audio_refs):
                     raise ValueError(
@@ -875,34 +824,38 @@ class SeedanceArkVideo(BaseTool):
                         "reference audio clips"
                     )
                 if any(
-                    float(value) < 2 or float(value) > 15
+                    float(value) < 2 or float(value) > max_reference_seconds
                     for value in audio_durations
                 ):
                     raise ValueError(
-                        "each reference audio duration must be 2 to 15 seconds"
+                        f"each reference audio duration must be 2 to {max_reference_seconds} seconds"
                     )
-                if sum(float(value) for value in audio_durations) > 15:
+                if (
+                    sum(float(value) for value in audio_durations)
+                    > max_reference_seconds
+                ):
                     raise ValueError(
                         "all reference audio clips together must be at most "
-                        "15 seconds"
+                        f"{max_reference_seconds} seconds"
                     )
             local_audio_durations = [
                 duration
                 for ref in audio_refs
                 if (
-                    duration := self._local_or_data_audio_duration(str(ref))
+                    duration := self._local_or_data_audio_duration(
+                        str(ref), max_seconds=max_reference_seconds
+                    )
                 )
                 is not None
             ]
-            if sum(local_audio_durations) > 15:
+            if sum(local_audio_durations) > max_reference_seconds:
                 raise ValueError(
                     "all local reference audio clips together must be at "
-                    "most 15 seconds"
+                    f"most {max_reference_seconds} seconds"
                 )
             if audio_refs and not (image_refs or video_refs):
                 raise ValueError(
-                    "reference audio requires at least one reference image "
-                    "or video"
+                    "reference audio requires at least one reference image or video"
                 )
             if not (image_refs or video_refs):
                 raise ValueError(
@@ -910,8 +863,7 @@ class SeedanceArkVideo(BaseTool):
                 )
 
             content.extend(
-                self._image_content(ref, role="reference_image")
-                for ref in image_refs
+                self._image_content(ref, role="reference_image") for ref in image_refs
             )
             content.extend(
                 {
@@ -922,14 +874,11 @@ class SeedanceArkVideo(BaseTool):
                 for ref in video_refs
             )
             content.extend(
-                self._audio_content(ref, role="reference_audio")
-                for ref in audio_refs
+                self._audio_content(ref, role="reference_audio") for ref in audio_refs
             )
 
         if inputs.get("web_search") and len(content) != 1:
-            raise ValueError(
-                "web_search is supported only for pure text input"
-            )
+            raise ValueError("web_search is supported only for pure text input")
 
         payload: dict[str, Any] = {
             "model": model,
@@ -939,9 +888,7 @@ class SeedanceArkVideo(BaseTool):
             "resolution": resolution,
             "generate_audio": bool(inputs.get("generate_audio", True)),
             "watermark": bool(inputs.get("watermark", False)),
-            "return_last_frame": bool(
-                inputs.get("return_last_frame", False)
-            ),
+            "return_last_frame": bool(inputs.get("return_last_frame", False)),
         }
         optional = (
             "callback_url",
@@ -959,12 +906,10 @@ class SeedanceArkVideo(BaseTool):
         self._validate_request_size(payload)
         return payload
 
-    def _resolve_model(
-        self, inputs: dict[str, Any]
-    ) -> tuple[str, str | None]:
+    def _resolve_model(self, inputs: dict[str, Any]) -> tuple[str, str | None]:
         variant = str(inputs.get("model_variant", "standard")).lower()
         if variant not in self.MODEL_IDS:
-            raise ValueError("model_variant must be standard, fast, or mini")
+            raise ValueError("model_variant must be 2.5, standard, fast, or mini")
         model = str(
             inputs.get("model")
             or os.environ.get("ARK_SEEDANCE_MODEL")
@@ -981,23 +926,25 @@ class SeedanceArkVideo(BaseTool):
         return model, None
 
     @staticmethod
-    def _normalize_duration(value: Any) -> int:
+    def _normalize_duration(value: Any, max_seconds: int = 15) -> int:
         if value == "auto":
             return -1
         if isinstance(value, bool):
-            raise ValueError("duration must be an integer from 4 to 15 or -1")
+            raise ValueError(
+                f"duration must be an integer from 4 to {max_seconds} or -1"
+            )
         try:
             duration = int(value)
         except (TypeError, ValueError) as exc:
             raise ValueError(
-                "duration must be an integer from 4 to 15 or -1"
+                f"duration must be an integer from 4 to {max_seconds} or -1"
             ) from exc
         if str(value).strip() not in {str(duration), "auto"}:
             raise ValueError(
-                "duration must be an integer from 4 to 15 or -1"
+                f"duration must be an integer from 4 to {max_seconds} or -1"
             )
-        if duration != -1 and not 4 <= duration <= 15:
-            raise ValueError("duration must be between 4 and 15 or -1")
+        if duration != -1 and not 4 <= duration <= max_seconds:
+            raise ValueError(f"duration must be between 4 and {max_seconds} or -1")
         return duration
 
     @staticmethod
@@ -1082,8 +1029,7 @@ class SeedanceArkVideo(BaseTool):
         size = path.stat().st_size
         if size >= max_bytes:
             raise ValueError(
-                f"local {label} must be smaller than "
-                f"{max_bytes // (1024 * 1024)} MB"
+                f"local {label} must be smaller than {max_bytes // (1024 * 1024)} MB"
             )
         suffix = path.suffix.lower()
         mime = suffix_to_mime.get(suffix)
@@ -1114,9 +1060,7 @@ class SeedanceArkVideo(BaseTool):
                 width, height = image.size
                 image.verify()
         except Exception as exc:
-            raise ValueError(
-                f"image is unreadable or corrupt: {source}"
-            ) from exc
+            raise ValueError(f"image is unreadable or corrupt: {source}") from exc
         if not (300 <= width <= 6000 and 300 <= height <= 6000):
             raise ValueError(
                 "local image width and height must each be 300 to 6000 pixels"
@@ -1179,7 +1123,9 @@ class SeedanceArkVideo(BaseTool):
             )
         return mime, decoded
 
-    def _local_or_data_audio_duration(self, value: str) -> float | None:
+    def _local_or_data_audio_duration(
+        self, value: str, *, max_seconds: int = 15
+    ) -> float | None:
         if value.startswith("data:"):
             mime, decoded = self._decode_data_uri(
                 value,
@@ -1187,12 +1133,16 @@ class SeedanceArkVideo(BaseTool):
                 max_bytes=self.MAX_AUDIO_BYTES,
                 label="audio",
             )
-            return self._probe_audio_bytes(decoded, mime)
+            return self._probe_audio_bytes(decoded, mime, max_seconds=max_seconds)
         if self._is_remote_or_asset(value):
             return None
-        return self._probe_local_audio_duration(Path(value).expanduser())
+        return self._probe_local_audio_duration(
+            Path(value).expanduser(), max_seconds=max_seconds
+        )
 
-    def _probe_audio_bytes(self, decoded: bytes, mime: str) -> float:
+    def _probe_audio_bytes(
+        self, decoded: bytes, mime: str, *, max_seconds: int = 15
+    ) -> float:
         suffix = ".wav" if mime == "audio/wav" else ".mp3"
         # Windows does not allow ffprobe to reopen a NamedTemporaryFile while
         # Python still holds the file handle. Close it before probing, then
@@ -1202,19 +1152,17 @@ class SeedanceArkVideo(BaseTool):
             temp.flush()
             temp_path = Path(temp.name)
         try:
-            return self._probe_local_audio_duration(temp_path)
+            return self._probe_local_audio_duration(temp_path, max_seconds=max_seconds)
         finally:
             temp_path.unlink(missing_ok=True)
 
     @staticmethod
-    def _probe_local_audio_duration(path: Path) -> float:
+    def _probe_local_audio_duration(path: Path, *, max_seconds: int = 15) -> float:
         if not path.is_file():
             raise ValueError(f"local audio file does not exist: {path}")
         ffprobe = shutil.which("ffprobe")
         if not ffprobe:
-            raise ValueError(
-                "ffprobe is required to validate local reference audio"
-            )
+            raise ValueError("ffprobe is required to validate local reference audio")
         try:
             proc = subprocess.run(
                 [
@@ -1234,12 +1182,10 @@ class SeedanceArkVideo(BaseTool):
             )
             duration = float(proc.stdout.strip()) if proc.returncode == 0 else 0
         except (OSError, ValueError, subprocess.SubprocessError) as exc:
+            raise ValueError(f"failed to probe local reference audio: {path}") from exc
+        if not 2 <= duration <= max_seconds:
             raise ValueError(
-                f"failed to probe local reference audio: {path}"
-            ) from exc
-        if not 2 <= duration <= 15:
-            raise ValueError(
-                "each local reference audio clip must be 2 to 15 seconds"
+                f"each local reference audio clip must be 2 to {max_seconds} seconds"
             )
         return duration
 
@@ -1247,9 +1193,7 @@ class SeedanceArkVideo(BaseTool):
     def _is_remote_or_asset(value: str) -> bool:
         return value.startswith(("https://", "http://", "asset://"))
 
-    def _validate_remote_refs(
-        self, refs: list[Any], label: str
-    ) -> None:
+    def _validate_remote_refs(self, refs: list[Any], label: str) -> None:
         for ref in refs:
             value = str(ref)
             if not value.startswith(("https://", "http://", "asset://")):
@@ -1258,9 +1202,7 @@ class SeedanceArkVideo(BaseTool):
                     "Ark does not document video Base64 or local paths"
                 )
 
-    def _validate_optional_parameters(
-        self, payload: dict[str, Any]
-    ) -> None:
+    def _validate_optional_parameters(self, payload: dict[str, Any]) -> None:
         callback = payload.get("callback_url")
         if callback is not None and not str(callback).startswith(
             ("https://", "http://")
@@ -1268,9 +1210,7 @@ class SeedanceArkVideo(BaseTool):
             raise ValueError("callback_url must be an http(s) URL")
         expires = payload.get("execution_expires_after")
         if expires is not None and not 3600 <= int(expires) <= 259200:
-            raise ValueError(
-                "execution_expires_after must be between 3600 and 259200"
-            )
+            raise ValueError("execution_expires_after must be between 3600 and 259200")
         priority = payload.get("priority")
         if priority is not None and not 0 <= int(priority) <= 9:
             raise ValueError("priority must be between 0 and 9")
@@ -1308,9 +1248,7 @@ class SeedanceArkVideo(BaseTool):
             "Content-Type": "application/json",
         }
 
-    def _create_task(
-        self, payload: dict[str, Any], api_key: str
-    ) -> str:
+    def _create_task(self, payload: dict[str, Any], api_key: str) -> str:
         import requests
 
         response = requests.post(
@@ -1338,16 +1276,10 @@ class SeedanceArkVideo(BaseTool):
                     timeout=30,
                 )
                 retryable_status = (
-                    response.status_code == 429
-                    or response.status_code >= 500
+                    response.status_code == 429 or response.status_code >= 500
                 )
-                if (
-                    retryable_status
-                    and attempt < self.retry_policy.max_retries
-                ):
-                    time.sleep(
-                        self.retry_policy.backoff_seconds * (2**attempt)
-                    )
+                if retryable_status and attempt < self.retry_policy.max_retries:
+                    time.sleep(self.retry_policy.backoff_seconds * (2**attempt))
                     continue
                 self._raise_for_status(response)
                 break
@@ -1435,18 +1367,14 @@ class SeedanceArkVideo(BaseTool):
                     )
             except Exception:
                 pass
-            raise RuntimeError(
-                f"{exc}" + (f"; {detail}" if detail else "")
-            ) from exc
+            raise RuntimeError(f"{exc}" + (f"; {detail}" if detail else "")) from exc
 
     @staticmethod
     def _task_error(task: dict[str, Any]) -> str:
         error = task.get("error")
         if isinstance(error, dict):
             return ": ".join(
-                str(error.get(key))
-                for key in ("code", "message")
-                if error.get(key)
+                str(error.get(key)) for key in ("code", "message") if error.get(key)
             )
         return str(error or "")
 
@@ -1466,8 +1394,7 @@ class SeedanceArkVideo(BaseTool):
             model_inputs["model"] = task["model"]
         _, variant = self._resolve_model(model_inputs)
         resolution = str(
-            task.get("resolution")
-            or inputs.get("resolution", "720p")
+            task.get("resolution") or inputs.get("resolution", "720p")
         ).lower()
         condition = (
             "with_video"
@@ -1482,9 +1409,7 @@ class SeedanceArkVideo(BaseTool):
             rate = self._get_custom_price(inputs, required=False)
         else:
             try:
-                rate = self.PRICE_CNY_PER_MILLION[variant][condition][
-                    resolution
-                ]
+                rate = self.PRICE_CNY_PER_MILLION[variant][condition][resolution]
             except KeyError:
                 return None
         return round(float(tokens) * rate / 1_000_000, 4)
@@ -1498,15 +1423,9 @@ class SeedanceArkVideo(BaseTool):
         cny_per_usd = self._get_cny_per_usd()
         return round(cost_cny / cny_per_usd, 4)
 
-    def _safe_error(
-        self, exc: Exception, api_key: str | None = None
-    ) -> str:
+    def _safe_error(self, exc: Exception, api_key: str | None = None) -> str:
         message = str(exc)
-        secrets = {
-            value
-            for value in (api_key, self._get_api_key())
-            if value
-        }
+        secrets = {value for value in (api_key, self._get_api_key()) if value}
         for secret in secrets:
             message = message.replace(secret, "[redacted]")
         message = re.sub(

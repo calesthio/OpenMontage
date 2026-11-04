@@ -14,6 +14,7 @@ Approach: MediaPipe/OpenCV face detection → smoothed bounding box trajectory
 from __future__ import annotations
 
 import json
+from fractions import Fraction
 import time
 from pathlib import Path
 from typing import Any
@@ -43,7 +44,7 @@ ASPECT_PRESETS = {
 
 class AutoReframe(BaseTool):
     name = "auto_reframe"
-    version = "0.1.0"
+    version = "0.1.1"
     tier = ToolTier.CORE
     capability = "video_post"
     provider = "ffmpeg"
@@ -120,7 +121,8 @@ class AutoReframe(BaseTool):
     resume_support = ResumeSupport.FROM_START
     idempotency_key_fields = [
         "input_path", "target_aspect", "target_width", "target_height",
-        "smoothing_window", "face_padding",
+        "smoothing_window", "face_padding", "face_tracking_json", "sample_fps",
+        "codec", "crf",
     ]
     side_effects = ["writes reframed video to output_path"]
     user_visible_verification = [
@@ -136,15 +138,15 @@ class AutoReframe(BaseTool):
         start = time.time()
 
         # Get source video dimensions
-        src_w, src_h, src_fps = self._get_video_info(input_path)
+        src_w, src_h, src_fps, src_sar = self._get_video_info(input_path)
         if src_w == 0 or src_h == 0:
             return ToolResult(success=False, error="Could not read video dimensions")
 
         # Determine target crop dimensions (in source pixel space)
-        target_w, target_h = self._compute_crop_size(inputs, src_w, src_h)
+        target_w, target_h = self._compute_crop_size(inputs, src_w, src_h, src_sar)
 
         # If source already matches target aspect, no crop needed
-        if target_w == src_w and target_h == src_h:
+        if target_w == src_w and target_h == src_h and src_sar == 1.0:
             return ToolResult(
                 success=True,
                 data={"message": "Source already matches target aspect ratio", "output": str(input_path)},
@@ -218,12 +220,12 @@ class AutoReframe(BaseTool):
             duration_seconds=round(elapsed, 2),
         )
 
-    def _get_video_info(self, path: Path) -> tuple[int, int, float]:
-        """Get video width, height, fps via ffprobe."""
+    def _get_video_info(self, path: Path) -> tuple[int, int, float, float]:
+        """Get encoded dimensions, FPS, and sample aspect ratio via ffprobe."""
         cmd = [
             "ffprobe", "-v", "quiet",
             "-select_streams", "v:0",
-            "-show_entries", "stream=width,height,r_frame_rate",
+            "-show_entries", "stream=width,height,r_frame_rate,sample_aspect_ratio",
             "-of", "json", str(path),
         ]
         try:
@@ -235,12 +237,20 @@ class AutoReframe(BaseTool):
             # Parse r_frame_rate (e.g. "30000/1001")
             fps_parts = stream["r_frame_rate"].split("/")
             fps = float(fps_parts[0]) / float(fps_parts[1]) if len(fps_parts) == 2 else float(fps_parts[0])
-            return w, h, fps
+            # Unspecified sample aspect ratios are commonly reported as N/A
+            # or 0:1; retain the existing square-pixel interpretation for them.
+            try:
+                sar = float(Fraction(stream.get("sample_aspect_ratio", "1:1").replace(":", "/")))
+            except (ValueError, ZeroDivisionError):
+                sar = 1.0
+            if sar <= 0:
+                sar = 1.0
+            return w, h, fps, sar
         except Exception:
-            return 0, 0, 30.0
+            return 0, 0, 30.0, 1.0
 
     def _compute_crop_size(
-        self, inputs: dict[str, Any], src_w: int, src_h: int
+        self, inputs: dict[str, Any], src_w: int, src_h: int, src_sar: float = 1.0
     ) -> tuple[int, int]:
         """Compute crop dimensions in source pixel space that match the target aspect ratio."""
         if "target_width" in inputs and "target_height" in inputs:
@@ -250,7 +260,9 @@ class AutoReframe(BaseTool):
             aspect_name = inputs.get("target_aspect", "portrait")
             tw, th = ASPECT_PRESETS.get(aspect_name, (9, 16))
 
-        target_ratio = tw / th
+        # Face positions and crop dimensions are encoded-pixel coordinates;
+        # convert the requested display ratio into that coordinate space.
+        target_ratio = (tw / th) / src_sar
         src_ratio = src_w / src_h
 
         if target_ratio > src_ratio:
@@ -418,7 +430,7 @@ class AutoReframe(BaseTool):
         codec: str, crf: int,
     ) -> ToolResult:
         """Render with a static crop position."""
-        vf = f"crop={crop_w}:{crop_h}:{crop_x}:{crop_y},scale={out_w}:{out_h}"
+        vf = f"crop={crop_w}:{crop_h}:{crop_x}:{crop_y},scale={out_w}:{out_h},setsar=1"
 
         cmd = [
             "ffmpeg", "-y",
@@ -487,7 +499,7 @@ class AutoReframe(BaseTool):
         vf = (
             f"sendcmd=f='{str(sendcmd_path).replace(chr(92), '/')}':flags=enter,"
             f"crop={crop_w}:{crop_h}:{crop_xs[0]}:{crop_ys[0]},"
-            f"scale={out_w}:{out_h}"
+            f"scale={out_w}:{out_h},setsar=1"
         )
 
         cmd = [

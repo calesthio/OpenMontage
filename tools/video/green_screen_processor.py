@@ -17,6 +17,7 @@ import os
 import platform
 import shutil
 import time
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -140,8 +141,7 @@ class GreenScreenProcessor(BaseTool):
             method = self._auto_detect_method(input_path, duration, width, height)
 
         # Step 3: Set up temp directory for frame processing
-        temp_dir = output_path.parent / f".gs_tmp_{int(time.time())}"
-        temp_dir.mkdir(parents=True, exist_ok=True)
+        temp_dir = Path(tempfile.mkdtemp(prefix=".gs_tmp_", dir=output_path.parent))
 
         try:
             # Step 4: Extract frames at target fps
@@ -249,8 +249,7 @@ class GreenScreenProcessor(BaseTool):
         Extracts 5 evenly-spaced frames, checks color histograms for
         green/blue screen presence, then tests chromakey quality on a sample.
         """
-        temp_dir = input_path.parent / f".gs_detect_{int(time.time())}"
-        temp_dir.mkdir(parents=True, exist_ok=True)
+        temp_dir = Path(tempfile.mkdtemp(prefix=".gs_detect_", dir=input_path.parent))
 
         try:
             # Extract 5 sample frames evenly spaced

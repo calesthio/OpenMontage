@@ -1,5 +1,5 @@
 import React from "react";
-import { loadFont } from "@remotion/google-fonts/SpaceGrotesk";
+import { loadSpaceGrotesk } from "./lib/localFonts";
 import {
   AbsoluteFill,
   Audio,
@@ -18,10 +18,7 @@ import { resolveAsset } from "./lib/resolveAsset";
 
 const FPS = 30;
 
-const { fontFamily } = loadFont("normal", {
-  weights: ["400", "500", "700"],
-  subsets: ["latin"],
-});
+const { fontFamily } = loadSpaceGrotesk(["400", "500", "700"]);
 
 const toneGradient = (tone: CinematicTone) => {
   switch (tone) {
@@ -120,6 +117,8 @@ const SignalTexture: React.FC<{
   lineCount: number;
 }> = ({ accent, intensity, lineCount }) => {
   const frame = useCurrentFrame();
+  // The frame width, not a hardcoded 1920: odd lines sit on the right edge.
+  const { width: frameWidth } = useVideoConfig();
 
   return (
     <AbsoluteFill style={{ pointerEvents: "none" }}>
@@ -128,7 +127,7 @@ const SignalTexture: React.FC<{
         const opacity = (0.025 + pulse * 0.07) * intensity;
         const width = 18 + ((index * 37) % 56);
         const top = 140 + index * 42;
-        const left = index % 2 === 0 ? 0 : 1920 - width;
+        const left = index % 2 === 0 ? 0 : frameWidth - width;
 
         return (
           <div

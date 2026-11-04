@@ -141,16 +141,50 @@
           "type": "array",
           "items": { "type": "string" },
           "minItems": 1
+        },
+        "scene_type": {
+          "type": "string",
+          "description": "Default Remotion cut.type this style composes scenes as, e.g. 'anime_scene'. See remotion-composer/SCENE_TYPES.md."
+        },
+        "multi_image_per_scene": {
+          "type": "boolean",
+          "description": "Whether a scene is built from several stills that crossfade (the anime_scene grammar) rather than a single image."
+        },
+        "images_per_scene": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "How many stills to generate per scene when multi_image_per_scene is set."
+        },
+        "image_variation_guidance": {
+          "type": "string",
+          "description": "How the per-scene stills should differ from each other so the crossfade reads as motion."
+        },
+        "default_particles": {
+          "type": "string",
+          "description": "Default particle overlay for scenes in this style (maps to the renderer's particles prop)."
+        },
+        "default_particle_color": {
+          "type": "string",
+          "description": "Default particle color (maps to the renderer's particleColor prop)."
+        },
+        "default_vignette": {
+          "type": "boolean",
+          "description": "Whether scenes in this style get a vignette by default (maps to the renderer's vignette prop)."
         }
       },
       "additionalProperties": false
     },
     "overlays": {
+      "description": "Per-overlay styling. Covers the in-scene overlay boxes plus the timed overlay types the Explainer composition renders (see remotion-composer/src/Explainer.tsx, `Overlay.type`).",
       "type": "object",
       "properties": {
         "stat_card": { "$ref": "#/$defs/overlay_style" },
         "key_term": { "$ref": "#/$defs/overlay_style" },
-        "code_block": { "$ref": "#/$defs/overlay_style" }
+        "code_block": { "$ref": "#/$defs/overlay_style" },
+        "section_title": { "$ref": "#/$defs/overlay_style" },
+        "stat_reveal": { "$ref": "#/$defs/overlay_style" },
+        "hero_title": { "$ref": "#/$defs/overlay_style" },
+        "provider_chip": { "$ref": "#/$defs/overlay_style" }
       },
       "additionalProperties": false
     },
@@ -236,7 +270,11 @@
         "text": { "type": "string" },
         "radius": { "type": "number" },
         "shadow": { "type": "string" },
-        "highlight": { "type": "string" }
+        "highlight": { "type": "string" },
+        "accent": {
+          "type": "string",
+          "description": "Accent color for overlay types that render one (maps to the renderer's accentColor prop)."
+        }
       },
       "additionalProperties": false
     },

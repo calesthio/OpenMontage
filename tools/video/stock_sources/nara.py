@@ -86,8 +86,10 @@ class NARASource:
             r.raise_for_status()
             data = r.json()
         except Exception as e:
+            # Contract: an empty list means "nothing matched", so a
+            # transport failure has to propagate. See `base.StockSource`.
             _log.warning("NARA search failed: %s", e)
-            return []
+            raise
 
         results = data.get("results", []) or []
         out: list[Candidate] = []

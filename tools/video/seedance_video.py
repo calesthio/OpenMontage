@@ -1,4 +1,4 @@
-"""Seedance 2.0 (ByteDance) video generation via fal.ai API.
+"""Seedance 2.0 and 2.5 (ByteDance) video generation via fal.ai API.
 
 Best for cinematic clips with native audio, director-level camera control,
 and lip-sync from quoted dialogue in prompts.
@@ -27,7 +27,7 @@ from tools.base_tool import (
 
 class SeedanceVideo(BaseTool):
     name = "seedance_video"
-    version = "0.2.0"
+    version = "0.3.0"
     tier = ToolTier.GENERATE
     capability = "video_generation"
     provider = "seedance"
@@ -41,7 +41,7 @@ class SeedanceVideo(BaseTool):
         "Set FAL_KEY to your fal.ai API key.\n"
         "  Get one at https://fal.ai/dashboard/keys"
     )
-    agent_skills = ["seedance-2-0", "ai-video-gen"]
+    agent_skills = ["seedance-2-0", "seedance-2-5", "ai-video-gen"]
 
     capabilities = ["text_to_video", "image_to_video", "reference_to_video"]
     supports = {
@@ -63,7 +63,7 @@ class SeedanceVideo(BaseTool):
         "cinematic trailers, teasers, and high-fidelity clips with native synchronized audio",
         "director-level camera control and multi-shot editing in a single generation",
         "lip-sync from quoted dialogue in prompts",
-        "reference-conditioned generation (up to 9 images + 3 video clips + 3 audio clips)",
+        "Seedance 2.5 reference generation (up to 30 images + 10 video + 10 audio clips)",
         "consistent character identity across shots",
     ]
     not_good_for = ["offline generation", "budget-constrained projects"]
@@ -88,9 +88,44 @@ class SeedanceVideo(BaseTool):
                 "default": "standard",
                 "description": "standard = highest quality, fast = lower latency and cost",
             },
+            "model_version": {
+                "type": "string",
+                "enum": ["2.0", "2.5"],
+                "default": "2.0",
+                "description": "Seedance 2.5 is the current high-quality model; 2.0 retains fast-tier access.",
+            },
             "duration": {
                 "type": "string",
-                "enum": ["auto", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"],
+                "enum": [
+                    "auto",
+                    "4",
+                    "5",
+                    "6",
+                    "7",
+                    "8",
+                    "9",
+                    "10",
+                    "11",
+                    "12",
+                    "13",
+                    "14",
+                    "15",
+                    "16",
+                    "17",
+                    "18",
+                    "19",
+                    "20",
+                    "21",
+                    "22",
+                    "23",
+                    "24",
+                    "25",
+                    "26",
+                    "27",
+                    "28",
+                    "29",
+                    "30",
+                ],
                 "default": "5",
                 "description": "Duration in seconds. 'auto' lets the model decide.",
             },
@@ -152,8 +187,17 @@ class SeedanceVideo(BaseTool):
     resource_profile = ResourceProfile(
         cpu_cores=1, ram_mb=512, vram_mb=0, disk_mb=500, network_required=True
     )
-    retry_policy = RetryPolicy(max_retries=2, retryable_errors=["rate_limit", "timeout"])
-    idempotency_key_fields = ["prompt", "model_variant", "operation", "duration", "seed"]
+    retry_policy = RetryPolicy(
+        max_retries=2, retryable_errors=["rate_limit", "timeout"]
+    )
+    idempotency_key_fields = [
+        "prompt",
+        "model_version",
+        "model_variant",
+        "operation",
+        "duration",
+        "seed",
+    ]
     side_effects = ["writes video file to output_path", "calls fal.ai API"]
     user_visible_verification = [
         "Watch generated clip for motion coherence, audio sync, and visual quality"
@@ -168,6 +212,16 @@ class SeedanceVideo(BaseTool):
         return ToolStatus.UNAVAILABLE
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
+        if inputs.get("model_version", "2.0") == "2.5":
+            return round(
+                0.30
+                * (
+                    5
+                    if inputs.get("duration", "5") == "auto"
+                    else int(inputs.get("duration", "5"))
+                ),
+                2,
+            )
         variant = inputs.get("model_variant", "standard")
         duration = inputs.get("duration", "5")
         secs = 5 if duration == "auto" else int(duration)
@@ -175,6 +229,8 @@ class SeedanceVideo(BaseTool):
         return round(rate * secs, 2)
 
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
+        if inputs.get("model_version", "2.0") == "2.5":
+            return 150.0
         variant = inputs.get("model_variant", "standard")
         return 60.0 if variant == "fast" else 120.0
 
@@ -190,10 +246,18 @@ class SeedanceVideo(BaseTool):
 
         start = time.time()
         operation = inputs.get("operation", "text_to_video")
+        model_version = inputs.get("model_version", "2.0")
         variant = inputs.get("model_variant", "standard")
         operation_path = operation.replace("_", "-")
 
-        if variant == "fast":
+        if model_version == "2.5":
+            if variant == "fast":
+                return ToolResult(
+                    success=False,
+                    error="Seedance 2.5 on fal.ai has no fast endpoint; use model_variant='standard'.",
+                )
+            model_path = f"bytedance/seedance-2.5/{operation_path}"
+        elif variant == "fast":
             model_path = f"bytedance/seedance-2.0/fast/{operation_path}"
         else:
             model_path = f"bytedance/seedance-2.0/{operation_path}"
@@ -216,39 +280,48 @@ class SeedanceVideo(BaseTool):
                 payload["image_url"] = inputs["image_url"]
             elif inputs.get("image_path"):
                 from tools.video._shared import upload_image_fal
+
                 payload["image_url"] = upload_image_fal(inputs["image_path"])
             if inputs.get("end_image_url"):
                 payload["end_image_url"] = inputs["end_image_url"]
+            if model_version == "2.5":
+                payload["aspect_ratio"] = "auto"
 
         if operation == "reference_to_video":
             ref_image_urls = list(inputs.get("reference_image_urls") or [])
             for local_path in inputs.get("reference_image_paths") or []:
                 from tools.video._shared import upload_image_fal
+
                 ref_image_urls.append(upload_image_fal(local_path))
-            # Seedance 2.0 reference-to-video ceilings: 9 images + 3 video + 3 audio.
-            if len(ref_image_urls) > 9:
+            max_images = 30 if model_version == "2.5" else 9
+            max_videos = 10 if model_version == "2.5" else 3
+            max_audios = 10 if model_version == "2.5" else 3
+            if len(ref_image_urls) > max_images:
                 return ToolResult(
                     success=False,
-                    error=f"Seedance 2.0 reference_to_video accepts at most 9 reference images; got {len(ref_image_urls)}",
+                    error=f"Seedance {model_version} reference_to_video accepts at most {max_images} reference images; got {len(ref_image_urls)}",
                 )
             ref_video_urls = list(inputs.get("reference_video_urls") or [])
-            if len(ref_video_urls) > 3:
+            if len(ref_video_urls) > max_videos:
                 return ToolResult(
                     success=False,
-                    error=f"Seedance 2.0 reference_to_video accepts at most 3 reference videos; got {len(ref_video_urls)}",
+                    error=f"Seedance {model_version} reference_to_video accepts at most {max_videos} reference videos; got {len(ref_video_urls)}",
                 )
             ref_audio_urls = list(inputs.get("reference_audio_urls") or [])
-            if len(ref_audio_urls) > 3:
+            if len(ref_audio_urls) > max_audios:
                 return ToolResult(
                     success=False,
-                    error=f"Seedance 2.0 reference_to_video accepts at most 3 reference audio clips; got {len(ref_audio_urls)}",
+                    error=f"Seedance {model_version} reference_to_video accepts at most {max_audios} reference audio clips; got {len(ref_audio_urls)}",
                 )
+            # fal's 2.0 and 2.5 reference-to-video endpoints both read image_urls /
+            # video_urls / audio_urls; reference_*_urls is silently dropped and the
+            # request fails with "At least one reference image or video is required."
             if ref_image_urls:
-                payload["reference_image_urls"] = ref_image_urls
+                payload["image_urls"] = ref_image_urls
             if ref_video_urls:
-                payload["reference_video_urls"] = ref_video_urls
+                payload["video_urls"] = ref_video_urls
             if ref_audio_urls:
-                payload["reference_audio_urls"] = ref_audio_urls
+                payload["audio_urls"] = ref_audio_urls
 
         headers = {
             "Authorization": f"Key {api_key}",
@@ -277,7 +350,7 @@ class SeedanceVideo(BaseTool):
                 if status in ("FAILED", "CANCELLED"):
                     return ToolResult(
                         success=False,
-                        error=f"Seedance 2.0 video generation {status.lower()}",
+                        error=f"Seedance {model_version} video generation {status.lower()}",
                     )
 
             result_resp = requests.get(response_url, headers=headers, timeout=30)
@@ -295,7 +368,7 @@ class SeedanceVideo(BaseTool):
         except Exception as e:
             return ToolResult(
                 success=False,
-                error=f"Seedance 2.0 video generation failed: {e}",
+                error=f"Seedance {model_version} video generation failed: {e}",
             )
 
         from tools.video._shared import probe_output
@@ -309,6 +382,7 @@ class SeedanceVideo(BaseTool):
                 "prompt": inputs["prompt"],
                 "operation": operation,
                 "variant": variant,
+                "model_version": model_version,
                 "aspect_ratio": inputs.get("aspect_ratio", "16:9"),
                 "resolution": inputs.get("resolution", "720p"),
                 "generate_audio": inputs.get("generate_audio", True),

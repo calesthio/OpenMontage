@@ -14,3 +14,5 @@ openai>=2.44.0         # Videos API support for Sora 2
 fastapi>=0.110
 uvicorn>=0.29
 watchfiles>=0.21
+
+websockets>=14.0       # Eleven v4 Turbo and realtime audio transports

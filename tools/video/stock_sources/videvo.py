@@ -83,8 +83,10 @@ class VidevoSource:
             r.raise_for_status()
             data = r.json()
         except Exception as e:
+            # Contract: an empty list means "nothing matched", so a
+            # transport failure has to propagate. See `base.StockSource`.
             _log.warning("Videvo search failed: %s", e)
-            return []
+            raise
 
         hits = data.get("data", []) or data.get("results", []) or data.get("clips", []) or []
         out: list[Candidate] = []

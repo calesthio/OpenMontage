@@ -56,8 +56,8 @@ class ComfyUIClient:
         self._capability_env_var = (
             f"COMFYUI_{capability.upper()}_SERVER_URL" if capability else None
         )
-        resolved = server_url or self._capability_url() or os.environ.get(
-            "COMFYUI_SERVER_URL"
+        resolved = (
+            server_url or self._capability_url() or os.environ.get("COMFYUI_SERVER_URL")
         )
         self.server_url = (resolved or "http://localhost:8188").rstrip("/")
         # Scopes websocket execution events to this client (see wait_ws) and
@@ -98,9 +98,7 @@ class ComfyUIClient:
     def is_available(self) -> bool:
         """Return True if the ComfyUI server is reachable."""
         try:
-            resp = requests.get(
-                f"{self.server_url}/system_stats", timeout=5
-            )
+            resp = requests.get(f"{self.server_url}/system_stats", timeout=5)
             return resp.status_code == 200
         except Exception:
             return False
@@ -149,9 +147,7 @@ class ComfyUIClient:
                 result[group] = []
         return result
 
-    def check_models(
-        self, required: list[str]
-    ) -> tuple[list[str], list[str]]:
+    def check_models(self, required: list[str]) -> tuple[list[str], list[str]]:
         """Check which of *required* model filenames are available.
 
         Returns ``(found, missing)`` — two lists of filenames.
@@ -163,6 +159,17 @@ class ComfyUIClient:
         found = [m for m in required if m in all_models]
         missing = [m for m in required if m not in all_models]
         return found, missing
+
+    def has_node(self, node_class: str) -> bool:
+        """Return whether the connected server exposes a node class."""
+        try:
+            response = requests.get(
+                f"{self.server_url}/object_info/{node_class}", timeout=10
+            )
+            response.raise_for_status()
+            return node_class in response.json()
+        except Exception:
+            return False
 
     # ------------------------------------------------------------------
     # Core cycle
@@ -307,9 +314,7 @@ class ComfyUIClient:
                     if on_progress:
                         on_progress(data)
                 elif msg_type == "execution_error":
-                    raise ComfyUIError(
-                        f"Execution error: {data}", prompt_id=prompt_id
-                    )
+                    raise ComfyUIError(f"Execution error: {data}", prompt_id=prompt_id)
                 elif msg_type == "executing" and data.get("node") is None:
                     finished = True
                     break
@@ -445,6 +450,7 @@ class ComfyUIClient:
             node_output.get("images", [])
             or node_output.get("gifs", [])
             or node_output.get("audio", [])
+            or node_output.get("video", [])
         )
         if not items:
             raise ComfyUIError(
@@ -479,9 +485,7 @@ class ComfyUIClient:
             return json.load(f)
 
     @staticmethod
-    def patch_workflow(
-        workflow: dict, patches: dict[str, dict[str, Any]]
-    ) -> dict:
+    def patch_workflow(workflow: dict, patches: dict[str, dict[str, Any]]) -> dict:
         """Deep-copy *workflow* and apply *patches*.
 
         *patches* maps ``node_id`` → ``{input_name: value, ...}``.

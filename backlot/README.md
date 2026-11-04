@@ -11,6 +11,10 @@ python -m backlot open                # library view (all projects)
 python -m backlot serve --port 4750   # run the server in the foreground
 ```
 
+Backlot binds to `127.0.0.1` and accepts HTTP requests only for `127.0.0.1`
+or `localhost`, on the selected port. Other `Host` headers receive HTTP 400
+to protect local project data from DNS rebinding.
+
 ## How it stays live
 
 No agent involvement. A `watchfiles` watcher on `projects/` publishes change

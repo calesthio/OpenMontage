@@ -38,6 +38,41 @@
       "type": "array",
       "items": { "type": "string" }
     },
+    "production_modes": {
+      "type": "array",
+      "description": "Mutually exclusive ways this pipeline can be produced. The agent picks one at the idea stage and records it in the brief; the stage director skill reads it to constrain later choices (see skills/pipelines/screen-demo/idea-director.md).",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "required_tools": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Tools that must be available for this mode to be viable"
+          },
+          "optional_tools": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "scene_type": {
+            "type": "string",
+            "description": "Remotion cut.type this mode composes, when it synthesizes rather than captures"
+          },
+          "agent_skills": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Layer 3 skills to read before producing in this mode"
+          },
+          "best_for": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
     "stages": {
       "type": "array",
       "items": {

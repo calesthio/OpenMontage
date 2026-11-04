@@ -16,6 +16,17 @@ Use this skill before calling `comfyui_image`, `comfyui_video`, or `comfyui_musi
 - Long waits (video, music) prefer ComfyUI's websocket feed for immediate completion/error detection and transparently fall back to REST polling if `websocket-client` isn't installed. Either way, a timeout is recoverable: pass the error's `prompt_id` back in as `resume_prompt_id` to resume waiting on the same job instead of resubmitting it.
 - Export workflows with ComfyUI's API-format JSON, not the UI layout format. If a downloaded workflow will not submit, re-export it from ComfyUI with API format enabled.
 
+### Partner Nodes are hosted
+
+- `gemini_omni_flash`, `seedance_2.5`, and `minimax_h3_api` in
+  `comfyui_video` are official ComfyUI Partner Nodes. They call hosted APIs and
+  require network access, a logged-in Comfy account, and prepaid credits.
+- Do not describe Partner Nodes as local, offline, or free merely because the
+  graph runs in a local ComfyUI process.
+- `minimax_h3_local` is a separate open-weight path. It requires the official
+  MiniMax H3 workflow exported in API format, its `output_node`, and the model
+  stack reported by the tool.
+
 ## Choosing a Workflow
 
 - Use bundled workflows when the requested operation matches and the local machine has the required models and VRAM.
@@ -35,6 +46,11 @@ Use this skill before calling `comfyui_image`, `comfyui_video`, or `comfyui_musi
 - Identify templated nodes before execution: prompt text, seed, dimensions, frame count, source image, sampler settings, and output filename prefix.
 - Fixed nodes are model loaders, VAEs, text encoders, LoRA loaders, schedulers, and graph wiring. Do not mutate those unless the workflow author intended that customization.
 - For community workflows, inspect each loader node and note every required model or custom node before running. Missing models should be handled through the tool's structured `missing_models` payload when available.
+
+### Video workflows need a temporal latent
+
+- A video workflow's empty-latent node must be a **video** latent -- `EmptyHunyuanLatentVideo` for Wan 2.2 t2v, `Wan22ImageToVideoLatent` or `WanImageToVideo` for the image-conditioned variants. The frame count goes in `length`; `batch_size` is how many separate clips to generate and stays at `1`.
+- `EmptyLatentImage` with `batch_size` set to the frame count is a trap: it asks for N unrelated images, and the resulting MP4 has the right frame count, duration and codec and passes `ffprobe` cleanly -- it just strobes. Check the latent node before running any unfamiliar video workflow.
 
 ## Model and LoRA Setup
 

@@ -24,6 +24,7 @@ def resolve_google_location(location: str | None = None) -> str:
 
     return location or os.environ.get("GOOGLE_CLOUD_LOCATION") or "us-central1"
 
+
 # Shared constants for long-running Google/Vertex AI generation calls (e.g. music, video)
 GOOGLE_API_TIMEOUT_SECONDS = 600
 GOOGLE_API_TIMEOUT_MS = GOOGLE_API_TIMEOUT_SECONDS * 1000
@@ -47,6 +48,7 @@ def has_google_credentials() -> bool:
 def get_genai_client(
     http_options: Any | None = None,
     location: str | None = None,
+    force_vertex: bool = False,
 ) -> Any:
     """Initialize Google GenAI using the configured credential mode.
 
@@ -61,7 +63,7 @@ def get_genai_client(
         "1",
     ) or os.environ.get("GOOGLE_GENAI_USE_ENTERPRISE", "").lower() in ("true", "1")
 
-    if use_vertex or (not api_key and service_account_configured()):
+    if force_vertex or use_vertex or (not api_key and service_account_configured()):
         kwargs = {
             "vertexai": True,
             "location": resolve_google_location(location),

@@ -17,6 +17,10 @@ import yaml
 import jsonschema
 
 STYLES_DIR = Path(__file__).resolve().parent
+# Generated playbooks are written to styles/custom/ by
+# lib/playbook_generator.save_playbook(); both lookups below search it as a
+# fallback so those playbooks are visible to the render path.
+CUSTOM_SUBDIR = "custom"
 SCHEMA_PATH = (
     Path(__file__).resolve().parent.parent
     / "schemas"
@@ -33,6 +37,9 @@ def _load_playbook_schema() -> dict:
 def load_playbook(name: str, styles_dir: Optional[Path] = None) -> dict[str, Any]:
     """Load and validate a style playbook by name.
 
+    Presets live directly in the styles dir; generated playbooks live in its
+    ``custom/`` subdirectory. A preset wins when both exist.
+
     Args:
         name: Playbook name (without .yaml extension).
         styles_dir: Override directory for playbook files.
@@ -43,7 +50,12 @@ def load_playbook(name: str, styles_dir: Optional[Path] = None) -> dict[str, Any
     styles_dir = styles_dir or STYLES_DIR
     path = styles_dir / f"{name}.yaml"
     if not path.exists():
-        raise FileNotFoundError(f"Playbook not found: {path}")
+        path = styles_dir / CUSTOM_SUBDIR / f"{name}.yaml"
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Playbook not found: {name!r} "
+            f"(searched {styles_dir} and {styles_dir / CUSTOM_SUBDIR})"
+        )
 
     with open(path, encoding="utf-8") as f:
         playbook = yaml.safe_load(f)
@@ -59,13 +71,17 @@ def validate_playbook(playbook: dict) -> None:
 
 
 def list_playbooks(styles_dir: Optional[Path] = None) -> list[str]:
-    """List all available playbook names."""
+    """List all available playbook names (presets + generated custom ones)."""
     styles_dir = styles_dir or STYLES_DIR
-    return [
+    names = [
         p.stem
         for p in styles_dir.glob("*.yaml")
         if p.stem != "__pycache__"
     ]
+    custom_dir = styles_dir / CUSTOM_SUBDIR
+    if custom_dir.exists():
+        names.extend(p.stem for p in custom_dir.glob("*.yaml"))
+    return sorted(set(names))
 
 
 # ---------------------------------------------------------------------------

@@ -33,6 +33,7 @@ def _load_dotenv() -> None:
     if not env_path.is_file():
         return
     import re
+
     with open(env_path, encoding="utf-8", errors="ignore") as f:
         for line in f:
             line = line.strip()
@@ -84,10 +85,11 @@ class ToolStatus(str, Enum):
 
 class ToolRuntime(str, Enum):
     """Where and how a tool executes."""
-    LOCAL = "local"            # Runs entirely on-device, free, no network
-    LOCAL_GPU = "local_gpu"    # Runs on-device but needs GPU (VRAM)
-    API = "api"                # Calls an external API, requires API key, costs money
-    HYBRID = "hybrid"          # Can run locally OR via API (e.g., image_selector)
+
+    LOCAL = "local"  # Runs entirely on-device, free, no network
+    LOCAL_GPU = "local_gpu"  # Runs on-device but needs GPU (VRAM)
+    API = "api"  # Calls an external API, requires API key, costs money
+    HYBRID = "hybrid"  # Can run locally OR via API (e.g., image_selector)
 
 
 class ExecutionMode(str, Enum):
@@ -110,6 +112,7 @@ class ResumeSupport(str, Enum):
 @dataclass
 class ResourceProfile:
     """Hardware resource envelope for a tool."""
+
     cpu_cores: int = 1
     ram_mb: int = 512
     vram_mb: int = 0
@@ -120,6 +123,7 @@ class ResourceProfile:
 @dataclass
 class RetryPolicy:
     """Safe retry behavior for a tool."""
+
     max_retries: int = 0
     backoff_seconds: float = 1.0
     retryable_errors: list[str] = field(default_factory=list)
@@ -128,14 +132,16 @@ class RetryPolicy:
 @dataclass
 class ToolResult:
     """Standard result returned by tool execution."""
+
     success: bool
     data: dict[str, Any] = field(default_factory=dict)
     artifacts: list[str] = field(default_factory=list)
     error: Optional[str] = None
-    cost_usd: float = 0.0
+    cost_usd: Optional[float] = 0.0
     duration_seconds: float = 0.0
     seed: Optional[int] = None
     model: Optional[str] = None
+    from_cache: bool = False
 
 
 import threading as _threading
@@ -185,21 +191,29 @@ def _instrument_execute(fn: Callable) -> Callable:
             "depth": depth if depth else None,
         }
         if project_dir is not None:
-            emit_event(project_dir, {
-                **base, "event": "start",
-                "output_path": str(output_path) if output_path else None,
-            })
+            emit_event(
+                project_dir,
+                {
+                    **base,
+                    "event": "start",
+                    "output_path": str(output_path) if output_path else None,
+                },
+            )
 
         started = time.monotonic()
         try:
             result = fn(self, inputs, *args, **kwargs)
         except Exception as exc:
             if project_dir is not None:
-                emit_event(project_dir, {
-                    **base, "event": "error",
-                    "error": str(exc)[:300],
-                    "duration_s": round(time.monotonic() - started, 2),
-                })
+                emit_event(
+                    project_dir,
+                    {
+                        **base,
+                        "event": "error",
+                        "error": str(exc)[:300],
+                        "duration_s": round(time.monotonic() - started, 2),
+                    },
+                )
             raise
         finally:
             depth_state.value = depth
@@ -210,17 +224,185 @@ def _instrument_execute(fn: Callable) -> Callable:
             project_dir = infer_project_dir(inputs)
         if project_dir is not None:
             cost = getattr(result, "cost_usd", None)
-            emit_event(project_dir, {
-                **base, "event": "finish",
-                "output_path": str(output_path) if output_path else None,
-                "success": getattr(result, "success", None),
-                # NOTE: 0.0 is meaningful (ran for free) — only None is dropped.
-                "cost_usd": cost if isinstance(cost, (int, float)) else None,
-                "duration_s": round(time.monotonic() - started, 2),
-            })
+            emit_event(
+                project_dir,
+                {
+                    **base,
+                    "event": "finish",
+                    "output_path": str(output_path) if output_path else None,
+                    "success": getattr(result, "success", None),
+                    # NOTE: 0.0 is meaningful (ran for free) — only None is dropped.
+                    "cost_usd": cost if isinstance(cost, (int, float)) else None,
+                    "duration_s": round(time.monotonic() - started, 2),
+                },
+            )
         return result
 
     wrapper._backlot_instrumented = True  # type: ignore[attr-defined]
+    return wrapper
+
+
+_FILE_HASH_CHUNK = 1024 * 1024
+
+
+def _hash_file(path: Path) -> Optional[str]:
+    """SHA-256 of a file's bytes, read in chunks. None if it can't be read."""
+    try:
+        h = hashlib.sha256()
+        with open(path, "rb") as f:
+            for chunk in iter(lambda: f.read(_FILE_HASH_CHUNK), b""):
+                h.update(chunk)
+        return h.hexdigest()
+    except OSError:
+        return None
+
+
+def _fingerprint_value(value: Any) -> Any:
+    """Make one cache-key value content-addressed.
+
+    A value that points at an existing file is replaced by a hash of the file's
+    bytes, so rewriting the file at the same path changes the key. A path string
+    on its own would not, which would let a rerun restore output derived from
+    stale input bytes. Lists and dicts are walked so nested asset paths are
+    covered too; everything else passes through unchanged.
+    """
+    if isinstance(value, (str, os.PathLike)):
+        try:
+            path = Path(value)
+            if path.is_file():
+                digest = _hash_file(path)
+                if digest is not None:
+                    return {"__file_sha256__": digest}
+        except (OSError, ValueError):
+            pass
+        return value
+    if isinstance(value, (list, tuple)):
+        return [_fingerprint_value(v) for v in value]
+    if isinstance(value, dict):
+        return {k: _fingerprint_value(v) for k, v in value.items()}
+    return value
+
+
+def _is_cacheable(tool: "BaseTool", inputs: dict[str, Any]) -> bool:
+    """Whether a call may be served from / written to the asset cache.
+
+    Cache only reproducible, single-output calls whose sole side effect is the
+    file they write: a declared idempotency contract, a concrete output_path to
+    materialize into, not a publisher, and a determinism class that guarantees
+    the same bytes: deterministic always, seeded only when a seed is pinned
+    (an unpinned seed is effectively stochastic), stochastic never.
+    """
+    # A documented preflight must reach the tool's dry-run branch without
+    # materializing an artifact or touching the cache's access metadata.
+    if inputs.get("dry_run") and "dry_run" in tool.input_schema.get("properties", {}):
+        return False
+    if not tool.idempotency_key_fields:
+        return False
+    if not inputs.get("output_path"):
+        return False
+    if tool.tier == ToolTier.PUBLISH:
+        return False
+    det = tool.determinism
+    if det == Determinism.STOCHASTIC:
+        return False
+    if det == Determinism.SEEDED and inputs.get("seed") is None:
+        return False
+    return True
+
+
+def _result_from_cache(restored: dict[str, Any], dest: Any) -> "ToolResult":
+    """Build a ToolResult for a cache hit that was materialized to ``dest``."""
+    data = dict(restored.get("data") or {})
+    # Repoint only the declared local-output references. Cache admission is
+    # single-artifact; remote URLs, input paths, and other provenance stay put.
+    original_outputs = {
+        data[name] for name in ("output", "output_path")
+        if isinstance(data.get(name), str)
+    }
+    for name in ("outputs", "video_paths", "image_paths", "audio_paths"):
+        values = data.get(name)
+        if (isinstance(values, list) and len(values) == 1
+                and isinstance(values[0], str) and values[0] in original_outputs):
+            data[name] = [str(dest)]
+    for name in ("output", "output_path"):
+        if name in data:
+            data[name] = str(dest)
+    data["cached"] = True
+    return ToolResult(
+        success=True,
+        data=data,
+        artifacts=[str(dest)],
+        cost_usd=0.0,
+        duration_seconds=0.0,
+        seed=restored.get("seed"),
+        model=restored.get("model"),
+        from_cache=True,
+    )
+
+
+def _cache_execute(fn: Callable) -> Callable:
+    """Wrap a tool's execute() with content-addressed output caching.
+
+    When the asset cache is enabled and the call is reproducible, a repeat of a
+    prior call links the cached artifact back into the requested output path and
+    returns a free ToolResult without invoking fn or paying a provider. On a
+    miss, fn runs and a single-file success is ingested for next time.
+
+    The cache layer is strictly optional and non-fatal: any failure importing or
+    using it falls through to the live call untouched. It is also off unless
+    OPENMONTAGE_ASSET_CACHE is set, so an existing run behaves exactly as before.
+    """
+    if getattr(fn, "_asset_cached", False):
+        return fn
+
+    @functools.wraps(fn)
+    def wrapper(self, inputs: Any, *args: Any, **kwargs: Any):
+        try:
+            from lib.asset_cache import asset_cache_enabled, get_default_asset_cache
+        except Exception:
+            return fn(self, inputs, *args, **kwargs)
+
+        if not asset_cache_enabled() or not isinstance(inputs, dict):
+            return fn(self, inputs, *args, **kwargs)
+        if not _is_cacheable(self, inputs):
+            return fn(self, inputs, *args, **kwargs)
+
+        try:
+            key = self.cache_key(inputs)
+            cache = get_default_asset_cache()
+        except Exception:
+            return fn(self, inputs, *args, **kwargs)
+
+        dest = inputs["output_path"]
+        try:
+            restored = cache.try_restore(key, Path(dest))
+        except Exception:
+            restored = None
+        if restored is not None:
+            return _result_from_cache(restored, dest)
+
+        result = fn(self, inputs, *args, **kwargs)
+
+        try:
+            artifacts = getattr(result, "artifacts", None) or []
+            if getattr(result, "success", False) and len(artifacts) == 1:
+                art = Path(artifacts[0])
+                if art.exists():
+                    cache.store(
+                        key,
+                        art,
+                        tool_name=self.name,
+                        tool_version=self.version,
+                        model=getattr(result, "model", None) or "",
+                        seed=getattr(result, "seed", None),
+                        cost_usd=float(getattr(result, "cost_usd", 0.0) or 0.0),
+                        data=getattr(result, "data", None),
+                    )
+        except Exception:
+            pass
+        return result
+
+    wrapper._asset_cached = True  # type: ignore[attr-defined]
     return wrapper
 
 
@@ -232,7 +414,9 @@ class BaseTool(ABC):
         super().__init_subclass__(**kwargs)
         impl = cls.__dict__.get("execute")
         if impl is not None and not getattr(impl, "__isabstractmethod__", False):
-            cls.execute = _instrument_execute(impl)
+            # Cache is outermost: a hit skips both the live call and its event
+            # emission. Instrumentation wraps the raw implementation beneath it.
+            cls.execute = _cache_execute(_instrument_execute(impl))
 
     # --- Identity (override in subclasses) ---
     name: str = ""
@@ -306,7 +490,7 @@ class BaseTool(ABC):
         for dep in self.dependencies:
             if dep.startswith(("cmd:", "binary:")):
                 prefix = "cmd:" if dep.startswith("cmd:") else "binary:"
-                cmd_name = dep[len(prefix):]
+                cmd_name = dep[len(prefix) :]
                 if shutil.which(cmd_name) is None:
                     raise DependencyError(
                         f"Command {cmd_name!r} not found. {self.install_instructions}"
@@ -362,7 +546,8 @@ class BaseTool(ABC):
             "resume_support": self.resume_support.value,
             "side_effects": self.side_effects,
             "fallback": self.fallback,
-            "fallback_tools": self.fallback_tools or ([self.fallback] if self.fallback else []),
+            "fallback_tools": self.fallback_tools
+            or ([self.fallback] if self.fallback else []),
             "agent_skills": self.agent_skills,
             "related_skills": self.agent_skills,
             "user_visible_verification": self.user_visible_verification,
@@ -389,6 +574,33 @@ class BaseTool(ABC):
         raw = json.dumps(key_data, sort_keys=True)
         return hashlib.sha256(raw.encode()).hexdigest()[:16]
 
+    def cache_key(self, inputs: dict[str, Any]) -> str:
+        """Content-addressed key for this call, used by the asset cache.
+
+        Combines tool identity and version with the declared
+        ``idempotency_key_fields`` so identical inputs to the same tool version
+        resolve to the same key, while a version bump or a different tool never
+        collides. Returns the full SHA-256 hex; the cache stores blobs under it.
+
+        File-valued fields are fingerprinted by content, not by path string, so
+        rewriting an input file at the same path changes the key rather than
+        serving output derived from the old bytes. For tools that exclude output
+        paths from this set, placement alone does not change the key. The normalized
+        destination suffix is included because local encoders select their
+        output container from it; moving between formats must render again.
+        """
+        key_data = {
+            "tool": self.name,
+            "version": self.version,
+            "output_suffix": Path(inputs.get("output_path") or "").suffix.lower(),
+            "fields": {
+                k: _fingerprint_value(inputs.get(k))
+                for k in self.idempotency_key_fields
+            },
+        }
+        raw = json.dumps(key_data, sort_keys=True, default=str)
+        return hashlib.sha256(raw.encode()).hexdigest()
+
     # ---- Execution ----
 
     @abstractmethod
@@ -398,9 +610,19 @@ class BaseTool(ABC):
 
     def dry_run(self, inputs: dict[str, Any]) -> dict[str, Any]:
         """Preflight check without side effects. Override for paid/publishing tools."""
+        from tools.provider_pricing import PriceQuoteRequired
+
+        quote_error = None
+        try:
+            estimated_cost = self.estimate_cost(inputs)
+        except PriceQuoteRequired as exc:
+            estimated_cost = None
+            quote_error = str(exc)
         return {
             "tool": self.name,
-            "estimated_cost_usd": self.estimate_cost(inputs),
+            "estimated_cost_usd": estimated_cost,
+            "cost_status": "quote_required" if quote_error else "estimated",
+            "quote_reason": quote_error,
             "estimated_runtime_seconds": self.estimate_runtime(inputs),
             "status": self.get_status().value,
             "would_execute": True,
@@ -477,4 +699,5 @@ class ToolCommandError(subprocess.CalledProcessError):
 
 class DependencyError(Exception):
     """Raised when a tool's dependency is not satisfied."""
+
     pass

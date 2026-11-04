@@ -104,3 +104,7 @@ venv/
 
 # Local Wan / diffusers GPU environment
 .venv-wan/
+
+# Relay provider config (references env var names only; still user-specific)
+relay_providers.yaml
+*.relay-job.json.part

@@ -1,0 +1,124 @@
+# 团队共享的中转站模型配置（可提交：只含环境变量名，不含任何密钥）
+#
+# 使用：在自己的 .env 中写入
+#   OPENMONTAGE_RELAY_CONFIG=relay_providers.team.yaml
+#   TSTSTS_MEDIA_API_KEY=<你自己的生图/生视频 Key>
+#   TSTSTS_TEXT_API_KEY=<你自己的文本 Key>（可选）
+# 然后运行 python -m tools.relay check。
+#
+# 模型 ID 来自 2026-11-04 GET /v1/models 的实际返回，并已真实出片验证
+# （gpt-image-2 文生图/图生图、grok-imagine-video-1.5 本地首帧图生视频）。
+# 协议参照 clipforge 已验证的实现（openai.ts 的 Images 协议、xai.ts 的 Grok 视频协议）。
+#
+# ⚠ pricing 是保守估算值（中转站未公开价格），仅用于预算闸门；请按实际账单修改。
+# ⚠ live: true 表示允许真实计费请求。
+
+version: 1
+
+routing:
+  paid_provider_policy: relay_only
+
+relays:
+  tststs:
+    display_name: vvvvvip 中转（生图/生视频）
+    base_url: https://vvvvvip.tststs.shop     # 自动补 /v1
+    api_key_env: TSTSTS_MEDIA_API_KEY
+    live: true
+    models:
+      # ---- 生图：OpenAI Images（文生图 JSON；图生图 multipart image[]，返回 b64）----
+      - name: gpt-image-2
+        model: gpt-image-2
+        protocol: openai_images
+        capabilities: [text_to_image, image_to_image]
+        image_input: multipart
+        limits:
+          max_reference_images: 4
+          size_map: {"16:9": "1536x864", "9:16": "864x1536", "1:1": "1024x1024"}
+        defaults: {size: "864x1536"}
+        pricing: {per_image: 0.08}           # 估算
+        submit_timeout_seconds: 240
+        best_for: [文字渲染, 商品保真图生图, 分镜首帧, 风格化修图]
+      - name: gpt-image-2-5
+        model: gpt-image-2.5
+        protocol: openai_images
+        capabilities: [text_to_image, image_to_image]
+        image_input: multipart
+        limits:
+          max_reference_images: 4
+          size_map: {"16:9": "1536x864", "9:16": "864x1536", "1:1": "1024x1024"}
+        defaults: {size: "864x1536"}
+        pricing: {per_image: 0.10}           # 估算
+        submit_timeout_seconds: 240
+
+      # ---- 生视频：xAI Grok Imagine 协议（clipforge xai.ts）----
+      # POST /videos/generations → request_id；GET /videos/{id}：pending → done/failed/expired；
+      # 结果 video.url 可能是绝对地址，也可能是相对路径 /v1/videos/{id}/content（带鉴权下载）。
+      # 2026-11-04 实测：grok-imagine-video（v1）在该中转上游一律返回 400，已停用；用 1.5。
+      - name: grok-video
+        enabled: false
+        model: grok-imagine-video
+        protocol: generic_async
+        api_root: /v1                        # generic 协议默认不补根路径
+        kind: video
+        capabilities: [text_to_video, image_to_video]
+        image_input: data_uri
+        limits:
+          duration_range: [1, 15]
+          aspect_ratios: ["16:9", "9:16", "1:1"]
+          resolutions: [480p, 720p]
+          max_image_mb: 10
+          max_upload_kb: 900                 # xAI 拒收过大的内联首帧：超限自动转 JPEG
+        defaults: {duration: 5, aspect_ratio: "9:16", resolution: 720p}
+        pricing: {per_second: 0.10}          # 估算
+        poll: {interval_seconds: 5, timeout_seconds: 900}
+        submit_timeout_seconds: 120
+        best_for: [首帧动画, 竖屏短视频, 电影感运镜]
+        request: &grok_video_request
+          submit:
+            method: POST
+            path: /videos/generations
+            body_format: json
+            body:
+              model: "{{model}}"
+              prompt: "{{prompt}}"
+              duration: "{{duration}}"
+              aspect_ratio: "{{aspect_ratio}}"
+              resolution: "{{resolution}}"
+              image: {url: "{{first_frame}}"}
+          response:
+            task_id: "request_id|id|task_id|data.request_id"
+            error: "error.message|error|message"
+          poll:
+            method: GET
+            path: /videos/{task_id}
+            status: "status|data.status"
+            success: [done, completed, succeeded]
+            failure: [failed, expired, error, cancelled]
+            error: "error.message|error|message"
+            result_url: "video.url|data.video.url|url"
+      - name: grok-video-1-5
+        model: grok-imagine-video-1.5
+        protocol: generic_async
+        api_root: /v1                        # generic 协议默认不补根路径
+        kind: video
+        capabilities: [text_to_video, image_to_video]
+        image_input: data_uri
+        limits:
+          duration_range: [1, 15]
+          aspect_ratios: ["16:9", "9:16", "1:1"]
+          resolutions: [480p, 720p]
+          max_upload_kb: 900
+        defaults: {duration: 5, aspect_ratio: "9:16", resolution: 720p}
+        pricing: {per_second: 0.12}          # 估算
+        poll: {interval_seconds: 5, timeout_seconds: 900}
+        request: *grok_video_request
+
+  tststs-text:
+    display_name: vvvvvip 中转（文本）
+    base_url: https://vvvvvip.tststs.shop
+    api_key_env: TSTSTS_TEXT_API_KEY
+    live: true
+    models:
+      # 文本模型只登记（OpenMontage 的规划由 Agent 自己完成，不生成工具）
+      - {name: gpt-5-5, model: gpt-5.5, protocol: openai_chat, capabilities: [chat, vision]}
+      - {name: gpt-6-sol, model: gpt-6-sol, protocol: openai_chat, capabilities: [chat]}

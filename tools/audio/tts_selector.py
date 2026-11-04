@@ -231,7 +231,14 @@ class TTSSelector(BaseTool):
         # Normal generation — use scored selection
         tool, score = self._select_best_tool(inputs, candidates, task_context)
         if tool is None:
-            return ToolResult(success=False, error="No TTS provider available.")
+            from tools.provider_routing import no_provider_message
+
+            return ToolResult(
+                success=False,
+                error=no_provider_message(
+                    "No TTS provider available.", inputs, self._providers()
+                ),
+            )
 
         try:
             adapted = self._adapt_inputs(tool, inputs)

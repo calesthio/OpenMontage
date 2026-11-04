@@ -92,6 +92,7 @@ Key capability families to look for in the output:
 | Azure TTS | (tool: `azure_tts`) | Optional cloud neural narration (SSML prosody, express-as styles) — same Speech key as `azure_stt` | `azure-text-to-speech` |
 | Subtitle Sync | `core/subtitle-sync.md` | Subtitle timing and alignment | `remotion-best-practices` |
 | Color Grading | `core/color-grading.md` | FFmpeg color profiles, LUT workflow, accessibility | `ffmpeg` |
+| Relay Providers | `core/relay-providers.md` | Image/video/TTS generation through third-party API relays (中转站) configured in `relay_providers.yaml`; tools `relay_<relay>_<model>` | `relay-providers` |
 
 ## Creative Skills
 

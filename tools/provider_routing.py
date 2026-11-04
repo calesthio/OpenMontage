@@ -3,7 +3,81 @@
 from __future__ import annotations
 
 
+def _is_free_or_local(tool, inputs) -> bool:
+    from tools.base_tool import ToolRuntime
+
+    if tool.runtime in (ToolRuntime.LOCAL, ToolRuntime.LOCAL_GPU):
+        return True
+    try:
+        return not tool.estimate_cost(inputs)
+    except Exception:  # unpriced or unknown → treat as paid
+        return False
+
+
+def apply_paid_provider_policy(inputs, candidates):
+    """Enforce ``routing.paid_provider_policy`` from relay_providers.yaml.
+
+    ``relay_only`` keeps relay tools plus free/local tools, so a selector can
+    never quietly bill a first-party vendor the user did not approve. A caller
+    that has the user's explicit approval passes ``allow_non_relay_paid=True``.
+    """
+    try:
+        from tools.relay.config import try_load_relay_config
+
+        policy = try_load_relay_config().routing
+    except Exception:
+        return list(candidates)
+    if not policy.relay_only or inputs.get("allow_non_relay_paid"):
+        return list(candidates)
+    return [
+        tool
+        for tool in candidates
+        if getattr(tool, "is_relay_tool", False) or _is_free_or_local(tool, inputs)
+    ]
+
+
+def paid_policy_note(inputs) -> str:
+    """Human-readable reason to append when a selector finds no provider."""
+    try:
+        from tools.relay.config import try_load_relay_config
+
+        if try_load_relay_config().routing.relay_only and not inputs.get("allow_non_relay_paid"):
+            return (
+                " paid_provider_policy=relay_only: only relay tools and free/local tools are "
+                "eligible. Check `python -m tools.relay check`, or pass "
+                "allow_non_relay_paid=true after the user approves another paid vendor."
+            )
+    except Exception:
+        pass
+    return ""
+
+
+def no_provider_message(base: str, inputs, all_candidates) -> str:
+    """Explain an empty selection: missing key, unsupported op, or policy."""
+    message = base
+    wanted = inputs.get("preferred_tool")
+    if wanted:
+        tool = next((t for t in all_candidates if t.name == wanted), None)
+        if tool is None:
+            message += f" preferred_tool {wanted!r} is not registered."
+        else:
+            status = tool.get_status().value
+            reason = ""
+            try:
+                reason = tool.get_info().get("status_reason") or ""
+            except Exception:
+                pass
+            message += (
+                f" preferred_tool {wanted!r} is {status}"
+                + (f" ({reason})" if reason else "")
+                + "; it does not match the requested operation/model, or is excluded. "
+                "No other provider was tried."
+            )
+    return message + paid_policy_note(inputs)
+
+
 def filter_explicit_route(inputs, candidates):
+    candidates = apply_paid_provider_policy(inputs, candidates)
     tool_name = inputs.get("preferred_tool")
     host = inputs.get("hosting_provider")
     model = inputs.get("model") or inputs.get("model_id") or inputs.get("model_name")

@@ -4,7 +4,7 @@ Codex only scans **`~/.codex/prompts/`** (user home) for custom prompts — it d
 
 ```bash
 mkdir -p ~/.codex/prompts
-cp .codex/prompts/ink-art.md .codex/prompts/animated-drawing.md ~/.codex/prompts/
+cp .codex/prompts/ink-art.md .codex/prompts/animated-drawing.md .codex/prompts/relay-video.md ~/.codex/prompts/
 # or symlink so repo edits propagate:
 # ln -s "$PWD/.codex/prompts/ink-art.md" ~/.codex/prompts/ink-art.md
 ```

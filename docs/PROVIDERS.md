@@ -30,6 +30,14 @@ quality require live validation in the intended environment.
 
 ---
 
+## Third-party relays (中转站)
+
+No first-party keys? Route image, video and TTS generation through one or more API relays
+with `relay_providers.yaml` — one tool per configured model, exact routing, async resume without
+double billing, and a live-billing switch. See [RELAY_PROVIDERS.zh-CN.md](RELAY_PROVIDERS.zh-CN.md).
+
+---
+
 ## Quick Start: What Should I Set Up?
 
 **Start free, add paid providers as you need them.** Here's the recommended order:

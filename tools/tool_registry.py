@@ -71,16 +71,33 @@ class ToolRegistry:
         self._discovered_packages.clear()
 
     def register_module(self, module: ModuleType) -> list[str]:
-        """Register all concrete BaseTool subclasses defined in a module."""
+        """Register all concrete BaseTool subclasses defined in a module.
+
+        Classes flagged ``_registry_template = True`` are templates that need
+        constructor arguments (e.g. config-driven relay adapters) and are not
+        instantiated here. A module may instead expose
+        ``build_registry_tools() -> list[BaseTool]`` to contribute instances.
+        """
         registered: list[str] = []
         for _, cls in inspect.getmembers(module, inspect.isclass):
             if cls is BaseTool or not issubclass(cls, BaseTool):
                 continue
             if cls.__module__ != module.__name__ or inspect.isabstract(cls):
                 continue
+            if getattr(cls, "_registry_template", False):
+                continue
             tool = cls()
             self.register(tool)
             registered.append(tool.name)
+        factory = getattr(module, "build_registry_tools", None)
+        if callable(factory):
+            for tool in factory() or []:
+                existing = self._tools.get(getattr(tool, "name", ""))
+                # Never let a factory shadow a built-in tool; re-discovery may
+                # refresh a previously built instance of the same type.
+                if isinstance(tool, BaseTool) and (existing is None or type(existing) is type(tool)):
+                    self.register(tool)
+                    registered.append(tool.name)
         return registered
 
     @staticmethod

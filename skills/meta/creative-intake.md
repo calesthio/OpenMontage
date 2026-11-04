@@ -1,7 +1,9 @@
 # Creative Intake
 
 Before the research stage, gather user intent through targeted questions.
-Do NOT start production on a vague brief.
+Do NOT start production on a vague brief — either get the missing answers, or,
+when the user supplied media and delegated the decisions, infer them as
+described in "Handling Open, Media-Led Briefs" and present a filled-in proposal.
 
 ## Required Questions (ask conversationally, not as a survey)
 
@@ -32,6 +34,38 @@ When the user says something like "make me a video about X":
 2. Ask the single most important missing question first (usually purpose or audience).
 3. Based on their answer, ask the next most important gap.
 4. Stop asking when you have enough to start research. You don't need perfect answers — research will fill in details.
+
+## Handling Open, Media-Led Briefs ("you decide")
+
+When the user hands over material and delegates the creative call — e.g.
+"here are a few photos and a song, make a cinematic video, you decide" /
+"我给你几张图和一首歌，你自己决定怎么做一条电影感视频" — the material IS the brief.
+Do not interrogate the user and do not ask them to fill in parameters.
+
+1. **Analyze before asking.** Run `review_source_media` (lib/source_media_review.py)
+   on every supplied file; look at each image (subject, light, palette, aspect,
+   whether it can serve as a first frame); probe the song (`audio_probe` duration,
+   `audio_energy` for intensity/sections) and treat its length as the default
+   runtime cap and its energy changes as cut points.
+2. **Infer the 7 answers yourself** and mark them `inferred` in the intake_brief:
+   purpose = mood piece / showcase, platform = 16:9 unless the images are
+   portrait (then 9:16), tone from the music and images, duration = song length
+   (trimmed to the strongest 15–45 s section for short-form), narration = none
+   unless the user wrote words to say, subtitles only with narration.
+3. **Decide the shot plan**: one shot per image (more if a photo supports two
+   framings), image-to-video with the user's photo (or a graded `image_selector`
+   edit of it) as the first frame, camera moves matched to the subject,
+   shot lengths snapped to the model's allowed durations and to the beat,
+   transitions (hard cut on downbeats, crossfade on sustained passages), and the
+   provider/model per shot from what the registry actually declares
+   (`video_selector` operation `rank`; relay tools: `python -m tools.relay list`).
+4. **Ask at most one question, only if it blocks** (e.g. two images are
+   portrait and two landscape and no platform was named). Otherwise proceed.
+5. **Present, don't quiz**: route to the `cinematic` pipeline and present the
+   proposal with every default already filled — concept options, shot list,
+   tool/model per shot, music handling, runtime, and cost estimate — then wait
+   at the normal approval gate. Autonomy covers the *planning*; the pipeline's
+   checkpoints, cost approval, and "announce before paid calls" rules still apply.
 
 ## Handling Detailed Briefs
 

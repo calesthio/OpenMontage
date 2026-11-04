@@ -389,8 +389,13 @@ class VideoSelector(BaseTool):
         task_context = self._prepare_task_context(inputs)
         tool, score = self._select_best_tool(inputs, candidates, task_context)
         if tool is None:
+            from tools.provider_routing import no_provider_message
+
             return ToolResult(
-                success=False, error="No video generation provider available."
+                success=False,
+                error=no_provider_message(
+                    "No video generation provider available.", inputs, candidates
+                ),
             )
 
         # Adapt input keys: stock tools use 'query' while generators use 'prompt'

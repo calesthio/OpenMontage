@@ -46,6 +46,27 @@ This is a first-class workflow in OpenMontage.
 
 If a model misses this distinction, it will often fall back to plain search + guesswork. That is incorrect for OpenMontage.
 
+## Open, Media-Led Briefs ("you decide")
+
+When the user supplies images / video / music and delegates the creative call
+("here are some photos and a song, make a cinematic video, you decide"), do not
+quiz them for parameters. Read `skills/meta/creative-intake.md` → "Handling Open,
+Media-Led Briefs": analyze the media, infer duration / aspect / tone / shot plan /
+transitions / music handling / per-shot model yourself, then route to the
+`cinematic` pipeline and present a filled-in proposal at the normal approval gate.
+
+## Third-Party Relay Providers (中转站)
+
+If `relay_providers.yaml` exists, generation may run entirely through API relays.
+At preflight run `python -m tools.relay check` and `python -m tools.relay list`;
+relay tools are named `relay_<relay>_<model>` and are reached through the normal
+selectors. Before the first relay call read `.agents/skills/relay-providers/SKILL.md`
+(Layer 3) and `skills/core/relay-providers.md` (Layer 2). Key rules: pin approved
+tools with `preferred_tool` (or `hosting_provider` + `model`); only plan shots with
+declared capabilities; a `pending` result is resumed by calling again — never by a
+new paid submit; `live: false` relays refuse billable calls until the user enables
+them. User-facing setup guide: `docs/RELAY_PROVIDERS.zh-CN.md`.
+
 ## Rule Zero — All Production Goes Through a Pipeline
 
 **Every video production request MUST go through the pipeline system. No exceptions.**

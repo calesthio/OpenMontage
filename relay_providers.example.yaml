@@ -1,0 +1,168 @@
+# OpenMontage 中转站（第三方 API Relay）统一模型配置示例
+#
+# 使用方法：
+#   1. 复制为 relay_providers.yaml（已在 .gitignore 中，不会被提交）
+#        cp relay_providers.example.yaml relay_providers.yaml
+#   2. 在 .env 中写入密钥（只写环境变量名到本文件，绝不写密钥本身）：
+#        MYRELAY_API_KEY=你的中转站Key
+#        ARKRELAY_API_KEY=另一个中转站的Key
+#   3. 校验：python -m tools.relay check
+#   4. 先跑 Mock 测试：python -m pytest tests/tools/test_relay_providers.py tests/tools/test_relay_e2e.py
+#   5. 确认无误后，把对应中转站的 live 改为 true，才允许真实计费请求。
+#
+# 规则：
+#   * 本文件出现任何 api_key / token / secret 字面值都会被拒绝加载。
+#   * 每个模型生成一个独立工具，名字默认 relay_<中转站>_<模型名>，可用 tool_name 指定。
+#   * capabilities 必须显式声明；未声明的能力调用时会被明确拒绝，不会"假装支持"。
+#   * 只给 base_url 写域名（如 https://relay.example.com）时会自动补 API 根路径：
+#       OpenAI 风格协议补 /v1，ark_seedance 补 /api/v3。已带路径则原样使用。
+
+version: 1
+
+routing:
+  # relay_only：选择器只会选中转站工具和免费/本地工具，绝不悄悄调用其他收费官方供应商。
+  # any：保持 OpenMontage 原有行为。临时覆盖：环境变量 OPENMONTAGE_PAID_PROVIDER_POLICY。
+  paid_provider_policy: relay_only
+
+relays:
+  # ---------------------------------------------------------------------------
+  # 中转站 A：OpenAI 风格（new-api / one-api 类），同一个 Key 提供生图、生视频、TTS
+  # ---------------------------------------------------------------------------
+  myrelay:
+    display_name: 我的中转站
+    base_url: https://relay.example.com      # 自动补 /v1
+    api_key_env: MYRELAY_API_KEY             # 只写变量名
+    # auth_header: Authorization             # 默认 Authorization: Bearer <key>
+    # auth_scheme: Bearer                    # 有的中转站要求裸 key：设为 ""
+    live: false                              # 真实计费开关：Mock 验证通过后改为 true
+    trust_env_proxy: true                    # 是否走系统 HTTP(S)_PROXY
+    models:
+      # 文生图 + 图生图（OpenAI Images：/images/generations 与 /images/edits）
+      - name: gpt-image-2
+        model: gpt-image-2                   # 中转站后台里的准确模型 ID
+        protocol: openai_images
+        capabilities: [text_to_image, image_to_image]
+        image_input: multipart               # /images/edits 需要上传文件
+        limits:
+          max_reference_images: 4
+          size_map: {"16:9": "1536x864", "9:16": "864x1536", "1:1": "1024x1024"}
+        defaults: {size: "1536x864", quality: medium}
+        pricing: {currency: CNY, per_image: 0.3, cny_per_usd: 7.2}
+        best_for: [文字渲染, 商品保真图生图, 分镜首帧]
+
+      # 文生视频 + 图生视频（OpenAI Videos：multipart /videos，首帧作为 input_reference 文件上传）
+      - name: sora-2
+        model: sora-2
+        protocol: openai_videos
+        capabilities: [text_to_video, image_to_video]
+        image_input: multipart
+        limits:
+          durations: [4, 8, 12]
+          sizes: ["720x1280", "1280x720"]
+          size_map: {"16:9": "1280x720", "9:16": "720x1280"}
+        defaults: {duration: 8, aspect_ratio: "16:9"}
+        pricing: {currency: CNY, per_second: 0.6}
+        poll: {interval_seconds: 10, timeout_seconds: 900}
+        best_for: [电影感镜头, 物理运动, 首帧动画]
+
+      # JSON 版视频接口（/video/generations），首帧以 data URI 放在 input_reference
+      - name: kling-v2-1
+        model: kling-v2-1
+        protocol: openai_video_generations
+        capabilities: [text_to_video, image_to_video]
+        image_input: data_uri
+        limits:
+          durations: [5, 10]
+          aspect_ratios: ["16:9", "9:16", "1:1"]
+        defaults: {duration: 5, aspect_ratio: "16:9", resolution: 720p}
+        pricing: {currency: CNY, per_request: 2.0}
+        best_for: [人物表演, 运镜, 产品展示]
+        # 中转站字段不同就覆盖预设（深度合并）：
+        # request:
+        #   submit: {body: {image: "{{first_frame}}", duration: "{{duration}}"}}
+        #   poll: {path: "/video/generations/{task_id}"}
+
+      # 只支持文生视频的模型：不声明 image_to_video，传首帧会被明确拒绝
+      - name: veo-3-fast
+        model: veo-3-fast
+        protocol: openai_video_generations
+        capabilities: [text_to_video]
+        limits: {durations: [8]}
+        defaults: {duration: 8, size: "1280x720"}
+        pricing: {currency: CNY, per_request: 3.5}
+
+      # TTS（OpenAI /audio/speech）
+      - name: tts
+        model: gpt-4o-mini-tts
+        protocol: openai_speech
+        capabilities: [text_to_speech]
+        limits: {max_chars: 4000, voices: [alloy, ash, coral, echo, nova, onyx, sage, shimmer]}
+        defaults: {voice: alloy, output_format: mp3}
+        pricing: {currency: CNY, per_1k_chars: 0.1}
+
+      # 文本模型（记录用：OpenMontage 的规划由 Agent 自己完成，不生成工具）
+      - name: deepseek
+        model: deepseek-v4-pro
+        protocol: openai_chat
+        capabilities: [chat]
+
+  # ---------------------------------------------------------------------------
+  # 中转站 B：火山方舟（Ark）兼容协议的 Seedance 中转，复用现有 seedance_ark 适配器的请求构建
+  # ---------------------------------------------------------------------------
+  arkrelay:
+    display_name: Seedance 中转
+    base_url: https://ark-relay.example.com  # 自动补 /api/v3
+    api_key_env: ARKRELAY_API_KEY
+    live: false
+    models:
+      - name: seedance-2
+        model: doubao-seedance-2-0-260128
+        protocol: ark_seedance
+        capabilities: [text_to_video, image_to_video, first_last_frame, reference_to_video]
+        limits: {duration_range: [4, 15], resolutions: [480p, 720p, 1080p]}
+        defaults: {resolution: 720p, aspect_ratio: "16:9", duration: 5}
+        pricing: {currency: CNY, per_second: 1.0}
+        agent_skills: [seedance-2-0]
+        best_for: [多镜头叙事, 首尾帧控制, 参考图一致性]
+
+  # ---------------------------------------------------------------------------
+  # 中转站 C：完全自定义协议（不是 OpenAI 兼容）——用声明式映射描述
+  # ---------------------------------------------------------------------------
+  customrelay:
+    display_name: 自定义协议中转
+    base_url: https://custom-relay.example.com/api   # 带路径则原样使用
+    api_key_env: CUSTOMRELAY_API_KEY
+    auth_header: X-API-Key
+    auth_scheme: ""                          # 发送裸 key
+    live: false
+    models:
+      - name: wan-i2v
+        model: wan2.5-i2v
+        protocol: generic_async
+        kind: video
+        capabilities: [image_to_video]       # 只有图生视频
+        image_input: base64                  # 首帧以纯 base64 发送
+        limits: {durations: [5, 10]}
+        defaults: {duration: 5}
+        pricing: {currency: CNY, per_second: 0.5}
+        request:
+          submit:
+            method: POST
+            path: /v2/video/submit
+            body_format: json
+            body:
+              model: "{{model}}"
+              input: {prompt: "{{prompt}}", first_frame_image: "{{first_frame}}"}
+              parameters: {duration: "{{duration}}", seed: "{{seed}}"}
+          response:
+            task_id: "data.task_id|task_id"
+            error: "message|error.message"
+          poll:
+            method: GET
+            path: /v2/video/tasks/{task_id}
+            status: "data.status"
+            success: [SUCCESS, SUCCEEDED]
+            failure: [FAILED, CANCELED, UNKNOWN]
+            error: "data.message|data.fail_reason"
+            result_url: "data.video_url|data.results.0.url"
+          # download: {path: "/v2/video/tasks/{task_id}/file"}   # 结果需要带鉴权下载时使用

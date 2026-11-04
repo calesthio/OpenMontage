@@ -275,7 +275,14 @@ class ImageSelector(BaseTool):
         # Normal generation — use scored selection
         tool, score = self._select_best_tool(inputs, candidates, task_context)
         if tool is None:
-            return ToolResult(success=False, error="No image provider available.")
+            from tools.provider_routing import no_provider_message
+
+            return ToolResult(
+                success=False,
+                error=no_provider_message(
+                    "No image provider available.", inputs, self._providers()
+                ),
+            )
 
         # Adapt input keys: stock tools use 'query' while generators use 'prompt'
         adapted = dict(inputs)
@@ -482,7 +489,13 @@ class ImageSelector(BaseTool):
             or inputs.get("image_paths")
         )
         if not wants_edit:
-            return candidates
+            # Tools that explicitly declare text_to_image=False (edit-only models,
+            # e.g. relay entries) cannot serve a pure generation request.
+            return [
+                t
+                for t in candidates
+                if getattr(t, "supports", {}).get("text_to_image", True) is not False
+            ]
 
         filtered: list[BaseTool] = []
         for tool in candidates:

@@ -12,3 +12,7 @@ There are no instructions in this file. All instructions are in AGENT_GUIDE.md.
 
 - Puede haber varias sesiones de agentes trabajando a la vez en este repo: comprueba `git status` y que el HEAD es tuyo antes de stagear, commitear o reescribir historia.
 - Aplica siempre KISS: la solución más pequeña y simple que resuelva el caso actual.
+
+## Secretos
+
+Leer o ver un secreto en una sesión no obliga a rotarlo. Se rotan cada 90 días para minimizar riesgos, salvo que se expongan en un sitio público o a terceros o queden invalidados: entonces, en el momento.

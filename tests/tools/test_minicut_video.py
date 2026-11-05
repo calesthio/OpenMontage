@@ -80,6 +80,7 @@ def fake(monkeypatch, tmp_path):
     cli = FakeMiniCut(saved)
     real_which = shutil.which
     monkeypatch.setenv("MINICUT_HOME", str(tmp_path / "home"))
+    monkeypatch.delenv("MINICUT_USD_PER_CREDIT", raising=False)
     monkeypatch.setattr(mod.shutil, "which", lambda name: EXE if name == "minicut" else real_which(name))
     monkeypatch.setattr(mod.subprocess, "run", cli)
     monkeypatch.setattr(mod.time, "sleep", lambda s: None)
@@ -248,3 +249,46 @@ def test_edit_clip_is_staged_in_minicut_cache(fake, tmp_path):
     assert role == "video_ref[0]"
     assert path.startswith(str(tmp_path / "home" / "cache" / "openmontage"))
     assert open(path, "rb").read() == b"clip"
+
+
+def test_dry_run_prices_in_usd_when_credit_rate_set(fake, monkeypatch):
+    monkeypatch.setenv("MINICUT_USD_PER_CREDIT", "0.01")
+    plan = _tool().dry_run({"prompt": "a lighthouse at dusk"})
+
+    assert plan["estimated_cost_usd"] == pytest.approx(0.6045)
+    assert plan["cost_status"] == "estimated"
+
+
+@pytest.mark.parametrize("rate", [None, "", "abc", "0", "-1"])
+def test_no_usd_without_a_positive_credit_rate(fake, monkeypatch, tmp_path, rate):
+    if rate is not None:
+        monkeypatch.setenv("MINICUT_USD_PER_CREDIT", rate)
+    plan = _tool().dry_run({"prompt": "a lighthouse at dusk"})
+    assert plan["estimated_cost_usd"] is None
+    assert plan["cost_status"] == "quote_required"
+
+    inputs = {"prompt": "a lighthouse at dusk", "approval": plan["approval"],
+              "output_path": str(tmp_path / "out.mp4")}
+    result = _tool().execute(inputs)
+    assert result.success, result.error
+    assert result.cost_usd is None
+    assert result.data["cost_status"] == "unquoted"
+
+
+def test_approved_job_cost_is_approved_credits_times_rate(fake, monkeypatch, tmp_path):
+    monkeypatch.setenv("MINICUT_USD_PER_CREDIT", "0.01")
+    result = _tool().execute(_approved(tmp_path))
+
+    assert result.success, result.error
+    assert result.cost_usd == pytest.approx(0.6045)
+    assert result.data["cost_status"] == "estimated"
+
+
+def test_refused_job_cost_is_credits_charged_times_rate(fake, monkeypatch, tmp_path):
+    monkeypatch.setenv("MINICUT_USD_PER_CREDIT", "0.01")
+    fake.job_states = ["failed"]
+    result = _tool().execute(_approved(tmp_path))
+
+    assert not result.success
+    assert result.data["credits_charged"] == 0
+    assert result.cost_usd == 0.0

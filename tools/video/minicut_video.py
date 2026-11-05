@@ -3,10 +3,15 @@
 ``dry_run`` returns the CLI's free price quote as an ``approval``, and
 ``execute`` sends exactly that approval and nothing else; sending it again
 never starts a second paid job. The CLI calls live in ``tools/minicut_cli.py``.
+
+MiniCut bills in credits. When ``MINICUT_USD_PER_CREDIT`` says what one credit
+costs the user, credits are also reported in USD; otherwise cost_usd stays None.
 """
 
 from __future__ import annotations
 
+import math
+import os
 import shutil
 import time
 from pathlib import Path
@@ -28,6 +33,18 @@ from tools.base_tool import (
 from tools.provider_pricing import PriceQuoteRequired
 
 MODELS = ["kling-4", "kling-4-edit"]
+
+
+def credits_to_usd(credits: Any) -> float | None:
+    """Credits in USD at MINICUT_USD_PER_CREDIT, or None when unset or not a positive number."""
+    try:
+        rate = float(os.environ.get("MINICUT_USD_PER_CREDIT", ""))
+        usd = float(credits) * rate
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(rate) or rate <= 0 or not math.isfinite(usd):
+        return None
+    return round(usd, 6)
 
 
 class MiniCutVideo(BaseTool):
@@ -151,6 +168,9 @@ class MiniCutVideo(BaseTool):
             approval = minicut_cli.quote(self._gen_words(inputs))
         except Exception as exc:
             return {**result, "would_execute": False, "quote_reason": str(exc)}
+        usd = credits_to_usd(approval["credits"])
+        if usd is not None:
+            result.update(estimated_cost_usd=usd, cost_status="estimated")
         return {
             **result,
             "estimated_credits": approval["credits"],
@@ -173,6 +193,8 @@ class MiniCutVideo(BaseTool):
 
             saved = minicut_cli.collect(job_id, inputs.get("poll_timeout", 900))
             if isinstance(saved, ToolResult):
+                # A failed or stopped job: what the CLI says it charged.
+                saved.cost_usd = credits_to_usd(saved.data.get("credits_charged"))
                 return saved
             output_path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(saved, output_path)
@@ -188,6 +210,8 @@ class MiniCutVideo(BaseTool):
         from tools.video._shared import probe_output
 
         model = inputs.get("model", "kling-4")
+        # The approved credits: the quote fingerprint stops a send at any other price.
+        cost_usd = credits_to_usd((inputs.get("approval") or {}).get("credits"))
         return ToolResult(
             success=True,
             data={
@@ -199,11 +223,11 @@ class MiniCutVideo(BaseTool):
                 "output_path": str(output_path),
                 "format": "mp4",
                 # MiniCut bills in credits; the USD value depends on the user's plan.
-                "cost_status": "unquoted",
+                "cost_status": "unquoted" if cost_usd is None else "estimated",
                 **probe_output(output_path),
             },
             artifacts=[str(output_path)],
-            cost_usd=None,
+            cost_usd=cost_usd,
             duration_seconds=round(time.time() - start, 2),
             model=model,
         )

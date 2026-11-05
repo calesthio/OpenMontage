@@ -37,6 +37,9 @@ def _install_fakes(monkeypatch, *, cuda: bool, mps: bool):
     )
 
     def generator(device):
+        # older PyTorch can't create a Generator on MPS
+        if device == "mps":
+            raise RuntimeError("Device type MPS is not supported for torch.Generator() api.")
         calls["generator_device"] = device
         return types.SimpleNamespace(manual_seed=lambda seed: None)
 
@@ -58,14 +61,16 @@ def _install_fakes(monkeypatch, *, cuda: bool, mps: bool):
 
 
 @pytest.mark.parametrize(
-    ("cuda", "mps", "device", "dtype"),
+    ("cuda", "mps", "device", "dtype", "gen_device"),
     [
-        (True, True, "cuda", "float16"),
-        (False, True, "mps", "float16"),
-        (False, False, "cpu", "float32"),
+        (True, True, "cuda", "float16", "cuda"),
+        (False, True, "mps", "float16", "cpu"),
+        (False, False, "cpu", "float32", "cpu"),
     ],
 )
-def test_local_diffusion_picks_device(monkeypatch, tmp_path, cuda, mps, device, dtype):
+def test_local_diffusion_picks_device(
+    monkeypatch, tmp_path, cuda, mps, device, dtype, gen_device
+):
     calls = _install_fakes(monkeypatch, cuda=cuda, mps=mps)
 
     result = LocalDiffusion().execute(
@@ -74,7 +79,7 @@ def test_local_diffusion_picks_device(monkeypatch, tmp_path, cuda, mps, device, 
 
     assert result.success, result.error
     assert calls["device"] == device
-    assert calls["generator_device"] == device
+    assert calls["generator_device"] == gen_device
     assert calls["dtype"] == dtype
 
 
@@ -94,3 +99,15 @@ def test_image_gen_local_backend_uses_mps(monkeypatch, tmp_path):
 
     assert calls["device"] == "mps"
     assert calls["dtype"] == "float16"
+
+
+def test_image_gen_local_backend_seeded_on_mps(monkeypatch, tmp_path):
+    calls = _install_fakes(monkeypatch, cuda=False, mps=True)
+
+    result = ImageGen()._generate_local(
+        {"prompt": "a cat", "seed": 1, "output_path": str(tmp_path / "o.png")}
+    )
+
+    assert result.success, result.error
+    assert calls["device"] == "mps"
+    assert calls["generator_device"] == "cpu"

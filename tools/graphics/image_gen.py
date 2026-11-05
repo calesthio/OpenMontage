@@ -236,7 +236,11 @@ class ImageGen(BaseTool):
         import torch
         from diffusers import StableDiffusionPipeline
 
-        from tools.graphics.local_diffusion import DEFAULT_MODEL, select_device
+        from tools.graphics.local_diffusion import (
+            DEFAULT_MODEL,
+            generator_device,
+            select_device,
+        )
 
         prompt = inputs["prompt"]
         negative = inputs.get("negative_prompt", "")
@@ -252,7 +256,7 @@ class ImageGen(BaseTool):
 
         generator = None
         if seed is not None:
-            generator = torch.Generator(device=device).manual_seed(seed)
+            generator = torch.Generator(device=generator_device(device)).manual_seed(seed)
 
         image = pipe(
             prompt,

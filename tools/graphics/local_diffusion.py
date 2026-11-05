@@ -38,6 +38,14 @@ def select_device(torch: Any) -> tuple[str, Any]:
     return "cpu", torch.float32
 
 
+def generator_device(device: str) -> str:
+    """Device for the seeded torch.Generator.
+
+    Older PyTorch releases can't create a Generator on MPS, so seed on CPU
+    there; diffusers accepts a CPU generator for an MPS pipeline.
+    """
+    return "cpu" if device == "mps" else device
+
 
 class LocalDiffusion(BaseTool):
     name = "local_diffusion"
@@ -142,7 +150,7 @@ class LocalDiffusion(BaseTool):
 
             generator = None
             if seed is not None:
-                generator = torch.Generator(device=device).manual_seed(seed)
+                generator = torch.Generator(device=generator_device(device)).manual_seed(seed)
 
             image = pipe(
                 prompt,

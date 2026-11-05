@@ -5,8 +5,8 @@ and a length), writes a song file whose chords change and whose drum hits
 land on every cut, and has ``minicut music check`` and ``minicut music
 render`` play it on this computer with recorded instrument samples. The
 result is a WAV exactly as long as the cut. No model generates it, no
-media leaves the computer and nothing is charged; the CLI only needs to be
-signed in once.
+media leaves the computer and it uses no credits. It needs a free
+``minicut login`` first, like every MiniCut command.
 
 A song file is plain data (format ``minicut-song/1``): instruments by id,
 notes as ``[pitch, start_s, length_s, velocity]``. An agent can also write
@@ -146,7 +146,7 @@ class MiniCutMusicFit(BaseTool):
     }
     best_for = [
         "music that changes on every cut of a finished edit",
-        "a track exactly as long as the cut, free and local",
+        "a track exactly as long as the cut, made locally with no credits",
         "short-form edits that are re-cut often (same cuts in, same song out)",
     ]
     not_good_for = ["vocals or lyrics", "a specific genre or a known song's sound"]

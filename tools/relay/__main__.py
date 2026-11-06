@@ -3,6 +3,8 @@
     python -m tools.relay check            validate config + env vars (no network)
     python -m tools.relay list             tools built from the config, with capabilities
     python -m tools.relay models --relay R list model ids the relay serves to your key (GET /models, free)
+    python -m tools.relay route           show per-kind default channels
+    python -m tools.relay route --kind video --tool TOOL  switch a default (no API call)
     python -m tools.relay resume JOB.json  resume a pending job (polls + downloads, never resubmits)
     python -m tools.relay mock-server      run the loopback mock relay for manual testing
 
@@ -70,6 +72,7 @@ def cmd_check(_args) -> int:
         "exists": path.is_file(),
         "ok": not config.errors,
         "paid_provider_policy": config.routing.effective_policy,
+        "default_tools": config.routing.default_tools,
         "relays": relays,
         "models": models,
         "errors": config.errors,
@@ -128,6 +131,47 @@ def cmd_models(args) -> int:
     return 0
 
 
+def cmd_route(args) -> int:
+    """Change one default without deleting any provider or touching old jobs."""
+    import os
+    import tempfile
+    from pathlib import Path
+
+    import yaml
+    from tools.relay.config import config_path, load_relay_config, parse_relay_config
+
+    path = config_path()
+    config = load_relay_config(use_cache=False)
+    if args.kind or args.tool:
+        if not args.kind or not args.tool:
+            _print({"error": "--kind and --tool must be provided together"})
+            return 1
+        model = config.get_model(args.tool)
+        if model is None or model.kind != args.kind:
+            _print({"error": f"{args.tool!r} is not a configured {args.kind} tool"})
+            return 1
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        data.setdefault("routing", {}).setdefault("default_tools", {})[args.kind] = args.tool
+        updated = parse_relay_config(data, path)
+        if updated.errors:
+            _print({"errors": updated.errors})
+            return 1
+        temp_path = None
+        try:
+            with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent,
+                                             prefix=path.name + ".", suffix=".tmp", delete=False) as f:
+                temp_path = Path(f.name)
+                yaml.safe_dump(data, f, allow_unicode=True, sort_keys=False)
+            os.replace(temp_path, path)
+        finally:
+            if temp_path is not None:
+                temp_path.unlink(missing_ok=True)
+        config = load_relay_config(use_cache=False)
+    _print({"config_path": str(path), "default_tools": config.routing.default_tools,
+            "note": "Explicit project routes override defaults; existing jobs stay on their original relay."})
+    return 0
+
+
 def cmd_resume(args) -> int:
     from pathlib import Path
 
@@ -176,6 +220,10 @@ def main(argv=None) -> int:
     p = sub.add_parser("models")
     p.add_argument("--relay", required=True)
     p.set_defaults(fn=cmd_models)
+    p = sub.add_parser("route")
+    p.add_argument("--kind", choices=["image", "video", "tts"])
+    p.add_argument("--tool")
+    p.set_defaults(fn=cmd_route)
     p = sub.add_parser("resume")
     p.add_argument("job_path")
     p.add_argument("--timeout", type=float, default=None, help="poll timeout seconds for this resume")

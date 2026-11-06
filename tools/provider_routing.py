@@ -56,6 +56,10 @@ def no_provider_message(base: str, inputs, all_candidates) -> str:
     """Explain an empty selection: missing key, unsupported op, or policy."""
     message = base
     wanted = inputs.get("preferred_tool")
+    if not wanted and all_candidates:
+        wanted = default_tool_for(inputs, all_candidates[0].capability)
+        if wanted:
+            message += f" Configured default is {wanted!r}; no automatic channel fallback."
     if wanted:
         tool = next((t for t in all_candidates if t.name == wanted), None)
         if tool is None:
@@ -76,11 +80,39 @@ def no_provider_message(base: str, inputs, all_candidates) -> str:
     return message + paid_policy_note(inputs)
 
 
+def default_tool_for(inputs, capability):
+    """Use a persisted channel only when the caller did not choose a route.
+
+    A default is strict: an unavailable default cannot silently bill another
+    relay. Explicit project routes and old-job recovery keep their original host.
+    """
+    if any(inputs.get(k) for k in (
+        "preferred_tool", "hosting_provider",
+        "allowed_providers", "job_path", "resume_job",
+    )) or inputs.get("preferred_provider", "auto") not in (None, "", "auto"):
+        return None
+    kind = {"image_generation": "image", "video_generation": "video", "tts": "tts"}.get(capability)
+    if not kind:
+        return None
+    from tools.relay.config import try_load_relay_config
+
+    return try_load_relay_config().routing.default_tools.get(kind)
+
+
 def filter_explicit_route(inputs, candidates):
     candidates = apply_paid_provider_policy(inputs, candidates)
     tool_name = inputs.get("preferred_tool")
     host = inputs.get("hosting_provider")
     model = inputs.get("model") or inputs.get("model_id") or inputs.get("model_name")
+    if not tool_name and candidates:
+        default = default_tool_for(inputs, candidates[0].capability)
+        if default and model:
+            anchor = next((t for t in candidates if t.name == default), None)
+            if anchor is None:
+                return []
+            host = getattr(anchor, "hosting_provider", anchor.provider)
+        else:
+            tool_name = default
     selected = []
     for tool in candidates:
         if tool_name and tool.name != tool_name:

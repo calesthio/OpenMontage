@@ -31,6 +31,7 @@ import re
 import shutil
 import subprocess
 import time
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -348,14 +349,17 @@ class RelayHTTP:
         json_body: Any = None,
         data: Any = None,
         files: Any = None,
+        headers: Optional[dict[str, str]] = None,
         timeout: float = 60.0,
     ) -> Any:
         url = self.url(path)
         self._check_scheme(url)
+        request_headers = dict(headers or {})
+        request_headers.update(self.auth_headers())
         return self.session.request(
             method.upper(),
             url,
-            headers=self.auth_headers(),
+            headers=request_headers,
             json=json_body,
             data=data,
             files=files,
@@ -726,6 +730,7 @@ class JobRunner:
                     {k: previous.get(k) for k in ("task_id", "state", "error", "submitted_at", "fingerprint")}
                 ]
             save_job(req.job_path, job)  # recorded BEFORE the paid request leaves
+            req.variables["idempotency_key"] = job["idempotency_key"]
             try:
                 submitted = submit_fn(req)
             except SubmitUnknown as exc:
@@ -886,6 +891,7 @@ class JobRunner:
             "operation": req.operation,
             "fingerprint": req.fingerprint,
             "state": "submitting",
+            "idempotency_key": uuid.uuid4().hex,
             "created_at": _now(),
             "task_id": None,
             "result_url": None,
@@ -944,9 +950,14 @@ class JobRunner:
         extra = req.variables.get("extra_params") or {}
         if isinstance(body, dict) and isinstance(extra, dict):
             body = deep_merge(body, extra)
+        max_bytes = self.model.limits.get("max_request_bytes")
+        if max_bytes and len(json.dumps(body).encode("utf-8")) > int(max_bytes):
+            raise SubmitRejected("request body exceeds this relay's configured byte limit", code="request_too_large")
         path = render_template(submit.get("path", ""), req.variables)
         method = submit.get("method", "POST")
         timeout = self.model.submit_timeout_seconds
+        request_headers = render_template(submit.get("headers") or {}, req.variables)
+        header_args = {"headers": request_headers} if request_headers else {}
         if submit.get("body_format", "json") == "multipart":
             files = []
             for field_name, placeholder in (submit.get("files") or {}).items():
@@ -964,9 +975,9 @@ class JobRunner:
             # multipart/form-data — with no file attached, requests would
             # otherwise silently fall back to x-www-form-urlencoded.
             parts = [(k, (None, v)) for k, v in form.items()] + files
-            response = self.http.submit(method, path, files=parts, timeout=timeout)
+            response = self.http.submit(method, path, files=parts, timeout=timeout, **header_args)
         else:
-            response = self.http.submit(method, path, json_body=body, timeout=timeout)
+            response = self.http.submit(method, path, json_body=body, timeout=timeout, **header_args)
         try:
             payload = response.json()
         except ValueError as exc:

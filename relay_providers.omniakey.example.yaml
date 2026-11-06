@@ -1,0 +1,54 @@
+version: 1
+routing:
+  paid_provider_policy: relay_only
+relays:
+  omniakey:
+    base_url: https://api.omniakey.com
+    api_key_env: OMNIAKEY_API_KEY
+    live: false
+    models:
+      - name: minimax-h3
+        model: minimax-h3
+        aliases: [MiniMax-H3]
+        protocol: generic_async
+        api_root: /v1
+        kind: video
+        capabilities: [text_to_video, image_to_video, first_last_frame, reference_to_video]
+        image_input: data_uri
+        limits:
+          duration_range: [4, 15]
+          resolutions: [768P, 2K]
+          aspect_ratios: [adaptive, "16:9", "9:16", "1:1", "4:3", "3:4", "21:9"]
+          native_audio: true
+          max_request_bytes: 1048576
+          max_upload_kb: 700
+        defaults: {duration: 4, resolution: 768P, aspect_ratio: "16:9"}
+        # Published OmniaKey rates, checked 2026-11-05; verify again before use.
+        pricing:
+          currency: USD
+          per_second_by_resolution: {768P: 0.0269, 2K: 0.0431}
+        agent_skills: [minimax-h3]
+        poll: {interval_seconds: 5, timeout_seconds: 600}
+        request:
+          submit:
+            method: POST
+            path: /media/tasks
+            headers: {Idempotency-Key: "{{idempotency_key}}"}
+            body:
+              model: "{{model}}"
+              type: video
+              operation: "{{operation}}"
+              input: {prompt: "{{prompt}}", media: "{{media}}"}
+              parameters:
+                duration: "{{duration}}"
+                resolution: "{{resolution}}"
+                aspect_ratio: "{{aspect_ratio}}"
+          response: {task_id: "id|data.id", error: "error.message|error|message"}
+          poll:
+            method: GET
+            path: /media/tasks/{task_id}
+            status: "status|data.status"
+            success: [succeeded]
+            failure: [failed, canceled, cancelled, expired]
+            error: "error.message|error.code|message"
+            result_url: "assets.0.url|data.assets.0.url"

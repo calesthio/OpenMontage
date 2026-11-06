@@ -217,8 +217,14 @@ class RelayToolBase(BaseTool):
         total = pricing.per_request or 0.0
         if pricing.per_image is not None:
             total += pricing.per_image * units.get("images", 1)
-        if pricing.per_second is not None:
-            total += pricing.per_second * units.get("seconds", 0)
+        per_second = pricing.per_second
+        if pricing.per_second_by_resolution:
+            resolution = str(inputs.get("resolution") or self.relay_model.defaults.get("resolution") or "").upper()
+            if resolution not in pricing.per_second_by_resolution:
+                raise PriceQuoteRequired(f"no per-second price for {self.name} at resolution {resolution!r}")
+            per_second = pricing.per_second_by_resolution[resolution]
+        if per_second is not None:
+            total += per_second * units.get("seconds", 0)
         if pricing.per_1k_chars is not None:
             total += pricing.per_1k_chars * units.get("chars", 0) / 1000.0
         return round(pricing.to_usd(total), 4)
@@ -341,6 +347,7 @@ class RelayToolBase(BaseTool):
         spec = protocol_spec(self.relay_model)
         submit = spec.get("submit") or {}
         body = render_template(submit.get("body") or {}, _summarize_media(req.variables))
+        headers = render_template(submit.get("headers") or {}, {**req.variables, "idempotency_key": "<per-job persistent UUID>"})
         return ToolResult(
             success=True,
             data={
@@ -352,6 +359,7 @@ class RelayToolBase(BaseTool):
                 "path": submit.get("path"),
                 "body_format": submit.get("body_format", "json"),
                 "body": body,
+                "request_headers": headers,
                 "files": {k: v.source for k, v in req.files.items()},
                 "operation": req.operation,
                 "estimated_cost_usd": estimated,
@@ -395,6 +403,8 @@ def _summarize_media(variables: dict[str, Any]) -> dict[str, Any]:
             return f"<base64 {len(value)} chars>"
         if isinstance(value, list):
             return [short(v) for v in value]
+        if isinstance(value, dict):
+            return {k: short(v) for k, v in value.items()}
         return value
 
     return {k: short(v) for k, v in variables.items()}

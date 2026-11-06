@@ -219,6 +219,7 @@ class RelayVideo(RelayToolBase):
         m = self.relay_model
         try:
             variables = self._common_variables(inputs, prompt, duration)
+            variables["operation"] = operation
             files = {}
             media_digest: dict[str, Any] = {}
             if first:
@@ -237,12 +238,18 @@ class RelayVideo(RelayToolBase):
                 loaded = [self._load_image(r) for r in refs]
                 variables["reference_images"] = [self._encode(i) for i in loaded]
                 media_digest["reference_images"] = [self._image_digest(i) for i in loaded]
+            media = []
+            for field_name, role in (("first_frame", "first_frame"), ("last_frame", "last_frame")):
+                if variables.get(field_name):
+                    media.append({"type": role, "url": variables[field_name]})
+            media.extend({"type": "reference_image", "url": url} for url in variables.get("reference_images", []))
+            variables["media"] = media or None
         except Exception as exc:  # noqa: BLE001
             return self._fail(str(exc), code=getattr(exc, "code", "bad_image"))
 
         output_path, job_path = self._paths(inputs, f"{self.name}.mp4")
         estimated = self._estimated_cost_or_none(inputs)
-        summary = {k: v for k, v in variables.items() if k not in {"first_frame", "last_frame", "reference_images", "first_frame_file", "last_frame_file"} and v is not None}
+        summary = {k: v for k, v in variables.items() if k not in {"first_frame", "last_frame", "reference_images", "first_frame_file", "last_frame_file", "media"} and v is not None}
         summary.update(media_digest)
         req = JobRequest(
             tool_name=self.name,

@@ -89,11 +89,12 @@ class Pricing:
     per_request: Optional[float] = None
     per_image: Optional[float] = None
     per_second: Optional[float] = None
+    per_second_by_resolution: dict[str, float] = field(default_factory=dict)
     per_1k_chars: Optional[float] = None
 
     @property
     def configured(self) -> bool:
-        return any(
+        return bool(self.per_second_by_resolution) or any(
             v is not None
             for v in (self.per_request, self.per_image, self.per_second, self.per_1k_chars)
         )
@@ -182,6 +183,7 @@ class RelayModel:
 @dataclass
 class RoutingPolicy:
     paid_provider_policy: str = "any"
+    default_tools: dict[str, str] = field(default_factory=dict)
 
     @property
     def relay_only(self) -> bool:
@@ -322,12 +324,16 @@ def _parse_pricing(raw: Any) -> Pricing:
     currency = str(raw.get("currency", "USD")).upper()
     if currency not in {"USD", "CNY"}:
         raise ValueError("pricing.currency must be USD or CNY")
+    rates = {str(k).upper(): float(v) for k, v in (raw.get("per_second_by_resolution") or {}).items()}
+    if any(v < 0 for v in rates.values()):
+        raise ValueError("pricing.per_second_by_resolution rates must be >= 0")
     return Pricing(
         currency=currency,
         cny_per_usd=float(raw.get("cny_per_usd", 7.2)),
         per_request=num("per_request"),
         per_image=num("per_image"),
         per_second=num("per_second"),
+        per_second_by_resolution=rates,
         per_1k_chars=num("per_1k_chars"),
     )
 
@@ -349,9 +355,9 @@ def _template_vars(node: Any) -> set[str]:
 # allowed. Declaring image_to_video without wiring the first frame into the
 # request would silently drop the user's image — exactly what we refuse.
 _GENERIC_REQUIRES = {
-    "image_to_video": {"first_frame", "first_frame_file"},
-    "first_last_frame": {"last_frame", "last_frame_file"},
-    "reference_to_video": {"reference_images"},
+    "image_to_video": {"first_frame", "first_frame_file", "media"},
+    "first_last_frame": {"last_frame", "last_frame_file", "media"},
+    "reference_to_video": {"reference_images", "media"},
     "image_to_image": {"images", "first_frame", "first_frame_file"},
 }
 
@@ -469,7 +475,14 @@ def parse_relay_config(data: Any, path: Optional[Path] = None) -> RelayConfig:
     policy = str(routing.get("paid_provider_policy", "any")).strip().lower()
     if policy not in PAID_POLICIES:
         raise RelayConfigError(f"routing.paid_provider_policy must be one of {sorted(PAID_POLICIES)}")
-    config.routing = RoutingPolicy(paid_provider_policy=policy)
+    defaults = routing.get("default_tools") or {}
+    if not isinstance(defaults, dict):
+        raise RelayConfigError("routing.default_tools must map image/video/tts to tool names")
+    if set(defaults) - {"image", "video", "tts"} or any(
+        not isinstance(v, str) or not v.strip() for v in defaults.values()
+    ):
+        raise RelayConfigError("routing.default_tools must map image/video/tts to non-empty tool names")
+    config.routing = RoutingPolicy(paid_provider_policy=policy, default_tools=dict(defaults))
 
     seen_tools: set[str] = set()
     for name, raw in (data.get("relays") or {}).items():
@@ -496,6 +509,12 @@ def parse_relay_config(data: Any, path: Optional[Path] = None) -> RelayConfig:
                 continue
             seen_tools.add(model.tool_name)
             config.models.append(model)
+    for kind, tool_name in defaults.items():
+        model = config.get_model(tool_name)
+        if model is None or model.kind != kind:
+            config.errors.append(
+                f"routing.default_tools.{kind}: {tool_name!r} must name a configured {kind} tool"
+            )
     return config
 
 

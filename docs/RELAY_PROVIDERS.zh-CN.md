@@ -6,7 +6,7 @@ OpenMontage 可以完全通过第三方 API 中转站完成生图、生视频和
 
 - 配置文件：`relay_providers.yaml`（从 [`relay_providers.example.yaml`](../relay_providers.example.yaml) 复制，已被 git 忽略）
 - 密钥：只放在 `.env` / 环境变量里，配置文件中只写变量名
-- 命令行：`python -m tools.relay check | list | models | resume | mock-server`
+- 命令行：`python -m tools.relay check | list | models | route | resume | mock-server`
 - Agent 使用说明：[`.agents/skills/relay-providers/SKILL.md`](../.agents/skills/relay-providers/SKILL.md)
 
 ---
@@ -62,6 +62,44 @@ Agent 会分析素材、推断时长/画幅/风格、规划分镜和每个镜头
 ---
 
 ## 2. 配置结构
+
+### 分开选择图片和视频渠道
+
+在 `routing.default_tools` 中为各类素材指定默认工具，例如：
+
+```yaml
+routing:
+  paid_provider_policy: relay_only
+  default_tools:
+    image: relay_tokenshop_gpt_image_2
+    video: relay_newrelay_grok_video_1_5
+```
+
+工具名以 `python -m tools.relay list` 的实际结果为准。多个渠道可以同时保留注册，
+不必删除旧配置或密钥。以下命令只修改视频默认值，不调用生成 API：
+
+```bash
+python -m tools.relay route
+python -m tools.relay route --kind video --tool relay_newrelay_grok_video_1_5
+python -m tools.relay route --kind video --tool relay_tokenshop_grok_video_1_5
+```
+
+上述两条切换命令是相反的选择，按需执行其中一条。`--kind image`、`--kind tts`
+也可单独设置。指定模型时仍留在默认渠道内选择该模型；项目显式指定的工具或渠道优先。
+默认渠道不可用时会报告错误，不自动改走另一家。旧任务仍用 `.relay-job.json`
+记录的原工具恢复；切换默认渠道不迁移、重提或重做旧任务。
+
+新渠道模型列表、配置检查和 `dry_run` 通过，只代表接入配置就绪，不能证明真实生成成功。
+价格未核实就保留未报价状态，不能套用其他渠道的价格。
+
+OmniaKey MiniMax H3 的独立接入模板见
+[`relay_providers.omniakey.example.yaml`](../relay_providers.omniakey.example.yaml)。
+`generic_async` 可用 `{{operation}}` 和 `{{media}}` 映射统一媒体任务：`media` 按输入生成
+`first_frame`、`last_frame`、`reference_image` 条目；文生视频时省略该字段。
+`request.submit.headers` 支持 `Idempotency-Key: "{{idempotency_key}}"`；该 UUID 在提交前
+随 job 持久化，恢复旧任务不再次提交，用户批准的新尝试使用新 UUID。
+`pricing.per_second_by_resolution` 可分别设置 `768P` / `2K` 等档位的秒价，避免混用费率；
+`limits.max_request_bytes` 可在联网前拒绝超过该中转站限制的请求体。
 
 ```yaml
 routing:

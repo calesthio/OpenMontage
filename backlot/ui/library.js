@@ -73,16 +73,69 @@ function card(p) {
   );
 }
 
+// Series sections remember open/closed per viewer; storage may be unavailable.
+const SERIES_KEY = "backlot.series.collapsed";
+function loadCollapsed() {
+  try { return new Set(JSON.parse(localStorage.getItem(SERIES_KEY) || "[]")); } catch { return new Set(); }
+}
+function saveCollapsed(set) {
+  try { localStorage.setItem(SERIES_KEY, JSON.stringify([...set])); } catch { /* ignore */ }
+}
+
+function seriesSection(name, members, collapsed) {
+  const live = members.filter((p) => p.live).length;
+  const awaiting = members.filter((p) => p.awaiting_human).length;
+  const latest = Math.max(...members.map((p) => p.last_activity || 0));
+  const details = el("details", { class: `lib-series${live ? " live-series" : ""}`, "data-series": name });
+  details.open = !collapsed.has(name);
+  details.addEventListener("toggle", () => {
+    const set = loadCollapsed();
+    if (details.open) set.delete(name); else set.add(name);
+    saveCollapsed(set);
+  });
+  details.append(
+    el("summary", {},
+      el("span", { class: "ls-caret", "aria-hidden": "true" }, "▸"),
+      el("h2", {}, name.toUpperCase()),
+      el("span", { class: "chip" }, `${members.length} ${members.length === 1 ? "project" : "projects"}`),
+      live ? el("span", { class: "chip ls-live" }, el("span", { class: "dot" }), `${live} LIVE`) : null,
+      awaiting ? el("span", { class: "chip ls-live" }, `◈ ${awaiting} AWAITING YOU`) : null,
+      el("span", { class: "when" }, fmtAgo(latest)),
+    ),
+    el("div", { class: "lib-grid ls-grid" }, ...members.map(card)),
+  );
+  return details;
+}
+
+// Projects arrive live-first, then by recency. A series is placed where its
+// first (most relevant) member would have been; loose projects stay in place.
+function layout(projects) {
+  const bySeries = new Map();
+  const items = [];
+  for (const p of projects) {
+    if (!p.series) { items.push(p); continue; }
+    if (!bySeries.has(p.series)) { bySeries.set(p.series, []); items.push({ series: p.series }); }
+    bySeries.get(p.series).push(p);
+  }
+  return { items, bySeries };
+}
+
 async function render() {
   const projects = await getJSON("/api/projects");
-  document.getElementById("count").textContent = `${projects.length} projects`;
+  const { items, bySeries } = layout(projects);
+  const seriesCount = bySeries.size;
+  document.getElementById("count").textContent = `${projects.length} projects`
+    + (seriesCount ? ` · ${seriesCount} series` : "");
   const liveCount = projects.filter((p) => p.live).length;
   const badge = document.getElementById("liveBadge");
   badge.classList.toggle("idle", liveCount === 0);
   document.getElementById("liveText").textContent = liveCount ? `${liveCount} LIVE` : "IDLE";
   grid.innerHTML = "";
   document.getElementById("empty").style.display = projects.length ? "none" : "block";
-  for (const p of projects) grid.append(card(p));
+  const collapsed = loadCollapsed();
+  for (const item of items) {
+    grid.append(item.project_id ? card(item) : seriesSection(item.series, bySeries.get(item.series), collapsed));
+  }
 }
 
 render().catch(console.error);

@@ -842,6 +842,23 @@ aside .panel:nth-of-type(1) { animation-delay: .32s } aside .panel:nth-of-type(2
 .lib-body .lb-meta { display: flex; gap: 8px; margin-top: 5px; align-items: center; }
 .lib-body .lb-meta .chip { font-size: calc(9.5px * var(--fs-scale)); padding: 2px 7px; }
 .lib-body .lb-meta .when { font-size: calc(10.5px * var(--fs-scale)); color: var(--text-3); margin-left: auto; }
+/* series: a full-width row in the library grid holding its own card grid */
+.lib-series { grid-column: 1 / -1; border: 1px solid var(--border-soft); border-radius: 14px; background: var(--surface-2); padding: 0 16px; }
+.lib-series.live-series { border-color: rgba(240,168,60,.35); }
+.lib-series > summary {
+  list-style: none; cursor: pointer; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  padding: 14px 0; user-select: none;
+}
+.lib-series > summary::-webkit-details-marker { display: none; }
+.lib-series > summary:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; border-radius: 6px; }
+.lib-series > summary h2 { font-family: var(--mono); font-size: calc(13.5px * var(--fs-scale)); font-weight: 600; letter-spacing: .08em; overflow-wrap: anywhere; }
+.lib-series > summary .chip { font-size: calc(9.5px * var(--fs-scale)); padding: 2px 7px; }
+.lib-series > summary .ls-live { color: var(--amber); display: inline-flex; gap: 5px; align-items: center; }
+.lib-series > summary .ls-live .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--amber); animation: pulse 1.6s infinite; }
+.lib-series > summary .when { font-size: calc(10.5px * var(--fs-scale)); color: var(--text-3); margin-left: auto; }
+.lib-series .ls-caret { color: var(--text-3); transition: transform .15s; display: inline-block; }
+.lib-series[open] .ls-caret { transform: rotate(90deg); }
+.lib-series .ls-grid { padding-top: 0; padding-bottom: 16px; }
 .mini-rail { display: flex; gap: 4px; margin-top: 11px; align-items: center; }
 .mini-rail i { height: 4px; flex: 1; border-radius: 2px; background: var(--surface-3); }
 .mini-rail i.d { background: #3d5c4b; }

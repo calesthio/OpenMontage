@@ -202,12 +202,16 @@ def init_project(
     pipeline_type: str,
     pipeline_dir: Optional[Path] = None,
     style_playbook: Optional[str] = None,
+    series: Optional[str] = None,
 ) -> Path:
     """Initialize a project workspace with the canonical layout + marker file.
 
     Creates projects/<project_id>/ with the standard subdirectories and writes
     project.json — the marker the Backlot board uses to render a project's
     identity and stage rail before the first checkpoint exists.
+
+    ``series`` optionally groups several projects (episodes of one show) into
+    a single section of the Backlot library. Projects stay flat on disk.
 
     Idempotent: re-running preserves the original created_at and merges fields.
     Returns the project directory.
@@ -241,6 +245,8 @@ def init_project(
     marker["pipeline_type"] = pipeline_type
     if style_playbook is not None:
         marker["style_playbook"] = style_playbook
+    if series is not None:
+        marker["series"] = series
 
     with open(marker_path, "w", encoding="utf-8") as f:
         json.dump(marker, f, indent=2)

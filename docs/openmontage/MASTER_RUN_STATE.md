@@ -203,3 +203,7 @@
 **Rollback:** `git revert` of the Z commits on branch `factory/business-documentary-pilot`.
 
 
+
+## Freeze: ветка origin/factory/business-documentary-pilot (архивная)
+**Зафиксировано:** 2026-11-06.
+**Решение:** ветка `origin/factory/business-documentary-pilot` заморожена как архивная. Пушей в неё не производить. Она не используется для дальнейшей разработки пилота; активная ветка — `kilo/mega-100`. Коммит ce92ccf (checkpoint Stage 0) сделан на `kilo/mega-100`.

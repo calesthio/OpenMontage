@@ -4,44 +4,6 @@
   // Active for code-editing tasks only; NOT for research/testing/model tasks.
   // Enable per-session with /ponytail full; default mode is off.
   "plugin": ["@dietrichgebert/ponytail"],
-  "autoApproval": {
-    "enabled": true,
-    "read": {
-      "enabled": true,
-      "outside": true
-    },
-    "write": {
-      "enabled": true,
-      "outside": true,
-      "protected": true
-    },
-    "execute": {
-      "enabled": true
-    },
-    "browser": {
-      "enabled": true
-    },
-    "mcp": {
-      "enabled": true
-    },
-    "mode": {
-      "enabled": true
-    },
-    "subtasks": {
-      "enabled": true
-    },
-    "question": {
-      "enabled": true,
-      "timeout": 60
-    },
-    "retry": {
-      "enabled": true,
-      "delay": 10
-    },
-    "todo": {
-      "enabled": true
-    }
-  },
   "permission": {
     "*": "ask",
     "read": "allow",

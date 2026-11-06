@@ -79,11 +79,13 @@ def generate_thumbnail(out_path, title: str, subtitle: str = "",
     }
 
 
-def build_metadata_block(title: str, description: str, tags: List[str],
-                         credits: Dict[str, str],
+def build_metadata_block(title: str, description: str, tags: List[str] | None = None,
+                         credits: Dict[str, str] | None = None,
                          ai_disclosure: bool = False,
                          category: str = "Education") -> Dict[str, Any]:
     """Build the titles/description/credits block for upload."""
+    tags = list(tags or [])
+    credits = dict(credits or {})
     return {
         "title": title[:100],
         "description": description,

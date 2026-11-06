@@ -1,0 +1,273 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/production_manifest",
+  "title": "Production Manifest",
+  "description": "Unified interchange format between preproduction, asset generation, audio sync, motion, and render stages. One manifest per project run; versioned for forward compatibility.",
+  "type": "object",
+  "required": ["version", "manifest_id", "run_id", "created_at", "project", "media_profile", "scenes", "audio_sync", "timeline", "status"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1.0",
+      "description": "Manifest schema version"
+    },
+    "manifest_id": {
+      "type": "string",
+      "description": "Unique identifier for this manifest instance"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Factory run identifier this manifest belongs to"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp of manifest creation"
+    },
+    "project": {
+      "type": "string",
+      "description": "Project slug / identifier"
+    },
+    "media_profile": {
+      "type": "string",
+      "description": "Target render profile name (e.g. youtube_landscape, youtube_shorts)"
+    },
+    "target_duration_seconds": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Target total video duration in seconds"
+    },
+    "scenes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["scene_id", "asset_id", "script_section_id", "prompt", "expected_format", "duration_seconds", "timeline_position", "camera_move", "transition", "file_status", "qc_result"],
+        "properties": {
+          "scene_id": {
+            "type": "string",
+            "description": "Unique scene identifier"
+          },
+          "asset_id": {
+            "type": "string",
+            "description": "Asset identifier linking to the generated/sourced media file"
+          },
+          "script_section_id": {
+            "type": "string",
+            "description": "Reference to the source script block this scene illustrates"
+          },
+          "prompt": {
+            "type": "string",
+            "description": "Generation prompt used to produce this scene's media"
+          },
+          "negative_prompt": {
+            "type": "string",
+            "description": "Negative prompt used during generation"
+          },
+          "references": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Reference image IDs or descriptions used for consistency"
+          },
+          "expected_format": {
+            "type": "string",
+            "description": "Expected image format (e.g. '1920x1080, ink illustration')"
+          },
+          "duration_seconds": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Planned on-screen duration for this scene"
+          },
+          "timeline_position": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Start time on the timeline in seconds"
+          },
+          "camera_move": {
+            "type": "string",
+            "description": "Camera motion type (e.g. 'zoom_in', 'pan_left', 'static', 'parallax')"
+          },
+          "pan_zoom_params": {
+            "type": ["object", "null"],
+            "description": "Parameters for pan/zoom motion (scale range, easing, direction)",
+            "properties": {
+              "start_scale": { "type": "number", "minimum": 0 },
+              "end_scale": { "type": "number", "minimum": 0 },
+              "easing": { "type": "string" },
+              "direction": { "type": "string" },
+              "pan_x": { "type": "number" },
+              "pan_y": { "type": "number" }
+            },
+            "additionalProperties": false
+          },
+          "parallax_layers": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5,
+            "description": "Number of parallax layers if parallax motion is used"
+          },
+          "transition": {
+            "type": "string",
+            "description": "Transition type entering this scene (e.g. 'cut', 'dissolve', 'fade', 'wipe')"
+          },
+          "transition_duration": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Transition duration in seconds"
+          },
+          "caption_space": {
+            "type": ["object", "null"],
+            "description": "Reserved space for editor-added captions/subtitles",
+            "properties": {
+              "reserved": { "type": "boolean" },
+              "region": {
+                "type": "object",
+                "properties": {
+                  "x": { "type": "number" },
+                  "y": { "type": "number" },
+                  "width": { "type": "number" },
+                  "height": { "type": "number" }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "file_status": {
+            "type": "string",
+            "enum": ["missing", "stub", "validated", "corrupted", "duplicate"],
+            "description": "Current state of the media file on disk"
+          },
+          "file_path": {
+            "type": ["string", "null"],
+            "description": "Resolved filesystem path to the media file (when validated)"
+          },
+          "file_sha256": {
+            "type": ["string", "null"],
+            "pattern": "^[a-f0-9]{64}$",
+            "description": "SHA-256 hash of the validated media file"
+          },
+          "file_resolution": {
+            "type": ["string", "null"],
+            "description": "Actual resolution of the media file (e.g. '1920x1080')"
+          },
+          "qc_result": {
+            "type": "string",
+            "enum": ["pass", "fail", "pending", "human_review"],
+            "description": "Quality control verdict for this scene"
+          },
+          "qc_notes": {
+            "type": "string",
+            "description": "QC reviewer notes"
+          },
+          "character_id": {
+            "type": ["string", "null"],
+            "description": "Character appearing in this scene (for consistency tracking)"
+          },
+          "hero_moment": {
+            "type": "boolean",
+            "description": "Whether this scene is a hero/payload moment"
+          },
+          "narrative_role": {
+            "type": "string",
+            "description": "Narrative role (e.g. 'establish_context', 'deliver_payload', 'resolution')"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Additional scene metadata"
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "audio_sync": {
+      "type": ["object", "null"],
+      "required": ["narration_manifest_id", "segments", "total_duration_seconds"],
+      "properties": {
+        "narration_manifest_id": {
+          "type": "string",
+          "description": "Reference to the narration manifest used for sync"
+        },
+        "total_duration_seconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Total measured audio duration"
+        },
+        "segments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["segment_id", "scene_id", "start_seconds", "end_seconds", "duration_seconds", "text"],
+            "properties": {
+              "segment_id": { "type": "string" },
+              "scene_id": { "type": "string" },
+              "text": { "type": "string" },
+              "start_seconds": { "type": "number", "minimum": 0 },
+              "end_seconds": { "type": "number", "minimum": 0 },
+              "duration_seconds": { "type": "number", "minimum": 0 },
+              "word_timestamps": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["word", "start_seconds", "end_seconds"],
+                  "properties": {
+                    "word": { "type": "string" },
+                    "start_seconds": { "type": "number", "minimum": 0 },
+                    "end_seconds": { "type": "number", "minimum": 0 }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "issue": {
+                "type": "string",
+                "enum": ["too_long", "too_short", "ok"],
+                "description": "Duration issue flag for this segment"
+              },
+              "issue_threshold_seconds": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Threshold used to flag too_long/too_short"
+              },
+              "metadata": { "type": "object" }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "timeline": {
+      "type": ["object", "null"],
+      "required": ["total_duration_seconds", "fps", "resolution"],
+      "properties": {
+        "total_duration_seconds": { "type": "number", "minimum": 0 },
+        "fps": { "type": "integer", "minimum": 1 },
+        "resolution": { "type": "string", "description": "Timeline resolution (e.g. '1920x1080')" },
+        "aspect_ratio": { "type": "string" },
+        "cuts_count": { "type": "integer", "minimum": 0 },
+        "metadata": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "validated", "ready_for_render", "rendering", "completed", "failed"],
+      "description": "Manifest lifecycle status"
+    },
+    "missing_assets": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of scene_ids whose media files are missing or corrupted"
+    },
+    "integrity_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 integrity hash of the manifest (computed over canonical JSON)"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional manifest-level metadata"
+    }
+  },
+  "additionalProperties": false
+}

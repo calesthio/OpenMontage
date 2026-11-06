@@ -410,6 +410,26 @@ projects/pilot/first_video/
 
 ---
 
+## 8.1 Интегрированный конвейер внешних инструментов
+
+Архитектура пилота (строго по порядку):
+
+Research → Script → Fact-checking → Storyboard → Nano Banana → Stickman Rig → Scientific Animation → Kokoro → Audio Sync → Motion Design → Remotion → FFmpeg → Final QC.
+
+Подключённые инструменты (лицензии MIT/Apache 2.0, коммерческое использование разрешено):
+
+- `youtube_competitor_research` (yt-dlp + youtube-transcript-api) — исследование конкурентов, хуков и структуры успешных видео перед сценарием.
+- `transcript_fetcher` (youtube-transcript-api) — анализ публичных субтитров.
+- `video_downloader` (yt-dlp) — скачивание референсов/аудио (только легально доступные).
+- `diagram_gen` / `math_animate` (ManimCE, опционально) — научные диаграммы и математическая анимация.
+- `kokoro_tts` / `piper_tts` — озвучка.
+- `visual_qa`, `frame_sampler`, `scene_detect` — проверка кадров.
+- Remotion + FFmpeg — единственный рендер-стек (второй рендерер не создаём).
+
+Не подключать платные API. Zero-Cost Gate, `--no-spend` и MCP Security Proxy остаются включёнными.
+
+Полный аудит внешних репозиториев и решений: `docs/EXTERNAL_TOOLING_INTEGRATION.md`.
+
 ## 9. Критерии приёмки — что значит «готово»
 
 Пилот считается завершённым только если все обязательные пункты ниже выполнены:

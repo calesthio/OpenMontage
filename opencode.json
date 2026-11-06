@@ -1,13 +1,3 @@
 {
-  "$schema": "https://app.kilo.ai/config.json",
-  "mcp": {
-    "servers": {
-      "niche-finder": {
-        "type": "local",
-        "command": [
-          "/workspaces/OpenMontage/youtube-niche-finder/scripts/mcp-host.sh"
-        ]
-      }
-    }
-  }
+  "$schema": "https://app.kilo.ai/config.json"
 }

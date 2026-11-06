@@ -611,3 +611,14 @@
 - **Rollback:** `git revert` of the F5 commit on branch `factory/business-documentary-pilot`.
 - **Next smallest step:** owner reviews F5 QC result, OWNER_ACTIONS.md, FOOTAGE_QUALITY.md (email + AI-upscale decision); then proceed to next milestone per plan.
 
+
+---
+
+### 2026-11-04 — External tooling integration (Beam 1.0)
+
+- **Goal:** изучить 8 внешних репозиториев, выбрать полезные возможности, интегрировать в фабрику, обновить FIRST_VIDEO_MASTER_PLAN.md и создать EXTERNAL_TOOLING_INTEGRATION.md, провести тесты, обновить roadmap.
+- **Installed (free):** `youtube-transcript-api`, `yt-dlp` → `transcript_fetcher`, `video_downloader` AVAILABLE.
+- **Added:** `tools/analysis/youtube_competitor_research.py` + `tests/tools/test_youtube_competitor_research.py`; skill `.kilo/skills/youtube-competitor-research/SKILL.md`; skill `.kilo/skills/beam-production-orchestrator/SKILL.md`.
+- **Docs:** `docs/EXTERNAL_TOOLING_INTEGRATION.md`, updated `FIRST_VIDEO_MASTER_PLAN.md` (раздел 8.1), `docs/FACTORY_IMPLEMENTATION_ROADMAP.md` (Phase 7).
+- **Tests:** `tests/tools/test_youtube_competitor_research.py` — 4 passed.
+- **Remaining:** Manim+texlive не установлены; ytstudio-cli интеграция требует OAuth/согласования; Remotion node_modules пуст.

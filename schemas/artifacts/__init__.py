@@ -39,6 +39,7 @@ ARTIFACT_NAMES = [
     "alignment_report",
     "qa_report",
     "publish_package",
+    "production_manifest",
 ]
 
 

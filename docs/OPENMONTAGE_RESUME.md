@@ -263,3 +263,12 @@ python -m pytest tests/factory -q                          # 150 passed
   and `piper-tts` (free), voice-model download (free), local diagram render and local
   narration synthesis (local CPU, free). **No paid API call, no video generation, no upload,
   no YouTube publish.**
+
+---
+
+## 2026-11-04 — External tooling integration
+
+- Installed `youtube-transcript-api`, `yt-dlp` (free) → `transcript_fetcher`, `video_downloader` AVAILABLE.
+- Added `youtube_competitor_research` tool + tests + skill.
+- Created `docs/EXTERNAL_TOOLING_INTEGRATION.md`; updated `FIRST_VIDEO_MASTER_PLAN.md` and roadmap.
+- Beam orchestrator skill added for automatic tool selection.

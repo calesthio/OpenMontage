@@ -39,6 +39,22 @@ OWN_GRAPHICS = {
 }
 
 
+def _graphics_record(asset_id: str, access_date: str) -> Dict[str, Any]:
+    """Own-work graphics card record (QC-exempt from sha256/source_url)."""
+    return {
+        "asset_id": asset_id,
+        "kind": "graphics",
+        "rights_basis": OWN_GRAPHICS["rights_basis"],
+        "center": OWN_GRAPHICS["center"],
+        "credit": OWN_GRAPHICS["center"],
+        "license": OWN_GRAPHICS["license"],
+        "license_url": OWN_GRAPHICS["license_url"],
+        "flags": {},
+        "usable": True,
+        "access_date": access_date,
+    }
+
+
 def _sha256(path: str | Path) -> str:
     p = Path(path)
     if not p.is_file():
@@ -94,18 +110,7 @@ def build_rights_records(
                 "access_date": access_date,
             })
         elif kind == "graphics":
-            records.append({
-                "asset_id": cut["asset_id"],
-                "kind": "graphics",
-                "rights_basis": OWN_GRAPHICS["rights_basis"],
-                "center": OWN_GRAPHICS["center"],
-                "credit": OWN_GRAPHICS["center"],
-                "license": OWN_GRAPHICS["license"],
-                "license_url": OWN_GRAPHICS["license_url"],
-                "flags": {},
-                "usable": True,
-                "access_date": access_date,
-            })
+            records.append(_graphics_record(cut["asset_id"], access_date))
         else:
             raise ValueError(f"unresolved cut kind {kind!r} for {cut.get('asset_id')}")
     return records

@@ -47,13 +47,18 @@ python -m backlot open backlot-demo-run
 
 Several projects can be episodes of one show. Add an optional `series` label
 to each episode's `project.json` (or pass `series=` to
-`lib.checkpoint.init_project`) and the library groups them into one
-collapsible section. Folders stay flat in `projects/`; nothing moves.
+`lib.checkpoint.init_project`). Folders stay flat in `projects/`; nothing moves.
 
 ```json
 { "title": "Episode 3: The Heist", "pipeline_type": "animation", "series": "my-show" }
 ```
 
-Projects without `series` show as loose cards, exactly as before.
+- The library shows one card per series next to the loose projects.
+- `/?series=my-show` opens the series: the usual project grid, filtered, with
+  links back to the library and to the series list (`/?view=series`).
+- An episode's board links back to its series.
+
+Projects without `series` (including older projects with no `project.json`)
+show as loose cards, exactly as before.
 
 Design doc: `internal/design/LIVING_STORYBOARD.md`.

@@ -1,5 +1,7 @@
 [English](README.md) | [Português (Brasil)](README_pt-BR.md) | **Español** | [简体中文](README_zh-CN.md)
 
+> Traducción del [README en inglés](README.md), que es la fuente de verdad. Si ambos difieren, manda el inglés.
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/monty-dark.svg">

@@ -145,7 +145,7 @@ class RemotionCaptionBurn(BaseTool):
     }
 
     resource_profile = ResourceProfile(cpu_cores=4, ram_mb=2048, vram_mb=0, disk_mb=500)
-    idempotency_key_fields = ["input_path", "segments", "srt_path"]
+    idempotency_key_fields = ["input_path", "segments", "srt_path", "caption_props"]
     side_effects = ["writes captioned video to output_path"]
     user_visible_verification = [
         "Play the output video and verify captions appear at the bottom of the frame",

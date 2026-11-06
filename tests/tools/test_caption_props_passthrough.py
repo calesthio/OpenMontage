@@ -60,6 +60,11 @@ def test_burn_schema_declares_caption_props():
     assert p["caption_props"]["type"] == "object"
 
 
+def test_burn_cache_key_includes_caption_props():
+    """A style change must not return a cached video rendered with the old style."""
+    assert "caption_props" in RemotionCaptionBurn.idempotency_key_fields
+
+
 def test_burn_execute_forwards_caption_props(tmp_path, monkeypatch):
     video = tmp_path / "in.mp4"
     video.write_bytes(b"v")

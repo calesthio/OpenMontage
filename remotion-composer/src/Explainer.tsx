@@ -238,6 +238,7 @@ interface Cut {
   color?: string;
   accentColor?: string;
   fontSize?: number;
+  titleFontSize?: number;
   // Animation & transitions
   animation?: string;
   transition_in?: string;
@@ -604,6 +605,7 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
         text={cut.text} type={cut.callout_type} title={cut.title}
         borderColor={accent} backgroundColor={cut.backgroundColor || theme.surfaceColor}
         textColor={textColor} containerBackgroundColor={bgColor}
+        fontSize={cut.fontSize} titleFontSize={cut.titleFontSize}
       />
     );
   }

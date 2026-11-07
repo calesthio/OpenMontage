@@ -528,7 +528,6 @@ def write_checkpoint(
     # append them to the project-level decision log file, then write the
     # reference back into relevant artifacts so downstream consumers can find it.
     if "decision_log" in artifacts and isinstance(artifacts["decision_log"], dict):
-        _merge_decision_log(pipeline_dir, project_id, artifacts["decision_log"])
         log_ref = str(_decision_log_path(pipeline_dir, project_id))
 
         # Write decision_log_ref into proposal_packet and render_report
@@ -545,6 +544,10 @@ def write_checkpoint(
                     plan_or_top["decision_log_ref"] = log_ref
 
     validate_checkpoint(checkpoint)
+
+    # Reject invalid stage/artifact payloads before persisting their decisions.
+    if "decision_log" in artifacts and isinstance(artifacts["decision_log"], dict):
+        _merge_decision_log(pipeline_dir, project_id, artifacts["decision_log"])
 
     path = _checkpoint_path(pipeline_dir, project_id, stage)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -605,14 +608,18 @@ def get_completed_stages(
     """Return list of stages that have a completed checkpoint.
 
     When pipeline_type is provided, only checks stages defined in that
-    pipeline's manifest — preventing false positives from leftover
-    checkpoints of a different pipeline type.
+    pipeline's manifest and requires their recorded pipeline_type to match —
+    preventing false positives from a previous pipeline's shared stages.
     """
     stages_to_check = get_pipeline_stages(pipeline_type)
     completed = []
     for stage in stages_to_check:
         cp = read_checkpoint(pipeline_dir, project_id, stage)
-        if cp and cp.get("status") == "completed":
+        if (
+            cp
+            and cp.get("status") == "completed"
+            and (pipeline_type is None or cp.get("pipeline_type") == pipeline_type)
+        ):
             completed.append(stage)
     return completed
 

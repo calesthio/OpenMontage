@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import base64
+import json
 import os
+import re
 import time
 from pathlib import Path
 from typing import Any
@@ -142,6 +145,16 @@ class ElevenLabsTTS(BaseTool):
                 "default": "mp3_44100_128",
                 "enum": ["mp3_44100_128", "mp3_44100_192", "pcm_16000", "pcm_24000"],
             },
+            "with_timestamps": {
+                "type": "boolean",
+                "default": False,
+                "description": (
+                    "Use the /with-timestamps endpoint and return word-level timings "
+                    "(data.word_timestamps) plus the raw character alignment, saved next to "
+                    "the audio as <output>.alignment.json. Use for caption sync and "
+                    "word-cued animation without a separate transcription pass."
+                ),
+            },
         },
     }
 
@@ -166,6 +179,7 @@ class ElevenLabsTTS(BaseTool):
         "previous_request_ids",
         "next_request_ids",
         "output_format",
+        "with_timestamps",
     ]
     side_effects = ["writes audio file to output_path", "calls ElevenLabs API"]
     user_visible_verification = ["Listen to generated audio for natural speech quality"]
@@ -246,18 +260,30 @@ class ElevenLabsTTS(BaseTool):
         ):
             if field in inputs:
                 payload[field] = inputs[field]
+        with_timestamps = bool(inputs.get("with_timestamps", False))
+        endpoint = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+        if with_timestamps:
+            endpoint += "/with-timestamps"
         response = requests.post(
-            f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
+            endpoint,
             headers={
                 "xi-api-key": api_key,
                 "Content-Type": "application/json",
-                "Accept": "audio/mpeg",
+                "Accept": "application/json" if with_timestamps else "audio/mpeg",
             },
             json=payload,
             params={"output_format": output_format},
             timeout=120,
         )
         response.raise_for_status()
+
+        alignment = None
+        if with_timestamps:
+            body = response.json()
+            audio_bytes = base64.b64decode(body["audio_base64"])
+            alignment = body.get("alignment") or body.get("normalized_alignment")
+        else:
+            audio_bytes = response.content
 
         ext = "mp3" if "mp3" in output_format else "wav"
         output_path = Path(inputs.get("output_path", f"tts_output.{ext}"))
@@ -269,9 +295,29 @@ class ElevenLabsTTS(BaseTool):
                 wav.setnchannels(1)
                 wav.setsampwidth(2)
                 wav.setframerate(int(output_format.split("_")[1]))
-                wav.writeframes(response.content)
+                wav.writeframes(audio_bytes)
         else:
-            output_path.write_bytes(response.content)
+            output_path.write_bytes(audio_bytes)
+
+        artifacts = [str(output_path)]
+        extra: dict[str, Any] = {}
+        if with_timestamps:
+            if not alignment:
+                raise ValueError("ElevenLabs returned no alignment for a with-timestamps request")
+            words = self.words_from_alignment(alignment)
+            alignment_path = output_path.with_name(output_path.name + ".alignment.json")
+            alignment_path.write_text(
+                json.dumps({"text": text, "alignment": alignment, "words": words}, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            artifacts.append(str(alignment_path))
+            extra = {
+                "word_timestamps": words,
+                "alignment_path": str(alignment_path),
+                # False when the service normalised the text (numbers, symbols); timings
+                # then refer to the spoken form returned in the alignment.
+                "alignment_matches_text": "".join(alignment["characters"]) == text,
+            }
 
         return ToolResult(
             success=True,
@@ -284,7 +330,31 @@ class ElevenLabsTTS(BaseTool):
                 "output": str(output_path),
                 "format": output_format,
                 "request_id": response.headers.get("request-id"),
+                **extra,
             },
-            artifacts=[str(output_path)],
+            artifacts=artifacts,
             model=model_id,
         )
+
+    @staticmethod
+    def words_from_alignment(alignment: dict[str, Any]) -> list[dict[str, Any]]:
+        """Group ElevenLabs character timings into whitespace-delimited words.
+
+        Each word gets the start of its first character and the end of its last one,
+        in seconds from the start of the returned audio.
+        """
+        pieces = alignment["characters"]
+        starts = alignment["character_start_times_seconds"]
+        ends = alignment["character_end_times_seconds"]
+        text, owner = "", []  # owner[k] = alignment entry that produced text[k]
+        for i, piece in enumerate(pieces):
+            text += piece
+            owner.extend([i] * len(piece))
+        return [
+            {
+                "word": m.group(),
+                "start": round(starts[owner[m.start()]], 3),
+                "end": round(ends[owner[m.end() - 1]], 3),
+            }
+            for m in re.finditer(r"\S+", text)
+        ]

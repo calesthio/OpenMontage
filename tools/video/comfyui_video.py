@@ -612,7 +612,19 @@ class ComfyUIVideo(BaseTool):
             workflow,
             {
                 "2": {"text": inputs["prompt"]},
-                "11": {"width": width, "height": height, "batch_size": num_frames},
+                # `length` is the frame count, `batch_size` is how many separate
+                # clips to make. Node 11 used to be an EmptyLatentImage with
+                # batch_size=num_frames, which asks for 81 unrelated images
+                # rather than one 81-frame video: the mp4 has the right frame
+                # count and duration and passes ffprobe, but strobes. WAN 2.2
+                # needs a temporal video latent, as ComfyUI's own
+                # video_wan2_2_14B_t2v template uses.
+                "11": {
+                    "width": width,
+                    "height": height,
+                    "length": num_frames,
+                    "batch_size": 1,
+                },
                 "12": {"noise_seed": seed},
                 "16": {"filename_prefix": output_path.stem},
             },

@@ -150,7 +150,10 @@ _SYNONYM_CLUSTERS: list[set[str]] = [
     {"music", "soundtrack", "background-music", "score", "ambient"},
 ]
 
-_TOKEN_RE = re.compile(r"[a-z0-9](?:[a-z0-9+._-]*[a-z0-9])?")
+# Letters/digits of any script (e.g. Hebrew prompts), not just ASCII.
+_TOKEN_RE = re.compile(r"[^\W_](?:[\w+.-]*[^\W_])?")
+# Hebrew niqqud/cantillation marks; stripped so pointed and unpointed words match.
+_HEBREW_MARKS_RE = re.compile(r"[\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7]")
 _GENERATED_VISUAL_TERMS = {
     "animated",
     "animation",
@@ -194,7 +197,7 @@ _IMAGE_EDIT_TERMS = {
 
 
 def _tokenize_text(value: str) -> list[str]:
-    return _TOKEN_RE.findall((value or "").lower())
+    return _TOKEN_RE.findall(_HEBREW_MARKS_RE.sub("", value or "").lower())
 
 
 def _expand_synonyms(words: set[str]) -> set[str]:

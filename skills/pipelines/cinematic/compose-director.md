@@ -16,6 +16,24 @@ For a Blender world film, FFmpeg is the approved packager for the numbered
 Blender image sequence and audio. It must not synthesize camera motion or replace
 missing Blender frames with pan/zoom effects.
 
+### Fast Full-Song Beat Montage (BMTS-Lite)
+
+When the approved brief calls for a quick montage from one supplied music track
+and already-selected video clips—with no reference matching, narration, titles,
+or semantic clip selection—use `bgm_montage_lite` as the complete render path.
+Pass the source audio, all intended source clips, the project directory, and the
+requested aspect ratio (`auto` by default). The tool returns the MP4, timeline,
+audiomap, and an OpenMontage render report after stream, dimension, duration,
+and full-decode checks.
+
+This is distinct from the professional reference-guided BGM Montage integration:
+Lite does not need a reference video or API key and intentionally retains BMTS-Lite
+source reuse and automatic framing. Do not add semantic selection, strict reuse
+limits, Agent visual-review dependencies, or a second rendering engine to this
+route. Use the existing composition runtimes for authored scenes and mixed-media
+work; the professional BGM Montage route remains the choice for reference-style
+matching and its stricter quality gates.
+
 `delivery_promise.motion_required=true` means the locked runtime is a commitment. Silent swap to another runtime (including FFmpeg Ken Burns) is a CRITICAL governance violation. If the locked runtime fails, escalate per AGENT_GUIDE.md > "Escalate Blockers Explicitly."
 
 **Pass `proposal_packet` to `video_compose.execute()`** so the tool's `runtime_swap_detected` check compares directly against `proposal_packet.production_plan.render_runtime`. Without it the swap check is skipped in-tool and only the reviewer skill catches the drift.

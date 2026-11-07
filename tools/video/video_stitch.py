@@ -9,6 +9,8 @@ picture-in-picture) for duet-style content.
 from __future__ import annotations
 
 import json
+import shutil
+import tempfile
 import time
 from pathlib import Path
 from typing import Any, Optional
@@ -524,8 +526,7 @@ class VideoStitch(BaseTool):
                 ),
             )
 
-        temp_dir = output_path.parent / ".stitch_tmp"
-        temp_dir.mkdir(parents=True, exist_ok=True)
+        temp_dir = Path(tempfile.mkdtemp(prefix=".stitch_tmp-", dir=output_path.parent))
         temp_files: list[Path] = []
 
         try:
@@ -803,8 +804,7 @@ class VideoStitch(BaseTool):
             if not Path(clip).exists():
                 return ToolResult(success=False, error=f"Clip not found: {clip}")
 
-        temp_dir = output_path.parent / ".spatial_tmp"
-        temp_dir.mkdir(parents=True, exist_ok=True)
+        temp_dir = Path(tempfile.mkdtemp(prefix=".spatial_tmp-", dir=output_path.parent))
         temp_files: list[Path] = []
 
         try:
@@ -948,15 +948,5 @@ class VideoStitch(BaseTool):
 
     @staticmethod
     def _cleanup_temp(temp_dir: Path, temp_files: list[Path]) -> None:
-        """Remove temporary files and directory."""
-        for f in temp_files:
-            if f.exists():
-                try:
-                    f.unlink()
-                except OSError:
-                    pass
-        if temp_dir.exists():
-            try:
-                temp_dir.rmdir()
-            except OSError:
-                pass
+        """Remove this job's workspace, including any partially written files."""
+        shutil.rmtree(temp_dir, ignore_errors=True)

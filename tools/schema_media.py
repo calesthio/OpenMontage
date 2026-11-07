@@ -134,11 +134,13 @@ class SchemaMedia(BaseTool):
     def build_request(self, inputs):
         model = inputs.get("model", next(iter(self.models)))
         routes = self.models.get(model, {})
-        references = bool(
-            inputs.get("image_url")
-            or inputs.get("image_path")
-            or inputs.get("image_urls")
-            or inputs.get("image_paths")
+        native_reference_fields = ("images", "image_input", "image", "image_uri")
+        references = any(
+            inputs.get(field)
+            for field in (
+                "image_url", "image_path", "image_urls", "image_paths",
+                *native_reference_fields,
+            )
         )
         operation = (
             inputs.get("generation_mode")
@@ -158,6 +160,9 @@ class SchemaMedia(BaseTool):
             raise ValueError(f"Unsupported model/operation: {model}/{operation}")
         schema = self.contracts[endpoint]["input_schema"]
         props = schema["properties"]
+        for field in native_reference_fields:
+            if inputs.get(field) and field not in props:
+                raise ValueError(f"{endpoint} does not accept {field}")
         payload = {k: v for k, v in inputs.items() if k in props and k != "model"}
         payload.update(inputs.get("provider_params") or {})
         if self.provider == "atlascloud":

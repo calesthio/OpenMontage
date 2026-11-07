@@ -9,15 +9,12 @@ import {
   useVideoConfig,
 } from "remotion";
 import { getVideoMetadata } from "@remotion/media-utils";
-import { loadFont } from "@remotion/google-fonts/PlayfairDisplay";
+import { loadPlayfair } from "./lib/localFonts";
 import { resolveAsset } from "./lib/resolveAsset";
 
 // Editorial serif for the tagline — Playfair Display at its boldest weight.
 // Loaded once at module scope so every render reuses the same font face.
-const { fontFamily } = loadFont("normal", {
-  weights: ["400", "700", "900"],
-  subsets: ["latin"],
-});
+const { fontFamily } = loadPlayfair("normal", ["400", "700", "900"]);
 
 export type TitledVideoProps = {
   videoSrc: string;

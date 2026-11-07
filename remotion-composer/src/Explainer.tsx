@@ -204,6 +204,11 @@ interface Cut {
   leftLabel?: string;
   rightLabel?: string;
   leftValue?: string;
+  leftColor?: string;
+  rightColor?: string;
+  titleFontSize?: number;
+  labelFontSize?: number;
+  valueFontSize?: number;
   rightValue?: string;
   // Chart props
   chartData?: any[];
@@ -614,6 +619,12 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
         leftValue={cut.leftValue} rightValue={cut.rightValue}
         title={cut.title} backgroundColor={bgColor} textColor={textColor}
         cardBackgroundColor={cut.cardBackgroundColor || theme.surfaceColor}
+        leftColor={cut.leftColor || theme.chartColors?.[0]}
+        rightColor={cut.rightColor || theme.chartColors?.[1]}
+        fontFamily={theme.bodyFont || fontFamily}
+        titleFontSize={cut.titleFontSize}
+        labelFontSize={cut.labelFontSize}
+        valueFontSize={cut.valueFontSize}
       />
     );
   }
@@ -878,6 +889,7 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
           color={theme.textColor}
           highlightColor={theme.captionHighlightColor}
           backgroundColor={theme.captionBackgroundColor}
+          fontFamily={theme.bodyFont || fontFamily}
         />
       )}
 

@@ -9,46 +9,53 @@ resume.
 
 ## Section 0 — Resumption check (run first, every session)
 
-- `git log --oneline -20` read: HEAD = `e794fdf v7: section 0 resumption checkpoint`
-- `docs/BUILD_LOG_V7.md` existed => resume point: Section 0 complete, at
-  start of Stage A.
+- `git log --oneline -20` read; `docs/BUILD_LOG_V7.md` exists => resume from
+  recorded point.
 - Hard rules (V7 §1): $0 budget, no YouTube publish, no asset mislabeling
   (source: existing | newly_generated), evidence in JSON/sha256, concept
   (Европа/Энцелад) untouched, git safe (no force-push).
 
 STATUS: Section 0 complete.
 
-## Stage A — Consolidation + baseline (V7 §5)
+## Stage A — Consolidation + baseline (V7 §5) — DONE
 
-- A1 release_checklist.py + qc/baseline_v7.json — DONE (commit cd53a9d)
-  - scripts/release_checklist.py: zero-cost QC, metrics
-    max_static_segment_sec / avg_visual_change_interval_sec (§4.1),
-    explicit success/fallback_used/failed per check.
-  - qc/baseline_v7.json: final.mp4
-    max_static_segment_sec=0.0 (<=15 ✓), avg_visual_change_interval_sec=3.902
-    (<=15 ✓), duration=169.466s, overall_passed=true.
-- A2 review_package/ — DONE earlier (autonomous task, commit 393d5a2):
-  frames/ (fps=1/10), script_with_timestamps.md, final_qc_report.json,
-  metadata.json.
-- A3 .gitignore/secrets — DONE earlier: no .env in tree,
-  .env.example = empty placeholders, no sk-/AIza/ya29/gflow-token values in
-  git history.
+- A1 release_checklist.py + qc/baseline_v7.json (commit cd53a9d): metrics
+  max_static_segment_sec=0.0 (<=15 ✓), avg_visual_change_interval_sec=3.902
+  (<=15 ✓), duration=169.466s, overall_passed=true.
+- A2 review_package/ — DONE earlier (commit 393d5a2).
+- A3 .gitignore/secrets — DONE earlier: no secrets committed.
 
-STATUS: Stage A complete.
+## Stage B — Apply numerical criteria to current video (V7 §5) — DONE
 
-## Stage B — Apply numerical criteria to current video (V7 §5)
+- B1 max_static_segment_sec=0.0 → not >15, no motion rework / no
+  final_v7.mp4 rebuild.
+- B2 hook-delivery cycle (§4.2) — script_analyzer: hook = first sentence
+  (question), honest framing, no repetition flags, conclusion at end → PASS.
+- B3 AI-plaque placement (§4.3) — QC `ai_disclosure_corner_splash: PASS`,
+  corner splash not in opening frame → PASS.
+- B4 baseline compare — no rebuild, new == baseline, not worse → PASS.
 
-- B1 max_static_segment_sec > 15? measured 0.0 → NOT triggered, no
-  motion_director rework / no final_v7.mp4 rebuild needed.
-- B2 hook-delivery cycle (§4.2) — script_analyzer on narration:
-  hook = first sentence (question "could life exist in an ocean that has
-  never seen the sky?"), honest framing ("Some of what follows is measured,
-  and some of it is invented, and we will mark the difference every time"),
-  no repetition flags, conclusion at end. → PASS, no change needed.
-- B3 AI-plaque placement (§4.3) — existing QC
-  `ai_disclosure_corner_splash: PASS`; corner splash during AI shots, hook
-  opens video at 0:00 (plaque not in first frame). → PASS.
-- B4 compare baseline vs new — no rebuild performed, so new version ==
-  baseline; all metrics <= thresholds, not worse. → PASS.
+## Stage C — Reusable architecture (V7 §5, §3) — DONE (commit b7c03ec)
 
-STATUS: Stage B complete. Proceeding to Stage C.
+Five layers now present:
+- L1 RESEARCH/SCRIPT: lib/script_analyzer.py (existing)
+- L2 VOICE: lib/tts_engine.py (Kokoro+Piper), lib/audio_mixer.py (-16 LUFS)
+- L3 VISUALS: lib/footage_sourcing.py, lib/color_match.py, lib/scene_router.py (new)
+- L4 ASSEMBLY: lib/final_qc.py, lib/motion_director.py (new, <=15s rule)
+- L5 PUBLISH-PREP: scripts/release_checklist.py, lib/release_gate.py
+- budget_guard.py (new): single $0 budget check point, all layers route
+  through it; every public function returns explicit status
+  (success/fallback_used/failed).
+
+## Stage D — Second episode, scenario only, no assets (V7 §5) — DONE
+
+- scripts/new_episode_scaffold.py slugify fixed to transliterate Cyrillic.
+- projects/pilot/ekzoplanety-poisk-vtoryh-zemel/ scaffolded:
+  images/, audio/, qc/, manifests/, script/, footage/, prompts/.
+- script/scenario.md: 15 Russian sentences, hook-delivery cycle
+  (question hook → promise → reveal part 1 → mini-hook → reveal part 2 →
+  conclusion), honest measured-vs-hypothetical framing, no over-promise,
+  no image/sound generated. Verified with script_analyzer (14 blocks, no
+  repetition flags).
+
+STATUS: Stages A–D complete. Proceeding to Stage E (publish package).

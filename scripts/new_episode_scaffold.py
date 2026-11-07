@@ -19,8 +19,24 @@ PILOT_TEMPLATE = PROJECTS_DIR / "pilot" / "first_video"
 EMPTY_DIRS = ("images", "audio", "qc", "manifests", "script", "footage", "prompts")
 
 
+_CYRILLIC_TO_LATIN = {
+    "а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "е": "e", "ё": "e",
+    "ж": "zh", "з": "z", "и": "i", "й": "y", "к": "k", "л": "l", "м": "m",
+    "н": "n", "о": "o", "п": "p", "р": "r", "с": "s", "т": "t", "у": "u",
+    "ф": "f", "х": "h", "ц": "ts", "ч": "ch", "ш": "sh", "щ": "sch",
+    "ъ": "", "ы": "y", "ь": "", "э": "e", "ю": "yu", "я": "ya",
+}
+
+
+def _transliterate(text: str) -> str:
+    out = []
+    for ch in text.lower():
+        out.append(_CYRILLIC_TO_LATIN.get(ch, ch))
+    return "".join(out)
+
+
 def slugify(topic: str) -> str:
-    slug = re.sub(r"[^a-z0-9]+", "-", topic.lower()).strip("-")
+    slug = re.sub(r"[^a-z0-9]+", "-", _transliterate(topic)).strip("-")
     return slug or "episode"
 
 

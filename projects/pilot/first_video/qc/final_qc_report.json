@@ -23,8 +23,10 @@
     "scene_aware_color_grade": "PASS (lib/color_match.py)",
     "differentiated_per_scene_motion": "PASS"
   },
+  "git": "merged origin/kilo/mega-100 (commits a1f2383, 6dc7563); disk cleaned (final_v2/v3/v5, preview, technical_validation, remotion node_modules, slice renders removed)",
   "pending_owner": [
-    "background music + SFX (YouTube Audio Library / Pixabay Music) — no project assets, can't download without API keys/credits",
+    "background music + SFX (YouTube Audio Library / Pixabay Music) — pending your manual files in assets/music/",
+    "title/description selection — waiting for your choice of title variant",
     "final publish/upload — owner approval required"
   ]
 }

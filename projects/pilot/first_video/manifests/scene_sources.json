@@ -1,0 +1,248 @@
+[
+  {
+    "scene_id": "S001",
+    "sentence_id": "S001",
+    "narration": "Start with a simple question: could life exist in an ocean that has never seen the sky?",
+    "source_type": "ai_generated"
+  },
+  {
+    "scene_id": "S002",
+    "sentence_id": "S002",
+    "narration": "On Jupiter's moon Europa, a global saltwater ocean lies hidden beneath a completely frozen crust.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S003",
+    "sentence_id": "S003",
+    "narration": "That crust is tens of miles thick, and the ocean surface beneath it is frozen solid.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S004",
+    "sentence_id": "S004",
+    "narration": "Yet the ocean underneath holds more than twice as much water as all of Earth's oceans combined.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S005",
+    "sentence_id": "S005",
+    "narration": "It stays liquid not because of sunlight, but because Jupiter's gravity flexes the moon and heats it from within.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S006",
+    "sentence_id": "S006",
+    "narration": "Sunlight never reaches that water, so nothing down there has ever seen a sunrise.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S007",
+    "sentence_id": "S007",
+    "narration": "So the question becomes sharper: what could live in a dark ocean sealed under ice?",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S008",
+    "sentence_id": "S008",
+    "narration": "Europa is not even the only one: Saturn's moon Enceladus hides a global salty ocean beneath its icy crust.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S009",
+    "sentence_id": "S009",
+    "narration": "Enceladus even sprays that ocean into space through cracks near its south pole.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S010",
+    "sentence_id": "S010",
+    "narration": "On Earth, we already know what life can do without sunlight, because the deep sea has an answer.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S011",
+    "sentence_id": "S011",
+    "narration": "This episode follows that answer outward, from a vent on our own sea floor to an ocean we have never touched.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S012",
+    "sentence_id": "S012",
+    "narration": "Some of what follows is measured, and some of it is invented, and we will mark the difference every time.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S013",
+    "sentence_id": "S013",
+    "narration": "By the end, you can decide which parts you believe.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S014",
+    "sentence_id": "S014",
+    "narration": "Two of the least remarkable-looking moons in the solar system may be the most interesting.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S015",
+    "sentence_id": "S015",
+    "narration": "Begin with the shape of the world: an ocean with no shore you could walk out onto, capped by ice.",
+    "source_type": "ai_generated"
+  },
+  {
+    "scene_id": "S016",
+    "sentence_id": "S016",
+    "narration": "Europa's ocean is global, which means it wraps the entire moon.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S017",
+    "sentence_id": "S017",
+    "narration": "There is no beach here, no coastline, no place where water meets air.",
+    "source_type": "ai_generated"
+  },
+  {
+    "scene_id": "S018",
+    "sentence_id": "S018",
+    "narration": "Above the water sits a crust of ice tens of miles thick.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S019",
+    "sentence_id": "S019",
+    "narration": "That ice stays frozen where it meets the water, so the boundary is a lid, not a shoreline.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S020",
+    "sentence_id": "S020",
+    "narration": "The water below is the striking part: more than twice the volume of every ocean on Earth.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S021",
+    "sentence_id": "S021",
+    "narration": "Twice over, in a single moon.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S022",
+    "sentence_id": "S022",
+    "narration": "Volume is not the same as habitability, but it does buy room.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S023",
+    "sentence_id": "S023",
+    "narration": "Room for chemistry, room for gradients, room for time.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S024",
+    "sentence_id": "S024",
+    "narration": "The heat that keeps it liquid comes from Jupiter, which pulls on Europa as the moon orbits.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S025",
+    "sentence_id": "S025",
+    "narration": "That flexing bends the moon, and the bending becomes heat.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S026",
+    "sentence_id": "S026",
+    "narration": "Tidal heating is why the ocean is not a block of ice all the way through.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S027",
+    "sentence_id": "S027",
+    "narration": "It also drives chemistry between the ocean and the rocky floor beneath it.",
+    "source_type": "ai_generated"
+  },
+  {
+    "scene_id": "S028",
+    "sentence_id": "S028",
+    "narration": "Enceladus, at Saturn, is smaller but follows the same logic.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S029",
+    "sentence_id": "S029",
+    "narration": "It too carries a global salty ocean under an icy crust.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S030",
+    "sentence_id": "S030",
+    "narration": "Two moons, two oceans, both sealed away from the sky.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S031",
+    "sentence_id": "S031",
+    "narration": "If you wanted to design a place where life could hide, you would struggle to do better.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S032",
+    "sentence_id": "S032",
+    "narration": "But hiding is not the same as living, and for that a world needs an energy source.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S033",
+    "sentence_id": "S033",
+    "narration": "So the next thing to measure is not the size of the ocean, but what powers it.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S034",
+    "sentence_id": "S034",
+    "narration": "Keep the image in your head: an ocean with no shores, roofed by ice, warmed from below.",
+    "source_type": "ai_generated"
+  },
+  {
+    "scene_id": "S035",
+    "sentence_id": "S035",
+    "narration": "An ocean with more water than ours, and no way for the sun to reach it.",
+    "source_type": "ai_generated"
+  },
+  {
+    "scene_id": "S036",
+    "sentence_id": "S036",
+    "narration": "Nothing about that lid is thin enough to see through.",
+    "source_type": "ai_generated"
+  },
+  {
+    "scene_id": "S037",
+    "sentence_id": "S037",
+    "narration": "If you poured Earth's oceans into it, you would still have room for another Earth's worth.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S038",
+    "sentence_id": "S038",
+    "narration": "The moon is not a dead ball of ice, it is being worked on from the outside, every orbit.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S039",
+    "sentence_id": "S039",
+    "narration": "That is the first surprise of this world: the heat comes from a neighbour, not from the star.",
+    "source_type": "archival"
+  },
+  {
+    "scene_id": "S040",
+    "sentence_id": "S040",
+    "narration": "Enceladus is smaller, but the same three layers appear: ice, water, and rock.",
+    "source_type": "ai_generated"
+  },
+  {
+    "scene_id": "S041",
+    "sentence_id": "S041",
+    "narration": "Does a smaller world keep its ocean as easily? That is a question only the mission data can answer.",
+    "source_type": "archival"
+  }
+]

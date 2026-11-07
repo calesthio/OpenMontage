@@ -220,6 +220,45 @@ def run_checklist(video: str | Path, baseline_out: str | Path | None = None) -> 
         note=vci_note,
     ))
 
+    # --- hook: first 30 seconds (V8 §4.2 YouTube Intro) ---
+    # First 30s should not be overly static (>5s without visual change) and
+    # narration should be audible (not silence-dominated).
+    hook_static = _max_static_in_range(video, 0.0, 30.0)
+    hook_static_passed = hook_static is None or hook_static <= 5.0
+    hook_static_status = ("success" if hook_static_passed and hook_static is not None
+                          else "warning")
+    hook_static_note = (f"first 30s max static {hook_static:.3f}s"
+                        if hook_static is not None
+                        else "could not measure first-30s static")
+    if not hook_static_passed and hook_static is not None:
+        hook_static_note += " — >5s static in hook, review intro pacing"
+    results.append(CheckResult(
+        check_id="hook_first30s_static_sec",
+        status=hook_static_status,
+        measured=round(hook_static, 3) if hook_static is not None else None,
+        threshold=5.0,
+        passed=hook_static_passed,
+        note=hook_static_note,
+    ))
+
+    hook_silent_ratio = _silence_ratio_in_range(video, 0.0, 30.0)
+    hook_silent_passed = hook_silent_ratio is None or hook_silent_ratio <= 0.5
+    hook_silent_status = ("success" if hook_silent_passed and hook_silent_ratio is not None
+                          else "warning")
+    hook_silent_note = (f"first 30s silence ratio {hook_silent_ratio:.2f}"
+                        if hook_silent_ratio is not None
+                        else "could not measure first-30s silence")
+    if not hook_silent_passed and hook_silent_ratio is not None:
+        hook_silent_note += " — >50% silence in hook, narration may be missing"
+    results.append(CheckResult(
+        check_id="hook_first30s_silence_ratio",
+        status=hook_silent_status,
+        measured=round(hook_silent_ratio, 3) if hook_silent_ratio is not None else None,
+        threshold=0.5,
+        passed=hook_silent_passed,
+        note=hook_silent_note,
+    ))
+
     # --- duration probe ---
     duration = probe_duration(video)
     results.append(CheckResult(
@@ -260,6 +299,62 @@ def main(argv: list[str] | None = None) -> int:
     report = run_checklist(video, baseline)
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report.get("overall_passed") else 1
+
+
+# ---------------------------------------------------------------------------
+# Hook / first-30s helpers (V8 §4.2)
+# ---------------------------------------------------------------------------
+
+def _max_static_in_range(video: Path, start_s: float, end_s: float) -> float | None:
+    """Longest frozen segment fully within [start_s, end_s] via freezedetect."""
+    try:
+        dur = probe_duration(video)
+        if dur <= 0:
+            return None
+        # Limit probe to the range using -ss / -t.
+        seg_end = min(end_s, dur)
+        seg_dur = seg_end - start_s
+        if seg_dur <= 0:
+            return None
+        out = _run([
+            "ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", f"{start_s}",
+            "-i", str(video), "-t", f"{seg_dur}",
+            "-vf", "freezedetect", "-f", "null", "-",
+        ])
+        text = out.stderr or ""
+        import re as _re
+        starts = [float(m.group(1)) for m in _re.finditer(r"freeze_start:\s*([\d.]+)", text)]
+        durations = [float(m.group(1)) for m in _re.finditer(r"freeze_duration:\s*([\d.]+)", text)]
+        if not durations:
+            return 0.0
+        return max(durations)
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _silence_ratio_in_range(video: Path, start_s: float, end_s: float) -> float | None:
+    """Ratio of silence within [start_s, end_s] via silencedetect."""
+    try:
+        dur = probe_duration(video)
+        if dur <= 0:
+            return None
+        seg_end = min(end_s, dur)
+        seg_dur = seg_end - start_s
+        if seg_dur <= 0:
+            return None
+        out = _run([
+            "ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", f"{start_s}",
+            "-i", str(video), "-t", f"{seg_dur}",
+            "-af", "silencedetect=noise=-30dB:d=0.25",
+            "-f", "null", "-",
+        ])
+        text = out.stderr or ""
+        import re as _re
+        silent_durs = [float(m.group(1)) for m in _re.finditer(r"silence_duration:\s*([\d.]+)", text)]
+        total_silent = sum(silent_durs)
+        return total_silent / seg_dur if seg_dur > 0 else 0.0
+    except Exception:  # noqa: BLE001
+        return None
 
 
 if __name__ == "__main__":

@@ -1,5 +1,9 @@
 """Color matching helpers for blending archival and AI footage.
 
+V8 §8.12: explicit input/output color spaces + transform metadata.
+Color matching must not change scientifically significant colors of the
+source measurement or spectral visualization.
+
 Uses FFmpeg filters only (no paid tools). Scene-aware grading: archival
 and AI sources get *different* profiles so hybrid cuts don't clash, and
 the grade accounts for scene content instead of one LUT for everything.
@@ -10,6 +14,8 @@ with pilot defaults, so the helper is not tied to the first_video S-IDs.
 
 from __future__ import annotations
 
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 import subprocess
 
@@ -42,6 +48,61 @@ AI_PROFILES = {
     "default": AI_DEFAULT,
     "cool": AI_COOL,
 }
+
+
+# V8 §8.12: color space metadata.
+@dataclass
+class ColorSpace:
+    """Describes a color space: primaries, transfer, matrix."""
+
+    name: str  # e.g. "Rec.709", "Rec.2020", "P3-DCI", "sRGB"
+    primaries: str  # e.g. "bt709", "bt2020", "smpte432"
+    transfer: str  # e.g. "bt709", "srgb", "linear"
+    matrix: str  # e.g. "bt709", "bt2020"
+
+    def to_dict(self) -> dict[str, str]:
+        return asdict(self)
+
+
+# V8 §8.12: default output target is Rec.709 SDR.
+DEFAULT_OUTPUT_COLOR = ColorSpace(
+    name="Rec.709 SDR", primaries="bt709", transfer="bt709", matrix="bt709"
+)
+
+
+@dataclass
+class ColorTransform:
+    """Record of a color transform applied to one asset."""
+
+    transform_id: str
+    input_color: ColorSpace
+    output_color: ColorSpace
+    filter_chain: str  # ffmpeg filter string applied
+    grade_id: str | None = None  # reference grade / LUT version
+    lut_version: str | None = None
+    input_checksum: str | None = None  # sha256 of source before transform
+    output_checksum: str | None = None  # sha256 of output after transform
+    applied_at: str = field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+    )
+    notes: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "transform_id": self.transform_id,
+            "input_color": self.input_color.to_dict(),
+            "output_color": self.output_color.to_dict(),
+            "filter_chain": self.filter_chain,
+            "grade_id": self.grade_id,
+            "lut_version": self.lut_version,
+            "input_checksum": self.input_checksum,
+            "output_checksum": self.output_checksum,
+            "applied_at": self.applied_at,
+            "notes": self.notes,
+        }
+
+
+from typing import Any  # noqa: E402  (used in ColorTransform.to_dict)
 
 
 def profile_for(
@@ -83,4 +144,49 @@ def grade(input_path: str | Path, output_path: str | Path, grade_filter: str) ->
     subprocess.run(
         ["ffmpeg", "-y", "-i", str(inp), "-vf", grade_filter, "-frames:v", "1", str(out)],
         check=True, capture_output=True,
+    )
+
+
+def apply_colormanaged_grade(
+    *,
+    input_path: str | Path,
+    output_path: str | Path,
+    transform_id: str,
+    input_color: ColorSpace | None = None,
+    output_color: ColorSpace | None = None,
+    grade_filter: str = BASE,
+    grade_id: str | None = None,
+    lut_version: str | None = None,
+    input_checksum: str | None = None,
+    output_checksum: str | None = None,
+    notes: str = "",
+) -> ColorTransform:
+    """Apply a grade with explicit color space metadata (V8 §8.12).
+
+    Writes the transformed file via ffmpeg and returns a ColorTransform
+    record with input/output color spaces, filter chain, and checksums.
+    """
+    inp = Path(input_path)
+    out = Path(output_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    in_color = input_color or DEFAULT_OUTPUT_COLOR
+    out_color = output_color or DEFAULT_OUTPUT_COLOR
+
+    subprocess.run(
+        ["ffmpeg", "-y", "-i", str(inp), "-vf", grade_filter,
+         "-frames:v", "1", str(out)],
+        check=True, capture_output=True,
+    )
+
+    return ColorTransform(
+        transform_id=transform_id,
+        input_color=in_color,
+        output_color=out_color,
+        filter_chain=grade_filter,
+        grade_id=grade_id,
+        lut_version=lut_version,
+        input_checksum=input_checksum,
+        output_checksum=output_checksum,
+        notes=notes,
     )

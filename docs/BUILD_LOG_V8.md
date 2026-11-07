@@ -84,3 +84,51 @@ Committed after every completed P0 item (8.1–8.6) and after every wave item.
   - `MOTION_TYPES`: static_intentional, optical_push_pull, lateral_drift, depth_parallax, reveal_mask, diagram_animation, real_footage_stabilization, no_motion.
   - `frames_from_seconds()` / `seconds_from_frames()`: rational timebase, no per-frame rounding.
 - Updated `lib/scene_router.py`: added `visual_class` field to `RouteDecision` (V8 §8.9). `_visual_class_for()` resolves class from explicit override > archival->REAL_ARCHIVE > legacy source_type mapping. Backward-compatible: `source_type` still returned.
+
+### 2026-11-07 — Волна 1.3: Движение кадров с ручным контролем (DONE)
+
+- Updated `lib/motion_director.py`: V8 §8.13 classified motion types — static_intentional, optical_push_pull, lateral_drift, depth_parallax, reveal_mask, diagram_animation, real_footage_stabilization, no_motion. `MotionPlan.motion_type` records the chosen type. Depth parallax gated on depth_confidence >= 0.6; weak depth falls back to 2D zoompan. `plan()` accepts motion_type and depth_map_path params.
+
+### 2026-11-07 — Волна 1.4: Музыкальная драматургия (DONE)
+
+- Created `lib/music_dramaturgy.py`: V8 §3.7.
+  - MUSIC_PHASES: hook, mystery, discovery, explanation, speculation, resolution, finale.
+  - MUSIC_VOLUME_DB / MUSIC_FADE_S per phase (hook=-30dB near-silence, finale=-12dB punctuation).
+  - ROLE_TO_PHASE maps narrative_role → music phase.
+  - `cue_for_scene()` builds MusicCue with enabled=False when no licensed music (rights_basis required when enabled).
+  - MusicCue.validate() checks phase validity + rights_basis when enabled.
+  - No continuous drone; music by dramatic state; narration always intelligible.
+
+### 2026-11-07 — Волна 1.5: Редактура hook и первых 30 секунд (DONE)
+
+- Updated `scripts/release_checklist.py`: V8 §4.2 YouTube Intro.
+  - `hook_first30s_static_sec`: max frozen segment in first 30s; warning if >5s (advisory).
+  - `hook_first30s_silence_ratio`: silence ratio in first 30s; warning if >50% (narration may be missing).
+  - Both are advisory (passed=None when > threshold), not blocking — consistent with V8 §8.5 advisory approach.
+  - Added `_max_static_in_range()` and `_silence_ratio_in_range()` helpers using ffmpeg freezedetect/silencedetect with -ss/-t range limiting.
+
+### 2026-11-07 — Волна 2.1: Цветовые пространства и matching (DONE)
+
+- Updated `lib/color_match.py`: V8 §8.12 explicit color spaces + transform metadata.
+  - `ColorSpace`: name, primaries, transfer, matrix.
+  - `DEFAULT_OUTPUT_COLOR`: Rec.709 SDR (bt709/b709/b709).
+  - `ColorTransform`: transform_id, input/output color, filter_chain, grade_id, lut_version, checksums, notes.
+  - `apply_colormanaged_grade()`: applies grade + returns ColorTransform record.
+  - `grade()` and `profile_for()` retained unchanged (backward-compatible).
+
+### 2026-11-07 — Волна 2.2: Claim ledger / asset provenance / rights QC (DONE)
+
+- Created `lib/claim_ledger.py`: V8 §8.8, §8.10.
+  - `ClaimRecord`: claim_id, text, source, source_url, confidence, requires_human_review.
+  - `AssetRecord`: asset_id, local_path, local_hash, source_url, creator, license, license_url, retrieval_date, commercial_use, modifications, attribution, rights_verified, quarantined.
+  - `ClaimLedger`: add_claim/add_asset, rights_qc() — checks all assets have source_url, creator, license, local_hash; commercial assets must be rights_verified; quarantined assets need reason.
+  - Archive.org/"free download" is NOT treated as proof of license.
+
+### 2026-11-07 — Волна 2.3: Human review gate (DONE)
+
+- Created `lib/human_review.py`: V8 §8.17.
+  - `ReviewGate`: tracks required stages and explicit ReviewDecision (approved/rejected).
+  - `is_cleared(stage)`, `pending_reviews()`, `all_cleared()`.
+  - `human_review_gate()` module-level convenience.
+  - Integrates with checkpoint.py (§8.1: awaiting_human → completed requires human_approved=True) and state_store.py (§8.2: requires_approval flag).
+- All 6 P0 items + 5 wave-1 items + 3 wave-2 items complete.

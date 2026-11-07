@@ -92,7 +92,14 @@ class Pond5PublicDomainSource:
             data = r.json()
         except Exception as e:
             _log.warning("Pond5 PD search failed (API), trying web fallback: %s", e)
-            return self._search_web_fallback(query, kind, filters)
+            fallback = self._search_web_fallback(query, kind, filters)
+            if fallback is None:
+                # Both paths are dead: the API errored and the web
+                # fallback has nothing to offer. `[]` would read as
+                # "Pond5 has nothing", so surface the API error
+                # instead. See `base.StockSource`.
+                raise
+            return fallback
 
         results = data.get("results", []) or data.get("items", []) or []
         return self._parse_results(results, kind, filters)
@@ -162,14 +169,20 @@ class Pond5PublicDomainSource:
 
     def _search_web_fallback(
         self, query: str, kind: str, filters: SearchFilters
-    ) -> list[Candidate]:
+    ) -> list[Candidate] | None:
         """Fallback: parse Pond5 free page HTML for public domain clips.
 
         Used when the API endpoint is unavailable or returns errors.
-        Returns empty list if HTML parsing fails — does not raise.
+
+        Returns `None` when the fallback could not run at all, which
+        tells `search()` to surface the API error it was standing in
+        for. A list — including an empty one — means the fallback did
+        run and this is Pond5's answer.
+
+        Not implemented yet, so today it always returns `None`.
         """
-        _log.info("Pond5 PD: web fallback not implemented, returning empty")
-        return []
+        _log.info("Pond5 PD: web fallback not implemented")
+        return None
 
     def download(self, candidate: Candidate, out_path: Path) -> Path:
         import requests

@@ -1,0 +1,304 @@
+{
+  "word_timestamps": [
+    {
+      "word": "Every",
+      "start": 0.0,
+      "end": 0.479
+    },
+    {
+      "word": "breath",
+      "start": 0.479,
+      "end": 0.958
+    },
+    {
+      "word": "you",
+      "start": 0.958,
+      "end": 1.437
+    },
+    {
+      "word": "take",
+      "start": 1.437,
+      "end": 1.916
+    },
+    {
+      "word": "started",
+      "start": 1.916,
+      "end": 2.395
+    },
+    {
+      "word": "inside",
+      "start": 2.395,
+      "end": 2.874
+    },
+    {
+      "word": "a",
+      "start": 2.874,
+      "end": 3.353
+    },
+    {
+      "word": "leaf",
+      "start": 3.353,
+      "end": 3.832
+    },
+    {
+      "word": "Thirty",
+      "start": 3.832,
+      "end": 4.311
+    },
+    {
+      "word": "seconds\u2014here's",
+      "start": 4.311,
+      "end": 4.79
+    },
+    {
+      "word": "photosynthesis",
+      "start": 4.79,
+      "end": 5.27
+    },
+    {
+      "word": "In",
+      "start": 5.27,
+      "end": 5.755
+    },
+    {
+      "word": "chloroplasts",
+      "start": 5.755,
+      "end": 6.24
+    },
+    {
+      "word": "chlorophyll",
+      "start": 6.24,
+      "end": 6.726
+    },
+    {
+      "word": "traps",
+      "start": 6.726,
+      "end": 7.211
+    },
+    {
+      "word": "sunlight\u2014the",
+      "start": 7.211,
+      "end": 7.697
+    },
+    {
+      "word": "spark",
+      "start": 7.697,
+      "end": 8.182
+    },
+    {
+      "word": "that",
+      "start": 8.182,
+      "end": 8.668
+    },
+    {
+      "word": "powers",
+      "start": 8.668,
+      "end": 9.153
+    },
+    {
+      "word": "the",
+      "start": 9.153,
+      "end": 9.639
+    },
+    {
+      "word": "whole",
+      "start": 9.639,
+      "end": 10.124
+    },
+    {
+      "word": "process",
+      "start": 10.124,
+      "end": 10.61
+    },
+    {
+      "word": "That",
+      "start": 10.61,
+      "end": 11.117
+    },
+    {
+      "word": "light",
+      "start": 11.117,
+      "end": 11.625
+    },
+    {
+      "word": "splits",
+      "start": 11.625,
+      "end": 12.132
+    },
+    {
+      "word": "water",
+      "start": 12.132,
+      "end": 12.64
+    },
+    {
+      "word": "apart",
+      "start": 12.64,
+      "end": 13.147
+    },
+    {
+      "word": "releasing",
+      "start": 13.147,
+      "end": 13.655
+    },
+    {
+      "word": "the",
+      "start": 13.655,
+      "end": 14.162
+    },
+    {
+      "word": "oxygen",
+      "start": 14.162,
+      "end": 14.67
+    },
+    {
+      "word": "we",
+      "start": 14.67,
+      "end": 15.177
+    },
+    {
+      "word": "breathe",
+      "start": 15.177,
+      "end": 15.685
+    },
+    {
+      "word": "right",
+      "start": 15.685,
+      "end": 16.192
+    },
+    {
+      "word": "now",
+      "start": 16.192,
+      "end": 16.7
+    },
+    {
+      "word": "At",
+      "start": 16.7,
+      "end": 17.166
+    },
+    {
+      "word": "the",
+      "start": 17.166,
+      "end": 17.632
+    },
+    {
+      "word": "same",
+      "start": 17.632,
+      "end": 18.099
+    },
+    {
+      "word": "time",
+      "start": 18.099,
+      "end": 18.565
+    },
+    {
+      "word": "carbon",
+      "start": 18.565,
+      "end": 19.032
+    },
+    {
+      "word": "dioxide",
+      "start": 19.032,
+      "end": 19.498
+    },
+    {
+      "word": "from",
+      "start": 19.498,
+      "end": 19.965
+    },
+    {
+      "word": "the",
+      "start": 19.965,
+      "end": 20.431
+    },
+    {
+      "word": "air",
+      "start": 20.431,
+      "end": 20.897
+    },
+    {
+      "word": "is",
+      "start": 20.897,
+      "end": 21.364
+    },
+    {
+      "word": "stitched",
+      "start": 21.364,
+      "end": 21.83
+    },
+    {
+      "word": "into",
+      "start": 21.83,
+      "end": 22.297
+    },
+    {
+      "word": "sugar\u2014plant",
+      "start": 22.297,
+      "end": 22.763
+    },
+    {
+      "word": "fuel",
+      "start": 22.763,
+      "end": 23.23
+    },
+    {
+      "word": "Sunlight",
+      "start": 23.23,
+      "end": 23.721
+    },
+    {
+      "word": "water",
+      "start": 23.721,
+      "end": 24.213
+    },
+    {
+      "word": "and",
+      "start": 24.213,
+      "end": 24.704
+    },
+    {
+      "word": "CO\u2082",
+      "start": 24.704,
+      "end": 25.196
+    },
+    {
+      "word": "in",
+      "start": 25.196,
+      "end": 25.687
+    },
+    {
+      "word": "oxygen",
+      "start": 25.687,
+      "end": 26.179
+    },
+    {
+      "word": "and",
+      "start": 26.179,
+      "end": 26.671
+    },
+    {
+      "word": "sugar",
+      "start": 26.671,
+      "end": 27.162
+    },
+    {
+      "word": "out",
+      "start": 27.162,
+      "end": 27.654
+    },
+    {
+      "word": "Life's",
+      "start": 27.654,
+      "end": 28.145
+    },
+    {
+      "word": "solar",
+      "start": 28.145,
+      "end": 28.637
+    },
+    {
+      "word": "engine",
+      "start": 28.637,
+      "end": 29.129
+    }
+  ]
+}

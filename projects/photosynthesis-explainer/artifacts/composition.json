@@ -1,0 +1,500 @@
+{
+  "version": "1.0",
+  "renderer_family": "explainer-teacher",
+  "render_runtime": "remotion",
+  "composition_mode": "templated",
+  "theme": "flat-motion-graphics",
+  "cuts": [
+    {
+      "id": "cut-scene-1",
+      "source": "",
+      "type": "hero_title",
+      "in_seconds": 0,
+      "out_seconds": 5.27,
+      "text": "Photosynthesis in 30 Seconds",
+      "heroSubtitle": "Sunlight In, Life Out",
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "cut-scene-2",
+      "source": "photosynthesis-explainer/scene-2-chloroplast-diagram.png",
+      "in_seconds": 5.27,
+      "out_seconds": 10.61,
+      "animation": "ken-burns",
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "cut-scene-3",
+      "source": "",
+      "type": "comparison",
+      "in_seconds": 10.61,
+      "out_seconds": 14.09,
+      "title": "Light splits water",
+      "leftLabel": "H\u2082O",
+      "leftValue": "Water in",
+      "rightLabel": "O\u2082",
+      "rightValue": "Oxygen out",
+      "accentColor": "#06B6D4",
+      "backgroundColor": "#0F172A",
+      "color": "#F8FAFC"
+    },
+    {
+      "id": "cut-scene-4",
+      "source": "",
+      "type": "stat_card",
+      "in_seconds": 14.09,
+      "out_seconds": 16.7,
+      "stat": "O\u2082",
+      "subtitle": "Released into the air you breathe",
+      "accentColor": "#06B6D4",
+      "backgroundColor": "#0F172A"
+    },
+    {
+      "id": "cut-scene-5",
+      "source": "",
+      "type": "text_card",
+      "in_seconds": 16.7,
+      "out_seconds": 20.43,
+      "text": "CO\u2082 stitches into sugar \u2014 plant fuel",
+      "accentColor": "#EC4899",
+      "backgroundColor": "#0F172A",
+      "color": "#F8FAFC"
+    },
+    {
+      "id": "cut-scene-6",
+      "source": "",
+      "type": "text_card",
+      "in_seconds": 20.43,
+      "out_seconds": 23.23,
+      "text": "Inputs: Sunlight \u00b7 Water \u00b7 CO\u2082",
+      "accentColor": "#7C3AED",
+      "backgroundColor": "#0F172A",
+      "color": "#F8FAFC"
+    },
+    {
+      "id": "cut-scene-7",
+      "source": "",
+      "type": "stat_card",
+      "in_seconds": 23.23,
+      "out_seconds": 29.13,
+      "stat": "6CO\u2082 + 6H\u2082O + light \u2192 C\u2086H\u2081\u2082O\u2086 + 6O\u2082",
+      "subtitle": "Life's solar engine",
+      "accentColor": "#7C3AED",
+      "backgroundColor": "#0F172A"
+    }
+  ],
+  "audio": {
+    "narration": {
+      "src": "photosynthesis-explainer/narration_full.wav",
+      "volume": 1.0
+    },
+    "music": {
+      "src": "photosynthesis-explainer/background_music.mp3",
+      "volume": 0.12,
+      "fadeInSeconds": 2,
+      "fadeOutSeconds": 3
+    }
+  },
+  "captions": [
+    {
+      "word": "Every",
+      "startMs": 0,
+      "endMs": 479
+    },
+    {
+      "word": "breath",
+      "startMs": 479,
+      "endMs": 958
+    },
+    {
+      "word": "you",
+      "startMs": 958,
+      "endMs": 1437
+    },
+    {
+      "word": "take",
+      "startMs": 1437,
+      "endMs": 1916
+    },
+    {
+      "word": "started",
+      "startMs": 1916,
+      "endMs": 2395
+    },
+    {
+      "word": "inside",
+      "startMs": 2395,
+      "endMs": 2874
+    },
+    {
+      "word": "a",
+      "startMs": 2874,
+      "endMs": 3353
+    },
+    {
+      "word": "leaf",
+      "startMs": 3353,
+      "endMs": 3832
+    },
+    {
+      "word": "Thirty",
+      "startMs": 3832,
+      "endMs": 4311
+    },
+    {
+      "word": "seconds\u2014here's",
+      "startMs": 4311,
+      "endMs": 4790
+    },
+    {
+      "word": "photosynthesis",
+      "startMs": 4790,
+      "endMs": 5270
+    },
+    {
+      "word": "In",
+      "startMs": 5270,
+      "endMs": 5755
+    },
+    {
+      "word": "chloroplasts",
+      "startMs": 5755,
+      "endMs": 6240
+    },
+    {
+      "word": "chlorophyll",
+      "startMs": 6240,
+      "endMs": 6726
+    },
+    {
+      "word": "traps",
+      "startMs": 6726,
+      "endMs": 7211
+    },
+    {
+      "word": "sunlight\u2014the",
+      "startMs": 7211,
+      "endMs": 7697
+    },
+    {
+      "word": "spark",
+      "startMs": 7697,
+      "endMs": 8182
+    },
+    {
+      "word": "that",
+      "startMs": 8182,
+      "endMs": 8668
+    },
+    {
+      "word": "powers",
+      "startMs": 8668,
+      "endMs": 9153
+    },
+    {
+      "word": "the",
+      "startMs": 9153,
+      "endMs": 9639
+    },
+    {
+      "word": "whole",
+      "startMs": 9639,
+      "endMs": 10124
+    },
+    {
+      "word": "process",
+      "startMs": 10124,
+      "endMs": 10610
+    },
+    {
+      "word": "That",
+      "startMs": 10610,
+      "endMs": 11117
+    },
+    {
+      "word": "light",
+      "startMs": 11117,
+      "endMs": 11625
+    },
+    {
+      "word": "splits",
+      "startMs": 11625,
+      "endMs": 12132
+    },
+    {
+      "word": "water",
+      "startMs": 12132,
+      "endMs": 12640
+    },
+    {
+      "word": "apart",
+      "startMs": 12640,
+      "endMs": 13147
+    },
+    {
+      "word": "releasing",
+      "startMs": 13147,
+      "endMs": 13655
+    },
+    {
+      "word": "the",
+      "startMs": 13655,
+      "endMs": 14162
+    },
+    {
+      "word": "oxygen",
+      "startMs": 14162,
+      "endMs": 14670
+    },
+    {
+      "word": "we",
+      "startMs": 14670,
+      "endMs": 15177
+    },
+    {
+      "word": "breathe",
+      "startMs": 15177,
+      "endMs": 15685
+    },
+    {
+      "word": "right",
+      "startMs": 15685,
+      "endMs": 16192
+    },
+    {
+      "word": "now",
+      "startMs": 16192,
+      "endMs": 16700
+    },
+    {
+      "word": "At",
+      "startMs": 16700,
+      "endMs": 17166
+    },
+    {
+      "word": "the",
+      "startMs": 17166,
+      "endMs": 17632
+    },
+    {
+      "word": "same",
+      "startMs": 17632,
+      "endMs": 18099
+    },
+    {
+      "word": "time",
+      "startMs": 18099,
+      "endMs": 18565
+    },
+    {
+      "word": "carbon",
+      "startMs": 18565,
+      "endMs": 19032
+    },
+    {
+      "word": "dioxide",
+      "startMs": 19032,
+      "endMs": 19498
+    },
+    {
+      "word": "from",
+      "startMs": 19498,
+      "endMs": 19965
+    },
+    {
+      "word": "the",
+      "startMs": 19965,
+      "endMs": 20431
+    },
+    {
+      "word": "air",
+      "startMs": 20431,
+      "endMs": 20897
+    },
+    {
+      "word": "is",
+      "startMs": 20897,
+      "endMs": 21364
+    },
+    {
+      "word": "stitched",
+      "startMs": 21364,
+      "endMs": 21830
+    },
+    {
+      "word": "into",
+      "startMs": 21830,
+      "endMs": 22297
+    },
+    {
+      "word": "sugar\u2014plant",
+      "startMs": 22297,
+      "endMs": 22763
+    },
+    {
+      "word": "fuel",
+      "startMs": 22763,
+      "endMs": 23230
+    },
+    {
+      "word": "Sunlight",
+      "startMs": 23230,
+      "endMs": 23721
+    },
+    {
+      "word": "water",
+      "startMs": 23721,
+      "endMs": 24213
+    },
+    {
+      "word": "and",
+      "startMs": 24213,
+      "endMs": 24704
+    },
+    {
+      "word": "CO\u2082",
+      "startMs": 24704,
+      "endMs": 25196
+    },
+    {
+      "word": "in",
+      "startMs": 25196,
+      "endMs": 25687
+    },
+    {
+      "word": "oxygen",
+      "startMs": 25687,
+      "endMs": 26179
+    },
+    {
+      "word": "and",
+      "startMs": 26179,
+      "endMs": 26671
+    },
+    {
+      "word": "sugar",
+      "startMs": 26671,
+      "endMs": 27162
+    },
+    {
+      "word": "out",
+      "startMs": 27162,
+      "endMs": 27654
+    },
+    {
+      "word": "Life's",
+      "startMs": 27654,
+      "endMs": 28145
+    },
+    {
+      "word": "solar",
+      "startMs": 28145,
+      "endMs": 28637
+    },
+    {
+      "word": "engine",
+      "startMs": 28637,
+      "endMs": 29129
+    }
+  ],
+  "subtitles": {
+    "enabled": true,
+    "style": "word-by-word",
+    "font": "Space Grotesk",
+    "font_size": 48,
+    "color": "#F8FAFC",
+    "background": "#0F172A88",
+    "position": "bottom-center",
+    "max_words_per_line": 8
+  },
+  "metadata": {
+    "total_duration_seconds": 29.13,
+    "timeline_basis": "narration_actual_durations",
+    "playbook": "flat-motion-graphics",
+    "scene_count": 7,
+    "pacing_notes": "Visual cuts retimed to Piper WAV lengths; s3/s4 split 4:3 across paired scenes.",
+    "remotion_props": {
+      "theme": "flat-motion-graphics",
+      "cuts": [
+        {
+          "id": "cut-scene-1",
+          "source": "",
+          "type": "hero_title",
+          "in_seconds": 0,
+          "out_seconds": 5.27,
+          "text": "Photosynthesis in 30 Seconds",
+          "heroSubtitle": "Sunlight In, Life Out",
+          "backgroundColor": "#0F172A"
+        },
+        {
+          "id": "cut-scene-2",
+          "source": "diagram-scene-2",
+          "in_seconds": 5.27,
+          "out_seconds": 10.61,
+          "animation": "ken-burns",
+          "backgroundColor": "#0F172A"
+        },
+        {
+          "id": "cut-scene-3",
+          "source": "",
+          "type": "comparison",
+          "in_seconds": 10.61,
+          "out_seconds": 14.09,
+          "title": "Light splits water",
+          "leftLabel": "H\u2082O",
+          "leftValue": "Water in",
+          "rightLabel": "O\u2082",
+          "rightValue": "Oxygen out",
+          "accentColor": "#06B6D4",
+          "backgroundColor": "#0F172A",
+          "color": "#F8FAFC"
+        },
+        {
+          "id": "cut-scene-4",
+          "source": "",
+          "type": "stat_card",
+          "in_seconds": 14.09,
+          "out_seconds": 16.7,
+          "stat": "O\u2082",
+          "subtitle": "Released into the air you breathe",
+          "accentColor": "#06B6D4",
+          "backgroundColor": "#0F172A"
+        },
+        {
+          "id": "cut-scene-5",
+          "source": "",
+          "type": "text_card",
+          "in_seconds": 16.7,
+          "out_seconds": 20.43,
+          "text": "CO\u2082 stitches into sugar \u2014 plant fuel",
+          "accentColor": "#EC4899",
+          "backgroundColor": "#0F172A",
+          "color": "#F8FAFC"
+        },
+        {
+          "id": "cut-scene-6",
+          "source": "",
+          "type": "text_card",
+          "in_seconds": 20.43,
+          "out_seconds": 23.23,
+          "text": "Inputs: Sunlight \u00b7 Water \u00b7 CO\u2082",
+          "accentColor": "#7C3AED",
+          "backgroundColor": "#0F172A",
+          "color": "#F8FAFC"
+        },
+        {
+          "id": "cut-scene-7",
+          "source": "",
+          "type": "stat_card",
+          "in_seconds": 23.23,
+          "out_seconds": 29.13,
+          "stat": "6CO\u2082 + 6H\u2082O + light \u2192 C\u2086H\u2081\u2082O\u2086 + 6O\u2082",
+          "subtitle": "Life's solar engine",
+          "accentColor": "#7C3AED",
+          "backgroundColor": "#0F172A"
+        }
+      ]
+    }
+  },
+  "total_duration_seconds": 29.13
+}

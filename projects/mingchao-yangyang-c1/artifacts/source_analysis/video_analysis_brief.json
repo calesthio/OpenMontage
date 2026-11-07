@@ -1,0 +1,170 @@
+{
+  "version": "1.0",
+  "source": {
+    "type": "local_file",
+    "duration_seconds": 60.3,
+    "resolution": "1920x1080",
+    "fps": "30",
+    "local_path": "C:\\Users\\木白\\OpenMontage\\projects\\mingchao-yangyang-c1\\assets\\source\\jiguan_xuanling_demo.mp4",
+    "title": "【机核独家】《鸣潮》共鸣者「秧秧·玄翎」、「穗穗」演示",
+    "uploader": "机核GCORES"
+  },
+  "content_analysis": {
+    "summary": "Official Wuthering Waves 3.5 gameplay demo showcasing Yangyang Xuanling and Suishui combat in Xuanfang realm.",
+    "topics": [
+      "鸣潮",
+      "秧秧·玄翎",
+      "穗穗",
+      "玄方地界",
+      "湮灭属性",
+      "游戏实机"
+    ],
+    "target_audience": "鸣潮玩家与二次元游戏营销受众"
+  },
+  "structure_analysis": {
+    "total_scenes": 6,
+    "scenes": [
+      {
+        "index": 1,
+        "start_s": 0,
+        "end_s": 8,
+        "motion_type": "motion_clip",
+        "description": "环境/角色亮相"
+      },
+      {
+        "index": 2,
+        "start_s": 8,
+        "end_s": 18,
+        "motion_type": "motion_clip",
+        "description": "秧秧·玄翎战斗连招"
+      },
+      {
+        "index": 3,
+        "start_s": 18,
+        "end_s": 30,
+        "motion_type": "motion_clip",
+        "description": "技能特效与风元素粒子"
+      },
+      {
+        "index": 4,
+        "start_s": 30,
+        "end_s": 42,
+        "motion_type": "motion_clip",
+        "description": "大招/玄翎雀风暴"
+      },
+      {
+        "index": 5,
+        "start_s": 42,
+        "end_s": 52,
+        "motion_type": "motion_clip",
+        "description": "穗穗战斗片段"
+      },
+      {
+        "index": 6,
+        "start_s": 52,
+        "end_s": 60,
+        "motion_type": "motion_clip",
+        "description": "收尾镜头"
+      }
+    ],
+    "pacing_profile": {
+      "avg_shot_length_s": 10,
+      "style": "gameplay_demo"
+    }
+  },
+  "keyframes": [
+    {
+      "path": "C:\\Users\\木白\\OpenMontage\\projects\\mingchao-yangyang-c1\\artifacts\\source_analysis\\keyframes\\frame_001.jpg",
+      "timestamp_s": 0.0
+    },
+    {
+      "path": "C:\\Users\\木白\\OpenMontage\\projects\\mingchao-yangyang-c1\\artifacts\\source_analysis\\keyframes\\frame_002.jpg",
+      "timestamp_s": 5.02
+    },
+    {
+      "path": "C:\\Users\\木白\\OpenMontage\\projects\\mingchao-yangyang-c1\\artifacts\\source_analysis\\keyframes\\frame_003.jpg",
+      "timestamp_s": 10.05
+    },
+    {
+      "path": "C:\\Users\\木白\\OpenMontage\\projects\\mingchao-yangyang-c1\\artifacts\\source_analysis\\keyframes\\frame_004.jpg",
+      "timestamp_s": 15.07
+    },
+    {
+      "path": "C:\\Users\\木白\\OpenMontage\\projects\\mingchao-yangyang-c1\\artifacts\\source_analysis\\keyframes\\frame_005.jpg",
+      "timestamp_s": 20.1
+    },
+    {
+      "path": "C:\\Users\\木白\\OpenMontage\\projects\\mingchao-yangyang-c1\\artifacts\\source_analysis\\keyframes\\frame_006.jpg",
+      "timestamp_s": 25.12
+    },
+    {
+      "path": "C:\\Users\\木白\\OpenMontage\\projects\\mingchao-yangyang-c1\\artifacts\\source_analysis\\keyframes\\frame_007.jpg",
+      "timestamp_s": 30.15
+    },
+    {
+      "path": "C:\\Users\\木白\\OpenMontage\\projects\\mingchao-yangyang-c1\\artifacts\\source_analysis\\keyframes\\frame_008.jpg",
+      "timestamp_s": 35.17
+    },
+    {
+      "path": "C:\\Users\\木白\\OpenMontage\\projects\\mingchao-yangyang-c1\\artifacts\\source_analysis\\keyframes\\frame_009.jpg",
+      "timestamp_s": 40.2
+    },
+    {
+      "path": "C:\\Users\\木白\\OpenMontage\\projects\\mingchao-yangyang-c1\\artifacts\\source_analysis\\keyframes\\frame_010.jpg",
+      "timestamp_s": 45.22
+    },
+    {
+      "path": "C:\\Users\\木白\\OpenMontage\\projects\\mingchao-yangyang-c1\\artifacts\\source_analysis\\keyframes\\frame_011.jpg",
+      "timestamp_s": 50.25
+    },
+    {
+      "path": "C:\\Users\\木白\\OpenMontage\\projects\\mingchao-yangyang-c1\\artifacts\\source_analysis\\keyframes\\frame_012.jpg",
+      "timestamp_s": 55.27
+    }
+  ],
+  "style_profile": {
+    "color_palette": {
+      "primary_colors": [
+        "teal",
+        "deep navy",
+        "gold accent"
+      ],
+      "accent_colors": [
+        "cyan glow",
+        "warm skin tone"
+      ],
+      "overall_mood": "fantasy cinematic, high-contrast game lighting"
+    },
+    "transition_types": [
+      "hard_cut"
+    ],
+    "music_style": "orchestral battle theme in source",
+    "production_quality": "AAA game capture",
+    "closest_playbook": "cinematic"
+  },
+  "replication_guidance": {
+    "suggested_pipeline": "cinematic",
+    "suggested_playbook": "cinematic",
+    "key_elements_to_replicate": [
+      "秧秧·玄翎水中/光晕亮相",
+      "风元素粒子与剑招特写",
+      "大招风暴全景",
+      "青金配色电影感调色"
+    ],
+    "motion_required": true,
+    "creative_differentiation_seeds": [
+      "古诗字幕开场替代解说",
+      "竖屏9:16情绪混剪而非横屏演示",
+      "更慢 dissolve 与留白"
+    ]
+  },
+  "_analysis_meta": {
+    "depth": "standard",
+    "steps_completed": [
+      "ffmpeg_probe",
+      "keyframe_extract"
+    ],
+    "keyframe_count": 12,
+    "duration_seconds": 60.3
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "theme": "flat-motion-graphics",
+  "renderer_family": "animation-first",
+  "playbook": "flat-motion-graphics",
+  "metadata": {
+    "project": "douyin-comment-resonance",
+    "variant": "sample",
+    "concept": "comment_resonance"
+  },
+  "cuts": [
+    {
+      "id": "hook",
+      "source": "",
+      "type": "hero_title",
+      "in_seconds": 0,
+      "out_seconds": 3,
+      "text": "大专生的就业迷茫期",
+      "subtitle": "评论区，比你想象中更懂你",
+      "backgroundVideo": "douyin-comment-resonance/reference.mp4",
+      "backgroundVideoStart": 0,
+      "backgroundOverlay": 0.72,
+      "color": "#F8FAFC"
+    },
+    {
+      "id": "comment-1",
+      "source": "",
+      "type": "callout",
+      "callout_type": "quote",
+      "in_seconds": 3,
+      "out_seconds": 8.5,
+      "title": "@别害怕我不是好人",
+      "text": "你们还好吧可以到网上吐槽。当时的我只能自己一个人消化，而又消化不了，差点把自己逼疯了",
+      "backgroundVideo": "douyin-comment-resonance/reference.mp4",
+      "backgroundVideoStart": 5,
+      "backgroundOverlay": 0.78,
+      "borderColor": "#94A3B8",
+      "backgroundColor": "rgba(15, 23, 42, 0.88)",
+      "textColor": "#F1F5F9",
+      "containerBackgroundColor": "transparent",
+      "fontSize": 28
+    },
+    {
+      "id": "comment-2",
+      "source": "",
+      "type": "callout",
+      "callout_type": "quote",
+      "in_seconds": 8.5,
+      "out_seconds": 12,
+      "title": "@小夏1",
+      "text": "为什么总在网上投，外面不能去看看",
+      "backgroundVideo": "douyin-comment-resonance/reference.mp4",
+      "backgroundVideoStart": 15,
+      "backgroundOverlay": 0.78,
+      "borderColor": "#60A5FA",
+      "backgroundColor": "rgba(15, 23, 42, 0.88)",
+      "textColor": "#F1F5F9",
+      "containerBackgroundColor": "transparent",
+      "fontSize": 30
+    }
+  ],
+  "overlays": [
+    {
+      "type": "section_title",
+      "in_seconds": 0.4,
+      "out_seconds": 2.6,
+      "text": "然然 · 参考续作",
+      "subtitle": "评论区共鸣版 · 样片",
+      "accentColor": "#F59E0B",
+      "position": "top-left"
+    }
+  ],
+  "captions": [],
+  "audio": {}
+}

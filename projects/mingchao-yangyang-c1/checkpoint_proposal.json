@@ -1,0 +1,14 @@
+{
+  "version": "1.0",
+  "project_id": "mingchao-yangyang-c1",
+  "pipeline_type": "cinematic",
+  "stage": "proposal",
+  "status": "completed",
+  "timestamp": "2026-07-12T12:35:00+00:00",
+  "checkpoint_policy": "guided",
+  "human_approval_required": true,
+  "human_approved": true,
+  "artifacts": {
+    "proposal_packet": "@proposal_packet.json"
+  }
+}

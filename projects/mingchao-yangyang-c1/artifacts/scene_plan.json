@@ -1,0 +1,198 @@
+{
+  "version": "1.0",
+  "style_playbook": "cinematic",
+  "scenes": [
+    {
+      "id": "scene-1",
+      "type": "text_card",
+      "description": "黑场金句开场：霓裳一曲千峰上",
+      "start_seconds": 0,
+      "end_seconds": 3,
+      "script_section_id": "b1",
+      "framing": "竖屏满幅居中，上三分之一金句",
+      "movement": "逐字淡入，轻 flare",
+      "transition_in": "fade",
+      "transition_out": "dissolve",
+      "overlay_notes": "Title plate; accent #D4AF37; no VO",
+      "shot_intent": "古诗 hook 定调诗意气质",
+      "narrative_role": "establish_context",
+      "information_role": "建立古典意象与情绪基调",
+      "hero_moment": false,
+      "metadata": {
+        "overlays": [{"type": "title", "content": "霓裳一曲千峰上", "placement": "upper-center"}],
+        "five_aspect": {
+          "subject": "N/A — typography-led",
+          "subject_motion": "N/A",
+          "scene": "纯黑底；无环境",
+          "spatial_framing": "竖屏 centered MS text",
+          "camera": "locked-off; real-time"
+        }
+      }
+    },
+    {
+      "id": "scene-2",
+      "type": "broll",
+      "description": "玄方广场大景 establishing，背身望向浮空门户",
+      "start_seconds": 3,
+      "end_seconds": 8,
+      "script_section_id": "b2",
+      "framing": "竖屏中心裁切 16:9 源；主体居中偏下",
+      "movement": "慢 scale-down 1.015→1.0",
+      "transition_in": "dissolve",
+      "transition_out": "dissolve",
+      "shot_language": {
+        "shot_size": "extreme_wide",
+        "camera_movement": "static",
+        "lighting_key": "overcast_soft",
+        "depth_of_field": "deep",
+        "color_temperature": "cool"
+      },
+      "shot_intent": "千峰/玄方地界尺度感",
+      "narrative_role": "establish_context",
+      "information_role": "世界观与史诗空间",
+      "hero_moment": true,
+      "metadata": {
+        "source_trim": {"in": 22, "out": 27},
+        "overlays": [],
+        "five_aspect": {
+          "subject": "秧秧·玄翎背身；玄翎羽发尾端发光",
+          "subject_motion": "静立远望",
+          "scene": "雾面石庭；浮空圆环远景；开发中水印右下角",
+          "spatial_framing": "EWS; subject lower-third; symmetric depth",
+          "camera": "game cam static; cool grade"
+        }
+      }
+    },
+    {
+      "id": "scene-3",
+      "type": "text_card",
+      "description": "第二句诗：尽日欢娱忘岁年",
+      "start_seconds": 8,
+      "end_seconds": 11,
+      "script_section_id": "b3",
+      "framing": "竖屏居中细字",
+      "movement": "fade-in 1.2s",
+      "transition_in": "fade",
+      "transition_out": "cut",
+      "shot_intent": "承接诗意，放慢节奏",
+      "narrative_role": "emotional_beat",
+      "information_role": "浪漫沉醉语气",
+      "hero_moment": false,
+      "metadata": {
+        "overlays": [{"type": "title", "content": "尽日欢娱忘岁年", "placement": "center"}]
+      }
+    },
+    {
+      "id": "scene-4",
+      "type": "broll",
+      "description": "秧秧玄翎正面 CU，羽发与额饰发光",
+      "start_seconds": 11,
+      "end_seconds": 17,
+      "script_section_id": "b4",
+      "framing": "竖屏 CU 裁切胸部以上",
+      "movement": "微推入",
+      "transition_in": "cut",
+      "transition_out": "dissolve",
+      "shot_language": {
+        "shot_size": "close_up",
+        "camera_movement": "dolly_in",
+        "lighting_key": "rim_lit",
+        "depth_of_field": "shallow",
+        "color_temperature": "cool"
+      },
+      "shot_intent": "角色 reveal — 玄翎身份锚点",
+      "narrative_role": "introduce_subject",
+      "information_role": "观众认出秧秧·玄翎造型",
+      "hero_moment": true,
+      "metadata": {
+        "source_trim": {"in": 0.5, "out": 6.5},
+        "five_aspect": {
+          "subject": "秧秧·玄翎；羽状发光发饰；灰紫长袍",
+          "subject_motion": "轻微呼吸感站姿",
+          "scene": "雾面宫殿庭院远景虚化",
+          "spatial_framing": "CU centered; shallow DOF",
+          "camera": "game portrait cam; cold tone"
+        }
+      }
+    },
+    {
+      "id": "scene-5",
+      "type": "broll",
+      "description": "大招金青粒子爆发高潮",
+      "start_seconds": 17,
+      "end_seconds": 23,
+      "script_section_id": "b5",
+      "framing": "竖屏 MS 保留放射粒子",
+      "movement": "硬切进入；hold 情绪峰",
+      "transition_in": "dissolve",
+      "transition_out": "dissolve",
+      "shot_language": {
+        "shot_size": "medium",
+        "camera_movement": "static",
+        "lighting_key": "volumetric",
+        "depth_of_field": "medium",
+        "color_temperature": "mixed"
+      },
+      "shot_intent": "情绪与技能视觉峰值",
+      "narrative_role": "deliver_payload",
+      "information_role": "湮灭风元素力量感",
+      "hero_moment": true,
+      "metadata": {
+        "source_trim": {"in": 34, "out": 40},
+        "five_aspect": {
+          "subject": "秧秧·玄翎施放技能",
+          "subject_motion": "蓄力→爆发粒子放射",
+          "scene": "石庭地面能量纹路；金青对比",
+          "spatial_framing": "MS centered; particles fill frame",
+          "camera": "game action cam; slight slow feel via long hold"
+        }
+      }
+    },
+    {
+      "id": "scene-6",
+      "type": "text_card",
+      "description": "话题标签叠加",
+      "start_seconds": 23,
+      "end_seconds": 26,
+      "script_section_id": "b6",
+      "framing": "overlay lower-third",
+      "movement": "overlay on trimmed skill bg",
+      "transition_in": "fade",
+      "transition_out": "fade",
+      "shot_intent": "抖音传播标签",
+      "narrative_role": "call_to_action",
+      "information_role": "话题可发现性",
+      "hero_moment": false,
+      "metadata": {
+        "overlays": [{"type": "hashtag", "content": "#鸣潮秧秧玄翎", "placement": "lower-third"}],
+        "background_trim": {"in": 34, "out": 37}
+      }
+    },
+    {
+      "id": "scene-7",
+      "type": "text_card",
+      "description": "落版：玄翎上线",
+      "start_seconds": 26,
+      "end_seconds": 30,
+      "script_section_id": "b7",
+      "framing": "竖屏居中落版",
+      "movement": "spring settle",
+      "transition_in": "fade",
+      "transition_out": "fade to black",
+      "shot_intent": "上线 CTA 收束",
+      "narrative_role": "call_to_action",
+      "information_role": "版本上线记忆点",
+      "hero_moment": false,
+      "metadata": {
+        "overlays": [{"type": "end_card", "content": "玄翎上线", "placement": "center"}]
+      }
+    }
+  ],
+  "metadata": {
+    "hero_frames": ["scene-2", "scene-4", "scene-5"],
+    "transition_rules": ["fade", "dissolve", "cut — max 3 types"],
+    "aspect_ratio_rules": "1080x1920 vertical center-crop from 1920x1080 source",
+    "title_card_rules": "gold #D4AF37 primary; max 4 title beats; no VO",
+    "support_insert_rules": "no generated inserts — source-led only"
+  }
+}

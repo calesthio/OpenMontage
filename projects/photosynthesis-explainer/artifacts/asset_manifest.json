@@ -1,0 +1,166 @@
+{
+  "version": "1.0",
+  "assets": [
+    {
+      "id": "diagram-scene-2",
+      "type": "diagram",
+      "path": "assets/images/scene-2-chloroplast-diagram.png",
+      "source_tool": "diagram_gen",
+      "scene_id": "scene-2",
+      "prompt": "flowchart LR: Sunlight → Chlorophyll → Light Energy inside Chloroplast; purple/teal flat-motion-graphics palette",
+      "cost_usd": 0,
+      "format": "png",
+      "generation_summary": "Mermaid-style flowchart rendered via diagram_gen (Pillow fallback; mmdc not on PATH)",
+      "provider": "mermaid"
+    },
+    {
+      "id": "music-bg",
+      "type": "music",
+      "path": "assets/music/background_music.mp3",
+      "source_tool": "pixabay_music",
+      "scene_id": "scene-1",
+      "duration_seconds": 119,
+      "cost_usd": 0,
+      "format": "mp3",
+      "subtype": "background",
+      "generation_summary": "Pixabay royalty-free search: upbeat educational soft synth",
+      "provider": "pixabay_music",
+      "license": "Pixabay License"
+    },
+    {
+      "id": "narration-s1",
+      "type": "narration",
+      "path": "assets/audio/s1.wav",
+      "source_tool": "piper_tts",
+      "scene_id": "scene-1",
+      "model": "en_US-lessac-medium",
+      "cost_usd": 0,
+      "duration_seconds": 5.27,
+      "format": "wav",
+      "provider": "piper",
+      "generation_summary": "Piper local TTS; SSML breaks stripped; length_scale=0.95",
+      "voice_performance": {
+        "source_section_id": "s1",
+        "delivery_cues_applied": true,
+        "provider_text_used": true,
+        "provider_settings": {
+          "length_scale": 0.95,
+          "sentence_silence": 0.35
+        },
+        "sample_approved": true,
+        "sample_path": "assets/audio/s1-sample.wav"
+      }
+    },
+    {
+      "id": "narration-s2",
+      "type": "narration",
+      "path": "assets/audio/s2.wav",
+      "source_tool": "piper_tts",
+      "scene_id": "scene-2",
+      "model": "en_US-lessac-medium",
+      "cost_usd": 0,
+      "duration_seconds": 5.34,
+      "format": "wav",
+      "provider": "piper",
+      "generation_summary": "Piper local TTS; length_scale=0.95",
+      "voice_performance": {
+        "source_section_id": "s2",
+        "delivery_cues_applied": true,
+        "provider_text_used": true,
+        "provider_settings": {
+          "length_scale": 0.95,
+          "sentence_silence": 0.35
+        },
+        "sample_approved": true,
+        "sample_path": "assets/audio/s1-sample.wav"
+      }
+    },
+    {
+      "id": "narration-s3",
+      "type": "narration",
+      "path": "assets/audio/s3.wav",
+      "source_tool": "piper_tts",
+      "scene_id": "scene-3",
+      "model": "en_US-lessac-medium",
+      "cost_usd": 0,
+      "duration_seconds": 6.09,
+      "format": "wav",
+      "provider": "piper",
+      "generation_summary": "Piper local TTS; length_scale=1.55 to match 7s scene timing",
+      "voice_performance": {
+        "source_section_id": "s3",
+        "delivery_cues_applied": true,
+        "provider_text_used": true,
+        "provider_settings": {
+          "length_scale": 1.55,
+          "sentence_silence": 0.4
+        },
+        "sample_approved": true,
+        "sample_path": "assets/audio/s1-sample.wav"
+      }
+    },
+    {
+      "id": "narration-s4",
+      "type": "narration",
+      "path": "assets/audio/s4.wav",
+      "source_tool": "piper_tts",
+      "scene_id": "scene-5",
+      "model": "en_US-lessac-medium",
+      "cost_usd": 0,
+      "duration_seconds": 6.53,
+      "format": "wav",
+      "provider": "piper",
+      "generation_summary": "Piper local TTS; length_scale=1.42 to match 7s scene timing",
+      "voice_performance": {
+        "source_section_id": "s4",
+        "delivery_cues_applied": true,
+        "provider_text_used": true,
+        "provider_settings": {
+          "length_scale": 1.42,
+          "sentence_silence": 0.4
+        },
+        "sample_approved": true,
+        "sample_path": "assets/audio/s1-sample.wav"
+      }
+    },
+    {
+      "id": "narration-s5",
+      "type": "narration",
+      "path": "assets/audio/s5.wav",
+      "source_tool": "piper_tts",
+      "scene_id": "scene-7",
+      "model": "en_US-lessac-medium",
+      "cost_usd": 0,
+      "duration_seconds": 5.9,
+      "format": "wav",
+      "provider": "piper",
+      "generation_summary": "Piper local TTS; length_scale=0.95",
+      "voice_performance": {
+        "source_section_id": "s5",
+        "delivery_cues_applied": true,
+        "provider_text_used": true,
+        "provider_settings": {
+          "length_scale": 0.95,
+          "sentence_silence": 0.35
+        },
+        "sample_approved": true,
+        "sample_path": "assets/audio/s1-sample.wav"
+      }
+    }
+  ],
+  "total_cost_usd": 0,
+  "metadata": {
+    "generation_summary": {
+      "narration_sections": 5,
+      "images_generated": 0,
+      "diagrams_generated": 1,
+      "music_tracks": 1
+    },
+    "music_status": "available",
+    "narration_provider": "piper_tts",
+    "narration_model": "en_US-lessac-medium",
+    "narration_total_seconds": 29.13,
+    "tts_sample_path": "assets/audio/s1-sample.wav",
+    "timing_notes": "All narration sections within ±15% of script section targets after s3/s4 length_scale tuning."
+  }
+}

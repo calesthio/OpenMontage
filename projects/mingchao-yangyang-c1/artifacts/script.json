@@ -1,0 +1,80 @@
+{
+  "version": "1.0",
+  "title": "霓裳入梦",
+  "total_duration_seconds": 30,
+  "sections": [
+    {
+      "id": "b1",
+      "label": "Hook",
+      "text": "霓裳一曲千峰上",
+      "start_seconds": 0,
+      "end_seconds": 3,
+      "enhancement_cues": [{"type": "overlay", "description": "Gold serif title on black, slow fade-in", "timestamp_seconds": 0}]
+    },
+    {
+      "id": "b2",
+      "label": "Establish",
+      "text": "",
+      "start_seconds": 3,
+      "end_seconds": 8,
+      "enhancement_cues": [{"type": "broll", "description": "雾面广场大景 establishing", "timestamp_seconds": 3}]
+    },
+    {
+      "id": "b3",
+      "label": "Poetic line",
+      "text": "尽日欢娱忘岁年",
+      "start_seconds": 8,
+      "end_seconds": 11,
+      "enhancement_cues": [{"type": "overlay", "description": "Second poem line, restrained typography", "timestamp_seconds": 8}]
+    },
+    {
+      "id": "b4",
+      "label": "Reveal",
+      "text": "",
+      "start_seconds": 11,
+      "end_seconds": 17,
+      "enhancement_cues": [{"type": "broll", "description": "秧秧·玄翎 CU 羽发发光", "timestamp_seconds": 11}]
+    },
+    {
+      "id": "b5",
+      "label": "Peak",
+      "text": "",
+      "start_seconds": 17,
+      "end_seconds": 23,
+      "enhancement_cues": [{"type": "broll", "description": "大招金青粒子高潮", "timestamp_seconds": 17}]
+    },
+    {
+      "id": "b6",
+      "label": "Tag",
+      "text": "#鸣潮秧秧玄翎",
+      "start_seconds": 23,
+      "end_seconds": 26,
+      "enhancement_cues": [{"type": "overlay", "description": "Hashtag overlay on motion bg", "timestamp_seconds": 23}]
+    },
+    {
+      "id": "b7",
+      "label": "Landing",
+      "text": "玄翎上线",
+      "start_seconds": 26,
+      "end_seconds": 30,
+      "enhancement_cues": [{"type": "overlay", "description": "End card CTA", "timestamp_seconds": 26}]
+    }
+  ],
+  "metadata": {
+    "beat_map": {
+      "hook": "b1",
+      "escalation": "b4",
+      "reveal": "b5",
+      "landing": "b7"
+    },
+    "dialogue_selects": [],
+    "title_card_copy": ["霓裳一曲千峰上", "尽日欢娱忘岁年", "#鸣潮秧秧玄翎", "玄翎上线"],
+    "music_turns": [
+      {"at_seconds": 0, "note": "piano bed in"},
+      {"at_seconds": 17, "note": "swell into climax"},
+      {"at_seconds": 26, "note": "resolve on end card"}
+    ],
+    "silence_windows": [],
+    "narration_mode": "none — title-led BGM montage"
+  }
+}

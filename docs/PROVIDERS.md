@@ -23,7 +23,11 @@ New asynchronous video/image tools return `resume_job` and optionally save
 another paid request. Unpriced calls return `cost_usd: null` with `cost_status`,
 not zero. Ideogram direct supports an unbilled `dry_run` price quote.
 
-Kling 4/Flash stays gated pending verified public schemas and account access.
+Kling 4 and Kling 4 Edit run through `minicut_video` (the MiniCut CLI: install it,
+then `minicut login`). `dry_run` returns the price as an `approval`; `execute`
+sends only that approval, and sending it again never pays twice. A failed job's
+held credits are refunded. Kling 4 Flash stays gated pending verified public
+schemas and account access.
 LTX-2.5 local execution requires a supplied ComfyUI API workflow and installed
 weights; the direct LTX API is implemented separately. GPU and paid API output
 quality require live validation in the intended environment.

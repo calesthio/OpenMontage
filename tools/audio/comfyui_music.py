@@ -359,7 +359,7 @@ class ComfyUIMusic(BaseTool):
                     "-of", "default=noprint_wrappers=1:nokey=1",
                     str(path),
                 ],
-                capture_output=True, text=True, timeout=15, check=True,
+                capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=15, check=True,
             )
             value = out.stdout.strip()
             return round(float(value), 2) if value else None

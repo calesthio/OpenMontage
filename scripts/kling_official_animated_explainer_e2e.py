@@ -74,7 +74,7 @@ def _probe_media(path: Path) -> dict[str, Any]:
         str(path),
     ]
     try:
-        completed = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        completed = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", check=True)
         return json.loads(completed.stdout or "{}")
     except Exception as exc:
         return {"error": str(exc)}

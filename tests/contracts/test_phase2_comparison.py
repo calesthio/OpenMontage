@@ -29,7 +29,7 @@ def _has_ffmpeg() -> bool:
 def _get_duration(path: str) -> float:
     result = subprocess.run(
         ["ffprobe", "-v", "quiet", "-show_entries", "format=duration", "-of", "json", path],
-        capture_output=True, text=True, check=True,
+        capture_output=True, text=True, encoding="utf-8", errors="replace", check=True,
     )
     data = json.loads(result.stdout)
     return float(data.get("format", {}).get("duration", 0))

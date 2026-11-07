@@ -101,7 +101,7 @@ def _render_preview_mp4(preview_path: Path, video_path: Path, duration_seconds: 
         "yuv420p",
         str(video_path),
     ]
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if result.returncode != 0:
         raise RuntimeError(result.stderr.strip() or "ffmpeg failed to render preview MP4")
 

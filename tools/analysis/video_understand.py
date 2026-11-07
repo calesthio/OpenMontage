@@ -259,7 +259,7 @@ class VideoUnderstand(BaseTool):
             out = subprocess.run(
                 ["ffprobe", "-v", "error", "-show_entries", "format=duration",
                  "-of", "default=noprint_wrappers=1:nokey=1", str(video_path)],
-                capture_output=True, text=True, timeout=30,
+                capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=30,
             ).stdout.strip()
             duration = float(out)
             return duration if duration > 0 else None
@@ -300,7 +300,7 @@ class VideoUnderstand(BaseTool):
                      "-vsync", "vfr",
                      str(tmp / "frame_%04d.png"),
                      "-y", "-loglevel", "error"],
-                    capture_output=True, text=True, timeout=60,
+                    capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60,
                 )
             elif (duration := self._video_duration_seconds(video_path)) is not None:
                 # Land inside each 1/N slice rather than on its edge, so a cut
@@ -315,7 +315,7 @@ class VideoUnderstand(BaseTool):
                          "-frames:v", "1",
                          str(tmp / f"frame_{index:04d}.png"),
                          "-y", "-loglevel", "error"],
-                        capture_output=True, text=True, timeout=60,
+                        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60,
                     )
             else:
                 # No duration — a stream, or no ffprobe on PATH. Fall back to
@@ -325,7 +325,7 @@ class VideoUnderstand(BaseTool):
                      "-vsync", "vfr", "-frames:v", str(max_frames),
                      str(tmp / "frame_%04d.png"),
                      "-y", "-loglevel", "error"],
-                    capture_output=True, text=True, timeout=60,
+                    capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60,
                 )
 
             # Load extracted frames

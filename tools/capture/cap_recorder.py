@@ -117,19 +117,19 @@ def _is_cap_running() -> bool:
         if sys_platform == "Windows":
             result = subprocess.run(
                 ["tasklist", "/FI", "IMAGENAME eq Cap.exe", "/NH"],
-                capture_output=True, text=True, timeout=5,
+                capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=5,
             )
             return "Cap.exe" in result.stdout
         elif sys_platform == "Darwin":
             result = subprocess.run(
                 ["pgrep", "-x", "Cap"],
-                capture_output=True, text=True, timeout=5,
+                capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=5,
             )
             return result.returncode == 0
         elif sys_platform == "Linux":
             result = subprocess.run(
                 ["pgrep", "-x", "cap"],
-                capture_output=True, text=True, timeout=5,
+                capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=5,
             )
             return result.returncode == 0
     except Exception:

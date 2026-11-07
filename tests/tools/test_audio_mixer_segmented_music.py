@@ -68,7 +68,7 @@ def test_segmented_music_preserves_narration_level(tmp_path):
         out = subprocess.run(
             ["ffmpeg", "-ss", str(ss), "-t", str(t), "-i", str(path),
              "-vn", "-af", "volumedetect", "-f", "null", "-"],
-            capture_output=True, text=True, timeout=60,
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60,
         )
         for line in out.stderr.splitlines():
             if "mean_volume" in line:

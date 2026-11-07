@@ -183,7 +183,7 @@ def test_hyperframes_full_render(tmp_path: Path):
             "-of", "default=nw=1",
             str(out_mp4),
         ],
-        capture_output=True, text=True, timeout=30,
+        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=30,
     )
     assert probe.returncode == 0, probe.stderr
     assert "codec_name" in probe.stdout

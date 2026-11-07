@@ -40,7 +40,7 @@ def test_external_audio_mux_adds_audible_stream_without_changing_video_length(tm
         ],
         capture_output=True,
         check=True,
-        text=True,
+        text=True, encoding="utf-8", errors="replace",
         timeout=30,
     ).stdout.splitlines()
     duration = float(subprocess.run(
@@ -50,7 +50,7 @@ def test_external_audio_mux_adds_audible_stream_without_changing_video_length(tm
         ],
         capture_output=True,
         check=True,
-        text=True,
+        text=True, encoding="utf-8", errors="replace",
         timeout=30,
     ).stdout.strip())
 

@@ -37,7 +37,7 @@ def _detect_audio_device_windows() -> str | None:
     try:
         result = subprocess.run(
             ["ffmpeg", "-list_devices", "true", "-f", "dshow", "-i", "dummy"],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=10,
         )
         # dshow lists devices in stderr
         output = result.stderr
@@ -59,7 +59,7 @@ def _detect_audio_device_mac() -> str | None:
     try:
         result = subprocess.run(
             ["ffmpeg", "-f", "avfoundation", "-list_devices", "true", "-i", ""],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=10,
         )
         output = result.stderr
         in_audio = False
@@ -199,7 +199,7 @@ class ScreenRecorder(BaseTool):
         start_time = time.time()
         try:
             proc = subprocess.run(
-                cmd, capture_output=True, text=True,
+                cmd, capture_output=True, text=True, encoding="utf-8", errors="replace",
                 timeout=duration + 30,  # grace period
             )
             elapsed = time.time() - start_time
@@ -384,7 +384,7 @@ class ScreenRecorder(BaseTool):
                     "-of", "csv=p=0",
                     path,
                 ],
-                capture_output=True, text=True, timeout=10,
+                capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=10,
             )
             parts = result.stdout.strip().split(",")
             if len(parts) == 2:

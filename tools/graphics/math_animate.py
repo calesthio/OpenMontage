@@ -350,7 +350,7 @@ class MathAnimate(BaseTool):
             proc = subprocess.run(
                 cmd,
                 capture_output=True,
-                text=True,
+                text=True, encoding="utf-8", errors="replace",
                 timeout=300,  # 5 min timeout
                 cwd=str(work_dir),
             )
@@ -466,7 +466,7 @@ class MathAnimate(BaseTool):
                     str(path),
                 ],
                 capture_output=True,
-                text=True,
+                text=True, encoding="utf-8", errors="replace",
                 timeout=10,
             )
             if proc.returncode == 0:

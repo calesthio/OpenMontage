@@ -95,7 +95,7 @@ def test_chromakey_preserves_frame_size_and_keys(tmp_path):
         r = subprocess.run(
             ["ffprobe", "-v", "quiet", "-show_entries", "stream=width,height",
              "-of", "csv=p=0", str(p)],
-            capture_output=True, text=True, timeout=30,
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=30,
         )
         w, h = r.stdout.strip().split(",")
         return int(w), int(h)

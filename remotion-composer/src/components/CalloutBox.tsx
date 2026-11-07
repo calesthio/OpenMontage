@@ -201,6 +201,9 @@ export const CalloutBox: React.FC<CalloutBoxProps> = ({
                 fontSize,
                 color: textColor,
                 lineHeight: 1.6,
+                // Honour newlines in the text prop — callout bodies are written
+                // as one item per line and must not collapse into a run-on line.
+                whiteSpace: "pre-line",
               }}
             >
               {text}

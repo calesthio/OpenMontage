@@ -226,6 +226,7 @@ interface Cut {
   progressColor?: string;
   progressAnimation?: string;
   progressSegments?: any[];
+  showPercentage?: boolean;
   // Hero title props (when used as scene, not overlay)
   heroSubtitle?: string;
   // Styling overrides
@@ -553,6 +554,7 @@ const BackgroundVideoLayer: React.FC<{
 };
 
 const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme }) => {
+  const { fps: sceneFps } = useVideoConfig();
   // Wrap component with background video or image if specified
   const maybeWrapWithBg = (element: React.ReactElement) => {
     if (cut.backgroundVideo) {
@@ -595,7 +597,7 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
   }
   if (cut.type === "stat_card" && cut.stat) {
     return maybeWrapWithBg(
-      <StatCard stat={cut.stat} subtitle={cut.subtitle} accentColor={accent} backgroundColor={bgColor} />
+      <StatCard stat={cut.stat} subtitle={cut.subtitle} accentColor={accent} backgroundColor={bgColor} color={textColor} />
     );
   }
   if (cut.type === "callout" && cut.text) {
@@ -696,6 +698,11 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
     );
   }
   if (cut.type === "progress_bar" && cut.progress !== undefined) {
+    // Pace the fill against this scene, not the whole composition.
+    const progressSceneFrames = Math.max(
+      1,
+      Math.round((cut.out_seconds - cut.in_seconds) * sceneFps)
+    );
     return maybeWrapWithBg(
       <AbsoluteFill
         style={{
@@ -717,6 +724,9 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
           color={cut.progressColor || accent}
           animationStyle={(cut.progressAnimation as any) || "fill"}
           segments={cut.progressSegments} backgroundColor={cut.backgroundColor || theme.surfaceColor}
+          showPercentage={cut.showPercentage}
+          textColor={textColor}
+          animationDurationInFrames={progressSceneFrames}
         />
       </AbsoluteFill>
     );

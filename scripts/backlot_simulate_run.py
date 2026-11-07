@@ -94,6 +94,14 @@ def main() -> int:
     brief["topic"] = "The Last Lighthouse"
     cp("research", "completed", {"research_brief": brief})
 
+    # proposal gates: later stages cannot advance until it is approved
+    cp("proposal", "in_progress", {})
+    proposal = sample_artifact("proposal_packet")
+    save_artifact("proposal_packet", proposal)
+    cp("proposal", "awaiting_human", {"proposal_packet": proposal})
+    time.sleep(wait)
+    cp("proposal", "completed", {"proposal_packet": proposal}, human_approved=True)
+
     # script gates: awaiting_human -> approved
     cp("script", "in_progress", {})
     save_artifact("script", art["script"])

@@ -17,6 +17,45 @@
           "source": { "type": "string", "description": "Source file path or asset-manifest ID" },
           "in_seconds": { "type": "number", "minimum": 0 },
           "out_seconds": { "type": "number", "minimum": 0 },
+          "type": {
+            "type": "string",
+            "description": "Remotion cut.type template (see remotion-composer/SCENE_TYPES.md). Omit for a plain image/video cut driven by `source`.",
+            "enum": ["text_card", "hero_title", "stat_card", "callout", "comparison", "bar_chart", "line_chart", "pie_chart", "kpi_grid", "progress_bar", "anime_scene", "terminal_scene", "screenshot_scene"]
+          },
+          "text": { "type": "string", "description": "text_card / callout / hero_title (as title) body text" },
+          "title": { "type": "string", "description": "callout / kpi_grid / bar_chart / line_chart / pie_chart / comparison heading" },
+          "subtitle": { "type": "string", "description": "stat_card / hero_title (via heroSubtitle) supporting line" },
+          "heroSubtitle": { "type": "string", "description": "hero_title supporting line (falls back to subtitle if omitted)" },
+          "stat": { "type": "string", "description": "stat_card headline value" },
+          "fontSize": { "type": "number", "description": "text_card font size override" },
+          "accentColor": { "type": "string", "description": "Accent/highlight color for this cut (stat value, callout border, chart accent, hero_title lead word)" },
+          "color": { "type": "string", "description": "Primary text color override for this cut" },
+          "callout_type": { "type": "string", "enum": ["info", "warning", "tip", "quote"], "description": "callout tone — picks icon and default accent" },
+          "columns": { "type": "integer", "minimum": 2, "maximum": 4, "description": "kpi_grid column count" },
+          "chartAnimation": { "type": "string", "description": "Chart/KPI entrance style, e.g. count-up, pop, cascade, grow-up, slide-in" },
+          "chartColors": { "type": "array", "items": { "type": "string" }, "description": "Per-series/per-card accent colors for kpi_grid / bar_chart / pie_chart" },
+          "chartData": {
+            "type": "array",
+            "description": "kpi_grid / bar_chart / pie_chart data points",
+            "items": {
+              "type": "object",
+              "required": ["label", "value"],
+              "properties": {
+                "label": { "type": "string" },
+                "value": { "type": "number" },
+                "prefix": { "type": "string" },
+                "suffix": { "type": "string" },
+                "change": { "type": "number", "description": "Percentage change indicator, positive = up" },
+                "icon": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          },
+          "leftLabel": { "type": "string", "description": "comparison" },
+          "rightLabel": { "type": "string", "description": "comparison" },
+          "leftValue": { "type": "string", "description": "comparison" },
+          "rightValue": { "type": "string", "description": "comparison" },
+          "progress": { "type": "number", "minimum": 0, "maximum": 1, "description": "progress_bar fill amount" },
           "speed": { "type": "number", "minimum": 0.1, "default": 1.0 },
           "layer": {
             "type": "string",

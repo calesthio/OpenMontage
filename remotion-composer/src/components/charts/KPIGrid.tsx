@@ -5,6 +5,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { arabicFontFamily, isRTLText } from "../../lib/rtlText";
 
 interface Metric {
   label: string;
@@ -36,7 +37,7 @@ export const KPIGrid: React.FC<KPIGridProps> = ({
   title,
   columns = 3,
   colors = ["#2563EB", "#F59E0B", "#10B981", "#EC4899"],
-  fontFamily = "Inter, system-ui, sans-serif",
+  fontFamily: fontFamilyProp = "Inter, system-ui, sans-serif",
   textColor = "#1F2937",
   backgroundColor = "#FFFFFF",
   cardBackgroundColor = "#F9FAFB",
@@ -46,6 +47,8 @@ export const KPIGrid: React.FC<KPIGridProps> = ({
 }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
+  const isRTL = isRTLText(title) || metrics.some((m) => isRTLText(m.label));
+  const fontFamily = isRTL ? arabicFontFamily : fontFamilyProp;
 
   const cols = Math.min(columns, metrics.length);
   const rows = Math.ceil(metrics.length / cols);
@@ -77,6 +80,7 @@ export const KPIGrid: React.FC<KPIGridProps> = ({
 
   return (
     <AbsoluteFill
+      dir={isRTL ? "rtl" : "ltr"}
       style={{
         background: backgroundColor,
         justifyContent: "flex-start",

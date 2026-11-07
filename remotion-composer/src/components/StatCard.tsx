@@ -1,4 +1,5 @@
 import { AbsoluteFill, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { arabicFontFamily, isRTLText } from "../lib/rtlText";
 
 interface StatCardProps {
   stat: string;
@@ -21,6 +22,9 @@ export const StatCard: React.FC<StatCardProps> = ({
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const isRTL = isRTLText(stat) || isRTLText(subtitle);
+  const fontFamily = isRTL ? arabicFontFamily : "Inter, system-ui, sans-serif";
+  const wordSpacing = isRTL ? "0.25em" : "normal";
 
   const scale = spring({
     frame,
@@ -44,13 +48,14 @@ export const StatCard: React.FC<StatCardProps> = ({
         background: backgroundColor,
       }}
     >
-      <div style={{ textAlign: "center" }}>
+      <div style={{ textAlign: "center" }} dir={isRTL ? "rtl" : "ltr"}>
         <div
           style={{
             transform: `scale(${scale})`,
             fontSize: statFontSize,
             color: accentColor,
-            fontFamily: "Inter, system-ui, sans-serif",
+            fontFamily,
+            wordSpacing,
             fontWeight: 800,
             lineHeight: 1.1,
           }}
@@ -63,7 +68,8 @@ export const StatCard: React.FC<StatCardProps> = ({
               opacity: subtitleOpacity,
               fontSize: subtitleFontSize,
               color,
-              fontFamily: "Inter, system-ui, sans-serif",
+              fontFamily,
+              wordSpacing,
               fontWeight: 400,
               marginTop: 16,
             }}

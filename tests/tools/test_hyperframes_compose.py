@@ -501,11 +501,15 @@ def test_video_compose_rejects_missing_render_runtime(tmp_path):
     assert "remotion render failed" not in err
 
 
-def test_schemas_require_render_runtime():
-    """Regression: both proposal_packet and edit_decisions schemas must
-    REQUIRE render_runtime, not just declare it as an optional property."""
+def test_schemas_require_render_runtime_at_the_approval_boundary():
+    """Proposal runtime is required after approval, but not while awaiting it."""
     import json
     from pathlib import Path
+
+    from jsonschema import ValidationError
+
+    from schemas.artifacts import validate_artifact
+    from tests.contracts.test_phase0_contracts import sample_artifact
 
     root = Path(__file__).resolve().parent.parent.parent
 
@@ -525,10 +529,22 @@ def test_schemas_require_render_runtime():
         )
     )
     pp_prod = pp["properties"]["production_plan"]
-    assert "render_runtime" in pp_prod["required"], (
-        "proposal_packet.production_plan must require render_runtime — "
-        "the proposal stage MUST pick a runtime explicitly."
+    assert "render_runtime" not in pp_prod["required"], (
+        "proposal_packet.production_plan must defer render_runtime until "
+        "the user approves the proposal."
     )
+
+    pending = sample_artifact("proposal_packet")
+    pending["approval"] = {"status": "pending"}
+    pending["production_plan"].pop("render_runtime")
+    validate_artifact("proposal_packet", pending)
+
+    for approval_status in ("approved", "approved_with_changes"):
+        approved = sample_artifact("proposal_packet")
+        approved["approval"]["status"] = approval_status
+        approved["production_plan"].pop("render_runtime")
+        with pytest.raises(ValidationError, match="render_runtime"):
+            validate_artifact("proposal_packet", approved)
 
 
 def test_runtime_swap_detected_flips_when_proposal_packet_disagrees(tmp_path):

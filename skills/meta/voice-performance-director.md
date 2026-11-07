@@ -66,6 +66,10 @@ Section-level delivery cues:
 - ElevenLabs: use lower `stability` for more variation, moderate `style` for
   expressiveness, `speed` in the provider's `0.7..1.2` range, and keep
   `similarity_boost` high enough to preserve the voice.
+- Deepgram Aura: no SSML and no `<break>` tags. Choose the voice by accent
+  (`aura-2-<name>-<lang>`, e.g. `antonia` for es-AR), set `speed` in
+  `0.7..1.5`, and express pauses in `provider_text` with punctuation and
+  ellipses (`...` = longer pause; groups of three dots stack).
 - Offline/basic voices: rely on punctuation, shorter sentences, and explicit
   segment splitting because provider-level emotion controls may be unavailable.
 

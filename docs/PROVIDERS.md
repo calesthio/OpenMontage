@@ -77,6 +77,9 @@ DASHSCOPE_API_KEY=           # Alibaba DashScope (Qwen image gen, TTS, ASR with 
 AZURE_SPEECH_KEY=            # Azure AI Speech — azure_stt (Fast Transcription) + azure_tts (neural narration)
 AZURE_SPEECH_REGION=         # Speech resource region, e.g. eastus
 
+# DEEPGRAM (optional cloud STT + TTS; one key unlocks both directions)
+DEEPGRAM_API_KEY=            # Deepgram — deepgram_stt (Nova-3) + deepgram_tts (Aura-2, regional Spanish voices)
+
 # MULTI-MODEL GATEWAY (one key, 6+ tools)
 FAL_KEY=                     # FLUX, Recraft, Kling, Veo, MiniMax video
 MINIMAX_API_KEY=             # MiniMax first-party image + MiniMax H3 video generation
@@ -783,6 +786,63 @@ Azure neural TTS Standard (S0) bills roughly **$16 per 1M characters** (a free
 F0 tier includes a limited monthly allowance). A 150-word narration segment
 costs about $0.015. OpenMontage estimates cost from character count. See
 [Azure AI Speech pricing](https://azure.microsoft.com/pricing/details/cognitive-services/speech-services/) for current rates.
+
+---
+
+### Deepgram — Speech-to-Text + Text-to-Speech (Shared Key)
+
+> **Cloud STT and TTS on one key.** Deepgram Nova-3 transcribes local audio or video with word-level timestamps, smart formatting and diarization; Deepgram Aura-2 generates natural narration, including **regional Spanish voices** (Argentine, Mexican, Colombian, Peninsular, Latin American). Optional: the local `transcriber` / `piper_tts` remain the default offline paths.
+
+**Tools unlocked:** `deepgram_stt`, `deepgram_tts`
+**Env vars:** `DEEPGRAM_API_KEY`
+
+#### Setup
+
+1. Sign in to the [Deepgram console](https://console.deepgram.com) (new accounts include free credit).
+2. Create a key under **API Keys**.
+3. Add to `.env`:
+   ```bash
+   DEEPGRAM_API_KEY=your-deepgram-api-key
+   ```
+
+#### API Notes
+
+Both directions are synchronous REST calls authenticated with
+`Authorization: Token ${DEEPGRAM_API_KEY}`:
+
+```text
+POST https://api.deepgram.com/v1/listen?model=nova-3&smart_format=true&utterances=true&language=es
+Content-Type: audio/* or video/*          (raw file bytes as the body)
+
+POST https://api.deepgram.com/v1/speak?model=aura-2-antonia-es&encoding=mp3
+Content-Type: application/json            ({"text": "..."})
+```
+
+`deepgram_stt` maps `results.utterances[]` onto the `transcriber` schema
+(segments + word_timestamps, using the smart-formatted `punctuated_word`), so
+it is a drop-in for `subtitle_gen`. `deepgram_tts` accepts voice aliases
+(`antonia`, `estrella`, `selena`, `aquila`, `sirio`, `diana`, `nestor`,
+`thalia`, `apollo`) or any Aura model name, plus `speed` (0.7–1.5). Aura has no
+SSML: pacing is controlled with punctuation and ellipses — see the
+`deepgram-text-to-speech` skill.
+
+#### What It Is Best For
+
+- Spanish narration with a specific regional accent (e.g. `aura-2-antonia-es`, es-AR)
+- Fast, inexpensive cloud transcription with real per-word confidence
+- Keyterm prompting for names and brands (Nova-3)
+- One key for both caption timing (STT) and narration (TTS)
+
+Not for: fully offline production (use `transcriber` / `piper_tts`), voice
+cloning (use `elevenlabs_tts`), or fine SSML prosody control (use `azure_tts`).
+
+#### Pricing
+
+Pay-as-you-go (Oct 2026): Nova-3 pre-recorded **$0.0048/min** (monolingual) or
+**$0.0058/min** (multilingual); Aura-2 **$0.030 per 1k characters**. A 45-second
+social video's narration costs about $0.01–0.02. OpenMontage estimates STT cost
+from the returned audio duration and TTS cost from character count. See
+[Deepgram pricing](https://deepgram.com/pricing) for current rates.
 
 ---
 

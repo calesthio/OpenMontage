@@ -321,3 +321,23 @@ def test_ark_local_reference_routes_without_fal_upload(rankings, monkeypatch, tm
     assert "image_url" not in ark.last_execute_inputs
     assert result.data["selected_tool"] == "seedance_ark"
     assert result.data["selected_provider"] == "ark"
+
+
+# ---------------------------------------------------------------------------
+# Registry-driven discovery — real providers are routable through the selector
+# without any per-provider changes to VideoSelector.
+# ---------------------------------------------------------------------------
+
+def test_ofox_video_is_discovered_through_the_registry():
+    """ofox_video must be routable via the selector's registry discovery.
+
+    VideoSelector discovers every capability="video_generation" tool from the
+    registry (no hard-coded provider list), so a new provider is routable the
+    moment its tool file exists. This locks that in for ofox_video.
+    """
+    selector = VideoSelector()
+    providers = {tool.name: tool for tool in selector._providers()}
+    assert "ofox_video" in providers
+    assert providers["ofox_video"].provider == "ofox"
+    assert "ofox_video" in selector.fallback_tools
+    assert "ofox" in selector.provider_matrix

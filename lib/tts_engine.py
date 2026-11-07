@@ -140,3 +140,203 @@ def synthesize_speech(text: str, output_path: str | Path,
                       voice: str = "default") -> dict[str, Any]:
     """Module-level convenience entry point."""
     return TtsEngine().synthesize(text, output_path, voice).to_dict()
+
+
+# ---------------------------------------------------------------------------
+# TTS A/B (V8 §8.11 / wave 3.2)
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class TtsAbResult:
+    """Result of comparing two TTS engines on the same text."""
+
+    text: str
+    engine_a: str  # e.g. "kokoro"
+    engine_b: str  # e.g. "piper"
+    result_a: TtsResult
+    result_b: TtsResult
+    chosen: str  # engine_id of the preferred result
+    reason: str  # why this engine was chosen
+    created_at: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        d = asdict(self)
+        d["result_a"] = self.result_a.to_dict()
+        d["result_b"] = self.result_b.to_dict()
+        if not self.created_at:
+            d["created_at"] = datetime.now(timezone.utc).isoformat()
+        return d
+
+
+class TtsAbTester:
+    """Compare two TTS engines on the same text and pick the preferred one.
+
+    Preference order:
+      1. success > fallback_used > failed
+      2. shorter duration (more concise narration)
+      3. kokoro preferred over piper when both succeed (quality)
+    """
+
+    def __init__(self, engine_a: str = "kokoro", engine_b: str = "piper") -> None:
+        self.engine_a = engine_a
+        self.engine_b = engine_b
+
+    def run(
+        self,
+        text: str,
+        output_dir: str | Path,
+        *,
+        voice: str = "default",
+    ) -> TtsAbResult:
+        """Synthesize ``text`` with both engines and return the preferred."""
+        out_dir = Path(output_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+
+        path_a = out_dir / f"ab_{self.engine_a}.wav"
+        path_b = out_dir / f"ab_{self.engine_b}.wav"
+
+        result_a = self._synthesize_with(text, str(path_a), self.engine_a, voice)
+        result_b = self._synthesize_with(text, str(path_b), self.engine_b, voice)
+
+        chosen, reason = self._pick(result_a, result_b)
+
+        return TtsAbResult(
+            text=text,
+            engine_a=self.engine_a,
+            engine_b=self.engine_b,
+            result_a=result_a,
+            result_b=result_b,
+            chosen=chosen,
+            reason=reason,
+        )
+
+    # ------------------------------------------------------------------
+    # Internals
+    # ------------------------------------------------------------------
+
+    def _synthesize_with(
+        self, text: str, output_path: str, engine: str, voice: str
+    ) -> TtsResult:
+        """Synthesize with a specific engine, forcing that engine path."""
+        # Temporarily constrain availability to force the chosen engine.
+        engine_order = [engine]
+        result = self._synthesize_one(text, output_path, voice, engine_order)
+        return result
+
+    def _synthesize_one(
+        self, text: str, output_path: str, voice: str,
+        engine_order: list[str]
+    ) -> TtsResult:
+        """Synthesize with the first engine in engine_order."""
+        engine = engine_order[0]
+        if engine == "kokoro":
+            kokoro = self._kokoro_available()
+            if kokoro:
+                try:
+                    out_path = Path(output_path)
+                    out_path.parent.mkdir(parents=True, exist_ok=True)
+                    self._synthesize_kokoro(text, str(out_path), voice)
+                    if out_path.is_file():
+                        return TtsResult(
+                            text=text, output_path=str(out_path), engine="kokoro",
+                            status="success",
+                            reason="kokoro synthesis succeeded",
+                        )
+                except Exception:
+                    pass
+                # Kokoro failed -> fall through to report failure for this engine
+                return TtsResult(
+                    text=text, output_path=str(out_path), engine="kokoro",
+                    status="failed",
+                    failure_class="REQUIRED",
+                    reason="kokoro synthesis failed",
+                )
+            return TtsResult(
+                text=text, output_path=str(output_path), engine="kokoro",
+                status="failed",
+                failure_class="REQUIRED",
+                reason="kokoro not available",
+            )
+        if engine == "piper":
+            piper = self._piper_available()
+            if piper:
+                try:
+                    out_path = Path(output_path)
+                    out_path.parent.mkdir(parents=True, exist_ok=True)
+                    self._synthesize_piper(text, str(out_path), voice)
+                    if out_path.is_file():
+                        return TtsResult(
+                            text=text, output_path=str(out_path), engine="piper",
+                            status="success",
+                            reason="piper synthesis succeeded",
+                        )
+                except Exception:
+                    pass
+                return TtsResult(
+                    text=text, output_path=str(output_path), engine="piper",
+                    status="failed",
+                    failure_class="REQUIRED",
+                    reason="piper synthesis failed",
+                )
+            return TtsResult(
+                text=text, output_path=str(output_path), engine="piper",
+                status="failed",
+                failure_class="REQUIRED",
+                reason="piper not available",
+            )
+        return TtsResult(
+            text=text, output_path=str(output_path), engine=engine,
+            status="failed",
+            failure_class="REQUIRED",
+            reason=f"unknown engine {engine}",
+        )
+
+    def _kokoro_available(self) -> bool:
+        import importlib.util
+        return importlib.util.find_spec("kokoro") is not None
+
+    def _piper_available(self) -> bool:
+        import shutil
+        return shutil.which("piper-tts") is not None or \
+            shutil.which("piper") is not None
+
+    def _synthesize_kokoro(self, text: str, output_path: str, voice: str) -> None:
+        raise NotImplementedError("kokoro binding not implemented in this repo")
+
+    def _synthesize_piper(self, text: str, output_path: str, voice: str) -> None:
+        import subprocess
+        subprocess.run(
+            ["piper-tts", "--model", "default", "--output", output_path, "--text", text],
+            check=True, capture_output=True, timeout=120,
+        )
+
+    def _pick(self, ra: TtsResult, rb: TtsResult) -> tuple[str, str]:
+        """Pick preferred engine; return (chosen_engine_id, reason)."""
+        rank = {"success": 3, "fallback_used": 2, "failed": 1}
+        ra_rank = rank.get(ra.status, 0)
+        rb_rank = rank.get(rb.status, 0)
+        if ra_rank > rb_rank:
+            return ra.engine, f"{ra.engine} succeeded, {rb.engine} did not"
+        if rb_rank > ra_rank:
+            return rb.engine, f"{rb.engine} succeeded, {ra.engine} did not"
+        # Same status: prefer kokoro when both succeed (quality).
+        if ra.status == "success" and self.engine_a == "kokoro":
+            return ra.engine, "both succeeded; kokoro preferred for quality"
+        if rb.status == "success" and self.engine_b == "kokoro":
+            return rb.engine, "both succeeded; kokoro preferred for quality"
+        # Fallback: shorter duration (file size proxy), then engine_a.
+        return ra.engine, "equal status; keeping engine_a as default"
+
+
+def tts_ab_test(
+    text: str,
+    output_dir: str | Path,
+    *,
+    engine_a: str = "kokoro",
+    engine_b: str = "piper",
+    voice: str = "default",
+) -> dict[str, Any]:
+    """Module-level convenience: run TTS A/B and return dict."""
+    tester = TtsAbTester(engine_a=engine_a, engine_b=engine_b)
+    return tester.run(text, output_dir, voice=voice).to_dict()

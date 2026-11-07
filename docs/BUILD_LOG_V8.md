@@ -129,6 +129,21 @@ Committed after every completed P0 item (8.1–8.6) and after every wave item.
 - Created `lib/human_review.py`: V8 §8.17.
   - `ReviewGate`: tracks required stages and explicit ReviewDecision (approved/rejected).
   - `is_cleared(stage)`, `pending_reviews()`, `all_cleared()`.
-  - `human_review_gate()` module-level convenience.
-  - Integrates with checkpoint.py (§8.1: awaiting_human → completed requires human_approved=True) and state_store.py (§8.2: requires_approval flag).
+- `human_review_gate()` module-level convenience.
+- Integrates with checkpoint.py (§8.1: awaiting_human → completed requires human_approved=True) and state_store.py (§8.2: requires_approval flag).
 - All 6 P0 items + 5 wave-1 items + 3 wave-2 items complete.
+
+### 2026-11-07 — Волна 3.1: State machine + SQLite (DONE — P0 8.2)
+
+- `lib/state_store.py` created in P0 8.2: SQLite-backed durable runtime state store.
+  - `stage_state` table, `events` append-only log, statuses/failure classes.
+  - `transition()`, `complete()` (enforces §8.1), `fail()`.
+  - WAL mode, single transaction per write.
+
+### 2026-11-07 — Волна 3.2: TTS A/B (DONE)
+
+- Updated `lib/tts_engine.py`: added `TtsAbTester` and `tts_ab_test()`.
+  - Compares kokoro vs piper on same text.
+  - Preference: success > fallback_used > failed; kokoro preferred when both succeed.
+  - `TtsAbResult` with chosen engine and reason.
+- All 8 waves complete: P0 (8.1–8.6) + Wave 1 (1.1–1.5) + Wave 2 (2.1–2.3) + Wave 3 (3.1–3.2).

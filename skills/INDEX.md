@@ -310,7 +310,7 @@ Load via `styles/playbook_loader.py`: `load_playbook("clean-professional")`
 ## Installed Agent Skills (Layer 3)
 
 All agent skills live in `.agents/skills/` and are managed via `npx skills add`.
-Claude Code accesses them via symlinks in `.claude/skills/`.
+Claude Code accesses them via symlinks in `.claude/skills/` — one per skill, checked into git as mode 120000. `tests/contracts/test_agent_skill_pointers.py` fails if the two roots diverge, which is how they stayed in sync after `.claude/skills/` drifted to 49 of 90 skills.
 
 | Category | Installed Skills | Source |
 |----------|-----------------|--------|

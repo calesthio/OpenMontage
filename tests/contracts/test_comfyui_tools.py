@@ -256,6 +256,29 @@ class TestClientHelpers:
         assert isinstance(w, dict)
         assert "1" in w
 
+    def test_load_workflow_reads_utf8_non_ascii_content(self, monkeypatch, tmp_path):
+        from tools._comfyui.client import ComfyUIClient
+
+        workflow = {"1": {"inputs": {"text": "\u955c\u5934\u7f13\u6162\u63a8\u8fdb"}}}
+        workflow_path = tmp_path / "workflow.json"
+        workflow_path.write_text(
+            json.dumps(workflow, ensure_ascii=False),
+            encoding="utf-8",
+        )
+
+        real_open = open
+        encoding = None
+
+        def tracked_open(*args, **kwargs):
+            nonlocal encoding
+            encoding = kwargs.get("encoding")
+            return real_open(*args, **kwargs)
+
+        monkeypatch.setattr("builtins.open", tracked_open)
+
+        assert ComfyUIClient.load_workflow(workflow_path) == workflow
+        assert encoding == "utf-8"
+
     def test_patch_workflow(self):
         from tools._comfyui.client import ComfyUIClient
         w = ComfyUIClient.load_workflow(WORKFLOW_DIR / "flux2-txt2img.json")
@@ -812,6 +835,44 @@ class TestCustomWorkflowContract:
         assert result.data["workflow_provenance"]["model_stack_source"] == (
             "unknown_custom_workflow"
         )
+
+    def test_video_custom_workflow_path_loads_utf8_and_uses_output_node(self, tmp_path):
+        workflow = {
+            "20": {
+                "inputs": {"text": "\u955c\u5934\u7f13\u6162\u63a8\u8fdb"},
+                "class_type": "SaveVideo",
+            }
+        }
+        workflow_path = tmp_path / "workflow.json"
+        workflow_path.write_text(
+            json.dumps(workflow, ensure_ascii=False),
+            encoding="utf-8",
+        )
+
+        tool = ComfyUIVideo()
+        tool._client.is_available = lambda: True
+        seen = {}
+
+        def fake_generate(loaded_workflow, output_node, dest, **kwargs):
+            seen["workflow"] = loaded_workflow
+            seen["output_node"] = output_node
+            return [Path(dest)]
+
+        tool._client.generate = fake_generate
+
+        result = tool.execute({
+            "prompt": "test",
+            "workflow_path": str(workflow_path),
+            "output_node": "20",
+            "workflow_model": "MiniMax-H3",
+            "model_family": "minimax_h3_local",
+            "output_path": str(tmp_path / "video.mp4"),
+        })
+
+        assert result.success is True
+        assert seen == {"workflow": workflow, "output_node": "20"}
+        assert result.data["workflow_provenance"]["workflow_path"] == str(workflow_path)
+        assert result.data["workflow_provenance"]["output_node"] == "20"
 
     def test_custom_workflow_accepts_model_stack_provenance(self, tmp_path):
         tool = ComfyUIVideo()

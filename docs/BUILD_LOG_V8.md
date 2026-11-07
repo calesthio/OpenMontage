@@ -63,3 +63,14 @@ Committed after every completed P0 item (8.1–8.6) and after every wave item.
 - `lib/render_integration.py`: V8 §8.6 — rejected "strictly not worse on every metric". `ready_for_render` now requires only blocking (critical technical guardrails) checks to pass. Non-blocking checks (severity "low") are advisory — they don't block render. `all_passed` still computed for info but doesn't gate render. Removed unused `blocking_passed` variable.
 - Verified: 19 existing render_integration tests pass.
 - All 6 P0 items (8.1–8.6) complete.
+
+### 2026-11-07 — Волна 1.1: A/V sync по audio master (DONE)
+
+- Created `lib/audio_master.py`: V8 §3.4 audio-as-single-source-of-time.
+  - `VoiceBlock`: per-block WAV with sample_count, sample_rate, duration_seconds, pause_after, crossfade, engine.
+  - `NarrationMaster`: concatenated master WAV, duration measured from actual samples (soundfile/ffprobe), never from ASR/WPM.
+  - `TimelineManifest`: single manifest driving Remotion + FFmpeg; scene timings derived from rational timebase (fps_num/fps_den), no per-frame independent rounding.
+  - `probe_wav_duration()`: sample_count/sample_rate/duration from actual WAV samples.
+  - `build_narration_master()`: ffmpeg concat of blocks with pauses/crossfades.
+  - `build_timeline_manifest()`: manifest anchored to narration master.
+- Updated `lib/tts_engine.py`: added `synthesize_blocks()` — synthesizes semantic voice blocks (paragraphs), preserves each block WAV with parameters (V8 §8.11).

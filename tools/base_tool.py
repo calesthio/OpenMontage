@@ -636,11 +636,20 @@ class BaseTool(ABC):
         *,
         timeout: Optional[int] = None,
         cwd: Optional[Path] = None,
+        env: Optional[dict[str, str]] = None,
+        input: Optional[str] = None,
     ) -> subprocess.CompletedProcess:
         """Run a subprocess command with standard error handling.
 
         On Windows, resolves .cmd/.bat wrappers (e.g. npx, npm) via
         shutil.which() so subprocess.run() can find them without shell=True.
+
+        `env` replaces the child environment entirely (subprocess semantics).
+        Pass a copy of os.environ with your edits applied, not just the deltas.
+
+        `input` is written to the child's stdin and stdin is then closed. Always
+        pass it (even as "") for a CLI that reads stdin — several block forever
+        waiting for EOF when stdin is an inherited, never-closed pipe.
         """
         resolved_cmd = list(cmd)
         if platform.system() == "Windows" and resolved_cmd:
@@ -660,6 +669,8 @@ class BaseTool(ABC):
                 errors="replace",
                 timeout=timeout,
                 cwd=cwd,
+                env=env,
+                input=input,
                 check=True,
             )
         except subprocess.CalledProcessError as exc:

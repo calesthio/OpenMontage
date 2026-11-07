@@ -90,6 +90,8 @@ Key capability families to look for in the output:
 | WhisperX | `core/whisperx.md` | Transcription with word-level timestamps — default STT (offline, free) | `speech-to-text` |
 | Azure STT | (tool: `azure_stt`) | Optional cloud speech-to-text, word-level timestamps — preferred when `AZURE_SPEECH_KEY` is set | `azure-speech-to-text` |
 | Azure TTS | (tool: `azure_tts`) | Optional cloud neural narration (SSML prosody, express-as styles) — same Speech key as `azure_stt` | `azure-text-to-speech` |
+| Codex Image | `core/codex-image.md` | gpt-image-2 stills billed to a ChatGPT subscription — no API key | `codex-image` |
+| Flow Video | `core/flow-video.md` | Veo 3 clips billed to a Google Flow subscription via a browser tab — no API key | `flow-video` |
 | Subtitle Sync | `core/subtitle-sync.md` | Subtitle timing and alignment | `remotion-best-practices` |
 | Color Grading | `core/color-grading.md` | FFmpeg color profiles, LUT workflow, accessibility | `ffmpeg` |
 
@@ -108,6 +110,8 @@ Key capability families to look for in the output:
 | â†³ VEO Prompting | `creative/prompting/veo-prompting.md` | VEO 3.1 14-component structure, art movements | `ai-video-gen` |
 | â†³ LTX Prompting | `creative/prompting/ltx-prompting.md` | LTX-2 6-element structure, audio prompting | `ltx2` |
 | â†³ HunyuanVideo Prompting | `creative/prompting/hunyuan-prompting.md` | HunyuanVideo formula, I2V best practices | â€" |
+| Shopee Product Ad | `creative/shopee-product-ad.md` | A product link (Shopee/TikTok Shop/Lazada) or product description → short vertical ad; measured Repeat-Reveal DNA, archetype picker, no-text/no-watermark handling | `ai-video-gen`, `ffmpeg` |
+| Printed Apparel Ad | `creative/printed-apparel-ad.md` | Extends the above for AOP/POD garments: never describe the print, settle stills at 0 credits before spending on video, Showcase-Reaction archetype, why no ad of this kind gets an undressing beat | `ai-video-gen`, `ffmpeg` |
 | Storytelling | `creative/storytelling.md` | Narrative structure, hooks, pacing, Mayer's principles | â€" |
 | Sound Design | `creative/sound-design.md` | Audio ducking, LUFS targets, SFX timing, AI TTS mixing | `elevenlabs` |
 | Typography | `creative/typography.md` | Font selection, text sizing, safe zones, caption styling | â€" |
@@ -326,4 +330,5 @@ Claude Code accesses them via symlinks in `.claude/skills/`.
 | **AI Video (HeyGen)** | `heygen`, `avatar-video`, `create-video`, `faceswap`, `ai-video-gen`, `video-download`, `video-edit`, `video-translate`, `video-understand`, `visual-style` | `heygen-com/skills` |
 | **AI Video/Image/TTS/Avatar (Kling Official)** | `kling-official` - official direct API auth, Classic/Turbo/Omni task protocols, multi-reference Omni syntax, internal Elements/Account Usage helpers, callback notes, TTS voice parameters, avatar/lip-sync face selection, error handling, and cost governance for `kling_official_video` / `kling_official_image` / `kling_tts` / `kling_avatar` / `kling_lip_sync` | Local OpenMontage skill |
 | **AI Video (Premium)** | `seedance-2-0` — preferred premium default (cinematic, trailer, multi-shot, lip-sync, synced audio); accessed via `seedance_video` (fal.ai) or `heygen_video` Avatar Shots; `seedance-2-5` — 4–30 s clips, 50 multimodal references, prompt contract (section order, `Hard cut` breakdown, continuity locks, asset method) | Local OpenMontage skill |
+| **Subscription providers (no API key)** | `codex-image` — gpt-image-2 through the signed-in Codex CLI (`codex_image`); `flow-video` — Veo / Omni through a signed-in Google Flow tab, driven by Playwright over CDP (`lib/flow_driver.py`, `flow_video`) | Local OpenMontage skill |
 | **Infrastructure** | `acestep`, `ltx2`, `playwright-recording` | `digitalsamba/claude-code-video-toolkit` |

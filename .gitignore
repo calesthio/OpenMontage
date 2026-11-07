@@ -27,6 +27,13 @@ tests/qa/output/
 
 # Project workspaces (generated assets, renders — all regenerable)
 projects/
+# Same class of content as projects/, just the newer name for it. workspace/
+# alone reached 1.7 GB of stills, clips and renders on this machine.
+workspace/
+remotion-composer/workspace/
+
+# Playwright MCP browser profile/trace artifacts
+.playwright-mcp/
 
 # Corpus directories (downloaded stock clips, thumbnails, embeddings —
 # regenerable from source APIs via corpus_builder). Explicit rule even
@@ -51,6 +58,7 @@ service_account*.json
 
 # Stray media downloads (test/scratch clips left in repo root)
 pexels_video_*.mp4
+flow_output_*.mp4
 
 # Scratch/debug scripts
 scratch/
@@ -104,3 +112,8 @@ venv/
 
 # Local Wan / diffusers GPU environment
 .venv-wan/
+
+# Per-run scratch written by the asset-generation scripts; regenerate, do not track.
+/s[0-9].json
+/v1r.json
+/*_result.json

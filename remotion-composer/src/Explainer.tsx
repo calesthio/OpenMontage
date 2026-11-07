@@ -20,6 +20,11 @@ import { PieChart } from "./components/charts/PieChart";
 import { KPIGrid } from "./components/charts/KPIGrid";
 import { ProgressBar } from "./components/ProgressBar";
 import { CaptionOverlay, WordCaption } from "./components/CaptionOverlay";
+import {
+  PhraseCaptions,
+  isPhraseCaptionStyle,
+  phraseCaptionPropsFromSubtitles,
+} from "./components/PhraseCaptions";
 import { SectionTitle } from "./components/SectionTitle";
 import { StatReveal } from "./components/StatReveal";
 import { HeroTitle } from "./components/HeroTitle";
@@ -304,6 +309,8 @@ export interface ExplainerProps {
   cuts: Cut[];
   overlays?: Overlay[];
   captions?: WordCaption[];
+  // edit_decisions.subtitles — `style: "karaoke"` selects PhraseCaptions.
+  subtitles?: Record<string, unknown>;
   audio?: AudioConfig;
 }
 
@@ -869,16 +876,20 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
         );
       })}
 
-      {/* Layer 3: Captions (word-by-word highlight) */}
+      {/* Layer 3: Captions — phrase captions for subtitles.style "karaoke", word-by-word highlight otherwise */}
       {captions && captions.length > 0 && (
-        <CaptionOverlay
-          words={captions}
-          wordsPerPage={6}
-          fontSize={42}
-          color={theme.textColor}
-          highlightColor={theme.captionHighlightColor}
-          backgroundColor={theme.captionBackgroundColor}
-        />
+        isPhraseCaptionStyle(props.subtitles?.style) ? (
+          <PhraseCaptions words={captions} {...phraseCaptionPropsFromSubtitles(props.subtitles)} />
+        ) : (
+          <CaptionOverlay
+            words={captions}
+            wordsPerPage={6}
+            fontSize={42}
+            color={theme.textColor}
+            highlightColor={theme.captionHighlightColor}
+            backgroundColor={theme.captionBackgroundColor}
+          />
+        )
       )}
 
       {/* Layer 4: Audio — narration */}

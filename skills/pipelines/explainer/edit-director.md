@@ -79,6 +79,26 @@ Subtitles are mandatory for all explainer content:
 
 **Subtitle timing**: Derive from narration audio timestamps. Each word should highlight as it's spoken (word-by-word style) or display in phrase chunks (phrase style).
 
+**`style` selects the Remotion renderer — it is not a label:**
+
+| `style` | Renderer | On screen |
+|---|---|---|
+| `"karaoke"` | `PhraseCaptions` | Short phrase cue (≤ `max_chars_per_cue`, default 26 chars) shown whole; spoken words turn active at their real start and stay active; the cue and its box persist through silence between words and are held until the next cue (max `hold_seconds`, default 0.6 s). Preferred for narration-led explainers — it does not flicker. |
+| anything else (`"word-by-word"`) | `CaptionOverlay` | Pages of words with only the current word highlighted. |
+
+`karaoke` needs real word timings: either props `captions` or `subtitles.source` pointing at the qwen3_tts timestamps JSON (`timestamps_path` / `word_timestamps_path`). Without them `video_compose` fails instead of rendering without captions.
+
+```json
+{
+  "subtitles": {
+    "enabled": true,
+    "style": "karaoke",
+    "source": "projects/<project>/assets/narration/.qnttslocal/om_segments.json",
+    "position": "bottom-center"
+  }
+}
+```
+
 Use the playbook's typography for font choices.
 
 ### Step 4: Configure Audio Layers

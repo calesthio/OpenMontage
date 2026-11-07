@@ -14,6 +14,7 @@ import {
 
 import { CinematicRendererProps, CinematicTone, CinematicVideoScene } from "./cinematic/types";
 import { CaptionOverlay } from "./components/CaptionOverlay";
+import { PhraseCaptions, isPhraseCaptionStyle } from "./components/PhraseCaptions";
 import { resolveAsset } from "./lib/resolveAsset";
 
 const FPS = 30;
@@ -513,7 +514,19 @@ export const CinematicRenderer: React.FC<CinematicRendererProps> = ({
         </Sequence>
       ))}
       {/* Layer 4: TikTok-style captions */}
-      {captions?.words ? (
+      {captions?.words && isPhraseCaptionStyle(captions.style) ? (
+        <PhraseCaptions
+          words={captions.words}
+          maxChars={captions.maxCharsPerCue}
+          holdSeconds={captions.holdSeconds}
+          fontFamily={captions.fontFamily}
+          fontSize={captions.fontSize}
+          activeColor={captions.color}
+          dimColor={captions.dimColor}
+          backgroundColor={captions.backgroundColor}
+          position={captions.position}
+        />
+      ) : captions?.words ? (
         <CaptionOverlay
           words={captions.words}
           wordsPerPage={captions.wordsPerPage ?? 5}

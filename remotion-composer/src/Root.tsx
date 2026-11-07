@@ -128,8 +128,9 @@ const calculateMetadata: CalculateMetadataFunction<ExplainerProps> = async ({
     return { durationInFrames: 30 * 60 };
   }
   const lastEnd = Math.max(...cuts.map((c) => c.out_seconds || 0));
-  // Add 1 second padding for final fade
-  return { durationInFrames: Math.ceil((lastEnd + 1) * 30) };
+  // Add 1 second padding for final fade (overridable, e.g. 0 for shorts that end on footage)
+  const tail = typeof props.tailPaddingSeconds === "number" ? props.tailPaddingSeconds : 1;
+  return { durationInFrames: Math.ceil((lastEnd + tail) * 30) };
 };
 
 export const Root: React.FC = () => {

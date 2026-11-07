@@ -27,6 +27,7 @@
 - Register a generic `social_vertical` profile instead of treating TikTok's platform duration/file-size limits as universal social limits. Reuse the existing `youtube_landscape` profile for desktop HD.
 - Store selected profiles in `proposal_packet.production_plan.output_profiles`, with a non-empty, unique enum list. Old proposals without the field retain their current single-target behavior.
 - Write distinct, profile-named files under the project's `renders/` directory. Each render reuses approved media and the same edit decisions, while composition is laid out/rendered for that profile's aspect ratio.
+- Cache identity includes both profile inputs (`profile` and `output_profile`), dimension overrides in the edit decisions, encoding settings, media, subtitles, style and review inputs. Destination names do not affect identity; the existing cache key includes the output-container suffix.
 - Remotion and HyperFrames consume the new playbook's declared chart palette and flat-background treatment; playbooks without that setting keep their existing ambient background.
 - The new playbook is recommended for `animated-explainer`; existing playbooks remain unchanged.
 
@@ -40,6 +41,7 @@ For a first voice audition, use the already integrated Google Chirp 3 HD route; 
 
 - The proposal visibly offers both checked output choices and accepts either or both, rejecting an empty selection.
 - Selected profiles yield separate files at exactly 1080×1920 and/or 1920×1080; report entries name the format and dimensions.
+- With the asset cache enabled, exporting both profiles and restoring each to a new destination preserves its own dimensions; verify the files with ffprobe through both `compose` and `render`.
 - The new playbook renders a flat near-black field in Remotion and provides equivalent flat-background/chart tokens to HyperFrames.
 - Existing playbooks without `background_effect: flat` retain their ambient background treatment.
 - The new playbook loads and validates; existing playbooks and historical single-target runs remain valid.

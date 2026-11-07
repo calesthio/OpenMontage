@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from lib.asset_cache import reset_default_asset_cache
 from tools.video.video_compose import VideoCompose
 
 pytestmark = pytest.mark.skipif(
@@ -78,8 +79,20 @@ def test_compose_vertical_profile(tmp_path):
     assert _dims(out) == (1080, 1920)
 
 
-def test_social_and_desktop_profiles_render_to_separate_dimensions(tmp_path):
+@pytest.mark.parametrize("operation,profile_field", [("compose", "profile"), ("render", "output_profile")])
+def test_social_and_desktop_profiles_render_to_separate_dimensions(
+    tmp_path, monkeypatch, operation, profile_field,
+):
     src = tmp_path / "in.mp4"
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("OPENMONTAGE_ASSET_CACHE", "1")
+    monkeypatch.setenv("OPENMONTAGE_ASSET_CACHE_DIR", str(tmp_path / "cache"))
+    reset_default_asset_cache()
+    request = {
+        "operation": operation,
+        "edit_decisions": {**_edit_decisions(src), "renderer_family": "explainer-data"},
+        "asset_manifest": {"version": "1.0", "assets": []},
+    }
     _make_clip(src)
     social = tmp_path / "story-social.mp4"
     desktop = tmp_path / "story-desktop.mp4"
@@ -88,18 +101,25 @@ def test_social_and_desktop_profiles_render_to_separate_dimensions(tmp_path):
         ("social_vertical", social),
         ("youtube_landscape", desktop),
     ):
-        result = VideoCompose().execute(
-            {
-                "operation": "compose",
-                "edit_decisions": _edit_decisions(src),
-                "profile": profile,
-                "output_path": str(output),
-            }
-        )
-        assert result.success, result.error
+        try:
+            result = VideoCompose().execute(
+                {**request, profile_field: profile, "output_path": str(output)}
+            )
+            assert result.success, result.error
+            expected = (1080, 1920) if profile == "social_vertical" else (1920, 1080)
+            assert _dims(output) == expected
+            assert not result.from_cache
 
-    assert _dims(social) == (1080, 1920)
-    assert _dims(desktop) == (1920, 1080)
+            output.unlink()
+            restored_path = output.with_stem(f"{output.stem}-restored")
+            restored = VideoCompose().execute(
+                {**request, profile_field: profile, "output_path": str(restored_path)}
+            )
+            assert restored.success, restored.error
+            assert restored.from_cache
+            assert _dims(restored_path) == expected
+        finally:
+            reset_default_asset_cache()
 
 
 def test_compose_target_override_cover(tmp_path):

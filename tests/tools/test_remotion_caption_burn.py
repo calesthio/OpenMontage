@@ -141,7 +141,7 @@ def test_english_captions_unchanged():
     captions = tool._segments_to_word_captions(segs)
     assert [c["word"] for c in captions] == ["Cats", "land"]
     assert "pageBreakAfter" not in captions[-1]
-    assert tool._caption_word_separator(captions) is None
+    assert tool._caption_word_separator(tool._segments_are_thai(segs)) is None
 
 
 def test_thai_srt_is_segmented(tmp_path):
@@ -151,3 +151,88 @@ def test_thai_srt_is_segmented(tmp_path):
     assert "".join(c["word"] for c in captions) == "แมวตกจากที่สูง"
     assert len(captions) > 1
     assert captions[0]["startMs"] == 0 and captions[-1]["endMs"] == 1000
+
+
+# ---------------------------------------------------------------------- #
+#  PR #879 review: case-insensitive corrections, stable Thai mode
+# ---------------------------------------------------------------------- #
+
+
+def _even_thai_segment(text, start=0.0, end=2.0):
+    return [{"start": start, "end": end, "text": text}]
+
+
+def test_thai_corrections_are_case_insensitive():
+    tool = RemotionCaptionBurn()
+    captions = tool._segments_to_word_captions(
+        _even_thai_segment("ลองใช้ Cloud เพื่อทำงาน"), {"cloud": "Claude"})
+    joined = "".join(c["word"] for c in captions)
+    assert "Claude" in joined and "Cloud" not in joined
+
+
+def test_thai_srt_corrections_are_case_insensitive(tmp_path):
+    srt = tmp_path / "th.srt"
+    srt.write_text("1\n00:00:00,000 --> 00:00:02,000\nลองใช้ CLOUD เพื่อทำงาน\n", encoding="utf-8")
+    captions = RemotionCaptionBurn()._srt_to_word_captions(str(srt), {"Cloud": "Claude"})
+    joined = "".join(c["word"] for c in captions)
+    assert "Claude" in joined and "CLOUD" not in joined
+
+
+def _run_execute(tmp_path, monkeypatch, inputs, *, remotion=True):
+    composer_root = tmp_path / "remotion-composer"
+    (composer_root / "node_modules").mkdir(parents=True, exist_ok=True)
+    source = tmp_path / "clip.mp4"
+    source.write_bytes(b"fake video")
+    output = tmp_path / "out.mp4"
+    srt_texts: list[str] = []
+
+    tool = RemotionCaptionBurn()
+    monkeypatch.setattr(tool, "_find_remotion_root", lambda: composer_root)
+    monkeypatch.setattr(tool, "_remotion_available", lambda: remotion)
+
+    def fake_run_command(cmd, *args, **kwargs):
+        if "format=duration" in cmd:
+            return subprocess.CompletedProcess(cmd, 0, stdout="2.0\n")
+        if "stream=width,height" in cmd:
+            return subprocess.CompletedProcess(cmd, 0, stdout="1080x1920\n")
+        if cmd[0] == "ffmpeg":
+            vf = cmd[cmd.index("-vf") + 1]
+            path = vf.split("subtitles='", 1)[1].split("'", 1)[0].replace("\\:", ":")
+            srt_texts.append(open(path, encoding="utf-8").read())
+        output.write_bytes(b"rendered")
+        return subprocess.CompletedProcess(cmd, 0, stdout="")
+
+    monkeypatch.setattr(tool, "run_command", fake_run_command)
+    result = tool.execute({"input_path": str(source), "output_path": str(output), **inputs})
+    assert result.success, result.error
+    props_file = composer_root / "public" / "demo-props" / "caption-burn-clip.json"
+    props = json.loads(props_file.read_text(encoding="utf-8")) if remotion else None
+    return props, srt_texts
+
+
+def test_latin_heavy_correction_keeps_thai_mode(tmp_path, monkeypatch):
+    props, _ = _run_execute(tmp_path, monkeypatch, {
+        "segments": _even_thai_segment("แมวใช้ openai"),
+        "corrections": {"openai": "OpenMontage"},
+    })
+    assert props["captionWordSeparator"] == ""
+    assert props["wordsPerPage"] == 6
+
+
+def test_latin_heavy_correction_keeps_thai_mode_in_ffmpeg(tmp_path, monkeypatch):
+    _, srt_texts = _run_execute(tmp_path, monkeypatch, {
+        "segments": _even_thai_segment("แมวใช้ openai"),
+        "corrections": {"openai": "OpenMontage"},
+    }, remotion=False)
+    text = srt_texts[0].split("\n")[2]
+    assert text == "แมวใช้ OpenMontage"
+
+
+def test_thai_correction_keeps_english_spacing(tmp_path, monkeypatch):
+    segs = [{"start": 0, "end": 1, "text": "hi cat", "words": [
+        {"word": " hi", "start": 0.0, "end": 0.5}, {"word": " cat", "start": 0.5, "end": 1.0}]}]
+    props, _ = _run_execute(tmp_path, monkeypatch, {
+        "segments": segs, "corrections": {"cat": "แมวน้อยน่ารักมาก"},
+    })
+    assert "captionWordSeparator" not in props
+    assert props["wordsPerPage"] == 4

@@ -11,6 +11,7 @@ import json
 import re
 import time
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any
 
 from tools.base_tool import (
@@ -113,16 +114,24 @@ class FrameSampler(BaseTool):
         start = time.time()
 
         try:
-            if strategy == "interval":
-                frames = self._extract_interval(input_path, output_dir, fmt, quality, inputs)
-            elif strategy == "count":
-                frames = self._extract_count(input_path, output_dir, fmt, quality, inputs)
-            elif strategy == "timestamps":
-                frames = self._extract_timestamps(input_path, output_dir, fmt, quality, inputs)
-            elif strategy == "scene_guided":
-                frames = self._extract_scene_guided(input_path, output_dir, fmt, quality, inputs)
-            else:
-                return ToolResult(success=False, error=f"Unknown strategy: {strategy}")
+            with TemporaryDirectory(prefix=".frame-sampler-", dir=output_dir) as workspace:
+                staging = Path(workspace)
+                if strategy == "interval":
+                    frames = self._extract_interval(input_path, staging, fmt, quality, inputs)
+                elif strategy == "count":
+                    frames = self._extract_count(input_path, staging, fmt, quality, inputs)
+                elif strategy == "timestamps":
+                    frames = self._extract_timestamps(input_path, staging, fmt, quality, inputs)
+                elif strategy == "scene_guided":
+                    frames = self._extract_scene_guided(input_path, staging, fmt, quality, inputs)
+                else:
+                    return ToolResult(success=False, error=f"Unknown strategy: {strategy}")
+
+                for frame in frames:
+                    source = Path(frame["path"])
+                    destination = output_dir / source.name
+                    source.replace(destination)
+                    frame["path"] = str(destination)
         except Exception as e:
             return ToolResult(success=False, error=str(e))
 

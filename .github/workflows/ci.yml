@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -18,6 +19,7 @@ concurrency:
 jobs:
   validate:
     name: Validate Python
+    timeout-minutes: 90
     runs-on: ubuntu-latest
 
     steps:

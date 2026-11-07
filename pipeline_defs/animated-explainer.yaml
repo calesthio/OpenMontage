@@ -53,7 +53,7 @@ orchestration:
 compatible_playbooks:
   recommended:
     - clean-professional
-    - flat-motion-graphics
+    - editorial-data-explainer
   also_works:
     - minimalist-diagram
   custom_allowed: true

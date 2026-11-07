@@ -1,0 +1,111 @@
+identity:
+  name: "Editorial Data Explainer"
+  category: minimalist
+  mood: factual, restrained, evidence-led
+  pace: deliberate
+  best_for: "Newsroom-style data explainers: satellite evidence, maps, timelines, source-led claims"
+
+visual_language:
+  background_effect: flat
+  color_palette:
+    primary: ["#E8C34A"]
+    accent: ["#C9A227"]
+    background: "#0A0A0A"
+    text: "#EDEDED"
+    muted: "#8A8A8A"
+  composition: "single evidence frame per scene, generous margins, one focal element (map, diagram, timeline or figure)"
+  texture: "flat matte field, no gradients, no glows, hairline-free panels only where a chart needs an axis"
+
+typography:
+  headings:
+    font: "Space Grotesk"
+    weight: 500
+    tracking: "-0.01em"
+  body:
+    font: "Space Grotesk"
+    weight: 400
+    line_height: 1.5
+  code:
+    font: "Fira Code"
+    weight: 400
+  stat_card:
+    font: "Space Grotesk"
+    weight: 700
+    size_multiplier: 2.8
+  scale_system: "major_third"
+  weight_matrix:
+    title: 600
+    heading: 500
+    body: 400
+    caption: 300
+
+motion:
+  transitions: [cut, fade]
+  animation_style: "ease-out, measured reveals; values appear in place, boundaries and highlights draw on once, no bounce or overshoot"
+  pacing_rules:
+    min_scene_hold_seconds: 3.0
+    max_scene_hold_seconds: 12
+    text_card_hold_seconds: 4.0
+    stat_card_hold_seconds: 3.5
+    transition_duration_seconds: 0.4
+  entrance: "fade-up with a single accent draw-on; numbers count once, not repeatedly"
+  exit: "cut or quick fade; no zoom-out flourishes"
+
+audio:
+  voice_style: "calm, precise, reporter-like; attribute claims ('the agency says'), never hype"
+  music_mood: "none or a very low ambient bed; silence is acceptable between facts"
+  music_volume: 0.04
+  sfx_style: "at most a soft tick when a timeline marker lands; no whooshes on every transition"
+  ducking_threshold_db: -2
+
+asset_generation:
+  image_prompt_prefix: "flat documentary map or diagram on near-black background, restrained yellow highlight, minimal labels, no decorative imagery, "
+  image_negative_prompt: "photorealistic people, cinematic reenactment, neon glow, gradients, lens flare, stock b-roll look"
+  diagram_style: "thin light lines on near-black, one yellow highlight for the measured value, source labels kept small and legible"
+  consistency_anchors:
+    - "Near-black (#0A0A0A) field in every scene; never brighten the background"
+    - "Yellow (#E8C34A) is the only emphasis color, used for the single measured element"
+    - "Every figure or map carries its source line in muted text"
+    - "Timelines advance left to right; highlighted states change in place"
+
+overlays:
+  stat_card:
+    bg: "#111111"
+    border: "#222222"
+    text: "#EDEDED"
+    radius: 4
+    shadow: "none"
+  key_term:
+    bg: "#141414"
+    text: "#E8C34A"
+    radius: 2
+  section_title:
+    text: "#EDEDED"
+    bg: "#0A0A0A"
+  stat_reveal:
+    accent: "#E8C34A"
+    text: "#EDEDED"
+    bg: "#111111"
+  hero_title:
+    text: "#EDEDED"
+    accent: "#E8C34A"
+    bg: "#0A0A0A"
+
+quality_rules:
+  - "Minimum contrast ratio 4.5:1 for all text on the near-black field"
+  - "One accent color on screen at a time; the highlight marks the claim being made"
+  - "Every numeric claim is labeled with its source and date"
+  - "Diagrams must be legible at 480p; avoid hairline detail on mobile"
+  - "Progressive reveal for diagrams and timelines — never show the full chart at once"
+  - "No decorative imagery: every scene explains one sourced fact"
+
+chart_palette:
+  - "#E8C34A"
+  - "#8A8A8A"
+  - "#B0BEC5"
+  - "#5B6B7A"
+
+color_rules:
+  harmony_type: "analogous"
+  contrast_validation: true
+  colorblind_safe: true

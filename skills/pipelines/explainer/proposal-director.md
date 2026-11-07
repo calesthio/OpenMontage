@@ -227,6 +227,15 @@ Set realistic duration based on platform and content depth:
 | YouTube | 60-180s | 150-450 words |
 | LinkedIn | 60-120s | 150-300 words |
 
+#### Output formats (multi-select)
+
+Show both delivery choices below in each new proposal, checked by default. The user may uncheck either; an empty selection is invalid.
+
+- [x] `social_vertical` — 9:16, 1080×1920; Reels, TikTok and Shorts
+- [x] `youtube_landscape` — 16:9, 1920×1080; desktop HD
+
+Persist the user's selected profile names, in display order, as `production_plan.output_profiles`. These are separate exports of the approved edit, not separate story concepts, and do not override the concept's audience/platform choice.
+
 #### 3e: When to Break the Patterns
 
 The hook patterns and narrative structures above are starting points, not templates. Here are signs you should invent something new:
@@ -437,6 +446,9 @@ Concept: [selected title]
 Duration: [X] seconds for [platform]
 Estimated cost: $[X.XX] of $[budget] budget
 Production path: [premium/standard/budget/free]
+
+Output formats: [list each selected profile and resolution]
+Separate render for each checked output; estimate local render time accordingly.
 
 Proceed? (approve / approve with changes / reject)
 ────────────────────────────────────────

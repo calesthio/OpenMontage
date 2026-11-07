@@ -1105,33 +1105,57 @@ def test_style_bridge_fallback_has_all_required_vars():
     assert "# DESIGN" in design
 
 
-def test_style_bridge_picks_up_playbook_palette():
+def test_style_bridge_picks_up_playbook_schema_keys():
     from lib.hyperframes_style_bridge import style_bridge
 
     playbook = {
-        "name": "neon-test",
+        "name": "schema-test",
+        "identity": {"pace": "fast"},
         "visual_language": {
             "color_palette": {
                 "background": "#000000",
                 "text": "#FFFFFF",
-                "accent": ["#FF00FF", "#FF66FF"],
+                "accent": ["#FF00FF"],
                 "primary": "#00FFFF",
-            }
+                "muted": "#CCCCCC",
+            },
+            "composition": "grid-aligned",
+            "texture": "flat",
+            "background_effect": "flat",
         },
         "typography": {
-            "heading": {"font": "Space Grotesk"},
+            "headings": {"font": "Space Grotesk"},
             "body": {"font": "Inter"},
         },
-        "motion": {"pace": "fast"},
+        "motion": {"transitions": ["cut"], "animation_style": "measured"},
+        "chart_palette": ["#00FFFF", "#FF00FF", "#CCCCCC"],
     }
     css, design = style_bridge(playbook, None)
     assert css["--color-bg"] == "#000000"
-    assert css["--color-accent"] == "#FF00FF"  # list → first
+    assert css["--color-accent"] == "#FF00FF"
     assert css["--color-primary"] == "#00FFFF"
+    assert css["--color-muted"] == "#CCCCCC"
     assert css["--font-heading"] == "Space Grotesk"
-    # Fast pace → shorter entrance duration.
-    assert css["--duration-entrance"].startswith("0.")
-    assert "neon-test" in design
+    assert css["--duration-entrance"] == "0.4s"
+    assert css["--background-effect"] == "flat"
+    assert css["--chart-1"] == "#00FFFF"
+    assert "schema-test" in design
+
+
+def test_style_bridge_maps_editorial_playbook_canonical_keys():
+    from styles.playbook_loader import load_playbook
+    from lib.hyperframes_style_bridge import style_bridge
+
+    css, design = style_bridge(load_playbook("editorial-data-explainer"), None)
+    palette = load_playbook("editorial-data-explainer")["visual_language"]["color_palette"]
+
+    assert css["--color-bg"] == palette["background"]
+    assert css["--color-fg"] == palette["text"]
+    assert css["--color-muted"] == palette["muted"]
+    assert css["--background-effect"] == "flat"
+    assert css["--chart-1"] == "#E8C34A"
+    assert "--chart-2" in css
+    assert "flat" in design.lower()
 
 
 def test_style_bridge_edit_decision_override_wins():

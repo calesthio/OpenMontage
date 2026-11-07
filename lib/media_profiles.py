@@ -128,6 +128,15 @@ GENERIC_HD = MediaProfile(
 )
 
 
+SOCIAL_VERTICAL = MediaProfile(
+    name="social_vertical",
+    width=1080, height=1920,
+    aspect_ratio=AspectRatio.PORTRAIT_9_16,
+    fps=30, codec="libx264", audio_codec="aac", crf=20,
+    caption_format="srt",
+    notes="Platform-neutral 9:16 social video output",
+)
+
 # ---- Profile registry ----
 
 ALL_PROFILES: dict[str, MediaProfile] = {
@@ -135,6 +144,7 @@ ALL_PROFILES: dict[str, MediaProfile] = {
         YOUTUBE_LANDSCAPE, YOUTUBE_4K, YOUTUBE_SHORTS,
         INSTAGRAM_REELS, INSTAGRAM_FEED,
         TIKTOK, LINKEDIN, CINEMATIC, GENERIC_HD,
+        SOCIAL_VERTICAL,
     ]
 }
 

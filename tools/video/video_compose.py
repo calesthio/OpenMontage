@@ -225,7 +225,14 @@ class VideoCompose(BaseTool):
     ]
     retry_policy = RetryPolicy(max_retries=1, retryable_errors=["Conversion failed"])
     resume_support = ResumeSupport.FROM_START
-    idempotency_key_fields = ["operation", "input_path", "edit_decisions"]
+    idempotency_key_fields = [
+        "operation", "input_path", "edit_decisions", "asset_manifest", "composition_data",
+        "profile", "output_profile", "codec", "crf", "preset", "fps", "quality", "options",
+        "audio_path", "subtitle_path", "subtitle_style", "overlays", "playbook", "playbook_name",
+        "public_dir", "workspace_path", "scene_plan", "proposal_packet",
+        "narration_transcript_path", "script_path", "script_text",
+        "strict", "skip_contrast", "strict_check", "snapshots",
+    ]
     side_effects = ["writes video file to output_path"]
     user_visible_verification = [
         "Play the composed output and verify cuts, subtitles, and overlays",
@@ -1307,14 +1314,16 @@ class VideoCompose(BaseTool):
             surface = palette.get("surface", bg)
             muted = palette.get("muted", "#6B7280")
 
-            # Build chart colors from all palette entries
-            chart_colors = []
-            for key in ["primary", "accent", "secondary", "success", "warning", "info"]:
-                val = palette.get(key)
-                if val:
-                    chart_colors.append(val[0] if isinstance(val, list) else val)
-            if len(chart_colors) < 3:
-                chart_colors = [primary, accent, "#10B981", "#8B5CF6", "#EC4899", "#06B6D4"]
+            # An explicit chart_palette wins; otherwise derive from palette entries.
+            declared_palette = playbook.get("chart_palette")
+            chart_colors = list(declared_palette) if declared_palette else []
+            if not chart_colors:
+                for key in ["primary", "accent", "secondary", "success", "warning", "info"]:
+                    val = palette.get(key)
+                    if val:
+                        chart_colors.append(val[0] if isinstance(val, list) else val)
+                if len(chart_colors) < 3:
+                    chart_colors = [primary, accent, "#10B981", "#8B5CF6", "#EC4899", "#06B6D4"]
 
             theme = {
                 "primaryColor": primary,
@@ -1331,14 +1340,16 @@ class VideoCompose(BaseTool):
                 "transitionDuration": 0.4,
             }
 
-            # Derive caption colors from the palette
             theme["captionHighlightColor"] = primary
             # Caption background: semi-transparent version of the bg color
             theme["captionBackgroundColor"] = (
                 f"rgba(255, 255, 255, 0.85)" if bg.upper() in ("#FFFFFF", "#FAFAFA", "#F9FAFB")
                 else f"rgba(15, 23, 42, 0.75)"
             )
-
+            # Opt-in flat field: suppresses ambient gradients/orbs in the renderer.
+            theme["backgroundEffect"] = (
+                vl.get("background_effect") or "ambient"
+            )
             # Motion style from playbook. `pace` is an identity field in the
             # playbook schema; motion carries pacing_rules, not a pace enum.
             pace = playbook.get("identity", {}).get("pace", "moderate")

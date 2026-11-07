@@ -847,6 +847,26 @@ class TestStylePlaybooks:
                 name in available
             ), f"Manifest references unavailable playbook: {name}"
 
+class TestEditorialDataExplainerPlaybook:
+    def test_listed(self):
+        assert "editorial-data-explainer" in list_playbooks()
+
+    def test_loads_and_validates(self):
+        pb = load_playbook("editorial-data-explainer")
+        assert pb["identity"]["name"]
+
+    def test_flat_near_black_editorial_style(self):
+        pb = load_playbook("editorial-data-explainer")
+        palette = pb["visual_language"]["color_palette"]
+        assert pb["visual_language"]["background_effect"] == "flat"
+        assert palette["background"] == "#0A0A0A"
+        assert len(palette["accent"]) == 1
+        assert pb["identity"]["pace"] in ("deliberate", "moderate")
+
+    def test_manifest_recommends_it_for_explainers(self):
+        manifest = load_pipeline("animated-explainer")
+        assert "editorial-data-explainer" in manifest["compatible_playbooks"]["recommended"]
+
 
 # ---- Skills Existence ----
 

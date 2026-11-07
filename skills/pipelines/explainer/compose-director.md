@@ -142,9 +142,16 @@ For audio:
 2. Verify music duration covers video duration
 3. Prepare ducking parameters from edit decisions
 
-### Step 3: Determine Output Profile
+### Step 3: Determine Output Profile(s)
 
-Read the target platform from the brief artifact. Map to a media profile:
+For a new approved proposal, read `proposal_packet.production_plan.output_profiles` and render exactly those profiles. Each selected format gets its own aspect-specific render from the same approved edit, asset manifest, narration and captions. Do not crop or resize the other final export into this one.
+
+| Profile | Resolution | Output filename |
+|---------|------------|-----------------|
+| `social_vertical` | 1080×1920 | `<slug>-social-vertical-1080x1920.mp4` |
+| `youtube_landscape` | 1920×1080 | `<slug>-youtube-landscape-1920x1080.mp4` |
+
+For an older proposal without `output_profiles`, preserve the existing single-target mapping from the brief:
 
 | Platform | Profile | Resolution | Notes |
 |----------|---------|-----------|-------|
@@ -153,25 +160,25 @@ Read the target platform from the brief artifact. Map to a media profile:
 | Twitter/X | `twitter_landscape` | 1280x720 | Shorter format |
 | LinkedIn | `linkedin` | 1920x1080 | Professional context |
 
-Get the exact encoding parameters via `ffmpeg_output_args(get_profile(name))`.
+Get the encoding parameters per render via `ffmpeg_output_args(get_profile(name))`.
 
 ### Step 4: Render Video
 
-Call the `video_compose` tool with:
-```
+For each selected profile, call `video_compose` once with the same approved inputs, the `profile` value, and its distinct output path. Stop and report a failed render; do not substitute a different profile or discard outputs already completed.
+
+Example call for one selected target:
+
+```json
 {
   "operation": "render",
-  "edit_decisions": <edit_decisions artifact>,
-  "asset_manifest": <asset_manifest artifact>,
-  "output_profile": "youtube_landscape",
-  "output_path": "renders/output.mp4",
-  "options": {
-    "subtitle_burn": true,
-    "audio_normalize": true,
-    "two_pass_encode": true
-  }
+  "edit_decisions": "<edit_decisions artifact>",
+  "asset_manifest": "<asset_manifest artifact>",
+  "profile": "social_vertical",
+  "output_path": "projects/<slug>/renders/<slug>-social-vertical-1080x1920.mp4"
 }
 ```
+
+Use `youtube_landscape` and its matching filename for the desktop pass. Verify each result with `ffprobe`; dimensions must match the selected profile. Lay out text/labels inside each aspect ratio's safe area and review every selected render separately.
 
 If using Remotion for animated segments:
 1. Generate Remotion composition data from edit decisions
@@ -301,6 +308,8 @@ After rendering, the agent **must review its own output** before presenting to t
 The most common agent failure is doing 6a (frames) and 6c (visual) while skipping
 6b (audio transcription) — which misses catastrophic issues like missing audio entirely.**
 
+Run the complete probe, frame and audio review for every selected output. One aspect ratio passing does not validate the other.
+
 **6a. Probe rendered file (FIRST — gate for all other checks):**
 ```bash
 ffprobe -v quiet -print_format json -show_format -show_streams rendered_video.mp4
@@ -390,31 +399,36 @@ result = Transcriber().execute({
 
 ### Step 7: Build Render Report
 
+Record all successful target renders in `render_report.outputs`; keep one entry per output and use the schema's `file_size_bytes` and `platform_target` fields.
+
 ```json
 {
   "version": "1.0",
   "outputs": [
     {
-      "path": "renders/output.mp4",
+      "path": "renders/<slug>-social-vertical-1080x1920.mp4",
       "format": "mp4",
       "codec": "h264",
+      "audio_codec": "aac",
+      "resolution": "1080x1920",
+      "fps": 30,
+      "duration_seconds": 62.4,
+      "file_size_bytes": 45200000,
+      "platform_target": "social_vertical"
+    },
+    {
+      "path": "renders/<slug>-youtube-landscape-1920x1080.mp4",
+      "format": "mp4",
+      "codec": "h264",
+      "audio_codec": "aac",
       "resolution": "1920x1080",
       "fps": 30,
       "duration_seconds": 62.4,
-      "file_size_mb": 45.2,
-      "audio_codec": "aac",
-      "audio_channels": 2,
-      "render_strategy": "ffmpeg",
-      "render_time_seconds": 180
+      "file_size_bytes": 45200000,
+      "platform_target": "youtube_landscape"
     }
   ],
-  "render_summary": {
-    "total_cuts_rendered": 12,
-    "subtitles_burned": true,
-    "audio_tracks_mixed": 3,
-    "target_duration_seconds": 60,
-    "actual_duration_seconds": 62.4
-  }
+  "verification_notes": ["Both selected profiles probed and reviewed independently."]
 }
 ```
 

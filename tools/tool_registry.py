@@ -9,6 +9,7 @@ from __future__ import annotations
 import importlib
 import inspect
 import pkgutil
+from collections.abc import Iterable
 from types import ModuleType
 from typing import Any, Optional
 
@@ -153,6 +154,42 @@ class ToolRegistry:
     def get_by_capability(self, capability: str) -> list[BaseTool]:
         """Get all tools registered for a top-level capability family."""
         return [t for t in self._tools.values() if t.capability == capability]
+
+    def capability_coverage(self, tool_names: Iterable[str]) -> dict[str, dict[str, int]]:
+        """Count available concrete providers for capabilities touched by tools.
+
+        Selector tools identify a capability but are excluded from its provider
+        totals. Unknown tool names are ignored so stale optional manifest entries
+        do not hide coverage for tools that are still registered.
+        """
+        self.ensure_discovered()
+        capabilities = {
+            tool.capability
+            for name in tool_names
+            if (tool := self._tools.get(name)) is not None
+        }
+        coverage: dict[str, dict[str, int]] = {}
+        for capability in sorted(capabilities):
+            providers = [
+                tool
+                for tool in self._tools.values()
+                if tool.capability == capability and tool.provider != "selector"
+            ]
+            coverage[capability] = {
+                "available": sum(
+                    tool.get_status() == ToolStatus.AVAILABLE for tool in providers
+                ),
+                "total": len(providers),
+            }
+        return coverage
+
+    def uncovered_capabilities(self, tool_names: Iterable[str]) -> list[str]:
+        """Return touched capability families with no available provider."""
+        return [
+            capability
+            for capability, counts in self.capability_coverage(tool_names).items()
+            if counts["available"] == 0
+        ]
 
     def get_by_provider(self, provider: str) -> list[BaseTool]:
         """Get all tools backed by a specific provider."""

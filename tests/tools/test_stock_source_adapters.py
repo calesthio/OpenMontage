@@ -1,9 +1,11 @@
 import sys
 import types
+from pathlib import Path
 
 import pytest
 
 from tools.video.stock_sources import SearchFilters, all_sources, get_source
+from tools.video.stock_sources.base import stable_url_id
 from tools.video.stock_sources.unsplash import _build_download_url, _orientation_for_unsplash
 from tools.video.stock_sources.wikimedia import (
     _build_search_queries,
@@ -75,6 +77,28 @@ def test_unsplash_helpers_preserve_query_params():
     assert "ixid=abc" in url
     assert "w=1920" in url
     assert "fm=jpg" in url
+
+
+def test_stable_url_id_is_deterministic_and_url_specific():
+    url = "https://example.test/media/launch.mp4"
+
+    assert stable_url_id(url) == "57d3145f3621a60c"
+    assert stable_url_id(url) == stable_url_id(url)
+    assert stable_url_id(url) != stable_url_id("https://example.test/media/landing.mp4")
+
+
+@pytest.mark.parametrize("adapter", ["esa.py", "noaa.py", "loc.py"])
+def test_url_backed_adapters_do_not_use_randomized_python_hash(adapter):
+    source = (
+        Path(__file__).parents[2]
+        / "tools"
+        / "video"
+        / "stock_sources"
+        / adapter
+    ).read_text(encoding="utf-8")
+
+    assert "stable_url_id(" in source
+    assert "hash(" not in source
 
 
 # ---------------------------------------------------------------------

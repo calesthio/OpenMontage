@@ -19,3 +19,21 @@ Committed after every completed P0 item (8.1–8.6) and after every wave item.
 - Extracted `FACTORY_RESEARCH_AND_ARCHITECTURE_AUDIT_V8.md` from git commit `944c0de` (was absent from working tree).
 - Audited current code: `lib/checkpoint.py` (atomic tmp+os.replace checkpoint writes), `lib/budget_guard.py` ($0 guard with free fallbacks), `lib/zero_cost_gate.py` (fail-closed gate, `reroute_allowed=False`), `lib/motion_director.py` (`STATIC_LIMIT_SEC=15.0` hard-coded as law), `scripts/release_checklist.py` (`STATIC_MAX_SEC=15.0` hard pass/fail), `lib/final_qc.py` (blocking/non-blocking check split), `lib/tts_engine.py` (Kokoro+Piper per-sentence), `lib/scene_router.py` (archival vs ai_generated binary).
 - No code changes yet. Starting P0.
+
+### 2026-11-07 — P0 8.1 (DONE)
+
+- `lib/checkpoint.py`: added `COMPLETED_REQUIRED_ARTIFACT_KEYS = {"checksums", "qc_passed"}`. `write_checkpoint` now rejects `status="completed"` unless artifacts carry a non-empty `checksums` map and `qc_passed == True`. Atomic tmp+os.replace rename retained. Moved completed-validation after `_enforce_stage_prerequisites` so prerequisite violations surface first.
+- `tests/lib/test_checkpoint_resume_identity.py`: updated all three `write_checkpoint(..., "completed", ...)` calls to include `checksums` and `qc_passed: True`.
+- Status: all 16 checkpoint tests pass.
+
+### 2026-11-07 — P0 8.2 (DONE)
+
+- Created `lib/state_store.py`: SQLite-backed durable runtime state store.
+  - Table `stage_state`: project_id, stage, pipeline_type, status, failure_class, input_fingerprint, output_artifacts, checksums, qc_passed, retry_count, reason_code, warning, requires_approval, timestamps.
+  - Table `events`: append-only event log.
+  - Statuses: PENDING, RUNNING, PASSED, DEGRADED, BLOCKED, FAILED, NEEDS_REVIEW, SKIPPED.
+  - Failure classes: REQUIRED, OPTIONAL, DEGRADABLE, MANUAL_REVIEW.
+  - `transition()` for atomic status changes; `complete()` enforces V8 §8.1 (checksums + qc_passed); `fail()` records failure class.
+  - WAL journal mode, single transaction per write, explicit commit.
+- Verified with smoke test: transition→complete→fail round-trip works.
+- Status: new module, no existing tests broken.

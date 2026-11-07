@@ -212,6 +212,15 @@ class VideoCompose(BaseTool):
                     "when a pinned enterprise browser binary is required."
                 ),
             },
+            "remotion_concurrency": {
+                "type": "integer",
+                "minimum": 1,
+                "description": (
+                    "Number of parallel browser tabs Remotion renders with, passed "
+                    "through as `--concurrency`. Lower it (1-2) on low-memory "
+                    "machines where the headless browser crashes mid-render."
+                ),
+            },
         },
     }
 
@@ -1711,6 +1720,8 @@ class VideoCompose(BaseTool):
                 remotion_inputs["remotion_timeout_ms"] = inputs["remotion_timeout_ms"]
             if inputs.get("remotion_browser_executable") is not None:
                 remotion_inputs["remotion_browser_executable"] = inputs["remotion_browser_executable"]
+            if inputs.get("remotion_concurrency") is not None:
+                remotion_inputs["remotion_concurrency"] = inputs["remotion_concurrency"]
             if inputs.get("public_dir") is not None:
                 remotion_inputs["public_dir"] = inputs["public_dir"]
             render_result = self._remotion_render(remotion_inputs)
@@ -2128,6 +2139,12 @@ class VideoCompose(BaseTool):
             # restricted networks the default 30s browser setup times out with an
             # opaque failure. Pass it through and give the subprocess enough headroom
             # so run_command() does not kill Remotion before its own timeout fires.
+            if inputs.get("remotion_concurrency"):
+                try:
+                    cmd.append(f"--concurrency={int(inputs['remotion_concurrency'])}")
+                except (TypeError, ValueError):
+                    pass
+
             remotion_timeout_ms = inputs.get("remotion_timeout_ms")
             scene_count = len(props.get("scenes") or props.get("cuts") or [])
             subprocess_timeout = max(600, scene_count * 15)

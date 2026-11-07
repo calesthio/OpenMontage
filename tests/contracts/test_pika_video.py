@@ -12,6 +12,7 @@ from collections import deque
 from pathlib import Path
 
 import pytest
+from requests.exceptions import ConnectionError, Timeout
 
 from tools.base_tool import (
     BaseTool,
@@ -231,6 +232,41 @@ class TestDiscoveryAndStatus:
 # ------------------------------------------------------------------
 
 class TestEstimates:
+    def test_provider_overrides_are_priced_in_preflight_and_submission(self, pika_env, fake_http, tmp_path):
+        inputs = {"prompt": "x", "duration": 3, "resolution": "480p",
+                  "provider_params": {"duration": 15, "resolution": "4k"},
+                  "output_path": str(tmp_path / "override.mp4")}
+        tool = PikaVideo()
+        assert tool.estimate_cost(inputs) == pytest.approx(1.28)
+        assert fake_http.calls == []
+        happy_path(fake_http)
+        result = tool.execute(inputs)
+        assert result.success, result.error
+        assert result.data["estimated_cost_usd"] == pytest.approx(1.28)
+        assert result.data["resume_job"]["estimated_cost_usd"] == pytest.approx(1.28)
+        sent = fake_http.by("POST", "/v1/media/pika/")[0]["json"]
+        assert sent["duration"] == 15 and sent["resolution"] == "4k"
+
+    def test_overridden_references_include_input_video_cost(self):
+        inputs = {"prompt": "x", "reference_image_urls": ["https://a/original.png"],
+                  "resolution": "4k", "duration": 15,
+                  "provider_params": {"references": [{"type": "video", "url": "https://a/final.mp4"}]}}
+        with pytest.raises(PriceQuoteRequired):
+            PikaVideo().estimate_cost(inputs)
+        assert PikaVideo().estimate_cost({**inputs, "reference_video_seconds": 6}) == pytest.approx(2.20)
+
+    def test_only_effective_references_are_billed(self):
+        inputs = {"prompt": "x", "reference_video_urls": ["https://a/unused.mp4"],
+                  "provider_params": {"references": [{"type": "image", "url": "https://a/final.png"}]}}
+        assert PikaVideo().estimate_cost(inputs) == pytest.approx(0.36)
+
+    def test_estimate_of_local_media_never_uploads(self, fake_http, tmp_path):
+        # This need not exist: preflight must not upload or read the reference.
+        inputs = {"prompt": "x", "reference_video_paths": [str(tmp_path / "input.mp4")],
+                  "reference_video_seconds": 6}
+        assert PikaVideo().estimate_cost(inputs) == pytest.approx(0.72)
+        assert fake_http.calls == []
+
     @pytest.mark.parametrize(
         ("inputs", "expected"),
         [
@@ -417,6 +453,40 @@ class TestLifecycle:
 
 
 class TestBilling:
+    @pytest.mark.parametrize("error", [ConnectionError("offline"), Timeout("timed out"),
+                                       module.PikaAPIError("unavailable", status=503)])
+    @pytest.mark.parametrize("recovers", [False, True])
+    def test_refresh_errors_preserve_completed_video(self, error, recovers, pika_env, fake_http,
+                                                     tmp_path, monkeypatch):
+        pending = {"state": "pending", "reason": "reconciling"}
+        happy_path(fake_http, polls=[job("completed", billing=pending)])
+        original = fake_http.request
+        polls = 0
+
+        def request(method, url, **kwargs):
+            nonlocal polls
+            if method == "GET" and "/v1/media/jobs/" in url:
+                polls += 1
+                if polls > 1:
+                    if recovers and polls > 2:
+                        return FakeResponse(200, job("completed"))
+                    raise error
+            return original(method, url, **kwargs)
+
+        monkeypatch.setattr(fake_http, "request", request)
+        out = tmp_path / "completed.mp4"
+        result = PikaVideo().execute({"prompt": "x", "output_path": str(out)})
+        assert result.success, result.error
+        assert result.artifacts == [str(out)] and out.read_bytes().startswith(b"\x00\x00\x00\x18ftyp")
+        assert result.data["output"] == str(out)
+        assert result.data["resume_job"]["id"] == JOB_ID
+        assert result.data["estimated_cost_usd"] == pytest.approx(0.12)
+        assert result.data["cost_status"] == ("settled" if recovers else "pending")
+        assert result.cost_usd == pytest.approx(0.372189 if recovers else 0.12)
+        if not recovers:
+            assert result.data["billing"] == pending
+        assert len(fake_http.by("POST", "/v1/media/pika/")) == 1
+
     def test_pending_then_settled(self, pika_env, fake_http, tmp_path):
         happy_path(fake_http, polls=[
             job("completed", billing={"state": "pending"}),
@@ -500,6 +570,102 @@ class TestErrors:
         result = PikaVideo().execute({"prompt": "x"})
         assert result.success is False and result.data["error_code"] == "invalid_input"
         assert fake_http.by("GET", "/v1/media/jobs/") == []
+
+
+class TestAssetCache:
+    @pytest.fixture(autouse=True)
+    def isolated_cache(self, monkeypatch, tmp_path):
+        from lib.asset_cache import reset_default_asset_cache
+
+        monkeypatch.setenv("OPENMONTAGE_ASSET_CACHE", "1")
+        monkeypatch.setenv("OPENMONTAGE_ASSET_CACHE_DIR", str(tmp_path / "cache"))
+        reset_default_asset_cache()
+        yield
+        reset_default_asset_cache()
+
+    @pytest.mark.parametrize(("alias", "first", "second", "request_key"), [
+        ("seconds", 5, 10, "duration"),
+        ("ratio", "16:9", "9:16", "aspect_ratio"),
+        ("prompt_optimizer", True, False, "rewrite"),
+        ("first_frame_image", "https://a/first.png", "https://a/second.png", "image"),
+        ("image_url", "https://a/first.png", "https://a/second.png", "image"),
+        ("last_frame_image", "https://a/first.png", "https://a/second.png", "last_frame_image"),
+        ("end_image_url", "https://a/first.png", "https://a/second.png", "last_frame_image"),
+    ])
+    def test_alias_changes_generate_fresh_media(self, alias, first, second, request_key,
+                                                pika_env, fake_http, tmp_path):
+        happy_path(fake_http)
+        tool = PikaVideo()
+        inputs = {"prompt": "x", "seed": 77, alias: first, "output_path": str(tmp_path / "a.mp4")}
+        initial = tool.execute(inputs)
+        inputs.update({alias: second, "output_path": str(tmp_path / "b.mp4")})
+        changed = tool.execute(inputs)
+        assert initial.success and changed.success
+        assert not changed.from_cache
+        assert changed.data["request"][request_key] == second
+        assert len(fake_http.by("POST", "/v1/media/pika/")) == 2
+
+        cached = tool.execute({**inputs, "output_path": str(tmp_path / "c.mp4")})
+        assert cached.success and cached.from_cache
+        assert cached.data["request"][request_key] == second
+        assert Path(cached.artifacts[0]).read_bytes() == Path(changed.artifacts[0]).read_bytes()
+        assert len(fake_http.by("POST", "/v1/media/pika/")) == 2
+
+    @pytest.mark.parametrize(("field", "extension"), [
+        ("image_path", ".png"), ("reference_image_path", ".png"),
+        ("last_frame_image_path", ".png"), ("reference_image_paths", ".png"),
+        ("reference_video_paths", ".mp4"), ("reference_audio_paths", ".wav"),
+        ("reference_paths", ".mp4"), ("references", ".mp4"),
+    ])
+    def test_replacing_local_media_invalidates_cache(self, field, extension, pika_env, fake_http,
+                                                    tmp_path, monkeypatch):
+        happy_path(fake_http)
+        media = tmp_path / f"input{extension}"
+        media.write_bytes(b"original reference")
+        uploads = []
+
+        def upload(self, path, headers):
+            uploads.append(path.read_bytes())
+            return f"https://a/uploaded{extension}"
+
+        monkeypatch.setattr(PikaVideo, "_upload", upload)
+        value = ([{"type": "video", "path": str(media)}] if field == "references" else
+                 [str(media)] if field.endswith("paths") else str(media))
+        inputs = {"prompt": "x", "seed": 77, field: value, "reference_video_seconds": 6}
+        if field == "reference_audio_paths":
+            inputs["reference_image_urls"] = ["https://a/image.png"]
+        tool = PikaVideo()
+        initial = tool.execute({**inputs, "output_path": str(tmp_path / "a.mp4")})
+        media.write_bytes(b"replacement reference")
+        changed = tool.execute({**inputs, "output_path": str(tmp_path / "b.mp4")})
+        assert initial.success and changed.success
+        assert not changed.from_cache
+        assert uploads == [b"original reference", b"replacement reference"]
+        assert len(fake_http.by("POST", "/v1/media/pika/")) == 2
+
+    def test_cached_success_does_not_bypass_audio_validation(self, pika_env, fake_http, tmp_path):
+        happy_path(fake_http)
+        inputs = {"prompt": "x", "seed": 77, "output_path": str(tmp_path / "a.mp4")}
+        tool = PikaVideo()
+        assert tool.execute(inputs).success
+        result = tool.execute({**inputs, "generate_audio": False, "output_path": str(tmp_path / "b.mp4")})
+        assert not result.success and "always generates" in result.error
+        assert len(fake_http.by("POST", "/v1/media/pika/")) == 1
+
+    def test_resume_job_is_not_replaced_by_cached_generation(self, pika_env, fake_http, tmp_path):
+        happy_path(fake_http)
+        inputs = {"prompt": "x", "seed": 77}
+        tool = PikaVideo()
+        generated = tool.execute({**inputs, "output_path": str(tmp_path / "a.mp4")})
+        assert generated.success
+        other_id = "media_another_job"
+        fake_http.add("GET", f"/v1/media/jobs/{other_id}", job("completed"))
+        resumed = tool.execute({**inputs, "resume_job": {**generated.data["resume_job"], "id": other_id},
+                                "output_path": str(tmp_path / "b.mp4")})
+        assert resumed.success and not resumed.from_cache
+        assert resumed.data["job_id"] == other_id
+        assert len(fake_http.by("GET", f"/v1/media/jobs/{other_id}")) == 1
+        assert len(fake_http.by("POST", "/v1/media/pika/")) == 1
 
 
 # ------------------------------------------------------------------

@@ -27,6 +27,7 @@ from urllib.parse import quote
 
 import requests
 from jsonschema import Draft202012Validator
+from requests.exceptions import RequestException
 
 from tools.base_tool import (
     BaseTool,
@@ -116,7 +117,7 @@ def _rate_table(pricing: dict[str, Any], role: str) -> dict[str, float]:
 
 class PikaVideo(BaseTool):
     name = "pika_video"
-    version = "0.1.0"
+    version = "0.1.1"
     tier = ToolTier.GENERATE
     capability = "video_generation"
     provider = "pika"
@@ -185,11 +186,14 @@ class PikaVideo(BaseTool):
     # Paid submission: never retried automatically.
     retry_policy = RetryPolicy(max_retries=0)
     idempotency_key_fields = [
-        "model", "operation", "prompt", "duration", "resolution", "aspect_ratio",
-        "seed", "rewrite", "reference_image_url", "reference_image_path", "last_frame_image_url",
-        "last_frame_image_path", "references", "reference_image_urls",
-        "reference_video_urls", "reference_audio_urls", "reference_paths",
-        "provider_params",
+        "model", "operation", "generation_mode", "prompt", "duration", "seconds",
+        "resolution", "aspect_ratio", "ratio", "seed", "rewrite", "prompt_optimizer",
+        "generate_audio", "image_url", "image_path", "reference_image_url",
+        "reference_image_path", "first_frame_image", "last_frame_image_url",
+        "last_frame_image_path", "last_frame_image", "end_image_url", "references",
+        "reference_image_urls", "reference_video_urls", "reference_audio_urls",
+        "reference_image_paths", "reference_video_paths", "reference_audio_paths",
+        "reference_paths", "reference_video_seconds", "provider_params", "resume_job",
     ]
     side_effects = [
         "submits a paid Pika generation job",
@@ -373,10 +377,14 @@ class PikaVideo(BaseTool):
     # ------------------------------------------------------------------
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
-        operation = self._resolve_operation(inputs)
-        function = OPERATION_FUNCTIONS[operation]
-        resolution = self._normalize_resolution(inputs)
-        seconds = self._normalize_duration(inputs) + ESTIMATE_DURATION_ALLOWANCE_SECONDS
+        # Use the same validated payload as submission, including provider_params,
+        # without uploading local files or contacting the provider during preflight.
+        _, function, payload = self._build_request({**inputs, "dry_run": True}, {})
+        return self._estimate_request(function, payload, inputs.get("reference_video_seconds"))
+
+    def _estimate_request(self, function: str, payload: dict[str, Any], video_seconds: Any) -> float:
+        resolution = payload["resolution"]
+        seconds = payload["duration"] + ESTIMATE_DURATION_ALLOWANCE_SECONDS
         rates = self._rates[function]
         if resolution not in rates:
             raise PriceQuoteRequired(
@@ -384,16 +392,8 @@ class PikaVideo(BaseTool):
             )
         cost = rates[resolution] * seconds
         if function == "reference-to-video":
-            has_video = bool(
-                inputs.get("reference_video_urls")
-                or inputs.get("reference_video_paths")
-                or any(
-                    (ref.get("type") == "video") for ref in (inputs.get("references") or []) if isinstance(ref, dict)
-                )
-                or any(self._guess_kind(p) == "video" for p in (inputs.get("reference_paths") or []))
-            )
+            has_video = any(ref["type"] == "video" for ref in payload["references"])
             if has_video:
-                video_seconds = inputs.get("reference_video_seconds")
                 if video_seconds is None:
                     raise PriceQuoteRequired(
                         "reference-to-video bills input video seconds; pass reference_video_seconds "
@@ -428,7 +428,10 @@ class PikaVideo(BaseTool):
         try:
             if not job:
                 operation, function, payload = self._build_request(inputs, headers)
-                estimate = self._safe_estimate(inputs)
+                try:
+                    estimate = self._estimate_request(function, payload, inputs.get("reference_video_seconds"))
+                except PriceQuoteRequired:
+                    estimate = None
                 if inputs.get("dry_run"):
                     quoted = self._quote(function, payload)
                     return ToolResult(
@@ -762,12 +765,6 @@ class PikaVideo(BaseTool):
             return bool(inputs["prompt_optimizer"])
         return True
 
-    def _safe_estimate(self, inputs: dict[str, Any]) -> float | None:
-        try:
-            return self.estimate_cost(inputs)
-        except PriceQuoteRequired:
-            return None
-
     # ------------------------------------------------------------------
     # HTTP
     # ------------------------------------------------------------------
@@ -850,7 +847,7 @@ class PikaVideo(BaseTool):
 
     @staticmethod
     def _settle_billing(fetch, result: dict[str, Any], estimate: float | None) -> tuple[dict[str, Any] | None, float | None, str]:
-        """Return (billing, cost_usd, cost_status). Only a settled charge counts as spend."""
+        """Return a settled charge or a flagged estimate without losing completed media."""
         billing = result.get("billing")
         for delay in BILLING_SETTLE_DELAYS:
             state = (billing or {}).get("state")
@@ -859,7 +856,14 @@ class PikaVideo(BaseTool):
             if state == "unavailable":
                 break
             time.sleep(delay)
-            billing = fetch().get("billing")
+            try:
+                refreshed = fetch().get("billing")
+            except (PikaAPIError, RequestException):
+                # Generation and download already succeeded. Keep the last billing
+                # record and retry reconciliation only, never the paid submission.
+                continue
+            if refreshed is not None:
+                billing = refreshed
         state = (billing or {}).get("state")
         if state == "settled" and billing.get("charge_micro_usd") is not None:
             return billing, int(billing["charge_micro_usd"]) / 1_000_000, "settled"

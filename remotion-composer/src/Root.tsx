@@ -129,7 +129,14 @@ const calculateMetadata: CalculateMetadataFunction<ExplainerProps> = async ({
   }
   const lastEnd = Math.max(...cuts.map((c) => c.out_seconds || 0));
   // Add 1 second padding for final fade
-  return { durationInFrames: Math.ceil((lastEnd + 1) * 30) };
+  // Optional dimensions from props (e.g. 1080x1350 for 4:5 social formats).
+  // When absent, the composition keeps its 1920x1080 default.
+  const w = (props as Record<string, unknown>).width as number | undefined;
+  const h = (props as Record<string, unknown>).height as number | undefined;
+  return {
+    durationInFrames: Math.ceil((lastEnd + 1) * 30),
+    ...(w && h ? { width: Math.round(w), height: Math.round(h) } : {}),
+  };
 };
 
 export const Root: React.FC = () => {

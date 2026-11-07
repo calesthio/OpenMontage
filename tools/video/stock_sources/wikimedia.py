@@ -82,17 +82,14 @@ class WikimediaSource:
                 "inprop": "url",
             }
 
-            try:
-                r = requests.get(
-                    _API_URL,
-                    params=params,
-                    headers={"User-Agent": _USER_AGENT},
-                    timeout=30,
-                )
-                r.raise_for_status()
-                data = r.json()
-            except Exception:
-                continue
+            r = requests.get(
+                _API_URL,
+                params=params,
+                headers={"User-Agent": _USER_AGENT},
+                timeout=30,
+            )
+            r.raise_for_status()
+            data = r.json()
             pages = list(((data.get("query") or {}).get("pages") or {}).values())
             if not pages:
                 continue

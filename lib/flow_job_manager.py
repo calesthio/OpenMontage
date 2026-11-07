@@ -22,6 +22,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import queue
+import time
 import os
 import sqlite3
 import subprocess
@@ -320,7 +322,13 @@ def _mcp_jsonrpc(tool_name: str, arguments: dict[str, Any], timeout: int = 120) 
     """
     if tool_name in GFLOW_READ_ONLY_TOOLS:
         cmd = ["gflow", "mcp", "run", "--profile", "flow_remote", "--no-spend"]
-        env = {"GFLOW_CLI_PROFILE": "flow_remote", "GFLOW_MCP_NO_SPEND": "1"}
+        # Read-only MCP runs in GitHub Codespaces have no X display, so force
+        # headless Chrome to avoid an immediate browser exit ("Connection closed").
+        env = {
+            "GFLOW_CLI_PROFILE": "flow_remote",
+            "GFLOW_MCP_NO_SPEND": "1",
+            "GFLOW_CLI_HEADLESS": "true",
+        }
     elif tool_name in BROWSER_USE_READ_ONLY_TOOLS:
         cmd = [
             "/home/vscode/.local/bin/browser-use",
@@ -367,30 +375,85 @@ def _mcp_jsonrpc(tool_name: str, arguments: dict[str, Any], timeout: int = 120) 
         text=True,
         env={**os.environ, **env},
     )
-    try:
-        out, err = proc.communicate(input=payload, timeout=timeout)
-    except subprocess.TimeoutExpired:
-        proc.kill()
-        proc.communicate()
-        raise RuntimeError(f"MCP {tool_name} timed out after {timeout}s")
 
-    if proc.returncode != 0:
-        raise RuntimeError(f"MCP {tool_name} exited {proc.returncode}: {err[:500]}")
+    # Keep stdin open while waiting for the (possibly long-running) tool
+    # response. Closing stdin immediately (communicate) makes the stdio MCP
+    # server shut down before a slow tool (e.g. credits browser launch)
+    # can reply, surfacing as "Connection closed".
+    assert proc.stdin is not None
+    assert proc.stdout is not None
+    assert proc.stderr is not None
+    proc.stdin.write(payload)
+    proc.stdin.flush()
 
-    # Extract the id=2 result line from stdout
-    for line in out.splitlines():
-        line = line.strip()
-        if not line:
-            continue
+    result_msg: dict[str, Any] | None = None
+    stdout_q: "queue.Queue[str | None]" = queue.Queue()
+    stderr_chunks: list[str] = []
+
+    def _read_stdout() -> None:
+        for line in proc.stdout:  # type: ignore[union-attr]
+            stdout_q.put(line)
+        stdout_q.put(None)
+
+    def _read_stderr() -> None:
         try:
-            msg = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if msg.get("id") == 2:
-            if "error" in msg:
-                raise RuntimeError(f"MCP {tool_name} error: {msg['error']}")
-            return msg.get("result", {})
-    raise RuntimeError(f"MCP {tool_name}: no id=2 response in output")
+            stderr_chunks.append(proc.stderr.read())  # type: ignore[union-attr]
+        except Exception:  # noqa: BLE001
+            pass
+
+    t_out = threading.Thread(target=_read_stdout, daemon=True)
+    t_err = threading.Thread(target=_read_stderr, daemon=True)
+    t_out.start()
+    t_err.start()
+
+    deadline = time.monotonic() + timeout
+    try:
+        while time.monotonic() < deadline:
+            remaining = deadline - time.monotonic()
+            try:
+                line = stdout_q.get(timeout=min(0.1, max(0.0, remaining)))
+            except queue.Empty:
+                if proc.poll() is not None:
+                    break
+                continue
+            if line is None:
+                break
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                msg = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if msg.get("id") == 2:
+                result_msg = msg
+                break
+    finally:
+        # Stop the server and reap resources.
+        try:
+            proc.stdin.close()
+        except Exception:  # noqa: BLE001
+            pass
+        if proc.poll() is None:
+            proc.terminate()
+            try:
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait()
+        t_out.join(timeout=2)
+        t_err.join(timeout=2)
+
+    err_text = "".join(stderr_chunks)
+
+    if result_msg is None:
+        if proc.returncode not in (0, None) and proc.returncode != 0:
+            raise RuntimeError(f"MCP {tool_name} exited {proc.returncode}: {err_text[:500]}")
+        raise RuntimeError(f"MCP {tool_name}: no id=2 response in output")
+
+    if "error" in result_msg:
+        raise RuntimeError(f"MCP {tool_name} error: {result_msg['error']}")
+    return result_msg.get("result", {})
 
 
 def check_gflow_auth() -> dict[str, Any]:

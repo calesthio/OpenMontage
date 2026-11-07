@@ -77,7 +77,7 @@ pixabay_music_*
 Thumbs.db
 
 # Node (for remotion-composer/)
-node_modules/
+node_modules
 
 # Remotion build output and copied project assets (regenerable at render time)
 remotion-composer/out/
@@ -93,14 +93,18 @@ remotion-composer/public/demo-props/talking-head-*
 remotion-composer/public/demo-props/caption-burn-*
 
 venv/
-.venv/
+.venv
 
 # Backlot local cache (thumbnails)
 .backlot/
 
 # Workspace-local third-party runtimes (for example the portable Blender LTS
 # used by blender_world). These are checksum-verified but never committed.
-.runtime/
+.runtime
 
 # Local Wan / diffusers GPU environment
 .venv-wan/
+
+# Superpowers implementation workspaces and isolated Git worktrees
+.superpowers/
+.worktrees/

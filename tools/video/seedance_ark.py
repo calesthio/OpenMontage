@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 
+from lib.seedance_config import SeedanceConfigError, load_seedance_config
 from tools.base_tool import (
     BaseTool,
     Determinism,
@@ -139,7 +140,9 @@ class SeedanceArkVideo(BaseTool):
     dependencies = ["env:ARK_API_KEY"]
     install_instructions = (
         "Set ARK_API_KEY to the API Key body from Volcengine Ark (without "
-        "the 'Bearer ' prefix). Optional: ARK_SEEDANCE_MODEL and ARK_BASE_URL."
+        "the 'Bearer ' prefix), or initialize ~/.seedance/config.json with "
+        "the seedance-product-scene setup command. Optional: "
+        "ARK_SEEDANCE_MODEL and ARK_BASE_URL."
     )
     agent_skills = ["seedance-2-0", "seedance-2-5", "ai-video-gen"]
 
@@ -352,16 +355,33 @@ class SeedanceArkVideo(BaseTool):
     ]
 
     def _get_api_key(self) -> str | None:
-        return os.environ.get("ARK_API_KEY")
+        environment_key = os.environ.get("ARK_API_KEY")
+        if environment_key:
+            return environment_key
+        config_path = Path(
+            os.environ.get("SEEDANCE_CONFIG_PATH", "~/.seedance/config.json")
+        ).expanduser()
+        if not config_path.is_file():
+            return None
+        return load_seedance_config().api_key
 
     def _get_base_url(self) -> str:
-        base_url = os.environ.get("ARK_BASE_URL", self.BASE_URL).rstrip("/")
+        base_url = os.environ.get("ARK_BASE_URL")
+        if not base_url:
+            try:
+                base_url = load_seedance_config().api_base
+            except SeedanceConfigError:
+                base_url = self.BASE_URL
+        base_url = base_url.rstrip("/")
         if not base_url.startswith("https://"):
             raise ValueError("ARK_BASE_URL must be an https:// URL")
         return base_url
 
     def get_status(self) -> ToolStatus:
-        api_key = self._get_api_key()
+        try:
+            api_key = self._get_api_key()
+        except SeedanceConfigError:
+            return ToolStatus.UNAVAILABLE
         if not api_key or api_key.lower().startswith("bearer "):
             return ToolStatus.UNAVAILABLE
         return ToolStatus.AVAILABLE
@@ -549,7 +569,10 @@ class SeedanceArkVideo(BaseTool):
         except (TypeError, ValueError, OSError) as exc:
             return ToolResult(success=False, error=self._safe_error(exc))
 
-        api_key = self._get_api_key()
+        try:
+            api_key = self._get_api_key()
+        except SeedanceConfigError as exc:
+            return ToolResult(success=False, error=str(exc))
         if not api_key:
             return ToolResult(
                 success=False,
@@ -910,9 +933,17 @@ class SeedanceArkVideo(BaseTool):
         variant = str(inputs.get("model_variant", "standard")).lower()
         if variant not in self.MODEL_IDS:
             raise ValueError("model_variant must be 2.5, standard, fast, or mini")
+        configured_model = os.environ.get("ARK_SEEDANCE_MODEL")
+        if not configured_model:
+            try:
+                config = load_seedance_config()
+                if config.source != "environment/defaults":
+                    configured_model = config.video_model
+            except SeedanceConfigError:
+                configured_model = None
         model = str(
             inputs.get("model")
-            or os.environ.get("ARK_SEEDANCE_MODEL")
+            or configured_model
             or self.MODEL_IDS[variant]
         )
         if not model or any(char.isspace() for char in model):
@@ -1425,7 +1456,11 @@ class SeedanceArkVideo(BaseTool):
 
     def _safe_error(self, exc: Exception, api_key: str | None = None) -> str:
         message = str(exc)
-        secrets = {value for value in (api_key, self._get_api_key()) if value}
+        try:
+            resolved_key = self._get_api_key()
+        except SeedanceConfigError:
+            resolved_key = None
+        secrets = {value for value in (api_key, resolved_key) if value}
         for secret in secrets:
             message = message.replace(secret, "[redacted]")
         message = re.sub(

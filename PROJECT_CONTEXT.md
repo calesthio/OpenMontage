@@ -71,6 +71,7 @@ Each tool's `agent_skills[]` field bridges Layer 1 → Layer 3. See `skills/INDE
 | `tools/cost_tracker.py` | Budget governance |
 | `tools/video/video_stitch.py` | Multi-clip assembly (stitch, spatial, validate, preview) |
 | `tools/video/video_compose.py` | Runtime-aware composition orchestrator — routes to Remotion / HyperFrames / FFmpeg based on `edit_decisions.render_runtime` |
+| `tools/graphics/seedream_ark_image.py` | Direct Volcengine Ark Seedream product-scene generation with local-reference validation |
 | `tools/video/hyperframes_compose.py` | HyperFrames runtime — templated workspace materialization plus authored-workspace unified `check`/`render`, FFmpeg floor check |
 | `tools/graphics/threejs_world.py` | Local semantic 3D-world authoring with explicit blockout/production fidelity tiers, region-aware terrain, diagnostics, and HyperFrames atelier workspaces |
 | `tools/graphics/threejs_asset_catalog.py` | CC0 GLTF/GLB catalog acquisition, inventory, and provenance for production-fidelity world builds |
@@ -101,6 +102,7 @@ Each tool's `agent_skills[]` field bridges Layer 1 → Layer 3. See `skills/INDE
 | `hybrid` | `pipeline_defs/hybrid.yaml` | Source-plus-support hybrid |
 | `avatar-spokesperson` | `pipeline_defs/avatar-spokesperson.yaml` | Avatar presenter |
 | `localization-dub` | `pipeline_defs/localization-dub.yaml` | Localization and dubbing |
+| `seedance-product-scene` | `pipeline_defs/seedance-product-scene.yaml` | Product image to selected ARK image/video packages with Codex copy and approved music |
 | `framework-smoke` | `pipeline_defs/framework-smoke.yaml` | Test harness |
 
 ## When Building New Pipelines

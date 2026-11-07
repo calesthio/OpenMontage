@@ -75,9 +75,49 @@ class PixabayMusic(BaseTool):
         "type": "object",
         "required": ["query"],
         "properties": {
+            "operation": {
+                "type": "string",
+                "enum": ["search", "download", "search_and_download"],
+                "default": "search_and_download",
+                "description": (
+                    "search returns candidates without writing a file; download "
+                    "fetches one selected Pixabay URL; search_and_download "
+                    "preserves the legacy first-result behavior."
+                ),
+            },
             "query": {
                 "type": "string",
                 "description": "Search query for music (e.g., 'upbeat corporate background')",
+            },
+            "max_results": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10,
+                "default": 3,
+                "description": "Maximum candidates returned by operation=search.",
+            },
+            "download_url": {
+                "type": "string",
+                "description": "Pixabay-owned URL returned by operation=search.",
+            },
+            "candidate_index": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10,
+                "description": "One-based candidate number selected by the user.",
+            },
+            "title": {
+                "type": "string",
+                "description": "Candidate title returned by operation=search.",
+            },
+            "artist": {
+                "type": "string",
+                "description": "Candidate artist returned by operation=search.",
+            },
+            "duration_seconds": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Candidate duration returned by operation=search.",
             },
             "min_duration": {
                 "type": "number",
@@ -102,7 +142,15 @@ class PixabayMusic(BaseTool):
         cpu_cores=1, ram_mb=256, vram_mb=0, disk_mb=50, network_required=True
     )
     retry_policy = RetryPolicy(max_retries=2, retryable_errors=["timeout"])
-    idempotency_key_fields = ["query", "min_duration", "max_duration"]
+    idempotency_key_fields = [
+        "query",
+        "min_duration",
+        "max_duration",
+        "operation",
+        "max_results",
+        "download_url",
+        "candidate_index",
+    ]
     side_effects = ["writes audio file to output_path", "scrapes Pixabay website"]
     user_visible_verification = [
         "Listen to downloaded track for mood and quality",
@@ -139,8 +187,42 @@ class PixabayMusic(BaseTool):
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         start = time.time()
+        operation = str(inputs.get("operation", "search_and_download"))
+        if operation not in {"search", "download", "search_and_download"}:
+            return ToolResult(
+                success=False,
+                error="operation must be search, download, or search_and_download",
+            )
 
         try:
+            if operation == "download":
+                download_url = str(inputs.get("download_url", ""))
+                self._validate_download_url(download_url)
+                track = {
+                    "title": inputs.get("title") or "Pixabay selected track",
+                    "artist": inputs.get("artist") or "Unknown",
+                    "audio_url": download_url,
+                    "duration": inputs.get("duration_seconds"),
+                }
+                output_path = self._download(track, inputs)
+                return ToolResult(
+                    success=True,
+                    data={
+                        "provider": "pixabay_music",
+                        "track_title": track["title"],
+                        "artist": track["artist"],
+                        "duration_seconds": track.get("duration"),
+                        "query": inputs.get("query"),
+                        "selected_index": inputs.get("candidate_index"),
+                        "output": str(output_path),
+                        "format": "mp3",
+                        "license": "Pixabay Content License (free, no attribution required)",
+                    },
+                    artifacts=[str(output_path)],
+                    cost_usd=0.0,
+                    duration_seconds=round(time.time() - start, 2),
+                )
+
             # Step 1: Search Pixabay Music
             tracks = self._search(inputs)
             if not tracks:
@@ -163,6 +245,55 @@ class PixabayMusic(BaseTool):
             # Fall back to unfiltered if no matches within duration range
             if not filtered:
                 filtered = tracks
+
+            if operation == "search":
+                max_results = inputs.get("max_results", 3)
+                if (
+                    isinstance(max_results, bool)
+                    or not isinstance(max_results, int)
+                    or not 1 <= max_results <= 10
+                ):
+                    raise ValueError("max_results must be an integer from 1 to 10")
+                candidates = []
+                for index, candidate in enumerate(filtered, start=1):
+                    download_url = self._normalize_audio_url(
+                        str(candidate.get("audio_url", ""))
+                    )
+                    if not self._is_allowed_download_url(download_url):
+                        continue
+                    candidates.append(
+                        {
+                            "index": len(candidates) + 1,
+                            "title": candidate.get("title", "Unknown"),
+                            "artist": candidate.get("artist", "Unknown"),
+                            "duration_seconds": candidate.get("duration"),
+                            "license": "Pixabay Content License",
+                            "download_url": download_url,
+                            "pixabay_id": candidate.get("pixabay_id"),
+                        }
+                    )
+                    if len(candidates) == max_results:
+                        break
+                if not candidates:
+                    return ToolResult(
+                        success=False,
+                        error="No safe Pixabay music candidates were found.",
+                        duration_seconds=round(time.time() - start, 2),
+                    )
+                return ToolResult(
+                    success=True,
+                    data={
+                        "provider": "pixabay_music",
+                        "query": inputs["query"],
+                        "candidates": candidates,
+                        "results_found": len(tracks),
+                        "results_after_filter": len(filtered),
+                        "license": "Pixabay Content License",
+                    },
+                    artifacts=[],
+                    cost_usd=0.0,
+                    duration_seconds=round(time.time() - start, 2),
+                )
 
             # Step 3: Pick the first matching track
             track = filtered[0]
@@ -195,6 +326,36 @@ class PixabayMusic(BaseTool):
             cost_usd=0.0,
             duration_seconds=round(time.time() - start, 2),
         )
+
+    @staticmethod
+    def _normalize_audio_url(audio_url: str) -> str:
+        if audio_url.startswith("//"):
+            return "https:" + audio_url
+        if audio_url.startswith("/"):
+            return "https://pixabay.com" + audio_url
+        return audio_url
+
+    @classmethod
+    def _is_allowed_download_url(cls, audio_url: str) -> bool:
+        try:
+            parsed = urllib.parse.urlsplit(cls._normalize_audio_url(audio_url))
+        except ValueError:
+            return False
+        hostname = (parsed.hostname or "").lower()
+        return (
+            parsed.scheme == "https"
+            and (
+                hostname == "pixabay.com"
+                or hostname.endswith(".pixabay.com")
+            )
+        )
+
+    @classmethod
+    def _validate_download_url(cls, audio_url: str) -> None:
+        if not cls._is_allowed_download_url(audio_url):
+            raise ValueError(
+                "download_url must be an HTTPS URL on pixabay.com or its CDN."
+            )
 
     def _build_opener(self) -> urllib.request.OpenerDirector:
         """Build a URL opener with cookie support for session persistence."""
@@ -322,15 +483,10 @@ class PixabayMusic(BaseTool):
 
     def _download(self, track: dict, inputs: dict[str, Any]) -> Path:
         """Download an MP3 track to the output path."""
-        audio_url = track.get("audio_url")
+        audio_url = self._normalize_audio_url(str(track.get("audio_url", "")))
         if not audio_url:
             raise RuntimeError("No audio URL found for the selected track.")
-
-        # Ensure URL is absolute
-        if audio_url.startswith("//"):
-            audio_url = "https:" + audio_url
-        elif audio_url.startswith("/"):
-            audio_url = "https://pixabay.com" + audio_url
+        self._validate_download_url(audio_url)
 
         # Build output path
         track_title = track.get("title", "pixabay_music")

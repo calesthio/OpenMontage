@@ -283,6 +283,13 @@ OpenMontage 会在提案阶段在 Remotion 和 HyperFrames 之间进行选择（
 
 ## 流水线
 
+### 火山方舟产品场景
+
+`seedance-product-scene` 流水线会把一张产品图先转成四种风格预览，再按用户
+选择的 1–3 种风格生成 Seedream 场景图、三段式 Seedance 视频、三套 Codex
+文案和用户确认的 Pixabay 配乐。所有创作选择都会停在人工审批门。详见
+[`docs/seedance-product-scene.md`](docs/seedance-product-scene.md)。
+
 每条流水线都是一个完整的制作工作流，从创意直到成品视频。
 
 | 流水线 | 产出内容 | 最适用场景 |

@@ -218,9 +218,18 @@ The `req_key` for video is `jimeng_ti2v_v30_pro`. Success code is `10000`. Task 
 
 > **Official direct Seedance API.** Calls Volcengine Ark without routing through fal.ai or Replicate, while keeping those existing provider paths available as independent fallbacks.
 
-**Tool unlocked:** `seedance_ark`
+**Tools unlocked:** `seedance_ark`, `seedream_ark_image`
 
-**Env var:** `ARK_API_KEY`
+**Configuration:** OpenMontage reads `~/.seedance/config.json` by default. Use
+`SEEDANCE_CONFIG_PATH` for another file. Environment variables
+`ARK_API_KEY`, `ARK_BASE_URL`, `ARK_SEEDREAM_MODEL`, and `ARK_SEEDANCE_MODEL`
+take precedence. The image model default is
+`doubao-seedream-5-0-pro-260628`.
+
+The `seedance-product-scene` pipeline uses direct Ark image-to-image requests
+through `seedream_ark_image`, then passes the chosen scene image into
+`seedance_ark`. Copywriting stays in the active Codex session. See
+[`seedance-product-scene.md`](seedance-product-scene.md).
 
 #### Setup
 

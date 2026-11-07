@@ -9,7 +9,11 @@ def test_pipeline_switch_restarts_shared_stage(tmp_path):
     # the old cinematic run, not the new framework-smoke run.
     write_checkpoint(
         tmp_path, "film", "research", "completed",
-        {"research_brief": sample_artifact("research_brief")},
+        {
+            "research_brief": sample_artifact("research_brief"),
+            "checksums": {"research_brief.json": "sha256:deadbeef"},
+            "qc_passed": True,
+        },
         pipeline_type="cinematic", human_approved=True,
     )
 
@@ -20,7 +24,11 @@ def test_pipeline_switch_restarts_shared_stage(tmp_path):
 def test_matching_pipeline_completion_is_retained(tmp_path):
     write_checkpoint(
         tmp_path, "film", "research", "completed",
-        {"research_brief": sample_artifact("research_brief")},
+        {
+            "research_brief": sample_artifact("research_brief"),
+            "checksums": {"research_brief.json": "sha256:deadbeef"},
+            "qc_passed": True,
+        },
         pipeline_type="framework-smoke", human_approved=True,
     )
 
@@ -31,7 +39,11 @@ def test_matching_pipeline_completion_is_retained(tmp_path):
 def test_unscoped_legacy_resume_still_accepts_completion(tmp_path):
     write_checkpoint(
         tmp_path, "film", "research", "completed",
-        {"research_brief": sample_artifact("research_brief")},
+        {
+            "research_brief": sample_artifact("research_brief"),
+            "checksums": {"research_brief.json": "sha256:deadbeef"},
+            "qc_passed": True,
+        },
         human_approved=True,
     )
 

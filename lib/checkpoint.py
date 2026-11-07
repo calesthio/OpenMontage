@@ -27,6 +27,11 @@ ALL_KNOWN_STAGES = frozenset([
 STAGES = ["research", "proposal", "idea", "script", "scene_plan",
           "assets", "edit", "compose", "publish"]
 
+# V8 §8.1: a stage may only be marked "completed" when its artifacts carry
+# checksums and a QC pass record. The durable state store (SQLite, §8.2) is
+# the source of truth; checkpoint JSON is the human-readable mirror.
+COMPLETED_REQUIRED_ARTIFACT_KEYS = frozenset({"checksums", "qc_passed"})
+
 CANONICAL_STAGE_ARTIFACTS = {
     "research": "research_brief",
     "proposal": "proposal_packet",
@@ -436,7 +441,14 @@ def write_checkpoint(
     error: Optional[str] = None,
     metadata: Optional[dict] = None,
 ) -> Path:
-    """Write a checkpoint file for a pipeline stage."""
+    """Write a checkpoint file for a pipeline stage.
+
+    V8 §8.1: when ``status == "completed"``, ``artifacts`` must carry a
+    non-empty ``checksums`` map and ``qc_passed == True``. The checkpoint is
+    written to a temp file then atomically renamed into place (``os.replace``)
+    so a mid-write failure never leaves a truncated checkpoint. A superseded
+    completed/awaiting_human checkpoint is archived to ``history/`` first.
+    """
     # Backfill identity fields from the project marker so omitted kwargs
     # cannot bypass either gate enforcement or style validation.
     marker = None
@@ -500,6 +512,30 @@ def write_checkpoint(
         stage,
         status,
     )
+
+    # V8 §8.1: completed requires checksums + qc_passed; otherwise the stage
+    # is not durably finished and must not be treated as done downstream.
+    # Checked after prerequisites so that prerequisite violations surface
+    # first (existing tests depend on that ordering).
+    if status == "completed":
+        missing = COMPLETED_REQUIRED_ARTIFACT_KEYS - set(artifacts.keys())
+        if missing:
+            raise CheckpointValidationError(
+                f"Stage {stage!r} cannot be completed without "
+                f"{sorted(missing)} in artifacts. V8 §8.1: output must be "
+                f"valid, checksum-recorded, QC-passed, and durably committed "
+                f"before the stage is marked completed."
+            )
+        if not isinstance(artifacts.get("checksums"), dict) or not artifacts["checksums"]:
+            raise CheckpointValidationError(
+                f"Stage {stage!r} completed with empty or missing checksums; "
+                f"V8 §8.1 requires a non-empty checksums map."
+            )
+        if artifacts.get("qc_passed") is not True:
+            raise CheckpointValidationError(
+                f"Stage {stage!r} completed without qc_passed=True; "
+                f"V8 §8.1 requires QC to pass before completion."
+            )
 
     checkpoint = {
         "version": "1.0",

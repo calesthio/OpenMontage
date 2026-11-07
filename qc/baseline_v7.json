@@ -1,0 +1,35 @@
+{
+  "video": "projects/pilot/first_video/final.mp4",
+  "created_at": "2026-11-07T08:57:09.328815+00:00",
+  "overall_passed": true,
+  "metrics": {
+    "max_static_segment_sec": 0.0,
+    "avg_visual_change_interval_sec": 3.902
+  },
+  "checks": [
+    {
+      "check_id": "max_static_segment_sec",
+      "status": "success",
+      "measured": 0.0,
+      "threshold": 15.0,
+      "passed": true,
+      "note": "0 frozen segment(s); limit 15.0s"
+    },
+    {
+      "check_id": "avg_visual_change_interval_sec",
+      "status": "success",
+      "measured": 3.902,
+      "threshold": 15.0,
+      "passed": true,
+      "note": "success"
+    },
+    {
+      "check_id": "duration_sec",
+      "status": "success",
+      "measured": 169.466,
+      "threshold": null,
+      "passed": true,
+      "note": ""
+    }
+  ]
+}

@@ -21,6 +21,7 @@ class RouteDecision:
     source_type: str  # "archival" | "ai_generated"
     reason: str
     status: str  # success | fallback_used | failed
+    failure_class: str = "OPTIONAL"  # REQUIRED | OPTIONAL | DEGRADABLE | MANUAL_REVIEW
     evidence: dict[str, Any] | None = None
     checked_at: str = ""
 
@@ -62,6 +63,7 @@ class SceneRouter:
             return RouteDecision(
                 scene_id=scene_id, source_type="ai_generated",
                 status="failed", reason="budget guard refused lookup",
+                failure_class="REQUIRED",
                 evidence={"budget": budget},
             )
 
@@ -78,6 +80,7 @@ class SceneRouter:
                 scene_id=scene_id, source_type="ai_generated",
                 status="fallback_used",
                 reason="archival not available for scene; falling back to ai_generated",
+                failure_class="OPTIONAL",
                 evidence={"budget": budget},
             )
         if scene_id in self.ai_scenes:
@@ -93,12 +96,14 @@ class SceneRouter:
                 scene_id=scene_id, source_type="archival",
                 status="fallback_used",
                 reason="unknown scene; defaulting to archival if available",
+                failure_class="OPTIONAL",
                 evidence={"budget": budget},
             )
         return RouteDecision(
             scene_id=scene_id, source_type="ai_generated",
             status="fallback_used",
             reason="unknown scene; no archival, defaulting to ai_generated",
+            failure_class="OPTIONAL",
             evidence={"budget": budget},
         )
 

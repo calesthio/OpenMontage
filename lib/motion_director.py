@@ -25,6 +25,7 @@ class MotionPlan:
     filter: str | None
     status: str  # success | fallback_used | failed
     reason: str
+    failure_class: str = "DEGRADABLE"  # REQUIRED | OPTIONAL | DEGRADABLE | MANUAL_REVIEW
     created_at: str = ""
 
     def to_dict(self) -> dict[str, Any]:
@@ -57,9 +58,6 @@ class MotionDirector:
                 filter=None, status="success",
                 reason=f"hold {hold_sec}s <= limit {self.static_limit_sec}s; no motion",
             )
-
-        # Gentle zoompan: slowly scale 1.00->1.06 over the hold so the
-        # frame is never perfectly static. ffmpeg zoompan filter.
         zfilter = ("zoompan=z='min(zoom+0.0015,1.06)':d=1:x='iw/2-(iw/zoom/2)':"
                    "y='ih/2-(ih/zoom/2)':s=1920x1080:fps=30")
         try:
@@ -84,6 +82,7 @@ class MotionDirector:
             return MotionPlan(
                 input_path=str(inp), output_path=str(out), applied=False,
                 filter=None, status="fallback_used",
+                failure_class="DEGRADABLE",
                 reason=f"zoompan failed ({exc}); still copied unchanged",
             )
 

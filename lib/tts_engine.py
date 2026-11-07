@@ -24,6 +24,7 @@ class TtsResult:
     engine: str  # "kokoro" | "piper" | "none"
     status: str  # success | fallback_used | failed
     reason: str
+    failure_class: str = "OPTIONAL"  # REQUIRED | OPTIONAL | DEGRADABLE | MANUAL_REVIEW
     created_at: str = ""
 
     def to_dict(self) -> dict[str, Any]:
@@ -79,17 +80,20 @@ class TtsEngine:
                     return TtsResult(
                         text=text, output_path=str(out), engine="piper",
                         status="fallback_used",
+                        failure_class="OPTIONAL",
                         reason="kokoro unavailable; piper CPU fallback used",
                     )
             except Exception as exc:  # pragma: no cover - env dependent
                 return TtsResult(
                     text=text, output_path=str(out), engine="none",
                     status="failed",
+                    failure_class="REQUIRED",
                     reason=f"kokoro and piper both failed: {exc}",
                 )
 
         return TtsResult(
             text=text, output_path=str(out), engine="none", status="failed",
+            failure_class="REQUIRED",
             reason="no TTS engine available (kokoro/piper not installed)",
         )
 

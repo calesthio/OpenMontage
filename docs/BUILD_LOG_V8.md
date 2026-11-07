@@ -37,3 +37,11 @@ Committed after every completed P0 item (8.1–8.6) and after every wave item.
   - WAL journal mode, single transaction per write, explicit commit.
 - Verified with smoke test: transition→complete→fail round-trip works.
 - Status: new module, no existing tests broken.
+
+### 2026-11-07 — P0 8.3 (DONE)
+
+- `lib/scene_router.py`: added `failure_class` field to `RouteDecision` (default OPTIONAL). Archival-missing → AI fallback = OPTIONAL; budget guard refusal = REQUIRED.
+- `lib/motion_director.py`: added `failure_class` field to `MotionPlan` (default DEGRADABLE). zoompan failure → fallback_used = DEGRADABLE (continue with warning, static frame accepted).
+- `lib/tts_engine.py`: added `failure_class` field to `TtsResult` (default OPTIONAL). Piper fallback = OPTIONAL; both engines failed = REQUIRED (cannot assemble without voice).
+- Field order fixed in dataclasses (`reason` before `failure_class` with defaults).
+- Verified: all three modules import and produce correct failure_class defaults.

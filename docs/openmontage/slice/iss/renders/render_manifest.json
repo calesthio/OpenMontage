@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "topic_id": "iss",
+  "resolution": "1280x720",
+  "fps": 30,
+  "assets": {
+    "card_title": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/iss/graphics/card_title.png"
+    },
+    "card_orbit": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/iss/graphics/card_orbit.png"
+    },
+    "card_cupola": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/iss/graphics/card_cupola.png"
+    },
+    "card_earthobs": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/iss/graphics/card_earthobs.png"
+    },
+    "card_daynight": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/iss/graphics/card_daynight.png"
+    },
+    "card_crew": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/iss/graphics/card_crew.png"
+    },
+    "card_matters": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/iss/graphics/card_matters.png"
+    },
+    "card_end": {
+      "kind": "graphics",
+      "path": "/workspaces/OpenMontage/docs/openmontage/slice/iss/graphics/card_end.png"
+    },
+    "iss_earth_views": {
+      "kind": "footage",
+      "path": "/workspaces/OpenMontage/projects/slice_iss/footage/iss_earth_views_medium.mp4"
+    }
+  }
+}

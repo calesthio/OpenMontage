@@ -31,6 +31,14 @@ ARTIFACT_NAMES = [
     "final_review",
     "character_qa_report",
     "video_analysis_brief",
+    # business-documentary pipeline
+    "topic_brief",
+    "evidence_ledger",
+    "fact_check_report",
+    "narration_manifest",
+    "alignment_report",
+    "qa_report",
+    "publish_package",
 ]
 
 

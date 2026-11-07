@@ -1,0 +1,20 @@
+{
+  "sentences": 37,
+  "duration_s": 298.35,
+  "finished_duration_s": 298.35,
+  "sample_rate": 24000,
+  "beats": [
+    "B1",
+    "B2",
+    "B3",
+    "B4",
+    "B5",
+    "B6",
+    "B7",
+    "B8"
+  ],
+  "engine": "kokoro_82m_cpu",
+  "voice": "af_heart",
+  "script": "docs/openmontage/slice/iss/ISS_FULL_SCRIPT_v0.md",
+  "expected_duration": 298.35
+}

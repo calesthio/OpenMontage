@@ -1,0 +1,30 @@
+{
+  "ladder": [],
+  "rungs": [
+    {
+      "rung": 1,
+      "stack": "released_037_x4",
+      "note": "released diffusers 0.37.0 + transformers 4.x + hub <1.0 (ships Flux2KleinPipeline and ZImagePipeline)",
+      "pip_args": [
+        "diffusers==0.37.0",
+        "transformers==4.57.6",
+        "huggingface-hub>=0.34,<1.0",
+        "accelerate>=1.10",
+        "safetensors>=0.4"
+      ],
+      "pip_ok": true,
+      "import_found": "ZImagePipeline",
+      "import_error": null,
+      "versions_after": {
+        "diffusers": "0.37.0",
+        "transformers": "4.57.6",
+        "huggingface_hub": "0.36.2",
+        "accelerate": "1.14.0",
+        "torch": "2.11.0+cu128"
+      }
+    }
+  ],
+  "used_rung": 1,
+  "used_stack": "released_037_x4",
+  "pipeline_class": "ZImagePipeline"
+}

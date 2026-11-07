@@ -1,0 +1,1 @@
+"""Kaggle bridge tool package."""

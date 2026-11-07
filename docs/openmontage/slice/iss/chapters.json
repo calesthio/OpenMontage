@@ -1,0 +1,66 @@
+[
+  {
+    "chapter_id": "C1",
+    "title": "Hook: Earth from the Cupola",
+    "target_seconds": 60,
+    "footage": {"source": "iss_earth_views_medium.mp4", "segment_seconds": [0, 60], "notes": "Opening Earth-view footage from the ISS, title card overlay"},
+    "graphics_needed": ["card_title", "card_hook"],
+    "footage_type": "archive_footage + graphics"
+  },
+  {
+    "chapter_id": "C2",
+    "title": "ISS Orbit: 250 Miles, 17,500 MPH",
+    "target_seconds": 75,
+    "footage": {"source": "iss_earth_views_medium.mp4", "segment_seconds": [300, 375], "notes": "Earth rolling beneath the station; orbit context"},
+    "graphics_needed": ["card_orbit"],
+    "footage_type": "archive_footage + graphics"
+  },
+  {
+    "chapter_id": "C3",
+    "title": "The Cupola: Seven Windows",
+    "target_seconds": 75,
+    "footage": {"source": "iss_earth_views_medium.mp4", "segment_seconds": [600, 675], "notes": "Cupola and Earth-view footage; 7-window graphics card"},
+    "graphics_needed": ["card_cupola"],
+    "footage_type": "archive_footage + graphics"
+  },
+  {
+    "chapter_id": "C4",
+    "title": "Earth Observation from Orbit",
+    "target_seconds": 75,
+    "footage": {"source": "iss_earth_views_medium.mp4", "segment_seconds": [900, 975], "notes": "Earth-imagery footage; Earth-observation graphics card"},
+    "graphics_needed": ["card_earthobs"],
+    "footage_type": "archive_footage + graphics"
+  },
+  {
+    "chapter_id": "C5",
+    "title": "Day and Night: 16 Sunrises",
+    "target_seconds": 75,
+    "footage": {"source": "iss_earth_views_medium.mp4", "segment_seconds": [1200, 1275], "notes": "Day/night terminator footage; day-night graphics card"},
+    "graphics_needed": ["card_daynight"],
+    "footage_type": "archive_footage + graphics"
+  },
+  {
+    "chapter_id": "C6",
+    "title": "Crew Perspective on Earth",
+    "target_seconds": 75,
+    "footage": {"source": "iss_earth_views_medium.mp4", "segment_seconds": [1500, 1575], "notes": "Crew viewing Earth; crew-perspective graphics card"},
+    "graphics_needed": ["card_crew"],
+    "footage_type": "archive_footage + graphics"
+  },
+  {
+    "chapter_id": "C7",
+    "title": "Why It Matters: Earth's Fragility",
+    "target_seconds": 75,
+    "footage": {"source": "iss_earth_views_medium.mp4", "segment_seconds": [1800, 1875], "notes": "Earth fragility footage; so-what graphics card"},
+    "graphics_needed": ["card_matters"],
+    "footage_type": "archive_footage + graphics"
+  },
+  {
+    "chapter_id": "C8",
+    "title": "Conclusion: Our Home in a Whole New Light",
+    "target_seconds": 60,
+    "footage": {"source": "iss_earth_views_medium.mp4", "segment_seconds": [2100, 2160], "notes": "Closing Earth-view footage; credits card"},
+    "graphics_needed": ["card_end", "card_credits"],
+    "footage_type": "archive_footage + graphics"
+  }
+]

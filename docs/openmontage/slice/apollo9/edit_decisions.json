@@ -1,0 +1,375 @@
+{
+  "version": 1,
+  "topic_id": "apollo9",
+  "total_duration_s": 428.597,
+  "resolution": "1920x1080",
+  "fps": 30,
+  "codec": "h264",
+  "audio_codec": "aac",
+  "cuts": [
+    {
+      "cut_id": 1,
+      "start": 0.0,
+      "end": 22.0,
+      "asset_id": "card_title",
+      "role": "graphics_card",
+      "clip": "Title",
+      "layout": "static_card",
+      "rationale": "Opening title card \u2014 hook question; static_by_design.",
+      "rights_basis": "source_policy_us_gov",
+      "source_segment": "n/a (original graphics / NASA PD still)",
+      "static_by_design": true
+    },
+    {
+      "cut_id": 2,
+      "start": 22.0,
+      "end": 40.0,
+      "asset_id": "card_mission",
+      "role": "graphics_card",
+      "clip": "Mission",
+      "layout": "static_card",
+      "rationale": "Full Apollo spacecraft flight; static_by_design.",
+      "rights_basis": "source_policy_us_gov",
+      "source_segment": "n/a (original graphics / NASA PD still)",
+      "static_by_design": true
+    },
+    {
+      "cut_id": 3,
+      "start": 40.0,
+      "end": 64.0,
+      "asset_id": "card_crew",
+      "role": "graphics_card",
+      "clip": "Crew",
+      "layout": "static_card",
+      "rationale": "McDivitt / Scott / Schweickart bios; static_by_design.",
+      "rights_basis": "source_policy_us_gov",
+      "source_segment": "n/a (original graphics / NASA PD still)",
+      "static_by_design": true
+    },
+    {
+      "cut_id": 4,
+      "start": 64.0,
+      "end": 79.0,
+      "asset_id": "card_callsigns",
+      "role": "graphics_card",
+      "clip": "Callsigns",
+      "layout": "static_card",
+      "rationale": "Gumdrop CSM\u2011104 / Spider LM\u20113; static_by_design.",
+      "rights_basis": "source_policy_us_gov",
+      "source_segment": "n/a (original graphics / NASA PD still)",
+      "static_by_design": true
+    },
+    {
+      "cut_id": 5,
+      "start": 79.0,
+      "end": 99.0,
+      "asset_id": "card_docking_1",
+      "role": "graphics_card",
+      "clip": "Docking 1",
+      "layout": "static_card",
+      "rationale": "Transposition 2h 41m after launch; static_by_design.",
+      "rights_basis": "source_policy_us_gov",
+      "source_segment": "n/a (original graphics / NASA PD still)",
+      "static_by_design": true
+    },
+    {
+      "cut_id": 6,
+      "start": 99.0,
+      "end": 114.0,
+      "asset_id": "card_docking_2",
+      "role": "graphics_card",
+      "clip": "S\u2011IVB sep",
+      "layout": "static_card",
+      "rationale": "Springs ejected docked spacecraft; static_by_design.",
+      "rights_basis": "source_policy_us_gov",
+      "source_segment": "n/a (original graphics / NASA PD still)",
+      "static_by_design": true
+    },
+    {
+      "cut_id": 7,
+      "start": 114.0,
+      "end": 132.0,
+      "asset_id": "card_docking_3",
+      "role": "graphics_card",
+      "clip": "Docking OK",
+      "layout": "static_card",
+      "rationale": "First successful Apollo docking; static_by_design.",
+      "rights_basis": "source_policy_us_gov",
+      "source_segment": "n/a (original graphics / NASA PD still)",
+      "static_by_design": true
+    },
+    {
+      "cut_id": 8,
+      "start": 132.0,
+      "end": 152.0,
+      "asset_id": "card_systems_1",
+      "role": "graphics_card",
+      "clip": "Systems 1",
+      "layout": "static_card",
+      "rationale": "8 hours in Spider checkout; static_by_design.",
+      "rights_basis": "source_policy_us_gov",
+      "source_segment": "n/a (original graphics / NASA PD still)",
+      "static_by_design": true
+    },
+    {
+      "cut_id": 9,
+      "start": 152.0,
+      "end": 167.0,
+      "asset_id": "card_systems_2",
+      "role": "graphics_card",
+      "clip": "Descent burn",
+      "layout": "static_card",
+      "rationale": "367\u2011s throttle test; static_by_design.",
+      "rights_basis": "source_policy_us_gov",
+      "source_segment": "n/a (original graphics / NASA PD still)",
+      "static_by_design": true
+    },
+    {
+      "cut_id": 10,
+      "start": 167.0,
+      "end": 187.0,
+      "asset_id": "AS09-21-3199_LM",
+      "role": "graphics_card",
+      "clip": "LM interior",
+      "layout": "static_card",
+      "rationale": "LM interior archival still; static_by_design.",
+      "rights_basis": "source_policy_us_gov",
+      "source_segment": "n/a (original graphics / NASA PD still)",
+      "static_by_design": true
+    },
+    {
+      "cut_id": 11,
+      "start": 187.0,
+      "end": 213.0,
+      "asset_id": "card_eva",
+      "role": "graphics_card",
+      "clip": "EVA",
+      "layout": "static_card",
+      "rationale": "37.5\u2011min EVA, PLSS tested; static_by_design.",
+      "rights_basis": "source_policy_us_gov",
+      "source_segment": "n/a (original graphics / NASA PD still)",
+      "static_by_design": true
+    },
+    {
+      "cut_id": 12,
+      "start": 213.0,
+      "end": 237.0,
+      "asset_id": "card_undock",
+      "role": "graphics_card",
+      "clip": "Undock",
+      "layout": "static_card",
+      "rationale": "6h 23m independent flight; static_by_design.",
+      "rights_basis": "source_policy_us_gov",
+      "source_segment": "n/a (original graphics / NASA PD still)",
+      "static_by_design": true
+    },
+    {
+      "cut_id": 13,
+      "start": 237.0,
+      "end": 250.0,
+      "asset_id": "card_dps",
+      "role": "graphics_card",
+      "clip": "DPS burn",
+      "layout": "static_card",
+      "rationale": "19 s at 10\u219240% thrust; static_by_design.",
+      "rights_basis": "source_policy_us_gov",
+      "source_segment": "n/a (original graphics / NASA PD still)",
+      "static_by_design": true
+    },
+    {
+      "cut_id": 14,
+      "start": 250.0,
+      "end": 263.0,
+      "asset_id": "card_rendezvous",
+      "role": "graphics_card",
+      "clip": "Rendezvous",
+      "layout": "static_card",
+      "rationale": "RCS 32 s, APS 3 s / 38 s; static_by_design.",
+      "rights_basis": "source_policy_us_gov",
+      "source_segment": "n/a (original graphics / NASA PD still)",
+      "static_by_design": true
+    },
+    {
+      "cut_id": 15,
+      "start": 263.0,
+      "end": 276.0,
+      "asset_id": "card_dockback",
+      "role": "graphics_card",
+      "clip": "Redock",
+      "layout": "static_card",
+      "rationale": "100 ft pitchover, smooth docking; static_by_design.",
+      "rights_basis": "source_policy_us_gov",
+      "source_segment": "n/a (original graphics / NASA PD still)",
+      "static_by_design": true
+    },
+    {
+      "cut_id": 16,
+      "start": 276.0,
+      "end": 289.0,
+      "asset_id": "card_ascent",
+      "role": "graphics_card",
+      "clip": "Ascent",
+      "layout": "static_card",
+      "rationale": "APS 6 min, decayed 23 Oct 1981; static_by_design.",
+      "rights_basis": "source_policy_us_gov",
+      "source_segment": "n/a (original graphics / NASA PD still)",
+      "static_by_design": true
+    },
+    {
+      "cut_id": 17,
+      "start": 289.0,
+      "end": 309.0,
+      "asset_id": "GPN-2000-001283_splashdown",
+      "role": "graphics_card",
+      "clip": "Splashdown",
+      "layout": "static_card",
+      "rationale": "Recovery still; static_by_design.",
+      "rights_basis": "source_policy_us_gov",
+      "source_segment": "n/a (original graphics / NASA PD still)",
+      "static_by_design": true
+    },
+    {
+      "cut_id": 18,
+      "start": 309.0,
+      "end": 325.0,
+      "asset_id": "card_end",
+      "role": "graphics_card",
+      "clip": "End",
+      "layout": "static_card",
+      "rationale": "Apollo 9 \u2192 Apollo 11 bridge; static_by_design.",
+      "rights_basis": "source_policy_us_gov",
+      "source_segment": "n/a (original graphics / NASA PD still)",
+      "static_by_design": true
+    },
+    {
+      "cut_id": 19,
+      "start": 325.0,
+      "end": 428.597,
+      "asset_id": "card_sources",
+      "role": "graphics_card",
+      "clip": "Sources",
+      "layout": "static_card",
+      "rationale": "NASA primary documents credits block; static_by_design.",
+      "rights_basis": "source_policy_us_gov",
+      "source_segment": "n/a (original graphics / NASA PD still)",
+      "static_by_design": true
+    }
+  ],
+  "static_segments": [
+    {
+      "start": 0.0,
+      "end": 22.0,
+      "reason": "Opening title card \u2014 hook question; static_by_design.",
+      "static_by_design": true
+    },
+    {
+      "start": 22.0,
+      "end": 40.0,
+      "reason": "Full Apollo spacecraft flight; static_by_design.",
+      "static_by_design": true
+    },
+    {
+      "start": 40.0,
+      "end": 64.0,
+      "reason": "McDivitt / Scott / Schweickart bios; static_by_design.",
+      "static_by_design": true
+    },
+    {
+      "start": 64.0,
+      "end": 79.0,
+      "reason": "Gumdrop CSM\u2011104 / Spider LM\u20113; static_by_design.",
+      "static_by_design": true
+    },
+    {
+      "start": 79.0,
+      "end": 99.0,
+      "reason": "Transposition 2h 41m after launch; static_by_design.",
+      "static_by_design": true
+    },
+    {
+      "start": 99.0,
+      "end": 114.0,
+      "reason": "Springs ejected docked spacecraft; static_by_design.",
+      "static_by_design": true
+    },
+    {
+      "start": 114.0,
+      "end": 132.0,
+      "reason": "First successful Apollo docking; static_by_design.",
+      "static_by_design": true
+    },
+    {
+      "start": 132.0,
+      "end": 152.0,
+      "reason": "8 hours in Spider checkout; static_by_design.",
+      "static_by_design": true
+    },
+    {
+      "start": 152.0,
+      "end": 167.0,
+      "reason": "367\u2011s throttle test; static_by_design.",
+      "static_by_design": true
+    },
+    {
+      "start": 167.0,
+      "end": 187.0,
+      "reason": "LM interior archival still; static_by_design.",
+      "static_by_design": true
+    },
+    {
+      "start": 187.0,
+      "end": 213.0,
+      "reason": "37.5\u2011min EVA, PLSS tested; static_by_design.",
+      "static_by_design": true
+    },
+    {
+      "start": 213.0,
+      "end": 237.0,
+      "reason": "6h 23m independent flight; static_by_design.",
+      "static_by_design": true
+    },
+    {
+      "start": 237.0,
+      "end": 250.0,
+      "reason": "19 s at 10\u219240% thrust; static_by_design.",
+      "static_by_design": true
+    },
+    {
+      "start": 250.0,
+      "end": 263.0,
+      "reason": "RCS 32 s, APS 3 s / 38 s; static_by_design.",
+      "static_by_design": true
+    },
+    {
+      "start": 263.0,
+      "end": 276.0,
+      "reason": "100 ft pitchover, smooth docking; static_by_design.",
+      "static_by_design": true
+    },
+    {
+      "start": 276.0,
+      "end": 289.0,
+      "reason": "APS 6 min, decayed 23 Oct 1981; static_by_design.",
+      "static_by_design": true
+    },
+    {
+      "start": 289.0,
+      "end": 309.0,
+      "reason": "Recovery still; static_by_design.",
+      "static_by_design": true
+    },
+    {
+      "start": 309.0,
+      "end": 325.0,
+      "reason": "Apollo 9 \u2192 Apollo 11 bridge; static_by_design.",
+      "static_by_design": true
+    },
+    {
+      "start": 325.0,
+      "end": 428.597,
+      "reason": "NASA primary documents credits block; static_by_design.",
+      "static_by_design": true
+    }
+  ],
+  "notes": "Apollo 9 draft. Original graphics cards (a4-graphics-list) + two NASA PD stills. No clean native-HD PD Apollo 9 motion footage available (splashdown clip is CC BY-NC-ND; 16mm film AI-upscaled/rejected). All segments static_by_design."
+}

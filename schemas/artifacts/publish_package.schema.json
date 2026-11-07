@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/publish_package",
+  "title": "Publish Package",
+  "description": "Stage 12 output of the business-documentary pipeline. The handoff bundle a human reviews before any upload. Automatic publishing is NOT part of this artifact: manual_approval.status must be explicit, and a blocked QA report cannot produce a package.",
+  "type": "object",
+  "required": ["version", "run_id", "created_at", "video", "title", "description", "chapters", "sources_credits", "manual_approval"],
+  "properties": {
+    "version": { "type": "string", "const": "1.0" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "minLength": 1 },
+    "video": {
+      "type": "object",
+      "required": ["path", "duration_seconds", "resolution", "fps", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "duration_seconds": { "type": "number", "minimum": 0 },
+        "resolution": { "type": "string" },
+        "fps": { "type": "number", "minimum": 0 },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "container": { "type": "string" },
+        "video_codec": { "type": "string" },
+        "audio_codec": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "thumbnail": {
+      "type": "object",
+      "properties": {
+        "path": { "type": "string" },
+        "source_frame_seconds": { "type": "number", "minimum": 0 },
+        "notes": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "title": { "type": "string", "minLength": 1 },
+    "description": { "type": "string", "minLength": 1 },
+    "chapters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["start_seconds", "label"],
+        "properties": {
+          "start_seconds": { "type": "number", "minimum": 0 },
+          "label": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "sources_credits": {
+      "type": "array",
+      "description": "Every asset and source used, with the attribution its license requires. Must match the asset_manifest provenance.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["asset_id", "provider", "original_url", "license", "attribution"],
+        "properties": {
+          "asset_id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Must resolve to asset_manifest.assets[].id."
+          },
+          "scene_id": { "type": "string" },
+          "provider": { "type": "string", "minLength": 1 },
+          "original_url": { "type": "string", "minLength": 1 },
+          "author": { "type": "string" },
+          "license": { "type": "string", "minLength": 1 },
+          "attribution": { "type": "string", "minLength": 1 },
+          "commercial_use_allowed": { "type": "boolean" },
+          "modification_allowed": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "music_credit": {
+      "type": "object",
+      "properties": {
+        "track": { "type": "string" },
+        "author": { "type": "string" },
+        "license": { "type": "string" },
+        "source_url": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "manual_approval": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "rejected", "not_requested"]
+        },
+        "approved_by": { "type": "string" },
+        "approved_at": { "type": "string" },
+        "reviewed_artifacts": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "notes": { "type": "string" },
+        "upload_target": {
+          "type": ["string", "null"],
+          "description": "Destination platform. null until a human decides; this artifact never triggers an upload."
+        }
+      },
+      "additionalProperties": false
+    },
+    "qa_ref": {
+      "type": "object",
+      "description": "The QA report this package is gated on.",
+      "properties": {
+        "status": { "type": "string", "enum": ["pass", "fail", "blocked"] },
+        "report_path": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "metadata": { "type": "object" }
+  },
+  "additionalProperties": false
+}

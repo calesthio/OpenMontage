@@ -1,0 +1,11 @@
+[
+  {"text": "On December first, 1984, NASA crashed a Boeing 720 airliner on purpose.", "claim_id": "CID-01"},
+  {"text": "Nobody was on board. A pilot flew it by remote control from the ground.", "claim_id": "CID-04"},
+  {"text": "The goal was to test a fuel additive meant to stop crash fires.", "claim_id": "CID-03"},
+  {"text": "Before the real thing, the team flew fourteen test flights with crews aboard and practiced sixty-nine approaches to the crash site.", "claim_id": "CID-05"},
+  {"text": "But in practice, the airplane had never flown lower than a hundred and fifty feet toward the crash site.", "claim_id": "CID-06"},
+  {"text": "On the real flight, it arrived slightly off the centerline, and its left wing hit first.", "claim_id": "CID-08"},
+  {"text": "On the real flight, it arrived slightly off the centerline, and its left wing hit first.", "claim_id": "CID-09"},
+  {"text": "The fuel ignited into a fireball that burned for more than an hour.", "claim_id": "CID-10"},
+  {"text": "And the additive that had worked in small tests did not reduce the fire at full scale.", "claim_id": "CID-13"}
+]

@@ -219,6 +219,7 @@ class RemotionCaptionBurn(BaseTool):
                 "default": "#22D3EE",
                 "description": "Highlight color for the active word (hex).",
             },
+            "caption_props": {"type": "object", "description": "Extra CaptionOverlay props passed through as captionProps."},
             "corrections": {
                 "type": "object",
                 "description": (
@@ -251,7 +252,7 @@ class RemotionCaptionBurn(BaseTool):
     resource_profile = ResourceProfile(cpu_cores=4, ram_mb=2048, vram_mb=0, disk_mb=500)
     idempotency_key_fields = [
         "input_path", "segments", "srt_path", "corrections", "words_per_page",
-        "font_size", "highlight_color", "overlays", "force_ffmpeg",
+        "font_size", "highlight_color", "overlays", "force_ffmpeg", "caption_props",
     ]
     side_effects = ["writes captioned video to output_path"]
     user_visible_verification = [
@@ -451,6 +452,7 @@ class RemotionCaptionBurn(BaseTool):
         highlight_color: str,
         overlays: list[dict] | None = None,
         thai: bool = False,
+        caption_props: dict | None = None,
     ) -> ToolResult:
         root = self._find_remotion_root()
         if root is None:
@@ -496,6 +498,7 @@ class RemotionCaptionBurn(BaseTool):
             "wordsPerPage": words_per_page,
             "fontSize": font_size,
             "highlightColor": highlight_color,
+            **({"captionProps": caption_props} if caption_props else {}),
         }
         separator = self._caption_word_separator(thai)
         if separator is not None:
@@ -684,7 +687,7 @@ class RemotionCaptionBurn(BaseTool):
             result = self._render_remotion(
                 input_path, output_path, captions,
                 words_per_page, font_size, highlight_color,
-                overlays=overlays, thai=thai,
+                overlays=overlays, thai=thai, caption_props=inputs.get("caption_props"),
             )
         else:
             result = self._render_ffmpeg(input_path, output_path, captions, thai=thai)

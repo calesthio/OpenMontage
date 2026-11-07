@@ -39,7 +39,12 @@ type CaptionOverlayProps = {
   // Distance from the bottom edge in px. Vertical shorts want captions
   // well above the platform UI (e.g. ~35% of frame height).
   bottomOffset?: number;
+  // Optional CSS merged over the defaults (box, text, every word, words not yet spoken) + active-word pop.
+  boxStyle?: React.CSSProperties; textStyle?: React.CSSProperties;
+  wordStyle?: React.CSSProperties; inactiveWordStyle?: React.CSSProperties;
+  wordPop?: { scale: number; damping?: number; stiffness?: number };
 };
+export type CaptionProps = Partial<CaptionOverlayProps>; // for compositions to forward
 
 const RTL_CHAR = /[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]/;
 const LTR_CHAR = /[A-Za-z\u00C0-\u024F\u0370-\u03FF\u0400-\u04FF]/;
@@ -92,7 +97,8 @@ const PageRenderer: React.FC<{
   wordSeparator: string;
   direction: "ltr" | "rtl";
   bottomOffset: number;
-}> = ({ page, fontSize, color, highlightColor, backgroundColor, fontFamily, wordSeparator, direction, bottomOffset }) => {
+  look: CaptionProps;
+}> = ({ page, fontSize, color, highlightColor, backgroundColor, fontFamily, wordSeparator, direction, bottomOffset, look }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -124,6 +130,7 @@ const PageRenderer: React.FC<{
           padding: "14px 28px",
           maxWidth: "80%",
           textAlign: "center",
+          ...look.boxStyle,
         }}
       >
         <span
@@ -133,11 +140,14 @@ const PageRenderer: React.FC<{
             fontFamily,
             lineHeight: 1.4,
             whiteSpace: "pre-wrap",
+            ...look.textStyle,
           }}
         >
           {page.words.map((w, i) => {
             const isActive = w.startMs <= currentMs && w.endMs > currentMs;
             const isPast = w.endMs <= currentMs;
+            const pop = isActive && look.wordPop ? spring({ frame: Math.max(0, Math.round(((currentMs - w.startMs) / 1000) * fps)),
+              fps, config: { damping: look.wordPop.damping ?? 12, stiffness: look.wordPop.stiffness ?? 220 } }) : undefined;
             return (
               <Fragment key={`${w.startMs}-${i}`}>
                 <span
@@ -152,6 +162,9 @@ const PageRenderer: React.FC<{
                     textShadow: isActive
                       ? `0 0 20px ${highlightColor}66, 0 2px 4px rgba(0,0,0,0.5)`
                       : "0 2px 4px rgba(0,0,0,0.5)",
+                    ...look.wordStyle,
+                    ...(!isActive && !isPast ? look.inactiveWordStyle : {}),
+                    ...(pop !== undefined ? { transform: `scale(${1 + (look.wordPop!.scale - 1) * pop})` } : {}),
                   }}
                 >
                   {w.word}
@@ -177,6 +190,7 @@ export const CaptionOverlay: React.FC<CaptionOverlayProps> = ({
   wordSeparator = " ",
   direction = "auto",
   bottomOffset = 80,
+  ...look
 }) => {
   const { fps } = useVideoConfig();
   const pages = buildPages(words, wordsPerPage);
@@ -205,6 +219,7 @@ export const CaptionOverlay: React.FC<CaptionOverlayProps> = ({
               wordSeparator={wordSeparator}
               direction={resolvedDirection}
               bottomOffset={bottomOffset}
+              look={look}
             />
           </Sequence>
         );

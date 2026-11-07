@@ -15,6 +15,7 @@ import platform
 import subprocess
 import shutil
 import time
+import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
@@ -186,6 +187,7 @@ def _instrument_execute(fn: Callable) -> Callable:
         project_dir = infer_project_dir(inputs)
 
         base = {
+            "call_id": uuid.uuid4().hex,
             "tool": tool_name,
             "scene_id": scene_id,
             "depth": depth if depth else None,

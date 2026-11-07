@@ -12,8 +12,15 @@ export { ParticleOverlay } from "./ParticleOverlay";
 export { AnimeScene } from "./AnimeScene";
 export { TerminalScene } from "./TerminalScene";
 export { ScreenshotScene } from "./ScreenshotScene";
+export { ScreencastScene } from "./ScreencastScene";
 export { ProviderChip } from "./ProviderChip";
 export type { ParticleType } from "./ParticleOverlay";
 export type { CameraMotion, AnimeSceneProps } from "./AnimeScene";
 export type { TerminalStep } from "./TerminalScene";
 export type { ScreenshotStep, Region, Point } from "./ScreenshotScene";
+export type {
+  ScreencastOverlay,
+  CursorKeyframe,
+  ZoomWindow,
+} from "./ScreencastScene";
+export { OverlayForStep, CursorArrow } from "./overlayPrimitives";

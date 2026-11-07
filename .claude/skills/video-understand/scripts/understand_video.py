@@ -125,7 +125,7 @@ def extract_frames_scene(video_path, frames_dir):
         "ffmpeg", "-y",
         "-i", video_path,
         "-vf", f"select='gt(scene,{_SCENE_THRESHOLD})',showinfo",
-        "-vsync", "vfr",
+        "-fps_mode", "vfr",
         "-q:v", "2",
         os.path.join(frames_dir, "frame_%04d.jpg"),
     ]
@@ -149,7 +149,7 @@ def extract_frames_keyframe(video_path, frames_dir):
         "ffmpeg", "-y",
         "-i", video_path,
         "-vf", "select='eq(pict_type,I)'",
-        "-vsync", "vfr",
+        "-fps_mode", "vfr",
         "-q:v", "2",
         os.path.join(frames_dir, "frame_%04d.jpg"),
     ]

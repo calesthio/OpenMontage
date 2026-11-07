@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "circuit-video": {
+      "command": "python3",
+      "args": ["mcp_servers/circuit_video/server.py"],
+      "env": {
+        "PYTHONUNBUFFERED": "1"
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+# Project-scoped MCP servers for OpenMontage.
+# Grok expands ${VAR} / ${VAR:-default} in command, args, env, and headers.
+
+[mcp_servers.circuit-video]
+command = "python3"
+args = ["mcp_servers/circuit_video/server.py"]
+enabled = true
+startup_timeout_sec = 15
+tool_timeout_sec = 2400
+tool_timeouts = { render_tutorial = 2400, upload_video = 300, doctor = 60, list_tutorials = 30, get_render = 120 }
+
+[mcp_servers.circuit-video.env]
+PYTHONUNBUFFERED = "1"

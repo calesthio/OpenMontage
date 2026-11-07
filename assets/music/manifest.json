@@ -1,0 +1,19 @@
+[
+  {
+    "source": "archive.org",
+    "collection": "opensource_audio / community",
+    "identifier": "sw-datapedia-ardune-ambient",
+    "title": "Soundworlds Datapedia: Ardune Ambient - Red Moon Quarry (John Oestmann)",
+    "artist": "John Oestmann",
+    "license": "Public Domain Mark 1.0",
+    "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+    "download_url": "https://archive.org/download/sw-datapedia-ardune-ambient/John%20Oestmann%20-%20Soundworlds%20Datapedia%20-%20Ardune%20Ambient/01%200x2A75F%20-%20Red%20Moon%20Quarry.mp3",
+    "local_path": "assets/music/ardune_red_moon.mp3",
+    "duration_s": 212.58,
+    "role": "background_music",
+    "volume_db": -18,
+    "fade_in_s": 3,
+    "fade_out_s": 3,
+    "notes": "Cosmic ambient, matches Europa/Enceladus under-ice ocean theme. PD Mark — no attribution required, safe for YouTube."
+  }
+]

@@ -74,3 +74,13 @@ Committed after every completed P0 item (8.1–8.6) and after every wave item.
   - `build_narration_master()`: ffmpeg concat of blocks with pauses/crossfades.
   - `build_timeline_manifest()`: manifest anchored to narration master.
 - Updated `lib/tts_engine.py`: added `synthesize_blocks()` — synthesizes semantic voice blocks (paragraphs), preserves each block WAV with parameters (V8 §8.11).
+
+### 2026-11-07 — Волна 1.2: Storyboard и scene manifest (DONE)
+
+- Created `lib/storyboard.py`: V8 §3.5, §8.7, §8.8, §8.9.
+  - `SceneManifest`: scene_id, narration_segment, start_frame/end_frame (rational timebase), claim_ids (link to claim ledger), visual_role, visual_class (6 classes from §8.9), asset_ids, motion {type, amplitude, depth_map_required}, transition_in/out, music_cue, disclosure_required, qc_profile.
+  - `StoryboardManifest`: ordered scenes with validation (unique scene_ids, contiguous non-overlapping frames).
+  - `VISUAL_CLASSES`: REAL_ARCHIVE, DATA_VISUALIZATION, SCIENTIFIC_DIAGRAM, SCIENTIFIC_RECONSTRUCTION, HYPOTHETICAL_RECONSTRUCTION, ARTISTIC_METAPHOR.
+  - `MOTION_TYPES`: static_intentional, optical_push_pull, lateral_drift, depth_parallax, reveal_mask, diagram_animation, real_footage_stabilization, no_motion.
+  - `frames_from_seconds()` / `seconds_from_frames()`: rational timebase, no per-frame rounding.
+- Updated `lib/scene_router.py`: added `visual_class` field to `RouteDecision` (V8 §8.9). `_visual_class_for()` resolves class from explicit override > archival->REAL_ARCHIVE > legacy source_type mapping. Backward-compatible: `source_type` still returned.

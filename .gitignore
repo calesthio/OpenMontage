@@ -104,3 +104,6 @@ venv/
 
 # Local Wan / diffusers GPU environment
 .venv-wan/
+
+# yt-dlp browser-session cookies for video_downloader (never commit these)
+/cookies.txt

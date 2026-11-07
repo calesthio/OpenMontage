@@ -57,3 +57,9 @@ Committed after every completed P0 item (8.1–8.6) and after every wave item.
 - `lib/motion_director.py`: `STATIC_LIMIT_SEC` re-documented as "warning threshold, not an absolute quality law" (V8 §8.5). `MotionPlan` gains `motion_advisory: bool` — set True when hold > limit and motion could not be applied (static hold is advisory, not blocking).
 - `scripts/release_checklist.py`: `max_static_segment_sec` and `avg_visual_change_interval_sec` now return WARNING (passed=None, non-blocking) when > 15s, instead of hard FAIL. Overall verdict still requires all blocking checks to pass; advisory warnings don't block.
 - `FACTORY_100_SPEC.md` line 74 ("still-only <= 15 s unless motion-lint passes") left untouched per file header instruction — change proposed via SPEC_CHANGE_REQUESTS.md instead.
+
+### 2026-11-07 — P0 8.6 (DONE)
+
+- `lib/render_integration.py`: V8 §8.6 — rejected "strictly not worse on every metric". `ready_for_render` now requires only blocking (critical technical guardrails) checks to pass. Non-blocking checks (severity "low") are advisory — they don't block render. `all_passed` still computed for info but doesn't gate render. Removed unused `blocking_passed` variable.
+- Verified: 19 existing render_integration tests pass.
+- All 6 P0 items (8.1–8.6) complete.

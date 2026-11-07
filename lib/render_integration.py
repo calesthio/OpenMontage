@@ -56,7 +56,11 @@ class RenderReadinessReport:
 
     @property
     def ready_for_render(self) -> bool:
-        return self.all_passed and self.blocking_count == 0
+        # V8 §8.6: ready when all blocking (critical) checks pass.
+        # Non-blocking checks are advisory — do not block render.
+        return self.blocking_count == 0 and all(
+            c.passed for c in self.checks if c.blocking
+        )
 
 
 @dataclass
@@ -306,6 +310,11 @@ class RenderIntegration:
             )
         )
 
+        # V8 §8.6: do not require every check to pass — only blocking
+        # (critical technical guardrails) must pass. Non-blocking checks
+        # (severity "low") are advisory: a slower frame may improve sense of
+        # scale, more dynamic music may reduce voice clarity share, etc.
+        # Metrics are compared by category, not monotonically across all numbers.
         all_passed = all(c.passed for c in checks)
 
         return RenderReadinessReport(

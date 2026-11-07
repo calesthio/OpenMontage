@@ -1,0 +1,49 @@
+{
+  "video": "projects/pilot/first_video/final.mp4",
+  "metadata_applied": {
+    "title": "Океаны подо льдом: могут ли Европа и Энцелад скрыть жизнь?",
+    "source": "projects/pilot/first_video/metadata.json",
+    "status": "PASS"
+  },
+  "background_music": {
+    "source": "archive.org",
+    "identifier": "sw-datapedia-ardune-ambient",
+    "title": "Soundworlds Datapedia: Ardune Ambient - Red Moon Quarry (John Oestmann)",
+    "license": "Public Domain Mark 1.0 (https://creativecommons.org/publicdomain/mark/1.0/)",
+    "local_path": "assets/music/ardune_red_moon.mp3",
+    "volume_db": -18,
+    "fade_in_s": 3,
+    "fade_out_s": 3,
+    "manifest": "assets/music/manifest.json",
+    "status": "PASS"
+  },
+  "sections_done": ["1_technical_export","2_opening_15s","3_remove_offtopic_frames","4_subtitles","5_color_match_hybrid","6_anti_slideshow_motion","7_script_climax","8_audio_normalization","9_metadata_title","10_background_music"],
+  "checks": {
+    "sar_1_1_dar_16_9": "PASS",
+    "resolution_1920x1080": "PASS",
+    "fps_30": "PASS",
+    "codec_h264_aac": "PASS",
+    "audio_48000_mono": "PASS",
+    "color_space_bt709": "PASS",
+    "duration_matches_audio": "PASS (169.47s vs audio 169.61s)",
+    "no_black_tail": "PASS",
+    "full_decode": "PASS",
+    "audio_loudness": "PASS (I=-18.0 LUFS with music, TPK=-1.7 dBTP)",
+    "audio_true_peak": "PASS (-1.7 dBTP, <= -1.5)",
+    "s012_compressed": "PASS (5.45s, measured-vs-inferred)",
+    "s041_climax": "PASS (5.41s, water/energy/life axis)",
+    "ai_disclosure_corner_splash": "PASS",
+    "compact_subtitles_bottom": "PASS",
+    "opening_icy_satellite_cutaway": "PASS",
+    "s001_no_intro_phrase": "PASS",
+    "s027_replaced_thematic_archive": "PASS",
+    "scene_aware_color_grade": "PASS (lib/color_match.py)",
+    "differentiated_per_scene_motion": "PASS",
+    "metadata_title_applied": "PASS (Вариант №1)",
+    "background_music_mixed": "PASS (music -18 dB vs voice, fade-in/fade-out 3s)"
+  },
+  "git": "merged origin/kilo/mega-100; disk cleaned",
+  "pending_owner": [
+    "final publish/upload — owner approval required (explicit \"публикуй\")"
+  ]
+}

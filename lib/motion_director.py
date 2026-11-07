@@ -1,9 +1,9 @@
 """Motion director — camera pan/zoom/reveal for static shots.
 
-V7 §3, layer 4 (ASSEMBLY) and §4.1 retention rule: no static shot longer
-than 15 s without a visual change. Applies gentle pan/zoom/reveal to any
-still image held beyond the limit, via ffmpeg zoompan/crop, and returns an
-explicit status (success / fallback_used / failed).
+V8 §8.5: 15 s is a warning/review threshold, not an absolute law.
+Longer static holds are allowed when artistically or scientifically
+motivated (establishing shot, slow observational detail).  The director
+flags them as advisory rather than forcing motion on every frame.
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-STATIC_LIMIT_SEC = 15.0  # V7 §4.1: max static segment before motion required
+STATIC_LIMIT_SEC = 15.0  # V8 §8.5: warning threshold, not an absolute quality law
 
 
 @dataclass
@@ -26,6 +26,7 @@ class MotionPlan:
     status: str  # success | fallback_used | failed
     reason: str
     failure_class: str = "DEGRADABLE"  # REQUIRED | OPTIONAL | DEGRADABLE | MANUAL_REVIEW
+    motion_advisory: bool = False  # True when hold > limit but motion is advisory
     created_at: str = ""
 
     def to_dict(self) -> dict[str, Any]:
@@ -58,6 +59,16 @@ class MotionDirector:
                 filter=None, status="success",
                 reason=f"hold {hold_sec}s <= limit {self.static_limit_sec}s; no motion",
             )
+        if not self.needs_motion(hold_sec):
+            # No motion needed: copy through (passthrough) to keep pipeline
+            # uniform without re-encoding when not required.
+            return MotionPlan(
+                input_path=str(inp), output_path=str(out), applied=False,
+                filter=None, status="success",
+                reason=f"hold {hold_sec}s <= limit {self.static_limit_sec}s; no motion",
+            )
+        # Gentle zoompan: slowly scale 1.00->1.06 over the hold so the
+        # frame is never perfectly static. ffmpeg zoompan filter.
         zfilter = ("zoompan=z='min(zoom+0.0015,1.06)':d=1:x='iw/2-(iw/zoom/2)':"
                    "y='ih/2-(ih/zoom/2)':s=1920x1080:fps=30")
         try:
@@ -74,7 +85,7 @@ class MotionDirector:
                 reason=f"zoompan applied for {hold_sec}s hold (> {self.static_limit_sec}s)",
             )
         except Exception as exc:  # pragma: no cover - ffmpeg environment
-            # Fallback: plain copy of the still (accept static, flagged).
+            # Fallback: plain copy of the still (accept static, flagged as advisory).
             try:
                 out.write_bytes(inp.read_bytes())
             except Exception:
@@ -83,7 +94,9 @@ class MotionDirector:
                 input_path=str(inp), output_path=str(out), applied=False,
                 filter=None, status="fallback_used",
                 failure_class="DEGRADABLE",
-                reason=f"zoompan failed ({exc}); still copied unchanged",
+                motion_advisory=True,
+                reason=f"zoompan failed ({exc}); still copied unchanged — static hold "
+                       f"{hold_sec}s > limit {self.static_limit_sec}s is advisory, not blocking",
             )
 
 

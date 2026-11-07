@@ -51,3 +51,9 @@ Committed after every completed P0 item (8.1–8.6) and after every wave item.
 - `lib/budget_guard.py`: V8 §8.4 — fallback never uses Google Flow. `_fallback_for` now explicitly says "Never Google Flow — no credits, no hidden generation" for image/video generation, and adds a `flow_generation` entry that returns "BLOCKED — Google Flow never used as fallback. Retry must not spend credits." Existing assets are never renamed to newly_generated.
 - Verified: guard returns fallback_used for paid ops, success for $0, fallback text contains anti-Flow language.
 - Existing tests: 3 passed (test_zero_cost_gate + budget/guard tests in tests/lib/).
+
+### 2026-11-07 — P0 8.5 (DONE)
+
+- `lib/motion_director.py`: `STATIC_LIMIT_SEC` re-documented as "warning threshold, not an absolute quality law" (V8 §8.5). `MotionPlan` gains `motion_advisory: bool` — set True when hold > limit and motion could not be applied (static hold is advisory, not blocking).
+- `scripts/release_checklist.py`: `max_static_segment_sec` and `avg_visual_change_interval_sec` now return WARNING (passed=None, non-blocking) when > 15s, instead of hard FAIL. Overall verdict still requires all blocking checks to pass; advisory warnings don't block.
+- `FACTORY_100_SPEC.md` line 74 ("still-only <= 15 s unless motion-lint passes") left untouched per file header instruction — change proposed via SPEC_CHANGE_REQUESTS.md instead.

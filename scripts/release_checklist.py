@@ -37,10 +37,10 @@ except Exception:  # pragma: no cover
 
 
 # ---------------------------------------------------------------------------
-# Thresholds (V7 §4.1 numerical criteria)
+# Thresholds (V8 §8.5: 15 s is a warning/review threshold, not an absolute law)
 # ---------------------------------------------------------------------------
-STATIC_MAX_SEC = 15.0        # max_static_segment_sec must be <= 15
-CHANGE_INTERVAL_MAX_SEC = 15.0  # avg_visual_change_interval_sec must be <= 15
+STATIC_MAX_SEC = 15.0        # max_static_segment_sec: <= 15 is PASS, > 15 is advisory WARNING
+CHANGE_INTERVAL_MAX_SEC = 15.0  # avg_visual_change_interval_sec advisory threshold
 
 
 @dataclass
@@ -172,30 +172,52 @@ def run_checklist(video: str | Path, baseline_out: str | Path | None = None) -> 
 
     results: list[CheckResult] = []
 
-    # --- max_static_segment_sec (V7 §4.1) ---
+    # --- max_static_segment_sec (V8 §8.5: advisory threshold, not law) ---
     segs = frozen_segments(video)
     max_static = max((s["duration"] for s in segs), default=0.0)
-    passed = max_static <= STATIC_MAX_SEC
+    if max_static <= STATIC_MAX_SEC:
+        passed = True
+        status = "success"
+        note = f"{len(segs)} frozen segment(s); limit {STATIC_MAX_SEC}s"
+    else:
+        passed = None  # advisory, not blocking
+        status = "warning"
+        note = (f"{len(segs)} frozen segment(s); max_static={max_static:.3f}s "
+                f"exceeds advisory limit {STATIC_MAX_SEC}s — review, not a hard fail")
     results.append(CheckResult(
         check_id="max_static_segment_sec",
-        status="success",
+        status=status,
         measured=round(max_static, 3),
         threshold=STATIC_MAX_SEC,
         passed=passed,
-        note=f"{len(segs)} frozen segment(s); limit {STATIC_MAX_SEC}s",
+        note=note,
     ))
 
-    # --- avg_visual_change_interval_sec (V7 §4.1) ---
+    # --- avg_visual_change_interval_sec (V8 §8.5: advisory threshold) ---
     vci = visual_change_interval(video)
     avg_ivc = vci.get("avg_interval_sec")
-    vci_passed = (avg_ivc is not None and avg_ivc <= CHANGE_INTERVAL_MAX_SEC)
+    if avg_ivc is not None:
+        if avg_ivc <= CHANGE_INTERVAL_MAX_SEC:
+            vci_passed = True
+            vci_status = "success"
+            vci_note = vci.get("note", "")
+        else:
+            vci_passed = None  # advisory, not blocking
+            vci_status = "warning"
+            vci_note = (f"avg_interval={avg_ivc:.3f}s exceeds advisory limit "
+                        f"{CHANGE_INTERVAL_MAX_SEC}s — review, not a hard fail. "
+                        f"{vci.get('note', '')}")
+    else:
+        vci_passed = None
+        vci_status = "fallback_used"
+        vci_note = vci.get("note", "")
     results.append(CheckResult(
         check_id="avg_visual_change_interval_sec",
-        status="success" if avg_ivc is not None else "fallback_used",
+        status=vci_status,
         measured=avg_ivc,
         threshold=CHANGE_INTERVAL_MAX_SEC,
-        passed=vci_passed if avg_ivc is not None else None,
-        note=vci.get("note", ""),
+        passed=vci_passed,
+        note=vci_note,
     ))
 
     # --- duration probe ---

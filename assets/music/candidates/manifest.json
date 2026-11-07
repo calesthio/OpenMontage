@@ -1,0 +1,25 @@
+{
+  "note": "Spare atmospheric music candidates from Archive.org (Public Domain / CC0). assets/music/ardune_red_moon.mp3 remains the active track; these are alternatives for future releases or if the owner prefers a different sound.",
+  "candidates": [
+    {
+      "identifier": "dj-saint-hubert-in-gastronomic-space_202605",
+      "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "status": "downloaded",
+      "reason": "",
+      "local_file": "dj-saint-hubert-in-gastronomic-space_202605__DJ Saint-Hubert - in gastronomic space - 01 kashi dimension 57b.mp3",
+      "source_url": "https://archive.org/download/dj-saint-hubert-in-gastronomic-space_202605/DJ%20Saint-Hubert%20-%20in%20gastronomic%20space%20-%2001%20kashi%20dimension%2057b.mp3",
+      "size_bytes": 28309626,
+      "sha256": "99e62ce0e6540adaaddb31039e6ee2ee4d21865b80efc6e1a030c727f64c763d"
+    },
+    {
+      "identifier": "hope-drone-cloak-of-ash",
+      "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "status": "downloaded",
+      "reason": "",
+      "local_file": "hope-drone-cloak-of-ash__06. The Waves Forever Shatter Upon the Shores.mp3",
+      "source_url": "https://archive.org/download/hope-drone-cloak-of-ash/06.%20The%20Waves%20Forever%20Shatter%20Upon%20the%20Shores.mp3",
+      "size_bytes": 15531832,
+      "sha256": "200563fd75eeaf1017c2dde627c4bce41ca7712a167ba22cc751f99900186fa0"
+    }
+  ]
+}

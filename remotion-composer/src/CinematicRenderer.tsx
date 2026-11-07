@@ -384,7 +384,7 @@ const TitleCard: React.FC<{
   );
 };
 
-const Soundtrack: React.FC<{
+export const Soundtrack: React.FC<{
   src: string;
   volume: number;
   trimBeforeSeconds?: number;

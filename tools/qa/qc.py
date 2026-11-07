@@ -373,6 +373,7 @@ class QCTool(BaseTool):
         "claim_ids_resolve",
         "motion_variety",
         "speculative_label",
+        "source_blend_consistency",
     ]
     resource_profile = ResourceProfile(cpu_cores=1, ram_mb=256, vram_mb=0, disk_mb=50)
     idempotency_key_fields = ["input_path"]
@@ -400,6 +401,7 @@ class QCTool(BaseTool):
             "edit_decisions_path": {"type": "string"},
             "ai_label_max_share": {"type": "number", "default": 0.15},
             "speculative_niche": {"type": "boolean", "default": False},
+            "source_blend_report": {"type": "string"},
             "static_segments": {
                 "type": "array",
                 "items": {
@@ -1313,6 +1315,34 @@ class QCTool(BaseTool):
                             f"speculative_label unrunnable: {exc}",
                         )
                     )
+
+        # ---- 16. source_blend_consistency ----
+        # Ensures neighboring cuts from different sources (archival vs AI)
+        # do not have a harsh color/contrast jump after color matching.
+        blend_path = inputs.get("source_blend_report")
+        if not blend_path or not Path(blend_path).is_file():
+            report.append(
+                entry("source_blend_consistency", "NOT_RUN", "source_blend_report not provided")
+            )
+        else:
+            try:
+                data = _load_json(blend_path)
+                pairs = data if isinstance(data, list) else data.get("pairs", [])
+                max_delta = 0.0
+                for p in pairs:
+                    max_delta = max(max_delta, float(p.get("color_delta", 0.0)))
+                threshold = 15.0
+                if max_delta <= threshold:
+                    report.append(entry("source_blend_consistency", "PASS",
+                                        f"max color delta {max_delta:.2f} <= {threshold}",
+                                        max_delta, threshold))
+                else:
+                    report.append(entry("source_blend_consistency", "FAILED",
+                                        f"max color delta {max_delta:.2f} > {threshold}",
+                                        max_delta, threshold))
+            except Exception as exc:  # noqa: BLE001
+                report.append(entry("source_blend_consistency", "BLOCKED",
+                                    f"source_blend_consistency unrunnable: {exc}"))
 
         # ---- overall verdict ----
         statuses = [e["status"] for e in report]

@@ -21,7 +21,10 @@ def filter_explicit_route(inputs, candidates):
             models.update(getattr(tool, "_MODELS", {}))
             models.update(getattr(tool, "_MODEL_ALIASES", {}))
             models.update(tool.get_info().get("model_catalog", {}))
-            if model not in models:
+            # Free-form model fields can't be enumerated; such a tool may still
+            # vouch for a specific value (e.g. piper: an installed voice or .onnx path).
+            vouch = getattr(tool, "vouches_for_model", None)
+            if model not in models and not (vouch and vouch(model)):
                 continue
         operation = inputs.get("generation_mode") or inputs.get("operation")
         routes = getattr(tool, "routes", None) or getattr(tool, "models", None)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import time
@@ -95,6 +96,16 @@ class PiperTTS(BaseTool):
     side_effects = ["writes audio file to output_path"]
     user_visible_verification = ["Listen to generated audio for intelligibility"]
 
+    def vouches_for_model(self, model: str) -> bool:
+        """True when `piper --model <model>` (as _generate invokes it) finds a voice.
+
+        Mirrors piper's own lookup: an existing file path (absolute or relative),
+        else `<name>.onnx` in its data dir, which defaults to the cwd since we
+        pass no --data-dir. False means "can't confirm", not "unsupported":
+        provider_routing then applies its generic free-form-model policy.
+        """
+        return Path(model).is_file() or (Path.cwd() / f"{model}.onnx").is_file()
+
     def get_status(self) -> ToolStatus:
         if shutil.which("piper"):
             return ToolStatus.AVAILABLE
@@ -133,6 +144,10 @@ class PiperTTS(BaseTool):
             input=inputs["text"],
             capture_output=True,
             text=True,
+            # Both sides UTF-8: the Windows default (cp1252) turns accented text
+            # into input piper can't decode, which yields an empty WAV.
+            encoding="utf-8",
+            env={**os.environ, "PYTHONIOENCODING": "utf-8"},
             timeout=300,
         )
 

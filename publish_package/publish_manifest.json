@@ -1,0 +1,47 @@
+{
+  "package_id": "publish_package_v7",
+  "created_at": "2026-11-07T09:22:00Z",
+  "stage": "E — publish package (one-click ready, not published)",
+  "status": "draft_for_owner_review",
+  "note": "Все ассеты source: existing (ничего не генерировалось, ноль кредитов). Кнопку публикации не нажимать (V7 §1.2).",
+  "final_video": {
+    "path": "projects/pilot/first_video/final.mp4",
+    "source": "existing",
+    "baseline_metrics": {
+      "max_static_segment_sec": 0.0,
+      "avg_visual_change_interval_sec": 3.902,
+      "duration_sec": 169.466
+    },
+    "baseline_source": "qc/baseline_v7.json",
+    "measures_v7_section41": "max_static_segment_sec <= 15 (PASS), avg_visual_change_interval_sec <= 15 (PASS)"
+  },
+  "metadata": {
+    "title": "Океаны подо льдом: могут ли Европа и Энцелад скрыть жизнь?",
+    "description_source": "projects/pilot/first_video/metadata.json (source: existing)",
+    "description": "Документальный пилот о подлёдных океанах ледяных спутников'Europa' и 'Enceladus'. Что мы знаем о жидкой воде подо льдом, где берётся тепло и достаточно ли этого для жизни? Видео включает кадры, созданные с помощью ИИ (помечены плашкой \"AI-generated visualization\").\n\nМатериалы: NASA Image and Video Library, архивные кадры, AI-визуализация.\n\n#Европа #Энцелад #космос #астрообиология #подлёдныйокеан #документальный",
+    "language": "ru",
+    "category": "28",
+    "ai_disclosure": "AI-generated visualization — реалистичные синтетические кадры, используются для'illustration' недоступных для съёмки сцен",
+    "source": "existing"
+  },
+  "tags": ["Европа", "Энцелад", "астрообиология", "подлёдный океан", "космос", "NASA", "документальный", "внеземная жизнь", "гидротермальные источники"],
+  "preview_candidates": [
+    "projects/pilot/first_video/review_package/frames/frame_001.jpg",
+    "projects/pilot/first_video/review_package/frames/frame_005.jpg",
+    "projects/pilot/first_video/review_package/frames/frame_009.jpg",
+    "projects/pilot/first_video/review_package/frames/frame_013.jpg",
+    "projects/pilot/first_video/review_package/frames/frame_017.jpg"
+  ],
+  "preview_note": "5 кадров из review_package/frames (fps=1/10 по всему final.mp4, source: existing) — candidates для превью, владелец выбирает.",
+  "chapters": [
+    {"time": "0:00", "title": "Введение: океан, который никогда не видел неба"},
+    {"time": "0:05", "title": "Европа: глобальный океан под ледяной корой"},
+    {"time": "0:15", "title": "Энцелад: фонтаны океана в космосе"},
+    {"time": "0:30", "title": "Гидротермальные источники и жизнь без солнца"},
+    {"time": "0:50", "title": "Измеренное и гипотетическое"},
+    {"time": "1:48", "title": "Кульминация: вода, энергия, жизнь"}
+  ],
+  "chapters_source": "projects/pilot/first_video/metadata.json (source: existing)",
+  "release_gate": "scripts/release_checklist.py + lib/release_gate.py — run before owner approval; publish only on explicit \"публикуй\"",
+  "owner_action_required": "Явное одобрение публикации (публикуй) — не выполняется автономно"
+}

@@ -19,6 +19,33 @@ from tools.base_tool import (
     ToolTier,
 )
 
+# stabilityai/stable-diffusion-2-1-base was removed from the Hugging Face Hub
+# and now returns 401; sd2-community hosts the same weights.
+DEFAULT_MODEL = "sd2-community/stable-diffusion-2-1-base"
+
+
+def select_device(torch: Any) -> tuple[str, Any]:
+    """Pick the best available torch device and a matching dtype.
+
+    CUDA first, then Apple Silicon (MPS), then CPU. fp16 is only used on
+    GPU backends; CPU stays on fp32.
+    """
+    if torch.cuda.is_available():
+        return "cuda", torch.float16
+    mps = getattr(torch.backends, "mps", None)
+    if mps is not None and mps.is_available():
+        return "mps", torch.float16
+    return "cpu", torch.float32
+
+
+def generator_device(device: str) -> str:
+    """Device for the seeded torch.Generator.
+
+    Older PyTorch releases can't create a Generator on MPS, so seed on CPU
+    there; diffusers accepts a CPU generator for an MPS pipeline.
+    """
+    return "cpu" if device == "mps" else device
+
 
 class LocalDiffusion(BaseTool):
     name = "local_diffusion"
@@ -65,7 +92,7 @@ class LocalDiffusion(BaseTool):
             "height": {"type": "integer", "default": 512},
             "model": {
                 "type": "string",
-                "default": "stabilityai/stable-diffusion-2-1-base",
+                "default": DEFAULT_MODEL,
             },
             "seed": {"type": "integer"},
             "num_inference_steps": {"type": "integer", "default": 30},
@@ -111,20 +138,19 @@ class LocalDiffusion(BaseTool):
         width = inputs.get("width", 512)
         height = inputs.get("height", 512)
         seed = inputs.get("seed")
-        model_id = inputs.get("model", "stabilityai/stable-diffusion-2-1-base")
+        model_id = inputs.get("model", DEFAULT_MODEL)
         steps = inputs.get("num_inference_steps", 30)
         guidance = inputs.get("guidance_scale", 7.5)
 
         try:
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-            dtype = torch.float16 if device == "cuda" else torch.float32
+            device, dtype = select_device(torch)
 
             pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=dtype)
             pipe = pipe.to(device)
 
             generator = None
             if seed is not None:
-                generator = torch.Generator(device=device).manual_seed(seed)
+                generator = torch.Generator(device=generator_device(device)).manual_seed(seed)
 
             image = pipe(
                 prompt,

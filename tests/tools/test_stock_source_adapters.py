@@ -4,6 +4,8 @@ import types
 import pytest
 
 from tools.video.stock_sources import SearchFilters, all_sources, get_source
+from tools.video.stock_sources.base import Candidate
+from tools.video.stock_sources.mixkit import _content_url_from_json_ld
 from tools.video.stock_sources.unsplash import _build_download_url, _orientation_for_unsplash
 from tools.video.stock_sources.wikimedia import (
     _build_search_queries,
@@ -158,7 +160,7 @@ class _EmptySoup:
         return None
 
 
-def _install_fake_transport(monkeypatch, fake_get):
+def _install_fake_transport(monkeypatch, fake_get, soup_cls=_EmptySoup):
     """Point every adapter's lazy `import requests` at `fake_get`.
 
     `bs4` is stubbed alongside it: it is an optional dependency (the
@@ -166,13 +168,16 @@ def _install_fake_transport(monkeypatch, fake_get):
     they import it at the top of `search()`. Left alone, those adapters
     would fail on the import rather than on the request, and the test
     would pass for the wrong reason wherever bs4 is not installed.
+
+    `soup_cls` lets a test stand in a soup that actually answers a
+    selector; the default finds nothing.
     """
     requests_stub = types.ModuleType("requests")
     requests_stub.get = fake_get
     monkeypatch.setitem(sys.modules, "requests", requests_stub)
 
     bs4_stub = types.ModuleType("bs4")
-    bs4_stub.BeautifulSoup = _EmptySoup
+    bs4_stub.BeautifulSoup = soup_cls
     monkeypatch.setitem(sys.modules, "bs4", bs4_stub)
 
     for var, value in _SOURCE_CREDENTIALS.items():
@@ -219,3 +224,162 @@ def test_search_returns_empty_when_the_source_has_no_results(
         )
         == []
     )
+
+
+# ---------------------------------------------------------------------
+# Mixkit download-URL resolution (issue #572)
+#
+# `MixkitSource.download()` scraped the detail page for a download button,
+# then for `video source[src]`. Mixkit puts `src` on the <video> tag
+# itself, so neither matched and every download died on "Could not find
+# download URL on Mixkit page" — while `search()` two hundred lines up was
+# already matching both shapes.
+#
+# The page's own JSON-LD `VideoObject.contentUrl` names the file and does
+# not move when the player markup does, so it is now read first; the DOM
+# selectors stay as fallbacks. These tests pin the parser against the
+# JSON-LD shapes pages actually ship, and pin the `video[src]` fallback so
+# the selector cannot narrow again.
+# ---------------------------------------------------------------------
+
+_CONTENT_URL = "https://assets.mixkit.co/videos/preview/mixkit-rain-42-large.mp4"
+
+
+def _ld_page(payload: str) -> str:
+    return (
+        "<html><head>"
+        f'<script type="application/ld+json">{payload}</script>'
+        "</head><body></body></html>"
+    )
+
+
+def test_mixkit_json_ld_reads_a_plain_video_object():
+    html = _ld_page(
+        '{"@context":"https://schema.org","@type":"VideoObject",'
+        f'"name":"Rain on a city street","contentUrl":"{_CONTENT_URL}"}}'
+    )
+    assert _content_url_from_json_ld(html) == _CONTENT_URL
+
+
+def test_mixkit_json_ld_reads_a_graph_wrapper():
+    # Yoast-style wrapper: the VideoObject is nested under "@graph"
+    html = _ld_page(
+        '{"@context":"https://schema.org","@graph":['
+        '{"@type":"WebPage","name":"Free Stock Video"},'
+        f'{{"@type":["VideoObject","MediaObject"],"contentUrl":"{_CONTENT_URL}"}}'
+        "]}"
+    )
+    assert _content_url_from_json_ld(html) == _CONTENT_URL
+
+
+def test_mixkit_json_ld_skips_malformed_and_non_video_blocks():
+    # A half-templated block earlier in the page must not hide the real
+    # one, and a BreadcrumbList must not be mistaken for the video
+    html = (
+        "<html><head>"
+        '<script type="application/ld+json">{"@type":"VideoObject",</script>'
+        '<script type="application/ld+json">'
+        '{"@type":"BreadcrumbList","itemListElement":[]}</script>'
+        '<script type="application/ld+json">'
+        f'[{{"@type":"VideoObject","contentUrl":["{_CONTENT_URL}"]}}]</script>'
+        "</head></html>"
+    )
+    assert _content_url_from_json_ld(html) == _CONTENT_URL
+
+
+def test_mixkit_json_ld_returns_empty_when_no_video_is_declared():
+    assert _content_url_from_json_ld("<html><body>no metadata</body></html>") == ""
+    assert (
+        _content_url_from_json_ld(_ld_page('{"@type":"VideoObject","name":"no url"}'))
+        == ""
+    )
+
+
+class _HtmlResponse:
+    """A 200 carrying a specific page body."""
+
+    status_code = 200
+
+    def __init__(self, text):
+        self.text = text
+
+    def raise_for_status(self):
+        return None
+
+
+class _VideoTagSoup(_EmptySoup):
+    """Soup for a page whose `src` sits on the <video> tag itself.
+
+    Answers only a selector that actually asks for `video[src]`, which is
+    the markup Mixkit ships today. A `video source[src]`-only selector
+    gets nothing back — that is the #572 regression this pins.
+    """
+
+    def select(self, selector, *_args, **_kwargs):
+        if "video[src]" not in selector:
+            return []
+        return [_SrcTag(_CONTENT_URL)]
+
+
+class _SrcTag:
+    def __init__(self, src):
+        self._src = src
+
+    def get(self, name, default=""):
+        return self._src if name == "src" else default
+
+
+def _mixkit_candidate():
+    return Candidate(
+        source="mixkit",
+        source_id="mixkit_rain_42",
+        source_url="https://mixkit.co/free-stock-video/rain-42/",
+        download_url="https://mixkit.co/free-stock-video/rain-42/",
+        kind="video",
+        extra={"detail_url": "https://mixkit.co/free-stock-video/rain-42/"},
+    )
+
+
+def _resolved_download_url(monkeypatch, page, tmp_path, soup_cls=_EmptySoup):
+    """Run `download()` against `page` and report the URL it resolved to."""
+    _install_fake_transport(
+        monkeypatch, lambda *_a, **_k: _HtmlResponse(page), soup_cls=soup_cls
+    )
+
+    streamed = {}
+
+    def fake_stream(_self, url, out_path):
+        streamed["url"] = url
+        return out_path
+
+    monkeypatch.setattr(
+        type(get_source("mixkit")), "_stream_download", fake_stream, raising=True
+    )
+    get_source("mixkit").download(_mixkit_candidate(), tmp_path / "clip.mp4")
+    return streamed.get("url")
+
+
+def test_mixkit_download_resolves_from_json_ld_alone(monkeypatch, tmp_path):
+    # No download button and no <video> anywhere in the DOM stub: the
+    # structured metadata has to carry the resolution on its own.
+    page = _ld_page(f'{{"@type":"VideoObject","contentUrl":"{_CONTENT_URL}"}}')
+    assert _resolved_download_url(monkeypatch, page, tmp_path) == _CONTENT_URL
+
+
+def test_mixkit_download_falls_back_to_src_on_the_video_tag(monkeypatch, tmp_path):
+    page = "<html><body><video src='...'></video></body></html>"
+    assert (
+        _resolved_download_url(
+            monkeypatch, page, tmp_path, soup_cls=_VideoTagSoup
+        )
+        == _CONTENT_URL
+    )
+
+
+def test_mixkit_download_still_reports_a_page_it_cannot_resolve(monkeypatch, tmp_path):
+    # The failure path stays intact: nothing to find is an error, not a
+    # silent zero-byte file.
+    with pytest.raises(RuntimeError, match="Could not find download URL"):
+        _resolved_download_url(
+            monkeypatch, "<html><body>no video here</body></html>", tmp_path
+        )

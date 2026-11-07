@@ -1,0 +1,5 @@
+{"name": "smoke-test",
+ "steps": [
+  {"tool": "elevenlabs_tts", "out": "vo/hello.mp3",
+   "inputs": {"text": "Hello from OpenMontage. Your keys are working.", "voice_id": "GxGSne3qX4QsbtuEIkbJ", "model_id": "eleven_multilingual_v2"}}
+ ]}

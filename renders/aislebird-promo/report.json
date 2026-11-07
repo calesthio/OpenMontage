@@ -1,0 +1,150 @@
+[
+ {
+  "out": "vo/narration.mp3",
+  "status": "kept"
+ },
+ {
+  "out": "footage/01_lost_aisle.mp4",
+  "status": "kept"
+ },
+ {
+  "out": "footage/02_woman_phone.mp4",
+  "status": "kept"
+ },
+ {
+  "out": "footage/03_produce.mp4",
+  "status": "kept"
+ },
+ {
+  "out": "footage/04_dairy.mp4",
+  "status": "kept"
+ },
+ {
+  "out": "footage/05_family_kitchen.mp4",
+  "status": "kept"
+ },
+ {
+  "out": "footage/06_checkout.mp4",
+  "status": "kept"
+ },
+ {
+  "out": "footage/07_shopper_aisle.mp4",
+  "status": "ok",
+  "error": null,
+  "data": {
+   "provider": "pixabay",
+   "video_id": 1735,
+   "user": "Buvrix27",
+   "tags": "supermarket, cart, market, mall, buy, retail, buyer, price, shopping, consumer, store, purchase, customer, time lapse",
+   "duration_seconds": 18,
+   "width": 1280,
+   "height": 720,
+   "query": "woman shopping supermarket aisle",
+   "output": "/home/runner/work/OpenMontage/OpenMontage/renders/aislebird-promo/footage/07_shopper_aisle.mp4",
+   "total_results": 1566,
+   "results_returned": 10,
+   "license": "Pixabay Content License (free, no attribution required)",
+   "page_url": "https://pixabay.com/videos/id-1735/"
+  }
+ },
+ {
+  "out": "footage/08_couple_shopping.mp4",
+  "status": "ok",
+  "error": null,
+  "data": {
+   "provider": "pixabay",
+   "video_id": 152798,
+   "user": "ghasoub",
+   "tags": "couple, lovers, hands, love, street, walking",
+   "duration_seconds": 27,
+   "width": 1920,
+   "height": 1080,
+   "query": "couple grocery shopping",
+   "output": "/home/runner/work/OpenMontage/OpenMontage/renders/aislebird-promo/footage/08_couple_shopping.mp4",
+   "total_results": 595,
+   "results_returned": 10,
+   "license": "Pixabay Content License (free, no attribution required)",
+   "page_url": "https://pixabay.com/videos/id-152798/"
+  }
+ },
+ {
+  "out": "footage/09_unpack_groceries.mp4",
+  "status": "ok",
+  "error": null,
+  "data": {
+   "provider": "pixabay",
+   "video_id": 105688,
+   "user": "Engin_Akyurt",
+   "tags": "tea, bag, boiling, heater, drink, glass, kitchen, food, beautiful wallpaper, background",
+   "duration_seconds": 58,
+   "width": 3840,
+   "height": 2160,
+   "query": "groceries kitchen bag",
+   "output": "/home/runner/work/OpenMontage/OpenMontage/renders/aislebird-promo/footage/09_unpack_groceries.mp4",
+   "total_results": 434,
+   "results_returned": 10,
+   "license": "Pixabay Content License (free, no attribution required)",
+   "page_url": "https://pixabay.com/videos/id-105688/"
+  }
+ },
+ {
+  "out": "footage/10_supermarket_walk.mp4",
+  "status": "ok",
+  "error": null,
+  "data": {
+   "provider": "pixabay",
+   "video_id": 152798,
+   "user": "ghasoub",
+   "tags": "couple, lovers, hands, love, street, walking",
+   "duration_seconds": 27,
+   "width": 1920,
+   "height": 1080,
+   "query": "supermarket walking aisle",
+   "output": "/home/runner/work/OpenMontage/OpenMontage/renders/aislebird-promo/footage/10_supermarket_walk.mp4",
+   "total_results": 1418,
+   "results_returned": 10,
+   "license": "Pixabay Content License (free, no attribution required)",
+   "page_url": "https://pixabay.com/videos/id-152798/"
+  }
+ },
+ {
+  "out": "footage/11_milk_shelf.mp4",
+  "status": "ok",
+  "error": null,
+  "data": {
+   "provider": "pixabay",
+   "video_id": 4315,
+   "user": "bottlein",
+   "tags": "milk, bottle, pouring, organic milk, almond milk, drink, white, glass, dairy, calcium, product, fresh, liquid, natural, indoors, ingredient, breakfast",
+   "duration_seconds": 27,
+   "width": 1920,
+   "height": 1080,
+   "query": "milk shelf store",
+   "output": "/home/runner/work/OpenMontage/OpenMontage/renders/aislebird-promo/footage/11_milk_shelf.mp4",
+   "total_results": 177,
+   "results_returned": 10,
+   "license": "Pixabay Content License (free, no attribution required)",
+   "page_url": "https://pixabay.com/videos/id-4315/"
+  }
+ },
+ {
+  "out": "footage/12_happy_shopper.mp4",
+  "status": "ok",
+  "error": null,
+  "data": {
+   "provider": "pixabay",
+   "video_id": 3735,
+   "user": "Skylent",
+   "tags": "elevator, shopping center, gold, yellow, the shops, light, speed, clients",
+   "duration_seconds": 46,
+   "width": 1920,
+   "height": 1080,
+   "query": "happy woman shopping bag",
+   "output": "/home/runner/work/OpenMontage/OpenMontage/renders/aislebird-promo/footage/12_happy_shopper.mp4",
+   "total_results": 2180,
+   "results_returned": 10,
+   "license": "Pixabay Content License (free, no attribution required)",
+   "page_url": "https://pixabay.com/videos/id-3735/"
+  }
+ }
+]

@@ -1,0 +1,74 @@
+{
+ "name": "orchamind-promo",
+ "steps": [
+  {
+   "tool": "elevenlabs_tts",
+   "out": "vo/narration_v2.mp3",
+   "inputs": {
+    "text": "It's nine P.M. You're still chasing crews, hours, receipts... and tomorrow's bid isn't even started. Meet Orchamind. The AI brain that runs your field business, A to Z. Snap a photo of your plans. Orchamind does the takeoff, builds a 3D model of the house, and prices every room. Good, better, and best options. Ready to send, and convert to an invoice. Then run the whole job by voice. Log eight hours for Mike at the Johnson job. Done. Every morning, your briefing: what's at risk, who's where, what's over budget. GPS time clock. Client portal. Change orders that actually get billed. One flat price. Unlimited seats. First month free. Orchamind. Run the job, not the chaos.",
+    "voice_id": "W2cdBod56VIbm57Ma8I9",
+    "model_id": "eleven_multilingual_v2"
+   }
+  },
+  {
+   "tool": "pixabay_video",
+   "out": "footage/01_site.mp4",
+   "inputs": {
+    "query": "construction site workers",
+    "video_type": "film",
+    "min_duration": 5,
+    "per_page": 10
+   }
+  },
+  {
+   "tool": "pixabay_video",
+   "out": "footage/02_electrician.mp4",
+   "inputs": {
+    "query": "electrician wiring",
+    "video_type": "film",
+    "min_duration": 4,
+    "per_page": 10
+   }
+  },
+  {
+   "tool": "pixabay_video",
+   "out": "footage/03_roof.mp4",
+   "inputs": {
+    "query": "roofer roof work",
+    "video_type": "film",
+    "min_duration": 4,
+    "per_page": 10
+   }
+  },
+  {
+   "tool": "pixabay_video",
+   "out": "footage/04_timelapse.mp4",
+   "inputs": {
+    "query": "construction timelapse building",
+    "video_type": "film",
+    "min_duration": 5,
+    "per_page": 10
+   }
+  },
+  {
+   "tool": "pixabay_video",
+   "out": "footage/05_tools.mp4",
+   "inputs": {
+    "query": "carpenter saw wood",
+    "video_type": "film",
+    "min_duration": 4,
+    "per_page": 10
+   }
+  },
+  {
+   "tool": "pixabay_video",
+   "out": "footage/06_hvac.mp4",
+   "inputs": {
+    "query": "plumber pipe repair",
+    "video_type": "film",
+    "min_duration": 4,
+    "per_page": 10
+   }
+  }
+ ]
+}

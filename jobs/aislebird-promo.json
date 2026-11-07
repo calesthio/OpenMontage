@@ -1,0 +1,129 @@
+{
+ "name": "aislebird-promo",
+ "steps": [
+  {
+   "tool": "elevenlabs_tts",
+   "out": "vo/narration.mp3",
+   "inputs": {
+    "text": "Ever walked the same grocery store three times... for one forgotten item? Meet AisleBird. Just say your list. Almond milk, bananas, salmon. And AisleBird sorts it by department, in the order you walk the store. Produce. Dairy. Meat. Frozen. Done. Share lists with your family in real time, and re-buy last week's trip in one tap. Whole Foods, Trader Joe's, Costco, Target, and more. And it's free. AisleBird. Stop wandering. Start flying.",
+    "voice_id": "GxGSne3qX4QsbtuEIkbJ",
+    "model_id": "eleven_multilingual_v2"
+   }
+  },
+  {
+   "tool": "pixabay_video",
+   "out": "footage/01_lost_aisle.mp4",
+   "inputs": {
+    "query": "supermarket aisle shopping cart",
+    "min_duration": 5,
+    "per_page": 10
+   }
+  },
+  {
+   "tool": "pixabay_video",
+   "out": "footage/02_woman_phone.mp4",
+   "inputs": {
+    "query": "woman smartphone supermarket",
+    "min_duration": 5,
+    "per_page": 10
+   }
+  },
+  {
+   "tool": "pixabay_video",
+   "out": "footage/03_produce.mp4",
+   "inputs": {
+    "query": "fresh vegetables grocery",
+    "min_duration": 5,
+    "per_page": 10
+   }
+  },
+  {
+   "tool": "pixabay_video",
+   "out": "footage/04_dairy.mp4",
+   "inputs": {
+    "query": "supermarket refrigerator dairy",
+    "min_duration": 5,
+    "per_page": 10
+   }
+  },
+  {
+   "tool": "pixabay_video",
+   "out": "footage/05_family_kitchen.mp4",
+   "inputs": {
+    "query": "family cooking kitchen",
+    "min_duration": 5,
+    "per_page": 10
+   }
+  },
+  {
+   "tool": "pixabay_video",
+   "out": "footage/06_checkout.mp4",
+   "inputs": {
+    "query": "grocery bags shopping happy",
+    "min_duration": 5,
+    "per_page": 10
+   }
+  },
+  {
+   "tool": "pixabay_video",
+   "out": "footage/07_shopper_aisle.mp4",
+   "inputs": {
+    "query": "woman shopping supermarket aisle",
+    "video_type": "film",
+    "min_duration": 5,
+    "per_page": 10
+   }
+  },
+  {
+   "tool": "pixabay_video",
+   "out": "footage/08_couple_shopping.mp4",
+   "inputs": {
+    "query": "couple grocery shopping",
+    "video_type": "film",
+    "min_duration": 5,
+    "per_page": 10
+   }
+  },
+  {
+   "tool": "pixabay_video",
+   "out": "footage/09_unpack_groceries.mp4",
+   "inputs": {
+    "query": "groceries kitchen bag",
+    "video_type": "film",
+    "min_duration": 5,
+    "per_page": 10
+   }
+  },
+  {
+   "tool": "pixabay_video",
+   "out": "footage/10_supermarket_walk.mp4",
+   "inputs": {
+    "query": "supermarket walking aisle",
+    "video_type": "film",
+    "min_duration": 5,
+    "per_page": 10,
+    "page": 1
+   }
+  },
+  {
+   "tool": "pixabay_video",
+   "out": "footage/11_milk_shelf.mp4",
+   "inputs": {
+    "query": "milk shelf store",
+    "video_type": "film",
+    "min_duration": 4,
+    "per_page": 10
+   }
+  },
+  {
+   "tool": "pixabay_video",
+   "out": "footage/12_happy_shopper.mp4",
+   "inputs": {
+    "query": "happy woman shopping bag",
+    "video_type": "film",
+    "min_duration": 4,
+    "per_page": 10
+   }
+  }
+ ]
+}

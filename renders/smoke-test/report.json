@@ -1,0 +1,17 @@
+[
+ {
+  "out": "vo/hello.mp3",
+  "status": "ok",
+  "error": null,
+  "data": {
+   "provider": "elevenlabs",
+   "model": "eleven_multilingual_v2",
+   "voice_id": "GxGSne3qX4QsbtuEIkbJ",
+   "text_length": 46,
+   "output": "/home/runner/work/OpenMontage/OpenMontage/renders/smoke-test/vo/hello.mp3",
+   "format": "mp3_44100_128",
+   "request_id": "6kla9j1taHxUoiwhG1i0",
+   "cost_status": "estimated"
+  }
+ }
+]

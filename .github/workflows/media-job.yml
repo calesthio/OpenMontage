@@ -1,0 +1,38 @@
+name: Media job
+# Runs OpenMontage tools for any job file pushed to jobs/ and commits the results to renders/.
+on:
+  push:
+    paths: ["jobs/**.json"]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: media-job
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 2 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Install
+        run: |
+          sudo apt-get -qq update && sudo apt-get -qq install -y ffmpeg
+          pip install -q pyyaml pydantic jsonschema python-dotenv numpy requests
+      - name: Run changed jobs
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+        run: |
+          files=$(git diff --name-only --diff-filter=AM HEAD~1 HEAD -- 'jobs/*.json' || true)
+          [ -z "$files" ] && files=$(ls jobs/*.json)
+          echo "jobs: $files"
+          python scripts/run_job.py $files
+      - name: Commit results
+        if: always()
+        run: |
+          git config user.name "media-bot"
+          git config user.email "media-bot@users.noreply.github.com"
+          git add renders || true
+          git diff --cached --quiet || (git commit -m "Media job results [skip ci]" && git push)

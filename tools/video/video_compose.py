@@ -203,6 +203,15 @@ class VideoCompose(BaseTool):
                     "networks). The subprocess timeout is widened to match."
                 ),
             },
+            "remotion_browser_executable": {
+                "type": "string",
+                "description": (
+                    "Optional absolute path to a browser executable for Remotion "
+                    "renders, passed through as `--browser-executable=<path>`. "
+                    "Use when running on machines without bundled Chromium or "
+                    "when a pinned enterprise browser binary is required."
+                ),
+            },
         },
     }
 
@@ -930,6 +939,23 @@ class VideoCompose(BaseTool):
         visit(value)
         return len(staged_by_source)
 
+    @staticmethod
+    def _append_remotion_browser_executable(
+        cmd: list[str], inputs: dict[str, Any]
+    ) -> str | None:
+        """Validate and append a job-scoped Remotion browser executable."""
+        requested = inputs.get("remotion_browser_executable")
+        if requested is None:
+            return None
+        browser = Path(str(requested)).expanduser().resolve()
+        if not browser.is_file():
+            raise ValueError(
+                "remotion_browser_executable does not exist or is not a file: "
+                f"{browser}"
+            )
+        cmd.append(f"--browser-executable={browser}")
+        return str(browser)
+
     def _render_via_atelier(
         self,
         inputs: dict[str, Any],
@@ -1021,6 +1047,10 @@ class VideoCompose(BaseTool):
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         cmd = ["npx", "remotion", "render", str(effective_entry), str(comp_id), str(output_path)]
+        try:
+            self._append_remotion_browser_executable(cmd, inputs)
+        except ValueError as e:
+            return ToolResult(success=False, error=str(e))
 
         props_path = bespoke.get("props_path")
         if props_path:
@@ -1668,6 +1698,8 @@ class VideoCompose(BaseTool):
             # would only take effect on a direct _remotion_render() call.
             if inputs.get("remotion_timeout_ms") is not None:
                 remotion_inputs["remotion_timeout_ms"] = inputs["remotion_timeout_ms"]
+            if inputs.get("remotion_browser_executable") is not None:
+                remotion_inputs["remotion_browser_executable"] = inputs["remotion_browser_executable"]
             if inputs.get("public_dir") is not None:
                 remotion_inputs["public_dir"] = inputs["public_dir"]
             render_result = self._remotion_render(remotion_inputs)
@@ -2061,6 +2093,11 @@ class VideoCompose(BaseTool):
             ]
             if public_dir is not None:
                 cmd.append(f"--public-dir={public_dir}")
+
+            try:
+                self._append_remotion_browser_executable(cmd, inputs)
+            except ValueError as e:
+                return ToolResult(success=False, error=str(e))
 
             # Apply media profile dimensions
             if profile_name:

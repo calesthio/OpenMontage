@@ -56,7 +56,13 @@ PROFILES = {
     "vintage_film": {
         "description": "Faded film look with grain texture and warm tint",
         "vf": (
-            "colorbalance=rs=0.06:gs=0.03:bs=-0.03:ms=0.03:mh=-0.02,"
+            # colorbalance takes per-range channel options — rs/gs/bs (shadows),
+            # rm/gm/bm (midtones), rh/gh/bh (highlights). "ms" and "mh" are not
+            # options at all, so ffmpeg rejected the whole filter chain with
+            # "Error applying option 'ms' to filter 'colorbalance'" and this
+            # profile could never render. Warm midtones + cooler highlights keep
+            # the intended faded-film tint.
+            "colorbalance=rs=0.06:gs=0.03:bs=-0.03:rm=0.03:bh=-0.02,"
             "curves=all='0/0.06 0.25/0.25 0.5/0.50 0.75/0.74 1/0.94',"
             "eq=saturation=0.85:contrast=0.95"
         ),

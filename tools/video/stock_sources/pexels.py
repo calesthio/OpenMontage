@@ -51,7 +51,7 @@ class PexelsSource:
     supports = {"video": True, "image": True}
 
     def is_available(self) -> bool:
-        return bool(os.environ.get("PEXELS_API_KEY"))
+        return bool(os.environ.get("PEXELS_API_KEY", "").strip())
 
     # ------------------------------------------------------------------
     # Public protocol
@@ -109,7 +109,7 @@ class PexelsSource:
     # ------------------------------------------------------------------
 
     def _headers(self) -> dict[str, str]:
-        key = os.environ.get("PEXELS_API_KEY")
+        key = os.environ.get("PEXELS_API_KEY", "").strip()
         if not key:
             raise RuntimeError(
                 "PEXELS_API_KEY not set. Get a free key at "

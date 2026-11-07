@@ -94,6 +94,50 @@ def main() -> int:
     brief["topic"] = "The Last Lighthouse"
     cp("research", "completed", {"research_brief": brief})
 
+    # proposal gates: awaiting_human -> approved. lib/checkpoint.py enforces
+    # the manifest's stage order, so script cannot advance without a completed,
+    # approved proposal checkpoint.
+    cp("proposal", "in_progress", {})
+    proposal = sample_artifact("proposal_packet")
+    proposal["concept_options"][0].update({
+        "title": "The Last Lighthouse",
+        "hook": "The coast holds its breath.",
+        "narrative_structure": "story",
+        "visual_approach": "generated cinematic stills with slow motion moves",
+    })
+    proposal["selected_concept"] = {"concept_id": "c1",
+                                    "rationale": "Strongest emotional arc for a 21s teaser"}
+    proposal["production_plan"]["pipeline"] = "cinematic"
+    decision_log = {
+        "version": "1.0",
+        "project_id": pid,
+        "decisions": [{
+            "decision_id": "d1",
+            "stage": "proposal",
+            "category": "render_runtime_selection",
+            "subject": "Composition runtime",
+            "options_considered": [
+                {"option_id": "remotion", "label": "Remotion", "score": 0.9,
+                 "reason": "Spring-animated stills suit the slow, moody treatment"},
+                {"option_id": "hyperframes", "label": "HyperFrames", "score": 0.6,
+                 "reason": "Stronger for kinetic typography than for still-led mood",
+                 "rejected_because": "Brief is still-led, not typography-led"},
+            ],
+            "selected": "remotion",
+            "reason": "Still-led cinematic treatment renders best with Remotion",
+            "user_visible": True,
+            "user_approved": True,
+            "confidence": 0.85,
+        }],
+    }
+    save_artifact("proposal_packet", proposal)
+    save_artifact("decision_log", decision_log)
+    cp("proposal", "awaiting_human",
+       {"proposal_packet": proposal, "decision_log": decision_log})
+    time.sleep(wait)  # "user picks a concept on the board"
+    cp("proposal", "completed",
+       {"proposal_packet": proposal, "decision_log": decision_log}, human_approved=True)
+
     # script gates: awaiting_human -> approved
     cp("script", "in_progress", {})
     save_artifact("script", art["script"])

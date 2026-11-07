@@ -45,3 +45,9 @@ Committed after every completed P0 item (8.1–8.6) and after every wave item.
 - `lib/tts_engine.py`: added `failure_class` field to `TtsResult` (default OPTIONAL). Piper fallback = OPTIONAL; both engines failed = REQUIRED (cannot assemble without voice).
 - Field order fixed in dataclasses (`reason` before `failure_class` with defaults).
 - Verified: all three modules import and produce correct failure_class defaults.
+
+### 2026-11-07 — P0 8.4 (DONE)
+
+- `lib/budget_guard.py`: V8 §8.4 — fallback never uses Google Flow. `_fallback_for` now explicitly says "Never Google Flow — no credits, no hidden generation" for image/video generation, and adds a `flow_generation` entry that returns "BLOCKED — Google Flow never used as fallback. Retry must not spend credits." Existing assets are never renamed to newly_generated.
+- Verified: guard returns fallback_used for paid ops, success for $0, fallback text contains anti-Flow language.
+- Existing tests: 3 passed (test_zero_cost_gate + budget/guard tests in tests/lib/).

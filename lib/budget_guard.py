@@ -6,6 +6,12 @@ call ``guard(spending_kind)``. It always returns a dict with an explicit
 ``status`` (``success`` / ``fallback_used`` / ``failed``) and a free
 fallback recommendation — never raises, never spends.
 
+V8 §8.4: fallback never spends Google Flow credits. No hidden Flow
+generation on retry. Fallback is only an already-available free local tool
+or an existing asset with ``source: existing``. An existing asset is never
+renamed to ``newly_generated``. If no safe fallback exists -> BLOCKED /
+NEEDS_REVIEW.
+
 This is the ONLY place a spending decision is made; every layer routes
 through it.
 """
@@ -78,12 +84,13 @@ class BudgetGuard:
 
 def _fallback_for(kind: str) -> str:
     table = {
-        "image_generation": "local PIER/diffusion placeholder or archival NASA/Archive.org image (footage_sourcing)",
-        "video_generation": "existing final.mp4 / archival footage; no new generation",
-        "tts": "Piper local CPU TTS (no API key, no credits)",
-        "music": "existing assets/music/ardune_red_moon.mp3 (Public Domain, already licensed)",
-        "api_call": "cached/local computation instead of remote API",
-        "download": "already-downloaded asset from projects/ or assets/",
+        "image_generation": "local PIER/diffusion placeholder or archival NASA/Archive.org image (footage_sourcing). Never Google Flow — no credits, no hidden generation.",
+        "video_generation": "existing final.mp4 / archival footage; no new generation. Never Google Flow.",
+        "tts": "Piper local CPU TTS (no API key, no credits).",
+        "music": "existing assets/music/ardune_red_moon.mp3 (Public Domain, already licensed).",
+        "api_call": "cached/local computation instead of remote API.",
+        "download": "already-downloaded asset from projects/ or assets/.",
+        "flow_generation": "BLOCKED — Google Flow never used as fallback. Retry must not spend credits.",
     }
     return table.get(kind, "reuse an existing local asset instead of generating")
 

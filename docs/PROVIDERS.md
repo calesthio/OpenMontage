@@ -1008,6 +1008,64 @@ Gen-3 Alpha Turbo and Gen-4 Aleph were removed from the Runway API on
 
 ---
 
+### Magnific — Multi-Modal Generation Suite
+
+> **One key across image, video, upscaling, and audio.** Magnific (formerly the Freepik API) fronts Mystic, Flux 2, Seedream 5, Seedance 2, Kling, Veo 3.1, WAN, LTX, Runway, Hailuo, PixVerse, ElevenLabs Music, and the Magnific upscalers. It is the broadest single-key surface in this table — the natural alternative to Higgsfield when you want stills, clips, upscaling, and audio behind one credential.
+
+**Tools unlocked:** `magnific_image`, `magnific_video`, `magnific_upscale`, `magnific_music`, `magnific_sound_effects`, `magnific_audio_isolation`
+**Env var:** `MAGNIFIC_API_KEY`
+
+#### Setup
+
+1. Sign in at [magnific.com](https://www.magnific.com/)
+2. Subscribe to a paid plan. Third-party guides claim API keys need Business tier; verified working on **Pro** as of 2026-09-04, so check your own org's API Keys page rather than assuming
+3. Open the user menu → organization **Settings** → **API Keys**
+4. Create a key. **The key and secret are shown only once** — copy them before closing
+5. Add to `.env`:
+   ```
+   MAGNIFIC_API_KEY=your-api-key
+   ```
+
+#### No API key? Use the MCP server instead
+
+Magnific also runs an official MCP server that authenticates with OAuth against
+an ordinary magnific.com account — no API key to manage or rotate — and it draws
+on the same credit balance as the web app and the REST API:
+
+```bash
+claude mcp add --transport http magnific https://mcp.magnific.com
+```
+
+That path exposes Magnific's own tool surface directly to the agent
+(`images_generate`, `images_upscale`, `video_generate`, `audio_tts`,
+`models3d_generate`, `custom_references_create` for Soul character training, plus
+creation history). It does **not** register OpenMontage tools, so it sits outside
+the pipeline system and its cost does not flow through the cost tracker. Use the
+REST tools above for anything a pipeline drives; use MCP for ad-hoc chat work.
+
+#### Models
+
+| Capability | Tool | Notable models |
+|------------|------|----------------|
+| Image | `magnific_image` | Mystic (realism / fluid / zen / flexible / super_real / editorial_portraits), Flux 2 Pro/Turbo, Seedream 5 Pro/Lite, Nano Banana Pro, Z-Image, Hyperflux |
+| Video | `magnific_video` | Seedance 2.0 Pro (480p–4K, default), Seedance 2.5 Pro, Kling v3, Veo 3.1, WAN 2.7, LTX 2 Pro, Hailuo 2.3, Runway 4.5, PixVerse V6 |
+| Upscale | `magnific_upscale` | Creative (prompt-guided, up to 16x) and Precision (faithful) |
+| Audio | `magnific_music`, `magnific_sound_effects`, `magnific_audio_isolation` | ElevenLabs Music (10–240s), SFX (0.5–22s), SAM Audio isolation |
+
+#### Pricing
+
+Magnific bills **credits**, not per-call USD, and publishes no per-endpoint rate.
+The `estimate_cost` values in these tools are order-of-magnitude planning figures
+for budget gates — reconcile real spend against the Analytics API
+(`POST /v1/analytics/team-credit-usage`).
+
+> **Note:** an "Unlimited" allowance on a Magnific subscription covers the web app
+> only. API calls always draw on the credit balance.
+
+**Free tier:** None for the API — it always draws on the credit balance.
+
+---
+
 ### HeyGen — Avatar Video Gateway
 
 > **Multi-model video gateway.** Access VEO, Sora, Runway, Kling, and Seedance through a single API.
@@ -1456,6 +1514,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **xAI** | `XAI_API_KEY` | `grok_image`, `grok_video` | Paid only |
 | **Runway** | `RUNWAY_API_KEY` | `runway_video` | Free trial + paid |
 | **Higgsfield** | `HIGGSFIELD_API_KEY` + `HIGGSFIELD_API_SECRET` | `higgsfield_video` | Subscription ($15-84/mo) |
+| **Magnific** | `MAGNIFIC_API_KEY` | `magnific_image`, `magnific_video`, `magnific_upscale`, `magnific_music`, `magnific_sound_effects`, `magnific_audio_isolation` | Credits (verified on Pro); OAuth MCP server needs no key |
 | **HeyGen** | `HEYGEN_API_KEY` | `heygen_video` | Pay-as-you-go |
 | **Suno** | `SUNO_API_KEY` | `suno_music` | Pay-as-you-go |
 | **Tencent Hunyuan** | `TENCENT_TOKENHUB_API_KEY` | `hunyuan_cloud_video` | Pay-as-you-go (~$0.25–0.83/gen) |

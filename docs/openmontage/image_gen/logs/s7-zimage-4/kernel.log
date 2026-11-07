@@ -1,0 +1,24 @@
+[{"stream_name":"stderr","time":98.209465517,"data":"Flax classes are deprecated and will be removed in Diffusers v1.0.0. We recommend migrating to PyTorch classes or pinning your version of Diffusers.\n"}
+,{"stream_name":"stderr","time":98.210135446,"data":"Flax classes are deprecated and will be removed in Diffusers v1.0.0. We recommend migrating to PyTorch classes or pinning your version of Diffusers.\n"}
+,{"stream_name":"stderr","time":245.195227343,"data":"\rFetching 18 files:   0%|          | 0/18 [00:00\u003c?, ?it/s]\rFetching 18 files:  11%|█         | 2/18 [00:00\u003c00:03,  4.55it/s]\rFetching 18 files:  22%|██▏       | 4/18 [01:26\u003c05:53, 25.26s/it]\rFetching 18 files:  72%|███████▏  | 13/18 [02:26\u003c00:52, 10.56s/it]\rFetching 18 files: 100%|██████████| 18/18 [02:26\u003c00:00,  8.12s/it]\n"}
+,{"stream_name":"stderr","time":246.614703181,"data":"\rLoading pipeline components...:   0%|          | 0/5 [00:00\u003c?, ?it/s]\n"}
+,{"stream_name":"stderr","time":263.029495534,"data":"\rLoading checkpoint shards:   0%|          | 0/3 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":278.87181211,"data":"\rLoading checkpoint shards:  33%|███▎      | 1/3 [00:16\u003c00:32, 16.41s/it]\u001b[A\n"}
+,{"stream_name":"stderr","time":279.233902093,"data":"\rLoading checkpoint shards:  67%|██████▋   | 2/3 [00:32\u003c00:16, 16.08s/it]\u001b[A\n"}
+,{"stream_name":"stderr","time":279.234201233,"data":"\rLoading checkpoint shards: 100%|██████████| 3/3 [00:32\u003c00:00,  8.90s/it]\u001b[A\rLoading checkpoint shards: 100%|██████████| 3/3 [00:32\u003c00:00, 10.87s/it]\n"}
+,{"stream_name":"stderr","time":281.433065456,"data":"\rLoading pipeline components...:  20%|██        | 1/5 [00:34\u003c02:16, 34.03s/it]\rLoading pipeline components...:  40%|████      | 2/5 [00:35\u003c00:44, 14.74s/it]\rLoading pipeline components...:  60%|██████    | 3/5 [00:35\u003c00:16,  8.32s/it]\rLoading pipeline components...:  80%|████████  | 4/5 [00:36\u003c00:05,  5.13s/it]\n"}
+,{"stream_name":"stderr","time":317.222674542,"data":"\rLoading checkpoint shards:   0%|          | 0/3 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":357.100248932,"data":"\rLoading checkpoint shards:  33%|███▎      | 1/3 [00:35\u003c01:11, 35.79s/it]\u001b[A\n"}
+,{"stream_name":"stderr","time":375.781391308,"data":"\rLoading checkpoint shards:  67%|██████▋   | 2/3 [01:15\u003c00:38, 38.19s/it]\u001b[A\n"}
+,{"stream_name":"stderr","time":375.785976803,"data":"\rLoading checkpoint shards: 100%|██████████| 3/3 [01:34\u003c00:00, 29.28s/it]\u001b[A\rLoading checkpoint shards: 100%|██████████| 3/3 [01:34\u003c00:00, 31.45s/it]\n"}
+,{"stream_name":"stderr","time":375.789464563,"data":"\rLoading pipeline components...: 100%|██████████| 5/5 [02:10\u003c00:00, 37.32s/it]\rLoading pipeline components...: 100%|██████████| 5/5 [02:10\u003c00:00, 26.12s/it]\n"}
+,{"stream_name":"stderr","time":430.350084515,"data":"/usr/local/lib/python3.13/dist-packages/diffusers/image_processor.py:142: RuntimeWarning: invalid value encountered in cast\n"}
+,{"stream_name":"stderr","time":430.350675103,"data":"  images = (images * 255).round().astype(\"uint8\")\n"}
+,{"stream_name":"stdout","time":898.185269694,"data":"s7 zimage done: 10 images, 51.908 s/img steady, peak VRAM 12355.12 MB, load 277.6s\n"}
+,{"stream_name":"stderr","time":912.045416256,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":912.045438381,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":912.421385302,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":912.421448126,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":914.341711192,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":915.250378363,"data":"[NbConvertApp] Writing 392755 bytes to __results__.html\n"}
+]

@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/evidence_ledger",
+  "title": "Evidence Ledger",
+  "description": "Stage 3 output of the business-documentary pipeline. Normalized, stable-ID evidence entries. Every factual claim in the script must resolve to an evidence_id defined here; a fabricated or unknown evidence_id is a stage failure.",
+  "type": "object",
+  "required": ["version", "run_id", "created_at", "entries"],
+  "properties": {
+    "version": { "type": "string", "const": "1.0" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "minLength": 1 },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["evidence_id", "claim_text", "source_id", "url", "extract", "source_type", "claim_label", "quality", "caveats"],
+        "properties": {
+          "evidence_id": {
+            "type": "string",
+            "pattern": "^EV-[a-z0-9][a-z0-9_-]{2,63}$",
+            "description": "Stable ID derived from the source and the claim. Never reused, never invented."
+          },
+          "claim_text": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The claim this entry supports, stated so it can be checked."
+          },
+          "source_id": {
+            "type": "string",
+            "pattern": "^SRC-[a-z0-9][a-z0-9_-]{2,63}$",
+            "description": "Must resolve to a source recorded in the research_brief."
+          },
+          "url": { "type": "string", "minLength": 1 },
+          "extract": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Verbatim quote or extract from the source. Paraphrase is not evidence."
+          },
+          "publisher": { "type": "string" },
+          "published_date": {
+            "type": ["string", "null"],
+            "description": "Publication date of the source, or null when the source carries none."
+          },
+          "accessed_date": { "type": "string", "minLength": 1 },
+          "source_type": {
+            "type": "string",
+            "enum": ["primary", "secondary", "tertiary"]
+          },
+          "source_class": {
+            "type": "string",
+            "description": "primary=annual report / regulator filing / court record / patent / paper; secondary=reporting / analysis.",
+            "enum": [
+              "corporate_filing",
+              "regulator",
+              "court_record",
+              "patent",
+              "scientific_paper",
+              "government_document",
+              "official_press_release",
+              "industry_report",
+              "news_reporting",
+              "analysis",
+              "interview",
+              "other"
+            ]
+          },
+          "claim_label": {
+            "type": "string",
+            "description": "Fact, interpretation, estimate, forecast and opinion are NOT the same thing.",
+            "enum": ["fact", "interpretation", "estimate", "forecast", "opinion"]
+          },
+          "quality": {
+            "type": "string",
+            "enum": ["high", "medium", "low"]
+          },
+          "metrics": {
+            "type": "array",
+            "description": "Exact numbers the entry carries, each with date, unit and geography.",
+            "items": {
+              "type": "object",
+              "required": ["value", "unit"],
+              "properties": {
+                "value": { "type": "string" },
+                "unit": { "type": "string" },
+                "as_of_date": { "type": ["string", "null"] },
+                "geography": { "type": "string" },
+                "methodology_note": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          },
+          "caveats": {
+            "type": "array",
+            "description": "Known limits of the evidence: single source, contested figure, projection, etc. Empty array is allowed only when the claim is uncontested.",
+            "items": { "type": "string" }
+          },
+          "corroborated_by": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^SRC-" }
+          },
+          "metadata": { "type": "object" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "source_gaps": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Claims the research could NOT source. Must be empty or explicitly carried into fact_check as unverified."
+        },
+        "unverified_claim_count": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

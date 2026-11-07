@@ -1,0 +1,21 @@
+[{"stream_name":"stdout","time":7.096925204,"data":"STICK2 Track A starting\n"}
+,{"stream_name":"stdout","time":247.161615196,"data":"BLOCKED: base pip install failed:   error: subprocess-exited-with-error\n"}
+,{"stream_name":"stdout","time":247.161661729,"data":"  \n"}
+,{"stream_name":"stdout","time":247.161666249,"data":"  × Building wheel for tokenizers (pyproject.toml) did not run successfully.\n"}
+,{"stream_name":"stdout","time":247.16167048,"data":"  │ exit code: 1\n"}
+,{"stream_name":"stdout","time":247.161673506,"data":"  ╰─\u003e No available output.\n"}
+,{"stream_name":"stdout","time":247.16167703,"data":"  \n"}
+,{"stream_name":"stdout","time":247.161679978,"data":"  note: This error originates from a subprocess, and is likely not a problem with pip.\n"}
+,{"stream_name":"stdout","time":247.161697829,"data":"  ERROR: Failed building wheel for tokenizers\n"}
+,{"stream_name":"stdout","time":247.161703268,"data":"error: failed-wheel-build-for-install\n"}
+,{"stream_name":"stdout","time":247.161707851,"data":"\n"}
+,{"stream_name":"stdout","time":247.16171261,"data":"× Failed to build installable wheels for some pyproject.toml based projects\n"}
+,{"stream_name":"stdout","time":247.161717466,"data":"╰─\u003e tokenizers\n"}
+,{"stream_name":"stdout","time":247.161721817,"data":"\n"}
+,{"stream_name":"stderr","time":251.493458029,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":251.493516508,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":251.740476531,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":251.740589579,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":252.481709679,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":253.439712335,"data":"[NbConvertApp] Writing 337612 bytes to __results__.html\n"}
+]

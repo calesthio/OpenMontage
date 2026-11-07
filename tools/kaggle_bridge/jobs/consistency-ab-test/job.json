@@ -1,0 +1,45 @@
+{
+  "job_id": "consistency-ab-test",
+  "title": "Character consistency A/B test on Kaggle T4 (SDXL Base 1.0, no DreamShaper)",
+  "model_id": "stabilityai/stable-diffusion-xl-base-1.0",
+  "ip_adapter_repo": "h94/IP-Adapter",
+  "ip_adapter_subfolder": "sdxl_models",
+  "width": 768,
+  "height": 768,
+  "batch_size": 1,
+  "precision": "fp16",
+  "memory_opts": [
+    "vae_slicing",
+    "vae_tiling",
+    "model_cpu_offload"
+  ],
+  "fixed_seed_list": [
+    42,
+    123,
+    777,
+    2026,
+    9001
+  ],
+  "steps": 25,
+  "guidance_scale": 7.5,
+  "test_scenarios": [
+    "crowd portrait close-up",
+    "side profile",
+    "full body standing",
+    "dynamic action pose",
+    "different lighting",
+    "different emotion",
+    "different outfit detail visible",
+    "different background",
+    "group scene with other character"
+  ],
+  "banned_components": [
+    "DreamShaper XL (base)",
+    "IP-Adapter FaceID",
+    "PhotoMaker V2",
+    "PuLID"
+  ],
+  "accelerator": "gpu",
+  "enable_internet": true,
+  "created_at": "2026-10-26T12:37:00Z"
+}

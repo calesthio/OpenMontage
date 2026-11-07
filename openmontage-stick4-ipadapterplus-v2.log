@@ -1,0 +1,55 @@
+[{"stream_name":"stdout","time":41.583287458,"data":"STICK4 IP-Adapter Plus SDXL starting\n"}
+,{"stream_name":"stderr","time":60.861176785,"data":"/usr/local/lib/python3.13/dist-packages/diffusers/utils/deprecation_utils.py:23: FutureWarning: `torch_dtype` is deprecated and will be removed in version 1.0.0. Please use `dtype` instead.\n"}
+,{"stream_name":"stderr","time":60.861223355999996,"data":"  \"new_class\": \"CLIPImageProcessor\",\n"}
+,{"stream_name":"stderr","time":61.07493403,"data":"Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stderr","time":61.074960064,"data":"WARNING:huggingface_hub.utils._http:Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stderr","time":116.734075078,"data":"\rFetching 18 files:   0%|          | 0/18 [00:00\u003c?, ?it/s]\rFetching 18 files:  11%|█         | 2/18 [00:00\u003c00:01, 13.28it/s]\rFetching 18 files:  56%|█████▌    | 10/18 [00:00\u003c00:00, 43.74it/s]\rFetching 18 files:  83%|████████▎ | 15/18 [00:02\u003c00:00,  4.63it/s]\rFetching 18 files:  94%|█████████▍| 17/18 [00:19\u003c00:00,  4.63it/s]\rFetching 18 files: 100%|██████████| 18/18 [00:55\u003c00:00,  4.92s/it]\rFetching 18 files: 100%|██████████| 18/18 [00:55\u003c00:00,  3.08s/it]\n"}
+,{"stream_name":"stderr","time":116.737483176,"data":"Keyword arguments {'safety_checker': None} are not expected by StableDiffusionXLPipeline and will be ignored.\n"}
+,{"stream_name":"stderr","time":128.331693042,"data":"\rLoading pipeline components...:   0%|          | 0/7 [00:00\u003c?, ?it/s]\n"}
+,{"stream_name":"stderr","time":130.584215889,"data":"\rLoading weights:   0%|          | 0/196 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":130.592905956,"data":"\rLoading weights:   1%|          | 2/196 [00:02\u003c03:38,  1.13s/it]\u001b[A\rLoading weights: 100%|██████████| 196/196 [00:02\u003c00:00, 86.69it/s]\n"}
+,{"stream_name":"stderr","time":135.920869794,"data":"\rLoading pipeline components...:  14%|█▍        | 1/7 [00:13\u003c01:23, 13.87s/it]\rLoading pipeline components...:  43%|████▎     | 3/7 [00:19\u003c00:22,  5.50s/it]\n"}
+,{"stream_name":"stderr","time":139.492661431,"data":"\rLoading weights:   0%|          | 0/517 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":139.856099318,"data":"\rLoading weights:   0%|          | 2/517 [00:03\u003c15:19,  1.79s/it]\u001b[A\n"}
+,{"stream_name":"stderr","time":140.14699255,"data":"\rLoading weights:  26%|██▋       | 136/517 [00:03\u003c00:08, 47.28it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":140.503953643,"data":"\rLoading weights:  31%|███       | 158/517 [00:04\u003c00:07, 50.88it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":140.790905864,"data":"\rLoading weights:  34%|███▎      | 174/517 [00:04\u003c00:06, 49.81it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":141.105687846,"data":"\rLoading weights:  36%|███▌      | 186/517 [00:04\u003c00:06, 48.39it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":141.391294147,"data":"\rLoading weights:  39%|███▊      | 200/517 [00:05\u003c00:06, 47.56it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":141.719050818,"data":"\rLoading weights:  42%|████▏     | 216/517 [00:05\u003c00:06, 49.39it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":142.02396764,"data":"\rLoading weights:  45%|████▍     | 232/517 [00:05\u003c00:05, 49.24it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":142.342587686,"data":"\rLoading weights:  48%|████▊     | 248/517 [00:06\u003c00:05, 50.07it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":142.647700671,"data":"\rLoading weights:  51%|█████     | 264/517 [00:06\u003c00:05, 50.11it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":142.963530001,"data":"\rLoading weights:  54%|█████▍    | 280/517 [00:06\u003c00:04, 50.75it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":143.272206231,"data":"\rLoading weights:  57%|█████▋    | 296/517 [00:07\u003c00:04, 50.73it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":143.553324417,"data":"\rLoading weights:  60%|██████    | 312/517 [00:07\u003c00:04, 51.05it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":143.666981509,"data":"\rLoading weights:  63%|██████▎   | 328/517 [00:07\u003c00:03, 52.65it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":143.900805691,"data":"\rLoading weights:  65%|██████▍   | 334/517 [00:07\u003c00:03, 52.66it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":144.171893253,"data":"\rLoading weights:  67%|██████▋   | 344/517 [00:07\u003c00:03, 49.84it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":144.541911241,"data":"\rLoading weights:  70%|██████▉   | 360/517 [00:08\u003c00:02, 52.79it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":144.820155256,"data":"\rLoading weights:  73%|███████▎  | 376/517 [00:08\u003c00:02, 49.11it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":145.127205028,"data":"\rLoading weights:  76%|███████▌  | 392/517 [00:08\u003c00:02, 51.57it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":145.459574947,"data":"\rLoading weights:  79%|███████▉  | 408/517 [00:09\u003c00:02, 51.75it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":145.781116872,"data":"\rLoading weights:  82%|████████▏ | 424/517 [00:09\u003c00:01, 50.55it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":146.104420098,"data":"\rLoading weights:  85%|████████▌ | 440/517 [00:09\u003c00:01, 50.31it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":146.358456301,"data":"\rLoading weights:  88%|████████▊ | 456/517 [00:10\u003c00:01, 50.05it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":146.7367106,"data":"\rLoading weights:  91%|█████████▏| 472/517 [00:10\u003c00:00, 53.39it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":147.013668313,"data":"\rLoading weights:  94%|█████████▍| 488/517 [00:10\u003c00:00, 49.47it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":147.018798806,"data":"\rLoading weights:  97%|█████████▋| 504/517 [00:11\u003c00:00, 51.70it/s]\u001b[A\rLoading weights: 100%|██████████| 517/517 [00:11\u003c00:00, 46.59it/s]\n"}
+,{"stream_name":"stderr","time":148.452098699,"data":"\rLoading pipeline components...:  57%|█████▋    | 4/7 [00:30\u003c00:22,  7.51s/it]\rLoading pipeline components...:  86%|████████▌ | 6/7 [00:30\u003c00:03,  3.81s/it]\rLoading pipeline components...: 100%|██████████| 7/7 [00:31\u003c00:00,  3.14s/it]\rLoading pipeline components...: 100%|██████████| 7/7 [00:31\u003c00:00,  4.53s/it]\n"}
+,{"stream_name":"stderr","time":169.112116641,"data":"\r  0%|          | 0/20 [00:00\u003c?, ?it/s]\r  5%|▌         | 1/20 [00:04\u003c01:23,  4.40s/it]\r 10%|█         | 2/20 [00:04\u003c00:36,  2.02s/it]\r 15%|█▌        | 3/20 [00:05\u003c00:24,  1.45s/it]\r 20%|██        | 4/20 [00:06\u003c00:18,  1.18s/it]\r 25%|██▌       | 5/20 [00:07\u003c00:15,  1.03s/it]\r 30%|███       | 6/20 [00:07\u003c00:13,  1.06it/s]\r 35%|███▌      | 7/20 [00:08\u003c00:11,  1.13it/s]\r 40%|████      | 8/20 [00:09\u003c00:10,  1.18it/s]\r 45%|████▌     | 9/20 [00:10\u003c00:09,  1.21it/s]\r 50%|█████     | 10/20 [00:10\u003c00:08,  1.23it/s]\r 55%|█████▌    | 11/20 [00:11\u003c00:07,  1.24it/s]\r 60%|██████    | 12/20 [00:12\u003c00:06,  1.25it/s]\r 65%|██████▌   | 13/20 [00:13\u003c00:05,  1.26it/s]\r 70%|███████   | 14/20 [00:14\u003c00:04,  1.26it/s]\r 75%|███████▌  | 15/20 [00:14\u003c00:03,  1.26it/s]\r 80%|████████  | 16/20 [00:15\u003c00:03,  1.26it/s]\r 85%|████████▌ | 17/20 [00:16\u003c00:02,  1.26it/s]\r 90%|█████████ | 18/20 [00:17\u003c00:01,  1.26it/s]\r 95%|█████████▌| 19/20 [00:18\u003c00:00,  1.27it/s]\r100%|██████████| 20/20 [00:18\u003c00:00,  1.27it/s]\r100%|██████████| 20/20 [00:18\u003c00:00,  1.06it/s]\n"}
+,{"stream_name":"stderr","time":169.113827457,"data":"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl.py:748: FutureWarning: `upcast_vae` is deprecated and will be removed in version 1.0.0. `upcast_vae` is deprecated. Please use `pipe.vae.to(torch.float32)`. For more details, please refer to: https://github.com/huggingface/diffusers/pull/12619#issue-3606633695.\n"}
+,{"stream_name":"stderr","time":169.113846277,"data":"  deprecate(\n"}
+,{"stream_name":"stderr","time":169.114006343,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":171.872436303,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":181.152826928,"data":"\rLoading weights:   0%|          | 0/520 [00:00\u003c?, ?it/s]\rLoading weights:  17%|█▋        | 89/520 [00:00\u003c00:00, 765.91it/s]\rLoading weights:  36%|███▌      | 185/520 [00:00\u003c00:00, 870.72it/s]\rLoading weights:  52%|█████▎    | 273/520 [00:00\u003c00:00, 741.71it/s]\rLoading weights:  67%|██████▋   | 350/520 [00:00\u003c00:00, 724.52it/s]\rLoading weights:  82%|████████▏ | 425/520 [00:00\u003c00:00, 696.47it/s]\rLoading weights:  95%|█████████▌| 496/520 [00:00\u003c00:00, 636.22it/s]\rLoading weights: 100%|██████████| 520/520 [00:00\u003c00:00, 705.27it/s]\n"}
+,{"stream_name":"stderr","time":192.758595208,"data":"There are modules in UNet2DConditionModel that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stdout","time":196.702648309,"data":"IP-Adapter Plus: peak_vram=5335.21 MB, fits_t4=True, oom=False, mean_sim=None, err=False\n"}
+,{"stream_name":"stdout","time":196.702799526,"data":"STICK4 complete\n"}
+,{"stream_name":"stderr","time":204.883809463,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":204.883851512,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":205.222743374,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":205.222770988,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":206.341265946,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":207.410052324,"data":"[NbConvertApp] Writing 335077 bytes to __results__.html\n"}
+]

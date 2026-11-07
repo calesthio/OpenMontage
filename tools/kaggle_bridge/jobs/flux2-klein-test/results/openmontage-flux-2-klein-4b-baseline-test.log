@@ -1,0 +1,22 @@
+[{"stream_name":"stdout","time":1.080078399,"data":"Installing diffusers==0.37.0 ...\n"}
+,{"stream_name":"stdout","time":11.156468927,"data":"Installing transformers==4.57.6 ...\n"}
+,{"stream_name":"stderr","time":27.530092693,"data":"ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.\n"}
+,{"stream_name":"stderr","time":27.530123699,"data":"gradio 6.26.0 requires huggingface-hub\u003c2.0,\u003e=1.16.0, but you have huggingface-hub 0.36.2 which is incompatible.\n"}
+,{"stream_name":"stderr","time":27.530131952,"data":"gradio 6.26.0 requires pillow\u003c13.0,\u003e=8.0, but you have pillow 13.0.0 which is incompatible.\n"}
+,{"stream_name":"stderr","time":85.416257592,"data":"Flax classes are deprecated and will be removed in Diffusers v1.0.0. We recommend migrating to PyTorch classes or pinning your version of Diffusers.\n"}
+,{"stream_name":"stderr","time":85.417292436,"data":"Flax classes are deprecated and will be removed in Diffusers v1.0.0. We recommend migrating to PyTorch classes or pinning your version of Diffusers.\n"}
+,{"stream_name":"stdout","time":85.559383843,"data":"ENV: {\"torch\": \"2.11.0+cu128\", \"cuda_available\": true, \"diffusers\": \"0.37.0\", \"device\": \"Tesla T4\", \"total_vram_gb\": 14.56}\n"}
+,{"stream_name":"stderr","time":158.142187124,"data":"\rFetching 17 files:   0%|          | 0/17 [00:00\u003c?, ?it/s]\rFetching 17 files:  12%|█▏        | 2/17 [00:00\u003c00:02,  5.82it/s]\rFetching 17 files:  24%|██▎       | 4/17 [00:59\u003c03:47, 17.51s/it]\rFetching 17 files:  88%|████████▊ | 15/17 [01:12\u003c00:08,  4.06s/it]\rFetching 17 files: 100%|██████████| 17/17 [01:12\u003c00:00,  4.25s/it]\n"}
+,{"stream_name":"stderr","time":179.300416202,"data":"\rLoading pipeline components...:   0%|          | 0/5 [00:00\u003c?, ?it/s]\rLoading pipeline components...:  20%|██        | 1/5 [00:10\u003c00:43, 10.91s/it]\rLoading pipeline components...:  40%|████      | 2/5 [00:21\u003c00:31, 10.45s/it]\n"}
+,{"stream_name":"stderr","time":198.778821618,"data":"\rLoading checkpoint shards:   0%|          | 0/2 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":211.049103626,"data":"\rLoading checkpoint shards:  50%|█████     | 1/2 [00:19\u003c00:19, 19.48s/it]\u001b[A\n"}
+,{"stream_name":"stderr","time":211.049454217,"data":"\rLoading checkpoint shards: 100%|██████████| 2/2 [00:31\u003c00:00, 15.24s/it]\u001b[A\rLoading checkpoint shards: 100%|██████████| 2/2 [00:31\u003c00:00, 15.87s/it]\n"}
+,{"stream_name":"stderr","time":211.665088157,"data":"\rLoading pipeline components...:  60%|██████    | 3/5 [00:52\u003c00:40, 20.23s/it]\rLoading pipeline components...: 100%|██████████| 5/5 [00:53\u003c00:00,  8.95s/it]\rLoading pipeline components...: 100%|██████████| 5/5 [00:53\u003c00:00, 10.70s/it]\n"}
+,{"stream_name":"stdout","time":211.665180234,"data":"MODEL LOAD FAILED: Pipeline \u003cclass 'diffusers.pipelines.flux.pipeline_flux.FluxPipeline'\u003e expected ['feature_extractor', 'image_encoder', 'scheduler', 'text_encoder', 'text_encoder_2', 'tokenizer', 'tokenizer_2', 'transformer', 'vae'], but only {'vae', 'text_encoder', 'transformer', 'scheduler', 'tokenizer'} were passed.\n"}
+,{"stream_name":"stderr","time":221.594788615,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":221.594829109,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":221.943280685,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":221.943338362,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":222.87129422,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":223.725527274,"data":"[NbConvertApp] Writing 296211 bytes to __results__.html\n"}
+]

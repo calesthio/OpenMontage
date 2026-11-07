@@ -1,0 +1,48 @@
+{
+  "created_utc": "2026-10-22T01:59:16Z",
+  "all_passed": true,
+  "results": [
+    {
+      "id": "E1",
+      "task": "qc fails a corrupt MP4",
+      "status": "PASS",
+      "detail": "verdict=FAILED; failed/blocked checks=4",
+      "elapsed_s": 0.54
+    },
+    {
+      "id": "E2",
+      "task": "finish_audio hits loudness + true peak",
+      "status": "PASS",
+      "detail": "I=-13.9 LUFS, TP=-13.2 dBTP (target -14+/-2, TP<=-1.5)",
+      "elapsed_s": 1.14
+    },
+    {
+      "id": "E3",
+      "task": "TTS refuses Piper lessac",
+      "status": "PASS",
+      "detail": "verdict=REJECT; reason=blocked; file_written=False",
+      "elapsed_s": 0.06
+    },
+    {
+      "id": "E4",
+      "task": "claim_ids fails on an unknown id",
+      "status": "PASS",
+      "detail": "claim_ids_resolve=FAILED",
+      "elapsed_s": 0.56
+    },
+    {
+      "id": "E5",
+      "task": "third-party credit classifies REJECT",
+      "status": "PASS",
+      "detail": "rights_basis=unknown, usable=False",
+      "elapsed_s": 0.0
+    },
+    {
+      "id": "E6",
+      "task": "rebuild script fails on hash mismatch",
+      "status": "PASS",
+      "detail": "exit=1; mismatch_reported=True",
+      "elapsed_s": 0.29
+    }
+  ]
+}

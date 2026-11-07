@@ -1,0 +1,64 @@
+[
+  {
+    "asset_id": "iss_earth_views",
+    "file": "projects/slice_iss/footage/iss_earth_views_medium.mp4",
+    "rights_basis": "source_policy_us_gov",
+    "source": "NASA Image & Video Library NHQ_2019_0626",
+    "credit_line": "NASA Image & Video Library",
+    "third_party_credit": false,
+    "nc_nd": false,
+    "sha256": "248b111940d65e4968950702206d6636eda8e2890f9c29dacdf0ea5e7416c0a5",
+    "usable": true
+  },
+  {
+    "asset_id": "step_inside_station",
+    "file": "projects/slice_iss/footage/step_inside_4k_clean_medium.mp4",
+    "rights_basis": "source_policy_us_gov",
+    "source": "NASA Image & Video Library Step_Inside_the_Station-4K-Clean (JSC)",
+    "credit_line": "NASA Image & Video Library",
+    "third_party_credit": false,
+    "nc_nd": false,
+    "sha256": "19c4c9ee785953bf...",
+    "usable": true
+  },
+  {
+    "asset_id": "narration",
+    "file": "docs/openmontage/slice/iss/audio/narration_finished.wav",
+    "rights_basis": "source_policy_us_gov",
+    "source": "kokoro-onnx synthesis of original script",
+    "credit_line": "OpenMontage",
+    "third_party_credit": false,
+    "nc_nd": false,
+    "usable": true
+  },
+  {
+    "asset_id": "orbit_path",
+    "file": "projects/slice_iss/graphics/orbit_path.mp4",
+    "rights_basis": "source_policy_us_gov",
+    "source": "OpenMontage original (PIL+ffmpeg)",
+    "credit_line": "OpenMontage",
+    "third_party_credit": false,
+    "nc_nd": false,
+    "usable": true
+  },
+  {
+    "asset_id": "cupola_geometry",
+    "file": "projects/slice_iss/graphics/cupola_geometry.mp4",
+    "rights_basis": "source_policy_us_gov",
+    "source": "OpenMontage original (PIL+ffmpeg)",
+    "credit_line": "OpenMontage",
+    "third_party_credit": false,
+    "nc_nd": false,
+    "usable": true
+  },
+  {
+    "asset_id": "daynight_timeline",
+    "file": "projects/slice_iss/graphics/daynight_timeline.mp4",
+    "rights_basis": "source_policy_us_gov",
+    "source": "OpenMontage original (PIL+ffmpeg)",
+    "credit_line": "OpenMontage",
+    "third_party_credit": false,
+    "nc_nd": false,
+    "usable": true
+  }
+]

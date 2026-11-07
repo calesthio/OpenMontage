@@ -1,0 +1,22 @@
+{
+  "base_model": "SDXL Base 1.0 (не DreamShaper, пока лицензия не подтверждена шагом 0)",
+  "resolution": "768x768",
+  "batch_size": 1,
+  "precision": "fp16",
+  "memory_opts": ["vae_slicing", "vae_tiling", "model_cpu_offload"],
+  "character_reference": "один чистый референс персонажа, чистый фон",
+  "fixed_seed_list": [42, 123, 777, 2026, 9001],
+  "test_scenarios": [
+    "crowd portrait close-up", "side profile", "full body standing",
+    "dynamic action pose", "different lighting", "different emotion",
+    "different outfit detail visible", "different background", "group scene with other character"
+  ],
+  "scoring_categories": ["face/hair", "outfit", "silhouette", "accessories", "line-art style consistency", "scene fit"],
+  "banned_components": ["DreamShaper XL (base)", "IP-Adapter FaceID", "PhotoMaker V2", "PuLID"],
+  "oom_policy": "фиксировать точную операцию, разрешение и сценарий; не обходить уменьшением качества",
+  "adapter_rules": [
+    "использовать только ip-adapter-plus-face_sdxl_vit-h (Тест Б)",
+    "использовать только ip-adapter-plus_sdxl_vit-h (Тест В, full-body)",
+    "Тест Г только если Б и В прошли без OOM поодиночке"
+  ]
+}

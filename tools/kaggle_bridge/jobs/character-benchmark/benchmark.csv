@@ -1,0 +1,6 @@
+model_id,stage,file,status,seconds,peak_vram_mb,resolution,steps,guidance_scale,strength,seed,error
+black-forest-labs/FLUX.2-klein-4B,source,black_forest_labs_flux_2_klein_4b_source.png,ok,23.093,7990.4,512x512,4,1.0,,42,
+black-forest-labs/FLUX.2-klein-4B,A_scratch_head,black_forest_labs_flux_2_klein_4b_A_scratch_head.png,ok,22.12,8295.5,512x512,4,1.0,0.75,43,
+black-forest-labs/FLUX.2-klein-4B,B_explain_diagram,black_forest_labs_flux_2_klein_4b_B_explain_diagram.png,ok,21.347,8295.5,512x512,4,1.0,0.75,43,
+black-forest-labs/FLUX.2-klein-4B,C_surprised_object,black_forest_labs_flux_2_klein_4b_C_surprised_object.png,ok,20.81,8295.5,512x512,4,1.0,0.75,43,
+Qwen/Qwen-Image-Edit-2511,load,,not_tested,,,,,,,,T4 has no bf16 hardware support; model card requires torch.bfloat16. Full BF16 weights (~57.7 GB) exceed T4 14.56 GB VRAM. No confirmed quantized fp16 variant compatible with a single T4. Not downloaded.

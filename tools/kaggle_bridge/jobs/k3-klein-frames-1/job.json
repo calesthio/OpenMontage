@@ -1,0 +1,19 @@
+{
+  "job_id": "k3-klein-frames-1",
+  "title": "K3 FLUX.2-klein-4B frames sections 1-4 (35 frames)",
+  "sections": [1, 2, 3, 4],
+  "model_id": "black-forest-labs/FLUX.2-klein-4B",
+  "width": 1280,
+  "height": 720,
+  "steps": 4,
+  "guidance_scale": 1.0,
+  "precision": "bfloat16 with float16 fallback",
+  "memory_opts": ["model_cpu_offload"],
+  "num_frames": 35,
+  "est_gen_min": 54,
+  "output_dir": "/kaggle/working/k3-klein-frames/frames",
+  "results": "/kaggle/working/k3-klein-frames/results.json",
+  "note": "One kernel per section-group. bf16->float16 fallback. Logs time/VRAM/dtype per shot, NaN/black detection.",
+  "accelerator": "gpu",
+  "enable_internet": true
+}

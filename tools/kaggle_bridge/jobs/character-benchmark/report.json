@@ -1,0 +1,75 @@
+{
+  "started_utc": "2026-10-26T16:30:42Z",
+  "finished_utc": "2026-10-26T16:34:05Z",
+  "environment": {
+    "torch": "2.11.0+cu128",
+    "cuda_available": true,
+    "ram_mb": 939.3,
+    "device": "Tesla T4",
+    "total_vram_gb": 14.56
+  },
+  "protocol_notes": "T4 has no bf16 hardware support; fp16 used throughout even though model cards show bf16. No IP-Adapter / PhotoMaker / PuLID / InstantID / FaceID / InsightFace / ArcFace. No non-commercial models. Full Qwen 57.7 GB weights not downloaded.",
+  "models": [
+    {
+      "model_id": "black-forest-labs/FLUX.2-klein-4B",
+      "status": "completed",
+      "download_seconds": 115.348,
+      "load_seconds": 0.03,
+      "peak_vram_after_load_mb": 0.0,
+      "source": {
+        "file": "black_forest_labs_flux_2_klein_4b_source.png",
+        "seconds": 23.093,
+        "peak_vram_mb": 7990.4,
+        "resolution": "512x512",
+        "steps": 4,
+        "guidance_scale": 1.0,
+        "seed": 42,
+        "status": "ok"
+      },
+      "edits": {
+        "A_scratch_head": {
+          "file": "black_forest_labs_flux_2_klein_4b_A_scratch_head.png",
+          "seconds": 22.12,
+          "peak_vram_mb": 8295.5,
+          "strength": 0.75,
+          "seed": 43,
+          "status": "ok"
+        },
+        "B_explain_diagram": {
+          "file": "black_forest_labs_flux_2_klein_4b_B_explain_diagram.png",
+          "seconds": 21.347,
+          "peak_vram_mb": 8295.5,
+          "strength": 0.75,
+          "seed": 43,
+          "status": "ok"
+        },
+        "C_surprised_object": {
+          "file": "black_forest_labs_flux_2_klein_4b_C_surprised_object.png",
+          "seconds": 20.81,
+          "peak_vram_mb": 8295.5,
+          "strength": 0.75,
+          "seed": 43,
+          "status": "ok"
+        }
+      },
+      "error": null,
+      "oom": null
+    },
+    {
+      "model_id": "Qwen/Qwen-Image-Edit-2511",
+      "status": "not_tested",
+      "error": "T4 has no bf16 hardware support; model card requires torch.bfloat16. Full BF16 weights (~57.7 GB) exceed T4 14.56 GB VRAM. No confirmed quantized fp16 variant compatible with a single T4. Not downloaded.",
+      "download_seconds": null,
+      "load_seconds": null,
+      "peak_vram_after_load_mb": null,
+      "source": null,
+      "edits": {},
+      "oom": null
+    }
+  ],
+  "artifacts": {
+    "images_dir": "/kaggle/working/character_benchmark/images",
+    "contact_sheet": "/kaggle/working/character_benchmark/contact_sheet.png",
+    "benchmark_csv": "/kaggle/working/character_benchmark/benchmark.csv"
+  }
+}

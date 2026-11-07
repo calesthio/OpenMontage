@@ -1,0 +1,273 @@
+{
+  "job_id": "s15-style-lock-1",
+  "created_utc": "2026-10-23T09:25:10Z",
+  "model_id": "Lykon/dreamshaper-xl-1-0",
+  "revision": "41e6644752a8c9aa63930e6043c4fd83c7708420",
+  "tail": "stylized, non-photorealistic, empty low-detail lower fifth for captions, no text",
+  "negative_prompt": "photorealistic, photo, glossy 3D render, mirror reflections, text, letters, watermark, signature, logo, extra limbs, fused anatomy, duplicated creature, cluttered bottom edge",
+  "styles": {
+    "paper-cut": "layered hand-cut paper shapes, matte paper fiber, clean cut edges, separate foreground midground background, broad directional light, soft cutout shadows, deep navy, mineral teal, sea-glass, shell ivory, one coral accent",
+    "field-guide": "naturalist field-guide illustration, clean ink outline with thicker outer contour, opaque gouache colour masses, restrained watercolor texture, warm paper, graphite, sea-ink, kelp green, mineral blue, one rust-coral accent",
+    "graphic-novel-ink": "bold graphic-novel ink illustration, thick outer contour, sparse hatching, large flat shadow masses, limited halftone, night ink, deep sea, electric teal, pale bone, one coral accent"
+  },
+  "anatomy_rule": {
+    "s01": "ANATOMY_CREATURE verbatim (S10 limb_count 6)",
+    "s03": "limbless wording (S10 limb_count 0)",
+    "s10": "ANATOMY_CREATURE for the grazer + limbless drifter",
+    "habitats": "no anatomy line"
+  },
+  "renders": [
+    {
+      "render_id": "s15_paper-cut_s01_1001",
+      "scene_id": "s01",
+      "style": "paper-cut",
+      "seed": 1001,
+      "prompt": "The vent grazer has exactly six separate tendrils, two pairs of fins. vent grazer grazing bacterial mats on a vent chimney. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime bioluminescence, layered hand-cut paper shapes, matte paper fiber, clean cut edges, separate foreground midground background, broad directional light, soft cutout shadows, deep navy, mineral teal, sea-glass, shell ivory, one coral accent. side silhouette, rule-of-thirds, copy space; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_paper-cut_s01_2027",
+      "scene_id": "s01",
+      "style": "paper-cut",
+      "seed": 2027,
+      "prompt": "The vent grazer has exactly six separate tendrils, two pairs of fins. vent grazer grazing bacterial mats on a vent chimney. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime bioluminescence, layered hand-cut paper shapes, matte paper fiber, clean cut edges, separate foreground midground background, broad directional light, soft cutout shadows, deep navy, mineral teal, sea-glass, shell ivory, one coral accent. side silhouette, rule-of-thirds, copy space; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_field-guide_s01_1001",
+      "scene_id": "s01",
+      "style": "field-guide",
+      "seed": 1001,
+      "prompt": "The vent grazer has exactly six separate tendrils, two pairs of fins. vent grazer grazing bacterial mats on a vent chimney. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime bioluminescence, naturalist field-guide illustration, clean ink outline with thicker outer contour, opaque gouache colour masses, restrained watercolor texture, warm paper, graphite, sea-ink, kelp green, mineral blue, one rust-coral accent. side silhouette, rule-of-thirds, copy space; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_field-guide_s01_2027",
+      "scene_id": "s01",
+      "style": "field-guide",
+      "seed": 2027,
+      "prompt": "The vent grazer has exactly six separate tendrils, two pairs of fins. vent grazer grazing bacterial mats on a vent chimney. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime bioluminescence, naturalist field-guide illustration, clean ink outline with thicker outer contour, opaque gouache colour masses, restrained watercolor texture, warm paper, graphite, sea-ink, kelp green, mineral blue, one rust-coral accent. side silhouette, rule-of-thirds, copy space; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_graphic-novel-ink_s01_1001",
+      "scene_id": "s01",
+      "style": "graphic-novel-ink",
+      "seed": 1001,
+      "prompt": "The vent grazer has exactly six separate tendrils, two pairs of fins. vent grazer grazing bacterial mats on a vent chimney. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime bioluminescence, bold graphic-novel ink illustration, thick outer contour, sparse hatching, large flat shadow masses, limited halftone, night ink, deep sea, electric teal, pale bone, one coral accent. side silhouette, rule-of-thirds, copy space; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_graphic-novel-ink_s01_2027",
+      "scene_id": "s01",
+      "style": "graphic-novel-ink",
+      "seed": 2027,
+      "prompt": "The vent grazer has exactly six separate tendrils, two pairs of fins. vent grazer grazing bacterial mats on a vent chimney. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime bioluminescence, bold graphic-novel ink illustration, thick outer contour, sparse hatching, large flat shadow masses, limited halftone, night ink, deep sea, electric teal, pale bone, one coral accent. side silhouette, rule-of-thirds, copy space; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_paper-cut_s03_1001",
+      "scene_id": "s03",
+      "style": "paper-cut",
+      "seed": 1001,
+      "prompt": "The filter drifter is limbless: no legs, no arms, one continuous undulating fin, wide filter mouth. filter drifter sieving suspended microbes. It is shown open water column of the frozen alien ocean, drifting particles and faint light shafts, diffuse bioluminescent glow, neutral buoyancy, layered hand-cut paper shapes, matte paper fiber, clean cut edges, separate foreground midground background, broad directional light, soft cutout shadows, deep navy, mineral teal, sea-glass, shell ivory, one coral accent. three-quarter view, floating in mid-water; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_paper-cut_s03_2027",
+      "scene_id": "s03",
+      "style": "paper-cut",
+      "seed": 2027,
+      "prompt": "The filter drifter is limbless: no legs, no arms, one continuous undulating fin, wide filter mouth. filter drifter sieving suspended microbes. It is shown open water column of the frozen alien ocean, drifting particles and faint light shafts, diffuse bioluminescent glow, neutral buoyancy, layered hand-cut paper shapes, matte paper fiber, clean cut edges, separate foreground midground background, broad directional light, soft cutout shadows, deep navy, mineral teal, sea-glass, shell ivory, one coral accent. three-quarter view, floating in mid-water; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_field-guide_s03_1001",
+      "scene_id": "s03",
+      "style": "field-guide",
+      "seed": 1001,
+      "prompt": "The filter drifter is limbless: no legs, no arms, one continuous undulating fin, wide filter mouth. filter drifter sieving suspended microbes. It is shown open water column of the frozen alien ocean, drifting particles and faint light shafts, diffuse bioluminescent glow, neutral buoyancy, naturalist field-guide illustration, clean ink outline with thicker outer contour, opaque gouache colour masses, restrained watercolor texture, warm paper, graphite, sea-ink, kelp green, mineral blue, one rust-coral accent. three-quarter view, floating in mid-water; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_field-guide_s03_2027",
+      "scene_id": "s03",
+      "style": "field-guide",
+      "seed": 2027,
+      "prompt": "The filter drifter is limbless: no legs, no arms, one continuous undulating fin, wide filter mouth. filter drifter sieving suspended microbes. It is shown open water column of the frozen alien ocean, drifting particles and faint light shafts, diffuse bioluminescent glow, neutral buoyancy, naturalist field-guide illustration, clean ink outline with thicker outer contour, opaque gouache colour masses, restrained watercolor texture, warm paper, graphite, sea-ink, kelp green, mineral blue, one rust-coral accent. three-quarter view, floating in mid-water; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_graphic-novel-ink_s03_1001",
+      "scene_id": "s03",
+      "style": "graphic-novel-ink",
+      "seed": 1001,
+      "prompt": "The filter drifter is limbless: no legs, no arms, one continuous undulating fin, wide filter mouth. filter drifter sieving suspended microbes. It is shown open water column of the frozen alien ocean, drifting particles and faint light shafts, diffuse bioluminescent glow, neutral buoyancy, bold graphic-novel ink illustration, thick outer contour, sparse hatching, large flat shadow masses, limited halftone, night ink, deep sea, electric teal, pale bone, one coral accent. three-quarter view, floating in mid-water; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_graphic-novel-ink_s03_2027",
+      "scene_id": "s03",
+      "style": "graphic-novel-ink",
+      "seed": 2027,
+      "prompt": "The filter drifter is limbless: no legs, no arms, one continuous undulating fin, wide filter mouth. filter drifter sieving suspended microbes. It is shown open water column of the frozen alien ocean, drifting particles and faint light shafts, diffuse bioluminescent glow, neutral buoyancy, bold graphic-novel ink illustration, thick outer contour, sparse hatching, large flat shadow masses, limited halftone, night ink, deep sea, electric teal, pale bone, one coral accent. three-quarter view, floating in mid-water; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_paper-cut_s05_1001",
+      "scene_id": "s05",
+      "style": "paper-cut",
+      "seed": 1001,
+      "prompt": "vent chimney field with black smokers. It is shown field of hydrothermal vent chimneys on the ocean floor, black smoker plumes and mineral crusts, vent glow illuminating black smoker plumes, layered hand-cut paper shapes, matte paper fiber, clean cut edges, separate foreground midground background, broad directional light, soft cutout shadows, deep navy, mineral teal, sea-glass, shell ivory, one coral accent. wide establishing shot, low angle; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_paper-cut_s05_2027",
+      "scene_id": "s05",
+      "style": "paper-cut",
+      "seed": 2027,
+      "prompt": "vent chimney field with black smokers. It is shown field of hydrothermal vent chimneys on the ocean floor, black smoker plumes and mineral crusts, vent glow illuminating black smoker plumes, layered hand-cut paper shapes, matte paper fiber, clean cut edges, separate foreground midground background, broad directional light, soft cutout shadows, deep navy, mineral teal, sea-glass, shell ivory, one coral accent. wide establishing shot, low angle; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_field-guide_s05_1001",
+      "scene_id": "s05",
+      "style": "field-guide",
+      "seed": 1001,
+      "prompt": "vent chimney field with black smokers. It is shown field of hydrothermal vent chimneys on the ocean floor, black smoker plumes and mineral crusts, vent glow illuminating black smoker plumes, naturalist field-guide illustration, clean ink outline with thicker outer contour, opaque gouache colour masses, restrained watercolor texture, warm paper, graphite, sea-ink, kelp green, mineral blue, one rust-coral accent. wide establishing shot, low angle; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_field-guide_s05_2027",
+      "scene_id": "s05",
+      "style": "field-guide",
+      "seed": 2027,
+      "prompt": "vent chimney field with black smokers. It is shown field of hydrothermal vent chimneys on the ocean floor, black smoker plumes and mineral crusts, vent glow illuminating black smoker plumes, naturalist field-guide illustration, clean ink outline with thicker outer contour, opaque gouache colour masses, restrained watercolor texture, warm paper, graphite, sea-ink, kelp green, mineral blue, one rust-coral accent. wide establishing shot, low angle; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_graphic-novel-ink_s05_1001",
+      "scene_id": "s05",
+      "style": "graphic-novel-ink",
+      "seed": 1001,
+      "prompt": "vent chimney field with black smokers. It is shown field of hydrothermal vent chimneys on the ocean floor, black smoker plumes and mineral crusts, vent glow illuminating black smoker plumes, bold graphic-novel ink illustration, thick outer contour, sparse hatching, large flat shadow masses, limited halftone, night ink, deep sea, electric teal, pale bone, one coral accent. wide establishing shot, low angle; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_graphic-novel-ink_s05_2027",
+      "scene_id": "s05",
+      "style": "graphic-novel-ink",
+      "seed": 2027,
+      "prompt": "vent chimney field with black smokers. It is shown field of hydrothermal vent chimneys on the ocean floor, black smoker plumes and mineral crusts, vent glow illuminating black smoker plumes, bold graphic-novel ink illustration, thick outer contour, sparse hatching, large flat shadow masses, limited halftone, night ink, deep sea, electric teal, pale bone, one coral accent. wide establishing shot, low angle; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_paper-cut_s06_1001",
+      "scene_id": "s06",
+      "style": "paper-cut",
+      "seed": 1001,
+      "prompt": "under-ice cavern ceiling with melt pools. It is shown cavern beneath the frozen ice shell, melt pools and ice columns, faint light filtering through ice, bioluminescent patches, layered hand-cut paper shapes, matte paper fiber, clean cut edges, separate foreground midground background, broad directional light, soft cutout shadows, deep navy, mineral teal, sea-glass, shell ivory, one coral accent. looking up at the ice ceiling; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_paper-cut_s06_2027",
+      "scene_id": "s06",
+      "style": "paper-cut",
+      "seed": 2027,
+      "prompt": "under-ice cavern ceiling with melt pools. It is shown cavern beneath the frozen ice shell, melt pools and ice columns, faint light filtering through ice, bioluminescent patches, layered hand-cut paper shapes, matte paper fiber, clean cut edges, separate foreground midground background, broad directional light, soft cutout shadows, deep navy, mineral teal, sea-glass, shell ivory, one coral accent. looking up at the ice ceiling; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_field-guide_s06_1001",
+      "scene_id": "s06",
+      "style": "field-guide",
+      "seed": 1001,
+      "prompt": "under-ice cavern ceiling with melt pools. It is shown cavern beneath the frozen ice shell, melt pools and ice columns, faint light filtering through ice, bioluminescent patches, naturalist field-guide illustration, clean ink outline with thicker outer contour, opaque gouache colour masses, restrained watercolor texture, warm paper, graphite, sea-ink, kelp green, mineral blue, one rust-coral accent. looking up at the ice ceiling; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_field-guide_s06_2027",
+      "scene_id": "s06",
+      "style": "field-guide",
+      "seed": 2027,
+      "prompt": "under-ice cavern ceiling with melt pools. It is shown cavern beneath the frozen ice shell, melt pools and ice columns, faint light filtering through ice, bioluminescent patches, naturalist field-guide illustration, clean ink outline with thicker outer contour, opaque gouache colour masses, restrained watercolor texture, warm paper, graphite, sea-ink, kelp green, mineral blue, one rust-coral accent. looking up at the ice ceiling; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_graphic-novel-ink_s06_1001",
+      "scene_id": "s06",
+      "style": "graphic-novel-ink",
+      "seed": 1001,
+      "prompt": "under-ice cavern ceiling with melt pools. It is shown cavern beneath the frozen ice shell, melt pools and ice columns, faint light filtering through ice, bioluminescent patches, bold graphic-novel ink illustration, thick outer contour, sparse hatching, large flat shadow masses, limited halftone, night ink, deep sea, electric teal, pale bone, one coral accent. looking up at the ice ceiling; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_graphic-novel-ink_s06_2027",
+      "scene_id": "s06",
+      "style": "graphic-novel-ink",
+      "seed": 2027,
+      "prompt": "under-ice cavern ceiling with melt pools. It is shown cavern beneath the frozen ice shell, melt pools and ice columns, faint light filtering through ice, bioluminescent patches, bold graphic-novel ink illustration, thick outer contour, sparse hatching, large flat shadow masses, limited halftone, night ink, deep sea, electric teal, pale bone, one coral accent. looking up at the ice ceiling; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_paper-cut_s10_1001",
+      "scene_id": "s10",
+      "style": "paper-cut",
+      "seed": 1001,
+      "prompt": "The vent grazer has exactly six separate tendrils, two pairs of fins, and the filter drifter is limbless. food-web plate: chemosynthetic bacteria, vent grazer, filter drifter. It is shown vent field with bacterial mat base of the food web, vent glow, bioluminescent lime bacteria, layered hand-cut paper shapes, matte paper fiber, clean cut edges, separate foreground midground background, broad directional light, soft cutout shadows, deep navy, mineral teal, sea-glass, shell ivory, one coral accent. wide plate with copy space for labels; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_paper-cut_s10_2027",
+      "scene_id": "s10",
+      "style": "paper-cut",
+      "seed": 2027,
+      "prompt": "The vent grazer has exactly six separate tendrils, two pairs of fins, and the filter drifter is limbless. food-web plate: chemosynthetic bacteria, vent grazer, filter drifter. It is shown vent field with bacterial mat base of the food web, vent glow, bioluminescent lime bacteria, layered hand-cut paper shapes, matte paper fiber, clean cut edges, separate foreground midground background, broad directional light, soft cutout shadows, deep navy, mineral teal, sea-glass, shell ivory, one coral accent. wide plate with copy space for labels; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_field-guide_s10_1001",
+      "scene_id": "s10",
+      "style": "field-guide",
+      "seed": 1001,
+      "prompt": "The vent grazer has exactly six separate tendrils, two pairs of fins, and the filter drifter is limbless. food-web plate: chemosynthetic bacteria, vent grazer, filter drifter. It is shown vent field with bacterial mat base of the food web, vent glow, bioluminescent lime bacteria, naturalist field-guide illustration, clean ink outline with thicker outer contour, opaque gouache colour masses, restrained watercolor texture, warm paper, graphite, sea-ink, kelp green, mineral blue, one rust-coral accent. wide plate with copy space for labels; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_field-guide_s10_2027",
+      "scene_id": "s10",
+      "style": "field-guide",
+      "seed": 2027,
+      "prompt": "The vent grazer has exactly six separate tendrils, two pairs of fins, and the filter drifter is limbless. food-web plate: chemosynthetic bacteria, vent grazer, filter drifter. It is shown vent field with bacterial mat base of the food web, vent glow, bioluminescent lime bacteria, naturalist field-guide illustration, clean ink outline with thicker outer contour, opaque gouache colour masses, restrained watercolor texture, warm paper, graphite, sea-ink, kelp green, mineral blue, one rust-coral accent. wide plate with copy space for labels; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_graphic-novel-ink_s10_1001",
+      "scene_id": "s10",
+      "style": "graphic-novel-ink",
+      "seed": 1001,
+      "prompt": "The vent grazer has exactly six separate tendrils, two pairs of fins, and the filter drifter is limbless. food-web plate: chemosynthetic bacteria, vent grazer, filter drifter. It is shown vent field with bacterial mat base of the food web, vent glow, bioluminescent lime bacteria, bold graphic-novel ink illustration, thick outer contour, sparse hatching, large flat shadow masses, limited halftone, night ink, deep sea, electric teal, pale bone, one coral accent. wide plate with copy space for labels; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_graphic-novel-ink_s10_2027",
+      "scene_id": "s10",
+      "style": "graphic-novel-ink",
+      "seed": 2027,
+      "prompt": "The vent grazer has exactly six separate tendrils, two pairs of fins, and the filter drifter is limbless. food-web plate: chemosynthetic bacteria, vent grazer, filter drifter. It is shown vent field with bacterial mat base of the food web, vent glow, bioluminescent lime bacteria, bold graphic-novel ink illustration, thick outer contour, sparse hatching, large flat shadow masses, limited halftone, night ink, deep sea, electric teal, pale bone, one coral accent. wide plate with copy space for labels; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_paper-cut_s12_1001",
+      "scene_id": "s12",
+      "style": "paper-cut",
+      "seed": 1001,
+      "prompt": "frozen planet surface with vent plumes breaking through ice. It is shown ice crust surface of the frozen ocean world, plume fractures and drifting frost, dim surface light, plume glow from below, layered hand-cut paper shapes, matte paper fiber, clean cut edges, separate foreground midground background, broad directional light, soft cutout shadows, deep navy, mineral teal, sea-glass, shell ivory, one coral accent. planet-surface wide, high angle; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_paper-cut_s12_2027",
+      "scene_id": "s12",
+      "style": "paper-cut",
+      "seed": 2027,
+      "prompt": "frozen planet surface with vent plumes breaking through ice. It is shown ice crust surface of the frozen ocean world, plume fractures and drifting frost, dim surface light, plume glow from below, layered hand-cut paper shapes, matte paper fiber, clean cut edges, separate foreground midground background, broad directional light, soft cutout shadows, deep navy, mineral teal, sea-glass, shell ivory, one coral accent. planet-surface wide, high angle; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_field-guide_s12_1001",
+      "scene_id": "s12",
+      "style": "field-guide",
+      "seed": 1001,
+      "prompt": "frozen planet surface with vent plumes breaking through ice. It is shown ice crust surface of the frozen ocean world, plume fractures and drifting frost, dim surface light, plume glow from below, naturalist field-guide illustration, clean ink outline with thicker outer contour, opaque gouache colour masses, restrained watercolor texture, warm paper, graphite, sea-ink, kelp green, mineral blue, one rust-coral accent. planet-surface wide, high angle; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_field-guide_s12_2027",
+      "scene_id": "s12",
+      "style": "field-guide",
+      "seed": 2027,
+      "prompt": "frozen planet surface with vent plumes breaking through ice. It is shown ice crust surface of the frozen ocean world, plume fractures and drifting frost, dim surface light, plume glow from below, naturalist field-guide illustration, clean ink outline with thicker outer contour, opaque gouache colour masses, restrained watercolor texture, warm paper, graphite, sea-ink, kelp green, mineral blue, one rust-coral accent. planet-surface wide, high angle; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_graphic-novel-ink_s12_1001",
+      "scene_id": "s12",
+      "style": "graphic-novel-ink",
+      "seed": 1001,
+      "prompt": "frozen planet surface with vent plumes breaking through ice. It is shown ice crust surface of the frozen ocean world, plume fractures and drifting frost, dim surface light, plume glow from below, bold graphic-novel ink illustration, thick outer contour, sparse hatching, large flat shadow masses, limited halftone, night ink, deep sea, electric teal, pale bone, one coral accent. planet-surface wide, high angle; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    },
+    {
+      "render_id": "s15_graphic-novel-ink_s12_2027",
+      "scene_id": "s12",
+      "style": "graphic-novel-ink",
+      "seed": 2027,
+      "prompt": "frozen planet surface with vent plumes breaking through ice. It is shown ice crust surface of the frozen ocean world, plume fractures and drifting frost, dim surface light, plume glow from below, bold graphic-novel ink illustration, thick outer contour, sparse hatching, large flat shadow masses, limited halftone, night ink, deep sea, electric teal, pale bone, one coral accent. planet-surface wide, high angle; stylized, non-photorealistic, empty low-detail lower fifth for captions, no text"
+    }
+  ]
+}

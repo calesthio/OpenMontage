@@ -1,0 +1,38 @@
+spec_version: "1.0"
+pilot: "life beneath a frozen alien ocean"
+niche: speculative_evolution
+type: species
+name: "vent grazer"
+role: "grazer of chemosynthetic bacterial mats on hydrothermal vent chimneys"
+anatomy:
+  limb_count: 6
+  eye_count: 2
+  horn_count: 0
+  dominant_features:
+    - name: "long neck"
+      function: "reaches bacterial mats on vent chimney walls without moving the bulky body close to hot fluid"
+      evidence: "INFERENCE"
+      source: "NOAA hydrothermal vents fact sheet (vent chimneys host grazers; animals position at temperature gradients)"
+    - name: "spade-like forelimbs (2 of the 6 limbs)"
+      function: "grip vent chimney rock and brace against rising warm vent flow"
+      evidence: "SPECULATION"
+      source: "no direct alien analogue; grounded in vent-creature anchoring (tubeworms/mussels attach to substrate)"
+energy_source: "chemosynthesis-based: grazes bacterial/archaeal mats that oxidize sulfides and methane from vent fluid (not sunlight)"
+pressure_temperature_constraint: "deep-ocean pressure (~1 atm per 10 m depth; hundreds of atm at vent depth) tolerates near-freezing ambient water (~2-4 C) beside vent fluid that can exceed 400 C but is held liquid by pressure (boiling suppressed ~370 C at 2500 m)"
+canonical_silhouette: "tall, narrow profile: six limb stalks splayed for grip, long neck rising to a small head, broad spade forelimbs planted on the chimney; no tail, no external shell"
+known_inference_speculation_per_trait:
+  limb_count_6: SPECULATION
+  eye_count_2: SPECULATION
+  horn_count_0: KNOWN  (no horns needed; darkness makes display structures useless)
+  long_neck: INFERENCE
+  spade_like_forelimbs: SPECULATION
+sources:
+  - title: "Hydrothermal Vents (NOAA fact sheet)"
+    url: "https://www.noaa.gov/hydrothermal-vents-fact-sheet"
+    accessed: "2026-10-21"
+  - title: "Life on a Hydrothermal Vent (NOAA Ocean Explorer)"
+    url: "https://oceanexplorer.noaa.gov/wp-content/uploads/2025/04/life-on-hydrothermal-vent-investigation.pdf"
+    accessed: "2026-10-21"
+  - title: "Wild and Bizarre Marine Life — pressure, light, chemosynthesis (NOAA Ocean Explorer)"
+    url: "https://oceanexplorer.noaa.gov/explainers/marine-life/"
+    accessed: "2026-10-21"

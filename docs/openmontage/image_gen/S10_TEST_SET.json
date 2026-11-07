@@ -1,0 +1,1361 @@
+{
+  "schema_version": "1.0",
+  "milestone": "S10-1",
+  "created_utc": "2026-10-22T12:05:36Z",
+  "purpose": "visual-style test: 3 styles x 6 scenes x 3 seeds, blind owner pack, objective flags only",
+  "resolution": [
+    1024,
+    1024
+  ],
+  "model": "klein",
+  "model_source": "config/image_engine.json -> model (LOCKED)",
+  "model_display_name": "FLUX.2-klein-4B",
+  "model_id": "black-forest-labs/FLUX.2-klein-4B",
+  "engine_status": "OWNER_GATED",
+  "prompt_target": "klein",
+  "prompt_variant": "C",
+  "steps": 4,
+  "guidance": 1.0,
+  "scheduler": {
+    "class": null,
+    "kwargs": {}
+  },
+  "dtype": "float16",
+  "bitsandbytes": false,
+  "install_ladder": [
+    "released_037_x4",
+    "released_037_x5",
+    "released_041_x5_ao",
+    "git_main_x5_ao"
+  ],
+  "versions_reference": {
+    "diffusers": "0.37.0",
+    "transformers": "4.57.6",
+    "huggingface_hub": "0.36.2",
+    "torch": "2.11.0+cu128",
+    "accelerate": "1.14.0",
+    "safetensors": "0.8.0",
+    "numpy": "2.1.3",
+    "pillow": "12.3.0",
+    "torch_cuda": "12.8",
+    "gpu": "Tesla T4",
+    "python": "3.13.15"
+  },
+  "prompt_source": "tools/prompting/builder.py (OpenCode-owned, read only)",
+  "scenes": [
+    "s01",
+    "s03",
+    "s05",
+    "s06",
+    "s10",
+    "s12"
+  ],
+  "scene_specs": [
+    {
+      "scene_id": "s01",
+      "kind": "creature",
+      "role": "vent grazer (limbed creature)",
+      "caption": "The vent grazer crops bacterial mats at the chimney rim.",
+      "seeds": [
+        3100,
+        3101,
+        3102
+      ],
+      "spec": {
+        "subject": "vent grazer grazing bacterial mats on a vent chimney",
+        "anatomy": {
+          "limb_count": 6,
+          "eye_count": 2,
+          "horn_count": 0,
+          "dominant_features": [
+            "long neck",
+            "spade-like forelimbs"
+          ]
+        },
+        "environment": "hydrothermal vent chimney field, bacterial mats on basalt",
+        "light": "bioluminescent vent glow, deep teal water, faint lime bioluminescence",
+        "style": "flat-vector field-guide plate",
+        "palette": {
+          "deep_teal": "#14455C",
+          "bioluminescent_lime": "#A8E06F",
+          "basalt_charcoal": "#3B444B",
+          "pale_bone": "#EDE7D8"
+        },
+        "camera": "side silhouette, rule-of-thirds, copy space",
+        "constraints": {
+          "no_text": true,
+          "no_people": true,
+          "no_logos": true,
+          "not_photorealistic": true,
+          "silhouette_first": true
+        }
+      }
+    },
+    {
+      "scene_id": "s03",
+      "kind": "creature",
+      "role": "filter drifter (limbless creature)",
+      "caption": "Filter drifters sieve microbes from the open water column.",
+      "seeds": [
+        3110,
+        3111,
+        3112
+      ],
+      "spec": {
+        "subject": "filter drifter sieving suspended microbes",
+        "anatomy": {
+          "limb_count": 0,
+          "eye_count": 0,
+          "horn_count": 0,
+          "dominant_features": [
+            "undulating fin",
+            "wide filter mouth"
+          ]
+        },
+        "environment": "open water column of the frozen alien ocean, drifting particles and faint light shafts",
+        "light": "diffuse bioluminescent glow, neutral buoyancy",
+        "style": "flat-vector field-guide plate",
+        "palette": {
+          "midnight_indigo": "#1C2A5E",
+          "ice_aqua": "#6FD3D8",
+          "glacier_blue": "#2E6E8E",
+          "pale_bone": "#EDE7D8"
+        },
+        "camera": "three-quarter view, floating in mid-water",
+        "constraints": {
+          "no_text": true,
+          "no_people": true,
+          "no_logos": true,
+          "not_photorealistic": true,
+          "silhouette_first": true
+        }
+      }
+    },
+    {
+      "scene_id": "s05",
+      "kind": "habitat",
+      "role": "vent chimney field (habitat)",
+      "caption": "Chimney fields vent mineral-rich water onto the sea floor.",
+      "seeds": [
+        3120,
+        3121,
+        3122
+      ],
+      "spec": {
+        "subject": "vent chimney field with black smokers",
+        "anatomy": {
+          "limb_count": 0,
+          "eye_count": 0,
+          "horn_count": 0,
+          "dominant_features": []
+        },
+        "environment": "field of hydrothermal vent chimneys on the ocean floor, black smoker plumes and mineral crusts",
+        "light": "vent glow illuminating black smoker plumes",
+        "style": "flat-vector field-guide plate",
+        "palette": {
+          "abyss_black": "#1A1B1E",
+          "sulphur_amber": "#E8A33D",
+          "smoker_grey": "#5A5F66",
+          "vent_lime": "#A8E06F"
+        },
+        "camera": "wide establishing shot, low angle",
+        "constraints": {
+          "no_text": true,
+          "no_people": true,
+          "no_logos": true,
+          "not_photorealistic": true,
+          "silhouette_first": true
+        }
+      }
+    },
+    {
+      "scene_id": "s06",
+      "kind": "habitat",
+      "role": "under-ice cavern (habitat)",
+      "caption": "Melt pools glow beneath the frozen ice shell.",
+      "seeds": [
+        3130,
+        3131,
+        3132
+      ],
+      "spec": {
+        "subject": "under-ice cavern ceiling with melt pools",
+        "anatomy": {
+          "limb_count": 0,
+          "eye_count": 0,
+          "horn_count": 0,
+          "dominant_features": []
+        },
+        "environment": "cavern beneath the frozen ice shell, melt pools and ice columns",
+        "light": "faint light filtering through ice, bioluminescent patches",
+        "style": "flat-vector field-guide plate",
+        "palette": {
+          "glacier_blue": "#2E6E8E",
+          "ice_white": "#DCE9EF",
+          "cavern_indigo": "#22304F",
+          "bioluminescent_lime": "#A8E06F"
+        },
+        "camera": "looking up at the ice ceiling",
+        "constraints": {
+          "no_text": true,
+          "no_people": true,
+          "no_logos": true,
+          "not_photorealistic": true,
+          "silhouette_first": true
+        }
+      }
+    },
+    {
+      "scene_id": "s10",
+      "kind": "food_web_plate",
+      "role": "food-web plate (bacteria -> grazer -> drifter)",
+      "caption": "Chemosynthetic bacteria feed the whole vent food web.",
+      "seeds": [
+        3140,
+        3141,
+        3142
+      ],
+      "spec": {
+        "subject": "food-web plate: chemosynthetic bacteria, vent grazer, filter drifter",
+        "anatomy": {
+          "limb_count": 6,
+          "eye_count": 2,
+          "horn_count": 0,
+          "dominant_features": []
+        },
+        "environment": "vent field with bacterial mat base of the food web",
+        "light": "vent glow, bioluminescent lime bacteria",
+        "style": "flat-vector field-guide plate",
+        "palette": {
+          "plate_teal": "#0F3B4A",
+          "mat_lime": "#B7E86A",
+          "basalt_charcoal": "#3B444B",
+          "pale_bone": "#EDE7D8"
+        },
+        "camera": "wide plate with copy space for labels",
+        "constraints": {
+          "no_text": true,
+          "no_people": true,
+          "no_logos": true,
+          "not_photorealistic": true,
+          "silhouette_first": true
+        }
+      }
+    },
+    {
+      "scene_id": "s12",
+      "kind": "wide_scene",
+      "role": "frozen surface wide scene",
+      "caption": "Plumes break through the ice crust of the frozen ocean world.",
+      "seeds": [
+        3150,
+        3151,
+        3152
+      ],
+      "spec": {
+        "subject": "frozen planet surface with vent plumes breaking through ice",
+        "anatomy": {
+          "limb_count": 0,
+          "eye_count": 0,
+          "horn_count": 0,
+          "dominant_features": []
+        },
+        "environment": "ice crust surface of the frozen ocean world, plume fractures and drifting frost",
+        "light": "dim surface light, plume glow from below",
+        "style": "flat-vector field-guide plate",
+        "palette": {
+          "ice_violet": "#5B5A8C",
+          "frost_white": "#E6EAF2",
+          "plume_teal": "#2E7D8A",
+          "dim_surface_grey": "#3A3F4A"
+        },
+        "camera": "planet-surface wide, high angle",
+        "constraints": {
+          "no_text": true,
+          "no_people": true,
+          "no_logos": true,
+          "not_photorealistic": true,
+          "silhouette_first": true
+        }
+      }
+    }
+  ],
+  "styles": [
+    "S-A",
+    "S-B",
+    "S-C"
+  ],
+  "style_specs": {
+    "S-A": {
+      "name": "flat vector illustration",
+      "prompt": "flat vector illustration with saturated colour, bold contours, smooth gradients, a rich coloured background, readable shapes and no texture noise",
+      "prompt_tokens": [
+        "flat vector illustration",
+        "saturated colour",
+        "bold contours",
+        "smooth gradients",
+        "rich coloured background",
+        "readable shapes",
+        "no texture noise"
+      ],
+      "creature_detail_phrase": "readable shapes"
+    },
+    "S-B": {
+      "name": "natural-history gouache field-guide plate",
+      "prompt": "natural-history gouache field-guide plate with warm paper texture, visible brush strokes, detailed anatomy and a muted but varied palette",
+      "prompt_tokens": [
+        "natural-history gouache field-guide plate",
+        "warm paper texture",
+        "visible brush strokes",
+        "detailed anatomy",
+        "muted but varied palette"
+      ],
+      "creature_detail_phrase": "detailed anatomy"
+    },
+    "S-C": {
+      "name": "layered paper-cut diorama",
+      "prompt": "layered paper-cut diorama with separate foreground, midground and background layers, soft drop shadows and clear depth",
+      "prompt_tokens": [
+        "layered paper-cut diorama",
+        "foreground",
+        "midground",
+        "background layers",
+        "soft drop shadows",
+        "clear depth"
+      ],
+      "creature_detail_phrase": "separate foreground, midground and background layers"
+    }
+  },
+  "notes": [
+    "Scenes s01/s03/s05/s06/s10/s12 are the S7/S8 scenes, so the style test is comparable with the model bake-off; the palette and some background wording are re-authored per scene for S10.",
+    "The 2 habitat scenes and the wide scene carry a zero anatomy count (0 limbs / 0 eyes / 0 horns) because the read-only builder always renders the counts line; that is identical across the three styles, so the comparison is unaffected."
+  ],
+  "renders": [
+    {
+      "render_id": "p001",
+      "scene_id": "s01",
+      "style": "S-A",
+      "seed": 3100,
+      "kind": "creature",
+      "prompt": "6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. vent grazer grazing bacterial mats on a vent chimney has 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime bioluminescence, in a flat vector illustration with saturated colour, bold contours, smooth gradients, a rich coloured background, readable shapes and no texture noise, deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 6,
+        "eyes": 2,
+        "horns": 0,
+        "features": [
+          "long neck",
+          "spade-like forelimbs"
+        ]
+      }
+    },
+    {
+      "render_id": "p002",
+      "scene_id": "s01",
+      "style": "S-A",
+      "seed": 3101,
+      "kind": "creature",
+      "prompt": "6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. vent grazer grazing bacterial mats on a vent chimney has 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime bioluminescence, in a flat vector illustration with saturated colour, bold contours, smooth gradients, a rich coloured background, readable shapes and no texture noise, deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 6,
+        "eyes": 2,
+        "horns": 0,
+        "features": [
+          "long neck",
+          "spade-like forelimbs"
+        ]
+      }
+    },
+    {
+      "render_id": "p003",
+      "scene_id": "s01",
+      "style": "S-A",
+      "seed": 3102,
+      "kind": "creature",
+      "prompt": "6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. vent grazer grazing bacterial mats on a vent chimney has 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime bioluminescence, in a flat vector illustration with saturated colour, bold contours, smooth gradients, a rich coloured background, readable shapes and no texture noise, deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 6,
+        "eyes": 2,
+        "horns": 0,
+        "features": [
+          "long neck",
+          "spade-like forelimbs"
+        ]
+      }
+    },
+    {
+      "render_id": "p004",
+      "scene_id": "s01",
+      "style": "S-B",
+      "seed": 3100,
+      "kind": "creature",
+      "prompt": "6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. vent grazer grazing bacterial mats on a vent chimney has 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime bioluminescence, in a natural-history gouache field-guide plate with warm paper texture, visible brush strokes, detailed anatomy and a muted but varied palette, deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 6,
+        "eyes": 2,
+        "horns": 0,
+        "features": [
+          "long neck",
+          "spade-like forelimbs"
+        ]
+      }
+    },
+    {
+      "render_id": "p005",
+      "scene_id": "s01",
+      "style": "S-B",
+      "seed": 3101,
+      "kind": "creature",
+      "prompt": "6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. vent grazer grazing bacterial mats on a vent chimney has 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime bioluminescence, in a natural-history gouache field-guide plate with warm paper texture, visible brush strokes, detailed anatomy and a muted but varied palette, deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 6,
+        "eyes": 2,
+        "horns": 0,
+        "features": [
+          "long neck",
+          "spade-like forelimbs"
+        ]
+      }
+    },
+    {
+      "render_id": "p006",
+      "scene_id": "s01",
+      "style": "S-B",
+      "seed": 3102,
+      "kind": "creature",
+      "prompt": "6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. vent grazer grazing bacterial mats on a vent chimney has 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime bioluminescence, in a natural-history gouache field-guide plate with warm paper texture, visible brush strokes, detailed anatomy and a muted but varied palette, deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 6,
+        "eyes": 2,
+        "horns": 0,
+        "features": [
+          "long neck",
+          "spade-like forelimbs"
+        ]
+      }
+    },
+    {
+      "render_id": "p007",
+      "scene_id": "s01",
+      "style": "S-C",
+      "seed": 3100,
+      "kind": "creature",
+      "prompt": "6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. vent grazer grazing bacterial mats on a vent chimney has 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime bioluminescence, in a layered paper-cut diorama with separate foreground, midground and background layers, soft drop shadows and clear depth, deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 6,
+        "eyes": 2,
+        "horns": 0,
+        "features": [
+          "long neck",
+          "spade-like forelimbs"
+        ]
+      }
+    },
+    {
+      "render_id": "p008",
+      "scene_id": "s01",
+      "style": "S-C",
+      "seed": 3101,
+      "kind": "creature",
+      "prompt": "6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. vent grazer grazing bacterial mats on a vent chimney has 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime bioluminescence, in a layered paper-cut diorama with separate foreground, midground and background layers, soft drop shadows and clear depth, deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 6,
+        "eyes": 2,
+        "horns": 0,
+        "features": [
+          "long neck",
+          "spade-like forelimbs"
+        ]
+      }
+    },
+    {
+      "render_id": "p009",
+      "scene_id": "s01",
+      "style": "S-C",
+      "seed": 3102,
+      "kind": "creature",
+      "prompt": "6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. vent grazer grazing bacterial mats on a vent chimney has 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime bioluminescence, in a layered paper-cut diorama with separate foreground, midground and background layers, soft drop shadows and clear depth, deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 6,
+        "eyes": 2,
+        "horns": 0,
+        "features": [
+          "long neck",
+          "spade-like forelimbs"
+        ]
+      }
+    },
+    {
+      "render_id": "p010",
+      "scene_id": "s03",
+      "style": "S-A",
+      "seed": 3110,
+      "kind": "creature",
+      "prompt": "0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth. filter drifter sieving suspended microbes has 0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth. It is shown open water column of the frozen alien ocean, drifting particles and faint light shafts, diffuse bioluminescent glow, neutral buoyancy, in a flat vector illustration with saturated colour, bold contours, smooth gradients, a rich coloured background, readable shapes and no texture noise, midnight_indigo #1C2A5E, ice_aqua #6FD3D8, glacier_blue #2E6E8E, pale_bone #EDE7D8. three-quarter view, floating in mid-water clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": [
+          "undulating fin",
+          "wide filter mouth"
+        ]
+      }
+    },
+    {
+      "render_id": "p011",
+      "scene_id": "s03",
+      "style": "S-A",
+      "seed": 3111,
+      "kind": "creature",
+      "prompt": "0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth. filter drifter sieving suspended microbes has 0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth. It is shown open water column of the frozen alien ocean, drifting particles and faint light shafts, diffuse bioluminescent glow, neutral buoyancy, in a flat vector illustration with saturated colour, bold contours, smooth gradients, a rich coloured background, readable shapes and no texture noise, midnight_indigo #1C2A5E, ice_aqua #6FD3D8, glacier_blue #2E6E8E, pale_bone #EDE7D8. three-quarter view, floating in mid-water clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": [
+          "undulating fin",
+          "wide filter mouth"
+        ]
+      }
+    },
+    {
+      "render_id": "p012",
+      "scene_id": "s03",
+      "style": "S-A",
+      "seed": 3112,
+      "kind": "creature",
+      "prompt": "0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth. filter drifter sieving suspended microbes has 0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth. It is shown open water column of the frozen alien ocean, drifting particles and faint light shafts, diffuse bioluminescent glow, neutral buoyancy, in a flat vector illustration with saturated colour, bold contours, smooth gradients, a rich coloured background, readable shapes and no texture noise, midnight_indigo #1C2A5E, ice_aqua #6FD3D8, glacier_blue #2E6E8E, pale_bone #EDE7D8. three-quarter view, floating in mid-water clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": [
+          "undulating fin",
+          "wide filter mouth"
+        ]
+      }
+    },
+    {
+      "render_id": "p013",
+      "scene_id": "s03",
+      "style": "S-B",
+      "seed": 3110,
+      "kind": "creature",
+      "prompt": "0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth. filter drifter sieving suspended microbes has 0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth. It is shown open water column of the frozen alien ocean, drifting particles and faint light shafts, diffuse bioluminescent glow, neutral buoyancy, in a natural-history gouache field-guide plate with warm paper texture, visible brush strokes, detailed anatomy and a muted but varied palette, midnight_indigo #1C2A5E, ice_aqua #6FD3D8, glacier_blue #2E6E8E, pale_bone #EDE7D8. three-quarter view, floating in mid-water clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": [
+          "undulating fin",
+          "wide filter mouth"
+        ]
+      }
+    },
+    {
+      "render_id": "p014",
+      "scene_id": "s03",
+      "style": "S-B",
+      "seed": 3111,
+      "kind": "creature",
+      "prompt": "0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth. filter drifter sieving suspended microbes has 0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth. It is shown open water column of the frozen alien ocean, drifting particles and faint light shafts, diffuse bioluminescent glow, neutral buoyancy, in a natural-history gouache field-guide plate with warm paper texture, visible brush strokes, detailed anatomy and a muted but varied palette, midnight_indigo #1C2A5E, ice_aqua #6FD3D8, glacier_blue #2E6E8E, pale_bone #EDE7D8. three-quarter view, floating in mid-water clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": [
+          "undulating fin",
+          "wide filter mouth"
+        ]
+      }
+    },
+    {
+      "render_id": "p015",
+      "scene_id": "s03",
+      "style": "S-B",
+      "seed": 3112,
+      "kind": "creature",
+      "prompt": "0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth. filter drifter sieving suspended microbes has 0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth. It is shown open water column of the frozen alien ocean, drifting particles and faint light shafts, diffuse bioluminescent glow, neutral buoyancy, in a natural-history gouache field-guide plate with warm paper texture, visible brush strokes, detailed anatomy and a muted but varied palette, midnight_indigo #1C2A5E, ice_aqua #6FD3D8, glacier_blue #2E6E8E, pale_bone #EDE7D8. three-quarter view, floating in mid-water clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": [
+          "undulating fin",
+          "wide filter mouth"
+        ]
+      }
+    },
+    {
+      "render_id": "p016",
+      "scene_id": "s03",
+      "style": "S-C",
+      "seed": 3110,
+      "kind": "creature",
+      "prompt": "0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth. filter drifter sieving suspended microbes has 0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth. It is shown open water column of the frozen alien ocean, drifting particles and faint light shafts, diffuse bioluminescent glow, neutral buoyancy, in a layered paper-cut diorama with separate foreground, midground and background layers, soft drop shadows and clear depth, midnight_indigo #1C2A5E, ice_aqua #6FD3D8, glacier_blue #2E6E8E, pale_bone #EDE7D8. three-quarter view, floating in mid-water clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": [
+          "undulating fin",
+          "wide filter mouth"
+        ]
+      }
+    },
+    {
+      "render_id": "p017",
+      "scene_id": "s03",
+      "style": "S-C",
+      "seed": 3111,
+      "kind": "creature",
+      "prompt": "0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth. filter drifter sieving suspended microbes has 0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth. It is shown open water column of the frozen alien ocean, drifting particles and faint light shafts, diffuse bioluminescent glow, neutral buoyancy, in a layered paper-cut diorama with separate foreground, midground and background layers, soft drop shadows and clear depth, midnight_indigo #1C2A5E, ice_aqua #6FD3D8, glacier_blue #2E6E8E, pale_bone #EDE7D8. three-quarter view, floating in mid-water clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": [
+          "undulating fin",
+          "wide filter mouth"
+        ]
+      }
+    },
+    {
+      "render_id": "p018",
+      "scene_id": "s03",
+      "style": "S-C",
+      "seed": 3112,
+      "kind": "creature",
+      "prompt": "0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth. filter drifter sieving suspended microbes has 0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth. It is shown open water column of the frozen alien ocean, drifting particles and faint light shafts, diffuse bioluminescent glow, neutral buoyancy, in a layered paper-cut diorama with separate foreground, midground and background layers, soft drop shadows and clear depth, midnight_indigo #1C2A5E, ice_aqua #6FD3D8, glacier_blue #2E6E8E, pale_bone #EDE7D8. three-quarter view, floating in mid-water clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": [
+          "undulating fin",
+          "wide filter mouth"
+        ]
+      }
+    },
+    {
+      "render_id": "p019",
+      "scene_id": "s05",
+      "style": "S-A",
+      "seed": 3120,
+      "kind": "habitat",
+      "prompt": "0 limbs, 0 eyes, 0 horns. vent chimney field with black smokers has 0 limbs, 0 eyes, 0 horns. It is shown field of hydrothermal vent chimneys on the ocean floor, black smoker plumes and mineral crusts, vent glow illuminating black smoker plumes, in a flat vector illustration with saturated colour, bold contours, smooth gradients, a rich coloured background, readable shapes and no texture noise, abyss_black #1A1B1E, sulphur_amber #E8A33D, smoker_grey #5A5F66, vent_lime #A8E06F. wide establishing shot, low angle clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p020",
+      "scene_id": "s05",
+      "style": "S-A",
+      "seed": 3121,
+      "kind": "habitat",
+      "prompt": "0 limbs, 0 eyes, 0 horns. vent chimney field with black smokers has 0 limbs, 0 eyes, 0 horns. It is shown field of hydrothermal vent chimneys on the ocean floor, black smoker plumes and mineral crusts, vent glow illuminating black smoker plumes, in a flat vector illustration with saturated colour, bold contours, smooth gradients, a rich coloured background, readable shapes and no texture noise, abyss_black #1A1B1E, sulphur_amber #E8A33D, smoker_grey #5A5F66, vent_lime #A8E06F. wide establishing shot, low angle clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p021",
+      "scene_id": "s05",
+      "style": "S-A",
+      "seed": 3122,
+      "kind": "habitat",
+      "prompt": "0 limbs, 0 eyes, 0 horns. vent chimney field with black smokers has 0 limbs, 0 eyes, 0 horns. It is shown field of hydrothermal vent chimneys on the ocean floor, black smoker plumes and mineral crusts, vent glow illuminating black smoker plumes, in a flat vector illustration with saturated colour, bold contours, smooth gradients, a rich coloured background, readable shapes and no texture noise, abyss_black #1A1B1E, sulphur_amber #E8A33D, smoker_grey #5A5F66, vent_lime #A8E06F. wide establishing shot, low angle clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p022",
+      "scene_id": "s05",
+      "style": "S-B",
+      "seed": 3120,
+      "kind": "habitat",
+      "prompt": "0 limbs, 0 eyes, 0 horns. vent chimney field with black smokers has 0 limbs, 0 eyes, 0 horns. It is shown field of hydrothermal vent chimneys on the ocean floor, black smoker plumes and mineral crusts, vent glow illuminating black smoker plumes, in a natural-history gouache field-guide plate with warm paper texture, visible brush strokes, detailed anatomy and a muted but varied palette, abyss_black #1A1B1E, sulphur_amber #E8A33D, smoker_grey #5A5F66, vent_lime #A8E06F. wide establishing shot, low angle clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p023",
+      "scene_id": "s05",
+      "style": "S-B",
+      "seed": 3121,
+      "kind": "habitat",
+      "prompt": "0 limbs, 0 eyes, 0 horns. vent chimney field with black smokers has 0 limbs, 0 eyes, 0 horns. It is shown field of hydrothermal vent chimneys on the ocean floor, black smoker plumes and mineral crusts, vent glow illuminating black smoker plumes, in a natural-history gouache field-guide plate with warm paper texture, visible brush strokes, detailed anatomy and a muted but varied palette, abyss_black #1A1B1E, sulphur_amber #E8A33D, smoker_grey #5A5F66, vent_lime #A8E06F. wide establishing shot, low angle clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p024",
+      "scene_id": "s05",
+      "style": "S-B",
+      "seed": 3122,
+      "kind": "habitat",
+      "prompt": "0 limbs, 0 eyes, 0 horns. vent chimney field with black smokers has 0 limbs, 0 eyes, 0 horns. It is shown field of hydrothermal vent chimneys on the ocean floor, black smoker plumes and mineral crusts, vent glow illuminating black smoker plumes, in a natural-history gouache field-guide plate with warm paper texture, visible brush strokes, detailed anatomy and a muted but varied palette, abyss_black #1A1B1E, sulphur_amber #E8A33D, smoker_grey #5A5F66, vent_lime #A8E06F. wide establishing shot, low angle clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p025",
+      "scene_id": "s05",
+      "style": "S-C",
+      "seed": 3120,
+      "kind": "habitat",
+      "prompt": "0 limbs, 0 eyes, 0 horns. vent chimney field with black smokers has 0 limbs, 0 eyes, 0 horns. It is shown field of hydrothermal vent chimneys on the ocean floor, black smoker plumes and mineral crusts, vent glow illuminating black smoker plumes, in a layered paper-cut diorama with separate foreground, midground and background layers, soft drop shadows and clear depth, abyss_black #1A1B1E, sulphur_amber #E8A33D, smoker_grey #5A5F66, vent_lime #A8E06F. wide establishing shot, low angle clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p026",
+      "scene_id": "s05",
+      "style": "S-C",
+      "seed": 3121,
+      "kind": "habitat",
+      "prompt": "0 limbs, 0 eyes, 0 horns. vent chimney field with black smokers has 0 limbs, 0 eyes, 0 horns. It is shown field of hydrothermal vent chimneys on the ocean floor, black smoker plumes and mineral crusts, vent glow illuminating black smoker plumes, in a layered paper-cut diorama with separate foreground, midground and background layers, soft drop shadows and clear depth, abyss_black #1A1B1E, sulphur_amber #E8A33D, smoker_grey #5A5F66, vent_lime #A8E06F. wide establishing shot, low angle clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p027",
+      "scene_id": "s05",
+      "style": "S-C",
+      "seed": 3122,
+      "kind": "habitat",
+      "prompt": "0 limbs, 0 eyes, 0 horns. vent chimney field with black smokers has 0 limbs, 0 eyes, 0 horns. It is shown field of hydrothermal vent chimneys on the ocean floor, black smoker plumes and mineral crusts, vent glow illuminating black smoker plumes, in a layered paper-cut diorama with separate foreground, midground and background layers, soft drop shadows and clear depth, abyss_black #1A1B1E, sulphur_amber #E8A33D, smoker_grey #5A5F66, vent_lime #A8E06F. wide establishing shot, low angle clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p028",
+      "scene_id": "s06",
+      "style": "S-A",
+      "seed": 3130,
+      "kind": "habitat",
+      "prompt": "0 limbs, 0 eyes, 0 horns. under-ice cavern ceiling with melt pools has 0 limbs, 0 eyes, 0 horns. It is shown cavern beneath the frozen ice shell, melt pools and ice columns, faint light filtering through ice, bioluminescent patches, in a flat vector illustration with saturated colour, bold contours, smooth gradients, a rich coloured background, readable shapes and no texture noise, glacier_blue #2E6E8E, ice_white #DCE9EF, cavern_indigo #22304F, bioluminescent_lime #A8E06F. looking up at the ice ceiling clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p029",
+      "scene_id": "s06",
+      "style": "S-A",
+      "seed": 3131,
+      "kind": "habitat",
+      "prompt": "0 limbs, 0 eyes, 0 horns. under-ice cavern ceiling with melt pools has 0 limbs, 0 eyes, 0 horns. It is shown cavern beneath the frozen ice shell, melt pools and ice columns, faint light filtering through ice, bioluminescent patches, in a flat vector illustration with saturated colour, bold contours, smooth gradients, a rich coloured background, readable shapes and no texture noise, glacier_blue #2E6E8E, ice_white #DCE9EF, cavern_indigo #22304F, bioluminescent_lime #A8E06F. looking up at the ice ceiling clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p030",
+      "scene_id": "s06",
+      "style": "S-A",
+      "seed": 3132,
+      "kind": "habitat",
+      "prompt": "0 limbs, 0 eyes, 0 horns. under-ice cavern ceiling with melt pools has 0 limbs, 0 eyes, 0 horns. It is shown cavern beneath the frozen ice shell, melt pools and ice columns, faint light filtering through ice, bioluminescent patches, in a flat vector illustration with saturated colour, bold contours, smooth gradients, a rich coloured background, readable shapes and no texture noise, glacier_blue #2E6E8E, ice_white #DCE9EF, cavern_indigo #22304F, bioluminescent_lime #A8E06F. looking up at the ice ceiling clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p031",
+      "scene_id": "s06",
+      "style": "S-B",
+      "seed": 3130,
+      "kind": "habitat",
+      "prompt": "0 limbs, 0 eyes, 0 horns. under-ice cavern ceiling with melt pools has 0 limbs, 0 eyes, 0 horns. It is shown cavern beneath the frozen ice shell, melt pools and ice columns, faint light filtering through ice, bioluminescent patches, in a natural-history gouache field-guide plate with warm paper texture, visible brush strokes, detailed anatomy and a muted but varied palette, glacier_blue #2E6E8E, ice_white #DCE9EF, cavern_indigo #22304F, bioluminescent_lime #A8E06F. looking up at the ice ceiling clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p032",
+      "scene_id": "s06",
+      "style": "S-B",
+      "seed": 3131,
+      "kind": "habitat",
+      "prompt": "0 limbs, 0 eyes, 0 horns. under-ice cavern ceiling with melt pools has 0 limbs, 0 eyes, 0 horns. It is shown cavern beneath the frozen ice shell, melt pools and ice columns, faint light filtering through ice, bioluminescent patches, in a natural-history gouache field-guide plate with warm paper texture, visible brush strokes, detailed anatomy and a muted but varied palette, glacier_blue #2E6E8E, ice_white #DCE9EF, cavern_indigo #22304F, bioluminescent_lime #A8E06F. looking up at the ice ceiling clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p033",
+      "scene_id": "s06",
+      "style": "S-B",
+      "seed": 3132,
+      "kind": "habitat",
+      "prompt": "0 limbs, 0 eyes, 0 horns. under-ice cavern ceiling with melt pools has 0 limbs, 0 eyes, 0 horns. It is shown cavern beneath the frozen ice shell, melt pools and ice columns, faint light filtering through ice, bioluminescent patches, in a natural-history gouache field-guide plate with warm paper texture, visible brush strokes, detailed anatomy and a muted but varied palette, glacier_blue #2E6E8E, ice_white #DCE9EF, cavern_indigo #22304F, bioluminescent_lime #A8E06F. looking up at the ice ceiling clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p034",
+      "scene_id": "s06",
+      "style": "S-C",
+      "seed": 3130,
+      "kind": "habitat",
+      "prompt": "0 limbs, 0 eyes, 0 horns. under-ice cavern ceiling with melt pools has 0 limbs, 0 eyes, 0 horns. It is shown cavern beneath the frozen ice shell, melt pools and ice columns, faint light filtering through ice, bioluminescent patches, in a layered paper-cut diorama with separate foreground, midground and background layers, soft drop shadows and clear depth, glacier_blue #2E6E8E, ice_white #DCE9EF, cavern_indigo #22304F, bioluminescent_lime #A8E06F. looking up at the ice ceiling clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p035",
+      "scene_id": "s06",
+      "style": "S-C",
+      "seed": 3131,
+      "kind": "habitat",
+      "prompt": "0 limbs, 0 eyes, 0 horns. under-ice cavern ceiling with melt pools has 0 limbs, 0 eyes, 0 horns. It is shown cavern beneath the frozen ice shell, melt pools and ice columns, faint light filtering through ice, bioluminescent patches, in a layered paper-cut diorama with separate foreground, midground and background layers, soft drop shadows and clear depth, glacier_blue #2E6E8E, ice_white #DCE9EF, cavern_indigo #22304F, bioluminescent_lime #A8E06F. looking up at the ice ceiling clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p036",
+      "scene_id": "s06",
+      "style": "S-C",
+      "seed": 3132,
+      "kind": "habitat",
+      "prompt": "0 limbs, 0 eyes, 0 horns. under-ice cavern ceiling with melt pools has 0 limbs, 0 eyes, 0 horns. It is shown cavern beneath the frozen ice shell, melt pools and ice columns, faint light filtering through ice, bioluminescent patches, in a layered paper-cut diorama with separate foreground, midground and background layers, soft drop shadows and clear depth, glacier_blue #2E6E8E, ice_white #DCE9EF, cavern_indigo #22304F, bioluminescent_lime #A8E06F. looking up at the ice ceiling clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p037",
+      "scene_id": "s10",
+      "style": "S-A",
+      "seed": 3140,
+      "kind": "food_web_plate",
+      "prompt": "6 limbs, 2 eyes, 0 horns. food-web plate: chemosynthetic bacteria, vent grazer, filter drifter has 6 limbs, 2 eyes, 0 horns. It is shown vent field with bacterial mat base of the food web, vent glow, bioluminescent lime bacteria, in a flat vector illustration with saturated colour, bold contours, smooth gradients, a rich coloured background, readable shapes and no texture noise, plate_teal #0F3B4A, mat_lime #B7E86A, basalt_charcoal #3B444B, pale_bone #EDE7D8. wide plate with copy space for labels clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 6,
+        "eyes": 2,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p038",
+      "scene_id": "s10",
+      "style": "S-A",
+      "seed": 3141,
+      "kind": "food_web_plate",
+      "prompt": "6 limbs, 2 eyes, 0 horns. food-web plate: chemosynthetic bacteria, vent grazer, filter drifter has 6 limbs, 2 eyes, 0 horns. It is shown vent field with bacterial mat base of the food web, vent glow, bioluminescent lime bacteria, in a flat vector illustration with saturated colour, bold contours, smooth gradients, a rich coloured background, readable shapes and no texture noise, plate_teal #0F3B4A, mat_lime #B7E86A, basalt_charcoal #3B444B, pale_bone #EDE7D8. wide plate with copy space for labels clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 6,
+        "eyes": 2,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p039",
+      "scene_id": "s10",
+      "style": "S-A",
+      "seed": 3142,
+      "kind": "food_web_plate",
+      "prompt": "6 limbs, 2 eyes, 0 horns. food-web plate: chemosynthetic bacteria, vent grazer, filter drifter has 6 limbs, 2 eyes, 0 horns. It is shown vent field with bacterial mat base of the food web, vent glow, bioluminescent lime bacteria, in a flat vector illustration with saturated colour, bold contours, smooth gradients, a rich coloured background, readable shapes and no texture noise, plate_teal #0F3B4A, mat_lime #B7E86A, basalt_charcoal #3B444B, pale_bone #EDE7D8. wide plate with copy space for labels clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 6,
+        "eyes": 2,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p040",
+      "scene_id": "s10",
+      "style": "S-B",
+      "seed": 3140,
+      "kind": "food_web_plate",
+      "prompt": "6 limbs, 2 eyes, 0 horns. food-web plate: chemosynthetic bacteria, vent grazer, filter drifter has 6 limbs, 2 eyes, 0 horns. It is shown vent field with bacterial mat base of the food web, vent glow, bioluminescent lime bacteria, in a natural-history gouache field-guide plate with warm paper texture, visible brush strokes, detailed anatomy and a muted but varied palette, plate_teal #0F3B4A, mat_lime #B7E86A, basalt_charcoal #3B444B, pale_bone #EDE7D8. wide plate with copy space for labels clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 6,
+        "eyes": 2,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p041",
+      "scene_id": "s10",
+      "style": "S-B",
+      "seed": 3141,
+      "kind": "food_web_plate",
+      "prompt": "6 limbs, 2 eyes, 0 horns. food-web plate: chemosynthetic bacteria, vent grazer, filter drifter has 6 limbs, 2 eyes, 0 horns. It is shown vent field with bacterial mat base of the food web, vent glow, bioluminescent lime bacteria, in a natural-history gouache field-guide plate with warm paper texture, visible brush strokes, detailed anatomy and a muted but varied palette, plate_teal #0F3B4A, mat_lime #B7E86A, basalt_charcoal #3B444B, pale_bone #EDE7D8. wide plate with copy space for labels clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 6,
+        "eyes": 2,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p042",
+      "scene_id": "s10",
+      "style": "S-B",
+      "seed": 3142,
+      "kind": "food_web_plate",
+      "prompt": "6 limbs, 2 eyes, 0 horns. food-web plate: chemosynthetic bacteria, vent grazer, filter drifter has 6 limbs, 2 eyes, 0 horns. It is shown vent field with bacterial mat base of the food web, vent glow, bioluminescent lime bacteria, in a natural-history gouache field-guide plate with warm paper texture, visible brush strokes, detailed anatomy and a muted but varied palette, plate_teal #0F3B4A, mat_lime #B7E86A, basalt_charcoal #3B444B, pale_bone #EDE7D8. wide plate with copy space for labels clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 6,
+        "eyes": 2,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p043",
+      "scene_id": "s10",
+      "style": "S-C",
+      "seed": 3140,
+      "kind": "food_web_plate",
+      "prompt": "6 limbs, 2 eyes, 0 horns. food-web plate: chemosynthetic bacteria, vent grazer, filter drifter has 6 limbs, 2 eyes, 0 horns. It is shown vent field with bacterial mat base of the food web, vent glow, bioluminescent lime bacteria, in a layered paper-cut diorama with separate foreground, midground and background layers, soft drop shadows and clear depth, plate_teal #0F3B4A, mat_lime #B7E86A, basalt_charcoal #3B444B, pale_bone #EDE7D8. wide plate with copy space for labels clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 6,
+        "eyes": 2,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p044",
+      "scene_id": "s10",
+      "style": "S-C",
+      "seed": 3141,
+      "kind": "food_web_plate",
+      "prompt": "6 limbs, 2 eyes, 0 horns. food-web plate: chemosynthetic bacteria, vent grazer, filter drifter has 6 limbs, 2 eyes, 0 horns. It is shown vent field with bacterial mat base of the food web, vent glow, bioluminescent lime bacteria, in a layered paper-cut diorama with separate foreground, midground and background layers, soft drop shadows and clear depth, plate_teal #0F3B4A, mat_lime #B7E86A, basalt_charcoal #3B444B, pale_bone #EDE7D8. wide plate with copy space for labels clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 6,
+        "eyes": 2,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p045",
+      "scene_id": "s10",
+      "style": "S-C",
+      "seed": 3142,
+      "kind": "food_web_plate",
+      "prompt": "6 limbs, 2 eyes, 0 horns. food-web plate: chemosynthetic bacteria, vent grazer, filter drifter has 6 limbs, 2 eyes, 0 horns. It is shown vent field with bacterial mat base of the food web, vent glow, bioluminescent lime bacteria, in a layered paper-cut diorama with separate foreground, midground and background layers, soft drop shadows and clear depth, plate_teal #0F3B4A, mat_lime #B7E86A, basalt_charcoal #3B444B, pale_bone #EDE7D8. wide plate with copy space for labels clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 6,
+        "eyes": 2,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p046",
+      "scene_id": "s12",
+      "style": "S-A",
+      "seed": 3150,
+      "kind": "wide_scene",
+      "prompt": "0 limbs, 0 eyes, 0 horns. frozen planet surface with vent plumes breaking through ice has 0 limbs, 0 eyes, 0 horns. It is shown ice crust surface of the frozen ocean world, plume fractures and drifting frost, dim surface light, plume glow from below, in a flat vector illustration with saturated colour, bold contours, smooth gradients, a rich coloured background, readable shapes and no texture noise, ice_violet #5B5A8C, frost_white #E6EAF2, plume_teal #2E7D8A, dim_surface_grey #3A3F4A. planet-surface wide, high angle clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p047",
+      "scene_id": "s12",
+      "style": "S-A",
+      "seed": 3151,
+      "kind": "wide_scene",
+      "prompt": "0 limbs, 0 eyes, 0 horns. frozen planet surface with vent plumes breaking through ice has 0 limbs, 0 eyes, 0 horns. It is shown ice crust surface of the frozen ocean world, plume fractures and drifting frost, dim surface light, plume glow from below, in a flat vector illustration with saturated colour, bold contours, smooth gradients, a rich coloured background, readable shapes and no texture noise, ice_violet #5B5A8C, frost_white #E6EAF2, plume_teal #2E7D8A, dim_surface_grey #3A3F4A. planet-surface wide, high angle clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p048",
+      "scene_id": "s12",
+      "style": "S-A",
+      "seed": 3152,
+      "kind": "wide_scene",
+      "prompt": "0 limbs, 0 eyes, 0 horns. frozen planet surface with vent plumes breaking through ice has 0 limbs, 0 eyes, 0 horns. It is shown ice crust surface of the frozen ocean world, plume fractures and drifting frost, dim surface light, plume glow from below, in a flat vector illustration with saturated colour, bold contours, smooth gradients, a rich coloured background, readable shapes and no texture noise, ice_violet #5B5A8C, frost_white #E6EAF2, plume_teal #2E7D8A, dim_surface_grey #3A3F4A. planet-surface wide, high angle clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p049",
+      "scene_id": "s12",
+      "style": "S-B",
+      "seed": 3150,
+      "kind": "wide_scene",
+      "prompt": "0 limbs, 0 eyes, 0 horns. frozen planet surface with vent plumes breaking through ice has 0 limbs, 0 eyes, 0 horns. It is shown ice crust surface of the frozen ocean world, plume fractures and drifting frost, dim surface light, plume glow from below, in a natural-history gouache field-guide plate with warm paper texture, visible brush strokes, detailed anatomy and a muted but varied palette, ice_violet #5B5A8C, frost_white #E6EAF2, plume_teal #2E7D8A, dim_surface_grey #3A3F4A. planet-surface wide, high angle clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p050",
+      "scene_id": "s12",
+      "style": "S-B",
+      "seed": 3151,
+      "kind": "wide_scene",
+      "prompt": "0 limbs, 0 eyes, 0 horns. frozen planet surface with vent plumes breaking through ice has 0 limbs, 0 eyes, 0 horns. It is shown ice crust surface of the frozen ocean world, plume fractures and drifting frost, dim surface light, plume glow from below, in a natural-history gouache field-guide plate with warm paper texture, visible brush strokes, detailed anatomy and a muted but varied palette, ice_violet #5B5A8C, frost_white #E6EAF2, plume_teal #2E7D8A, dim_surface_grey #3A3F4A. planet-surface wide, high angle clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p051",
+      "scene_id": "s12",
+      "style": "S-B",
+      "seed": 3152,
+      "kind": "wide_scene",
+      "prompt": "0 limbs, 0 eyes, 0 horns. frozen planet surface with vent plumes breaking through ice has 0 limbs, 0 eyes, 0 horns. It is shown ice crust surface of the frozen ocean world, plume fractures and drifting frost, dim surface light, plume glow from below, in a natural-history gouache field-guide plate with warm paper texture, visible brush strokes, detailed anatomy and a muted but varied palette, ice_violet #5B5A8C, frost_white #E6EAF2, plume_teal #2E7D8A, dim_surface_grey #3A3F4A. planet-surface wide, high angle clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p052",
+      "scene_id": "s12",
+      "style": "S-C",
+      "seed": 3150,
+      "kind": "wide_scene",
+      "prompt": "0 limbs, 0 eyes, 0 horns. frozen planet surface with vent plumes breaking through ice has 0 limbs, 0 eyes, 0 horns. It is shown ice crust surface of the frozen ocean world, plume fractures and drifting frost, dim surface light, plume glow from below, in a layered paper-cut diorama with separate foreground, midground and background layers, soft drop shadows and clear depth, ice_violet #5B5A8C, frost_white #E6EAF2, plume_teal #2E7D8A, dim_surface_grey #3A3F4A. planet-surface wide, high angle clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p053",
+      "scene_id": "s12",
+      "style": "S-C",
+      "seed": 3151,
+      "kind": "wide_scene",
+      "prompt": "0 limbs, 0 eyes, 0 horns. frozen planet surface with vent plumes breaking through ice has 0 limbs, 0 eyes, 0 horns. It is shown ice crust surface of the frozen ocean world, plume fractures and drifting frost, dim surface light, plume glow from below, in a layered paper-cut diorama with separate foreground, midground and background layers, soft drop shadows and clear depth, ice_violet #5B5A8C, frost_white #E6EAF2, plume_teal #2E7D8A, dim_surface_grey #3A3F4A. planet-surface wide, high angle clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    },
+    {
+      "render_id": "p054",
+      "scene_id": "s12",
+      "style": "S-C",
+      "seed": 3152,
+      "kind": "wide_scene",
+      "prompt": "0 limbs, 0 eyes, 0 horns. frozen planet surface with vent plumes breaking through ice has 0 limbs, 0 eyes, 0 horns. It is shown ice crust surface of the frozen ocean world, plume fractures and drifting frost, dim surface light, plume glow from below, in a layered paper-cut diorama with separate foreground, midground and background layers, soft drop shadows and clear depth, ice_violet #5B5A8C, frost_white #E6EAF2, plume_teal #2E7D8A, dim_surface_grey #3A3F4A. planet-surface wide, high angle clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "dtype": "float16",
+      "anatomy_counts": {
+        "limbs": 0,
+        "eyes": 0,
+        "horns": 0,
+        "features": []
+      }
+    }
+  ]
+}

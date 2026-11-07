@@ -1,0 +1,22 @@
+{
+  "job_id": "k3-v3-host-variations",
+  "title": "K3 v3 — FLUX.2-klein-4B host identity variations from anchor reference",
+  "model_id": "black-forest-labs/FLUX.2-klein-4B",
+  "width": 1280,
+  "height": 720,
+  "steps": 4,
+  "guidance_scale": 1.0,
+  "precision": "bfloat16 with float16 fallback",
+  "memory_opts": ["model_cpu_offload"],
+  "num_variations": 6,
+  "seeds": [1001, 2027, 777, 42, 2026, 9001],
+  "poses": ["frontal", "profile left", "three-quarter", "close-up face", "frontal presenting", "profile right"],
+  "output_dir": "/kaggle/working/k3-v3-host-variations/frames",
+  "contact_sheet": "/kaggle/working/k3-v3-host-variations/contact_sheet_master_v3.jpg",
+  "anchor_image": "/kaggle/working/master_v3_anchor.png",
+  "anchor_source": "downloaded from GitHub raw URL at runtime",
+  "note": "Uses anchor reference image (candidate #6 from v2 sheet) as image= parameter in Flux2KleinPipeline — native multi-reference Klein identity. 4-6 variations of ONE character with different poses. WAITING_OWNER: show contact_sheet_master_v3.jpg; if identity still drifts, discuss SVG-rig fallback.",
+  "accelerator": "gpu",
+  "enable_internet": true,
+  "created_at": "2026-10-28T00:00:00Z"
+}

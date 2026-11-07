@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/qc_report",
+  "title": "QC report (tools/qa/qc.py output)",
+  "description": "Array of check entries emitted by QCTool. Fail-closed: every check has a status from PASS|REVIEW|BLOCKED|FAILED|NOT_RUN and an evidence string. This schema validates the emitted report itself, not the older business-documentary qa_report shape.",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "required": ["job_id", "check_id", "status", "evidence", "measured_value", "threshold", "tool_version", "timestamp"],
+    "properties": {
+      "job_id": {"type": "string"},
+      "check_id": {"type": "string", "minLength": 1},
+      "status": {"type": "string", "enum": ["PASS", "REVIEW", "BLOCKED", "FAILED", "NOT_RUN"]},
+      "evidence": {"type": "string"},
+      "measured_value": {},
+      "threshold": {},
+      "tool_version": {"type": "string"},
+      "timestamp": {"type": "string", "minLength": 10}
+    },
+    "additionalProperties": false
+  }
+}

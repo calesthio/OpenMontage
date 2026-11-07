@@ -1,0 +1,611 @@
+{
+  "schema_version": "1.0",
+  "milestone": "S8-1",
+  "source": "https://huggingface.co/api/models/<repo> (public model API) and huggingface.co/<repo>/raw/main/{README.md,LICENSE*}",
+  "read_only": true,
+  "candidates": [
+    {
+      "repo": "ByteDance/SDXL-Lightning",
+      "model_id": "ByteDance/SDXL-Lightning",
+      "author": "ByteDance",
+      "gated": false,
+      "license": "openrail++",
+      "license_name": null,
+      "license_link": null,
+      "pipeline_tag": "text-to-image",
+      "pipeline_class": null,
+      "parameters_total": null,
+      "parameters_by_dtype": {},
+      "weight_bytes_total": 49474325448,
+      "weight_files_top": [
+        {
+          "file": "sdxl_lightning_1step_x0.safetensors",
+          "bytes": 6938040682
+        },
+        {
+          "file": "sdxl_lightning_2step.safetensors",
+          "bytes": 6938040682
+        },
+        {
+          "file": "sdxl_lightning_4step.safetensors",
+          "bytes": 6938040682
+        },
+        {
+          "file": "sdxl_lightning_8step.safetensors",
+          "bytes": 6938040682
+        },
+        {
+          "file": "sdxl_lightning_1step_unet_x0.safetensors",
+          "bytes": 5135149736
+        },
+        {
+          "file": "sdxl_lightning_2step_unet.safetensors",
+          "bytes": 5135149736
+        },
+        {
+          "file": "sdxl_lightning_4step_unet.safetensors",
+          "bytes": 5135149736
+        },
+        {
+          "file": "sdxl_lightning_8step_unet.safetensors",
+          "bytes": 5135149736
+        }
+      ],
+      "library_name": "diffusers",
+      "tags": [
+        "arxiv:2402.13929",
+        "license:openrail++"
+      ],
+      "last_modified": "2024-04-03T15:59:08.000Z",
+      "downloads": 139183,
+      "card_statements": [
+        "--- license: openrail++ tags: - text-to-image - stable-diffusion library_name: diffusers inference: false ---",
+        "SDXL-Lightning is a lightning-fast text-to-image generation model. It can generate high-quality 1024px images in a few steps. For more information, please refer to our research paper: [SDXL-Lightning: Progressive Adversarial Diffusion Distillation](https://arxiv.org/abs/2402.13929). We open-source the model as part of the research.",
+        "Please always use the correct checkpoint for the corresponding inference steps.",
+        "```python import torch from diffusers import StableDiffusionXLPipeline, UNet2DConditionModel, EulerDiscreteScheduler from huggingface_hub import hf_hub_download from safetensors.torch import load_file",
+        "# Load model. unet = UNet2DConditionModel.from_config(base, subfolder=\"unet\").to(\"cuda\", torch.float16) unet.load_state_dict(load_file(hf_hub_download(repo, ckpt), device=\"cuda\")) pipe = StableDiffusionXLPipeline.from_pretrained(base, unet=unet, torch_dtype=torch.float16, variant=\"fp16\").to(\"cuda\")",
+        "# Ensure sampler uses \"trailing\" timesteps. pipe.scheduler = EulerDiscreteScheduler.from_config(pipe.scheduler.config, timestep_spacing=\"trailing\")",
+        "# Ensure using the same inference steps as the loaded model and CFG set to 0. pipe(\"A girl smiling\", num_inference_steps=4, guidance_scale=0).images[0].save(\"output.png\") ```",
+        "Use LoRA only if you are using non-SDXL base models. Otherwise use our UNet checkpoint for better quality. ```python import torch from diffusers import StableDiffusionXLPipeline, EulerDiscreteScheduler from huggingface_hub import hf_hub_download",
+        "# Load model. pipe = StableDiffusionXLPipeline.from_pretrained(base, torch_dtype=torch.float16, variant=\"fp16\").to(\"cuda\") pipe.load_lora_weights(hf_hub_download(repo, ckpt)) pipe.fuse_lora()",
+        "# Ensure sampler uses \"trailing\" timesteps and \"sample\" prediction type. pipe.scheduler = EulerDiscreteScheduler.from_config(pipe.scheduler.config, timestep_spacing=\"trailing\", prediction_type=\"sample\")",
+        "# Ensure using the same inference steps as the loaded model and CFG set to 0. pipe(\"A girl smiling\", num_inference_steps=1, guidance_scale=0).images[0].save(\"output.png\") ```",
+        "Please always use the correct checkpoint for the corresponding inference steps. Please use Euler sampler with sgm_uniform scheduler."
+      ],
+      "license_text_excerpt": [
+        "Copyright (c) 2023 Stability AI CreativeML Open RAIL++-M License dated July 26, 2023 Section I: PREAMBLE Multimodal generative models are being widely adopted and used, and have the potential to transform the way artists, among other individuals, conceive and benefit from AI or ML technologies as a tool for content creation.",
+        "In short, this license strives for both the open and responsible downstream use of the accompanying model.",
+        "When it comes to the open character, we took inspiration from open source permissive licenses regarding the grant of IP rights.",
+        "Referring to the downstream responsible use, we added use-based restrictions not permitting the use of the model in very specific scenarios, in order for the licensor to be able to enforce the license in case potential misuses of the Model may occur.",
+        "Even though downstream derivative versions of the model could be released under different licensing terms, the latter will always have to include - at minimum - the same use-based restrictions as the ones in the original license (this license).",
+        "This CreativeML Open RAIL++-M License governs the use of the model (and its derivatives) and is informed by the model card associated with the model.",
+        "NOW THEREFORE, You and Licensor agree as follows: Definitions \"License\" means the terms and conditions for use, reproduction, and Distribution as defined in this document.",
+        "The Data is not licensed under this License.",
+        "\"Licensor\" means the copyright owner or entity authorized by the copyright owner that is granting the License, including the persons or entities that may have rights in the Model and/or distributing the Model.",
+        "\"You\" (or \"Your\") means an individual or Legal Entity exercising permissions granted by this License and/or making use of the Model for whichever purpose and in any field of use, including usage of the Model in an end-use application - e.",
+        "Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare, publicly display, publicly perform, sublicense, and distribute the Complementary Material, the Model, and Derivatives of the Model.",
+        "If You institute patent litigation against any entity (including a cross-claim or counterclaim in a lawsuit) alleging that the Model and/or Complementary Material or a Contribution incorporated within the Model and/or Complementary Material constitutes direct or contributory patent infringement, then any patent licenses granted to You under this License for the Model and/or Work shall terminate as of the date such litigation is asserted or filed."
+      ]
+    },
+    {
+      "repo": "Lykon/dreamshaper-xl-lightning",
+      "model_id": "Lykon/dreamshaper-xl-lightning",
+      "author": "Lykon",
+      "gated": false,
+      "license": "openrail++",
+      "license_name": null,
+      "license_link": null,
+      "pipeline_tag": "text-to-image",
+      "pipeline_class": "StableDiffusionXLPipeline",
+      "parameters_total": 2567463684,
+      "parameters_by_dtype": {
+        "F32": 2567463684
+      },
+      "weight_bytes_total": 34692140366,
+      "weight_files_top": [
+        {
+          "file": "unet/diffusion_pytorch_model.safetensors",
+          "bytes": 10270077736
+        },
+        {
+          "file": "DreamShaperXL_Lightning-SFW.safetensors",
+          "bytes": 6939220250
+        },
+        {
+          "file": "DreamShaperXL_Lightning.safetensors",
+          "bytes": 6939220250
+        },
+        {
+          "file": "unet/diffusion_pytorch_model.fp16.safetensors",
+          "bytes": 5135149760
+        },
+        {
+          "file": "text_encoder_2/model.safetensors",
+          "bytes": 2778702264
+        },
+        {
+          "file": "text_encoder_2/model.fp16.safetensors",
+          "bytes": 1389382176
+        },
+        {
+          "file": "text_encoder/model.safetensors",
+          "bytes": 492265168
+        },
+        {
+          "file": "vae/diffusion_pytorch_model.safetensors",
+          "bytes": 334643268
+        }
+      ],
+      "library_name": "diffusers",
+      "tags": [
+        "license:openrail++",
+        "diffusers:StableDiffusionXLPipeline"
+      ],
+      "last_modified": "2024-03-01T11:46:18.000Z",
+      "downloads": 53514,
+      "card_statements": [
+        "--- language: - en license: openrail++ tags: - stable-diffusion - stable-diffusion-diffusers - stable-diffusion-xl - stable-diffusion-xl-lightning - text-to-image - art - artistic - diffusers - anime - dreamshaper - turbo - lcm duplicated_from: lykon/dreamshaper-xl-lightning ---",
+        "2. Run ```py from diffusers import AutoPipelineForText2Image, DPMSolverMultistepScheduler import torch",
+        "pipe = AutoPipelineForText2Image.from_pretrained('lykon/dreamshaper-xl-lightning', torch_dtype=torch.float16, variant=\"fp16\") pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config) pipe = pipe.to(\"cuda\")",
+        "generator = torch.manual_seed(0) image = pipe(prompt, num_inference_steps=4, guidance_scale=2).images[0] image.save(\"./image.png\") ```"
+      ]
+    },
+    {
+      "repo": "krea/Krea-2-Turbo",
+      "model_id": "krea/Krea-2-Turbo",
+      "author": "krea",
+      "gated": "auto",
+      "license": "other",
+      "license_name": "krea-2-community-license",
+      "license_link": "https://cdn.jsdelivr.net/gh/krea-ai/krea-2@db3984fbc6e13b34c0064990fc2d95ac64d00058/assets/hf_samples/LICENSE.pdf",
+      "pipeline_tag": "text-to-image",
+      "pipeline_class": "Krea2Pipeline",
+      "parameters_total": 12820073036,
+      "parameters_by_dtype": {
+        "F32": 321571404,
+        "BF16": 12498501632
+      },
+      "weight_bytes_total": 61949977004,
+      "weight_files_top": [
+        {
+          "file": "turbo.safetensors",
+          "bytes": 26283332608
+        },
+        {
+          "file": "transformer/diffusion_pytorch_model-00001-of-00003.safetensors",
+          "bytes": 9970652128
+        },
+        {
+          "file": "transformer/diffusion_pytorch_model-00002-of-00003.safetensors",
+          "bytes": 9829444456
+        },
+        {
+          "file": "text_encoder/model.safetensors",
+          "bytes": 8875715136
+        },
+        {
+          "file": "transformer/diffusion_pytorch_model-00003-of-00003.safetensors",
+          "bytes": 6483240784
+        },
+        {
+          "file": "vae/diffusion_pytorch_model.safetensors",
+          "bytes": 507591892
+        }
+      ],
+      "library_name": "diffusers",
+      "tags": [
+        "base_model:krea/Krea-2-Raw",
+        "base_model:finetune:krea/Krea-2-Raw",
+        "license:other",
+        "diffusers:Krea2Pipeline"
+      ],
+      "last_modified": "2026-07-24T15:50:26.000Z",
+      "downloads": 90069,
+      "card_statements": []
+    },
+    {
+      "repo": "Efficient-Large-Model/Sana_Sprint_1.6B_1024px",
+      "model_id": "Efficient-Large-Model/Sana_Sprint_1.6B_1024px",
+      "author": "Efficient-Large-Model",
+      "gated": false,
+      "license": "apache-2.0",
+      "license_name": null,
+      "license_link": null,
+      "pipeline_tag": "text-to-image",
+      "pipeline_class": null,
+      "parameters_total": null,
+      "parameters_by_dtype": {},
+      "weight_bytes_total": 6453060642,
+      "weight_files_top": [
+        {
+          "file": "checkpoints/Sana_Sprint_1.6B_1024px.pth",
+          "bytes": 6453060642
+        }
+      ],
+      "library_name": "sana, sana-sprint",
+      "tags": [
+        "arxiv:2503.09641",
+        "base_model:Efficient-Large-Model/Sana_Sprint_1.6B_1024px",
+        "base_model:finetune:Efficient-Large-Model/Sana_Sprint_1.6B_1024px",
+        "license:apache-2.0"
+      ],
+      "last_modified": "2026-07-31T14:29:22.000Z",
+      "downloads": 75,
+      "card_statements": [
+        "--- license: apache-2.0 library_name: sana, sana-sprint tags: - text-to-image - SANA-Sprint - 1024px_based_image_size - BF16 - One-step diffusion language: - en - zh base_model: - Efficient-Large-Model/Sana_Sprint_1.6B_1024px pipeline_tag: text-to-image --- <p align=\"center\" style=\"border-radius: 10px\"> <img src=\"https://nvlabs.github.io/Sana/Sprint/asset/SANA-Sprint.png\" width=\"50%\" alt=\"logo\"/> ",
+        "SANA-Sprint is an ultra-efficient diffusion model for text-to-image (T2I) generation, reducing inference steps from 20 to 1-4 while achieving state-of-the-art performance. Key innovations include: (1) A training-free approach for continuous-time consistency distillation (sCM), eliminating costly retraining; (2) A unified step-adaptive model for high-quality generation in 1-4 steps; and (3) Control",
+        "- **Developed by:** NVIDIA, Sana - **Model type:** One-Step Diffusion with Continuous-Time Consistency Distillation - **Model size:** 1.6B parameters - **Model precision:** torch.bfloat16 (BF16) - **Model resolution:** This model is developed to generate 1024px based images with multi-scale heigh and width. - **Model Description:** This is a model that can be used to generate and modify images bas",
+        "For research purposes, we recommend our `generative-models` Github repository (https://github.com/NVlabs/Sana), which is more suitable for both training and inference [MIT Han-Lab](https://nv-sana.mit.edu/sprint) provides free SANA-Sprint inference. - **Repository:** https://github.com/NVlabs/Sana - **Demo:** https://nv-sana.mit.edu/sprint - **Guidance:** https://github.com/NVlabs/Sana/asset/docs/",
+        "## License/Terms of Use",
+        "This model is released under the [Apache License 2.0](./LICENSE)."
+      ],
+      "license_text_excerpt": [
+        "org/licenses/ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION 1.",
+        "\"License\" shall mean the terms and conditions for use, reproduction, and distribution as defined by Sections 1 through 9 of this document.",
+        "\"Licensor\" shall mean the copyright owner or entity authorized by the copyright owner that is granting the License.",
+        "\"You\" (or \"Your\") shall mean an individual or Legal Entity exercising permissions granted by this License.",
+        "\"Work\" shall mean the work of authorship, whether in Source or Object form, made available under the License, as indicated by a copyright notice that is included in or attached to the work (an example is provided in the Appendix below).",
+        "For the purposes of this License, Derivative Works shall not include works that remain separable from, or merely link (or bind by name) to the interfaces of, the Work and Derivative Works thereof.",
+        "Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare Derivative Works of, publicly display, publicly perform, sublicense, and distribute the Work and such Derivative Works in Source or Object form.",
+        "Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable (except as stated in this section) patent license to make, have made, use, offer to sell, sell, import, and otherwise transfer the Work, where such license applies only to those patent claims licensable by such Contributor that are necessarily infringed by their Contribution(s) alone or by combination of their Contribution(s) with the Work to which such Contribution(s) was submitted.",
+        "If You institute patent litigation against any entity (including a cross-claim or counterclaim in a lawsuit) alleging that the Work or a Contribution incorporated within the Work constitutes direct or contributory patent infringement, then any patent licenses granted to You under this License for that Work shall terminate as of the date such litigation is filed.",
+        "The contents of the NOTICE file are for informational purposes only and do not modify the License.",
+        "You may add Your own attribution notices within Derivative Works that You distribute, alongside or as an addendum to the NOTICE text from the Work, provided that such additional attribution notices cannot be construed as modifying the License.",
+        "You may add Your own copyright statement to Your modifications and may provide additional or different license terms and conditions for use, reproduction, or distribution of Your modifications, or for any such Derivative Works as a whole, provided Your use, reproduction, and distribution of the Work otherwise complies with the conditions stated in this License."
+      ]
+    },
+    {
+      "repo": "Efficient-Large-Model/Sana_Sprint_1.6B_1024px_diffusers",
+      "model_id": "Efficient-Large-Model/Sana_Sprint_1.6B_1024px_diffusers",
+      "author": "Efficient-Large-Model",
+      "gated": false,
+      "license": "apache-2.0",
+      "license_name": null,
+      "license_link": null,
+      "pipeline_tag": "text-to-image",
+      "pipeline_class": null,
+      "parameters_total": null,
+      "parameters_by_dtype": {},
+      "weight_bytes_total": 9698291140,
+      "weight_files_top": [
+        {
+          "file": "text_encoder/model-00001-of-00002.safetensors",
+          "bytes": 4988024144
+        },
+        {
+          "file": "transformer/diffusion_pytorch_model.safetensors",
+          "bytes": 3220530536
+        },
+        {
+          "file": "vae/diffusion_pytorch_model.safetensors",
+          "bytes": 1249044836
+        },
+        {
+          "file": "text_encoder/model-00002-of-00002.safetensors",
+          "bytes": 240691624
+        }
+      ],
+      "library_name": "sana, sana-sprint",
+      "tags": [
+        "arxiv:2503.09641",
+        "base_model:Efficient-Large-Model/Sana_Sprint_1.6B_1024px",
+        "base_model:finetune:Efficient-Large-Model/Sana_Sprint_1.6B_1024px",
+        "license:apache-2.0"
+      ],
+      "last_modified": "2026-07-31T14:29:23.000Z",
+      "downloads": 0,
+      "card_statements": [
+        "--- library_name: sana, sana-sprint tags: - text-to-image - SANA-Sprint - 1024px_based_image_size - BF16 - One-step diffusion language: - en - zh base_model: - Efficient-Large-Model/Sana_Sprint_1.6B_1024px pipeline_tag: text-to-image license: apache-2.0 --- <p align=\"center\" style=\"border-radius: 10px\"> <img src=\"https://nvlabs.github.io/Sana/Sprint/asset/SANA-Sprint.png\" width=\"50%\" alt=\"logo\"/> ",
+        "SANA-Sprint is an ultra-efficient diffusion model for text-to-image (T2I) generation, reducing inference steps from 20 to 1-4 while achieving state-of-the-art performance. Key innovations include: (1) A training-free approach for continuous-time consistency distillation (sCM), eliminating costly retraining; (2) A unified step-adaptive model for high-quality generation in 1-4 steps; and (3) Control",
+        "- **Developed by:** NVIDIA, Sana - **Model type:** One-Step Diffusion with Continuous-Time Consistency Distillation - **Model size:** 1.6B parameters - **Model precision:** torch.bfloat16 (BF16) - **Model resolution:** This model is developed to generate 1024px based images with multi-scale heigh and width. - **License:** [Apache License 2.0](./LICENSE). Additional Information: [Gemma Terms of Use",
+        "For research purposes, we recommend our `generative-models` Github repository (https://github.com/NVlabs/Sana), which is more suitable for both training and inference [MIT Han-Lab](https://nv-sana.mit.edu/sprint) provides free SANA-Sprint inference. - **Repository:** https://github.com/NVlabs/Sana - **Demo:** https://nv-sana.mit.edu/sprint - **Guidance:** https://github.com/NVlabs/Sana/asset/docs/",
+        "pipeline = SanaSprintPipeline.from_pretrained( \"Efficient-Large-Model/Sana_Sprint_1.6B_1024px_diffusers\", torch_dtype=torch.bfloat16 ) pipeline.to(\"cuda:0\")",
+        "image = pipeline(prompt=prompt, num_inference_steps=2).images[0] image.save(\"sana_sprint.png\") ```"
+      ],
+      "license_text_excerpt": [
+        "org/licenses/ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION 1.",
+        "\"License\" shall mean the terms and conditions for use, reproduction, and distribution as defined by Sections 1 through 9 of this document.",
+        "\"Licensor\" shall mean the copyright owner or entity authorized by the copyright owner that is granting the License.",
+        "\"You\" (or \"Your\") shall mean an individual or Legal Entity exercising permissions granted by this License.",
+        "\"Work\" shall mean the work of authorship, whether in Source or Object form, made available under the License, as indicated by a copyright notice that is included in or attached to the work (an example is provided in the Appendix below).",
+        "For the purposes of this License, Derivative Works shall not include works that remain separable from, or merely link (or bind by name) to the interfaces of, the Work and Derivative Works thereof.",
+        "Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare Derivative Works of, publicly display, publicly perform, sublicense, and distribute the Work and such Derivative Works in Source or Object form.",
+        "Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable (except as stated in this section) patent license to make, have made, use, offer to sell, sell, import, and otherwise transfer the Work, where such license applies only to those patent claims licensable by such Contributor that are necessarily infringed by their Contribution(s) alone or by combination of their Contribution(s) with the Work to which such Contribution(s) was submitted.",
+        "If You institute patent litigation against any entity (including a cross-claim or counterclaim in a lawsuit) alleging that the Work or a Contribution incorporated within the Work constitutes direct or contributory patent infringement, then any patent licenses granted to You under this License for that Work shall terminate as of the date such litigation is filed.",
+        "The contents of the NOTICE file are for informational purposes only and do not modify the License.",
+        "You may add Your own attribution notices within Derivative Works that You distribute, alongside or as an addendum to the NOTICE text from the Work, provided that such additional attribution notices cannot be construed as modifying the License.",
+        "You may add Your own copyright statement to Your modifications and may provide additional or different license terms and conditions for use, reproduction, or distribution of Your modifications, or for any such Derivative Works as a whole, provided Your use, reproduction, and distribution of the Work otherwise complies with the conditions stated in this License."
+      ]
+    },
+    {
+      "repo": "stabilityai/sdxl-turbo",
+      "model_id": "stabilityai/sdxl-turbo",
+      "author": "stabilityai",
+      "gated": false,
+      "license": "other",
+      "license_name": "sai-nc-community",
+      "license_link": "https://huggingface.co/stabilityai/sdxl-turbo/blob/main/LICENSE.md",
+      "pipeline_tag": "text-to-image",
+      "pipeline_class": "StableDiffusionXLPipeline",
+      "parameters_total": 2567463684,
+      "parameters_by_dtype": {
+        "F32": 2567463684
+      },
+      "weight_bytes_total": 41627543137,
+      "weight_files_top": [
+        {
+          "file": "sd_xl_turbo_1.0.safetensors",
+          "bytes": 13875761366
+        },
+        {
+          "file": "unet/diffusion_pytorch_model.safetensors",
+          "bytes": 10270077736
+        },
+        {
+          "file": "sd_xl_turbo_1.0_fp16.safetensors",
+          "bytes": 6938081905
+        },
+        {
+          "file": "unet/diffusion_pytorch_model.fp16.safetensors",
+          "bytes": 5135149760
+        },
+        {
+          "file": "text_encoder_2/model.safetensors",
+          "bytes": 2778702264
+        },
+        {
+          "file": "text_encoder_2/model.fp16.safetensors",
+          "bytes": 1389382176
+        },
+        {
+          "file": "text_encoder/model.safetensors",
+          "bytes": 492265168
+        },
+        {
+          "file": "vae/diffusion_pytorch_model.safetensors",
+          "bytes": 334643268
+        }
+      ],
+      "library_name": "diffusers",
+      "tags": [
+        "license:other",
+        "diffusers:StableDiffusionXLPipeline"
+      ],
+      "last_modified": "2024-07-10T11:33:43.000Z",
+      "downloads": 637600,
+      "card_statements": [
+        "--- pipeline_tag: text-to-image inference: false license: other license_name: sai-nc-community license_link: https://huggingface.co/stabilityai/sdxl-turbo/blob/main/LICENSE.md ---",
+        "Please note: For commercial use, please refer to https://stability.ai/license.",
+        "### Model Description SDXL-Turbo is a distilled version of [SDXL 1.0](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0), trained for real-time synthesis. SDXL-Turbo is based on a novel training method called Adversarial Diffusion Distillation (ADD) (see the [technical report](https://stability.ai/research/adversarial-diffusion-distillation)), which allows sampling large-scale founda",
+        "## Evaluation ![comparison1](image_quality_one_step.png) ![comparison2](prompt_alignment_one_step.png) The charts above evaluate user preference for SDXL-Turbo over other single- and multi-step models. SDXL-Turbo evaluated at a single step is preferred by human voters in terms of image quality and prompt following over LCM-XL evaluated at four (or fewer) steps. In addition, we see that using four ",
+        "The model is intended for both non-commercial and commercial usage. You can use this model for non-commercial or research purposes under this [license](https://huggingface.co/stabilityai/sdxl-turbo/blob/main/LICENSE.md). Possible research areas and tasks include",
+        "For commercial use, please refer to https://stability.ai/membership.",
+        "SDXL-Turbo does not make use of `guidance_scale` or `negative_prompt`, we disable it with `guidance_scale=0.0`. Preferably, the model generates images of size 512x512 but higher image sizes work as well. A **single step** is enough to generate high quality images.",
+        "pipe = AutoPipelineForText2Image.from_pretrained(\"stabilityai/sdxl-turbo\", torch_dtype=torch.float16, variant=\"fp16\") pipe.to(\"cuda\")",
+        "image = pipe(prompt=prompt, num_inference_steps=1, guidance_scale=0.0).images[0] ```",
+        "When using SDXL-Turbo for image-to-image generation, make sure that `num_inference_steps` * `strength` is larger or equal to 1. The image-to-image pipeline will run for `int(num_inference_steps * strength)` steps, *e.g.* 0.5 * 2.0 = 1 step in our example below.",
+        "pipe = AutoPipelineForImage2Image.from_pretrained(\"stabilityai/sdxl-turbo\", torch_dtype=torch.float16, variant=\"fp16\") pipe.to(\"cuda\")",
+        "image = pipe(prompt, image=init_image, num_inference_steps=2, strength=0.5, guidance_scale=0.0).images[0] ```",
+        "The model is intended for both non-commercial and commercial usage."
+      ],
+      "license_text_excerpt": [
+        "INTRODUCTION This Agreement applies to any individual person or entity (\u201cYou\u201d, \u201cYour\u201d or \u201cLicensee\u201d) that uses or distributes any portion or element of the Stability AI Materials or Derivative Works thereof for any Research & Non-Commercial or Commercial purpose.",
+        "This Agreement is intended to allow research, non-commercial, and limited commercial uses of the Models free of charge.",
+        "In order to ensure that certain limited commercial uses of the Models continue to be allowed, this Agreement preserves free access to the Models for people or organizations generating annual revenue of less than US $1,000,000 (or local currency equivalent).",
+        "RESEARCH & NON-COMMERCIAL USE LICENSE Subject to the terms of this Agreement, Stability AI grants You a non-exclusive, worldwide, non-transferable, non-sublicensable, revocable and royalty-free limited license under Stability AI\u2019s intellectual property or other rights owned by Stability AI embodied in the Stability AI Materials to use, reproduce, distribute, and create Derivative Works of, and make modifications to, the Stability AI Materials for any Research or Non-Commercial Purpose.",
+        "\u201cResearch Purpose\u201d means academic or scientific advancement, and in each case, is not primarily intended for commercial advantage or monetary compensation to You or others.",
+        "\u201cNon-Commercial Purpose\u201d means any purpose other than a Research Purpose that is not primarily intended for commercial advantage or monetary compensation to You or others, such as personal use (i.",
+        "COMMERCIAL USE LICENSE Subject to the terms of this Agreement (including the remainder of this Section III), Stability AI grants You a non-exclusive, worldwide, non-transferable, non-sublicensable, revocable and royalty-free limited license under Stability AI\u2019s intellectual property or other rights owned by Stability AI embodied in the Stability AI Materials to use, reproduce, distribute, and create Derivative Works of, and make modifications to, the Stability AI Materials for any Commercial Purpose.",
+        "\u201cCommercial Purpose\u201d means any purpose other than a Research Purpose or Non-Commercial Purpose that is primarily intended for commercial advantage or monetary compensation to You or others, including but not limited to, (i) creating, modifying, or distributing Your product or service, including via a hosted service or application programming interface, and (ii) for Your business\u2019s or organization\u2019s internal operations.",
+        "If You are using or distributing the Stability AI Materials for a Commercial Purpose, You must register with Stability AI at (https://stability.",
+        "GENERAL TERMS Your Research, Non-Commercial, and Commercial License(s) under this Agreement are subject to the following terms.",
+        "STABILITY AI COMMUNITY LICENSE AGREEMENT Last Updated: July 5, 2024 1.",
+        "If at any time You or Your Affiliate(s), either individually or in aggregate, generate more than USD $1,000,000 in annual revenue (or the equivalent thereof in Your local currency), regardless of whether that revenue is generated directly or indirectly from the Stability AI Materials or Derivative Works, any licenses granted to You under this Agreement shall terminate as of such date."
+      ]
+    },
+    {
+      "repo": "Efficient-Large-Model/Sana_1600M_1024px_diffusers",
+      "model_id": "Efficient-Large-Model/Sana_1600M_1024px_diffusers",
+      "author": "Efficient-Large-Model",
+      "gated": false,
+      "license": "apache-2.0",
+      "license_name": null,
+      "license_link": null,
+      "pipeline_tag": "text-to-image",
+      "pipeline_class": null,
+      "parameters_total": null,
+      "parameters_by_dtype": {},
+      "weight_bytes_total": 25791360656,
+      "weight_files_top": [
+        {
+          "file": "transformer/diffusion_pytorch_model-00001-of-00002.safetensors",
+          "bytes": 4999769624
+        },
+        {
+          "file": "text_encoder/model-00001-of-00002.safetensors",
+          "bytes": 4988024144
+        },
+        {
+          "file": "text_encoder/model.fp16-00001-of-00002.safetensors",
+          "bytes": 4988024144
+        },
+        {
+          "file": "transformer/diffusion_pytorch_model.safetensors",
+          "bytes": 3208971656
+        },
+        {
+          "file": "transformer/diffusion_pytorch_model.fp16.safetensors",
+          "bytes": 3208971144
+        },
+        {
+          "file": "transformer/diffusion_pytorch_model-00002-of-00002.safetensors",
+          "bytes": 1418127024
+        },
+        {
+          "file": "vae/diffusion_pytorch_model.fp16.safetensors",
+          "bytes": 1249044836
+        },
+        {
+          "file": "vae/diffusion_pytorch_model.safetensors",
+          "bytes": 1249044836
+        }
+      ],
+      "library_name": "sana",
+      "tags": [
+        "arxiv:2410.10629",
+        "base_model:Efficient-Large-Model/Sana_1600M_1024px_diffusers",
+        "base_model:finetune:Efficient-Large-Model/Sana_1600M_1024px_diffusers",
+        "license:apache-2.0"
+      ],
+      "last_modified": "2026-07-31T14:29:01.000Z",
+      "downloads": 0,
+      "card_statements": [
+        "--- library_name: sana tags: - text-to-image - Sana - 1024px_based_image_size - Multi-language language: - en - zh base_model: - Efficient-Large-Model/Sana_1600M_1024px_diffusers pipeline_tag: text-to-image license: apache-2.0 --- <p align=\"center\" style=\"border-radius: 10px\"> <img src=\"https://raw.githubusercontent.com/NVlabs/Sana/refs/heads/main/asset/logo.png\" width=\"35%\" alt=\"logo\"/> </p>",
+        "- **Developed by:** NVIDIA, Sana - **Model type:** Linear-Diffusion-Transformer-based text-to-image generative model - **Model size:** 1648M parameters - **Model resolution:** This model is developed to generate 1024px based images with multi-scale heigh and width. - **License:** [Apache License 2.0](./LICENSE). Additional Information: [Gemma Terms of Use | Google AI for Developers](https://ai.goo",
+        "pipe = SanaPipeline.from_pretrained( \"Efficient-Large-Model/Sana_1600M_1024px_diffusers\", variant=\"fp16\", torch_dtype=torch.float16, ) pipe.to(\"cuda\")",
+        "pipe.vae.to(torch.bfloat16) pipe.text_encoder.to(torch.bfloat16)",
+        "prompt = 'A cute \ud83d\udc3c eating \ud83c\udf8b, ink drawing style' image = pipe( prompt=prompt, height=1024, width=1024, guidance_scale=4.5, num_inference_steps=20, generator=torch.Generator(device=\"cuda\").manual_seed(42), )[0]",
+        "pipe = SanaPAGPipeline.from_pretrained( \"Efficient-Large-Model/Sana_1600M_1024px_diffusers\", variant=\"fp16\", torch_dtype=torch.float16, pag_applied_layers=\"transformer_blocks.8\", ) pipe.to(\"cuda\")",
+        "pipe.text_encoder.to(torch.bfloat16) pipe.vae.to(torch.bfloat16)",
+        "prompt = 'A cute \ud83d\udc3c eating \ud83c\udf8b, ink drawing style' image = pipe( prompt=prompt, height=1024, width=1024, guidance_scale=5.0, pag_scale=2.0, num_inference_steps=20, generator=torch.Generator(device=\"cuda\").manual_seed(42), )[0] image[0].save('sana.png') ```"
+      ],
+      "license_text_excerpt": [
+        "org/licenses/ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION 1.",
+        "\"License\" shall mean the terms and conditions for use, reproduction, and distribution as defined by Sections 1 through 9 of this document.",
+        "\"Licensor\" shall mean the copyright owner or entity authorized by the copyright owner that is granting the License.",
+        "\"You\" (or \"Your\") shall mean an individual or Legal Entity exercising permissions granted by this License.",
+        "\"Work\" shall mean the work of authorship, whether in Source or Object form, made available under the License, as indicated by a copyright notice that is included in or attached to the work (an example is provided in the Appendix below).",
+        "For the purposes of this License, Derivative Works shall not include works that remain separable from, or merely link (or bind by name) to the interfaces of, the Work and Derivative Works thereof.",
+        "Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare Derivative Works of, publicly display, publicly perform, sublicense, and distribute the Work and such Derivative Works in Source or Object form.",
+        "Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable (except as stated in this section) patent license to make, have made, use, offer to sell, sell, import, and otherwise transfer the Work, where such license applies only to those patent claims licensable by such Contributor that are necessarily infringed by their Contribution(s) alone or by combination of their Contribution(s) with the Work to which such Contribution(s) was submitted.",
+        "If You institute patent litigation against any entity (including a cross-claim or counterclaim in a lawsuit) alleging that the Work or a Contribution incorporated within the Work constitutes direct or contributory patent infringement, then any patent licenses granted to You under this License for that Work shall terminate as of the date such litigation is filed.",
+        "The contents of the NOTICE file are for informational purposes only and do not modify the License.",
+        "You may add Your own attribution notices within Derivative Works that You distribute, alongside or as an addendum to the NOTICE text from the Work, provided that such additional attribution notices cannot be construed as modifying the License.",
+        "You may add Your own copyright statement to Your modifications and may provide additional or different license terms and conditions for use, reproduction, or distribution of Your modifications, or for any such Derivative Works as a whole, provided Your use, reproduction, and distribution of the Work otherwise complies with the conditions stated in this License."
+      ]
+    },
+    {
+      "repo": "PixArt-alpha/PixArt-Sigma-XL-2-1024-MS",
+      "model_id": "PixArt-alpha/PixArt-Sigma-XL-2-1024-MS",
+      "author": "PixArt-alpha",
+      "gated": false,
+      "license": "openrail++",
+      "license_name": null,
+      "license_link": null,
+      "pipeline_tag": "text-to-image",
+      "pipeline_class": "PixArtSigmaPipeline",
+      "parameters_total": 610856096,
+      "parameters_by_dtype": {
+        "F32": 610856096
+      },
+      "weight_bytes_total": 21827405446,
+      "weight_files_top": [
+        {
+          "file": "text_encoder/model-00001-of-00002.safetensors",
+          "bytes": 9989150328
+        },
+        {
+          "file": "text_encoder/model-00002-of-00002.safetensors",
+          "bytes": 9060119392
+        },
+        {
+          "file": "transformer/diffusion_pytorch_model.safetensors",
+          "bytes": 2443492488
+        },
+        {
+          "file": "vae/diffusion_pytorch_model.safetensors",
+          "bytes": 334643238
+        }
+      ],
+      "library_name": "diffusers",
+      "tags": [
+        "arxiv:2403.04692",
+        "arxiv:2310.00426",
+        "arxiv:2112.10752",
+        "arxiv:2309.05019",
+        "license:openrail++",
+        "diffusers:PixArtSigmaPipeline"
+      ],
+      "last_modified": "2024-05-04T12:52:44.000Z",
+      "downloads": 17927,
+      "card_statements": [
+        "--- license: openrail++ tags: - text-to-image - PixArt-\u03a3 ---",
+        "- **Developed by:** PixArt-\u03a3 - **Model type:** Diffusion-Transformer-based text-to-image generative model - **License:** [CreativeML Open RAIL++-M License](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/main/LICENSE.md) - **Model Description:** This is a model that can be used to generate and modify images based on text prompts. It is a [Transformer Latent Diffusion Model](ht",
+        "device = torch.device(\"cuda:0\" if torch.cuda.is_available() else \"cpu\") weight_dtype = torch.float16",
+        "If you are limited by GPU VRAM, you can enable *cpu offloading* by calling `pipe.enable_model_cpu_offload` instead of `.to(\"cuda\")`:"
+      ]
+    },
+    {
+      "repo": "segmind/SSD-1B",
+      "model_id": "segmind/SSD-1B",
+      "author": "segmind",
+      "gated": false,
+      "license": "apache-2.0",
+      "license_name": null,
+      "license_link": null,
+      "pipeline_tag": "text-to-image",
+      "pipeline_class": "StableDiffusionXLPipeline",
+      "parameters_total": 1331334404,
+      "parameters_by_dtype": {
+        "F32": 1331334404
+      },
+      "weight_bytes_total": 26794001456,
+      "weight_files_top": [
+        {
+          "file": "unet/diffusion_pytorch_model.safetensors",
+          "bytes": 5325459760
+        },
+        {
+          "file": "SSD-1B-modelspec.safetensors",
+          "bytes": 4465933050
+        },
+        {
+          "file": "SSD-1B.safetensors",
+          "bytes": 4465671506
+        },
+        {
+          "file": "SSD-1B-A1111.safetensors",
+          "bytes": 4465671322
+        },
+        {
+          "file": "text_encoder_2/model.safetensors",
+          "bytes": 2778702976
+        },
+        {
+          "file": "unet/diffusion_pytorch_model.fp16.safetensors",
+          "bytes": 2662790608
+        },
+        {
+          "file": "text_encoder_2/model.fp16.safetensors",
+          "bytes": 1389382880
+        },
+        {
+          "file": "text_encoder/model.safetensors",
+          "bytes": 492265880
+        }
+      ],
+      "library_name": "diffusers",
+      "tags": [
+        "arxiv:2401.02677",
+        "license:apache-2.0",
+        "diffusers:StableDiffusionXLPipeline"
+      ],
+      "last_modified": "2024-01-08T04:26:34.000Z",
+      "downloads": 22695,
+      "card_statements": [
+        "--- license: apache-2.0 tags: - text-to-image - ultra-realistic - text-to-image - stable-diffusion - distilled-model - knowledge-distillation pinned: true datasets: - zzliang/GRIT - wanng/midjourney-v5-202304-clean library_name: diffusers ---",
+        "Special thanks to the HF team \ud83e\udd17 especially [Sayak](https://huggingface.co/sayakpaul), [Patrick](https://github.com/patrickvonplaten) and [Poli](https://huggingface.co/multimodalart) for their collaboration and guidance on this work.",
+        "```py from diffusers import StableDiffusionXLPipeline import torch pipe = StableDiffusionXLPipeline.from_pretrained(\"segmind/SSD-1B\", torch_dtype=torch.float16, use_safetensors=True, variant=\"fp16\") pipe.to(\"cuda\") # if using torch < 2.0 # pipe.enable_xformers_memory_efficient_attention() prompt = \"An astronaut riding a green horse\" # Your prompt here neg_prompt = \"ugly, blurry, poor quality\" # Ne",
+        "- **Developed by:** [Segmind](https://www.segmind.com/) - **Developers:** [Yatharth Gupta](https://huggingface.co/Warlord-K) and [Vishnu Jaddipal](https://huggingface.co/Icar). - **Model type:** Diffusion-based text-to-image generative model - **License:** Apache 2.0 - **Distilled From** [stabilityai/stable-diffusion-xl-base-1.0](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0)",
+        "![image/png](https://cdn-uploads.huggingface.co/production/uploads/62039c2d91d53938a643317d/Qa8Ow-moLQhOvzp-5kGt4.png)",
+        "* Steps: 251000 * Learning rate: 1e-5 * Batch size: 32 * Gradient accumulation steps: 4 * Image resolution: 1024 * Mixed-precision: fp16",
+        "We have observed that SSD-1B is upto 60% faster than the Base SDXL Model. Below is a comparision on an A100 80GB.",
+        "- **[LoRA](https://github.com/huggingface/diffusers/blob/main/examples/text_to_image/train_text_to_image_lora_sdxl.py):** ```bash export MODEL_NAME=\"segmind/SSD-1B\" export VAE_NAME=\"madebyollin/sdxl-vae-fp16-fix\" export DATASET_NAME=\"lambdalabs/pokemon-blip-captions\"",
+        "accelerate launch train_text_to_image_lora_sdxl.py \\ --pretrained_model_name_or_path=$MODEL_NAME \\ --pretrained_vae_model_name_or_path=$VAE_NAME \\ --dataset_name=$DATASET_NAME --caption_column=\"text\" \\ --resolution=1024 --random_flip \\ --train_batch_size=1 \\ --num_train_epochs=2 --checkpointing_steps=500 \\ --learning_rate=1e-04 --lr_scheduler=\"constant\" --lr_warmup_steps=0 \\ --mixed_precision=\"fp1",
+        "- **[Fine-Tune](https://github.com/huggingface/diffusers/blob/main/examples/text_to_image/train_text_to_image_sdxl.py):** ```bash export MODEL_NAME=\"segmind/SSD-1B\" export VAE_NAME=\"madebyollin/sdxl-vae-fp16-fix\" export DATASET_NAME=\"lambdalabs/pokemon-blip-captions\"",
+        "accelerate launch train_text_to_image_sdxl.py \\ --pretrained_model_name_or_path=$MODEL_NAME \\ --pretrained_vae_model_name_or_path=$VAE_NAME \\ --dataset_name=$DATASET_NAME \\ --enable_xformers_memory_efficient_attention \\ --resolution=512 --center_crop --random_flip \\ --proportion_empty_prompts=0.2 \\ --train_batch_size=1 \\ --gradient_accumulation_steps=4 --gradient_checkpointing \\ --max_train_steps=",
+        "accelerate launch train_dreambooth_lora_sdxl.py \\ --pretrained_model_name_or_path=$MODEL_NAME \\ --instance_data_dir=$INSTANCE_DIR \\ --pretrained_vae_model_name_or_path=$VAE_PATH \\ --output_dir=$OUTPUT_DIR \\ --mixed_precision=\"fp16\" \\ --instance_prompt=\"a photo of sks dog\" \\ --resolution=1024 \\ --train_batch_size=1 \\ --gradient_accumulation_steps=4 \\ --learning_rate=1e-5 \\ --report_to=\"wandb\" \\ --l"
+      ]
+    }
+  ]
+}

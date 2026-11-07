@@ -1,0 +1,1572 @@
+1
+00:00:00,000 --> 00:00:03,479
+Start with a simple question: could life
+exist in an
+
+2
+00:00:03,479 --> 00:00:06,959
+ocean that has never seen the sky? On
+Jupiter's
+
+3
+00:00:06,959 --> 00:00:10,439
+moon Europa, a global saltwater ocean lies
+hidden beneath a
+
+4
+00:00:10,439 --> 00:00:13,919
+completely frozen crust. That crust is
+tens of miles
+
+5
+00:00:13,919 --> 00:00:17,399
+thick, and the ocean surface beneath it is
+frozen solid.
+
+6
+00:00:17,399 --> 00:00:20,662
+Yet the ocean underneath holds more than
+twice as
+
+7
+00:00:20,662 --> 00:00:23,924
+much water as all of Earth's oceans
+combined. It
+
+8
+00:00:23,924 --> 00:00:27,187
+stays liquid not because of sunlight, but
+because Jupiter's
+
+9
+00:00:27,187 --> 00:00:30,449
+gravity flexes the moon and heats it from
+within.
+
+10
+00:00:30,449 --> 00:00:33,932
+Sunlight never reaches that water, so
+nothing down there has
+
+11
+00:00:33,932 --> 00:00:37,414
+ever seen a sunrise. So the question
+becomes sharper:
+
+12
+00:00:37,414 --> 00:00:40,896
+what could live in a dark ocean sealed
+under ice?
+
+13
+00:00:40,896 --> 00:00:44,378
+Europa is not even the only one: Saturn's
+moon
+
+14
+00:00:44,378 --> 00:00:47,859
+Enceladus hides a global salty ocean
+beneath its icy crust.
+
+15
+00:00:47,859 --> 00:00:51,859
+Enceladus even sprays that ocean into
+space through cracks near
+
+16
+00:00:51,859 --> 00:00:55,859
+its south pole. On Earth, we already know
+what life can
+
+17
+00:00:55,859 --> 00:00:59,859
+do without sunlight, because the deep sea
+has an answer.
+
+18
+00:00:59,859 --> 00:01:03,575
+This episode follows that answer outward,
+from a vent on
+
+19
+00:01:03,575 --> 00:01:07,290
+our own sea floor to an ocean we have
+never
+
+20
+00:01:07,289 --> 00:01:11,004
+touched. Some of what follows is measured,
+and some of it
+
+21
+00:01:11,004 --> 00:01:14,719
+is invented, and we will mark the
+difference every time.
+
+22
+00:01:14,719 --> 00:01:18,719
+By the end, you can decide which parts
+
+23
+00:01:18,719 --> 00:01:22,719
+you believe. Two of the least
+remarkable-looking moons in
+
+24
+00:01:22,719 --> 00:01:26,719
+the solar system may be the most
+interesting.
+
+25
+00:00:00,000 --> 00:00:03,707
+Begin with the shape of the world: an
+ocean with no
+
+26
+00:00:03,707 --> 00:00:07,415
+shore you could walk out onto, capped by
+ice. Europa's ocean
+
+27
+00:00:07,415 --> 00:00:11,122
+is global, which means it wraps the entire
+moon. There is
+
+28
+00:00:11,122 --> 00:00:14,830
+no beach here, no coastline, no place
+where water meets air.
+
+29
+00:00:14,830 --> 00:00:17,998
+Above the water sits a crust of ice tens
+
+30
+00:00:17,998 --> 00:00:21,166
+of miles thick. That ice stays frozen
+where it meets
+
+31
+00:00:21,166 --> 00:00:24,333
+the water, so the boundary is a lid, not
+
+32
+00:00:24,334 --> 00:00:27,502
+a shoreline. The water below is the
+striking part: more
+
+33
+00:00:27,502 --> 00:00:30,670
+than twice the volume of every ocean on
+Earth.
+
+34
+00:00:30,670 --> 00:00:34,375
+Twice over, in a single moon. Volume is
+not the same
+
+35
+00:00:34,375 --> 00:00:38,079
+as habitability, but it does buy room.
+Room for chemistry, room
+
+36
+00:00:38,079 --> 00:00:41,784
+for gradients, room for time. The heat
+that keeps it liquid
+
+37
+00:00:41,785 --> 00:00:45,490
+comes from Jupiter, which pulls on Europa
+as the moon orbits.
+
+38
+00:00:45,490 --> 00:00:48,792
+That flexing bends the moon, and the
+bending becomes heat.
+
+39
+00:00:48,792 --> 00:00:52,094
+Tidal heating is why the ocean is not a
+block
+
+40
+00:00:52,094 --> 00:00:55,396
+of ice all the way through. It also drives
+
+41
+00:00:55,396 --> 00:00:58,698
+chemistry between the ocean and the rocky
+floor beneath it.
+
+42
+00:00:58,698 --> 00:01:02,000
+Enceladus, at Saturn, is smaller but
+follows the same logic.
+
+43
+00:01:02,000 --> 00:01:05,202
+It too carries a global salty ocean under
+an icy
+
+44
+00:01:05,202 --> 00:01:08,405
+crust. Two moons, two oceans, both sealed
+away from
+
+45
+00:01:08,405 --> 00:01:11,607
+the sky. If you wanted to design a place
+
+46
+00:01:11,607 --> 00:01:14,810
+where life could hide, you would struggle
+to do better.
+
+47
+00:01:14,810 --> 00:01:18,248
+But hiding is not the same as living, and
+for
+
+48
+00:01:18,248 --> 00:01:21,686
+that a world needs an energy source. So
+the next
+
+49
+00:01:21,686 --> 00:01:25,124
+thing to measure is not the size of the
+ocean, but
+
+50
+00:01:25,123 --> 00:01:28,561
+what powers it. Keep the image in your
+head: an
+
+51
+00:01:28,561 --> 00:01:32,000
+ocean with no shores, roofed by ice,
+warmed from below.
+
+52
+00:01:32,000 --> 00:01:35,537
+An ocean with more water than ours, and no
+way
+
+53
+00:01:35,537 --> 00:01:39,074
+for the sun to reach it. Nothing about
+that lid is
+
+54
+00:01:39,075 --> 00:01:42,612
+thin enough to see through. If you poured
+Earth's oceans into
+
+55
+00:01:42,612 --> 00:01:46,150
+it, you would still have room for another
+Earth's worth.
+
+56
+00:01:46,150 --> 00:01:49,520
+The moon is not a dead ball of ice, it
+
+57
+00:01:49,520 --> 00:01:52,890
+is being worked on from the outside, every
+orbit. That
+
+58
+00:01:52,890 --> 00:01:56,260
+is the first surprise of this world: the
+heat comes
+
+59
+00:01:56,260 --> 00:01:59,630
+from a neighbour, not from the star.
+Enceladus is smaller,
+
+60
+00:01:59,629 --> 00:02:03,000
+but the same three layers appear: ice,
+water, and rock.
+
+61
+00:02:03,000 --> 00:02:07,000
+Does a smaller world keep its
+
+62
+00:02:07,000 --> 00:02:11,000
+ocean as easily? That is a question
+
+63
+00:02:11,000 --> 00:02:15,000
+only the mission data can answer.
+
+64
+00:00:00,000 --> 00:00:03,745
+Here is the problem the ice creates: no
+sunlight reaches
+
+65
+00:00:03,745 --> 00:00:07,490
+the water, so photosynthesis is off the
+table. On
+
+66
+00:00:07,490 --> 00:00:11,234
+Earth, life solved that problem in the
+dark, at
+
+67
+00:00:11,234 --> 00:00:14,980
+hydrothermal vents. Vent ecosystems run on
+chemosynthesis instead of sunlight.
+
+68
+00:00:14,980 --> 00:00:19,053
+Chemosynthetic bacteria take chemical
+energy from hydrogen sulfide and carbon
+
+69
+00:00:19,053 --> 00:00:23,126
+dioxide and turn inorganic chemicals into
+food. That makes them the
+
+70
+00:00:23,126 --> 00:00:27,199
+base of the food web, not the top of it.
+
+71
+00:00:27,199 --> 00:00:30,667
+Around those bacteria live vent shrimp,
+tubeworms and mussels,
+
+72
+00:00:30,667 --> 00:00:34,135
+none of which need a single photon. So the
+
+73
+00:00:34,135 --> 00:00:37,603
+template exists, and it is not
+hypothetical on
+
+74
+00:00:37,603 --> 00:00:41,072
+Earth. Enceladus appears to have the same
+kind of
+
+75
+00:00:41,072 --> 00:00:44,539
+machinery: vents where its ocean meets a
+rocky core.
+
+76
+00:00:44,539 --> 00:00:47,771
+Cassini found silica grains in the plume
+that
+
+77
+00:00:47,771 --> 00:00:51,003
+formed where liquid water and rock
+interacted above
+
+78
+00:00:51,003 --> 00:00:54,235
+ninety degrees Celsius. That is hot rock
+in contact
+
+79
+00:00:54,236 --> 00:00:57,468
+with water, under an ice shell, far from
+
+80
+00:00:57,468 --> 00:01:00,700
+the sun. The plume also carries molecular
+hydrogen.
+
+81
+00:01:00,700 --> 00:01:04,168
+Microbes could pair that hydrogen with
+dissolved carbon dioxide
+
+82
+00:01:04,168 --> 00:01:07,636
+and harvest the reaction as energy. Read
+that again:
+
+83
+00:01:07,636 --> 00:01:11,104
+a chemical battery, vented into space,
+from an
+
+84
+00:01:11,104 --> 00:01:14,572
+ocean nobody has visited. At Europa, tidal
+heating supplies
+
+85
+00:01:14,572 --> 00:01:18,040
+the energy and drives chemistry at the sea
+floor.
+
+86
+00:01:18,040 --> 00:01:21,430
+Two different moons, two routes to the
+same three
+
+87
+00:01:21,430 --> 00:01:24,820
+ingredients: water, chemistry, energy.
+That combination is why
+
+88
+00:01:24,820 --> 00:01:28,210
+these moons keep appearing on lists of
+places to
+
+89
+00:01:28,210 --> 00:01:31,600
+look for life. It is also why the
+
+90
+00:01:31,599 --> 00:01:34,989
+next part of this episode has to be
+careful.
+
+91
+00:01:34,989 --> 00:01:38,637
+Because the ingredients are measured, but
+the inhabitants are
+
+92
+00:01:38,637 --> 00:01:42,284
+not. Hydrogen and carbon dioxide are a
+possible energy
+
+93
+00:01:42,284 --> 00:01:45,932
+source, not proof that anything is using
+them. Possible is
+
+94
+00:01:45,932 --> 00:01:49,579
+the honest word, and it is worth holding
+onto.
+
+95
+00:01:49,579 --> 00:01:53,127
+With the chemistry established, the
+question moves from what
+
+96
+00:01:53,127 --> 00:01:56,674
+a world provides to what a body could do
+
+97
+00:01:56,674 --> 00:02:00,222
+with it. No sunlight, no photosynthesis,
+and still a
+
+98
+00:02:00,222 --> 00:02:03,769
+full ecosystem: that is what the vents
+show us.
+
+99
+00:02:03,769 --> 00:02:07,317
+Water plus hot rock leaves mineral traces,
+and the
+
+100
+00:02:07,317 --> 00:02:10,865
+plume carries those traces outward.
+Hydrogen is the part
+
+101
+00:02:10,865 --> 00:02:14,413
+that matters for biology, because it can
+power a
+
+102
+00:02:14,413 --> 00:02:17,961
+microbe without any light. Notice what is
+missing from
+
+103
+00:02:17,961 --> 00:02:21,509
+that list: sunshine, plants, and anything
+with a face.
+
+104
+00:02:21,509 --> 00:02:25,509
+At Europa the heat arrives through
+
+105
+00:02:25,509 --> 00:02:29,509
+the ice, from a parent planet,
+
+106
+00:02:29,509 --> 00:02:33,509
+and reaches the water from below.
+
+107
+00:00:00,000 --> 00:00:03,222
+From here on, we stop describing and start
+designing.
+
+108
+00:00:03,222 --> 00:00:06,445
+Everything from this point is invented:
+honestly labelled, constrained
+
+109
+00:00:06,445 --> 00:00:09,667
+by physics, and never observed. The rule
+we set ourselves
+
+110
+00:00:09,667 --> 00:00:12,890
+was simple: no creature without a reason
+to exist.
+
+111
+00:00:12,890 --> 00:00:16,635
+Every body plan has to answer three
+questions: what does it
+
+112
+00:00:16,635 --> 00:00:20,380
+eat, what is trying to eat it, and how
+does it
+
+113
+00:00:20,380 --> 00:00:24,125
+move. Start where the energy is: the
+bacterial mats that
+
+114
+00:00:24,125 --> 00:00:27,870
+coat vent chimneys. The vent grazer is
+built to harvest them.
+
+115
+00:00:27,870 --> 00:00:31,265
+It has six limbs, and it uses them to grip
+
+116
+00:00:31,265 --> 00:00:34,660
+the chimney while it grazes. Six points of
+contact hold
+
+117
+00:00:34,660 --> 00:00:38,055
+it steady in the rising vent flow. Its
+body
+
+118
+00:00:38,055 --> 00:00:41,450
+is low and broad, a shape that suits
+crushing pressure.
+
+119
+00:00:41,450 --> 00:00:44,672
+We gave it a long neck, so it can
+
+120
+00:00:44,672 --> 00:00:47,894
+reach mats on the chimney wall without
+pressing its
+
+121
+00:00:47,895 --> 00:00:51,117
+body into hot fluid. That is a design
+choice, not
+
+122
+00:00:51,117 --> 00:00:54,340
+an observation, and it is written down as
+one.
+
+123
+00:00:54,340 --> 00:00:57,650
+The filter drifter takes a different route
+to the same
+
+124
+00:00:57,650 --> 00:01:00,960
+food: it filters microbes out of the
+water. It
+
+125
+00:01:00,960 --> 00:01:04,269
+swims with a single undulating fin. No
+limbs, one
+
+126
+00:01:04,269 --> 00:01:07,579
+continuous fin, and a wide mouth that
+strains the water.
+
+127
+00:01:07,579 --> 00:01:11,061
+We kept it limbless on purpose, because
+limbs are expensive
+
+128
+00:01:11,061 --> 00:01:14,543
+when you never need to grip anything. We
+also kept
+
+129
+00:01:14,543 --> 00:01:18,025
+both animals small in frame, because an
+invented creature should
+
+130
+00:01:18,025 --> 00:01:21,507
+not be sold as a portrait. Now put them in
+
+131
+00:01:21,507 --> 00:01:24,989
+the same water and the scene stops being a
+catalogue.
+
+132
+00:01:24,989 --> 00:01:28,734
+Mats grow where vent fluid meets cold
+water, and drifters gather
+
+133
+00:01:28,734 --> 00:01:32,480
+where mats break apart. One grazes the
+surface of the rock,
+
+134
+00:01:32,479 --> 00:01:36,224
+and one harvests what the current carries
+away. That is
+
+135
+00:01:36,224 --> 00:01:39,969
+a food web in miniature, and it is
+entirely our invention.
+
+136
+00:01:39,969 --> 00:01:43,173
+Which raises the question this episode
+cannot answer with
+
+137
+00:01:43,173 --> 00:01:46,377
+data: what would eat them? The drifter's
+body is
+
+138
+00:01:46,378 --> 00:01:49,581
+a ribbon, flattened and wide, a shape that
+does not
+
+139
+00:01:49,581 --> 00:01:52,785
+fight the water. Neither animal has eyes
+in our
+
+140
+00:01:52,786 --> 00:01:55,989
+design, because there is nothing down here
+to see.
+
+141
+00:01:55,989 --> 00:01:59,212
+The grazer's food is a mat, and a mat
+
+142
+00:01:59,212 --> 00:02:02,434
+is a surface, so the animal has to hold
+
+143
+00:02:02,435 --> 00:02:05,657
+position against a current. Two
+strategies, one pantry: one animal
+
+144
+00:02:05,657 --> 00:02:08,879
+farms the rock, and the other skims the
+water.
+
+145
+00:02:08,879 --> 00:02:12,879
+If you have ever wondered what
+
+146
+00:02:12,879 --> 00:02:16,879
+a food web looks like before it
+
+147
+00:02:16,879 --> 00:02:20,879
+has a top, this is it.
+
+148
+00:00:00,000 --> 00:00:03,420
+Here we have to be honest: there is no
+evidence
+
+149
+00:00:03,420 --> 00:00:06,840
+for an alien predator, because nobody has
+seen one.
+
+150
+00:00:06,840 --> 00:00:10,260
+What we can do is reason: if a mat feeds
+
+151
+00:00:10,260 --> 00:00:13,680
+a grazer, the same energy is available to
+something
+
+152
+00:00:13,680 --> 00:00:17,100
+that eats grazers. That is not evidence,
+it is bookkeeping.
+
+153
+00:00:17,100 --> 00:00:20,304
+Energy that collects in one body becomes a
+target
+
+154
+00:00:20,304 --> 00:00:23,509
+for another. So a plausible ocean would
+not stop
+
+155
+00:00:23,510 --> 00:00:26,715
+at grazers. A hunter here would face the
+same
+
+156
+00:00:26,715 --> 00:00:29,920
+constraints as everything else: pressure,
+cold, and permanent dark.
+
+157
+00:00:29,920 --> 00:00:33,484
+We did not design one, because a predator
+is where
+
+158
+00:00:33,484 --> 00:00:37,048
+invention starts to outrun constraint.
+Instead, ask what an arms
+
+159
+00:00:37,048 --> 00:00:40,612
+race would even look like without light.
+One answer is
+
+160
+00:00:40,612 --> 00:00:44,176
+already in our design set: light. The vent
+grazer signals
+
+161
+00:00:44,176 --> 00:00:47,740
+with bioluminescence, in an ocean that
+never sees the sun.
+
+162
+00:00:47,740 --> 00:00:51,035
+In permanent darkness, light is the only
+language that
+
+163
+00:00:51,035 --> 00:00:54,330
+travels. But a signal that travels is also
+a
+
+164
+00:00:54,329 --> 00:00:57,625
+signal that can be intercepted. That is
+the whole logic
+
+165
+00:00:57,625 --> 00:01:00,920
+of an arms race: every advantage becomes a
+vulnerability.
+
+166
+00:01:00,920 --> 00:01:04,340
+Camouflage against a glow, speed against a
+slow grazer, a
+
+167
+00:01:04,340 --> 00:01:07,760
+harder shell against a jaw. Each of those
+is
+
+168
+00:01:07,760 --> 00:01:11,180
+a guess about a guess, and we are not
+going
+
+169
+00:01:11,180 --> 00:01:14,600
+to dress them up as findings. What we can
+
+170
+00:01:14,599 --> 00:01:18,019
+say is that competition would not require
+sunlight, only scarcity.
+
+171
+00:01:18,019 --> 00:01:21,225
+Bacterial mats coat the chimneys, which
+makes the food
+
+172
+00:01:21,225 --> 00:01:24,432
+patchy by construction. Patchy food makes
+territory, and territory
+
+173
+00:01:24,432 --> 00:01:27,638
+makes conflict. None of this is observed:
+all of
+
+174
+00:01:27,638 --> 00:01:30,844
+it is the reasoning a field biologist
+would use
+
+175
+00:01:30,843 --> 00:01:34,049
+on Earth, pointed at a place we cannot
+visit.
+
+176
+00:01:34,049 --> 00:01:37,611
+And that is the limit of this section: the
+shape
+
+177
+00:01:37,611 --> 00:01:41,173
+of an argument, with no animal attached to
+it. So
+
+178
+00:01:41,173 --> 00:01:44,735
+we leave the predators unbuilt, and say so
+out loud.
+
+179
+00:01:44,735 --> 00:01:48,297
+A predator is not a monster in this story,
+it
+
+180
+00:01:48,298 --> 00:01:51,859
+is a bookkeeping entry that has not been
+filled in.
+
+181
+00:01:51,859 --> 00:01:55,509
+And an unfilled entry is more honest than
+a creature
+
+182
+00:01:55,509 --> 00:01:59,159
+invented to fill it. Our grazer already
+carries a light,
+
+183
+00:01:59,159 --> 00:02:02,810
+which means it already carries a risk.
+Every signal in the
+
+184
+00:02:02,810 --> 00:02:06,459
+dark is a decision about who gets to find
+you.
+
+185
+00:02:06,459 --> 00:02:10,460
+That is the arms race in
+
+186
+00:02:10,460 --> 00:02:14,460
+one sentence, and we can leave
+
+187
+00:02:14,460 --> 00:02:18,460
+it there without inventing a winner.
+
+188
+00:00:00,000 --> 00:00:03,189
+Now go down, past the mats, to the floor
+
+189
+00:00:03,189 --> 00:00:06,379
+of the world. At Enceladus, that floor is
+where
+
+190
+00:00:06,379 --> 00:00:09,570
+the ocean meets rock, and where the vents
+
+191
+00:00:09,570 --> 00:00:12,759
+are. The silica grains in the plume are
+the
+
+192
+00:00:12,759 --> 00:00:15,949
+receipt: water and hot rock, interacting
+above ninety degrees.
+
+193
+00:00:15,949 --> 00:00:19,394
+At Europa, the same meeting point would be
+the sea
+
+194
+00:00:19,394 --> 00:00:22,839
+floor, under an ocean twice the size of
+ours.
+
+195
+00:00:22,839 --> 00:00:26,285
+The ice burrower lives in the sediment at
+that
+
+196
+00:00:26,285 --> 00:00:29,730
+boundary. It moves by peristalsis, pushing
+through sediment under load.
+
+197
+00:00:29,730 --> 00:00:33,354
+Near-freezing water and high pressure are
+the two constraints its
+
+198
+00:00:33,354 --> 00:00:36,979
+body answers. We gave it no limbs, because
+limbs do
+
+199
+00:00:36,979 --> 00:00:40,604
+not help in mud. It does not swim and it
+
+200
+00:00:40,604 --> 00:00:44,229
+does not graze: it simply moves through
+the ground, slowly.
+
+201
+00:00:44,229 --> 00:00:47,672
+Everything down here ultimately traces
+back to chemosynthesis, the same
+
+202
+00:00:47,672 --> 00:00:51,115
+chemistry as Earth's vents. The grazer
+stays near the
+
+203
+00:00:51,114 --> 00:00:54,557
+chimneys, where the mats are. And it
+reproduces by
+
+204
+00:00:54,557 --> 00:00:58,000
+budding, at the vents, where chemical
+energy is most abundant.
+
+205
+00:00:58,000 --> 00:01:01,897
+Budding is a design choice: no mate
+required, no season required,
+
+206
+00:01:01,897 --> 00:01:05,795
+just energy and time. In a world sealed
+under ice, there
+
+207
+00:01:05,795 --> 00:01:09,692
+is no daylight to synchronise with. So
+reproduction would have
+
+208
+00:01:09,692 --> 00:01:13,590
+to be tied to something else: chemistry,
+temperature, or each other.
+
+209
+00:01:13,590 --> 00:01:17,215
+Communication, in that world, would have
+to travel without any
+
+210
+00:01:17,215 --> 00:01:20,840
+light from above. Bioluminescence is our
+answer: the creature makes
+
+211
+00:01:20,840 --> 00:01:24,465
+its own light. It is also the least
+certain thing
+
+212
+00:01:24,465 --> 00:01:28,090
+in this episode, and we are flagging it as
+such.
+
+213
+00:01:28,090 --> 00:01:31,532
+Three invented animals, one shared
+constraint: everything must work in
+
+214
+00:01:31,532 --> 00:01:34,974
+the dark, under pressure, at near-freezing
+temperature. The grazer
+
+215
+00:01:34,974 --> 00:01:38,417
+grips, the drifter filters, the burrower
+pushes. None of
+
+216
+00:01:38,417 --> 00:01:41,859
+them has been seen, and all of them are
+possible.
+
+217
+00:01:41,859 --> 00:01:45,414
+Sediment is the quietest habitat in this
+world, and the
+
+218
+00:01:45,414 --> 00:01:48,968
+burrower is built for quiet. Budding means
+the young are
+
+219
+00:01:48,968 --> 00:01:52,522
+not scattered, they start where the energy
+already is.
+
+220
+00:01:52,521 --> 00:01:56,075
+The chimney is a tower of chemistry, and
+the grazer
+
+221
+00:01:56,075 --> 00:01:59,629
+is the animal that learned to hold on to
+it.
+
+222
+00:01:59,629 --> 00:02:03,626
+Three animals, three answers to the same
+exam question: how do
+
+223
+00:02:03,626 --> 00:02:07,623
+you make a living where nothing grows from
+light? On Earth,
+
+224
+00:02:07,623 --> 00:02:11,620
+that exam has already been passed, in
+water just as dark.
+
+225
+00:02:11,620 --> 00:02:15,620
+And that is why the deep
+
+226
+00:02:15,620 --> 00:02:19,620
+is the closest thing we
+
+227
+00:02:19,620 --> 00:02:23,620
+have to a rehearsal for Europa.
+
+228
+00:00:00,000 --> 00:00:03,457
+Suppose life did appear under that ice:
+would it look
+
+229
+00:00:03,457 --> 00:00:06,915
+like our designs, or like nothing we could
+guess? This
+
+230
+00:00:06,915 --> 00:00:10,372
+is the part of the episode where the
+honest answer is
+
+231
+00:00:10,372 --> 00:00:13,830
+that we do not know, and neither does
+anyone else.
+
+232
+00:00:13,830 --> 00:00:17,457
+There are two ways to think about it, and
+they point
+
+233
+00:00:17,457 --> 00:00:21,085
+in opposite directions. The first says
+that physics narrows the options:
+
+234
+00:00:21,085 --> 00:00:24,712
+if you need to grip rock in a current, six
+
+235
+00:00:24,712 --> 00:00:28,339
+points of contact is one of a small number
+of answers.
+
+236
+00:00:28,339 --> 00:00:32,219
+The second says that history matters more
+than physics: what survives depends
+
+237
+00:00:32,219 --> 00:00:36,100
+on what happened to arrive first. Under
+that view, our grazer
+
+238
+00:00:36,100 --> 00:00:39,980
+is not a prediction, it is a coincidence
+waiting to be
+
+239
+00:00:39,980 --> 00:00:43,859
+disproved. Both views are respectable, and
+neither is testable from a desk.
+
+240
+00:00:43,859 --> 00:00:47,369
+That is why the mission matters more than
+the argument.
+
+241
+00:00:47,369 --> 00:00:50,879
+Europa Clipper is being built to measure
+the ice shell, the
+
+242
+00:00:50,879 --> 00:00:54,389
+ocean, and the surface chemistry. Future
+missions could sample Enceladus'
+
+243
+00:00:54,390 --> 00:00:57,899
+plumes directly, looking for the chemistry
+of life. Until then, every
+
+244
+00:00:57,899 --> 00:01:01,409
+creature in this episode is a hypothesis
+with a shape.
+
+245
+00:01:01,409 --> 00:01:04,952
+And a hypothesis with a shape is easier to
+argue
+
+246
+00:01:04,952 --> 00:01:08,495
+with than a vague hope. That is the point
+of designing
+
+247
+00:01:08,495 --> 00:01:12,037
+them at all: to make our assumptions
+visible. If the ocean
+
+248
+00:01:12,037 --> 00:01:15,579
+is empty, our designs are wrong in an
+interesting way.
+
+249
+00:01:15,579 --> 00:01:19,039
+And if it is not empty, they are probably
+wrong
+
+250
+00:01:19,039 --> 00:01:22,500
+in a more interesting way. Either outcome
+teaches us something,
+
+251
+00:01:22,500 --> 00:01:25,960
+and that is the best a guess can do. So
+would
+
+252
+00:01:25,960 --> 00:01:29,420
+this world repeat? We will not know until
+someone looks.
+
+253
+00:01:29,420 --> 00:01:33,420
+The two views do not cancel each other,
+they set
+
+254
+00:01:33,420 --> 00:01:37,420
+the size of the bet. Either way, the ocean
+is the
+
+255
+00:01:37,420 --> 00:01:41,420
+thing to look at, and the ice is the door.
+
+256
+00:00:00,000 --> 00:00:03,547
+There is one more question, and it is the
+strangest
+
+257
+00:00:03,547 --> 00:00:07,094
+one in the episode. If this ocean had
+life, could it
+
+258
+00:00:07,094 --> 00:00:10,642
+ever build something? Not a civilisation,
+something simpler: a tool, a
+
+259
+00:00:10,642 --> 00:00:14,189
+structure, a signal that carries further
+than a body can.
+
+260
+00:00:14,189 --> 00:00:18,190
+Start with the obvious obstacle: there is
+no dry land to
+
+261
+00:00:18,190 --> 00:00:22,190
+stand on. Everything happens in water, and
+water is a medium
+
+262
+00:00:22,190 --> 00:00:26,190
+that pushes back. The second obstacle is
+heat you can hold.
+
+263
+00:00:26,190 --> 00:00:29,570
+A vent gives heat, but it gives it at the
+
+264
+00:00:29,570 --> 00:00:32,950
+bottom of an ocean, in a place you cannot
+carry
+
+265
+00:00:32,950 --> 00:00:36,330
+it away from. The third obstacle is
+material: our own
+
+266
+00:00:36,329 --> 00:00:39,710
+technology leans on solids that can be
+shaped and kept.
+
+267
+00:00:39,710 --> 00:00:43,710
+Rock and ice exist here, but whether they
+can be worked
+
+268
+00:00:43,710 --> 00:00:47,710
+is a different question. And if a vent
+field shifts
+
+269
+00:00:47,710 --> 00:00:51,710
+or cools, anything built on it has to move
+with it.
+
+270
+00:00:51,710 --> 00:00:55,292
+So a technological species here would need
+a body that works
+
+271
+00:00:55,292 --> 00:00:58,874
+in water, hands or their equivalent, and a
+reason to
+
+272
+00:00:58,874 --> 00:01:02,456
+build at all. That is a long list of
+conditions, and
+
+273
+00:01:02,456 --> 00:01:06,038
+each one is a place where the story could
+stop.
+
+274
+00:01:06,038 --> 00:01:09,620
+It is also the reason this section is
+short on conclusions.
+
+275
+00:01:09,620 --> 00:01:13,082
+We could invent a tool-maker, but
+inventing one would tell
+
+276
+00:01:13,082 --> 00:01:16,545
+you nothing about this ocean. Nothing we
+have measured rules
+
+277
+00:01:16,545 --> 00:01:20,007
+intelligence in or out. That is an honest
+place to leave
+
+278
+00:01:20,007 --> 00:01:23,469
+it: an open question with no evidence on
+either side.
+
+279
+00:01:23,469 --> 00:01:27,019
+And it is worth saying plainly that the
+absence of
+
+280
+00:01:27,019 --> 00:01:30,569
+evidence is not a verdict. And what
+happens to a tool
+
+281
+00:01:30,569 --> 00:01:34,119
+left in salt water for a century? Every
+obstacle here is
+
+282
+00:01:34,120 --> 00:01:37,670
+a place where a different world would have
+an advantage.
+
+283
+00:01:37,670 --> 00:01:41,670
+Which is why the honest answer
+
+284
+00:01:41,670 --> 00:01:45,670
+to the technology question is
+
+285
+00:01:45,670 --> 00:01:49,670
+not no, but not yet measurable.
+
+286
+00:00:00,000 --> 00:00:03,339
+So let us separate the two piles, starting
+with
+
+287
+00:00:03,339 --> 00:00:06,679
+what is measured. Europa has a global
+saltwater ocean
+
+288
+00:00:06,679 --> 00:00:10,019
+under a completely frozen crust. That
+ocean holds
+
+289
+00:00:10,019 --> 00:00:13,359
+more than twice the water of all Earth's
+oceans.
+
+290
+00:00:13,359 --> 00:00:16,795
+Jupiter's tidal heating keeps it liquid
+and drives chemistry
+
+291
+00:00:16,795 --> 00:00:20,230
+at the sea floor. Enceladus has a global
+salty
+
+292
+00:00:20,230 --> 00:00:23,664
+ocean under ice. Its vents put hot rock in
+
+293
+00:00:23,664 --> 00:00:27,100
+contact with water, and the plume carries
+the evidence.
+
+294
+00:00:27,100 --> 00:00:30,630
+Its plume also carries hydrogen, a
+chemical energy source
+
+295
+00:00:30,630 --> 00:00:34,160
+microbes could use. And on Earth, vent
+life runs
+
+296
+00:00:34,159 --> 00:00:37,689
+on chemosynthesis, without sunlight.
+Everything else is ours: the grazer,
+
+297
+00:00:37,689 --> 00:00:41,219
+the drifter, the burrower, the budding,
+and the glow.
+
+298
+00:00:41,219 --> 00:00:44,462
+Five inventions, each with a stated
+constraint, none
+
+299
+00:00:44,462 --> 00:00:47,704
+with an observation. That is the whole
+list, and
+
+300
+00:00:47,704 --> 00:00:50,947
+it is short on purpose. A longer list
+would
+
+301
+00:00:50,947 --> 00:00:54,189
+have meant weaker sourcing, not a better
+episode.
+
+302
+00:00:54,189 --> 00:00:57,435
+If you remember one thing, make it this:
+
+303
+00:00:57,435 --> 00:01:00,680
+the ocean is real, and the animals are
+not.
+
+304
+00:01:00,679 --> 00:01:03,924
+Enceladus supplies the strongest chemical
+case, because its ocean
+
+305
+00:01:03,924 --> 00:01:07,170
+is sampled for us, by its own plumes.
+
+306
+00:01:07,170 --> 00:01:10,450
+Notice the asymmetry: eight claims about
+the world, and
+
+307
+00:01:10,450 --> 00:01:13,730
+five about animals we made up. The Earth
+
+308
+00:01:13,730 --> 00:01:17,010
+analogue is the reason any of this is
+worth
+
+309
+00:01:17,009 --> 00:01:20,289
+arguing about. If the vents had no life,
+
+310
+00:01:20,289 --> 00:01:23,569
+this episode would be science fiction with
+better footnotes.
+
+311
+00:00:00,000 --> 00:00:03,476
+A frozen alien ocean may be the best place
+in
+
+312
+00:00:03,476 --> 00:00:06,952
+the solar system to look for life. Not
+because we have
+
+313
+00:00:06,952 --> 00:00:10,428
+found it, but because the physics allows
+it. Water, chemistry,
+
+314
+00:00:10,428 --> 00:00:13,903
+energy: the ingredients are there. The
+rest is a question for
+
+315
+00:00:13,903 --> 00:00:17,379
+the next mission, and for the people who
+fly it.
+
+316
+00:00:17,379 --> 00:00:20,855
+So here is our question for you. If you
+had
+
+317
+00:00:20,855 --> 00:00:24,331
+one instrument to send under that ice,
+what would you measure
+
+318
+00:00:24,332 --> 00:00:27,807
+first? The chemistry, the temperature, or
+the sound of something
+
+319
+00:00:27,807 --> 00:00:31,283
+moving? Tell us in the comments, and tell
+us why. Because
+
+320
+00:00:31,283 --> 00:00:34,759
+that is how a guess becomes a question
+worth funding.
+
+321
+00:00:34,759 --> 00:00:38,019
+It is a moon of Jupiter, and it has been
+
+322
+00:00:38,019 --> 00:00:41,279
+there the whole time. The ocean is waiting
+under the
+
+323
+00:00:41,280 --> 00:00:44,539
+ice, and it is not going anywhere. Until
+then,
+
+324
+00:00:44,539 --> 00:00:47,799
+keep asking the question, and keep asking
+for the evidence.
+

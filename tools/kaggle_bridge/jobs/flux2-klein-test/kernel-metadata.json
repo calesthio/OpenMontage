@@ -1,0 +1,16 @@
+{
+  "id": "forts845/om-flux2-klein-test",
+  "title": "OpenMontage FLUX.2 Klein 4B baseline test",
+  "code_file": "run.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": "false",
+  "enable_internet": true,
+  "machine_shape": "",
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}

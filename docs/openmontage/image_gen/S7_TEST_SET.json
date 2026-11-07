@@ -1,0 +1,383 @@
+{
+  "schema_version": "1.0",
+  "milestone": "S7",
+  "niche": "speculative_evolution",
+  "pilot": "life beneath a frozen alien ocean",
+  "source_matrix": "docs/openmontage/image_gen/prompt_test_matrix.json",
+  "dropped_scenes": [
+    "s02",
+    "s07"
+  ],
+  "drop_reason": "the 2 easiest: s02 (duplicate vent-grazer silhouette of s01) and s07 (empty flat abyssal plate, no anatomy)",
+  "total_scenes": 10,
+  "models": [
+    "sdxl",
+    "klein",
+    "zimage"
+  ],
+  "run_order": [
+    "sdxl",
+    "klein",
+    "zimage"
+  ],
+  "variant_by_model": {
+    "sdxl": "A",
+    "zimage": "B",
+    "klein": "C"
+  },
+  "variant_rationale": {
+    "sdxl": "structured keyword phrases + short negative prompt",
+    "zimage": "prose, style first, no negative prompt",
+    "klein": "prose, anatomy first, no negative prompt"
+  },
+  "resolution": [
+    1024,
+    1024
+  ],
+  "seeds": {
+    "s01": 4000,
+    "s03": 4004,
+    "s04": 4006,
+    "s05": 4008,
+    "s06": 4010,
+    "s08": 4014,
+    "s09": 4016,
+    "s10": 4018,
+    "s11": 4020,
+    "s12": 4022
+  },
+  "seed_mode": "1 seed per scene, identical across the 3 models",
+  "total_renders": 30,
+  "renders": [
+    {
+      "render_id": "r0001",
+      "scene_id": "s01",
+      "model": "sdxl",
+      "variant": "A",
+      "seed": 4000,
+      "prompt": "vent grazer grazing bacterial mats on a vent chimney, 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs, hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime bioluminescence, flat-vector field-guide plate, , deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8, side silhouette, rule-of-thirds, copy space, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+      "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+      "guidance_scale": 7.5,
+      "steps": 50
+    },
+    {
+      "render_id": "r0002",
+      "scene_id": "s01",
+      "model": "klein",
+      "variant": "C",
+      "seed": 4000,
+      "prompt": "6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. vent grazer grazing bacterial mats on a vent chimney has 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. It is shown hydrothermal vent chimney field, bacterial mats on basalt, bioluminescent vent glow, deep teal water, faint lime bioluminescence, in a flat-vector field-guide plate, deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. side silhouette, rule-of-thirds, copy space clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "guidance_scale": null,
+      "steps": 4
+    },
+    {
+      "render_id": "r0003",
+      "scene_id": "s01",
+      "model": "zimage",
+      "variant": "B",
+      "seed": 4000,
+      "prompt": "A flat-vector field-guide plate field-guide plate. vent grazer grazing bacterial mats on a vent chimney with 6 limbs, 2 eyes, 0 horns; long neck, spade-like forelimbs. set in hydrothermal vent chimney field, bacterial mats on basalt. lit by bioluminescent vent glow, deep teal water, faint lime bioluminescence. deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "guidance_scale": 0.0,
+      "steps": 9
+    },
+    {
+      "render_id": "r0004",
+      "scene_id": "s03",
+      "model": "sdxl",
+      "variant": "A",
+      "seed": 4004,
+      "prompt": "filter drifter sieving suspended microbes, 0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth, open water column of the frozen alien ocean, diffuse bioluminescent glow, neutral buoyancy, flat-vector field-guide plate, , deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8, three-quarter view, floating in mid-water, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+      "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+      "guidance_scale": 7.5,
+      "steps": 50
+    },
+    {
+      "render_id": "r0005",
+      "scene_id": "s03",
+      "model": "klein",
+      "variant": "C",
+      "seed": 4004,
+      "prompt": "0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth. filter drifter sieving suspended microbes has 0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth. It is shown open water column of the frozen alien ocean, diffuse bioluminescent glow, neutral buoyancy, in a flat-vector field-guide plate, deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. three-quarter view, floating in mid-water clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "guidance_scale": null,
+      "steps": 4
+    },
+    {
+      "render_id": "r0006",
+      "scene_id": "s03",
+      "model": "zimage",
+      "variant": "B",
+      "seed": 4004,
+      "prompt": "A flat-vector field-guide plate field-guide plate. filter drifter sieving suspended microbes with 0 limbs, 0 eyes, 0 horns; undulating fin, wide filter mouth. set in open water column of the frozen alien ocean. lit by diffuse bioluminescent glow, neutral buoyancy. deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "guidance_scale": 0.0,
+      "steps": 9
+    },
+    {
+      "render_id": "r0007",
+      "scene_id": "s04",
+      "model": "sdxl",
+      "variant": "A",
+      "seed": 4006,
+      "prompt": "ice burrower peristaltic burrowing through sediment, 0 limbs, 0 eyes, 0 horns; tapered head, segmented body, deep ocean sediment beneath the ice, very dim bioluminescence, near darkness, flat-vector field-guide plate, , deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8, side view, half-submerged in sediment, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+      "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+      "guidance_scale": 7.5,
+      "steps": 50
+    },
+    {
+      "render_id": "r0008",
+      "scene_id": "s04",
+      "model": "klein",
+      "variant": "C",
+      "seed": 4006,
+      "prompt": "0 limbs, 0 eyes, 0 horns; tapered head, segmented body. ice burrower peristaltic burrowing through sediment has 0 limbs, 0 eyes, 0 horns; tapered head, segmented body. It is shown deep ocean sediment beneath the ice, very dim bioluminescence, near darkness, in a flat-vector field-guide plate, deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. side view, half-submerged in sediment clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "guidance_scale": null,
+      "steps": 4
+    },
+    {
+      "render_id": "r0009",
+      "scene_id": "s04",
+      "model": "zimage",
+      "variant": "B",
+      "seed": 4006,
+      "prompt": "A flat-vector field-guide plate field-guide plate. ice burrower peristaltic burrowing through sediment with 0 limbs, 0 eyes, 0 horns; tapered head, segmented body. set in deep ocean sediment beneath the ice. lit by very dim bioluminescence, near darkness. deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "guidance_scale": 0.0,
+      "steps": 9
+    },
+    {
+      "render_id": "r0010",
+      "scene_id": "s05",
+      "model": "sdxl",
+      "variant": "A",
+      "seed": 4008,
+      "prompt": "vent chimney field with black smokers, 0 limbs, 0 eyes, 0 horns, field of hydrothermal vent chimneys on the ocean floor, vent glow illuminating black smoker plumes, flat-vector field-guide plate, , deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8, wide establishing shot, low angle, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+      "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+      "guidance_scale": 7.5,
+      "steps": 50
+    },
+    {
+      "render_id": "r0011",
+      "scene_id": "s05",
+      "model": "klein",
+      "variant": "C",
+      "seed": 4008,
+      "prompt": "0 limbs, 0 eyes, 0 horns. vent chimney field with black smokers has 0 limbs, 0 eyes, 0 horns. It is shown field of hydrothermal vent chimneys on the ocean floor, vent glow illuminating black smoker plumes, in a flat-vector field-guide plate, deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. wide establishing shot, low angle clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "guidance_scale": null,
+      "steps": 4
+    },
+    {
+      "render_id": "r0012",
+      "scene_id": "s05",
+      "model": "zimage",
+      "variant": "B",
+      "seed": 4008,
+      "prompt": "A flat-vector field-guide plate field-guide plate. vent chimney field with black smokers with 0 limbs, 0 eyes, 0 horns. set in field of hydrothermal vent chimneys on the ocean floor. lit by vent glow illuminating black smoker plumes. deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "guidance_scale": 0.0,
+      "steps": 9
+    },
+    {
+      "render_id": "r0013",
+      "scene_id": "s06",
+      "model": "sdxl",
+      "variant": "A",
+      "seed": 4010,
+      "prompt": "under-ice cavern ceiling with melt pools, 0 limbs, 0 eyes, 0 horns, cavern beneath the frozen ice shell, faint light filtering through ice, bioluminescent patches, flat-vector field-guide plate, , deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8, looking up at the ice ceiling, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+      "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+      "guidance_scale": 7.5,
+      "steps": 50
+    },
+    {
+      "render_id": "r0014",
+      "scene_id": "s06",
+      "model": "klein",
+      "variant": "C",
+      "seed": 4010,
+      "prompt": "0 limbs, 0 eyes, 0 horns. under-ice cavern ceiling with melt pools has 0 limbs, 0 eyes, 0 horns. It is shown cavern beneath the frozen ice shell, faint light filtering through ice, bioluminescent patches, in a flat-vector field-guide plate, deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. looking up at the ice ceiling clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "guidance_scale": null,
+      "steps": 4
+    },
+    {
+      "render_id": "r0015",
+      "scene_id": "s06",
+      "model": "zimage",
+      "variant": "B",
+      "seed": 4010,
+      "prompt": "A flat-vector field-guide plate field-guide plate. under-ice cavern ceiling with melt pools with 0 limbs, 0 eyes, 0 horns. set in cavern beneath the frozen ice shell. lit by faint light filtering through ice, bioluminescent patches. deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "guidance_scale": 0.0,
+      "steps": 9
+    },
+    {
+      "render_id": "r0016",
+      "scene_id": "s08",
+      "model": "sdxl",
+      "variant": "A",
+      "seed": 4014,
+      "prompt": "vent grazer spade-like forelimb anatomy detail, 6 limbs, 2 eyes, 0 horns; spade-like forelimb close-up, close-up on basalt vent rock, bioluminescent lime highlight on the forelimb, flat-vector field-guide plate, , deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8, macro detail crop, tight framing, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+      "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+      "guidance_scale": 7.5,
+      "steps": 50
+    },
+    {
+      "render_id": "r0017",
+      "scene_id": "s08",
+      "model": "klein",
+      "variant": "C",
+      "seed": 4014,
+      "prompt": "6 limbs, 2 eyes, 0 horns; spade-like forelimb close-up. vent grazer spade-like forelimb anatomy detail has 6 limbs, 2 eyes, 0 horns; spade-like forelimb close-up. It is shown close-up on basalt vent rock, bioluminescent lime highlight on the forelimb, in a flat-vector field-guide plate, deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. macro detail crop, tight framing clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "guidance_scale": null,
+      "steps": 4
+    },
+    {
+      "render_id": "r0018",
+      "scene_id": "s08",
+      "model": "zimage",
+      "variant": "B",
+      "seed": 4014,
+      "prompt": "A flat-vector field-guide plate field-guide plate. vent grazer spade-like forelimb anatomy detail with 6 limbs, 2 eyes, 0 horns; spade-like forelimb close-up. set in close-up on basalt vent rock. lit by bioluminescent lime highlight on the forelimb. deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "guidance_scale": 0.0,
+      "steps": 9
+    },
+    {
+      "render_id": "r0019",
+      "scene_id": "s09",
+      "model": "sdxl",
+      "variant": "A",
+      "seed": 4016,
+      "prompt": "filter drifter wide filter mouth anatomy detail, 0 limbs, 0 eyes, 0 horns; wide filter mouth close-up, close-up in mid-water, diffuse bioluminescent backlight, flat-vector field-guide plate, , deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8, macro detail crop, front-facing, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+      "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+      "guidance_scale": 7.5,
+      "steps": 50
+    },
+    {
+      "render_id": "r0020",
+      "scene_id": "s09",
+      "model": "klein",
+      "variant": "C",
+      "seed": 4016,
+      "prompt": "0 limbs, 0 eyes, 0 horns; wide filter mouth close-up. filter drifter wide filter mouth anatomy detail has 0 limbs, 0 eyes, 0 horns; wide filter mouth close-up. It is shown close-up in mid-water, diffuse bioluminescent backlight, in a flat-vector field-guide plate, deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. macro detail crop, front-facing clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "guidance_scale": null,
+      "steps": 4
+    },
+    {
+      "render_id": "r0021",
+      "scene_id": "s09",
+      "model": "zimage",
+      "variant": "B",
+      "seed": 4016,
+      "prompt": "A flat-vector field-guide plate field-guide plate. filter drifter wide filter mouth anatomy detail with 0 limbs, 0 eyes, 0 horns; wide filter mouth close-up. set in close-up in mid-water. lit by diffuse bioluminescent backlight. deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "guidance_scale": 0.0,
+      "steps": 9
+    },
+    {
+      "render_id": "r0022",
+      "scene_id": "s10",
+      "model": "sdxl",
+      "variant": "A",
+      "seed": 4018,
+      "prompt": "food-web plate: chemosynthetic bacteria, vent grazer, filter drifter, 6 limbs, 2 eyes, 0 horns, vent field with bacterial mat base of the food web, vent glow, bioluminescent lime bacteria, flat-vector field-guide plate, , deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8, wide plate with copy space for labels, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+      "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+      "guidance_scale": 7.5,
+      "steps": 50
+    },
+    {
+      "render_id": "r0023",
+      "scene_id": "s10",
+      "model": "klein",
+      "variant": "C",
+      "seed": 4018,
+      "prompt": "6 limbs, 2 eyes, 0 horns. food-web plate: chemosynthetic bacteria, vent grazer, filter drifter has 6 limbs, 2 eyes, 0 horns. It is shown vent field with bacterial mat base of the food web, vent glow, bioluminescent lime bacteria, in a flat-vector field-guide plate, deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. wide plate with copy space for labels clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "guidance_scale": null,
+      "steps": 4
+    },
+    {
+      "render_id": "r0024",
+      "scene_id": "s10",
+      "model": "zimage",
+      "variant": "B",
+      "seed": 4018,
+      "prompt": "A flat-vector field-guide plate field-guide plate. food-web plate: chemosynthetic bacteria, vent grazer, filter drifter with 6 limbs, 2 eyes, 0 horns. set in vent field with bacterial mat base of the food web. lit by vent glow, bioluminescent lime bacteria. deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "guidance_scale": 0.0,
+      "steps": 9
+    },
+    {
+      "render_id": "r0025",
+      "scene_id": "s11",
+      "model": "sdxl",
+      "variant": "A",
+      "seed": 4020,
+      "prompt": "food-web plate: ice burrower, bacteria, detritus, 0 limbs, 0 eyes, 0 horns; segmented body, sediment with bacterial films and detritus, very dim bioluminescence, flat-vector field-guide plate, , deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8, wide plate with copy space for labels, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+      "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+      "guidance_scale": 7.5,
+      "steps": 50
+    },
+    {
+      "render_id": "r0026",
+      "scene_id": "s11",
+      "model": "klein",
+      "variant": "C",
+      "seed": 4020,
+      "prompt": "0 limbs, 0 eyes, 0 horns; segmented body. food-web plate: ice burrower, bacteria, detritus has 0 limbs, 0 eyes, 0 horns; segmented body. It is shown sediment with bacterial films and detritus, very dim bioluminescence, in a flat-vector field-guide plate, deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. wide plate with copy space for labels clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "guidance_scale": null,
+      "steps": 4
+    },
+    {
+      "render_id": "r0027",
+      "scene_id": "s11",
+      "model": "zimage",
+      "variant": "B",
+      "seed": 4020,
+      "prompt": "A flat-vector field-guide plate field-guide plate. food-web plate: ice burrower, bacteria, detritus with 0 limbs, 0 eyes, 0 horns; segmented body. set in sediment with bacterial films and detritus. lit by very dim bioluminescence. deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "guidance_scale": 0.0,
+      "steps": 9
+    },
+    {
+      "render_id": "r0028",
+      "scene_id": "s12",
+      "model": "sdxl",
+      "variant": "A",
+      "seed": 4022,
+      "prompt": "frozen planet surface with vent plumes breaking through ice, 0 limbs, 0 eyes, 0 horns, ice crust surface with plume fractures, dim surface light, plume glow from below, flat-vector field-guide plate, , deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8, planet-surface wide, high angle, clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos",
+      "negative_prompt": "extra limbs, fused legs, duplicate subject, text, watermark, photorealism",
+      "guidance_scale": 7.5,
+      "steps": 50
+    },
+    {
+      "render_id": "r0029",
+      "scene_id": "s12",
+      "model": "klein",
+      "variant": "C",
+      "seed": 4022,
+      "prompt": "0 limbs, 0 eyes, 0 horns. frozen planet surface with vent plumes breaking through ice has 0 limbs, 0 eyes, 0 horns. It is shown ice crust surface with plume fractures, dim surface light, plume glow from below, in a flat-vector field-guide plate, deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. planet-surface wide, high angle clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "guidance_scale": null,
+      "steps": 4
+    },
+    {
+      "render_id": "r0030",
+      "scene_id": "s12",
+      "model": "zimage",
+      "variant": "B",
+      "seed": 4022,
+      "prompt": "A flat-vector field-guide plate field-guide plate. frozen planet surface with vent plumes breaking through ice with 0 limbs, 0 eyes, 0 horns. set in ice crust surface with plume fractures. lit by dim surface light, plume glow from below. deep_teal #14455C, bioluminescent_lime #A8E06F, basalt_charcoal #3B444B, pale_bone #EDE7D8. clean image without text, text-free, no letters, no numerals, no watermark, not photorealistic, no people, no logos.",
+      "negative_prompt": null,
+      "guidance_scale": 0.0,
+      "steps": 9
+    }
+  ]
+}

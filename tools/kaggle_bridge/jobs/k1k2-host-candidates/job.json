@@ -1,0 +1,20 @@
+{
+  "job_id": "k1k2-host-candidates",
+  "title": "K1+K2 — FLUX.2-klein-4B host candidates, 8 x 1280x720, contact sheet 2x4",
+  "model_id": "black-forest-labs/FLUX.2-klein-4B",
+  "width": 1280,
+  "height": 720,
+  "batch_size": 1,
+  "precision": "bfloat16 with float16 fallback",
+  "memory_opts": ["model_cpu_offload"],
+  "num_candidates": 8,
+  "steps": 4,
+  "guidance_scale": 1.0,
+  "seeds": [1001, 2027, 777, 42, 2026, 9001, 123, 555],
+  "output_dir": "/kaggle/working/k1k2-host-candidates/images",
+  "contact_sheet": "/kaggle/working/k1k2-host-candidates/contact_sheet_master.jpg",
+  "note": "Single kernel (weights downloaded once). Tries torch.bfloat16 first; on exception/NaN/black frame falls back to torch.float16. Logs load time, generation time, peak VRAM, selected dtype. WAITING_OWNER: owner names candidate number (1-8) to copy as pilot-render/ref/master.png.",
+  "accelerator": "gpu",
+  "enable_internet": true,
+  "created_at": "2026-10-27T00:00:00Z"
+}

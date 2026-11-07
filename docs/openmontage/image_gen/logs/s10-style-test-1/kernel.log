@@ -1,0 +1,16 @@
+[{"stream_name":"stderr","time":85.849137904,"data":"Flax classes are deprecated and will be removed in Diffusers v1.0.0. We recommend migrating to PyTorch classes or pinning your version of Diffusers.\n"}
+,{"stream_name":"stderr","time":85.849875012,"data":"Flax classes are deprecated and will be removed in Diffusers v1.0.0. We recommend migrating to PyTorch classes or pinning your version of Diffusers.\n"}
+,{"stream_name":"stderr","time":147.219215323,"data":"\rFetching 17 files:   0%|          | 0/17 [00:00\u003c?, ?it/s]\rFetching 17 files:  12%|█▏        | 2/17 [00:00\u003c00:01,  8.26it/s]\rFetching 17 files:  24%|██▎       | 4/17 [00:59\u003c03:48, 17.56s/it]\rFetching 17 files:  88%|████████▊ | 15/17 [01:01\u003c00:06,  3.22s/it]\rFetching 17 files: 100%|██████████| 17/17 [01:01\u003c00:00,  3.60s/it]\n"}
+,{"stream_name":"stderr","time":173.332849217,"data":"\rLoading pipeline components...:   0%|          | 0/5 [00:00\u003c?, ?it/s]\rLoading pipeline components...:  20%|██        | 1/5 [00:15\u003c01:03, 15.92s/it]\rLoading pipeline components...:  40%|████      | 2/5 [00:24\u003c00:35, 11.80s/it]\rLoading pipeline components...:  60%|██████    | 3/5 [00:25\u003c00:13,  6.73s/it]\rLoading pipeline components...:  80%|████████  | 4/5 [00:26\u003c00:04,  4.28s/it]\n"}
+,{"stream_name":"stderr","time":192.852780874,"data":"\rLoading checkpoint shards:   0%|          | 0/2 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":205.087961876,"data":"\rLoading checkpoint shards:  50%|█████     | 1/2 [00:19\u003c00:19, 19.52s/it]\u001b[A\n"}
+,{"stream_name":"stderr","time":205.089093128,"data":"\rLoading checkpoint shards: 100%|██████████| 2/2 [00:31\u003c00:00, 15.23s/it]\u001b[A\rLoading checkpoint shards: 100%|██████████| 2/2 [00:31\u003c00:00, 15.88s/it]\n"}
+,{"stream_name":"stderr","time":205.09711057,"data":"\rLoading pipeline components...: 100%|██████████| 5/5 [00:57\u003c00:00, 14.21s/it]\rLoading pipeline components...: 100%|██████████| 5/5 [00:57\u003c00:00, 11.57s/it]\n"}
+,{"stream_name":"stdout","time":1651.677266219,"data":"s7 klein done: 54 images, 25.075 s/img steady, peak VRAM 7995.02 MB, load 119.2s\n"}
+,{"stream_name":"stderr","time":1659.783684692,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":1659.78371587,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":1660.044797877,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":1660.044825289,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":1661.027125673,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":1661.648431273,"data":"[NbConvertApp] Writing 517284 bytes to __results__.html\n"}
+]

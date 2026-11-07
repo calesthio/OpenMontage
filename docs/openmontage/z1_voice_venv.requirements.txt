@@ -1,0 +1,11 @@
+kokoro-onnx==0.6.1
+onnxruntime==1.20.1
+espeakng-loader==0.2.4
+phonemizer==3.4.0
+kokoro==0.2.2
+misaki==0.7.17
+soundfile==0.14.0
+numpy==2.5.4
+torch==2.6.0+cpu
+torchaudio==2.6.0+cpu
+en-core-web-sm==3.8.0

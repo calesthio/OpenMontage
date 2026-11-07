@@ -1,0 +1,30 @@
+{
+  "ladder": [],
+  "rungs": [
+    {
+      "rung": 1,
+      "stack": "released_036_x4",
+      "note": "older released diffusers 0.36.0 + transformers 4.x",
+      "pip_args": [
+        "diffusers==0.36.0",
+        "transformers==4.57.6",
+        "huggingface-hub>=0.34,<1.0",
+        "accelerate>=1.10",
+        "safetensors>=0.4"
+      ],
+      "pip_ok": true,
+      "import_found": "StableDiffusionXLPipeline",
+      "import_error": null,
+      "versions_after": {
+        "diffusers": "0.36.0",
+        "transformers": "4.57.6",
+        "huggingface_hub": "0.36.2",
+        "accelerate": "1.14.0",
+        "torch": "2.11.0+cu128"
+      }
+    }
+  ],
+  "used_rung": 1,
+  "used_stack": "released_036_x4",
+  "pipeline_class": "StableDiffusionXLPipeline"
+}

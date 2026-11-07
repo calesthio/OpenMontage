@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "niche_id": "art_history",
+  "style_name": "museum_plate_line_drawing",
+  "display_name": "Art History - museum plate line drawings (limited AI inserts)",
+  "status": "FINAL",
+  "locked_model": "klein (config/image_engine.json -> model); prompt target klein, variant C",
+  "media_policy": {
+    "allowed": [
+      "ai_generated_still_illustration",
+      "own_graphics_diagram"
+    ],
+    "excluded": [
+      "photorealistic_people",
+      "fake_reproduction_of_a_real_artwork",
+      "text_in_image",
+      "video_clips"
+    ],
+    "rights_basis": "ai_generated_illustration",
+    "generator": "AI",
+    "ai_share": 0.15,
+    "note": "AI plates may cover at most 15% of the runtime. An AI plate must never imitate or reproduce a specific real artwork: it may show a generic motif study or a diagram of composition. Real artworks come from CC0 / public-domain museum records with their own rights records."
+  },
+  "palette": {
+    "plaster_white": "#F2EFE9",
+    "graphite": "#3A3A3A",
+    "ochre": "#C08A3E",
+    "verdigris": "#4E8073"
+  },
+  "line_style": {
+    "name": "museum plate line drawing",
+    "prompt_phrase": "museum plate line drawing, fine ink contours, hatching, two muted accent washes",
+    "rules": [
+      "contour line first, hatching for volume",
+      "no photographic texture, no impasto simulation",
+      "two accent washes maximum",
+      "catalogue-plate framing with wide margins"
+    ]
+  },
+  "light": "even neutral illumination, no photographic depth",
+  "camera_vocabulary": {
+    "front": "flat front view of the motif, centered, catalogue-plate margins",
+    "side": "profile view of the motif, centered, catalogue-plate margins",
+    "three_quarter": "three-quarter view of the motif, near and far planes readable",
+    "detail_crop": "close crop on one detail of the motif",
+    "wide_context": "wide plate of the motif in a generic setting, small in frame"
+  },
+  "constraints": [
+    {
+      "id": "no_text",
+      "positive": "clean image without text, text-free, no letters, no numerals, no watermark, no signature",
+      "negative": "text, watermark, letters, numerals, signature, inscription",
+      "enforced_by": "tools/prompting/builder.py",
+      "inject": false
+    },
+    {
+      "id": "not_photoreal",
+      "positive": "drawn line work, not a photograph, not a photorealistic painting",
+      "negative": "photorealism, photograph, oil painting texture, photorealistic",
+      "enforced_by": "tools/prompting/builder.py",
+      "inject": false
+    },
+    {
+      "id": "no_people",
+      "positive": "no human figures, no faces, no portrait likeness",
+      "negative": "people, person, portrait, face, likeness, figure",
+      "enforced_by": "tools/prompting/builder.py",
+      "inject": false
+    },
+    {
+      "id": "no_logos",
+      "positive": "no emblems, no insignia, no flags, no logos, no watermarks",
+      "negative": "emblem, insignia, flag, logo, watermark, signature",
+      "enforced_by": "tools/prompting/builder.py",
+      "inject": false
+    },
+    {
+      "id": "no_fake_artwork",
+      "positive": "generic original motif study, an invented subject",
+      "negative": "copy of a known painting, famous artwork, reproduction of a specific artwork",
+      "enforced_by": "style_kit",
+      "inject": true
+    },
+    {
+      "id": "plate_margins",
+      "positive": "wide plain margins around the motif",
+      "negative": "full bleed, cropped edges, busy frame",
+      "enforced_by": "style_kit",
+      "inject": true
+    }
+  ],
+  "label_rule": {
+    "label": "Illustration",
+    "placement": "start_and_description",
+    "ai_share": 0.15,
+    "gate": "every AI cut carries the label; the AI share stays within the niche limit (max 15% of runtime); an AI plate is never presented as a real artwork",
+    "enforced_by": "tools/illustration/illustration_batch.py (IMAGE_LABEL)"
+  },
+  "anatomy_rule": {
+    "required": false,
+    "counts": [],
+    "canonical_silhouette": false,
+    "rule": "no creatures in this niche; the motif and its parts are named in the prompt"
+  },
+  "seed_policy": {
+    "range": [
+      3000,
+      3999
+    ],
+    "base": 3000,
+    "rule": "one fixed seed per plate and view, recorded in the manifest; never reuse a seed for two subjects inside one batch",
+    "source": "docs/openmontage/image_gen/ILLUSTRATION_STYLE_BIBLE.md section 3"
+  },
+  "aspect": {
+    "full_frame": [
+      1344,
+      768
+    ],
+    "card": [
+      1024,
+      1024
+    ],
+    "sheet_square": [
+      1024,
+      1024
+    ]
+  },
+  "editorial_overlays": [
+    "labels",
+    "callouts",
+    "arrows",
+    "measurement_lines",
+    "numbers"
+  ],
+  "editorial_overlays_rule": "labels, callouts, arrows, measurement lines and numbers are drawn in the editor, never by the image model",
+  "provenance": {
+    "source_profile": "docs/openmontage/niches/art_history.yaml",
+    "style_bible": "docs/openmontage/niches/art_history/STYLE_BIBLE.md",
+    "citations": [
+      {
+        "title": "FLUX.2 [klein] 4B model card (prompt style sensitivity)",
+        "url": "https://huggingface.co/black-forest-labs/FLUX.2-klein-4B",
+        "accessed": "2026-10-22"
+      }
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+rank,topic,query,niche,n,n_over_100k,over_100k_share,n_under_12mo,under_12mo_share,n_shorts,shorts_share,n_longform,n_recent_longform,n_recent_longform_over_100k,comp_score
+1,Apollo 9,Apollo 9 docking maneuver test,t10_apollo9_docking,3,0,0.0,0,0.0,2,66.7,1,0,0,0.0
+2,Apollo 10,Apollo 10 closest approach lunar,t10_apollo10_approach,4,1,25.0,1,25.0,1,25.0,3,0,0,0.0
+3,Apollo 11,Apollo 11 first moonwalk Armstrong,t10_apollo11_moonwalk,50,50,100.0,0,0.0,21,42.0,29,0,0,0.0
+4,ISS,ISS Earth view cupola,t10_iss_cupola,50,16,32.0,9,18.0,28,56.0,22,1,0,0.5
+5,Apollo 9,Apollo 9 lunar module EVA test,t10_apollo9_lm_eva,41,5,12.2,6,14.6,10,24.4,31,3,0,1.5
+6,Apollo 9,Apollo 9 Saturn V crew McDivitt,t10_apollo9_crew,31,1,3.2,4,12.9,3,9.7,28,3,0,1.5
+7,Lunar rover,Apollo 15 lunar rover first drive,t10_rover_apollo15,50,14,28.0,14,28.0,29,58.0,21,1,1,1.5
+8,Apollo 10,Apollo 10 dress rehearsal moon,t10_apollo10_rehearsal,50,3,6.0,7,14.0,8,16.0,42,4,0,2.0
+9,JWST,JWST launch Ariane 5,t10_jwst_launch,50,22,44.0,2,4.0,6,12.0,44,2,1,2.0
+10,Apollo 13,Apollo 13 reentry blackout Odyssey,t10_apollo13_reentry,13,6,46.2,4,30.8,1,7.7,12,3,1,2.5
+11,Lunar rover,Apollo 16 lunar rover highlands,t10_rover_apollo16,50,4,8.0,10,20.0,12,24.0,38,5,0,2.5
+12,ISS,ISS first module Zarya Unity,t10_iss_zarya_unity,36,3,8.3,7,19.4,6,16.7,30,5,0,2.5
+13,ISS,ISS Expedition 1 crew,t10_iss_expedition1,50,20,40.0,6,12.0,2,4.0,48,5,0,2.5
+14,Apollo 10,Apollo 10 Stafford Cernan Young,t10_apollo10_crew,50,2,4.0,13,26.0,10,20.0,40,6,0,3.0
+15,Apollo 11,Apollo 11 moon landing Eagle,t10_apollo11_eagle,50,50,100.0,3,6.0,11,22.0,39,2,2,3.0
+16,Artemis,Artemis I uncrewed test flight,t10_artemis1_test,50,4,8.0,13,26.0,16,32.0,34,6,0,3.0
+17,JWST,JWST deployment sunshield mirror,t10_jwst_deployment,32,6,18.8,12,37.5,6,18.8,26,7,0,3.5
+18,Apollo 9,Apollo 9 lunar module spider,t10_apollo9_spider,50,2,4.0,12,24.0,7,14.0,43,8,0,4.0
+19,Lunar rover,Apollo 17 lunar rover last mission,t10_rover_apollo17,50,50,100.0,3,6.0,13,26.0,37,3,3,4.5
+20,Apollo 11,Apollo 11 quarantine Hornet,t10_apollo11_quarantine,50,2,4.0,21,42.0,24,48.0,26,10,0,5.0
+21,ISS,ISS construction assembly spacewalks,t10_iss_assembly,36,5,13.9,23,63.9,18,50.0,18,12,0,6.0
+22,Lunar rover,lunar rover vehicle deployment moon,t10_rover_deployment,50,21,42.0,9,18.0,23,46.0,27,7,3,6.5
+23,JWST,JWST exoplanet atmosphere,t10_jwst_exoplanet,50,15,30.0,19,38.0,23,46.0,27,8,3,7.0
+24,Voyager,Voyager golden record,t10_voyager_golden_record,50,50,100.0,5,10.0,10,20.0,40,5,5,7.5
+25,Apollo 10,Apollo 10 lunar module Snoopy descent,t10_apollo10_snoopy,50,4,8.0,23,46.0,9,18.0,41,17,0,8.5
+26,Apollo 13,Apollo 13 oxygen tank explosion,t10_apollo13_oxygen,47,29,61.7,17,36.2,10,21.3,37,11,3,8.5
+27,Apollo 11,Apollo 11 Saturn V launch Kennedy,t10_apollo11_launch,50,49,98.0,8,16.0,7,14.0,43,6,6,9.0
+28,Artemis,Artemis SLS rocket launch,t10_artemis_sls_launch,50,50,100.0,10,20.0,20,40.0,30,6,6,9.0
+29,Apollo 13,Apollo 13 successful failure,t10_apollo13_failure,50,41,82.0,9,18.0,12,24.0,38,7,6,9.5
+30,Apollo 13,Apollo 13 Lovell Haise Swigert,t10_apollo13_crew,50,14,28.0,28,56.0,18,36.0,32,18,1,10.0
+31,ISS,ISS spacewalk EVA repair,t10_iss_eva_repair,50,11,22.0,24,48.0,16,32.0,34,15,3,10.5
+32,JWST,JWST first deep field image,t10_jwst_deep_field,50,29,58.0,10,20.0,10,20.0,40,10,8,13.0
+33,Voyager,Voyager 2 grand tour planets,t10_voyager2_grand_tour,50,25,50.0,18,36.0,12,24.0,38,13,7,13.5
+34,Voyager,Voyager pale blue dot,t10_voyager_pale_blue_dot,50,50,100.0,12,24.0,18,36.0,32,10,10,15.0
+35,Voyager,Voyager 1 interstellar space,t10_voyager1_interstellar,50,50,100.0,14,28.0,17,34.0,33,13,13,19.5
+36,JWST,JWST earliest galaxies,t10_jwst_galaxies,50,50,100.0,20,40.0,6,12.0,44,19,19,28.5
+37,Voyager,Voyager 1 solar system exit,t10_voyager1_exit,50,43,86.0,24,48.0,14,28.0,36,21,18,28.5
+38,Artemis,Artemis Gateway lunar station,t10_artemis_gateway,50,50,100.0,26,52.0,6,12.0,44,25,25,37.5
+39,Artemis,Artemis II crewed lunar flyby,t10_artemis2_crewed,50,35,70.0,48,96.0,9,18.0,41,40,27,47.0
+40,Artemis,Artemis III moon landing Starship,t10_artemis3_landing,50,50,100.0,39,78.0,12,24.0,38,34,34,51.0

@@ -1,0 +1,37 @@
+spec_version: "1.0"
+pilot: "life beneath a frozen alien ocean"
+niche: speculative_evolution
+type: food_web_plate
+name: "frozen_ocean_food_web"
+role: "chemosynthetic food web at the base of the alien-ocean ecosystem"
+anatomy: null
+trophic_levels:
+  - level: "producers"
+    members: ["chemosynthetic bacteria and archaea"]
+    energy: "oxidize sulfides, methane, and other inorganic chemicals from vent fluid (chemosynthesis, not sunlight)"
+    evidence: "KNOWN"
+  - level: "primary consumers"
+    members: ["filter drifter (sieves suspended microbes)", "vent grazer (grazes bacterial mats)", "ice burrower (grazes sediment films)"]
+    energy: "eat chemosynthetic microbes/mats/detritus"
+    evidence: "SPECULATION"
+  - level: "secondary consumers"
+    members: ["(reserved) small predators eating grazers/drifters"]
+    energy: "eat primary consumers"
+    evidence: "SPECULATION"
+pressure_temperature_constraint: "entire web below ~200 m (no sunlight), deep-water temp ~2-4 C, pressure hundreds of atm; all members soft-bodied/pressure-resistant with no air spaces"
+canonical_silhouette: "horizontal plate: bacterial mat band at the base (bottom), grazers/drifters in the middle water, predator silhouettes at top; arrows show energy flow upward; copy space for labels"
+known_inference_speculation_per_trait:
+  chemosynthetic_producers: KNOWN (vent microbes are the producers — NOAA)
+  no_photosynthesis_anywhere: KNOWN (below ~200 m no sunlight — NOAA)
+  grazer/drifter/burrower_primary_consumers: SPECULATION (no direct alien food-web observations)
+  secondary_consumers: SPECULATION (reserved; not yet designed)
+sources:
+  - title: "Life on a Hydrothermal Vent (NOAA Ocean Explorer)"
+    url: "https://oceanexplorer.noaa.gov/wp-content/uploads/2025/04/life-on-hydrothermal-vent-investigation.pdf"
+    accessed: "2026-10-21"
+  - title: "Wild and Bizarre Marine Life — chemosynthesis, pressure, light (NOAA Ocean Explorer)"
+    url: "https://oceanexplorer.noaa.gov/explainers/marine-life/"
+    accessed: "2026-10-21"
+  - title: "Hydrothermal Vents (NOAA fact sheet)"
+    url: "https://www.noaa.gov/hydrothermal-vents-fact-sheet"
+    accessed: "2026-10-21"

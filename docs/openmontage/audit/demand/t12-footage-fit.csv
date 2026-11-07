@@ -1,0 +1,4 @@
+topic,archiveorg_total_results,archiveorg_hd_formats,hd_clips_observed_estimate,est_usable_minutes_15min,est_usable_minutes_30min,est_usable_minutes_45min,rights_basis,third_party_credit_flags,footage_verdict
+Apollo test flights / Saturn V,359,"h.264, QuickTime, MPEG4, h.264 IA, WebM",20-40,YES,YES,YES,"Public domain (NASA); credit required; logos restricted (14 CFR 1221)","Third-party Content ID claims on PD NASA footage documented","FIT"
+ISS (International Space Station),46420,"h.264, h.264/MPEG2-TS, WebM",30-60,YES,YES,YES,"Public domain (NASA); credit required; logos restricted (14 CFR 1221)","Third-party Content ID claims on PD NASA footage documented","FIT"
+JWST / space telescope,1552,"h.264, WebM, MPEG1, MPEG2, Ogg Video",20-40,YES,YES,YES,"Public domain (NASA/ESA); SOHO commercial restriction; credit required","Third-party Content ID claims on PD NASA footage documented","FIT"

@@ -1,0 +1,35 @@
+spec_version: "1.0"
+pilot: "life beneath a frozen alien ocean"
+niche: speculative_evolution
+type: species
+name: "ice burrower"
+role: "peristaltic burrower through deep ocean sediment beneath the ice"
+anatomy:
+  limb_count: 0
+  eye_count: 0
+  horn_count: 0
+  dominant_features:
+    - name: "tapered head"
+      function: "pushes through sediment and ice-adjacent mud with minimal resistance"
+      evidence: "SPECULATION"
+      source: "burrowing analogues (earthworms, amphipods); no direct alien analogue"
+    - name: "segmented body"
+      function: "peristaltic locomotion through sediment; each segment anchors and advances"
+      evidence: "INFERENCE"
+      source: "peristaltic burrowing is standard for sediment-dwelling invertebrates (annelids)"
+energy_source: "chemosynthesis-derived: grazes bacterial films and detritus in the sediment (not sunlight)"
+pressure_temperature_constraint: "high pressure (hundreds of atm), near-freezing temperature (~2-4 C), total darkness; soft boneless body resists pressure; no air spaces"
+canonical_silhouette: "cylindrical, tapered, segmented worm-like body, wider at the head and narrowing to the tail; no limbs, no eyes, no horns; no distinct head appendages"
+known_inference_speculation_per_trait:
+  limb_count_0: KNOWN  (burrowers use body waves, not limbs)
+  eye_count_0: KNOWN   (darkness; NOAA deep-ocean)
+  horn_count_0: KNOWN  (no display function in darkness)
+  tapered_head: SPECULATION
+  segmented_body: INFERENCE
+sources:
+  - title: "Wild and Bizarre Marine Life — pressure, light, chemosynthesis (NOAA Ocean Explorer)"
+    url: "https://oceanexplorer.noaa.gov/explainers/marine-life/"
+    accessed: "2026-10-21"
+  - title: "Life on a Hydrothermal Vent (NOAA Ocean Explorer)"
+    url: "https://oceanexplorer.noaa.gov/wp-content/uploads/2025/04/life-on-hydrothermal-vent-investigation.pdf"
+    accessed: "2026-10-21"

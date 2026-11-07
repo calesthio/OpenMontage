@@ -1,0 +1,30 @@
+{
+  "best_style": "graphic-novel-ink",
+  "style_stats": {
+    "paper-cut": {
+      "images": 12,
+      "black_or_nan": 0,
+      "caption_unreadable": 2,
+      "blur_flagged": 0,
+      "mean_caption_dark_fraction": 0.505,
+      "bad": 20
+    },
+    "field-guide": {
+      "images": 12,
+      "black_or_nan": 0,
+      "caption_unreadable": 2,
+      "blur_flagged": 0,
+      "mean_caption_dark_fraction": 0.4472,
+      "bad": 20
+    },
+    "graphic-novel-ink": {
+      "images": 12,
+      "black_or_nan": 0,
+      "caption_unreadable": 2,
+      "blur_flagged": 0,
+      "mean_caption_dark_fraction": 0.5125,
+      "bad": 20
+    }
+  },
+  "rule": "min(bad) where bad = 1000*black_or_nan + 10*caption_unreadable + blur_flagged; tie-break mean caption dark fraction, then declared style order"
+}

@@ -1,0 +1,54 @@
+version: "1.0"
+niche_id: art_history
+display_name: "Art History — Public-Domain Museum Collections"
+
+# --- 3a. Allowed sources + per-source storage policy ---
+allowed_sources:
+  - name: met
+    storage_policy: per_project_asset
+  - name: smithsonian
+    storage_policy: per_project_asset
+  - name: rijksmuseum
+    storage_policy: per_project_asset
+  - name: nga
+    storage_policy: per_project_asset
+  - name: wikimedia
+    storage_policy: per_project_asset
+
+# --- 3b. Excluded content (hard reject at footage/editorial) ---
+excluded_content:
+  - rights_not_cc0_or_public_domain
+  - third_party_credit_required
+  - identifiable_private_persons_without_clearance
+  - contemporary_copyrighted_work
+
+# --- 3c. Required primary document types ---
+required_primary_doc_types:
+  - MET_OBJECT_PAGE      # metmuseum.org object record (CC0 / PD)
+  - SMITHSONIAN_OBJECT   # si.edu object record (CC0 / PD)
+  - RIJKSMUSEUM_OBJECT   # rijksmuseum.nl object record (CC0 / PD)
+  - NGA_OBJECT           # nga.gov object record (PD)
+  - WIKIMEDIA_FILE_PAGE  # commons.wikimedia.org file page (license stated)
+
+# --- 3d. Viability gate ---
+viability_gate:
+  min_licensed_video_clips: 0      # image-led niche; stills + motion variety
+  min_primary_docs: 3
+
+# --- 3e. Added-value gate ---
+added_value_gate:
+  min_narration_coverage: 0.90
+  min_original_diagrams_per_90s: 0
+  max_unannotated_archive_clip_s: 20
+  max_still_only_sequence_s: 15
+  claim_source_card_policy: every_claim
+  ai_illustration_max_share: 0.15
+
+# --- 3f. Episode templates (>= 3 distinct structures) ---
+episode_templates:
+  - id: artist_biography
+    description: "One artist across a career: early work, breakthrough, mature style, legacy, key works with dates and collections."
+  - id: movement_survey
+    description: "One art movement: origins, defining characteristics, representative artists, social context, decline or evolution."
+  - id: single_work_deep_dive
+    description: "One work: commission, creation, materials, provenance, reception, conservation, current location."

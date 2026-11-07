@@ -1,0 +1,67 @@
+{
+  "job_id": "stick4-ipadapter-fixed-2",
+  "model": "ip_adapter_plus_sdxl",
+  "model_id": "Lykon/dreamshaper-xl-1-0",
+  "ip_adapter_repo": "h94/IP-Adapter",
+  "ip_adapter_weight": "sdxl_models/ip-adapter-plus_sdxl_vit-h.safetensors",
+  "license": "Apache-2.0 (h94/IP-Adapter)",
+  "pipeline_class": "StableDiffusionXLPipeline",
+  "dtype": "float16",
+  "bitsandbytes": false,
+  "cpu_fallback": false,
+  "image_encoder_offloaded_before_gen": true,
+  "tensor_shape_fix": "2D->3D reshape applied before pipeline call",
+  "width": 1024,
+  "height": 1024,
+  "requested": 3,
+  "generated": 0,
+  "load_seconds": 87.816,
+  "steady_state_sec_per_image": null,
+  "mean_sec_per_image": null,
+  "gpu_seconds": 0.27,
+  "peak_vram_mb": 12279.12,
+  "peak_vram_reserved_mb": 12824.0,
+  "oom_count": 0,
+  "black_count": 0,
+  "nan_count": 0,
+  "consistency": {
+    "candidate": "ip_adapter_plus_sdxl",
+    "n_comparisons": 0,
+    "mean_clip_similarity": null,
+    "min_clip_similarity": null,
+    "max_clip_similarity": null,
+    "note": "cosine similarity of CLIP ViT-H image embedding vs reference (1.0 = identical)"
+  },
+  "versions": {
+    "diffusers": "0.40.0",
+    "transformers": "5.16.1",
+    "torch": "2.11.0+cu128",
+    "accelerate": "1.14.0",
+    "safetensors": "0.8.0",
+    "numpy": "2.1.3",
+    "pillow": "13.0.0",
+    "torch_cuda": "12.8",
+    "gpu": "Tesla T4"
+  },
+  "created_utc": "2026-10-25T01:45:18Z",
+  "images": [
+    {
+      "render_id": "scene_pointing",
+      "file": null,
+      "seed": 2222,
+      "error": "generation_exception"
+    },
+    {
+      "render_id": "scene_confused",
+      "file": null,
+      "seed": 3333,
+      "error": "generation_exception"
+    },
+    {
+      "render_id": "scene_talking",
+      "file": null,
+      "seed": 4444,
+      "error": "generation_exception"
+    }
+  ]
+}

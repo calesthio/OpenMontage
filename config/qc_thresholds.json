@@ -1,0 +1,38 @@
+{
+  "black_ratio_max": 0.05,
+  "freeze_duration_max": 2.0,
+  "silence_ratio_max": 0.1,
+  "lufs_target": -14.0,
+  "lufs_tolerance": 2.0,
+  "true_peak_max": -1.5,
+  "duration_tolerance": 1.0,
+  "subtitle_drift_max": 0.5,
+  "narration_share_min": 0.9,
+  "graphics_per_90s_min": 1.0,
+  "unannotated_clip_max_s": 20.0,
+  "still_only_max_s": 15.0,
+  "illustration_qc": {
+    "note": "P4: thresholds for the illustration QC. New keys - no existing threshold was changed. The text detector and the palette/duplicate checks are documented in docs/openmontage/image_gen/IMAGE_QC_V2.md.",
+    "blur_variance_min": 100.0,
+    "text_detector": {
+      "method": "connected_components",
+      "analysis_width": 1024,
+      "ink_delta": 14,
+      "background_window": 25,
+      "glyph_max_stroke_ratio": 0.38,
+      "line_min_characters": 3,
+      "line_min_height": 6,
+      "line_max_gap_ratio": 1.6,
+      "line_max_baseline_spread": 0.35,
+      "line_max_overlap": 0
+    },
+    "size_exact": true,
+    "aspect_tolerance": 0.01,
+    "duplicate_hamming_max": 8,
+    "palette_drift": {
+      "color_distance_max": 70,
+      "min_palette_coverage": 0.04,
+      "max_off_palette_share": 0.92
+    }
+  }
+}

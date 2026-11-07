@@ -1,0 +1,181 @@
+{
+  "topic_id": "artemis",
+  "stages": {
+    "claim_ledger_check": {
+      "status": "OK",
+      "started_at": "2026-10-19T07:37:02Z",
+      "finished_at": "2026-10-19T07:37:02Z",
+      "wall_time_s": 0.003,
+      "disk_before_bytes": 6586662912,
+      "disk_after_bytes": 6586662912,
+      "outputs": {
+        "ledger": "/workspaces/OpenMontage/docs/openmontage/evidence/ARTEMIS_CLAIM_LEDGER.md",
+        "claim_ids": [
+          "ARTEMIS-01",
+          "ARTEMIS-02",
+          "ARTEMIS-03",
+          "ARTEMIS-04",
+          "ARTEMIS-05",
+          "ARTEMIS-06",
+          "ARTEMIS-07",
+          "ARTEMIS-08",
+          "ARTEMIS-09",
+          "ARTEMIS-10",
+          "ARTEMIS-11",
+          "ARTEMIS-12"
+        ]
+      },
+      "output_hash": "074a147765639c059a8e95f7bdf5edb407a4866d5d8e1f0e1011e7f1e5030379",
+      "error": null,
+      "resumed": true
+    },
+    "script_validation": {
+      "status": "OK",
+      "started_at": "2026-10-19T07:37:02Z",
+      "finished_at": "2026-10-19T07:37:02Z",
+      "wall_time_s": 0.002,
+      "disk_before_bytes": 6586662912,
+      "disk_after_bytes": 6586662912,
+      "outputs": {
+        "script": "/workspaces/OpenMontage/docs/openmontage/slice/ARTEMIS_FULL_SCRIPT_v0.md",
+        "sentences": 20
+      },
+      "output_hash": "d90444c5cad6e4862f6a5d3eb976a3676870b16c0aa476d1540bfd97c7a901d0",
+      "error": null,
+      "resumed": true
+    },
+    "footage_manifest_rights": {
+      "status": "OK",
+      "started_at": "2026-10-19T07:37:02Z",
+      "finished_at": "2026-10-19T07:37:02Z",
+      "wall_time_s": 0.0,
+      "disk_before_bytes": 6586662912,
+      "disk_after_bytes": 6586662912,
+      "outputs": {
+        "rights_records": "/workspaces/OpenMontage/docs/openmontage/slice/artifacts/rights_records.json",
+        "assets": 9
+      },
+      "output_hash": "430f572368b6e7a3d221337ed274d100f8f395e1a8b270bd1788f27990bc9665",
+      "error": null,
+      "resumed": true
+    },
+    "narration": {
+      "status": "OK",
+      "started_at": "2026-10-19T10:47:23Z",
+      "finished_at": "2026-10-19T10:47:23Z",
+      "wall_time_s": 144.423,
+      "disk_before_bytes": 6530519040,
+      "disk_after_bytes": 6493573120,
+      "outputs": {
+        "narration_wav": "/workspaces/OpenMontage/docs/openmontage/slice/artemis/narration_finished.wav",
+        "verdict": "PASS",
+        "input": "/workspaces/OpenMontage/docs/openmontage/slice/artemis/narration_raw.wav",
+        "output": "/workspaces/OpenMontage/docs/openmontage/slice/artemis/narration_finished.wav",
+        "measured_loudness": {
+          "input_i": -25.67,
+          "input_lra": 3.3,
+          "input_tp": -3.31,
+          "input_thresh": -36.01
+        },
+        "targets": {
+          "target_i": -14.0,
+          "target_tp": -1.5,
+          "target_lra": 11.0
+        },
+        "sample_rate": 24000,
+        "channels": 1,
+        "ducking": false
+      },
+      "output_hash": "2e9487b18977dbf76e3b3d64e78986637ab1f2bb036d5b64ad860cb44f96dd62",
+      "error": null,
+      "resumed": true
+    },
+    "subtitles": {
+      "status": "OK",
+      "started_at": "2026-10-19T10:47:39Z",
+      "finished_at": "2026-10-19T10:47:39Z",
+      "wall_time_s": 16.769,
+      "disk_before_bytes": 6493573120,
+      "disk_after_bytes": 6493532160,
+      "outputs": {
+        "words": "/workspaces/OpenMontage/docs/openmontage/slice/artemis/word-timestamps.json",
+        "subtitles": "/workspaces/OpenMontage/docs/openmontage/slice/artemis/subtitles.srt"
+      },
+      "output_hash": "0d70d025933216cd7668222dfb101f1060edcbe6a76d8e6d88ebb62ad2d42b4d",
+      "error": null,
+      "resumed": true
+    },
+    "edl": {
+      "status": "OK",
+      "started_at": "2026-10-19T10:47:39Z",
+      "finished_at": "2026-10-19T10:47:39Z",
+      "wall_time_s": 0.0,
+      "disk_before_bytes": 6493532160,
+      "disk_after_bytes": 6493523968,
+      "outputs": {
+        "edit_decisions": "/workspaces/OpenMontage/docs/openmontage/slice/artemis/edit_decisions.json",
+        "cuts": 12
+      },
+      "output_hash": "ed83e560c6252dabc4f77fb8c2353a060661cb2f28f27dcb74f684cbf1b18c1e",
+      "error": null,
+      "resumed": true
+    },
+    "render": {
+      "status": "OK",
+      "started_at": "2026-10-19T10:52:51Z",
+      "finished_at": "2026-10-19T10:52:51Z",
+      "wall_time_s": 311.846,
+      "disk_before_bytes": 6493519872,
+      "disk_after_bytes": 6377115648,
+      "outputs": {
+        "video": "/workspaces/OpenMontage/docs/openmontage/slice/artemis/renders/final_artemis_draft.mp4"
+      },
+      "output_hash": "05df5959b38081715f3f8c4f92b6f916d4f8c33cda038061e4adbb482058a388",
+      "error": null,
+      "resumed": true
+    },
+    "finish_audio": {
+      "status": "OK",
+      "started_at": "2026-10-19T10:55:43Z",
+      "finished_at": "2026-10-19T10:55:43Z",
+      "wall_time_s": 0.059,
+      "disk_before_bytes": 6376345600,
+      "disk_after_bytes": 6376345600,
+      "outputs": {
+        "finished_wav": "/workspaces/OpenMontage/docs/openmontage/slice/artemis/narration_finished.wav",
+        "already_finished": true
+      },
+      "output_hash": "b03f05911afb17e71a540a49ec458cac5dfacb1ab768c4c36808903e5491d96f",
+      "error": null
+    },
+    "qc": {
+      "status": "OK",
+      "started_at": "2026-10-19T10:57:35Z",
+      "finished_at": "2026-10-19T10:57:35Z",
+      "wall_time_s": 112.276,
+      "disk_before_bytes": 6376345600,
+      "disk_after_bytes": 6376345600,
+      "outputs": {
+        "qa_report": "/workspaces/OpenMontage/docs/openmontage/slice/artifacts/qa_report.json",
+        "verdict": "FAILED"
+      },
+      "output_hash": "010674b1c27cf2febc93e05e2e643985f7cc6c923832d07ba71e26489f574fc0",
+      "error": null
+    },
+    "package_draft": {
+      "status": "OK",
+      "started_at": "2026-10-19T10:57:35Z",
+      "finished_at": "2026-10-19T10:57:35Z",
+      "wall_time_s": 0.011,
+      "disk_before_bytes": 6376345600,
+      "disk_after_bytes": 6376275968,
+      "outputs": {
+        "package": "/workspaces/OpenMontage/docs/openmontage/slice/artemis/package",
+        "manifest": "/workspaces/OpenMontage/docs/openmontage/slice/artemis/package/package_manifest.json"
+      },
+      "output_hash": "fcb33d161fa77253bef3979cfb60e14443cb6d49b50cd8125aaa050f3fc56e69",
+      "error": null
+    }
+  },
+  "updated_at": "2026-10-19T10:55:43Z"
+}

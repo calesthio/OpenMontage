@@ -1,0 +1,2880 @@
+{
+  "generated_utc": "2026-10-28T00:00:00Z",
+  "model": "black-forest-labs/FLUX.2-klein-4B",
+  "resolution": "1280x720",
+  "steps": 4,
+  "guidance_scale": 1.0,
+  "total_audio_s": 1099.775,
+  "total_frames": 78,
+  "est_gen_seconds_per_frame": 90,
+  "est_gen_total_s": 7020,
+  "est_gen_min": 117.0,
+  "sections": [
+    {
+      "num": 1,
+      "title": "Hook and the question — target 1:30",
+      "sentences": [
+        {
+          "id": "S001",
+          "tag": "NARRATIVE",
+          "text": "Start with a simple question: could life exist in an ocean that has never seen the sky?",
+          "words": 17,
+          "prompt": "extreme wide establishing plate, black ice ceiling filling the top third, still dark water below, single pale-bone glint at the horizon line, night ink and deep sea teal, no subject"
+        },
+        {
+          "id": "S002",
+          "tag": "SE-01",
+          "text": "On Jupiter's moon Europa, a global saltwater ocean lies hidden beneath a completely frozen crust.",
+          "words": 15,
+          "prompt": "wide context, small moon disc in deep sea field, thin pale-bone ice rind over a dark teal interior, one coral accent hairline crack, distant and schematic"
+        },
+        {
+          "id": "S003",
+          "tag": "SE-04",
+          "text": "That crust is tens of miles thick, and the ocean surface beneath it is frozen solid.",
+          "words": 16,
+          "prompt": "side cross-section plate, layered ice bands in pale bone over black water, hard horizontal boundary, sparse hatching, no creatures"
+        },
+        {
+          "id": "S004",
+          "tag": "SE-02",
+          "text": "Yet the ocean underneath holds more than twice as much water as all of Earth's oceans combined.",
+          "words": 17,
+          "prompt": "wide abstract plate, two dark teal volumes side by side, one small pale-bone sphere dwarfed by a larger mass, flat fills, no labels"
+        },
+        {
+          "id": "S005",
+          "tag": "SE-03",
+          "text": "It stays liquid not because of sunlight, but because Jupiter's gravity flexes the moon and heats it from within.",
+          "words": 19,
+          "prompt": "wide context, moon silhouette stretched slightly oval, faint concentric stress arcs in electric teal, distant planet mass at frame edge, no text"
+        },
+        {
+          "id": "S006",
+          "tag": "SE-04",
+          "text": "Sunlight never reaches that water, so nothing down there has ever seen a sunrise.",
+          "words": 14,
+          "prompt": "near-black plate, single narrow shaft of pale bone light stopping dead at an ice layer, deep teal darkness below, extreme minimal"
+        },
+        {
+          "id": "S007",
+          "tag": "SE-01",
+          "text": "So the question becomes sharper: what could live in a dark ocean sealed under ice?",
+          "words": 15,
+          "prompt": "wide context, tiny pale-bone silhouette suspended in a vast dark teal void beneath an ice roof, subject very small in frame, silhouetted"
+        },
+        {
+          "id": "S008",
+          "tag": "SE-05",
+          "text": "Europa is not even the only one: Saturn's moon Enceladus hides a global salty ocean beneath its icy crust.",
+          "words": 19,
+          "prompt": "wide context, second small moon disc in deep sea field, fractured ice shell in pale bone, thin electric teal seam, distant and schematic"
+        },
+        {
+          "id": "S009",
+          "tag": "SE-05",
+          "text": "Enceladus even sprays that ocean into space through cracks near its south pole.",
+          "words": 13,
+          "prompt": "wide context, small moon at lower left venting a pale-bone plume upward into night ink, faint electric teal streaks, distant silhouette"
+        },
+        {
+          "id": "S010",
+          "tag": "SE-08",
+          "text": "On Earth, we already know what life can do without sunlight, because the deep sea has an answer.",
+          "words": 18,
+          "prompt": "wide establishing plate, black basalt floor, cluster of pale-bone chimney towers, diffuse lime-teal glow at their bases, no creatures"
+        },
+        {
+          "id": "S011",
+          "tag": "NARRATIVE",
+          "text": "This episode follows that answer outward, from a vent on our own sea floor to an ocean we have never touched.",
+          "words": 21,
+          "prompt": "horizontal triptych plate, left chimney field, centre dark water column, right ice ceiling, connected by one electric teal current line, flat fills"
+        },
+        {
+          "id": "S012",
+          "tag": "NARRATIVE",
+          "text": "Some of what follows is measured, and some of it is invented, and we will mark the difference every time.",
+          "words": 20,
+          "prompt": "two flat panels split by a hard vertical edge, left pale bone, right night ink, one coral accent dot on the boundary, no symbols"
+        },
+        {
+          "id": "S013",
+          "tag": "NARRATIVE",
+          "text": "By the end, you can decide which parts you believe.",
+          "words": 10,
+          "prompt": "single pale-bone dot centred in a wide night ink field, one coral accent ring around it, extreme minimal plate"
+        },
+        {
+          "id": "S014",
+          "tag": "NARRATIVE",
+          "text": "Two of the least remarkable-looking moons in the solar system may be the most interesting.",
+          "words": 15,
+          "prompt": "wide context, two small pale-bone moon discs low in a night ink field, both distant and schematic"
+        }
+      ]
+    },
+    {
+      "num": 2,
+      "title": "The world: an ocean with no shores — target 2:30",
+      "sentences": [
+        {
+          "id": "S015",
+          "tag": "SE-01, SE-04",
+          "text": "Begin with the shape of the world: an ocean with no shore you could walk out onto, capped by ice.",
+          "words": 20,
+          "prompt": "wide context, curved horizon of ice meeting dark water with no land anywhere, pale bone above, deep teal below, distant and empty"
+        },
+        {
+          "id": "S016",
+          "tag": "SE-01",
+          "text": "Europa's ocean is global, which means it wraps the entire moon.",
+          "words": 11,
+          "prompt": "front view schematic, sphere wrapped in a continuous deep teal band under a pale-bone cap, flat fills, no labels"
+        },
+        {
+          "id": "S017",
+          "tag": "SE-01, SE-04",
+          "text": "There is no beach here, no coastline, no place where water meets air.",
+          "words": 13,
+          "prompt": "wide plate, unbroken water surface meeting ice directly, no shoreline, hard horizontal seam, night ink and pale bone only"
+        },
+        {
+          "id": "S018",
+          "tag": "SE-04",
+          "text": "Above the water sits a crust of ice tens of miles thick.",
+          "words": 12,
+          "prompt": "side cross-section, thick pale-bone ice slab occupying the upper half, sparse hatching for depth, black water beneath"
+        },
+        {
+          "id": "S019",
+          "tag": "SE-04",
+          "text": "That ice stays frozen where it meets the water, so the boundary is a lid, not a shoreline.",
+          "words": 18,
+          "prompt": "detail crop, ice-water contact line, flat pale bone against flat deep teal, thin electric teal seam, no creatures"
+        },
+        {
+          "id": "S020",
+          "tag": "SE-02",
+          "text": "The water below is the striking part: more than twice the volume of every ocean on Earth.",
+          "words": 17,
+          "prompt": "wide plate, vast dark teal mass filling the frame, one small pale-bone circle for scale at the edge, flat fills, no text"
+        },
+        {
+          "id": "S021",
+          "tag": "SE-02",
+          "text": "Twice over, in a single moon.",
+          "words": 6,
+          "prompt": "minimal plate, two identical dark teal discs stacked over one small pale-bone disc, hard flat edges, one coral accent line"
+        },
+        {
+          "id": "S022",
+          "tag": "NARRATIVE",
+          "text": "Volume is not the same as habitability, but it does buy room.",
+          "words": 12,
+          "prompt": "wide plate, empty deep teal field with a single pale-bone measuring tick at the base, sparse hatching, no subject"
+        },
+        {
+          "id": "S023",
+          "tag": "NARRATIVE",
+          "text": "Room for chemistry, room for gradients, room for time.",
+          "words": 9,
+          "prompt": "abstract plate, three horizontal bands of deep teal, electric teal and night ink, soft boundaries, flat fills, no text"
+        },
+        {
+          "id": "S024",
+          "tag": "SE-03",
+          "text": "The heat that keeps it liquid comes from Jupiter, which pulls on Europa as the moon orbits.",
+          "words": 17,
+          "prompt": "wide context, large dark planet mass at frame left, small moon at right, faint pale-bone tidal arcs between them, distant silhouette"
+        },
+        {
+          "id": "S025",
+          "tag": "SE-03",
+          "text": "That flexing bends the moon, and the bending becomes heat.",
+          "words": 10,
+          "prompt": "detail crop, moon outline drawn twice, solid and dashed, slight ellipse offset, electric teal stress lines, no text"
+        },
+        {
+          "id": "S026",
+          "tag": "SE-03",
+          "text": "Tidal heating is why the ocean is not a block of ice all the way through.",
+          "words": 16,
+          "prompt": "side cross-section, pale-bone ice shell thinning toward a liquid deep teal core, warm coral accent at the inner boundary"
+        },
+        {
+          "id": "S027",
+          "tag": "SE-03",
+          "text": "It also drives chemistry between the ocean and the rocky floor beneath it.",
+          "words": 13,
+          "prompt": "wide establishing plate, flat basalt charcoal sea floor, dark teal water above, faint lime-teal mineral wisps rising from cracks"
+        },
+        {
+          "id": "S028",
+          "tag": "SE-05",
+          "text": "Enceladus, at Saturn, is smaller but follows the same logic.",
+          "words": 10,
+          "prompt": "wide context, small moon disc low in frame, pale-bone fractured shell, night ink field, distant and schematic"
+        },
+        {
+          "id": "S029",
+          "tag": "SE-05",
+          "text": "It too carries a global salty ocean under an icy crust.",
+          "words": 11,
+          "prompt": "front view schematic, small sphere with a deep teal band beneath a cracked pale-bone shell, flat fills, no labels"
+        },
+        {
+          "id": "S030",
+          "tag": "NARRATIVE",
+          "text": "Two moons, two oceans, both sealed away from the sky.",
+          "words": 10,
+          "prompt": "wide plate, two small moon discs at opposite corners, both under pale-bone caps, empty night ink between them, minimal"
+        },
+        {
+          "id": "S031",
+          "tag": "NARRATIVE",
+          "text": "If you wanted to design a place where life could hide, you would struggle to do better.",
+          "words": 17,
+          "prompt": "wide establishing plate, ice roof, dark water, faint glow at the floor, no subject, deep sea teal dominant"
+        },
+        {
+          "id": "S032",
+          "tag": "NARRATIVE",
+          "text": "But hiding is not the same as living, and for that a world needs an energy source.",
+          "words": 17,
+          "prompt": "single coral accent spark at the centre of a black field, pale-bone halo, extreme minimal plate"
+        },
+        {
+          "id": "S033",
+          "tag": "NARRATIVE",
+          "text": "So the next thing to measure is not the size of the ocean, but what powers it.",
+          "words": 17,
+          "prompt": "wide plate, dark teal water column with a faint pale-bone vertical gradient rising from the floor, no subject"
+        },
+        {
+          "id": "S034",
+          "tag": "NARRATIVE",
+          "text": "Keep the image in your head: an ocean with no shores, roofed by ice, warmed from below.",
+          "words": 17,
+          "prompt": "wide context, ice ceiling, still water, faint warm coral glow along the sea floor, everything else night ink"
+        },
+        {
+          "id": "S035",
+          "tag": "SE-02, SE-04",
+          "text": "An ocean with more water than ours, and no way for the sun to reach it.",
+          "words": 16,
+          "prompt": "wide plate, black field bisected by a pale-bone ice layer, deep teal mass below, one thin blocked light ray at top"
+        },
+        {
+          "id": "S036",
+          "tag": "SE-04",
+          "text": "Nothing about that lid is thin enough to see through.",
+          "words": 10,
+          "prompt": "side cross-section, thick pale-bone ice slab, no transparency, black water beneath, sparse hatching"
+        },
+        {
+          "id": "S037",
+          "tag": "SE-02",
+          "text": "If you poured Earth's oceans into it, you would still have room for another Earth's worth.",
+          "words": 16,
+          "prompt": "wide plate, one small pale-bone sphere beside two large dark teal masses, flat fills, no labels"
+        },
+        {
+          "id": "S038",
+          "tag": "SE-03",
+          "text": "The moon is not a dead ball of ice, it is being worked on from the outside, every orbit.",
+          "words": 19,
+          "prompt": "wide context, moon silhouette with faint electric teal stress arcs, dark planet mass at frame edge"
+        },
+        {
+          "id": "S039",
+          "tag": "NARRATIVE",
+          "text": "That is the first surprise of this world: the heat comes from a neighbour, not from the star.",
+          "words": 18,
+          "prompt": "wide plate, small moon disc beside a large dark planet mass, one coral accent heat line between them"
+        },
+        {
+          "id": "S040",
+          "tag": "SE-05, SE-06",
+          "text": "Enceladus is smaller, but the same three layers appear: ice, water, and rock.",
+          "words": 13,
+          "prompt": "side cross-section, three flat bands of pale bone, deep teal and basalt charcoal, hard seams, no text"
+        },
+        {
+          "id": "S041",
+          "tag": "NARRATIVE",
+          "text": "Does a smaller world keep its ocean as easily? That is a question only the mission data can answer.",
+          "words": 19,
+          "prompt": "wide context, small moon disc with a faint deep teal band, night ink space, distant and schematic"
+        }
+      ]
+    },
+    {
+      "num": 3,
+      "title": "Energy: no sunlight, two answers — target 2:30",
+      "sentences": [
+        {
+          "id": "S042",
+          "tag": "SE-04",
+          "text": "Here is the problem the ice creates: no sunlight reaches the water, so photosynthesis is off the table.",
+          "words": 18,
+          "prompt": "wide plate, pale-bone ice lid, single light shaft stopping at the surface, darkness below, extreme minimal"
+        },
+        {
+          "id": "S043",
+          "tag": "SE-08",
+          "text": "On Earth, life solved that problem in the dark, at hydrothermal vents.",
+          "words": 12,
+          "prompt": "wide establishing plate, black chimney cluster on basalt floor, lime-teal mat glow, night ink water, no creatures"
+        },
+        {
+          "id": "S044",
+          "tag": "SE-08",
+          "text": "Vent ecosystems run on chemosynthesis instead of sunlight.",
+          "words": 8,
+          "prompt": "detail crop, textured mat surface in lime teal against basalt charcoal, sparse hatching, flat fills"
+        },
+        {
+          "id": "S045",
+          "tag": "SE-08",
+          "text": "Chemosynthetic bacteria take chemical energy from hydrogen sulfide and carbon dioxide and turn inorganic chemicals into food.",
+          "words": 17,
+          "prompt": "abstract detail plate, pale-bone grains drifting through electric teal fluid toward a dark mineral surface, no symbols, no text"
+        },
+        {
+          "id": "S046",
+          "tag": "SE-08",
+          "text": "That makes them the base of the food web, not the top of it.",
+          "words": 14,
+          "prompt": "wide plate, low band of lime-teal mat along the bottom edge, empty water above, single pale-bone dot at the base, flat fills"
+        },
+        {
+          "id": "S047",
+          "tag": "SE-08",
+          "text": "Around those bacteria live vent shrimp, tubeworms and mussels, none of which need a single photon.",
+          "words": 16,
+          "prompt": "wide context, distant silhouettes of small crustaceans and worm tubes clustered on a chimney base, all dark against lime glow"
+        },
+        {
+          "id": "S048",
+          "tag": "NARRATIVE",
+          "text": "So the template exists, and it is not hypothetical on Earth.",
+          "words": 11,
+          "prompt": "wide establishing plate, chimney field with a single pale-bone reference scale bar, no text, flat fills"
+        },
+        {
+          "id": "S049",
+          "tag": "SE-06",
+          "text": "Enceladus appears to have the same kind of machinery: vents where its ocean meets a rocky core.",
+          "words": 17,
+          "prompt": "side cross-section, small moon interior, deep teal ocean layer over basalt charcoal core, coral accent at the contact line"
+        },
+        {
+          "id": "S050",
+          "tag": "SE-06",
+          "text": "Cassini found silica grains in the plume that formed where liquid water and rock interacted above ninety degrees Celsius.",
+          "words": 19,
+          "prompt": "detail crop, pale-bone angular grains suspended in electric teal fluid beside dark rock, flat fills, no symbols"
+        },
+        {
+          "id": "S051",
+          "tag": "SE-06",
+          "text": "That is hot rock in contact with water, under an ice shell, far from the sun.",
+          "words": 16,
+          "prompt": "wide context, cracked basalt floor under dark teal water under pale-bone ice, warm coral glow at the rock seam, no subject"
+        },
+        {
+          "id": "S052",
+          "tag": "SE-07",
+          "text": "The plume also carries molecular hydrogen.",
+          "words": 6,
+          "prompt": "abstract detail plate, small pale-bone bubbles rising through deep teal, sparse hatching, no symbols, no text"
+        },
+        {
+          "id": "S053",
+          "tag": "SE-07",
+          "text": "Microbes could pair that hydrogen with dissolved carbon dioxide and harvest the reaction as energy.",
+          "words": 15,
+          "prompt": "abstract plate, two drifting particle streams in electric teal meeting at a single coral accent point, flat fills, no symbols"
+        },
+        {
+          "id": "S054",
+          "tag": "NARRATIVE",
+          "text": "Read that again: a chemical battery, vented into space, from an ocean nobody has visited.",
+          "words": 15,
+          "prompt": "wide context, small moon at lower left venting a pale-bone plume into black space, faint electric teal wake, distant silhouette"
+        },
+        {
+          "id": "S055",
+          "tag": "SE-03",
+          "text": "At Europa, tidal heating supplies the energy and drives chemistry at the sea floor.",
+          "words": 14,
+          "prompt": "wide establishing plate, basalt floor with mineral wisps, faint coral heat glow, dark teal water, no subject"
+        },
+        {
+          "id": "S056",
+          "tag": "SE-03, SE-06, SE-07",
+          "text": "Two different moons, two routes to the same three ingredients: water, chemistry, energy.",
+          "words": 13,
+          "prompt": "wide plate, three stacked flat bands in deep teal, lime teal and coral accent, pale-bone separators, no text"
+        },
+        {
+          "id": "S057",
+          "tag": "NARRATIVE",
+          "text": "That combination is why these moons keep appearing on lists of places to look for life.",
+          "words": 16,
+          "prompt": "wide context, two small moon discs above a pale-bone horizon line, night ink field, distant and schematic"
+        },
+        {
+          "id": "S058",
+          "tag": "NARRATIVE",
+          "text": "It is also why the next part of this episode has to be careful.",
+          "words": 14,
+          "prompt": "minimal plate, single pale-bone vertical line on night ink, one coral accent dot at its base, no subject"
+        },
+        {
+          "id": "S059",
+          "tag": "NARRATIVE",
+          "text": "Because the ingredients are measured, but the inhabitants are not.",
+          "words": 10,
+          "prompt": "split plate, left side pale-bone mineral texture, right side empty black void, hard vertical seam, flat fills"
+        },
+        {
+          "id": "S060",
+          "tag": "SE-07",
+          "text": "Hydrogen and carbon dioxide are a possible energy source, not proof that anything is using them.",
+          "words": 16,
+          "prompt": "detail crop, pale-bone particles drifting past dark rock, no glow, no creature, sparse hatching"
+        },
+        {
+          "id": "S061",
+          "tag": "NARRATIVE",
+          "text": "Possible is the honest word, and it is worth holding onto.",
+          "words": 11,
+          "prompt": "single pale-bone wordless shape, a plain circle, centred in deep sea teal, extreme minimal, no text"
+        },
+        {
+          "id": "S062",
+          "tag": "NARRATIVE",
+          "text": "With the chemistry established, the question moves from what a world provides to what a body could do with it.",
+          "words": 20,
+          "prompt": "wide plate, dark water column with a faint pale-bone silhouette at its centre, subject distant and unreadable"
+        },
+        {
+          "id": "S063",
+          "tag": "SE-08",
+          "text": "No sunlight, no photosynthesis, and still a full ecosystem: that is what the vents show us.",
+          "words": 16,
+          "prompt": "wide establishing plate, black chimney cluster, lime-teal mat glow, empty dark water above"
+        },
+        {
+          "id": "S064",
+          "tag": "SE-06",
+          "text": "Water plus hot rock leaves mineral traces, and the plume carries those traces outward.",
+          "words": 14,
+          "prompt": "detail crop, pale-bone grains lifting from dark rock into electric teal fluid, flat fills"
+        },
+        {
+          "id": "S065",
+          "tag": "SE-07",
+          "text": "Hydrogen is the part that matters for biology, because it can power a microbe without any light.",
+          "words": 17,
+          "prompt": "abstract plate, pale-bone bubbles rising past dark rock, faint coral accent glow, no symbols"
+        },
+        {
+          "id": "S066",
+          "tag": "NARRATIVE",
+          "text": "Notice what is missing from that list: sunshine, plants, and anything with a face.",
+          "words": 14,
+          "prompt": "wide plate, empty dark teal water column, one small lime glow at the base, no creature"
+        },
+        {
+          "id": "S067",
+          "tag": "SE-03",
+          "text": "At Europa the heat arrives through the ice, from a parent planet, and reaches the water from below.",
+          "words": 18,
+          "prompt": "wide context, ice roof, dark water, faint coral warmth along the sea floor, no subject"
+        }
+      ]
+    },
+    {
+      "num": 4,
+      "title": "Life near the ice: mats and filter-feeders — target 2:30",
+      "sentences": [
+        {
+          "id": "S068",
+          "tag": "NARRATIVE",
+          "text": "From here on, we stop describing and start designing.",
+          "words": 9,
+          "prompt": "wide plate, empty drafting field in deep sea teal, single pale-bone outline of a rectangle, one coral accent corner mark, no text"
+        },
+        {
+          "id": "S069",
+          "tag": "SE-09, SE-10, SE-11, SE-12, SE-13",
+          "text": "Everything from this point is invented: honestly labelled, constrained by physics, and never observed.",
+          "words": 14,
+          "prompt": "wide plate, pale-bone silhouette of an unreadable animal shape held inside a coral accent outline box, flat fills"
+        },
+        {
+          "id": "S070",
+          "tag": "NARRATIVE",
+          "text": "The rule we set ourselves was simple: no creature without a reason to exist.",
+          "words": 14,
+          "prompt": "minimal plate, single pale-bone dot with one coral accent line running from it, night ink field"
+        },
+        {
+          "id": "S071",
+          "tag": "NARRATIVE",
+          "text": "Every body plan has to answer three questions: what does it eat, what is trying to eat it, and how does it move.",
+          "words": 23,
+          "prompt": "wide plate, three empty pale-bone circles in a row on deep teal, hard flat edges, no symbols"
+        },
+        {
+          "id": "S072",
+          "tag": "SE-09",
+          "text": "Start where the energy is: the bacterial mats that coat vent chimneys.",
+          "words": 12,
+          "prompt": "detail crop, lime-teal mat texture clinging to a dark chimney wall, sparse hatching, no creature"
+        },
+        {
+          "id": "S073",
+          "tag": "SE-09",
+          "text": "The vent grazer is built to harvest them.",
+          "words": 8,
+          "prompt": "extreme wide, tall narrow silhouette at the base of a chimney, subject tiny, all dark against lime glow"
+        },
+        {
+          "id": "S074",
+          "tag": "SE-09",
+          "text": "It has six limbs, and it uses them to grip the chimney while it grazes.",
+          "words": 15,
+          "prompt": "extreme wide context, distant silhouetted grazer on a chimney, six limb stalks readable only as spokes, exactly six separate tendrils, two pairs of fins, subject small in frame"
+        },
+        {
+          "id": "S075",
+          "tag": "SE-09",
+          "text": "Six points of contact hold it steady in the rising vent flow.",
+          "words": 12,
+          "prompt": "detail crop of chimney rock with six small pale-bone grip points, no animal body, sparse hatching, flat fills"
+        },
+        {
+          "id": "S076",
+          "tag": "NARRATIVE",
+          "text": "Its body is low and broad, a shape that suits crushing pressure.",
+          "words": 12,
+          "prompt": "extreme wide, broad low silhouette against a vent glow, distant and dark, no internal detail"
+        },
+        {
+          "id": "S077",
+          "tag": "NARRATIVE",
+          "text": "We gave it a long neck, so it can reach mats on the chimney wall without pressing its body into hot fluid.",
+          "words": 22,
+          "prompt": "extreme wide, distant silhouette with a thin rising neck line reaching up a chimney, all black against pale-bone glow"
+        },
+        {
+          "id": "S078",
+          "tag": "NARRATIVE",
+          "text": "That is a design choice, not an observation, and it is written down as one.",
+          "words": 15,
+          "prompt": "minimal plate, pale-bone outline of a single thin line on night ink, one coral accent tick at its top"
+        },
+        {
+          "id": "S079",
+          "tag": "SE-10",
+          "text": "The filter drifter takes a different route to the same food: it filters microbes out of the water.",
+          "words": 18,
+          "prompt": "extreme wide, ribbon-like silhouette suspended mid-water, no legs, no arms, one continuous undulating fin, wide filter mouth, distant"
+        },
+        {
+          "id": "S080",
+          "tag": "SE-10",
+          "text": "It swims with a single undulating fin.",
+          "words": 7,
+          "prompt": "side profile, long flat ribbon silhouette with a wavy edge, flat fills, distant and unreadable, deep teal field"
+        },
+        {
+          "id": "S081",
+          "tag": "SE-10",
+          "text": "No limbs, one continuous fin, and a wide mouth that strains the water.",
+          "words": 13,
+          "prompt": "extreme wide, small silhouetted drifter at centre, wide frontal mouth suggested by a flat wedge, no legs, no arms, subject tiny"
+        },
+        {
+          "id": "S082",
+          "tag": "NARRATIVE",
+          "text": "We kept it limbless on purpose, because limbs are expensive when you never need to grip anything.",
+          "words": 17,
+          "prompt": "minimal plate, pale-bone straight line beside a coral accent wavy line, flat fills, no text"
+        },
+        {
+          "id": "S083",
+          "tag": "NARRATIVE",
+          "text": "We also kept both animals small in frame, because an invented creature should not be sold as a portrait.",
+          "words": 19,
+          "prompt": "extreme wide, two tiny distant silhouettes in a large dark teal field, one at upper left, one at lower right"
+        },
+        {
+          "id": "S084",
+          "tag": "NARRATIVE",
+          "text": "Now put them in the same water and the scene stops being a catalogue.",
+          "words": 14,
+          "prompt": "wide context, mat band along the base, two distant silhouettes above it, faint lime glow, night ink water"
+        },
+        {
+          "id": "S085",
+          "tag": "SE-09",
+          "text": "Mats grow where vent fluid meets cold water, and drifters gather where mats break apart.",
+          "words": 15,
+          "prompt": "wide plate, chimney base with lime mat, loose pale-bone fragments drifting upward, faint electric teal current line"
+        },
+        {
+          "id": "S086",
+          "tag": "SE-09, SE-10",
+          "text": "One grazes the surface of the rock, and one harvests what the current carries away.",
+          "words": 15,
+          "prompt": "wide context, grazer silhouette fixed to a chimney at left, drifter silhouette drifting at right, both distant and dark"
+        },
+        {
+          "id": "S087",
+          "tag": "NARRATIVE",
+          "text": "That is a food web in miniature, and it is entirely our invention.",
+          "words": 13,
+          "prompt": "wide plate, three pale-bone dots connected by coral accent lines in a triangle, deep teal field, no text"
+        },
+        {
+          "id": "S088",
+          "tag": "NARRATIVE",
+          "text": "Which raises the question this episode cannot answer with data: what would eat them?",
+          "words": 14,
+          "prompt": "extreme wide, empty black water above a lime mat, single faint pale-bone shape at the top edge, unreadable"
+        },
+        {
+          "id": "S089",
+          "tag": "NARRATIVE",
+          "text": "The drifter's body is a ribbon, flattened and wide, a shape that does not fight the water.",
+          "words": 17,
+          "prompt": "extreme wide, ribbon-like silhouette suspended in dark teal, no legs, no arms, one continuous undulating fin, distant"
+        },
+        {
+          "id": "S090",
+          "tag": "NARRATIVE",
+          "text": "Neither animal has eyes in our design, because there is nothing down here to see.",
+          "words": 15,
+          "prompt": "extreme wide, two eyeless silhouettes in a black field, both distant, no detail"
+        },
+        {
+          "id": "S091",
+          "tag": "SE-09",
+          "text": "The grazer's food is a mat, and a mat is a surface, so the animal has to hold position against a current.",
+          "words": 22,
+          "prompt": "wide context, grazer silhouette gripping a chimney, lime mat underfoot, faint current lines"
+        },
+        {
+          "id": "S092",
+          "tag": "NARRATIVE",
+          "text": "Two strategies, one pantry: one animal farms the rock, and the other skims the water.",
+          "words": 15,
+          "prompt": "wide plate, chimney with lime mat at left, drifting ribbon silhouette at right, both distant"
+        },
+        {
+          "id": "S093",
+          "tag": "NARRATIVE",
+          "text": "If you have ever wondered what a food web looks like before it has a top, this is it.",
+          "words": 19,
+          "prompt": "wide plate, three pale-bone dots along the base connected by coral accent lines, empty water above"
+        }
+      ]
+    },
+    {
+      "num": 5,
+      "title": "Predators, and the logic of an arms race — target 2:30",
+      "sentences": [
+        {
+          "id": "S094",
+          "tag": "NARRATIVE",
+          "text": "Here we have to be honest: there is no evidence for an alien predator, because nobody has seen one.",
+          "words": 19,
+          "prompt": "wide plate, empty night ink field with a single pale-bone question-shaped gap of light, no subject, flat fills"
+        },
+        {
+          "id": "S095",
+          "tag": "NARRATIVE",
+          "text": "What we can do is reason: if a mat feeds a grazer, the same energy is available to something that eats grazers.",
+          "words": 22,
+          "prompt": "wide plate, lime-teal mat at base, pale-bone dot above it, coral accent arrowless line rising further, no text"
+        },
+        {
+          "id": "S096",
+          "tag": "NARRATIVE",
+          "text": "That is not evidence, it is bookkeeping.",
+          "words": 7,
+          "prompt": "minimal plate, two flat columns of pale-bone marks on deep teal, one slightly taller, no numerals"
+        },
+        {
+          "id": "S097",
+          "tag": "NARRATIVE",
+          "text": "Energy that collects in one body becomes a target for another.",
+          "words": 11,
+          "prompt": "detail crop, single pale-bone sphere with a coral accent ring closing around it, night ink background"
+        },
+        {
+          "id": "S098",
+          "tag": "NARRATIVE",
+          "text": "So a plausible ocean would not stop at grazers.",
+          "words": 9,
+          "prompt": "wide context, chain of three distant silhouettes in a dark field, the last one larger and less readable"
+        },
+        {
+          "id": "S099",
+          "tag": "NARRATIVE",
+          "text": "A hunter here would face the same constraints as everything else: pressure, cold, and permanent dark.",
+          "words": 16,
+          "prompt": "extreme wide, large unreadable silhouette low in frame under an ice roof, all black, no detail"
+        },
+        {
+          "id": "S100",
+          "tag": "NARRATIVE",
+          "text": "We did not design one, because a predator is where invention starts to outrun constraint.",
+          "words": 15,
+          "prompt": "wide plate, pale-bone outline that stops halfway across the frame and dissolves into hatching, coral accent at the break"
+        },
+        {
+          "id": "S101",
+          "tag": "NARRATIVE",
+          "text": "Instead, ask what an arms race would even look like without light.",
+          "words": 12,
+          "prompt": "wide plate, two pale-bone silhouettes facing each other across an empty deep teal gap, both distant, no detail"
+        },
+        {
+          "id": "S102",
+          "tag": "SE-13",
+          "text": "One answer is already in our design set: light.",
+          "words": 9,
+          "prompt": "single coral accent glow point in black water, pale-bone halo, extreme minimal"
+        },
+        {
+          "id": "S103",
+          "tag": "SE-13",
+          "text": "The vent grazer signals with bioluminescence, in an ocean that never sees the sun.",
+          "words": 14,
+          "prompt": "extreme wide, distant grazer silhouette on a chimney with a small lime glow at its head, everything else night ink"
+        },
+        {
+          "id": "S104",
+          "tag": "SE-13",
+          "text": "In permanent darkness, light is the only language that travels.",
+          "words": 10,
+          "prompt": "wide plate, three small lime-teal glow points in a black field, spaced apart, flat fills, no text"
+        },
+        {
+          "id": "S105",
+          "tag": "NARRATIVE",
+          "text": "But a signal that travels is also a signal that can be intercepted.",
+          "words": 13,
+          "prompt": "wide plate, one lime glow at left, a faint pale-bone eye-less shape at right, dark gap between them"
+        },
+        {
+          "id": "S106",
+          "tag": "NARRATIVE",
+          "text": "That is the whole logic of an arms race: every advantage becomes a vulnerability.",
+          "words": 14,
+          "prompt": "minimal plate, pale-bone shield shape with a coral accent crack, night ink field"
+        },
+        {
+          "id": "S107",
+          "tag": "NARRATIVE",
+          "text": "Camouflage against a glow, speed against a slow grazer, a harder shell against a jaw.",
+          "words": 15,
+          "prompt": "wide plate, three flat panels: dark matte texture, motion streak, pale-bone ridged shell, separated by hard seams"
+        },
+        {
+          "id": "S108",
+          "tag": "NARRATIVE",
+          "text": "Each of those is a guess about a guess, and we are not going to dress them up as findings.",
+          "words": 20,
+          "prompt": "wide plate, pale-bone outline of a shape drawn three times, each fainter, dissolving into night ink"
+        },
+        {
+          "id": "S109",
+          "tag": "NARRATIVE",
+          "text": "What we can say is that competition would not require sunlight, only scarcity.",
+          "words": 13,
+          "prompt": "wide plate, one lime-teal patch at frame edge, vast empty dark teal elsewhere, flat fills"
+        },
+        {
+          "id": "S110",
+          "tag": "SE-09",
+          "text": "Bacterial mats coat the chimneys, which makes the food patchy by construction.",
+          "words": 12,
+          "prompt": "wide context, three separated chimney towers, lime mat only at their bases, empty water between"
+        },
+        {
+          "id": "S111",
+          "tag": "NARRATIVE",
+          "text": "Patchy food makes territory, and territory makes conflict.",
+          "words": 8,
+          "prompt": "wide plate, two pale-bone boundary lines drawn around separate lime patches, coral accent where they meet"
+        },
+        {
+          "id": "S112",
+          "tag": "NARRATIVE",
+          "text": "None of this is observed: all of it is the reasoning a field biologist would use on Earth, pointed at a place we cannot visit.",
+          "words": 25,
+          "prompt": "wide plate, pale-bone survey grid laid over an empty dark teal field, one coral accent marker, no text"
+        },
+        {
+          "id": "S113",
+          "tag": "NARRATIVE",
+          "text": "And that is the limit of this section: the shape of an argument, with no animal attached to it.",
+          "words": 19,
+          "prompt": "wide plate, pale-bone outline of a large shape with an empty interior, night ink field, no subject"
+        },
+        {
+          "id": "S114",
+          "tag": "NARRATIVE",
+          "text": "So we leave the predators unbuilt, and say so out loud.",
+          "words": 11,
+          "prompt": "minimal plate, empty coral accent frame with nothing inside, deep teal field"
+        },
+        {
+          "id": "S115",
+          "tag": "NARRATIVE",
+          "text": "A predator is not a monster in this story, it is a bookkeeping entry that has not been filled in.",
+          "words": 20,
+          "prompt": "wide plate, empty coral accent frame in a black field, nothing inside, flat fills"
+        },
+        {
+          "id": "S116",
+          "tag": "NARRATIVE",
+          "text": "And an unfilled entry is more honest than a creature invented to fill it.",
+          "words": 14,
+          "prompt": "minimal plate, pale-bone blank rectangle on night ink, one coral accent edge, no text"
+        },
+        {
+          "id": "S117",
+          "tag": "SE-13",
+          "text": "Our grazer already carries a light, which means it already carries a risk.",
+          "words": 13,
+          "prompt": "extreme wide, distant grazer silhouette with a small lime glow at its head, black water around"
+        },
+        {
+          "id": "S118",
+          "tag": "NARRATIVE",
+          "text": "Every signal in the dark is a decision about who gets to find you.",
+          "words": 14,
+          "prompt": "wide plate, one lime-teal glow point with a faint pale-bone shape approaching from the far edge"
+        },
+        {
+          "id": "S119",
+          "tag": "NARRATIVE",
+          "text": "That is the arms race in one sentence, and we can leave it there without inventing a winner.",
+          "words": 18,
+          "prompt": "wide plate, two distant silhouettes facing each other, empty dark gap, no detail"
+        }
+      ]
+    },
+    {
+      "num": 6,
+      "title": "The deep, the vents, and the animals that stay — target 2:30",
+      "sentences": [
+        {
+          "id": "S120",
+          "tag": "NARRATIVE",
+          "text": "Now go down, past the mats, to the floor of the world.",
+          "words": 12,
+          "prompt": "wide context, descending water column from pale-bone ice to basalt floor, faint gradient, no subject"
+        },
+        {
+          "id": "S121",
+          "tag": "SE-06",
+          "text": "At Enceladus, that floor is where the ocean meets rock, and where the vents are.",
+          "words": 15,
+          "prompt": "side cross-section, deep teal ocean layer meeting basalt charcoal core, coral accent at the seam, no subject"
+        },
+        {
+          "id": "S122",
+          "tag": "SE-06",
+          "text": "The silica grains in the plume are the receipt: water and hot rock, interacting above ninety degrees.",
+          "words": 17,
+          "prompt": "detail crop, pale-bone angular grains clustered beside dark rock, faint warm coral glow, flat fills"
+        },
+        {
+          "id": "S123",
+          "tag": "SE-02",
+          "text": "At Europa, the same meeting point would be the sea floor, under an ocean twice the size of ours.",
+          "words": 19,
+          "prompt": "wide establishing plate, basalt floor with mineral wisps, huge dark teal water mass above, pale-bone ice far overhead"
+        },
+        {
+          "id": "S124",
+          "tag": "SE-11",
+          "text": "The ice burrower lives in the sediment at that boundary.",
+          "words": 10,
+          "prompt": "extreme wide, small segmented silhouette half-buried in pale-bone sediment, distant, no detail"
+        },
+        {
+          "id": "S125",
+          "tag": "SE-11",
+          "text": "It moves by peristalsis, pushing through sediment under load.",
+          "words": 9,
+          "prompt": "detail crop, pale-bone sediment with a single smooth tunnel line and faint compression rings, no animal"
+        },
+        {
+          "id": "S126",
+          "tag": "SE-11",
+          "text": "Near-freezing water and high pressure are the two constraints its body answers.",
+          "words": 12,
+          "prompt": "wide plate, pale-bone sediment band under dark teal water, sparse hatching, cold flat fills"
+        },
+        {
+          "id": "S127",
+          "tag": "NARRATIVE",
+          "text": "We gave it no limbs, because limbs do not help in mud.",
+          "words": 12,
+          "prompt": "minimal plate, pale-bone cylinder silhouette with no appendages, flat fills, deep teal field"
+        },
+        {
+          "id": "S128",
+          "tag": "NARRATIVE",
+          "text": "It does not swim and it does not graze: it simply moves through the ground, slowly.",
+          "words": 16,
+          "prompt": "extreme wide, faint tunnel traces through sediment, tiny silhouette at the far end, distant and unreadable"
+        },
+        {
+          "id": "S129",
+          "tag": "NARRATIVE",
+          "text": "Everything down here ultimately traces back to chemosynthesis, the same chemistry as Earth's vents.",
+          "words": 14,
+          "prompt": "wide plate, lime-teal mat at the base of a black chimney, faint electric teal wisps rising, no creatures"
+        },
+        {
+          "id": "S130",
+          "tag": "SE-09",
+          "text": "The grazer stays near the chimneys, where the mats are.",
+          "words": 10,
+          "prompt": "extreme wide, grazer silhouette on a chimney at frame right, empty dark water at left"
+        },
+        {
+          "id": "S131",
+          "tag": "SE-12",
+          "text": "And it reproduces by budding, at the vents, where chemical energy is most abundant.",
+          "words": 14,
+          "prompt": "extreme wide, two small silhouettes attached at the base of one chimney, distant, all dark"
+        },
+        {
+          "id": "S132",
+          "tag": "SE-12",
+          "text": "Budding is a design choice: no mate required, no season required, just energy and time.",
+          "words": 15,
+          "prompt": "minimal plate, one pale-bone circle splitting into two smaller circles, coral accent at the join"
+        },
+        {
+          "id": "S133",
+          "tag": "SE-04",
+          "text": "In a world sealed under ice, there is no daylight to synchronise with.",
+          "words": 13,
+          "prompt": "wide plate, unbroken pale-bone ice lid across the top, black water below, no light shafts"
+        },
+        {
+          "id": "S134",
+          "tag": "NARRATIVE",
+          "text": "So reproduction would have to be tied to something else: chemistry, temperature, or each other.",
+          "words": 15,
+          "prompt": "wide plate, three flat pale-bone markers along a dark teal line, one coral accent, no text"
+        },
+        {
+          "id": "S135",
+          "tag": "SE-13",
+          "text": "Communication, in that world, would have to travel without any light from above.",
+          "words": 13,
+          "prompt": "wide plate, black water column, one small lime glow at the centre, everything else night ink"
+        },
+        {
+          "id": "S136",
+          "tag": "SE-13",
+          "text": "Bioluminescence is our answer: the creature makes its own light.",
+          "words": 10,
+          "prompt": "extreme wide, distant silhouette with a small lime-teal halo at its head, subject tiny in a black field"
+        },
+        {
+          "id": "S137",
+          "tag": "NARRATIVE",
+          "text": "It is also the least certain thing in this episode, and we are flagging it as such.",
+          "words": 17,
+          "prompt": "minimal plate, single lime glow half-covered by a pale-bone bar, flat fills, no text"
+        },
+        {
+          "id": "S138",
+          "tag": "NARRATIVE",
+          "text": "Three invented animals, one shared constraint: everything must work in the dark, under pressure, at near-freezing temperature.",
+          "words": 17,
+          "prompt": "wide plate, three small distant silhouettes in a row under an ice roof, all dark, no detail"
+        },
+        {
+          "id": "S139",
+          "tag": "SE-09, SE-10, SE-11",
+          "text": "The grazer grips, the drifter filters, the burrower pushes.",
+          "words": 9,
+          "prompt": "wide plate, three abstract pale-bone marks: a six-spoke shape, a wavy line, a segmented bar, flat fills, no text"
+        },
+        {
+          "id": "S140",
+          "tag": "NARRATIVE",
+          "text": "None of them has been seen, and all of them are possible.",
+          "words": 12,
+          "prompt": "wide plate, three pale-bone outlines fading into night ink at the frame edges, one coral accent dot"
+        },
+        {
+          "id": "S141",
+          "tag": "SE-11",
+          "text": "Sediment is the quietest habitat in this world, and the burrower is built for quiet.",
+          "words": 15,
+          "prompt": "wide plate, pale-bone sediment plain under dark teal water, faint tunnel traces, no subject"
+        },
+        {
+          "id": "S142",
+          "tag": "SE-12",
+          "text": "Budding means the young are not scattered, they start where the energy already is.",
+          "words": 14,
+          "prompt": "extreme wide, two small silhouettes at the base of one chimney, lime glow beneath, distant"
+        },
+        {
+          "id": "S143",
+          "tag": "SE-09",
+          "text": "The chimney is a tower of chemistry, and the grazer is the animal that learned to hold on to it.",
+          "words": 20,
+          "prompt": "wide context, tall black chimney with lime mat at its base, tiny silhouette attached, distant"
+        },
+        {
+          "id": "S144",
+          "tag": "NARRATIVE",
+          "text": "Three animals, three answers to the same exam question: how do you make a living where nothing grows from light?",
+          "words": 20,
+          "prompt": "wide plate, three distant silhouettes in a row under an ice roof, all dark, unreadable"
+        },
+        {
+          "id": "S145",
+          "tag": "SE-08",
+          "text": "On Earth, that exam has already been passed, in water just as dark.",
+          "words": 13,
+          "prompt": "wide establishing plate, black vent chimney with lime-teal mat glow, no creatures, flat fills"
+        },
+        {
+          "id": "S146",
+          "tag": "NARRATIVE",
+          "text": "And that is why the deep is the closest thing we have to a rehearsal for Europa.",
+          "words": 17,
+          "prompt": "wide context, basalt floor with mineral wisps under a vast dark teal water mass, pale-bone ice far above"
+        }
+      ]
+    },
+    {
+      "num": 7,
+      "title": "Chance and law: would this world repeat? — target 2:00",
+      "sentences": [
+        {
+          "id": "S147",
+          "tag": "NARRATIVE",
+          "text": "Suppose life did appear under that ice: would it look like our designs, or like nothing we could guess?",
+          "words": 19,
+          "prompt": "wide plate, pale-bone outline shape at left, empty black space at right, hard flat seam between"
+        },
+        {
+          "id": "S148",
+          "tag": "NARRATIVE",
+          "text": "This is the part of the episode where the honest answer is that we do not know, and neither does anyone else.",
+          "words": 22,
+          "prompt": "wide plate, empty deep teal field with a single faint pale-bone horizon line, no subject"
+        },
+        {
+          "id": "S149",
+          "tag": "NARRATIVE",
+          "text": "There are two ways to think about it, and they point in opposite directions.",
+          "words": 14,
+          "prompt": "minimal plate, two pale-bone arrows suggested by tapered bars pointing away from each other, no text"
+        },
+        {
+          "id": "S150",
+          "tag": "NARRATIVE",
+          "text": "The first says that physics narrows the options: if you need to grip rock in a current, six points of contact is one of a small number of answers.",
+          "words": 29,
+          "prompt": "detail crop, pale-bone rock surface with six identical grip points arranged in a ring, sparse hatching"
+        },
+        {
+          "id": "S151",
+          "tag": "NARRATIVE",
+          "text": "The second says that history matters more than physics: what survives depends on what happened to arrive first.",
+          "words": 18,
+          "prompt": "wide plate, scattered pale-bone marks drifting in deep teal, one coral accent mark ahead of the rest"
+        },
+        {
+          "id": "S152",
+          "tag": "NARRATIVE",
+          "text": "Under that view, our grazer is not a prediction, it is a coincidence waiting to be disproved.",
+          "words": 17,
+          "prompt": "extreme wide, tiny grazer silhouette at the centre of a vast empty field, subject almost lost"
+        },
+        {
+          "id": "S153",
+          "tag": "NARRATIVE",
+          "text": "Both views are respectable, and neither is testable from a desk.",
+          "words": 11,
+          "prompt": "wide plate, two pale-bone rectangles side by side on night ink, both empty, flat fills"
+        },
+        {
+          "id": "S154",
+          "tag": "NARRATIVE",
+          "text": "That is why the mission matters more than the argument.",
+          "words": 10,
+          "prompt": "wide context, small pale-bone probe silhouette above a moon disc, distant, no detail"
+        },
+        {
+          "id": "S155",
+          "tag": "SE-01, SE-03",
+          "text": "Europa Clipper is being built to measure the ice shell, the ocean, and the surface chemistry.",
+          "words": 16,
+          "prompt": "wide context, small spacecraft silhouette in black space beside a pale-bone ice-covered moon, distant and schematic"
+        },
+        {
+          "id": "S156",
+          "tag": "SE-05, SE-07",
+          "text": "Future missions could sample Enceladus' plumes directly, looking for the chemistry of life.",
+          "words": 13,
+          "prompt": "wide context, small probe silhouette crossing a pale-bone plume venting from a moon at frame edge, distant"
+        },
+        {
+          "id": "S157",
+          "tag": "NARRATIVE",
+          "text": "Until then, every creature in this episode is a hypothesis with a shape.",
+          "words": 13,
+          "prompt": "wide plate, pale-bone outline of an unreadable animal form, flat fills, deep teal field"
+        },
+        {
+          "id": "S158",
+          "tag": "NARRATIVE",
+          "text": "And a hypothesis with a shape is easier to argue with than a vague hope.",
+          "words": 15,
+          "prompt": "minimal plate, pale-bone geometric outline beside a soft pale-bone blur, coral accent on the outline"
+        },
+        {
+          "id": "S159",
+          "tag": "NARRATIVE",
+          "text": "That is the point of designing them at all: to make our assumptions visible.",
+          "words": 14,
+          "prompt": "wide plate, pale-bone survey lines revealing a faint silhouette inside a dark field, no text"
+        },
+        {
+          "id": "S160",
+          "tag": "NARRATIVE",
+          "text": "If the ocean is empty, our designs are wrong in an interesting way.",
+          "words": 13,
+          "prompt": "wide plate, empty dark teal water column, one pale-bone outline erased to a dotted trace"
+        },
+        {
+          "id": "S161",
+          "tag": "NARRATIVE",
+          "text": "And if it is not empty, they are probably wrong in a more interesting way.",
+          "words": 15,
+          "prompt": "wide plate, dense pale-bone fragments in dark water, one coral accent among them, no readable shapes"
+        },
+        {
+          "id": "S162",
+          "tag": "NARRATIVE",
+          "text": "Either outcome teaches us something, and that is the best a guess can do.",
+          "words": 14,
+          "prompt": "minimal plate, two pale-bone dots connected by a single coral accent line, night ink field"
+        },
+        {
+          "id": "S163",
+          "tag": "NARRATIVE",
+          "text": "So would this world repeat? We will not know until someone looks.",
+          "words": 12,
+          "prompt": "wide plate, pale-bone ice lid, black water, one tiny unreadable silhouette, extreme distance"
+        },
+        {
+          "id": "S164",
+          "tag": "NARRATIVE",
+          "text": "The two views do not cancel each other, they set the size of the bet.",
+          "words": 15,
+          "prompt": "minimal plate, two pale-bone blocks of different sizes on night ink, one coral accent line between"
+        },
+        {
+          "id": "S165",
+          "tag": "NARRATIVE",
+          "text": "Either way, the ocean is the thing to look at, and the ice is the door.",
+          "words": 16,
+          "prompt": "wide context, pale-bone ice lid with a faint seam, dark teal water below, one coral accent at the seam"
+        }
+      ]
+    },
+    {
+      "num": 8,
+      "title": "What blocks technology without land or fire — target 2:00",
+      "sentences": [
+        {
+          "id": "S166",
+          "tag": "NARRATIVE",
+          "text": "There is one more question, and it is the strangest one in the episode.",
+          "words": 14,
+          "prompt": "wide plate, empty black field with a single pale-bone vertical seam of light, no subject"
+        },
+        {
+          "id": "S167",
+          "tag": "NARRATIVE",
+          "text": "If this ocean had life, could it ever build something?",
+          "words": 10,
+          "prompt": "wide plate, pale-bone stack of flat blocks in deep teal water, no hands, no subject"
+        },
+        {
+          "id": "S168",
+          "tag": "NARRATIVE",
+          "text": "Not a civilisation, something simpler: a tool, a structure, a signal that carries further than a body can.",
+          "words": 18,
+          "prompt": "minimal plate, small pale-bone shape extended by a coral accent line, flat fills, no text"
+        },
+        {
+          "id": "S169",
+          "tag": "NARRATIVE",
+          "text": "Start with the obvious obstacle: there is no dry land to stand on.",
+          "words": 13,
+          "prompt": "wide plate, unbroken dark teal water surface meeting pale-bone ice, no shore anywhere"
+        },
+        {
+          "id": "S170",
+          "tag": "NARRATIVE",
+          "text": "Everything happens in water, and water is a medium that pushes back.",
+          "words": 12,
+          "prompt": "detail crop, pale-bone object with electric teal drag lines curving around it, sparse hatching"
+        },
+        {
+          "id": "S171",
+          "tag": "NARRATIVE",
+          "text": "The second obstacle is heat you can hold.",
+          "words": 8,
+          "prompt": "minimal plate, single coral accent glow held inside a pale-bone ring, night ink background"
+        },
+        {
+          "id": "S172",
+          "tag": "NARRATIVE",
+          "text": "A vent gives heat, but it gives it at the bottom of an ocean, in a place you cannot carry it away from.",
+          "words": 23,
+          "prompt": "wide context, basalt floor with coral heat glow, dark teal water mass above, no subject"
+        },
+        {
+          "id": "S173",
+          "tag": "NARRATIVE",
+          "text": "The third obstacle is material: our own technology leans on solids that can be shaped and kept.",
+          "words": 17,
+          "prompt": "wide plate, three pale-bone flat blocks stacked in dark water, hard edges, no tools, no text"
+        },
+        {
+          "id": "S174",
+          "tag": "NARRATIVE",
+          "text": "Rock and ice exist here, but whether they can be worked is a different question.",
+          "words": 15,
+          "prompt": "detail crop, cracked basalt charcoal surface beside a pale-bone ice facet, flat fills"
+        },
+        {
+          "id": "S175",
+          "tag": "NARRATIVE",
+          "text": "And if a vent field shifts or cools, anything built on it has to move with it.",
+          "words": 17,
+          "prompt": "wide plate, chimney cluster tilted, pale-bone structure outline abandoned beside it, dark water"
+        },
+        {
+          "id": "S176",
+          "tag": "NARRATIVE",
+          "text": "So a technological species here would need a body that works in water, hands or their equivalent, and a reason to build at all.",
+          "words": 24,
+          "prompt": "wide plate, three pale-bone conditions as three separate marks in a row, coral accent under the third, no text"
+        },
+        {
+          "id": "S177",
+          "tag": "NARRATIVE",
+          "text": "That is a long list of conditions, and each one is a place where the story could stop.",
+          "words": 18,
+          "prompt": "wide plate, a pale-bone line crossing three gaps, each gap marked by a coral accent break"
+        },
+        {
+          "id": "S178",
+          "tag": "NARRATIVE",
+          "text": "It is also the reason this section is short on conclusions.",
+          "words": 11,
+          "prompt": "minimal plate, empty pale-bone frame on night ink, nothing inside, flat fills"
+        },
+        {
+          "id": "S179",
+          "tag": "NARRATIVE",
+          "text": "We could invent a tool-maker, but inventing one would tell you nothing about this ocean.",
+          "words": 15,
+          "prompt": "extreme wide, faint silhouette of a limb-like shape holding a pale-bone block, distant, unreadable, no detail"
+        },
+        {
+          "id": "S180",
+          "tag": "NARRATIVE",
+          "text": "Nothing we have measured rules intelligence in or out.",
+          "words": 9,
+          "prompt": "wide plate, black water with a single pale-bone dot, one coral accent ring, extreme minimal"
+        },
+        {
+          "id": "S181",
+          "tag": "NARRATIVE",
+          "text": "That is an honest place to leave it: an open question with no evidence on either side.",
+          "words": 17,
+          "prompt": "wide plate, two empty pale-bone panels facing each other across a dark gap, flat fills"
+        },
+        {
+          "id": "S182",
+          "tag": "NARRATIVE",
+          "text": "And it is worth saying plainly that the absence of evidence is not a verdict.",
+          "words": 15,
+          "prompt": "minimal plate, pale-bone outline of a closed shape with one side left open, night ink field"
+        },
+        {
+          "id": "S183",
+          "tag": "NARRATIVE",
+          "text": "And what happens to a tool left in salt water for a century?",
+          "words": 13,
+          "prompt": "detail crop, pale-bone block half-eroded in electric teal fluid, sparse hatching, no subject"
+        },
+        {
+          "id": "S184",
+          "tag": "NARRATIVE",
+          "text": "Every obstacle here is a place where a different world would have an advantage.",
+          "words": 14,
+          "prompt": "wide plate, three pale-bone barriers in a dark field, each with a coral accent gap"
+        },
+        {
+          "id": "S185",
+          "tag": "NARRATIVE",
+          "text": "Which is why the honest answer to the technology question is not no, but not yet measurable.",
+          "words": 17,
+          "prompt": "minimal plate, pale-bone open frame on night ink, one coral accent dot outside it"
+        }
+      ]
+    },
+    {
+      "num": 9,
+      "title": "What is science, and what is a guess — target 1:30",
+      "sentences": [
+        {
+          "id": "S186",
+          "tag": "NARRATIVE",
+          "text": "So let us separate the two piles, starting with what is measured.",
+          "words": 12,
+          "prompt": "wide plate, pale-bone field divided into two flat blocks, one textured, one empty, hard seam"
+        },
+        {
+          "id": "S187",
+          "tag": "SE-01",
+          "text": "Europa has a global saltwater ocean under a completely frozen crust.",
+          "words": 11,
+          "prompt": "front view schematic, small sphere with deep teal band beneath a pale-bone cracked shell, flat fills, no labels"
+        },
+        {
+          "id": "S188",
+          "tag": "SE-02",
+          "text": "That ocean holds more than twice the water of all Earth's oceans.",
+          "words": 12,
+          "prompt": "wide plate, large dark teal mass dwarfing a small pale-bone sphere, flat fills, no text"
+        },
+        {
+          "id": "S189",
+          "tag": "SE-03",
+          "text": "Jupiter's tidal heating keeps it liquid and drives chemistry at the sea floor.",
+          "words": 13,
+          "prompt": "wide context, moon silhouette with stress arcs and a faint coral glow at its base, distant"
+        },
+        {
+          "id": "S190",
+          "tag": "SE-05",
+          "text": "Enceladus has a global salty ocean under ice.",
+          "words": 8,
+          "prompt": "front view schematic, small fractured pale-bone sphere with a deep teal band, flat fills"
+        },
+        {
+          "id": "S191",
+          "tag": "SE-06",
+          "text": "Its vents put hot rock in contact with water, and the plume carries the evidence.",
+          "words": 15,
+          "prompt": "side cross-section, basalt core, coral accent seam, pale-bone plume rising through the ocean"
+        },
+        {
+          "id": "S192",
+          "tag": "SE-07",
+          "text": "Its plume also carries hydrogen, a chemical energy source microbes could use.",
+          "words": 12,
+          "prompt": "abstract detail plate, pale-bone bubbles rising in electric teal, no symbols, no text"
+        },
+        {
+          "id": "S193",
+          "tag": "SE-08",
+          "text": "And on Earth, vent life runs on chemosynthesis, without sunlight.",
+          "words": 10,
+          "prompt": "wide establishing plate, black chimney cluster with lime-teal mat glow, night ink water"
+        },
+        {
+          "id": "S194",
+          "tag": "SE-09, SE-10, SE-11, SE-12, SE-13",
+          "text": "Everything else is ours: the grazer, the drifter, the burrower, the budding, and the glow.",
+          "words": 15,
+          "prompt": "wide plate, five faint pale-bone outlines in a row, all distant, all dissolving into hatching at the edges"
+        },
+        {
+          "id": "S195",
+          "tag": "NARRATIVE",
+          "text": "Five inventions, each with a stated constraint, none with an observation.",
+          "words": 11,
+          "prompt": "minimal plate, five pale-bone marks with coral accent ticks beneath each, deep teal field, no text"
+        },
+        {
+          "id": "S196",
+          "tag": "NARRATIVE",
+          "text": "That is the whole list, and it is short on purpose.",
+          "words": 11,
+          "prompt": "wide plate, small pale-bone block in a large empty night ink field, extreme minimal"
+        },
+        {
+          "id": "S197",
+          "tag": "NARRATIVE",
+          "text": "A longer list would have meant weaker sourcing, not a better episode.",
+          "words": 12,
+          "prompt": "minimal plate, long pale-bone line fading to nothing, one coral accent dot at its origin"
+        },
+        {
+          "id": "S198",
+          "tag": "NARRATIVE",
+          "text": "If you remember one thing, make it this: the ocean is real, and the animals are not.",
+          "words": 17,
+          "prompt": "split plate, left a solid pale-bone ice-and-water mass, right five faint dotted outlines, hard vertical seam"
+        },
+        {
+          "id": "S199",
+          "tag": "SE-06, SE-07",
+          "text": "Enceladus supplies the strongest chemical case, because its ocean is sampled for us, by its own plumes.",
+          "words": 17,
+          "prompt": "wide context, small moon venting a pale-bone plume, faint electric teal streaks, distant"
+        },
+        {
+          "id": "S200",
+          "tag": "NARRATIVE",
+          "text": "Notice the asymmetry: eight claims about the world, and five about animals we made up.",
+          "words": 15,
+          "prompt": "wide plate, eight pale-bone marks on the left, five fainter dotted marks on the right, hard seam"
+        },
+        {
+          "id": "S201",
+          "tag": "SE-08",
+          "text": "The Earth analogue is the reason any of this is worth arguing about.",
+          "words": 13,
+          "prompt": "wide establishing plate, black chimney cluster with lime mat glow, empty dark water"
+        },
+        {
+          "id": "S202",
+          "tag": "NARRATIVE",
+          "text": "If the vents had no life, this episode would be science fiction with better footnotes.",
+          "words": 15,
+          "prompt": "wide plate, empty black chimney field with no glow, night ink water, extreme minimal"
+        }
+      ]
+    },
+    {
+      "num": 10,
+      "title": "Closing and a question for you — target 1:00",
+      "sentences": [
+        {
+          "id": "S203",
+          "tag": "SE-01, SE-03",
+          "text": "A frozen alien ocean may be the best place in the solar system to look for life.",
+          "words": 17,
+          "prompt": "wide context, pale-bone ice-covered moon lit from one edge, black space, distant and schematic"
+        },
+        {
+          "id": "S204",
+          "tag": "SE-03, SE-07",
+          "text": "Not because we have found it, but because the physics allows it.",
+          "words": 12,
+          "prompt": "wide plate, faint coral heat glow at a sea floor under a vast dark teal ocean, no subject"
+        },
+        {
+          "id": "S205",
+          "tag": "SE-03",
+          "text": "Water, chemistry, energy: the ingredients are there.",
+          "words": 7,
+          "prompt": "wide plate, three flat bands of deep teal, lime teal and coral accent with pale-bone separators, no text"
+        },
+        {
+          "id": "S206",
+          "tag": "NARRATIVE",
+          "text": "The rest is a question for the next mission, and for the people who fly it.",
+          "words": 16,
+          "prompt": "wide context, small probe silhouette above a moon disc, distant, no detail, night ink space"
+        },
+        {
+          "id": "S207",
+          "tag": "NARRATIVE",
+          "text": "So here is our question for you.",
+          "words": 7,
+          "prompt": "minimal plate, single pale-bone dot at centre of deep teal field, coral accent ring, no text"
+        },
+        {
+          "id": "S208",
+          "tag": "NARRATIVE",
+          "text": "If you had one instrument to send under that ice, what would you measure first?",
+          "words": 15,
+          "prompt": "wide plate, small pale-bone instrument shape lowered on a thin line into black water, distant"
+        },
+        {
+          "id": "S209",
+          "tag": "NARRATIVE",
+          "text": "The chemistry, the temperature, or the sound of something moving?",
+          "words": 10,
+          "prompt": "wide plate, three separate pale-bone marks in a row: grains, a heat glow, a ripple line, no text"
+        },
+        {
+          "id": "S210",
+          "tag": "NARRATIVE",
+          "text": "Tell us in the comments, and tell us why.",
+          "words": 9,
+          "prompt": "minimal plate, two pale-bone speech-like blank blocks facing each other, no letters, flat fills"
+        },
+        {
+          "id": "S211",
+          "tag": "NARRATIVE",
+          "text": "Because that is how a guess becomes a question worth funding.",
+          "words": 11,
+          "prompt": "wide plate, pale-bone outline of a shape being lifted by a thin coral accent line, night ink field"
+        },
+        {
+          "id": "S212",
+          "tag": "SE-01",
+          "text": "It is a moon of Jupiter, and it has been there the whole time.",
+          "words": 14,
+          "prompt": "wide context, small pale-bone moon disc beside a large dark planet mass, night ink space, distant"
+        },
+        {
+          "id": "S213",
+          "tag": "SE-01",
+          "text": "The ocean is waiting under the ice, and it is not going anywhere.",
+          "words": 13,
+          "prompt": "wide context, small probe silhouette above an ice-covered moon, distant, no detail"
+        },
+        {
+          "id": "S214",
+          "tag": "NARRATIVE",
+          "text": "Until then, keep asking the question, and keep asking for the evidence.",
+          "words": 12,
+          "prompt": "minimal plate, single pale-bone dot with a coral accent ring, deep teal field, no text"
+        }
+      ]
+    }
+  ],
+  "shots": [
+    {
+      "bit_id": "B001",
+      "section": 1,
+      "sentence_ids": [
+        "S001",
+        "S002",
+        "S003"
+      ],
+      "start": 0.0,
+      "end": 17.4,
+      "duration": 17.4,
+      "text": "Start with a simple question: could life exist in an ocean that has never seen the sky? On Jupiter's moon Europa, a global saltwater ocean lies hidden beneath a completely frozen crust. That crust is tens of miles thick, and the ocean surface beneath it is frozen solid.",
+      "words": 48,
+      "prompt": "extreme wide establishing plate, black ice ceiling filling the top third, still dark water below, single pale-bone glint at the horizon line, night ink and deep sea teal, no subject | wide context, small moon disc in deep sea field, thin pale-bone ice rind over a dark teal interior, one coral accent hairline crack, distant and schematic | side cross-section plate, layered ice bands in pale bone over black water, hard horizontal boundary, sparse hatching, no creatures",
+      "host_in_frame": false,
+      "prompt_klein": "extreme wide establishing plate, black ice ceiling filling the top third, still dark water below, single pale-bone glint at the horizon line, night ink and deep sea teal, no subject | wide context, small moon disc in deep sea field, thin pale-bone ice rind over a dark teal interior, one coral accent hairline crack, distant and schematic | side cross-section plate, layered ice bands in pale bone over black water, hard horizontal boundary, sparse hatching, no creatures. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Hook and the question — target 1:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B002",
+      "section": 1,
+      "sentence_ids": [
+        "S004",
+        "S005"
+      ],
+      "start": 17.4,
+      "end": 30.45,
+      "duration": 13.05,
+      "text": "Yet the ocean underneath holds more than twice as much water as all of Earth's oceans combined. It stays liquid not because of sunlight, but because Jupiter's gravity flexes the moon and heats it from within.",
+      "words": 36,
+      "prompt": "wide abstract plate, two dark teal volumes side by side, one small pale-bone sphere dwarfed by a larger mass, flat fills, no labels | wide context, moon silhouette stretched slightly oval, faint concentric stress arcs in electric teal, distant planet mass at frame edge, no text",
+      "host_in_frame": false,
+      "prompt_klein": "wide abstract plate, two dark teal volumes side by side, one small pale-bone sphere dwarfed by a larger mass, flat fills, no labels | wide context, moon silhouette stretched slightly oval, faint concentric stress arcs in electric teal, distant planet mass at frame edge, no text. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Hook and the question — target 1:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B003",
+      "section": 1,
+      "sentence_ids": [
+        "S006",
+        "S007",
+        "S008"
+      ],
+      "start": 30.45,
+      "end": 47.86,
+      "duration": 17.4,
+      "text": "Sunlight never reaches that water, so nothing down there has ever seen a sunrise. So the question becomes sharper: what could live in a dark ocean sealed under ice? Europa is not even the only one: Saturn's moon Enceladus hides a global salty ocean beneath its icy crust.",
+      "words": 48,
+      "prompt": "near-black plate, single narrow shaft of pale bone light stopping dead at an ice layer, deep teal darkness below, extreme minimal | wide context, tiny pale-bone silhouette suspended in a vast dark teal void beneath an ice roof, subject very small in frame, silhouetted | wide context, second small moon disc in deep sea field, fractured ice shell in pale bone, thin electric teal seam, distant and schematic",
+      "host_in_frame": false,
+      "prompt_klein": "near-black plate, single narrow shaft of pale bone light stopping dead at an ice layer, deep teal darkness below, extreme minimal | wide context, tiny pale-bone silhouette suspended in a vast dark teal void beneath an ice roof, subject very small in frame, silhouetted | wide context, second small moon disc in deep sea field, fractured ice shell in pale bone, thin electric teal seam, distant and schematic. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Hook and the question — target 1:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B004",
+      "section": 1,
+      "sentence_ids": [
+        "S009",
+        "S010"
+      ],
+      "start": 47.86,
+      "end": 59.86,
+      "duration": 12,
+      "text": "Enceladus even sprays that ocean into space through cracks near its south pole. On Earth, we already know what life can do without sunlight, because the deep sea has an answer.",
+      "words": 31,
+      "prompt": "wide context, small moon at lower left venting a pale-bone plume upward into night ink, faint electric teal streaks, distant silhouette | wide establishing plate, black basalt floor, cluster of pale-bone chimney towers, diffuse lime-teal glow at their bases, no creatures",
+      "host_in_frame": false,
+      "prompt_klein": "wide context, small moon at lower left venting a pale-bone plume upward into night ink, faint electric teal streaks, distant silhouette | wide establishing plate, black basalt floor, cluster of pale-bone chimney towers, diffuse lime-teal glow at their bases, no creatures. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Hook and the question — target 1:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B005",
+      "section": 1,
+      "sentence_ids": [
+        "S011",
+        "S012"
+      ],
+      "start": 59.86,
+      "end": 74.72,
+      "duration": 14.86,
+      "text": "This episode follows that answer outward, from a vent on our own sea floor to an ocean we have never touched. Some of what follows is measured, and some of it is invented, and we will mark the difference every time.",
+      "words": 41,
+      "prompt": "horizontal triptych plate, left chimney field, centre dark water column, right ice ceiling, connected by one electric teal current line, flat fills | two flat panels split by a hard vertical edge, left pale bone, right night ink, one coral accent dot on the boundary, no symbols",
+      "host_in_frame": false,
+      "prompt_klein": "horizontal triptych plate, left chimney field, centre dark water column, right ice ceiling, connected by one electric teal current line, flat fills | two flat panels split by a hard vertical edge, left pale bone, right night ink, one coral accent dot on the boundary, no symbols. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Hook and the question — target 1:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B006",
+      "section": 1,
+      "sentence_ids": [
+        "S013",
+        "S014"
+      ],
+      "start": 74.72,
+      "end": 86.72,
+      "duration": 12,
+      "text": "By the end, you can decide which parts you believe. Two of the least remarkable-looking moons in the solar system may be the most interesting.",
+      "words": 25,
+      "prompt": "single pale-bone dot centred in a wide night ink field, one coral accent ring around it, extreme minimal plate | wide context, two small pale-bone moon discs low in a night ink field, both distant and schematic",
+      "host_in_frame": false,
+      "prompt_klein": "single pale-bone dot centred in a wide night ink field, one coral accent ring around it, extreme minimal plate | wide context, two small pale-bone moon discs low in a night ink field, both distant and schematic. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Hook and the question — target 1:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B001",
+      "section": 2,
+      "sentence_ids": [
+        "S015",
+        "S016",
+        "S017"
+      ],
+      "start": 0.0,
+      "end": 14.83,
+      "duration": 14.83,
+      "text": "Begin with the shape of the world: an ocean with no shore you could walk out onto, capped by ice. Europa's ocean is global, which means it wraps the entire moon. There is no beach here, no coastline, no place where water meets air.",
+      "words": 44,
+      "prompt": "wide context, curved horizon of ice meeting dark water with no land anywhere, pale bone above, deep teal below, distant and empty | front view schematic, sphere wrapped in a continuous deep teal band under a pale-bone cap, flat fills, no labels | wide plate, unbroken water surface meeting ice directly, no shoreline, hard horizontal seam, night ink and pale bone only",
+      "host_in_frame": false,
+      "prompt_klein": "wide context, curved horizon of ice meeting dark water with no land anywhere, pale bone above, deep teal below, distant and empty | front view schematic, sphere wrapped in a continuous deep teal band under a pale-bone cap, flat fills, no labels | wide plate, unbroken water surface meeting ice directly, no shoreline, hard horizontal seam, night ink and pale bone only. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: The world: an ocean with no shores — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B002",
+      "section": 2,
+      "sentence_ids": [
+        "S018",
+        "S019",
+        "S020"
+      ],
+      "start": 14.83,
+      "end": 30.67,
+      "duration": 15.84,
+      "text": "Above the water sits a crust of ice tens of miles thick. That ice stays frozen where it meets the water, so the boundary is a lid, not a shoreline. The water below is the striking part: more than twice the volume of every ocean on Earth.",
+      "words": 47,
+      "prompt": "side cross-section, thick pale-bone ice slab occupying the upper half, sparse hatching for depth, black water beneath | detail crop, ice-water contact line, flat pale bone against flat deep teal, thin electric teal seam, no creatures | wide plate, vast dark teal mass filling the frame, one small pale-bone circle for scale at the edge, flat fills, no text",
+      "host_in_frame": false,
+      "prompt_klein": "side cross-section, thick pale-bone ice slab occupying the upper half, sparse hatching for depth, black water beneath | detail crop, ice-water contact line, flat pale bone against flat deep teal, thin electric teal seam, no creatures | wide plate, vast dark teal mass filling the frame, one small pale-bone circle for scale at the edge, flat fills, no text. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: The world: an ocean with no shores — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B003",
+      "section": 2,
+      "sentence_ids": [
+        "S021",
+        "S022",
+        "S023",
+        "S024"
+      ],
+      "start": 30.67,
+      "end": 45.49,
+      "duration": 14.83,
+      "text": "Twice over, in a single moon. Volume is not the same as habitability, but it does buy room. Room for chemistry, room for gradients, room for time. The heat that keeps it liquid comes from Jupiter, which pulls on Europa as the moon orbits.",
+      "words": 44,
+      "prompt": "minimal plate, two identical dark teal discs stacked over one small pale-bone disc, hard flat edges, one coral accent line | wide plate, empty deep teal field with a single pale-bone measuring tick at the base, sparse hatching, no subject | abstract plate, three horizontal bands of deep teal, electric teal and night ink, soft boundaries, flat fills, no text | wide context, large dark planet mass at frame left, small moon at right, faint pale-bone tidal arcs between them, distant silhouette",
+      "host_in_frame": false,
+      "prompt_klein": "minimal plate, two identical dark teal discs stacked over one small pale-bone disc, hard flat edges, one coral accent line | wide plate, empty deep teal field with a single pale-bone measuring tick at the base, sparse hatching, no subject | abstract plate, three horizontal bands of deep teal, electric teal and night ink, soft boundaries, flat fills, no text | wide context, large dark planet mass at frame left, small moon at right, faint pale-bone tidal arcs between them, distant silhouette. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: The world: an ocean with no shores — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B004",
+      "section": 2,
+      "sentence_ids": [
+        "S025",
+        "S026",
+        "S027",
+        "S028"
+      ],
+      "start": 45.49,
+      "end": 62.0,
+      "duration": 16.51,
+      "text": "That flexing bends the moon, and the bending becomes heat. Tidal heating is why the ocean is not a block of ice all the way through. It also drives chemistry between the ocean and the rocky floor beneath it. Enceladus, at Saturn, is smaller but follows the same logic.",
+      "words": 49,
+      "prompt": "detail crop, moon outline drawn twice, solid and dashed, slight ellipse offset, electric teal stress lines, no text | side cross-section, pale-bone ice shell thinning toward a liquid deep teal core, warm coral accent at the inner boundary | wide establishing plate, flat basalt charcoal sea floor, dark teal water above, faint lime-teal mineral wisps rising from cracks | wide context, small moon disc low in frame, pale-bone fractured shell, night ink field, distant and schematic",
+      "host_in_frame": false,
+      "prompt_klein": "detail crop, moon outline drawn twice, solid and dashed, slight ellipse offset, electric teal stress lines, no text | side cross-section, pale-bone ice shell thinning toward a liquid deep teal core, warm coral accent at the inner boundary | wide establishing plate, flat basalt charcoal sea floor, dark teal water above, faint lime-teal mineral wisps rising from cracks | wide context, small moon disc low in frame, pale-bone fractured shell, night ink field, distant and schematic. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: The world: an ocean with no shores — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B005",
+      "section": 2,
+      "sentence_ids": [
+        "S029",
+        "S030",
+        "S031"
+      ],
+      "start": 62.0,
+      "end": 74.81,
+      "duration": 12.81,
+      "text": "It too carries a global salty ocean under an icy crust. Two moons, two oceans, both sealed away from the sky. If you wanted to design a place where life could hide, you would struggle to do better.",
+      "words": 38,
+      "prompt": "front view schematic, small sphere with a deep teal band beneath a cracked pale-bone shell, flat fills, no labels | wide plate, two small moon discs at opposite corners, both under pale-bone caps, empty night ink between them, minimal | wide establishing plate, ice roof, dark water, faint glow at the floor, no subject, deep sea teal dominant",
+      "host_in_frame": false,
+      "prompt_klein": "front view schematic, small sphere with a deep teal band beneath a cracked pale-bone shell, flat fills, no labels | wide plate, two small moon discs at opposite corners, both under pale-bone caps, empty night ink between them, minimal | wide establishing plate, ice roof, dark water, faint glow at the floor, no subject, deep sea teal dominant. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: The world: an ocean with no shores — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B006",
+      "section": 2,
+      "sentence_ids": [
+        "S032",
+        "S033",
+        "S034"
+      ],
+      "start": 74.81,
+      "end": 92.0,
+      "duration": 17.19,
+      "text": "But hiding is not the same as living, and for that a world needs an energy source. So the next thing to measure is not the size of the ocean, but what powers it. Keep the image in your head: an ocean with no shores, roofed by ice, warmed from below.",
+      "words": 51,
+      "prompt": "single coral accent spark at the centre of a black field, pale-bone halo, extreme minimal plate | wide plate, dark teal water column with a faint pale-bone vertical gradient rising from the floor, no subject | wide context, ice ceiling, still water, faint warm coral glow along the sea floor, everything else night ink",
+      "host_in_frame": false,
+      "prompt_klein": "single coral accent spark at the centre of a black field, pale-bone halo, extreme minimal plate | wide plate, dark teal water column with a faint pale-bone vertical gradient rising from the floor, no subject | wide context, ice ceiling, still water, faint warm coral glow along the sea floor, everything else night ink. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: The world: an ocean with no shores — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B007",
+      "section": 2,
+      "sentence_ids": [
+        "S035",
+        "S036",
+        "S037"
+      ],
+      "start": 92.0,
+      "end": 106.15,
+      "duration": 14.15,
+      "text": "An ocean with more water than ours, and no way for the sun to reach it. Nothing about that lid is thin enough to see through. If you poured Earth's oceans into it, you would still have room for another Earth's worth.",
+      "words": 42,
+      "prompt": "wide plate, black field bisected by a pale-bone ice layer, deep teal mass below, one thin blocked light ray at top | side cross-section, thick pale-bone ice slab, no transparency, black water beneath, sparse hatching | wide plate, one small pale-bone sphere beside two large dark teal masses, flat fills, no labels",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, black field bisected by a pale-bone ice layer, deep teal mass below, one thin blocked light ray at top | side cross-section, thick pale-bone ice slab, no transparency, black water beneath, sparse hatching | wide plate, one small pale-bone sphere beside two large dark teal masses, flat fills, no labels. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: The world: an ocean with no shores — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B008",
+      "section": 2,
+      "sentence_ids": [
+        "S038",
+        "S039",
+        "S040"
+      ],
+      "start": 106.15,
+      "end": 123.0,
+      "duration": 16.85,
+      "text": "The moon is not a dead ball of ice, it is being worked on from the outside, every orbit. That is the first surprise of this world: the heat comes from a neighbour, not from the star. Enceladus is smaller, but the same three layers appear: ice, water, and rock.",
+      "words": 50,
+      "prompt": "wide context, moon silhouette with faint electric teal stress arcs, dark planet mass at frame edge | wide plate, small moon disc beside a large dark planet mass, one coral accent heat line between them | side cross-section, three flat bands of pale bone, deep teal and basalt charcoal, hard seams, no text",
+      "host_in_frame": false,
+      "prompt_klein": "wide context, moon silhouette with faint electric teal stress arcs, dark planet mass at frame edge | wide plate, small moon disc beside a large dark planet mass, one coral accent heat line between them | side cross-section, three flat bands of pale bone, deep teal and basalt charcoal, hard seams, no text. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: The world: an ocean with no shores — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B009",
+      "section": 2,
+      "sentence_ids": [
+        "S041"
+      ],
+      "start": 123.0,
+      "end": 135.0,
+      "duration": 12,
+      "text": "Does a smaller world keep its ocean as easily? That is a question only the mission data can answer.",
+      "words": 19,
+      "prompt": "wide context, small moon disc with a faint deep teal band, night ink space, distant and schematic",
+      "host_in_frame": false,
+      "prompt_klein": "wide context, small moon disc with a faint deep teal band, night ink space, distant and schematic. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: The world: an ocean with no shores — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B001",
+      "section": 3,
+      "sentence_ids": [
+        "S042",
+        "S043",
+        "S044"
+      ],
+      "start": 0.0,
+      "end": 14.98,
+      "duration": 14.98,
+      "text": "Here is the problem the ice creates: no sunlight reaches the water, so photosynthesis is off the table. On Earth, life solved that problem in the dark, at hydrothermal vents. Vent ecosystems run on chemosynthesis instead of sunlight.",
+      "words": 38,
+      "prompt": "wide plate, pale-bone ice lid, single light shaft stopping at the surface, darkness below, extreme minimal | wide establishing plate, black chimney cluster on basalt floor, lime-teal mat glow, night ink water, no creatures | detail crop, textured mat surface in lime teal against basalt charcoal, sparse hatching, flat fills",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, pale-bone ice lid, single light shaft stopping at the surface, darkness below, extreme minimal | wide establishing plate, black chimney cluster on basalt floor, lime-teal mat glow, night ink water, no creatures | detail crop, textured mat surface in lime teal against basalt charcoal, sparse hatching, flat fills. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Energy: no sunlight, two answers — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B002",
+      "section": 3,
+      "sentence_ids": [
+        "S045",
+        "S046"
+      ],
+      "start": 14.98,
+      "end": 27.2,
+      "duration": 12.22,
+      "text": "Chemosynthetic bacteria take chemical energy from hydrogen sulfide and carbon dioxide and turn inorganic chemicals into food. That makes them the base of the food web, not the top of it.",
+      "words": 31,
+      "prompt": "abstract detail plate, pale-bone grains drifting through electric teal fluid toward a dark mineral surface, no symbols, no text | wide plate, low band of lime-teal mat along the bottom edge, empty water above, single pale-bone dot at the base, flat fills",
+      "host_in_frame": false,
+      "prompt_klein": "abstract detail plate, pale-bone grains drifting through electric teal fluid toward a dark mineral surface, no symbols, no text | wide plate, low band of lime-teal mat along the bottom edge, empty water above, single pale-bone dot at the base, flat fills. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Energy: no sunlight, two answers — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B003",
+      "section": 3,
+      "sentence_ids": [
+        "S047",
+        "S048",
+        "S049"
+      ],
+      "start": 27.2,
+      "end": 44.54,
+      "duration": 17.34,
+      "text": "Around those bacteria live vent shrimp, tubeworms and mussels, none of which need a single photon. So the template exists, and it is not hypothetical on Earth. Enceladus appears to have the same kind of machinery: vents where its ocean meets a rocky core.",
+      "words": 44,
+      "prompt": "wide context, distant silhouettes of small crustaceans and worm tubes clustered on a chimney base, all dark against lime glow | wide establishing plate, chimney field with a single pale-bone reference scale bar, no text, flat fills | side cross-section, small moon interior, deep teal ocean layer over basalt charcoal core, coral accent at the contact line",
+      "host_in_frame": false,
+      "prompt_klein": "wide context, distant silhouettes of small crustaceans and worm tubes clustered on a chimney base, all dark against lime glow | wide establishing plate, chimney field with a single pale-bone reference scale bar, no text, flat fills | side cross-section, small moon interior, deep teal ocean layer over basalt charcoal core, coral accent at the contact line. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Energy: no sunlight, two answers — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B004",
+      "section": 3,
+      "sentence_ids": [
+        "S050",
+        "S051",
+        "S052"
+      ],
+      "start": 44.54,
+      "end": 60.7,
+      "duration": 16.16,
+      "text": "Cassini found silica grains in the plume that formed where liquid water and rock interacted above ninety degrees Celsius. That is hot rock in contact with water, under an ice shell, far from the sun. The plume also carries molecular hydrogen.",
+      "words": 41,
+      "prompt": "detail crop, pale-bone angular grains suspended in electric teal fluid beside dark rock, flat fills, no symbols | wide context, cracked basalt floor under dark teal water under pale-bone ice, warm coral glow at the rock seam, no subject | abstract detail plate, small pale-bone bubbles rising through deep teal, sparse hatching, no symbols, no text",
+      "host_in_frame": false,
+      "prompt_klein": "detail crop, pale-bone angular grains suspended in electric teal fluid beside dark rock, flat fills, no symbols | wide context, cracked basalt floor under dark teal water under pale-bone ice, warm coral glow at the rock seam, no subject | abstract detail plate, small pale-bone bubbles rising through deep teal, sparse hatching, no symbols, no text. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Energy: no sunlight, two answers — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B005",
+      "section": 3,
+      "sentence_ids": [
+        "S053",
+        "S054",
+        "S055"
+      ],
+      "start": 60.7,
+      "end": 78.04,
+      "duration": 17.34,
+      "text": "Microbes could pair that hydrogen with dissolved carbon dioxide and harvest the reaction as energy. Read that again: a chemical battery, vented into space, from an ocean nobody has visited. At Europa, tidal heating supplies the energy and drives chemistry at the sea floor.",
+      "words": 44,
+      "prompt": "abstract plate, two drifting particle streams in electric teal meeting at a single coral accent point, flat fills, no symbols | wide context, small moon at lower left venting a pale-bone plume into black space, faint electric teal wake, distant silhouette | wide establishing plate, basalt floor with mineral wisps, faint coral heat glow, dark teal water, no subject",
+      "host_in_frame": false,
+      "prompt_klein": "abstract plate, two drifting particle streams in electric teal meeting at a single coral accent point, flat fills, no symbols | wide context, small moon at lower left venting a pale-bone plume into black space, faint electric teal wake, distant silhouette | wide establishing plate, basalt floor with mineral wisps, faint coral heat glow, dark teal water, no subject. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Energy: no sunlight, two answers — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B006",
+      "section": 3,
+      "sentence_ids": [
+        "S056",
+        "S057",
+        "S058"
+      ],
+      "start": 78.04,
+      "end": 94.99,
+      "duration": 16.95,
+      "text": "Two different moons, two routes to the same three ingredients: water, chemistry, energy. That combination is why these moons keep appearing on lists of places to look for life. It is also why the next part of this episode has to be careful.",
+      "words": 43,
+      "prompt": "wide plate, three stacked flat bands in deep teal, lime teal and coral accent, pale-bone separators, no text | wide context, two small moon discs above a pale-bone horizon line, night ink field, distant and schematic | minimal plate, single pale-bone vertical line on night ink, one coral accent dot at its base, no subject",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, three stacked flat bands in deep teal, lime teal and coral accent, pale-bone separators, no text | wide context, two small moon discs above a pale-bone horizon line, night ink field, distant and schematic | minimal plate, single pale-bone vertical line on night ink, one coral accent dot at its base, no subject. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Energy: no sunlight, two answers — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B007",
+      "section": 3,
+      "sentence_ids": [
+        "S059",
+        "S060",
+        "S061"
+      ],
+      "start": 94.99,
+      "end": 109.58,
+      "duration": 14.58,
+      "text": "Because the ingredients are measured, but the inhabitants are not. Hydrogen and carbon dioxide are a possible energy source, not proof that anything is using them. Possible is the honest word, and it is worth holding onto.",
+      "words": 37,
+      "prompt": "split plate, left side pale-bone mineral texture, right side empty black void, hard vertical seam, flat fills | detail crop, pale-bone particles drifting past dark rock, no glow, no creature, sparse hatching | single pale-bone wordless shape, a plain circle, centred in deep sea teal, extreme minimal, no text",
+      "host_in_frame": false,
+      "prompt_klein": "split plate, left side pale-bone mineral texture, right side empty black void, hard vertical seam, flat fills | detail crop, pale-bone particles drifting past dark rock, no glow, no creature, sparse hatching | single pale-bone wordless shape, a plain circle, centred in deep sea teal, extreme minimal, no text. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Energy: no sunlight, two answers — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B008",
+      "section": 3,
+      "sentence_ids": [
+        "S062",
+        "S063"
+      ],
+      "start": 109.58,
+      "end": 123.77,
+      "duration": 14.19,
+      "text": "With the chemistry established, the question moves from what a world provides to what a body could do with it. No sunlight, no photosynthesis, and still a full ecosystem: that is what the vents show us.",
+      "words": 36,
+      "prompt": "wide plate, dark water column with a faint pale-bone silhouette at its centre, subject distant and unreadable | wide establishing plate, black chimney cluster, lime-teal mat glow, empty dark water above",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, dark water column with a faint pale-bone silhouette at its centre, subject distant and unreadable | wide establishing plate, black chimney cluster, lime-teal mat glow, empty dark water above. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Energy: no sunlight, two answers — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B009",
+      "section": 3,
+      "sentence_ids": [
+        "S064",
+        "S065",
+        "S066"
+      ],
+      "start": 123.77,
+      "end": 141.51,
+      "duration": 17.74,
+      "text": "Water plus hot rock leaves mineral traces, and the plume carries those traces outward. Hydrogen is the part that matters for biology, because it can power a microbe without any light. Notice what is missing from that list: sunshine, plants, and anything with a face.",
+      "words": 45,
+      "prompt": "detail crop, pale-bone grains lifting from dark rock into electric teal fluid, flat fills | abstract plate, pale-bone bubbles rising past dark rock, faint coral accent glow, no symbols | wide plate, empty dark teal water column, one small lime glow at the base, no creature",
+      "host_in_frame": false,
+      "prompt_klein": "detail crop, pale-bone grains lifting from dark rock into electric teal fluid, flat fills | abstract plate, pale-bone bubbles rising past dark rock, faint coral accent glow, no symbols | wide plate, empty dark teal water column, one small lime glow at the base, no creature. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Energy: no sunlight, two answers — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B010",
+      "section": 3,
+      "sentence_ids": [
+        "S067"
+      ],
+      "start": 141.51,
+      "end": 153.51,
+      "duration": 12,
+      "text": "At Europa the heat arrives through the ice, from a parent planet, and reaches the water from below.",
+      "words": 18,
+      "prompt": "wide context, ice roof, dark water, faint coral warmth along the sea floor, no subject",
+      "host_in_frame": false,
+      "prompt_klein": "wide context, ice roof, dark water, faint coral warmth along the sea floor, no subject. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Energy: no sunlight, two answers — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B001",
+      "section": 4,
+      "sentence_ids": [
+        "S068",
+        "S069",
+        "S070"
+      ],
+      "start": 0.0,
+      "end": 12.89,
+      "duration": 12.89,
+      "text": "From here on, we stop describing and start designing. Everything from this point is invented: honestly labelled, constrained by physics, and never observed. The rule we set ourselves was simple: no creature without a reason to exist.",
+      "words": 37,
+      "prompt": "wide plate, empty drafting field in deep sea teal, single pale-bone outline of a rectangle, one coral accent corner mark, no text | wide plate, pale-bone silhouette of an unreadable animal shape held inside a coral accent outline box, flat fills | minimal plate, single pale-bone dot with one coral accent line running from it, night ink field",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, empty drafting field in deep sea teal, single pale-bone outline of a rectangle, one coral accent corner mark, no text | wide plate, pale-bone silhouette of an unreadable animal shape held inside a coral accent outline box, flat fills | minimal plate, single pale-bone dot with one coral accent line running from it, night ink field. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Life near the ice: mats and filter-feeders — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B002",
+      "section": 4,
+      "sentence_ids": [
+        "S071",
+        "S072",
+        "S073"
+      ],
+      "start": 12.89,
+      "end": 27.87,
+      "duration": 14.98,
+      "text": "Every body plan has to answer three questions: what does it eat, what is trying to eat it, and how does it move. Start where the energy is: the bacterial mats that coat vent chimneys. The vent grazer is built to harvest them.",
+      "words": 43,
+      "prompt": "wide plate, three empty pale-bone circles in a row on deep teal, hard flat edges, no symbols | detail crop, lime-teal mat texture clinging to a dark chimney wall, sparse hatching, no creature | extreme wide, tall narrow silhouette at the base of a chimney, subject tiny, all dark against lime glow",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, three empty pale-bone circles in a row on deep teal, hard flat edges, no symbols | detail crop, lime-teal mat texture clinging to a dark chimney wall, sparse hatching, no creature | extreme wide, tall narrow silhouette at the base of a chimney, subject tiny, all dark against lime glow. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Life near the ice: mats and filter-feeders — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B003",
+      "section": 4,
+      "sentence_ids": [
+        "S074",
+        "S075",
+        "S076"
+      ],
+      "start": 27.87,
+      "end": 41.45,
+      "duration": 13.58,
+      "text": "It has six limbs, and it uses them to grip the chimney while it grazes. Six points of contact hold it steady in the rising vent flow. Its body is low and broad, a shape that suits crushing pressure.",
+      "words": 39,
+      "prompt": "extreme wide context, distant silhouetted grazer on a chimney, six limb stalks readable only as spokes, exactly six separate tendrils, two pairs of fins, subject small in frame | detail crop of chimney rock with six small pale-bone grip points, no animal body, sparse hatching, flat fills | extreme wide, broad low silhouette against a vent glow, distant and dark, no internal detail",
+      "host_in_frame": false,
+      "prompt_klein": "extreme wide context, distant silhouetted grazer on a chimney, six limb stalks readable only as spokes, exactly six separate tendrils, two pairs of fins, subject small in frame | detail crop of chimney rock with six small pale-bone grip points, no animal body, sparse hatching, flat fills | extreme wide, broad low silhouette against a vent glow, distant and dark, no internal detail. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Life near the ice: mats and filter-feeders — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B004",
+      "section": 4,
+      "sentence_ids": [
+        "S077",
+        "S078"
+      ],
+      "start": 41.45,
+      "end": 54.34,
+      "duration": 12.89,
+      "text": "We gave it a long neck, so it can reach mats on the chimney wall without pressing its body into hot fluid. That is a design choice, not an observation, and it is written down as one.",
+      "words": 37,
+      "prompt": "extreme wide, distant silhouette with a thin rising neck line reaching up a chimney, all black against pale-bone glow | minimal plate, pale-bone outline of a single thin line on night ink, one coral accent tick at its top",
+      "host_in_frame": false,
+      "prompt_klein": "extreme wide, distant silhouette with a thin rising neck line reaching up a chimney, all black against pale-bone glow | minimal plate, pale-bone outline of a single thin line on night ink, one coral accent tick at its top. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Life near the ice: mats and filter-feeders — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B005",
+      "section": 4,
+      "sentence_ids": [
+        "S079",
+        "S080",
+        "S081"
+      ],
+      "start": 54.34,
+      "end": 67.58,
+      "duration": 13.24,
+      "text": "The filter drifter takes a different route to the same food: it filters microbes out of the water. It swims with a single undulating fin. No limbs, one continuous fin, and a wide mouth that strains the water.",
+      "words": 38,
+      "prompt": "extreme wide, ribbon-like silhouette suspended mid-water, no legs, no arms, one continuous undulating fin, wide filter mouth, distant | side profile, long flat ribbon silhouette with a wavy edge, flat fills, distant and unreadable, deep teal field | extreme wide, small silhouetted drifter at centre, wide frontal mouth suggested by a flat wedge, no legs, no arms, subject tiny",
+      "host_in_frame": false,
+      "prompt_klein": "extreme wide, ribbon-like silhouette suspended mid-water, no legs, no arms, one continuous undulating fin, wide filter mouth, distant | side profile, long flat ribbon silhouette with a wavy edge, flat fills, distant and unreadable, deep teal field | extreme wide, small silhouetted drifter at centre, wide frontal mouth suggested by a flat wedge, no legs, no arms, subject tiny. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Life near the ice: mats and filter-feeders — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B006",
+      "section": 4,
+      "sentence_ids": [
+        "S082",
+        "S083",
+        "S084"
+      ],
+      "start": 67.58,
+      "end": 84.99,
+      "duration": 17.42,
+      "text": "We kept it limbless on purpose, because limbs are expensive when you never need to grip anything. We also kept both animals small in frame, because an invented creature should not be sold as a portrait. Now put them in the same water and the scene stops being a catalogue.",
+      "words": 50,
+      "prompt": "minimal plate, pale-bone straight line beside a coral accent wavy line, flat fills, no text | extreme wide, two tiny distant silhouettes in a large dark teal field, one at upper left, one at lower right | wide context, mat band along the base, two distant silhouettes above it, faint lime glow, night ink water",
+      "host_in_frame": false,
+      "prompt_klein": "minimal plate, pale-bone straight line beside a coral accent wavy line, flat fills, no text | extreme wide, two tiny distant silhouettes in a large dark teal field, one at upper left, one at lower right | wide context, mat band along the base, two distant silhouettes above it, faint lime glow, night ink water. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Life near the ice: mats and filter-feeders — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B007",
+      "section": 4,
+      "sentence_ids": [
+        "S085",
+        "S086",
+        "S087"
+      ],
+      "start": 84.99,
+      "end": 99.97,
+      "duration": 14.98,
+      "text": "Mats grow where vent fluid meets cold water, and drifters gather where mats break apart. One grazes the surface of the rock, and one harvests what the current carries away. That is a food web in miniature, and it is entirely our invention.",
+      "words": 43,
+      "prompt": "wide plate, chimney base with lime mat, loose pale-bone fragments drifting upward, faint electric teal current line | wide context, grazer silhouette fixed to a chimney at left, drifter silhouette drifting at right, both distant and dark | wide plate, three pale-bone dots connected by coral accent lines in a triangle, deep teal field, no text",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, chimney base with lime mat, loose pale-bone fragments drifting upward, faint electric teal current line | wide context, grazer silhouette fixed to a chimney at left, drifter silhouette drifting at right, both distant and dark | wide plate, three pale-bone dots connected by coral accent lines in a triangle, deep teal field, no text. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Life near the ice: mats and filter-feeders — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B008",
+      "section": 4,
+      "sentence_ids": [
+        "S088",
+        "S089",
+        "S090"
+      ],
+      "start": 99.97,
+      "end": 115.99,
+      "duration": 16.02,
+      "text": "Which raises the question this episode cannot answer with data: what would eat them? The drifter's body is a ribbon, flattened and wide, a shape that does not fight the water. Neither animal has eyes in our design, because there is nothing down here to see.",
+      "words": 46,
+      "prompt": "extreme wide, empty black water above a lime mat, single faint pale-bone shape at the top edge, unreadable | extreme wide, ribbon-like silhouette suspended in dark teal, no legs, no arms, one continuous undulating fin, distant | extreme wide, two eyeless silhouettes in a black field, both distant, no detail",
+      "host_in_frame": false,
+      "prompt_klein": "extreme wide, empty black water above a lime mat, single faint pale-bone shape at the top edge, unreadable | extreme wide, ribbon-like silhouette suspended in dark teal, no legs, no arms, one continuous undulating fin, distant | extreme wide, two eyeless silhouettes in a black field, both distant, no detail. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Life near the ice: mats and filter-feeders — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B009",
+      "section": 4,
+      "sentence_ids": [
+        "S091",
+        "S092"
+      ],
+      "start": 115.99,
+      "end": 128.88,
+      "duration": 12.89,
+      "text": "The grazer's food is a mat, and a mat is a surface, so the animal has to hold position against a current. Two strategies, one pantry: one animal farms the rock, and the other skims the water.",
+      "words": 37,
+      "prompt": "wide context, grazer silhouette gripping a chimney, lime mat underfoot, faint current lines | wide plate, chimney with lime mat at left, drifting ribbon silhouette at right, both distant",
+      "host_in_frame": false,
+      "prompt_klein": "wide context, grazer silhouette gripping a chimney, lime mat underfoot, faint current lines | wide plate, chimney with lime mat at left, drifting ribbon silhouette at right, both distant. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Life near the ice: mats and filter-feeders — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B010",
+      "section": 4,
+      "sentence_ids": [
+        "S093"
+      ],
+      "start": 128.88,
+      "end": 140.88,
+      "duration": 12,
+      "text": "If you have ever wondered what a food web looks like before it has a top, this is it.",
+      "words": 19,
+      "prompt": "wide plate, three pale-bone dots along the base connected by coral accent lines, empty water above",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, three pale-bone dots along the base connected by coral accent lines, empty water above. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Life near the ice: mats and filter-feeders — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B001",
+      "section": 5,
+      "sentence_ids": [
+        "S094",
+        "S095",
+        "S096"
+      ],
+      "start": 0.0,
+      "end": 17.1,
+      "duration": 17.1,
+      "text": "Here we have to be honest: there is no evidence for an alien predator, because nobody has seen one. What we can do is reason: if a mat feeds a grazer, the same energy is available to something that eats grazers. That is not evidence, it is bookkeeping.",
+      "words": 48,
+      "prompt": "wide plate, empty night ink field with a single pale-bone question-shaped gap of light, no subject, flat fills | wide plate, lime-teal mat at base, pale-bone dot above it, coral accent arrowless line rising further, no text | minimal plate, two flat columns of pale-bone marks on deep teal, one slightly taller, no numerals",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, empty night ink field with a single pale-bone question-shaped gap of light, no subject, flat fills | wide plate, lime-teal mat at base, pale-bone dot above it, coral accent arrowless line rising further, no text | minimal plate, two flat columns of pale-bone marks on deep teal, one slightly taller, no numerals. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Predators, and the logic of an arms race — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B002",
+      "section": 5,
+      "sentence_ids": [
+        "S097",
+        "S098",
+        "S099"
+      ],
+      "start": 17.1,
+      "end": 29.92,
+      "duration": 12.82,
+      "text": "Energy that collects in one body becomes a target for another. So a plausible ocean would not stop at grazers. A hunter here would face the same constraints as everything else: pressure, cold, and permanent dark.",
+      "words": 36,
+      "prompt": "detail crop, single pale-bone sphere with a coral accent ring closing around it, night ink background | wide context, chain of three distant silhouettes in a dark field, the last one larger and less readable | extreme wide, large unreadable silhouette low in frame under an ice roof, all black, no detail",
+      "host_in_frame": false,
+      "prompt_klein": "detail crop, single pale-bone sphere with a coral accent ring closing around it, night ink background | wide context, chain of three distant silhouettes in a dark field, the last one larger and less readable | extreme wide, large unreadable silhouette low in frame under an ice roof, all black, no detail. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Predators, and the logic of an arms race — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B003",
+      "section": 5,
+      "sentence_ids": [
+        "S100",
+        "S101",
+        "S102",
+        "S103"
+      ],
+      "start": 29.92,
+      "end": 47.74,
+      "duration": 17.81,
+      "text": "We did not design one, because a predator is where invention starts to outrun constraint. Instead, ask what an arms race would even look like without light. One answer is already in our design set: light. The vent grazer signals with bioluminescence, in an ocean that never sees the sun.",
+      "words": 50,
+      "prompt": "wide plate, pale-bone outline that stops halfway across the frame and dissolves into hatching, coral accent at the break | wide plate, two pale-bone silhouettes facing each other across an empty deep teal gap, both distant, no detail | single coral accent glow point in black water, pale-bone halo, extreme minimal | extreme wide, distant grazer silhouette on a chimney with a small lime glow at its head, everything else night ink",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, pale-bone outline that stops halfway across the frame and dissolves into hatching, coral accent at the break | wide plate, two pale-bone silhouettes facing each other across an empty deep teal gap, both distant, no detail | single coral accent glow point in black water, pale-bone halo, extreme minimal | extreme wide, distant grazer silhouette on a chimney with a small lime glow at its head, everything else night ink. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Predators, and the logic of an arms race — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B004",
+      "section": 5,
+      "sentence_ids": [
+        "S104",
+        "S105",
+        "S106"
+      ],
+      "start": 47.74,
+      "end": 60.92,
+      "duration": 13.18,
+      "text": "In permanent darkness, light is the only language that travels. But a signal that travels is also a signal that can be intercepted. That is the whole logic of an arms race: every advantage becomes a vulnerability.",
+      "words": 37,
+      "prompt": "wide plate, three small lime-teal glow points in a black field, spaced apart, flat fills, no text | wide plate, one lime glow at left, a faint pale-bone eye-less shape at right, dark gap between them | minimal plate, pale-bone shield shape with a coral accent crack, night ink field",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, three small lime-teal glow points in a black field, spaced apart, flat fills, no text | wide plate, one lime glow at left, a faint pale-bone eye-less shape at right, dark gap between them | minimal plate, pale-bone shield shape with a coral accent crack, night ink field. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Predators, and the logic of an arms race — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B005",
+      "section": 5,
+      "sentence_ids": [
+        "S107",
+        "S108",
+        "S109"
+      ],
+      "start": 60.92,
+      "end": 78.02,
+      "duration": 17.1,
+      "text": "Camouflage against a glow, speed against a slow grazer, a harder shell against a jaw. Each of those is a guess about a guess, and we are not going to dress them up as findings. What we can say is that competition would not require sunlight, only scarcity.",
+      "words": 48,
+      "prompt": "wide plate, three flat panels: dark matte texture, motion streak, pale-bone ridged shell, separated by hard seams | wide plate, pale-bone outline of a shape drawn three times, each fainter, dissolving into night ink | wide plate, one lime-teal patch at frame edge, vast empty dark teal elsewhere, flat fills",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, three flat panels: dark matte texture, motion streak, pale-bone ridged shell, separated by hard seams | wide plate, pale-bone outline of a shape drawn three times, each fainter, dissolving into night ink | wide plate, one lime-teal patch at frame edge, vast empty dark teal elsewhere, flat fills. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Predators, and the logic of an arms race — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B006",
+      "section": 5,
+      "sentence_ids": [
+        "S110",
+        "S111",
+        "S112"
+      ],
+      "start": 78.02,
+      "end": 94.05,
+      "duration": 16.03,
+      "text": "Bacterial mats coat the chimneys, which makes the food patchy by construction. Patchy food makes territory, and territory makes conflict. None of this is observed: all of it is the reasoning a field biologist would use on Earth, pointed at a place we cannot visit.",
+      "words": 45,
+      "prompt": "wide context, three separated chimney towers, lime mat only at their bases, empty water between | wide plate, two pale-bone boundary lines drawn around separate lime patches, coral accent where they meet | wide plate, pale-bone survey grid laid over an empty dark teal field, one coral accent marker, no text",
+      "host_in_frame": false,
+      "prompt_klein": "wide context, three separated chimney towers, lime mat only at their bases, empty water between | wide plate, two pale-bone boundary lines drawn around separate lime patches, coral accent where they meet | wide plate, pale-bone survey grid laid over an empty dark teal field, one coral accent marker, no text. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Predators, and the logic of an arms race — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B007",
+      "section": 5,
+      "sentence_ids": [
+        "S113",
+        "S114",
+        "S115"
+      ],
+      "start": 94.05,
+      "end": 111.86,
+      "duration": 17.81,
+      "text": "And that is the limit of this section: the shape of an argument, with no animal attached to it. So we leave the predators unbuilt, and say so out loud. A predator is not a monster in this story, it is a bookkeeping entry that has not been filled in.",
+      "words": 50,
+      "prompt": "wide plate, pale-bone outline of a large shape with an empty interior, night ink field, no subject | minimal plate, empty coral accent frame with nothing inside, deep teal field | wide plate, empty coral accent frame in a black field, nothing inside, flat fills",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, pale-bone outline of a large shape with an empty interior, night ink field, no subject | minimal plate, empty coral accent frame with nothing inside, deep teal field | wide plate, empty coral accent frame in a black field, nothing inside, flat fills. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Predators, and the logic of an arms race — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B008",
+      "section": 5,
+      "sentence_ids": [
+        "S116",
+        "S117",
+        "S118"
+      ],
+      "start": 111.86,
+      "end": 126.46,
+      "duration": 14.61,
+      "text": "And an unfilled entry is more honest than a creature invented to fill it. Our grazer already carries a light, which means it already carries a risk. Every signal in the dark is a decision about who gets to find you.",
+      "words": 41,
+      "prompt": "minimal plate, pale-bone blank rectangle on night ink, one coral accent edge, no text | extreme wide, distant grazer silhouette with a small lime glow at its head, black water around | wide plate, one lime-teal glow point with a faint pale-bone shape approaching from the far edge",
+      "host_in_frame": false,
+      "prompt_klein": "minimal plate, pale-bone blank rectangle on night ink, one coral accent edge, no text | extreme wide, distant grazer silhouette with a small lime glow at its head, black water around | wide plate, one lime-teal glow point with a faint pale-bone shape approaching from the far edge. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Predators, and the logic of an arms race — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B009",
+      "section": 5,
+      "sentence_ids": [
+        "S119"
+      ],
+      "start": 126.46,
+      "end": 138.46,
+      "duration": 12,
+      "text": "That is the arms race in one sentence, and we can leave it there without inventing a winner.",
+      "words": 18,
+      "prompt": "wide plate, two distant silhouettes facing each other, empty dark gap, no detail",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, two distant silhouettes facing each other, empty dark gap, no detail. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Predators, and the logic of an arms race — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B001",
+      "section": 6,
+      "sentence_ids": [
+        "S120",
+        "S121",
+        "S122"
+      ],
+      "start": 0.0,
+      "end": 15.95,
+      "duration": 15.95,
+      "text": "Now go down, past the mats, to the floor of the world. At Enceladus, that floor is where the ocean meets rock, and where the vents are. The silica grains in the plume are the receipt: water and hot rock, interacting above ninety degrees.",
+      "words": 44,
+      "prompt": "wide context, descending water column from pale-bone ice to basalt floor, faint gradient, no subject | side cross-section, deep teal ocean layer meeting basalt charcoal core, coral accent at the seam, no subject | detail crop, pale-bone angular grains clustered beside dark rock, faint warm coral glow, flat fills",
+      "host_in_frame": false,
+      "prompt_klein": "wide context, descending water column from pale-bone ice to basalt floor, faint gradient, no subject | side cross-section, deep teal ocean layer meeting basalt charcoal core, coral accent at the seam, no subject | detail crop, pale-bone angular grains clustered beside dark rock, faint warm coral glow, flat fills. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: The deep, the vents, and the animals that stay — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B002",
+      "section": 6,
+      "sentence_ids": [
+        "S123",
+        "S124",
+        "S125"
+      ],
+      "start": 15.95,
+      "end": 29.73,
+      "duration": 13.78,
+      "text": "At Europa, the same meeting point would be the sea floor, under an ocean twice the size of ours. The ice burrower lives in the sediment at that boundary. It moves by peristalsis, pushing through sediment under load.",
+      "words": 38,
+      "prompt": "wide establishing plate, basalt floor with mineral wisps, huge dark teal water mass above, pale-bone ice far overhead | extreme wide, small segmented silhouette half-buried in pale-bone sediment, distant, no detail | detail crop, pale-bone sediment with a single smooth tunnel line and faint compression rings, no animal",
+      "host_in_frame": false,
+      "prompt_klein": "wide establishing plate, basalt floor with mineral wisps, huge dark teal water mass above, pale-bone ice far overhead | extreme wide, small segmented silhouette half-buried in pale-bone sediment, distant, no detail | detail crop, pale-bone sediment with a single smooth tunnel line and faint compression rings, no animal. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: The deep, the vents, and the animals that stay — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B003",
+      "section": 6,
+      "sentence_ids": [
+        "S126",
+        "S127",
+        "S128"
+      ],
+      "start": 29.73,
+      "end": 44.23,
+      "duration": 14.5,
+      "text": "Near-freezing water and high pressure are the two constraints its body answers. We gave it no limbs, because limbs do not help in mud. It does not swim and it does not graze: it simply moves through the ground, slowly.",
+      "words": 40,
+      "prompt": "wide plate, pale-bone sediment band under dark teal water, sparse hatching, cold flat fills | minimal plate, pale-bone cylinder silhouette with no appendages, flat fills, deep teal field | extreme wide, faint tunnel traces through sediment, tiny silhouette at the far end, distant and unreadable",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, pale-bone sediment band under dark teal water, sparse hatching, cold flat fills | minimal plate, pale-bone cylinder silhouette with no appendages, flat fills, deep teal field | extreme wide, faint tunnel traces through sediment, tiny silhouette at the far end, distant and unreadable. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: The deep, the vents, and the animals that stay — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B004",
+      "section": 6,
+      "sentence_ids": [
+        "S129",
+        "S130",
+        "S131"
+      ],
+      "start": 44.23,
+      "end": 58.0,
+      "duration": 13.78,
+      "text": "Everything down here ultimately traces back to chemosynthesis, the same chemistry as Earth's vents. The grazer stays near the chimneys, where the mats are. And it reproduces by budding, at the vents, where chemical energy is most abundant.",
+      "words": 38,
+      "prompt": "wide plate, lime-teal mat at the base of a black chimney, faint electric teal wisps rising, no creatures | extreme wide, grazer silhouette on a chimney at frame right, empty dark water at left | extreme wide, two small silhouettes attached at the base of one chimney, distant, all dark",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, lime-teal mat at the base of a black chimney, faint electric teal wisps rising, no creatures | extreme wide, grazer silhouette on a chimney at frame right, empty dark water at left | extreme wide, two small silhouettes attached at the base of one chimney, distant, all dark. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: The deep, the vents, and the animals that stay — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B005",
+      "section": 6,
+      "sentence_ids": [
+        "S132",
+        "S133",
+        "S134"
+      ],
+      "start": 58.0,
+      "end": 73.59,
+      "duration": 15.59,
+      "text": "Budding is a design choice: no mate required, no season required, just energy and time. In a world sealed under ice, there is no daylight to synchronise with. So reproduction would have to be tied to something else: chemistry, temperature, or each other.",
+      "words": 43,
+      "prompt": "minimal plate, one pale-bone circle splitting into two smaller circles, coral accent at the join | wide plate, unbroken pale-bone ice lid across the top, black water below, no light shafts | wide plate, three flat pale-bone markers along a dark teal line, one coral accent, no text",
+      "host_in_frame": false,
+      "prompt_klein": "minimal plate, one pale-bone circle splitting into two smaller circles, coral accent at the join | wide plate, unbroken pale-bone ice lid across the top, black water below, no light shafts | wide plate, three flat pale-bone markers along a dark teal line, one coral accent, no text. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: The deep, the vents, and the animals that stay — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B006",
+      "section": 6,
+      "sentence_ids": [
+        "S135",
+        "S136",
+        "S137"
+      ],
+      "start": 73.59,
+      "end": 88.09,
+      "duration": 14.5,
+      "text": "Communication, in that world, would have to travel without any light from above. Bioluminescence is our answer: the creature makes its own light. It is also the least certain thing in this episode, and we are flagging it as such.",
+      "words": 40,
+      "prompt": "wide plate, black water column, one small lime glow at the centre, everything else night ink | extreme wide, distant silhouette with a small lime-teal halo at its head, subject tiny in a black field | minimal plate, single lime glow half-covered by a pale-bone bar, flat fills, no text",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, black water column, one small lime glow at the centre, everything else night ink | extreme wide, distant silhouette with a small lime-teal halo at its head, subject tiny in a black field | minimal plate, single lime glow half-covered by a pale-bone bar, flat fills, no text. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: The deep, the vents, and the animals that stay — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B007",
+      "section": 6,
+      "sentence_ids": [
+        "S138",
+        "S139",
+        "S140"
+      ],
+      "start": 88.09,
+      "end": 101.86,
+      "duration": 13.78,
+      "text": "Three invented animals, one shared constraint: everything must work in the dark, under pressure, at near-freezing temperature. The grazer grips, the drifter filters, the burrower pushes. None of them has been seen, and all of them are possible.",
+      "words": 38,
+      "prompt": "wide plate, three small distant silhouettes in a row under an ice roof, all dark, no detail | wide plate, three abstract pale-bone marks: a six-spoke shape, a wavy line, a segmented bar, flat fills, no text | wide plate, three pale-bone outlines fading into night ink at the frame edges, one coral accent dot",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, three small distant silhouettes in a row under an ice roof, all dark, no detail | wide plate, three abstract pale-bone marks: a six-spoke shape, a wavy line, a segmented bar, flat fills, no text | wide plate, three pale-bone outlines fading into night ink at the frame edges, one coral accent dot. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: The deep, the vents, and the animals that stay — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B008",
+      "section": 6,
+      "sentence_ids": [
+        "S141",
+        "S142",
+        "S143"
+      ],
+      "start": 101.86,
+      "end": 119.63,
+      "duration": 17.76,
+      "text": "Sediment is the quietest habitat in this world, and the burrower is built for quiet. Budding means the young are not scattered, they start where the energy already is. The chimney is a tower of chemistry, and the grazer is the animal that learned to hold on to it.",
+      "words": 49,
+      "prompt": "wide plate, pale-bone sediment plain under dark teal water, faint tunnel traces, no subject | extreme wide, two small silhouettes at the base of one chimney, lime glow beneath, distant | wide context, tall black chimney with lime mat at its base, tiny silhouette attached, distant",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, pale-bone sediment plain under dark teal water, faint tunnel traces, no subject | extreme wide, two small silhouettes at the base of one chimney, lime glow beneath, distant | wide context, tall black chimney with lime mat at its base, tiny silhouette attached, distant. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: The deep, the vents, and the animals that stay — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B009",
+      "section": 6,
+      "sentence_ids": [
+        "S144",
+        "S145"
+      ],
+      "start": 119.63,
+      "end": 131.62,
+      "duration": 12,
+      "text": "Three animals, three answers to the same exam question: how do you make a living where nothing grows from light? On Earth, that exam has already been passed, in water just as dark.",
+      "words": 33,
+      "prompt": "wide plate, three distant silhouettes in a row under an ice roof, all dark, unreadable | wide establishing plate, black vent chimney with lime-teal mat glow, no creatures, flat fills",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, three distant silhouettes in a row under an ice roof, all dark, unreadable | wide establishing plate, black vent chimney with lime-teal mat glow, no creatures, flat fills. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: The deep, the vents, and the animals that stay — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B010",
+      "section": 6,
+      "sentence_ids": [
+        "S146"
+      ],
+      "start": 131.62,
+      "end": 143.62,
+      "duration": 12,
+      "text": "And that is why the deep is the closest thing we have to a rehearsal for Europa.",
+      "words": 17,
+      "prompt": "wide context, basalt floor with mineral wisps under a vast dark teal water mass, pale-bone ice far above",
+      "host_in_frame": false,
+      "prompt_klein": "wide context, basalt floor with mineral wisps under a vast dark teal water mass, pale-bone ice far above. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: The deep, the vents, and the animals that stay — target 2:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B001",
+      "section": 7,
+      "sentence_ids": [
+        "S147",
+        "S148"
+      ],
+      "start": 0.0,
+      "end": 13.83,
+      "duration": 13.83,
+      "text": "Suppose life did appear under that ice: would it look like our designs, or like nothing we could guess? This is the part of the episode where the honest answer is that we do not know, and neither does anyone else.",
+      "words": 41,
+      "prompt": "wide plate, pale-bone outline shape at left, empty black space at right, hard flat seam between | wide plate, empty deep teal field with a single faint pale-bone horizon line, no subject",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, pale-bone outline shape at left, empty black space at right, hard flat seam between | wide plate, empty deep teal field with a single faint pale-bone horizon line, no subject. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Chance and law: would this world repeat? — target 2:00. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B002",
+      "section": 7,
+      "sentence_ids": [
+        "S149",
+        "S150"
+      ],
+      "start": 13.83,
+      "end": 28.34,
+      "duration": 14.51,
+      "text": "There are two ways to think about it, and they point in opposite directions. The first says that physics narrows the options: if you need to grip rock in a current, six points of contact is one of a small number of answers.",
+      "words": 43,
+      "prompt": "minimal plate, two pale-bone arrows suggested by tapered bars pointing away from each other, no text | detail crop, pale-bone rock surface with six identical grip points arranged in a ring, sparse hatching",
+      "host_in_frame": false,
+      "prompt_klein": "minimal plate, two pale-bone arrows suggested by tapered bars pointing away from each other, no text | detail crop, pale-bone rock surface with six identical grip points arranged in a ring, sparse hatching. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Chance and law: would this world repeat? — target 2:00. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B003",
+      "section": 7,
+      "sentence_ids": [
+        "S151",
+        "S152",
+        "S153"
+      ],
+      "start": 28.34,
+      "end": 43.86,
+      "duration": 15.52,
+      "text": "The second says that history matters more than physics: what survives depends on what happened to arrive first. Under that view, our grazer is not a prediction, it is a coincidence waiting to be disproved. Both views are respectable, and neither is testable from a desk.",
+      "words": 46,
+      "prompt": "wide plate, scattered pale-bone marks drifting in deep teal, one coral accent mark ahead of the rest | extreme wide, tiny grazer silhouette at the centre of a vast empty field, subject almost lost | wide plate, two pale-bone rectangles side by side on night ink, both empty, flat fills",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, scattered pale-bone marks drifting in deep teal, one coral accent mark ahead of the rest | extreme wide, tiny grazer silhouette at the centre of a vast empty field, subject almost lost | wide plate, two pale-bone rectangles side by side on night ink, both empty, flat fills. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Chance and law: would this world repeat? — target 2:00. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B004",
+      "section": 7,
+      "sentence_ids": [
+        "S154",
+        "S155",
+        "S156",
+        "S157"
+      ],
+      "start": 43.86,
+      "end": 61.41,
+      "duration": 17.55,
+      "text": "That is why the mission matters more than the argument. Europa Clipper is being built to measure the ice shell, the ocean, and the surface chemistry. Future missions could sample Enceladus' plumes directly, looking for the chemistry of life. Until then, every creature in this episode is a hypothesis with a shape.",
+      "words": 52,
+      "prompt": "wide context, small pale-bone probe silhouette above a moon disc, distant, no detail | wide context, small spacecraft silhouette in black space beside a pale-bone ice-covered moon, distant and schematic | wide context, small probe silhouette crossing a pale-bone plume venting from a moon at frame edge, distant | wide plate, pale-bone outline of an unreadable animal form, flat fills, deep teal field",
+      "host_in_frame": false,
+      "prompt_klein": "wide context, small pale-bone probe silhouette above a moon disc, distant, no detail | wide context, small spacecraft silhouette in black space beside a pale-bone ice-covered moon, distant and schematic | wide context, small probe silhouette crossing a pale-bone plume venting from a moon at frame edge, distant | wide plate, pale-bone outline of an unreadable animal form, flat fills, deep teal field. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Chance and law: would this world repeat? — target 2:00. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B005",
+      "section": 7,
+      "sentence_ids": [
+        "S158",
+        "S159",
+        "S160"
+      ],
+      "start": 61.41,
+      "end": 75.58,
+      "duration": 14.17,
+      "text": "And a hypothesis with a shape is easier to argue with than a vague hope. That is the point of designing them at all: to make our assumptions visible. If the ocean is empty, our designs are wrong in an interesting way.",
+      "words": 42,
+      "prompt": "minimal plate, pale-bone geometric outline beside a soft pale-bone blur, coral accent on the outline | wide plate, pale-bone survey lines revealing a faint silhouette inside a dark field, no text | wide plate, empty dark teal water column, one pale-bone outline erased to a dotted trace",
+      "host_in_frame": false,
+      "prompt_klein": "minimal plate, pale-bone geometric outline beside a soft pale-bone blur, coral accent on the outline | wide plate, pale-bone survey lines revealing a faint silhouette inside a dark field, no text | wide plate, empty dark teal water column, one pale-bone outline erased to a dotted trace. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Chance and law: would this world repeat? — target 2:00. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B006",
+      "section": 7,
+      "sentence_ids": [
+        "S161",
+        "S162",
+        "S163"
+      ],
+      "start": 75.58,
+      "end": 89.42,
+      "duration": 13.83,
+      "text": "And if it is not empty, they are probably wrong in a more interesting way. Either outcome teaches us something, and that is the best a guess can do. So would this world repeat? We will not know until someone looks.",
+      "words": 41,
+      "prompt": "wide plate, dense pale-bone fragments in dark water, one coral accent among them, no readable shapes | minimal plate, two pale-bone dots connected by a single coral accent line, night ink field | wide plate, pale-bone ice lid, black water, one tiny unreadable silhouette, extreme distance",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, dense pale-bone fragments in dark water, one coral accent among them, no readable shapes | minimal plate, two pale-bone dots connected by a single coral accent line, night ink field | wide plate, pale-bone ice lid, black water, one tiny unreadable silhouette, extreme distance. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Chance and law: would this world repeat? — target 2:00. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B007",
+      "section": 7,
+      "sentence_ids": [
+        "S164",
+        "S165"
+      ],
+      "start": 89.42,
+      "end": 101.42,
+      "duration": 12,
+      "text": "The two views do not cancel each other, they set the size of the bet. Either way, the ocean is the thing to look at, and the ice is the door.",
+      "words": 31,
+      "prompt": "minimal plate, two pale-bone blocks of different sizes on night ink, one coral accent line between | wide context, pale-bone ice lid with a faint seam, dark teal water below, one coral accent at the seam",
+      "host_in_frame": false,
+      "prompt_klein": "minimal plate, two pale-bone blocks of different sizes on night ink, one coral accent line between | wide context, pale-bone ice lid with a faint seam, dark teal water below, one coral accent at the seam. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Chance and law: would this world repeat? — target 2:00. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B001",
+      "section": 8,
+      "sentence_ids": [
+        "S166",
+        "S167",
+        "S168"
+      ],
+      "start": 0.0,
+      "end": 14.19,
+      "duration": 14.19,
+      "text": "There is one more question, and it is the strangest one in the episode. If this ocean had life, could it ever build something? Not a civilisation, something simpler: a tool, a structure, a signal that carries further than a body can.",
+      "words": 42,
+      "prompt": "wide plate, empty black field with a single pale-bone vertical seam of light, no subject | wide plate, pale-bone stack of flat blocks in deep teal water, no hands, no subject | minimal plate, small pale-bone shape extended by a coral accent line, flat fills, no text",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, empty black field with a single pale-bone vertical seam of light, no subject | wide plate, pale-bone stack of flat blocks in deep teal water, no hands, no subject | minimal plate, small pale-bone shape extended by a coral accent line, flat fills, no text. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: What blocks technology without land or fire — target 2:00. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B002",
+      "section": 8,
+      "sentence_ids": [
+        "S169",
+        "S170",
+        "S171"
+      ],
+      "start": 14.19,
+      "end": 26.19,
+      "duration": 12,
+      "text": "Start with the obvious obstacle: there is no dry land to stand on. Everything happens in water, and water is a medium that pushes back. The second obstacle is heat you can hold.",
+      "words": 33,
+      "prompt": "wide plate, unbroken dark teal water surface meeting pale-bone ice, no shore anywhere | detail crop, pale-bone object with electric teal drag lines curving around it, sparse hatching | minimal plate, single coral accent glow held inside a pale-bone ring, night ink background",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, unbroken dark teal water surface meeting pale-bone ice, no shore anywhere | detail crop, pale-bone object with electric teal drag lines curving around it, sparse hatching | minimal plate, single coral accent glow held inside a pale-bone ring, night ink background. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: What blocks technology without land or fire — target 2:00. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B003",
+      "section": 8,
+      "sentence_ids": [
+        "S172",
+        "S173"
+      ],
+      "start": 26.19,
+      "end": 39.71,
+      "duration": 13.52,
+      "text": "A vent gives heat, but it gives it at the bottom of an ocean, in a place you cannot carry it away from. The third obstacle is material: our own technology leans on solids that can be shaped and kept.",
+      "words": 40,
+      "prompt": "wide context, basalt floor with coral heat glow, dark teal water mass above, no subject | wide plate, three pale-bone flat blocks stacked in dark water, hard edges, no tools, no text",
+      "host_in_frame": false,
+      "prompt_klein": "wide context, basalt floor with coral heat glow, dark teal water mass above, no subject | wide plate, three pale-bone flat blocks stacked in dark water, hard edges, no tools, no text. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: What blocks technology without land or fire — target 2:00. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B004",
+      "section": 8,
+      "sentence_ids": [
+        "S174",
+        "S175"
+      ],
+      "start": 39.71,
+      "end": 51.71,
+      "duration": 12,
+      "text": "Rock and ice exist here, but whether they can be worked is a different question. And if a vent field shifts or cools, anything built on it has to move with it.",
+      "words": 32,
+      "prompt": "detail crop, cracked basalt charcoal surface beside a pale-bone ice facet, flat fills | wide plate, chimney cluster tilted, pale-bone structure outline abandoned beside it, dark water",
+      "host_in_frame": false,
+      "prompt_klein": "detail crop, cracked basalt charcoal surface beside a pale-bone ice facet, flat fills | wide plate, chimney cluster tilted, pale-bone structure outline abandoned beside it, dark water. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: What blocks technology without land or fire — target 2:00. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B005",
+      "section": 8,
+      "sentence_ids": [
+        "S176",
+        "S177",
+        "S178"
+      ],
+      "start": 51.71,
+      "end": 69.62,
+      "duration": 17.91,
+      "text": "So a technological species here would need a body that works in water, hands or their equivalent, and a reason to build at all. That is a long list of conditions, and each one is a place where the story could stop. It is also the reason this section is short on conclusions.",
+      "words": 53,
+      "prompt": "wide plate, three pale-bone conditions as three separate marks in a row, coral accent under the third, no text | wide plate, a pale-bone line crossing three gaps, each gap marked by a coral accent break | minimal plate, empty pale-bone frame on night ink, nothing inside, flat fills",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, three pale-bone conditions as three separate marks in a row, coral accent under the third, no text | wide plate, a pale-bone line crossing three gaps, each gap marked by a coral accent break | minimal plate, empty pale-bone frame on night ink, nothing inside, flat fills. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: What blocks technology without land or fire — target 2:00. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B006",
+      "section": 8,
+      "sentence_ids": [
+        "S179",
+        "S180",
+        "S181"
+      ],
+      "start": 69.62,
+      "end": 83.47,
+      "duration": 13.85,
+      "text": "We could invent a tool-maker, but inventing one would tell you nothing about this ocean. Nothing we have measured rules intelligence in or out. That is an honest place to leave it: an open question with no evidence on either side.",
+      "words": 41,
+      "prompt": "extreme wide, faint silhouette of a limb-like shape holding a pale-bone block, distant, unreadable, no detail | wide plate, black water with a single pale-bone dot, one coral accent ring, extreme minimal | wide plate, two empty pale-bone panels facing each other across a dark gap, flat fills",
+      "host_in_frame": false,
+      "prompt_klein": "extreme wide, faint silhouette of a limb-like shape holding a pale-bone block, distant, unreadable, no detail | wide plate, black water with a single pale-bone dot, one coral accent ring, extreme minimal | wide plate, two empty pale-bone panels facing each other across a dark gap, flat fills. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: What blocks technology without land or fire — target 2:00. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B007",
+      "section": 8,
+      "sentence_ids": [
+        "S182",
+        "S183",
+        "S184"
+      ],
+      "start": 83.47,
+      "end": 97.67,
+      "duration": 14.19,
+      "text": "And it is worth saying plainly that the absence of evidence is not a verdict. And what happens to a tool left in salt water for a century? Every obstacle here is a place where a different world would have an advantage.",
+      "words": 42,
+      "prompt": "minimal plate, pale-bone outline of a closed shape with one side left open, night ink field | detail crop, pale-bone block half-eroded in electric teal fluid, sparse hatching, no subject | wide plate, three pale-bone barriers in a dark field, each with a coral accent gap",
+      "host_in_frame": false,
+      "prompt_klein": "minimal plate, pale-bone outline of a closed shape with one side left open, night ink field | detail crop, pale-bone block half-eroded in electric teal fluid, sparse hatching, no subject | wide plate, three pale-bone barriers in a dark field, each with a coral accent gap. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: What blocks technology without land or fire — target 2:00. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B008",
+      "section": 8,
+      "sentence_ids": [
+        "S185"
+      ],
+      "start": 97.67,
+      "end": 109.67,
+      "duration": 12,
+      "text": "Which is why the honest answer to the technology question is not no, but not yet measurable.",
+      "words": 17,
+      "prompt": "minimal plate, pale-bone open frame on night ink, one coral accent dot outside it",
+      "host_in_frame": false,
+      "prompt_klein": "minimal plate, pale-bone open frame on night ink, one coral accent dot outside it. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: What blocks technology without land or fire — target 2:00. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B001",
+      "section": 9,
+      "sentence_ids": [
+        "S186",
+        "S187",
+        "S188"
+      ],
+      "start": 0.0,
+      "end": 13.36,
+      "duration": 13.36,
+      "text": "So let us separate the two piles, starting with what is measured. Europa has a global saltwater ocean under a completely frozen crust. That ocean holds more than twice the water of all Earth's oceans.",
+      "words": 35,
+      "prompt": "wide plate, pale-bone field divided into two flat blocks, one textured, one empty, hard seam | front view schematic, small sphere with deep teal band beneath a pale-bone cracked shell, flat fills, no labels | wide plate, large dark teal mass dwarfing a small pale-bone sphere, flat fills, no text",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, pale-bone field divided into two flat blocks, one textured, one empty, hard seam | front view schematic, small sphere with deep teal band beneath a pale-bone cracked shell, flat fills, no labels | wide plate, large dark teal mass dwarfing a small pale-bone sphere, flat fills, no text. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: What is science, and what is a guess — target 1:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B002",
+      "section": 9,
+      "sentence_ids": [
+        "S189",
+        "S190",
+        "S191"
+      ],
+      "start": 13.36,
+      "end": 27.1,
+      "duration": 13.74,
+      "text": "Jupiter's tidal heating keeps it liquid and drives chemistry at the sea floor. Enceladus has a global salty ocean under ice. Its vents put hot rock in contact with water, and the plume carries the evidence.",
+      "words": 36,
+      "prompt": "wide context, moon silhouette with stress arcs and a faint coral glow at its base, distant | front view schematic, small fractured pale-bone sphere with a deep teal band, flat fills | side cross-section, basalt core, coral accent seam, pale-bone plume rising through the ocean",
+      "host_in_frame": false,
+      "prompt_klein": "wide context, moon silhouette with stress arcs and a faint coral glow at its base, distant | front view schematic, small fractured pale-bone sphere with a deep teal band, flat fills | side cross-section, basalt core, coral accent seam, pale-bone plume rising through the ocean. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: What is science, and what is a guess — target 1:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B003",
+      "section": 9,
+      "sentence_ids": [
+        "S192",
+        "S193",
+        "S194"
+      ],
+      "start": 27.1,
+      "end": 41.22,
+      "duration": 14.12,
+      "text": "Its plume also carries hydrogen, a chemical energy source microbes could use. And on Earth, vent life runs on chemosynthesis, without sunlight. Everything else is ours: the grazer, the drifter, the burrower, the budding, and the glow.",
+      "words": 37,
+      "prompt": "abstract detail plate, pale-bone bubbles rising in electric teal, no symbols, no text | wide establishing plate, black chimney cluster with lime-teal mat glow, night ink water | wide plate, five faint pale-bone outlines in a row, all distant, all dissolving into hatching at the edges",
+      "host_in_frame": false,
+      "prompt_klein": "abstract detail plate, pale-bone bubbles rising in electric teal, no symbols, no text | wide establishing plate, black chimney cluster with lime-teal mat glow, night ink water | wide plate, five faint pale-bone outlines in a row, all distant, all dissolving into hatching at the edges. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: What is science, and what is a guess — target 1:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B004",
+      "section": 9,
+      "sentence_ids": [
+        "S195",
+        "S196",
+        "S197"
+      ],
+      "start": 41.22,
+      "end": 54.19,
+      "duration": 12.98,
+      "text": "Five inventions, each with a stated constraint, none with an observation. That is the whole list, and it is short on purpose. A longer list would have meant weaker sourcing, not a better episode.",
+      "words": 34,
+      "prompt": "minimal plate, five pale-bone marks with coral accent ticks beneath each, deep teal field, no text | wide plate, small pale-bone block in a large empty night ink field, extreme minimal | minimal plate, long pale-bone line fading to nothing, one coral accent dot at its origin",
+      "host_in_frame": false,
+      "prompt_klein": "minimal plate, five pale-bone marks with coral accent ticks beneath each, deep teal field, no text | wide plate, small pale-bone block in a large empty night ink field, extreme minimal | minimal plate, long pale-bone line fading to nothing, one coral accent dot at its origin. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: What is science, and what is a guess — target 1:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B005",
+      "section": 9,
+      "sentence_ids": [
+        "S198",
+        "S199"
+      ],
+      "start": 54.19,
+      "end": 67.17,
+      "duration": 12.98,
+      "text": "If you remember one thing, make it this: the ocean is real, and the animals are not. Enceladus supplies the strongest chemical case, because its ocean is sampled for us, by its own plumes.",
+      "words": 34,
+      "prompt": "split plate, left a solid pale-bone ice-and-water mass, right five faint dotted outlines, hard vertical seam | wide context, small moon venting a pale-bone plume, faint electric teal streaks, distant",
+      "host_in_frame": false,
+      "prompt_klein": "split plate, left a solid pale-bone ice-and-water mass, right five faint dotted outlines, hard vertical seam | wide context, small moon venting a pale-bone plume, faint electric teal streaks, distant. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: What is science, and what is a guess — target 1:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B006",
+      "section": 9,
+      "sentence_ids": [
+        "S200",
+        "S201",
+        "S202"
+      ],
+      "start": 67.17,
+      "end": 83.57,
+      "duration": 16.41,
+      "text": "Notice the asymmetry: eight claims about the world, and five about animals we made up. The Earth analogue is the reason any of this is worth arguing about. If the vents had no life, this episode would be science fiction with better footnotes.",
+      "words": 43,
+      "prompt": "wide plate, eight pale-bone marks on the left, five fainter dotted marks on the right, hard seam | wide establishing plate, black chimney cluster with lime mat glow, empty dark water | wide plate, empty black chimney field with no glow, night ink water, extreme minimal",
+      "host_in_frame": false,
+      "prompt_klein": "wide plate, eight pale-bone marks on the left, five fainter dotted marks on the right, hard seam | wide establishing plate, black chimney cluster with lime mat glow, empty dark water | wide plate, empty black chimney field with no glow, night ink water, extreme minimal. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: What is science, and what is a guess — target 1:30. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B001",
+      "section": 10,
+      "sentence_ids": [
+        "S203",
+        "S204",
+        "S205",
+        "S206"
+      ],
+      "start": 0.0,
+      "end": 17.38,
+      "duration": 17.38,
+      "text": "A frozen alien ocean may be the best place in the solar system to look for life. Not because we have found it, but because the physics allows it. Water, chemistry, energy: the ingredients are there. The rest is a question for the next mission, and for the people who fly it.",
+      "words": 52,
+      "prompt": "wide context, pale-bone ice-covered moon lit from one edge, black space, distant and schematic | wide plate, faint coral heat glow at a sea floor under a vast dark teal ocean, no subject | wide plate, three flat bands of deep teal, lime teal and coral accent with pale-bone separators, no text | wide context, small probe silhouette above a moon disc, distant, no detail, night ink space",
+      "host_in_frame": false,
+      "prompt_klein": "wide context, pale-bone ice-covered moon lit from one edge, black space, distant and schematic | wide plate, faint coral heat glow at a sea floor under a vast dark teal ocean, no subject | wide plate, three flat bands of deep teal, lime teal and coral accent with pale-bone separators, no text | wide context, small probe silhouette above a moon disc, distant, no detail, night ink space. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Closing and a question for you — target 1:00. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B002",
+      "section": 10,
+      "sentence_ids": [
+        "S207",
+        "S208",
+        "S209",
+        "S210",
+        "S211"
+      ],
+      "start": 17.38,
+      "end": 34.76,
+      "duration": 17.38,
+      "text": "So here is our question for you. If you had one instrument to send under that ice, what would you measure first? The chemistry, the temperature, or the sound of something moving? Tell us in the comments, and tell us why. Because that is how a guess becomes a question worth funding.",
+      "words": 52,
+      "prompt": "minimal plate, single pale-bone dot at centre of deep teal field, coral accent ring, no text | wide plate, small pale-bone instrument shape lowered on a thin line into black water, distant | wide plate, three separate pale-bone marks in a row: grains, a heat glow, a ripple line, no text | minimal plate, two pale-bone speech-like blank blocks facing each other, no letters, flat fills | wide plate, pale-bone outline of a shape being lifted by a thin coral accent line, night ink field",
+      "host_in_frame": false,
+      "prompt_klein": "minimal plate, single pale-bone dot at centre of deep teal field, coral accent ring, no text | wide plate, small pale-bone instrument shape lowered on a thin line into black water, distant | wide plate, three separate pale-bone marks in a row: grains, a heat glow, a ripple line, no text | minimal plate, two pale-bone speech-like blank blocks facing each other, no letters, flat fills | wide plate, pale-bone outline of a shape being lifted by a thin coral accent line, night ink field. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Closing and a question for you — target 1:00. 1280x720, flat graphic style."
+    },
+    {
+      "bit_id": "B003",
+      "section": 10,
+      "sentence_ids": [
+        "S212",
+        "S213",
+        "S214"
+      ],
+      "start": 34.76,
+      "end": 47.8,
+      "duration": 13.04,
+      "text": "It is a moon of Jupiter, and it has been there the whole time. The ocean is waiting under the ice, and it is not going anywhere. Until then, keep asking the question, and keep asking for the evidence.",
+      "words": 39,
+      "prompt": "wide context, small pale-bone moon disc beside a large dark planet mass, night ink space, distant | wide context, small probe silhouette above an ice-covered moon, distant, no detail | minimal plate, single pale-bone dot with a coral accent ring, deep teal field, no text",
+      "host_in_frame": false,
+      "prompt_klein": "wide context, small pale-bone moon disc beside a large dark planet mass, night ink space, distant | wide context, small probe silhouette above an ice-covered moon, distant, no detail | minimal plate, single pale-bone dot with a coral accent ring, deep teal field, no text. thick crisp black outer contours, controlled interior linework, large flat matte color fills, clean two-tone cel shading, restrained palette, no gradients, graphic-novel ink illustration. Section: Closing and a question for you — target 1:00. 1280x720, flat graphic style."
+    }
+  ]
+}

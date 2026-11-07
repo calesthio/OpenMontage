@@ -1,0 +1,197 @@
+{
+  "version": 1,
+  "topic_id": "artemis",
+  "total_duration_s": 185.43,
+  "resolution": "1920x1080",
+  "fps": 30,
+  "codec": "h264",
+  "audio_codec": "aac",
+  "cuts": [
+    {
+      "cut_id": 1,
+      "start": 0.0,
+      "end": 8.0,
+      "asset_id": "card_title",
+      "role": "graphics_card",
+      "clip": "Title",
+      "layout": "static_card",
+      "rationale": "Opening title card with claim_ids ARTEMIS-01/05/06; static by design.",
+      "rights_basis": "source_policy_us_gov"
+    },
+    {
+      "cut_id": 2,
+      "start": 8.0,
+      "end": 22.0,
+      "asset_id": "card_b1",
+      "role": "graphics_card",
+      "clip": "B1",
+      "layout": "static_card",
+      "rationale": "Beat 1 Preparation graphics card with claim_ids ARTEMIS-01/02/04; static by design.",
+      "rights_basis": "source_policy_us_gov"
+    },
+    {
+      "cut_id": 3,
+      "start": 22.0,
+      "end": 38.0,
+      "asset_id": "artemis_launch",
+      "role": "archive_insert",
+      "clip": "Launch B-roll",
+      "layout": "1080p_scaled",
+      "source_segment": "40.0-56.0s",
+      "rationale": "Bright ascent portion of the Artemis I launch (source 1080p, no framing).",
+      "rights_basis": "source_policy_us_gov"
+    },
+    {
+      "cut_id": 4,
+      "start": 38.0,
+      "end": 54.0,
+      "asset_id": "card_b2",
+      "role": "graphics_card",
+      "clip": "B2",
+      "layout": "static_card",
+      "rationale": "Beat 2 Launch graphics card with claim_ids ARTEMIS-05/06; static by design.",
+      "rights_basis": "source_policy_us_gov"
+    },
+    {
+      "cut_id": 5,
+      "start": 54.0,
+      "end": 70.0,
+      "asset_id": "artemis_launch",
+      "role": "archive_insert",
+      "clip": "Launch B-roll",
+      "layout": "1080p_scaled",
+      "source_segment": "56.0-72.0s",
+      "rationale": "Continued launch B-roll; 1080p source, no framing.",
+      "rights_basis": "source_policy_us_gov"
+    },
+    {
+      "cut_id": 6,
+      "start": 70.0,
+      "end": 84.0,
+      "asset_id": "card_b3",
+      "role": "graphics_card",
+      "clip": "B3",
+      "layout": "static_card",
+      "rationale": "Beat 3 Transit graphics card with claim_ids ARTEMIS-05/06/07; static by design.",
+      "rights_basis": "source_policy_us_gov"
+    },
+    {
+      "cut_id": 7,
+      "start": 84.0,
+      "end": 102.0,
+      "asset_id": "card_b4",
+      "role": "graphics_card",
+      "clip": "B4",
+      "layout": "static_card",
+      "rationale": "Beat 4 Moon flybys graphics card with claim_ids ARTEMIS-07/08; static by design.",
+      "rights_basis": "source_policy_us_gov"
+    },
+    {
+      "cut_id": 8,
+      "start": 102.0,
+      "end": 118.0,
+      "asset_id": "artemis_launch",
+      "role": "archive_insert",
+      "clip": "Launch B-roll",
+      "layout": "1080p_scaled",
+      "source_segment": "72.0-88.0s",
+      "rationale": "Continued launch B-roll; 1080p source, no framing.",
+      "rights_basis": "source_policy_us_gov"
+    },
+    {
+      "cut_id": 9,
+      "start": 118.0,
+      "end": 134.0,
+      "asset_id": "artemis_launch",
+      "role": "archive_insert",
+      "clip": "Launch B-roll",
+      "layout": "1080p_scaled",
+      "source_segment": "88.0-104.0s",
+      "rationale": "Continued launch B-roll; 1080p source, no framing.",
+      "rights_basis": "source_policy_us_gov"
+    },
+    {
+      "cut_id": 10,
+      "start": 134.0,
+      "end": 156.0,
+      "asset_id": "card_b5",
+      "role": "graphics_card",
+      "clip": "B5",
+      "layout": "static_card",
+      "rationale": "Beat 5 Return graphics card with claim_ids ARTEMIS-09/10; static by design.",
+      "rights_basis": "source_policy_us_gov"
+    },
+    {
+      "cut_id": 11,
+      "start": 156.0,
+      "end": 178.0,
+      "asset_id": "card_b6",
+      "role": "graphics_card",
+      "clip": "B6",
+      "layout": "static_card",
+      "rationale": "Beat 6 Legacy graphics card with claim_ids ARTEMIS-11/12; static by design.",
+      "rights_basis": "source_policy_us_gov"
+    },
+    {
+      "cut_id": 12,
+      "start": 178.0,
+      "end": 185.43,
+      "asset_id": "card_credits",
+      "role": "graphics_card",
+      "clip": "Credits",
+      "layout": "static_card",
+      "rationale": "Closing credits card; static by design.",
+      "rights_basis": "source_policy_us_gov"
+    }
+  ],
+  "static_segments": [
+    {
+      "start": 0.0,
+      "end": 8.0,
+      "reason": "title card",
+      "static_by_design": true
+    },
+    {
+      "start": 8.0,
+      "end": 22.0,
+      "reason": "B1 card",
+      "static_by_design": true
+    },
+    {
+      "start": 38.0,
+      "end": 54.0,
+      "reason": "B2 card",
+      "static_by_design": true
+    },
+    {
+      "start": 70.0,
+      "end": 84.0,
+      "reason": "B3 card",
+      "static_by_design": true
+    },
+    {
+      "start": 84.0,
+      "end": 102.0,
+      "reason": "B4 card",
+      "static_by_design": true
+    },
+    {
+      "start": 134.0,
+      "end": 156.0,
+      "reason": "B5 card",
+      "static_by_design": true
+    },
+    {
+      "start": 156.0,
+      "end": 178.0,
+      "reason": "B6 card",
+      "static_by_design": true
+    },
+    {
+      "start": 178.0,
+      "end": 185.43,
+      "reason": "credits card",
+      "static_by_design": true
+    }
+  ]
+}

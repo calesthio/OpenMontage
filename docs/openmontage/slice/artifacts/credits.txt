@@ -1,0 +1,21 @@
+ISS — Earth View from the Cupola (Draft)
+
+Title: ISS — Earth View from the Cupola
+Director: OpenMontage Factory Pipeline
+Production: OpenMontage (YouTube Factory)
+
+Topic: ISS Earth observation from the cupola
+Estimated duration: ~3:16 (195.7s narration)
+
+Footage: Earth Views from the ISS (NHQ_2019_0626), NASA Image & Video Library — source_policy_us_gov — HD 1280x720, 44:00, public domain
+Graphics: OpenMontage original cards (card_title, card_orbit, card_cupola, card_earthobs, card_daynight, card_crew, card_matters, card_end, card_credits)
+Narration: Kokoro-82M (af_heart), Apache-2.0 weights, kokoro-onnx CPU, local synthesis.
+Subtitles: built from measured Kokoro sentence durations (8 cues).
+
+claim_ids: every beat carries claim_id(s); all resolve to ISS_CLAIM_LEDGER.md;
+ISS-001/002/004 are SINGLE_SOURCE and flagged honestly.
+
+NOT_PUBLISHABLE: synthetic-voice disclosure pending (YouTube AI-content policy);
+NASA insignia/frame review pending (NEEDS_REVIEW); footage from a single NASA clip
+with no per-chapter shot variety; claim ledger relies on limited reachable NASA pages
+(SINGLE_SOURCE claims flagged).

@@ -1,0 +1,1 @@
+PARTIAL: generated 0/10 (some images failed); see manifest.json

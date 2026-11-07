@@ -1,0 +1,3181 @@
+{
+  "ts": "2026-10-23T05:02:20.123267+00:00",
+  "rule": {
+    "window": [
+      "2025-10-23T00:00:00+00:00",
+      "2026-10-23T00:00:00+00:00"
+    ],
+    "duration_min_max": [
+      8,
+      25
+    ],
+    "max_subs": 50000,
+    "outlier_threshold": 5.0,
+    "baseline_window": 20,
+    "min_baseline_videos": 3,
+    "formula": "outlier_multiple = views / median(views of channel's other long-form uploads, last 20, excl. self & Shorts); pass if >= 5",
+    "subs_note": "current subs from channels.statistics; at-upload subs UNKNOWN unless archived snapshot"
+  },
+  "counts_evidence": {
+    "ts": "2026-10-23T05:02:20.123267+00:00",
+    "source_file": "/workspaces/OpenMontage/youtube-niche-finder/reports/s9-core-breakouts.csv",
+    "counts": {
+      "A_speculative_evolution": {
+        "reported_videos": 33,
+        "reported_channels": 25,
+        "channels": [
+          "Age of Monotremes",
+          "Atlas of Civilizations",
+          "Axtro Explainer",
+          "BrainZap",
+          "Evolroot",
+          "Impossible Travel",
+          "InterWildlife",
+          "Klassy Korea",
+          "Mario Lanzas Archive",
+          "Mira Beyond the Screen",
+          "Mystery Origins",
+          "Ovskii",
+          "Paleora",
+          "Pilem KW",
+          "Quark",
+          "SciFi Safari",
+          "Silvia Pineda-Munoz, PhD \u2014 Climate Ages",
+          "Storm King",
+          "TIMELINE RUNNER",
+          "The Future Is Wild",
+          "Ugly FRS  Redesign - meme & Lore",
+          "Universe Unfold",
+          "Wildlife Wonders 4K",
+          "Z hui Feng",
+          "narration cinema"
+        ]
+      },
+      "B_science_what_if": {
+        "reported_videos": 89,
+        "reported_channels": 52,
+        "channels": [
+          "Akaich ",
+          "Alok Singh \u0917\u0947\u092e\u093f\u0902\u0917 ",
+          "Ashu Singh Podcast",
+          "Atomic What If",
+          "Befast",
+          "ClearTier",
+          "CounterRants",
+          "Curiosity_Shot",
+          "Disasters Visualized",
+          "EDU SK",
+          "Fact Wala Banda",
+          "Facts With Maps",
+          "FutureFound AI",
+          "GeoBasics",
+          "Gyano Trick",
+          "HAKAVAN",
+          "HRIDOY GROW",
+          "Hypothetica",
+          "IFOLOGY",
+          "IFopposite ",
+          "Ifsphere",
+          "Ifverse",
+          "JorJor EXP",
+          "Lore",
+          "LuminaVerse",
+          "Lunarzone Animates",
+          "Manifesting",
+          "Molli Kroni",
+          "Mostly Cannon Universe",
+          "Nager4ik",
+          "Now Explained",
+          "Nutshell World ",
+          "One Small If",
+          "Price of If",
+          "Ronbizzy",
+          "Space Buddy",
+          "Space Drift",
+          "The Last Day",
+          "The Wise Mapper ",
+          "Tiny Apocalypse",
+          "Tracer Project",
+          "Universe Unfold",
+          "Valtazar - Topic",
+          "Vince Explains",
+          "What If Sim",
+          "What if for 5 seconds",
+          "WhatIfCountdown",
+          "WhatWouldHappen?",
+          "factsandteach999",
+          "prism docs",
+          "prodbeatsbymat",
+          "revonixak"
+        ]
+      },
+      "C_worldbuilding": {
+        "reported_videos": 39,
+        "reported_channels": 25,
+        "channels": [
+          "Daniel New",
+          "Data1B4",
+          "Disney Everything TH",
+          "Dragon Souls",
+          "FacemanArt",
+          "Farz",
+          "Flamey The GM",
+          "Geo By Abu",
+          "Gyano Trick",
+          "Halfway Gaming",
+          "Large Lads Studios",
+          "MapPulse",
+          "Mapy Code",
+          "Meridian Anatomy",
+          "Myth & Reason",
+          "NestersCrush",
+          "Oridont",
+          "The Grainbound",
+          "The Map Maker",
+          "The Tale Tinkerer",
+          "Uluscri",
+          "Whatif Map",
+          "World in Progress",
+          "Zack Feldman",
+          "vvd | a storytelling toolkit"
+        ]
+      }
+    }
+  },
+  "per_niche": {
+    "A_speculative_evolution": {
+      "candidates": 13,
+      "passing": 6,
+      "distinct_channels_passing": 6
+    },
+    "B_science_what_if": {
+      "candidates": 16,
+      "passing": 6,
+      "distinct_channels_passing": 4
+    },
+    "C_worldbuilding": {
+      "candidates": 11,
+      "passing": 8,
+      "distinct_channels_passing": 8
+    }
+  },
+  "passing_tables": {
+    "A_speculative_evolution": [
+      {
+        "niche": "A_speculative_evolution",
+        "videoId": "Wk2Ck8fJkjc",
+        "title": "Each Sea Eater Speculative Life's Growth Phases Explained",
+        "channel": "Axtro Explainer",
+        "channelId": "UCicsylWP_2LNX0Qv9O5ktzA",
+        "subs_recorded": 41000,
+        "subs_current": 41500,
+        "subs_note": "current (API)",
+        "views": 1682140,
+        "duration_min": 9.8,
+        "publishedAt": "2026-03-16T13:22:03Z",
+        "in_window": true,
+        "duration_8_25": true,
+        "subs_under_50k": true,
+        "baseline_median_views": 109441.5,
+        "baseline_n_used": 20,
+        "outlier_multiple": 15.37,
+        "views_per_day": 7623.5,
+        "passes_5x": true,
+        "passes_all": true,
+        "format_check": ""
+      },
+      {
+        "niche": "A_speculative_evolution",
+        "videoId": "ZU7XbIBiNZo",
+        "title": "The Biology of Rocky the Eridian | Project Hail Mary",
+        "channel": "Storm King",
+        "channelId": "UCrwNJIAACptfW66SMly9gvA",
+        "subs_recorded": 30400,
+        "subs_current": 30500,
+        "subs_note": "current (API)",
+        "views": 978293,
+        "duration_min": 8.2,
+        "publishedAt": "2026-03-20T14:00:55Z",
+        "in_window": true,
+        "duration_8_25": true,
+        "subs_under_50k": true,
+        "baseline_median_views": 63475.0,
+        "baseline_n_used": 20,
+        "outlier_multiple": 15.41,
+        "views_per_day": 4516.0,
+        "passes_5x": true,
+        "passes_all": true,
+        "format_check": ""
+      },
+      {
+        "niche": "A_speculative_evolution",
+        "videoId": "i7jQee86opc",
+        "title": "I Ran Through The 4.5 Billion Years of Evolution of Life on Earth",
+        "channel": "TIMELINE RUNNER",
+        "channelId": "UCk_5OiqyQlD7lBNPfX5i7bg",
+        "subs_recorded": 1500,
+        "subs_current": 1500,
+        "subs_note": "current (API)",
+        "views": 401611,
+        "duration_min": 15.7,
+        "publishedAt": "2026-09-06T15:00:28Z",
+        "in_window": true,
+        "duration_8_25": true,
+        "subs_under_50k": true,
+        "baseline_median_views": 1884.0,
+        "baseline_n_used": 6,
+        "outlier_multiple": 213.17,
+        "views_per_day": 8621.1,
+        "passes_5x": true,
+        "passes_all": true,
+        "format_check": ""
+      },
+      {
+        "niche": "A_speculative_evolution",
+        "videoId": "XzH3YLsxYBg",
+        "title": "HOPE (2026) Every Alien Explained",
+        "channel": "Klassy Korea",
+        "channelId": "UCUxebm4Io_ysK4WIsBDBHRg",
+        "subs_recorded": 12100,
+        "subs_current": 12100,
+        "subs_note": "current (API)",
+        "views": 259559,
+        "duration_min": 9.6,
+        "publishedAt": "2026-09-11T13:00:02Z",
+        "in_window": true,
+        "duration_8_25": true,
+        "subs_under_50k": true,
+        "baseline_median_views": 22494.5,
+        "baseline_n_used": 20,
+        "outlier_multiple": 11.54,
+        "views_per_day": 6229.2,
+        "passes_5x": true,
+        "passes_all": true,
+        "format_check": ""
+      },
+      {
+        "niche": "A_speculative_evolution",
+        "videoId": "od2MkLF49vs",
+        "title": "What If Tyrannosaurids Survived? - Speculative Evolution Study",
+        "channel": "Ovskii",
+        "channelId": "UCB6SehT_iWu1GWrcUxiRz8g",
+        "subs_recorded": 3640,
+        "subs_current": 3640,
+        "subs_note": "current (API)",
+        "views": 125542,
+        "duration_min": 23.2,
+        "publishedAt": "2025-12-20T02:03:01Z",
+        "in_window": true,
+        "duration_8_25": true,
+        "subs_under_50k": true,
+        "baseline_median_views": 1405,
+        "baseline_n_used": 13,
+        "outlier_multiple": 89.35,
+        "views_per_day": 408.8,
+        "passes_5x": true,
+        "passes_all": true,
+        "format_check": ""
+      },
+      {
+        "niche": "A_speculative_evolution",
+        "videoId": "oKk0WAMuYcc",
+        "title": "Spider Girl Lost in an Alien World",
+        "channel": "Pilem KW",
+        "channelId": "UC8xSyroXdWvHCgPZm_wg_TQ",
+        "subs_recorded": 7080,
+        "subs_current": 7090,
+        "subs_note": "current (API)",
+        "views": 97155,
+        "duration_min": 12.4,
+        "publishedAt": "2025-12-03T08:29:42Z",
+        "in_window": true,
+        "duration_8_25": true,
+        "subs_under_50k": true,
+        "baseline_median_views": 4202.0,
+        "baseline_n_used": 20,
+        "outlier_multiple": 23.12,
+        "views_per_day": 300.0,
+        "passes_5x": true,
+        "passes_all": true,
+        "format_check": ""
+      }
+    ],
+    "B_science_what_if": [
+      {
+        "niche": "B_science_what_if",
+        "videoId": "0iBYMwGDin0",
+        "title": "What If Asteroid Apophis Hit Earth? Scientists Mapped Where It Lands",
+        "channel": "Tracer Project",
+        "channelId": "UC0Lr__HsSMj0_h0jNqKvKBA",
+        "subs_recorded": 2280,
+        "subs_current": 2420,
+        "subs_note": "current (API)",
+        "views": 3468256,
+        "duration_min": 13.5,
+        "publishedAt": "2026-10-16T07:11:59Z",
+        "in_window": true,
+        "duration_8_25": true,
+        "subs_under_50k": true,
+        "baseline_median_views": 436.0,
+        "baseline_n_used": 20,
+        "outlier_multiple": 7954.72,
+        "views_per_day": 501920.8,
+        "passes_5x": true,
+        "passes_all": true,
+        "format_check": ""
+      },
+      {
+        "niche": "B_science_what_if",
+        "videoId": "eGfbwdXL3wg",
+        "title": "What would happen If the Moon Crashed Into Earth?",
+        "channel": "The Last Day",
+        "channelId": "UCN6XxorahzAiDNyRnI1of2g",
+        "subs_recorded": 31700,
+        "subs_current": 32000,
+        "subs_note": "current (API)",
+        "views": 1754806,
+        "duration_min": 20.9,
+        "publishedAt": "2026-09-26T12:44:03Z",
+        "in_window": true,
+        "duration_8_25": true,
+        "subs_under_50k": true,
+        "baseline_median_views": 105310.5,
+        "baseline_n_used": 20,
+        "outlier_multiple": 16.66,
+        "views_per_day": 65773.9,
+        "passes_5x": true,
+        "passes_all": true,
+        "format_check": ""
+      },
+      {
+        "niche": "B_science_what_if",
+        "videoId": "hxlGCMo6ihI",
+        "title": "What Would Happen If an Asteroid Hit the Ocean?",
+        "channel": "The Last Day",
+        "channelId": "UCN6XxorahzAiDNyRnI1of2g",
+        "subs_recorded": 31700,
+        "subs_current": 32000,
+        "subs_note": "current (API)",
+        "views": 1568564,
+        "duration_min": 20.1,
+        "publishedAt": "2026-09-11T22:40:00Z",
+        "in_window": true,
+        "duration_8_25": true,
+        "subs_under_50k": true,
+        "baseline_median_views": 105310.5,
+        "baseline_n_used": 20,
+        "outlier_multiple": 14.89,
+        "views_per_day": 38011.5,
+        "passes_5x": true,
+        "passes_all": true,
+        "format_check": ""
+      },
+      {
+        "niche": "B_science_what_if",
+        "videoId": "c8U9B2-nKr0",
+        "title": "10 Scariest Paradoxes in Physics That Prove Reality Is Not What We Think",
+        "channel": "Space Buddy",
+        "channelId": "UCEPfByJp1U8VCpLGTZCDUiA",
+        "subs_recorded": 7250,
+        "subs_current": 7260,
+        "subs_note": "current (API)",
+        "views": 1253592,
+        "duration_min": 16.6,
+        "publishedAt": "2026-05-12T14:09:32Z",
+        "in_window": true,
+        "duration_8_25": true,
+        "subs_under_50k": true,
+        "baseline_median_views": 2285.0,
+        "baseline_n_used": 20,
+        "outlier_multiple": 548.62,
+        "views_per_day": 7661.6,
+        "passes_5x": true,
+        "passes_all": true,
+        "format_check": ""
+      },
+      {
+        "niche": "B_science_what_if",
+        "videoId": "yqIVm6jajfQ",
+        "title": "What Would Happen If The Sun Disappeared For One Week?",
+        "channel": "The Last Day",
+        "channelId": "UCN6XxorahzAiDNyRnI1of2g",
+        "subs_recorded": 31700,
+        "subs_current": 32000,
+        "subs_note": "current (API)",
+        "views": 728626,
+        "duration_min": 21.4,
+        "publishedAt": "2026-10-03T15:39:45Z",
+        "in_window": true,
+        "duration_8_25": true,
+        "subs_under_50k": true,
+        "baseline_median_views": 105310.5,
+        "baseline_n_used": 20,
+        "outlier_multiple": 6.92,
+        "views_per_day": 37255.9,
+        "passes_5x": true,
+        "passes_all": true,
+        "format_check": ""
+      },
+      {
+        "niche": "B_science_what_if",
+        "videoId": "7CShkGQxCn0",
+        "title": "What If You Couldn\u2019t Feel Pain?",
+        "channel": "Space Drift",
+        "channelId": "UCE-mdd_VKM-K_u5KmGUTP4Q",
+        "subs_recorded": 729,
+        "subs_current": 729,
+        "subs_note": "current (API)",
+        "views": 34825,
+        "duration_min": 9.1,
+        "publishedAt": "2026-10-14T23:42:35Z",
+        "in_window": true,
+        "duration_8_25": true,
+        "subs_under_50k": true,
+        "baseline_median_views": 169,
+        "baseline_n_used": 13,
+        "outlier_multiple": 206.07,
+        "views_per_day": 4235.6,
+        "passes_5x": true,
+        "passes_all": true,
+        "format_check": ""
+      }
+    ],
+    "C_worldbuilding": [
+      {
+        "niche": "C_worldbuilding",
+        "videoId": "gcwNxA660iQ",
+        "title": "Why Humans Take Over Every Fantasy World",
+        "channel": "Myth & Reason",
+        "channelId": "UCYD1eqIp-khYYH-7gh628JA",
+        "subs_recorded": 15000,
+        "subs_current": 15100,
+        "subs_note": "current (API)",
+        "views": 2003842,
+        "duration_min": 9.7,
+        "publishedAt": "2026-10-04T19:00:34Z",
+        "in_window": true,
+        "duration_8_25": true,
+        "subs_under_50k": true,
+        "baseline_median_views": 52762.5,
+        "baseline_n_used": 20,
+        "outlier_multiple": 37.98,
+        "views_per_day": 108798.6,
+        "passes_5x": true,
+        "passes_all": true,
+        "format_check": ""
+      },
+      {
+        "niche": "C_worldbuilding",
+        "videoId": "pjLSv4WNUtY",
+        "title": "Creating a Fantasy Map From Scratch | Initial World Draft",
+        "channel": "World in Progress",
+        "channelId": "UCuV9ve9LV0ATFKvdDWAMeAg",
+        "subs_recorded": 11400,
+        "subs_current": 11400,
+        "subs_note": "current (API)",
+        "views": 466206,
+        "duration_min": 18.8,
+        "publishedAt": "2026-07-21T16:11:36Z",
+        "in_window": true,
+        "duration_8_25": true,
+        "subs_under_50k": true,
+        "baseline_median_views": 30146,
+        "baseline_n_used": 7,
+        "outlier_multiple": 15.46,
+        "views_per_day": 4984.3,
+        "passes_5x": true,
+        "passes_all": true,
+        "format_check": ""
+      },
+      {
+        "niche": "C_worldbuilding",
+        "videoId": "_tfuuHjSVd8",
+        "title": "The 7 Deadly Sins of Worldbuilding",
+        "channel": "Large Lads Studios",
+        "channelId": "UCUMIH5Xhx6fyfGokIxtN70g",
+        "subs_recorded": 22700,
+        "subs_current": 22700,
+        "subs_note": "current (API)",
+        "views": 373504,
+        "duration_min": 19.6,
+        "publishedAt": "2026-06-13T15:45:03Z",
+        "in_window": true,
+        "duration_8_25": true,
+        "subs_under_50k": true,
+        "baseline_median_views": 35369.0,
+        "baseline_n_used": 20,
+        "outlier_multiple": 10.56,
+        "views_per_day": 2839.2,
+        "passes_5x": true,
+        "passes_all": true,
+        "format_check": ""
+      },
+      {
+        "niche": "C_worldbuilding",
+        "videoId": "byHCes4UG94",
+        "title": "I Tried Worldbuilding for One Year",
+        "channel": "Daniel New",
+        "channelId": "UCtJBZL_ZOsc2BThP2QaEDjg",
+        "subs_recorded": 20600,
+        "subs_current": 20600,
+        "subs_note": "current (API)",
+        "views": 143154,
+        "duration_min": 10.0,
+        "publishedAt": "2025-12-24T04:12:56Z",
+        "in_window": true,
+        "duration_8_25": true,
+        "subs_under_50k": true,
+        "baseline_median_views": 246,
+        "baseline_n_used": 17,
+        "outlier_multiple": 581.93,
+        "views_per_day": 472.4,
+        "passes_5x": true,
+        "passes_all": true,
+        "format_check": ""
+      },
+      {
+        "niche": "C_worldbuilding",
+        "videoId": "xDqUjVsViEU",
+        "title": "How to Give Your Worlds Meaning Again",
+        "channel": "Halfway Gaming",
+        "channelId": "UCeU_nc2WbOpST5EgUuRR7tg",
+        "subs_recorded": 12400,
+        "subs_current": 12400,
+        "subs_note": "current (API)",
+        "views": 134356,
+        "duration_min": 8.0,
+        "publishedAt": "2026-05-23T03:00:45Z",
+        "in_window": true,
+        "duration_8_25": true,
+        "subs_under_50k": true,
+        "baseline_median_views": 86.0,
+        "baseline_n_used": 20,
+        "outlier_multiple": 1562.28,
+        "views_per_day": 877.7,
+        "passes_5x": true,
+        "passes_all": true,
+        "format_check": ""
+      },
+      {
+        "niche": "C_worldbuilding",
+        "videoId": "_B8FfX9dTaM",
+        "title": "Worldbuilding is the most important thing I have ever done",
+        "channel": "FacemanArt",
+        "channelId": "UCmkyBO_yVNwZQUvNQrYucuQ",
+        "subs_recorded": 1880,
+        "subs_current": 1890,
+        "subs_note": "current (API)",
+        "views": 64007,
+        "duration_min": 9.3,
+        "publishedAt": "2026-03-07T23:35:08Z",
+        "in_window": true,
+        "duration_8_25": true,
+        "subs_under_50k": true,
+        "baseline_median_views": 547.5,
+        "baseline_n_used": 20,
+        "outlier_multiple": 116.91,
+        "views_per_day": 279.2,
+        "passes_5x": true,
+        "passes_all": true,
+        "format_check": ""
+      },
+      {
+        "niche": "C_worldbuilding",
+        "videoId": "_Pfw_28BxXw",
+        "title": "The Hidden Worldbuilding of The Eminence In Shadow",
+        "channel": "Farz",
+        "channelId": "UC3FSmF_c5GZGMhgUY0bcsgw",
+        "subs_recorded": 826,
+        "subs_current": 838,
+        "subs_note": "current (API)",
+        "views": 32059,
+        "duration_min": 13.2,
+        "publishedAt": "2026-07-07T15:58:23Z",
+        "in_window": true,
+        "duration_8_25": true,
+        "subs_under_50k": true,
+        "baseline_median_views": 3612,
+        "baseline_n_used": 15,
+        "outlier_multiple": 8.88,
+        "views_per_day": 298.1,
+        "passes_5x": true,
+        "passes_all": true,
+        "format_check": ""
+      },
+      {
+        "niche": "C_worldbuilding",
+        "videoId": "HNxCEgduzZo",
+        "title": "a basket of worldbuilding ideas",
+        "channel": "Uluscri",
+        "channelId": "UCdRDB4G8gybQilHVXM3WhXQ",
+        "subs_recorded": 5210,
+        "subs_current": 5210,
+        "subs_note": "current (API)",
+        "views": 31004,
+        "duration_min": 12.9,
+        "publishedAt": "2026-01-26T18:00:28Z",
+        "in_window": true,
+        "duration_8_25": true,
+        "subs_under_50k": true,
+        "baseline_median_views": 860.0,
+        "baseline_n_used": 20,
+        "outlier_multiple": 36.05,
+        "views_per_day": 115.1,
+        "passes_5x": true,
+        "passes_all": true,
+        "format_check": ""
+      }
+    ]
+  },
+  "reference_channels": [
+    {
+      "name": "Buried Signal",
+      "channel": "Buried Signal",
+      "channelId": "UCTdYCtuxNqIpw0C7jbrIIag",
+      "found": true,
+      "subs_current": 5770,
+      "uploads_fetched": 89,
+      "long_form_eligible": 86,
+      "median_multiple": 1.17,
+      "min_multiple": 0.13,
+      "max_multiple": 3181.93
+    },
+    {
+      "name": "The Neural Signal",
+      "channel": "The Neural Signal",
+      "channelId": "UCyhUwgh0_UbMHNEsgW73GmA",
+      "found": true,
+      "subs_current": 4020,
+      "uploads_fetched": 60,
+      "long_form_eligible": 53,
+      "median_multiple": 1.38,
+      "min_multiple": 0.09,
+      "max_multiple": 405.95
+    },
+    {
+      "name": "First Humans",
+      "channel": "HistoryMush",
+      "channelId": "UCquX65xaaLvumBDHm6M684g",
+      "found": true,
+      "subs_current": 20400,
+      "uploads_fetched": 85,
+      "long_form_eligible": 44,
+      "median_multiple": 0.97,
+      "min_multiple": 0.05,
+      "max_multiple": 49.83
+    },
+    {
+      "name": "Fauna Hub",
+      "channel": "Babe Wild Yt",
+      "channelId": "UCvUDditigK-FXY4SHXKPsLQ",
+      "found": true,
+      "subs_current": 39100,
+      "uploads_fetched": 145,
+      "long_form_eligible": 0,
+      "median_multiple": null,
+      "min_multiple": null,
+      "max_multiple": null
+    }
+  ],
+  "quota": {
+    "calls": {
+      "search": 4,
+      "videos": 55,
+      "playlistItems": 55,
+      "channels": 33,
+      "commentThreads": 0
+    },
+    "units_used": 121,
+    "ledger": {
+      "calls": [
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UC5CxfumHhUcI_VtK78bZw4A"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UC0Lr__HsSMj0_h0jNqKvKBA"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCW_J4cG6NAblyYm-F2BwN9A"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCeU_nc2WbOpST5EgUuRR7tg"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCB6SehT_iWu1GWrcUxiRz8g"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCuV9ve9LV0ATFKvdDWAMeAg"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCEPfByJp1U8VCpLGTZCDUiA"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCE-mdd_VKM-K_u5KmGUTP4Q"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCxyFoG5OeOx3qUyZsHKB8-g"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCAhbkuNio6jFXf4RWqOUxpQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCdRDB4G8gybQilHVXM3WhXQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCAWsiuGuCzzavd_2YOBR7eA"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCN6XxorahzAiDNyRnI1of2g"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCGDYkZRg0XKIc3Oa2v-XgNA"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCmkyBO_yVNwZQUvNQrYucuQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCicsylWP_2LNX0Qv9O5ktzA"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCSeuqv9fNSUJT5VfcmslTBg"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCYD1eqIp-khYYH-7gh628JA"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCz_SvTQYp4NZal2Fu9aYA-Q"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCUxebm4Io_ysK4WIsBDBHRg"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UC933vmmlf5Fg-2AtP3vKYXg"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCk_5OiqyQlD7lBNPfX5i7bg"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCrwNJIAACptfW66SMly9gvA"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCUMIH5Xhx6fyfGokIxtN70g"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCv4DniMRgnBTmfFaxeMTTLA"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UC8xSyroXdWvHCgPZm_wg_TQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCtJBZL_ZOsc2BThP2QaEDjg"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UC3FSmF_c5GZGMhgUY0bcsgw"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCLSZ9gGZkwioZMDSBClwxgg"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUicsylWP_2LNX0Qv9O5ktzA",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUicsylWP_2LNX0Qv9O5ktzA",
+            "maxResults": 50,
+            "pageToken": "EAAaHlBUOkNESWlFRFUzT0RWRFJrVTVRVUUwTkVVME1EYw"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUicsylWP_2LNX0Qv9O5ktzA",
+            "maxResults": 50,
+            "pageToken": "EAAaHlBUOkNHUWlFREU1T0RFd05UUXhSalZGUlRjeVFUVQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "2UNnsUA8IOg,1aeOBnmicFI,k66fwGq-Thk,FrgefFg8Btw,HHR-kO9rNvs,bydNUe-9v0E,cx0wpGs4AQc,At4zP3hxY-s,F7Y47_ihA6Q,iHHVICD8Xx0,Jn4H1RMdE2c,m7yH7FPRTpo,kVAXG_ZJf20,jOAKdeHtzAU,8P0EnZZlG6k,XibTi8WwfYo,pxa0CfP6c-Q,X3F0b6Zon-s,18fwKDM9QZE,zGLeyY25Bbg,mfE8peKOHUc,BeoraALhVkU,bvqdbepER90,fke63UCfoZc,Sqvq4xRCr0g,okhfEu9OVQY,IJZzxMyqtP0,s3ws0DKb7ZM,1fMCwF6Rpu8,puLXFjtTVD0,9_2j1tvb2n8,ti6kaBj9Bf4,Dg1yGQqvc3k,8Ju7sTU_OUE,_82xSRSfDpg,7SmocRsoo9o,zdp-kx0G7xo,QbyeYUxJW1s,7ZqRk5-JiI0,dVD3J8-ipBE,44lKjQ43eV8,i3kc0sNrKZ0,L2fBAci9atY,dfJFti1hesI,4ID9Z6lYd54,kfhaDEffejE,KjAu92Cxvag,CtxutrzmeEk,CeO4uY-A8us,BxvTQlbc3FY"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "cDWq5Gy4aEs,ISMkbJxcu_M,XYacnLw6768,NfYwVQdlgd0,UMoNXTHcQ3M,xZ2LolESsEc,RNT1OGqHh0Q,Jt-XpAAfPOY,ijVxGxHTuxg,vX7xM0FR_js,7rO9l4tx1bA,LDmQ08oRi10,-CiWzozDgQQ,TNDiP8KteYo,ulHMBRJMB-Q,Bj3bJ596FKU,i6nRlVdNR9w,9rdS3DKbTn8,tDO2w3JNumY,DNpoCq7P-Bs,YWCZH2QFa2Y,v1YKkPypoQI,mwP1aEf1C4E,y045r3elheg,KsJ1G_Nr7HA,blHKKTMXr_M,ZT8jfh9erL8,zcUwnCm7UbA,g4XVl_Bzqu4,0XtV8xHfgmk,QFb02sVMB4A,UkHfOQZsoxY,bJR6LrxKNi8,thDlNDwwfns,oHN8tf357Mw,K9apKuKQLiw,H-6Ng3cPrU0,BQ1MkxjjlH4,gbyI1QisVUQ,JHPJvFGkuVQ,t6Tn3MT8onM,iOodOws6QmQ,cyK5958Ku1s,I6FI9QJ7yKI,8czz5KkIjjg,7P_BZnJ_E_c,UUIGfGoAzQo,mWK4HkTsDEw,5Y5sm8rdBho,eXsYUO6Wk8o"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "KshshE80TEo,9jBjjQaeS2c,ns_bmcB0Y00,lFhfSoCxgKM,Ayb-CFQ--rY,gMzqH_Hkb0s,jT6Rii82eUk,3aCij9SqVv4,YFKEi4IFLBY,4VL-9PDCYBw,jbxPPa5mIu8,deIot92KQ_0,yZKJm8YTMCE,-quEs24A7mY,hsMJZsckBxg,MCla1USngIM,T-AERq2ou6Y,YjsMlYb5tek,glE2dAFIk6I,J0Pss9w0rEY,T-tV9lV19qc,Hy0Gu6--0wE,McknSzL9gp8"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUrwNJIAACptfW66SMly9gvA",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "FHkTZb22rAI,hN3Lrje23sg,ydNhiBGjlLY,dHcSvUy5o_c,0KqsdhN03p0,bSIOcQAHeek,DZ-FCz6lMiI,29qxzihCQCU,E8f3y-xDUXY,ikqcH36BWEk,SZI2lS7_jrM,OjLnJPJHrYY,4TnuMNHDaDQ,enVrxMtmrlA,1mhBRZR4nYY,sb_UUpne2KI,vARkI6Dajag,_5-S7uYmim4,TbMvtgt5L2c,HKwDcWP4o8k,PSYnCqhntlM,dETkrfL1n9I,zpOisSAzkIA,xU3v-blNzm8,VdhnT0nXORQ,Od1o9pE0TWQ,PsFYb3LSut0,ftIhZIPYJR0,_h7BOLYOzMs,dNllErWtuqI,TxJTagFlNgU,E3kmNO-XGnI,6f0DFXoLfRQ,sIOd2f43EbU"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUk_5OiqyQlD7lBNPfX5i7bg",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "yqNGwOjbdEg,c78OVWMnWOk,Z9HyWiJk7OU,NBvbTOGObUs,4mvaOYI2H8M,hOZPhrw7wEM,rV7QIu-q1A4,_d9xIKnZC5M"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUUxebm4Io_ysK4WIsBDBHRg",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUUxebm4Io_ysK4WIsBDBHRg",
+            "maxResults": 50,
+            "pageToken": "EAAaHlBUOkNESWlFRVpETlVRMFJUazBOalEwTlRNM01UQQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUUxebm4Io_ysK4WIsBDBHRg",
+            "maxResults": 50,
+            "pageToken": "EAAaHlBUOkNHUWlFRE5HUmtSRU9FUkZPVVUzUTBSRE56aw"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUUxebm4Io_ysK4WIsBDBHRg",
+            "maxResults": 50,
+            "pageToken": "EAAaH1BUOkNKWUJJaEF3UWpBeE4wRXlRamxCTkRNeE56TTA"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUUxebm4Io_ysK4WIsBDBHRg",
+            "maxResults": 50,
+            "pageToken": "EAAaH1BUOkNNZ0JJaEF6UlRVeE9UaEZSa1k1T1VORk5FRkQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "yhEe9RRy21c,Un-JN9yQ0Ms,D2rId9zQEgI,Sca6KJjSSK0,HAnOt9iY-eo,WPF-vBmPWqI,4thgY9g6IEA,3sFldg88_sk,XsOyj8isFkw,E6_5UndUAoM,qphCdttS3EU,79oKuG8iuuQ,DK4EziskJGs,ymfrA3_T1Eg,9j7Iuj4vohw,_gmUac_6k-Y,utvSmDDgMRI,5y_0xLJhB1U,gMAxp0csl_U,-gSkUF8r-tg,eZ_H-voxR30,pB8FFecBP7Q,W1JanBD3A58,C0VhNhuEgZE,SO9LWt70fCE,UookqW3Mynk,_YyMwDSG6yQ,Cf_fSmCJk7E,Gxar6F2_7Go,8c59gJN7wAg,Abxj3o-zl_o,ybZATPhbxRc,kqBTp0be8Jc,fSUd1LBL2ek,Y0zXYC0kHjc,djHj_vvIPfw,pCugYCH1fyE,bF63jbawm5o,xbbgv07ZBtw,yJAWpRRGj34,cg_Q4aq0CIE,BXoTsfkFyP4,GbhiVU3XIFc,Mt8-Bn5NFXs,p92qC3PTl-0,IUcUdJJKNz0,qEUDaNs0KYo,LBvVFZezGGA,p0oVwpJxQ0s,smUq1kIFkmk"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "AAUeE0ktlj4,xj17ibtBU4Q,FeLpX-AvjMI,AkoZubbJTeQ,F4HV5-PYAa8,xMc7q39T5Co,CtkZ_9QlJp4,Mm21x7xR0mI,P5hujMyp94o,XJYwNv4xT4o,q_k_6XCHbZw,mvE2v9Xv0QE,17qbFI0i3S4,weO1AqRl-sE,LK1Pb_IfVE0,b1GHveRTS7w,ffOM60p18Gw,PifGpcN13-0,2IKJOI9eBiU,NDvWTeoL3Ik,oFg5VAqzEm0,LuShL_B75Yo,MMxtgVefoeo,y4IYhqXLOiM,oXysR-eDDZk,3f4WLhuRctQ,tjKDs_5cFPA,IeUM0r_AwXI,QRhR4w97Qqc,B1anTxHuxCo,s12xJz3ohE4,JqCO1j1J8-Y,oGxkK6r0MWs,NurkVZou28E,z7bEnx_s0y8,43ERZN1d9uo,0sMLe14p4y0,ujQYcIUIlD0,oDe902_kDKc,GzQLUfL8NZM,kxCnMVP7Ga4,M4l-3b6R-tQ,LR4YqbOzD6Q,2CS2a0DLBlo,zhojK4bJUyQ,NyCCvZ9v--Q,zF4UcmXQKEg,NzSQKZEHBMM,KSDEwUrWnZ8,lebwjRRH8GU"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "6hRhIkCG0yc,e_nXydCWRK8,JMjs9GpXA0A,5KunZQxetfA,9WqFyXqq3kE,lb5YDMSdS2k,YCOy3W2bF4E,Cf5NhEds5bE,so4Jt--_43E,0iWUjmbmemM,v33xDlJ6R0Y,_MDYwt0B9_0,Tz_zZ461AzA,xfuKeA2_gJ8,iYomIzNnSng,CdFracXsA74,qpKkB-_sJiw,CVW_glhq-W0,3TvWOmPE-L0,lxk_bXIDr8E,k3CblNJhwRk,IvJmHB-7qDw,qleeNEBpiEE,rzXY6aKdSSo,NpQEJ3E2uvQ,olwggCQ6fqg,CLsyPsfB5aY,aqYEmKL1vYU,LzwxOqVYaqE,WgMlmQU-ork,Y71OSuUlkpk,wX5JG8FdJo8,pdLRR2s1kII,MK0zk7tnhcU,cYgGI2EWR0g,sCK5vu7mbw0,Mbncl6l9N0w,1e-TWFfPB64,3Tn40_4hTSg,oVHefFOV5Cw,l0Ow7J5VrrA,nRYEU8VEwrA,-CZw1fpfJbM,91cFV7e7Mps,T2celYe9BVE,v8H2EJYWmWA,bGfXQ_mXo_s,WJsnyAREFvk,bm2cvGG4jeQ,SvE3Oy6JR9Y"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "ns2CmOLmCyU,w3YRh8V0dqk,Z0sMc7dPbBM,cFTjsKtXvqI,DM_pw0trlaI,tzVPU28k2DI,HfUf1mOM0sQ,Ro0x_PqHt-U,a9GyUbpE_Nk,K5Thtfx-9fE,ARTpTmcPQXs,2SNZdQoj7l8,UJAt3kxrQp8,Txi40w5gH4s,fPrTdznMOvE,46aA73lqwxU,YVgTFmPAIt0,sTAmW3oWvzs,nrc1OKbjriA,bxdeKkS3JEY,HDDozulrp90,EUz3m43IXsg,yEqzq0aTc3U,rkrlTVXUMT8,HuY6WWJr1uQ,avBokjFrUVg,kZv8hvfpTWQ,OyZiviG_FiM,9-P4DcVGwbg,_8ThOpKKLEs,sHlT05qP1s0,9lXYR9bIxPY,m4wQTlIe4PU,CFOp4_Z-1X4,-m0VNv8b4Qg,m2xwleThu1o,7-aJR7xeV7k,j4Xkpb778e4,VK-BnLf7yRc,Dx4b8eikvQI,Cul0BxTNof0,wLQJ_wTdH2Y,3hPaf4-qq6o,JmKPI5th4wA,Dw88slxkJ5I,ztz8fcOfsK4,RV1tby5L_GA,eSA1AeiCQSc,UXx7qKgGXgo,IzNUDPiOHaI"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "FwBSfb2VnEM,WY5DXxzPpcw,mtK4SOqYfkM,hal1VEDLMms,gQ5lWIG8rKg,AFAdv_CdrEs,U64HD72my8w,-Gcv4yY_U5k,fejpKMg95c4,SilInimWvRY,KizABvM7TBs,3Hlaytz1lB0,rboNCZNkZbg,0jl3f0dKxuo,paf54_lP9J0,3QN3YIXi-4g,2hd8xnoWz3w,PndqmYThJO8,tZQ5iJ2n3qM,ndslvdP-3PU,ZDAnZ5tJVWg,bAuC4FgFgrI,S_-DnVx8n2Q"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UU5CxfumHhUcI_VtK78bZw4A",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "tDMCTcVgqr4,Rd8TyxK04ik,ejhvCHuIKcI,U3K0LmCwFwQ,cIKqnqZfop8,2n95mRhavSw,XNxG44Q1WYE,KuY2YvJs5hw,bP6OKnNpFS8,NlvTdCzMfkA,Le4vBLqnCAM,QKzUaBGxOv8,8FKEAx65nbg,P6qDlpiyXzo,wnu_1Jr92KA"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUB6SehT_iWu1GWrcUxiRz8g",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUB6SehT_iWu1GWrcUxiRz8g",
+            "maxResults": 50,
+            "pageToken": "EAAaHlBUOkNESWlFRFV6UmpSRE1qVXhOa0UzUlRCQ05UQQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUB6SehT_iWu1GWrcUxiRz8g",
+            "maxResults": 50,
+            "pageToken": "EAAaHlBUOkNHUWlFRFl4TTBNME16RTBSalkyTWpVME1ERQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "h68p5mxQRq4,ntEz9LarpsE,8zRLOXhCpnw,zbZgtdtqN8A,etim08HpwuU,ViLADOqBhYA,2zebiPXln2E,rgqjty05FPE,3BHZzdulfbw,-p4cEkd2ulA,19HH-ZuAM_o,Xf2eCfJQ2A4,ynhyy1gTGcA,Ku5_34qYtLA,zwYiyDCVdZE,HECEE_Foc_s,gcEnfFhSioo,NnFHQA5GSXQ,VFbGxFUpNDQ,L8I7B85J6N8,o084B7UGF8k,p0zi4zhQ0ak,-aGiAnflgP8,PlwTvfbAxLk,_aSgvmh7xlI,JvyBcH9-KzE,j0_p1XZbtWc,f5JvDSIV924,MteDcEaXR14,EEwAOuvhC2Y,tQAc2xAIwiw,nPfzV9SDBU8,vm2lcB5j44k,nmzdSQT8XrE,rGdlGXdTKXg,WIGxvtbmgBc,_ytt6NtybDI,79ARxTUwgfg,j7SP08pSOkU,2B6Gm5koKcE,NC1MoYd4ZcY,4N5H9bQOQ_Y,tHN9dgbaH48,ycbiB6U6XCE,P6NC_wRqzwU,jIf13ZhfsNU,zFATvT6-USI,YHSl-5uBFy8,RcI5WkkNoAc,a-qnrPpGvnA"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "0PYOyL4Lptk,D7KxM_7Rh_g,bqWoj8I2Aag,IDX2xHiIMBs,kioFE91zA9c,Eek3Np3hWuw,i3CRgt_rg9A,OrwRO2ckBH4,2lHj1V0i9Bg,qrm5ywnKxAQ,FV6OM9RLqn8,PK7a-fqhk3E,o3187cWTXHs,TYikeTJaTKQ,8fGiBPcj6_o,WLfq1fdWaPE,jcFPE3Ey7cE,8n5iPZHWc1Y,qf8Ue6qBZvE,bh9pWCQs_xY,UVniqgzD9Ew,62RTvrdpYDg,Y086cI4jLHM,h3dF9jKw-Cw,Yi_LTq1Sbxo,uYrqeNWN_vY,qidQ4XjSRqo,Sz5PnExrq1c,3RvCp8ySqCg,NfvLWfn0t9I,qGvj9-8FQ90,rjGEaXjojFI,8bPLpjmntnY,eo6jeKySVyE,Gi0yayFA-hg,V2lr3ZSqyuc,RrIS-NmuXIc,vmkuzjw8AGg,nLoglFYlEJ8,U7srfFVA5uw,IjJc8b7LNaU,A7ikh98KwGE,D9HSYuJLGZY,-cvyjCTTmD0,ei780TQNcHw,JY9IbU9HowU,qVX-4EtxBoI,5wK0j7PzC8E,dxFrWjdONB0,NySRRMQhpOA"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "8CPhjMYjTZA,1ctPio55_Ts,Q5kM0OlL-Is,CCPQ51X28bs,bXPxoCAwm5U,WDmjrbMZUQU,4gacGgpid2M,q7LEMkgcJJo,XIPS6N_zIQU,BzTgbOn3Ysk,VOBJIgW7eS4,-eCYUYEFFHs,LyOWkmzpv4c,Y4gPfrv8Nl4"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UU8xSyroXdWvHCgPZm_wg_TQ",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UU8xSyroXdWvHCgPZm_wg_TQ",
+            "maxResults": 50,
+            "pageToken": "EAAaHlBUOkNESWlFRFUyTkVZNU1FRXhPRE5HTjBKRk5qVQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UU8xSyroXdWvHCgPZm_wg_TQ",
+            "maxResults": 50,
+            "pageToken": "EAAaHlBUOkNHUWlFRFEwUVRFMU1UVkZRVEpDUVVZeFEwWQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "4X5gTPwZ2S8,daegIGVlRWQ,TXYpWW-rIq4,LOvfnMDes9o,LyQKxp6ZLHk,biEBEjVJXMw,DzgYicNfE_U,KB1a19E1ISc,q-aCZ7xDD30,7UMxmI4F7BI,G9Z2d9brbYQ,eTpPgxQYfvc,5gHcS1yegRo,ZJc9A3x7uX0,jY-tRfBMLms,hL1jN179gdc,xFzxzQwOYyo,wdXHSvZcCao,j1I1g_87Fp4,tSmul6aSd3E,HG5QThG3ZTs,m5vJoDSQW6Y,dQgeCKGEKoc,y9WwzS5yuhs,tqt-JtgYVyE,ldHoe_XH054,wVqHCUEG4Wg,m2fAYDlSaXs,jn3xi1k4ljY,E3qWBM-kF0o,EFCfo7esTiw,AwsVZ67DLfY,MuA6xmJDqyA,tKq7ycfZc9o,UIg-oLdCZBM,V93sg0ZwLVE,bKdItcWPdso,V8rU2MaUrj0,myUXn2O-Dhw,5XwXxLCheRc,uyfo-7AyTT8,uDxpEPpNKHc,TPOa71fKSwg,ERLMP5uji70,G4mJu_osL9M,1Ui-NxUSkv0,44W6jEKBLUw,rKOT-deJdUI,7qNEuo3l3rg,87OVy_Pf7C0"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "GxZf6p7fPPg,BUMZTzViZJA,HssBshZroDA,dnEqI2eN5Gs,bmtrwwUdkoo,_Y28AVUC5y0,Xg3BuKtPAHg,XTb1QWzo434,sNa5LtkNdaM,UoQ4mMdP3go,Y9lVIN2IwPM,LusMIcoPES8,evKsA5fepvY,OoEMRYbiXjs,TnrzryJEGRY,8fpP_IsScJw,VO0JlJUFDrM,JOgnWNMrgh4,1Zmdg9NwQh8,k-KKZ2vzCqs,RNx4Ejf62Vk,_yc87mMgwWU,DsmnpfxqB4w,aRuKNoABcB0,bF7FGxotfuo,bDOiifDfHAw,Xt2wE0-lKhU,GZAtNOifqfE,GOzOW9iMwio,8YcQzoxUxxI,7BtnjQByhyY,YVGZzAwoH-8,9j9CCKEW2VA,QjzQbMyZaso,wf34na9WS6Q,StaCB8hH-Lo,ZZVc9rfrzfg,TLETDGwmALc,xRTCKdFRp0U,dFE39rS4quU,PJds9kIccN8,kiY3ogpn3_I,EaN4guNHAsg,bZg8HGm6tw8,TB0cj3Vjyo0,0BMbxWGKW_s,b4r8r4qVlGU,qbFIFCaAZSA,bN4nYoP7BG8,LwFgLXY0Bko"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "p8ufcKWzJ0I,4FLRjTAc_Qs,-w5tHel6Qio"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUxyFoG5OeOx3qUyZsHKB8-g",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "91NY94fJCSE,LB-RMcZjCHo,SYSMEO88TEQ,X0uZ1eCLCEM,utbDYJxFyDY,P6zj12-ilzE,EE7a6bKbAes,zmCa0oUTlos,9iWwu0xgEOM,r09c8zQcb-c"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UU933vmmlf5Fg-2AtP3vKYXg",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "mLZIekdTYXQ,MZlqbcHJATI,kqHLw1zzUrE,NRv18FSUsDY,yJpHCxNj5Xw,CCPkXxA1PMQ,IUI83gAnKzU,PwvWJR4cq9E,6MXTR8u4UtQ,uLMuHyeY0w4,ZrVqMD44wIQ,-6WUkyJ24cE,M0CTxRjGvxI,9_o0H3WhMDQ,LwgtxKsmm1Y,hKnJgrnSFwY,Vo8VZnnIeY4,c19Ar9XQEhU,xTs-HRpDgOM,Xxa4IOxn-ks"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UU0Lr__HsSMj0_h0jNqKvKBA",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "__pfCTcBb5U,VzTFoYKkM8M,lxfqXozizTE,BcaX3pbZtN0,Z63E3VtgQQM,OnoJW084xd0,ju_cVC5hfj0,v3l0Wo5Sifg,OlNJU8xBErs,2ikwtEYeCXY,zGVss7MvwOQ,NJ3m7-1czqc,GmW5mhRTsfU,0mW6nE690x0,Z56n1I7TuBo,0p7YZ1eKxU0,5ssdJlnRwMk,FXlnUvJIgw8,rjPSG13KlBA,uFmbpd0h3nA,-6hMFV153FM,mDJS3r5wIiM,4Qq0v2uNN08,qj6xudJmD-0,jMOgWYNV3OA,YsruNo_waKE"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUN6XxorahzAiDNyRnI1of2g",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "7Z_SlUGxKNA,vtUUjqQGk1o,ggpFFdeYPGc,vfIaNeGVaVo,g1NgSUV1vFs,zIHCcU7E-b4,novRaC6U6YU,ZNAORJtCVcU,C3cR0Gh6gOM,CPltHN7PYrQ,T5Is9IweAys,P-5b8-ozvLM,10zaq4d-IPQ,iXBBCrU6y1Q,nhaTh5gGXiM,PqmK6eF1VcA,3fy2DnrCRVc,5c6ND5sRnGk"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUEPfByJp1U8VCpLGTZCDUiA",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUEPfByJp1U8VCpLGTZCDUiA",
+            "maxResults": 50,
+            "pageToken": "EAAaHlBUOkNESWlFRGczUlVZMU1qZ3hOamt4UkRjNU5FRQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "rHyrbaXrbv8,DtgAaxpU5nI,yWIfgOH1GEI,FJnY8i6uJdk,rsSez5ck2A8,D6nV8dmAy-w,noDM_4FQ7Ak,_lNgDVbM4dM,ikiUtH15ZAE,Xa4O_U2PgqU,dTp5OQpOgbg,PH8BIWb_FoU,z1jo14NMhV8,FcgSC6zt-VA,Mj5dpmy1v-k,cw3IxC814fY,QMbJu7-Q7EQ,cV_bHOv2J8E,uyXzkxCGxFg,WNv3qNSQou4,C534AT-2YY4,Qzm8lGcoKPY,T-CtjhUmLKY,ze-vQc9PssY,LvTu3JLQ9Bk,tnNdR5MY0no,gqOPNRjJzRo,4NJQuR1A8WM,Qmyu2n43mSA,bSSLN4CG6bg,a8q5T33AHlQ,pKi_mMgQWmc,9PhxGIVXpCo,b4h5DOAq3Og,otFPk-DBHyo,Q82eArp0e7s,sfOuUOnRkTU,eQzqH0RzmAs,0_-pYC29KWo,K4dHnNdjZnM,am8IfVlHJs0,ZsKGtlLXRzs,2fcOPjLTfa0,7iaie3QLCwY,DiwQwH3PEvg,eas8jnpA1F4,a6Dstn3TyBU,nHZ_Tmt7K90,GpuASxYDXdA,vXFxb-apQGQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "7Hd8O7EV_dQ,CQEq0NX1G-U,M7zXjy0EWpU,RXi32gLsInU,0JCBANGhUpE,ssoP3tHIkr0,YMjEq0q5mqs,ctCYP51GB8c,LuGsisIs0Oo,pAA1O07fC4M,pdJQzeNJVu8,3DeFAWS9wN8,OLa5gY3ET94,eSobv78IHOg,nDyqSj58hGw,ya04j4m6d3Q,5W1eatBcs3Q,m2n4LxP8fGo,yIZ5fNkMVmM,WLtBAfjtXTg,IgPQZB9nClo,V2bHMr4N7xY,Yvcl0Ae5jEk,M0KUaxqkGUg,Y47zmxdO2_U,HIWREjII8zY,XMuQtRprfXM,6HXm0C3F5hc,nIkMY-ZyC5o,toWWHhoJmvA"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUz_SvTQYp4NZal2Fu9aYA-Q",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "Fn05v5j7dgs,QTap0zDgIdA,ZoRpxhsa0n8,GbV57Rxzv8g,k_BWiYuMkNA,K48vaw2nqBQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUv4DniMRgnBTmfFaxeMTTLA",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "99sPdezP2MU,Mfb3LHkFv5g,6jAsgf1muc8,g6wWbx4-Uy4,v9qHVzt-Yik,0IckuPLNVF8,Z6Vd7hjEcnM,B0CsQnzLw84,y300HjYnHPw,Vuc2Oyc82CI,xRqMdfHKlYg,OXjfIXOhLNY,EmRLqIZXseg,77kcj19ianQ,Ltz6GOnpXvs,-8cgQIqgx74,o8r3kpJv5gc"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUW_J4cG6NAblyYm-F2BwN9A",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "KYsZKfakgMk,zBLMdS4iKqA,qk0Xc9Pjaxg,L07bfnOMfdg,J5Ub-9hS8XE,wV3YFHsCXDI,0qOhmiqKKV0"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UULSZ9gGZkwioZMDSBClwxgg",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "rmiX_xnwkVM,Z8MeU22lFeA,6YYKFxKPmxo,vy5yBzuU27A,6GD7oYC6fLA,-yfgmtaDBKk,tsiyWhHoe0U,YiEkNET2uBo,0erdfOVTa6c,aTSAI6EqPdo,UDd4izw1oy4,N7loiZTgHiM,gqwmCXVGFyE,NIX85VWQK_8,fyZguLvCsnY,DMpBiX4_EzE,GS7M5ep7OgY"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUAWsiuGuCzzavd_2YOBR7eA",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "JZzEQ_1e_Q4,ZyR1mXsJjw4,50gv7EC9upg,lGibJL0BT1c,_mXIecVySao,_UF2bfkMz3I,DJuI8TpX2uM,jmgHFKpgB9U,28frBOhO2jw,U4J0VuXJHBk,7Ka_D49NhiM"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUGDYkZRg0XKIc3Oa2v-XgNA",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "pmN2YTYRwSw,qqIOId8qr0E,NU6zruX6dMM,JnngF5D-ycE,AJ9KPdJAnHI,JGtQzkSTR6o,YVM4evczxjI,V75bgQVWYJM,YagsxRHg2fQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUE-mdd_VKM-K_u5KmGUTP4Q",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "hr5mtOoJ55I,EdXZr09nsdI,IFaHWlPwX-M,LMqwZX5QojQ,EiG_ZMYLZJg,gTW0pEBG56E,lV8wNEQpLCM,BZynAJ0rniI,4eA0I6dLVVo,Mh-44JMuYLY,qAT-b4l8NyY,zbfvqyCERzA,20S1INvN_Eg,3yrlNpDIc9w,LBr7-ewv6cE"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUYD1eqIp-khYYH-7gh628JA",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "5UFxgzsSeSY,8lyN7oQwb3c,GI0bBal4XwI,xWZaO2gi0YQ,69C_viD8-U4,CXLwPBDTzXQ,l-ge24kEME4,XH_B8MG4nSE,XmOviFPYh2M,VgK9g4uMOZA,DkXiGYdqzOs,2RQMa3leQls,zfqo3jSNgQk,e1i4nLo1s7E,Qb9C42s4H7Q,FC9UQ_lU3G8,D77t334-rSM,mZtaieNh_1k,7HZCMUlgSyU,VhqfMY9X6Nc,zR4b-NZxs24,F2weze6uY30,RzIu9W5p41k,eTDRJqzZtHo,Q8Jl9OPrc7U,PjkzMpZ6WbY,OCvwOR_-u0M,nIMKinwCpPg,GPds4B3i0IQ,OFnG8_t_vD0,4VDONKli0Pk,JtwNHKiN_NY,554JvRX3-hI,hkc2tcGXm2s,D1Acm4QnZPM,XvANkrqvDf4,IuWva-cy56M,dgtsAV588EM,6_x77R2Ytes,2PLX_kLPxBg,0FDdUFKfMOo,JAyvz92hrsY"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUuV9ve9LV0ATFKvdDWAMeAg",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "q8_VMsYBIRQ,4t5Dlyk8M3o,b-RlwLdHU6Q,rPYysoATRpM,UCKMJlNW34s,Q4h1lZPNboI,h0hgSIxiZyg,R0PHBSLBWGI"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUSeuqv9fNSUJT5VfcmslTBg",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "pat2a8k2k2c,tKDcLoYxfPE,yk3At2Akg5M,u5kEbkeX_94,G7N57SJBFfo,tVY1fSBUL3Q,E2EBgmnj7Mo,E90JMfIMdBw,rTyPvy8_z9k,I--xW5Jgw5Q,MIqpvpNS5pI,c2MJoTYjOpI,oZYbnvDfDA0,wjHb_YJUQGs,7whHXsOO9_Y,ikAKQjK-YT4,zX2bJABEAiQ,yhthgAf3I34,AIFi8OnN5oU,907MoXWl464,56OgvPJIi5s,3VuLWiCVyzM,aq6CS3DbkaA,f02TCEsYugM,cqwyZvALw_w,yJkywijQMEk"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUUMIH5Xhx6fyfGokIxtN70g",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUUMIH5Xhx6fyfGokIxtN70g",
+            "maxResults": 50,
+            "pageToken": "EAAaHlBUOkNESWlFRVJGTnpRMFFVTXpNakZGTUVaRE5EWQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUUMIH5Xhx6fyfGokIxtN70g",
+            "maxResults": 50,
+            "pageToken": "EAAaHlBUOkNHUWlFRGhDUlRFeU1FSkRSak00T1RVelF6WQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUUMIH5Xhx6fyfGokIxtN70g",
+            "maxResults": 50,
+            "pageToken": "EAAaH1BUOkNKWUJJaEF5UkVFeFJFUkdOMFpHTlVRNU5qaEY"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "Hz5xgABtZPw,3q8VxyzPTnk,I0PInGa9zh4,WoOM0WmvBdk,s7dA1xijHPI,1WZuv1rJAkw,s7rgEUc2NcA,M5LO5pPzrSo,Xt66IOrqWbE,GtwoqLN0dEI,WtWxwbSNVus,RGdFKczhcY8,ItpijLHzyyI,MiLq2XPZ2bA,mlX1jSm8x0k,uL93bKCwmy8,zO_TmghIB2Q,yBqM58l6QtY,RUcVe57ypac,Pi7JWO8gSho,2REFKRje7_8,s2XJxPQqtAQ,mrLWpYzasSg,3EpBzpPUAmk,6-Vt4TVcOb0,4YDrglz-Yho,uUYy_TtF8Q8,On4nxPBBjNs,1TvnZTbU2So,JzXigH2xgAA,8xWfks2bFsw,ojVc-Al-9WM,UFmX6XlNl7I,__zkyJS-tOE,QqzC9p_0fvA,FO8tGMlAS_Q,hNZNmAWjGJA,BRYuCfQuHTI,jbCArPhe0I4,dolf348DQuM,9Du7bwVBMhs,K2zIWTUrgFw,XEcnR6oPMUE,Wz4VX3roXaE,s50W1kqyRT4,ngZbT8dYzzA,US3yjlsbfCo,ppN1SH5z4cE,EC-4JRvBHIc,xf6SM1fY8kw"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "7da31wVTFOQ,qvWuq8Z2ujk,VoMGxoP1EdA,d0V9XS-F31Q,t2v41nHiV9E,90jZZBWsaO0,K8bIQfJPe3g,opWRsX6nJnM,dyxnu0LyVWs,mHanQzMRymI,Vqm4znyKLaY,kn5u_XeSBGY,ZW70jSdUfno,UFf-4tZpE4A,IBSQW84qyCA,tvvA1nG0KqA,xDNXNAQOS-k,gTrZ_uboNW8,klbk6JE1MF4,rUbP-SHox38,4ab0wHZi5RY,hDEXgV86SMQ,gnZW0OmJt74,QZ_59-1QqGI,za-LeNIcV74,3fZH7-OjANI,SCU1wSkfALY,FjYlU_yhayc,ifsB-TOWaDA,PmYgLCYV34Y,k4gFXHbJfi4,G-yJjce61uk,q7e_wFNmTz0,TdP1qStmbwc,Svg5JAIm-H0,X9Vl6aZt4hE,qA-yejZTVKM,7Vmg5n8xq5o,ZPrnsmRP0Ng,i-bK4QtYF8s,rkoFKL_Q_Nw,l3s4E5ez0q0,kXnH1S-wSwo,RIhOmdTsKfY,K0piQ7p0Zf0,BWzzE0MZ02U,egouuvN0Vec,1sHFTYJBlqk,zRc8G9xsFGY,aOsI6blIuqk"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "NXprGIEQBh4,sk939p2C2zA,ovGijFr08BY,NHr8cwywTws,Dd4swsgJqxg,mqETWJv_TRM,kIfSGSjZy9w,Jucs0JdETwU,ZuG0vNyOHBA,0fjaGWWk5tE,41qK-TyeEsM,v6U6AOiqlgk,o2f9yudmWN4,40C-nQbumQg,JWrAbe3MIr8,FvVrVEdp8Hc,WmqWAxR93Cc,xzm87VAiA0g,wk_8vVZn5KY,qJ629XsQoyk,9AI3sbaoZS4,3UKbv5R_xBA,wkw1OoDP9uw,hbE3Mxlm3Ug,UasbSvt7afU,XXYbW-ZCLck,YV4zyaz69hg,sXERAIgU7RI,Pl9ldwOs3iQ,py1jhvl-xFc,NDWseDreMyY,GRxBdxo1d2I,zwyDYo8oGFE,LO9OCCXbNlE,Ul18S28-kF8,2xk637avBjY,DKuBwbxLrR4,VY0st23dwZ0,JHTj-UnEtMM,1JFoE7s05Nk,ojht72XRxXI,OK7AhTxOa0I,yWfA4wKktnE,Ksr4gF1jjMA,2XjtOqDYz3M,QeiryTa7r-8,1ZtVl0phro4,jJ04h0HBu7Y,fURgUyFStIA,KXYD7vHtsNQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "JQ_5RLOx2Wg,-kN92abn3q8,07am7sLh8dM,TWq1Gxv5YEM,VDYtQs3w9fg,3ofTVqT6gkY,fE-EW_G-1Ps,mc8axjEk6OU,_q0B8PZrAqI,5ZrSS9hBN1c,h3oSgNAZK9c,USXVDP15f9c,OuvVXOqkmBs,joKEnqoRFOE,ue1vnFptz5A,85xpWdRGcLk,f9GY13qFrXg,ZCZceB-qRuQ,SDIp9OOdFLc,6SjHrowuq9s,SEMeK7fhNYM,RbxwX63-K9M,RR_wy2K-InQ,XVj2ttFokZ4,mZutxMiBi58,s4SCApff6n8,aNzsiUReYE4,8YyX3iuNWhw,SDresxhIn1E,P68_xh7dp8o,X8nL33cszm0,bMtXCZs6aoo,TGCDdEkuDBU,eE-FkXmIBds,NfXX7yOFkp8,tntsaE1pmsE,QO8sR16EVJc,EgpAICZ2gXE,9y_qZUpmrak,KnXlrop8eFU,gkELcfO1ZdQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUtJBZL_ZOsc2BThP2QaEDjg",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUtJBZL_ZOsc2BThP2QaEDjg",
+            "maxResults": 50,
+            "pageToken": "EAAaHlBUOkNESWlFRUpFUkRneU5qazVSRVkzUkVVMk4wUQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "A4BmAxyZWVs,Ss18VRewhbg,OWNLsbKCilE,Ux7LvEJhvzU,uDyqSX6oQs4,wXaGQaS68KQ,47G0hcyjFdA,UYCH1R3jqpQ,VW1hd-k1bYg,8nrnQNv9sAo,a-6Hui2udMw,4waN918ZbGo,bBr3MlK7Wic,vyIxv5o7kVA,AtzQm8KSR0Q,j2egATliPvg,L0dhsHKBS1g,_N9Vl-tGWxY,Bgzct5pe748,JB886ZtYS6k,b1mNAyd5wIQ,wd1ge2cQKEY,gbJ_0aYTv-s,rEPA_YqUBM0,j7G1r3mLhPM,TVtIaroMqXI,JxxHcsMzQQ4,hwAmQiTzrSE,QkO9uAakQ8k,AD0u8CokNnQ,pXhNRrtmBVE,jfCrHAfSnoc,rP4UHJR8YNM,x3NOTKHm3mg,KwgzYY_LA7o,bI53eZm1UPg,gmALDJDO6Us,sjmGNvlouKw,xNBJPsqxsBM,UQvDgMvvfL4,lWSW3iA2uII,jXttjxytbaM,gI1La1H-Htw,zRzObt1ONI0,yX96tkTD8vA,m9eoCuURtdE,rHscCcFZCyw,sGR-9vPLhMY,kgQvcUeMcJs,m4pDRAKsAog"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "voIBKyFtiBg,x1z5-P2RXqQ,F3fZs3S12Lc,rDtbffW33Z4,pchk4s4vl68,xMPBy-Fv-aM,4F_hqx2eEqM,J1kQrskC_BE,hSKANTOJcu8,Sv_OShbdYHk,hCCc5GGwmnU,ZjGYfWme6uA,Y1ZHmpGbRos,NZm6Myck6i4,6ij8FATSdEM,XWp3-y1b-Ww,dw85Yo56FPk,2RPoEzLSt0A,sYWxKuEzu8g,-lpHni_o3zs,8ned6qFzk10,AOpyEBTR0xA,WBo9Pi-4Hjg,GRyYNCEs-3w,qf0efSNieeI,XAvgFR6EReM,Swvzb9OqfIg"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUeU_nc2WbOpST5EgUuRR7tg",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUeU_nc2WbOpST5EgUuRR7tg",
+            "maxResults": 50,
+            "pageToken": "EAAaHlBUOkNESWlFREEyUXpReE1qZ3pSVFUwT1RZeU1qTQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "AQkq9BhVNH8,b04bm9HLpi4,GT-EuBD8jj4,qaRmO2C6MsA,-4JqfqrHqVI,Y4YfVMAv91g,wpVH5UrqxBo,WXgSlzysHdM,a8eL1d8wmQg,Go1Lg7EN1Gg,BQsNd1dfW4o,lbqqsY64aJI,3KKuTXrOos8,nu47uaCptk0,pF3VuaYYth8,jAV0S32ntT8,IPp6jzALWjQ,KORD1_JcU54,ReAHnG6LM-8,GKURvS-r2nw,9-3sw3rxzzk,xxKDZCdSWDM,QIVt4JYKWW0,3iPjhwx9uUI,Jq0_g4t7CtQ,2Mjo8fiEepE,pakhBc00D7M,VwEeDzPdIfA,9bZL6zahw7M,JWraJoACXdc,dnFTRj5oS-c,mfTKVzdcoew,uHkl_QfoLi8,j7tMCzdoQ3A,_R68GtfqvNA,ySO2hecuGE8,jBnzsVeMTCE,qUQf41F2120,h7X7sNScItI,gQ3skkUYtA4,WPbFlzQJMGw,Xaphq_RCg8E,XqMtyyaz3-Q,64QrVjGvvK4,CAWkfsADTC0,AFR3rdKTJqc,BM16pxGQerg,I2AeexxRRe8,xCFVEPpSQvQ,VEWydfUsHQo"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "EY7STvE9Ijw,yT3AmQiHoHI,S04x9vdrypg,NntSjSuh7Us,2MA88Z0vBCM,aQn0HAVME84,AjJ4y5Yhk7c,ogbzCUjrK_E,4neEEhLbEPE,yIOyukLo7WQ,0bJw4-Air_o,5jIlblibBaY,3u7Lf2HbnmE,QYa9D0Y4jsc,o_72GCa8_H4,sU-VB1vClMY,gNn6D4NSFTo,F2OIxB25m3w,cKOKewjsgTk,O0X67eWYezY,fPtcJFeNVUI,-oMbj4hZZPY,LQ1n5jVaqsM,i_F5gX7VpYs,5E1Ct-3IoGQ,vWS6KodM_pw,TAFToIBo5io,vt-Rbg6an1s,rHAbok3zNrU,Ql8JwX_AoZI,mnedNoQpeDg,Wk42-XWHS6Q,Ir8F_-uuKYc,y1a_5BycsJM,erqtKeT_1jY"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUmkyBO_yVNwZQUvNQrYucuQ",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "U0wBznn1cD8,HWMsGBlSRKs,IObrdb9qO9U,KLHSpZrMhKI,FvvOlytgGOo,Dbe2iaIkgUU,fI_0gG9YBw0,EytaSxdjkQU,Rb2qTPIkbgw,FtGhley31xk,eFhv9O0PEkw,5MLmWaC_VLs,qjmDSJjE3k0,6zdlzUMF9YI,nUt3GFg2v5I,MBMhSzS6LtQ,ZF1Wu7ijRa0,6jRZRVMEHc0,LTTMFqoFh3w,P9iSPwsyR4k,gKaifR7ERnk,_cluHV4LWuA,wwZbj1b24cA,meeKdZtZ0Ts,LrUoK4HZgcA,8Bd6mw6l3Cc,nchx-bb9HeY,8CO32MRsIRM,qZjn_3alvBA,T8iSYks0bz4,0L0yXt-5H8Q,kvZRLslOYcM,02Dyee6PaMs,nQE6XBgFk3I,J6Vixy_6k5Y,jtleNPW6KWc,NqmdMJf97-c,KztiduNIj9g,mXmbpUdlQiA,hbD8Ny7Haho"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUAhbkuNio6jFXf4RWqOUxpQ",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUAhbkuNio6jFXf4RWqOUxpQ",
+            "maxResults": 50,
+            "pageToken": "EAAaHlBUOkNESWlFRU14TWpKRVJETkdNVGREUVVWQ01VVQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "8pGLGU0EyG8,1ZU36omqn_Q,_IR9EZ4OdS8,cklra-DWOdE,P9X_9o_AQDw,0-cxup8--MI,LOkTBdYbTTw,wDT0yrud4S0,q8bp7lxjxAc,HOcjTeyDrok,W5I0-2Afgg0,qIeJ7Gw9v_I,3sc9gcDzPsI,QPFG9u27yeE,RLfAlh_scjU,KyEgLXRXR9A,Z-mzvTdmj8I,EobOvyYUR8Q,NKfsHLrRGkk,I6ARd3Quoxw,j9ecnCQ2vmw,PPJgTT-1vRk,U-ljj2Rra9o,nSAQv4xUbFE,-E9RYQx_Txw,E6K_5zMWcwU,1Cbz5UHGiDA,l9hurMwS39E,MyLsTynwaac,B7aV8bxncJE,nx4PIOSepdI,0ne9Pi0JNjE,F62cVbGDBwc,VwTVFl4w8YA,SYzjne4ZUq4,ivynozAgzUM,F2atvvz56bI,SkG3AG3-AUg,6x7vgDdOObc,nJlt2U_O8Ow,-bkuwrRQISM,MPV6HwlxPtU,JEaSPk-vXzU,553vxPsLFss,AKlf9IBcZa0,hnLLHqCss_s,g6RBvLmVSkQ,FREiaqHrUR4,xCHtJrZXIkg,m5Sv-k5N1kY"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "bFZYy-Klmbw,TOOrjseRttE,uCSmzDMm6ek,kqfQq5xUJcM,fo9i9Dp5vDw,uqz1sC6T1xI,MHwtK7tMSe8,KLe9VWvavv0,vVPnar1gY4g,zsbzIpkDB1U,Da1p01-QBj0,AsYXNUd_6XY,h6ukSRvYgs8,QHmfgC4Rd-w,V1Yu1d8PcOM,CYuSyzVj6AI,UOnDMPGbu_A,2lOqYCvv0bU"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UU3FSmF_c5GZGMhgUY0bcsgw",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "DLwvy-Q-3NM,p-SZsse1nEg,W4IaJgd93qE,P7LD1HzpxPc,CLr14DIH2D0,lJ5RJA80yQ4,XrU6xcMK1ZM,smvyGHDwrXU,p9aQdhklj4o,_hScQ9fQpow,KcUn8SXuq3M,Lh2T_wNewzY,A6zQ-0BxtnM,XjoJWfaLddk,4NVKVs1pUWw,53jgLRUbe38,JpaDbTX2Gv4,DfuEZmq0Fv0,_2zNl-unAmo,9nodNPCA6k4,kzT_M1H4GSw,jr_RH3dVcB8,TG2QpozQ7IU,A0K_epaxAcs,NBCyIEa7-fI,UR8GeeOEe0I,y3kijYA8j_I,xX8jIErCN14,v2oPtIJiDa0,51MV6JUcrkQ,A-bj22xTY-k,9DKmf61GCmA,OsnvC7co3Qk,fhE_cKHKDG4,QKkMQpFWkPA,OAEkdvmKUkA,X5Um6oqfkWM,WX0ruUTe17w"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUdRDB4G8gybQilHVXM3WhXQ",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "3vte9Spw08A,-YRtL1VnsyE,ONUDUlUU6mg,zJZe-XlLMqQ,-zJxLXXDyTY,2B3eTlOgYlc,9_LSh0wvPUk,SgqYMpuAb9A,t2lVMssusT0,TbqBFL33iAw,EBcbFOSM_70,jg48NAG5YAs,ZWiE2X_Y2fs,oQ4Ywt_fdm0,fljaguJNUts,1QcUDclE_vY,f0yqXwmce-M,V6W0VdbcUnE,mB2OBH0Lxqs,6Og3GhkPox4,ESJT5cBoWSQ,vbbrz6dEAmM,C6VWSUbRw2A,mdDNQxHKQ90,thdFn5dMOCQ,R4oGd-F81p0,F25W6V6QUrQ,rXUmQaZ8ToI,eu1dxlO6Gk8,Ayt0BwkpqZk,uinZ2udaGgw,2UVkXQcnKzo,_8Iute-tnDA,1_2t7nd3cy4"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "search",
+          "path": "/search",
+          "params": {
+            "part": "snippet",
+            "type": "video",
+            "maxResults": 25,
+            "q": "Buried Signal",
+            "order": "relevance",
+            "relevanceLanguage": "en"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCTdYCtuxNqIpw0C7jbrIIag"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUTdYCtuxNqIpw0C7jbrIIag",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUTdYCtuxNqIpw0C7jbrIIag",
+            "maxResults": 50,
+            "pageToken": "EAAaHlBUOkNESWlFRUl4UWtaRE1VWXhRa0ZCTWpnNE56RQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "pN1k7uRFWFk,Aw27kHhKOXM,yLWN7EqfvxY,NvuINt6e_OQ,KQMWxfVXncU,-7C0kaSb4zE,D31UseszP3M,OABHOqaN3lo,htZLqpZ37JA,2H0IJgNAJws,oaXw-lv8Ask,m08lHbU977g,FPj0BAfHAsY,sVRaUvxIya8,oJfI08nK93s,VFgD7zP9eI0,GcZDe2fkC2E,MNNZ_WrILKI,he0X7pO_URY,EZ3zpXyBnmA,UpfjEPMzStc,7Wqm_eaCq0Y,DTABZVRtcHU,tjhVQWkf2Oc,4l4UuL2AJck,BcPmt4j7DYE,iAPj3IOmNPk,LqWIwZQXMkc,OeaA71rn3ls,KXng7YfBVvA,Hkde7BRLidg,rsyuCJWvGac,wlt7ZUBKY-Q,oNtJrjJEUCg,XLOwxJ5TeF8,5i6bc2ptSFs,1bBxWmWUUXE,YJ57kur0kt0,f2ecQWv8fP8,vbHMr5USalc,UM9Pr_DgsZs,rN7AF322HBc,OUX5ISK3hi0,JpdOrTBvJ2w,MGypZ3bgxoc,B9To7chmbQ0,BqHp3Wh_ps4,l1Sp8OwvotQ,vopLqeXp_jE,IdGeI6eipwc"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "Nwv2NZd0oPc,oKGj_4oq9sk,CdIm6vCxqb4,8cfnpBAaSYg,VCVc9QiO2BM,4Uvr7UP7GZo,e_jNirHidIk,TiS4aS16l-c,I9xR0QceHhA,FOe3XFrxkho,djjx8CozORY,IW1uaDduJM0,Fl9Q9toyE5g,TJRlpFVXEuI,lB_T11i3UIs,ESfErd6O7k4,5w5L7NSyz9Y,qxvSMkKpR74,JDT5aH4W1z4,enpIGlSwslA,dULJx2WDhGs,K5HlnmOxIPo,lwxbnIJd-Oc,JXKOl7NcFjc,kzFCtVY0gvU,yDtSPvTZklc,jktn_GCnLsU,6VyQ9EdEo8Q,F1MUTBJ8TaE,f9AwotM9dkM,p6Xr51jxXD8,2U3cAR14EOY,a2IgHj_fASQ,UOw-8PxPKHA,vyPWOcczRNA,QVcRzfnQ_4s,dhxKKka_ER0,aE7Fm8gXqU0,ZxfiLrEianM"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "search",
+          "path": "/search",
+          "params": {
+            "part": "snippet",
+            "type": "video",
+            "maxResults": 25,
+            "q": "The Neural Signal",
+            "order": "relevance",
+            "relevanceLanguage": "en"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCyhUwgh0_UbMHNEsgW73GmA"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUyhUwgh0_UbMHNEsgW73GmA",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUyhUwgh0_UbMHNEsgW73GmA",
+            "maxResults": 50,
+            "pageToken": "EAAaHlBUOkNESWlFREZCUWpKRU0wWXpRemhCTlRneVJEVQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "e_pWajC4oDA,OfiZ9BRLaV0,CjM_gXci3OQ,EV6s5GfFvuc,_XJdqLbbgS8,42MlcflIyuc,hV-I9anDB8U,WBECtD_9mTY,mw5Gb-0UWdI,1H9sj5w3hIc,klcoGKA9p6o,9kTxYI771bc,Y_MlnuJRoA4,E4xC4NDCSAw,hqU5YQIBIPY,dxdkW3AY1jM,cDbeLLAa77E,kcqXoSVr7e0,fFj_cXfN50Y,8CHRoVMmvzQ,bvVBw0rsI2o,qygfnV6HRFk,YXsfJGY9e0o,eTwt5INJHrc,tHIF1K-yIkI,Rh0kP3IX6UU,PhXSmmUnGJo,7Nih_wCIt1w,5U9rhIlxZlI,-Ttb4ssJLfE,X_LfacWYs_A,BHK9AVJmgrc,yjyE0zCf6ok,IPkh7dRLzIo,QSg9Fyrg2H0,I3njL_T9a8A,B9zIqtHotmw,SbwejnuvUYo,ruYxHr4s9UA,CoWJfLBLpiU,hqdgVv2YyDE,dUSJm3fvXjY,ABfeAvkhEaw,X18QyxgcH14,0_WdcybmVro,d7cSaShrlzc,fM4lQy_uKO4,P0yHdXCLeRI,ADRB4VUwN6s,9SJiuuDenkQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "okmAMjvY20E,HA7odlwmyk4,zFZdk8lpPbs,M_oZZzoSOgA,TjI2fZpUguw,__5OU2GxeKM,XNtKx9stTHE,kpyKkEtcA44,InhcYCeDX5s,ZQh6N5hM6ic"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "search",
+          "path": "/search",
+          "params": {
+            "part": "snippet",
+            "type": "video",
+            "maxResults": 25,
+            "q": "First Humans",
+            "order": "relevance",
+            "relevanceLanguage": "en"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCquX65xaaLvumBDHm6M684g"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUquX65xaaLvumBDHm6M684g",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUquX65xaaLvumBDHm6M684g",
+            "maxResults": 50,
+            "pageToken": "EAAaHlBUOkNESWlFREl6T1RZNVFrRkZSVVkzTkRnek16WQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "8K6lvNQ1J04,Aqxy0EoyiHw,cfoYRRo9p6U,jpTrG3J7rGk,DQ8PgGlW0nU,d1KR3VpNn4g,DOD0wLimN1Y,jOYDVIx64Rk,6vQC3xBiRbM,nITnmynYSxk,QaA5-onUeYg,7Wq6XqyqQ34,XkLeAu4pAxA,CrxrlP3qpzo,aS1Z069EDNc,YDl9T7qerk4,ovR2q3N0QoU,W0JQW_GKNRs,JXTgcD3-wUU,G6lK5-WKXvE,yxwTfsmo4PM,Oz0tG9ku1jQ,ldNNY7DFyvY,ru8CISgY3Kk,mHQ0BqBkOrs,w7b1KdQrvug,cB8IioEopss,OHN5ffwjElk,gPiWOVejrwk,DRCb0x1wdFU,B7zpB3UBVIc,-F584VIN1jY,QGV7drfgleU,9s7kYGtRhMg,ZTysT5DICFo,AxBDXD-BA5I,H2f7ljKt29A,TU_c7Ps9eYA,XryKclVJc80,Rjp7eHZYnS4,nS_jPMAP5nU,oXgKqGIVrIk,9_XNT_vVm_s,yW6xY1s1m98,mHMOyFHu81Q,N9RMBMrDPgI,NeNanrFFVSg,LFncWqtWHV4,ViSzUxPHxBg,AwoTCe1xMyo"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "N5L-dAIqxQQ,q4V3EhNpf0I,fXI3ZOELSus,OFeMeJ63eE0,FbjoKULZxzQ,yqcOkvyya0c,RCgyxI0D8j4,zrtot0-iFDU,OaDzg3sstpQ,Nq5mObDx5ts,oxwkQjmjNDU,SI1cDuSALLs,wXkffSCTVRI,Ss1pMgXmaco,mSkf6f5XraA,m4IRyrtcdYI,nwdRTCCPr5Q,tt2fxsu48C4,JYmlkipdw5c,GRXTim0bi0M,EhtILan-jK4,RoPBdevVbyE,TI3AH6GB1yI,h0lZqGCsCPA,jhyTrhqO7OY,YEbkuGEdnL0,iDNeQNz6yh4,XKcZJu5xB_s,UAznbNrtCL0,Otem-uiDghA,kfcv_N4UNLc,TrB-ZGhLSlY,lzOoiZ0_ofQ,0VWvYOp9hog,fsMjSV4eD4Q"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "search",
+          "path": "/search",
+          "params": {
+            "part": "snippet",
+            "type": "video",
+            "maxResults": 25,
+            "q": "Fauna Hub",
+            "order": "relevance",
+            "relevanceLanguage": "en"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "channels",
+          "path": "/channels",
+          "params": {
+            "part": "contentDetails,statistics",
+            "id": "UCvUDditigK-FXY4SHXKPsLQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUvUDditigK-FXY4SHXKPsLQ",
+            "maxResults": 50
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUvUDditigK-FXY4SHXKPsLQ",
+            "maxResults": 50,
+            "pageToken": "EAAaHlBUOkNESWlFRVEwTlVJMU5qZzNORFkyUVRjMFJqYw"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "playlistItems",
+          "path": "/playlistItems",
+          "params": {
+            "part": "contentDetails",
+            "playlistId": "UUvUDditigK-FXY4SHXKPsLQ",
+            "maxResults": 50,
+            "pageToken": "EAAaHlBUOkNHUWlFRVV3UkVNME16UkJSak01TVVNMFJVSQ"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "X2X56IaSQ5c,Vm9FT6e6BRo,E4-AFrzbwm4,Mrvsz8vx7Iw,d5rc-cQiZzs,5pBAkT08Zfg,YNW3gozgQHQ,6QSqNbrfmOw,KR9bbR8stZE,aZ0ftHCDhcQ,j4CL4nJpy6k,vP8CUULEJi8,Kq2B79-Ix9c,H9KAfkC6WDQ,4IFWHkHDCDY,XValTZuN0xk,Hw1CeNvIuTo,pF7GwxVAuS4,6jIj0kyJOTw,iqhvr9ftG4o,iwkGqVSN_OU,y_5a1ttGcDQ,I6AwKo52Qog,5iblEYSD8BM,OyTOpgaflgg,4rYu3Lmt6hg,s6rJHVE8p0w,E4ScQTUSi7c,RJUw4aClokU,qU-fHE7CoT0,E-3Ir181rC8,xZ84scVXqTs,kMI1SyZgkCE,pL3DJ008ZnA,D9XGuG4TmUk,Npm32v4y0z8,Gz85wrRhUnU,PGoyvtLphTs,UwEv0oAQC18,TY0ABHDgcgs,2a-OpyKuBxA,50onzSrhi7Y,YC4PH7lkczk,97PrpUDV_1E,C0AiKaf60qY,4h_vm1TTN-w,Gu2v45t4ZrE,ZrDRWvMWW-Y,vAxNvk3Pi8E,RWe8_03aQBE"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "S_md1fNhhU4,E_6gfH1Slqs,2Pd1360NFBM,hnb5qzGb2nE,17F1OB25nfY,lo6_buY2klk,_GOVQYJ2aRY,m6hLeSV8b1I,7yUAZ2l9bZU,RbPJLAYznI8,WTiRcv17_WQ,SKMF4zGpKBo,Zb1k-P7ksh0,cXnQSNMpnGU,KcPNoNppRXE,Iv3-Qrn_Q6E,xst8LVMEnjc,AfXAEjGTslY,5YH9Orsbcis,_Fae7YQderc,ktJDs6YgT7I,2TlqAj-ID9I,q9gp4RHgcfA,FpiTeV-rRFU,FnbDdixG02U,TkQn9LsZqso,ubJOE6NXy6g,XQ7HrG7BlTY,zqZn0axwKwo,SjMpl1vKTbA,6C7hr2M2e6g,xLcyFWatTEM,mEyi_XqIhEs,Bw-RGrw7ohY,E5GrjFzSNc8,yh2JF-aa37A,hINBPgkvYbY,jxIPmQvkeUs,etXEelkjMXs,6CUxAg_GNVU,HqyWv5IATX8,1ROnWsuKCuc,tPBQT0_viXo,ymte5F3T__c,lUD28tPg5ok,NfqxXtA0oFo,DAAkyAx80vM,6IUsEWIYxak,mGoGREtQnls,Hy3K3EH_bTI"
+          },
+          "units": 1
+        },
+        {
+          "ts": "2026-10-23T05:02:20.123267+00:00",
+          "call": "videos",
+          "path": "/videos",
+          "params": {
+            "part": "contentDetails,statistics,snippet",
+            "id": "EVgK97zRn1Y,j1jzE-OZSxA,vFUTLGzDn0o,DKgCXXbGzwk,dL6dNi5E4Mg,isbRU2jiJhs,7NJ5l2MuBHI,SZmWHOor1SI,efPYa7_zpkw,0VqXn_odJSQ,TKHFFT2t0D4,rYVwUf-92dc,90CkbbjotT4,_aCHqDGdVV0,qPq2XRy5H6w,J-LluPDMAvc,bPkhJnILq7g,aYzyk3tk_VQ,sZ1E596Lg2Y,30tecH4aQHM,nNhrxvySHq8,RnXSHWYnvR4,VoPSaPuUEsQ,hDYIFjq7rjY,2fxfWgh44kc,RF__epMsXQI,n57gow1Vy2s,uXbbN5neyjI,psNIUTvI8UI,1kLtpf_h9Wo,oWyqXGQ48xg,045IhTxUSbw,p1B5AMrcweQ,cz03e5Slcs8,SHzDx5a241o,bKPYgIUrTtE,4unbJLX7pSE,Z_vovbXUX24,h3ObhuugOug,blu7DbZmAlE,_iuwpwB3euU,dEyitkCPUbM,qMJ180ol6Jo,99_giyaoYQ4,8ZO3zFW7aSM"
+          },
+          "units": 1
+        }
+      ],
+      "units_before": 0,
+      "units_after": 121
+    }
+  },
+  "results": [
+    {
+      "niche": "A_speculative_evolution",
+      "videoId": "Wk2Ck8fJkjc",
+      "title": "Each Sea Eater Speculative Life's Growth Phases Explained",
+      "channel": "Axtro Explainer",
+      "channelId": "UCicsylWP_2LNX0Qv9O5ktzA",
+      "subs_recorded": 41000,
+      "subs_current": 41500,
+      "subs_note": "current (API)",
+      "views": 1682140,
+      "duration_min": 9.8,
+      "publishedAt": "2026-03-16T13:22:03Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 109441.5,
+      "baseline_n_used": 20,
+      "outlier_multiple": 15.37,
+      "views_per_day": 7623.5,
+      "passes_5x": true,
+      "passes_all": true,
+      "format_check": ""
+    },
+    {
+      "niche": "A_speculative_evolution",
+      "videoId": "ZU7XbIBiNZo",
+      "title": "The Biology of Rocky the Eridian | Project Hail Mary",
+      "channel": "Storm King",
+      "channelId": "UCrwNJIAACptfW66SMly9gvA",
+      "subs_recorded": 30400,
+      "subs_current": 30500,
+      "subs_note": "current (API)",
+      "views": 978293,
+      "duration_min": 8.2,
+      "publishedAt": "2026-03-20T14:00:55Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 63475.0,
+      "baseline_n_used": 20,
+      "outlier_multiple": 15.41,
+      "views_per_day": 4516.0,
+      "passes_5x": true,
+      "passes_all": true,
+      "format_check": ""
+    },
+    {
+      "niche": "A_speculative_evolution",
+      "videoId": "i7jQee86opc",
+      "title": "I Ran Through The 4.5 Billion Years of Evolution of Life on Earth",
+      "channel": "TIMELINE RUNNER",
+      "channelId": "UCk_5OiqyQlD7lBNPfX5i7bg",
+      "subs_recorded": 1500,
+      "subs_current": 1500,
+      "subs_note": "current (API)",
+      "views": 401611,
+      "duration_min": 15.7,
+      "publishedAt": "2026-09-06T15:00:28Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 1884.0,
+      "baseline_n_used": 6,
+      "outlier_multiple": 213.17,
+      "views_per_day": 8621.1,
+      "passes_5x": true,
+      "passes_all": true,
+      "format_check": ""
+    },
+    {
+      "niche": "A_speculative_evolution",
+      "videoId": "XzH3YLsxYBg",
+      "title": "HOPE (2026) Every Alien Explained",
+      "channel": "Klassy Korea",
+      "channelId": "UCUxebm4Io_ysK4WIsBDBHRg",
+      "subs_recorded": 12100,
+      "subs_current": 12100,
+      "subs_note": "current (API)",
+      "views": 259559,
+      "duration_min": 9.6,
+      "publishedAt": "2026-09-11T13:00:02Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 22494.5,
+      "baseline_n_used": 20,
+      "outlier_multiple": 11.54,
+      "views_per_day": 6229.2,
+      "passes_5x": true,
+      "passes_all": true,
+      "format_check": ""
+    },
+    {
+      "niche": "A_speculative_evolution",
+      "videoId": "od2MkLF49vs",
+      "title": "What If Tyrannosaurids Survived? - Speculative Evolution Study",
+      "channel": "Ovskii",
+      "channelId": "UCB6SehT_iWu1GWrcUxiRz8g",
+      "subs_recorded": 3640,
+      "subs_current": 3640,
+      "subs_note": "current (API)",
+      "views": 125542,
+      "duration_min": 23.2,
+      "publishedAt": "2025-12-20T02:03:01Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 1405,
+      "baseline_n_used": 13,
+      "outlier_multiple": 89.35,
+      "views_per_day": 408.8,
+      "passes_5x": true,
+      "passes_all": true,
+      "format_check": ""
+    },
+    {
+      "niche": "A_speculative_evolution",
+      "videoId": "oKk0WAMuYcc",
+      "title": "Spider Girl Lost in an Alien World",
+      "channel": "Pilem KW",
+      "channelId": "UC8xSyroXdWvHCgPZm_wg_TQ",
+      "subs_recorded": 7080,
+      "subs_current": 7090,
+      "subs_note": "current (API)",
+      "views": 97155,
+      "duration_min": 12.4,
+      "publishedAt": "2025-12-03T08:29:42Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 4202.0,
+      "baseline_n_used": 20,
+      "outlier_multiple": 23.12,
+      "views_per_day": 300.0,
+      "passes_5x": true,
+      "passes_all": true,
+      "format_check": ""
+    },
+    {
+      "niche": "B_science_what_if",
+      "videoId": "0iBYMwGDin0",
+      "title": "What If Asteroid Apophis Hit Earth? Scientists Mapped Where It Lands",
+      "channel": "Tracer Project",
+      "channelId": "UC0Lr__HsSMj0_h0jNqKvKBA",
+      "subs_recorded": 2280,
+      "subs_current": 2420,
+      "subs_note": "current (API)",
+      "views": 3468256,
+      "duration_min": 13.5,
+      "publishedAt": "2026-10-16T07:11:59Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 436.0,
+      "baseline_n_used": 20,
+      "outlier_multiple": 7954.72,
+      "views_per_day": 501920.8,
+      "passes_5x": true,
+      "passes_all": true,
+      "format_check": ""
+    },
+    {
+      "niche": "B_science_what_if",
+      "videoId": "eGfbwdXL3wg",
+      "title": "What would happen If the Moon Crashed Into Earth?",
+      "channel": "The Last Day",
+      "channelId": "UCN6XxorahzAiDNyRnI1of2g",
+      "subs_recorded": 31700,
+      "subs_current": 32000,
+      "subs_note": "current (API)",
+      "views": 1754806,
+      "duration_min": 20.9,
+      "publishedAt": "2026-09-26T12:44:03Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 105310.5,
+      "baseline_n_used": 20,
+      "outlier_multiple": 16.66,
+      "views_per_day": 65773.9,
+      "passes_5x": true,
+      "passes_all": true,
+      "format_check": ""
+    },
+    {
+      "niche": "B_science_what_if",
+      "videoId": "hxlGCMo6ihI",
+      "title": "What Would Happen If an Asteroid Hit the Ocean?",
+      "channel": "The Last Day",
+      "channelId": "UCN6XxorahzAiDNyRnI1of2g",
+      "subs_recorded": 31700,
+      "subs_current": 32000,
+      "subs_note": "current (API)",
+      "views": 1568564,
+      "duration_min": 20.1,
+      "publishedAt": "2026-09-11T22:40:00Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 105310.5,
+      "baseline_n_used": 20,
+      "outlier_multiple": 14.89,
+      "views_per_day": 38011.5,
+      "passes_5x": true,
+      "passes_all": true,
+      "format_check": ""
+    },
+    {
+      "niche": "B_science_what_if",
+      "videoId": "c8U9B2-nKr0",
+      "title": "10 Scariest Paradoxes in Physics That Prove Reality Is Not What We Think",
+      "channel": "Space Buddy",
+      "channelId": "UCEPfByJp1U8VCpLGTZCDUiA",
+      "subs_recorded": 7250,
+      "subs_current": 7260,
+      "subs_note": "current (API)",
+      "views": 1253592,
+      "duration_min": 16.6,
+      "publishedAt": "2026-05-12T14:09:32Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 2285.0,
+      "baseline_n_used": 20,
+      "outlier_multiple": 548.62,
+      "views_per_day": 7661.6,
+      "passes_5x": true,
+      "passes_all": true,
+      "format_check": ""
+    },
+    {
+      "niche": "B_science_what_if",
+      "videoId": "yqIVm6jajfQ",
+      "title": "What Would Happen If The Sun Disappeared For One Week?",
+      "channel": "The Last Day",
+      "channelId": "UCN6XxorahzAiDNyRnI1of2g",
+      "subs_recorded": 31700,
+      "subs_current": 32000,
+      "subs_note": "current (API)",
+      "views": 728626,
+      "duration_min": 21.4,
+      "publishedAt": "2026-10-03T15:39:45Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 105310.5,
+      "baseline_n_used": 20,
+      "outlier_multiple": 6.92,
+      "views_per_day": 37255.9,
+      "passes_5x": true,
+      "passes_all": true,
+      "format_check": ""
+    },
+    {
+      "niche": "B_science_what_if",
+      "videoId": "7CShkGQxCn0",
+      "title": "What If You Couldn\u2019t Feel Pain?",
+      "channel": "Space Drift",
+      "channelId": "UCE-mdd_VKM-K_u5KmGUTP4Q",
+      "subs_recorded": 729,
+      "subs_current": 729,
+      "subs_note": "current (API)",
+      "views": 34825,
+      "duration_min": 9.1,
+      "publishedAt": "2026-10-14T23:42:35Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 169,
+      "baseline_n_used": 13,
+      "outlier_multiple": 206.07,
+      "views_per_day": 4235.6,
+      "passes_5x": true,
+      "passes_all": true,
+      "format_check": ""
+    },
+    {
+      "niche": "C_worldbuilding",
+      "videoId": "gcwNxA660iQ",
+      "title": "Why Humans Take Over Every Fantasy World",
+      "channel": "Myth & Reason",
+      "channelId": "UCYD1eqIp-khYYH-7gh628JA",
+      "subs_recorded": 15000,
+      "subs_current": 15100,
+      "subs_note": "current (API)",
+      "views": 2003842,
+      "duration_min": 9.7,
+      "publishedAt": "2026-10-04T19:00:34Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 52762.5,
+      "baseline_n_used": 20,
+      "outlier_multiple": 37.98,
+      "views_per_day": 108798.6,
+      "passes_5x": true,
+      "passes_all": true,
+      "format_check": ""
+    },
+    {
+      "niche": "C_worldbuilding",
+      "videoId": "pjLSv4WNUtY",
+      "title": "Creating a Fantasy Map From Scratch | Initial World Draft",
+      "channel": "World in Progress",
+      "channelId": "UCuV9ve9LV0ATFKvdDWAMeAg",
+      "subs_recorded": 11400,
+      "subs_current": 11400,
+      "subs_note": "current (API)",
+      "views": 466206,
+      "duration_min": 18.8,
+      "publishedAt": "2026-07-21T16:11:36Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 30146,
+      "baseline_n_used": 7,
+      "outlier_multiple": 15.46,
+      "views_per_day": 4984.3,
+      "passes_5x": true,
+      "passes_all": true,
+      "format_check": ""
+    },
+    {
+      "niche": "C_worldbuilding",
+      "videoId": "_tfuuHjSVd8",
+      "title": "The 7 Deadly Sins of Worldbuilding",
+      "channel": "Large Lads Studios",
+      "channelId": "UCUMIH5Xhx6fyfGokIxtN70g",
+      "subs_recorded": 22700,
+      "subs_current": 22700,
+      "subs_note": "current (API)",
+      "views": 373504,
+      "duration_min": 19.6,
+      "publishedAt": "2026-06-13T15:45:03Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 35369.0,
+      "baseline_n_used": 20,
+      "outlier_multiple": 10.56,
+      "views_per_day": 2839.2,
+      "passes_5x": true,
+      "passes_all": true,
+      "format_check": ""
+    },
+    {
+      "niche": "C_worldbuilding",
+      "videoId": "byHCes4UG94",
+      "title": "I Tried Worldbuilding for One Year",
+      "channel": "Daniel New",
+      "channelId": "UCtJBZL_ZOsc2BThP2QaEDjg",
+      "subs_recorded": 20600,
+      "subs_current": 20600,
+      "subs_note": "current (API)",
+      "views": 143154,
+      "duration_min": 10.0,
+      "publishedAt": "2025-12-24T04:12:56Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 246,
+      "baseline_n_used": 17,
+      "outlier_multiple": 581.93,
+      "views_per_day": 472.4,
+      "passes_5x": true,
+      "passes_all": true,
+      "format_check": ""
+    },
+    {
+      "niche": "C_worldbuilding",
+      "videoId": "xDqUjVsViEU",
+      "title": "How to Give Your Worlds Meaning Again",
+      "channel": "Halfway Gaming",
+      "channelId": "UCeU_nc2WbOpST5EgUuRR7tg",
+      "subs_recorded": 12400,
+      "subs_current": 12400,
+      "subs_note": "current (API)",
+      "views": 134356,
+      "duration_min": 8.0,
+      "publishedAt": "2026-05-23T03:00:45Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 86.0,
+      "baseline_n_used": 20,
+      "outlier_multiple": 1562.28,
+      "views_per_day": 877.7,
+      "passes_5x": true,
+      "passes_all": true,
+      "format_check": ""
+    },
+    {
+      "niche": "C_worldbuilding",
+      "videoId": "_B8FfX9dTaM",
+      "title": "Worldbuilding is the most important thing I have ever done",
+      "channel": "FacemanArt",
+      "channelId": "UCmkyBO_yVNwZQUvNQrYucuQ",
+      "subs_recorded": 1880,
+      "subs_current": 1890,
+      "subs_note": "current (API)",
+      "views": 64007,
+      "duration_min": 9.3,
+      "publishedAt": "2026-03-07T23:35:08Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 547.5,
+      "baseline_n_used": 20,
+      "outlier_multiple": 116.91,
+      "views_per_day": 279.2,
+      "passes_5x": true,
+      "passes_all": true,
+      "format_check": ""
+    },
+    {
+      "niche": "C_worldbuilding",
+      "videoId": "_Pfw_28BxXw",
+      "title": "The Hidden Worldbuilding of The Eminence In Shadow",
+      "channel": "Farz",
+      "channelId": "UC3FSmF_c5GZGMhgUY0bcsgw",
+      "subs_recorded": 826,
+      "subs_current": 838,
+      "subs_note": "current (API)",
+      "views": 32059,
+      "duration_min": 13.2,
+      "publishedAt": "2026-07-07T15:58:23Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 3612,
+      "baseline_n_used": 15,
+      "outlier_multiple": 8.88,
+      "views_per_day": 298.1,
+      "passes_5x": true,
+      "passes_all": true,
+      "format_check": ""
+    },
+    {
+      "niche": "C_worldbuilding",
+      "videoId": "HNxCEgduzZo",
+      "title": "a basket of worldbuilding ideas",
+      "channel": "Uluscri",
+      "channelId": "UCdRDB4G8gybQilHVXM3WhXQ",
+      "subs_recorded": 5210,
+      "subs_current": 5210,
+      "subs_note": "current (API)",
+      "views": 31004,
+      "duration_min": 12.9,
+      "publishedAt": "2026-01-26T18:00:28Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 860.0,
+      "baseline_n_used": 20,
+      "outlier_multiple": 36.05,
+      "views_per_day": 115.1,
+      "passes_5x": true,
+      "passes_all": true,
+      "format_check": ""
+    },
+    {
+      "niche": "A_speculative_evolution",
+      "videoId": "V26hamw-loM",
+      "title": "Day 17 Speculative Life Growth Stages Explained",
+      "channel": "Axtro Explainer",
+      "channelId": "UCicsylWP_2LNX0Qv9O5ktzA",
+      "subs_recorded": 41000,
+      "subs_current": 41500,
+      "subs_note": "current (API)",
+      "views": 389284,
+      "duration_min": 13.2,
+      "publishedAt": "2026-10-02T15:00:43Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 104891.0,
+      "baseline_n_used": 20,
+      "outlier_multiple": 3.71,
+      "views_per_day": 18911.6,
+      "passes_5x": false,
+      "passes_all": false,
+      "format_check": ""
+    },
+    {
+      "niche": "A_speculative_evolution",
+      "videoId": "FMolk7NygwQ",
+      "title": "Evolved Land Eater Speculative Life Growth Stages Explained",
+      "channel": "Axtro Explainer",
+      "channelId": "UCicsylWP_2LNX0Qv9O5ktzA",
+      "subs_recorded": 41000,
+      "subs_current": 41500,
+      "subs_note": "current (API)",
+      "views": 354142,
+      "duration_min": 10.1,
+      "publishedAt": "2026-08-19T13:26:51Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 109441.5,
+      "baseline_n_used": 20,
+      "outlier_multiple": 3.24,
+      "views_per_day": 5477.9,
+      "passes_5x": false,
+      "passes_all": false,
+      "format_check": ""
+    },
+    {
+      "niche": "A_speculative_evolution",
+      "videoId": "X01pLVSDVtA",
+      "title": "2197, A Lone Engineer Had 18 Minutes to Escape an Alien Planet \u2014 But Something Followed the Power",
+      "channel": "Mira Beyond the Screen",
+      "channelId": "UC5CxfumHhUcI_VtK78bZw4A",
+      "subs_recorded": 30100,
+      "subs_current": 30200,
+      "subs_note": "current (API)",
+      "views": 199707,
+      "duration_min": 8.1,
+      "publishedAt": "2026-07-31T23:35:36Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 131424,
+      "baseline_n_used": 13,
+      "outlier_multiple": 1.52,
+      "views_per_day": 2399.5,
+      "passes_5x": false,
+      "passes_all": false,
+      "format_check": ""
+    },
+    {
+      "niche": "A_speculative_evolution",
+      "videoId": "TEH2vHKABzc",
+      "title": "Bird Walker Speculative Life Growth Stages Explained",
+      "channel": "Axtro Explainer",
+      "channelId": "UCicsylWP_2LNX0Qv9O5ktzA",
+      "subs_recorded": 41000,
+      "subs_current": 41500,
+      "subs_note": "current (API)",
+      "views": 170239,
+      "duration_min": 11.1,
+      "publishedAt": "2026-10-20T15:47:04Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 109441.5,
+      "baseline_n_used": 20,
+      "outlier_multiple": 1.56,
+      "views_per_day": 66701.0,
+      "passes_5x": false,
+      "passes_all": false,
+      "format_check": ""
+    },
+    {
+      "niche": "A_speculative_evolution",
+      "videoId": "J5LyARt_EAk",
+      "title": "Day 2027 Speculative Life Growth Stages Explained",
+      "channel": "Axtro Explainer",
+      "channelId": "UCicsylWP_2LNX0Qv9O5ktzA",
+      "subs_recorded": 41000,
+      "subs_current": 41500,
+      "subs_note": "current (API)",
+      "views": 79515,
+      "duration_min": 13.8,
+      "publishedAt": "2026-10-13T11:57:48Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 109441.5,
+      "baseline_n_used": 20,
+      "outlier_multiple": 0.73,
+      "views_per_day": 8187.7,
+      "passes_5x": false,
+      "passes_all": false,
+      "format_check": ""
+    },
+    {
+      "niche": "A_speculative_evolution",
+      "videoId": "pbmTOiyIZtk",
+      "title": "Welcome to the Age of Monotremes (Speculative Evolution Show Pitch)",
+      "channel": "Age of Monotremes",
+      "channelId": "UCxyFoG5OeOx3qUyZsHKB8-g",
+      "subs_recorded": 13500,
+      "subs_current": 13700,
+      "subs_note": "current (API)",
+      "views": 63093,
+      "duration_min": 8.0,
+      "publishedAt": "2025-11-02T01:09:23Z",
+      "in_window": true,
+      "duration_8_25": false,
+      "subs_under_50k": true,
+      "baseline_median_views": 42947,
+      "baseline_n_used": 5,
+      "outlier_multiple": 1.47,
+      "views_per_day": 177.6,
+      "passes_5x": false,
+      "passes_all": false,
+      "format_check": ""
+    },
+    {
+      "niche": "A_speculative_evolution",
+      "videoId": "ivyEFGLSXvM",
+      "title": "11 Million Years of Animal Evolution: Ep4 (Speculative Evolution) | FUTURE FAUNA",
+      "channel": "InterWildlife",
+      "channelId": "UC933vmmlf5Fg-2AtP3vKYXg",
+      "subs_recorded": 1660,
+      "subs_current": 1670,
+      "subs_note": "current (API)",
+      "views": 58334,
+      "duration_min": 10.1,
+      "publishedAt": "2026-09-07T00:55:07Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": null,
+      "baseline_n_used": 2,
+      "outlier_multiple": null,
+      "views_per_day": 1263.4,
+      "passes_5x": false,
+      "passes_all": false,
+      "format_check": ""
+    },
+    {
+      "niche": "B_science_what_if",
+      "videoId": "ncziskWQbQA",
+      "title": "What if your IQ was 10x higher ?",
+      "channel": "Manifesting",
+      "channelId": "UCz_SvTQYp4NZal2Fu9aYA-Q",
+      "subs_recorded": 3300,
+      "subs_current": 3460,
+      "subs_note": "current (API)",
+      "views": 746133,
+      "duration_min": 8.8,
+      "publishedAt": "2026-10-14T21:57:21Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": null,
+      "baseline_n_used": 1,
+      "outlier_multiple": null,
+      "views_per_day": 89948.3,
+      "passes_5x": false,
+      "passes_all": false,
+      "format_check": ""
+    },
+    {
+      "niche": "B_science_what_if",
+      "videoId": "YznR5NmI3bc",
+      "title": "What IF You Could Stop Time?",
+      "channel": "IFOLOGY",
+      "channelId": "UCv4DniMRgnBTmfFaxeMTTLA",
+      "subs_recorded": 31500,
+      "subs_current": 34600,
+      "subs_note": "current (API)",
+      "views": 529169,
+      "duration_min": 10.2,
+      "publishedAt": "2026-10-16T19:00:10Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": null,
+      "baseline_n_used": 2,
+      "outlier_multiple": null,
+      "views_per_day": 82448.5,
+      "passes_5x": false,
+      "passes_all": false,
+      "format_check": ""
+    },
+    {
+      "niche": "B_science_what_if",
+      "videoId": "t4fQQ2msesQ",
+      "title": "What Would Happen If It Rained on Earth for an Entire Year?",
+      "channel": "The Last Day",
+      "channelId": "UCN6XxorahzAiDNyRnI1of2g",
+      "subs_recorded": 31700,
+      "subs_current": 32000,
+      "subs_note": "current (API)",
+      "views": 224194,
+      "duration_min": 19.5,
+      "publishedAt": "2026-10-18T17:14:44Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 105310.5,
+      "baseline_n_used": 20,
+      "outlier_multiple": 2.13,
+      "views_per_day": 49916.4,
+      "passes_5x": false,
+      "passes_all": false,
+      "format_check": ""
+    },
+    {
+      "niche": "B_science_what_if",
+      "videoId": "RxAhxw6Emec",
+      "title": "What IF You Could Shapeshift?",
+      "channel": "IFOLOGY",
+      "channelId": "UCv4DniMRgnBTmfFaxeMTTLA",
+      "subs_recorded": 31500,
+      "subs_current": 34600,
+      "subs_note": "current (API)",
+      "views": 195443,
+      "duration_min": 22.1,
+      "publishedAt": "2026-10-21T18:00:08Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": null,
+      "baseline_n_used": 2,
+      "outlier_multiple": null,
+      "views_per_day": 133877.7,
+      "passes_5x": false,
+      "passes_all": false,
+      "format_check": ""
+    },
+    {
+      "niche": "B_science_what_if",
+      "videoId": "qDM4u0o_4B0",
+      "title": "What IF You Could Control Gravity?",
+      "channel": "IFOLOGY",
+      "channelId": "UCv4DniMRgnBTmfFaxeMTTLA",
+      "subs_recorded": 31500,
+      "subs_current": 34600,
+      "subs_note": "current (API)",
+      "views": 191790,
+      "duration_min": 18.9,
+      "publishedAt": "2026-10-17T18:00:08Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": null,
+      "baseline_n_used": 2,
+      "outlier_multiple": null,
+      "views_per_day": 35127.3,
+      "passes_5x": false,
+      "passes_all": false,
+      "format_check": ""
+    },
+    {
+      "niche": "B_science_what_if",
+      "videoId": "kUY6LPPtM8U",
+      "title": "What IF You Could Copy Powers?",
+      "channel": "IFOLOGY",
+      "channelId": "UCv4DniMRgnBTmfFaxeMTTLA",
+      "subs_recorded": 31500,
+      "subs_current": 34600,
+      "subs_note": "current (API)",
+      "views": 152647,
+      "duration_min": 10.5,
+      "publishedAt": "2026-10-20T19:00:11Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": null,
+      "baseline_n_used": 2,
+      "outlier_multiple": null,
+      "views_per_day": 63125.2,
+      "passes_5x": false,
+      "passes_all": false,
+      "format_check": ""
+    },
+    {
+      "niche": "B_science_what_if",
+      "videoId": "ggRf0ZYzrr8",
+      "title": "What If You Could Breathe Underwater?",
+      "channel": "Ifsphere",
+      "channelId": "UCAWsiuGuCzzavd_2YOBR7eA",
+      "subs_recorded": 1270,
+      "subs_current": 1440,
+      "subs_note": "current (API)",
+      "views": 128451,
+      "duration_min": 9.2,
+      "publishedAt": "2026-10-20T15:32:28Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": null,
+      "baseline_n_used": 0,
+      "outlier_multiple": null,
+      "views_per_day": 50129.0,
+      "passes_5x": false,
+      "passes_all": false,
+      "format_check": ""
+    },
+    {
+      "niche": "B_science_what_if",
+      "videoId": "j9jjTlzVX0Y",
+      "title": "What IF You Had Infinite IQ?",
+      "channel": "IFopposite ",
+      "channelId": "UCW_J4cG6NAblyYm-F2BwN9A",
+      "subs_recorded": 2330,
+      "subs_current": 2380,
+      "subs_note": "current (API)",
+      "views": 121067,
+      "duration_min": 9.4,
+      "publishedAt": "2026-10-16T20:40:07Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": null,
+      "baseline_n_used": 1,
+      "outlier_multiple": null,
+      "views_per_day": 19069.4,
+      "passes_5x": false,
+      "passes_all": false,
+      "format_check": ""
+    },
+    {
+      "niche": "B_science_what_if",
+      "videoId": "KzdIyAqm15c",
+      "title": "What If You Doubled in Size Every Hour?",
+      "channel": "One Small If",
+      "channelId": "UCLSZ9gGZkwioZMDSBClwxgg",
+      "subs_recorded": 2560,
+      "subs_current": 2750,
+      "subs_note": "current (API)",
+      "views": 112685,
+      "duration_min": 8.5,
+      "publishedAt": "2026-10-19T15:00:13Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": null,
+      "baseline_n_used": 0,
+      "outlier_multiple": null,
+      "views_per_day": 31434.1,
+      "passes_5x": false,
+      "passes_all": false,
+      "format_check": ""
+    },
+    {
+      "niche": "B_science_what_if",
+      "videoId": "G7d42-W5Yak",
+      "title": "What IF You Could Walk Through Walls ?",
+      "channel": "Price of If",
+      "channelId": "UCGDYkZRg0XKIc3Oa2v-XgNA",
+      "subs_recorded": 1280,
+      "subs_current": 1540,
+      "subs_note": "current (API)",
+      "views": 60484,
+      "duration_min": 9.2,
+      "publishedAt": "2026-10-20T15:00:26Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": null,
+      "baseline_n_used": 2,
+      "outlier_multiple": null,
+      "views_per_day": 23401.2,
+      "passes_5x": false,
+      "passes_all": false,
+      "format_check": ""
+    },
+    {
+      "niche": "C_worldbuilding",
+      "videoId": "2wwcKrI44ks",
+      "title": "Your Fantasy World Has a Metal Problem",
+      "channel": "The Grainbound",
+      "channelId": "UCSeuqv9fNSUJT5VfcmslTBg",
+      "subs_recorded": 47100,
+      "subs_current": 47200,
+      "subs_note": "current (API)",
+      "views": 418237,
+      "duration_min": 14.4,
+      "publishedAt": "2026-07-11T18:00:07Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 95045.0,
+      "baseline_n_used": 20,
+      "outlier_multiple": 4.4,
+      "views_per_day": 4042.5,
+      "passes_5x": false,
+      "passes_all": false,
+      "format_check": ""
+    },
+    {
+      "niche": "C_worldbuilding",
+      "videoId": "1wAyQUAD25E",
+      "title": "Your Fantasy Capital Is Mathematically Impossible",
+      "channel": "The Grainbound",
+      "channelId": "UCSeuqv9fNSUJT5VfcmslTBg",
+      "subs_recorded": 47100,
+      "subs_current": 47200,
+      "subs_note": "current (API)",
+      "views": 372906,
+      "duration_min": 8.5,
+      "publishedAt": "2026-05-30T17:01:33Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 95045.0,
+      "baseline_n_used": 20,
+      "outlier_multiple": 3.92,
+      "views_per_day": 2562.9,
+      "passes_5x": false,
+      "passes_all": false,
+      "format_check": ""
+    },
+    {
+      "niche": "C_worldbuilding",
+      "videoId": "Ru6aBKEdJ-Q",
+      "title": "10 Worldbuilding Crimes You\u2019re Probably Guilty Of",
+      "channel": "Flamey The GM",
+      "channelId": "UCAhbkuNio6jFXf4RWqOUxpQ",
+      "subs_recorded": 27100,
+      "subs_current": 27100,
+      "subs_note": "current (API)",
+      "views": 61100,
+      "duration_min": 12.9,
+      "publishedAt": "2026-01-12T17:01:00Z",
+      "in_window": true,
+      "duration_8_25": true,
+      "subs_under_50k": true,
+      "baseline_median_views": 45242.0,
+      "baseline_n_used": 20,
+      "outlier_multiple": 1.35,
+      "views_per_day": 215.5,
+      "passes_5x": false,
+      "passes_all": false,
+      "format_check": ""
+    }
+  ]
+}

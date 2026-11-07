@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import time
@@ -22,6 +23,47 @@ from tools.base_tool import (
 )
 
 
+def _voice_search_dirs() -> list[Path]:
+    """Directories a bare voice name is resolved against, in order."""
+
+    dirs: list[Path] = []
+    env_dir = os.environ.get("PIPER_VOICES_DIR")
+    if env_dir:
+        dirs.append(Path(env_dir).expanduser())
+    dirs.append(Path.home() / ".local" / "share" / "piper" / "voices")
+    dirs.append(Path.cwd())
+    return dirs
+
+
+def resolve_voice_model(model: str) -> Path:
+    """Resolve a piper voice argument to an existing ``.onnx`` file.
+
+    ``python -m piper.download_voices <voice>`` drops the voice into the
+    current directory unless ``--download-dir`` is given, so a bare voice
+    name like ``en_US-lessac-medium`` only works when it happens to sit in
+    the process cwd. This resolves the name against ``PIPER_VOICES_DIR``,
+    the conventional user voice directory and the cwd, and raises a clear
+    error naming the fix when nothing matches.
+    """
+
+    candidate = Path(model).expanduser()
+    if candidate.exists():
+        return candidate
+
+    for base in _voice_search_dirs():
+        for suffix in ("", ".onnx"):
+            resolved = base / f"{model}{suffix}"
+            if resolved.exists():
+                return resolved
+
+    searched = ", ".join(str(d) for d in _voice_search_dirs())
+    raise FileNotFoundError(
+        f"Piper voice {model!r} not found. Download it with "
+        f"`python -m piper.download_voices {model}` (optionally with "
+        f"--download-dir), or set PIPER_VOICES_DIR. Searched: {searched}"
+    )
+
+
 class PiperTTS(BaseTool):
     name = "piper_tts"
     version = "0.1.0"
@@ -39,7 +81,10 @@ class PiperTTS(BaseTool):
         "  pip install piper-tts\n"
         "Or download from https://github.com/rhasspy/piper/releases\n"
         "Then download a voice model:\n"
-        "  piper --download-dir ~/.piper/models --model en_US-lessac-medium"
+        "  piper --download-dir ~/.local/share/piper/voices --model en_US-lessac-medium\n"
+        "Or: python -m piper.download_voices --download-dir ~/.local/share/piper/voices en_US-lessac-medium\n"
+        "A bare voice name is resolved against $PIPER_VOICES_DIR, then\n"
+        "~/.local/share/piper/voices, then the current directory."
     )
     agent_skills = ["text-to-speech"]
 
@@ -70,6 +115,7 @@ class PiperTTS(BaseTool):
             "model": {
                 "type": "string",
                 "default": "en_US-lessac-medium",
+                "description": "Voice name or path to an .onnx voice. A bare name is resolved against $PIPER_VOICES_DIR, ~/.local/share/piper/voices and the cwd.",
             },
             "speaker_id": {
                 "type": "integer",
@@ -123,7 +169,7 @@ class PiperTTS(BaseTool):
         proc = subprocess.run(
             [
                 "piper",
-                "--model", inputs.get("model", "en_US-lessac-medium"),
+                "--model", str(resolve_voice_model(inputs.get("model", "en_US-lessac-medium"))),
                 "--speaker", str(inputs.get("speaker_id", 0)),
                 "--length-scale", str(inputs.get("length_scale", 1.0)),
                 "--sentence-silence", str(inputs.get("sentence_silence", 0.3)),

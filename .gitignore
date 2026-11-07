@@ -104,3 +104,5 @@ venv/
 
 # Local Wan / diffusers GPU environment
 .venv-wan/
+models/*.zip
+models/antelopev2.zip

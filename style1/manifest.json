@@ -1,0 +1,98 @@
+{
+  "gpu": {
+    "diffusers": "0.40.0",
+    "transformers": "5.16.1",
+    "huggingface_hub": "1.29.0",
+    "torch": "2.11.0+cu128",
+    "accelerate": "1.14.0",
+    "safetensors": "0.8.0",
+    "numpy": "2.1.3",
+    "pillow": "13.0.0",
+    "torchvision": "0.26.0+cu128",
+    "sentencepiece": "0.2.2",
+    "protobuf": "5.29.5",
+    "torch_cuda": "12.8",
+    "gpu": "Tesla T4",
+    "vram_total_gb": 14.56
+  },
+  "vram_total_gb": 16.0,
+  "models": {
+    "cheyenne": {
+      "model": "cheyenne",
+      "license": "CreativeML Open RAIL++-M Addendum (SDXL family; commercial allowed by default; Civitai permission icons not verifiable \u2014 Civitai returned 403)",
+      "peak_vram_mb": 6736.74,
+      "load_seconds": 43.514,
+      "gen_seconds_per_image": 28.5461,
+      "oom": false,
+      "fits_t4": true,
+      "error": null,
+      "generations": [
+        {
+          "render_id": "style_cheyenne_s01",
+          "scene_id": "s01",
+          "file": "style_cheyenne_s01.png",
+          "sha256": "32c5552930ea76e51aea7a3052785c710d444c4adfa16926a9e15a8c49f61db5",
+          "bytes": 1664820,
+          "seed": 1001,
+          "seconds": 29.8749,
+          "model": "cheyenne"
+        },
+        {
+          "render_id": "style_cheyenne_s03",
+          "scene_id": "s03",
+          "file": "style_cheyenne_s03.png",
+          "sha256": "27fed26e3efc75b21a2a327a7f771f8ce5e381536f7f5b9513a684b0eb877f07",
+          "bytes": 1749055,
+          "seed": 1001,
+          "seconds": 27.9847,
+          "model": "cheyenne"
+        },
+        {
+          "render_id": "style_cheyenne_s05",
+          "scene_id": "s05",
+          "file": "style_cheyenne_s05.png",
+          "sha256": "6ef8b0b403cd2be41964cb6f65ca604da707581b09e4467c03a9c1cb65e61c00",
+          "bytes": 1118504,
+          "seed": 1001,
+          "seconds": 27.7787,
+          "model": "cheyenne"
+        }
+      ]
+    },
+    "flux_klein_4b": {
+      "model": "flux_klein_4b",
+      "license": "Apache-2.0",
+      "peak_vram_mb": null,
+      "load_seconds": null,
+      "gen_seconds_per_image": null,
+      "oom": false,
+      "fits_t4": null,
+      "error": "Traceback (most recent call last):\n  File \"/kaggle/src/script.py\", line 268, in _test_flux_klein\n    pipe = FluxPipeline.from_pretrained(\n        FLUX_REPO, torch_dtype=torch.bfloat16)\n  File \"/usr/local/lib/python3.13/dist-packages/huggingface_hub/utils/_validators.py\", line 114, in _inner_fn\n    return fn(*args, **kwargs)\n  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/pipeline_utils.py\", line 1100, in from_pretrained\n    raise ValueError(\n        f\"Pipeline {pipeline_class} expected {expected_modules}, but only {passed_modules} were passed.\"\n    )\nValueError: Pipeline <class 'diffusers.pipelines.flux.pipeline_flux.FluxPipeline'> expected ['feature_extractor', 'image_encoder', 'scheduler', 'text_encoder', 'text_encoder_2', 'tokenizer', 'tokenizer_2', 'transformer', 'vae'], but only {'text_encoder', 'transformer', 'tokenizer', 'scheduler', 'vae'} were passed.\n",
+      "generations": []
+    }
+  },
+  "style_notes": {
+    "cheyenne": "Open RAIL++-M Addendum \u2014 commercial OK by default; Civitai icons unverified (403)",
+    "flux_klein_4b": "Apache-2.0 \u2014 fully FOSS, commercially usable"
+  },
+  "ip_adapter_flux_compat": {
+    "compatible": false,
+    "reason": "IP-Adapter Plus is built on SDXL's cross-attention / UNet layout. FLUX uses a different transformer-based architecture with joint attention blocks; no official IP-Adapter for FLUX exists in diffusers. A different adapter (e.g. FLUX-IP-Adapter community port) would be needed, none verified FOSS on a T4."
+  },
+  "versions": {
+    "diffusers": "0.37.0",
+    "transformers": "4.57.6",
+    "huggingface_hub": "0.36.2",
+    "torch": "2.11.0+cu128",
+    "accelerate": "1.14.0",
+    "safetensors": "0.8.0",
+    "numpy": "2.1.3",
+    "pillow": "13.0.0",
+    "torchvision": "0.26.0+cu128",
+    "sentencepiece": "0.2.2",
+    "protobuf": "5.29.5",
+    "torch_cuda": "12.8",
+    "gpu": "Tesla T4",
+    "vram_total_gb": 14.56
+  }
+}

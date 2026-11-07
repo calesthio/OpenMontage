@@ -1,0 +1,1 @@
+FAILED: RuntimeError: Input type (torch.cuda.HalfTensor) and weight type (torch.HalfTensor) should be the same

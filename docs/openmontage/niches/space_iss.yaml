@@ -1,0 +1,47 @@
+version: "1.0"
+niche_id: space_iss
+display_name: "Space — ISS Earth View & Cupola"
+
+# --- 3a. Allowed sources + per-source storage policy ---
+allowed_sources:
+  - name: nasa
+    storage_policy: per_project_asset
+  - name: archive_org
+    storage_policy: per_project_asset
+  - name: wikimedia
+    storage_policy: per_project_asset
+
+# --- 3b. Excluded content (hard reject at footage/editorial) ---
+excluded_content:
+  - identifiable_private_persons_without_clearance
+  - nasa_insignia_or_emblem  # 14 CFR 1221; cropped out where present
+  - third_party_credit_required
+
+# --- 3c. Required primary document types ---
+required_primary_doc_types:
+  - NASA_IMAGES_API      # images.nasa.gov record page (reachable)
+  - NASA_GOV_STATION     # nasa.gov/station (reachable)
+  - NASA_GOV_CUPOLA      # nasa.gov cupola page (reachable)
+
+# --- 3d. Viability gate ---
+viability_gate:
+  min_licensed_video_clips: 8
+  min_primary_docs: 2
+
+# --- 3e. Added-value gate ---
+added_value_gate:
+  min_narration_coverage: 0.90
+  min_original_diagrams_per_90s: 1
+  max_unannotated_archive_clip_s: 20
+  max_still_only_sequence_s: 15
+  claim_source_card_policy: every_claim
+  ai_illustration_max_share: 0.15
+
+# --- 3f. Episode templates (>= 3 distinct structures) ---
+episode_templates:
+  - id: iss_orbit_chronology
+    description: "One orbit start-to-finish: altitude/speed, 90-min period, 16 sunrises, cupola view, Earth observation purpose."
+  - id: cupola_anatomy
+    description: "One feature: the cupola — seven windows, delivery (Tranquility, 2010-02-09), robotics workstation/Canadarm2, docking observation, photography."
+  - id: earth_observation_record
+    description: "Earth observation from orbit: hurricanes, volcanoes, city lights, glaciers; decades-long record; climate research; overview effect."

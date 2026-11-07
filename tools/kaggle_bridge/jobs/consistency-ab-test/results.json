@@ -1,0 +1,1734 @@
+{
+  "protocol": "tools/kaggle_bridge/jobs/consistency-ab-test/test_protocol.json",
+  "started_utc": "2026-10-26T14:56:12Z",
+  "environment": {
+    "torch": "2.11.0+cu128",
+    "cuda_available": true,
+    "diffusers": "0.40.0",
+    "device": "Tesla T4",
+    "total_vram_gb": 14.56
+  },
+  "tests": [
+    {
+      "test_name": "A_baseline",
+      "load_seconds": 4.28,
+      "peak_vram_mb_after_load": 9.1,
+      "peak_vram_mb_overall": 5196.0,
+      "oom": null,
+      "passed": true,
+      "renders": [
+        {
+          "test": "A_baseline",
+          "seed": 42,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "A_baseline_42_crowd_portrait_close_up.png",
+          "status": "ok",
+          "seconds": 18.346,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 123,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "A_baseline_123_crowd_portrait_close_up.png",
+          "status": "ok",
+          "seconds": 18.255,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 777,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "A_baseline_777_crowd_portrait_close_up.png",
+          "status": "ok",
+          "seconds": 18.821,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 2026,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "A_baseline_2026_crowd_portrait_close_up.png",
+          "status": "ok",
+          "seconds": 19.938,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 9001,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "A_baseline_9001_crowd_portrait_close_up.png",
+          "status": "ok",
+          "seconds": 21.13,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 42,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "A_baseline_42_side_profile.png",
+          "status": "ok",
+          "seconds": 20.28,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 123,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "A_baseline_123_side_profile.png",
+          "status": "ok",
+          "seconds": 19.78,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 777,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "A_baseline_777_side_profile.png",
+          "status": "ok",
+          "seconds": 20.083,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 2026,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "A_baseline_2026_side_profile.png",
+          "status": "ok",
+          "seconds": 20.393,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 9001,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "A_baseline_9001_side_profile.png",
+          "status": "ok",
+          "seconds": 20.196,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 42,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "A_baseline_42_full_body_standing.png",
+          "status": "ok",
+          "seconds": 20.174,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 123,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "A_baseline_123_full_body_standing.png",
+          "status": "ok",
+          "seconds": 20.262,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 777,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "A_baseline_777_full_body_standing.png",
+          "status": "ok",
+          "seconds": 20.365,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 2026,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "A_baseline_2026_full_body_standing.png",
+          "status": "ok",
+          "seconds": 20.292,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 9001,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "A_baseline_9001_full_body_standing.png",
+          "status": "ok",
+          "seconds": 20.143,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 42,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "A_baseline_42_dynamic_action_pose.png",
+          "status": "ok",
+          "seconds": 20.286,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 123,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "A_baseline_123_dynamic_action_pose.png",
+          "status": "ok",
+          "seconds": 20.287,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 777,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "A_baseline_777_dynamic_action_pose.png",
+          "status": "ok",
+          "seconds": 20.146,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 2026,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "A_baseline_2026_dynamic_action_pose.png",
+          "status": "ok",
+          "seconds": 20.205,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 9001,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "A_baseline_9001_dynamic_action_pose.png",
+          "status": "ok",
+          "seconds": 20.343,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 42,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "A_baseline_42_different_lighting.png",
+          "status": "ok",
+          "seconds": 20.204,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 123,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "A_baseline_123_different_lighting.png",
+          "status": "ok",
+          "seconds": 20.214,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 777,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "A_baseline_777_different_lighting.png",
+          "status": "ok",
+          "seconds": 20.253,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 2026,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "A_baseline_2026_different_lighting.png",
+          "status": "ok",
+          "seconds": 20.128,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 9001,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "A_baseline_9001_different_lighting.png",
+          "status": "ok",
+          "seconds": 20.271,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 42,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "A_baseline_42_different_emotion.png",
+          "status": "ok",
+          "seconds": 20.304,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 123,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "A_baseline_123_different_emotion.png",
+          "status": "ok",
+          "seconds": 20.109,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 777,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "A_baseline_777_different_emotion.png",
+          "status": "ok",
+          "seconds": 20.347,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 2026,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "A_baseline_2026_different_emotion.png",
+          "status": "ok",
+          "seconds": 20.325,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 9001,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "A_baseline_9001_different_emotion.png",
+          "status": "ok",
+          "seconds": 20.287,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 42,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "A_baseline_42_different_outfit_detail.png",
+          "status": "ok",
+          "seconds": 20.117,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 123,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "A_baseline_123_different_outfit_detail.png",
+          "status": "ok",
+          "seconds": 20.206,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 777,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "A_baseline_777_different_outfit_detail.png",
+          "status": "ok",
+          "seconds": 20.3,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 2026,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "A_baseline_2026_different_outfit_detail.png",
+          "status": "ok",
+          "seconds": 20.314,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 9001,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "A_baseline_9001_different_outfit_detail.png",
+          "status": "ok",
+          "seconds": 20.154,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 42,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "A_baseline_42_different_background.png",
+          "status": "ok",
+          "seconds": 20.198,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 123,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "A_baseline_123_different_background.png",
+          "status": "ok",
+          "seconds": 20.288,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 777,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "A_baseline_777_different_background.png",
+          "status": "ok",
+          "seconds": 20.233,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 2026,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "A_baseline_2026_different_background.png",
+          "status": "ok",
+          "seconds": 20.276,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 9001,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "A_baseline_9001_different_background.png",
+          "status": "ok",
+          "seconds": 20.197,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 42,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "A_baseline_42_group_scene_other_character.png",
+          "status": "ok",
+          "seconds": 20.21,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 123,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "A_baseline_123_group_scene_other_character.png",
+          "status": "ok",
+          "seconds": 20.266,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 777,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "A_baseline_777_group_scene_other_character.png",
+          "status": "ok",
+          "seconds": 20.267,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 2026,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "A_baseline_2026_group_scene_other_character.png",
+          "status": "ok",
+          "seconds": 20.221,
+          "peak_vram_mb": 5196.0
+        },
+        {
+          "test": "A_baseline",
+          "seed": 9001,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "A_baseline_9001_group_scene_other_character.png",
+          "status": "ok",
+          "seconds": 20.282,
+          "peak_vram_mb": 5196.0
+        }
+      ]
+    },
+    {
+      "test_name": "B_plus_face",
+      "load_seconds": 34.39,
+      "peak_vram_mb_after_load": 9.1,
+      "peak_vram_mb_overall": 5106.2,
+      "oom": null,
+      "passed": true,
+      "renders": [
+        {
+          "test": "B_plus_face",
+          "seed": 42,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "B_plus_face_42_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 123,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "B_plus_face_123_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 777,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "B_plus_face_777_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 2026,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "B_plus_face_2026_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 9001,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "B_plus_face_9001_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 42,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "B_plus_face_42_side_profile.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 123,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "B_plus_face_123_side_profile.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 777,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "B_plus_face_777_side_profile.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 2026,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "B_plus_face_2026_side_profile.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 9001,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "B_plus_face_9001_side_profile.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 42,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "B_plus_face_42_full_body_standing.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 123,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "B_plus_face_123_full_body_standing.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 777,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "B_plus_face_777_full_body_standing.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 2026,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "B_plus_face_2026_full_body_standing.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 9001,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "B_plus_face_9001_full_body_standing.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 42,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "B_plus_face_42_dynamic_action_pose.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 123,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "B_plus_face_123_dynamic_action_pose.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 777,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "B_plus_face_777_dynamic_action_pose.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 2026,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "B_plus_face_2026_dynamic_action_pose.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 9001,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "B_plus_face_9001_dynamic_action_pose.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 42,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "B_plus_face_42_different_lighting.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 123,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "B_plus_face_123_different_lighting.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 777,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "B_plus_face_777_different_lighting.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 2026,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "B_plus_face_2026_different_lighting.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 9001,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "B_plus_face_9001_different_lighting.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 42,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "B_plus_face_42_different_emotion.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 123,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "B_plus_face_123_different_emotion.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 777,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "B_plus_face_777_different_emotion.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 2026,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "B_plus_face_2026_different_emotion.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 9001,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "B_plus_face_9001_different_emotion.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 42,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "B_plus_face_42_different_outfit_detail.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 123,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "B_plus_face_123_different_outfit_detail.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 777,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "B_plus_face_777_different_outfit_detail.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 2026,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "B_plus_face_2026_different_outfit_detail.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 9001,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "B_plus_face_9001_different_outfit_detail.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 42,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "B_plus_face_42_different_background.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 123,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "B_plus_face_123_different_background.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 777,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "B_plus_face_777_different_background.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 2026,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "B_plus_face_2026_different_background.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 9001,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "B_plus_face_9001_different_background.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 42,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "B_plus_face_42_group_scene_other_character.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 123,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "B_plus_face_123_group_scene_other_character.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 777,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "B_plus_face_777_group_scene_other_character.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 2026,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "B_plus_face_2026_group_scene_other_character.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "B_plus_face",
+          "seed": 9001,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "B_plus_face_9001_group_scene_other_character.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        }
+      ]
+    },
+    {
+      "test_name": "C_plus_fullbody",
+      "load_seconds": 64.01,
+      "peak_vram_mb_after_load": 4853.8,
+      "peak_vram_mb_overall": 5106.2,
+      "oom": null,
+      "passed": true,
+      "renders": [
+        {
+          "test": "C_plus_fullbody",
+          "seed": 42,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "C_plus_fullbody_42_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 123,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "C_plus_fullbody_123_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 777,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "C_plus_fullbody_777_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 2026,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "C_plus_fullbody_2026_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 9001,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "C_plus_fullbody_9001_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 42,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "C_plus_fullbody_42_side_profile.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 123,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "C_plus_fullbody_123_side_profile.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 777,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "C_plus_fullbody_777_side_profile.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 2026,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "C_plus_fullbody_2026_side_profile.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 9001,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "C_plus_fullbody_9001_side_profile.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 42,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "C_plus_fullbody_42_full_body_standing.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 123,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "C_plus_fullbody_123_full_body_standing.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 777,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "C_plus_fullbody_777_full_body_standing.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 2026,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "C_plus_fullbody_2026_full_body_standing.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 9001,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "C_plus_fullbody_9001_full_body_standing.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 42,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "C_plus_fullbody_42_dynamic_action_pose.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 123,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "C_plus_fullbody_123_dynamic_action_pose.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 777,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "C_plus_fullbody_777_dynamic_action_pose.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 2026,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "C_plus_fullbody_2026_dynamic_action_pose.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 9001,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "C_plus_fullbody_9001_dynamic_action_pose.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 42,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "C_plus_fullbody_42_different_lighting.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 123,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "C_plus_fullbody_123_different_lighting.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 777,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "C_plus_fullbody_777_different_lighting.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 2026,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "C_plus_fullbody_2026_different_lighting.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 9001,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "C_plus_fullbody_9001_different_lighting.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 42,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "C_plus_fullbody_42_different_emotion.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 123,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "C_plus_fullbody_123_different_emotion.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 777,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "C_plus_fullbody_777_different_emotion.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 2026,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "C_plus_fullbody_2026_different_emotion.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 9001,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "C_plus_fullbody_9001_different_emotion.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 42,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "C_plus_fullbody_42_different_outfit_detail.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 123,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "C_plus_fullbody_123_different_outfit_detail.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 777,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "C_plus_fullbody_777_different_outfit_detail.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 2026,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "C_plus_fullbody_2026_different_outfit_detail.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 9001,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "C_plus_fullbody_9001_different_outfit_detail.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 42,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "C_plus_fullbody_42_different_background.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 123,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "C_plus_fullbody_123_different_background.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 777,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "C_plus_fullbody_777_different_background.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 2026,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "C_plus_fullbody_2026_different_background.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 9001,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "C_plus_fullbody_9001_different_background.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 42,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "C_plus_fullbody_42_group_scene_other_character.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 123,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "C_plus_fullbody_123_group_scene_other_character.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 777,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "C_plus_fullbody_777_group_scene_other_character.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 2026,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "C_plus_fullbody_2026_group_scene_other_character.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "C_plus_fullbody",
+          "seed": 9001,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "C_plus_fullbody_9001_group_scene_other_character.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        }
+      ]
+    },
+    {
+      "test_name": "D_plus_plusface_combo",
+      "load_seconds": 48.51,
+      "peak_vram_mb_after_load": 4853.8,
+      "peak_vram_mb_overall": 9945.9,
+      "oom": null,
+      "passed": true,
+      "renders": [
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 42,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "D_plus_plusface_combo_42_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 123,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "D_plus_plusface_combo_123_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 777,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "D_plus_plusface_combo_777_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 2026,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "D_plus_plusface_combo_2026_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 9001,
+          "scenario": "crowd_portrait_close_up",
+          "scenario_desc": "crowd portrait close-up, surrounded by blurred people",
+          "file": "D_plus_plusface_combo_9001_crowd_portrait_close_up.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 42,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "D_plus_plusface_combo_42_side_profile.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 123,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "D_plus_plusface_combo_123_side_profile.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 777,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "D_plus_plusface_combo_777_side_profile.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 2026,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "D_plus_plusface_combo_2026_side_profile.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 9001,
+          "scenario": "side_profile",
+          "scenario_desc": "side profile view, looking to the left",
+          "file": "D_plus_plusface_combo_9001_side_profile.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 42,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "D_plus_plusface_combo_42_full_body_standing.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 123,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "D_plus_plusface_combo_123_full_body_standing.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 777,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "D_plus_plusface_combo_777_full_body_standing.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 2026,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "D_plus_plusface_combo_2026_full_body_standing.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 9001,
+          "scenario": "full_body_standing",
+          "scenario_desc": "full body standing, head to toe",
+          "file": "D_plus_plusface_combo_9001_full_body_standing.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 42,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "D_plus_plusface_combo_42_dynamic_action_pose.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 123,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "D_plus_plusface_combo_123_dynamic_action_pose.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 777,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "D_plus_plusface_combo_777_dynamic_action_pose.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 2026,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "D_plus_plusface_combo_2026_dynamic_action_pose.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 9001,
+          "scenario": "dynamic_action_pose",
+          "scenario_desc": "dynamic action pose, leaping mid-air",
+          "file": "D_plus_plusface_combo_9001_dynamic_action_pose.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 42,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "D_plus_plusface_combo_42_different_lighting.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 123,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "D_plus_plusface_combo_123_different_lighting.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 777,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "D_plus_plusface_combo_777_different_lighting.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 2026,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "D_plus_plusface_combo_2026_different_lighting.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 9001,
+          "scenario": "different_lighting",
+          "scenario_desc": "dramatic chiaroscuro lighting, strong shadows",
+          "file": "D_plus_plusface_combo_9001_different_lighting.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 42,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "D_plus_plusface_combo_42_different_emotion.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 123,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "D_plus_plusface_combo_123_different_emotion.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 777,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "D_plus_plusface_combo_777_different_emotion.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 2026,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "D_plus_plusface_combo_2026_different_emotion.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 9001,
+          "scenario": "different_emotion",
+          "scenario_desc": "joyful emotion, laughing, big smile",
+          "file": "D_plus_plusface_combo_9001_different_emotion.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 42,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "D_plus_plusface_combo_42_different_outfit_detail.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 123,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "D_plus_plusface_combo_123_different_outfit_detail.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 777,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "D_plus_plusface_combo_777_different_outfit_detail.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 2026,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "D_plus_plusface_combo_2026_different_outfit_detail.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 9001,
+          "scenario": "different_outfit_detail",
+          "scenario_desc": "blue denim jacket with embroidered patch detail visible",
+          "file": "D_plus_plusface_combo_9001_different_outfit_detail.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 42,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "D_plus_plusface_combo_42_different_background.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 123,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "D_plus_plusface_combo_123_different_background.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 777,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "D_plus_plusface_combo_777_different_background.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 2026,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "D_plus_plusface_combo_2026_different_background.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 9001,
+          "scenario": "different_background",
+          "scenario_desc": "standing in an autumn forest with colorful leaves",
+          "file": "D_plus_plusface_combo_9001_different_background.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 42,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "D_plus_plusface_combo_42_group_scene_other_character.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 123,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "D_plus_plusface_combo_123_group_scene_other_character.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 777,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "D_plus_plusface_combo_777_group_scene_other_character.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 2026,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "D_plus_plusface_combo_2026_group_scene_other_character.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        },
+        {
+          "test": "D_plus_plusface_combo",
+          "seed": 9001,
+          "scenario": "group_scene_other_character",
+          "scenario_desc": "group scene with other character, standing next to a second person",
+          "file": "D_plus_plusface_combo_9001_group_scene_other_character.png",
+          "status": "error",
+          "error": "not enough values to unpack (expected 2, got 1)"
+        }
+      ]
+    }
+  ],
+  "conclusion": {
+    "best_test": "A_baseline",
+    "best_peak_vram_mb": 5196.0,
+    "passed_with_images": [
+      "A_baseline"
+    ],
+    "no_oom_but_zero_images": [
+      "B_plus_face",
+      "C_plus_fullbody",
+      "D_plus_plusface_combo"
+    ],
+    "oom_tests": [],
+    "note": "B/C/D: geen OOM, но 0/45 картин из-за несовместимости h94/IP-Adapter image_embeds API с diffusers 0.40 (ошибки unpack/rank/размерности). Не пригодны к использованию без доработки адаптера. D пик 9945.9 МБ близко к лимиту T4 (14.56 ГБ).",
+    "recommendation": "Использовать Test A (SDXL Base 1.0, 768x768, fp16, vae_slicing+tiling+model_cpu_offload, без адаптера) как базу для пилотного эпизода. Консистентность персонажа через IP-Adapter требует отдельного исправления/image-encoder, не входящего в этот тест."
+  },
+  "finished_utc": "2026-10-26T15:17:25Z"
+}

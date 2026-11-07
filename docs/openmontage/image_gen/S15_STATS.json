@@ -1,0 +1,221 @@
+{
+  "schema_version": "1.0",
+  "milestone": "S15",
+  "job_id": "s15-style-lock-1",
+  "model": "dreamshaper-xl-1-0",
+  "model_id": "Lykon/dreamshaper-xl-1-0",
+  "model_revision": "41e6644752a8c9aa63930e6043c4fd83c7708420",
+  "pipeline_class": "StableDiffusionXLPipeline",
+  "dtype": "float16",
+  "bf16": false,
+  "bitsandbytes": false,
+  "device": "cuda",
+  "scheduler": "DEISMultistepScheduler",
+  "steps": 25,
+  "cfg": 5.5,
+  "requested": 36,
+  "wide_requested": 6,
+  "total_requested": 42,
+  "generated": 42,
+  "load_seconds": 84.901,
+  "gpu_seconds": 1114.72,
+  "oom_count": 0,
+  "black_count": 0,
+  "nan_count": 0,
+  "wall_cap_hit": false,
+  "install_stack": "released_037_x4",
+  "versions": {
+    "diffusers": "0.37.0",
+    "transformers": "4.57.6",
+    "huggingface_hub": "0.36.2",
+    "torch": "2.11.0+cu128",
+    "accelerate": "1.14.0",
+    "safetensors": "0.8.0",
+    "numpy": "2.1.3",
+    "pillow": "12.3.0",
+    "torch_cuda": "12.8",
+    "gpu": "Tesla T4",
+    "python": "3.13.15"
+  },
+  "wide_style": {
+    "best_style": "graphic-novel-ink",
+    "style_stats": {
+      "paper-cut": {
+        "images": 12,
+        "black_or_nan": 0,
+        "caption_unreadable": 2,
+        "blur_flagged": 0,
+        "mean_caption_dark_fraction": 0.505,
+        "bad": 20
+      },
+      "field-guide": {
+        "images": 12,
+        "black_or_nan": 0,
+        "caption_unreadable": 2,
+        "blur_flagged": 0,
+        "mean_caption_dark_fraction": 0.4472,
+        "bad": 20
+      },
+      "graphic-novel-ink": {
+        "images": 12,
+        "black_or_nan": 0,
+        "caption_unreadable": 2,
+        "blur_flagged": 0,
+        "mean_caption_dark_fraction": 0.5125,
+        "bad": 20
+      }
+    },
+    "rule": "min(bad) where bad = 1000*black_or_nan + 10*caption_unreadable + blur_flagged; tie-break mean caption dark fraction, then declared style order"
+  },
+  "buckets": {
+    "square_1024": {
+      "images": 36,
+      "generated": 36,
+      "median_sec_per_image": 26.003,
+      "median_warm_sec_per_image": 26.005,
+      "mean_warm_sec_per_image": 25.832,
+      "peak_vram_allocated_mb": 9968.01,
+      "peak_vram_reserved_mb": 12828.0,
+      "black_or_nan": 0,
+      "caption_readable": 30,
+      "caption_unreadable": 6,
+      "blur_flagged": 0
+    },
+    "wide_1344x768": {
+      "images": 6,
+      "generated": 6,
+      "median_sec_per_image": 25.762,
+      "median_warm_sec_per_image": 25.761,
+      "mean_warm_sec_per_image": 25.765,
+      "peak_vram_allocated_mb": 9920.73,
+      "peak_vram_reserved_mb": 12828.0,
+      "black_or_nan": 0,
+      "caption_readable": 6,
+      "caption_unreadable": 0,
+      "blur_flagged": 0
+    }
+  },
+  "per_style": {
+    "field-guide": {
+      "images": 12,
+      "generated": 12,
+      "median_sec_per_image": 25.9,
+      "median_warm_sec_per_image": 25.902,
+      "mean_warm_sec_per_image": 25.869,
+      "peak_vram_allocated_mb": 9967.26,
+      "peak_vram_reserved_mb": 12828.0,
+      "black_or_nan": 0,
+      "caption_readable": 10,
+      "caption_unreadable": 2,
+      "blur_flagged": 0
+    },
+    "graphic-novel-ink": {
+      "images": 12,
+      "generated": 12,
+      "median_sec_per_image": 26.106,
+      "median_warm_sec_per_image": 26.101,
+      "mean_warm_sec_per_image": 26.028,
+      "peak_vram_allocated_mb": 9968.01,
+      "peak_vram_reserved_mb": 12828.0,
+      "black_or_nan": 0,
+      "caption_readable": 10,
+      "caption_unreadable": 2,
+      "blur_flagged": 0
+    },
+    "paper-cut": {
+      "images": 12,
+      "generated": 12,
+      "median_sec_per_image": 26.003,
+      "median_warm_sec_per_image": 26.005,
+      "mean_warm_sec_per_image": 25.674,
+      "peak_vram_allocated_mb": 9967.26,
+      "peak_vram_reserved_mb": 12828.0,
+      "black_or_nan": 0,
+      "caption_readable": 10,
+      "caption_unreadable": 2,
+      "blur_flagged": 0
+    }
+  },
+  "per_scene": {
+    "s01": {
+      "images": 6,
+      "generated": 6,
+      "median_sec_per_image": 24.659,
+      "median_warm_sec_per_image": 25.2,
+      "mean_warm_sec_per_image": 24.784,
+      "peak_vram_allocated_mb": 9968.01,
+      "peak_vram_reserved_mb": 12828.0,
+      "black_or_nan": 0,
+      "caption_readable": 6,
+      "caption_unreadable": 0,
+      "blur_flagged": 0
+    },
+    "s03": {
+      "images": 6,
+      "generated": 6,
+      "median_sec_per_image": 26.027,
+      "median_warm_sec_per_image": 26.058,
+      "mean_warm_sec_per_image": 26.083,
+      "peak_vram_allocated_mb": 9967.26,
+      "peak_vram_reserved_mb": 12828.0,
+      "black_or_nan": 0,
+      "caption_readable": 5,
+      "caption_unreadable": 1,
+      "blur_flagged": 0
+    },
+    "s05": {
+      "images": 6,
+      "generated": 6,
+      "median_sec_per_image": 25.918,
+      "median_warm_sec_per_image": 25.977,
+      "mean_warm_sec_per_image": 25.96,
+      "peak_vram_allocated_mb": 9967.26,
+      "peak_vram_reserved_mb": 12828.0,
+      "black_or_nan": 0,
+      "caption_readable": 6,
+      "caption_unreadable": 0,
+      "blur_flagged": 0
+    },
+    "s06": {
+      "images": 6,
+      "generated": 6,
+      "median_sec_per_image": 26.001,
+      "median_warm_sec_per_image": 25.902,
+      "mean_warm_sec_per_image": 25.943,
+      "peak_vram_allocated_mb": 9967.26,
+      "peak_vram_reserved_mb": 12828.0,
+      "black_or_nan": 0,
+      "caption_readable": 6,
+      "caption_unreadable": 0,
+      "blur_flagged": 0
+    },
+    "s10": {
+      "images": 6,
+      "generated": 6,
+      "median_sec_per_image": 26.058,
+      "median_warm_sec_per_image": 26.064,
+      "mean_warm_sec_per_image": 26.077,
+      "peak_vram_allocated_mb": 9967.26,
+      "peak_vram_reserved_mb": 12828.0,
+      "black_or_nan": 0,
+      "caption_readable": 2,
+      "caption_unreadable": 4,
+      "blur_flagged": 0
+    },
+    "s12": {
+      "images": 6,
+      "generated": 6,
+      "median_sec_per_image": 26.029,
+      "median_warm_sec_per_image": 26.028,
+      "mean_warm_sec_per_image": 26.009,
+      "peak_vram_allocated_mb": 9968.01,
+      "peak_vram_reserved_mb": 12828.0,
+      "black_or_nan": 0,
+      "caption_readable": 5,
+      "caption_unreadable": 1,
+      "blur_flagged": 0
+    }
+  },
+  "warm_definition": "first generated image of each bucket excluded (1024 bucket and 1344x768 bucket separately)",
+  "source_manifest": "/tmp/kilo/s15_out/s15_style_lock_dreamshaper-xl-1-0/manifest.json"
+}

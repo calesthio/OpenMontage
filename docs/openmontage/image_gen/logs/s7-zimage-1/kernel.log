@@ -1,0 +1,63 @@
+[{"stream_name":"stderr","time":100.060594853,"data":"Flax classes are deprecated and will be removed in Diffusers v1.0.0. We recommend migrating to PyTorch classes or pinning your version of Diffusers.\n"}
+,{"stream_name":"stderr","time":100.061221955,"data":"Flax classes are deprecated and will be removed in Diffusers v1.0.0. We recommend migrating to PyTorch classes or pinning your version of Diffusers.\n"}
+,{"stream_name":"stderr","time":236.681409375,"data":"\rFetching 18 files:   0%|          | 0/18 [00:00\u003c?, ?it/s]\rFetching 18 files:  11%|█         | 2/18 [00:00\u003c00:02,  6.81it/s]\rFetching 18 files:  22%|██▏       | 4/18 [01:15\u003c05:12, 22.32s/it]\rFetching 18 files:  72%|███████▏  | 13/18 [02:09\u003c00:46,  9.40s/it]\rFetching 18 files:  78%|███████▊  | 14/18 [02:16\u003c00:36,  9.06s/it]\rFetching 18 files: 100%|██████████| 18/18 [02:16\u003c00:00,  7.56s/it]\n"}
+,{"stream_name":"stderr","time":249.733033781,"data":"\rLoading pipeline components...:   0%|          | 0/5 [00:00\u003c?, ?it/s]\rLoading pipeline components...:  20%|██        | 1/5 [00:11\u003c00:46, 11.70s/it]\n"}
+,{"stream_name":"stderr","time":280.948109163,"data":"\rLoading checkpoint shards:   0%|          | 0/3 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":320.003098973,"data":"\rLoading checkpoint shards:  33%|███▎      | 1/3 [00:31\u003c01:02, 31.21s/it]\u001b[A\n"}
+,{"stream_name":"stderr","time":338.655995176,"data":"\rLoading checkpoint shards:  67%|██████▋   | 2/3 [01:10\u003c00:35, 35.83s/it]\u001b[A\n"}
+,{"stream_name":"stderr","time":338.656555567,"data":"\rLoading checkpoint shards: 100%|██████████| 3/3 [01:28\u003c00:00, 27.98s/it]\u001b[A\rLoading checkpoint shards: 100%|██████████| 3/3 [01:28\u003c00:00, 29.64s/it]\n"}
+,{"stream_name":"stderr","time":339.473334805,"data":"\rLoading pipeline components...:  40%|████      | 2/5 [01:41\u003c02:53, 57.92s/it]\rLoading pipeline components...:  60%|██████    | 3/5 [01:42\u003c01:03, 31.79s/it]\n"}
+,{"stream_name":"stderr","time":355.193883661,"data":"\rLoading checkpoint shards:   0%|          | 0/3 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":371.125814522,"data":"\rLoading checkpoint shards:  33%|███▎      | 1/3 [00:15\u003c00:31, 15.72s/it]\u001b[A\n"}
+,{"stream_name":"stderr","time":371.505284581,"data":"\rLoading checkpoint shards:  67%|██████▋   | 2/3 [00:31\u003c00:15, 15.84s/it]\u001b[A\n"}
+,{"stream_name":"stderr","time":371.505317976,"data":"\rLoading checkpoint shards: 100%|██████████| 3/3 [00:32\u003c00:00,  8.78s/it]\u001b[A\rLoading checkpoint shards: 100%|██████████| 3/3 [00:32\u003c00:00, 10.68s/it]\n"}
+,{"stream_name":"stderr","time":371.544023273,"data":"\rLoading pipeline components...:  80%|████████  | 4/5 [02:14\u003c00:31, 31.93s/it]\rLoading pipeline components...: 100%|██████████| 5/5 [02:14\u003c00:00, 26.97s/it]\n"}
+,{"stream_name":"stderr","time":376.290346638,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stderr","time":376.290417406,"data":"  File \"/kaggle/src/script.py\", line 376, in main\n"}
+,{"stream_name":"stderr","time":376.290425979,"data":"    pipe, load_notes = _load_pipeline(job, model, pipe_cls, cfg)\n"}
+,{"stream_name":"stderr","time":376.29043119,"data":"                       ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":376.290436726,"data":"  File \"/kaggle/src/script.py\", line 322, in _load_pipeline\n"}
+,{"stream_name":"stderr","time":376.290441358,"data":"    pipe.to(\"cuda\")\n"}
+,{"stream_name":"stderr","time":376.290446109,"data":"    ~~~~~~~^^^^^^^^\n"}
+,{"stream_name":"stderr","time":376.290463385,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/pipeline_utils.py\", line 565, in to\n"}
+,{"stream_name":"stderr","time":376.290468046,"data":"    module.to(device, dtype)\n"}
+,{"stream_name":"stderr","time":376.290471856,"data":"    ~~~~~~~~~^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":376.290475111,"data":"  File \"/usr/local/lib/python3.13/dist-packages/diffusers/models/modeling_utils.py\", line 1451, in to\n"}
+,{"stream_name":"stderr","time":376.290478783,"data":"    return super().to(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":376.290482018,"data":"           ~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":376.290485241,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1384, in to\n"}
+,{"stream_name":"stderr","time":376.290488705,"data":"    return self._apply(convert)\n"}
+,{"stream_name":"stderr","time":376.290491928,"data":"           ~~~~~~~~~~~^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":376.290495277,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 934, in _apply\n"}
+,{"stream_name":"stderr","time":376.290503953,"data":"    module._apply(fn)\n"}
+,{"stream_name":"stderr","time":376.290506753,"data":"    ~~~~~~~~~~~~~^^^^\n"}
+,{"stream_name":"stderr","time":376.290508921,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 934, in _apply\n"}
+,{"stream_name":"stderr","time":376.2905112,"data":"    module._apply(fn)\n"}
+,{"stream_name":"stderr","time":376.290513276,"data":"    ~~~~~~~~~~~~~^^^^\n"}
+,{"stream_name":"stderr","time":376.290515493,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 934, in _apply\n"}
+,{"stream_name":"stderr","time":376.290517743,"data":"    module._apply(fn)\n"}
+,{"stream_name":"stderr","time":376.290520285,"data":"    ~~~~~~~~~~~~~^^^^\n"}
+,{"stream_name":"stderr","time":376.290522696,"data":"  [Previous line repeated 1 more time]\n"}
+,{"stream_name":"stderr","time":376.290524855,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 965, in _apply\n"}
+,{"stream_name":"stderr","time":376.290527103,"data":"    param_applied = fn(param)\n"}
+,{"stream_name":"stderr","time":376.290529318,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1370, in convert\n"}
+,{"stream_name":"stderr","time":376.290531581,"data":"    return t.to(\n"}
+,{"stream_name":"stderr","time":376.29053369,"data":"           ~~~~^\n"}
+,{"stream_name":"stderr","time":376.290535827,"data":"        device,\n"}
+,{"stream_name":"stderr","time":376.290537889,"data":"        ^^^^^^^\n"}
+,{"stream_name":"stderr","time":376.290540059,"data":"        dtype if t.is_floating_point() or t.is_complex() else None,\n"}
+,{"stream_name":"stderr","time":376.290542275,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":376.2905584,"data":"        non_blocking,\n"}
+,{"stream_name":"stderr","time":376.290562406,"data":"        ^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":376.290565955,"data":"    )\n"}
+,{"stream_name":"stderr","time":376.290569466,"data":"    ^\n"}
+,{"stream_name":"stderr","time":376.290579174,"data":"torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 76.00 MiB. GPU 0 has a total capacity of 14.56 GiB of which 68.81 MiB is free. Including non-PyTorch memory, this process has 14.49 GiB memory in use. Of the allocated memory 14.19 GiB is allocated by PyTorch, and 202.44 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)\n"}
+,{"stream_name":"stderr","time":376.290588411,"data":"\n"}
+,{"stream_name":"stderr","time":376.290591694,"data":"BLOCKED: model load failed: torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 76.00 MiB. GPU 0 has a total capacity of 14.56 GiB of which 68.81 MiB is free. Including non-PyTorch memory, this process has 14.49 GiB memory in use. Of the allocated memory 14.19 GiB is allocated by PyTorch, and 202.44 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)\n"}
+,{"stream_name":"stderr","time":385.864794952,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":385.864825579,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":386.199900543,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":386.199928953,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":387.612751186,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":388.386160531,"data":"[NbConvertApp] Writing 388761 bytes to __results__.html\n"}
+]

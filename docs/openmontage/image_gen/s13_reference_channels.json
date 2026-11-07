@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Buried Signal",
+    "channel": "Buried Signal",
+    "channelId": "UCTdYCtuxNqIpw0C7jbrIIag",
+    "found": true,
+    "subs_current": 5770,
+    "uploads_fetched": 89,
+    "long_form_eligible": 86,
+    "median_multiple": 1.17,
+    "min_multiple": 0.13,
+    "max_multiple": 3181.93
+  },
+  {
+    "name": "The Neural Signal",
+    "channel": "The Neural Signal",
+    "channelId": "UCyhUwgh0_UbMHNEsgW73GmA",
+    "found": true,
+    "subs_current": 4020,
+    "uploads_fetched": 60,
+    "long_form_eligible": 53,
+    "median_multiple": 1.38,
+    "min_multiple": 0.09,
+    "max_multiple": 405.95
+  },
+  {
+    "name": "First Humans",
+    "channel": "HistoryMush",
+    "channelId": "UCquX65xaaLvumBDHm6M684g",
+    "found": true,
+    "subs_current": 20400,
+    "uploads_fetched": 85,
+    "long_form_eligible": 44,
+    "median_multiple": 0.97,
+    "min_multiple": 0.05,
+    "max_multiple": 49.83
+  },
+  {
+    "name": "Fauna Hub",
+    "channel": "Babe Wild Yt",
+    "channelId": "UCvUDditigK-FXY4SHXKPsLQ",
+    "found": true,
+    "subs_current": 39100,
+    "uploads_fetched": 145,
+    "long_form_eligible": 0,
+    "median_multiple": null,
+    "min_multiple": null,
+    "max_multiple": null
+  }
+]

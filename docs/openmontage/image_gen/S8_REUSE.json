@@ -1,0 +1,210 @@
+{
+  "schema_version": "1.0",
+  "milestone": "S8-2",
+  "reused_models": [
+    "sdxl",
+    "klein"
+  ],
+  "images": [
+    {
+      "model": "sdxl",
+      "job_id": "s7-sdxl-1",
+      "render_id": "r0001",
+      "scene_id": "s01",
+      "file": "r0001.png",
+      "sha256": "ff417f8ba6cef48a7a17c206d8b487637711aae6425047138f50928deb71eee9",
+      "bytes": 1810287,
+      "cached": "output/s7_cache/sdxl/r0001.png"
+    },
+    {
+      "model": "sdxl",
+      "job_id": "s7-sdxl-1",
+      "render_id": "r0004",
+      "scene_id": "s03",
+      "file": "r0004.png",
+      "sha256": "6724a06d152fb47a4423bece7ede17605eb87a84b562f160f2dd59cdc3425278",
+      "bytes": 1931056,
+      "cached": "output/s7_cache/sdxl/r0004.png"
+    },
+    {
+      "model": "sdxl",
+      "job_id": "s7-sdxl-1",
+      "render_id": "r0007",
+      "scene_id": "s04",
+      "file": "r0007.png",
+      "sha256": "204779135ec0465ca333cb899a9a0e4b5ad1a9f08a9d6b7f39850405bef81160",
+      "bytes": 1747288,
+      "cached": "output/s7_cache/sdxl/r0007.png"
+    },
+    {
+      "model": "sdxl",
+      "job_id": "s7-sdxl-1",
+      "render_id": "r0010",
+      "scene_id": "s05",
+      "file": "r0010.png",
+      "sha256": "55dd2cd733c03582a9e12ff96b6fb492c7b79ce8898e71e819aa5e53f8c72805",
+      "bytes": 1858399,
+      "cached": "output/s7_cache/sdxl/r0010.png"
+    },
+    {
+      "model": "sdxl",
+      "job_id": "s7-sdxl-1",
+      "render_id": "r0013",
+      "scene_id": "s06",
+      "file": "r0013.png",
+      "sha256": "f0d26052323067ea45c6fe568c1e922d0aeea23d5ec343217d48e8c720e530d8",
+      "bytes": 1751078,
+      "cached": "output/s7_cache/sdxl/r0013.png"
+    },
+    {
+      "model": "sdxl",
+      "job_id": "s7-sdxl-1",
+      "render_id": "r0016",
+      "scene_id": "s08",
+      "file": "r0016.png",
+      "sha256": "1c536d1ccd122172b8713d493b08f68ebb0c2f43c6a7fdf3d806d6ca8f5c1bc7",
+      "bytes": 1985245,
+      "cached": "output/s7_cache/sdxl/r0016.png"
+    },
+    {
+      "model": "sdxl",
+      "job_id": "s7-sdxl-1",
+      "render_id": "r0019",
+      "scene_id": "s09",
+      "file": "r0019.png",
+      "sha256": "41d585a5e87630974780378dd3067a287c0e6f7b92efff236d716430158ef81c",
+      "bytes": 2084859,
+      "cached": "output/s7_cache/sdxl/r0019.png"
+    },
+    {
+      "model": "sdxl",
+      "job_id": "s7-sdxl-1",
+      "render_id": "r0022",
+      "scene_id": "s10",
+      "file": "r0022.png",
+      "sha256": "8def1ce2c2915fd2eea9b4c7f0bd2074b122c543e1e9df760957d5ae5c8d260a",
+      "bytes": 1637397,
+      "cached": "output/s7_cache/sdxl/r0022.png"
+    },
+    {
+      "model": "sdxl",
+      "job_id": "s7-sdxl-1",
+      "render_id": "r0025",
+      "scene_id": "s11",
+      "file": "r0025.png",
+      "sha256": "b15313ba1186c090c463f8497352be5ba9b550d87f3ff6539e6eddcafe4e22cc",
+      "bytes": 1599819,
+      "cached": "output/s7_cache/sdxl/r0025.png"
+    },
+    {
+      "model": "sdxl",
+      "job_id": "s7-sdxl-1",
+      "render_id": "r0028",
+      "scene_id": "s12",
+      "file": "r0028.png",
+      "sha256": "839c1cae1aa60d2ecda0be5e85d2a2834fdbad5cebbb20a3968121ba5a06d3cc",
+      "bytes": 1993045,
+      "cached": "output/s7_cache/sdxl/r0028.png"
+    },
+    {
+      "model": "klein",
+      "job_id": "s7-klein-1",
+      "render_id": "r0002",
+      "scene_id": "s01",
+      "file": "r0002.png",
+      "sha256": "ff05257870ee05e89c425c09096cf1ddd0d833967540253a8dd0d9643cb0dd2a",
+      "bytes": 625422,
+      "cached": "output/s7_cache/klein/r0002.png"
+    },
+    {
+      "model": "klein",
+      "job_id": "s7-klein-1",
+      "render_id": "r0005",
+      "scene_id": "s03",
+      "file": "r0005.png",
+      "sha256": "66a23c80a5121d3ae567377eb317c7a11b84f69b0399162d9bda915baea59b99",
+      "bytes": 1142138,
+      "cached": "output/s7_cache/klein/r0005.png"
+    },
+    {
+      "model": "klein",
+      "job_id": "s7-klein-1",
+      "render_id": "r0008",
+      "scene_id": "s04",
+      "file": "r0008.png",
+      "sha256": "8ad32bdf3e438b06f4b4e614a1b63d48c16227dcac10e8d32ec1b552d03ff39f",
+      "bytes": 666446,
+      "cached": "output/s7_cache/klein/r0008.png"
+    },
+    {
+      "model": "klein",
+      "job_id": "s7-klein-1",
+      "render_id": "r0011",
+      "scene_id": "s05",
+      "file": "r0011.png",
+      "sha256": "6ba0d1fb8e80db090fea92b2682694b526df5cd1222ccb4fc550f40b87be35b6",
+      "bytes": 548641,
+      "cached": "output/s7_cache/klein/r0011.png"
+    },
+    {
+      "model": "klein",
+      "job_id": "s7-klein-1",
+      "render_id": "r0014",
+      "scene_id": "s06",
+      "file": "r0014.png",
+      "sha256": "d1fc2002d0ce90e1d5da1a70ff76ca852f3ff6c956acaec17208964b130200c2",
+      "bytes": 857022,
+      "cached": "output/s7_cache/klein/r0014.png"
+    },
+    {
+      "model": "klein",
+      "job_id": "s7-klein-1",
+      "render_id": "r0017",
+      "scene_id": "s08",
+      "file": "r0017.png",
+      "sha256": "9cda5549136699b67634c75bbfb6a5946cd9e4c354073cca4112ff8face9a415",
+      "bytes": 506771,
+      "cached": "output/s7_cache/klein/r0017.png"
+    },
+    {
+      "model": "klein",
+      "job_id": "s7-klein-1",
+      "render_id": "r0020",
+      "scene_id": "s09",
+      "file": "r0020.png",
+      "sha256": "3b9083b8342e5e0eeba539b114d639f36a9a4d3b5988f641b777f9762e842e60",
+      "bytes": 650852,
+      "cached": "output/s7_cache/klein/r0020.png"
+    },
+    {
+      "model": "klein",
+      "job_id": "s7-klein-1",
+      "render_id": "r0023",
+      "scene_id": "s10",
+      "file": "r0023.png",
+      "sha256": "4880283d7be2519b87c884db31498bd9d06a298748e0f42d9228e26009f3484e",
+      "bytes": 470566,
+      "cached": "output/s7_cache/klein/r0023.png"
+    },
+    {
+      "model": "klein",
+      "job_id": "s7-klein-1",
+      "render_id": "r0026",
+      "scene_id": "s11",
+      "file": "r0026.png",
+      "sha256": "5955fa1bd022537759830604f782349fa8e6b12d5e87ebb1cea3942d52ddfc50",
+      "bytes": 482814,
+      "cached": "output/s7_cache/klein/r0026.png"
+    },
+    {
+      "model": "klein",
+      "job_id": "s7-klein-1",
+      "render_id": "r0029",
+      "scene_id": "s12",
+      "file": "r0029.png",
+      "sha256": "dbc6eb90c393367090c13e247acb125cca776fdfb7f55adb36c22f2134d0d742",
+      "bytes": 951388,
+      "cached": "output/s7_cache/klein/r0029.png"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "job_id": "example-001",
+  "overall_status": "NOT_CHECKED",
+  "checks": [
+    {
+      "name": "output_exists",
+      "status": "NOT_CHECKED",
+      "evidence": ""
+    },
+    {
+      "name": "ffprobe_streams",
+      "status": "NOT_CHECKED",
+      "evidence": ""
+    },
+    {
+      "name": "audio_quality",
+      "status": "NOT_CHECKED",
+      "evidence": ""
+    },
+    {
+      "name": "black_frames_and_gaps",
+      "status": "NOT_CHECKED",
+      "evidence": ""
+    },
+    {
+      "name": "captions_sync",
+      "status": "NOT_CHECKED",
+      "evidence": ""
+    },
+    {
+      "name": "factual_claims_sources",
+      "status": "NOT_CHECKED",
+      "evidence": ""
+    },
+    {
+      "name": "asset_rights_complete",
+      "status": "NOT_CHECKED",
+      "evidence": ""
+    },
+    {
+      "name": "human_approval",
+      "status": "NOT_CHECKED",
+      "evidence": ""
+    }
+  ]
+}

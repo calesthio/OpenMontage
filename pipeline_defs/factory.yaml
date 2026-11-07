@@ -1,0 +1,219 @@
+name: factory
+version: "1.0"
+description: >
+  OpenMontage full factory pipeline — one command transforms an approved
+  topic into a publish-ready YouTube video package. Stages are pluggable,
+  checkpointed, resumable, and fail-closed. Category A stages are agent
+  autonomous; Category B requires one owner decision; Category C is owner
+  only and never automated.
+category: generated
+stability: production
+
+default_checkpoint_policy: guided
+
+extensions:
+  custom_scripts: true
+  custom_playbooks: false
+  custom_skills: false
+  custom_tools: false
+
+required_skills:
+  - meta/reviewer
+  - meta/checkpoint-protocol
+
+orchestration:
+  mode: executive-producer
+  skill: pipelines/factory/orchestrator
+  budget_default_usd: 0.00
+  max_revisions_per_stage: 3
+  max_send_backs: 3
+  max_wall_time_minutes: 120
+
+compatible_playbooks:
+  recommended:
+    - clean-professional
+    - flat-motion-graphics
+  also_works:
+    - minimalist-diagram
+  custom_allowed: true
+
+stages:
+  - name: zero_cost_gate
+    skill: pipelines/factory/zero-cost-gate
+    produces:
+      - route_manifest
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - All routes declared with cost_usd=0.0
+      - No unnamed or unpriced routes
+    success_criteria:
+      - All routes pass strict zero-cost evaluation
+
+  - name: claim_ledger_check
+    skill: pipelines/factory/claim-ledger-check
+    produces:
+      - claim_ledger
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Claim ledger exists with claim_ids
+      - Single-source claims flagged
+    success_criteria:
+      - Ledger has >= 1 claim_id
+
+  - name: script_validation
+    skill: pipelines/factory/script-validation
+    required_artifacts_in:
+      - claim_ledger
+    produces:
+      - script
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Sentences parse correctly
+      - Prompts present for each beat
+      - claim_ids resolve against ledger
+    success_criteria:
+      - Script has sentences and prompts
+
+  - name: footage_rights
+    skill: pipelines/factory/footage-rights
+    required_artifacts_in:
+      - script
+    produces:
+      - rights_records
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - rights_basis allowed for every asset
+      - AI illustrations labelled
+    success_criteria:
+      - All assets have valid rights_basis
+
+  - name: narration
+    skill: pipelines/factory/narration
+    required_artifacts_in:
+      - rights_records
+    produces:
+      - narration_wav
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Audio exists and is non-empty
+      - Duration matches script estimate
+    success_criteria:
+      - Narration WAV present
+
+  - name: subtitles
+    skill: pipelines/factory/subtitles
+    required_artifacts_in:
+      - narration_wav
+    produces:
+      - subtitles_srt
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - SRT blocks present
+      - Timing within audio duration
+    success_criteria:
+      - Subtitles file with blocks
+
+  - name: edl
+    skill: pipelines/factory/edl-builder
+    required_artifacts_in:
+      - subtitles_srt
+    produces:
+      - edit_decisions
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Every cut has rationale
+      - Motion variety (no identical moves in a row)
+    success_criteria:
+      - EDL covers full duration
+
+  - name: speculative_gate
+    skill: pipelines/factory/speculative-gate
+    required_artifacts_in:
+      - edit_decisions
+    produces:
+      - speculative_flags
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Speculative claims labelled
+      - Owner aware of speculation
+    success_criteria:
+      - Speculation flagged or none
+
+  - name: render
+    skill: pipelines/factory/render
+    required_artifacts_in:
+      - edit_decisions
+    produces:
+      - render_report
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Output video exists and is playable
+      - Resolution 1280x720, 30fps
+      - Subtitles burned in
+    success_criteria:
+      - MP4 passes ffprobe validation
+
+  - name: finish_audio
+    skill: pipelines/factory/finish-audio
+    required_artifacts_in:
+      - render_report
+    produces:
+      - mastered_audio
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Loudness −14 LUFS ± 2
+      - True peak ≤ −1.5 dBTP
+    success_criteria:
+      - Audio mastered within target
+
+  - name: qc
+    skill: pipelines/factory/qc
+    required_artifacts_in:
+      - mastered_audio
+    produces:
+      - qa_report
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - All QC checks PASS or REVIEW
+      - No BLOCKED / NOT_RUN checks
+    success_criteria:
+      - QC verdict PASS or REVIEW
+
+  - name: release_gate
+    skill: pipelines/factory/release-gate
+    required_artifacts_in:
+      - qa_report
+    produces:
+      - release_approval
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - "Owner decisions: master reference, frame approval, music file"
+      - QC verdict acceptable
+    success_criteria:
+      - All Category B decisions provided
+
+  - name: package_draft
+    skill: pipelines/factory/package-draft
+    required_artifacts_in:
+      - release_approval
+    produces:
+      - youtube_package
+    checkpoint_required: true
+    human_approval_default: false
+    review_focus:
+      - Titles, description, tags, chapters
+      - "Status: draft (not published)"
+    success_criteria:
+      - Package draft generated

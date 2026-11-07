@@ -1,0 +1,70 @@
+httpx.HTTPStatusError: Client error '401 Unauthorized' for url 'https://huggingface.co/models/image_encoder/resolve/main/config.json'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/dist-packages/transformers/utils/hub.py", line 438, in cached_files
+    hf_hub_download(
+    ~~~~~~~~~~~~~~~^
+        path_or_repo_id,
+        ^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+        tqdm_class=tqdm_class,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/dist-packages/huggingface_hub/utils/_validators.py", line 88, in _inner_fn
+    return fn(*args, **kwargs)
+  File "/usr/local/lib/python3.13/dist-packages/huggingface_hub/file_download.py", line 1027, in hf_hub_download
+    return _hf_hub_download_to_cache_dir(
+        # Destination
+    ...<15 lines>...
+        dry_run=dry_run,
+    )
+  File "/usr/local/lib/python3.13/dist-packages/huggingface_hub/file_download.py", line 1174, in _hf_hub_download_to_cache_dir
+    _raise_on_head_call_error(head_call_error, force_download, local_files_only)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/huggingface_hub/file_download.py", line 1913, in _raise_on_head_call_error
+    raise head_call_error
+huggingface_hub.errors.RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6add4c6f-14b2710f6893b128428d3eb6;06d5a608-06cf-4ce2-b5cc-7d83c82144b5)
+
+Repository Not Found for url: https://huggingface.co/models/image_encoder/resolve/main/config.json.
+Please make sure you specified the correct `repo_id` and `repo_type`.
+If you are trying to access a private or gated repo, make sure you are authenticated and your token has the required permissions.
+For more details, see https://huggingface.co/docs/huggingface_hub/authentication
+Invalid username or password.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/kaggle/src/script.py", line 197, in main
+    image_encoder = CLIPVisionModelWithProjection.from_pretrained(
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        encoder_path, torch_dtype=torch.float16).to(device)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/transformers/modeling_utils.py", line 4221, in from_pretrained
+    _adapter_model_path, pretrained_model_name_or_path, adapter_kwargs = maybe_load_adapters(
+                                                                         ~~~~~~~~~~~~~~~~~~~^
+        pretrained_model_name_or_path,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        download_kwargs_with_commit,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        **adapter_kwargs,
+        ^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/dist-packages/transformers/integrations/peft.py", line 673, in maybe_load_adapters
+    resolved_config_file = cached_file(
+        pretrained_model_name_or_path,
+    ...<10 lines>...
+        _raise_exceptions_for_connection_errors=False,
+    )
+  File "/usr/local/lib/python3.13/dist-packages/transformers/utils/hub.py", line 294, in cached_file
+    file = cached_files(path_or_repo_id=path_or_repo_id, filenames=[filename], **kwargs)
+  File "/usr/local/lib/python3.13/dist-packages/transformers/utils/hub.py", line 470, in cached_files
+    raise OSError(
+    ...<4 lines>...
+    ) from e
+OSError: models/image_encoder is not a local folder and is not a valid model identifier listed on 'https://huggingface.co/models'
+If this is a private repository, make sure to pass a token having permission to this repo either by logging in with `hf auth login` or by passing `token=<your_token>`

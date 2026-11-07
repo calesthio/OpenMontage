@@ -1,0 +1,97 @@
+[{"stream_name":"stderr","time":43.651782936000004,"data":"/usr/local/lib/python3.13/dist-packages/diffusers/utils/deprecation_utils.py:23: FutureWarning: `torch_dtype` is deprecated and will be removed in version 1.0.0. Please use `dtype` instead.\n"}
+,{"stream_name":"stderr","time":43.651849616,"data":"  deprecate(\"torch_dtype\", \"1.0.0\", _TORCH_DTYPE_DEPRECATION_MESSAGE)\n"}
+,{"stream_name":"stderr","time":43.943571274,"data":"Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stderr","time":43.943595217,"data":"WARNING:huggingface_hub.utils._http:Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stderr","time":101.223555244,"data":"\rFetching 18 files:   0%|          | 0/18 [00:00\u003c?, ?it/s]\rFetching 18 files:  11%|█         | 2/18 [00:00\u003c00:00, 17.87it/s]\rFetching 18 files:  39%|███▉      | 7/18 [00:00\u003c00:00, 33.54it/s]\rFetching 18 files:  72%|███████▏  | 13/18 [00:00\u003c00:00, 37.20it/s]\rFetching 18 files:  89%|████████▉ | 16/18 [00:19\u003c00:00, 37.20it/s]\rFetching 18 files:  94%|█████████▍| 17/18 [00:29\u003c00:02,  2.56s/it]\rFetching 18 files: 100%|██████████| 18/18 [00:57\u003c00:00,  5.40s/it]\rFetching 18 files: 100%|██████████| 18/18 [00:57\u003c00:00,  3.17s/it]\n"}
+,{"stream_name":"stderr","time":111.909615721,"data":"\rLoading pipeline components...:   0%|          | 0/7 [00:00\u003c?, ?it/s]\rLoading pipeline components...:  14%|█▍        | 1/7 [00:08\u003c00:53,  8.92s/it]\rLoading pipeline components...:  29%|██▊       | 2/7 [00:10\u003c00:23,  4.63s/it]\n"}
+,{"stream_name":"stderr","time":113.609711369,"data":"\rLoading weights:   0%|          | 0/196 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":113.712917484,"data":"\rLoading weights:   1%|          | 2/196 [00:01\u003c02:44,  1.18it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":113.715406432,"data":"\rLoading weights:  95%|█████████▍| 186/196 [00:01\u003c00:00, 143.39it/s]\u001b[A\rLoading weights: 100%|██████████| 196/196 [00:01\u003c00:00, 108.56it/s]\n"}
+,{"stream_name":"stderr","time":113.960094473,"data":"\rLoading pipeline components...:  43%|████▎     | 3/7 [00:12\u003c00:13,  3.41s/it]\n"}
+,{"stream_name":"stderr","time":114.089978341,"data":"\rLoading weights:   0%|          | 0/517 [00:00\u003c?, ?it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":114.197616374,"data":"\rLoading weights:   0%|          | 2/517 [00:00\u003c00:33, 15.29it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":114.39539203,"data":"\rLoading weights:  29%|██▉       | 152/517 [00:00\u003c00:00, 761.65it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":114.562114076,"data":"\rLoading weights:  45%|████▌     | 235/517 [00:00\u003c00:00, 561.08it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":114.672318996,"data":"\rLoading weights:  58%|█████▊    | 300/517 [00:00\u003c00:00, 489.71it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":114.817325465,"data":"\rLoading weights:  69%|██████▊   | 355/517 [00:00\u003c00:00, 492.52it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":114.943892868,"data":"\rLoading weights:  79%|███████▉  | 408/517 [00:00\u003c00:00, 449.00it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":115.053140496,"data":"\rLoading weights:  88%|████████▊ | 456/517 [00:00\u003c00:00, 427.34it/s]\u001b[A\n"}
+,{"stream_name":"stderr","time":115.053180126,"data":"\rLoading weights:  97%|█████████▋| 504/517 [00:01\u003c00:00, 431.54it/s]\u001b[A\rLoading weights: 100%|██████████| 517/517 [00:01\u003c00:00, 472.66it/s]\n"}
+,{"stream_name":"stderr","time":124.94274089,"data":"\rLoading pipeline components...:  57%|█████▋    | 4/7 [00:13\u003c00:07,  2.60s/it]\rLoading pipeline components...:  71%|███████▏  | 5/7 [00:13\u003c00:03,  1.70s/it]\rLoading pipeline components...: 100%|██████████| 7/7 [00:23\u003c00:00,  3.31s/it]\rLoading pipeline components...: 100%|██████████| 7/7 [00:23\u003c00:00,  3.39s/it]\n"}
+,{"stream_name":"stderr","time":144.141386415,"data":"\rLoading weights:   0%|          | 0/520 [00:00\u003c?, ?it/s]\rLoading weights:  26%|██▋       | 137/520 [00:00\u003c00:00, 1255.18it/s]\rLoading weights:  54%|█████▍    | 283/520 [00:00\u003c00:00, 1351.49it/s]\rLoading weights:  81%|████████  | 419/520 [00:00\u003c00:00, 1213.79it/s]\rLoading weights: 100%|██████████| 520/520 [00:00\u003c00:00, 1176.47it/s]\n"}
+,{"stream_name":"stderr","time":164.733988866,"data":"/usr/local/lib/python3.13/dist-packages/diffusers/pipelines/stable_diffusion_xl/pipeline_stable_diffusion_xl.py:748: FutureWarning: `upcast_vae` is deprecated and will be removed in version 1.0.0. `upcast_vae` is deprecated. Please use `pipe.vae.to(torch.float32)`. For more details, please refer to: https://github.com/huggingface/diffusers/pull/12619#issue-3606633695.\n"}
+,{"stream_name":"stderr","time":164.734047577,"data":"  deprecate(\n"}
+,{"stream_name":"stderr","time":164.735150269,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":165.181473732,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":186.846680275,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":187.015405541,"data":"There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.\n"}
+,{"stream_name":"stderr","time":191.483908619,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stderr","time":191.483968405,"data":"  File \"/kaggle/src/script.py\", line 333, in \u003cmodule\u003e\n"}
+,{"stream_name":"stderr","time":191.48397468,"data":"    main()\n"}
+,{"stream_name":"stderr","time":191.483979909,"data":"    ~~~~^^\n"}
+,{"stream_name":"stderr","time":191.483984273,"data":"  File \"/kaggle/src/script.py\", line 240, in main\n"}
+,{"stream_name":"stderr","time":191.483988566,"data":"    sim = _clip_image_similarity(ref_image, img, clip_processor,\n"}
+,{"stream_name":"stderr","time":191.483993052,"data":"                                 image_encoder, device)\n"}
+,{"stream_name":"stderr","time":191.48400265,"data":"  File \"/kaggle/src/script.py\", line 90, in _clip_image_similarity\n"}
+,{"stream_name":"stderr","time":191.48400595,"data":"    e1 = model(**inputs1).image_embeds\n"}
+,{"stream_name":"stderr","time":191.484008808,"data":"         ~~~~~^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":191.484011664,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
+,{"stream_name":"stderr","time":191.484014813,"data":"    return self._call_impl(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":191.484027491,"data":"           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":191.484029954,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
+,{"stream_name":"stderr","time":191.484032345,"data":"    return forward_call(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":191.484034629,"data":"  File \"/usr/local/lib/python3.13/dist-packages/transformers/utils/generic.py\", line 939, in wrapper\n"}
+,{"stream_name":"stderr","time":191.484037125,"data":"    output = func(self, *args, **kwargs)\n"}
+,{"stream_name":"stderr","time":191.484039383,"data":"  File \"/usr/local/lib/python3.13/dist-packages/transformers/models/clip/modeling_clip.py\", line 935, in forward\n"}
+,{"stream_name":"stderr","time":191.484041794,"data":"    vision_outputs: BaseModelOutputWithPooling = self.vision_model(\n"}
+,{"stream_name":"stderr","time":191.484044156,"data":"                                                 ~~~~~~~~~~~~~~~~~^\n"}
+,{"stream_name":"stderr","time":191.484046426,"data":"        pixel_values=pixel_values,\n"}
+,{"stream_name":"stderr","time":191.484048663,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":191.484050968,"data":"        interpolate_pos_encoding=interpolate_pos_encoding,\n"}
+,{"stream_name":"stderr","time":191.48405325,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":191.484055696,"data":"        **kwargs,\n"}
+,{"stream_name":"stderr","time":191.484057933,"data":"        ^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":191.484060167,"data":"    )\n"}
+,{"stream_name":"stderr","time":191.484062339,"data":"    ^\n"}
+,{"stream_name":"stderr","time":191.484064536,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
+,{"stream_name":"stderr","time":191.484066934,"data":"    return self._call_impl(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":191.484069253,"data":"           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":191.484071522,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
+,{"stream_name":"stderr","time":191.484073912,"data":"    return forward_call(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":191.484076221,"data":"  File \"/usr/local/lib/python3.13/dist-packages/transformers/utils/generic.py\", line 1068, in wrapper\n"}
+,{"stream_name":"stderr","time":191.484078603,"data":"    output = func(self, *args, **kwargs)\n"}
+,{"stream_name":"stderr","time":191.484080837,"data":"  File \"/usr/local/lib/python3.13/dist-packages/transformers/utils/output_capturing.py\", line 262, in wrapper\n"}
+,{"stream_name":"stderr","time":191.484083224,"data":"    outputs = func(self, *args, **kwargs)\n"}
+,{"stream_name":"stderr","time":191.48408715,"data":"  File \"/usr/local/lib/python3.13/dist-packages/transformers/models/clip/modeling_clip.py\", line 632, in forward\n"}
+,{"stream_name":"stderr","time":191.484089607,"data":"    hidden_states = self.embeddings(pixel_values, interpolate_pos_encoding=interpolate_pos_encoding)\n"}
+,{"stream_name":"stderr","time":191.484092363,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
+,{"stream_name":"stderr","time":191.484094781,"data":"    return self._call_impl(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":191.484097013,"data":"           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":191.484099237,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
+,{"stream_name":"stderr","time":191.484104282,"data":"    return forward_call(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":191.484106583,"data":"  File \"/usr/local/lib/python3.13/dist-packages/transformers/models/clip/modeling_clip.py\", line 209, in forward\n"}
+,{"stream_name":"stderr","time":191.484108986,"data":"    patch_embeds = self.patch_embedding(pixel_values.to(dtype=target_dtype))  # shape = [*, width, grid, grid]\n"}
+,{"stream_name":"stderr","time":191.4841114,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1779, in _wrapped_call_impl\n"}
+,{"stream_name":"stderr","time":191.484113803,"data":"    return self._call_impl(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":191.484116015,"data":"           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":191.484118256,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/module.py\", line 1790, in _call_impl\n"}
+,{"stream_name":"stderr","time":191.484120598,"data":"    return forward_call(*args, **kwargs)\n"}
+,{"stream_name":"stderr","time":191.484122862,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/conv.py\", line 553, in forward\n"}
+,{"stream_name":"stderr","time":191.484125216,"data":"    return self._conv_forward(input, self.weight, self.bias)\n"}
+,{"stream_name":"stderr","time":191.484127496,"data":"           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":191.484129756,"data":"  File \"/usr/local/lib/python3.13/dist-packages/torch/nn/modules/conv.py\", line 548, in _conv_forward\n"}
+,{"stream_name":"stderr","time":191.484132166,"data":"    return F.conv2d(\n"}
+,{"stream_name":"stderr","time":191.484134347,"data":"           ~~~~~~~~^\n"}
+,{"stream_name":"stderr","time":191.484136574,"data":"        input, weight, bias, self.stride, self.padding, self.dilation, self.groups\n"}
+,{"stream_name":"stderr","time":191.48413892,"data":"        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"}
+,{"stream_name":"stderr","time":191.484141221,"data":"    )\n"}
+,{"stream_name":"stderr","time":191.484143364,"data":"    ^\n"}
+,{"stream_name":"stderr","time":191.484145508,"data":"RuntimeError: Input type (torch.cuda.HalfTensor) and weight type (torch.HalfTensor) should be the same\n"}
+,{"stream_name":"stderr","time":191.484147851,"data":"\n"}
+,{"stream_name":"stderr","time":199.392763815,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":199.392793849,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":199.704966596,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":199.704995302,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":200.478085094,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":201.591340058,"data":"[NbConvertApp] Writing 342374 bytes to __results__.html\n"}
+]

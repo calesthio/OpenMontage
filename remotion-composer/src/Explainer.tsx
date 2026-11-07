@@ -230,7 +230,7 @@ interface Cut {
   heroSubtitle?: string;
   // Styling overrides
   backgroundColor?: string;
-  cardBackgroundColor?: string; // Inner card surface (comparison); defaults to theme.surfaceColor
+  cardBackgroundColor?: string; // Inner card surface (comparison, kpi_grid); defaults to theme.surfaceColor
   backgroundImage?: string; // AI-generated or stock image rendered behind the component
   backgroundVideo?: string; // Video clip rendered behind the component (takes priority over backgroundImage)
   backgroundVideoStart?: number; // Seek position in seconds for background video (default 0)
@@ -691,6 +691,7 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
         metrics={cut.chartData} title={cut.title} columns={cut.columns}
         colors={cut.chartColors || theme.chartColors} animationStyle={(cut.chartAnimation as any) || "count-up"}
         backgroundColor={bgColor}
+        cardBackgroundColor={cut.cardBackgroundColor || theme.surfaceColor}
         textColor={textColor}
       />
     );
@@ -708,6 +709,9 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
           <div style={{
             position: "absolute", top: 120, fontSize: 48, fontWeight: 700,
             color: textColor, textAlign: "center", width: "100%",
+            // ProgressBar renders an opaque full-frame AbsoluteFill after this
+            // node, so the title needs to be lifted above it to stay visible.
+            zIndex: 1,
           }}>
             {cut.title}
           </div>

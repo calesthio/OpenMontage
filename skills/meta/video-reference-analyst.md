@@ -108,6 +108,19 @@ The analyst's report MUST break down the reference video into the **five aspects
 
 See `skills/creative/video-gen-prompting.md` for primitive definitions and the canonical vocabulary used at every aspect.
 
+### v1.1 persistence contract
+
+New reference analyses MUST be written as `video_analysis_brief@1.1`. In addition to the
+conversational five-aspect summary, persist `analysis_id`, `analysis_run`, the typed
+`evidence` index, `five_aspect_observations`, and `assertions`. Every scene must contain
+one status-bearing observation for each aspect; use `unknown` when the tool or vision
+pass has not established a value and `not_applicable` only when it truly does not
+apply. Do not convert an inferred audience or "why it works" statement into an
+observation. Preserve the analysis ID and evidence IDs when handing the artifact to proposal, script,
+and scene-plan stages. For multiple references, keep one analysis per source inside a
+`video_analysis_bundle@1.1` and qualify ambiguous evidence refs as
+`analysis_id#evidence_id`. See `docs/VIDEO_ANALYSIS_CONTRACT_V1_1.md`.
+
 ### Step 2: Capability Audit
 
 Run standard preflight:

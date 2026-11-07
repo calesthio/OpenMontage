@@ -46,6 +46,15 @@ This is a first-class workflow in OpenMontage.
 
 If a model misses this distinction, it will often fall back to plain search + guesswork. That is incorrect for OpenMontage.
 
+### Reference-analysis contract v1.1
+
+New reference-driven artifacts use the versioned contract described in
+[`docs/VIDEO_ANALYSIS_CONTRACT_V1_1.md`](docs/VIDEO_ANALYSIS_CONTRACT_V1_1.md): one
+`video_analysis_brief@1.1` per source (or `video_analysis_bundle@1.1` for multiple
+sources), typed evidence and stable IDs, explicit five-aspect observation coverage, and
+resolvable `reference_analysis_refs` through proposal, script, and scene-plan stages. Narrative, review, and platform profiles remain
+versioned and composable; none is a universal story schema.
+
 ## Rule Zero — All Production Goes Through a Pipeline
 
 **Every video production request MUST go through the pipeline system. No exceptions.**

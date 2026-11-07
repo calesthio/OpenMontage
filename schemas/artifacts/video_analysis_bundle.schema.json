@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/video_analysis_bundle",
+  "title": "video_analysis_bundle",
+  "description": "Legacy-compatible container for multiple reference video analyses.",
+  "type": "object",
+  "required": [
+    "version",
+    "analyses"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "analyses": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object"
+      }
+    }
+  },
+  "additionalProperties": false
+}

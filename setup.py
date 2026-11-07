@@ -5,6 +5,10 @@ setup(
     version="0.1.0",
     description="AI-Orchestrated Video Production Platform",
     packages=find_packages(),
+    include_package_data=True,
+    package_data={
+        "schemas.artifacts": ["*.schema.json", "versions/*/*.schema.json"],
+    },
     python_requires=">=3.10",
     install_requires=[
         "pyyaml>=6.0",

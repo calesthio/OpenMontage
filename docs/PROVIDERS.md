@@ -968,43 +968,34 @@ Gen-3 Alpha Turbo and Gen-4 Aleph were removed from the Runway API on
 
 ### Higgsfield — Multi-Model Video Orchestrator
 
-> **Multi-model video platform.** Routes to Kling 3.0, Veo 3.1, Sora 2, WAN 2.5, and proprietary Soul Cinema through a single API. Includes Soul ID for character consistency across clips.
+> **Multi-model video platform.** The OpenMontage adapter can use Higgsfield's authenticated CLI catalog, including Seedance, Kling, Veo, Wan, Grok, Gemini, and other models available to the account.
 
-**Tools unlocked:** `higgsfield_video`
-**Env vars:** `HIGGSFIELD_API_KEY` + `HIGGSFIELD_API_SECRET` (or combined `HIGGSFIELD_KEY=key:secret`)
+**Tool unlocked:** `higgsfield_video`
 
-#### Setup
+#### Setup (preferred OAuth/CLI path)
 
-1. Go to [cloud.higgsfield.ai](https://cloud.higgsfield.ai/) and create an account
-2. Subscribe to a plan (Starter or above for API access)
-3. Navigate to API Keys section at [cloud.higgsfield.ai/api-keys](https://cloud.higgsfield.ai/api-keys)
-4. Generate an API key and secret
-5. Add to `.env`:
-   ```
-   HIGGSFIELD_API_KEY=your-api-key
-   HIGGSFIELD_API_SECRET=your-api-secret
-   ```
+1. Install the Higgsfield CLI if it is not already on `PATH`
+2. Run `higgsfield auth login` and complete the browser OAuth flow
+3. Select a workspace when prompted: `higgsfield workspace set <workspace_id>`
+4. Verify the session: `higgsfield account status`
+5. Discover the account's current video job types: `higgsfield model list --video`
 
-#### Pricing
+This path uses the CLI's local OAuth session. No Higgsfield credential needs to be placed in `.env`.
 
-| Plan | Price | Notes |
-|------|-------|-------|
-| Free | $0 | Limited credits |
-| Starter | $15/mo | Basic allocation |
-| Plus | $34/mo | Mid-tier, ~33-56 Kling 3.0 clips |
-| Ultra | $84/mo | High volume |
+#### Direct API fallback
 
-**Per-generation costs (approximate, via credits):**
+Installations that explicitly provision Cloud API credentials may still use:
 
-| Model | Cost per clip |
-|-------|--------------|
-| Kling 3.0 | ~$0.10 (cheapest) |
-| WAN 2.5 | ~$0.10 |
-| Soul Cinema | ~$0.15 |
-| Veo 3.1 | ~$0.50 |
-| Sora 2 | ~$0.50 |
+```text
+HIGGSFIELD_API_KEY=your-api-key
+HIGGSFIELD_API_SECRET=your-api-secret
+```
 
-**Free tier:** Limited credits on signup. No monthly renewal on free plan.
+or `HIGGSFIELD_KEY=key:secret`. Keep these values outside Git. When both paths exist, OpenMontage preserves the direct API path for compatibility; otherwise it uses the authenticated CLI.
+
+#### Pricing and model IDs
+
+Higgsfield credits and model availability are account-specific. Use `higgsfield model list --video` and the Higgsfield account/web console as the authority. OpenMontage's cost estimate is only a planning approximation; it is not a billing quote.
 
 ---
 
@@ -1455,7 +1446,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **OpenAI** | `OPENAI_API_KEY` | `openai_tts`, `openai_image` | Paid only |
 | **xAI** | `XAI_API_KEY` | `grok_image`, `grok_video` | Paid only |
 | **Runway** | `RUNWAY_API_KEY` | `runway_video` | Free trial + paid |
-| **Higgsfield** | `HIGGSFIELD_API_KEY` + `HIGGSFIELD_API_SECRET` | `higgsfield_video` | Subscription ($15-84/mo) |
+| **Higgsfield** | CLI OAuth (`higgsfield auth login`) or API key + secret | `higgsfield_video` | Subscription/credits |
 | **HeyGen** | `HEYGEN_API_KEY` | `heygen_video` | Pay-as-you-go |
 | **Suno** | `SUNO_API_KEY` | `suno_music` | Pay-as-you-go |
 | **Tencent Hunyuan** | `TENCENT_TOKENHUB_API_KEY` | `hunyuan_cloud_video` | Pay-as-you-go (~$0.25–0.83/gen) |

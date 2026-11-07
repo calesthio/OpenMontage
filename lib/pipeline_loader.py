@@ -82,6 +82,11 @@ def _condition_is_active(condition: Optional[str], context: Optional[dict[str, A
         return True
     if not context:
         return False
+    if condition == "video_analysis_brief_exists":
+        return bool(
+            context.get("video_analysis_brief_exists")
+            or context.get("video_analysis_bundle_exists")
+        )
     return bool(context.get(condition))
 
 

@@ -6,6 +6,14 @@ Write scripts as performable animation beats, not just narration.
 
 ## Process
 
+
+### Reference-aware v1.1 handoff
+
+When a `video_analysis_brief@1.1` or `video_analysis_bundle@1.1` is present for a reference-driven run, carry the brief's `analysis_id`. For a bundle, carry the IDs in the selected concept's `reference_analysis_refs` (a non-empty subset is valid), not every member by default, in
+`reference_analysis_refs` and emit `script@1.1`. Keep action beats in the script, use
+namespaced `beat_role` values when a narrative profile is selected, and attach
+`evidence_refs` to reference-derived claims. See `docs/VIDEO_ANALYSIS_CONTRACT_V1_1.md`.
+
 1. Lock audio architecture:
    - music-only,
    - narrator,

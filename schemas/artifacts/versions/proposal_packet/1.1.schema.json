@@ -1,0 +1,837 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/proposal_packet/1.1",
+  "title": "Proposal Packet@1.1",
+  "description": "Pre-production proposal containing concept options, production plan, cost estimate, and approval gate. The user reviews and approves this before any assets are generated or money is spent.",
+  "type": "object",
+  "required": [
+    "version",
+    "concept_options",
+    "selected_concept",
+    "production_plan",
+    "cost_estimate",
+    "approval"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1.1"
+    },
+    "concept_options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "hook",
+          "narrative_structure",
+          "visual_approach",
+          "target_duration_seconds",
+          "why_this_works"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "c1, c2, c3, etc."
+          },
+          "title": {
+            "type": "string",
+            "description": "Specific, compelling — not generic"
+          },
+          "hook": {
+            "type": "string",
+            "description": "Opening line that creates curiosity. Under 20 words."
+          },
+          "narrative_structure": {
+            "type": "string",
+            "enum": [
+              "analogy",
+              "problem_solution",
+              "journey",
+              "debate",
+              "myth_busting",
+              "timeline",
+              "comparison",
+              "tutorial",
+              "story",
+              "data_narrative"
+            ],
+            "description": "The structural approach to telling this story"
+          },
+          "visual_approach": {
+            "type": "string",
+            "description": "Primary visual strategy — specific enough to guide scene planning"
+          },
+          "suggested_playbook": {
+            "type": "string",
+            "description": "Style playbook name from styles/"
+          },
+          "target_audience": {
+            "type": "string",
+            "description": "Specific audience segment this angle serves best"
+          },
+          "target_platform": {
+            "type": "string",
+            "enum": [
+              "youtube",
+              "instagram",
+              "tiktok",
+              "linkedin",
+              "generic"
+            ]
+          },
+          "target_duration_seconds": {
+            "type": "number",
+            "minimum": 1
+          },
+          "key_points": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 2,
+            "description": "Concrete claims the video will prove — not vague topics"
+          },
+          "core_message": {
+            "type": "string",
+            "description": "The one thing the viewer remembers tomorrow"
+          },
+          "cta": {
+            "type": "string",
+            "description": "Call to action — specific and relevant"
+          },
+          "tone": {
+            "type": "string"
+          },
+          "grounded_in": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Which research_brief findings support this concept"
+          },
+          "why_this_works": {
+            "type": "string",
+            "description": "Rationale citing research findings — not vibes"
+          },
+          "reference_analysis_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "narrative_profile_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)?@[0-9]+(?:\\.[0-9]+)*$"
+            },
+            "uniqueItems": true
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "preserve": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "change": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "avoid": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 2,
+      "description": "At least 3 genuinely different concept directions",
+      "maxItems": 3
+    },
+    "selected_concept": {
+      "type": "object",
+      "required": [
+        "concept_id",
+        "rationale"
+      ],
+      "properties": {
+        "concept_id": {
+          "type": "string",
+          "description": "ID of the chosen concept from concept_options"
+        },
+        "rationale": {
+          "type": "string",
+          "description": "Why this concept was selected (user choice or agent recommendation)"
+        },
+        "modifications": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Any modifications the user requested to the selected concept"
+        },
+        "reference_analysis_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "narrative_profile_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)?@[0-9]+(?:\\.[0-9]+)*$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "production_plan": {
+      "type": "object",
+      "required": [
+        "pipeline",
+        "stages",
+        "render_runtime"
+      ],
+      "properties": {
+        "pipeline": {
+          "type": "string",
+          "description": "Pipeline manifest name, e.g., 'animated-explainer'"
+        },
+        "playbook": {
+          "type": "string",
+          "description": "Selected style playbook"
+        },
+        "stages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "stage",
+              "tools",
+              "approach"
+            ],
+            "properties": {
+              "stage": {
+                "type": "string"
+              },
+              "tools": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "tool_name",
+                    "role",
+                    "available"
+                  ],
+                  "properties": {
+                    "tool_name": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string",
+                      "description": "What this tool does in this stage"
+                    },
+                    "provider": {
+                      "type": "string"
+                    },
+                    "available": {
+                      "type": "boolean"
+                    },
+                    "estimated_cost_usd": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "why_this_provider": {
+                      "type": "string",
+                      "description": "Rationale for choosing this specific provider"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "approach": {
+                "type": "string",
+                "description": "What happens in this stage and how"
+              },
+              "fallback_if_unavailable": {
+                "type": "string",
+                "description": "What happens if primary tool is unavailable"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "quality_tradeoffs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "tradeoff",
+              "recommendation"
+            ],
+            "properties": {
+              "tradeoff": {
+                "type": "string",
+                "description": "e.g., 'ElevenLabs TTS ($0.30) vs Piper local (free)'"
+              },
+              "recommendation": {
+                "type": "string"
+              },
+              "quality_impact": {
+                "type": "string",
+                "description": "What the user gains or loses"
+              }
+            },
+            "additionalProperties": false
+          },
+          "description": "Explicit quality/cost tradeoffs for the user to consider"
+        },
+        "alternative_paths": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "description",
+              "total_cost_usd",
+              "quality_level"
+            ],
+            "properties": {
+              "description": {
+                "type": "string"
+              },
+              "total_cost_usd": {
+                "type": "number",
+                "minimum": 0
+              },
+              "quality_level": {
+                "type": "string",
+                "enum": [
+                  "premium",
+                  "standard",
+                  "budget",
+                  "free"
+                ]
+              },
+              "what_changes": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "description": "Alternative production paths at different price/quality points"
+        },
+        "delivery_promise": {
+          "type": "object",
+          "description": "Explicit classification of what this production promises to deliver",
+          "required": [
+            "promise_type",
+            "motion_required",
+            "tone_mode",
+            "quality_floor"
+          ],
+          "properties": {
+            "promise_type": {
+              "type": "string",
+              "enum": [
+                "motion_led",
+                "source_led",
+                "data_explainer",
+                "teacher_explainer",
+                "screen_demo",
+                "avatar_presenter",
+                "hybrid",
+                "localization"
+              ]
+            },
+            "motion_required": {
+              "type": "boolean",
+              "description": "True when the video's quality depends on actual motion, not still-image animation"
+            },
+            "source_required": {
+              "type": "boolean",
+              "description": "True when user-provided footage is the primary medium"
+            },
+            "tone_mode": {
+              "type": "string",
+              "description": "cinematic, educational, corporate, playful, raw, intimate, epic"
+            },
+            "quality_floor": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "presentable",
+                "broadcast"
+              ]
+            },
+            "approved_fallback": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "animatic, still_led, or null (no fallback approved)"
+            }
+          },
+          "additionalProperties": false
+        },
+        "renderer_family": {
+          "type": "string",
+          "enum": [
+            "explainer-data",
+            "explainer-teacher",
+            "cinematic-trailer",
+            "documentary-montage",
+            "product-reveal",
+            "screen-demo",
+            "presenter",
+            "animation-first"
+          ],
+          "description": "Locked at proposal stage — compose cannot change without logging a decision. This is the creative grammar, NOT the technical engine."
+        },
+        "render_runtime": {
+          "type": "string",
+          "enum": [
+            "remotion",
+            "hyperframes",
+            "ffmpeg"
+          ],
+          "description": "Locked at proposal stage — the technical runtime that realizes renderer_family. remotion=React scene components, hyperframes=HTML/CSS/GSAP, ffmpeg=simple concat/trim. Must be explicit and auditable; silent swaps are forbidden."
+        },
+        "composition_mode": {
+          "type": "string",
+          "enum": [
+            "templated",
+            "atelier"
+          ],
+          "description": "Locked at proposal — HOW the composition is built (orthogonal to render_runtime). templated=assemble stock cut.type scenes (Explainer/CinematicRenderer); atelier=hand-author a project-local composition from scratch with no creative-component reuse. Default atelier for hero work. See AGENT_GUIDE.md → 'Composition Authoring Mode' and skills/meta/bespoke-composition.md. The decision MUST be logged in decision_log with category='composition_mode' and BOTH options presented."
+        },
+        "art_direction": {
+          "type": "string",
+          "description": "Required when composition_mode='atelier'. Short note (or path to art-direction.md) committing to a fresh visual language for THIS piece — palette, type, motion, signature device. Per skills/meta/bespoke-composition.md step 1, written down BEFORE authoring scenes."
+        },
+        "taste_profile": {
+          "$ref": "#/$defs/taste_profile"
+        },
+        "music_source": {
+          "type": "object",
+          "description": "Resolved music plan from the proposal stage",
+          "properties": {
+            "source_type": {
+              "type": "string",
+              "enum": [
+                "user_library",
+                "ai_generated",
+                "bring_your_own",
+                "none"
+              ]
+            },
+            "track_path": {
+              "type": "string",
+              "description": "Path to selected track, if known"
+            },
+            "provider": {
+              "type": "string",
+              "description": "Music generation provider, if AI-generated"
+            },
+            "mood_direction": {
+              "type": "string",
+              "description": "Music mood description from research"
+            },
+            "estimated_cost_usd": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "voice_selection": {
+          "type": "object",
+          "description": "Selected voice/TTS provider and rationale",
+          "properties": {
+            "provider": {
+              "type": "string"
+            },
+            "voice_id": {
+              "type": "string"
+            },
+            "rationale": {
+              "type": "string"
+            },
+            "estimated_cost_usd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "delivery_style": {
+              "type": "string",
+              "description": "Plain-language voice direction, e.g. warm expert, expressive narrator, crisp tutorial."
+            },
+            "pacing_policy": {
+              "type": "string",
+              "description": "How the voice should use pauses, speed, and emphasis across the piece."
+            },
+            "sample_approval_required": {
+              "type": "boolean",
+              "description": "True when a TTS sample must be approved before batch narration generation."
+            }
+          },
+          "additionalProperties": false
+        },
+        "decision_log_ref": {
+          "type": "string",
+          "description": "Path to the decision_log artifact for this project"
+        },
+        "provider_rankings": {
+          "type": "object",
+          "description": "Scored provider rankings for each asset category used in this production",
+          "properties": {
+            "video": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "tool_name",
+                  "provider",
+                  "weighted_score"
+                ],
+                "properties": {
+                  "tool_name": {
+                    "type": "string"
+                  },
+                  "provider": {
+                    "type": "string"
+                  },
+                  "weighted_score": {
+                    "type": "number"
+                  },
+                  "task_fit": {
+                    "type": "number"
+                  },
+                  "output_quality": {
+                    "type": "number"
+                  },
+                  "explanation": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "image": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "tool_name",
+                  "provider",
+                  "weighted_score"
+                ],
+                "properties": {
+                  "tool_name": {
+                    "type": "string"
+                  },
+                  "provider": {
+                    "type": "string"
+                  },
+                  "weighted_score": {
+                    "type": "number"
+                  },
+                  "task_fit": {
+                    "type": "number"
+                  },
+                  "output_quality": {
+                    "type": "number"
+                  },
+                  "explanation": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "tts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "tool_name",
+                  "provider",
+                  "weighted_score"
+                ],
+                "properties": {
+                  "tool_name": {
+                    "type": "string"
+                  },
+                  "provider": {
+                    "type": "string"
+                  },
+                  "weighted_score": {
+                    "type": "number"
+                  },
+                  "task_fit": {
+                    "type": "number"
+                  },
+                  "output_quality": {
+                    "type": "number"
+                  },
+                  "explanation": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "music": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "tool_name",
+                  "provider",
+                  "weighted_score"
+                ],
+                "properties": {
+                  "tool_name": {
+                    "type": "string"
+                  },
+                  "provider": {
+                    "type": "string"
+                  },
+                  "weighted_score": {
+                    "type": "number"
+                  },
+                  "task_fit": {
+                    "type": "number"
+                  },
+                  "output_quality": {
+                    "type": "number"
+                  },
+                  "explanation": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "cost_estimate": {
+      "type": "object",
+      "required": [
+        "total_estimated_usd",
+        "line_items",
+        "budget_verdict"
+      ],
+      "properties": {
+        "total_estimated_usd": {
+          "type": "number",
+          "minimum": 0
+        },
+        "line_items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "tool",
+              "operation",
+              "estimated_usd"
+            ],
+            "properties": {
+              "tool": {
+                "type": "string"
+              },
+              "operation": {
+                "type": "string",
+                "description": "What this tool call does"
+              },
+              "quantity": {
+                "type": "number",
+                "description": "How many calls, e.g., 6 images, 1 TTS run"
+              },
+              "estimated_usd": {
+                "type": "number",
+                "minimum": 0
+              },
+              "notes": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "budget_cap_usd": {
+          "type": "number",
+          "minimum": 0,
+          "description": "User-set budget cap, if any"
+        },
+        "budget_verdict": {
+          "type": "string",
+          "enum": [
+            "within_budget",
+            "near_limit",
+            "over_budget",
+            "no_budget_set"
+          ],
+          "description": "How the estimate compares to the budget cap"
+        },
+        "savings_options": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Concrete ways to reduce cost if over budget"
+        }
+      },
+      "additionalProperties": false
+    },
+    "approval": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "approved",
+            "approved_with_changes",
+            "rejected"
+          ],
+          "description": "User's approval decision"
+        },
+        "user_notes": {
+          "type": "string",
+          "description": "Any feedback or changes requested"
+        },
+        "approved_budget_usd": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Budget the user explicitly approved"
+        }
+      },
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "reference_analysis_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "narrative_profile_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)?@[0-9]+(?:\\.[0-9]+)*$"
+      },
+      "uniqueItems": true
+    },
+    "reference_driven": {
+      "type": "boolean"
+    }
+  },
+  "$defs": {
+    "taste_profile": {
+      "type": "object",
+      "required": [
+        "design_read",
+        "visual_variance",
+        "motion_intensity",
+        "information_density"
+      ],
+      "properties": {
+        "design_read": {
+          "type": "string",
+          "description": "Brief-specific read of what the video should feel like and why."
+        },
+        "visual_variance": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "How much scenes may vary visually while still feeling coherent."
+        },
+        "motion_intensity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "How energetic the motion language should be."
+        },
+        "information_density": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "How much information can be on screen at once."
+        },
+        "palette_discipline": {
+          "type": "string"
+        },
+        "layout_variation": {
+          "type": "string"
+        },
+        "reference_strategy": {
+          "type": "string"
+        },
+        "anti_patterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "quality_gates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "reference_driven"
+        ],
+        "properties": {
+          "reference_driven": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "reference_analysis_refs"
+        ]
+      }
+    }
+  ]
+}

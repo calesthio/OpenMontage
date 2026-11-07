@@ -84,6 +84,9 @@ stages:
     skill: pipelines/animation/proposal-director
     required_artifacts_in:
       - research_brief
+    optional_artifacts_in:
+      - video_analysis_brief
+      - video_analysis_bundle
     produces:
       - proposal_packet
       - decision_log
@@ -126,6 +129,8 @@ stages:
       - proposal_packet
     optional_artifacts_in:
       - research_brief
+      - video_analysis_brief
+      - video_analysis_bundle
     produces:
       - script
     optional_tools:
@@ -152,6 +157,8 @@ stages:
       - script
     optional_artifacts_in:
       - proposal_packet
+      - video_analysis_brief
+      - video_analysis_bundle
     produces:
       - scene_plan
     tools_available: []

@@ -7,6 +7,15 @@ reuse, cost, and runtime choice.
 
 ## Required Proposal Elements
 
+### Reference-aware v1.1 handoff
+
+When a `video_analysis_brief@1.1` or `video_analysis_bundle@1.1` is present for a reference-driven run, emit a `proposal_packet@1.1` with
+`reference_analysis_refs`, per-concept preserve/change/avoid decisions, evidence refs,
+and composable `narrative_profile_refs`. Keep observations in the analysis artifact and
+recommendations in the proposal; do not create a format-pattern entity. See
+`docs/VIDEO_ANALYSIS_CONTRACT_V1_1.md`.
+
+
 Each option must include:
 
 - characters and roles,

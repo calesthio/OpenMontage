@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/artifacts/brief/1.1",
+  "title": "Video Brief@1.1",
+  "description": "Creative brief produced by the Idea Explorer agent.",
+  "type": "object",
+  "required": [
+    "version",
+    "title",
+    "hook",
+    "key_points",
+    "tone",
+    "style",
+    "target_platform",
+    "target_duration_seconds"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1.1"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hook": {
+      "type": "string",
+      "description": "Opening hook / attention grabber"
+    },
+    "key_points": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "core_message": {
+      "type": "string"
+    },
+    "cta": {
+      "type": "string",
+      "description": "Call to action"
+    },
+    "tone": {
+      "type": "string"
+    },
+    "style": {
+      "type": "string",
+      "description": "Style playbook name or custom description"
+    },
+    "target_audience": {
+      "type": "string"
+    },
+    "target_platform": {
+      "type": "string",
+      "enum": [
+        "youtube",
+        "instagram",
+        "tiktok",
+        "linkedin",
+        "generic"
+      ]
+    },
+    "target_duration_seconds": {
+      "type": "number",
+      "minimum": 1
+    },
+    "reference_material": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Paths or URLs to source material"
+    },
+    "angle_options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "description"
+        ]
+      },
+      "description": "2-3 angle options for user to choose from"
+    },
+    "selected_angle": {
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "reference_analysis_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "narrative_profile_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)?@[0-9]+(?:\\.[0-9]+)*$"
+      },
+      "uniqueItems": true
+    },
+    "reference_driven": {
+      "type": "boolean"
+    },
+    "adaptation": {
+      "type": "object",
+      "properties": {
+        "preserve": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "change": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "avoid": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "reference_driven"
+        ],
+        "properties": {
+          "reference_driven": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "reference_analysis_refs"
+        ]
+      }
+    }
+  ]
+}

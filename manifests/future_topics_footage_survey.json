@@ -1,0 +1,256 @@
+[
+  {
+    "topic": "Европа Клиппер ледяные спутники миссия",
+    "sources": {
+      "nasa": {
+        "found": 0,
+        "examples": [],
+        "status": "OK"
+      },
+      "archive_org": {
+        "found": 0,
+        "examples": [],
+        "status": "OK"
+      },
+      "wikimedia_commons": {
+        "found": null,
+        "examples": [],
+        "license": null,
+        "status": "ERROR: HTTP Error 403: Forbidden"
+      }
+    }
+  },
+  {
+    "topic": "Europa Clipper icy moons mission",
+    "sources": {
+      "nasa": {
+        "found": 59,
+        "examples": [
+          {
+            "title": "NASA Begins Assembly of Europa Clipper Spacecraft",
+            "identifier": "PIA25125",
+            "license": "Public Domain (US Government work; verify third-party credits)"
+          },
+          {
+            "title": "Europa Clipper Approaches Its Target (Artist's Concept)",
+            "identifier": "PIA26445",
+            "license": "Public Domain (US Government work; verify third-party credits)"
+          },
+          {
+            "title": "Europa Clipper Zooms Over Its Target of Study (Artist's Concept)",
+            "identifier": "PIA26443",
+            "license": "Public Domain (US Government work; verify third-party credits)"
+          }
+        ],
+        "status": "OK"
+      },
+      "archive_org": {
+        "found": 6,
+        "examples": [
+          {
+            "title": "A Poem for Europa by U.S. Poet Laureate Ada Limón",
+            "identifier": "nasa_tv-A_Poem_for_Europa_by_U.S._Poet_Laureate_Ada_Limon",
+            "license": "Check collection license"
+          },
+          {
+            "title": "NASA Reveals New Discoveries on Oceans Beyond Earth During Science Briefing",
+            "identifier": "nasa_tv-NASA_Reveals_New_Discoveries_on_Oceans_Beyond_Earth_During_Science_Briefing",
+            "license": "Check collection license"
+          },
+          {
+            "title": "Small Steps, Giant Leaps: Episode 142: Europa Clipper: Voyage to a Water World",
+            "identifier": "lioe5nhmsvr4vhpslwcgmaea7bsohrtyjnlgyhll",
+            "license": "Check collection license"
+          }
+        ],
+        "status": "OK"
+      },
+      "wikimedia_commons": {
+        "found": null,
+        "examples": [],
+        "license": null,
+        "status": "ERROR: HTTP Error 403: Forbidden"
+      }
+    }
+  },
+  {
+    "topic": "Глубокое время вымершие экосистемы палеонтология",
+    "sources": {
+      "nasa": {
+        "found": 0,
+        "examples": [],
+        "status": "OK"
+      },
+      "archive_org": {
+        "found": 0,
+        "examples": [],
+        "status": "OK"
+      },
+      "wikimedia_commons": {
+        "found": null,
+        "examples": [],
+        "license": null,
+        "status": "ERROR: HTTP Error 403: Forbidden"
+      }
+    }
+  },
+  {
+    "topic": "deep time extinct ecosystems paleontology",
+    "sources": {
+      "nasa": {
+        "found": 0,
+        "examples": [],
+        "status": "OK"
+      },
+      "archive_org": {
+        "found": 0,
+        "examples": [],
+        "status": "OK"
+      },
+      "wikimedia_commons": {
+        "found": null,
+        "examples": [],
+        "license": null,
+        "status": "ERROR: HTTP Error 403: Forbidden"
+      }
+    }
+  },
+  {
+    "topic": "экзопланеты поиск планет Kepler TESS",
+    "sources": {
+      "nasa": {
+        "found": 0,
+        "examples": [],
+        "status": "OK"
+      },
+      "archive_org": {
+        "found": 0,
+        "examples": [],
+        "status": "OK"
+      },
+      "wikimedia_commons": {
+        "found": null,
+        "examples": [],
+        "license": null,
+        "status": "ERROR: HTTP Error 403: Forbidden"
+      }
+    }
+  },
+  {
+    "topic": "exoplanets Kepler TESS discovery",
+    "sources": {
+      "nasa": {
+        "found": 0,
+        "examples": [],
+        "status": "OK"
+      },
+      "archive_org": {
+        "found": 7,
+        "examples": [
+          {
+            "title": "Consciousness-Enhanced Five-Domain Physical Synthesis for Exoplanet False-Positive Discrimination: Novel Planet Candidate Predictions from Kepler Objects of Interest",
+            "identifier": "osf-registrations-tf4bw-v1",
+            "license": "Check collection license"
+          },
+          {
+            "title": "5,000 Exoplanets: Listen to the Sounds of Discovery (NASA Data Sonification)",
+            "identifier": "nasa_tv-5_000_Exoplanets_-_Listen_to_the_Sounds_of_Discovery_NASA_Data_Sonification",
+            "license": "Check collection license"
+          },
+          {
+            "title": "5,000 Exoplanets: Listen to the Sounds of Discovery (360 Video)",
+            "identifier": "nasa_tv-5_000_Exoplanets_-_Listen_to_the_Sounds_of_Discovery_360_Video",
+            "license": "Check collection license"
+          }
+        ],
+        "status": "OK"
+      },
+      "wikimedia_commons": {
+        "found": null,
+        "examples": [],
+        "license": null,
+        "status": "ERROR: HTTP Error 403: Forbidden"
+      }
+    }
+  },
+  {
+    "topic": "альтернативная история технологий",
+    "sources": {
+      "nasa": {
+        "found": 0,
+        "examples": [],
+        "status": "OK"
+      },
+      "archive_org": {
+        "found": 7,
+        "examples": [
+          {
+            "title": "Аудиокнига \"Ложь эволюции. Книга 3\"",
+            "identifier": "01-mp-3_20251011",
+            "license": "Check collection license"
+          },
+          {
+            "title": "Территория Заблуждений С Игорем Прокопенко",
+            "identifier": "convert.io_202602",
+            "license": "Check collection license"
+          },
+          {
+            "title": "Территория Заблуждений С Игорем Прокопенко",
+            "identifier": "convert.io",
+            "license": "Check collection license"
+          }
+        ],
+        "status": "OK"
+      },
+      "wikimedia_commons": {
+        "found": null,
+        "examples": [],
+        "license": null,
+        "status": "ERROR: HTTP Error 403: Forbidden"
+      }
+    }
+  },
+  {
+    "topic": "alternative history of technology",
+    "sources": {
+      "nasa": {
+        "found": 1,
+        "examples": [
+          {
+            "title": "Gemini Simulator and Neil Armstrong ",
+            "identifier": "LRC-1963-B701_P-09365",
+            "license": "Public Domain (US Government work; verify third-party credits)"
+          }
+        ],
+        "status": "OK"
+      },
+      "archive_org": {
+        "found": 10,
+        "examples": [
+          {
+            "title": "Man, Economy, and State | Chapter 5, Part 2/9: The Evenly Rotating Economy",
+            "identifier": "youtube-kf1UUCQl4mM",
+            "license": "Check collection license"
+          },
+          {
+            "title": "KSCO 1080 AM [AM 1080 KSCO] : April 16, 2017 02:00PM-03:00PM PDT",
+            "identifier": "KSCO_1080_AM_20170416_210000",
+            "license": "Check collection license"
+          },
+          {
+            "title": "TWIAR 1013 HAM",
+            "identifier": "TWIAR1013HAM",
+            "license": "http://creativecommons.org/licenses/by-nc-nd/4.0/"
+          }
+        ],
+        "status": "OK"
+      },
+      "wikimedia_commons": {
+        "found": null,
+        "examples": [],
+        "license": null,
+        "status": "ERROR: HTTP Error 403: Forbidden"
+      }
+    }
+  }
+]

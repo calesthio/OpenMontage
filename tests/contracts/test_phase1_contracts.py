@@ -9,7 +9,7 @@ import pytest
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from tools.base_tool import BaseTool, ToolResult, ToolTier, ToolStatus, DependencyError
+from tools.base_tool import BaseTool, ToolTier, ToolStatus
 from tools.tool_registry import ToolRegistry
 from lib.pipeline_loader import load_pipeline, get_stage_order, get_required_tools, list_pipelines
 

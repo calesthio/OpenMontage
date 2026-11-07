@@ -1,6 +1,6 @@
 # OpenMontage Architecture
 
-> Last updated: 2026-03-28 | Derived from code exploration, not prior documentation.
+> Last updated: 2026-09-01 | Derived from code exploration, not prior documentation.
 
 OpenMontage is an **agent-orchestrated video production platform**. An LLM coding assistant (Claude Code, Cursor, Copilot, etc.) acts as the orchestrator — reading pipeline manifests, following skill instructions, calling Python tools, and checkpointing state. There is no runtime Python orchestrator; the agent _is_ the control plane.
 
@@ -38,9 +38,8 @@ OpenMontage/
 │   ├── pipeline_loader.py  # YAML manifest loading & validation
 │   ├── media_profiles.py   # Platform-specific render profiles (YouTube, TikTok, etc.)
 │   ├── env_loader.py       # .env variable management
-│   └── providers/          # (Reserved for future provider abstractions)
 │
-├── tools/                  # 57+ Python tool implementations
+├── tools/                  # 121 registered tool implementations
 │   ├── base_tool.py        # Abstract base class — the tool contract
 │   ├── tool_registry.py    # Auto-discovery singleton registry
 │   ├── cost_tracker.py     # Budget governance (estimate → reserve → reconcile)

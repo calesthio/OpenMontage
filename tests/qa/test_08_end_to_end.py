@@ -24,7 +24,6 @@ from lib.checkpoint import (
     read_checkpoint,
     get_completed_stages,
     get_next_stage,
-    STAGES,
     CANONICAL_STAGE_ARTIFACTS,
 )
 from tools.cost_tracker import CostTracker, BudgetMode

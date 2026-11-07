@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
-from lib.paths import PROJECTS_DIR, REPO_ROOT  # single source of truth
+from lib.paths import PROJECTS_DIR  # single source of truth
 
 EVENTS_FILENAME = "events.jsonl"
 

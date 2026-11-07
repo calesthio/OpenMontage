@@ -7,7 +7,6 @@ using the Manim Community Edition engine. Free, local, no API key required.
 from __future__ import annotations
 
 import ast
-import os
 import shutil
 import subprocess
 import tempfile

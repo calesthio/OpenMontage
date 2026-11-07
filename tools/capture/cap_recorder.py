@@ -19,8 +19,6 @@ This tool does NOT control Cap directly — it acts as a bridge:
 
 from __future__ import annotations
 
-import glob
-import json
 import os
 import platform
 import shutil

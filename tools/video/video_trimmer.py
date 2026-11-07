@@ -7,7 +7,6 @@ by default.
 
 from __future__ import annotations
 
-import json
 import time
 import tempfile
 from pathlib import Path

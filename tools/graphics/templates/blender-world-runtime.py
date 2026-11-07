@@ -15,7 +15,7 @@ from pathlib import Path
 
 import bpy
 from mathutils import Vector
-from mathutils.noise import fractal, hetero_terrain, noise_vector, seed_set
+from mathutils.noise import fractal, hetero_terrain, seed_set
 
 
 def args_after_separator() -> argparse.Namespace:

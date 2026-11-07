@@ -13,7 +13,6 @@ Falls back to FFmpeg region-based filters if MediaPipe is not installed.
 
 from __future__ import annotations
 
-import json
 import time
 from pathlib import Path
 from typing import Any
@@ -178,7 +177,6 @@ class EyeEnhance(BaseTool):
     ) -> ToolResult:
         """Full MediaPipe Face Mesh + OpenCV pipeline for precise eye enhancement."""
         import cv2
-        import numpy as np
         import mediapipe as mp
 
         operations = inputs.get("operations", ["dark_circles", "brighten_eyes"])
@@ -279,7 +277,6 @@ class EyeEnhance(BaseTool):
         sharpen_intensity: float,
     ):
         """Apply eye enhancements to a single frame using detected landmarks."""
-        import cv2
         import numpy as np
 
         result = frame.copy()

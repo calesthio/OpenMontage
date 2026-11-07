@@ -11,7 +11,7 @@ internally and normalises both into the same `Candidate` shape. The
 corpus builder never branches on kind.
 
 Uses `PEXELS_API_KEY` from the environment. `.env` is loaded at process
-start by `tools.base_tool._load_dotenv`.
+start by `tools.base_tool.load_dotenv`.
 """
 from __future__ import annotations
 

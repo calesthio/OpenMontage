@@ -24,7 +24,7 @@ That intelligence lives in the corpus manager and retrieval skills.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Iterable, Sequence, Union
+from typing import Sequence, Union
 
 import numpy as np
 

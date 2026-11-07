@@ -7,7 +7,6 @@ pipeline manifests + stage director skills + meta skills.
 """
 
 import importlib
-import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -21,7 +20,6 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from lib.config_model import OpenMontageConfig
 from lib.checkpoint import (
     CheckpointValidationError,
-    STAGES,
     get_next_stage,
     read_checkpoint,
     write_checkpoint,
@@ -39,7 +37,7 @@ from lib.pipeline_loader import (
 )
 from tools.base_tool import BaseTool, ToolResult, ToolTier, ToolStatus
 from tools.tool_registry import ToolRegistry
-from tools.cost_tracker import CostTracker, BudgetMode, BudgetExceededError, ApprovalRequiredError
+from tools.cost_tracker import CostTracker, BudgetMode, BudgetExceededError
 from schemas.artifacts import load_schema, validate_artifact, list_schemas
 
 

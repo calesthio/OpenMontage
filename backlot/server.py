@@ -19,7 +19,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
-from backlot.state import PROJECTS_DIR, REPO_ROOT, list_projects, load_board_state, summarize_project
+from backlot.state import PROJECTS_DIR, REPO_ROOT, load_board_state, summarize_project
 
 UI_DIR = Path(__file__).resolve().parent / "ui"
 THUMB_CACHE_DIR = REPO_ROOT / ".backlot" / "thumbs"

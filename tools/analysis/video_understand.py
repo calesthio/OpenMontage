@@ -397,8 +397,6 @@ class VideoUnderstand(BaseTool):
         from transformers import (
             CLIPProcessor,
             CLIPModel,
-            BlipProcessor,
-            BlipForConditionalGeneration,
             Blip2Processor,
             Blip2ForConditionalGeneration,
             AutoProcessor,

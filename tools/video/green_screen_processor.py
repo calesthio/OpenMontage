@@ -13,7 +13,6 @@ Methods:
 from __future__ import annotations
 
 import json
-import os
 import platform
 import shutil
 import time
@@ -314,22 +313,7 @@ class GreenScreenProcessor(BaseTool):
                 # Check stderr for color stats
                 output = result.stderr or ""
 
-                # Alternative: use FFmpeg to count green-ish pixels
-                # Run a simpler hue check with colorchannelmixer
-                cmd2 = [
-                    "ffmpeg", "-y",
-                    "-i", str(sample),
-                    "-vf", (
-                        "split[a][b];"
-                        "[a]colorchannelmixer=rr=0:gg=1:bb=0,"
-                        "threshold=threshold=0.3:similarity=0.3[mask];"
-                        "[mask]blackframe=amount=0:threshold=32"
-                    ),
-                    "-frames:v", "1",
-                    "-f", "null", self._null_device,
-                ]
-                # This is complex; use a simpler approach: check raw pixels
-                # via a green-range filter
+                # Count green-ish pixels via a green-range filter.
                 cmd_green = [
                     "ffmpeg", "-y",
                     "-i", str(sample),
@@ -490,19 +474,7 @@ class GreenScreenProcessor(BaseTool):
             except Exception:
                 # Try with the frame size explicitly to fix scale
                 try:
-                    cmd_retry = [
-                        "ffmpeg", "-y",
-                        "-i", str(frame),
-                        "-vf",
-                        f"chromakey=color=0x00FF00:similarity=0.3:blend=0.08,"
-                        f"split[fg][alpha];"
-                        f"[alpha]alphaextract[a];"
-                        f"color=c={ffmpeg_bg}[bg];"
-                        f"[bg][fg][a]maskedmerge",
-                        "-frames:v", "1",
-                        str(out_path),
-                    ]
-                    # Simpler fallback: just apply chromakey without compositing
+                    # Fallback: apply chromakey without compositing.
                     cmd_simple = [
                         "ffmpeg", "-y",
                         "-i", str(frame),

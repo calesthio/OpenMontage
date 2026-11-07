@@ -14,7 +14,6 @@ install instructions when no provider is configured.
 
 from __future__ import annotations
 
-import json
 import os
 import time
 from pathlib import Path

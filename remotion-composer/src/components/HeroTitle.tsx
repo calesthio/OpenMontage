@@ -37,8 +37,11 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Staggered letter-by-letter spring
-  const titleChars = title.split("");
+  // Staggered letter-by-letter spring. Letters are grouped per word so the
+  // flex row only wraps at spaces, never mid-word (narrow/vertical frames).
+  const words = title.split(" ");
+  const firstWordLength = words[0].length;
+  let charIndex = 0;
 
   return (
     <AbsoluteFill
@@ -62,30 +65,40 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
             gap: 0,
           }}
         >
-          {titleChars.map((char, i) => {
-            const delay = i * 1.2;
-            const charSpring = spring({
-              frame: frame - delay,
-              fps,
-              config: { damping: 12, stiffness: 150 },
-            });
+          {words.map((word, w) => (
+            <span
+              key={w}
+              style={{
+                display: "inline-flex",
+                whiteSpace: "nowrap",
+                marginRight: w < words.length - 1 ? "0.3em" : 0,
+              }}
+            >
+              {word.split("").map((char) => {
+                const i = charIndex++;
+                const delay = i * 1.2;
+                const charSpring = spring({
+                  frame: frame - delay,
+                  fps,
+                  config: { damping: 12, stiffness: 150 },
+                });
 
-            return (
-              <span
-                key={i}
-                style={{
-                  display: "inline-block",
-                  opacity: charSpring,
-                  transform: `translateY(${interpolate(charSpring, [0, 1], [30, 0])}px)`,
-                  color: i < 8 ? accentColor : textColor, // Accent first word
-                  whiteSpace: char === " " ? "pre" : undefined,
-                  minWidth: char === " " ? "0.3em" : undefined,
-                }}
-              >
-                {char}
-              </span>
-            );
-          })}
+                return (
+                  <span
+                    key={i}
+                    style={{
+                      display: "inline-block",
+                      opacity: charSpring,
+                      transform: `translateY(${interpolate(charSpring, [0, 1], [30, 0])}px)`,
+                      color: i < firstWordLength ? accentColor : textColor, // Accent first word
+                    }}
+                  >
+                    {char}
+                  </span>
+                );
+              })}
+            </span>
+          ))}
         </div>
 
         {/* Subtitle */}
@@ -94,7 +107,7 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
             style={{
               marginTop: 20,
               opacity: spring({
-                frame: frame - titleChars.length * 1.2 - 5,
+                frame: frame - title.length * 1.2 - 5,
                 fps,
                 config: { damping: 20 },
               }),

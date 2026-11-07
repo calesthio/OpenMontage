@@ -1453,6 +1453,8 @@ class VideoCompose(BaseTool):
         # --- 2. Slideshow risk check ---
         renderer_family = edit_decisions.get("renderer_family")
         scenes = scene_plan or []
+        if isinstance(scenes, dict):
+            scenes = scenes.get("scenes") or scenes.get("scene_plan") or scenes.get("items") or []
 
         # If no scene_plan passed, try to extract scene info from cuts
         if not scenes and resolved_cuts:
@@ -1630,6 +1632,8 @@ class VideoCompose(BaseTool):
 
         # --- Pre-compose validation gate ---
         scene_plan = inputs.get("scene_plan")
+        if isinstance(scene_plan, dict):
+            scene_plan = scene_plan.get("scenes") or scene_plan.get("scene_plan") or scene_plan.get("items")
         validation_block = self._pre_compose_validation(edit_decisions, resolved_cuts, scene_plan)
         if validation_block is not None:
             return validation_block

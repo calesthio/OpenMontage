@@ -2,7 +2,7 @@
 
 ## When to Use
 
-You are the Asset Producer for a generated explainer video. You have a `scene_plan` with required assets and a `script` with narration text. Your job is to generate every asset needed: narration audio, images, diagrams, code snippets, and background music. Every file must exist on disk before you finish.
+You are the Asset Producer for a generated explainer video. You have a `scene_plan` with required assets and a `script` with narration text. Your job is to generate every asset needed: narration audio, images, videos, diagrams, code snippets, and background music. Every file must exist on disk before you finish.
 
 This is where plans become real files. A missing or low-quality asset will torpedo the final video.
 
@@ -54,6 +54,7 @@ Also create tasks for:
 - **Narration audio** — one per script section (use `tts_selector` or a concrete TTS provider)
 - **Background music** — one track for the whole video (use `music_gen` or select from library)
 - **Sound effects** — per playbook's `sfx_style` (optional, use `music_gen` or stock)
+- **Video clips** — for scenes marked `type: "video"`, `broll`, or motion-heavy `generated` scenes that need actual footage rather than a static frame (use `video_selector` or a concrete video provider)
 
 ### Step 2: Check Budget
 
@@ -119,6 +120,15 @@ Process asset tasks grouped by tool for efficiency:
 4. Generate and verify the file exists
 5. If the result doesn't match expectations, refine the prompt and regenerate (max 2 retries)
 
+**Videos (`video_selector`)**:
+1. Build a motion-first prompt from the scene's purpose:
+   - subject + motion in temporal order
+   - scene, setting, camera, and movement
+   - any reference-image or identity anchors needed for continuity
+2. Choose `operation` explicitly: `text_to_video` for original motion clips, `image_to_video` when a scene starts from a generated or sourced still
+3. Prefer the free/local path when available for budget-sensitive projects; otherwise route to the best available provider
+4. Verify the clip exists, opens, and matches the scene's motion intent before moving on
+
 **Diagrams (`diagram_gen`)**:
 1. Convert the scene description into valid Mermaid syntax
 2. Apply playbook's `asset_generation.diagram_style`
@@ -171,6 +181,16 @@ Assemble all generated assets into the manifest:
       "cost_usd": 0.00
     },
     {
+      "id": "video-scene-4",
+      "type": "video",
+      "subtype": "generated",
+      "path": "assets/video/scene-4.mp4",
+      "source_tool": "video_selector",
+      "scene_id": "scene-4",
+      "duration_seconds": 5.2,
+      "cost_usd": 0.00
+    },
+    {
       "id": "music-bg",
       "type": "audio",
       "subtype": "music",
@@ -212,6 +232,7 @@ Assemble all generated assets into the manifest:
 - [ ] Every asset `path` exists on disk
 - [ ] Every narration section has a corresponding audio file
 - [ ] Every scene with `required_assets` has all assets generated
+- [ ] Every required video asset exists and is playable
 - [ ] Background music file exists
 
 **Quality check:**
@@ -219,6 +240,7 @@ Assemble all generated assets into the manifest:
 - [ ] Narration assets record `voice_performance.delivery_cues_applied`
 - [ ] Approved TTS sample uses the same provider, voice, and expressive settings as the batch
 - [ ] Images match the playbook's style (review consistency anchors)
+- [ ] Video clips match the playbook's motion style and camera intent
 - [ ] Diagrams are legible and complete
 - [ ] Total cost within budget
 

@@ -108,7 +108,7 @@
           "source_name": { "type": "string", "description": "e.g., 'Stack Overflow 2025 Developer Survey'" },
           "credibility": {
             "type": "string",
-            "enum": ["primary_source", "secondary_source", "anecdotal"],
+            "enum": ["primary_source", "secondary_source", "anecdotal", "manual_input"],
             "description": "How reliable is this data point?"
           },
           "surprise_factor": {

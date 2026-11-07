@@ -169,8 +169,8 @@ stages:
     required_tools:
       - tts_selector
       - image_selector
-    optional_tools:
       - video_selector
+    optional_tools:
       - math_animate
       - diagram_gen
       - code_snippet
@@ -190,9 +190,9 @@ stages:
       - Narration covers all script sections
       - Narration assets apply the approved voice performance plan and sample settings
       - Total cost within approved budget from proposal_packet
-      - Image style consistency across all generated visuals
-    success_criteria:
-      - Schema-valid asset_manifest with all required assets generated
+      - Image and video style consistency across all generated visuals
+      - Composition/runtime stage can consume every asset referenced in edit_decisions
+      - Schema-valid asset_manifest with all required assets generated, including video clips when a scene calls for motion footage
       - All file paths resolve to existing files
 
   - name: edit

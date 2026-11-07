@@ -87,10 +87,12 @@ description; the Edit stage converts that intent into `cut.type`.
 | `text_card` | Statements, closing messages, key terms | Remotion TextCard (centered, spring animation) | 3-5s |
 | `animation` | Concepts needing motion (data flow, math) | Remotion, Manim | 4-10s |
 | `diagram` | Processes, architecture, relationships | `diagram_gen` (Mermaid), `image_selector` | 4-8s |
-| `generated` | Illustrations, metaphors, real-world imagery | `image_selector` (FLUX/GPT Image) | 3-6s |
+| `generated` | Illustrations, metaphors, real-world imagery | `image_selector` (FLUX/GPT Image), `video_selector` for motion-heavy scenes | 3-6s |
 | `talking_head` | AI avatar speaking (if HeyGen available) | HeyGen tools | 5-15s |
-| `broll` | Context, real-world examples | Stock or generated footage | 3-6s |
+| `broll` | Context, real-world examples | Stock or generated footage via `video_selector` | 3-6s |
 | `screen_recording` | Code demos, UI walkthroughs | Recorded or simulated | 5-15s |
+
+For scenes that truly need motion footage, add a `required_assets` entry of `type: "video"` with `source: "generate"` or `source: "stock"` rather than trying to force a static image into a moving moment.
 
 **Zero-key scene selection:** When no image/video generation is available,
 plan `text_card`, `animation`, or `diagram` scenes and name an appropriate
@@ -220,6 +222,7 @@ The style playbook constrains your visual choices:
 - [ ] Diagram descriptions are specific enough for Mermaid syntax generation
 - [ ] Image descriptions are specific enough for FLUX/GPT Image prompt engineering
 - [ ] No scene requires tools that aren't in the tool registry
+- [ ] Motion-heavy scenes that need video are explicitly planned as `type: "video"` or `broll`, not silently downgraded to static image scenes
 
 ### Step 7: Self-Evaluate
 

@@ -32,7 +32,8 @@ from lib.env_loader import load_env  # noqa: E402
 load_env(ROOT)
 
 from lib.pipeline_loader import load_pipeline  # noqa: E402
-from tools.tool_registry import registry  # noqa: E402
+from tools.tool_registry import enable_budget_from_config, registry  # noqa: E402
+
 from tools.video.video_compose import VideoCompose  # noqa: E402
 
 
@@ -695,6 +696,8 @@ def _execution_mode(args: argparse.Namespace) -> str:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    # Budget governance: enforce config.yaml's budget block on every paid call.
+    enable_budget_from_config(registry)
     args = _parse_args(argv)
     mode = _execution_mode(args)
     project_dir = ROOT / "projects" / args.project

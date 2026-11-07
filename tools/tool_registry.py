@@ -9,10 +9,13 @@ from __future__ import annotations
 import importlib
 import inspect
 import pkgutil
+from pathlib import Path
 from types import ModuleType
 from typing import Any, Optional
 
+from lib.config_model import BudgetConfig, OpenMontageConfig
 from tools.base_tool import BaseTool, ToolStatus, ToolTier, ToolStability
+from tools.cost_gate import CostGate
 
 
 # Unicode punctuation that breaks on Windows cp1252 stdout. Map each to an
@@ -58,12 +61,32 @@ class ToolRegistry:
     def __init__(self) -> None:
         self._tools: dict[str, BaseTool] = {}
         self._discovered_packages: set[str] = set()
+        self.cost_gate: Optional[CostGate] = None
 
     def register(self, tool: BaseTool) -> None:
         """Register a tool instance."""
         if not tool.name:
             raise ValueError("Tool must have a non-empty name")
         self._tools[tool.name] = tool
+        if self.cost_gate is not None:
+            self.cost_gate.wrap(tool)
+
+    def enable_budget(
+        self,
+        config: BudgetConfig,
+        cost_log_path: Optional[Path] = None,
+    ) -> CostGate:
+        """Activate budget governance on this registry.
+
+        Installs a CostGate that estimates, reserves, approves, and
+        reconciles every paid tool call. Idempotent in effect: a later call
+        replaces the previous gate and re-wraps registered tools.
+        """
+        gate = CostGate(config, cost_log_path=cost_log_path)
+        self.cost_gate = gate
+        for tool in list(self._tools.values()):
+            gate.wrap(tool)
+        return gate
 
     def clear(self) -> None:
         """Clear registered tools and discovery state."""
@@ -490,3 +513,27 @@ class ToolRegistry:
 
 # Singleton registry instance
 registry = ToolRegistry()
+
+def enable_budget_from_config(
+    tool_registry: Optional["ToolRegistry"] = None,
+    repo_root: Optional[Path] = None,
+) -> Optional[CostGate]:
+    """Activate budget governance from config.yaml's budget block, if declared.
+
+    Production entry points call this once at startup. When config.yaml
+    carries a ``budget:`` block, the gate is installed on the registry
+    (already-registered tools are re-wrapped) and cost entries persist to
+    ``cost_log.json`` at the repo root; without a budget block, nothing
+    changes and None is returned.
+
+    Importing this module has no side effects, so tests and library consumers
+    keep today's behavior unless they opt in — enforcement happens where
+    production execution starts, not at import time.
+    """
+    target = tool_registry or registry
+    if repo_root is None:
+        repo_root = Path(__file__).resolve().parent.parent
+    loaded = OpenMontageConfig.load(repo_root / "config.yaml")
+    if "budget" not in loaded.model_fields_set:
+        return None
+    return target.enable_budget(loaded.budget, cost_log_path=repo_root / "cost_log.json")

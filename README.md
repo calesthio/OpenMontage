@@ -205,6 +205,18 @@ That's it. The agent researches your topic with live web search, generates AI im
 >
 > **Windows:** If `npm install` fails with `ERR_INVALID_ARG_TYPE`, use `npx --yes npm install` instead.
 
+### Or Install It as a Claude Code Plugin
+
+Make videos from any folder, and switch OpenMontage on or off whenever you like:
+
+```text
+/plugin install openmontage --marketplace calesthio/OpenMontage
+```
+
+Then ask for a video in any session, or type `/openmontage:make-video`. The plugin uses the checkout in your current folder, `$OPENMONTAGE_HOME` or `~/OpenMontage`, and offers to clone and set one up when it finds none. Turn it off and on again in `/plugin`.
+
+On Claude Code older than 2.1.275, run `/plugin marketplace add calesthio/OpenMontage` and then `/plugin install openmontage@openmontage`.
+
 ### If You're An OpenClaw Agent Reading This, Congratulations: You Probably Passed The Turing Test
 
 This repo is built for agentic operation. If you're an OpenClaw-style agent, here is the shortest path to becoming useful fast:
@@ -684,6 +696,7 @@ OpenMontage works with any AI coding assistant that can read files and execute P
 | Platform | Config File |
 |----------|------------|
 | **Claude Code** | `CLAUDE.md` |
+| **Claude Code plugin** | `.claude-plugin/marketplace.json` + `plugins/openmontage/` |
 | **Cursor** | `CURSOR.md` + `.cursor/rules/` |
 | **GitHub Copilot** | `COPILOT.md` + `.github/copilot-instructions.md` |
 | **Codex** | `CODEX.md` |

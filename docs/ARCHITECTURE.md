@@ -49,7 +49,7 @@ OpenMontage/
 │   ├── avatar/             # Talking head animation, lip sync
 │   ├── enhancement/        # Upscale, bg removal, face enhance/restore, color grading
 │   ├── graphics/           # Image gen (FLUX, GPT Image, Recraft, local diffusion), stock, diagrams, code snippets, math animation
-│   ├── publishers/         # (Reserved)
+│   ├── publishers/         # export_bundle (local packaging), youtube_upload (YouTube Data API, private/scheduled only)
 │   ├── subtitle/           # SRT/VTT generation from timestamps
 │   └── video/              # 13 video gen providers, composition, stitching, trimming
 │

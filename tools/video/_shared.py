@@ -789,7 +789,24 @@ def probe_output(path: Path) -> dict[str, Any]:
                     info["video_width"] = int(stream.get("width", 0))
                     info["video_height"] = int(stream.get("height", 0))
                     info["video_codec"] = stream.get("codec_name", "")
+                    fps = _parse_frame_rate(
+                        stream.get("avg_frame_rate")
+                    ) or _parse_frame_rate(stream.get("r_frame_rate"))
+                    if fps:
+                        info["video_fps"] = fps
+                    if str(stream.get("nb_frames", "")).isdigit():
+                        info["video_num_frames"] = int(stream["nb_frames"])
                     break
     except Exception:
         pass
     return info
+
+
+def _parse_frame_rate(value: Any) -> float | None:
+    """Parse an ffprobe rate such as ``24/1`` or ``24000/1001``."""
+    try:
+        num, _, den = str(value).partition("/")
+        rate = float(num) / float(den or 1)
+    except (TypeError, ValueError, ZeroDivisionError):
+        return None
+    return round(rate, 3) if rate > 0 else None

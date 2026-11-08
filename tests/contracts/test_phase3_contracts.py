@@ -41,7 +41,6 @@ from tools.graphics.google_imagen import GoogleImagen
 from tools.audio.google_music import GoogleMusic
 from tools.video.veo_video import VeoVideo
 
-
 # ---- Google Credentials ----
 
 
@@ -120,7 +119,9 @@ class TestPiperTTS:
         assert "text_to_speech" in tool.capabilities
         assert "offline_generation" in tool.capabilities
 
-    def test_status_requires_piper_executable_even_if_python_package_imports(self, monkeypatch):
+    def test_status_requires_piper_executable_even_if_python_package_imports(
+        self, monkeypatch
+    ):
         """F-12 regression: Piper generation shells out to `piper`, so importing
         the Python package is not enough to mark the provider available."""
         original_import = builtins.__import__
@@ -131,7 +132,9 @@ class TestPiperTTS:
                 return object()
             return original_import(name, *args, **kwargs)
 
-        monkeypatch.setattr(shutil, "which", lambda cmd: None if cmd == "piper" else original_which(cmd))
+        monkeypatch.setattr(
+            shutil, "which", lambda cmd: None if cmd == "piper" else original_which(cmd)
+        )
         monkeypatch.setattr(builtins, "__import__", fake_import)
 
         assert PiperTTS().get_status() == ToolStatus.UNAVAILABLE
@@ -253,7 +256,9 @@ class TestGoogleMusic:
             assert res.success is True
             assert res.data["provider"] == "google"
             assert res.data["model"] == "lyria-3.5"
-            assert mock_client.interactions.create.call_args.kwargs["model"] == "lyria-3.5"
+            assert (
+                mock_client.interactions.create.call_args.kwargs["model"] == "lyria-3.5"
+            )
             assert res.data["output"] == str(output_file)
             assert output_file.read_bytes() == b"my_fake_google_lyria_audio"
 
@@ -466,9 +471,9 @@ class TestVeoVideo:
                 del os.environ["FAL_KEY"]
             if "FAL_AI_API_KEY" in os.environ:
                 del os.environ["FAL_AI_API_KEY"]
-            assert tool._get_google_credentials_status() is True
+            assert tool._get_google_credentials_status() is False
             assert not tool._get_fal_api_key()
-            assert tool.get_status() == ToolStatus.AVAILABLE
+            assert tool.get_status() == ToolStatus.UNAVAILABLE
 
         with patch.dict(
             os.environ,
@@ -484,7 +489,7 @@ class TestVeoVideo:
         mock_probe.return_value = {"width": 1920, "height": 1080, "duration": 8.0}
 
         mock_client = MagicMock()
-        mock_client._api_client.vertexai = False
+        mock_client._api_client.vertexai = True
         mock_operation = MagicMock()
         mock_operation.done = True
         mock_operation.error = None
@@ -496,7 +501,9 @@ class TestVeoVideo:
 
         with (
             patch.dict(os.environ, {"GEMINI_API_KEY": "test_key"}),
-            patch("google.genai.Client", return_value=mock_client),
+            patch(
+                "tools.google_credentials.get_genai_client", return_value=mock_client
+            ),
         ):
             # auto_fix = True -> coerced to 8s
             inputs = {
@@ -533,7 +540,7 @@ class TestVeoVideo:
         mock_req_get.return_value = mock_resp
 
         mock_client = MagicMock()
-        mock_client._api_client.vertexai = False
+        mock_client._api_client.vertexai = True
         mock_operation = MagicMock()
         mock_operation.done = True
         mock_operation.error = None
@@ -544,7 +551,9 @@ class TestVeoVideo:
 
         with (
             patch.dict(os.environ, {"GEMINI_API_KEY": "test_key"}),
-            patch("google.genai.Client", return_value=mock_client),
+            patch(
+                "tools.google_credentials.get_genai_client", return_value=mock_client
+            ),
         ):
             # text_to_video
             inputs = {
@@ -605,9 +614,9 @@ class TestVeoVideo:
 
     def test_missing_local_image_paths(self):
         tool = VeoVideo()
-        with patch.dict(
-            os.environ,
-            {"GEMINI_API_KEY": "test_key", "GOOGLE_GENAI_USE_VERTEXAI": "false"},
+        with patch(
+            "tools.google_credentials.get_genai_client",
+            return_value=SimpleNamespace(vertexai=True),
         ):
             inputs = {
                 "prompt": "cinematic shot",
@@ -621,9 +630,9 @@ class TestVeoVideo:
 
     def test_missing_reference_image_paths(self):
         tool = VeoVideo()
-        with patch.dict(
-            os.environ,
-            {"GEMINI_API_KEY": "test_key", "GOOGLE_GENAI_USE_VERTEXAI": "false"},
+        with patch(
+            "tools.google_credentials.get_genai_client",
+            return_value=SimpleNamespace(vertexai=True),
         ):
             inputs = {
                 "prompt": "cinematic shot",
@@ -690,8 +699,16 @@ class TestCapabilityMetadata:
         reg.register(PiperTTS())
         catalog = reg.capability_catalog()
         assert "tts" in catalog
-        providers = {item["provider"] for item in catalog["tts"] if item["provider"] != "selector"}
+        providers = {
+            item["provider"]
+            for item in catalog["tts"]
+            if item["provider"] != "selector"
+        }
         assert providers == {
+            "grok",
+            "heygen",
+            "mistral",
+            "microsoft_mai",
             "azure",
             "cartesia",
             "dashscope",
@@ -744,9 +761,9 @@ class TestAnimatedExplainerManifest:
         manifest = load_pipeline("animated-explainer")
         for stage in manifest["stages"]:
             focus = get_stage_review_focus(manifest, stage["name"])
-            assert len(focus) >= 3, (
-                f"Stage {stage['name']} needs more review focus items"
-            )
+            assert (
+                len(focus) >= 3
+            ), f"Stage {stage['name']} needs more review focus items"
 
     def test_required_tools_complete(self):
         manifest = load_pipeline("animated-explainer")
@@ -760,9 +777,9 @@ class TestAnimatedExplainerManifest:
         approval_stages = {"proposal", "script", "scene_plan", "publish"}
         for stage in manifest["stages"]:
             if stage["name"] in approval_stages:
-                assert stage.get("human_approval_default") is True, (
-                    f"Stage {stage['name']} should require human approval"
-                )
+                assert (
+                    stage.get("human_approval_default") is True
+                ), f"Stage {stage['name']} should require human approval"
 
     def test_listed(self):
         assert "animated-explainer" in list_pipelines()
@@ -826,9 +843,9 @@ class TestStylePlaybooks:
         # compatible_playbooks is a dict with recommended/also_works lists
         playbook_names = compat.get("recommended", []) + compat.get("also_works", [])
         for name in playbook_names:
-            assert name in available, (
-                f"Manifest references unavailable playbook: {name}"
-            )
+            assert (
+                name in available
+            ), f"Manifest references unavailable playbook: {name}"
 
 
 # ---- Skills Existence ----

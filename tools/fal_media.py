@@ -113,7 +113,9 @@ class FalMedia(BaseTool):
         info["model_catalog"] = {
             m: {
                 "routes": r,
-                "verified_on": "2026-10-03",
+                "verified_on": max(
+                    CONTRACTS[e].get("verified_on", "2026-10-03") for e in r.values()
+                ),
                 "pricing_status": "quote_required",
             }
             for m, r in self.routes.items()
@@ -138,9 +140,11 @@ class FalMedia(BaseTool):
             or (
                 "edit"
                 if references and self.capability == "image_generation"
-                else "image_to_video"
-                if references
-                else next(iter(self.routes.get(model, {})), "")
+                else (
+                    "image_to_video"
+                    if references
+                    else next(iter(self.routes.get(model, {})), "")
+                )
             )
         )
         if operation == "generate":
@@ -276,9 +280,7 @@ class FalMedia(BaseTool):
             values = result.get("images") or (
                 [result["video"]]
                 if result.get("video")
-                else [result["audio"]]
-                if result.get("audio")
-                else []
+                else [result["audio"]] if result.get("audio") else []
             )
             if not values:
                 raise ValueError("Completed job returned no media")
@@ -291,9 +293,11 @@ class FalMedia(BaseTool):
             outputs = [
                 download(
                     v["url"],
-                    path
-                    if i == 0
-                    else path.with_name(f"{path.stem}_{i + 1}{path.suffix}"),
+                    (
+                        path
+                        if i == 0
+                        else path.with_name(f"{path.stem}_{i + 1}{path.suffix}")
+                    ),
                 )
                 for i, v in enumerate(values)
             ]

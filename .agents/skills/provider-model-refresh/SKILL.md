@@ -103,3 +103,10 @@ Contracts were inspected 2026-10-03; each schema records its official source.
 See docs/provider-update-plan-2026-10-03.md for release research. Public Kling 4
 generation endpoints remain unverified, so do not invent a model ID. Live voice
 agents require a separate streaming/session integration beyond batch narration.
+
+## October 23 follow-up
+
+For current Google retirement handling, Eleven v4 transports, and newly supported
+providers, read [provider-refresh-oct23](../provider-refresh-oct23/SKILL.md).
+The v4 narration HTTP payload is dialogue inputs/settings, not legacy TTS
+text/voice_settings; v4 Turbo is WebSocket-only in the direct file adapter.

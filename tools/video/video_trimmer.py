@@ -80,7 +80,10 @@ class VideoTrimmer(BaseTool):
     )
     retry_policy = RetryPolicy(max_retries=1, retryable_errors=["FFmpeg error"])
     resume_support = ResumeSupport.FROM_START
-    idempotency_key_fields = ["operation", "input_path", "start_seconds", "end_seconds", "speed_factor"]
+    idempotency_key_fields = [
+        "operation", "input_path", "start_seconds", "end_seconds",
+        "speed_factor", "segments", "codec",
+    ]
     side_effects = ["writes video file to output_path"]
     user_visible_verification = ["Play trimmed output and verify cut points"]
 

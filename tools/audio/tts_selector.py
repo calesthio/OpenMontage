@@ -151,7 +151,7 @@ class TTSSelector(BaseTool):
                 "description": "True when generating an approval sample before batch narration.",
             },
             "output_format": {
-                "type": "string",
+                "type": ["string", "object"],
                 "description": "Audio output format (e.g. mp3_44100_128). Passed through to provider.",
             },
             "preferred_provider": {
@@ -233,7 +233,11 @@ class TTSSelector(BaseTool):
         if tool is None:
             return ToolResult(success=False, error="No TTS provider available.")
 
-        result = tool.execute(self._adapt_inputs(tool, inputs))
+        try:
+            adapted = self._adapt_inputs(tool, inputs)
+        except (ValueError, TypeError) as exc:
+            return ToolResult(success=False, error=str(exc))
+        result = tool.execute(adapted)
         if result.success:
             result.data.setdefault("selected_tool", tool.name)
             result.data["selected_provider"] = tool.provider
@@ -254,7 +258,13 @@ class TTSSelector(BaseTool):
     def _adapt_inputs(tool: BaseTool, inputs: dict[str, Any]) -> dict[str, Any]:
         """Translate capability-level controls to provider-native inputs."""
         adapted = dict(inputs)
-        if tool.name != "azure_tts":
+        props = tool.input_schema.get("properties", {})
+        if inputs.get("model") and "model_id" in props and "model" not in props:
+            if inputs.get("model_id") and inputs["model_id"] != inputs["model"]:
+                raise ValueError("model and model_id disagree")
+            adapted["model_id"] = inputs["model"]
+            adapted.pop("model", None)
+        if tool.name not in {"azure_tts", "mai_tts"}:
             return adapted
 
         if inputs.get("voice_id") and not inputs.get("voice"):

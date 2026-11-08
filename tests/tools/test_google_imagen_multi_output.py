@@ -45,6 +45,8 @@ def imagen_tool(monkeypatch):
     fake = types.ModuleType("requests")
 
     def _post(url, headers=None, json=None, timeout=None):
+        assert "aiplatform.googleapis.com" in url
+        assert "x-goog-api-key" not in headers
         return _FakeResponse(json["parameters"]["sampleCount"])
 
     fake.post = _post
@@ -52,13 +54,25 @@ def imagen_tool(monkeypatch):
     monkeypatch.setenv("GOOGLE_API_KEY", "test-key")
     from tools.graphics.google_imagen import GoogleImagen
 
+    monkeypatch.setattr(
+        "tools.graphics.google_imagen.service_account_configured", lambda: True
+    )
+    monkeypatch.setattr(
+        "tools.graphics.google_imagen.get_access_token",
+        lambda: ("vertex-token", "project"),
+    )
     return GoogleImagen()
 
 
 def test_all_requested_images_are_written(imagen_tool, tmp_path):
     out = tmp_path / "gen.png"
     result = imagen_tool.execute(
-        {"prompt": "p", "number_of_images": 4, "output_path": str(out)}
+        {
+            "model": "imagen-4.0-generate-001",
+            "prompt": "p",
+            "number_of_images": 4,
+            "output_path": str(out),
+        }
     )
 
     assert result.success
@@ -74,6 +88,7 @@ def test_all_requested_images_are_written(imagen_tool, tmp_path):
 def test_artifacts_match_billed_image_count(imagen_tool, tmp_path):
     # What the user pays for must equal what they receive.
     inputs = {
+        "model": "imagen-4.0-generate-001",
         "prompt": "p",
         "number_of_images": 3,
         "output_path": str(tmp_path / "img.png"),
@@ -88,7 +103,12 @@ def test_artifacts_match_billed_image_count(imagen_tool, tmp_path):
 def test_single_image_keeps_exact_output_path(imagen_tool, tmp_path):
     out = tmp_path / "single.png"
     result = imagen_tool.execute(
-        {"prompt": "p", "number_of_images": 1, "output_path": str(out)}
+        {
+            "model": "imagen-4.0-generate-001",
+            "prompt": "p",
+            "number_of_images": 1,
+            "output_path": str(out),
+        }
     )
 
     assert result.success

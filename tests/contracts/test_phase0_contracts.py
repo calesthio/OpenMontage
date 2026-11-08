@@ -284,6 +284,30 @@ class TestSchemas:
     def test_video_analysis_brief_validates(self):
         validate_artifact("video_analysis_brief", sample_artifact("video_analysis_brief"))
 
+    def test_edit_decisions_accepts_documented_end_tag(self):
+        # documentary-montage edit-director.md §8b records edit_decisions.end_tag
+        # and compose-director.md §4b reads end_tag.offset_seconds.
+        doc = {
+            "version": "1.0",
+            "cuts": [{"id": "cut-1", "source": "asset-1", "in_seconds": 0, "out_seconds": 10}],
+            "render_runtime": "remotion",
+            "end_tag": {
+                "offset_seconds": 84.5,
+                "notes": "Tag starts at body_duration - tag_duration.",
+            },
+        }
+        validate_artifact("edit_decisions", doc)
+
+    def test_edit_decisions_end_tag_rejects_negative_offset(self):
+        doc = {
+            "version": "1.0",
+            "cuts": [{"id": "cut-1", "source": "asset-1", "in_seconds": 0, "out_seconds": 10}],
+            "render_runtime": "remotion",
+            "end_tag": {"offset_seconds": -1},
+        }
+        with pytest.raises(Exception):
+            validate_artifact("edit_decisions", doc)
+
 
 # ---- Checkpoint ----
 

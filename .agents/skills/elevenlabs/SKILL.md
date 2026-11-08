@@ -5,6 +5,13 @@ description: Generate AI voiceovers, sound effects, and music using ElevenLabs A
 
 # ElevenLabs Audio Generation
 
+## Current v4 transports
+
+For v4, v4 Turbo, Instant Soundtracks and realtime models, read
+[the October integration guide](../provider-refresh-oct23/SKILL.md).
+v4 uses Text to Dialogue; Turbo uses the dialogue WebSocket.
+Do not send those models to the legacy text-to-speech endpoint.
+
 ## OpenMontage provider routing
 
 Inspect the OpenMontage registry before choosing an authentication path.

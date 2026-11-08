@@ -116,7 +116,7 @@ speculative model strings.
 
 | Model | Direct provider | fal.ai | Runway | ComfyUI Partner Nodes | Local ComfyUI |
 |-------|-----------------|--------|--------|-----------------------|---------------|
-| **Gemini Omni Flash** | Google `gemini_omni_video` | `gemini_omni_fal` (T2V, I2V, references, editing) | `runway_video` model `gemini_omni_flash` | `GeminiVideoOmni` (hosted, paid credits) | Not available as local weights |
+| **Gemini Omni Flash** | Google `gemini_omni_video` (`gemini-omni-1.1-flash`) | `gemini_omni_fal` (T2V, I2V, references, editing) | `runway_video` model `gemini_omni_flash` | Legacy `GeminiVideoOmni` mapping is not a stable 1.1 fallback; migrate separately to `GeminiVideoOmniV2` | Not available as local weights |
 | **Seedance 2.5** | Volcengine `seedance_ark` model variant `2.5` | `seedance_video` model version `2.5` | `runway_video` model `seedance2_5` | `ByteDance2TextToVideoNode` (hosted, paid credits) | Not available as local weights |
 | **MiniMax H3** | `minimax_video` model `MiniMax-H3` | `minimax_fal_video` (`hailuo-03`) | `runway_video` model `hailuo3` | `MinimaxHailuo03TextToVideoNode` (hosted, paid credits) | Supported with official open weights and an exported API workflow |
 
@@ -842,9 +842,11 @@ To select the Gemini backend through the governed `image_selector`, pass
 
 | Model | Price | Notes |
 |-------|-------|-------|
-| `gemini-omni-flash-preview` | ~$0.10 per second of video | Billed as 5,792 output tokens/sec of 720p video at $17.50/1M tokens |
+| `gemini-omni-1.1-flash` | ~$0.10 per second of video | Standard input: $1.50/1M tokens. Output: $9.00/1M text tokens and $17.50/1M video tokens; 720p video emits 5,792 tokens/sec |
 
-Generates 3–10 second clips at 720p/24fps with synthesized audio, plus stateful conversational editing (`edit_video` via `previous_interaction_id`). **Paid tier only — no free tier.** A typical 8-second clip costs ~$0.80; each edit turn generates a new clip and bills again.
+The direct OpenMontage adapter generates 3–10 second clips at 720p/24fps with synthesized audio, plus stateful conversational editing (`edit_video` via `previous_interaction_id`). The `duration` input is only a planning/prompt hint: the adapter does not send it, the model chooses the actual duration, and the hint does not cap billing. `ToolResult.cost_usd` uses valid provider `usage` when available: all input modalities are $1.50/1M tokens, output text is $9.00/1M, and video plus unknown or unclassified output is conservatively $17.50/1M; separately reported thought tokens are also charged at $17.50/1M. If usage is missing or malformed, the adapter assumes the maximum 10-second output at the exact `10 × 5,792 × $17.50/1M = $1.0136` rate, then adds a conservative input-token estimate, so a short duration hint cannot lower the fallback.
+
+Set `store=false` for a one-shot generation that should not remain available for a later edit turn. If the paid generation succeeds but its URI download fails, the result includes `output_uri`, a usage-based cost when valid usage was returned (otherwise the conservative fallback), and a `resume_download` payload; retry that payload to perform GET-only recovery without submitting or charging for a second generation. **Paid tier only — no free tier.** Actual 720p video output is approximately $0.10/sec before input and any text/thought output; each edit turn generates a new clip and bills again.
 
 #### Google Music (Lyria) Pricing
 
@@ -1252,7 +1254,7 @@ The same tool also supports these ComfyUI Partner Nodes:
 
 | `model_family` | Node | Execution | Approximate cost |
 |----------------|------|-----------|------------------|
-| `gemini_omni_flash` | `GeminiVideoOmni` | Hosted Partner Node | ~$0.146/sec |
+| `gemini_omni_flash` (legacy preview) | `GeminiVideoOmni` | Hosted Partner Node; separate from the stable direct `gemini_omni_video` adapter | ~$0.146/sec |
 | `seedance_2.5` | `ByteDance2TextToVideoNode` | Hosted Partner Node | ~$0.148/sec 480p; ~$0.333/sec 720p |
 | `minimax_h3_api` | `MinimaxHailuo03TextToVideoNode` | Hosted Partner Node | ~$0.129/sec 768P; ~$0.186/sec 2K |
 | `minimax_h3_local` | official MiniMax H3 graph | Local GPU | No API charge |
@@ -1500,3 +1502,21 @@ A: For quality → ElevenLabs. For localization (50+ languages) → Google TTS. 
 
 **Q: Do I need all these providers?**
 A: No. Start with what you have. The selector pattern auto-routes to whatever's available. Missing a provider? The system falls through to the next one automatically.
+
+## October 23, 2026 additions and migrations
+
+See [the current integration guide](../.agents/skills/provider-refresh-oct23/SKILL.md)
+for exact tool/model/host selection, setup, limitations, and primary sources.
+
+Added HeyGen Voice1/Turbo/Free and catalog TTS, timing-preserving HeyGen conversion,
+xAI narration TTS, Voxtral3 TTS/STT, MAI Voice2.1/Flash, ElevenLabs video soundtracks,
+Nano Banana2.1 (Google/fal/Replicate), FLUX3 Image (BFL/fal/Replicate), FLUX3 Max video
+(fal), Vidu Q4 (fal), Grok Imagine1.5/Lite, Fibo2 (Bria/fal), MAI Image2.6/Flash,
+and separate realtime transports for Grok Voice3, Eleven Realtime Mini/Max, and
+MAI streaming transcription. No Kling4 or realtime translation integration.
+
+Gemini Omni uses gemini-omni-1.1-flash. Retired Gemini Veo/Imagen calls fail with
+migration guidance; Vertex and aggregator routes are handled separately.
+Eleven v4 now uses the dialogue contract and Turbo uses its WebSocket transport.
+New provider availability is credential-based, not a live entitlement check.
+Pricing requires current quotes except the explicitly dated HeyGen free promotion.

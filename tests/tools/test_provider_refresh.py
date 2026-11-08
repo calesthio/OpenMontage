@@ -254,9 +254,9 @@ def test_avatar_v_eligibility_before_paid_post(monkeypatch, tmp_path):
             return {
                 "data": {
                     "avatar_type": "digital_twin" if eligible else "photo_avatar",
-                    "supported_api_engines": ["avatar_v"]
-                    if eligible
-                    else ["avatar_iv"],
+                    "supported_api_engines": (
+                        ["avatar_v"] if eligible else ["avatar_iv"]
+                    ),
                 }
             }
         if method == "POST":
@@ -440,7 +440,7 @@ def test_direct_eleven_v4_continuity_and_pcm(monkeypatch, tmp_path):
     result = ElevenLabsTTS().execute(
         {
             "text": "Next sentence",
-            "model_id": "eleven_v4_turbo",
+            "model_id": "eleven_v4",
             "previous_request_ids": ["r0"],
             "output_format": "pcm_24000",
             "output_path": str(output),
@@ -579,6 +579,30 @@ def test_gemini_voice_library_is_read_only(monkeypatch):
     result = GeminiTTS().execute({"operation": "list_voices"})
     assert result.success and result.data["voices"]
     assert request.call_args.args[0] == "GET"
+
+
+def test_gemini_tts_keeps_client_alive_during_request(monkeypatch, tmp_path):
+    import weakref
+    import tools.google_credentials as creds
+
+    class Interactions:
+        def __init__(self, client):
+            self._client = weakref.ref(client)
+
+        def create(self, **request):
+            if self._client() is None:
+                raise RuntimeError("client has been closed")
+            return SimpleNamespace(output_audio=SimpleNamespace(data=b"RIFFwav"))
+
+    class Client:
+        def __init__(self):
+            self.interactions = Interactions(self)
+
+    monkeypatch.setattr(creds, "get_genai_client", lambda **_: Client())
+    out = tmp_path / "speech.wav"
+    result = GeminiTTS().execute({"text": "Hola", "output_path": str(out)})
+    assert result.success, result.error
+    assert out.read_bytes() == b"RIFFwav"
 
 
 def test_unknown_price_preflight_is_not_free(monkeypatch):

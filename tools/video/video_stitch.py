@@ -141,7 +141,12 @@ class VideoStitch(BaseTool):
     )
     retry_policy = RetryPolicy(max_retries=1, retryable_errors=["Conversion failed"])
     resume_support = ResumeSupport.FROM_START
-    idempotency_key_fields = ["operation", "clips", "transition", "layout"]
+    idempotency_key_fields = [
+        "operation", "clips", "transition", "layout",
+        "transition_duration", "auto_normalize", "target_resolution", "target_fps",
+        "codec", "crf", "preset", "profile",
+        "pip_position", "pip_scale", "pip_margin",
+    ]
     side_effects = ["writes video file to output_path"]
     user_visible_verification = [
         "Play the stitched output and verify clip ordering, transitions, and A/V sync",

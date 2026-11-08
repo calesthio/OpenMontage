@@ -231,6 +231,15 @@
         "verdict": { "type": "string", "enum": ["strong", "acceptable", "revise", "fail"] }
       }
     },
+    "end_tag": {
+      "type": "object",
+      "description": "End-tag timing for overlay mode, recorded by the edit stage and read by compose. Omitted in concat mode. See documentary-montage edit-director.md §8b.",
+      "properties": {
+        "offset_seconds": { "type": "number", "minimum": 0, "description": "Body time at which the end-tag overlay starts (body_duration - tag_duration)." },
+        "notes": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
     "metadata": { "type": "object" }
   },
   "additionalProperties": false

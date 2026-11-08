@@ -2915,22 +2915,28 @@ class VideoCompose(BaseTool):
     @staticmethod
     def _build_subtitle_style(style: dict) -> str:
         """Build ASS force_style string from style dict."""
+
+        def _safe(val: Any) -> str:
+            # Every value below ends up inside -vf "...force_style='...'". Drop the
+            # characters that let a value close the quoted literal or start a new filter.
+            return "".join(c for c in str(val) if c not in "'\\:,;[]=")
+
         parts = []
-        parts.append(f"FontName={style.get('font', 'Inter')}")
-        parts.append(f"FontSize={style.get('font_size', 28)}")
+        parts.append(f"FontName={_safe(style.get('font', 'Inter'))}")
+        parts.append(f"FontSize={_safe(style.get('font_size', 28))}")
         parts.append(f"Bold={1 if style.get('bold', True) else 0}")
         if style.get("primary_color"):
-            parts.append(f"PrimaryColour={style['primary_color']}")
+            parts.append(f"PrimaryColour={_safe(style['primary_color'])}")
         if style.get("outline_color"):
-            parts.append(f"OutlineColour={style['outline_color']}")
+            parts.append(f"OutlineColour={_safe(style['outline_color'])}")
         if style.get("back_color"):
-            parts.append(f"BackColour={style['back_color']}")
+            parts.append(f"BackColour={_safe(style['back_color'])}")
         border_style = style.get("border_style", 1)
-        parts.append(f"BorderStyle={border_style}")
-        parts.append(f"Outline={style.get('outline_width', 2)}")
-        parts.append(f"Shadow={style.get('shadow', 0)}")
-        parts.append(f"MarginV={style.get('margin_v', 40)}")
-        parts.append(f"Alignment={style.get('alignment', 2)}")
+        parts.append(f"BorderStyle={_safe(border_style)}")
+        parts.append(f"Outline={_safe(style.get('outline_width', 2))}")
+        parts.append(f"Shadow={_safe(style.get('shadow', 0))}")
+        parts.append(f"MarginV={_safe(style.get('margin_v', 40))}")
+        parts.append(f"Alignment={_safe(style.get('alignment', 2))}")
         return ",".join(parts)
 
     @staticmethod

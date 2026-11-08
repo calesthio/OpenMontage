@@ -112,3 +112,7 @@ venv/
 # dirs are unwritable (see the NPM_CONFIG_CACHE note above), so `make test`
 # can leave pytest-of-<user>/ behind as untracked noise.
 pytest-of-*/
+
+
+# GFPGAN/facexlib download face-detection weights to ./gfpgan/weights at runtime
+gfpgan/

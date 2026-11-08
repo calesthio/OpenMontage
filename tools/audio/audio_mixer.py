@@ -25,7 +25,7 @@ from tools.base_tool import (
 
 class AudioMixer(BaseTool):
     name = "audio_mixer"
-    version = "0.1.1"
+    version = "0.1.2"
     tier = ToolTier.CORE
     capability = "audio_processing"
     provider = "ffmpeg"
@@ -272,7 +272,7 @@ class AudioMixer(BaseTool):
             fade_start = max(0.0, duration - float(fade_out))
             filters.append(f"afade=t=out:st={fade_start}:d={fade_out}")
         if delay_ms > 0:
-            filters.append(f"adelay={delay_ms}|{delay_ms}")
+            filters.append(f"adelay={delay_ms}:all=1")
 
         return filters
 

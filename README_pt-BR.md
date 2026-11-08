@@ -48,7 +48,7 @@
 <p align="center">
   <a href="https://www.youtube.com/@OpenMontage"><img src="https://img.shields.io/badge/YouTube-%40OpenMontage-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube"></a>
   <a href="https://x.com/calesthioailabs"><img src="https://img.shields.io/badge/X-%40calesthioailabs-111111?style=for-the-badge&logo=x&logoColor=white" alt="X"></a>
-  <a href="https://github.com/calesthio/OpenMontage/discussions"><img src="https://img.shields.io/badge/Community-GitHub%20Discussions-0b1220?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Discussions"></a>
+  <a href="https://github.com/OpenMontageInc/OpenMontage/discussions"><img src="https://img.shields.io/badge/Community-GitHub%20Discussions-0b1220?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Discussions"></a>
 </p>
 
 ---
@@ -57,7 +57,7 @@
 >
 > Estamos construindo algo novo para pessoas criativas e procuramos mentes curiosas para experimentar cedo.
 >
-> **[Ficou curioso? Dê uma primeira olhada e entre para os primeiros usuários.](https://github.com/calesthio/OpenMontage/discussions/892)**
+> **[Ficou curioso? Dê uma primeira olhada e entre para os primeiros usuários.](https://github.com/OpenMontageInc/OpenMontage/discussions/892)**
 
 Transforme seu assistente de código com IA em um estúdio completo de produção de vídeo. Descreva o que você quer em linguagem comum — seu agente cuida da pesquisa, do roteiro, da geração de assets, da edição e da composição final.
 
@@ -184,7 +184,7 @@ E quando uma execução termina, aperte **▶ REPLAY RUN** — a produção inte
 ### Instalar E Executar
 
 ```bash
-git clone https://github.com/calesthio/OpenMontage.git
+git clone https://github.com/OpenMontageInc/OpenMontage.git
 cd OpenMontage
 make setup
 ```
@@ -720,11 +720,11 @@ Veja `docs/ARCHITECTURE.md` para a referência técnica completa, `docs/PROVIDER
 
 ### Entre Para A Comunidade
 
-Usamos as [GitHub Discussions](https://github.com/calesthio/OpenMontage/discussions) para compartilhar trabalhos e ideias:
+Usamos as [GitHub Discussions](https://github.com/OpenMontageInc/OpenMontage/discussions) para compartilhar trabalhos e ideias:
 
-- **[Show and Tell](https://github.com/calesthio/OpenMontage/discussions/categories/show-and-tell)** — compartilhe vídeos que você fez, prompts que funcionaram bem ou fluxos criativos que você descobriu
-- **[Ideas](https://github.com/calesthio/OpenMontage/discussions/categories/ideas)** — sugira novas pipelines, ferramentas, playbooks de estilo ou integrações
-- **[Q&A](https://github.com/calesthio/OpenMontage/discussions/categories/q-a)** — tire dúvidas sobre instalação, pipelines ou resolução de problemas
+- **[Show and Tell](https://github.com/OpenMontageInc/OpenMontage/discussions/categories/show-and-tell)** — compartilhe vídeos que você fez, prompts que funcionaram bem ou fluxos criativos que você descobriu
+- **[Ideas](https://github.com/OpenMontageInc/OpenMontage/discussions/categories/ideas)** — sugira novas pipelines, ferramentas, playbooks de estilo ou integrações
+- **[Q&A](https://github.com/OpenMontageInc/OpenMontage/discussions/categories/q-a)** — tire dúvidas sobre instalação, pipelines ou resolução de problemas
 
 Fez algo legal? Poste no Show and Tell — vamos adorar ver o que você construiu.
 
@@ -734,7 +734,7 @@ Fez algo legal? Poste no Show and Tell — vamos adorar ver o que você construi
 
 Para novidades, lançamentos e notas de bastidores da construção, siga [@calesthioailabs](https://x.com/calesthioailabs).
 
-Para bugs, pedidos de funcionalidade e discussões de fluxo de trabalho, use as [GitHub Issues](https://github.com/calesthio/OpenMontage/issues) e as [GitHub Discussions](https://github.com/calesthio/OpenMontage/discussions), para que tudo fique visível e acionável.
+Para bugs, pedidos de funcionalidade e discussões de fluxo de trabalho, use as [GitHub Issues](https://github.com/OpenMontageInc/OpenMontage/issues) e as [GitHub Discussions](https://github.com/OpenMontageInc/OpenMontage/discussions), para que tudo fique visível e acionável.
 
 ---
 
@@ -752,11 +752,11 @@ make test
 
 ## Histórico De Estrelas
 
-<a href="https://star-history.dera.page/#calesthio/OpenMontage&type=date&legend=top-left">
+<a href="https://star-history.dera.page/#OpenMontageInc/OpenMontage&type=date&legend=top-left">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=calesthio/OpenMontage&type=date&theme=dark&legend=top-left" />
-    <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=calesthio/OpenMontage&type=date&legend=top-left" />
-    <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=calesthio/OpenMontage&type=date&legend=top-left" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=OpenMontageInc/OpenMontage&type=date&theme=dark&legend=top-left" />
+    <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=OpenMontageInc/OpenMontage&type=date&legend=top-left" />
+    <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=OpenMontageInc/OpenMontage&type=date&legend=top-left" />
   </picture>
 </a>
 

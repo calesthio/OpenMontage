@@ -6,7 +6,7 @@ body:
     attributes:
       value: |
         Have an idea? If it's open-ended or you want to discuss direction first, consider posting in
-        [Discussions → Ideas](https://github.com/calesthio/OpenMontage/discussions/categories/ideas).
+        [Discussions → Ideas](https://github.com/OpenMontageInc/OpenMontage/discussions/categories/ideas).
         Use this form for a concrete, actionable request.
   - type: textarea
     id: problem

@@ -72,7 +72,7 @@ Author a new scene by adding a cut to `build_composition.py` (or your equivalent
 ```python
 install_steps = [
     {"kind": "pause", "seconds": 7.0},                 # wait for intro narration
-    {"kind": "cmd", "text": "git clone https://github.com/calesthio/OpenMontage.git",
+    {"kind": "cmd", "text": "git clone https://github.com/OpenMontageInc/OpenMontage.git",
      "typeSpeed": 0.045, "holdSeconds": 0.3},
     {"kind": "out", "text": "Cloning into 'OpenMontage'..."},
     {"kind": "out", "text": "remote: Enumerating objects: 2847, done."},

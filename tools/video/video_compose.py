@@ -203,6 +203,24 @@ class VideoCompose(BaseTool):
                     "networks). The subprocess timeout is widened to match."
                 ),
             },
+            "remotion_browser_executable": {
+                "type": "string",
+                "description": (
+                    "Optional absolute path to a browser executable for Remotion "
+                    "renders, passed through as `--browser-executable=<path>`. "
+                    "Use when running on machines without bundled Chromium or "
+                    "when a pinned enterprise browser binary is required."
+                ),
+            },
+            "remotion_concurrency": {
+                "type": "integer",
+                "minimum": 1,
+                "description": (
+                    "Number of parallel browser tabs Remotion renders with, passed "
+                    "through as `--concurrency`. Lower it (1-2) on low-memory "
+                    "machines where the headless browser crashes mid-render."
+                ),
+            },
         },
     }
 
@@ -225,7 +243,19 @@ class VideoCompose(BaseTool):
     ]
     retry_policy = RetryPolicy(max_retries=1, retryable_errors=["Conversion failed"])
     resume_support = ResumeSupport.FROM_START
-    idempotency_key_fields = ["operation", "input_path", "edit_decisions"]
+    # Every top-level input execute() reads, declared or not: each one changes
+    # the video, the cached result data, or whether a gate (strict,
+    # skip_contrast) runs. output_path and remotion_timeout_ms do neither.
+    idempotency_key_fields = [
+        "operation", "input_path", "edit_decisions", "composition_data",
+        "asset_manifest", "audio_path", "subtitle_path", "subtitle_style",
+        "overlays", "codec", "crf", "preset", "profile", "output_profile",
+        "options", "proposal_packet", "script_path", "script_text",
+        "narration_transcript_path", "playbook", "playbook_name", "scene_plan",
+        "quality", "fps", "workspace_path", "public_dir", "strict",
+        "strict_check", "skip_contrast", "snapshots",
+        "remotion_browser_executable", "remotion_concurrency",
+    ]
     side_effects = ["writes video file to output_path"]
     user_visible_verification = [
         "Play the composed output and verify cuts, subtitles, and overlays",
@@ -930,6 +960,23 @@ class VideoCompose(BaseTool):
         visit(value)
         return len(staged_by_source)
 
+    @staticmethod
+    def _append_remotion_browser_executable(
+        cmd: list[str], inputs: dict[str, Any]
+    ) -> str | None:
+        """Validate and append a job-scoped Remotion browser executable."""
+        requested = inputs.get("remotion_browser_executable")
+        if requested is None:
+            return None
+        browser = Path(str(requested)).expanduser().resolve()
+        if not browser.is_file():
+            raise ValueError(
+                "remotion_browser_executable does not exist or is not a file: "
+                f"{browser}"
+            )
+        cmd.append(f"--browser-executable={browser}")
+        return str(browser)
+
     def _render_via_atelier(
         self,
         inputs: dict[str, Any],
@@ -1021,6 +1068,10 @@ class VideoCompose(BaseTool):
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         cmd = ["npx", "remotion", "render", str(effective_entry), str(comp_id), str(output_path)]
+        try:
+            self._append_remotion_browser_executable(cmd, inputs)
+        except ValueError as e:
+            return ToolResult(success=False, error=str(e))
 
         props_path = bespoke.get("props_path")
         if props_path:
@@ -1673,6 +1724,10 @@ class VideoCompose(BaseTool):
             # would only take effect on a direct _remotion_render() call.
             if inputs.get("remotion_timeout_ms") is not None:
                 remotion_inputs["remotion_timeout_ms"] = inputs["remotion_timeout_ms"]
+            if inputs.get("remotion_browser_executable") is not None:
+                remotion_inputs["remotion_browser_executable"] = inputs["remotion_browser_executable"]
+            if inputs.get("remotion_concurrency") is not None:
+                remotion_inputs["remotion_concurrency"] = inputs["remotion_concurrency"]
             if inputs.get("public_dir") is not None:
                 remotion_inputs["public_dir"] = inputs["public_dir"]
             render_result = self._remotion_render(remotion_inputs)
@@ -2008,6 +2063,10 @@ class VideoCompose(BaseTool):
 
         # Route to the correct Remotion composition based on renderer_family.
         # This prevents all pipelines from collapsing into the Explainer visual grammar.
+        # Caption look: CaptionOverlay props from edit_decisions, passed through as-is.
+        if isinstance((composition_data.get("subtitles") or {}).get("caption_props"), dict):
+            props["captionProps"] = composition_data["subtitles"]["caption_props"]
+
         if composition_id == "CinematicRenderer":
             if not props.get("scenes") and props.get("cuts"):
                 props["scenes"] = self._cuts_to_cinematic_scenes(props["cuts"])
@@ -2075,6 +2134,11 @@ class VideoCompose(BaseTool):
             if public_dir is not None:
                 cmd.append(f"--public-dir={public_dir}")
 
+            try:
+                self._append_remotion_browser_executable(cmd, inputs)
+            except ValueError as e:
+                return ToolResult(success=False, error=str(e))
+
             # Apply media profile dimensions
             if profile_name:
                 try:
@@ -2089,6 +2153,12 @@ class VideoCompose(BaseTool):
             # restricted networks the default 30s browser setup times out with an
             # opaque failure. Pass it through and give the subprocess enough headroom
             # so run_command() does not kill Remotion before its own timeout fires.
+            if inputs.get("remotion_concurrency"):
+                try:
+                    cmd.append(f"--concurrency={int(inputs['remotion_concurrency'])}")
+                except (TypeError, ValueError):
+                    pass
+
             remotion_timeout_ms = inputs.get("remotion_timeout_ms")
             scene_count = len(props.get("scenes") or props.get("cuts") or [])
             subprocess_timeout = max(600, scene_count * 15)

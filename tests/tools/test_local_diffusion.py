@@ -23,6 +23,9 @@ SD15 = "runwayml/stable-diffusion-v1-5"
 def _fake_torch(cuda: bool):
     torch = types.ModuleType("torch")
     torch.cuda = types.SimpleNamespace(is_available=lambda: cuda, empty_cache=MagicMock())
+    torch.backends = types.SimpleNamespace(
+        mps=types.SimpleNamespace(is_available=lambda: False)
+    )
     torch.float16 = "float16"
     torch.float32 = "float32"
     torch.Generator = MagicMock()

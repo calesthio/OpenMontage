@@ -55,6 +55,12 @@ def test_burn_passes_caption_props_through(tmp_path, monkeypatch):
     assert props["wordsPerPage"] == 4  # everything else untouched
 
 
+def test_burn_preserves_thai_spacing_with_custom_caption_props(tmp_path, monkeypatch):
+    props = _burn_props(tmp_path, monkeypatch, caption_props=STYLE, thai=True)
+    assert props["captionProps"] == STYLE
+    assert props["captionWordSeparator"] == ""
+
+
 def test_burn_schema_declares_caption_props():
     p = RemotionCaptionBurn.input_schema["properties"]
     assert p["caption_props"]["type"] == "object"

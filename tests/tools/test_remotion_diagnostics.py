@@ -149,6 +149,34 @@ def test_remotion_browser_executable_is_passed_through(tool, tmp_path, monkeypat
     assert f"--browser-executable={browser.resolve()}" in seen["cmd"]
 
 
+def test_browser_and_concurrency_survive_the_high_level_render(tool, tmp_path, monkeypatch):
+    """The merged controls must travel together through the normal render path."""
+    browser = tmp_path / "custom_chrome.exe"
+    browser.write_text("dummy binary")
+    seen = {}
+
+    def fake_run(cmd, *a, **k):
+        seen["cmd"] = cmd
+        return None
+
+    monkeypatch.setattr(tool, "run_command", fake_run)
+    monkeypatch.setattr(tool, "_pre_compose_validation", lambda *a, **k: None)
+    monkeypatch.setattr(tool, "_needs_remotion", lambda *a, **k: True)
+    tool._render({
+        "edit_decisions": {
+            "render_runtime": "remotion",
+            "renderer_family": "explainer-data",
+            "cuts": [{"id": "c1", "source": "a1", "in_seconds": 0, "out_seconds": 2}],
+        },
+        "asset_manifest": {"assets": [{"id": "a1", "path": "/tmp/a1.mp4"}]},
+        "output_path": str(tmp_path / "out.mp4"),
+        "remotion_browser_executable": str(browser),
+        "remotion_concurrency": 2,
+    })
+    assert f"--browser-executable={browser.resolve()}" in seen["cmd"]
+    assert "--concurrency=2" in seen["cmd"]
+
+
 def test_remotion_browser_executable_fails_on_missing_file(tool, tmp_path):
     missing = tmp_path / "nonexistent_chrome.exe"
     result = tool._remotion_render(

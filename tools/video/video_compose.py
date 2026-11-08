@@ -254,6 +254,7 @@ class VideoCompose(BaseTool):
         "narration_transcript_path", "playbook", "playbook_name", "scene_plan",
         "quality", "fps", "workspace_path", "public_dir", "strict",
         "strict_check", "skip_contrast", "snapshots",
+        "remotion_browser_executable", "remotion_concurrency",
     ]
     side_effects = ["writes video file to output_path"]
     user_visible_verification = [

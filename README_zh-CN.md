@@ -1,3 +1,5 @@
+[English](README.md) | [Português (Brasil)](README_pt-BR.md) | [Español](README_es.md) | **简体中文**
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/monty-dark.svg">

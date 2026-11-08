@@ -260,7 +260,8 @@ class FalMedia(BaseTool):
                     for k in ("request_id", "status_url", "response_url")
                 }
                 job.update(
-                    model=model, operation=operation, endpoint=endpoint, tool=self.name
+                    model=model, operation=operation, endpoint=endpoint, tool=self.name,
+                    output_format=payload.get("output_format"),
                 )
                 save_job(inputs.get("job_path"), job)
             if job.get("tool") != self.name or self.routes.get(
@@ -287,7 +288,7 @@ class FalMedia(BaseTool):
             ext = (
                 ".mp4"
                 if self.capability == "video_generation"
-                else "." + inputs.get("output_format", "png")
+                else "." + (job.get("output_format") or inputs.get("output_format", "png"))
             )
             path = Path(inputs.get("output_path") or self.name + ext)
             outputs = [

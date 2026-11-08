@@ -653,6 +653,7 @@ def load_board_state(project_dir: Path) -> dict[str, Any]:
         "title": marker.get("title") or meta_json.get("name") or project_id.replace("-", " ").title(),
         "pipeline": pipeline_meta,
         "style_playbook": marker.get("style_playbook"),
+        "series": _series_of(marker),
         "created_at": marker.get("created_at"),
         "has_marker": bool(marker),
         "has_pipeline_state": bool(checkpoints),
@@ -669,6 +670,19 @@ def load_board_state(project_dir: Path) -> dict[str, Any]:
     return state
 
 
+def _series_of(marker: dict[str, Any]) -> Optional[str]:
+    """Optional ``series`` label from project.json; blank/non-string -> None."""
+    series = marker.get("series")
+    if isinstance(series, str) and series.strip():
+        return series.strip()
+    return None
+
+
+def series_from_disk(project_dir: Path) -> Optional[str]:
+    """Series label for a project whose full summary failed to build."""
+    return _series_of(_read_json(Path(project_dir) / "project.json") or {})
+
+
 def summarize_project(project_dir: Path) -> dict[str, Any]:
     """Cheap library-card summary (no full artifact parse of big files)."""
     state = load_board_state(project_dir)
@@ -677,6 +691,7 @@ def summarize_project(project_dir: Path) -> dict[str, Any]:
     return {
         "project_id": state["project_id"],
         "title": state["title"],
+        "series": state["series"],
         "pipeline_type": state["pipeline"]["pipeline_type"],
         "has_pipeline_state": state["has_pipeline_state"],
         "poster": state["poster"],
@@ -709,6 +724,7 @@ def list_projects(projects_dir: Optional[Path] = None) -> list[dict[str, Any]]:
             summaries.append({
                 "project_id": entry.name,
                 "title": entry.name.replace("-", " ").title(),
+                "series": series_from_disk(entry),
                 "pipeline_type": "unknown",
                 "has_pipeline_state": False,
                 "poster": None,

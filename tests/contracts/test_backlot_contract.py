@@ -207,6 +207,14 @@ class TestInitProject:
         assert marker["created_at"] == created
         assert marker["title"] == "P2"
 
+    def test_series_is_optional_and_preserved(self, tmp_path):
+        pdir = init_project("p", title="P", pipeline_type="cinematic", pipeline_dir=tmp_path)
+        assert "series" not in json.loads((pdir / PROJECT_MARKER_FILENAME).read_text())
+        init_project("p", title="P", pipeline_type="cinematic", pipeline_dir=tmp_path, series="my-show")
+        init_project("p", title="P", pipeline_type="cinematic", pipeline_dir=tmp_path)
+        marker = json.loads((pdir / PROJECT_MARKER_FILENAME).read_text())
+        assert marker["series"] == "my-show"
+
 
 class TestEvents:
     def test_emit_and_read_roundtrip(self, tmp_path):

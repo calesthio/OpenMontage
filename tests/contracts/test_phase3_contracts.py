@@ -709,6 +709,7 @@ class TestCapabilityMetadata:
             "heygen",
             "mistral",
             "microsoft_mai",
+            "minicut",
             "azure",
             "cartesia",
             "dashscope",

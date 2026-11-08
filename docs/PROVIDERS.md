@@ -23,7 +23,42 @@ New asynchronous video/image tools return `resume_job` and optionally save
 another paid request. Unpriced calls return `cost_usd: null` with `cost_status`,
 not zero. Ideogram direct supports an unbilled `dry_run` price quote.
 
-Kling 4/Flash stays gated pending verified public schemas and account access.
+### Kling O3 on fal.ai (separate from official Kling and legacy fal Kling)
+
+`kling_o3_fal_video` uses `FAL_KEY` and exact models `kling-o3-standard`,
+`kling-o3-pro`, or `kling-o3-4k`. Each has `text_to_video`, `image_to_video`,
+`reference_to_video`, `video_to_video_reference`, and `video_to_video_edit`.
+Select video-to-video operation explicitly; all routes use the fal queue and
+return an optional resumable `job_path` checkpoint. `kling_o3_fal_image` uses
+model `kling-o3-image` with `text_to_image` and `image_to_image`. The original
+`kling_video` adapter and its `v3/standard` default are unchanged. These are
+fal-hosted endpoints, **not** `kling_official_video` or `kling_official_image`.
+For the shared selectors, `video_edit` maps to O3's `video_to_video_edit`,
+and `image_selector`'s `generate`/`edit` map to O3 text/image generation.
+
+Example image-reference clip: set `preferred_tool=kling_o3_fal_video`,
+`model=kling-o3-standard`, `operation=reference_to_video`, `prompt` (refer to
+appearance images as `@Image1`, `@Image2`), `start_image_url` for the first
+frame and `image_urls`/`image_paths` (or the selector's
+`reference_image_urls`/`reference_image_paths`) for appearance references.
+Do **not** use `image_url` as a first-frame alias on this route: it can
+appear twice in the reference list. Ordinary `image_to_video` takes
+`image_url` (or `image_path`) and optional `end_image_url`, but **not** `aspect_ratio`.
+Video-to-video reference/edit take `video_url` and `prompt`; edit does not
+accept `duration` or `aspect_ratio`. Native controls such as `elements`,
+`multi_prompt`, `shot_type`, `keep_audio`, and `generate_audio` are validated
+against the selected endpoint's published schema, not blindly copied between
+routes. For image edits, use `image_urls`/`image_paths` with `image_to_image`.
+
+These calls are paid. A configured key is not proof of entitlement or a price
+quote: `estimate_cost` requires a current quote and successful results report
+`cost_usd=null` when the provider gives no usage cost. The tool never retries
+a paid POST automatically. If the POST times out without a request ID, **do
+not resubmit** until checking the fal dashboard. No live paid O3 generation
+was validated; schemas and queue behavior were tested offline.
+
+Kling 4/Flash (a different version from O3 4K output) stays gated pending
+verified public schemas and account access.
 LTX-2.5 local execution requires a supplied ComfyUI API workflow and installed
 weights; the direct LTX API is implemented separately. GPU and paid API output
 quality require live validation in the intended environment.

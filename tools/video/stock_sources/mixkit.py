@@ -16,6 +16,7 @@ What Mixkit is good for
 """
 from __future__ import annotations
 
+import json
 import logging
 import re
 from pathlib import Path
@@ -27,6 +28,61 @@ _log = logging.getLogger(__name__)
 
 _SEARCH_URL = "https://mixkit.co/free-stock-video/"
 _LICENSE = "Mixkit License (free for commercial and personal use, no attribution required)"
+
+_JSON_LD_RE = re.compile(
+    r"<script[^>]+type=[\"']application/ld\+json[\"'][^>]*>(.*?)</script>",
+    re.DOTALL | re.IGNORECASE,
+)
+
+
+def _content_url_from_json_ld(html: str) -> str:
+    """Return the ``VideoObject.contentUrl`` a Mixkit page declares, or ``""``.
+
+    Mixkit ships schema.org metadata on every clip page and names the media
+    file there directly, so this survives player and markup redesigns —
+    unlike the CSS selectors in `download()`, which is what broke.
+
+    Takes raw HTML rather than a parsed soup: the payload is JSON inside a
+    script tag, so it needs `json`, not a DOM, and keeping it string-based
+    lets it be tested without beautifulsoup4 (an optional dependency here).
+    """
+    for block in _JSON_LD_RE.findall(html):
+        try:
+            payload = json.loads(block)
+        except ValueError:
+            # Third-party pages ship malformed or half-templated JSON-LD:
+            # one bad block must not hide a good one later in the page
+            continue
+
+        # A block is a single node, a list of nodes, or a wrapper carrying
+        # "@graph" — walk all three shapes instead of assuming one
+        pending: list[Any] = payload if isinstance(payload, list) else [payload]
+        while pending:
+            node = pending.pop(0)
+            if isinstance(node, list):
+                pending.extend(node)
+                continue
+            if not isinstance(node, dict):
+                continue
+
+            graph = node.get("@graph")
+            if graph:
+                pending.append(graph)
+
+            node_types = node.get("@type", "")
+            if "VideoObject" not in (
+                node_types if isinstance(node_types, list) else [node_types]
+            ):
+                continue
+
+            url = node.get("contentUrl", "")
+            # Singular in schema.org, but pages do ship a list of renditions
+            if isinstance(url, list):
+                url = next((u for u in url if isinstance(u, str) and u.strip()), "")
+            if isinstance(url, str) and url.strip():
+                return url.strip()
+
+    return ""
 
 
 class MixkitSource:
@@ -161,24 +217,30 @@ class MixkitSource:
             r.raise_for_status()
             soup = BeautifulSoup(r.text, "html.parser")
 
-            download_url = None
+            # Structured metadata first: the JSON-LD VideoObject names the
+            # file outright, so it is the only signal here that does not
+            # depend on Mixkit's current class names or player markup
+            download_url = _content_url_from_json_ld(r.text) or None
 
             # Look for download button/link
-            for a in soup.select("a[href]"):
-                href = a.get("href", "")
-                text = (a.get_text(strip=True) or "").lower()
-                classes = " ".join(a.get("class", []))
-                if "download" in text or "download" in classes:
-                    if href and any(ext in href.lower() for ext in [".mp4", ".mov", ".webm"]):
-                        download_url = href
-                        break
-                    elif href and "/download/" in href:
-                        download_url = href
-                        break
-
-            # Look for video source tags
             if not download_url:
-                for source in soup.select("video source[src]"):
+                for a in soup.select("a[href]"):
+                    href = a.get("href", "")
+                    text = (a.get_text(strip=True) or "").lower()
+                    classes = " ".join(a.get("class", []))
+                    if "download" in text or "download" in classes:
+                        if href and any(ext in href.lower() for ext in [".mp4", ".mov", ".webm"]):
+                            download_url = href
+                            break
+                        elif href and "/download/" in href:
+                            download_url = href
+                            break
+
+            # Look for video source tags. Mixkit now puts `src` on the
+            # <video> element itself rather than a nested <source>, so match
+            # both shapes — same selector `search()` already uses
+            if not download_url:
+                for source in soup.select("video source[src], video[src]"):
                     src = source.get("src", "")
                     if src and any(ext in src.lower() for ext in [".mp4", ".mov"]):
                         download_url = src

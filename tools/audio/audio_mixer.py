@@ -485,9 +485,6 @@ class AudioMixer(BaseTool):
             "ffmpeg", "-y",
             "-i", str(input_path),
             "-vn",
-            "-acodec", "pcm_s16le",
-            "-ar", "16000",
-            "-ac", "1",
             str(output_path),
         ]
 

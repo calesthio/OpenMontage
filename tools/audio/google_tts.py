@@ -152,12 +152,23 @@ class GoogleTTS(BaseTool):
         "ALAW": "wav",
     }
 
+    @staticmethod
+    def _get_scoped_api_key() -> str | None:
+        """A key provisioned specifically for Cloud TTS.
+
+        Operators set this when the TTS credential is deliberately scoped to a
+        different project or IAM role than the shared Google key, so it takes
+        precedence over everything else.
+        """
+        return os.environ.get("GOOGLE_TTS_API_KEY")
+
+    @staticmethod
+    def _get_shared_api_key() -> str | None:
+        """The generic Google key, also used by Imagen, Veo and Gemini."""
+        return os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
+
     def _get_api_key(self) -> str | None:
-        return (
-            os.environ.get("GOOGLE_TTS_API_KEY")
-            or os.environ.get("GOOGLE_API_KEY")
-            or os.environ.get("GEMINI_API_KEY")
-        )
+        return self._get_scoped_api_key() or self._get_shared_api_key()
 
     def get_status(self) -> ToolStatus:
         # Available via either an API key or a service-account JSON. Both paths
@@ -199,23 +210,40 @@ class GoogleTTS(BaseTool):
         return round(char_count * rate_per_char, 4)
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
-        # Prefer the service account. Cloud TTS rejects bare API keys outright
-        # ("API keys are not supported by this API. Expected OAuth2 access
-        # token..."), so preferring a key here meant that configuring
-        # GOOGLE_APPLICATION_CREDENTIALS had no effect whenever GOOGLE_API_KEY
-        # was also set — the tool reported AVAILABLE and then failed with 401.
-        # An API key only works when it comes from a Cloud project with the
-        # Text-to-Speech API enabled, so it stays as the fallback.
-        api_key = self._get_api_key()
+        # Credential precedence, strongest intent first:
+        #
+        #   1. GOOGLE_TTS_API_KEY — provisioned for this API on purpose, so it
+        #      wins even when a service account is also configured. The two may
+        #      point at different projects or carry different IAM roles.
+        #   2. the service-account JSON — an OAuth token works against
+        #      texttospeech.googleapis.com whatever project it came from.
+        #   3. GOOGLE_API_KEY / GEMINI_API_KEY — shared with Imagen, Veo and
+        #      Gemini, so it is the weakest signal of intent for TTS. A key
+        #      reaches this API only when it belongs to a Cloud project with
+        #      Text-to-Speech enabled; an AI Studio key is rejected with
+        #      "API keys are not supported by this API".
+        #
+        # Preferring the shared key over the service account is what made
+        # GOOGLE_APPLICATION_CREDENTIALS inert whenever GOOGLE_API_KEY was also
+        # set — the tool reported AVAILABLE and then failed with 401.
+        scoped_key = self._get_scoped_api_key()
+        shared_key = self._get_shared_api_key()
+        api_key: str | None = scoped_key
         bearer_token: str | None = None
-        if service_account_configured():
-            try:
-                bearer_token, _ = get_access_token()
-                api_key = None
-            except RuntimeError as exc:
-                if not api_key:
-                    return ToolResult(success=False, error=str(exc))
-        elif not api_key:
+
+        if api_key is None:
+            if service_account_configured():
+                try:
+                    bearer_token, _ = get_access_token()
+                except RuntimeError as exc:
+                    # Minting failed; a shared key is better than no attempt.
+                    if shared_key is None:
+                        return ToolResult(success=False, error=str(exc))
+                    api_key = shared_key
+            else:
+                api_key = shared_key
+
+        if api_key is None and bearer_token is None:
             return ToolResult(
                 success=False,
                 error="No Google credentials found. " + self.install_instructions,

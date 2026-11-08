@@ -178,7 +178,7 @@ Y cuando una ejecución termina, pulsa **▶ REPLAY RUN**: toda la producción s
 
 - **Python 3.10+** — [python.org](https://www.python.org/downloads/)
 - **FFmpeg** — `brew install ffmpeg` / `sudo apt install ffmpeg` / [ffmpeg.org](https://ffmpeg.org/download.html)
-- **Node.js 18+** — [nodejs.org](https://nodejs.org/)
+- **Node.js** — una versión con los parches de seguridad de las ramas 22.x (22.23.4+), 24.x (24.22.1+) o 26.x (26.12.1+); `.node-version` selecciona 22.23.4 — [nodejs.org](https://nodejs.org/)
 - **Un asistente de código con IA** — Claude Code, Cursor, Copilot, Windsurf o Codex
 
 ### Instalar Y Ejecutar
@@ -203,9 +203,9 @@ O, si quieres la ruta de metraje real:
 
 Eso es todo. El agente investiga tu tema con búsqueda web en directo, genera imágenes con IA, escribe y narra el guion con dirección de voz, encuentra automáticamente música de fondo libre de derechos, incrusta subtítulos palabra por palabra y renderiza el vídeo final. Antes de que veas nada, el sistema ejecuta una autorrevisión de varios puntos: validación con ffprobe, muestreo de fotogramas, análisis de niveles de audio, verificación de la promesa de entrega y comprobación de subtítulos. Cada elección de proveedor se puntúa en 7 dimensiones con un registro de decisiones auditable. Cada decisión creativa pasa por tu aprobación.
 
-> **¿Sin `make`?** macOS/Linux: `python3 -m venv .venv && source .venv/bin/activate && python -m pip install -r requirements.txt && cd remotion-composer && npm install && cd .. && python -m pip install piper-tts && cp .env.example .env`
+> **¿Sin `make`?** macOS/Linux: `python3 -m venv .venv && source .venv/bin/activate && python -m pip install 'pip>=26.2.2' && python -m pip install -r requirements.txt && cd remotion-composer && npm install && cd .. && python -m pip install piper-tts && cp .env.example .env`
 >
-> Windows PowerShell: `py -3 -m venv .venv; .\.venv\Scripts\Activate.ps1; python -m pip install -r requirements.txt; cd remotion-composer; npm install; cd ..; python -m pip install piper-tts; Copy-Item .env.example .env`
+> Windows PowerShell: `py -3 -m venv .venv; .\.venv\Scripts\Activate.ps1; python -m pip install 'pip>=26.2.2'; python -m pip install -r requirements.txt; cd remotion-composer; npm install; cd ..; python -m pip install piper-tts; Copy-Item .env.example .env`
 >
 > **Windows:** si `npm install` falla con `ERR_INVALID_ARG_TYPE`, usa `npx --yes npm install` en su lugar.
 

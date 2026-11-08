@@ -2061,8 +2061,6 @@ class VideoCompose(BaseTool):
                 error=f"Remotion composer project not found at {composer_dir}",
             )
 
-        # Route to the correct Remotion composition based on renderer_family.
-        # This prevents all pipelines from collapsing into the Explainer visual grammar.
         # Caption look: CaptionOverlay props from edit_decisions, passed through as-is.
         if isinstance((composition_data.get("subtitles") or {}).get("caption_props"), dict):
             props["captionProps"] = composition_data["subtitles"]["caption_props"]

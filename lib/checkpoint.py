@@ -142,6 +142,20 @@ def _validate_artifacts_for_stage(
             f"canonical artifact {required_artifact!r}"
         )
 
+    # The proposal packet's schema keeps render_runtime optional while its
+    # approval is pending, then requires it for approved packets. A proposal
+    # checkpoint can only complete after the human approval gate, so keep the
+    # checkpoint state and the embedded approval decision in sync as well.
+    if stage == "proposal" and status == "completed":
+        proposal = artifacts.get("proposal_packet")
+        approval = proposal.get("approval") if isinstance(proposal, dict) else None
+        approval_status = approval.get("status") if isinstance(approval, dict) else None
+        if approval_status not in {"approved", "approved_with_changes"}:
+            raise CheckpointValidationError(
+                "A completed proposal checkpoint must include a proposal_packet "
+                "with approval.status 'approved' or 'approved_with_changes'"
+            )
+
     for artifact_name, artifact_data in artifacts.items():
         if artifact_name not in ARTIFACT_NAMES:
             continue

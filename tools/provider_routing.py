@@ -28,8 +28,18 @@ def filter_explicit_route(inputs, candidates):
             # Free-form model fields can't be enumerated; such a tool may still
             # vouch for a specific value (e.g. piper: an installed voice or .onnx path).
             vouch = getattr(tool, "vouches_for_model", None)
-            if model not in models and not (vouch and vouch(model)):
-                continue
+            if model not in models and not (
+                model_field in props and vouch and vouch(model)
+            ):
+                # An open field can accept a caller-pinned model without
+                # claiming that unrelated free-form tools support it in auto mode.
+                if not (
+                    not models
+                    and model_field in props
+                    and (tool_name or tool.provider == inputs.get("preferred_provider"))
+                ):
+                    continue
+                unvouched.append(tool)
         operation = inputs.get("generation_mode") or inputs.get("operation")
         routes = getattr(tool, "routes", None) or getattr(tool, "models", None)
         if isinstance(routes, dict) and operation and operation != "rank":

@@ -100,11 +100,18 @@ class PiperTTS(BaseTool):
         """True when `piper --model <model>` (as _generate invokes it) finds a voice.
 
         Mirrors piper's own lookup: an existing file path (absolute or relative),
-        else `<name>.onnx` in its data dir, which defaults to the cwd since we
-        pass no --data-dir. False means "can't confirm", not "unsupported":
+        else `<name>.onnx` in the cwd or the configured home voice directory.
+        False means "can't confirm", not "unsupported":
         provider_routing then applies its generic free-form-model policy.
         """
-        return Path(model).is_file() or (Path.cwd() / f"{model}.onnx").is_file()
+        return Path(model).is_file() or any(
+            (directory / f"{model}.onnx").is_file()
+            for directory in (Path.cwd(), self._voice_data_dir())
+        )
+
+    @staticmethod
+    def _voice_data_dir() -> Path:
+        return Path.home() / ".piper" / "models"
 
     def get_status(self) -> ToolStatus:
         if shutil.which("piper"):
@@ -135,7 +142,7 @@ class PiperTTS(BaseTool):
             [
                 "piper",
                 "--model", inputs.get("model", "en_US-lessac-medium"),
-                "--data-dir", str(Path.home() / ".piper" / "models"),
+                "--data-dir", str(self._voice_data_dir()),
                 "--speaker", str(inputs.get("speaker_id", 0)),
                 "--length-scale", str(inputs.get("length_scale", 1.0)),
                 "--sentence-silence", str(inputs.get("sentence_silence", 0.3)),

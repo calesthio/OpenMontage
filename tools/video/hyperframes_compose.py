@@ -245,7 +245,9 @@ class HyperFramesCompose(BaseTool):
     #   {"version": "0.4.5"}   → package resolves
     #   {"error": "<short>"}   → resolution failed (offline, unpublished, etc.)
     # We cache per-process so the first call pays ~2-5s and subsequent calls
-    # (get_info spam from the registry) are free.
+    # (get_info spam from the registry) are free. Only definitive answers are
+    # cached — a timeout or network error is retried on the next call so one
+    # slow registry round-trip cannot poison the rest of the run.
     _npm_resolve_cache: Optional[dict[str, str]] = None
     _cli_probe_cache: Optional[dict[str, str]] = None
 
@@ -279,10 +281,20 @@ class HyperFramesCompose(BaseTool):
         `npm view hyperframes version` (5s timeout) and caches the answer
         for the rest of the process.
 
+        `npx` runs the CLI from its local cache, so a machine that has already
+        installed the package can render with a slow or unreachable registry.
+        The cache is therefore checked first (`npx --offline`); the registry is
+        only consulted when nothing is cached, i.e. when an install is needed.
+
         Returns {"version": "X.Y.Z"} on success, {"error": "<short>"} on any
         failure (404, timeout, network error, npm missing). Never raises.
         """
         if cls._npm_resolve_cache is not None:
+            return cls._npm_resolve_cache
+
+        cached = cls._cached_cli_version()
+        if cached:
+            cls._npm_resolve_cache = {"version": cached}
             return cls._npm_resolve_cache
 
         npm = shutil.which("npm")
@@ -298,11 +310,9 @@ class HyperFramesCompose(BaseTool):
                 timeout=5,
             )
         except subprocess.TimeoutExpired:
-            cls._npm_resolve_cache = {"error": "timeout (5s) — offline or slow registry"}
-            return cls._npm_resolve_cache
+            return {"error": "timeout (5s) — offline or slow registry"}
         except (OSError, subprocess.SubprocessError) as e:
-            cls._npm_resolve_cache = {"error": f"npm view failed: {type(e).__name__}"}
-            return cls._npm_resolve_cache
+            return {"error": f"npm view failed: {type(e).__name__}"}
 
         if proc.returncode != 0:
             stderr = (proc.stderr or "").strip()
@@ -311,10 +321,10 @@ class HyperFramesCompose(BaseTool):
                 cls._npm_resolve_cache = {
                     "error": f"npm package `{cls._NPM_PACKAGE}` not found (404)"
                 }
-            else:
-                tail = stderr.splitlines()[-1][:200] if stderr else f"exit {proc.returncode}"
-                cls._npm_resolve_cache = {"error": f"npm view failed: {tail}"}
-            return cls._npm_resolve_cache
+                return cls._npm_resolve_cache
+            # Anything else (ETIMEDOUT, ENOTFOUND, ...) is treated as transient.
+            tail = stderr.splitlines()[-1][:200] if stderr else f"exit {proc.returncode}"
+            return {"error": f"npm view failed: {tail}"}
 
         version = (proc.stdout or "").strip()
         if not version:
@@ -322,6 +332,30 @@ class HyperFramesCompose(BaseTool):
         else:
             cls._npm_resolve_cache = {"version": version}
         return cls._npm_resolve_cache
+
+    @classmethod
+    def _cached_cli_version(cls) -> Optional[str]:
+        """Return the CLI version from the local npx cache, or None.
+
+        `--offline` makes npm fail fast with ENOTCACHED instead of touching
+        the network, so this costs well under a second on a cold cache.
+        """
+        npx = shutil.which("npx")
+        if not npx:
+            return None
+        try:
+            proc = subprocess.run(
+                [npx, "--offline", cls._NPM_PACKAGE, "--version"],
+                capture_output=True,
+                text=True,
+                timeout=15,
+            )
+        except (OSError, subprocess.SubprocessError):
+            return None
+        if proc.returncode != 0:
+            return None
+        lines = (proc.stdout or "").strip().splitlines()
+        return lines[-1].strip() if lines else None
 
     @classmethod
     def _probe_cli(cls) -> dict[str, str]:
@@ -348,11 +382,10 @@ class HyperFramesCompose(BaseTool):
                 timeout=20,
             )
         except subprocess.TimeoutExpired:
-            cls._cli_probe_cache = {"error": "doctor timed out after 20s"}
-            return cls._cli_probe_cache
+            # Not cached: a slow run says nothing about whether the CLI works.
+            return {"error": "doctor timed out after 20s"}
         except (OSError, subprocess.SubprocessError) as exc:
-            cls._cli_probe_cache = {"error": f"doctor failed: {type(exc).__name__}"}
-            return cls._cli_probe_cache
+            return {"error": f"doctor failed: {type(exc).__name__}"}
 
         if proc.returncode != 0:
             output = "\n".join(filter(None, [proc.stderr, proc.stdout])).strip()

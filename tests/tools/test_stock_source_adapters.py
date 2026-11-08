@@ -1,5 +1,6 @@
 import sys
 import types
+from pathlib import Path
 
 import pytest
 
@@ -14,6 +15,9 @@ from tools.video.stock_sources.openverse import (
     _matches_orientation,
     _result_to_candidate,
 )
+
+
+from tools.video.stock_sources.base import stable_url_id
 from tools.video.stock_sources.unsplash import _build_download_url, _orientation_for_unsplash
 from tools.video.stock_sources.wikimedia import (
     _build_search_queries,
@@ -208,6 +212,28 @@ def test_openverse_orientation_helper():
     assert _matches_orientation("square", 1000, 1000)
     assert not _matches_orientation("portrait", 1920, 1080)
 
+
+
+def test_stable_url_id_is_deterministic_and_url_specific():
+    url = "https://example.test/media/launch.mp4"
+
+    assert stable_url_id(url) == "57d3145f3621a60c"
+    assert stable_url_id(url) == stable_url_id(url)
+    assert stable_url_id(url) != stable_url_id("https://example.test/media/landing.mp4")
+
+
+@pytest.mark.parametrize("adapter", ["esa.py", "noaa.py", "loc.py"])
+def test_url_backed_adapters_do_not_use_randomized_python_hash(adapter):
+    source = (
+        Path(__file__).parents[2]
+        / "tools"
+        / "video"
+        / "stock_sources"
+        / adapter
+    ).read_text(encoding="utf-8")
+
+    assert "stable_url_id(" in source
+    assert "hash(" not in source
 
 
 # ---------------------------------------------------------------------

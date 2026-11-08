@@ -20,9 +20,11 @@ RUN cp -n .env.example .env
 
 # Run as a regular user (uid 1000) so renders on a mounted folder are not owned by root.
 # Remotion and webpack write caches under node_modules/.remotion and .cache, so those must be writable too.
+# Caption burn and the asset pipeline stage media and props under remotion-composer/public at run time.
 RUN useradd -m -u 1000 montage \
     && mkdir -p remotion-composer/node_modules/.remotion remotion-composer/node_modules/.cache projects \
-    && chown -R montage:montage remotion-composer/node_modules/.remotion remotion-composer/node_modules/.cache projects
+    && chown -R montage:montage remotion-composer/node_modules/.remotion remotion-composer/node_modules/.cache \
+        remotion-composer/public projects
 USER montage
 
 # Productions and renders are written under /app/projects; mount it to keep them.

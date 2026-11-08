@@ -86,6 +86,7 @@ quality require live validation in the intended environment.
 | 13 | **pay-as-you-go** | Suno | Full song generation with vocals and lyrics |
 | 14 | **$0 + GPU** | Local video gen | WAN 2.1, Hunyuan, CogVideo, LTX — free, offline |
 | 15 | **$0 + GPU** | Local Diffusion | Stable Diffusion images — free, offline |
+| 16 | **pay-as-you-go** | MiniCut CLI (`minicut login`, no env var) | One sign-in for `minicut_image` (GPT Image 2), `minicut_tts` (ElevenLabs v3) and `minicut_music` (Lyria 3.5); each job shows its price and waits for a yes |
 
 ### Environment Variable Summary
 

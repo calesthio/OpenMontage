@@ -178,7 +178,7 @@ E quando uma execução termina, aperte **▶ REPLAY RUN** — a produção inte
 
 - **Python 3.10+** — [python.org](https://www.python.org/downloads/)
 - **FFmpeg** — `brew install ffmpeg` / `sudo apt install ffmpeg` / [ffmpeg.org](https://ffmpeg.org/download.html)
-- **Node.js 18+** — [nodejs.org](https://nodejs.org/)
+- **Node.js** — uma versão corrigida das linhas 22.x (22.23.4+), 24.x (24.22.1+) ou 26.x (26.12.1+); `.node-version` seleciona 22.23.4 — [nodejs.org](https://nodejs.org/)
 - **Um assistente de código com IA** — Claude Code, Cursor, Copilot, Windsurf ou Codex
 
 ### Instalar E Executar
@@ -203,9 +203,9 @@ Ou, se quiser o caminho com footage real:
 
 É isso. O agente pesquisa o seu tema com busca na web ao vivo, gera imagens com IA, escreve e narra o roteiro com direção de voz, encontra automaticamente música de fundo livre de royalties, embute legendas palavra a palavra e renderiza o vídeo final. Antes de você ver qualquer coisa, o sistema roda uma autorrevisão de vários pontos — validação com ffprobe, amostragem de quadros, análise de níveis de áudio, verificação da promessa de entrega e checagem de legendas. Cada escolha de provedor é pontuada em 7 dimensões, com um registro de decisões auditável. Cada decisão criativa passa pela sua aprovação.
 
-> **Sem `make`?** macOS/Linux: `python3 -m venv .venv && source .venv/bin/activate && python -m pip install -r requirements.txt && cd remotion-composer && npm install && cd .. && python -m pip install piper-tts && cp .env.example .env`
+> **Sem `make`?** macOS/Linux: `python3 -m venv .venv && source .venv/bin/activate && python -m pip install 'pip>=26.2.2' && python -m pip install -r requirements.txt && cd remotion-composer && npm install && cd .. && python -m pip install piper-tts && cp .env.example .env`
 >
-> Windows PowerShell: `py -3 -m venv .venv; .\.venv\Scripts\Activate.ps1; python -m pip install -r requirements.txt; cd remotion-composer; npm install; cd ..; python -m pip install piper-tts; Copy-Item .env.example .env`
+> Windows PowerShell: `py -3 -m venv .venv; .\.venv\Scripts\Activate.ps1; python -m pip install 'pip>=26.2.2'; python -m pip install -r requirements.txt; cd remotion-composer; npm install; cd ..; python -m pip install piper-tts; Copy-Item .env.example .env`
 >
 > **Windows:** se o `npm install` falhar com `ERR_INVALID_ARG_TYPE`, use `npx --yes npm install` no lugar.
 

@@ -6,8 +6,11 @@ import re
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-CITE = re.compile(r"`((?:docs|remotion-composer/public/demo-props)/[^`\s]+)`")
-SKIP = ("<", ">", "*", "$")
+CITE = re.compile(
+    r"`((?:docs|tools|lib|scripts|schemas|skills|styles|pipeline_defs|remotion-composer|backlot)/[^`\s]+)`"
+)
+# Placeholders, globs, and `module.function()` call notation are not paths.
+SKIP = ("<", ">", "*", "$", "{", "(")
 
 
 def _citations():

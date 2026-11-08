@@ -9,7 +9,16 @@ import types
 import pytest
 
 from tools.graphics.image_gen import ImageGen
+from tools.graphics import local_diffusion
 from tools.graphics.local_diffusion import LocalDiffusion
+
+
+@pytest.fixture(autouse=True)
+def isolated_pipeline_cache():
+    """Each hardware fake owns its pipeline; residency is tested within a case."""
+    local_diffusion._PIPELINE_CACHE.clear()
+    yield
+    local_diffusion._PIPELINE_CACHE.clear()
 
 
 class _FakePipe:
@@ -19,6 +28,10 @@ class _FakePipe:
     def to(self, device):
         self.calls["device"] = device
         return self
+
+    def enable_model_cpu_offload(self):
+        self.calls["device"] = "cuda"
+        self.calls["cpu_offload"] = True
 
     def __call__(self, *args, **kwargs):
         image = types.SimpleNamespace(save=lambda path: None)
@@ -31,7 +44,9 @@ def _install_fakes(monkeypatch, *, cuda: bool, mps: bool):
     torch = types.ModuleType("torch")
     torch.float16 = "float16"
     torch.float32 = "float32"
-    torch.cuda = types.SimpleNamespace(is_available=lambda: cuda)
+    torch.cuda = types.SimpleNamespace(
+        is_available=lambda: cuda, empty_cache=lambda: None
+    )
     torch.backends = types.SimpleNamespace(
         mps=types.SimpleNamespace(is_available=lambda: mps)
     )
@@ -47,13 +62,15 @@ def _install_fakes(monkeypatch, *, cuda: bool, mps: bool):
 
     class Pipeline:
         @staticmethod
-        def from_pretrained(model_id, torch_dtype):
+        def from_pretrained(model_id, torch_dtype, **kwargs):
             calls["model"] = model_id
             calls["dtype"] = torch_dtype
+            calls["variant"] = kwargs.get("variant")
             return _FakePipe(calls)
 
     diffusers = types.ModuleType("diffusers")
     diffusers.StableDiffusionPipeline = Pipeline
+    diffusers.AutoPipelineForText2Image = Pipeline
 
     monkeypatch.setitem(sys.modules, "torch", torch)
     monkeypatch.setitem(sys.modules, "diffusers", diffusers)
@@ -81,6 +98,8 @@ def test_local_diffusion_picks_device(
     assert calls["device"] == device
     assert calls["generator_device"] == gen_device
     assert calls["dtype"] == dtype
+    assert calls.get("cpu_offload", False) is cuda
+    assert calls["variant"] == ("fp16" if cuda else None)
 
 
 def test_local_diffusion_default_model_is_reachable(monkeypatch, tmp_path):

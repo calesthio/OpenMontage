@@ -251,11 +251,13 @@ If the folder has tracks, the proposal and asset stages should present them as o
 | `clip-factory` | Many clips from one long source | beta |
 | `podcast-repurpose` | Podcast highlights and derivatives | beta |
 | `cinematic` | Trailer, teaser, and mood-led edits | production |
+| `documentary-montage` | Retrieval-first montage of real footage from free stock and open archives | beta |
 | `animation` | Motion-graphics and animation-first videos | production |
 | `character-animation` | Local rigged cartoon characters and reusable character acting | beta |
 | `hybrid` | Source footage plus support visuals | production |
 | `avatar-spokesperson` | Presenter-led avatar or lip-sync videos | production |
 | `localization-dub` | Subtitle, dub, and translated variants | beta |
+| `documentary-montage` | Real-footage thematic montage via corpus retrieval | beta |
 | `framework-smoke` | Test: minimal 2-stage smoke test | test |
 
 > **Beta pipelines** have not been fully audited. They work, but expect rough edges. Mention this when the user selects one.
@@ -293,10 +295,16 @@ python -c "from tools.tool_registry import registry; import json; registry.disco
 Then:
 
 1. Read the selected manifest in `pipeline_defs/`.
-2. Check every `required_tools` entry against the registry.
-3. Check `fallback_tools` for unavailable tools.
-4. Report one of: `passed`, `degraded`, or `blocked`.
-5. Do not start production until the user understands the real capability envelope.
+2. For each stage, pass `get_stage_tools(manifest, stage)` to
+   `registry.capability_coverage(...)`; this includes optional selectors whose
+   concrete providers would otherwise be invisible to a required-tools-only check.
+3. Report every family from `registry.uncovered_capabilities(...)`. Treat it as
+   `degraded` when the treatment can proceed without that family, or `blocked`
+   when the approved delivery promise depends on it (especially motion, voice,
+   avatar, or music).
+4. Check every `required_tools` entry and its `fallback_tools` against the registry.
+5. Report one of: `passed`, `degraded`, or `blocked`.
+6. Do not start production until the user understands the real capability envelope.
 
 ### Provider Menu (Mandatory at Preflight)
 
@@ -491,7 +499,7 @@ All tool classes use **PascalCase without a "Tool" suffix**. When importing tool
 | `tools.audio.music_gen` | `MusicGen` | ~~MusicGenTool~~ |
 | `tools.video.video_compose` | `VideoCompose` | ~~VideoComposeTool~~ |
 | `tools.audio.audio_mixer` | `AudioMixer` | ~~AudioMixerTool~~ |
-| `tools.tts.elevenlabs_tts` | `ElevenLabsTTS` | ~~ElevenLabsTTSTool~~ |
+| `tools.audio.elevenlabs_tts` | `ElevenLabsTTS` | ~~ElevenLabsTTSTool~~ |
 | `tools.analysis.transcriber` | `Transcriber` | ~~TranscriberTool~~ |
 | `tools.subtitle.subtitle_gen` | `SubtitleGen` | ~~SubtitleGenTool~~ |
 
@@ -615,6 +623,7 @@ Checkpoint rules:
 - Write an `in_progress` checkpoint on entering each stage; during `assets`/`compose`, refresh `metadata.partial_progress` after each completed scene/asset unit — this powers live progress on the board.
 - `completed` and `awaiting_human` checkpoints must include the canonical artifact.
 - A gated stage (`human_approval_default: true`) can only be written `completed` with `human_approved=True` — the writer raises a GATE VIOLATION otherwise.
+- A `proposal` checkpoint can only be written `completed` when its `proposal_packet.approval.status` is `approved` or `approved_with_changes`; `human_approved=True` alone is not enough. Keep a pending proposal `awaiting_human` and leave `render_runtime` unset until the user approves and chooses a runtime.
 - Superseded checkpoints are archived automatically to `projects/<project_id>/history/` — stage re-runs never destroy run history.
 - Invalid checkpoints or invalid canonical artifacts are contract violations and should fail fast.
 
@@ -638,9 +647,14 @@ Tool rules:
 | `premium-minimalist` | Investor updates, expert explainers, product narratives |
 | `flat-motion-graphics` | Social media, TikTok, startups |
 | `minimalist-diagram` | Technical deep-dives, architecture |
-| `ink-sketch` (Ink Theater) | Hand-drawn ink-on-white doodle animation; a character that draws itself, walks, dances; contraption explainers |
+| `anime-ghibli` | Narrative animations, nature-themed stories, emotional storytelling, fantasy visuals |
+| `ink-sketch` (Ink Theater) | Hand-drawn ink-on-white doodle animation; a character that draws itself, walks, dances; contraption explainers. **Style id, not a YAML playbook** — there is no `styles/ink-sketch.yaml`; route through `skills/creative/ink-theater.md` |
+
+The YAML playbooks are the files in `styles/`; `list_playbooks()` in `styles/playbook_loader.py` is the authoritative list.
 
 For custom, atelier, brand, launch, or hero work, read `skills/meta/taste-direction.md` before choosing a playbook. Carry its `taste_profile` into the proposal so later stages can preserve the design read, visual variance, motion intensity, information density, reference strategy, and anti-patterns.
+
+For physical-product ads, launch films, or promos with generated shots of a specific SKU, also read `skills/creative/commercial-product-video.md` for product references, shot controls, continuity, and final-cut review within the selected pipeline.
 
 ### Hand-drawn "doodle" animation → Ink Theater / Ink Puppet
 

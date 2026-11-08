@@ -16,6 +16,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import time
 import uuid
 from email.utils import formatdate
@@ -23,11 +24,14 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
 
+from tools.provider_pricing import PriceQuoteRequired
+
 from tools.base_tool import (
     BaseTool,
     Determinism,
     ExecutionMode,
     ResourceProfile,
+    ResumeSupport,
     RetryPolicy,
     ToolResult,
     ToolRuntime,
@@ -44,6 +48,7 @@ class IFlytekTTS(BaseTool):
     provider = "iflytek"
     stability = ToolStability.EXPERIMENTAL
     execution_mode = ExecutionMode.ASYNC
+    resume_support = ResumeSupport.FROM_CHECKPOINT
     determinism = Determinism.STOCHASTIC
     runtime = ToolRuntime.API
 
@@ -90,9 +95,13 @@ class IFlytekTTS(BaseTool):
 
     input_schema = {
         "type": "object",
-        "required": ["text"],
+        "anyOf": [{"required": ["text"]}, {"required": ["task_id"]}],
         "properties": {
-            "text": {"type": "string", "description": "Text to convert to speech"},
+            "text": {"type": "string", "minLength": 1, "description": "Text to convert to speech"},
+            "task_id": {
+                "type": "string", "minLength": 1,
+                "description": "Resume an accepted DTS task by query/download only; never submits text.",
+            },
             "voice_id": {
                 "type": "string",
                 "description": (
@@ -178,11 +187,11 @@ class IFlytekTTS(BaseTool):
         cpu_cores=1, ram_mb=256, vram_mb=0, disk_mb=100, network_required=True
     )
     retry_policy = RetryPolicy(
-        max_retries=2,
-        backoff_seconds=2.0,
-        retryable_errors=["timeout", "rate_limit", "10163"],
+        max_retries=0,
+        retryable_errors=[],
     )
     idempotency_key_fields = [
+        "task_id",
         "text",
         "voice_id",
         "language",
@@ -213,17 +222,13 @@ class IFlytekTTS(BaseTool):
     STATUS_DISPATCH_FAILED = 2
     STATUS_COMPLETE = 5
 
-    # iFlytek sells DTS as prepaid character packages rather than a published
-    # per-character list price, and new accounts get a free daily quota. This
-    # approximation only exists so budget guards and cost reports are non-zero;
-    # it is deliberately in the same order of magnitude as the other Mandarin
-    # providers. Replace it if an official rate is published.
-    APPROX_USD_PER_CHAR = 0.000015
-
     _EXTENSIONS = {"lame": "mp3", "speex": "speex", "opus": "opus", "raw": "pcm"}
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
-        return round(len(inputs.get("text", "")) * self.APPROX_USD_PER_CHAR, 4)
+        raise PriceQuoteRequired(
+            "Obtain an account-specific DTS character-package quote and currency conversion; "
+            "the API does not report an actual USD charge."
+        )
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         app_id = os.environ.get("IFLYTEK_APP_ID")
@@ -248,7 +253,7 @@ class IFlytekTTS(BaseTool):
             )
 
         voice_id = inputs.get("voice_id") or os.environ.get(self.DEFAULT_VOICE_ENV)
-        if not voice_id:
+        if not voice_id and not inputs.get("task_id"):
             return ToolResult(
                 success=False,
                 error=(
@@ -269,11 +274,12 @@ class IFlytekTTS(BaseTool):
                 voice_id=voice_id,
             )
         except Exception as exc:
-            return ToolResult(success=False, error=f"iFlytek TTS failed: {self._safe_error(exc)}")
+            return ToolResult(
+                success=False, error=f"iFlytek TTS failed: {self._safe_error(exc)}",
+                cost_usd=None, data={"cost_status": "unquoted"},
+            )
 
         result.duration_seconds = round(time.time() - start, 2)
-        if not result.cost_usd:
-            result.cost_usd = self.estimate_cost(inputs)
         return result
 
     def _generate(
@@ -287,7 +293,7 @@ class IFlytekTTS(BaseTool):
     ) -> ToolResult:
         import requests
 
-        text = inputs["text"]
+        text = inputs.get("text", "")
         encoding = inputs.get("format", "lame")
         output_path = Path(
             inputs.get("output_path", f"iflytek_tts.{self._EXTENSIONS.get(encoding, 'mp3')}")
@@ -298,38 +304,61 @@ class IFlytekTTS(BaseTool):
         output_path.parent.mkdir(parents=True, exist_ok=True)
         metadata_path.parent.mkdir(parents=True, exist_ok=True)
 
-        create_response = requests.post(
-            self._signed_url(self.CREATE_PATH, api_key=api_key, api_secret=api_secret),
-            headers={"Content-Type": "application/json"},
-            json=self._create_body(inputs, app_id=app_id, voice_id=voice_id),
-            timeout=(10, 60),
-        )
-        create_data = self._json_or_raise(create_response)
-        self._raise_for_iflytek_error(create_response.status_code, create_data)
-
-        task_id = create_data.get("header", {}).get("task_id")
+        task_id = inputs.get("task_id")
         if not task_id:
-            raise RuntimeError("iFlytek dts_create succeeded but did not return header.task_id")
+            if not isinstance(text, str) or not text.strip():
+                raise ValueError("Provide non-empty text or an existing task_id")
+            create_response = requests.post(
+                self._signed_url(self.CREATE_PATH, api_key=api_key, api_secret=api_secret),
+                headers={"Content-Type": "application/json"},
+                json=self._create_body(inputs, app_id=app_id, voice_id=voice_id),
+                timeout=(10, 60),
+            )
+            create_data = self._json_or_raise(create_response)
+            self._raise_for_iflytek_error(create_response.status_code, create_data)
+            task_id = create_data.get("header", {}).get("task_id")
+            if not task_id:
+                raise RuntimeError("iFlytek dts_create succeeded but did not return header.task_id")
 
-        query_data = self._poll_query(
-            requests_module=requests,
-            app_id=app_id,
-            api_key=api_key,
-            api_secret=api_secret,
-            task_id=task_id,
-            poll_interval=float(inputs.get("poll_interval_seconds", 3.0)),
-            timeout_seconds=int(inputs.get("timeout_seconds", 600)),
-        )
-        audio_url = self._audio_url(query_data)
-        if not audio_url:
-            raise RuntimeError("iFlytek task completed but returned no payload.audio.audio URL")
+        # Keep recovery independent of text, voice selection, and another submission.
+        resume_inputs = {
+            "task_id": task_id, "output_path": str(output_path),
+            "metadata_path": str(metadata_path), "format": encoding,
+        }
+        task_path = metadata_path.with_name(metadata_path.name + ".task.json")
+        checkpoint_saved = False
+        try:
+            self._atomic_write(task_path, json.dumps(resume_inputs).encode("utf-8"))
+            checkpoint_saved = True
+            query_data = self._poll_query(
+                requests_module=requests,
+                app_id=app_id,
+                api_key=api_key,
+                api_secret=api_secret,
+                task_id=task_id,
+                poll_interval=float(inputs.get("poll_interval_seconds", 3.0)),
+                timeout_seconds=int(inputs.get("timeout_seconds", 600)),
+            )
+            audio_url = self._audio_url(query_data)
+            if not audio_url:
+                raise RuntimeError("iFlytek task completed but returned no payload.audio.audio URL")
 
-        audio_response = requests.get(audio_url, timeout=(10, 300))
-        audio_response.raise_for_status()
-        output_path.write_bytes(audio_response.content)
-        metadata_path.write_text(
-            json.dumps(query_data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
-        )
+            audio_response = requests.get(audio_url, timeout=(10, 300))
+            audio_response.raise_for_status()
+            self._atomic_write(output_path, audio_response.content)
+            self._atomic_write(
+                metadata_path,
+                (json.dumps(query_data, ensure_ascii=False, indent=2) + "\n").encode("utf-8"),
+            )
+
+        except Exception as exc:
+            return ToolResult(
+                success=False, error=f"iFlytek TTS failed: {self._safe_error(exc)}",
+                cost_usd=None, model="iflytek/dts",
+                data={"task_id": task_id, "resume_inputs": resume_inputs,
+                      "cost_status": "unquoted", "task_path": str(task_path)},
+                artifacts=[str(task_path)] if checkpoint_saved else [],
+            )
 
         audio_duration = self._audio_duration(output_path)
         audio_meta = query_data.get("payload", {}).get("audio", {})
@@ -347,7 +376,9 @@ class IFlytekTTS(BaseTool):
                 "speed": inputs.get("speed", 50),
                 "volume": inputs.get("volume", 50),
                 "pitch": inputs.get("pitch", 50),
-                "text_length": len(text),
+                "text_length": len(text) if text else None,
+                "cost_status": "unquoted",
+                "task_path": str(task_path),
                 "task_id": task_id,
                 "task_status": query_data.get("header", {}).get("task_status"),
                 "sid": query_data.get("header", {}).get("sid"),
@@ -358,10 +389,19 @@ class IFlytekTTS(BaseTool):
                 "output": str(output_path),
                 "metadata_path": str(metadata_path),
             },
-            artifacts=[str(output_path), str(metadata_path)],
-            cost_usd=self.estimate_cost(inputs),
+            artifacts=[str(output_path), str(metadata_path), str(task_path)],
+            cost_usd=None,
             model="iflytek/dts",
         )
+
+    @staticmethod
+    def _atomic_write(path: Path, content: bytes) -> None:
+        temporary = path.with_name(path.name + "." + uuid.uuid4().hex + ".tmp")
+        try:
+            temporary.write_bytes(content)
+            temporary.replace(path)
+        finally:
+            temporary.unlink(missing_ok=True)
 
     # ---- Request building -------------------------------------------------
 
@@ -514,7 +554,7 @@ class IFlytekTTS(BaseTool):
     @staticmethod
     def _safe_error(exc: Exception) -> str:
         """Never echo credentials; the signed URL carries the api_key in a query param."""
-        message = str(exc)
+        message = re.sub(r"https?://[^\s]+", "[redacted URL]", str(exc))
         for env_name in ("IFLYTEK_API_KEY", "IFLYTEK_API_SECRET", "IFLYTEK_APP_ID"):
             secret = os.environ.get(env_name)
             if secret:

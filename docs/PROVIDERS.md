@@ -2,6 +2,67 @@
 
 Everything you need to know about every provider in OpenMontage — setup instructions, pricing, free tiers, and what each unlocks.
 
+## October 2026 provider refresh
+
+See [implementation status and verified model map](provider-update-plan-2026-10-03.md)
+and [adapter usage](../.agents/skills/provider-model-refresh/SKILL.md).
+
+New routes cover HeyGen Avatar V, Eleven v4/Turbo, Wan 3.0 on fal/Atlas/Replicate,
+GPT Image 2.5 Flare/Sunburst, Gemini 3 Pro Image (Nano Banana Pro), Ideogram 4.5
+and Precise Edit, H3 Max, Gemini 3.8 TTS, Lyria 3.5, LTX-2.5, Sonic 3.6,
+Inworld TTS-2/Flash and local Qwen Image 2.1. Each model uses the exact API host's
+contract; an API key does not establish account entitlement.
+
+For image/video selectors use `model`, `hosting_provider`, and optionally
+`preferred_tool`. Speech uses `model_id`. Explicit tool, host and model constraints
+never silently fall back. Legacy `preferred_provider` remains a ranking preference.
+Several tools may share a host; ranking selects the actual tool name.
+
+New asynchronous video/image tools return `resume_job` and optionally save
+`job_path`. Resume the same job after a polling timeout instead of submitting
+another paid request. Unpriced calls return `cost_usd: null` with `cost_status`,
+not zero. Ideogram direct supports an unbilled `dry_run` price quote.
+
+### Kling O3 on fal.ai (separate from official Kling and legacy fal Kling)
+
+`kling_o3_fal_video` uses `FAL_KEY` and exact models `kling-o3-standard`,
+`kling-o3-pro`, or `kling-o3-4k`. Each has `text_to_video`, `image_to_video`,
+`reference_to_video`, `video_to_video_reference`, and `video_to_video_edit`.
+Select video-to-video operation explicitly; all routes use the fal queue and
+return an optional resumable `job_path` checkpoint. `kling_o3_fal_image` uses
+model `kling-o3-image` with `text_to_image` and `image_to_image`. The original
+`kling_video` adapter and its `v3/standard` default are unchanged. These are
+fal-hosted endpoints, **not** `kling_official_video` or `kling_official_image`.
+For the shared selectors, `video_edit` maps to O3's `video_to_video_edit`,
+and `image_selector`'s `generate`/`edit` map to O3 text/image generation.
+
+Example image-reference clip: set `preferred_tool=kling_o3_fal_video`,
+`model=kling-o3-standard`, `operation=reference_to_video`, `prompt` (refer to
+appearance images as `@Image1`, `@Image2`), `start_image_url` for the first
+frame and `image_urls`/`image_paths` (or the selector's
+`reference_image_urls`/`reference_image_paths`) for appearance references.
+Do **not** use `image_url` as a first-frame alias on this route: it can
+appear twice in the reference list. Ordinary `image_to_video` takes
+`image_url` (or `image_path`) and optional `end_image_url`, but **not** `aspect_ratio`.
+Video-to-video reference/edit take `video_url` and `prompt`; edit does not
+accept `duration` or `aspect_ratio`. Native controls such as `elements`,
+`multi_prompt`, `shot_type`, `keep_audio`, and `generate_audio` are validated
+against the selected endpoint's published schema, not blindly copied between
+routes. For image edits, use `image_urls`/`image_paths` with `image_to_image`.
+
+These calls are paid. A configured key is not proof of entitlement or a price
+quote: `estimate_cost` requires a current quote and successful results report
+`cost_usd=null` when the provider gives no usage cost. The tool never retries
+a paid POST automatically. If the POST times out without a request ID, **do
+not resubmit** until checking the fal dashboard. No live paid O3 generation
+was validated; schemas and queue behavior were tested offline.
+
+Kling 4/Flash (a different version from O3 4K output) stays gated pending
+verified public schemas and account access.
+LTX-2.5 local execution requires a supplied ComfyUI API workflow and installed
+weights; the direct LTX API is implemented separately. GPU and paid API output
+quality require live validation in the intended environment.
+
 ---
 
 ## Quick Start: What Should I Set Up?
@@ -25,6 +86,7 @@ Everything you need to know about every provider in OpenMontage — setup instru
 | 13 | **pay-as-you-go** | Suno | Full song generation with vocals and lyrics |
 | 14 | **$0 + GPU** | Local video gen | WAN 2.1, Hunyuan, CogVideo, LTX — free, offline |
 | 15 | **$0 + GPU** | Local Diffusion | Stable Diffusion images — free, offline |
+| 16 | **pay-as-you-go** | MiniCut CLI (`minicut login`, no env var) | One sign-in for `minicut_image` (GPT Image 2), `minicut_tts` (ElevenLabs v3) and `minicut_music` (Lyria 3.5); each job shows its price and waits for a yes |
 
 ### Environment Variable Summary
 
@@ -94,7 +156,7 @@ speculative model strings.
 
 | Model | Direct provider | fal.ai | Runway | ComfyUI Partner Nodes | Local ComfyUI |
 |-------|-----------------|--------|--------|-----------------------|---------------|
-| **Gemini Omni Flash** | Google `gemini_omni_video` | `gemini_omni_fal` (T2V, I2V, references, editing) | `runway_video` model `gemini_omni_flash` | `GeminiVideoOmni` (hosted, paid credits) | Not available as local weights |
+| **Gemini Omni Flash** | Google `gemini_omni_video` (`gemini-omni-1.1-flash`) | `gemini_omni_fal` (T2V, I2V, references, editing) | `runway_video` model `gemini_omni_flash` | Legacy `GeminiVideoOmni` mapping is not a stable 1.1 fallback; migrate separately to `GeminiVideoOmniV2` | Not available as local weights |
 | **Seedance 2.5** | Volcengine `seedance_ark` model variant `2.5` | `seedance_video` model version `2.5` | `runway_video` model `seedance2_5` | `ByteDance2TextToVideoNode` (hosted, paid credits) | Not available as local weights |
 | **MiniMax H3** | `minimax_video` model `MiniMax-H3` | `minimax_fal_video` (`hailuo-03`) | `runway_video` model `hailuo3` | `MinimaxHailuo03TextToVideoNode` (hosted, paid credits) | Supported with official open weights and an exported API workflow |
 
@@ -646,7 +708,18 @@ Rendered audio is kept on iFlytek's servers for **7 days**. The tool downloads i
 
 #### Pricing
 
-iFlytek sells DTS as prepaid character packages rather than a published per-character list rate, on top of a free daily quota for new accounts. OpenMontage estimates cost from text length using a conservative approximation in the same order of magnitude as the other Mandarin providers; check the console for your account's actual package before large batches.
+iFlytek DTS requires an enabled quota or purchased package. Obtain an account-specific quote and currency conversion before generation. `estimate_cost()` raises `PriceQuoteRequired`; results report `cost_usd=None` and `cost_status="unquoted"` because DTS does not return an actual USD charge. Unknown cost does not mean free usage.
+
+#### Recovering an Accepted Task
+
+As soon as DTS returns a task ID, the tool saves query-only recovery inputs in
+`<metadata_path>.task.json`. If polling or downloading fails, the failed result
+also includes `task_id` and `resume_inputs`, even if saving the checkpoint failed.
+Pass `resume_inputs` to `IFlytekTTS().execute()` to query/download that same task;
+this does not call `dts_create` and does not need text or a voice selection.
+Automatic submission retries are disabled. If submission itself times out before
+a task ID is received, its outcome is unknown: reconcile with the service before
+submitting again. Recovery remains subject to the service's seven-day retention.
 
 ---
 
@@ -885,9 +958,11 @@ To select the Gemini backend through the governed `image_selector`, pass
 
 | Model | Price | Notes |
 |-------|-------|-------|
-| `gemini-omni-flash-preview` | ~$0.10 per second of video | Billed as 5,792 output tokens/sec of 720p video at $17.50/1M tokens |
+| `gemini-omni-1.1-flash` | ~$0.10 per second of video | Standard input: $1.50/1M tokens. Output: $9.00/1M text tokens and $17.50/1M video tokens; 720p video emits 5,792 tokens/sec |
 
-Generates 3–10 second clips at 720p/24fps with synthesized audio, plus stateful conversational editing (`edit_video` via `previous_interaction_id`). **Paid tier only — no free tier.** A typical 8-second clip costs ~$0.80; each edit turn generates a new clip and bills again.
+The direct OpenMontage adapter generates 3–10 second clips at 720p/24fps with synthesized audio, plus stateful conversational editing (`edit_video` via `previous_interaction_id`). The `duration` input is only a planning/prompt hint: the adapter does not send it, the model chooses the actual duration, and the hint does not cap billing. `ToolResult.cost_usd` uses valid provider `usage` when available: all input modalities are $1.50/1M tokens, output text is $9.00/1M, and video plus unknown or unclassified output is conservatively $17.50/1M; separately reported thought tokens are also charged at $17.50/1M. If usage is missing or malformed, the adapter assumes the maximum 10-second output at the exact `10 × 5,792 × $17.50/1M = $1.0136` rate, then adds a conservative input-token estimate, so a short duration hint cannot lower the fallback.
+
+Set `store=false` for a one-shot generation that should not remain available for a later edit turn. If the paid generation succeeds but its URI download fails, the result includes `output_uri`, a usage-based cost when valid usage was returned (otherwise the conservative fallback), and a `resume_download` payload; retry that payload to perform GET-only recovery without submitting or charging for a second generation. **Paid tier only — no free tier.** Actual 720p video output is approximately $0.10/sec before input and any text/thought output; each edit turn generates a new clip and bills again.
 
 #### Google Music (Lyria) Pricing
 
@@ -1295,7 +1370,7 @@ The same tool also supports these ComfyUI Partner Nodes:
 
 | `model_family` | Node | Execution | Approximate cost |
 |----------------|------|-----------|------------------|
-| `gemini_omni_flash` | `GeminiVideoOmni` | Hosted Partner Node | ~$0.146/sec |
+| `gemini_omni_flash` (legacy preview) | `GeminiVideoOmni` | Hosted Partner Node; separate from the stable direct `gemini_omni_video` adapter | ~$0.146/sec |
 | `seedance_2.5` | `ByteDance2TextToVideoNode` | Hosted Partner Node | ~$0.148/sec 480p; ~$0.333/sec 720p |
 | `minimax_h3_api` | `MinimaxHailuo03TextToVideoNode` | Hosted Partner Node | ~$0.129/sec 768P; ~$0.186/sec 2K |
 | `minimax_h3_local` | official MiniMax H3 graph | Local GPU | No API charge |
@@ -1543,3 +1618,21 @@ A: For quality → ElevenLabs. For localization (50+ languages) → Google TTS. 
 
 **Q: Do I need all these providers?**
 A: No. Start with what you have. The selector pattern auto-routes to whatever's available. Missing a provider? The system falls through to the next one automatically.
+
+## October 23, 2026 additions and migrations
+
+See [the current integration guide](../.agents/skills/provider-refresh-oct23/SKILL.md)
+for exact tool/model/host selection, setup, limitations, and primary sources.
+
+Added HeyGen Voice1/Turbo/Free and catalog TTS, timing-preserving HeyGen conversion,
+xAI narration TTS, Voxtral3 TTS/STT, MAI Voice2.1/Flash, ElevenLabs video soundtracks,
+Nano Banana2.1 (Google/fal/Replicate), FLUX3 Image (BFL/fal/Replicate), FLUX3 Max video
+(fal), Vidu Q4 (fal), Grok Imagine1.5/Lite, Fibo2 (Bria/fal), MAI Image2.6/Flash,
+and separate realtime transports for Grok Voice3, Eleven Realtime Mini/Max, and
+MAI streaming transcription. No Kling4 or realtime translation integration.
+
+Gemini Omni uses gemini-omni-1.1-flash. Retired Gemini Veo/Imagen calls fail with
+migration guidance; Vertex and aggregator routes are handled separately.
+Eleven v4 now uses the dialogue contract and Turbo uses its WebSocket transport.
+New provider availability is credential-based, not a live entitlement check.
+Pricing requires current quotes except the explicitly dated HeyGen free promotion.

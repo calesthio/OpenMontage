@@ -1,0 +1,121 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "text": {
+      "description": "Text to synthesize (1-5000 characters). Break tags must express time in seconds (for example, <break time=\"0.35s\"/>); millisecond values are not supported.",
+      "maxLength": 5000,
+      "minLength": 1,
+      "title": "Text",
+      "type": "string"
+    },
+    "voice_id": {
+      "description": "Voice ID from the voice catalog. Professional voice clones use model speech generation instead.",
+      "title": "Voice Id",
+      "type": "string"
+    },
+    "input_type": {
+      "default": "text",
+      "description": "Type of the input: 'text' for plain text, 'ssml' for SSML markup. Defaults to 'text'.",
+      "title": "Input Type",
+      "type": "string"
+    },
+    "speed": {
+      "default": 1,
+      "description": "Speed multiplier (0.5-2.0).",
+      "maximum": 2,
+      "minimum": 0.5,
+      "title": "Speed",
+      "type": "number"
+    },
+    "language": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Base language code (e.g. 'en', 'pt', 'zh'). Optional \u00e2\u20ac\u201d auto-detected from text when omitted.",
+      "title": "Language"
+    },
+    "locale": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Locale tag for Starfish (e.g. 'zh-HK'). ElevenLabs does not support locale selection; use language instead.",
+      "title": "Locale"
+    },
+    "force_regenerate": {
+      "default": false,
+      "description": "Bypass HeyGen's speech cache and request fresh synthesis. Normal speech quota applies. Defaults to false.",
+      "title": "Force Regenerate",
+      "type": "boolean",
+      "x-mcp-omit-default": true
+    },
+    "engine": {
+      "anyOf": [
+        {
+          "enum": [
+            "heygen_voice",
+            "starfish",
+            "orca",
+            "elevenlabs",
+            "elevenlabs_v3"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Speech engine override for this request only. Omit to use the voice's saved default, including your saved preference. Voices without a concrete saved default retain Starfish. Unsupported defaults or overrides return an error; engines are never silently substituted. Use 'heygen_voice' for HeyGen Voice; 'orca' remains accepted as its legacy alias. Responses retain 'orca' for compatibility. ElevenLabs model variants are selected through settings.model_id. The deprecated elevenlabs_v3 engine retains its existing behavior while callers and saved defaults migrate."
+    },
+    "settings": {
+      "anyOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "model_id": {
+              "description": "ElevenLabs model for this request only. Omit settings to retain the voice's saved model preference.",
+              "enum": [
+                "eleven_multilingual_v2",
+                "eleven_flash_v2",
+                "eleven_flash_v2_5",
+                "eleven_turbo_v2_5",
+                "eleven_v3",
+                "eleven_v4"
+              ],
+              "title": "Model Id",
+              "type": "string"
+            }
+          },
+          "required": [
+            "model_id"
+          ],
+          "title": "ElevenLabsSpeechSettings",
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Request-only ElevenLabs model settings. Applied after saved preferences; valid for elevenlabs or the deprecated elevenlabs_v3 compatibility engine."
+    }
+  },
+  "required": [
+    "text",
+    "voice_id"
+  ],
+  "title": "CreateSpeechV3Request",
+  "type": "object"
+}

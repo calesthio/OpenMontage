@@ -37,7 +37,7 @@ If the scene plan includes a `corrections` dict, pass it to `subtitle_gen`:
 subtitle_gen.execute({
     "segments": <transcript_segments>,
     "corrections": {"cloud": "Claude"},
-    "max_words_per_line": 5,
+    "max_words_per_cue": 5,
     "output_path": "<project>/assets/subtitles/subtitles.srt"
 })
 ```

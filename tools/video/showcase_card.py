@@ -8,6 +8,9 @@ showcase segments.
 
 from __future__ import annotations
 
+import os
+import re
+import tempfile
 import time
 from pathlib import Path
 from typing import Any
@@ -21,6 +24,78 @@ from tools.base_tool import (
     ToolStability,
     ToolTier,
 )
+
+# FFmpeg color literal: a named color ("white"), or 0x/#-prefixed 6 or 8 hex
+# digits, each with an optional "@<alpha 0..1>" suffix. Rejects anything that
+# could close the quoted drawtext value or start a new filter (":", "'", ",").
+_COLOR_RE = re.compile(
+    r"^(?:[A-Za-z]+|(?:0x|#)[0-9A-Fa-f]{6}(?:[0-9A-Fa-f]{2})?)"
+    r"(?:@(?:0(?:\.[0-9]+)?|1(?:\.0+)?))?$"
+)
+
+# Font files are looked up by name only (system font lookup) - no path
+# separators, no filter-breaking characters.
+_FONT_FILE_RE = re.compile(r"^[A-Za-z0-9_.-]+\.(?:ttf|otf|ttc)$")
+
+
+def _validate_color(field: str, value: str) -> str:
+    value = str(value)
+    if not _COLOR_RE.match(value):
+        raise ValueError(
+            f"{field!r} is not a valid FFmpeg color literal: {value!r}"
+        )
+    return value
+
+
+def _validate_font_file(field: str, value: str) -> str:
+    value = str(value)
+    if not _FONT_FILE_RE.match(value):
+        raise ValueError(
+            f"{field!r} must be a bare font filename (letters/digits/._- "
+            f"ending in .ttf/.otf/.ttc), got {value!r}"
+        )
+    return value
+
+
+def _validate_int_range(field: str, value: Any, lo: int, hi: int) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError(f"{field!r} must be an integer, got {value!r}")
+    if not (lo <= value <= hi):
+        raise ValueError(f"{field!r} must be between {lo} and {hi}, got {value}")
+    return value
+
+
+def _write_drawtext_textfile(tmp_dir: Path, text: str) -> Path:
+    """Write text verbatim to a file for drawtext's textfile= option.
+
+    textfile+expansion=none reads the file as literal bytes - no FFmpeg
+    filter escaping of the TEXT is needed at all (colons, percents, quotes,
+    backslashes in user text all pass through unchanged), which is what
+    _drawtext_safe's character-stripping/substitution was trying (and
+    failing) to approximate.
+    """
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    fd, raw_path = tempfile.mkstemp(dir=tmp_dir, suffix=".txt")
+    os.close(fd)
+    path = Path(raw_path)
+    path.write_text(str(text), encoding="utf-8")
+    return path
+
+
+def _safe_filter_path(path: Path) -> str:
+    """Encode an internally-generated path for a quoted filter option value.
+
+    FFmpeg parses the graph and then the filter options. Escape option-level
+    backslashes, colons and quotes first, then preserve quotes through the
+    graph parser by closing/reopening the caller's single-quoted section.
+    Even generated filenames inherit spaces and punctuation from the user's
+    temporary directory, including Windows drive letters and apostrophes.
+    """
+    encoded = path.as_posix()
+    if "\x00" in encoded:
+        raise ValueError("filter paths cannot contain NUL bytes")
+    encoded = encoded.replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\'")
+    return encoded.replace("'", "'\\''")
 
 
 class ShowcaseCard(BaseTool):
@@ -125,6 +200,17 @@ class ShowcaseCard(BaseTool):
         title_color = inputs.get("title_color", "white")
         watermark = inputs.get("watermark", "")
 
+        try:
+            out_w = _validate_int_range("output_width", out_w, 16, 7680)
+            out_h = _validate_int_range("output_height", out_h, 16, 7680)
+            title_font_size = _validate_int_range("title_font_size", title_font_size, 8, 300)
+            subtitle_font_size = _validate_int_range("subtitle_font_size", subtitle_font_size, 8, 300)
+            bg_color = _validate_color("background_color", bg_color)
+            title_color = _validate_color("title_color", title_color)
+            title_font = _validate_font_file("title_font", title_font)
+        except ValueError as e:
+            return ToolResult(success=False, error=str(e))
+
         if not Path(input_path).exists():
             return ToolResult(success=False, error=f"Input not found: {input_path}")
 
@@ -150,61 +236,66 @@ class ShowcaseCard(BaseTool):
         scaled_h = scaled_h if scaled_h % 2 == 0 else scaled_h + 1
         pad_y = (out_h - scaled_h) // 2
 
-        # Build filter chain
-        filters = [
-            f"scale={out_w}:{scaled_h}",
-            f"pad={out_w}:{out_h}:0:{pad_y}:color={bg_color}",
-        ]
+        with tempfile.TemporaryDirectory(prefix="showcase_card_text_") as text_tmp_dir_str:
+            text_tmp_dir = Path(text_tmp_dir_str)
 
-        # Title text at top
-        title_escaped = title.replace("'", "\\'").replace(":", "\\:")
-        filters.append(
-            f"drawtext=text='{title_escaped}'"
-            f":fontfile='{title_font}'"
-            f":fontsize={title_font_size}"
-            f":fontcolor={title_color}"
-            f":borderw=3:bordercolor=black"
-            f":x=(w-text_w)/2:y=60"
-        )
+            # Build filter chain
+            filters = [
+                f"scale={out_w}:{scaled_h}",
+                f"pad={out_w}:{out_h}:0:{pad_y}:color={bg_color}",
+            ]
 
-        # Subtitle text at bottom
-        if subtitle:
-            sub_escaped = subtitle.replace("'", "\\'").replace(":", "\\:")
+            # Title text at top. Text is written verbatim to a file and read
+            # back with expansion=none, so no filter-escaping of the text
+            # itself is needed — only the (internally generated) path does.
+            title_path = _write_drawtext_textfile(text_tmp_dir, title)
             filters.append(
-                f"drawtext=text='{sub_escaped}'"
-                f":fontfile='segoeui.ttf'"
-                f":fontsize={subtitle_font_size}"
-                f":fontcolor=white@0.85"
-                f":x=(w-text_w)/2:y=h-100"
+                f"drawtext=textfile='{_safe_filter_path(title_path)}':expansion=none"
+                f":fontfile='{title_font}'"
+                f":fontsize={title_font_size}"
+                f":fontcolor={title_color}"
+                f":borderw=3:bordercolor=black"
+                f":x=(w-text_w)/2:y=60"
             )
 
-        # Watermark centered on video
-        if watermark:
-            wm_escaped = watermark.replace("'", "\\'").replace(":", "\\:")
-            filters.append(
-                f"drawtext=text='{wm_escaped}'"
-                f":fontfile='segoeui.ttf'"
-                f":fontsize=36"
-                f":fontcolor=white@0.3"
-                f":x=(w-text_w)/2:y=(h-text_h)/2"
-            )
+            # Subtitle text at bottom
+            if subtitle:
+                subtitle_path = _write_drawtext_textfile(text_tmp_dir, subtitle)
+                filters.append(
+                    f"drawtext=textfile='{_safe_filter_path(subtitle_path)}':expansion=none"
+                    f":fontfile='segoeui.ttf'"
+                    f":fontsize={subtitle_font_size}"
+                    f":fontcolor=white@0.85"
+                    f":x=(w-text_w)/2:y=h-100"
+                )
 
-        vf = ",".join(filters)
+            # Watermark centered on video
+            if watermark:
+                watermark_path = _write_drawtext_textfile(text_tmp_dir, watermark)
+                filters.append(
+                    f"drawtext=textfile='{_safe_filter_path(watermark_path)}':expansion=none"
+                    f":fontfile='segoeui.ttf'"
+                    f":fontsize=36"
+                    f":fontcolor=white@0.3"
+                    f":x=(w-text_w)/2:y=(h-text_h)/2"
+                )
 
-        cmd = [
-            "ffmpeg", "-y",
-            "-i", input_path,
-            "-vf", vf,
-            "-c:v", "libx264", "-preset", "fast", "-crf", "18",
-            "-pix_fmt", "yuv420p",
-            "-c:a", "aac", "-b:a", "192k",
-            output_path,
-        ]
+            vf = ",".join(filters)
 
-        try:
-            self.run_command(cmd)
-        except Exception as e:
-            return ToolResult(success=False, error=f"FFmpeg failed: {e}")
+            cmd = [
+                "ffmpeg", "-y",
+                "-i", input_path,
+                "-vf", vf,
+                "-c:v", "libx264", "-preset", "fast", "-crf", "18",
+                "-pix_fmt", "yuv420p",
+                "-c:a", "aac", "-b:a", "192k",
+                output_path,
+            ]
+
+            try:
+                self.run_command(cmd)
+            except Exception as e:
+                return ToolResult(success=False, error=f"FFmpeg failed: {e}")
 
         if not Path(output_path).exists():
             return ToolResult(success=False, error="No output produced")

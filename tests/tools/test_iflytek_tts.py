@@ -20,6 +20,7 @@ import pytest
 
 from tools.audio.iflytek_tts import IFlytekTTS
 from tools.base_tool import ToolStatus
+from tools.provider_pricing import PriceQuoteRequired
 
 
 AUDIO_URL = "https://cdn.xfyun.cn/dts/task-1.mp3"
@@ -271,7 +272,8 @@ class TestGenerate:
         assert result.data["provider"] == "iflytek"
         assert result.data["task_id"] == "task-1"
         assert result.model == "iflytek/dts"
-        assert result.cost_usd > 0
+        assert result.cost_usd is None
+        assert result.data["cost_status"] == "unquoted"
         assert str(out) in result.artifacts
 
         metadata = json.loads((tmp_path / "narration.mp3.json").read_text(encoding="utf-8"))
@@ -421,12 +423,10 @@ class TestSelectorRouting:
 
 
 class TestCost:
-    def test_cost_scales_with_text_length(self):
-        tool = IFlytekTTS()
-        assert tool.estimate_cost({"text": "a" * 1000}) > tool.estimate_cost({"text": "a" * 10})
-
-    def test_empty_text_is_free(self):
-        assert IFlytekTTS().estimate_cost({}) == 0.0
+    @pytest.mark.parametrize("text", ["", "a" * 1000])
+    def test_account_quote_required(self, text):
+        with pytest.raises(PriceQuoteRequired):
+            IFlytekTTS().estimate_cost({"text": text})
 
 
 class TestIdempotencyKey:

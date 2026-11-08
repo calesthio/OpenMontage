@@ -27,7 +27,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from .base import Candidate, SearchFilters
+from .base import Candidate, SearchFilters, stable_url_id
 
 _log = logging.getLogger(__name__)
 
@@ -177,7 +177,7 @@ class LibraryOfCongressSource:
                     out.append(
                         Candidate(
                             source=self.name,
-                            source_id=f"loc_{hash(full_url) & 0xFFFFFFFF:08x}",
+                            source_id=stable_url_id(full_url),
                             source_url=source_url,
                             download_url=full_url,
                             kind="video" if is_video else "image",
@@ -201,7 +201,7 @@ class LibraryOfCongressSource:
             out.append(
                 Candidate(
                     source=self.name,
-                    source_id=f"loc_{hash(full_url) & 0xFFFFFFFF:08x}",
+                    source_id=stable_url_id(full_url),
                     source_url=source_url,
                     download_url=full_url,
                     kind="image",

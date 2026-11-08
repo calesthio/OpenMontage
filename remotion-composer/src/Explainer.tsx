@@ -9,7 +9,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { loadFont } from "@remotion/google-fonts/SpaceGrotesk";
+import { loadSpaceGrotesk } from "./lib/localFonts";
 import { TextCard } from "./components/TextCard";
 import { StatCard } from "./components/StatCard";
 import { CalloutBox } from "./components/CalloutBox";
@@ -19,7 +19,7 @@ import { LineChart } from "./components/charts/LineChart";
 import { PieChart } from "./components/charts/PieChart";
 import { KPIGrid } from "./components/charts/KPIGrid";
 import { ProgressBar } from "./components/ProgressBar";
-import { CaptionOverlay, WordCaption } from "./components/CaptionOverlay";
+import { CaptionOverlay, CaptionProps, WordCaption } from "./components/CaptionOverlay";
 import { SectionTitle } from "./components/SectionTitle";
 import { StatReveal } from "./components/StatReveal";
 import { HeroTitle } from "./components/HeroTitle";
@@ -35,10 +35,7 @@ import type { ParticleType } from "./components/ParticleOverlay";
 import { resolveTheme, type ThemeConfig, DEFAULT_THEME } from "./Root";
 
 // Load Space Grotesk font for cinematic typography
-const { fontFamily } = loadFont("normal", {
-  weights: ["400", "700"],
-  subsets: ["latin"],
-});
+const { fontFamily } = loadSpaceGrotesk(["400", "700"]);
 
 // ---------------------------------------------------------------------------
 // Animated Background — Gradient Mesh + Floating Orbs
@@ -233,7 +230,7 @@ interface Cut {
   heroSubtitle?: string;
   // Styling overrides
   backgroundColor?: string;
-  cardBackgroundColor?: string; // Inner card surface (comparison); defaults to theme.surfaceColor
+  cardBackgroundColor?: string; // Inner card surface (comparison, kpi_grid); defaults to theme.surfaceColor
   backgroundImage?: string; // AI-generated or stock image rendered behind the component
   backgroundVideo?: string; // Video clip rendered behind the component (takes priority over backgroundImage)
   backgroundVideoStart?: number; // Seek position in seconds for background video (default 0)
@@ -241,6 +238,7 @@ interface Cut {
   color?: string;
   accentColor?: string;
   fontSize?: number;
+  titleFontSize?: number;
   // Animation & transitions
   animation?: string;
   transition_in?: string;
@@ -307,6 +305,13 @@ export interface ExplainerProps {
   cuts: Cut[];
   overlays?: Overlay[];
   captions?: WordCaption[];
+  // Optional caption layout overrides (e.g. bigger, fewer words, raised for 9:16 shorts)
+  captionStyle?: {
+    wordsPerPage?: number;
+    fontSize?: number;
+    bottomOffset?: number;
+  };
+  captionProps?: CaptionProps; // extra CaptionOverlay props, applied last
   audio?: AudioConfig;
 }
 
@@ -607,6 +612,7 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
         text={cut.text} type={cut.callout_type} title={cut.title}
         borderColor={accent} backgroundColor={cut.backgroundColor || theme.surfaceColor}
         textColor={textColor} containerBackgroundColor={bgColor}
+        fontSize={cut.fontSize} titleFontSize={cut.titleFontSize}
       />
     );
   }
@@ -694,6 +700,7 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
         metrics={cut.chartData} title={cut.title} columns={cut.columns}
         colors={cut.chartColors || theme.chartColors} animationStyle={(cut.chartAnimation as any) || "count-up"}
         backgroundColor={bgColor}
+        cardBackgroundColor={cut.cardBackgroundColor || theme.surfaceColor}
         textColor={textColor}
       />
     );
@@ -711,6 +718,9 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
           <div style={{
             position: "absolute", top: 120, fontSize: 48, fontWeight: 700,
             color: textColor, textAlign: "center", width: "100%",
+            // ProgressBar renders an opaque full-frame AbsoluteFill after this
+            // node, so the title needs to be lifted above it to stay visible.
+            zIndex: 1,
           }}>
             {cut.title}
           </div>
@@ -876,11 +886,13 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
       {captions && captions.length > 0 && (
         <CaptionOverlay
           words={captions}
-          wordsPerPage={6}
-          fontSize={42}
+          wordsPerPage={props.captionStyle?.wordsPerPage ?? 6}
+          fontSize={props.captionStyle?.fontSize ?? 42}
+          bottomOffset={props.captionStyle?.bottomOffset ?? 80}
           color={theme.textColor}
           highlightColor={theme.captionHighlightColor}
           backgroundColor={theme.captionBackgroundColor}
+          {...props.captionProps}
         />
       )}
 

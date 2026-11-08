@@ -73,11 +73,26 @@ The provider writes:
 
 - `output_path`: downloaded audio file
 - `metadata_path`: full `dts_query` response JSON, defaulting to `<output_path>.json`
+- `<metadata_path>.task.json`: recovery inputs saved immediately after acceptance
+
+## Pricing and Recovery
+
+Obtain an account-specific DTS package quote before generating speech.
+`estimate_cost()` raises `PriceQuoteRequired`; `cost_usd=None` with
+`cost_status="unquoted"` means the actual charge is unknown, not zero.
+
+After a polling or download failure, call `IFlytekTTS().execute(result.data["resume_inputs"])`
+or load the inputs from the task checkpoint. The `task_id` selects query/download
+only, without another `dts_create` call; text and voice are not required.
+The failed result retains the task ID even when checkpoint persistence fails.
+Automatic submission retries are disabled. A submission timeout with no returned
+task ID has an unknown outcome: reconcile it before attempting a new synthesis.
 
 ## Parameters
 
 - `voice_id`: iFlytek `vcn`. Defaults to `IFLYTEK_TTS_VCN`. There is no built-in
   default voice — which voices exist depends on what your app is authorized for.
+- `task_id`: resume an accepted task without submitting another synthesis.
 - `speed` / `volume` / `pitch`: `0-100`, `50` is normal. Note this is a different
   scale from Doubao's `speech_rate` (`-50..100`); do not copy a value across.
 - `language`: `zh` or `en`. Dialects are selected through the voice, not this field.

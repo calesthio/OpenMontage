@@ -22,6 +22,7 @@ from tools.base_tool import (
     ToolStatus,
     ToolTier,
 )
+from tools.enhancement._basicsr_compat import ensure_basicsr_compat
 
 
 class FaceRestore(BaseTool):
@@ -64,9 +65,12 @@ class FaceRestore(BaseTool):
             },
             "model": {
                 "type": "string",
-                "enum": ["CodeFormer", "GFPGAN"],
-                "default": "CodeFormer",
-                "description": "Restoration model to use",
+                "enum": ["GFPGAN", "CodeFormer"],
+                "default": "GFPGAN",
+                "description": (
+                    "Restoration model to use. CodeFormer is not available yet: "
+                    "the gfpgan package has no CodeFormer architecture."
+                ),
             },
             "fidelity": {
                 "type": "number",
@@ -100,6 +104,7 @@ class FaceRestore(BaseTool):
 
     def get_status(self) -> ToolStatus:
         try:
+            ensure_basicsr_compat()
             import gfpgan  # noqa: F401
             return ToolStatus.AVAILABLE
         except ImportError:
@@ -116,7 +121,14 @@ class FaceRestore(BaseTool):
                 str(input_path.with_stem(f"{input_path.stem}_restored")),
             )
         )
-        model_name = inputs.get("model", "CodeFormer")
+        model_name = inputs.get("model", "GFPGAN")
+        if model_name == "CodeFormer":
+            # GFPGANer only builds GFPGAN/RestoreFormer archs; asking it for
+            # CodeFormer used to download the weights and then fail to load.
+            return ToolResult(
+                success=False,
+                error="CodeFormer is not supported by the gfpgan backend; use model='GFPGAN'.",
+            )
         fidelity = inputs.get("fidelity", 0.5)
         upscale = inputs.get("upscale", 2)
         bg_upsampler_flag = inputs.get("bg_upsampler", False)
@@ -124,6 +136,7 @@ class FaceRestore(BaseTool):
         try:
             import cv2
             import inspect
+            ensure_basicsr_compat()
             from gfpgan import GFPGANer
             import torch
             from tools.video._shared import get_torch_device as _get_device
@@ -167,19 +180,11 @@ class FaceRestore(BaseTool):
             except ImportError:
                 bg_upsampler = None
 
-        # Select model path based on model choice
-        if model_name == "CodeFormer":
-            model_path = (
-                "https://github.com/sczhou/CodeFormer/releases/download/"
-                "v0.1.0/codeformer.pth"
-            )
-            arch = "CodeFormer"
-        else:
-            model_path = (
-                "https://github.com/TencentARC/GFPGAN/releases/download/"
-                "v1.3.0/GFPGANv1.3.pth"
-            )
-            arch = "clean"
+        model_path = (
+            "https://github.com/TencentARC/GFPGAN/releases/download/"
+            "v1.3.0/GFPGANv1.3.pth"
+        )
+        arch = "clean"
 
         # Instantiate restorer
         try:

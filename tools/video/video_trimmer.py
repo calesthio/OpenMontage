@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import time
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -70,7 +71,15 @@ class VideoTrimmer(BaseTool):
                     },
                 },
             },
-            "codec": {"type": "string", "default": "copy"},
+            "codec": {
+                "type": "string",
+                "default": "auto",
+                "description": (
+                    "auto: stream copy when cutting from 0, otherwise libx264 so the "
+                    "in/out points are frame-accurate. Pass copy explicitly to force the "
+                    "fast path — it snaps the cut to the nearest keyframe."
+                ),
+            },
         },
     }
 
@@ -79,7 +88,10 @@ class VideoTrimmer(BaseTool):
     )
     retry_policy = RetryPolicy(max_retries=1, retryable_errors=["FFmpeg error"])
     resume_support = ResumeSupport.FROM_START
-    idempotency_key_fields = ["operation", "input_path", "start_seconds", "end_seconds", "speed_factor"]
+    idempotency_key_fields = [
+        "operation", "input_path", "start_seconds", "end_seconds",
+        "speed_factor", "segments", "codec",
+    ]
     side_effects = ["writes video file to output_path"]
     user_visible_verification = ["Play trimmed output and verify cut points"]
 
@@ -109,20 +121,32 @@ class VideoTrimmer(BaseTool):
 
         start_s = inputs.get("start_seconds", 0)
         end_s = inputs.get("end_seconds")
-        codec = inputs.get("codec", "copy")
+        codec = inputs.get("codec", "auto")
         output_path = Path(
             inputs.get("output_path", str(input_path.with_stem(f"{input_path.stem}_cut")))
         )
 
-        cmd = [
-            "ffmpeg", "-y",
-            "-i", str(input_path),
-            "-ss", str(start_s),
-        ]
+        # Stream copy can only start on a keyframe, so a cut that starts partway
+        # into the source snaps to the nearest one and returns the wrong range.
+        # Cutting from zero has no such problem, so copy stays the fast path there.
+        if codec == "auto":
+            codec = "copy" if float(start_s) == 0 else "libx264"
+
+        # -ss must precede -i: as an output option it makes ffmpeg keep the
+        # source timestamps, so the clip's frames start at their original PTS
+        # instead of zero. Subtitles and overlays timed from 0 then land
+        # outside the clip's timeline and never render.
+        cmd = ["ffmpeg", "-y", "-ss", str(start_s), "-i", str(input_path)]
+        # -t (duration) rather than -to: with an input-side -ss the output
+        # timeline restarts at zero, so -to would be measured from the seek
+        # point and cut the wrong length.
         if end_s is not None:
-            cmd.extend(["-to", str(end_s)])
+            cmd.extend(["-t", str(max(0, float(end_s) - float(start_s)))])
         if codec == "copy":
-            cmd.extend(["-c", "copy"])
+            # Stream copy can only start on a keyframe, so the cut snaps to the
+            # nearest one at or before start_seconds. make_zero rebases the
+            # timestamps so the clip still starts at 0.
+            cmd.extend(["-c", "copy", "-avoid_negative_ts", "make_zero"])
         else:
             cmd.extend(["-c:v", codec, "-c:a", "aac"])
         cmd.append(str(output_path))
@@ -188,10 +212,9 @@ class VideoTrimmer(BaseTool):
 
         # First, cut each segment to a temp file if start/end are specified
         temp_files: list[Path] = []
-        temp_dir = output_path.parent / ".concat_tmp"
-        temp_dir.mkdir(parents=True, exist_ok=True)
-
-        try:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix=".concat-", dir=output_path.parent) as workspace:
+            temp_dir = Path(workspace)
             for i, seg in enumerate(segments):
                 seg_input = Path(seg["input_path"])
                 if not seg_input.exists():
@@ -202,12 +225,17 @@ class VideoTrimmer(BaseTool):
 
                 if seg_start is not None or seg_end is not None:
                     temp_path = temp_dir / f"seg_{i:04d}{seg_input.suffix}"
-                    cmd = ["ffmpeg", "-y", "-i", str(seg_input)]
+                    # Same seek ordering as _cut: -ss belongs before -i so the
+                    # segment's timestamps restart at zero. The concat demuxer
+                    # requires every segment to share codec parameters, so this
+                    # stays a stream copy and the cut still snaps to a keyframe.
+                    cmd = ["ffmpeg", "-y"]
                     if seg_start is not None:
                         cmd.extend(["-ss", str(seg_start)])
+                    cmd.extend(["-i", str(seg_input)])
                     if seg_end is not None:
-                        cmd.extend(["-to", str(seg_end)])
-                    cmd.extend(["-c", "copy", str(temp_path)])
+                        cmd.extend(["-t", str(max(0, float(seg_end) - float(seg_start or 0)))])
+                    cmd.extend(["-c", "copy", "-avoid_negative_ts", "make_zero", str(temp_path)])
                     self.run_command(cmd)
                     temp_files.append(temp_path)
                 else:
@@ -239,18 +267,6 @@ class VideoTrimmer(BaseTool):
                 },
                 artifacts=[str(output_path)],
             )
-        finally:
-            # Clean up temp segment files (but not the originals)
-            for tf in temp_files:
-                if tf.parent == temp_dir and tf.exists():
-                    tf.unlink()
-            if list_path.exists():
-                list_path.unlink()
-            if temp_dir.exists():
-                try:
-                    temp_dir.rmdir()
-                except OSError:
-                    pass
 
     @staticmethod
     def _build_atempo_chain(factor: float) -> str:

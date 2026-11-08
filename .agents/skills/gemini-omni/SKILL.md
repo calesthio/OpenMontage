@@ -1,7 +1,7 @@
 ---
 name: gemini-omni
 description: |
-  Generate and conversationally edit short videos with Google Gemini Omni Flash (`gemini-omni-flash-preview`). Use when: (1) iterating on a clip with natural-language edits instead of regenerating ("make the phone invisible, keep everything else the same"), (2) generating 3-10s 720p clips with synthesized audio, rendered on-screen text, or timecoded beats, (3) binding reference images to roles with <FIRST_FRAME>/<IMAGE_REF_N> prompt tags, (4) editing an existing uploaded video. Accessed via the `gemini_omni_video` tool using the project's GEMINI_API_KEY/GOOGLE_API_KEY — the same key as Imagen and Google TTS.
+  Generate and conversationally edit short videos with stable Google Gemini Omni Flash (`gemini-omni-1.1-flash`). Use when: (1) iterating on a clip with natural-language edits instead of regenerating ("make the phone invisible, keep everything else the same"), (2) generating 3-10s 720p clips with synthesized audio, rendered on-screen text, or timecoded beats, (3) binding reference images to roles with <FIRST_FRAME>/<IMAGE_REF_N> prompt tags, (4) editing an existing uploaded video. Accessed via the `gemini_omni_video` tool using the project's GEMINI_API_KEY/GOOGLE_API_KEY — the same key as Imagen and Google TTS.
 allowed-tools: Bash, Read, Write
 metadata:
   openclaw:
@@ -13,9 +13,9 @@ metadata:
 
 # Gemini Omni Flash (Google DeepMind)
 
-Gemini Omni is Google DeepMind's video generation **and editing** model family, announced at I/O 2026. The first model, **Gemini Omni Flash** (`gemini-omni-flash-preview`, developer access since June 30, 2026), generates 3-10 second clips at 720p/24fps with synthesized audio via the Gemini **Interactions API**. Its differentiator in the OpenMontage fleet is **stateful conversational editing**: each generation returns an `interaction_id`, and a follow-up call with `previous_interaction_id` edits that video in place — no other wrapped provider can refine a clip without regenerating it.
+Gemini Omni is Google DeepMind's video generation **and editing** model family. The OpenMontage direct adapter uses the generally available **Gemini Omni 1.1 Flash** model (`gemini-omni-1.1-flash`) through the Gemini **Interactions API**. Its implemented baseline generates 3–10 second clips at 720p/24fps with synthesized audio. Its differentiator in the OpenMontage fleet is **stateful conversational editing**: each stored generation returns an `interaction_id`, and a follow-up call with `previous_interaction_id` edits that video in place — no other wrapped provider can refine a clip without regenerating it.
 
-OpenMontage wraps it as `gemini_omni_video` (native Gemini API, no gateway). It shares `GOOGLE_API_KEY`/`GEMINI_API_KEY` with `google_imagen` and `google_tts` — one key, three capabilities. Paid tier only: ~$0.10 per second of output video (billed as 5,792 output tokens/sec at $17.50/1M).
+OpenMontage wraps it as `gemini_omni_video` (native Gemini API, no gateway). It shares `GOOGLE_API_KEY`/`GEMINI_API_KEY` with `google_imagen` and `google_tts` — one key, three capabilities. Paid tier only: ~$0.10 per second of output video (exactly 5,792 output tokens/sec at $17.50/1M, before input and any text/thought output).
 
 Other documented routes are available when the direct Google key is not the
 chosen provider:
@@ -24,7 +24,7 @@ chosen provider:
 |-------|------------------|----------------------|
 | fal.ai | `gemini_omni_fal` | T2V, I2V, reference video, and edit endpoints; no Google interaction ID is returned |
 | Runway | `runway_video`, `model: "gemini_omni_flash"` | T2V/I2V/V2V; video edits accept up to five image references |
-| ComfyUI Partner Node | `comfyui_video`, `model_family: "gemini_omni_flash"` | Hosted paid node; requires network, Comfy login, and credits |
+| ComfyUI Partner Node | Not a stable 1.1 fallback in this adapter | The existing `GeminiVideoOmni` mapping targets the legacy preview node; migrate it separately to `GeminiVideoOmniV2` before claiming Omni 1.1 support |
 
 Use the direct `gemini_omni_video` route for stateful conversational editing.
 Gateway routes return ordinary provider tasks and cannot preserve Google's
@@ -42,6 +42,12 @@ by feeding each output video URL into the next edit call.
 | Timecode-scheduled multi-beat clips from one prompt | Non-English narration (English only fully supported) |
 
 Route through `video_selector` for generation operations. **Editing (`edit_video`) is a direct-tool operation** — call `gemini_omni_video` from the registry, because the multi-turn interaction state lives outside the selector's model.
+
+## Billing and duration hints
+
+- `duration` is only a planning/prompt hint for the caller. The adapter does not send it to Google; express timing in the prompt or timecodes, and let the model choose the actual length. It does not cap billing.
+- `ToolResult.cost_usd` uses valid response `usage` when available: input tokens are $1.50/1M for every modality, output text is $9.00/1M, and output video is $17.50/1M. Unknown/unclassified output and separately reported thought tokens use the higher $17.50/1M rate so the result cannot underreport.
+- Without valid usage, the fallback assumes the maximum 10-second output: `10 × 5,792 × $17.50/1M = $1.0136`, plus a conservative upper estimate for prompt and available media input tokens. A short `duration` hint never reduces this fallback.
 
 ## Generation prompting
 
@@ -107,13 +113,15 @@ Other working edit prompts: "Make this video anime" / "Put a fashionable hat on 
 
 **Gotcha — `store`:** editing via `previous_interaction_id` only works if the *prior* call kept the interaction server-side (`store` defaults to true in `gemini_omni_video`). Set `store=false` only for one-shot generations you will never edit.
 
+**Download recovery:** after an accepted paid generation, a Files API poll or download can still fail. In that case the tool returns `output_uri`, the usage-based charged cost when valid usage was returned (otherwise the conservative fallback), and a `resume_download` payload. Pass that payload back to `gemini_omni_video` to retry only the existing file's GET/poll flow; it must not submit another paid generation.
+
 **Editing uploaded videos:** pass `input_video_path` instead of `previous_interaction_id`; the tool uploads it via the Files API. Unavailable in the EEA, Switzerland, and the UK (editing *generated* videos works everywhere).
 
-## Hard limitations (preview)
+## Current adapter limitations (stable model)
 
 - Output: 3-10s, 720p, 24fps, MP4 with audio; aspect ratio `16:9` or `9:16`. All output carries an invisible SynthID watermark.
 - No seed, negative prompt, temperature, top_p, or system instructions.
-- No video extension or first/last-frame interpolation; no voice editing.
+- The stable Google model supports video extension, first/last-frame interpolation, and additional resolutions, but this OpenMontage adapter has not implemented those controls. Do not advertise them as working direct-tool features. No voice editing.
 - Audio reference inputs unsupported. Video references ≤3s are accepted by the schema but **not processed correctly** — don't rely on them.
 - Multi-video prompting unsupported; may degrade output.
 - English fully supported; other languages untested.

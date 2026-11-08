@@ -140,8 +140,8 @@ class TalkingHead(BaseTool):
     # ------------------------------------------------------------------
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
-        image_path = Path(inputs["image_path"])
-        audio_path = Path(inputs["audio_path"])
+        image_path = Path(inputs["image_path"]).resolve()
+        audio_path = Path(inputs["audio_path"]).resolve()
 
         if not image_path.exists():
             return ToolResult(success=False, error=f"Image not found: {image_path}")
@@ -151,7 +151,7 @@ class TalkingHead(BaseTool):
         model = inputs.get("model", "sadtalker")
         output_path = Path(
             inputs.get("output_path", str(image_path.with_stem(f"{image_path.stem}_talking").with_suffix(".mp4")))
-        )
+        ).resolve()
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         start = time.time()

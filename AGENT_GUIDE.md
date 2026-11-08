@@ -293,10 +293,16 @@ python -c "from tools.tool_registry import registry; import json; registry.disco
 Then:
 
 1. Read the selected manifest in `pipeline_defs/`.
-2. Check every `required_tools` entry against the registry.
-3. Check `fallback_tools` for unavailable tools.
-4. Report one of: `passed`, `degraded`, or `blocked`.
-5. Do not start production until the user understands the real capability envelope.
+2. For each stage, pass `get_stage_tools(manifest, stage)` to
+   `registry.capability_coverage(...)`; this includes optional selectors whose
+   concrete providers would otherwise be invisible to a required-tools-only check.
+3. Report every family from `registry.uncovered_capabilities(...)`. Treat it as
+   `degraded` when the treatment can proceed without that family, or `blocked`
+   when the approved delivery promise depends on it (especially motion, voice,
+   avatar, or music).
+4. Check every `required_tools` entry and its `fallback_tools` against the registry.
+5. Report one of: `passed`, `degraded`, or `blocked`.
+6. Do not start production until the user understands the real capability envelope.
 
 ### Provider Menu (Mandatory at Preflight)
 

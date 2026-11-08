@@ -54,7 +54,7 @@ def _load_dotenv() -> None:
                 if match:
                     value = value[: match.start()]
                 value = value.strip()
-            if key and key not in os.environ:
+            if key and (key not in os.environ or not os.environ[key].strip()):
                 os.environ[key] = value
 
 
@@ -497,7 +497,7 @@ class BaseTool(ABC):
                     )
             elif dep.startswith("env:"):
                 env_name = dep[4:]
-                if not os.environ.get(env_name):
+                if not os.environ.get(env_name, "").strip():
                     raise DependencyError(
                         f"Environment variable {env_name!r} not set. {self.install_instructions}"
                     )

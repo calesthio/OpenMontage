@@ -6,8 +6,12 @@ from __future__ import annotations
 def filter_explicit_route(inputs, candidates):
     tool_name = inputs.get("preferred_tool")
     host = inputs.get("hosting_provider")
-    model = inputs.get("model") or inputs.get("model_id") or inputs.get("model_name")
+    model_field = next(
+        (f for f in ("model", "model_id", "model_name") if inputs.get(f)), None
+    )
+    model = inputs.get(model_field) if model_field else None
     selected = []
+    unvouched = []  # targeted open-field tools that cannot vouch for `model`
     for tool in candidates:
         if tool_name and tool.name != tool_name:
             continue
@@ -21,8 +25,21 @@ def filter_explicit_route(inputs, candidates):
             models.update(getattr(tool, "_MODELS", {}))
             models.update(getattr(tool, "_MODEL_ALIASES", {}))
             models.update(tool.get_info().get("model_catalog", {}))
-            if model not in models:
-                continue
+            # Free-form model fields can't be enumerated; such a tool may still
+            # vouch for a specific value (e.g. piper: an installed voice or .onnx path).
+            vouch = getattr(tool, "vouches_for_model", None)
+            if model not in models and not (
+                model_field in props and vouch and vouch(model)
+            ):
+                # An open field can accept a caller-pinned model without
+                # claiming that unrelated free-form tools support it in auto mode.
+                if not (
+                    not models
+                    and model_field in props
+                    and (tool_name or tool.provider == inputs.get("preferred_provider"))
+                ):
+                    continue
+                unvouched.append(tool)
         operation = inputs.get("generation_mode") or inputs.get("operation")
         routes = getattr(tool, "routes", None) or getattr(tool, "models", None)
         if isinstance(routes, dict) and operation and operation != "rank":
@@ -52,4 +69,6 @@ def filter_explicit_route(inputs, candidates):
             ):
                 continue
         selected.append(tool)
-    return selected
+    # A tool that declares the model beats one that merely might accept it.
+    vouched = [t for t in selected if t not in unvouched]
+    return vouched or selected

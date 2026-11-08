@@ -32,6 +32,31 @@ class ComfyUIError(Exception):
         self.prompt_id = prompt_id
 
 
+def compact_execution_error(messages: Any, *, limit: int = 1500) -> str:
+    """Summarize ComfyUI ``status.messages`` into one actionable line.
+
+    A failed prompt reports an ``execution_error`` message whose payload embeds
+    the full exception content; rendering the raw list can run hundreds of
+    lines of JSON that neither an operator nor an agent log can act on. This
+    extracts the useful core — node, exception type, and the first line of the
+    exception message — and truncates defensively.
+    """
+    if isinstance(messages, list):
+        for item in messages:
+            if not (isinstance(item, (list, tuple)) and len(item) >= 2):
+                continue
+            kind, payload = item[0], item[1]
+            if kind == "execution_error" and isinstance(payload, dict):
+                node = payload.get("node_type") or payload.get("node_id")
+                exc = payload.get("exception_type") or "Error"
+                msg = str(payload.get("exception_message") or "").strip().splitlines()
+                first = msg[0] if msg else ""
+                text = f"{node}: {exc}: {first}"
+                return text[:limit]
+    text = json.dumps(messages, default=str) if not isinstance(messages, str) else messages
+    return text[:limit]
+
+
 class ComfyUIClient:
     """Client for the ComfyUI REST API.
 
@@ -231,7 +256,10 @@ class ComfyUIClient:
         status = entry.get("status", {})
         if status.get("status_str") == "error":
             msgs = status.get("messages", [])
-            raise ComfyUIError(f"Execution error: {msgs}", prompt_id=prompt_id)
+            raise ComfyUIError(
+                f"Execution error: {compact_execution_error(msgs)}",
+                prompt_id=prompt_id,
+            )
         return entry
 
     def _history_entry_if_reachable(self, prompt_id: str) -> dict | None:

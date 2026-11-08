@@ -7,7 +7,11 @@ from tools.graphics.code_snippet import CodeSnippet
 
 
 @pytest.mark.parametrize(
-    "change", [{"padding": 80}, {"line_numbers": False}, {"title": "Example.py"}]
+    "change",
+    [
+        {"padding": 80}, {"line_numbers": False}, {"title": "Example.py"},
+        {"border_radius": 0}, {"width": 900},
+    ],
 )
 def test_presentation_changes_match_uncached_producer(tmp_path, monkeypatch, change):
     monkeypatch.setenv("HOME", str(tmp_path))

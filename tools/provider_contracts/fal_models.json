@@ -1,4 +1,2220 @@
 {
+  "fal-ai/kling-image/o3/image-to-image": {
+    "input_schema": {
+      "required": [
+        "prompt",
+        "image_urls"
+      ],
+      "type": "object",
+      "properties": {
+        "image_urls": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "elements": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ElementInput"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "aspect_ratio": {
+          "type": "string",
+          "enum": [
+            "16:9",
+            "9:16",
+            "1:1",
+            "4:3",
+            "3:4",
+            "3:2",
+            "2:3",
+            "21:9",
+            "auto"
+          ],
+          "default": "auto"
+        },
+        "num_images": {
+          "maximum": 9,
+          "minimum": 1,
+          "type": "integer",
+          "default": 1
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "default": true
+        },
+        "output_format": {
+          "type": "string",
+          "enum": [
+            "jpeg",
+            "png",
+            "webp"
+          ],
+          "default": "png"
+        },
+        "resolution": {
+          "type": "string",
+          "enum": [
+            "1K",
+            "2K",
+            "4K"
+          ],
+          "default": "1K"
+        },
+        "prompt": {
+          "type": "string",
+          "maxLength": 2500
+        },
+        "series_amount": {
+          "anyOf": [
+            {
+              "maximum": 9,
+              "minimum": 2,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "result_type": {
+          "type": "string",
+          "enum": [
+            "single",
+            "series"
+          ],
+          "default": "single"
+        },
+        "sync_mode": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "$defs": {
+        "ElementInput": {
+          "properties": {
+            "reference_image_urls": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "frontal_image_url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/kling-image/o3/image-to-image",
+    "verified_on": "2026-10-25"
+  },
+  "fal-ai/kling-image/o3/text-to-image": {
+    "input_schema": {
+      "required": [
+        "prompt"
+      ],
+      "type": "object",
+      "properties": {
+        "elements": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ElementInput"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "aspect_ratio": {
+          "type": "string",
+          "enum": [
+            "16:9",
+            "9:16",
+            "1:1",
+            "4:3",
+            "3:4",
+            "3:2",
+            "2:3",
+            "21:9"
+          ],
+          "default": "16:9"
+        },
+        "num_images": {
+          "maximum": 9,
+          "minimum": 1,
+          "type": "integer",
+          "default": 1
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "default": true
+        },
+        "output_format": {
+          "type": "string",
+          "enum": [
+            "jpeg",
+            "png",
+            "webp"
+          ],
+          "default": "png"
+        },
+        "resolution": {
+          "type": "string",
+          "enum": [
+            "1K",
+            "2K",
+            "4K"
+          ],
+          "default": "1K"
+        },
+        "prompt": {
+          "type": "string",
+          "maxLength": 2500
+        },
+        "series_amount": {
+          "anyOf": [
+            {
+              "maximum": 9,
+              "minimum": 2,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "result_type": {
+          "type": "string",
+          "enum": [
+            "single",
+            "series"
+          ],
+          "default": "single"
+        },
+        "sync_mode": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "$defs": {
+        "ElementInput": {
+          "properties": {
+            "reference_image_urls": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "frontal_image_url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/kling-image/o3/text-to-image",
+    "verified_on": "2026-10-25"
+  },
+  "fal-ai/kling-video/o3/4k/image-to-video": {
+    "input_schema": {
+      "properties": {
+        "generate_audio": {
+          "type": "boolean",
+          "default": false
+        },
+        "shot_type": {
+          "type": "string",
+          "enum": [
+            "customize",
+            "intelligent"
+          ],
+          "default": "customize"
+        },
+        "end_image_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 2500
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "multi_prompt": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/KlingV3MultiPromptElement"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duration": {
+          "type": "string",
+          "enum": [
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15"
+          ],
+          "default": "5"
+        },
+        "image_url": {
+          "type": "string"
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "type": "object",
+      "required": [
+        "image_url"
+      ],
+      "$defs": {
+        "KlingV3MultiPromptElement": {
+          "properties": {
+            "prompt": {
+              "type": "string"
+            },
+            "duration": {
+              "type": "string",
+              "enum": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15"
+              ],
+              "default": "5"
+            }
+          },
+          "type": "object",
+          "required": [
+            "prompt"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/kling-video/o3/4k/image-to-video",
+    "verified_on": "2026-10-25"
+  },
+  "fal-ai/kling-video/o3/4k/reference-to-video": {
+    "input_schema": {
+      "properties": {
+        "generate_audio": {
+          "type": "boolean",
+          "default": false
+        },
+        "shot_type": {
+          "type": "string",
+          "enum": [
+            "customize",
+            "intelligent"
+          ],
+          "default": "customize"
+        },
+        "end_image_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "multi_prompt": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/KlingV3MultiPromptElement"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 2500
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duration": {
+          "type": "string",
+          "enum": [
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15"
+          ],
+          "default": "5"
+        },
+        "aspect_ratio": {
+          "type": "string",
+          "enum": [
+            "16:9",
+            "9:16",
+            "1:1"
+          ],
+          "default": "16:9"
+        },
+        "image_urls": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "default": true
+        },
+        "elements": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/KlingV3ComboElementInput"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "start_image_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object",
+      "$defs": {
+        "KlingV3ComboElementInput": {
+          "properties": {
+            "video_url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "frontal_image_url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reference_image_urls": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "voice_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "type": "object"
+        },
+        "KlingV3MultiPromptElement": {
+          "properties": {
+            "prompt": {
+              "type": "string"
+            },
+            "duration": {
+              "type": "string",
+              "enum": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15"
+              ],
+              "default": "5"
+            }
+          },
+          "type": "object",
+          "required": [
+            "prompt"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/kling-video/o3/4k/reference-to-video",
+    "verified_on": "2026-10-25"
+  },
+  "fal-ai/kling-video/o3/4k/text-to-video": {
+    "input_schema": {
+      "properties": {
+        "generate_audio": {
+          "type": "boolean",
+          "default": false
+        },
+        "aspect_ratio": {
+          "type": "string",
+          "enum": [
+            "16:9",
+            "9:16",
+            "1:1"
+          ],
+          "default": "16:9"
+        },
+        "shot_type": {
+          "type": "string",
+          "enum": [
+            "customize",
+            "intelligent"
+          ],
+          "default": "customize"
+        },
+        "multi_prompt": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/KlingV3MultiPromptElement"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "default": true
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 2500
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duration": {
+          "type": "string",
+          "enum": [
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15"
+          ],
+          "default": "5"
+        }
+      },
+      "type": "object",
+      "$defs": {
+        "KlingV3MultiPromptElement": {
+          "properties": {
+            "prompt": {
+              "type": "string"
+            },
+            "duration": {
+              "type": "string",
+              "enum": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15"
+              ],
+              "default": "5"
+            }
+          },
+          "type": "object",
+          "required": [
+            "prompt"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/kling-video/o3/4k/text-to-video",
+    "verified_on": "2026-10-25"
+  },
+  "fal-ai/kling-video/o3/4k/video-to-video/edit": {
+    "input_schema": {
+      "properties": {
+        "shot_type": {
+          "type": "string",
+          "const": "customize",
+          "default": "customize"
+        },
+        "prompt": {
+          "type": "string",
+          "maxLength": 2500
+        },
+        "image_urls": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "video_url": {
+          "type": "string"
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "default": true
+        },
+        "keep_audio": {
+          "type": "boolean",
+          "default": true
+        },
+        "elements": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/KlingV3ImageElementInput"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object",
+      "required": [
+        "prompt",
+        "video_url"
+      ],
+      "$defs": {
+        "KlingV3ImageElementInput": {
+          "properties": {
+            "frontal_image_url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reference_image_urls": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/kling-video/o3/4k/video-to-video/edit",
+    "verified_on": "2026-10-25"
+  },
+  "fal-ai/kling-video/o3/4k/video-to-video/reference": {
+    "input_schema": {
+      "properties": {
+        "shot_type": {
+          "type": "string",
+          "const": "customize",
+          "default": "customize"
+        },
+        "prompt": {
+          "type": "string",
+          "maxLength": 2500
+        },
+        "keep_audio": {
+          "type": "boolean",
+          "default": true
+        },
+        "duration": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "aspect_ratio": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "16:9",
+            "9:16",
+            "1:1"
+          ],
+          "default": "auto"
+        },
+        "image_urls": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "video_url": {
+          "type": "string"
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "default": true
+        },
+        "elements": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/KlingV3ImageElementInput"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object",
+      "required": [
+        "prompt",
+        "video_url"
+      ],
+      "$defs": {
+        "KlingV3ImageElementInput": {
+          "properties": {
+            "frontal_image_url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reference_image_urls": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/kling-video/o3/4k/video-to-video/reference",
+    "verified_on": "2026-10-25"
+  },
+  "fal-ai/kling-video/o3/pro/image-to-video": {
+    "input_schema": {
+      "properties": {
+        "generate_audio": {
+          "type": "boolean",
+          "default": false
+        },
+        "shot_type": {
+          "type": "string",
+          "enum": [
+            "customize",
+            "intelligent"
+          ],
+          "default": "customize"
+        },
+        "end_image_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 2500
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "multi_prompt": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/KlingV3MultiPromptElement"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duration": {
+          "type": "string",
+          "enum": [
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15"
+          ],
+          "default": "5"
+        },
+        "image_url": {
+          "type": "string"
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "type": "object",
+      "required": [
+        "image_url"
+      ],
+      "$defs": {
+        "KlingV3MultiPromptElement": {
+          "properties": {
+            "prompt": {
+              "type": "string"
+            },
+            "duration": {
+              "type": "string",
+              "enum": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15"
+              ],
+              "default": "5"
+            }
+          },
+          "type": "object",
+          "required": [
+            "prompt"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/kling-video/o3/pro/image-to-video",
+    "verified_on": "2026-10-25"
+  },
+  "fal-ai/kling-video/o3/pro/reference-to-video": {
+    "input_schema": {
+      "properties": {
+        "generate_audio": {
+          "type": "boolean",
+          "default": false
+        },
+        "shot_type": {
+          "type": "string",
+          "enum": [
+            "customize",
+            "intelligent"
+          ],
+          "default": "customize"
+        },
+        "end_image_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "multi_prompt": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/KlingV3MultiPromptElement"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 2500
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duration": {
+          "type": "string",
+          "enum": [
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15"
+          ],
+          "default": "5"
+        },
+        "aspect_ratio": {
+          "type": "string",
+          "enum": [
+            "16:9",
+            "9:16",
+            "1:1"
+          ],
+          "default": "16:9"
+        },
+        "image_urls": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "default": true
+        },
+        "elements": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/KlingV3ComboElementInput"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "start_image_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object",
+      "$defs": {
+        "KlingV3ComboElementInput": {
+          "properties": {
+            "video_url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "frontal_image_url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reference_image_urls": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "voice_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "type": "object"
+        },
+        "KlingV3MultiPromptElement": {
+          "properties": {
+            "prompt": {
+              "type": "string"
+            },
+            "duration": {
+              "type": "string",
+              "enum": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15"
+              ],
+              "default": "5"
+            }
+          },
+          "type": "object",
+          "required": [
+            "prompt"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/kling-video/o3/pro/reference-to-video",
+    "verified_on": "2026-10-25"
+  },
+  "fal-ai/kling-video/o3/pro/text-to-video": {
+    "input_schema": {
+      "properties": {
+        "generate_audio": {
+          "type": "boolean",
+          "default": false
+        },
+        "aspect_ratio": {
+          "type": "string",
+          "enum": [
+            "16:9",
+            "9:16",
+            "1:1"
+          ],
+          "default": "16:9"
+        },
+        "shot_type": {
+          "type": "string",
+          "enum": [
+            "customize",
+            "intelligent"
+          ],
+          "default": "customize"
+        },
+        "multi_prompt": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/KlingV3MultiPromptElement"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "default": true
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 2500
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duration": {
+          "type": "string",
+          "enum": [
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15"
+          ],
+          "default": "5"
+        }
+      },
+      "type": "object",
+      "$defs": {
+        "KlingV3MultiPromptElement": {
+          "properties": {
+            "prompt": {
+              "type": "string"
+            },
+            "duration": {
+              "type": "string",
+              "enum": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15"
+              ],
+              "default": "5"
+            }
+          },
+          "type": "object",
+          "required": [
+            "prompt"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/kling-video/o3/pro/text-to-video",
+    "verified_on": "2026-10-25"
+  },
+  "fal-ai/kling-video/o3/pro/video-to-video/edit": {
+    "input_schema": {
+      "properties": {
+        "shot_type": {
+          "type": "string",
+          "const": "customize",
+          "default": "customize"
+        },
+        "prompt": {
+          "type": "string",
+          "maxLength": 2500
+        },
+        "image_urls": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "video_url": {
+          "type": "string"
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "default": true
+        },
+        "keep_audio": {
+          "type": "boolean",
+          "default": true
+        },
+        "elements": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/KlingV3ImageElementInput"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object",
+      "required": [
+        "prompt",
+        "video_url"
+      ],
+      "$defs": {
+        "KlingV3ImageElementInput": {
+          "properties": {
+            "frontal_image_url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reference_image_urls": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/kling-video/o3/pro/video-to-video/edit",
+    "verified_on": "2026-10-25"
+  },
+  "fal-ai/kling-video/o3/pro/video-to-video/reference": {
+    "input_schema": {
+      "properties": {
+        "shot_type": {
+          "type": "string",
+          "const": "customize",
+          "default": "customize"
+        },
+        "prompt": {
+          "type": "string",
+          "maxLength": 2500
+        },
+        "keep_audio": {
+          "type": "boolean",
+          "default": true
+        },
+        "duration": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "aspect_ratio": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "16:9",
+            "9:16",
+            "1:1"
+          ],
+          "default": "auto"
+        },
+        "image_urls": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "video_url": {
+          "type": "string"
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "default": true
+        },
+        "elements": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/KlingV3ImageElementInput"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object",
+      "required": [
+        "prompt",
+        "video_url"
+      ],
+      "$defs": {
+        "KlingV3ImageElementInput": {
+          "properties": {
+            "frontal_image_url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reference_image_urls": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/kling-video/o3/pro/video-to-video/reference",
+    "verified_on": "2026-10-25"
+  },
+  "fal-ai/kling-video/o3/standard/image-to-video": {
+    "input_schema": {
+      "properties": {
+        "generate_audio": {
+          "type": "boolean",
+          "default": false
+        },
+        "shot_type": {
+          "type": "string",
+          "enum": [
+            "customize",
+            "intelligent"
+          ],
+          "default": "customize"
+        },
+        "end_image_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 2500
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "multi_prompt": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/KlingV3MultiPromptElement"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duration": {
+          "type": "string",
+          "enum": [
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15"
+          ],
+          "default": "5"
+        },
+        "image_url": {
+          "type": "string"
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "type": "object",
+      "required": [
+        "image_url"
+      ],
+      "$defs": {
+        "KlingV3MultiPromptElement": {
+          "properties": {
+            "prompt": {
+              "type": "string"
+            },
+            "duration": {
+              "type": "string",
+              "enum": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15"
+              ],
+              "default": "5"
+            }
+          },
+          "type": "object",
+          "required": [
+            "prompt"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/kling-video/o3/standard/image-to-video",
+    "verified_on": "2026-10-25"
+  },
+  "fal-ai/kling-video/o3/standard/reference-to-video": {
+    "input_schema": {
+      "properties": {
+        "generate_audio": {
+          "type": "boolean",
+          "default": false
+        },
+        "shot_type": {
+          "type": "string",
+          "enum": [
+            "customize",
+            "intelligent"
+          ],
+          "default": "customize"
+        },
+        "end_image_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "multi_prompt": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/KlingV3MultiPromptElement"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 2500
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duration": {
+          "type": "string",
+          "enum": [
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15"
+          ],
+          "default": "5"
+        },
+        "aspect_ratio": {
+          "type": "string",
+          "enum": [
+            "16:9",
+            "9:16",
+            "1:1"
+          ],
+          "default": "16:9"
+        },
+        "image_urls": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "default": true
+        },
+        "elements": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/KlingV3ComboElementInput"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "start_image_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object",
+      "$defs": {
+        "KlingV3ComboElementInput": {
+          "properties": {
+            "video_url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "frontal_image_url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reference_image_urls": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "voice_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "type": "object"
+        },
+        "KlingV3MultiPromptElement": {
+          "properties": {
+            "prompt": {
+              "type": "string"
+            },
+            "duration": {
+              "type": "string",
+              "enum": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15"
+              ],
+              "default": "5"
+            }
+          },
+          "type": "object",
+          "required": [
+            "prompt"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/kling-video/o3/standard/reference-to-video",
+    "verified_on": "2026-10-25"
+  },
+  "fal-ai/kling-video/o3/standard/text-to-video": {
+    "input_schema": {
+      "properties": {
+        "generate_audio": {
+          "type": "boolean",
+          "default": false
+        },
+        "aspect_ratio": {
+          "type": "string",
+          "enum": [
+            "16:9",
+            "9:16",
+            "1:1"
+          ],
+          "default": "16:9"
+        },
+        "shot_type": {
+          "type": "string",
+          "enum": [
+            "customize",
+            "intelligent"
+          ],
+          "default": "customize"
+        },
+        "multi_prompt": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/KlingV3MultiPromptElement"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "default": true
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 2500
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duration": {
+          "type": "string",
+          "enum": [
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15"
+          ],
+          "default": "5"
+        }
+      },
+      "type": "object",
+      "$defs": {
+        "KlingV3MultiPromptElement": {
+          "properties": {
+            "prompt": {
+              "type": "string"
+            },
+            "duration": {
+              "type": "string",
+              "enum": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15"
+              ],
+              "default": "5"
+            }
+          },
+          "type": "object",
+          "required": [
+            "prompt"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/kling-video/o3/standard/text-to-video",
+    "verified_on": "2026-10-25"
+  },
+  "fal-ai/kling-video/o3/standard/video-to-video/edit": {
+    "input_schema": {
+      "properties": {
+        "shot_type": {
+          "type": "string",
+          "const": "customize",
+          "default": "customize"
+        },
+        "prompt": {
+          "type": "string",
+          "maxLength": 2500
+        },
+        "image_urls": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "video_url": {
+          "type": "string"
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "default": true
+        },
+        "keep_audio": {
+          "type": "boolean",
+          "default": true
+        },
+        "elements": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/KlingV3ImageElementInput"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object",
+      "required": [
+        "prompt",
+        "video_url"
+      ],
+      "$defs": {
+        "KlingV3ImageElementInput": {
+          "properties": {
+            "frontal_image_url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reference_image_urls": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/kling-video/o3/standard/video-to-video/edit",
+    "verified_on": "2026-10-25"
+  },
+  "fal-ai/kling-video/o3/standard/video-to-video/reference": {
+    "input_schema": {
+      "properties": {
+        "shot_type": {
+          "type": "string",
+          "const": "customize",
+          "default": "customize"
+        },
+        "prompt": {
+          "type": "string",
+          "maxLength": 2500
+        },
+        "keep_audio": {
+          "type": "boolean",
+          "default": true
+        },
+        "duration": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "aspect_ratio": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "16:9",
+            "9:16",
+            "1:1"
+          ],
+          "default": "auto"
+        },
+        "image_urls": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "video_url": {
+          "type": "string"
+        },
+        "enable_safety_checker": {
+          "type": "boolean",
+          "default": true
+        },
+        "elements": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/KlingV3ImageElementInput"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object",
+      "required": [
+        "prompt",
+        "video_url"
+      ],
+      "$defs": {
+        "KlingV3ImageElementInput": {
+          "properties": {
+            "frontal_image_url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reference_image_urls": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": "https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/kling-video/o3/standard/video-to-video/reference",
+    "verified_on": "2026-10-25"
+  },
   "alibaba/wan-3.0/image-to-video": {
     "input_schema": {
       "properties": {
@@ -1881,7 +4097,7 @@
           "minLength": 1,
           "type": "string",
           "examples": [
-            "create a realistic image taken with iphone at these coordinates 41\u00b043\u203232\u2033N 49\u00b056\u203249\u2033W 15 April 1912"
+            "create a realistic image taken with iphone at these coordinates 41°43′32″N 49°56′49″W 15 April 1912"
           ],
           "maxLength": 32000,
           "description": "The prompt for image generation"
@@ -2214,7 +4430,7 @@
           "minLength": 1,
           "type": "string",
           "examples": [
-            "create a realistic image taken with iphone at these coordinates 41\u00b043\u203232\u2033N 49\u00b056\u203249\u2033W 15 April 1912"
+            "create a realistic image taken with iphone at these coordinates 41°43′32″N 49°56′49″W 15 April 1912"
           ],
           "maxLength": 32000,
           "description": "The prompt for image generation"

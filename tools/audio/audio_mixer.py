@@ -7,6 +7,7 @@ not installed.
 
 from __future__ import annotations
 
+import math
 import time
 from pathlib import Path
 from typing import Any
@@ -268,7 +269,17 @@ class AudioMixer(BaseTool):
                 "-of", "csv=p=0",
                 track["path"],
             ]
-            duration = float(self.run_command(duration_cmd).stdout.strip().split("\n")[0])
+            probed = self.run_command(duration_cmd).stdout.strip().split("\n")[0]
+            try:
+                duration = float(probed)
+            except ValueError:
+                duration = math.nan
+            if not math.isfinite(duration) or duration <= 0:
+                raise ValueError(
+                    f"Audio duration is missing or invalid for {track['path']} "
+                    f"(ffprobe reported {probed!r}); regenerate or repair the "
+                    "track before applying fade_out_seconds."
+                )
             fade_start = max(0.0, duration - float(fade_out))
             filters.append(f"afade=t=out:st={fade_start}:d={fade_out}")
         if delay_ms > 0:

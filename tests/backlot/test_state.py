@@ -191,6 +191,32 @@ class TestLibrary:
         summary = summarize_project(p)
         assert summary["awaiting_human"] is True
         assert summary["active_stage"] == "script"
+        assert summary["series"] is None
+
+    def test_series_from_marker(self, projects_root):
+        ep1 = _make_project(projects_root, "show-ep01")
+        _write(ep1 / "project.json", {"title": "Ep 1", "series": "  my-show "})
+        blank = _make_project(projects_root, "blank")
+        _write(blank / "project.json", {"title": "Blank", "series": "   "})
+        odd = _make_project(projects_root, "odd")
+        _write(odd / "project.json", {"title": "Odd", "series": 42})
+        _make_project(projects_root, "loose")  # no marker at all
+
+        series = {p["project_id"]: p["series"] for p in list_projects(projects_root)}
+        assert series == {"show-ep01": "my-show", "blank": None, "odd": None, "loose": None}
+        assert load_board_state(ep1)["series"] == "my-show"
+
+    def test_unreadable_project_keeps_series(self, projects_root, monkeypatch):
+        p = _make_project(projects_root, "broken-ep")
+        _write(p / "project.json", {"title": "Broken", "series": "my-show"})
+
+        def boom(_):
+            raise RuntimeError("corrupt")
+
+        monkeypatch.setattr(state_mod, "summarize_project", boom)
+        [summary] = list_projects(projects_root)
+        assert summary["error"] == "unreadable"
+        assert summary["series"] == "my-show"
 
 
 class TestFindingsFixes:

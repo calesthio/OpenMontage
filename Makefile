@@ -6,7 +6,7 @@ PIP = $(RUN_PYTHON) -m pip
 
 .DEFAULT_GOAL := setup
 
-.PHONY: setup install install-dev install-gpu test test-contracts lint clean preflight demo demo-list hyperframes-doctor hyperframes-warm venv ensure-venv
+.PHONY: setup install install-dev install-gpu bootstrap test test-contracts lint clean preflight demo demo-list hyperframes-doctor hyperframes-warm venv ensure-venv
 
 # ---- Virtual environment ----
 
@@ -51,7 +51,12 @@ venv: ensure-venv
 
 # ---- One-command setup ----
 
-setup: ensure-venv
+# pip bundles its own certifi; upgrading the application dependency is not enough.
+# Keep this out of ensure-venv so test/demo commands do not install packages.
+bootstrap: ensure-venv
+	$(PIP) install 'pip>=26.2.2'
+
+setup: bootstrap
 	@echo "==> Installing Python dependencies..."
 	$(PIP) install -r requirements.txt
 	@echo ""
@@ -77,13 +82,13 @@ setup: ensure-venv
 
 # ---- Individual installs ----
 
-install: ensure-venv
+install: bootstrap
 	$(PIP) install -r requirements.txt
 
-install-dev: ensure-venv
+install-dev: bootstrap
 	$(PIP) install -r requirements-dev.txt
 
-install-gpu: ensure-venv
+install-gpu: bootstrap
 	$(PIP) install -r requirements-gpu.txt
 	$(PIP) install diffusers transformers accelerate
 

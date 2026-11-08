@@ -6,12 +6,8 @@ protocol. Pond5 has curated ~10,000 public domain video clips plus
 historical and archival material: WWI/WWII, early cinema, space
 launches, historical speeches, Olympic footage.
 
-All public domain items are CC0-equivalent — free for any use, no
-attribution required (though appreciated).
-
-The adapter accesses Pond5's free public domain search which does not
-require an API key. For the full commercial API, a partnership agreement
-is needed, but the public domain subset is openly browsable.
+The Pond5 search API requires an API key. This adapter does not scrape
+the public website as an unauthenticated fallback.
 
 What Pond5 Public Domain is good for
 -------------------------------------
@@ -46,14 +42,13 @@ class Pond5PublicDomainSource:
     display_name = "Pond5 Public Domain"
     provider = "pond5"
     priority = 38
-    install_instructions = (
-        "Pond5 Public Domain works without an API key for basic search. "
-        "Set POND5_API_KEY in .env for higher rate limits and full API access."
-    )
+    install_instructions = "Set POND5_API_KEY in .env to enable Pond5 search."
     supports = {"video": True, "image": True}
 
     def is_available(self) -> bool:
-        return True
+        import os
+
+        return bool(os.environ.get("POND5_API_KEY"))
 
     def search(self, query: str, filters: SearchFilters) -> list[Candidate]:
         import requests
@@ -81,18 +76,14 @@ class Pond5PublicDomainSource:
         if api_key:
             headers["Authorization"] = f"Bearer {api_key}"
 
-        try:
-            r = requests.get(
-                _SEARCH_URL,
-                headers=headers,
-                params=params,
-                timeout=30,
-            )
-            r.raise_for_status()
-            data = r.json()
-        except Exception as e:
-            _log.warning("Pond5 PD search failed (API), trying web fallback: %s", e)
-            return self._search_web_fallback(query, kind, filters)
+        r = requests.get(
+            _SEARCH_URL,
+            headers=headers,
+            params=params,
+            timeout=30,
+        )
+        r.raise_for_status()
+        data = r.json()
 
         results = data.get("results", []) or data.get("items", []) or []
         return self._parse_results(results, kind, filters)
@@ -159,17 +150,6 @@ class Pond5PublicDomainSource:
                 )
             )
         return out
-
-    def _search_web_fallback(
-        self, query: str, kind: str, filters: SearchFilters
-    ) -> list[Candidate]:
-        """Fallback: parse Pond5 free page HTML for public domain clips.
-
-        Used when the API endpoint is unavailable or returns errors.
-        Returns empty list if HTML parsing fails — does not raise.
-        """
-        _log.info("Pond5 PD: web fallback not implemented, returning empty")
-        return []
 
     def download(self, candidate: Candidate, out_path: Path) -> Path:
         import requests

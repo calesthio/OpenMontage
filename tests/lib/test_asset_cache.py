@@ -306,3 +306,48 @@ def test_get_default_asset_cache_honors_env_and_is_singleton(monkeypatch, tmp_pa
     assert a is b
     assert Path(a.cache_dir) == tmp_path / "envcache"
     reset_default_asset_cache()
+
+
+def test_oversized_artifact_does_not_evict_existing_cache_entries(tmp_path):
+    cache = AssetCache(cache_dir=tmp_path / "cache", max_total_bytes=8)
+    small = _fake_asset(tmp_path / "small.bin", b"1234")
+    oversized = _fake_asset(tmp_path / "large.bin", b"123456789")
+    assert cache.store("small", small) is True
+    before_manifest = cache.manifest_path.read_bytes()
+
+    assert cache.store("large", oversized) is False
+
+    assert cache.manifest_path.read_bytes() == before_manifest
+    assert cache.stats()["total_bytes"] == 4
+    assert cache.evictions_count == 0
+    assert cache.try_restore("small", tmp_path / "restored.bin") is not None
+    assert oversized.read_bytes() == b"123456789"
+
+
+def test_artifact_at_cache_cap_can_still_be_stored(tmp_path):
+    cache = AssetCache(cache_dir=tmp_path / "cache", max_total_bytes=8)
+    asset = _fake_asset(tmp_path / "asset.bin", b"12345678")
+    assert cache.store("at-limit", asset) is True
+    assert cache.stats()["total_bytes"] == 8
+    assert cache.try_restore("at-limit", tmp_path / "restored.bin") is not None
+
+
+def test_existing_key_remains_idempotent_with_larger_source(tmp_path):
+    cache = AssetCache(cache_dir=tmp_path / "cache", max_total_bytes=8)
+    original = _fake_asset(tmp_path / "original.bin", b"1234")
+    replacement = _fake_asset(tmp_path / "replacement.bin", b"123456789")
+    assert cache.store("same-key", original) is True
+    assert cache.store("same-key", replacement) is True
+    assert cache.stats()["total_bytes"] == 4
+    restored = tmp_path / "restored.bin"
+    assert cache.try_restore("same-key", restored) is not None
+    assert restored.read_bytes() == b"1234"
+
+
+def test_zero_capacity_leaves_successful_source_uncached(tmp_path):
+    cache = AssetCache(cache_dir=tmp_path / "cache", max_total_bytes=0)
+    asset = _fake_asset(tmp_path / "asset.bin", b"1234")
+    assert cache.store("no-room", asset) is False
+    assert cache.stats()["total_bytes"] == 0
+    assert cache.stats()["entry_count"] == 0
+    assert asset.read_bytes() == b"1234"

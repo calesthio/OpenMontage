@@ -597,9 +597,9 @@ Billing is **per UTF-8 byte of input text** (not per character) — CJK text and
 
 ---
 
-### Audexum — Low-cost multilingual TTS
+### Audexum — Multilingual TTS
 
-> **Narration through an ElevenLabs-compatible API.** Audexum serves the ElevenLabs `/v1/text-to-speech/{voice_id}` route, so no SDK is needed. Voices: `Nova`, `Atlas`, `Reid`, `Sage`, `Kai`, `Cole`, `Ivy`, `Mira`, `Elle` and `M1`-`M5` / `F1`-`F5` (list: `GET https://audexum.com/v1/voices`). No voice cloning.
+> **Plain REST, no SDK.** The tool calls the documented `POST /api/synthesize` endpoint with `Authorization: Bearer <key>` ([API docs](https://audexum.com/docs)). Engines: `v1`, `v2` (voices `F1`-`F5`, `M1`-`M5`) and `v3` (voices `Atlas`, `Reid`, `Sage`, `Kai`, `Cole`, `Ivy`, `Mira`, `Elle`, `Nova`); full list at `GET https://audexum.com/api/voices`. The engine defaults to `v2` for F/M voices and `v3` otherwise. No voice cloning.
 
 **Tools unlocked:** `audexum_tts`
 **Env var:** `AUDEXUM_API_KEY` (optional `AUDEXUM_BASE_URL` to point at another host)
@@ -610,7 +610,9 @@ Billing is **per UTF-8 byte of input text** (not per character) — CJK text and
 2. Create an API key (`sk_live_...`)
 3. Add to `.env`: `AUDEXUM_API_KEY=your-key-here`
 
-Input limit is 5,000 characters per call. Cost is not estimated by the tool; see [audexum.com/pricing](https://audexum.com/pricing).
+Input limit is 5,000 characters per call. The tool requests `mp3` by default (the API itself defaults to `wav`); pass `output_format` for `wav`, `ogg` or `opus`.
+
+**Cost:** Audexum bills in credits: 1 credit per character on `v1`, 1.5 on `v2`, 2 on `v3` ([how credits work](https://audexum.com/help/credits/how-credits-work)). Credits are sold through EUR plans and credit packs ([pricing](https://audexum.com/pricing)) and the tool cannot see which one a key uses, so `estimate_cost` raises `PriceQuoteRequired`, `dry_run` reports `quote_required`, and results carry `cost_usd: null` with `cost_status: "unquoted"` and the exact `estimated_credits`. The count is an upper bound: acting tags such as `<laugh>` are not billed.
 
 ---
 

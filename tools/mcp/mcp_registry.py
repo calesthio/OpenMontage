@@ -48,8 +48,13 @@ def list_server_tools(server: McpServerConfig, signature: str, timeout: float = 
         except Exception:
             pass  # corrupt cache -> refresh live
     client = MCPClient(server)
-    tools = client.list_tools(timeout=timeout)
-    client.close()
+    try:
+        tools = client.list_tools(timeout=timeout)
+    finally:
+        # Always release the background session/thread (and any stdio child
+        # process) even when initialization or list_tools times out — otherwise
+        # the failure path leaks them while sync_mcp_servers swallows the error.
+        client.close()
     try:
         cache_file.parent.mkdir(parents=True, exist_ok=True)
         cache_file.write_text(

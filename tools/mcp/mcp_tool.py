@@ -62,21 +62,27 @@ def extract_outputs(result, output_path: str | None) -> tuple[list[str], list[st
             artifacts.append(str(target))
         elif btype == "resource":
             resource = getattr(block, "resource", None)
-            uri = getattr(resource, "uri", "") or ""
+            # Normalize to str: the SDK URI is a plain string, but a defensive
+            # cast keeps string ops safe if a non-str URI ever arrives.
+            uri = str(getattr(resource, "uri", "") or "")
             mime = getattr(resource, "mime_type", None) or getattr(resource, "mimeType", None)
             blob = getattr(resource, "blob", None)
+            text = getattr(resource, "text", None)
             target = _take_path(paths, output_path, idx)
             idx += 1
             target = target.with_suffix(mime_extension(mime))
             if blob is not None:
                 _write(target, _decode(blob))
+            elif text is not None:
+                # Embedded text resource (TextResourceContents): persist as UTF-8.
+                _write(target, str(text).encode("utf-8"))
             elif uri.startswith("http"):
                 import requests
                 resp = requests.get(uri, timeout=60)
                 resp.raise_for_status()
                 _write(target, resp.content)
             else:
-                raise ValueError(f"resource '{uri}' has no blob and is not an http(s) URL")
+                raise ValueError(f"resource '{uri}' has no blob, text, or http(s) URL")
             artifacts.append(str(target))
         elif btype == "text":
             texts.append(getattr(block, "text", "") or "")

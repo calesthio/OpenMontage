@@ -74,6 +74,35 @@ def test_list_server_tools_cached_and_live(tmp_path):
     assert {t.name for t in tools2} == names
 
 
+def test_list_server_tools_closes_client_on_discovery_failure(monkeypatch):
+    """A failed list_tools must still release the client (thread/process).
+
+    Regression: list_server_tools used to call client.close() only after
+    list_tools succeeded, so an init/list timeout leaked the background
+    session/thread while sync_mcp_servers swallowed the error.
+    """
+    import pytest
+
+    server = McpServerConfig(slug="failboot", transport="stdio", command=sys.executable, args=["--hangs"])
+    digest = _config_signature({"servers": [server]})
+    closed: list[bool] = []
+
+    class FailingClient:
+        def __init__(self, server):
+            self.server = server
+
+        def list_tools(self, timeout=30.0):
+            raise RuntimeError("initialize timeout")
+
+        def close(self):
+            closed.append(True)
+
+    monkeypatch.setattr("tools.mcp.mcp_registry.MCPClient", FailingClient)
+    with pytest.raises(RuntimeError, match="initialize timeout"):
+        list_server_tools(server, digest)
+    assert closed == [True]
+
+
 def test_signature_diffs_on_tool_change():
     s1 = {"servers": [{"slug": "a", "tools": {"x": {"capability": "tts"}}}]}
     s2 = {"servers": [{"slug": "a", "tools": {"x": {"capability": "video_generation"}}}]}

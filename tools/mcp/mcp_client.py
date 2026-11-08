@@ -71,6 +71,16 @@ class MCPClient:
             loop.call_soon_threadsafe(closed.set)
         if self._thread:
             self._thread.join(timeout=3.0)
+            # A hung initialize()/transport never reaches the ``closed`` wait,
+            # so the signal alone won't release the thread. Stop the loop as a
+            # fallback so the background thread (and its stdio child) is freed
+            # even when the connect attempt is stuck.
+            if self._thread.is_alive() and loop is not None:
+                try:
+                    loop.call_soon_threadsafe(loop.stop)
+                except Exception:
+                    pass
+                self._thread.join(timeout=1.0)
 
     def probe(self, timeout: float = 8.0) -> bool:
         try:
@@ -83,6 +93,12 @@ class MCPClient:
         asyncio.set_event_loop(self._loop)
         try:
             self._loop.run_until_complete(self._serve())
+        except Exception:
+            # ``close()`` may force a stop on a hung initialize(); that raises
+            # out of run_until_complete. Real transport errors are captured by
+            # _serve and surfaced through _last_error/_ready, so this is only
+            # the forced-shutdown path — swallow it to avoid a stray traceback.
+            pass
         finally:
             try:
                 self._loop.close()

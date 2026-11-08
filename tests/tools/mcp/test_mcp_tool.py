@@ -40,6 +40,23 @@ def test_extract_outputs_text_only(tmp_path):
     assert texts == ["caption"]
 
 
+def test_extract_outputs_text_resource(tmp_path):
+    """A valid embedded text resource (no blob) must be persisted, not rejected."""
+    from pathlib import Path
+
+    from mcp.types import CallToolResult, EmbeddedResource, TextResourceContents
+
+    resource = TextResourceContents(uri="file:///notes/result.txt", mime_type="text/plain", text="hello world")
+    result = CallToolResult(
+        content=[EmbeddedResource(type="resource", resource=resource)], is_error=False
+    )
+    artifacts, texts, structured = extract_outputs(result, str(tmp_path / "out"))
+    assert len(artifacts) == 1
+    assert artifacts[0].endswith(".txt")
+    assert Path(artifacts[0]).read_text(encoding="utf-8") == "hello world"
+    assert texts == [] and structured is None
+
+
 def test_build_mcp_tools_only_frozen(fake_server_config):
     server = fake_server_config
     server.tools = {

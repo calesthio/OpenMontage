@@ -114,3 +114,56 @@ def test_chromakey_preserves_frame_size_and_keys(tmp_path):
     corner = _pixel(out, 10, 10)     # was green -> keyed to dark background
     assert center[0] > 150 and center[1] < 80, f"subject lost, center={center!r}"
     assert corner[0] < 60 and corner[1] < 60, f"green not keyed, corner={corner!r}"
+
+
+@pytest.mark.parametrize(
+    "invalid_color",
+    [
+        "#000000,drawbox=x=0:y=0:w=10:h=10:color=red",
+        "0x00FF00:size=1x1",
+        "red",
+        "black",
+        "00112",
+        "#1234567",
+        "invalid_hex",
+        "; rm -rf /",
+        "#00FF00[fg];",
+    ],
+)
+def test_validate_hex_color_rejects_malformed_and_injections(invalid_color):
+    tool = GreenScreenProcessor()
+    with pytest.raises(ValueError, match="Invalid bg_color"):
+        tool._validate_hex_color(invalid_color)
+
+
+@pytest.mark.parametrize(
+    ("valid_color", "expected_hex"),
+    [
+        ("#0E172A", "0E172A"),
+        ("0E172A", "0E172A"),
+        ("#00ff00", "00FF00"),
+        ("#fff", "FFFFFF"),
+        ("000", "000000"),
+        ("#0E172AFF", "0E172AFF"),
+    ],
+)
+def test_validate_hex_color_normalizes_valid_hex(valid_color, expected_hex):
+    tool = GreenScreenProcessor()
+    assert tool._validate_hex_color(valid_color) == expected_hex
+
+
+def test_execute_rejects_invalid_bg_color(tmp_path):
+    input_file = tmp_path / "input.mp4"
+    input_file.write_bytes(b"dummy")
+    output_file = tmp_path / "output.mp4"
+
+    tool = GreenScreenProcessor()
+    result = tool.execute(
+        {
+            "input_path": str(input_file),
+            "output_path": str(output_file),
+            "bg_color": "#000000,drawbox=color=red",
+        }
+    )
+    assert not result.success
+    assert "Invalid bg_color" in result.error

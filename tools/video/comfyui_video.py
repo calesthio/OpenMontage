@@ -586,6 +586,17 @@ class ComfyUIVideo(BaseTool):
                     "duration_seconds": round(num_frames / 16, 2),
                 }
             )
+        wall = round(time.time() - start, 3)
+        comfy_timing = dict(getattr(self._client, "last_timing", None) or {})
+        exec_s = comfy_timing.get("comfy_prompt_exec_s")
+        overhead = wall
+        if isinstance(exec_s, (int, float)):
+            overhead = round(max(0.0, wall - float(exec_s)), 3)
+        result_data["timing"] = {
+            **comfy_timing,
+            "client_overhead_s": overhead,
+            "wall_s": wall,
+        }
         return ToolResult(
             success=True,
             data=result_data,

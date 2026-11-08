@@ -392,7 +392,7 @@ class RemotionCaptionBurn(BaseTool):
     ) -> list[dict]:
         """Parse SRT file into word captions (``thai=None`` detects the mode)."""
         content = Path(srt_path).read_text(encoding="utf-8")
-        blocks = re.split(r"\n\n+", content.strip())
+        blocks = re.split(r"\n[ \t]*\n", content.strip())
         corr = {k.lower(): v for k, v in (corrections or {}).items()}
         captions: list[dict] = []
         if thai is None:

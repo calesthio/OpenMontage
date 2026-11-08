@@ -24,7 +24,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from .base import Candidate, SearchFilters
+from .base import Candidate, SearchFilters, stable_url_id
 
 _log = logging.getLogger(__name__)
 
@@ -118,7 +118,7 @@ class ESASource:
             out.append(
                 Candidate(
                     source=self.name,
-                    source_id=f"esa_{hash(href) & 0xFFFFFFFF:08x}",
+                    source_id=stable_url_id(href),
                     source_url=href,
                     download_url=href,  # Will be resolved in download()
                     kind=candidate_kind,

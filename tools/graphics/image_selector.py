@@ -3,6 +3,18 @@
 Provider discovery is automatic — any BaseTool with capability="image_generation"
 is picked up from the registry.  Adding a new image provider requires only creating
 the tool file in tools/graphics/; no changes to this selector are needed.
+
+Optional per-request hooks (duck-typed, resolved with ``getattr``; tools that
+don't define them keep the static behaviour):
+
+- ``accepts_image_input(inputs) -> bool``: decides whether the tool can take a
+  reference image for this request (e.g. the template/workflow it selects has
+  an image input). When defined, it alone decides whether the tool stays in an
+  edit request, and ``image_path`` is forwarded even if the default schema
+  doesn't list it. Only ``image_path`` is covered: ``image_paths``,
+  ``image_url`` and ``image_urls`` must still be declared in ``input_schema``.
+- ``get_status_for(inputs) -> ToolStatus``: readiness for this request; used
+  instead of ``get_status()`` when choosing a provider.
 """
 
 from __future__ import annotations
@@ -311,7 +323,10 @@ class ImageSelector(BaseTool):
 
         # Pass through generation params only to tools that accept them.
         if hasattr(tool, "input_schema"):
-            props = tool.input_schema.get("properties", {})
+            props = dict(tool.input_schema.get("properties", {}))
+            accepts_image = getattr(tool, "accepts_image_input", None)
+            if accepts_image is not None and accepts_image(adapted):
+                props.setdefault("image_path", {})
             stripped = []
             for passthrough_key in (
                 "negative_prompt",
@@ -486,6 +501,13 @@ class ImageSelector(BaseTool):
 
         filtered: list[BaseTool] = []
         for tool in candidates:
+            # Template tools decide per request: the ``workflow`` input can pick
+            # an edit template even when the default one is text-only.
+            accepts_image = getattr(tool, "accepts_image_input", None)
+            if accepts_image is not None:
+                if accepts_image(inputs):
+                    filtered.append(tool)
+                continue
             props = getattr(tool, "input_schema", {}).get("properties", {})
             supports = getattr(tool, "supports", {})
             if supports.get("image_edit") or any(
@@ -526,6 +548,8 @@ class ImageSelector(BaseTool):
     def _tool_selectable(self, tool: BaseTool, inputs: dict[str, Any]) -> bool:
         """A provider is selectable if it is AVAILABLE, or if it can serve a
         caller-supplied custom workflow even while bundled models report DEGRADED."""
-        if tool.get_status() == ToolStatus.AVAILABLE:
+        status_for = getattr(tool, "get_status_for", None)
+        status = status_for(inputs) if status_for else tool.get_status()
+        if status == ToolStatus.AVAILABLE:
             return True
         return self._custom_workflow_eligible(tool, inputs)

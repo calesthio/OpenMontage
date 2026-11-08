@@ -45,7 +45,7 @@ class PixabayVideoSource:
     supports = {"video": True, "image": False}
 
     def is_available(self) -> bool:
-        return bool(os.environ.get("PIXABAY_API_KEY"))
+        return bool(os.environ.get("PIXABAY_API_KEY", "").strip())
 
     def search(self, query: str, filters: SearchFilters) -> list[Candidate]:
         import requests
@@ -55,7 +55,7 @@ class PixabayVideoSource:
             return []  # video-only adapter
 
         params: dict[str, Any] = {
-            "key": os.environ["PIXABAY_API_KEY"],
+            "key": os.environ["PIXABAY_API_KEY"].strip(),
             "q": query,
             "per_page": max(3, min(filters.per_page, 200)),
             "page": max(1, filters.page),

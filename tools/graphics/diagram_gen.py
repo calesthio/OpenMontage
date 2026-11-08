@@ -127,7 +127,10 @@ class DiagramGen(BaseTool):
     }
 
     resource_profile = ResourceProfile(cpu_cores=1, ram_mb=256, vram_mb=0, disk_mb=50)
-    idempotency_key_fields = ["diagram_type", "definition", "boxes", "allow_text_fallback"]
+    idempotency_key_fields = [
+        "diagram_type", "definition", "boxes", "connections",
+        "title", "theme", "width", "height", "allow_text_fallback",
+    ]
     side_effects = ["writes diagram image to output_path"]
     user_visible_verification = [
         "Verify diagram accurately represents the described structure",
@@ -156,6 +159,11 @@ class DiagramGen(BaseTool):
 
     def idempotency_key(self, inputs: dict[str, Any]) -> str:
         return super().idempotency_key(
+            {**inputs, "allow_text_fallback": inputs.get("allow_text_fallback", False)}
+        )
+
+    def cache_key(self, inputs: dict[str, Any]) -> str:
+        return super().cache_key(
             {**inputs, "allow_text_fallback": inputs.get("allow_text_fallback", False)}
         )
 

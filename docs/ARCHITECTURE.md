@@ -1,6 +1,6 @@
 # OpenMontage Architecture
 
-> Last updated: 2026-03-28 | Derived from code exploration, not prior documentation.
+> Last updated: 2026-10-25 | Derived from code exploration, not prior documentation. Counts are snapshots; the tool registry (`registry.discover()`) is authoritative for what exists.
 
 OpenMontage is an **agent-orchestrated video production platform**. An LLM coding assistant (Claude Code, Cursor, Copilot, etc.) acts as the orchestrator — reading pipeline manifests, following skill instructions, calling Python tools, and checkpointing state. There is no runtime Python orchestrator; the agent _is_ the control plane.
 
@@ -38,24 +38,29 @@ OpenMontage/
 │   ├── pipeline_loader.py  # YAML manifest loading & validation
 │   ├── media_profiles.py   # Platform-specific render profiles (YouTube, TikTok, etc.)
 │   ├── env_loader.py       # .env variable management
+│   ├── asset_cache.py, corpus.py, clip_embedder.py, scoring.py   # retrieval-first corpus + clip ranking
+│   ├── delivery_promise.py, source_media_review.py, events.py    # brief contracts, user-media intake, board events
 │   └── providers/          # (Reserved for future provider abstractions)
 │
-├── tools/                  # 57+ Python tool implementations
+├── tools/                  # 181 Python tool modules, auto-discovered by the registry
 │   ├── base_tool.py        # Abstract base class — the tool contract
 │   ├── tool_registry.py    # Auto-discovery singleton registry
 │   ├── cost_tracker.py     # Budget governance (estimate → reserve → reconcile)
 │   ├── analysis/           # Transcription, scene detection, frame sampling, video understanding
-│   ├── audio/              # TTS (ElevenLabs, OpenAI, Piper, Azure, Google), music gen, mixing, enhancement
-│   ├── avatar/             # Talking head animation, lip sync
+│   ├── audio/              # 18 TTS providers + tts_selector, 6 music generators + search/library, mixing, enhancement
+│   ├── avatar/             # Talking head animation, lip sync (HeyGen, Kling, SadTalker, Wav2Lip)
+│   ├── capture/            # Screen recording (native recorder, Cap, selector)
+│   ├── character/          # Local character animation (specs, SVG rigs, poses, timelines, QA)
 │   ├── enhancement/        # Upscale, bg removal, face enhance/restore, color grading
-│   ├── graphics/           # Image gen (FLUX, GPT Image, Recraft, local diffusion), stock, diagrams, code snippets, math animation
-│   ├── publishers/         # (Reserved)
+│   ├── graphics/           # 29 image gen providers + image_selector, 3D (Three.js worlds, Blender, Atlas/fal 3D), stock, diagrams, code snippets, math animation
+│   ├── provider_contracts/ # JSON model/pricing refresh contracts per provider
+│   ├── publishers/         # Export bundle packaging
 │   ├── subtitle/           # SRT/VTT generation from timestamps
-│   └── video/              # 13 video gen providers, composition, stitching, trimming
+│   └── video/              # 33 video gen providers + video_selector, composition (Remotion / HyperFrames / FFmpeg), stitching, trimming, clip retrieval, stock_sources/ (17 free archives)
 │
 ├── pipeline_defs/          # YAML pipeline manifests
 ├── schemas/                # JSON Schema definitions for validation
-│   ├── artifacts/          # 11 artifact schemas (brief → publish_log)
+│   ├── artifacts/          # 20 artifact schemas (brief → publish_log, plus review, decision, character and 3D artifacts)
 │   ├── checkpoints/        # Checkpoint state schema
 │   ├── pipelines/          # Pipeline manifest schema
 │   ├── styles/             # Style playbook schema
@@ -64,12 +69,15 @@ OpenMontage/
 ├── skills/                 # Layer 2: OpenMontage-specific agent instructions
 │   ├── core/               # FFmpeg, Remotion, WhisperX, color grading skills
 │   ├── creative/           # Video editing, enhancement, data viz, prompt engineering
-│   ├── meta/               # reviewer, checkpoint-protocol, skill-creator
+│   ├── meta/               # reviewer, checkpoint-protocol, onboarding, taste-direction, bespoke-composition, ...
 │   └── pipelines/          # Per-pipeline stage-director skills
 │
 ├── .agents/skills/         # Layer 3: external technology skills (FFmpeg, HyperFrames, GSAP, etc.)
 ├── styles/                 # Visual style playbooks (YAML) + loader
 ├── remotion-composer/      # Node.js/React — Remotion video composition renderer
+├── backlot/                # Local living-storyboard board (FastAPI + SSE) that watches projects/
+├── ink-theater/            # Hand-drawn ink animation engine + Ink Puppet mocap (JS, HyperFrames runtime)
+├── scripts/                # Dev scripts: atelier scaffolds, Backlot simulators, provider smoke runs
 ├── tests/                  # Contract tests, QA integration tests, eval harness
 ├── docs/                   # Best-practices guides, session handoffs, audits
 └── config.yaml             # Global runtime configuration
@@ -151,19 +159,20 @@ Selectors route based on: user preference when explicitly set, then scored ranki
 
 ### Tool Inventory by Category
 
-**Analysis (5):** transcriber (WhisperX), azure_stt, scene_detect, frame_sampler, video_understand (CLIP/BLIP-2)
+Module counts per package as of 2026-10-25 (private helpers and `__init__.py` excluded). Do not treat this as a tool list — run `registry.capability_catalog()` or `registry.provider_catalog()` for the live grouping.
 
-**Audio (9):** elevenlabs_tts, google_tts, openai_tts, piper_tts, azure_tts, tts_selector, music_gen, audio_mixer, audio_enhance
-
-**Avatar (2):** talking_head (SadTalker/MuseTalk), lip_sync (Wav2Lip)
-
-**Enhancement (5):** upscale (Real-ESRGAN), bg_remove (rembg/U2Net), face_enhance, face_restore (CodeFormer/GFPGAN), color_grade (FFmpeg LUTs)
-
-**Graphics (13):** flux_image, grok_image, google_imagen, openai_image, recraft_image, local_diffusion, pexels_image, pixabay_image, image_selector, code_snippet, diagram_gen, math_animate (ManimCE), image_gen (deprecated)
-
-**Subtitle (1):** subtitle_gen
-
-**Video (18):** grok_video, heygen_video, higgsfield_video, veo_video, kling_video, runway_video, minimax_video, wan_video, hunyuan_video, cogvideo_video, ltx_video_local, ltx_video_modal, pexels_video, pixabay_video, video_selector, video_compose (FFmpeg), video_stitch, video_trimmer
+| Package | Modules | What lives there |
+|---------|---------|------------------|
+| `tools/analysis/` | 15 | Transcription (Whisper, Azure, Mistral, DashScope), scene detection, frame sampling, video analysis/understanding, visual QA, face tracking, audio probes, composition validator |
+| `tools/audio/` | 32 | 18 TTS providers + `tts_selector`, 6 music generators plus royalty-free search and the local `music_library`, `audio_mixer`, `audio_enhance`, realtime audio |
+| `tools/avatar/` | 5 | HeyGen and Kling avatars, Kling lip sync, local `lip_sync` (Wav2Lip) and `talking_head` (SadTalker) |
+| `tools/capture/` | 3 | `screen_recorder`, `cap_recorder`, `screen_capture_selector` |
+| `tools/character/` | 1 | `character_animation` — specs, SVG rig plans, pose libraries, action timelines, QA |
+| `tools/enhancement/` | 6 | `upscale`, `bg_remove`, `face_enhance`, `face_restore`, `eye_enhance`, `color_grade` |
+| `tools/graphics/` | 38 | 29 image generation providers + `image_selector`, 3D (`threejs_world`, `threejs_asset_catalog`, `blender_world`, `atlas_3d`, `fal_3d`), `diagram_gen`, `code_snippet`, `math_animate` |
+| `tools/publishers/` | 1 | `export_bundle` |
+| `tools/subtitle/` | 1 | `subtitle_gen` |
+| `tools/video/` | 50 + 17 stock sources | 33 video generation providers + `video_selector`, `video_compose` (routes to Remotion / HyperFrames / FFmpeg), `hyperframes_compose`, `video_stitch`, `video_trimmer`, clip retrieval and corpus tools, `silence_cutter`, `auto_reframe`, `stock_sources/` (Pexels, Pixabay, Archive.org, NASA, Wikimedia, Unsplash and more) |
 
 ---
 
@@ -176,7 +185,7 @@ Each pipeline is a YAML file in `pipeline_defs/` defining:
 ```yaml
 name: animated-explainer
 version: "2.0"
-category: generated          # talking_head | generated | hybrid | screen_recording | animation | cinematic | custom
+category: generated          # talking_head | generated | hybrid | screen_recording | animation | cinematic | documentary | custom
 default_checkpoint_policy: guided
 
 orchestration:
@@ -211,6 +220,7 @@ stages:
 | `character-animation` | animation | Local rigged cartoon characters with SVG rigs, pose libraries, GSAP timelines, and HyperFrames rendering |
 | `cinematic` | cinematic | Trailer, teaser, mood-driven edits |
 | `clip-factory` | custom | Batch short-form clips from long source |
+| `documentary-montage` | documentary | Retrieval-first thematic montage from a CLIP-indexed corpus of free stock footage and open archives (beta) |
 | `hybrid` | hybrid | Source footage + AI-generated support visuals |
 | `localization-dub` | custom | Subtitle, dub, and translate existing video |
 | `podcast-repurpose` | hybrid | Podcast highlights to video |
@@ -269,7 +279,7 @@ Checkpoints persist pipeline state as JSON in the project's `pipeline/` director
 
 **Functions:** `write_checkpoint()`, `read_checkpoint()`, `get_latest_checkpoint()`, `get_completed_stages()`, `get_next_stage()`
 
-### Canonical Artifacts (11 types, all JSON-schema validated)
+### Canonical Artifacts (20 schemas in `schemas/artifacts/`, all JSON-schema validated)
 
 | Artifact | Stage | Contains |
 |----------|-------|----------|
@@ -284,6 +294,15 @@ Checkpoints persist pipeline state as JSON in the project's `pipeline/` director
 | `publish_log` | publish | Platform publication entries with status |
 | `review` | (any) | Reviewer feedback and approval records |
 | `cost_log` | (any) | Budget tracking entries |
+| `decision_log` | (any) | Append-only audit trail of every meaningful production choice (the Backlot Decisions rail) |
+| `final_review` | compose | Structured self-review of the rendered output |
+| `source_media_review` | (pre-idea) | Review of user-supplied media, written before the first planning stage |
+| `video_analysis_brief` | (pre-idea) | Structured analysis of a reference video from `video_analyzer` |
+| `character_design` | character-animation | Character definitions for local rigged animation |
+| `rig_plan` | character-animation | Rig parts, pivots, layers, constraints, views |
+| `pose_library` | character-animation | Named reusable poses, expressions, transition hints |
+| `action_timeline` | character-animation | Timed character actions and poses compiled for rendering |
+| `character_qa_report` | character-animation | Rig integrity, motion, and render-readiness review |
 
 ---
 
@@ -321,7 +340,7 @@ reconcile(entry_id, $)     # records actual spend
 ## 3-Layer Knowledge Architecture
 
 ```
-Layer 3: .agents/skills/          External technology knowledge (47 skills)
+Layer 3: .agents/skills/          External technology knowledge (92 skills)
          "How the technology works"    FFmpeg, ElevenLabs API, FLUX, Remotion, Three.js, etc.
               ^
               | agent_skills[] references
@@ -479,7 +498,10 @@ Consumed via `npx hyperframes` (no monorepo checkout needed). Runtime floor: Nod
 
 ```
 tests/
+├── backlot/                # Backlot board server, state derivation, UI bug-bash
 ├── contracts/              # Phase 0-3: tool contract validation, schema checks, registry tests
+├── fixtures/               # Shared fixtures (provider payloads, sample media)
+├── lib/                    # lib/ runtime tests (checkpoint, decision log, corpus, scoring)
 ├── qa/                     # Integration tests: TTS, image gen, music, audio mix, video compose/stitch, E2E
 ├── eval/                   # Golden scenario replay harness for regression testing
 ├── pipelines/              # Pipeline-level tests
@@ -499,10 +521,10 @@ tests/
 
 **Required:**
 - Python >= 3.10
-- FFmpeg (used by ~15 tools)
+- FFmpeg (used by nearly every video and audio tool)
 
 **Optional (extend capabilities):**
-- Node.js (for Remotion composer)
+- Node.js (Remotion composer; Node >= 22 for HyperFrames via `npx hyperframes`)
 - GPU + CUDA (for local video/image generation)
 - Piper (offline TTS)
 - ManimCE (math animations)

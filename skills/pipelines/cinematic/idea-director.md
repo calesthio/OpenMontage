@@ -8,7 +8,6 @@ Do not use this pipeline just because the user said "make it look cinematic." If
 
 ## Reference Inputs
 
-- `docs/cinematic-best-practices.md`
 - `skills/creative/cinematic.md`
 - `skills/creative/storytelling.md`
 

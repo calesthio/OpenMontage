@@ -14,7 +14,6 @@ Per AGENT_GUIDE.md → "Present Both Composition Runtimes (HARD RULE)": surface 
 
 ## Reference Inputs
 
-- `docs/podcast-repurposing-best-practices.md`
 - `skills/creative/short-form.md`
 - `skills/creative/long-form.md`
 

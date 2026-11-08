@@ -21,7 +21,6 @@ A `render_runtime_selection` decision with only one runtime in `options_consider
 
 ## Reference Inputs
 
-- `docs/hybrid-video-best-practices.md`
 - `skills/creative/storytelling.md`
 - `skills/creative/video-editing.md`
 

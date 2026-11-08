@@ -597,6 +597,25 @@ Billing is **per UTF-8 byte of input text** (not per character) — CJK text and
 
 ---
 
+### Audexum — Multilingual TTS
+
+> **Plain REST, no SDK.** The tool calls the documented `POST /api/synthesize` endpoint with `Authorization: Bearer <key>` ([API docs](https://audexum.com/docs)). Engines: `v1`, `v2` (voices `F1`-`F5`, `M1`-`M5`) and `v3` (voices `Atlas`, `Reid`, `Sage`, `Kai`, `Cole`, `Ivy`, `Mira`, `Elle`, `Nova`); full list at `GET https://audexum.com/api/voices`. The engine defaults to `v2` for F/M voices and `v3` otherwise. No voice cloning.
+
+**Tools unlocked:** `audexum_tts`
+**Env var:** `AUDEXUM_API_KEY` (optional `AUDEXUM_BASE_URL` to point at another host)
+
+#### Setup
+
+1. Sign up at [audexum.com](https://audexum.com) (free tier: 2,000 credits to start, then 250/day, no card)
+2. Create an API key (`sk_live_...`)
+3. Add to `.env`: `AUDEXUM_API_KEY=your-key-here`
+
+Input limit is 5,000 characters per call. The tool requests `mp3` by default (the API itself defaults to `wav`); pass `output_format` for `wav`, `ogg` or `opus`.
+
+**Cost:** Audexum bills in credits: 1 credit per character on `v1`, 1.5 on `v2`, 2 on `v3` ([how credits work](https://audexum.com/help/credits/how-credits-work)). Credits are sold through EUR plans and credit packs ([pricing](https://audexum.com/pricing)) and the tool cannot see which one a key uses, so `estimate_cost` raises `PriceQuoteRequired`, `dry_run` reports `quote_required`, and results carry `cost_usd: null` with `cost_status: "unquoted"` and the exact `estimated_credits`. The count is an upper bound: acting tags such as `<laugh>` are not billed.
+
+---
+
 ### Doubao Speech — Mandarin TTS
 
 > **Strong Mandarin narration.** Volcengine Doubao Speech is a good choice for Chinese explainer voiceovers and long-form narration that needs subtitle timing metadata.
@@ -1483,6 +1502,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **Google** | `GOOGLE_API_KEY` (or `GEMINI_API_KEY`) | `google_tts`, `google_imagen`, `google_music`, `gemini_omni_video`, `veo_video` | Free tier (TTS) + paid |
 | **ElevenLabs** | `ELEVENLABS_API_KEY` | `elevenlabs_tts`, `music_gen` | Free tier + paid |
 | **fish.audio** | `FISH_AUDIO_API_KEY` | `fish_audio_tts` | Free tier (s2.1-pro-free) + paid |
+| **Audexum** | `AUDEXUM_API_KEY` | `audexum_tts` | Free tier + paid |
 | **fal.ai** | `FAL_KEY` | `flux_image`, `recraft_image`, `kling_video`, `veo_video`, `seedance_video`, `gemini_omni_fal`, `minimax_fal_video` | Pay-as-you-go |
 | **Atlas Cloud** | `ATLASCLOUD_API_KEY` | `atlas_image`, `atlas_video` | Pay-as-you-go |
 | **Kling Official** | `KLING_API_KEY` | `kling_official_video`, `kling_official_image`, `kling_tts`, `kling_avatar`, `kling_lip_sync` | Pay-as-you-go |
@@ -1510,7 +1530,7 @@ How many providers cover each capability:
 |-----------|----------------|-----------------|--------------|
 | **Image Generation** | FLUX, Kling Official, Grok, Google Imagen, GPT Image 2, Recraft | Local Diffusion | Pexels, Pixabay (stock) |
 | **Video Generation** | Grok, Kling Official, fal.ai, Seedance via Volcengine Ark, Runway, Veo, Gemini Omni, Higgsfield, MiniMax, HeyGen, Tencent Hunyuan, ComfyUI Partner Nodes | WAN, Hunyuan, CogVideo, LTX, ComfyUI WAN, ComfyUI MiniMax H3 | Pexels, Pixabay (stock) |
-| **Text-to-Speech** | Azure AI Speech, ElevenLabs, fish.audio, Google TTS, Kling Official, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier, Azure free tier, fish.audio s2.1-pro-free |
+| **Text-to-Speech** | Audexum, Azure AI Speech, ElevenLabs, fish.audio, Google TTS, Kling Official, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier, Azure free tier, fish.audio s2.1-pro-free, Audexum free tier |
 | **Music Generation** | ElevenLabs, Suno, Google Lyria | — | ElevenLabs free tier |
 | **Post-Production** | — | FFmpeg (compose, stitch, trim, mix, enhance, grade) | All free |
 | **Analysis** | — | WhisperX, Scene Detect, Frame Sampler, CLIP/BLIP-2 | All free |

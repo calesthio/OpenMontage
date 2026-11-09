@@ -1,0 +1,14 @@
+{
+  "tiny": {
+    "wer": 0.8333333333333334,
+    "text": " Click on your open given option support life, and what will your open clip imagine."
+  },
+  "base": {
+    "wer": 0.5833333333333334,
+    "text": " called your opens did an ocean support life, and what will your open clipper measure?"
+  },
+  "small": {
+    "wer": 0.3333333333333333,
+    "text": " Could Europe has hidden ocean support life, and what will Europa clip a measure?"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "video": "/home/vscode/backups/final_v7.mp4",
+  "created_at": "2026-11-09T06:11:50.611018+00:00",
+  "overall_passed": false,
+  "metrics": {
+    "max_static_segment_sec": 0.0,
+    "avg_visual_change_interval_sec": 3.902,
+    "audio_true_peak_dbfs": null,
+    "audio_channels": 1,
+    "audio_integrated_lufs": null
+  },
+  "checks": [
+    {
+      "check_id": "max_static_segment_sec",
+      "status": "success",
+      "measured": 0.0,
+      "threshold": 6.0,
+      "passed": true,
+      "note": "0 frozen segment(s); max_static=0.000s; gate: > 6.0s = FAIL, > 15.0s = review"
+    },
+    {
+      "check_id": "avg_visual_change_interval_sec",
+      "status": "success",
+      "measured": 3.902,
+      "threshold": 15.0,
+      "passed": true,
+      "note": "success"
+    },
+    {
+      "check_id": "audio_true_peak_dbfs",
+      "status": "fallback_used",
+      "measured": null,
+      "threshold": -1.5,
+      "passed": false,
+      "note": "true peak not measurable"
+    },
+    {
+      "check_id": "audio_channels",
+      "status": "success",
+      "measured": 1,
+      "threshold": "1-2",
+      "passed": true,
+      "note": "channels=1; gate: not 1-2 = FAIL"
+    },
+    {
+      "check_id": "audio_integrated_lufs",
+      "status": "fallback_used",
+      "measured": null,
+      "threshold": null,
+      "passed": false,
+      "note": "not measurable"
+    },
+    {
+      "check_id": "hook_first30s_static_sec",
+      "status": "success",
+      "measured": 0.0,
+      "threshold": 5.0,
+      "passed": true,
+      "note": "first 30s max static 0.000s"
+    },
+    {
+      "check_id": "hook_first30s_silence_ratio",
+      "status": "success",
+      "measured": 0.0,
+      "threshold": 0.5,
+      "passed": true,
+      "note": "first 30s silence ratio 0.00"
+    },
+    {
+      "check_id": "duration_sec",
+      "status": "success",
+      "measured": 169.466,
+      "threshold": null,
+      "passed": true,
+      "note": ""
+    }
+  ]
+}

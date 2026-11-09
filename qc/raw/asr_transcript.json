@@ -1,0 +1,324 @@
+{
+  "language": "en",
+  "duration": 169.4506875,
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 3.52,
+      "text": "Could life exist in an ocean that has never seen the sky?",
+      "avg_logprob": -0.1892
+    },
+    {
+      "start": 3.52,
+      "end": 8.92,
+      "text": "On Jupiter's moon Europa, a global ocean lies hidden beneath a completely frozen crust.",
+      "avg_logprob": -0.1892
+    },
+    {
+      "start": 8.92,
+      "end": 13.68,
+      "text": "At crust is tens of miles thick, and the ocean's surface beneath it is frozen solid.",
+      "avg_logprob": -0.1892
+    },
+    {
+      "start": 13.68,
+      "end": 18.92,
+      "text": "At the ocean underneath holds more than twice as much water, as all of Earth's oceans combine.",
+      "avg_logprob": -0.1892
+    },
+    {
+      "start": 18.92,
+      "end": 24.12,
+      "text": "Stays liquid not because of sunlight, but because Jupiter's gravity flexes the moon and heats",
+      "avg_logprob": -0.1892
+    },
+    {
+      "start": 24.12,
+      "end": 25.12,
+      "text": "it from within.",
+      "avg_logprob": -0.1892
+    },
+    {
+      "start": 25.12,
+      "end": 29.2,
+      "text": "Sunlight never reaches that water, so nothing down there has ever seen a sunrise, so the",
+      "avg_logprob": -0.1892
+    },
+    {
+      "start": 29.2,
+      "end": 31.04,
+      "text": "question becomes sharper.",
+      "avg_logprob": -0.1874
+    },
+    {
+      "start": 31.04,
+      "end": 33.24,
+      "text": "What could live in a dark ocean sealed under ice?",
+      "avg_logprob": -0.1874
+    },
+    {
+      "start": 33.24,
+      "end": 35.56,
+      "text": "Europa is not even the only one.",
+      "avg_logprob": -0.1874
+    },
+    {
+      "start": 35.56,
+      "end": 40.32,
+      "text": "Saturn's moon, Enceladus, hides a global salty ocean beneath its icy crust.",
+      "avg_logprob": -0.1874
+    },
+    {
+      "start": 40.32,
+      "end": 44.32,
+      "text": "Enceladus even sprays that ocean into space through cracks near its South Pole.",
+      "avg_logprob": -0.1874
+    },
+    {
+      "start": 44.32,
+      "end": 48.76,
+      "text": "On Earth, we already know what life can do without sunlight, because the deep sea has an",
+      "avg_logprob": -0.1874
+    },
+    {
+      "start": 48.76,
+      "end": 49.76,
+      "text": "answer.",
+      "avg_logprob": -0.1874
+    },
+    {
+      "start": 49.76,
+      "end": 51.84,
+      "text": "This episode follows that answer outward.",
+      "avg_logprob": -0.1874
+    },
+    {
+      "start": 51.84,
+      "end": 55.4,
+      "text": "From event on our own sea floor, to an ocean we have never touched.",
+      "avg_logprob": -0.1874
+    },
+    {
+      "start": 55.4,
+      "end": 57.32,
+      "text": "Some of what follows is measured.",
+      "avg_logprob": -0.1874
+    },
+    {
+      "start": 57.32,
+      "end": 60.8,
+      "text": "And some of it is invented, and we will mark the difference every time.",
+      "avg_logprob": -0.1972
+    },
+    {
+      "start": 60.8,
+      "end": 63.0,
+      "text": "By the end, you can decide which parts you believe.",
+      "avg_logprob": -0.1972
+    },
+    {
+      "start": 63.0,
+      "end": 67.66,
+      "text": "Two of the least remarkable looking moons in the solar system may be the most interest",
+      "avg_logprob": -0.1972
+    },
+    {
+      "start": 67.66,
+      "end": 69.56,
+      "text": "again with the shape of the world.",
+      "avg_logprob": -0.1972
+    },
+    {
+      "start": 69.56,
+      "end": 72.88,
+      "text": "An ocean with no shore you could walk out onto, capped by ice.",
+      "avg_logprob": -0.1972
+    },
+    {
+      "start": 72.88,
+      "end": 76.24,
+      "text": "Europa's ocean is global, which means it wraps the entire moon.",
+      "avg_logprob": -0.1972
+    },
+    {
+      "start": 76.24,
+      "end": 79.88,
+      "text": "There is no beach here, no coastline, no place where water meets air.",
+      "avg_logprob": -0.1972
+    },
+    {
+      "start": 79.88,
+      "end": 83.96,
+      "text": "Above the water, since it's a crust of ice tens, of miles that ice stays frozen where it meets",
+      "avg_logprob": -0.1972
+    },
+    {
+      "start": 83.96,
+      "end": 84.96,
+      "text": "the water.",
+      "avg_logprob": -0.1972
+    },
+    {
+      "start": 84.96,
+      "end": 87.28,
+      "text": "So the boundary is a lid, not a shoreline.",
+      "avg_logprob": -0.1972
+    },
+    {
+      "start": 87.28,
+      "end": 89.48,
+      "text": "Water below is the striking part.",
+      "avg_logprob": -0.2245
+    },
+    {
+      "start": 89.48,
+      "end": 93.8,
+      "text": "More than twice, the volume of every ocean on Earth, twice over, in a single moon.",
+      "avg_logprob": -0.2245
+    },
+    {
+      "start": 93.8,
+      "end": 99.08,
+      "text": "Volume is not the same as habitability, but it does by room for chemistry, room for gradients,",
+      "avg_logprob": -0.2245
+    },
+    {
+      "start": 99.08,
+      "end": 100.08,
+      "text": "room for top.",
+      "avg_logprob": -0.2245
+    },
+    {
+      "start": 100.08,
+      "end": 104.52,
+      "text": "Heat that keeps it liquid comes from Jupiter, which pulls on Europa as the moon orbits.",
+      "avg_logprob": -0.2245
+    },
+    {
+      "start": 104.52,
+      "end": 107.24,
+      "text": "That flexing bends the moon, and the bending becomes heat.",
+      "avg_logprob": -0.2245
+    },
+    {
+      "start": 107.24,
+      "end": 110.4,
+      "text": "Hydle heating is why the ocean is not a block of ice.",
+      "avg_logprob": -0.2245
+    },
+    {
+      "start": 110.4,
+      "end": 114.84,
+      "text": "All the way through it also drives chemistry, between the ocean and the rocky floor beneath",
+      "avg_logprob": -0.2245
+    },
+    {
+      "start": 114.84,
+      "end": 120.28,
+      "text": "and celadus at Saturn, is smaller but follows the same lodge too carries a global salty ocean",
+      "avg_logprob": -0.1733
+    },
+    {
+      "start": 120.28,
+      "end": 121.28,
+      "text": "under an icy crust.",
+      "avg_logprob": -0.1733
+    },
+    {
+      "start": 121.28,
+      "end": 124.28,
+      "text": "Two moons, two oceans, both sealed away from the scuff.",
+      "avg_logprob": -0.1733
+    },
+    {
+      "start": 124.28,
+      "end": 128.04,
+      "text": "You wanted to design a place where life could hide, you would struggle to do better.",
+      "avg_logprob": -0.1733
+    },
+    {
+      "start": 128.04,
+      "end": 132.32,
+      "text": "Hiding is not the same as living, and for that a world needs an energy source.",
+      "avg_logprob": -0.1733
+    },
+    {
+      "start": 132.32,
+      "end": 136.64,
+      "text": "So the next thing to measure is not the size of the ocean, but what powers keep the image",
+      "avg_logprob": -0.1733
+    },
+    {
+      "start": 136.64,
+      "end": 137.64,
+      "text": "in your head?",
+      "avg_logprob": -0.1733
+    },
+    {
+      "start": 137.64,
+      "end": 142.28,
+      "text": "An ocean with no shores, roofed by ice, warmed from below, an ocean with more water than",
+      "avg_logprob": -0.1733
+    },
+    {
+      "start": 142.28,
+      "end": 143.28,
+      "text": "hours.",
+      "avg_logprob": -0.1733
+    },
+    {
+      "start": 143.28,
+      "end": 146.76,
+      "text": "No way for the sun to reach nothing about that lid is thin enough to see through a few",
+      "avg_logprob": -0.2113
+    },
+    {
+      "start": 146.76,
+      "end": 148.72,
+      "text": "poured earth's oceans into it.",
+      "avg_logprob": -0.2113
+    },
+    {
+      "start": 148.72,
+      "end": 150.72,
+      "text": "You would still have room for another earth's world.",
+      "avg_logprob": -0.2113
+    },
+    {
+      "start": 150.72,
+      "end": 152.88,
+      "text": "Moon is not a dead ball of ice.",
+      "avg_logprob": -0.2113
+    },
+    {
+      "start": 152.88,
+      "end": 157.72,
+      "text": "It is being worked on from the outside, every orb, that is the first surprise of this world.",
+      "avg_logprob": -0.2113
+    },
+    {
+      "start": 157.72,
+      "end": 161.8,
+      "text": "The heat comes from a neighbor, not from the star, and celadus is smaller, but the same three",
+      "avg_logprob": -0.2113
+    },
+    {
+      "start": 161.8,
+      "end": 162.8,
+      "text": "layers appear.",
+      "avg_logprob": -0.2113
+    },
+    {
+      "start": 162.8,
+      "end": 167.28,
+      "text": "Ice, water, and rasa smaller world keep its ocean as easily.",
+      "avg_logprob": -0.2113
+    },
+    {
+      "start": 167.28,
+      "end": 169.48,
+      "text": "That is a question, only the mission data can answer.",
+      "avg_logprob": -0.3009
+    }
+  ]
+}

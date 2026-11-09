@@ -1,0 +1,54 @@
+{
+  "job_id": "pilot-test_mock_generate_160_sentenc0-S120",
+  "project": "pilot-test_mock_generate_160_sentenc0",
+  "scene": "S120",
+  "prompt": "A fluid mechanical clock gears records in geyser eruption. extreme_close_up, 35mm lens, tilt_down camera, symmetrical, high_contrast lighting, deep depth of field. bold ink illustration, crisp black outlines, flat expressive colour fills, scientific-documentary composition, expressive lighting; crisp black outlines; flat expressive colour fills; scientific-documentary composition; expressive lighting. character: no specific character; environment-focused scene. varied surrounding environment. bold ink illustration, crisp black outlines, flat expressive colour fills, scientific-documentary composition, expressive lighting, varied surrounding environments",
+  "prompt_version": 1,
+  "state": "READY_FOR_APPROVAL",
+  "aspect_ratio": "16:9",
+  "resolution": "1920x1080",
+  "references": [],
+  "input_files": [],
+  "generation_params": {
+    "model": "nano2",
+    "count": 1,
+    "aspect_ratio": "16:9",
+    "output_path": "/tmp/pytest-of-vscode/pytest-11/test_mock_generate_160_sentenc0/pilot-test_mock_generate_160_sentenc0/assets/S120.png",
+    "reference_entity": null,
+    "prompt_id": "pilot-test_mock_generate_160_sentenc0-PRT-S120",
+    "asset_id": "pilot-test_mock_generate_160_sentenc0-AST-S120"
+  },
+  "created_at": "2026-11-09T05:43:09.540651+00:00",
+  "updated_at": "2026-11-09T05:43:09.569509+00:00",
+  "approved_at": null,
+  "submitted_at": null,
+  "completed_at": null,
+  "error": null,
+  "history": [
+    {
+      "from": "DRAFT",
+      "to": "DRAFT",
+      "at": "2026-11-09T05:43:09.544679+00:00",
+      "reason": "job created"
+    },
+    {
+      "from": "DRAFT",
+      "to": "VALIDATED",
+      "at": "2026-11-09T05:43:09.557838+00:00",
+      "reason": "validation passed"
+    },
+    {
+      "from": "VALIDATED",
+      "to": "READY_FOR_APPROVAL",
+      "at": "2026-11-09T05:43:09.569509+00:00",
+      "reason": "ready for manual approval"
+    }
+  ],
+  "mcp_checked": true,
+  "mcp_auth_ok": false,
+  "mcp_projects": [],
+  "mcp_models": [],
+  "browser_checked": false,
+  "browser_auth_ok": false,
+  "browser_screenshot_path": null
+}

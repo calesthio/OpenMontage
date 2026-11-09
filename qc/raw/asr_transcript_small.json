@@ -1,0 +1,285 @@
+{
+  "model": "small",
+  "language": "en",
+  "duration": 169.4506875,
+  "elapsed_seconds": 5.47,
+  "vad_filter": true,
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 3.5,
+      "text": "Could life exist in an ocean that has never seen the sky?",
+      "avg_logprob": -0.1068
+    },
+    {
+      "start": 3.5,
+      "end": 9.0,
+      "text": "On Jupiter's moon Europa, a global ocean lies hidden beneath a completely frozen crust.",
+      "avg_logprob": -0.1068
+    },
+    {
+      "start": 9.0,
+      "end": 13.5,
+      "text": "That crust is tens of miles thick, and the ocean surface beneath it is frozen solid.",
+      "avg_logprob": -0.1068
+    },
+    {
+      "start": 13.5,
+      "end": 18.5,
+      "text": "Yet the ocean underneath holds more than twice as much water, as all of Earth's oceans combine.",
+      "avg_logprob": -0.1068
+    },
+    {
+      "start": 18.5,
+      "end": 24.5,
+      "text": "It stays liquid not because of sunlight, but because Jupiter's gravity flexes the moon and heats it from within.",
+      "avg_logprob": -0.1068
+    },
+    {
+      "start": 24.5,
+      "end": 29.0,
+      "text": "Sunlight never reaches that water, so nothing down there has ever seen a sunrise.",
+      "avg_logprob": -0.1068
+    },
+    {
+      "start": 29.0,
+      "end": 33.0,
+      "text": "So the question becomes sharper. What could live in a dark ocean sealed under ice?",
+      "avg_logprob": -0.0626
+    },
+    {
+      "start": 33.0,
+      "end": 40.0,
+      "text": "Europa is not even the only one. Saturn's moon Enceladus hides a global salty ocean beneath its icy crust.",
+      "avg_logprob": -0.0626
+    },
+    {
+      "start": 40.0,
+      "end": 44.0,
+      "text": "Enceladus even sprays that ocean into space through cracks near its south pole.",
+      "avg_logprob": -0.0626
+    },
+    {
+      "start": 44.0,
+      "end": 49.0,
+      "text": "On Earth, we already know what life can do without sunlight, because the deep sea has an answer.",
+      "avg_logprob": -0.0626
+    },
+    {
+      "start": 49.0,
+      "end": 55.0,
+      "text": "This episode follows that answer outward, from a vent on our own sea floor to an ocean we have never touched.",
+      "avg_logprob": -0.0626
+    },
+    {
+      "start": 55.0,
+      "end": 61.0,
+      "text": "Some of what follows is measured, and some of it is invented, and we will mark the difference every time.",
+      "avg_logprob": -0.056
+    },
+    {
+      "start": 61.0,
+      "end": 63.0,
+      "text": "By the end, you can decide which parts you believe.",
+      "avg_logprob": -0.056
+    },
+    {
+      "start": 63.0,
+      "end": 68.0,
+      "text": "Two of the least remarkable-looking moons in the solar system may be the most interesting.",
+      "avg_logprob": -0.056
+    },
+    {
+      "start": 68.0,
+      "end": 73.0,
+      "text": "Again with the shape of the world, an ocean with no shore you could walk out onto, capped by ice.",
+      "avg_logprob": -0.056
+    },
+    {
+      "start": 73.0,
+      "end": 76.0,
+      "text": "Europa's ocean is global, which means it wraps the entire moon.",
+      "avg_logprob": -0.056
+    },
+    {
+      "start": 76.0,
+      "end": 80.0,
+      "text": "There is no beach here, no coastline, no place where water meets air.",
+      "avg_logprob": -0.056
+    },
+    {
+      "start": 80.0,
+      "end": 85.0,
+      "text": "The water sits a crust of ice tins of miles that ice stays frozen where it meets the water,",
+      "avg_logprob": -0.1107
+    },
+    {
+      "start": 85.0,
+      "end": 87.0,
+      "text": "so the boundary is a lid, not a shoreline.",
+      "avg_logprob": -0.1107
+    },
+    {
+      "start": 87.0,
+      "end": 92.0,
+      "text": "Water below is the striking part, more than twice the volume of every ocean on Earth,",
+      "avg_logprob": -0.1107
+    },
+    {
+      "start": 92.0,
+      "end": 94.0,
+      "text": "twice over in a single moon.",
+      "avg_logprob": -0.1107
+    },
+    {
+      "start": 94.0,
+      "end": 97.0,
+      "text": "Volume is not the same as habitability, but it does buy room.",
+      "avg_logprob": -0.1107
+    },
+    {
+      "start": 97.0,
+      "end": 100.0,
+      "text": "Room for chemistry, room for gradients, room for time.",
+      "avg_logprob": -0.1107
+    },
+    {
+      "start": 100.0,
+      "end": 105.0,
+      "text": "Heat that keeps it liquid comes from Jupiter, which pulls on Europa as the moon orbits.",
+      "avg_logprob": -0.1107
+    },
+    {
+      "start": 106.0,
+      "end": 107.0,
+      "text": "And the bending becomes heat.",
+      "avg_logprob": -0.0952
+    },
+    {
+      "start": 107.0,
+      "end": 110.0,
+      "text": "Heightal heating is why the ocean is not a block of ice,",
+      "avg_logprob": -0.0952
+    },
+    {
+      "start": 110.0,
+      "end": 111.0,
+      "text": "all the way through.",
+      "avg_logprob": -0.0952
+    },
+    {
+      "start": 111.0,
+      "end": 115.0,
+      "text": "It also drives chemistry between the ocean and the rocky floor beneath.",
+      "avg_logprob": -0.0952
+    },
+    {
+      "start": 115.0,
+      "end": 118.0,
+      "text": "Enceladus at Saturn is smaller but follows the same logic.",
+      "avg_logprob": -0.0952
+    },
+    {
+      "start": 118.0,
+      "end": 121.0,
+      "text": "Two carries a global, salty ocean under an icy crust.",
+      "avg_logprob": -0.0952
+    },
+    {
+      "start": 121.0,
+      "end": 124.0,
+      "text": "Two moons, two oceans, both sealed away from the sky.",
+      "avg_logprob": -0.0952
+    },
+    {
+      "start": 124.0,
+      "end": 128.0,
+      "text": "If you wanted to design a place where life could hide, you would struggle to do better.",
+      "avg_logprob": -0.0952
+    },
+    {
+      "start": 128.0,
+      "end": 132.0,
+      "text": "Hiding is not the same as living, and for that a world needs an energy source.",
+      "avg_logprob": -0.0952
+    },
+    {
+      "start": 132.0,
+      "end": 135.0,
+      "text": "So the next thing to measure is not the size of the ocean.",
+      "avg_logprob": -0.0707
+    },
+    {
+      "start": 135.0,
+      "end": 137.0,
+      "text": "But what powers keep the image in your head?",
+      "avg_logprob": -0.0707
+    },
+    {
+      "start": 137.0,
+      "end": 141.0,
+      "text": "An ocean with no shores, roofed by ice, warmed from below.",
+      "avg_logprob": -0.0707
+    },
+    {
+      "start": 141.0,
+      "end": 144.0,
+      "text": "An ocean with more water than ours, and no way for the sun to reach.",
+      "avg_logprob": -0.0707
+    },
+    {
+      "start": 144.0,
+      "end": 146.0,
+      "text": "Nothing about that lid is thin enough to see through.",
+      "avg_logprob": -0.0707
+    },
+    {
+      "start": 146.0,
+      "end": 150.0,
+      "text": "If you poured Earth's oceans into it, you would still have room for another Earth's war.",
+      "avg_logprob": -0.0707
+    },
+    {
+      "start": 150.0,
+      "end": 152.0,
+      "text": "Moon is not a dead ball of ice.",
+      "avg_logprob": -0.0707
+    },
+    {
+      "start": 152.0,
+      "end": 155.0,
+      "text": "It is being worked on from the outside, every orbit.",
+      "avg_logprob": -0.0707
+    },
+    {
+      "start": 155.0,
+      "end": 157.0,
+      "text": "That is the first surprise of this world.",
+      "avg_logprob": -0.0707
+    },
+    {
+      "start": 157.0,
+      "end": 160.0,
+      "text": "The heat comes from a neighbor, not from the star.",
+      "avg_logprob": -0.0707
+    },
+    {
+      "start": 160.0,
+      "end": 163.0,
+      "text": "The cellitus is smaller, but the same three layers appear.",
+      "avg_logprob": -0.174
+    },
+    {
+      "start": 163.0,
+      "end": 167.0,
+      "text": "Ice, water, and rocks as a smaller world keep its ocean as easily.",
+      "avg_logprob": -0.174
+    },
+    {
+      "start": 167.0,
+      "end": 170.0,
+      "text": "That is a question only the mission data can answer.",
+      "avg_logprob": -0.174
+    }
+  ]
+}

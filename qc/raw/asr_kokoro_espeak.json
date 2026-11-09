@@ -1,0 +1,13 @@
+{
+  "model": "small",
+  "vad_filter": true,
+  "audio_source": "/tmp/kilo/kokoro_with_espeak_full.wav",
+  "text": "Cassini discovered cryovolcanism on Enceladus, where water jets erupt from the South Pole through cracks in the ice.",
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 7.0,
+      "text": "Cassini discovered cryovolcanism on Enceladus, where water jets erupt from the South Pole through cracks in the ice."
+    }
+  ]
+}

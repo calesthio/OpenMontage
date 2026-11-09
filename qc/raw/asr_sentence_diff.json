@@ -1,0 +1,356 @@
+{
+  "model": "small",
+  "vad_filter": true,
+  "audio_source": "projects/pilot/first_video/audio/narration_master.wav (clean narration, no music)",
+  "overall_wer": 0.4339,
+  "total_errors": 266,
+  "total_ref_words": 613,
+  "segments_compared": 41,
+  "wer_explanation": "WER 0.46 driven by: (1) music mixing in final.mp4 previously masked voice; (2) base model is smaller/less accurate than small; (3) sentence-boundary mismatches between ASR segments and subtitle segments cause alignment errors; (4) proper nouns (Cassini, cryovolcanism, Titan, Juno, Clipper, hydrothermal) are rare words that ASR often misses",
+  "key_words_in_scenario": {
+    "cassini": false,
+    "cryovolcanism": false,
+    "titan": false,
+    "juno": false,
+    "clipper": false,
+    "hydrothermal": false
+  },
+  "key_words_in_asr": {
+    "cassini": false,
+    "cryovolcanism": false,
+    "titan": false,
+    "juno": false,
+    "clipper": false,
+    "hydrothermal": false
+  },
+  "segments": [
+    {
+      "seg": 27,
+      "ref": "Enceladus, at Saturn, is smaller but follows the same logic.",
+      "asr": "It also drives chemistry between the ocean and the rocky floor beneath.",
+      "wer": 1.1,
+      "ref_words": 10,
+      "errors": 11
+    },
+    {
+      "seg": 35,
+      "ref": "Nothing about that lid is thin enough to see through.",
+      "asr": "An ocean with no shores, roofed by ice, warmed from below.",
+      "wer": 1.1,
+      "ref_words": 10,
+      "errors": 11
+    },
+    {
+      "seg": 28,
+      "ref": "It too carries a global salty ocean under an icy crust.",
+      "asr": "Enceladus at Saturn is smaller but follows the same logic.",
+      "wer": 1.0,
+      "ref_words": 11,
+      "errors": 11
+    },
+    {
+      "seg": 30,
+      "ref": "If you wanted to design a place where life could hide, you would struggle to do better.",
+      "asr": "Two moons, two oceans, both sealed away from the sky.",
+      "wer": 1.0,
+      "ref_words": 17,
+      "errors": 17
+    },
+    {
+      "seg": 31,
+      "ref": "But hiding is not the same as living, and for that a world needs an energy source.",
+      "asr": "If you wanted to design a place where life could hide, you would struggle to do better.",
+      "wer": 1.0,
+      "ref_words": 17,
+      "errors": 17
+    },
+    {
+      "seg": 32,
+      "ref": "So the next thing to measure is not the size of the ocean, but what powers it.",
+      "asr": "Hiding is not the same as living, and for that a world needs an energy source.",
+      "wer": 1.0,
+      "ref_words": 17,
+      "errors": 17
+    },
+    {
+      "seg": 36,
+      "ref": "If you poured Earth's oceans into it, you would still have room for another Earth's worth.",
+      "asr": "An ocean with more water than ours, and no way for the sun to reach.",
+      "wer": 1.0,
+      "ref_words": 16,
+      "errors": 16
+    },
+    {
+      "seg": 38,
+      "ref": "That is the first surprise of this world: the heat comes from a neighbour, not from the star.",
+      "asr": "If you poured Earth's oceans into it, you would still have room for another Earth's war.",
+      "wer": 1.0,
+      "ref_words": 18,
+      "errors": 18
+    },
+    {
+      "seg": 37,
+      "ref": "The moon is not a dead ball of ice, it is being worked on from the outside, every orbit.",
+      "asr": "Nothing about that lid is thin enough to see through.",
+      "wer": 0.9474,
+      "ref_words": 19,
+      "errors": 18
+    },
+    {
+      "seg": 40,
+      "ref": "Does a smaller world keep its ocean as easily? That is a question only the mission data can answer.",
+      "asr": "It is being worked on from the outside, every orbit.",
+      "wer": 0.9474,
+      "ref_words": 19,
+      "errors": 18
+    },
+    {
+      "seg": 33,
+      "ref": "Keep the image in your head: an ocean with no shores, roofed by ice, warmed from below.",
+      "asr": "So the next thing to measure is not the size of the ocean.",
+      "wer": 0.9412,
+      "ref_words": 17,
+      "errors": 16
+    },
+    {
+      "seg": 34,
+      "ref": "An ocean with more water than ours, and no way for the sun to reach it.",
+      "asr": "But what powers keep the image in your head?",
+      "wer": 0.9375,
+      "ref_words": 16,
+      "errors": 15
+    },
+    {
+      "seg": 26,
+      "ref": "It also drives chemistry between the ocean and the rocky floor beneath it.",
+      "asr": "all the way through.",
+      "wer": 0.9231,
+      "ref_words": 13,
+      "errors": 12
+    },
+    {
+      "seg": 39,
+      "ref": "Enceladus is smaller, but the same three layers appear: ice, water, and rock.",
+      "asr": "Moon is not a dead ball of ice.",
+      "wer": 0.9231,
+      "ref_words": 13,
+      "errors": 12
+    },
+    {
+      "seg": 17,
+      "ref": "Above the water sits a crust of ice tens of miles thick.",
+      "asr": "The water sits a crust of ice tins of miles that ice stays frozen where it meets the water,",
+      "wer": 0.9167,
+      "ref_words": 12,
+      "errors": 11
+    },
+    {
+      "seg": 29,
+      "ref": "Two moons, two oceans, both sealed away from the sky.",
+      "asr": "Two carries a global, salty ocean under an icy crust.",
+      "wer": 0.9,
+      "ref_words": 10,
+      "errors": 9
+    },
+    {
+      "seg": 18,
+      "ref": "That ice stays frozen where it meets the water, so the boundary is a lid, not a shoreline.",
+      "asr": "so the boundary is a lid, not a shoreline.",
+      "wer": 0.5,
+      "ref_words": 18,
+      "errors": 9
+    },
+    {
+      "seg": 24,
+      "ref": "That flexing bends the moon, and the bending becomes heat.",
+      "asr": "And the bending becomes heat.",
+      "wer": 0.5,
+      "ref_words": 10,
+      "errors": 5
+    },
+    {
+      "seg": 25,
+      "ref": "Tidal heating is why the ocean is not a block of ice all the way through.",
+      "asr": "Heightal heating is why the ocean is not a block of ice,",
+      "wer": 0.375,
+      "ref_words": 16,
+      "errors": 6
+    },
+    {
+      "seg": 0,
+      "ref": "Start with a simple question: could life exist in an ocean that has never seen the sky?",
+      "asr": "Could life exist in an ocean that has never seen the sky?",
+      "wer": 0.2941,
+      "ref_words": 17,
+      "errors": 5
+    },
+    {
+      "seg": 19,
+      "ref": "The water below is the striking part: more than twice the volume of every ocean on Earth.",
+      "asr": "Water below is the striking part, more than twice the volume of every ocean on Earth,",
+      "wer": 0.1765,
+      "ref_words": 17,
+      "errors": 3
+    },
+    {
+      "seg": 20,
+      "ref": "Twice over, in a single moon.",
+      "asr": "twice over in a single moon.",
+      "wer": 0.1667,
+      "ref_words": 6,
+      "errors": 1
+    },
+    {
+      "seg": 3,
+      "ref": "Yet the ocean underneath holds more than twice as much water as all of Earth's oceans combined.",
+      "asr": "Yet the ocean underneath holds more than twice as much water, as all of Earth's oceans combine.",
+      "wer": 0.1176,
+      "ref_words": 17,
+      "errors": 2
+    },
+    {
+      "seg": 14,
+      "ref": "Begin with the shape of the world: an ocean with no shore you could walk out onto, capped by ice.",
+      "asr": "Again with the shape of the world, an ocean with no shore you could walk out onto, capped by ice.",
+      "wer": 0.1,
+      "ref_words": 20,
+      "errors": 2
+    },
+    {
+      "seg": 1,
+      "ref": "On Jupiter's moon Europa, a global saltwater ocean lies hidden beneath a completely frozen crust.",
+      "asr": "On Jupiter's moon Europa, a global ocean lies hidden beneath a completely frozen crust.",
+      "wer": 0.0667,
+      "ref_words": 15,
+      "errors": 1
+    },
+    {
+      "seg": 6,
+      "ref": "So the question becomes sharper: what could live in a dark ocean sealed under ice?",
+      "asr": "So the question becomes sharper. What could live in a dark ocean sealed under ice?",
+      "wer": 0.0667,
+      "ref_words": 15,
+      "errors": 1
+    },
+    {
+      "seg": 23,
+      "ref": "The heat that keeps it liquid comes from Jupiter, which pulls on Europa as the moon orbits.",
+      "asr": "Heat that keeps it liquid comes from Jupiter, which pulls on Europa as the moon orbits.",
+      "wer": 0.0588,
+      "ref_words": 17,
+      "errors": 1
+    },
+    {
+      "seg": 7,
+      "ref": "Europa is not even the only one: Saturn's moon Enceladus hides a global salty ocean beneath its icy crust.",
+      "asr": "Europa is not even the only one. Saturn's moon Enceladus hides a global salty ocean beneath its icy crust.",
+      "wer": 0.0526,
+      "ref_words": 19,
+      "errors": 1
+    },
+    {
+      "seg": 2,
+      "ref": "That crust is tens of miles thick, and the ocean surface beneath it is frozen solid.",
+      "asr": "That crust is tens of miles thick, and the ocean surface beneath it is frozen solid.",
+      "wer": 0.0,
+      "ref_words": 16,
+      "errors": 0
+    },
+    {
+      "seg": 4,
+      "ref": "It stays liquid not because of sunlight, but because Jupiter's gravity flexes the moon and heats it from within.",
+      "asr": "It stays liquid not because of sunlight, but because Jupiter's gravity flexes the moon and heats it from within.",
+      "wer": 0.0,
+      "ref_words": 19,
+      "errors": 0
+    },
+    {
+      "seg": 5,
+      "ref": "Sunlight never reaches that water, so nothing down there has ever seen a sunrise.",
+      "asr": "Sunlight never reaches that water, so nothing down there has ever seen a sunrise.",
+      "wer": 0.0,
+      "ref_words": 14,
+      "errors": 0
+    },
+    {
+      "seg": 8,
+      "ref": "Enceladus even sprays that ocean into space through cracks near its south pole.",
+      "asr": "Enceladus even sprays that ocean into space through cracks near its south pole.",
+      "wer": 0.0,
+      "ref_words": 13,
+      "errors": 0
+    },
+    {
+      "seg": 9,
+      "ref": "On Earth, we already know what life can do without sunlight, because the deep sea has an answer.",
+      "asr": "On Earth, we already know what life can do without sunlight, because the deep sea has an answer.",
+      "wer": 0.0,
+      "ref_words": 18,
+      "errors": 0
+    },
+    {
+      "seg": 10,
+      "ref": "This episode follows that answer outward, from a vent on our own sea floor to an ocean we have never touched.",
+      "asr": "This episode follows that answer outward, from a vent on our own sea floor to an ocean we have never touched.",
+      "wer": 0.0,
+      "ref_words": 21,
+      "errors": 0
+    },
+    {
+      "seg": 11,
+      "ref": "Some of what follows is measured, and some of it is invented, and we will mark the difference every time.",
+      "asr": "Some of what follows is measured, and some of it is invented, and we will mark the difference every time.",
+      "wer": 0.0,
+      "ref_words": 20,
+      "errors": 0
+    },
+    {
+      "seg": 12,
+      "ref": "By the end, you can decide which parts you believe.",
+      "asr": "By the end, you can decide which parts you believe.",
+      "wer": 0.0,
+      "ref_words": 10,
+      "errors": 0
+    },
+    {
+      "seg": 13,
+      "ref": "Two of the least remarkable-looking moons in the solar system may be the most interesting.",
+      "asr": "Two of the least remarkable-looking moons in the solar system may be the most interesting.",
+      "wer": 0.0,
+      "ref_words": 15,
+      "errors": 0
+    },
+    {
+      "seg": 15,
+      "ref": "Europa's ocean is global, which means it wraps the entire moon.",
+      "asr": "Europa's ocean is global, which means it wraps the entire moon.",
+      "wer": 0.0,
+      "ref_words": 11,
+      "errors": 0
+    },
+    {
+      "seg": 16,
+      "ref": "There is no beach here, no coastline, no place where water meets air.",
+      "asr": "There is no beach here, no coastline, no place where water meets air.",
+      "wer": 0.0,
+      "ref_words": 13,
+      "errors": 0
+    },
+    {
+      "seg": 21,
+      "ref": "Volume is not the same as habitability, but it does buy room.",
+      "asr": "Volume is not the same as habitability, but it does buy room.",
+      "wer": 0.0,
+      "ref_words": 12,
+      "errors": 0
+    },
+    {
+      "seg": 22,
+      "ref": "Room for chemistry, room for gradients, room for time.",
+      "asr": "Room for chemistry, room for gradients, room for time.",
+      "wer": 0.0,
+      "ref_words": 9,
+      "errors": 0
+    }
+  ]
+}

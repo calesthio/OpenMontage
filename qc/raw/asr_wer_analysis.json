@@ -1,0 +1,337 @@
+{
+  "overall_wer": 0.46,
+  "total_errors": 282,
+  "total_ref_words": 613,
+  "matched_segments": 41,
+  "unmatched_ref_segments": 0,
+  "segments": [
+    {
+      "ref_start": "00:01:31,877 ",
+      "ref_end": " 00:01:33,419",
+      "ref": "Twice over, in a single moon.",
+      "asr": "More than twice, the volume of every ocean on Eart",
+      "wer": 1.667,
+      "overlap_sec": 1.5
+    },
+    {
+      "ref_start": "00:01:36,694 ",
+      "ref_end": " 00:01:39,638",
+      "ref": "Room for chemistry, room for gradients, room for t",
+      "asr": "Volume is not the same as habitability, but it doe",
+      "wer": 1.444,
+      "overlap_sec": 2.4
+    },
+    {
+      "ref_start": "00:01:58,015 ",
+      "ref_end": " 00:02:01,187",
+      "ref": "It too carries a global salty ocean under an icy c",
+      "asr": "and celadus at Saturn, is smaller but follows the ",
+      "wer": 1.364,
+      "overlap_sec": 2.3
+    },
+    {
+      "ref_start": "00:02:39,927 ",
+      "ref_end": " 00:02:44,204",
+      "ref": "Enceladus is smaller, but the same three layers ap",
+      "asr": "The heat comes from a neighbor, not from the star,",
+      "wer": 1.308,
+      "overlap_sec": 1.9
+    },
+    {
+      "ref_start": "00:02:24,484 ",
+      "ref_end": " 00:02:26,591",
+      "ref": "Nothing about that lid is thin enough to see throu",
+      "asr": "No way for the sun to reach nothing about that lid",
+      "wer": 1.0,
+      "overlap_sec": 2.1
+    },
+    {
+      "ref_start": "00:02:30,590 ",
+      "ref_end": " 00:02:35,415",
+      "ref": "The moon is not a dead ball of ice, it is being wo",
+      "asr": "It is being worked on from the outside, every orb,",
+      "wer": 0.947,
+      "overlap_sec": 2.5
+    },
+    {
+      "ref_start": "00:02:35,415 ",
+      "ref_end": " 00:02:39,927",
+      "ref": "That is the first surprise of this world: the heat",
+      "asr": "It is being worked on from the outside, every orb,",
+      "wer": 0.944,
+      "overlap_sec": 2.3
+    },
+    {
+      "ref_start": "00:01:19,674 ",
+      "ref_end": " 00:01:22,355",
+      "ref": "Above the water sits a crust of ice tens of miles ",
+      "asr": "Above the water, since it's a crust of ice tens, o",
+      "wer": 0.917,
+      "overlap_sec": 2.5
+    },
+    {
+      "ref_start": "00:01:54,864 ",
+      "ref_end": " 00:01:58,015",
+      "ref": "Enceladus, at Saturn, is smaller but follows the s",
+      "asr": "and celadus at Saturn, is smaller but follows the ",
+      "wer": 0.9,
+      "overlap_sec": 3.2
+    },
+    {
+      "ref_start": "00:01:27,026 ",
+      "ref_end": " 00:01:31,877",
+      "ref": "The water below is the striking part: more than tw",
+      "asr": "More than twice, the volume of every ocean on Eart",
+      "wer": 0.882,
+      "overlap_sec": 2.4
+    },
+    {
+      "ref_start": "00:02:20,793 ",
+      "ref_end": " 00:02:24,484",
+      "ref": "An ocean with more water than ours, and no way for",
+      "asr": "An ocean with no shores, roofed by ice, warmed fro",
+      "wer": 0.875,
+      "overlap_sec": 1.5
+    },
+    {
+      "ref_start": "00:02:44,204 ",
+      "ref_end": " 00:02:49,612",
+      "ref": "Does a smaller world keep its ocean as easily? Tha",
+      "asr": "Ice, water, and rasa smaller world keep its ocean ",
+      "wer": 0.789,
+      "overlap_sec": 3.1
+    },
+    {
+      "ref_start": "00:02:16,133 ",
+      "ref_end": " 00:02:20,793",
+      "ref": "Keep the image in your head: an ocean with no shor",
+      "asr": "An ocean with no shores, roofed by ice, warmed fro",
+      "wer": 0.765,
+      "overlap_sec": 3.2
+    },
+    {
+      "ref_start": "00:02:26,591 ",
+      "ref_end": " 00:02:30,590",
+      "ref": "If you poured Earth's oceans into it, you would st",
+      "asr": "poured earth's oceans into it.",
+      "wer": 0.75,
+      "overlap_sec": 2.0
+    },
+    {
+      "ref_start": "00:01:33,419 ",
+      "ref_end": " 00:01:36,694",
+      "ref": "Volume is not the same as habitability, but it doe",
+      "asr": "Volume is not the same as habitability, but it doe",
+      "wer": 0.583,
+      "overlap_sec": 2.9
+    },
+    {
+      "ref_start": "00:01:22,355 ",
+      "ref_end": " 00:01:27,026",
+      "ref": "That ice stays frozen where it meets the water, so",
+      "asr": "So the boundary is a lid, not a shoreline.",
+      "wer": 0.5,
+      "overlap_sec": 2.1
+    },
+    {
+      "ref_start": "00:00:33,173 ",
+      "ref_end": " 00:00:39,968",
+      "ref": "Europa is not even the only one: Saturn's moon Enc",
+      "asr": "Saturn's moon, Enceladus, hides a global salty oce",
+      "wer": 0.474,
+      "overlap_sec": 4.4
+    },
+    {
+      "ref_start": "00:01:50,905 ",
+      "ref_end": " 00:01:54,864",
+      "ref": "It also drives chemistry between the ocean and the",
+      "asr": "All the way through it also drives chemistry, betw",
+      "wer": 0.462,
+      "overlap_sec": 3.9
+    },
+    {
+      "ref_start": "00:00:49,100 ",
+      "ref_end": " 00:00:55,263",
+      "ref": "This episode follows that answer outward, from a v",
+      "asr": "From event on our own sea floor, to an ocean we ha",
+      "wer": 0.429,
+      "overlap_sec": 3.4
+    },
+    {
+      "ref_start": "00:01:47,199 ",
+      "ref_end": " 00:01:50,905",
+      "ref": "Tidal heating is why the ocean is not a block of i",
+      "asr": "Hydle heating is why the ocean is not a block of i",
+      "wer": 0.375,
+      "overlap_sec": 3.2
+    },
+    {
+      "ref_start": "00:01:07,660 ",
+      "ref_end": " 00:01:12,796",
+      "ref": "Begin with the shape of the world: an ocean with n",
+      "asr": "An ocean with no shore you could walk out onto, ca",
+      "wer": 0.35,
+      "overlap_sec": 3.2
+    },
+    {
+      "ref_start": "00:00:29,078 ",
+      "ref_end": " 00:00:33,173",
+      "ref": "So the question becomes sharper: what could live i",
+      "asr": "What could live in a dark ocean sealed under ice?",
+      "wer": 0.333,
+      "overlap_sec": 2.1
+    },
+    {
+      "ref_start": "00:00:55,263 ",
+      "ref_end": " 00:01:00,715",
+      "ref": "Some of what follows is measured, and some of it i",
+      "asr": "And some of it is invented, and we will mark the d",
+      "wer": 0.3,
+      "overlap_sec": 3.4
+    },
+    {
+      "ref_start": "00:00:00,000 ",
+      "ref_end": " 00:00:03,775",
+      "ref": "Start with a simple question: could life exist in ",
+      "asr": "Could life exist in an ocean that has never seen t",
+      "wer": 0.294,
+      "overlap_sec": 3.5
+    },
+    {
+      "ref_start": "00:00:24,718 ",
+      "ref_end": " 00:00:29,078",
+      "ref": "Sunlight never reaches that water, so nothing down",
+      "asr": "Sunlight never reaches that water, so nothing down",
+      "wer": 0.214,
+      "overlap_sec": 4.0
+    },
+    {
+      "ref_start": "00:00:18,797 ",
+      "ref_end": " 00:00:24,718",
+      "ref": "It stays liquid not because of sunlight, but becau",
+      "asr": "Stays liquid not because of sunlight, but because ",
+      "wer": 0.211,
+      "overlap_sec": 5.2
+    },
+    {
+      "ref_start": "00:01:02,951 ",
+      "ref_end": " 00:01:07,660",
+      "ref": "Two of the least remarkable-looking moons in the s",
+      "asr": "Two of the least remarkable looking moons in the s",
+      "wer": 0.2,
+      "overlap_sec": 4.7
+    },
+    {
+      "ref_start": "00:00:13,632 ",
+      "ref_end": " 00:00:18,797",
+      "ref": "Yet the ocean underneath holds more than twice as ",
+      "asr": "At the ocean underneath holds more than twice as m",
+      "wer": 0.176,
+      "overlap_sec": 5.1
+    },
+    {
+      "ref_start": "00:02:12,289 ",
+      "ref_end": " 00:02:16,133",
+      "ref": "So the next thing to measure is not the size of th",
+      "asr": "So the next thing to measure is not the size of th",
+      "wer": 0.176,
+      "overlap_sec": 3.8
+    },
+    {
+      "ref_start": "00:00:08,911 ",
+      "ref_end": " 00:00:13,632",
+      "ref": "That crust is tens of miles thick, and the ocean s",
+      "asr": "At crust is tens of miles thick, and the ocean's s",
+      "wer": 0.125,
+      "overlap_sec": 4.7
+    },
+    {
+      "ref_start": "00:02:01,187 ",
+      "ref_end": " 00:02:04,138",
+      "ref": "Two moons, two oceans, both sealed away from the s",
+      "asr": "Two moons, two oceans, both sealed away from the s",
+      "wer": 0.1,
+      "overlap_sec": 2.9
+    },
+    {
+      "ref_start": "00:00:03,775 ",
+      "ref_end": " 00:00:08,911",
+      "ref": "On Jupiter's moon Europa, a global saltwater ocean",
+      "asr": "On Jupiter's moon Europa, a global ocean lies hidd",
+      "wer": 0.067,
+      "overlap_sec": 5.1
+    },
+    {
+      "ref_start": "00:01:39,638 ",
+      "ref_end": " 00:01:44,478",
+      "ref": "The heat that keeps it liquid comes from Jupiter, ",
+      "asr": "Heat that keeps it liquid comes from Jupiter, whic",
+      "wer": 0.059,
+      "overlap_sec": 4.4
+    },
+    {
+      "ref_start": "00:02:04,138 ",
+      "ref_end": " 00:02:08,000",
+      "ref": "If you wanted to design a place where life could h",
+      "asr": "You wanted to design a place where life could hide",
+      "wer": 0.059,
+      "overlap_sec": 3.7
+    },
+    {
+      "ref_start": "00:02:08,000 ",
+      "ref_end": " 00:02:12,289",
+      "ref": "But hiding is not the same as living, and for that",
+      "asr": "Hiding is not the same as living, and for that a w",
+      "wer": 0.059,
+      "overlap_sec": 4.2
+    },
+    {
+      "ref_start": "00:00:44,252 ",
+      "ref_end": " 00:00:49,100",
+      "ref": "On Earth, we already know what life can do without",
+      "asr": "On Earth, we already know what life can do without",
+      "wer": 0.056,
+      "overlap_sec": 4.4
+    },
+    {
+      "ref_start": "00:00:39,968 ",
+      "ref_end": " 00:00:44,252",
+      "ref": "Enceladus even sprays that ocean into space throug",
+      "asr": "Enceladus even sprays that ocean into space throug",
+      "wer": 0.0,
+      "overlap_sec": 3.9
+    },
+    {
+      "ref_start": "00:01:00,715 ",
+      "ref_end": " 00:01:02,951",
+      "ref": "By the end, you can decide which parts you believe",
+      "asr": "By the end, you can decide which parts you believe",
+      "wer": 0.0,
+      "overlap_sec": 2.2
+    },
+    {
+      "ref_start": "00:01:12,796 ",
+      "ref_end": " 00:01:16,162",
+      "ref": "Europa's ocean is global, which means it wraps the",
+      "asr": "Europa's ocean is global, which means it wraps the",
+      "wer": 0.0,
+      "overlap_sec": 3.3
+    },
+    {
+      "ref_start": "00:01:16,162 ",
+      "ref_end": " 00:01:19,674",
+      "ref": "There is no beach here, no coastline, no place whe",
+      "asr": "There is no beach here, no coastline, no place whe",
+      "wer": 0.0,
+      "overlap_sec": 3.4
+    },
+    {
+      "ref_start": "00:01:44,478 ",
+      "ref_end": " 00:01:47,199",
+      "ref": "That flexing bends the moon, and the bending becom",
+      "asr": "That flexing bends the moon, and the bending becom",
+      "wer": 0.0,
+      "overlap_sec": 2.7
+    }
+  ]
+}

@@ -15,6 +15,8 @@ type HeroTitleProps = {
   textColor?: string;
   /** Subtitle color. */
   subtitleColor?: string;
+  /** Font family. Pass the theme's heading font; falls back to Space Grotesk. */
+  fontFamily?: string;
   /**
    * Scrim painted behind the title so it separates from whatever is underneath.
    * Defaults to a dark wash; a light theme must pass a light one, otherwise the
@@ -32,13 +34,26 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
   accentColor = "#22D3EE",
   textColor = "#F8FAFC",
   subtitleColor = "#A78BFA",
+  fontFamily = "Space Grotesk, Inter, system-ui, sans-serif",
   scrimBackground = DEFAULT_SCRIM,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Staggered letter-by-letter spring
-  const titleChars = title.split("");
+  // Staggered letter-by-letter spring. Words carry the global character index
+  // so the stagger timing is identical to the previous per-character layout.
+  const titleWords = (() => {
+    let cursor = 0;
+    return title.split(" ").map((word) => {
+      const entry = { word, start: cursor };
+      cursor += word.length + 1; // + the space that was consumed by the split
+      return entry;
+    });
+  })();
+  // Accent the first word. This used to be a hardcoded `i < 8`, which cuts
+  // mid-word for any first word that is not exactly eight characters long.
+  const firstSpace = title.indexOf(" ");
+  const accentChars = firstSpace === -1 ? title.length : firstSpace;
 
   return (
     <AbsoluteFill
@@ -54,7 +69,7 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
           style={{
             fontSize: 72,
             fontWeight: 800,
-            fontFamily: "Space Grotesk, Inter, system-ui, sans-serif",
+            fontFamily,
             lineHeight: 1.2,
             display: "flex",
             justifyContent: "center",
@@ -62,30 +77,41 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
             gap: 0,
           }}
         >
-          {titleChars.map((char, i) => {
-            const delay = i * 1.2;
-            const charSpring = spring({
-              frame: frame - delay,
-              fps,
-              config: { damping: 12, stiffness: 150 },
-            });
+          {titleWords.map(({ word, start }, wi) => (
+            // One flex item per word: the container wraps between items, so a
+            // long title can no longer break in the middle of a word.
+            <span
+              key={wi}
+              style={{
+                display: "inline-block",
+                whiteSpace: "nowrap",
+                marginRight: wi < titleWords.length - 1 ? "0.28em" : 0,
+              }}
+            >
+              {word.split("").map((char, ci) => {
+                const i = start + ci;
+                const charSpring = spring({
+                  frame: frame - i * 1.2,
+                  fps,
+                  config: { damping: 12, stiffness: 150 },
+                });
 
-            return (
-              <span
-                key={i}
-                style={{
-                  display: "inline-block",
-                  opacity: charSpring,
-                  transform: `translateY(${interpolate(charSpring, [0, 1], [30, 0])}px)`,
-                  color: i < 8 ? accentColor : textColor, // Accent first word
-                  whiteSpace: char === " " ? "pre" : undefined,
-                  minWidth: char === " " ? "0.3em" : undefined,
-                }}
-              >
-                {char}
-              </span>
-            );
-          })}
+                return (
+                  <span
+                    key={ci}
+                    style={{
+                      display: "inline-block",
+                      opacity: charSpring,
+                      transform: `translateY(${interpolate(charSpring, [0, 1], [30, 0])}px)`,
+                      color: i < accentChars ? accentColor : textColor,
+                    }}
+                  >
+                    {char}
+                  </span>
+                );
+              })}
+            </span>
+          ))}
         </div>
 
         {/* Subtitle */}
@@ -94,14 +120,14 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
             style={{
               marginTop: 20,
               opacity: spring({
-                frame: frame - titleChars.length * 1.2 - 5,
+                frame: frame - title.length * 1.2 - 5,
                 fps,
                 config: { damping: 20 },
               }),
               fontSize: 28,
               fontWeight: 400,
               color: subtitleColor,
-              fontFamily: "Space Grotesk, Inter, system-ui, sans-serif",
+              fontFamily,
               letterSpacing: "0.1em",
               textTransform: "uppercase",
             }}

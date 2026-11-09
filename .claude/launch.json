@@ -12,6 +12,18 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "4788", "--bind", "127.0.0.1"],
       "port": 4788
+    },
+    {
+      "name": "cooch-hf",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "4791", "--bind", "127.0.0.1", "--directory", "projects/cooch-behar-enclaves/hyperframes"],
+      "port": 4791
+    },
+    {
+      "name": "gib-hf",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "4792", "--bind", "127.0.0.1", "--directory", "projects/gibraltar-gate/hyperframes"],
+      "port": 4792
     }
   ]
 }

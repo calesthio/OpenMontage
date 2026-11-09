@@ -50,6 +50,8 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
 
+  // progress is a 0-100 percentage integer (e.g. 82 = 82%).
+  // Values on a 0-1 fraction scale are NOT supported — use 0-100 directly.
   const clampedProgress = Math.max(0, Math.min(100, progress));
 
   // Container entrance animation

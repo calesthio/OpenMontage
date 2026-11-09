@@ -179,9 +179,8 @@ def test_gemini_omni_usage_cost_prices_modalities_remainder_and_thoughts_conserv
     )
 
     # 100 input at $1.50/M, 300 text at $9/M, 800 video-rate tokens (video, audio,
-    # unclassified remainder, thoughts) at the 720p derived rate $0.07/5,792 per token.
-    video_rate = 0.07 / 5_792 * 1_000_000
-    assert cost == pytest.approx((100 * 1.5 + 300 * 9.0 + 800 * video_rate) / 1_000_000)
+    # unclassified remainder, thoughts) at the flat $12.00/M video output rate.
+    assert cost == pytest.approx((100 * 1.5 + 300 * 9.0 + 800 * 12.0) / 1_000_000)
 
 
 def test_gemini_omni_usage_cost_rejects_fractional_token_counts():
@@ -293,7 +292,7 @@ def test_gemini_omni_success_uses_provider_usage_over_short_duration_hint(
     )
 
     assert result.success, result.error
-    assert result.cost_usd == pytest.approx(0.7000105)
+    assert result.cost_usd == pytest.approx(0.6950505)
 
 
 def test_gemini_omni_malformed_usage_falls_back_conservatively(
@@ -396,7 +395,7 @@ def test_gemini_omni_download_error_preserves_recovery_data_and_cost(
         "interaction_id": "int_private",
         "store": True,
     }
-    assert result.cost_usd == pytest.approx(0.7000105)
+    assert result.cost_usd == pytest.approx(0.6950505)
     assert not output_path.exists()
 
 
@@ -425,7 +424,7 @@ def test_gemini_omni_accepted_response_without_video_preserves_usage_cost(
 
     assert not result.success
     assert result.data == {"interaction_id": "int_no_video"}
-    assert result.cost_usd == pytest.approx(0.7000105)
+    assert result.cost_usd == pytest.approx(0.6950505)
 
 
 def test_gemini_omni_resume_download_uses_get_only(monkeypatch, tmp_path, gemini_env):
@@ -834,3 +833,49 @@ def test_gemini_omni_rejects_invalid_resolution_or_duration_before_paid_call(
 
     assert not result.success
     assert calls["post"] == []
+
+
+@pytest.mark.parametrize(
+    ("resolution", "tokens_per_second", "price_per_second"),
+    [("360p", 1_931, 0.023), ("720p", 5_792, 0.07), ("1080p", 8_688, 0.104), ("4k", 17_376, 0.209)],
+)
+def test_gemini_omni_usage_cost_is_flat_rate_per_resolution(
+    monkeypatch, tmp_path, gemini_env, resolution, tokens_per_second, price_per_second
+):
+    from tools.video.gemini_omni_video import GeminiOmniVideo
+
+    video_tokens = 5 * tokens_per_second  # a 5 s clip at this resolution
+    inline = base64.b64encode(b"mp4").decode("ascii")
+    calls = _install_fake_requests(
+        monkeypatch,
+        post_responses=[
+            FakeResponse(
+                {
+                    "id": "int_res_cost",
+                    "output_video": {"data": inline},
+                    "usage": {
+                        "total_input_tokens": 0,
+                        "total_output_tokens": video_tokens,
+                        "output_tokens_by_modality": [
+                            {"modality": "video", "tokens": video_tokens}
+                        ],
+                    },
+                }
+            )
+        ],
+        get_responses=[],
+    )
+    result = GeminiOmniVideo().execute(
+        {
+            "prompt": "x",
+            "resolution": resolution,
+            "duration": "5",
+            "output_path": str(tmp_path / "res.mp4"),
+        }
+    )
+
+    assert result.success, result.error
+    assert calls["post"][0]["json"]["response_format"]["resolution"] == resolution
+    # Flat $12.00/M video tokens equals the published per-second price (rounded).
+    assert result.cost_usd == pytest.approx(video_tokens * 12.0 / 1_000_000)
+    assert result.cost_usd == pytest.approx(5 * price_per_second, rel=0.01)

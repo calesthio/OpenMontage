@@ -45,9 +45,9 @@ Route through `video_selector` for generation operations. **Editing (`edit_video
 
 ## Billing and duration hints
 
-- `duration` is only a planning/prompt hint for the caller. The adapter does not send it to Google; express timing in the prompt or timecodes, and let the model choose the actual length. It does not cap billing.
-- `ToolResult.cost_usd` uses valid response `usage` when available: input tokens are $1.50/1M for every modality, output text is $9.00/1M, and output video is $17.50/1M. Unknown/unclassified output and separately reported thought tokens use the higher $17.50/1M rate so the result cannot underreport.
-- Without valid usage, the fallback assumes the maximum 10-second output: `10 × 5,792 × $17.50/1M = $1.0136`, plus a conservative upper estimate for prompt and available media input tokens. A short `duration` hint never reduces this fallback.
+- `duration` (whole seconds, 3 to 15) is sent as `response_format.duration` (for example `"5s"`); `resolution` is `360p`, `720p` (default), `1080p` or `4k`.
+- `ToolResult.cost_usd` uses valid response `usage` when available: input tokens are $1.50/1M for every modality, output text is $9.00/1M, and output video is a flat $12.00/1M (tokens per second: 360p 1,931, 720p 5,792, 1080p 8,688, 4k 17,376). Unknown/unclassified output and separately reported thought tokens use the $12.00/1M video rate so the result cannot underreport.
+- Without valid usage, the fallback is the per-second price times `duration` (15 s when absent: 15 × $0.07 = about $1.05 at 720p), plus a conservative upper estimate for prompt and available media input tokens.
 
 ## Generation prompting
 

@@ -45,20 +45,16 @@ _SUPPORTED_RESOLUTIONS = ("360p", "720p", "1080p", "4k")
 _DEFAULT_RESOLUTION = "720p"
 # Google price page (checked 2026-11-09), USD per second of generated video.
 _PRICE_PER_SECOND_USD = {"360p": 0.023, "720p": 0.07, "1080p": 0.104, "4k": 0.209}
-# Measured 2026-11-09: a 5 s 720p clip reported 28,960 video output tokens
-# (5,792 per second). Assumed identical for other resolutions, so the per-token
-# rate below is derived from the per-second price.
+# Google bills output video at a flat $12.00 per 1M tokens; tokens per second
+# depend on resolution (360p 1,931, 720p 5,792, 1080p 8,688, 4k 17,376), which
+# yields the per-second prices above (pricing page, checked 2026-11-09).
+_OUTPUT_VIDEO_COST_PER_MILLION_TOKENS = 12.0
 _OUTPUT_VIDEO_TOKENS_PER_SECOND = 5_792
 _MIN_OUTPUT_DURATION_SECONDS = 3
 _MAX_OUTPUT_DURATION_SECONDS = 15
 _MAX_VIDEO_TOKEN_ESTIMATE = _MAX_OUTPUT_DURATION_SECONDS * _OUTPUT_VIDEO_TOKENS_PER_SECOND
 _INPUT_COST_PER_MILLION_TOKENS = 1.50
 _OUTPUT_TEXT_COST_PER_MILLION_TOKENS = 9.00
-
-
-def _video_cost_per_million_tokens(resolution: str) -> float:
-    price = _PRICE_PER_SECOND_USD.get(resolution, _PRICE_PER_SECOND_USD["4k"])
-    return price / _OUTPUT_VIDEO_TOKENS_PER_SECOND * 1_000_000
 
 
 def _parse_duration_seconds(value: Any) -> int | None:
@@ -284,8 +280,7 @@ class GeminiOmniVideo(BaseTool):
         )
 
     @staticmethod
-    def _cost_from_usage(usage: Any, resolution: str = _DEFAULT_RESOLUTION) -> float | None:
-        video_rate = _video_cost_per_million_tokens(resolution)
+    def _cost_from_usage(usage: Any) -> float | None:
         if not isinstance(usage, dict):
             return None
 
@@ -322,7 +317,7 @@ class GeminiOmniVideo(BaseTool):
         output_cost = 0.0
         breakdown = usage.get("output_tokens_by_modality")
         if breakdown is None:
-            output_cost = output_tokens * video_rate
+            output_cost = output_tokens * _OUTPUT_VIDEO_COST_PER_MILLION_TOKENS
         else:
             if not isinstance(breakdown, list):
                 return None
@@ -341,19 +336,19 @@ class GeminiOmniVideo(BaseTool):
                 rate = (
                     _OUTPUT_TEXT_COST_PER_MILLION_TOKENS
                     if item["modality"].strip().lower() == "text"
-                    else video_rate
+                    else _OUTPUT_VIDEO_COST_PER_MILLION_TOKENS
                 )
                 output_cost += count * rate
             if classified_tokens > output_tokens:
                 return None
             output_cost += (
                 output_tokens - classified_tokens
-            ) * video_rate
+            ) * _OUTPUT_VIDEO_COST_PER_MILLION_TOKENS
 
         return (
             input_tokens * _INPUT_COST_PER_MILLION_TOKENS
             + output_cost
-            + thought_tokens * video_rate
+            + thought_tokens * _OUTPUT_VIDEO_COST_PER_MILLION_TOKENS
         ) / 1_000_000
 
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
@@ -603,7 +598,9 @@ class GeminiOmniVideo(BaseTool):
             # Plain string for text-only turns (the documented minimal form),
             # typed parts when images or an uploaded video ride along.
             "input": prompt if not parts else parts + [{"type": "text", "text": prompt}],
-            # uri delivery avoids the ~4MB inline-payload ceiling; inline data in
+            # delivery "uri" is documented for gemini-omni-1.2-flash
+            # (ai.google.dev/gemini-api/docs/omni, "Retrieving videos with an URI"):
+            # Google-hosted URI, poll until ACTIVE. It avoids the ~4MB inline-payload ceiling; inline data in
             # the response is still handled below if the API returns it anyway.
             "response_format": {
                 "type": "video",
@@ -658,7 +655,7 @@ class GeminiOmniVideo(BaseTool):
             interaction_id = data.get("id")
             video = self._extract_output_video(data)
             if not video:
-                usage_cost = self._cost_from_usage(usage, resolution)
+                usage_cost = self._cost_from_usage(usage)
                 return ToolResult(
                     success=False,
                     data={"interaction_id": interaction_id} if interaction_id else {},
@@ -694,7 +691,7 @@ class GeminiOmniVideo(BaseTool):
                         "resume_download": resume_download,
                     }
                 )
-            usage_cost = self._cost_from_usage(usage, resolution)
+            usage_cost = self._cost_from_usage(usage)
             return ToolResult(
                 success=False,
                 data=failure_data,
@@ -707,7 +704,7 @@ class GeminiOmniVideo(BaseTool):
             )
 
         editable = inputs.get("store") is not False
-        usage_cost = self._cost_from_usage(usage, resolution)
+        usage_cost = self._cost_from_usage(usage)
         return ToolResult(
             success=True,
             data={

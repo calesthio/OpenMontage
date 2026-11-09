@@ -1,0 +1,248 @@
+[
+  {
+    "scene_id": "S001",
+    "dur": 1.9,
+    "motion": "pan",
+    "asset": "work/v12/assets/text_cards/S001.png"
+  },
+  {
+    "scene_id": "S002",
+    "dur": 1.9,
+    "motion": "lateral_drift",
+    "asset": "work/v12/assets/text_cards/S002.png"
+  },
+  {
+    "scene_id": "S003",
+    "dur": 3.533,
+    "motion": "slow_zoom",
+    "asset": "projects/pilot/first_video/footage/archival/S002.jpg"
+  },
+  {
+    "scene_id": "S004",
+    "dur": 3.533,
+    "motion": "slow_zoom",
+    "asset": "projects/pilot/first_video/footage/archival/S003.jpg"
+  },
+  {
+    "scene_id": "S005",
+    "dur": 3.533,
+    "motion": "pan",
+    "asset": "projects/pilot/first_video/footage/archival/S004.jpg"
+  },
+  {
+    "scene_id": "S006",
+    "dur": 3.533,
+    "motion": "lateral_drift",
+    "asset": "projects/pilot/first_video/footage/archival/S005.jpg"
+  },
+  {
+    "scene_id": "S007",
+    "dur": 4.0,
+    "motion": "slow_zoom",
+    "asset": "work/v12/assets/text_cards/S007.png"
+  },
+  {
+    "scene_id": "S008",
+    "dur": 4.0,
+    "motion": "slow_zoom",
+    "asset": "work/v12/assets/text_cards/S008.png"
+  },
+  {
+    "scene_id": "S009",
+    "dur": 2.867,
+    "motion": "pan",
+    "asset": "docs/openmontage/slice/europa/diagrams/europa_ice_shell.png"
+  },
+  {
+    "scene_id": "S010",
+    "dur": 2.867,
+    "motion": "lateral_drift",
+    "asset": "docs/openmontage/slice/europa/diagrams/europa_ice_shell.png"
+  },
+  {
+    "scene_id": "S011",
+    "dur": 2.867,
+    "motion": "slow_zoom",
+    "asset": "docs/openmontage/slice/europa/diagrams/europa_ice_shell.png"
+  },
+  {
+    "scene_id": "S012",
+    "dur": 2.867,
+    "motion": "slow_zoom",
+    "asset": "docs/openmontage/slice/europa/diagrams/europa_ice_shell.png"
+  },
+  {
+    "scene_id": "S013",
+    "dur": 2.867,
+    "motion": "pan",
+    "asset": "docs/openmontage/slice/europa/diagrams/europa_ice_shell.png"
+  },
+  {
+    "scene_id": "S014",
+    "dur": 2.867,
+    "motion": "lateral_drift",
+    "asset": "docs/openmontage/slice/europa/diagrams/europa_ice_shell.png"
+  },
+  {
+    "scene_id": "S015",
+    "dur": 4.0,
+    "motion": "slow_zoom",
+    "asset": "docs/openmontage/slice/europa/diagrams/enceladus_plume.png"
+  },
+  {
+    "scene_id": "S016",
+    "dur": 4.0,
+    "motion": "slow_zoom",
+    "asset": "docs/openmontage/slice/europa/diagrams/enceladus_plume.png"
+  },
+  {
+    "scene_id": "S017",
+    "dur": 4.0,
+    "motion": "pan",
+    "asset": "docs/openmontage/slice/europa/diagrams/enceladus_plume.png"
+  },
+  {
+    "scene_id": "S018",
+    "dur": 4.0,
+    "motion": "lateral_drift",
+    "asset": "docs/openmontage/slice/europa/diagrams/enceladus_plume.png"
+  },
+  {
+    "scene_id": "S019",
+    "dur": 3.867,
+    "motion": "slow_zoom",
+    "asset": "projects/pilot/first_video/footage/archival/S006.jpg"
+  },
+  {
+    "scene_id": "S020",
+    "dur": 3.867,
+    "motion": "slow_zoom",
+    "asset": "projects/pilot/first_video/footage/archival/S007.jpg"
+  },
+  {
+    "scene_id": "S021",
+    "dur": 3.867,
+    "motion": "pan",
+    "asset": "projects/pilot/first_video/footage/archival/S008.jpg"
+  },
+  {
+    "scene_id": "S022",
+    "dur": 3.367,
+    "motion": "lateral_drift",
+    "asset": "docs/openmontage/slice/europa/diagrams/hydrothermal_vent.png"
+  },
+  {
+    "scene_id": "S023",
+    "dur": 3.367,
+    "motion": "slow_zoom",
+    "asset": "docs/openmontage/slice/europa/diagrams/hydrothermal_vent.png"
+  },
+  {
+    "scene_id": "S024",
+    "dur": 3.367,
+    "motion": "slow_zoom",
+    "asset": "docs/openmontage/slice/europa/diagrams/hydrothermal_vent.png"
+  },
+  {
+    "scene_id": "S025",
+    "dur": 3.367,
+    "motion": "pan",
+    "asset": "docs/openmontage/slice/europa/diagrams/hydrothermal_vent.png"
+  },
+  {
+    "scene_id": "S026",
+    "dur": 3.167,
+    "motion": "lateral_drift",
+    "asset": "projects/pilot/first_video/footage/archival/S009.jpg"
+  },
+  {
+    "scene_id": "S027",
+    "dur": 3.167,
+    "motion": "slow_zoom",
+    "asset": "projects/pilot/first_video/footage/archival/S010.jpg"
+  },
+  {
+    "scene_id": "S028",
+    "dur": 3.167,
+    "motion": "slow_zoom",
+    "asset": "projects/pilot/first_video/footage/archival/S011.jpg"
+  },
+  {
+    "scene_id": "S029",
+    "dur": 3.167,
+    "motion": "pan",
+    "asset": "projects/pilot/first_video/footage/archival/S012.jpg"
+  },
+  {
+    "scene_id": "S030",
+    "dur": 3.167,
+    "motion": "lateral_drift",
+    "asset": "projects/pilot/first_video/footage/archival/S013.jpg"
+  },
+  {
+    "scene_id": "S031",
+    "dur": 3.167,
+    "motion": "slow_zoom",
+    "asset": "projects/pilot/first_video/footage/archival/S014.jpg"
+  },
+  {
+    "scene_id": "S032",
+    "dur": 3.033,
+    "motion": "slow_zoom",
+    "asset": "projects/pilot/first_video/footage/archival/S016.jpg"
+  },
+  {
+    "scene_id": "S033",
+    "dur": 3.033,
+    "motion": "pan",
+    "asset": "projects/pilot/first_video/footage/archival/S018.jpg"
+  },
+  {
+    "scene_id": "S034",
+    "dur": 3.033,
+    "motion": "lateral_drift",
+    "asset": "projects/pilot/first_video/footage/archival/S019.jpg"
+  },
+  {
+    "scene_id": "S035",
+    "dur": 3.033,
+    "motion": "slow_zoom",
+    "asset": "work/v12/assets/text_cards/S035.png"
+  },
+  {
+    "scene_id": "S036",
+    "dur": 3.033,
+    "motion": "slow_zoom",
+    "asset": "work/v12/assets/text_cards/S036.png"
+  },
+  {
+    "scene_id": "S037",
+    "dur": 3.033,
+    "motion": "pan",
+    "asset": "work/v12/assets/text_cards/S037.png"
+  },
+  {
+    "scene_id": "S038",
+    "dur": 3.033,
+    "motion": "lateral_drift",
+    "asset": "work/v12/assets/text_cards/S038.png"
+  },
+  {
+    "scene_id": "S039",
+    "dur": 2.8,
+    "motion": "slow_zoom",
+    "asset": "work/v12/assets/text_cards/S039.png"
+  },
+  {
+    "scene_id": "S040",
+    "dur": 2.8,
+    "motion": "slow_zoom",
+    "asset": "work/v12/assets/text_cards/S040.png"
+  },
+  {
+    "scene_id": "S041",
+    "dur": 2.8,
+    "motion": "pan",
+    "asset": "work/v12/assets/text_cards/S041.png"
+  }
+]

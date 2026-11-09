@@ -6,6 +6,11 @@ BASE_PYTHON ?= $(shell command -v python$(PYTHON_VERSION) 2>/dev/null || command
 # misreport a perfectly good interpreter as a missing one.
 RUN_PYTHON = $(shell for dir in "$$VIRTUAL_ENV" "$$CONDA_PREFIX" "$(VENV_DIR)"; do if [ -n "$$dir" ] && [ -x "$$dir/bin/python" ]; then printf "%s/bin/python" "$$dir"; exit 0; elif [ -n "$$dir" ] && [ -x "$$dir/Scripts/python.exe" ]; then printf "%s/Scripts/python.exe" "$$dir"; exit 0; fi; done; if [ "$(OS)" = "Windows_NT" ]; then printf "%s/Scripts/python.exe" "$(VENV_DIR)"; else printf "%s/bin/python" "$(VENV_DIR)"; fi)
 PIP = "$(RUN_PYTHON)" -m pip
+# Put the selected environment's bin dir on PATH so tool discovery (shutil.which)
+# finds CLI deps such as piper installed there, even when the venv is not
+# activated. Resolved in sh, not with $(dir)/$(abspath): those make functions
+# split on whitespace and break when the checkout path contains spaces.
+RUN_ENV_PATH = PATH="$$(cd "$$(dirname "$(RUN_PYTHON)")" && pwd):$$PATH"
 
 .DEFAULT_GOAL := setup
 
@@ -106,7 +111,7 @@ test-contracts: ensure-venv
 # ---- Utilities ----
 
 preflight: ensure-venv
-	"$(RUN_PYTHON)" -c "from tools.tool_registry import registry; import json; registry.discover(); print(json.dumps(registry.provider_menu(), indent=2))"
+	$(RUN_ENV_PATH) "$(RUN_PYTHON)" -c "from tools.tool_registry import registry; import json; registry.discover(); print(json.dumps(registry.provider_menu(), indent=2))"
 
 hyperframes-doctor: ensure-venv
 	@echo "==> Probing HyperFrames runtime (node/ffmpeg/npx + hyperframes doctor)..."
@@ -122,7 +127,7 @@ demo: ensure-venv
 	@echo "==> Rendering zero-key demo videos (no API keys needed)..."
 	@echo "    These use only Remotion components — animated charts, text, data viz."
 	@echo ""
-	"$(RUN_PYTHON)" render_demo.py
+	$(RUN_ENV_PATH) "$(RUN_PYTHON)" render_demo.py
 
 demo-list: ensure-venv
 	"$(RUN_PYTHON)" render_demo.py --list

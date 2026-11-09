@@ -1,6 +1,6 @@
 ---
 name: 3d-asset-generation
-description: Generate, reconstruct, inspect, and route production 3D assets for OpenMontage worlds using Atlas Cloud, fal.ai, licensed catalogs, and Blender.
+description: Generate, reconstruct, inspect, and route production 3D assets for OpenMontage worlds using Atlas Cloud, fal.ai, Tencent Hunyuan Cloud, licensed catalogs, and Blender.
 ---
 
 # 3D Asset Generation
@@ -17,6 +17,7 @@ this skill owns how unique and repeated meshes enter the world with provenance.
 | Unique object described in words | `atlas_3d` | `tripo-h3.1/text-to-3d` | Direct textured/PBR GLB with seeds and face limit |
 | Object matching a concept image | `fal_3d` | Hunyuan 3D v3.1 Rapid image-to-3D | Better silhouette/style conditioning from one image |
 | Several objects extracted from one regional composition | `fal_3d` | SAM 3D Objects | Individual and combined GLBs plus placement metadata |
+| Chinese-prompt text/image/multi-view hero asset, first-party Tencent quota | `hunyuan_cloud_3d` | `hy-3d-3.1` (TokenHub) | Text, image, or up to eight multi-view images; PBR, face count, white-model geometry; Bearer-token auth shared with `hunyuan_cloud_video` |
 | Terrain, composition, lighting, camera, final frames | `blender_world` | Blender 4.5 LTS / Eevee Next | Scene-level control; generated-asset APIs are not world renderers |
 
 Never ask a text-to-3D model to generate a whole cinematic world in one mesh.
@@ -33,8 +34,29 @@ a batch. As of 2026-08-13:
   textures; detailed geometry adds $0.22; quad mesh adds $0.055.
 - fal Hunyuan 3D v3.1 Rapid: $0.225 per generation; PBR adds $0.15.
 - fal SAM 3D Objects: $0.02 per reconstruction.
+- Tencent Hunyuan Cloud `hy-3d-3.1` (TokenHub): ~$0.33 per Normal generation;
+  Geometry white model ~$0.25; PBR/multi-view/face-count add ~$0.17 each.
 
 Pricing changes. Confirm the provider page before quoting or running a batch.
+
+### Hunyuan Cloud 3D specifics
+
+`hunyuan_cloud_3d` targets the first-party Tencent TokenHub gateway
+(`tokenhub.tencentmaas.com/v1/api/3d/*`), not a reseller. Same
+`TENCENT_TOKENHUB_API_KEY` as `hunyuan_cloud_video` and `hunyuan_image`.
+Only model `hy-3d-3.1` is exposed. Operations:
+
+- `text_to_3d` — prompt only, max 1024 UTF-8 characters, Chinese-friendly.
+- `image_to_3d` — one front-view image (`image_url` or local `image_path`),
+  optionally plus up to seven `multi_view_images` (`left`, `right`, `back`,
+  `top`, `bottom`, `left_front`, `right_front`), one image per view; encoded
+  total must stay under 8MB. Prompt and image are mutually exclusive.
+
+`generate_type` accepts `Normal` (textured) and `Geometry` (untextured
+white model). `LowPoly` and `Sketch` are 3.0-only and rejected by the tool.
+`result_format` may add one of STL/USDZ/FBX; OBJ and GLB always come back
+(GLBs are preferred for scene assembly). There is no seed support — treat
+output as stochastic and record the returned `job_id` in provenance.
 
 ## Asset prompt contract
 

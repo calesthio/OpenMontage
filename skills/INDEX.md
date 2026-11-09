@@ -61,7 +61,7 @@ Key capability families to look for in the output:
 | `character_animation` | — | Local character specs, SVG rigs, pose libraries, action timelines, previews, and QA |
 | `3d_world_generation` | — | Local semantic terrain, procedural scattering, explicit landmarks, diagnostics, and HyperFrames/Three.js fly-through workspaces |
 | `3d_asset_acquisition` | — | Rights-safe local GLTF/GLB catalogs and provenance |
-| `3d_asset_generation` | — | Atlas/fal textured mesh generation and reconstruction for unique scene assets |
+| `3d_asset_generation` | — | Atlas/fal/Tencent Hunyuan textured mesh generation and reconstruction for unique scene assets |
 | `3d_world_rendering` | — | Blender assembly and production rendering of detailed worlds |
 | `graphics` | — | Local rendering tools |
 | `music_library` | — | Discovers user-provided local tracks |

@@ -138,7 +138,10 @@ class ScreenCaptureSelector(BaseTool):
 
     @property
     def fallback_tools(self) -> list[str]:
-        return list(self._providers().keys())
+        # Tool names, not the provider keys `_providers()` is indexed by:
+        # registry.find_fallback() resolves these through registry.get(),
+        # which is keyed by tool name. This matches tts/image/video_selector.
+        return [t.name for t in self._providers().values()]
 
     def get_status(self) -> ToolStatus:
         providers = self._providers()

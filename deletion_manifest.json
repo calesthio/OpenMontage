@@ -1,0 +1,167 @@
+{
+  "deletion_manifest": [
+    {
+      "path": "/workspaces/OpenMontage/**/__pycache__",
+      "reason": "Python bytecode cache, regenerable",
+      "size_before": "unknown",
+      "sha256": null,
+      "approved_by": "user_instruction_S2_step2"
+    },
+    {
+      "path": "/workspaces/OpenMontage/.pytest_cache",
+      "reason": "pytest cache, regenerable",
+      "size_before": "unknown",
+      "sha256": null,
+      "approved_by": "user_instruction_S2_step2"
+    },
+    {
+      "path": "/home/vscode/.cache/pip",
+      "reason": "pip download cache, regenerable",
+      "size_before": "120M",
+      "sha256": null,
+      "approved_by": "user_instruction_S2_step2"
+    },
+    {
+      "path": "/var/cache/apt",
+      "reason": "apt package cache, regenerable",
+      "size_before": "48K",
+      "sha256": null,
+      "approved_by": "user_instruction_S2_step2"
+    },
+    {
+      "path": "/home/vscode/.cache/kilo/packages",
+      "reason": "kilo package cache, not in protected list (huggingface/torch/kokoro/piper/gflow/browser binaries)",
+      "size_before": "915M",
+      "sha256": null,
+      "approved_by": "user_instruction_S2_step2"
+    },
+    {
+      "path": "/home/vscode/.cache/go-build",
+      "reason": "Go build cache, regenerable",
+      "size_before": "241M",
+      "sha256": null,
+      "approved_by": "user_instruction_S2_step2"
+    },
+    {
+      "path": "/home/vscode/.cache/browseruse",
+      "reason": "small browser-use cache, regenerable",
+      "size_before": "16M",
+      "sha256": null,
+      "approved_by": "user_instruction_S2_step2"
+    },
+    {
+      "path": "/home/vscode/.cache/mesa_shader_cache_db",
+      "reason": "Mesa shader cache, regenerable",
+      "size_before": "2.1M",
+      "sha256": null,
+      "approved_by": "user_instruction_S2_step2"
+    },
+    {
+      "path": "/home/vscode/.cache/gstreamer-1.0",
+      "reason": "GStreamer cache, regenerable",
+      "size_before": "1.1M",
+      "sha256": null,
+      "approved_by": "user_instruction_S2_step2"
+    },
+    {
+      "path": "/home/vscode/.cache/fontconfig",
+      "reason": "fontconfig cache, regenerable",
+      "size_before": "660K",
+      "sha256": null,
+      "approved_by": "user_instruction_S2_step2"
+    },
+    {
+      "path": "/home/vscode/.cache/google-chrome-headless",
+      "reason": "Chrome headless cache, regenerable",
+      "size_before": "540K",
+      "sha256": null,
+      "approved_by": "user_instruction_S2_step2"
+    },
+    {
+      "path": "/home/vscode/.cache/copilot",
+      "reason": "Copilot cache, regenerable",
+      "size_before": "120K",
+      "sha256": null,
+      "approved_by": "user_instruction_S2_step2"
+    },
+    {
+      "path": "/home/vscode/.cache/Microsoft",
+      "reason": "Microsoft cache, regenerable",
+      "size_before": "112K",
+      "sha256": null,
+      "approved_by": "user_instruction_S2_step2"
+    },
+    {
+      "path": "/home/vscode/.cache/yarn",
+      "reason": "Yarn cache, regenerable",
+      "size_before": "12K",
+      "sha256": null,
+      "approved_by": "user_instruction_S2_step2"
+    },
+    {
+      "path": "/home/vscode/.cache/openbox",
+      "reason": "Openbox cache, regenerable",
+      "size_before": "12K",
+      "sha256": null,
+      "approved_by": "user_instruction_S2_step2"
+    },
+    {
+      "path": "/home/vscode/.cache/opencode",
+      "reason": "OpenCode cache, regenerable",
+      "size_before": "8K",
+      "sha256": null,
+      "approved_by": "user_instruction_S2_step2"
+    },
+    {
+      "path": "/tmp/kilo/motion_bench",
+      "reason": "Temporary motion_score benchmark files, test artifacts only",
+      "size_before": "unknown",
+      "sha256": null,
+      "approved_by": "user_instruction_S2_step2"
+    },
+    {
+      "path": "/tmp/kilo/fake_out.png",
+      "reason": "Temporary test output, 16 bytes",
+      "size_before": "16 bytes",
+      "sha256": null,
+      "approved_by": "user_instruction_S2_step2"
+    },
+    {
+      "path": "/tmp/kilo/lib_full.log",
+      "reason": "Temporary test log",
+      "size_before": "1871 bytes",
+      "sha256": null,
+      "approved_by": "user_instruction_S2_step2"
+    },
+    {
+      "path": "/tmp/kilo/pytest_lib.log",
+      "reason": "Temporary test log",
+      "size_before": "725 bytes",
+      "sha256": null,
+      "approved_by": "user_instruction_S2_step2"
+    },
+    {
+      "path": "/tmp/kilo/security-audit",
+      "reason": "Temporary security audit directory",
+      "size_before": "unknown",
+      "sha256": null,
+      "approved_by": "user_instruction_S2_step2"
+    }
+  ],
+  "protected_not_deleted": [
+    "/home/vscode/.cache/huggingface",
+    "/home/vscode/.cache/ms-playwright",
+    "/home/vscode/.cache/huggingface/...",
+    "~/.git history",
+    "~/.npm",
+    "venv",
+    "model weights",
+    "gflow data",
+    "assets/music",
+    "backups/"
+  ],
+  "not_found_not_backed_up": [
+    "/tmp/kilo/docs_openmontage_slice.tar.gz",
+    "/tmp/kilo/final_v7_backup.mp4"
+  ]
+}

@@ -1,0 +1,255 @@
+openapi: 3.1.0
+info:
+  title: OpenMontage GPT Gateway
+  version: 0.1.0
+  description: Control an OpenMontage installation from a Custom GPT while preserving the native OpenMontage pipeline and approval model.
+servers:
+  - url: https://YOUR-OPENMONTAGE-DOMAIN.example.com
+components:
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  schemas:
+    ToolRequest:
+      type: object
+      required: [project_id, inputs]
+      properties:
+        project_id:
+          type: string
+        inputs:
+          type: object
+          additionalProperties: true
+        allow_paid:
+          type: boolean
+          default: false
+        allow_side_effects:
+          type: boolean
+          default: false
+security:
+  - apiKey: []
+paths:
+  /health:
+    get:
+      operationId: health
+      security: []
+      responses:
+        '200':
+          description: Gateway health
+  /api/v1/instructions/core:
+    get:
+      operationId: getCoreInstructions
+      responses:
+        '200':
+          description: OpenMontage agent contract and architecture
+  /api/v1/pipelines:
+    get:
+      operationId: listPipelines
+      responses:
+        '200':
+          description: Available OpenMontage pipelines
+  /api/v1/pipelines/{pipeline_name}:
+    get:
+      operationId: getPipeline
+      parameters:
+        - in: path
+          name: pipeline_name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pipeline manifest and ordered stages
+  /api/v1/pipelines/{pipeline_name}/stages/{stage_name}/instructions:
+    get:
+      operationId: getStageInstructions
+      parameters:
+        - in: path
+          name: pipeline_name
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: stage_name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stage director instructions
+  /api/v1/capabilities/summary:
+    get:
+      operationId: getCapabilitiesSummary
+      responses:
+        '200':
+          description: Live provider, tool and composition-runtime capability summary
+  /api/v1/tools/{tool_name}:
+    get:
+      operationId: getToolInfo
+      parameters:
+        - in: path
+          name: tool_name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OpenMontage tool contract and input/output schemas
+  /api/v1/projects:
+    post:
+      operationId: createProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [project_id, title, pipeline_type]
+              properties:
+                project_id:
+                  type: string
+                title:
+                  type: string
+                pipeline_type:
+                  type: string
+                style_playbook:
+                  type: [string, 'null']
+      responses:
+        '200':
+          description: Project initialized
+  /api/v1/projects/{project_id}/state:
+    get:
+      operationId: getProjectState
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current project state, checkpoint and next stage
+  /api/v1/tools/{tool_name}/dry-run:
+    post:
+      operationId: dryRunTool
+      parameters:
+        - in: path
+          name: tool_name
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToolRequest'
+      responses:
+        '200':
+          description: Tool status, estimated cost and estimated runtime
+  /api/v1/tools/{tool_name}/execute:
+    post:
+      operationId: executeTool
+      parameters:
+        - in: path
+          name: tool_name
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToolRequest'
+      responses:
+        '200':
+          description: Native OpenMontage ToolResult
+        '409':
+          description: Explicit user approval is required before this call may execute
+  /api/v1/projects/{project_id}/checkpoint:
+    post:
+      operationId: writeCheckpoint
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [stage, status, artifacts]
+              properties:
+                stage:
+                  type: string
+                status:
+                  type: string
+                artifacts:
+                  type: object
+                  additionalProperties: true
+                pipeline_type:
+                  type: [string, 'null']
+                style_playbook:
+                  type: [string, 'null']
+                checkpoint_policy:
+                  type: string
+                  default: guided
+                human_approval_required:
+                  type: boolean
+                  default: false
+                human_approved:
+                  type: boolean
+                  default: false
+                review:
+                  type: [object, 'null']
+                  additionalProperties: true
+                cost_snapshot:
+                  type: [object, 'null']
+                  additionalProperties: true
+                error:
+                  type: [string, 'null']
+                metadata:
+                  type: [object, 'null']
+                  additionalProperties: true
+      responses:
+        '200':
+          description: Native OpenMontage checkpoint written
+  /api/v1/projects/{project_id}/artifacts/{artifact_name}:
+    get:
+      operationId: getArtifact
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: artifact_name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Project artifact content
+  /api/v1/projects/{project_id}/render:
+    get:
+      operationId: getFinalRender
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Final rendered MP4
+          content:
+            video/mp4:
+              schema:
+                type: string
+                format: binary

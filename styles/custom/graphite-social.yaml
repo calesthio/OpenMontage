@@ -1,0 +1,103 @@
+# Graphite Social: monochrome editorial social reels. Distilled from 7 vertical talking-point reels (9:16).
+identity:
+  name: "Graphite Social"
+  category: motion-graphics
+  mood: editorial, calm-confident, premium, thought-leader
+  pace: moderate
+  best_for: "9:16 Instagram/TikTok reels for brands, coaches and agencies: one opinion, hook -> problem -> truth -> CTA, text-led with no voiceover"
+
+taste_profile:
+  design_read: "A magazine page that reads itself to you: word-by-word captions in mixed serif-italic and grotesk, floating grayscale 3D objects and cut-out people on an off-white field, one continuous camera."
+  visual_variance: 5
+  motion_intensity: 5
+  information_density: 4
+  palette_discipline: "Off-white field + graphite ink + mid grays. Color only arrives inside content (a phone screen, a poster) or as one red correction stroke."
+  layout_variation: "Alternate: headline + tiny body copy + barcode/sparkle ornaments -> hero object or person cut-out centered -> phone frame showing content -> sparse closing line -> chrome logo outro."
+  reference_strategy: "Build a kit of grayscale props (pill, eye, statue, pocket watch, money, ornate frame) and cut-out portraits; every beat stages one prop under one line of copy."
+  anti_patterns:
+    - "saturated backgrounds or gradients"
+    - "fast flashy cuts and glitch transitions"
+    - "full sentences appearing at once"
+    - "voiceover-led pacing; the text is the voice"
+  quality_gates:
+    - "Every key line mixes two type voices: light serif italic for the setup word, heavy grotesk for the payoff word."
+    - "Nothing hard-cuts: transitions are camera pushes with motion blur, depth-of-field racks, or a prop sweeping across frame."
+
+visual_language:
+  color_palette:
+    primary: ["#1A1A1A", "#3A3A3A"]
+    accent: ["#D7263D", "#8A8A8A"]
+    background: "#EFEFEF"
+    text: "#1A1A1A"
+    muted: "#5F5F5F"
+  composition: "Centered hero prop or cut-out portrait with generous white space; headline above, 3-4 lines of tiny justified body copy below; ornaments (barcode, 4-point sparkle, halftone dot patches, dotted selection boxes, thin loop lines) at the edges"
+  texture: "Soft studio shadows under floating objects, grayscale 3D renders, halftone dot fields, large blurred foreground shapes (blobs, asterisks, circles) for depth"
+
+typography:
+  headings:
+    font: "Instrument Serif"
+    weight: 400
+    tracking: "-0.01em"
+  body:
+    font: "Inter Tight"
+    weight: 700
+  scale_system: "golden"
+  weight_matrix:
+    title: 800
+    heading: 700
+    body: 400
+    caption: 400
+
+motion:
+  transitions: [camera-push-blur, depth-of-field-rack, prop-sweep-wipe, phone-screen-swap, fade-to-white]
+  animation_style: "Word-by-word caption reveal (each word fades/slides up 8px, 60-90ms apart, key word scales in heavier); slow continuous camera drift; props float with gentle rotation; cursor-and-selection-box UI 'types' or 'selects' words; strike-through correction in red"
+  pacing_rules:
+    min_scene_hold_seconds: 1.5
+    max_scene_hold_seconds: 5
+    text_card_hold_seconds: 2.5
+    transition_duration_seconds: 0.6
+  entrance: "word-by-word rise with opacity ramp; props drift in from a blur"
+  exit: "camera pushes past the frame into blur, revealing the next beat"
+
+audio:
+  voice_style: "calm, confident English or Arabic VO, ~2.4 words/sec, one idea per sentence; on-screen text = the VO script word for word"
+  music_mood: "none (VO + SFX only, no music)"
+  music_volume: 0
+  sfx_style: "clean, close-miked, object-true foley + soft whooshes"
+  sfx_map:
+    velocity_matched_whip: "short whoosh shaped to the move: rising on exit, falling tail on entrance (6-10 frames)"
+    spin_whip: "whoosh with slight doppler/pitch bend"
+    zoom_whip_to_white: "air suck/reverse swell into the white frame"
+    cursor_click_select: "mouse click on press + soft drag for the selection box"
+    word_reveal_payoff: "subtle low hit on the payoff word only"
+    strike_through: "marker scratch"
+    pill_capsule: "small plastic tap/rattle"
+    eye_blink_open: "soft eyelid/wet click"
+    money_flying: "paper notes flutter"
+    pocket_watch: "mechanical tick-tock"
+    ornate_frame: "wood/plaster knock"
+    phone_screen_swap: "glass tap + UI swipe"
+    slat_mask_wipe: "sliding panels, one swoosh per slat"
+    chrome_star_outro: "metallic shimmer + soft impact"
+  sfx_rules:
+    - "No music. The voiceover carries rhythm; SFX carry motion."
+    - "Every SFX is semantically matched to what moves or appears (object, material, action), never a generic hit."
+    - "SFX start on the motion's first frame (0 to -1 frame lead); their length matches the move's duration."
+    - "Whooshes follow the move's speed curve: ease-in exit = rising whoosh, ease-out entrance = falling tail."
+    - "Keep SFX under the voice: peaks around -18 to -12 dBFS, never masking a spoken word; duck SFX -6 dB inside speech."
+    - "Use silence: holds between phrases get room tone only, so the next hit lands."
+
+asset_generation:
+  image_prompt_prefix: "grayscale studio product render on off-white background, soft shadow, floating object, editorial minimal, high detail, "
+  image_negative_prompt: "color, saturated, busy background, text, gradient"
+  diagram_style: "dotted selection box with corner handles and a cursor arrow"
+  consistency_anchors:
+    - "Off-white #EFEFEF field, graphite type"
+    - "Serif-italic + heavy grotesk pairing on every key line"
+    - "Grayscale props and cut-out people only"
+    - "Outro: chrome 4-point star mark + 'Edited by' credit"
+
+quality_rules:
+  - "Structure: hook line -> problem -> 'here is the truth' -> reframe -> CTA ('Comment X below') -> logo outro"
+  - "15-30s total; 3-8 continuous shots, one idea per beat"
+  - "Body copy may be small (texture), but the headline must be readable on a phone"

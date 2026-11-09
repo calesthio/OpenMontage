@@ -1,0 +1,92 @@
+# Archive Documentary: 2.5D documentary-style animation. Distilled from 9 documentary motion references (history, biography, sport).
+identity:
+  name: "Archive Documentary"
+  category: cinematic
+  mood: cinematic, nostalgic, investigative, epic
+  pace: moderate
+  best_for: "History and biography explainers, brand origin stories, 'the story of X' YouTube videos and reels; business-documentary storytelling"
+
+taste_profile:
+  design_read: "Still images become a world: photoreal stills cut into layers and flown through in 2.5D, framed by archival props (newspapers, photo frames, maps, paper) under warm cinematic light."
+  visual_variance: 7
+  motion_intensity: 6
+  information_density: 5
+  palette_discipline: "Warm sepia/amber grade with deep shadows; one era-appropriate accent per story (gold, red, NASA orange). Never flat or evenly lit."
+  layout_variation: "Rotate: full-bleed parallax scene -> portrait on textured wall -> map with route draw -> collage of photos/newspapers dropping onto a table -> object close-up -> title card with a year."
+  reference_strategy: "Generate or source one hero still per beat, then split it into 3-5 depth layers (background, midground, subject, foreground debris) before animating."
+  anti_patterns:
+    - "flat Ken Burns on an unlayered photo"
+    - "clean vector graphics that break the archival feel"
+    - "hard cuts with no transition device"
+  quality_gates:
+    - "Every shot has at least 3 depth layers moving at different speeds."
+    - "Every transition is diegetic: push into a photo frame, a map, a TV screen, a window, or a page."
+
+visual_language:
+  color_palette:
+    primary: ["#1A1410", "#2B211A"]
+    accent: ["#E0B341", "#B3261E"]
+    background: "#1A1410"
+    text: "#F2E6D0"
+    muted: "#BFAE92"
+  composition: "Cinematic 16:9 (or 9:16 crop), subject on thirds, strong foreground occluders, vignettes, light shafts; maps and documents shot top-down on wood or paper"
+  texture: "Film grain, paper fibre, vintage photo borders, ornate gilded frames, newsprint halftone, dust and light leaks"
+
+typography:
+  headings:
+    font: "Playfair Display"
+    weight: 700
+    tracking: "0em"
+  body:
+    font: "Source Serif 4"
+    weight: 400
+  scale_system: "perfect_fourth"
+
+motion:
+  transitions: [push-into-frame, photo-frame-zoom, map-fly-to, window-pass-through, page-turn, collage-drop]
+  animation_style: "2.5D parallax camera (slow dolly 3-6%/s with subtle rotation); layered depth with foreground drift; camera flies through a picture frame or screen into the next scene; route lines draw across maps; photos and newspapers drop onto a table with soft bounce; light flicker and particles"
+  pacing_rules:
+    min_scene_hold_seconds: 2
+    max_scene_hold_seconds: 7
+    text_card_hold_seconds: 2.5
+    transition_duration_seconds: 0.9
+  entrance: "camera dolly-in from black or through a foreground occluder"
+  exit: "push into a framed object that becomes the next scene"
+
+audio:
+  voice_style: "documentary narrator, measured and curious, ~2.2 words/sec; a camera move or transition starts on each new sentence (0-1 frame)"
+  music_mood: "none (VO + SFX only, no music)"
+  music_volume: 0
+  sfx_style: "period-true foley and room tones; cinematic but restrained"
+  sfx_map:
+    parallax_dolly: "low room tone of the scene (wind, crowd, office), fading with the move"
+    push_into_frame: "air whoosh into the frame + picture-frame wood creak"
+    year_title_card: "projector click or typewriter strike"
+    map_route_draw: "pen on paper scratch, length = route draw"
+    collage_drop: "paper/photo slap per item on landing"
+    newspaper: "newsprint rustle"
+    money: "banknote flutter / coin clink"
+    scene_split_reveal: "deep stone grind / rumble"
+    tv_screen: "CRT hum + switch click"
+    flash_or_light_flicker: "electrical buzz flicker"
+  sfx_rules:
+    - "No music. The voiceover carries rhythm; SFX carry motion."
+    - "Every SFX is semantically matched to what moves or appears (object, material, action), never a generic hit."
+    - "SFX start on the motion's first frame (0 to -1 frame lead); their length matches the move's duration."
+    - "Whooshes follow the move's speed curve: ease-in exit = rising whoosh, ease-out entrance = falling tail."
+    - "Keep SFX under the voice: peaks around -18 to -12 dBFS, never masking a spoken word; duck SFX -6 dB inside speech."
+    - "Use silence: holds between phrases get room tone only, so the next hit lands."
+
+asset_generation:
+  image_prompt_prefix: "cinematic photoreal still, warm dramatic lighting, film grain, documentary style, period-accurate, shallow depth of field, "
+  image_negative_prompt: "flat lighting, cartoon, modern UI, oversaturated, text artifacts"
+  diagram_style: "vintage map with a hand-drawn route line"
+  consistency_anchors:
+    - "Warm amber grade, deep shadows, film grain"
+    - "Archival props as transition portals (frames, maps, newspapers, TV)"
+    - "3+ parallax layers per shot"
+
+quality_rules:
+  - "Open on a dated establishing shot (a year, a place) to set the era"
+  - "One clear subject per shot; text overlays are short (a year, a name, a number)"
+  - "Narration leads; visuals land on the key noun of each sentence"

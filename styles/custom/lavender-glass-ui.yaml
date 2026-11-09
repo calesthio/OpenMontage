@@ -1,0 +1,93 @@
+# Lavender Glass UI: soft 3D SaaS/app UI motion. Distilled from 4 UI/UX motion references.
+identity:
+  name: "Lavender Glass UI"
+  category: motion-graphics
+  mood: friendly, soft, premium-tech, optimistic
+  pace: moderate
+  best_for: "SaaS / app launch videos, feature highlights, App Store previews, productivity & wellness apps"
+
+taste_profile:
+  design_read: "Real UI screens living inside a soft, toy-like 3D world: glass cards, clay props, desk and bedroom dioramas."
+  visual_variance: 6
+  motion_intensity: 5
+  information_density: 4
+  palette_discipline: "Monochrome lavender family + white. One saturated purple for CTAs/checkmarks. Tiny warm accents (pink, peach) only on props."
+  layout_variation: "Alternate three shot families: (1) macro on one UI element (button, toggle, checkmark), (2) exploded floating UI cards, (3) wide hero device in a styled room/desk."
+  reference_strategy: "Design the real UI first (flat screens), then stage it in 3D; never fake UI text."
+  anti_patterns:
+    - "flat screen recordings with no depth"
+    - "dark-mode neon"
+    - "harsh shadows or hard lighting"
+    - "illegible UI copy"
+  quality_gates:
+    - "Every shot shows a real interaction (tap, check, toggle, notification arriving)."
+    - "The camera never fully stops: slow dolly/orbit even on holds."
+
+visual_language:
+  color_palette:
+    primary: ["#7C69C9", "#8E7BC1"]
+    accent: ["#5B3FE0", "#F5A3C7"]
+    background: "#EEEAF6"
+    text: "#1E1B2E"
+    muted: "#6E6790"
+  composition: "3/4 or isometric angle on devices; exploded layered cards with depth of field; desk/bedroom dioramas as hero wides; UI text always angled enough to read"
+  texture: "Frosted glass (backdrop blur + inner highlight), soft clay/plastic props, subsurface glow, soft global illumination, gentle DOF"
+
+typography:
+  headings:
+    font: "Plus Jakarta Sans"
+    weight: 600
+    tracking: "-0.01em"
+  body:
+    font: "Inter"
+    weight: 400
+  scale_system: "major_third"
+
+motion:
+  transitions: [camera-push-through, card-stack-flip, match-cut-on-ui-element, soft-zoom-blur]
+  animation_style: "Springy but soft (stiffness ~120, damping ~18); staggered card entrances 60-90ms apart; continuous slow camera orbit/dolly; checkmark pop with 1.15 scale overshoot"
+  pacing_rules:
+    min_scene_hold_seconds: 1.5
+    max_scene_hold_seconds: 4
+    text_card_hold_seconds: 2
+    transition_duration_seconds: 0.5
+  entrance: "cards fly in on Z with stagger and slight rotation, settle on a spring"
+  exit: "camera pushes through the UI into the next scene"
+
+audio:
+  voice_style: "warm, friendly product VO, short sentences, 2.2-2.6 words/sec"
+  music_mood: "none (VO + SFX only, no music)"
+  music_volume: 0
+  sfx_style: "soft, rounded, glassy UI sounds; nothing harsh"
+  sfx_map:
+    button_tap: "soft rounded click"
+    checkmark_pop: "bubbly pop + tiny glass chime"
+    notification_drop_in: "gentle two-note notification"
+    card_fly_in_stagger: "soft whoosh per card, staggered with the cards"
+    card_flip: "paper-light flip swish"
+    toggle_switch: "clean tactile toggle"
+    camera_push_through: "airy whoosh that rises into the cut"
+    typing: "light keyboard ticks synced to characters"
+    success_state: "small bright chime"
+  sfx_rules:
+    - "No music. The voiceover carries rhythm; SFX carry motion."
+    - "Every SFX is semantically matched to what moves or appears (object, material, action), never a generic hit."
+    - "SFX start on the motion's first frame (0 to -1 frame lead); their length matches the move's duration."
+    - "Whooshes follow the move's speed curve: ease-in exit = rising whoosh, ease-out entrance = falling tail."
+    - "Keep SFX under the voice: peaks around -18 to -12 dBFS, never masking a spoken word; duck SFX -6 dB inside speech."
+    - "Use silence: holds between phrases get room tone only, so the next hit lands."
+
+asset_generation:
+  image_prompt_prefix: "soft 3D render, lavender and white palette, frosted glass UI cards floating, clay-style props, soft studio lighting, shallow depth of field, "
+  image_negative_prompt: "dark, neon, harsh shadow, realistic clutter, gibberish text"
+  diagram_style: "glass UI card with real labels"
+  consistency_anchors:
+    - "Lavender + white world"
+    - "Same app UI across all shots"
+    - "Hero device: phone or tablet on a styled desk"
+    - "Checkmark / CTA in saturated purple"
+
+quality_rules:
+  - "Three shot families repeat in a loop: macro element -> exploded cards -> hero room"
+  - "The tagline lands over the exploded-cards shot (e.g. 'Make every task fit into your day')"
+  - "Max one line of headline on screen"

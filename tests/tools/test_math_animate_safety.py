@@ -267,3 +267,202 @@ def test_blocks_star_import_from_non_manim():
 def test_safe_scene_attribute_access_still_passes():
     # numpy/math attribute access used by the safe scene must keep passing.
     assert MathAnimate._scan_scene_code(SAFE_SCENE) == []
+
+
+# --- Follow-ups to the PR #865 review (Copilot, 2026-11-05; calesthio,
+# 2026-11-07): the first version of the fix only matched the blocked
+# module's literal attribute spelling (`zipfile.os`) and only tracked plain
+# Name rebinding, so renamed re-exports (`random._os` is the real `os`
+# module) and alias forms (attribute, tuple-unpacking and container
+# aliases) still passed with zero violations. The scan now resolves
+# attribute chains against the real modules, so all of these are blocked.
+
+
+def test_blocks_renamed_reexport_random_os():
+    code = (
+        "from manim import *\n"
+        "import random\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        random._os.getcwd()\n"
+    )
+    violations = MathAnimate._scan_scene_code(code)
+    assert any(
+        "._os" in v and "re-exports blocked module 'os'" in v for v in violations
+    )
+
+
+def test_blocks_reexport_via_attribute_alias():
+    # Copilot: `self.z = zipfile; self.z.os.getcwd()` passed the scan.
+    code = (
+        "from manim import *\n"
+        "import zipfile\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        self.z = zipfile\n"
+        "        self.z.os.getcwd()\n"
+    )
+    assert "imported module attribute '.os'" in MathAnimate._scan_scene_code(code)
+
+
+def test_blocks_renamed_reexport_via_attribute_alias():
+    code = (
+        "from manim import *\n"
+        "import random\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        self.z = random\n"
+        "        self.z._os.getcwd()\n"
+    )
+    violations = MathAnimate._scan_scene_code(code)
+    assert any("re-exports blocked module 'os'" in v for v in violations)
+
+
+def test_blocks_reexport_via_tuple_unpacking():
+    # Copilot: `z, = (zipfile,); z.os.getcwd()` passed the scan.
+    code = (
+        "from manim import *\n"
+        "import zipfile\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        z, = (zipfile,)\n"
+        "        z.os.system('id')\n"
+    )
+    assert "imported module attribute '.os'" in MathAnimate._scan_scene_code(code)
+
+
+def test_blocks_renamed_reexport_via_tuple_unpacking():
+    code = (
+        "from manim import *\n"
+        "import random\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        r, = (random,)\n"
+        "        r._os.getcwd()\n"
+    )
+    violations = MathAnimate._scan_scene_code(code)
+    assert any("re-exports blocked module 'os'" in v for v in violations)
+
+
+def test_blocks_reexport_via_container():
+    # Copilot: `z = [zipfile]; z[0].os.getcwd()` passed the scan.
+    code = (
+        "from manim import *\n"
+        "import zipfile\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        z = [zipfile]\n"
+        "        z[0].os.system('id')\n"
+    )
+    assert "imported module attribute '.os'" in MathAnimate._scan_scene_code(code)
+
+
+def test_blocks_reexport_via_dict_container():
+    code = (
+        "from manim import *\n"
+        "import zipfile\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        z = {'k': zipfile}\n"
+        "        z['k'].os.system('id')\n"
+    )
+    assert "imported module attribute '.os'" in MathAnimate._scan_scene_code(code)
+
+
+def test_blocks_renamed_reexport_via_container():
+    code = (
+        "from manim import *\n"
+        "import random\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        z = [random]\n"
+        "        z[0]._os.getcwd()\n"
+    )
+    violations = MathAnimate._scan_scene_code(code)
+    assert any("re-exports blocked module 'os'" in v for v in violations)
+
+
+def test_blocks_blocked_module_via_rebinding():
+    # Once a binding IS the blocked module, any attribute use on it is a
+    # violation, not just the access that reached it.
+    code = (
+        "from manim import *\n"
+        "import zipfile\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        o = zipfile.os\n"
+        "        o.system('id')\n"
+    )
+    assert (
+        "blocked module 'os' attribute '.system'"
+        in MathAnimate._scan_scene_code(code)
+    )
+
+
+def test_blocks_renamed_blocked_module_via_rebinding():
+    code = (
+        "from manim import *\n"
+        "import random\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        o = random._os\n"
+        "        o.getcwd()\n"
+    )
+    assert (
+        "blocked module 'os' attribute '.getcwd'"
+        in MathAnimate._scan_scene_code(code)
+    )
+
+
+def test_blocks_from_import_of_renamed_reexport():
+    code = (
+        "from manim import *\n"
+        "from random import _os\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        _os.getcwd()\n"
+    )
+    violations = MathAnimate._scan_scene_code(code)
+    assert any("re-exported blocked module '_os'" in v for v in violations)
+
+
+def test_blocks_reexport_via_for_loop_alias():
+    code = (
+        "from manim import *\n"
+        "import zipfile\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        for z in [zipfile]:\n"
+        "            z.os.system('id')\n"
+    )
+    assert "imported module attribute '.os'" in MathAnimate._scan_scene_code(code)
+
+
+def test_blocks_reexport_via_function_default():
+    code = (
+        "from manim import *\n"
+        "import zipfile\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        def f(m=zipfile):\n"
+        "            m.os.system('id')\n"
+    )
+    assert "imported module attribute '.os'" in MathAnimate._scan_scene_code(code)
+
+
+def test_safe_attribute_and_container_use_still_passes():
+    # Legitimate scenes use attribute assignment, tuple unpacking and
+    # containers too; none of that may be blocked.
+    code = (
+        "from manim import *\n"
+        "import numpy as np\n"
+        "import random\n"
+        "class S(Scene):\n"
+        "    def construct(self):\n"
+        "        self.dot = Dot()\n"
+        "        a, b = np.pi, np.e\n"
+        "        shapes = [Circle(), Square()]\n"
+        "        self.play(Create(shapes[0]))\n"
+        "        self.play(Create(Circle(radius=random.random())))\n"
+    )
+    assert MathAnimate._scan_scene_code(code) == []

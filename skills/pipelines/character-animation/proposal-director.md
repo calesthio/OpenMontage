@@ -16,9 +16,12 @@ Each option must include:
 - sample plan,
 - audio architecture,
 - music plan,
-- render runtime options,
+- render_runtime options,
 - cost estimate,
 - honest limitation note.
+
+
+Present both Remotion and HyperFrames to the user before locking `render_runtime`. If only one runtime is available on the machine, explicitly note the unavailable option and record a `render_runtime_selection` decision with `rejected_because` explaining why.
 
 ## Runtime Selection
 
@@ -29,7 +32,7 @@ When both Remotion and HyperFrames are available:
 - Remotion: best when the final composition needs deterministic React-rendered
   video, captions, audio, scene JSON, and final MP4 governance.
 - HyperFrames: best when the character scene is HTML/SVG/GSAP-heavy and benefits
-  from web-native authoring, lint, validate, and registry blocks.
+  from web-native authoring, lint, validate, and registry blocks. (mention hyperframes)
 - FFmpeg: post-processing only. Do not pick FFmpeg as the primary runtime for
   character acting.
 

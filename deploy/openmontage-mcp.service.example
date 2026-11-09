@@ -1,0 +1,26 @@
+[Unit]
+Description=OpenMontage MCP server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=openmontage
+Group=openmontage
+WorkingDirectory=/opt/OpenMontage
+EnvironmentFile=/etc/openmontage/mcp.env
+Environment=OM_MCP_TRANSPORT=streamable-http
+Environment=OM_MCP_HOST=127.0.0.1
+Environment=OM_MCP_PORT=8000
+ExecStart=/opt/OpenMontage/.venv/bin/python -m integrations.mcp_server.server
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/openmontage
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

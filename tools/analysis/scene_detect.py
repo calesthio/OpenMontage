@@ -131,17 +131,17 @@ class SceneDetect(BaseTool):
 
         if method == "content":
             detector = ContentDetector(
-                threshold=threshold or 27.0,
+                threshold=27.0 if threshold is None else threshold,
                 min_scene_len=int(min_scene_len * video.frame_rate),
             )
         elif method == "threshold":
             detector = ThresholdDetector(
-                threshold=threshold or 12.0,
+                threshold=12.0 if threshold is None else threshold,
                 min_scene_len=int(min_scene_len * video.frame_rate),
             )
         elif method == "adaptive":
             detector = AdaptiveDetector(
-                adaptive_threshold=threshold or 3.0,
+                adaptive_threshold=3.0 if threshold is None else threshold,
                 min_scene_len=int(min_scene_len * video.frame_rate),
             )
         else:

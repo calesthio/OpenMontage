@@ -1,0 +1,220 @@
+1
+00:00:00,000 --> 00:00:02,240
+ Could  life  exist  in  an  ocean  that  has
+
+2
+00:00:02,240 --> 00:00:03,100
+ never  seen  the  sky?
+
+3
+00:00:04,040 --> 00:00:07,019
+ Beneath  Europa's  icy  shell  lies  an  ocean  with
+
+4
+00:00:07,019 --> 00:00:09,519
+ more  than  twice  the  water  of  all  Earth's
+
+5
+00:00:09,519 --> 00:00:10,339
+ oceans  combined.
+
+6
+00:00:11,179 --> 00:00:14,060
+ NASA's  Europa  Clipper  will  fly  past  it  49
+
+7
+00:00:14,060 --> 00:00:16,839
+ times  to  measure  whether  that  ocean  could  support
+
+8
+00:00:16,839 --> 00:00:17,199
+ life.
+
+9
+00:00:18,019 --> 00:00:20,640
+ We  have  never  sampled  liquid  water  beyond  Earth.
+
+10
+00:00:21,140 --> 00:00:21,760
+ Finding  it,
+
+11
+00:00:22,000 --> 00:00:22,879
+ or  ruling  it  out,
+
+12
+00:00:23,199 --> 00:00:25,140
+ changes  how  we  think  about  life  everywhere.
+
+13
+00:00:26,260 --> 00:00:30,440
+ Juno's  2022  flyby  measured  Europa's  ice  shell  at
+
+14
+00:00:30,440 --> 00:00:32,140
+ about  29  kilometers  thick,
+
+15
+00:00:32,460 --> 00:00:33,759
+ plus  or  minus  10.
+
+16
+00:00:34,560 --> 00:00:36,719
+ That  estimate  comes  from  a  pure  water  ice
+
+17
+00:00:36,719 --> 00:00:37,039
+ model.
+
+18
+00:00:37,719 --> 00:00:39,939
+ Salt  could  reduce  it  by  about  5  kilometers,
+
+19
+00:00:40,460 --> 00:00:42,259
+ and  the  full  shell  may  be  thicker  still.
+
+20
+00:00:43,240 --> 00:00:44,079
+ On  Enceladus,
+
+21
+00:00:44,439 --> 00:00:47,119
+ Cassini  found  sodium  phosphates  in  ice  grains.
+
+22
+00:00:47,920 --> 00:00:50,740
+ The  authors  estimate  the  ocean  phosphorus  is  at
+
+23
+00:00:50,740 --> 00:00:53,799
+ least  about  100  times  Earth's  ocean  concentration.
+
+24
+00:00:53,799 --> 00:00:55,740
+ A  geochemical  inference,
+
+25
+00:00:56,240 --> 00:00:58,299
+ not  a  direct  sample  of  liquid  water.
+
+26
+00:00:59,039 --> 00:01:03,259
+ Cassini  also  detected  molecular  hydrogen  in  Enceladus'  plume,
+
+27
+00:01:03,780 --> 00:01:06,900
+ a  possible  sign  of  hydrothermal  reactions  below  the
+
+28
+00:01:06,900 --> 00:01:07,200
+ ice,
+
+29
+00:01:07,620 --> 00:01:09,799
+ though  not  a  direct  observation  of  the  process.
+
+30
+00:01:10,780 --> 00:01:14,239
+ Fresh  ice  grains  from  Enceladus  contain  organic  fragments.
+
+31
+00:01:14,959 --> 00:01:18,799
+ Some  nitrogen  and  oxygen -containing  identifications  are  marked
+
+32
+00:01:18,799 --> 00:01:20,079
+ tentative  by  the  authors,
+
+33
+00:01:20,079 --> 00:01:21,859
+ building  blocks  detected,
+
+34
+00:01:22,280 --> 00:01:23,280
+ not  life  confirmed.
+
+35
+00:01:24,140 --> 00:01:26,299
+ Europa  Clipper  launched  October  14,
+
+36
+00:01:26,799 --> 00:01:27,739
+ 2024.
+
+37
+00:01:28,780 --> 00:01:31,400
+ A  Mars  Gravity  Assist  in  2025,
+
+38
+00:01:32,099 --> 00:01:35,000
+ then  an  Earth  Gravity  Assist  in  2026,
+
+39
+00:01:35,500 --> 00:01:38,459
+ sends  it  to  Jupiter  orbit  in  April  2030.
+
+40
+00:01:39,299 --> 00:01:42,079
+ First  Europa  flyby  in  2031.
+
+41
+00:01:43,099 --> 00:01:44,700
+ The  spacecraft  orbits  Jupiter,
+
+42
+00:01:44,900 --> 00:01:45,439
+ not  Europa.
+
+43
+00:01:45,439 --> 00:01:48,420
+ It  will  make  49  close  flybys  of  Europa,
+
+44
+00:01:48,920 --> 00:01:49,760
+ measuring  the  ice,
+
+45
+00:01:50,120 --> 00:01:51,359
+ the  ocean  and  the  plumes.
+
+46
+00:01:52,099 --> 00:01:52,700
+ What  we  know,
+
+47
+00:01:53,040 --> 00:01:56,140
+ Europa  has  an  ocean  Enceladus  has  phosphates  and
+
+48
+00:01:56,140 --> 00:01:56,719
+ organics.
+
+49
+00:01:57,219 --> 00:01:57,840
+ What  we  presume,
+
+50
+00:01:58,299 --> 00:02:00,000
+ those  ingredients  could  support  life.
+
+51
+00:02:00,620 --> 00:02:01,500
+ What  we  have  not  proven,
+
+52
+00:02:02,000 --> 00:02:03,459
+ that  life  exists  there  at  all.
+
+53
+00:02:04,299 --> 00:02:07,599
+ Europa  Clipper  arrives  at  Europa  in  2031.
+
+54
+00:02:08,340 --> 00:02:09,020
+ Until  then,
+
+55
+00:02:09,460 --> 00:02:11,719
+ the  ocean  remains  a  hypothesis  with  evidence.
+

@@ -1,0 +1,658 @@
+[
+  {
+    "scene_id": "S001",
+    "exit": 1,
+    "score": {
+      "mean": 0.718,
+      "p10": 0.456,
+      "median": 0.718,
+      "p90": 0.98,
+      "share_below_0.35": 0.0,
+      "longest_static_run_s": 0.5,
+      "valid_windows": 2,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "FAIL"
+    }
+  },
+  {
+    "scene_id": "S002",
+    "exit": 0,
+    "score": {
+      "mean": 1.011,
+      "p10": 0.203,
+      "median": 1.011,
+      "p90": 1.82,
+      "share_below_0.35": 0.5,
+      "longest_static_run_s": 0.5,
+      "valid_windows": 2,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S003",
+    "exit": 0,
+    "score": {
+      "mean": 15.163,
+      "p10": 14.179,
+      "median": 15.197,
+      "p90": 16.031,
+      "share_below_0.35": 0.0,
+      "longest_static_run_s": 0.0,
+      "valid_windows": 5,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S004",
+    "exit": 0,
+    "score": {
+      "mean": 16.222,
+      "p10": 16.012,
+      "median": 16.126,
+      "p90": 16.504,
+      "share_below_0.35": 0.0,
+      "longest_static_run_s": 0.0,
+      "valid_windows": 5,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S005",
+    "exit": 0,
+    "score": {
+      "mean": 1.184,
+      "p10": 0.001,
+      "median": 0.003,
+      "p90": 3.546,
+      "share_below_0.35": 0.8,
+      "longest_static_run_s": 2.0,
+      "valid_windows": 5,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S006",
+    "exit": 1,
+    "score": {
+      "mean": 0.796,
+      "p10": 0.004,
+      "median": 0.007,
+      "p90": 2.373,
+      "share_below_0.35": 0.8,
+      "longest_static_run_s": 2.0,
+      "valid_windows": 5,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "FAIL"
+    }
+  },
+  {
+    "scene_id": "S007",
+    "exit": 0,
+    "score": {
+      "mean": 2.059,
+      "p10": 1.846,
+      "median": 2.073,
+      "p90": 2.259,
+      "share_below_0.35": 0.0,
+      "longest_static_run_s": 0.0,
+      "valid_windows": 6,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S008",
+    "exit": 0,
+    "score": {
+      "mean": 2.059,
+      "p10": 1.846,
+      "median": 2.073,
+      "p90": 2.259,
+      "share_below_0.35": 0.0,
+      "longest_static_run_s": 0.0,
+      "valid_windows": 6,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S009",
+    "exit": 0,
+    "score": {
+      "mean": 5.07,
+      "p10": 0.0,
+      "median": 1.075,
+      "p90": 13.337,
+      "share_below_0.35": 0.5,
+      "longest_static_run_s": 1.0,
+      "valid_windows": 4,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S010",
+    "exit": 0,
+    "score": {
+      "mean": 1.518,
+      "p10": 0.0,
+      "median": 0.002,
+      "p90": 4.249,
+      "share_below_0.35": 0.75,
+      "longest_static_run_s": 1.5,
+      "valid_windows": 4,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S011",
+    "exit": 0,
+    "score": {
+      "mean": 9.12,
+      "p10": 8.0,
+      "median": 8.761,
+      "p90": 10.529,
+      "share_below_0.35": 0.0,
+      "longest_static_run_s": 0.0,
+      "valid_windows": 4,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S012",
+    "exit": 0,
+    "score": {
+      "mean": 9.12,
+      "p10": 8.0,
+      "median": 8.761,
+      "p90": 10.529,
+      "share_below_0.35": 0.0,
+      "longest_static_run_s": 0.0,
+      "valid_windows": 4,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S013",
+    "exit": 0,
+    "score": {
+      "mean": 5.07,
+      "p10": 0.0,
+      "median": 1.075,
+      "p90": 13.337,
+      "share_below_0.35": 0.5,
+      "longest_static_run_s": 1.0,
+      "valid_windows": 4,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S014",
+    "exit": 0,
+    "score": {
+      "mean": 1.518,
+      "p10": 0.0,
+      "median": 0.002,
+      "p90": 4.249,
+      "share_below_0.35": 0.75,
+      "longest_static_run_s": 1.5,
+      "valid_windows": 4,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S015",
+    "exit": 0,
+    "score": {
+      "mean": 3.692,
+      "p10": 2.762,
+      "median": 3.582,
+      "p90": 4.731,
+      "share_below_0.35": 0.0,
+      "longest_static_run_s": 0.0,
+      "valid_windows": 6,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S016",
+    "exit": 0,
+    "score": {
+      "mean": 3.692,
+      "p10": 2.762,
+      "median": 3.582,
+      "p90": 4.731,
+      "share_below_0.35": 0.0,
+      "longest_static_run_s": 0.0,
+      "valid_windows": 6,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S017",
+    "exit": 0,
+    "score": {
+      "mean": 1.549,
+      "p10": 0.0,
+      "median": 0.0,
+      "p90": 4.647,
+      "share_below_0.35": 0.667,
+      "longest_static_run_s": 2.0,
+      "valid_windows": 6,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S018",
+    "exit": 1,
+    "score": {
+      "mean": 0.585,
+      "p10": 0.0,
+      "median": 0.0,
+      "p90": 1.756,
+      "share_below_0.35": 0.833,
+      "longest_static_run_s": 2.5,
+      "valid_windows": 6,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "FAIL"
+    }
+  },
+  {
+    "scene_id": "S019",
+    "exit": 0,
+    "score": {
+      "mean": 18.72,
+      "p10": 18.204,
+      "median": 18.899,
+      "p90": 19.056,
+      "share_below_0.35": 0.0,
+      "longest_static_run_s": 0.0,
+      "valid_windows": 6,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S020",
+    "exit": 0,
+    "score": {
+      "mean": 12.033,
+      "p10": 11.275,
+      "median": 11.863,
+      "p90": 12.962,
+      "share_below_0.35": 0.0,
+      "longest_static_run_s": 0.0,
+      "valid_windows": 6,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S021",
+    "exit": 1,
+    "score": {
+      "mean": 0.66,
+      "p10": 0.0,
+      "median": 0.0,
+      "p90": 1.979,
+      "share_below_0.35": 0.833,
+      "longest_static_run_s": 2.5,
+      "valid_windows": 6,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "FAIL"
+    }
+  },
+  {
+    "scene_id": "S022",
+    "exit": 1,
+    "score": {
+      "mean": 0.598,
+      "p10": 0.0,
+      "median": 0.001,
+      "p90": 1.792,
+      "share_below_0.35": 0.8,
+      "longest_static_run_s": 2.0,
+      "valid_windows": 5,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "FAIL"
+    }
+  },
+  {
+    "scene_id": "S023",
+    "exit": 0,
+    "score": {
+      "mean": 3.605,
+      "p10": 2.284,
+      "median": 3.186,
+      "p90": 5.287,
+      "share_below_0.35": 0.0,
+      "longest_static_run_s": 0.0,
+      "valid_windows": 5,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S024",
+    "exit": 0,
+    "score": {
+      "mean": 3.605,
+      "p10": 2.284,
+      "median": 3.186,
+      "p90": 5.287,
+      "share_below_0.35": 0.0,
+      "longest_static_run_s": 0.0,
+      "valid_windows": 5,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S025",
+    "exit": 1,
+    "score": {
+      "mean": 0.833,
+      "p10": 0.0,
+      "median": 0.001,
+      "p90": 2.347,
+      "share_below_0.35": 0.6,
+      "longest_static_run_s": 2.0,
+      "valid_windows": 5,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "FAIL"
+    }
+  },
+  {
+    "scene_id": "S026",
+    "exit": 0,
+    "score": {
+      "mean": 1.026,
+      "p10": 0.001,
+      "median": 0.002,
+      "p90": 2.869,
+      "share_below_0.35": 0.75,
+      "longest_static_run_s": 1.5,
+      "valid_windows": 4,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S027",
+    "exit": 0,
+    "score": {
+      "mean": 14.38,
+      "p10": 13.771,
+      "median": 14.382,
+      "p90": 14.988,
+      "share_below_0.35": 0.0,
+      "longest_static_run_s": 0.0,
+      "valid_windows": 4,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S028",
+    "exit": 0,
+    "score": {
+      "mean": 15.207,
+      "p10": 14.269,
+      "median": 15.48,
+      "p90": 15.927,
+      "share_below_0.35": 0.0,
+      "longest_static_run_s": 0.0,
+      "valid_windows": 4,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S029",
+    "exit": 0,
+    "score": {
+      "mean": 2.301,
+      "p10": 0.007,
+      "median": 0.015,
+      "p90": 6.423,
+      "share_below_0.35": 0.75,
+      "longest_static_run_s": 1.5,
+      "valid_windows": 4,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S030",
+    "exit": 0,
+    "score": {
+      "mean": 1.915,
+      "p10": 0.003,
+      "median": 0.013,
+      "p90": 5.347,
+      "share_below_0.35": 0.75,
+      "longest_static_run_s": 1.5,
+      "valid_windows": 4,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S031",
+    "exit": 0,
+    "score": {
+      "mean": 14.318,
+      "p10": 12.85,
+      "median": 14.217,
+      "p90": 15.868,
+      "share_below_0.35": 0.0,
+      "longest_static_run_s": 0.0,
+      "valid_windows": 4,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S032",
+    "exit": 0,
+    "score": {
+      "mean": 17.266,
+      "p10": 16.849,
+      "median": 17.48,
+      "p90": 17.511,
+      "share_below_0.35": 0.0,
+      "longest_static_run_s": 0.0,
+      "valid_windows": 4,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S033",
+    "exit": 0,
+    "score": {
+      "mean": 3.767,
+      "p10": 0.005,
+      "median": 0.011,
+      "p90": 10.535,
+      "share_below_0.35": 0.75,
+      "longest_static_run_s": 1.5,
+      "valid_windows": 4,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S034",
+    "exit": 1,
+    "score": {
+      "mean": 0.805,
+      "p10": 0.004,
+      "median": 0.017,
+      "p90": 2.237,
+      "share_below_0.35": 0.75,
+      "longest_static_run_s": 1.5,
+      "valid_windows": 4,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "FAIL"
+    }
+  },
+  {
+    "scene_id": "S035",
+    "exit": 0,
+    "score": {
+      "mean": 2.752,
+      "p10": 2.481,
+      "median": 2.745,
+      "p90": 3.027,
+      "share_below_0.35": 0.0,
+      "longest_static_run_s": 0.0,
+      "valid_windows": 4,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S036",
+    "exit": 0,
+    "score": {
+      "mean": 2.752,
+      "p10": 2.481,
+      "median": 2.745,
+      "p90": 3.027,
+      "share_below_0.35": 0.0,
+      "longest_static_run_s": 0.0,
+      "valid_windows": 4,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S037",
+    "exit": 1,
+    "score": {
+      "mean": 0.841,
+      "p10": 0.0,
+      "median": 0.52,
+      "p90": 1.939,
+      "share_below_0.35": 0.5,
+      "longest_static_run_s": 1.0,
+      "valid_windows": 4,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "FAIL"
+    }
+  },
+  {
+    "scene_id": "S038",
+    "exit": 0,
+    "score": {
+      "mean": 1.458,
+      "p10": 0.0,
+      "median": 0.002,
+      "p90": 4.08,
+      "share_below_0.35": 0.75,
+      "longest_static_run_s": 1.5,
+      "valid_windows": 4,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S039",
+    "exit": 0,
+    "score": {
+      "mean": 1.466,
+      "p10": 1.194,
+      "median": 1.518,
+      "p90": 1.697,
+      "share_below_0.35": 0.0,
+      "longest_static_run_s": 0.0,
+      "valid_windows": 4,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S040",
+    "exit": 0,
+    "score": {
+      "mean": 1.466,
+      "p10": 1.194,
+      "median": 1.518,
+      "p90": 1.697,
+      "share_below_0.35": 0.0,
+      "longest_static_run_s": 0.0,
+      "valid_windows": 4,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "PASS"
+    }
+  },
+  {
+    "scene_id": "S041",
+    "exit": 1,
+    "score": {
+      "mean": 0.55,
+      "p10": 0.0,
+      "median": 0.292,
+      "p90": 1.305,
+      "share_below_0.35": 0.5,
+      "longest_static_run_s": 1.5,
+      "valid_windows": 4,
+      "excluded_windows": 0,
+      "coverage": 1.0,
+      "verdict": "FAIL"
+    }
+  }
+]

@@ -1,0 +1,44 @@
+[
+  {
+    "claim_id": "C001",
+    "sentence": "Juno's 2022 microwave radiometer flyby measured Europa's ice shell at about 29 kilometers thick, plus or minus 10 kilometers, under a pure water-ice assumption.",
+    "source": "Levin et al., 'Europa's ice thickness and subsurface structure characterized by the Juno microwave radiometer', Nature Astronomy, 2025, DOI 10.1038/s41550-025-02718-0",
+    "source_flags": "PEER_REVIEWED"
+  },
+  {
+    "claim_id": "C002",
+    "sentence": "Cassini CDA measured sodium phosphates in Enceladus ice grains; inferred ocean phosphorus is at least about 100 times Earth's ocean concentration.",
+    "source": "Postberg et al., 'Detection of phosphates originating from Enceladus's ocean', Nature, 2023, DOI 10.1038/s41586-023-05987-9",
+    "source_flags": "PEER_REVIEWED"
+  },
+  {
+    "claim_id": "C003",
+    "sentence": "Cassini INMS detected molecular hydrogen (H2) in Enceladus's plume, consistent with hydrothermal water-rock reactions below the ice.",
+    "source": "Waite et al., 'Cassini finds molecular hydrogen in the Enceladus plume: Evidence for hydrothermal processes', Science, 2017, DOI 10.1126/science.aai8703",
+    "source_flags": "PEER_REVIEWED"
+  },
+  {
+    "claim_id": "C004",
+    "sentence": "Europa's subsurface ocean contains more than twice the water of all Earth's oceans combined.",
+    "source": "NASA Europa Clipper mission overview, NASA Science (science.nasa.gov/mission/europa-clipper)",
+    "source_flags": "NASA"
+  },
+  {
+    "claim_id": "C005",
+    "sentence": "Freshly ejected Enceladus ice grains contain organic fragments; some nitrogen- and oxygen-containing identifications are tentative.",
+    "source": "Khawaja et al., 'Detection of organic compounds in freshly ejected ice grains from Enceladus's ocean', Nature Astronomy, 2025, DOI 10.1038/s41550-025-02655-y",
+    "source_flags": "PEER_REVIEWED"
+  },
+  {
+    "claim_id": "C006",
+    "sentence": "Europa Clipper launched October 14, 2024; Mars gravity assist March 1, 2025; Earth gravity assist December 3, 2026; Jupiter orbit April 2030; first Europa flyby March 7, 2031.",
+    "source": "NASA Europa Clipper mission timeline, NASA Science",
+    "source_flags": "NASA"
+  },
+  {
+    "claim_id": "C007",
+    "sentence": "Europa Clipper orbits Jupiter and will make 49 close flybys of Europa; it will not land.",
+    "source": "NASA Europa Clipper mission overview, NASA Science",
+    "source_flags": "NASA"
+  }
+]

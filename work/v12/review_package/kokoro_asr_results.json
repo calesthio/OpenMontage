@@ -1,0 +1,126 @@
+{
+  "all_pass_under_10": true,
+  "blocks": [
+    {
+      "block_id": "B001",
+      "expected": "Could life exist in an ocean that has never seen the sky?",
+      "asr_text": " Could life exist in an ocean that has never seen the sky?",
+      "wer": 0.0,
+      "wer_percent": 0.0,
+      "pass_under_10": true,
+      "duration_s": 3.775,
+      "asr_language": "en",
+      "asr_lang_prob": 1
+    },
+    {
+      "block_id": "B002",
+      "expected": "Beneath Europa's icy shell lies an ocean with more than twice the water of all Earth's oceans combined. NASA's Europa Clipper will fly past it 49 times to measure whether that ocean could support life.",
+      "asr_text": " Beneath Europa's icy shell lies an ocean with more than twice the water of all Earth's oceans combined.  NASA's Europa Clipper will fly past it 49 times to measure whether that ocean could support life.",
+      "wer": 0.0,
+      "wer_percent": 0.0,
+      "pass_under_10": true,
+      "duration_s": 14.075,
+      "asr_language": "en",
+      "asr_lang_prob": 1
+    },
+    {
+      "block_id": "B003",
+      "expected": "We have never sampled liquid water beyond Earth. Finding it \u2014 or ruling it out \u2014 changes how we think about life everywhere.",
+      "asr_text": " We have never sampled liquid water beyond Earth.  Finding it, or ruling it out, changes how we think about life everywhere.",
+      "wer": 0.0,
+      "wer_percent": 0.0,
+      "pass_under_10": true,
+      "duration_s": 8.025,
+      "asr_language": "en",
+      "asr_lang_prob": 1
+    },
+    {
+      "block_id": "B004",
+      "expected": "Juno's 2022 flyby measured Europa's ice shell at about 29 kilometers thick, plus or minus 10. That estimate comes from a pure water-ice model \u2014 salt could reduce it by about 5 kilometers, and the full shell may be thicker still.",
+      "asr_text": " Juno's 2022 flyby measured Europa's ice shell at about 29 kilometers thick, plus or minus 10.  That estimate comes from a pure water ice model.  Salt could reduce it by about 5 kilometers, and the full shell may be thicker still.",
+      "wer": 0.05,
+      "wer_percent": 5.0,
+      "pass_under_10": true,
+      "duration_s": 17.075,
+      "asr_language": "en",
+      "asr_lang_prob": 1
+    },
+    {
+      "block_id": "B005",
+      "expected": "On Enceladus, Cassini found sodium phosphates in ice grains. The authors estimate the ocean phosphorus is at least about 100 times Earth's ocean concentration \u2014 a geochemical inference, not a direct sample of liquid water.",
+      "asr_text": " On Enceladus, Cassini found sodium phosphates in ice grains.  The authors estimate the ocean phosphorus is at least about 100 times Earth's ocean concentration,  a geochemical inference, not a direct sample of liquid water.",
+      "wer": 0.0,
+      "wer_percent": 0.0,
+      "pass_under_10": true,
+      "duration_s": 16.0,
+      "asr_language": "en",
+      "asr_lang_prob": 1
+    },
+    {
+      "block_id": "B006",
+      "expected": "Cassini also detected molecular hydrogen in Enceladus's plume \u2014 a possible sign of hydrothermal reactions below the ice, though not a direct observation of the process.",
+      "asr_text": " Cassini also detected molecular hydrogen in Enceladus' plume,  a possible sign of hydrothermal reactions below the ice,  though not a direct observation of the process.",
+      "wer": 0.04,
+      "wer_percent": 4.0,
+      "pass_under_10": true,
+      "duration_s": 11.55,
+      "asr_language": "en",
+      "asr_lang_prob": 1
+    },
+    {
+      "block_id": "B007",
+      "expected": "Fresh ice grains from Enceladus contain organic fragments. Some nitrogen- and oxygen-containing identifications are marked tentative by the authors \u2014 building blocks detected, not life confirmed.",
+      "asr_text": " Fresh ice grains from Enceladus contain organic fragments.  Some nitrogen and oxygen-containing identifications are marked tentative by the authors,  building blocks detected, not life-confirmed.",
+      "wer": 0.08,
+      "wer_percent": 8.0,
+      "pass_under_10": true,
+      "duration_s": 13.45,
+      "asr_language": "en",
+      "asr_lang_prob": 1
+    },
+    {
+      "block_id": "B008",
+      "expected": "Europa Clipper launched October 14, 2024. A Mars gravity assist in 2025, then an Earth gravity assist in 2026, sends it to Jupiter orbit in April 2030 \u2014 first Europa flyby in 2031.",
+      "asr_text": " Europa Clipper launched October 14, 2024, a Mars gravity assist in 2025, then an Earth  gravity assist in 2026, sends it to Jupiter orbit in April 2030, first Europa flyby in  2031",
+      "wer": 0.0,
+      "wer_percent": 0.0,
+      "pass_under_10": true,
+      "duration_s": 18.925,
+      "asr_language": "en",
+      "asr_lang_prob": 1
+    },
+    {
+      "block_id": "B009",
+      "expected": "The spacecraft orbits Jupiter, not Europa. It will make 49 close flybys of Europa, measuring the ice, the ocean, and the plumes.",
+      "asr_text": " The spacecraft orbits Jupiter, not Europa.  It will make 49 close flybys of Europa, measuring the ice, the ocean and the plumes.",
+      "wer": 0.0,
+      "wer_percent": 0.0,
+      "pass_under_10": true,
+      "duration_s": 9.075,
+      "asr_language": "en",
+      "asr_lang_prob": 1
+    },
+    {
+      "block_id": "B010",
+      "expected": "What we know: Europa has an ocean, Enceladus has phosphates and organics. What we presume: those ingredients could support life. What we have not proven: that life exists there at all.",
+      "asr_text": " What we know, Europa has an ocean, Enceladus has phosphates and organics.  What we presume, those ingredients could support life.  What we have not proven, that life exists there at all.",
+      "wer": 0.0,
+      "wer_percent": 0.0,
+      "pass_under_10": true,
+      "duration_s": 12.1,
+      "asr_language": "en",
+      "asr_lang_prob": 1
+    },
+    {
+      "block_id": "B011",
+      "expected": "Europa Clipper arrives at Europa in 2031. Until then, the ocean remains a hypothesis with evidence.",
+      "asr_text": " Europa Clipper arrives at Europa in 2031.  Until then, the ocean remains a hypothesis with evidence.",
+      "wer": 0.0,
+      "wer_percent": 0.0,
+      "pass_under_10": true,
+      "duration_s": 8.375,
+      "asr_language": "en",
+      "asr_lang_prob": 1
+    }
+  ]
+}

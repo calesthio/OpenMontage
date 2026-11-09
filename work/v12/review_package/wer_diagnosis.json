@@ -1,0 +1,14 @@
+{
+  "expected": "Europa is a moon of Jupiter.",
+  "results": {
+    "raw_24k": {
+      "wer": 0.0,
+      "text": " Europa is a moon of Jupiter."
+    },
+    "resampled_16k": {
+      "wer": 0.0,
+      "text": " Europa is a moon of Jupiter."
+    }
+  },
+  "note": "WER computed with jiwer normalization (lowercase, no punctuation, strip)"
+}

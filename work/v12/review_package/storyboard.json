@@ -1,0 +1,792 @@
+{
+  "scenes": [
+    {
+      "scene_id": "S001",
+      "text": "Could life exist in an ocean that has never seen the sky?",
+      "start_s": 0.0,
+      "end_s": 1.89,
+      "duration_s": 1.89,
+      "claim_ids": [],
+      "visual_class": "TEXT_CARD",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "text_card_S001",
+      "source_type": "procedural",
+      "asset_origin": "procedural",
+      "motion_type": "pan",
+      "music_cue": "intro",
+      "why_this_image": "Opening hook question \u2014 text card focuses attention on the paradox",
+      "narrative_role": "hook"
+    },
+    {
+      "scene_id": "S002",
+      "text": "Could life exist in an ocean that has never seen the sky?",
+      "start_s": 1.89,
+      "end_s": 3.77,
+      "duration_s": 1.89,
+      "claim_ids": [],
+      "visual_class": "TEXT_CARD",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "text_card_S002",
+      "source_type": "procedural",
+      "asset_origin": "procedural",
+      "motion_type": "lateral_drift",
+      "music_cue": "intro",
+      "why_this_image": "Opening hook question \u2014 text card focuses attention on the paradox",
+      "narrative_role": "hook"
+    },
+    {
+      "scene_id": "S003",
+      "text": "Beneath Europa's icy shell lies an ocean with more than twice the water of all Earth's oceans combined. NASA's Europa Clipper will fly past it 49 times to measure whether that ocean could support life.",
+      "start_s": 3.77,
+      "end_s": 7.29,
+      "duration_s": 3.52,
+      "claim_ids": [
+        "C001",
+        "C002",
+        "C003"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "projects/pilot/first_video/footage/archival/S002.jpg",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "slow_zoom",
+      "music_cue": "question",
+      "why_this_image": "Europa ocean promise \u2014 diagram or archive establishes the subject",
+      "narrative_role": "promise"
+    },
+    {
+      "scene_id": "S004",
+      "text": "Beneath Europa's icy shell lies an ocean with more than twice the water of all Earth's oceans combined. NASA's Europa Clipper will fly past it 49 times to measure whether that ocean could support life.",
+      "start_s": 7.29,
+      "end_s": 10.8,
+      "duration_s": 3.52,
+      "claim_ids": [
+        "C001",
+        "C002",
+        "C003"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "projects/pilot/first_video/footage/archival/S003.jpg",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "slow_zoom",
+      "music_cue": "question",
+      "why_this_image": "Europa ocean promise \u2014 diagram or archive establishes the subject",
+      "narrative_role": "promise"
+    },
+    {
+      "scene_id": "S005",
+      "text": "Beneath Europa's icy shell lies an ocean with more than twice the water of all Earth's oceans combined. NASA's Europa Clipper will fly past it 49 times to measure whether that ocean could support life.",
+      "start_s": 10.8,
+      "end_s": 14.32,
+      "duration_s": 3.52,
+      "claim_ids": [
+        "C001",
+        "C002",
+        "C003"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "projects/pilot/first_video/footage/archival/S004.jpg",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "pan",
+      "music_cue": "question",
+      "why_this_image": "Europa ocean promise \u2014 diagram or archive establishes the subject",
+      "narrative_role": "promise"
+    },
+    {
+      "scene_id": "S006",
+      "text": "Beneath Europa's icy shell lies an ocean with more than twice the water of all Earth's oceans combined. NASA's Europa Clipper will fly past it 49 times to measure whether that ocean could support life.",
+      "start_s": 14.32,
+      "end_s": 17.84,
+      "duration_s": 3.52,
+      "claim_ids": [
+        "C001",
+        "C002",
+        "C003"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "projects/pilot/first_video/footage/archival/S005.jpg",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "lateral_drift",
+      "music_cue": "question",
+      "why_this_image": "Europa ocean promise \u2014 diagram or archive establishes the subject",
+      "narrative_role": "promise"
+    },
+    {
+      "scene_id": "S007",
+      "text": "We have never sampled liquid water beyond Earth. Finding it \u2014 or ruling it out \u2014 changes how we think about life everywhere.",
+      "start_s": 17.84,
+      "end_s": 21.86,
+      "duration_s": 4.01,
+      "claim_ids": [
+        "C004"
+      ],
+      "visual_class": "TEXT_CARD",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "text_card_S007",
+      "source_type": "procedural",
+      "asset_origin": "procedural",
+      "motion_type": "slow_zoom",
+      "music_cue": "tension",
+      "why_this_image": "Stakes statement \u2014 text card emphasizes the significance",
+      "narrative_role": "stakes"
+    },
+    {
+      "scene_id": "S008",
+      "text": "We have never sampled liquid water beyond Earth. Finding it \u2014 or ruling it out \u2014 changes how we think about life everywhere.",
+      "start_s": 21.86,
+      "end_s": 25.87,
+      "duration_s": 4.01,
+      "claim_ids": [
+        "C004"
+      ],
+      "visual_class": "TEXT_CARD",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "text_card_S008",
+      "source_type": "procedural",
+      "asset_origin": "procedural",
+      "motion_type": "slow_zoom",
+      "music_cue": "tension",
+      "why_this_image": "Stakes statement \u2014 text card emphasizes the significance",
+      "narrative_role": "stakes"
+    },
+    {
+      "scene_id": "S009",
+      "text": "Juno's 2022 flyby measured Europa's ice shell at about 29 kilometers thick, plus or minus 10. That estimate comes from a pure water-ice model \u2014 salt could reduce it by about 5 kilometers, and the full shell may be thicker still.",
+      "start_s": 25.87,
+      "end_s": 28.71,
+      "duration_s": 2.85,
+      "claim_ids": [
+        "C001"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "europa_ice_shell",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "pan",
+      "music_cue": "question",
+      "why_this_image": "Scientific evidence \u2014 diagram supports the specific claim being made",
+      "narrative_role": "evidence"
+    },
+    {
+      "scene_id": "S010",
+      "text": "Juno's 2022 flyby measured Europa's ice shell at about 29 kilometers thick, plus or minus 10. That estimate comes from a pure water-ice model \u2014 salt could reduce it by about 5 kilometers, and the full shell may be thicker still.",
+      "start_s": 28.71,
+      "end_s": 31.56,
+      "duration_s": 2.85,
+      "claim_ids": [
+        "C001"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "europa_ice_shell",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "lateral_drift",
+      "music_cue": "question",
+      "why_this_image": "Scientific evidence \u2014 diagram supports the specific claim being made",
+      "narrative_role": "evidence"
+    },
+    {
+      "scene_id": "S011",
+      "text": "Juno's 2022 flyby measured Europa's ice shell at about 29 kilometers thick, plus or minus 10. That estimate comes from a pure water-ice model \u2014 salt could reduce it by about 5 kilometers, and the full shell may be thicker still.",
+      "start_s": 31.56,
+      "end_s": 34.41,
+      "duration_s": 2.85,
+      "claim_ids": [
+        "C001"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "europa_ice_shell",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "slow_zoom",
+      "music_cue": "question",
+      "why_this_image": "Scientific evidence \u2014 diagram supports the specific claim being made",
+      "narrative_role": "evidence"
+    },
+    {
+      "scene_id": "S012",
+      "text": "Juno's 2022 flyby measured Europa's ice shell at about 29 kilometers thick, plus or minus 10. That estimate comes from a pure water-ice model \u2014 salt could reduce it by about 5 kilometers, and the full shell may be thicker still.",
+      "start_s": 34.41,
+      "end_s": 37.25,
+      "duration_s": 2.85,
+      "claim_ids": [
+        "C001"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "europa_ice_shell",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "slow_zoom",
+      "music_cue": "question",
+      "why_this_image": "Scientific evidence \u2014 diagram supports the specific claim being made",
+      "narrative_role": "evidence"
+    },
+    {
+      "scene_id": "S013",
+      "text": "Juno's 2022 flyby measured Europa's ice shell at about 29 kilometers thick, plus or minus 10. That estimate comes from a pure water-ice model \u2014 salt could reduce it by about 5 kilometers, and the full shell may be thicker still.",
+      "start_s": 37.25,
+      "end_s": 40.09,
+      "duration_s": 2.85,
+      "claim_ids": [
+        "C001"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "europa_ice_shell",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "pan",
+      "music_cue": "question",
+      "why_this_image": "Scientific evidence \u2014 diagram supports the specific claim being made",
+      "narrative_role": "evidence"
+    },
+    {
+      "scene_id": "S014",
+      "text": "Juno's 2022 flyby measured Europa's ice shell at about 29 kilometers thick, plus or minus 10. That estimate comes from a pure water-ice model \u2014 salt could reduce it by about 5 kilometers, and the full shell may be thicker still.",
+      "start_s": 40.09,
+      "end_s": 42.94,
+      "duration_s": 2.85,
+      "claim_ids": [
+        "C001"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "europa_ice_shell",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "lateral_drift",
+      "music_cue": "question",
+      "why_this_image": "Scientific evidence \u2014 diagram supports the specific claim being made",
+      "narrative_role": "evidence"
+    },
+    {
+      "scene_id": "S015",
+      "text": "On Enceladus, Cassini found sodium phosphates in ice grains. The authors estimate the ocean phosphorus is at least about 100 times Earth's ocean concentration \u2014 a geochemical inference, not a direct sample of liquid water.",
+      "start_s": 42.94,
+      "end_s": 46.94,
+      "duration_s": 4.0,
+      "claim_ids": [
+        "C002"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "enceladus_plume",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "slow_zoom",
+      "music_cue": "tension",
+      "why_this_image": "Scientific evidence \u2014 diagram supports the specific claim being made",
+      "narrative_role": "evidence"
+    },
+    {
+      "scene_id": "S016",
+      "text": "On Enceladus, Cassini found sodium phosphates in ice grains. The authors estimate the ocean phosphorus is at least about 100 times Earth's ocean concentration \u2014 a geochemical inference, not a direct sample of liquid water.",
+      "start_s": 46.94,
+      "end_s": 50.94,
+      "duration_s": 4.0,
+      "claim_ids": [
+        "C002"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "enceladus_plume",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "slow_zoom",
+      "music_cue": "tension",
+      "why_this_image": "Scientific evidence \u2014 diagram supports the specific claim being made",
+      "narrative_role": "evidence"
+    },
+    {
+      "scene_id": "S017",
+      "text": "On Enceladus, Cassini found sodium phosphates in ice grains. The authors estimate the ocean phosphorus is at least about 100 times Earth's ocean concentration \u2014 a geochemical inference, not a direct sample of liquid water.",
+      "start_s": 50.94,
+      "end_s": 54.94,
+      "duration_s": 4.0,
+      "claim_ids": [
+        "C002"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "enceladus_plume",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "pan",
+      "music_cue": "tension",
+      "why_this_image": "Scientific evidence \u2014 diagram supports the specific claim being made",
+      "narrative_role": "evidence"
+    },
+    {
+      "scene_id": "S018",
+      "text": "On Enceladus, Cassini found sodium phosphates in ice grains. The authors estimate the ocean phosphorus is at least about 100 times Earth's ocean concentration \u2014 a geochemical inference, not a direct sample of liquid water.",
+      "start_s": 54.94,
+      "end_s": 58.94,
+      "duration_s": 4.0,
+      "claim_ids": [
+        "C002"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "enceladus_plume",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "lateral_drift",
+      "music_cue": "tension",
+      "why_this_image": "Scientific evidence \u2014 diagram supports the specific claim being made",
+      "narrative_role": "evidence"
+    },
+    {
+      "scene_id": "S019",
+      "text": "Cassini also detected molecular hydrogen in Enceladus's plume \u2014 a possible sign of hydrothermal reactions below the ice, though not a direct observation of the process.",
+      "start_s": 58.94,
+      "end_s": 62.79,
+      "duration_s": 3.85,
+      "claim_ids": [
+        "C003"
+      ],
+      "visual_class": "AI_RECONSTRUCTION",
+      "visual_claim": "AI_RECONSTRUCTION",
+      "asset_id": "projects/pilot/first_video/footage/archival/S006.jpg",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "slow_zoom",
+      "music_cue": "tension",
+      "why_this_image": "Scientific evidence \u2014 diagram supports the specific claim being made",
+      "narrative_role": "evidence"
+    },
+    {
+      "scene_id": "S020",
+      "text": "Cassini also detected molecular hydrogen in Enceladus's plume \u2014 a possible sign of hydrothermal reactions below the ice, though not a direct observation of the process.",
+      "start_s": 62.79,
+      "end_s": 66.64,
+      "duration_s": 3.85,
+      "claim_ids": [
+        "C003"
+      ],
+      "visual_class": "AI_RECONSTRUCTION",
+      "visual_claim": "AI_RECONSTRUCTION",
+      "asset_id": "projects/pilot/first_video/footage/archival/S007.jpg",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "slow_zoom",
+      "music_cue": "tension",
+      "why_this_image": "Scientific evidence \u2014 diagram supports the specific claim being made",
+      "narrative_role": "evidence"
+    },
+    {
+      "scene_id": "S021",
+      "text": "Cassini also detected molecular hydrogen in Enceladus's plume \u2014 a possible sign of hydrothermal reactions below the ice, though not a direct observation of the process.",
+      "start_s": 66.64,
+      "end_s": 70.49,
+      "duration_s": 3.85,
+      "claim_ids": [
+        "C003"
+      ],
+      "visual_class": "AI_RECONSTRUCTION",
+      "visual_claim": "AI_RECONSTRUCTION",
+      "asset_id": "projects/pilot/first_video/footage/archival/S008.jpg",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "pan",
+      "music_cue": "tension",
+      "why_this_image": "Scientific evidence \u2014 diagram supports the specific claim being made",
+      "narrative_role": "evidence"
+    },
+    {
+      "scene_id": "S022",
+      "text": "Fresh ice grains from Enceladus contain organic fragments. Some nitrogen- and oxygen-containing identifications are marked tentative by the authors \u2014 building blocks detected, not life confirmed.",
+      "start_s": 70.49,
+      "end_s": 73.85,
+      "duration_s": 3.36,
+      "claim_ids": [
+        "C005"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "hydrothermal_vent",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "lateral_drift",
+      "music_cue": "reveal",
+      "why_this_image": "Scientific evidence \u2014 diagram supports the specific claim being made",
+      "narrative_role": "evidence"
+    },
+    {
+      "scene_id": "S023",
+      "text": "Fresh ice grains from Enceladus contain organic fragments. Some nitrogen- and oxygen-containing identifications are marked tentative by the authors \u2014 building blocks detected, not life confirmed.",
+      "start_s": 73.85,
+      "end_s": 77.21,
+      "duration_s": 3.36,
+      "claim_ids": [
+        "C005"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "hydrothermal_vent",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "slow_zoom",
+      "music_cue": "reveal",
+      "why_this_image": "Scientific evidence \u2014 diagram supports the specific claim being made",
+      "narrative_role": "evidence"
+    },
+    {
+      "scene_id": "S024",
+      "text": "Fresh ice grains from Enceladus contain organic fragments. Some nitrogen- and oxygen-containing identifications are marked tentative by the authors \u2014 building blocks detected, not life confirmed.",
+      "start_s": 77.21,
+      "end_s": 80.58,
+      "duration_s": 3.36,
+      "claim_ids": [
+        "C005"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "hydrothermal_vent",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "slow_zoom",
+      "music_cue": "reveal",
+      "why_this_image": "Scientific evidence \u2014 diagram supports the specific claim being made",
+      "narrative_role": "evidence"
+    },
+    {
+      "scene_id": "S025",
+      "text": "Fresh ice grains from Enceladus contain organic fragments. Some nitrogen- and oxygen-containing identifications are marked tentative by the authors \u2014 building blocks detected, not life confirmed.",
+      "start_s": 80.58,
+      "end_s": 83.94,
+      "duration_s": 3.36,
+      "claim_ids": [
+        "C005"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "hydrothermal_vent",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "pan",
+      "music_cue": "reveal",
+      "why_this_image": "Scientific evidence \u2014 diagram supports the specific claim being made",
+      "narrative_role": "evidence"
+    },
+    {
+      "scene_id": "S026",
+      "text": "Europa Clipper launched October 14, 2024. A Mars gravity assist in 2025, then an Earth gravity assist in 2026, sends it to Jupiter orbit in April 2030 \u2014 first Europa flyby in 2031.",
+      "start_s": 83.94,
+      "end_s": 87.09,
+      "duration_s": 3.15,
+      "claim_ids": [
+        "C006"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "projects/pilot/first_video/footage/archival/S009.jpg",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "lateral_drift",
+      "music_cue": "question",
+      "why_this_image": "Mission timeline \u2014 diagram or archive shows spacecraft trajectory",
+      "narrative_role": "mission"
+    },
+    {
+      "scene_id": "S027",
+      "text": "Europa Clipper launched October 14, 2024. A Mars gravity assist in 2025, then an Earth gravity assist in 2026, sends it to Jupiter orbit in April 2030 \u2014 first Europa flyby in 2031.",
+      "start_s": 87.09,
+      "end_s": 90.25,
+      "duration_s": 3.15,
+      "claim_ids": [
+        "C006"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "projects/pilot/first_video/footage/archival/S010.jpg",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "slow_zoom",
+      "music_cue": "question",
+      "why_this_image": "Mission timeline \u2014 diagram or archive shows spacecraft trajectory",
+      "narrative_role": "mission"
+    },
+    {
+      "scene_id": "S028",
+      "text": "Europa Clipper launched October 14, 2024. A Mars gravity assist in 2025, then an Earth gravity assist in 2026, sends it to Jupiter orbit in April 2030 \u2014 first Europa flyby in 2031.",
+      "start_s": 90.25,
+      "end_s": 93.41,
+      "duration_s": 3.15,
+      "claim_ids": [
+        "C006"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "projects/pilot/first_video/footage/archival/S011.jpg",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "slow_zoom",
+      "music_cue": "question",
+      "why_this_image": "Mission timeline \u2014 diagram or archive shows spacecraft trajectory",
+      "narrative_role": "mission"
+    },
+    {
+      "scene_id": "S029",
+      "text": "Europa Clipper launched October 14, 2024. A Mars gravity assist in 2025, then an Earth gravity assist in 2026, sends it to Jupiter orbit in April 2030 \u2014 first Europa flyby in 2031.",
+      "start_s": 93.41,
+      "end_s": 96.56,
+      "duration_s": 3.15,
+      "claim_ids": [
+        "C006"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "projects/pilot/first_video/footage/archival/S012.jpg",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "pan",
+      "music_cue": "question",
+      "why_this_image": "Mission timeline \u2014 diagram or archive shows spacecraft trajectory",
+      "narrative_role": "mission"
+    },
+    {
+      "scene_id": "S030",
+      "text": "Europa Clipper launched October 14, 2024. A Mars gravity assist in 2025, then an Earth gravity assist in 2026, sends it to Jupiter orbit in April 2030 \u2014 first Europa flyby in 2031.",
+      "start_s": 96.56,
+      "end_s": 99.72,
+      "duration_s": 3.15,
+      "claim_ids": [
+        "C006"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "projects/pilot/first_video/footage/archival/S013.jpg",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "lateral_drift",
+      "music_cue": "question",
+      "why_this_image": "Mission timeline \u2014 diagram or archive shows spacecraft trajectory",
+      "narrative_role": "mission"
+    },
+    {
+      "scene_id": "S031",
+      "text": "Europa Clipper launched October 14, 2024. A Mars gravity assist in 2025, then an Earth gravity assist in 2026, sends it to Jupiter orbit in April 2030 \u2014 first Europa flyby in 2031.",
+      "start_s": 99.72,
+      "end_s": 102.87,
+      "duration_s": 3.15,
+      "claim_ids": [
+        "C006"
+      ],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "projects/pilot/first_video/footage/archival/S014.jpg",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "slow_zoom",
+      "music_cue": "question",
+      "why_this_image": "Mission timeline \u2014 diagram or archive shows spacecraft trajectory",
+      "narrative_role": "mission"
+    },
+    {
+      "scene_id": "S032",
+      "text": "The spacecraft orbits Jupiter, not Europa. It will make 49 close flybys of Europa, measuring the ice, the ocean, and the plumes.",
+      "start_s": 102.87,
+      "end_s": 105.89,
+      "duration_s": 3.02,
+      "claim_ids": [
+        "C006",
+        "C007"
+      ],
+      "visual_class": "AI_RECONSTRUCTION",
+      "visual_claim": "AI_RECONSTRUCTION",
+      "asset_id": "projects/pilot/first_video/footage/archival/S016.jpg",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "slow_zoom",
+      "music_cue": "tension",
+      "why_this_image": "Mission timeline \u2014 diagram or archive shows spacecraft trajectory",
+      "narrative_role": "mission"
+    },
+    {
+      "scene_id": "S033",
+      "text": "The spacecraft orbits Jupiter, not Europa. It will make 49 close flybys of Europa, measuring the ice, the ocean, and the plumes.",
+      "start_s": 105.89,
+      "end_s": 108.92,
+      "duration_s": 3.02,
+      "claim_ids": [
+        "C006",
+        "C007"
+      ],
+      "visual_class": "AI_RECONSTRUCTION",
+      "visual_claim": "AI_RECONSTRUCTION",
+      "asset_id": "projects/pilot/first_video/footage/archival/S018.jpg",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "pan",
+      "music_cue": "tension",
+      "why_this_image": "Mission timeline \u2014 diagram or archive shows spacecraft trajectory",
+      "narrative_role": "mission"
+    },
+    {
+      "scene_id": "S034",
+      "text": "The spacecraft orbits Jupiter, not Europa. It will make 49 close flybys of Europa, measuring the ice, the ocean, and the plumes.",
+      "start_s": 108.92,
+      "end_s": 111.94,
+      "duration_s": 3.02,
+      "claim_ids": [
+        "C006",
+        "C007"
+      ],
+      "visual_class": "AI_RECONSTRUCTION",
+      "visual_claim": "AI_RECONSTRUCTION",
+      "asset_id": "projects/pilot/first_video/footage/archival/S019.jpg",
+      "source_type": "downloaded_archive",
+      "asset_origin": "downloaded_archive",
+      "motion_type": "lateral_drift",
+      "music_cue": "tension",
+      "why_this_image": "Mission timeline \u2014 diagram or archive shows spacecraft trajectory",
+      "narrative_role": "mission"
+    },
+    {
+      "scene_id": "S035",
+      "text": "What we know: Europa has an ocean, Enceladus has phosphates and organics. What we presume: those ingredients could support life. What we have not proven: that life exists there at all.",
+      "start_s": 111.94,
+      "end_s": 114.97,
+      "duration_s": 3.02,
+      "claim_ids": [
+        "C004"
+      ],
+      "visual_class": "TEXT_CARD",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "text_card_S035",
+      "source_type": "procedural",
+      "asset_origin": "procedural",
+      "motion_type": "slow_zoom",
+      "music_cue": "resolution",
+      "why_this_image": "Conclusion \u2014 text card summarizes known/presumed/unproven",
+      "narrative_role": "finale"
+    },
+    {
+      "scene_id": "S036",
+      "text": "What we know: Europa has an ocean, Enceladus has phosphates and organics. What we presume: those ingredients could support life. What we have not proven: that life exists there at all.",
+      "start_s": 114.97,
+      "end_s": 117.99,
+      "duration_s": 3.02,
+      "claim_ids": [
+        "C004"
+      ],
+      "visual_class": "TEXT_CARD",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "text_card_S036",
+      "source_type": "procedural",
+      "asset_origin": "procedural",
+      "motion_type": "slow_zoom",
+      "music_cue": "resolution",
+      "why_this_image": "Conclusion \u2014 text card summarizes known/presumed/unproven",
+      "narrative_role": "finale"
+    },
+    {
+      "scene_id": "S037",
+      "text": "What we know: Europa has an ocean, Enceladus has phosphates and organics. What we presume: those ingredients could support life. What we have not proven: that life exists there at all.",
+      "start_s": 117.99,
+      "end_s": 121.02,
+      "duration_s": 3.02,
+      "claim_ids": [
+        "C004"
+      ],
+      "visual_class": "TEXT_CARD",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "text_card_S037",
+      "source_type": "procedural",
+      "asset_origin": "procedural",
+      "motion_type": "pan",
+      "music_cue": "resolution",
+      "why_this_image": "Conclusion \u2014 text card summarizes known/presumed/unproven",
+      "narrative_role": "finale"
+    },
+    {
+      "scene_id": "S038",
+      "text": "What we know: Europa has an ocean, Enceladus has phosphates and organics. What we presume: those ingredients could support life. What we have not proven: that life exists there at all.",
+      "start_s": 121.02,
+      "end_s": 124.04,
+      "duration_s": 3.02,
+      "claim_ids": [
+        "C004"
+      ],
+      "visual_class": "TEXT_CARD",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "text_card_S038",
+      "source_type": "procedural",
+      "asset_origin": "procedural",
+      "motion_type": "lateral_drift",
+      "music_cue": "resolution",
+      "why_this_image": "Conclusion \u2014 text card summarizes known/presumed/unproven",
+      "narrative_role": "finale"
+    },
+    {
+      "scene_id": "S039",
+      "text": "Europa Clipper arrives at Europa in 2031. Until then, the ocean remains a hypothesis with evidence.",
+      "start_s": 124.04,
+      "end_s": 126.83,
+      "duration_s": 2.79,
+      "claim_ids": [
+        "C006"
+      ],
+      "visual_class": "TEXT_CARD",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "text_card_S039",
+      "source_type": "procedural",
+      "asset_origin": "procedural",
+      "motion_type": "slow_zoom",
+      "music_cue": "resolution",
+      "why_this_image": "Call to action \u2014 text card states what remains to be discovered",
+      "narrative_role": "cta"
+    },
+    {
+      "scene_id": "S040",
+      "text": "Europa Clipper arrives at Europa in 2031. Until then, the ocean remains a hypothesis with evidence.",
+      "start_s": 126.83,
+      "end_s": 129.63,
+      "duration_s": 2.79,
+      "claim_ids": [
+        "C006"
+      ],
+      "visual_class": "TEXT_CARD",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "text_card_S040",
+      "source_type": "procedural",
+      "asset_origin": "procedural",
+      "motion_type": "slow_zoom",
+      "music_cue": "resolution",
+      "why_this_image": "Call to action \u2014 text card states what remains to be discovered",
+      "narrative_role": "cta"
+    },
+    {
+      "scene_id": "S041",
+      "text": "Europa Clipper arrives at Europa in 2031. Until then, the ocean remains a hypothesis with evidence.",
+      "start_s": 129.63,
+      "end_s": 132.42,
+      "duration_s": 2.79,
+      "claim_ids": [
+        "C006"
+      ],
+      "visual_class": "TEXT_CARD",
+      "visual_claim": "DIAGRAM",
+      "asset_id": "text_card_S041",
+      "source_type": "procedural",
+      "asset_origin": "procedural",
+      "motion_type": "pan",
+      "music_cue": "resolution",
+      "why_this_image": "Call to action \u2014 text card states what remains to be discovered",
+      "narrative_role": "cta"
+    }
+  ],
+  "total_scenes": 41,
+  "total_duration_s": 132.38
+}

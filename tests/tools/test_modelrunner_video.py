@@ -25,6 +25,20 @@ from tools.video.modelrunner_video import ModelRunnerVideo
 REQUEST_ID = "req_ABCDEFGHIJKLMNOPQ"
 STATUS_URL = f"https://queue.modelrunner.run/x/y/requests/{REQUEST_ID}/status"
 RESPONSE_URL = f"https://queue.modelrunner.run/x/y/requests/{REQUEST_ID}"
+RECORD_URL_PREFIX = "https://queue.modelrunner.run/requests/"
+
+
+def record(billing_status: str, total_price: str | None = None) -> "FakeResponse":
+    """The account's request record, as GET /requests/{id} returns it."""
+    return FakeResponse({"id": REQUEST_ID, "status": "COMPLETED",
+                         "billingStatus": billing_status, "totalPrice": total_price})
+
+
+def strip_attempt(body: dict) -> dict:
+    """Drop the per-attempt metadata tag every submit adds, after checking it."""
+    body = dict(body)
+    assert set(body.pop("metadata")) == {"openmontage_attempt"}
+    return body
 
 
 class FakeResponse:
@@ -48,12 +62,21 @@ def fake_requests(monkeypatch):
     Queue items may be FakeResponse objects or Exceptions (raised to simulate
     transport failures). time.sleep advances the fake clock so the poll
     deadline logic is exercised for real.
+
+    Reads of the account's request record (GET /requests/{id}, the billing
+    read-back) are logged and served from their own "record" queue, so the
+    poll/result/download call order stays assertable. An empty record queue
+    answers 404 — the record is unreadable and the tool falls back to its
+    estimate.
     """
-    calls = {"post": [], "get": [], "put": []}
-    queues = {"post": [], "get": [], "put": []}
+    calls = {"post": [], "get": [], "put": [], "record": []}
+    queues = {"post": [], "get": [], "put": [], "record": []}
 
     def handler(method):
         def call(url, **kwargs):
+            if method == "get" and url.startswith(RECORD_URL_PREFIX):
+                calls["record"].append({"url": url, **kwargs})
+                return queues["record"].pop(0) if queues["record"] else FakeResponse(status_code=404)
             body = kwargs.get("data")
             if hasattr(body, "read"):
                 # requests consumes streamed bodies; record the actual bytes.
@@ -128,12 +151,16 @@ class TestVideoExecute:
         assert out.read_bytes() == b"MP4DATA"
         assert tool_result.data["request_id"] == REQUEST_ID
         assert tool_result.data["provider"] == "modelrunner"
-        assert tool_result.cost_usd == pytest.approx(0.50)  # wan 2.7, 720P default, 5s
+        # No readable request record -> the estimate (5s + 1s headroom at 720P).
+        assert tool_result.cost_usd == pytest.approx(0.60)
+        assert tool_result.data["billing"]["source"] == "estimate"
 
         submit = fake_requests.calls["post"][0]
         assert submit["url"] == "https://queue.modelrunner.run/wan-video/wan/v2.7/text-to-video"
         assert submit["headers"]["Authorization"] == "Key test-key"
-        body = submit["json"]
+        key = submit["headers"]["X-Idempotency-Key"]
+        assert submit["json"]["metadata"] == {"openmontage_attempt": key}
+        body = strip_attempt(submit["json"])
         assert body == {
             "prompt": "a rocket launching", "duration": 5,
             "resolution": "720P", "aspect_ratio": "16:9",
@@ -261,7 +288,7 @@ class TestTTSExecute:
         assert out.read_bytes() == b"WAV"
         submit = fake_requests.calls["post"][0]
         assert submit["url"].endswith("/hexgrad/kokoro-82m")
-        assert submit["json"] == {"text": "Welcome to the show.", "voice": "af_bella"}
+        assert strip_attempt(submit["json"]) == {"text": "Welcome to the show.", "voice": "af_bella"}
 
 
 class TestMusicExecute:
@@ -298,11 +325,15 @@ class TestErrorHandling:
                           "status_url": STATUS_URL, "response_url": RESPONSE_URL,
                           "error": "resolution not supported by this model"}),
         ]
+        fake_requests.queues["record"] = [record("failed", "0")]
         tool_result = ModelRunnerVideo().execute({"prompt": "p", "output_path": str(tmp_path / "o.mp4")})
         assert tool_result.success is False
         assert "resolution not supported" in tool_result.error
         assert tool_result.data["request_id"] == REQUEST_ID
+        # Zero only because the request record says the job was not billed.
+        assert tool_result.data["billing_status"] == "failed"
         assert tool_result.cost_usd == 0.0
+        assert tool_result.data["resubmit_safe"] is True, "a settled, unbilled job can be retried"
 
     def test_completed_with_error_is_a_failure(self, fake_requests, tmp_path):
         """A normalized provider failure: COMPLETED status, non-empty error."""
@@ -318,15 +349,20 @@ class TestErrorHandling:
         assert "upstream provider rejected" in tool_result.error
 
     def test_http_error_at_submit_includes_api_message(self, fake_requests, tmp_path):
-        fake_requests.queues["post"] = [
-            FakeResponse({"error": "Payment Required", "message": "Insufficient balance",
-                          "statusCode": 402}, status_code=402)
-        ]
+        refusal = FakeResponse({"error": "Payment Required", "message": "Insufficient balance",
+                                "statusCode": 402}, status_code=402)
+        fake_requests.queues["post"] = [refusal, refusal]
         tool_result = ModelRunnerVideo().execute({"prompt": "p", "output_path": str(tmp_path / "o.mp4")})
         assert tool_result.success is False
         assert "402" in tool_result.error
         assert "Insufficient balance" in tool_result.error
-        assert tool_result.data == {}  # nothing was submitted, nothing to recover
+        # A definite refusal: nothing was submitted, nothing to recover.
+        assert tool_result.data == {"billing_status": "not_submitted", "resubmit_safe": True}
+        assert tool_result.cost_usd == 0.0
+        # The same refusal on the confirming same-key re-send proves the key
+        # was released, i.e. nothing was dispatched.
+        first, second = fake_requests.calls["post"]
+        assert first["headers"]["X-Idempotency-Key"] == second["headers"]["X-Idempotency-Key"]
 
     def test_poll_timeout_reports_recovery_urls_and_billing_caveat(self, fake_requests, tmp_path):
         fake_requests.queues["post"] = [SUBMITTED]
@@ -342,7 +378,10 @@ class TestErrorHandling:
         assert tool_result.data["billing_status"] == "possibly_billed"
         assert tool_result.data["request_id"] == REQUEST_ID
         assert tool_result.data["status_url"] == STATUS_URL
-        assert tool_result.cost_usd == 0.0
+        assert tool_result.data["resubmit_safe"] is False
+        assert tool_result.data["estimated_usd"] == pytest.approx(0.60)
+        # Accepted and unverified: the charge is unknown, never reported as 0.
+        assert tool_result.cost_usd is None
 
     def test_transient_transport_errors_are_tolerated(self, fake_requests, tmp_path):
         fake_requests.queues["post"] = [SUBMITTED]
@@ -477,7 +516,7 @@ class TestAuthBoundary:
         assert "incomplete queue envelope" in tool_result.error
         assert tool_result.data["request_id"] == REQUEST_ID
         assert tool_result.data["billing_status"] == "possibly_billed"
-        assert tool_result.cost_usd == 0.0
+        assert tool_result.cost_usd is None
 
 
 class TestFailBeforeBilling:
@@ -544,7 +583,7 @@ class TestFailBeforeBilling:
             })
             assert tool_result.success is False
             assert "poll" in tool_result.error
-            assert tool_result.data == {}, "nothing was submitted"
+            assert tool_result.data == {"billing_status": "not_submitted", "resubmit_safe": True}
         assert not fake_requests.calls["post"]
 
     def test_invalid_payload_fails_before_media_upload(self, fake_requests, tmp_path):
@@ -563,3 +602,178 @@ class TestFailBeforeBilling:
         assert "duration" in tool_result.error
         assert not fake_requests.calls["post"], "no upload initiate, no submission"
         assert not fake_requests.calls["put"]
+
+
+# ------------------------------------------------------------------
+# Billing provenance and recovery (PR #574 review)
+# ------------------------------------------------------------------
+
+def _ok_gets(url="https://media.modelrunner.ai/c.mp4"):
+    return [completed_status(), result(url), FakeResponse(content=b"MP4")]
+
+
+class TestBillingReadBack:
+
+    def test_success_reports_the_charged_amount_not_the_estimate(self, fake_requests, tmp_path):
+        """Delivered seconds can exceed the request (4.1s for a 4s Seedance
+        clip): the reported cost is the record's totalPrice."""
+        fake_requests.queues["post"] = [SUBMITTED]
+        fake_requests.queues["get"] = _ok_gets()
+        fake_requests.queues["record"] = [record("charged", "0.2173")]
+        tool_result = ModelRunnerVideo().execute({
+            "prompt": "p", "model": "bytedance/seedance-v2-mini/text-to-video", "duration": 4,
+            "output_path": str(tmp_path / "o.mp4"),
+        })
+        assert tool_result.success is True, tool_result.error
+        assert tool_result.cost_usd == pytest.approx(0.2173)
+        billing = tool_result.data["billing"]
+        assert billing["source"] == "modelrunner_request_record"
+        assert billing["charged_usd"] == pytest.approx(0.2173)
+        assert billing["estimated_usd"] >= 0.2173, "the estimate must be an upper bound"
+        assert fake_requests.calls["record"][0]["url"] == f"{RECORD_URL_PREFIX}{REQUEST_ID}"
+        assert fake_requests.calls["record"][0]["headers"]["Authorization"] == "Key test-key"
+
+    def test_failure_after_acceptance_reads_the_charge(self, fake_requests, tmp_path):
+        """A job that billed and then failed to download reports the charge."""
+        fake_requests.queues["post"] = [SUBMITTED]
+        fake_requests.queues["get"] = [completed_status(), result("https://media.modelrunner.ai/c.mp4"),
+                                       ConnectionError("download reset")]
+        fake_requests.queues["record"] = [record("charged", "0.5")]
+        tool_result = ModelRunnerVideo().execute({"prompt": "p", "output_path": str(tmp_path / "o.mp4")})
+        assert tool_result.success is False
+        assert tool_result.cost_usd == pytest.approx(0.5)
+        assert tool_result.data["billing_status"] == "charged"
+        assert tool_result.data["resubmit_safe"] is False
+        assert REQUEST_ID in tool_result.data["recovery_hint"]
+
+
+class TestIdempotentSubmit:
+
+    def test_lost_response_is_resent_under_the_same_key(self, fake_requests, tmp_path):
+        replay = FakeResponse(SUBMITTED._payload, status_code=200)  # the server's replay
+        fake_requests.queues["post"] = [ConnectionError("reset"), replay]
+        fake_requests.queues["get"] = _ok_gets()
+        tool_result = ModelRunnerVideo().execute({"prompt": "p", "output_path": str(tmp_path / "o.mp4")})
+        assert tool_result.success is True, tool_result.error
+        first, second = fake_requests.calls["post"]
+        assert first["headers"]["X-Idempotency-Key"] == second["headers"]["X-Idempotency-Key"]
+        assert first["json"] == second["json"], "a re-send must be byte-identical"
+        assert tool_result.data["request_id"] == REQUEST_ID
+
+    def test_gateway_error_then_in_progress_then_replay(self, fake_requests, tmp_path):
+        in_flight = FakeResponse({"message": "in progress", "details": {"code": "idempotency_key_in_progress"}},
+                                 status_code=409)
+        fake_requests.queues["post"] = [FakeResponse(text="Gateway Timeout", status_code=504), in_flight,
+                                        FakeResponse(SUBMITTED._payload, status_code=200)]
+        fake_requests.queues["get"] = _ok_gets()
+        tool_result = ModelRunnerVideo().execute({"prompt": "p", "output_path": str(tmp_path / "o.mp4")})
+        assert tool_result.success is True, tool_result.error
+        assert len({c["headers"]["X-Idempotency-Key"] for c in fake_requests.calls["post"]}) == 1
+
+    def test_failure_before_any_send_is_not_submitted(self, fake_requests, tmp_path):
+        """A POST that never left the machine (a local error before any I/O)
+        is a definite non-submission: no retry, cost 0.0, resubmit is safe."""
+        fake_requests.queues["post"] = [RuntimeError("socket blocked")]
+        result = ModelRunnerVideo().execute({"prompt": "p", "output_path": str(tmp_path / "o.mp4")})
+        assert result.success is False
+        assert result.cost_usd == 0.0
+        assert result.data["billing_status"] == "not_submitted"
+        assert result.data["resubmit_safe"] is True
+        assert len(fake_requests.calls["post"]) == 1
+
+    def test_no_definite_answer_is_reported_as_unknown_never_zero(self, fake_requests, tmp_path):
+        fake_requests.queues["post"] = [ConnectionError("reset") for _ in range(6)]
+        tool_result = ModelRunnerVideo().execute({"prompt": "p", "output_path": str(tmp_path / "o.mp4")})
+        assert tool_result.success is False
+        assert tool_result.cost_usd is None
+        data = tool_result.data
+        assert data["billing_status"] == "unknown"
+        assert data["submit_outcome"] == "ambiguous"
+        assert data["resubmit_safe"] is False
+        key = fake_requests.calls["post"][0]["headers"]["X-Idempotency-Key"]
+        assert data["attempt_id"] == key
+        assert key in data["recovery_hint"]
+        assert len(fake_requests.calls["post"]) == 6, "bounded re-sends, then stop"
+        assert not fake_requests.calls["get"]
+
+    def test_refusal_whose_key_was_kept_is_unknown(self, fake_requests, tmp_path):
+        """A 400 can follow an accepted dispatch (the server keeps the key):
+        the confirming re-send answers 'in progress', so the outcome is unknown."""
+        kept = FakeResponse({"message": "in progress", "details": {"code": "idempotency_key_in_progress"}},
+                            status_code=409)
+        fake_requests.queues["post"] = [FakeResponse({"message": "insert failed"}, status_code=400), kept]
+        tool_result = ModelRunnerVideo().execute({"prompt": "p", "output_path": str(tmp_path / "o.mp4")})
+        assert tool_result.success is False
+        assert tool_result.cost_usd is None
+        assert tool_result.data["billing_status"] == "unknown"
+        assert tool_result.data["resubmit_safe"] is False
+        assert len(fake_requests.calls["post"]) == 2
+
+    def test_rate_limit_is_resent_under_the_same_key(self, fake_requests, tmp_path):
+        """An edge 429 says nothing about an earlier lost send; re-sending is free."""
+        fake_requests.queues["post"] = [ConnectionError("reset"), FakeResponse(text="Too Many", status_code=429),
+                                        FakeResponse(SUBMITTED._payload, status_code=200)]
+        fake_requests.queues["get"] = _ok_gets()
+        tool_result = ModelRunnerVideo().execute({"prompt": "p", "output_path": str(tmp_path / "o.mp4")})
+        assert tool_result.success is True, tool_result.error
+        assert len({c["headers"]["X-Idempotency-Key"] for c in fake_requests.calls["post"]}) == 1
+
+    def test_outcome_unknown_answer_stops_resending(self, fake_requests, tmp_path):
+        unknown = FakeResponse({"message": "?", "details": {"code": "idempotency_outcome_unknown"}}, status_code=409)
+        fake_requests.queues["post"] = [ConnectionError("reset"), unknown]
+        tool_result = ModelRunnerVideo().execute({"prompt": "p", "output_path": str(tmp_path / "o.mp4")})
+        assert tool_result.success is False
+        assert tool_result.cost_usd is None
+        assert tool_result.data["billing_status"] == "unknown"
+        assert len(fake_requests.calls["post"]) == 2
+
+
+class TestCollect:
+
+    def test_collect_by_request_id_never_submits(self, fake_requests, tmp_path):
+        out = tmp_path / "o.mp4"
+        fake_requests.queues["get"] = _ok_gets()
+        fake_requests.queues["record"] = [record("charged", "0.5")]
+        tool_result = ModelRunnerVideo().execute({"request_id": REQUEST_ID, "output_path": str(out)})
+        assert tool_result.success is True, tool_result.error
+        assert fake_requests.calls["post"] == [], "a collect call makes no submission"
+        assert out.read_bytes() == b"MP4"
+        assert tool_result.data["collected"] is True
+        # The job's charge was reported by the call that submitted it.
+        assert tool_result.cost_usd == 0.0
+        assert tool_result.data["billing"]["charged_usd"] == pytest.approx(0.5)
+        assert fake_requests.calls["get"][0]["url"].endswith(f"/requests/{REQUEST_ID}/status")
+
+    def test_download_failure_then_collect_pays_once(self, fake_requests, tmp_path):
+        fake_requests.queues["post"] = [SUBMITTED]
+        fake_requests.queues["get"] = [completed_status(), result("https://media.modelrunner.ai/c.mp4"),
+                                       ConnectionError("download reset")]
+        first = ModelRunnerVideo().execute({"prompt": "p", "output_path": str(tmp_path / "o.mp4")})
+        assert first.success is False
+
+        fake_requests.queues["get"] = _ok_gets()
+        again = ModelRunnerVideo().execute({"status_url": first.data["status_url"],
+                                            "output_path": str(tmp_path / "o.mp4")})
+        assert again.success is True, again.error
+        assert len(fake_requests.calls["post"]) == 1, "recovery must not submit a second paid job"
+
+    def test_collect_refuses_off_host_urls(self, fake_requests, tmp_path):
+        tool_result = ModelRunnerVideo().execute({"status_url": "https://evil.example.com/requests/x/status",
+                                                  "output_path": str(tmp_path / "o.mp4")})
+        assert tool_result.success is False
+        assert not fake_requests.calls["get"] and not fake_requests.calls["record"]
+        # The caller named an existing job: a failed collect never says resubmit.
+        assert tool_result.data["billing_status"] == "not_collected"
+        assert tool_result.data["resubmit_safe"] is False
+        assert tool_result.cost_usd == 0.0
+
+    def test_collect_works_for_every_tool(self, fake_requests, tmp_path):
+        for tool, url in ((ModelRunnerImage(), ["https://media.modelrunner.ai/a.jpeg"]),
+                          (ModelRunnerTTS(), "https://media.modelrunner.ai/a.wav"),
+                          (ModelRunnerMusic(), "https://media.modelrunner.ai/b.wav")):
+            fake_requests.queues["get"] = [completed_status(), result(url), FakeResponse(content=b"X")]
+            out = tmp_path / f"{tool.name}.out"
+            tool_result = tool.execute({"request_id": REQUEST_ID, "output_path": str(out)})
+            assert tool_result.success is True, (tool.name, tool_result.error)
+            assert tool_result.data["collected"] is True
+        assert fake_requests.calls["post"] == []

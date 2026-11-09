@@ -132,7 +132,10 @@ class ToolResult:
     data: dict[str, Any] = field(default_factory=dict)
     artifacts: list[str] = field(default_factory=list)
     error: Optional[str] = None
-    cost_usd: float = 0.0
+    # USD this call caused to be spent. None = unknown: a paid job was (or may
+    # have been) accepted and its charge could not be verified. Budget
+    # accounting must treat None as "still possibly spent", never as zero.
+    cost_usd: Optional[float] = 0.0
     duration_seconds: float = 0.0
     seed: Optional[int] = None
     model: Optional[str] = None

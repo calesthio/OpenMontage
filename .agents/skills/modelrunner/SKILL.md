@@ -108,14 +108,58 @@ route that can.
 All four tools submit to the ModelRunner queue, poll the returned request id,
 download the output, and return `ToolResult` provenance containing the
 provider, exact endpoint, request id, submitted parameters, source URL,
-artifact paths, and estimated cost. An unknown route, invalid enum, missing
-media input, or out-of-range duration fails BEFORE billing, with the supported
-choices in the error. A failure after submission returns the `request_id`,
-`status_url`, and `response_url` with `billing_status: "possibly_billed"` —
-the job may still complete and bill; check the status URL rather than
-resubmitting, and never switch providers silently. A request can report
-COMPLETED with a non-empty `error` (a normalized provider failure); the tools
-treat that as failure, never as output.
+artifact paths, and cost. An unknown route, invalid enum, missing media input,
+or out-of-range duration fails BEFORE billing, with the supported choices in
+the error. A request can report COMPLETED with a non-empty `error` (a
+normalized provider failure); the tools treat that as failure, never as output.
+
+**Cost.** After a job finishes, the tool reads the request record back from
+ModelRunner and reports what was actually charged. `data["billing"]` says
+where the figure came from:
+- `"source": "modelrunner_request_record"` means it is the real charge;
+- `"source": "estimate"` means the charge had not settled when the tool read
+  it back.
+
+`cost_usd` is `None` when the charge is **unknown**: the job was or may have
+been accepted, and its outcome cannot be verified. It is never `0.0` in that
+case.
+
+**Failures.** Every failure carries `billing_status` and `resubmit_safe`:
+
+| `billing_status` | Meaning | `cost_usd` | `resubmit_safe` |
+|---|---|---|---|
+| `not_submitted` | Refused before anything was accepted | `0.0` | true |
+| `not_collected` | A collect call failed before reaching the job | `0.0` | false |
+| `unknown` | The submit's outcome is unknown | `None` | false |
+| `possibly_billed` | Accepted; the charge has not settled | `None` | false |
+| `failed` | The job failed and was not charged | `0.0` | true |
+| `charged` / `partial` | Charged (e.g. the download failed after completion) | the charge | false |
+
+When `resubmit_safe` is false, do not resubmit. Collect the existing job
+instead: pass the failure's `request_id` (or its `status_url` /
+`response_url`) back to the same tool. A collect call polls, downloads and
+reports the job without submitting anything:
+
+```python
+tool.execute({"request_id": failed.data["request_id"], "output_path": "out.mp4"})
+```
+
+A collect call reports `cost_usd: 0.0`, because it caused no new spend. The
+job's own charge is in `data["billing"]`.
+
+**Submits are idempotent.** Each submit sends a per-attempt
+`X-Idempotency-Key` and retries transport errors, 5xx and 429 responses under
+that same key, so a lost response never starts a second paid job. A refusal is
+confirmed by one more same-key send before it is reported as `not_submitted`:
+the server answers the same refusal only when nothing was dispatched. If the outcome
+is still unknown after the retries, the failure carries an `attempt_id`, and
+the request is tagged with metadata `openmontage_attempt=<attempt_id>`. Find
+it in your ModelRunner request history before resubmitting. `extra_params`
+may not set `metadata`.
+
+**Estimates.** Per-second video and per-audio-second TTS estimates add one
+second of headroom (`rate x (seconds + 1)`). Billing is on the seconds
+delivered, which can run past the request: a 4s Seedance clip delivered 4.1s.
 
 The API key is only ever sent to `queue.modelrunner.run` and
 `api.modelrunner.run`; output downloads are unauthenticated.

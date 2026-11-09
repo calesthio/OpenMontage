@@ -161,10 +161,19 @@ class CostTracker:
         self._approved_tools.add(tool)
         self._save()
 
-    def reconcile(self, entry_id: str, actual_usd: float, success: bool = True) -> None:
-        """Reconcile actual spend after tool execution."""
+    def reconcile(self, entry_id: str, actual_usd: Optional[float], success: bool = True) -> None:
+        """Reconcile actual spend after tool execution.
+
+        `actual_usd=None` means the charge is unknown (a paid job may have
+        been accepted). The entry then counts as spent at its reserved
+        amount, or its estimate if it was never reserved, so the budget
+        stays conservative; `actual_unknown` marks it for later correction.
+        """
         entry = self._find(entry_id)
         entry["status"] = EntryStatus.COMPLETED.value if success else EntryStatus.FAILED.value
+        if actual_usd is None:
+            actual_usd = entry.get("reserved_usd") or entry.get("estimated_usd") or 0.0
+            entry["actual_unknown"] = True
         entry["actual_usd"] = round(actual_usd, 4)
         entry["reserved_usd"] = 0.0
         entry["timestamp"] = self._now()

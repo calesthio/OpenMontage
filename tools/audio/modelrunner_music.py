@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from tools import modelrunner_client
+from tools import modelrunner_client, modelrunner_jobs
 from tools.modelrunner_models import MUSIC_MODELS, PRICING_SNAPSHOT
 from tools.base_tool import (
     BaseTool,
@@ -94,6 +94,7 @@ class ModelRunnerMusic(BaseTool):
             "poll_interval": {"type": "number", "default": 3.0},
             "poll_timeout": {"type": "number", "default": 600.0},
             "output_path": {"type": "string"},
+            **modelrunner_jobs.COLLECT_SCHEMA_PROPERTIES,
         },
     }
 
@@ -177,28 +178,32 @@ class ModelRunnerMusic(BaseTool):
             return ToolResult(success=False, error="MODELRUNNER_KEY not set. " + self.install_instructions)
 
         started = time.time()
+        collecting = modelrunner_jobs.is_collect(inputs)
+        estimate = self.estimate_cost(inputs)
         queue: dict[str, Any] = {}
+        payload: dict[str, Any] = {}
         try:
             poll_interval, poll_timeout = modelrunner_client.parse_poll_controls(inputs, 3.0, 600.0)
             model = self._resolve_model(inputs)
-            payload = self._build_payload(inputs, model)
-            queue = modelrunner_client.submit(model, payload, api_key)
-            modelrunner_client.poll(
-                queue["status_url"], api_key,
-                interval=poll_interval,
-                timeout=poll_timeout,
-            )
-            result = modelrunner_client.get_result(queue["response_url"], api_key)
-            source_url = modelrunner_client.extract_outputs(result, "single")[0]
+            if collecting:
+                # Recover an accepted job: poll + download only, never submit.
+                queue = modelrunner_jobs.collect_coordinates(inputs, model)
+            else:
+                payload = self._build_payload(inputs, model)
+                queue = modelrunner_client.submit(model, payload, api_key)
+            source_url = modelrunner_jobs.fetch_outputs(
+                queue, api_key, interval=poll_interval, timeout=poll_timeout, cardinality="single"
+            )[0]
             output_path = Path(
                 inputs.get("output_path") or f"modelrunner_music.{MUSIC_MODELS[model]['output_format']}"
             )
             modelrunner_client.download(source_url, output_path)
-        except (modelrunner_client.ModelRunnerError, ValueError, KeyError) as exc:
-            return self._failure(exc, queue, started)
-        except Exception as exc:  # noqa: BLE001
-            return self._failure(exc, queue, started)
+        except Exception as exc:  # noqa: BLE001 - every failure reports billing provenance
+            return modelrunner_jobs.failure(
+                "music generation", exc, queue, started, estimate, api_key, collected=collecting
+            )
 
+        cost, billing = modelrunner_jobs.settle(queue, api_key, estimate, collected=collecting)
         return ToolResult(
             success=True,
             data={
@@ -206,22 +211,10 @@ class ModelRunnerMusic(BaseTool):
                 "output": str(output_path), "output_path": str(output_path),
                 "request_id": queue["request_id"], "source_url": source_url,
                 "format": MUSIC_MODELS[model]["output_format"], "request_params": payload,
+                "billing": billing, "collected": collecting,
             },
             artifacts=[str(output_path)],
-            cost_usd=self.estimate_cost({**inputs, "model": model}),
+            cost_usd=cost,
             duration_seconds=round(time.time() - started, 2),
             model=model,
-        )
-
-    def _failure(self, exc: Exception, queue: dict[str, Any], started: float) -> ToolResult:
-        known = queue or getattr(exc, "queue", {})
-        data: dict[str, Any] = {}
-        if known:
-            data = {**known, "billing_status": "possibly_billed"}
-        return ToolResult(
-            success=False,
-            error=f"ModelRunner music generation failed: {exc}",
-            data=data,
-            cost_usd=0.0,
-            duration_seconds=round(time.time() - started, 2),
         )

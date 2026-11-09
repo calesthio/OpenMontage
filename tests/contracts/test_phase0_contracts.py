@@ -484,6 +484,18 @@ class TestCostTracker:
         assert tracker.budget_spent_usd == 0.04
         assert tracker.budget_reserved_usd == 0.0
 
+    def test_reconcile_unknown_actual_counts_the_reservation(self):
+        """An accepted job whose charge is unknown (cost_usd None) must not
+        reconcile as free: it is counted at the reserved amount and flagged."""
+        tracker = CostTracker(budget_total_usd=10.0, mode=BudgetMode.OBSERVE)
+        entry_id = tracker.estimate("video_selector", "generate", 0.60)
+        tracker.reserve(entry_id)
+        tracker.reconcile(entry_id, None, success=False)
+        assert tracker.budget_spent_usd == pytest.approx(0.60)
+        assert tracker.budget_reserved_usd == 0.0
+        entry = next(e for e in tracker.entries if e["id"] == entry_id)
+        assert entry["actual_unknown"] is True
+
     def test_cap_mode_blocks_overspend(self):
         tracker = CostTracker(
             budget_total_usd=1.0,

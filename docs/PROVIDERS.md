@@ -461,9 +461,13 @@ tiers visible.
 Inspect each tool's `get_info()["model_catalog"]` for exact endpoint ids,
 rate tables, durations, sizes, and voices. A request can report COMPLETED and
 still carry an error (a normalized provider failure); the tools treat that as
-failure, and a post-submit failure returns the request id and status URL with
-`billing_status: "possibly_billed"` instead of pretending the spend didn't
-happen. Rates were verified 2026-08-28 — reconfirm on the live model page
+failure. `cost_usd` is the charge read back from the ModelRunner request
+record, and `None` when the charge is unknown — never a silent `0.0`. Each
+failure carries a `billing_status` and `resubmit_safe`. An accepted job can be
+collected again by passing its `request_id` back to the tool, which submits
+nothing new. Submits carry a per-attempt `X-Idempotency-Key`, so a retried
+submit never starts a second paid job. Per-second estimates include one second
+of headroom, because billing is on the seconds delivered. Rates were verified 2026-08-28 — reconfirm on the live model page
 before a paid batch.
 
 ---

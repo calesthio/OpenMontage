@@ -32,6 +32,8 @@ from __future__ import annotations
 import ipaddress
 import mimetypes
 import os
+import re
+import secrets
 import time
 from pathlib import Path
 from typing import Any
@@ -40,6 +42,28 @@ from urllib.parse import urlparse
 QUEUE_BASE_URL = "https://queue.modelrunner.run"
 API_BASE_URL = "https://api.modelrunner.run"
 STORAGE_INITIATE_ENDPOINT = f"{API_BASE_URL}/storage/upload/initiate"
+
+# Every submit carries a fresh per-attempt key. A retry of the SAME attempt
+# (same key, byte-identical body) gets the original request back instead of
+# starting — and billing — a second job; a different body under the same key
+# is refused with 409 rather than silently replayed.
+IDEMPOTENCY_HEADER = "X-Idempotency-Key"
+# The same id is written into the request's metadata, so an attempt whose
+# outcome is unknown can be found in the account's request history:
+#   GET /requests?metadata={"openmontage_attempt": "<attempt_id>"}
+ATTEMPT_METADATA_KEY = "openmontage_attempt"
+# Waits between re-sends of one attempt after a lost or 5xx response. The
+# first attempt may still be running server-side (a submit can take minutes on
+# slow routes), so the server answers "in progress" until it finishes.
+_SUBMIT_RETRY_DELAYS = (2.0, 5.0, 10.0, 20.0, 30.0)
+# While the server reports the first send still running, keep asking for this
+# long. A synchronous route holds the create open for the whole generation.
+_IN_PROGRESS_WAIT_S = 600.0
+_IN_PROGRESS_POLL_S = 30.0
+# 409 codes that describe the key itself, never the request.
+_KEY_IN_PROGRESS = "idempotency_key_in_progress"
+_KEY_STATE_CODES = {_KEY_IN_PROGRESS, "idempotency_outcome_unknown", "idempotency_key_reused"}
+_REQUEST_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 
 # The API documents COMPLETED as the only success status. FAILED and CANCELLED
 # are terminal failures. Anything else (IN_QUEUE, IN_PROGRESS, or a status
@@ -82,9 +106,10 @@ class ModelRunnerError(RuntimeError):
 class ModelRunnerSubmitError(ModelRunnerError):
     """Submission failed after the queue may already have accepted the job.
 
-    `queue` carries whatever sanitized coordinates the response exposed
-    (request_id at minimum) so tools can report honest billing provenance
-    even when the rest of the envelope was unusable.
+    `queue` carries whatever sanitized coordinates are known so tools can
+    report honest billing provenance: `request_id` when the response exposed
+    one, or `attempt_id` + `submit_outcome="ambiguous"` when no response ever
+    arrived and the job may or may not exist.
     """
 
     def __init__(self, message: str, queue: dict[str, Any] | None = None) -> None:
@@ -150,6 +175,17 @@ def _error_detail(response: Any) -> str:
     return str(getattr(response, "text", ""))[:500]
 
 
+def _error_code(response: Any) -> str | None:
+    """The API's machine-readable `details.code`, when the error body has one."""
+    try:
+        body = response.json()
+    except Exception:  # noqa: BLE001
+        return None
+    details = body.get("details") if isinstance(body, dict) else None
+    code = details.get("code") if isinstance(details, dict) else None
+    return str(code) if code else None
+
+
 def _raise_for_status(response: Any, context: str) -> None:
     status = getattr(response, "status_code", 200)
     if 300 <= status < 400:
@@ -201,6 +237,11 @@ def merge_extra_params(payload: dict[str, Any], extra: Any) -> dict[str, Any]:
     """
     if not isinstance(extra, dict):
         return payload
+    if "metadata" in extra:
+        raise ValueError(
+            "extra_params may not set `metadata`: it carries the submit attempt id "
+            "used to find a request whose submit outcome is unknown."
+        )
     overlap = sorted(set(extra) & set(payload))
     if overlap:
         raise ValueError(
@@ -211,33 +252,130 @@ def merge_extra_params(payload: dict[str, Any], extra: Any) -> dict[str, Any]:
     return payload
 
 
+def _never_sent(exc: BaseException, requests_module: Any) -> bool:
+    """True only when a POST provably never reached the network.
+
+    That is a refused or unresolvable connection, a connect timeout, or a
+    local error raised before any I/O (body encoding, a blocked socket).
+    Transport failures surface as `requests` exceptions or OSError; any of
+    those other than a failed connect may have been sent, so they count as
+    possibly sent.
+    """
+    exceptions = getattr(requests_module, "exceptions", None)
+    if exceptions is not None:
+        if isinstance(exc, exceptions.ConnectTimeout):
+            return True
+        if isinstance(exc, exceptions.ConnectionError):
+            try:
+                from urllib3.exceptions import NewConnectionError
+            except ImportError:  # pragma: no cover - urllib3 ships with requests
+                return False
+            reason = exc.args[0] if exc.args else None
+            return isinstance(getattr(reason, "reason", reason), NewConnectionError)
+        local = tuple(
+            getattr(exceptions, name)
+            for name in ("InvalidJSONError", "InvalidHeader", "InvalidURL", "MissingSchema", "InvalidSchema")
+            if hasattr(exceptions, name)
+        )
+        if local and isinstance(exc, local):
+            return True  # raised while preparing the request, before any socket
+        if isinstance(exc, exceptions.RequestException):
+            return False
+    return not isinstance(exc, OSError)
+
+
 def submit(endpoint_id: str, payload: dict[str, Any], api_key: str, timeout: int = 60) -> dict[str, Any]:
-    """Submit a generation request. Returns {request_id, status_url, response_url}.
+    """Submit a generation request.
+
+    Returns {request_id, status_url, response_url, attempt_id}.
+
+    The POST carries a per-attempt `X-Idempotency-Key`. If the response is
+    lost (transport error) or the edge answers 5xx, the identical request is
+    re-sent under the same key, so an accepted job is returned rather than
+    started twice. If no attempt yields an answer, a ModelRunnerSubmitError
+    with `submit_outcome="ambiguous"` and the `attempt_id` is raised: the job
+    may exist, and resubmitting would risk paying twice.
 
     If the POST succeeded but the queue envelope is unusable (incomplete, or
     pointing off the first-party hosts), the job may already exist server-side
-    — a ModelRunnerSubmitError carries the request_id so callers can still
-    report billing provenance.
+    — the ModelRunnerSubmitError carries the request_id.
     """
     import requests
 
     url = f"{QUEUE_BASE_URL}/{endpoint_id}"
-    try:
-        response = requests.post(
-            url, headers=_headers(api_key), json=payload, timeout=timeout, allow_redirects=False
+    attempt_id = secrets.token_urlsafe(16)
+    body = {**payload, "metadata": {ATTEMPT_METADATA_KEY: attempt_id}}
+    headers = {**_headers(api_key), IDEMPOTENCY_HEADER: attempt_id}
+    ambiguous = {"attempt_id": attempt_id, "submit_outcome": "ambiguous"}
+
+    # The status code of a refusal cannot say whether the server released the
+    # key (nothing dispatched) or kept it (the job may exist): both can be a
+    # 400. So a refusal is re-sent once under the same key, and the answer to
+    # that settles it: the same refusal means the key was released, a 409 key
+    # state means the first attempt may have dispatched.
+    delays = iter(_SUBMIT_RETRY_DELAYS)
+    in_progress_deadline: float | None = None
+    refusal_status: int | None = None
+    response = None
+    last_problem = ""
+    maybe_sent = False
+    while True:
+        try:
+            candidate = requests.post(url, headers=headers, json=body, timeout=timeout, allow_redirects=False)
+        except Exception as exc:  # noqa: BLE001 - no answer: the job may or may not exist
+            last_problem = f"could not reach ModelRunner at {url}: {exc}"
+            if not maybe_sent and _never_sent(exc, requests):
+                # Nothing has left this machine, so nothing can bill and a
+                # plain rerun is safe: fail now, without a queue.
+                raise ModelRunnerError(last_problem) from exc
+            maybe_sent = True
+            wait = None if refusal_status is not None else next(delays, None)
+        else:
+            maybe_sent = True
+            status = getattr(candidate, "status_code", 200)
+            code = _error_code(candidate) if status == 409 else None
+            last_problem = f"HTTP {status}: {_error_detail(candidate)}"
+            if status < 300:
+                response = candidate
+                break
+            if refusal_status is not None:
+                if status == refusal_status and code not in _KEY_STATE_CODES:
+                    response = candidate  # the key was released: a definite refusal
+                break
+            if code == _KEY_IN_PROGRESS:
+                if in_progress_deadline is None:
+                    in_progress_deadline = time.monotonic() + _IN_PROGRESS_WAIT_S
+                wait = _IN_PROGRESS_POLL_S if time.monotonic() < in_progress_deadline else None
+            elif status >= 500 or status == 429:
+                wait = next(delays, None)
+            elif status < 400 or code in _KEY_STATE_CODES:
+                break  # a redirect, or a key whose first attempt may have dispatched
+            else:
+                refusal_status, wait = status, 0.0
+        if wait is None:
+            break
+        if wait:
+            time.sleep(wait)
+
+    if response is None:
+        raise ModelRunnerSubmitError(
+            f"ModelRunner submission to {endpoint_id} got no definite answer ({last_problem}). "
+            f"The job may have started and may bill; find it by metadata "
+            f"{ATTEMPT_METADATA_KEY}={attempt_id} before resubmitting.",
+            queue=ambiguous,
         )
-    except ModelRunnerError:
-        raise
-    except Exception as exc:  # noqa: BLE001
-        raise ModelRunnerError(f"Could not reach ModelRunner at {url}: {exc}") from exc
 
     _raise_for_status(response, f"ModelRunner submission to {endpoint_id}")
-    data = _json_of(response, "ModelRunner submission")
+    try:
+        data = _json_of(response, "ModelRunner submission")
+    except ModelRunnerError as exc:
+        # A 2xx is sent only after the request row exists.
+        raise ModelRunnerSubmitError(str(exc), queue=ambiguous) from exc
 
     request_id = data.get("request_id")
     status_url = data.get("status_url")
     response_url = data.get("response_url")
-    accepted = {"request_id": str(request_id)} if request_id else {}
+    accepted = {"request_id": str(request_id), "attempt_id": attempt_id} if request_id else dict(ambiguous)
     if not (request_id and status_url and response_url):
         raise ModelRunnerSubmitError(
             f"ModelRunner submission returned an incomplete queue envelope: {str(data)[:500]}",
@@ -252,6 +390,54 @@ def submit(endpoint_id: str, payload: dict[str, Any], api_key: str, timeout: int
         "request_id": str(request_id),
         "status_url": str(status_url),
         "response_url": str(response_url),
+        "attempt_id": attempt_id,
+    }
+
+
+def queue_urls_for(endpoint_id: str, request_id: str) -> dict[str, str]:
+    """Status and result URLs for an already-submitted request (no network)."""
+    request_id = str(request_id)
+    if not _REQUEST_ID_RE.match(request_id):
+        raise ValueError(f"request_id {request_id!r} is not a ModelRunner request id")
+    base = f"{QUEUE_BASE_URL}/{endpoint_id}/requests/{request_id}"
+    return {"request_id": request_id, "status_url": f"{base}/status", "response_url": base}
+
+
+def get_request_record(request_id: str, api_key: str, timeout: int = 30) -> dict[str, Any]:
+    """Read the account's own record of a request: what it was actually charged.
+
+    Returns {"status", "billing_status", "total_price"} (any of them None when
+    unreadable). Never raises — billing provenance is best-effort and must not
+    turn a delivered result into a failure. `billing_status` is one of
+    pending / partial / charged / failed; `total_price` is the charged USD.
+    """
+    empty: dict[str, Any] = {"status": None, "billing_status": None, "total_price": None}
+    if not _REQUEST_ID_RE.match(str(request_id or "")):
+        return empty
+    try:
+        import requests
+
+        url = f"{QUEUE_BASE_URL}/requests/{request_id}"
+        _assert_api_url(url, "request record")
+        response = requests.get(
+            url, headers=_headers(api_key, json_body=False), timeout=timeout, allow_redirects=False
+        )
+        if getattr(response, "status_code", 200) != 200:
+            return empty
+        body = response.json()
+    except Exception:  # noqa: BLE001 - provenance only
+        return empty
+    if not isinstance(body, dict):
+        return empty
+    try:
+        total = float(body["totalPrice"]) if body.get("totalPrice") is not None else None
+    except (TypeError, ValueError):
+        total = None
+    billing = body.get("billingStatus")
+    return {
+        "status": body.get("status"),
+        "billing_status": billing if billing in ("pending", "partial", "charged", "failed") else None,
+        "total_price": total,
     }
 
 

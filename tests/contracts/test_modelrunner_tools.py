@@ -181,8 +181,8 @@ class TestDefaultsAreConsistent:
         assert all(target in catalog for target in aliases.values())
 
     def test_video_default_estimate_matches_default_route(self):
-        # wan 2.7 t2v at the tool's 720P/5s defaults: 0.10 * 5
-        assert ModelRunnerVideo().estimate_cost({}) == pytest.approx(0.50)
+        # wan 2.7 t2v at the tool's 720P/5s defaults, plus 1s of headroom: 0.10 * (5 + 1)
+        assert ModelRunnerVideo().estimate_cost({}) == pytest.approx(0.60)
 
     def test_tts_default_estimate_uses_kokoro(self):
         cost = ModelRunnerTTS().estimate_cost({"text": "x" * 150})
@@ -279,15 +279,17 @@ class TestVideoRoutes:
                 "alibaba/happy-horse/v1.1/text-to-video",
             )
 
+    # Verified per-second rates x (requested seconds + 1s headroom): billing is
+    # on DELIVERED seconds, which can run past the request (4.1s for a 4s clip).
     @pytest.mark.parametrize(
         "inputs,expected",
         [
-            ({"model": "wan-video/wan/v2.7/text-to-video", "duration": 5}, 0.50),
-            ({"model": "wan-video/wan/v2.7/text-to-video", "duration": 10, "resolution": "1080P"}, 1.50),
-            ({"model": "alibaba/happy-horse/v1.1/text-to-video", "duration": 5, "resolution": "720P"}, 0.70),
-            ({"model": "alibaba/happy-horse/v1.1/text-to-video", "duration": 5, "resolution": "1080P"}, 0.90),
-            ({"model": "bytedance/seedance-v2-mini/text-to-video", "duration": 10, "resolution": "480p"}, 0.53),
-            ({"model": "bytedance/seedance-v2-mini/text-to-video", "duration": 10, "resolution": "720p"}, 1.13),
+            ({"model": "wan-video/wan/v2.7/text-to-video", "duration": 5}, 0.10 * 6),
+            ({"model": "wan-video/wan/v2.7/text-to-video", "duration": 10, "resolution": "1080P"}, 0.15 * 11),
+            ({"model": "alibaba/happy-horse/v1.1/text-to-video", "duration": 5, "resolution": "720P"}, 0.14 * 6),
+            ({"model": "alibaba/happy-horse/v1.1/text-to-video", "duration": 5, "resolution": "1080P"}, 0.18 * 6),
+            ({"model": "bytedance/seedance-v2-mini/text-to-video", "duration": 10, "resolution": "480p"}, 0.053 * 11),
+            ({"model": "bytedance/seedance-v2-mini/text-to-video", "duration": 10, "resolution": "720p"}, 0.113 * 11),
         ],
     )
     def test_verified_resolution_tiered_costs(self, inputs, expected):
@@ -424,12 +426,20 @@ class TestTTSRoutes:
             )
 
     def test_per_audio_second_estimates(self):
-        # 150 chars ~= 10s of speech
+        # 150 chars ~= 10s of speech, plus 1s of headroom
         tool = ModelRunnerTTS()
         text = "x" * 150
-        assert tool.estimate_cost({"text": text, "model_id": "multilingual-v2"}) == pytest.approx(0.015)
-        assert tool.estimate_cost({"text": text, "model_id": "gemini-tts"}) == pytest.approx(0.006)
-        assert tool.estimate_cost({"text": text, "model_id": "chatterbox"}) == pytest.approx(0.00375)
+        assert tool.estimate_cost({"text": text, "model_id": "multilingual-v2"}) == pytest.approx(0.0015 * 11)
+        assert tool.estimate_cost({"text": text, "model_id": "gemini-tts"}) == pytest.approx(0.0006 * 11)
+        assert tool.estimate_cost({"text": text, "model_id": "chatterbox"}) == pytest.approx(0.000375 * 11)
+
+    def test_extra_params_cannot_set_metadata(self):
+        """`metadata` carries the submit attempt id used to find a request
+        whose submit outcome is unknown; a caller may not overwrite it."""
+        from tools import modelrunner_client
+
+        with pytest.raises(ValueError, match="metadata"):
+            modelrunner_client.merge_extra_params({"prompt": "p"}, {"metadata": {"x": "y"}})
 
 
 class TestMusicRoutes:

@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from tools import modelrunner_client
+from tools import modelrunner_client, modelrunner_jobs
 from tools.modelrunner_models import (
     CHARS_PER_SECOND_OF_SPEECH,
     CHATTERBOX_LANGUAGES,
@@ -119,6 +119,7 @@ class ModelRunnerTTS(BaseTool):
             "poll_interval": {"type": "number", "default": 2.0},
             "poll_timeout": {"type": "number", "default": 300.0},
             "output_path": {"type": "string"},
+            **modelrunner_jobs.COLLECT_SCHEMA_PROPERTIES,
         },
     }
 
@@ -163,7 +164,10 @@ class ModelRunnerTTS(BaseTool):
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         try:
             spec = TTS_MODELS[self._resolve_model(inputs)]
-            audio_seconds = max(len(str(inputs.get("text", ""))) / CHARS_PER_SECOND_OF_SPEECH, 1.0)
+            # Speech length is only predicted from the text, and billing is on
+            # the delivered audio: one second of headroom keeps the estimate an
+            # upper bound. The real charge is read back after delivery.
+            audio_seconds = max(len(str(inputs.get("text", ""))) / CHARS_PER_SECOND_OF_SPEECH, 1.0) + 1.0
             if spec["billing"] == "compute_time":
                 return round(
                     max(audio_seconds * spec["estimated_cost_per_audio_second"], spec["minimum_estimate"]), 6
@@ -230,28 +234,32 @@ class ModelRunnerTTS(BaseTool):
             return ToolResult(success=False, error="MODELRUNNER_KEY not set. " + self.install_instructions)
 
         started = time.time()
+        collecting = modelrunner_jobs.is_collect(inputs)
+        estimate = self.estimate_cost(inputs)
         queue: dict[str, Any] = {}
+        payload: dict[str, Any] = {}
         try:
             poll_interval, poll_timeout = modelrunner_client.parse_poll_controls(inputs, 2.0, 300.0)
             model = self._resolve_model(inputs)
-            payload = self._build_payload(inputs, model)
-            queue = modelrunner_client.submit(model, payload, api_key)
-            modelrunner_client.poll(
-                queue["status_url"], api_key,
-                interval=poll_interval,
-                timeout=poll_timeout,
-            )
-            result = modelrunner_client.get_result(queue["response_url"], api_key)
-            source_url = modelrunner_client.extract_outputs(result, "single")[0]
+            if collecting:
+                # Recover an accepted job: poll + download only, never submit.
+                queue = modelrunner_jobs.collect_coordinates(inputs, model)
+            else:
+                payload = self._build_payload(inputs, model)
+                queue = modelrunner_client.submit(model, payload, api_key)
+            source_url = modelrunner_jobs.fetch_outputs(
+                queue, api_key, interval=poll_interval, timeout=poll_timeout, cardinality="single"
+            )[0]
             output_path = Path(
                 inputs.get("output_path") or f"modelrunner_tts.{TTS_MODELS[model]['output_format']}"
             )
             modelrunner_client.download(source_url, output_path)
-        except (modelrunner_client.ModelRunnerError, ValueError, KeyError) as exc:
-            return self._failure(exc, queue, started)
-        except Exception as exc:  # noqa: BLE001
-            return self._failure(exc, queue, started)
+        except Exception as exc:  # noqa: BLE001 - every failure reports billing provenance
+            return modelrunner_jobs.failure(
+                "speech synthesis", exc, queue, started, estimate, api_key, collected=collecting
+            )
 
+        cost, billing = modelrunner_jobs.settle(queue, api_key, estimate, collected=collecting)
         return ToolResult(
             success=True,
             data={
@@ -261,22 +269,10 @@ class ModelRunnerTTS(BaseTool):
                 "output": str(output_path), "output_path": str(output_path),
                 "request_id": queue["request_id"], "source_url": source_url,
                 "format": TTS_MODELS[model]["output_format"], "request_params": payload,
+                "billing": billing, "collected": collecting,
             },
             artifacts=[str(output_path)],
-            cost_usd=self.estimate_cost({**inputs, "model": model}),
+            cost_usd=cost,
             duration_seconds=round(time.time() - started, 2),
             model=model,
-        )
-
-    def _failure(self, exc: Exception, queue: dict[str, Any], started: float) -> ToolResult:
-        known = queue or getattr(exc, "queue", {})
-        data: dict[str, Any] = {}
-        if known:
-            data = {**known, "billing_status": "possibly_billed"}
-        return ToolResult(
-            success=False,
-            error=f"ModelRunner speech synthesis failed: {exc}",
-            data=data,
-            cost_usd=0.0,
-            duration_seconds=round(time.time() - started, 2),
         )

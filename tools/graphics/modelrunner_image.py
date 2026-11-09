@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from tools import modelrunner_client
+from tools import modelrunner_client, modelrunner_jobs
 from tools.modelrunner_models import (
     IMAGE_MODELS,
     IMAGE_ROUTES,
@@ -107,6 +107,7 @@ class ModelRunnerImage(BaseTool):
             "poll_interval": {"type": "number", "default": 2.0},
             "poll_timeout": {"type": "number", "default": 600.0},
             "output_path": {"type": "string"},
+            **modelrunner_jobs.COLLECT_SCHEMA_PROPERTIES,
         },
     }
 
@@ -236,7 +237,10 @@ class ModelRunnerImage(BaseTool):
             return ToolResult(success=False, error="MODELRUNNER_KEY not set. " + self.install_instructions)
 
         started = time.time()
+        collecting = modelrunner_jobs.is_collect(inputs)
+        estimate = self.estimate_cost(inputs)
         queue: dict[str, Any] = {}
+        payload: dict[str, Any] = {}
         try:
             poll_interval, poll_timeout = modelrunner_client.parse_poll_controls(inputs, 2.0, 600.0)
             model = str(inputs.get("model", _DEFAULT_MODEL))
@@ -245,18 +249,19 @@ class ModelRunnerImage(BaseTool):
                     f"Unsupported ModelRunner image endpoint {model!r}. "
                     f"Use get_info()['model_catalog'] for the live routes."
                 )
-            payload = self._build_payload(inputs, model)
-            # SD 3.5 honors a caller-selected output_format; the saved file's
-            # name and the reported format must describe the actual bytes.
-            output_format = str(payload.get("output_format") or IMAGE_MODELS[model]["output_format"])
-            queue = modelrunner_client.submit(model, payload, api_key)
-            modelrunner_client.poll(
-                queue["status_url"], api_key,
-                interval=poll_interval,
-                timeout=poll_timeout,
+            if collecting:
+                # Recover an accepted job: poll + download only, never submit.
+                queue = modelrunner_jobs.collect_coordinates(inputs, model)
+                output_format = str(inputs.get("output_format") or IMAGE_MODELS[model]["output_format"])
+            else:
+                payload = self._build_payload(inputs, model)
+                # SD 3.5 honors a caller-selected output_format; the saved file's
+                # name and the reported format must describe the actual bytes.
+                output_format = str(payload.get("output_format") or IMAGE_MODELS[model]["output_format"])
+                queue = modelrunner_client.submit(model, payload, api_key)
+            source_urls = modelrunner_jobs.fetch_outputs(
+                queue, api_key, interval=poll_interval, timeout=poll_timeout, cardinality="list"
             )
-            result = modelrunner_client.get_result(queue["response_url"], api_key)
-            source_urls = modelrunner_client.extract_outputs(result, "list")
             requested = Path(inputs.get("output_path") or f"modelrunner_image.{output_format}")
             output_paths: list[Path] = []
             for index, url in enumerate(source_urls):
@@ -265,11 +270,12 @@ class ModelRunnerImage(BaseTool):
                 )
                 modelrunner_client.download(url, output_path)
                 output_paths.append(output_path)
-        except (modelrunner_client.ModelRunnerError, ValueError, KeyError) as exc:
-            return self._failure(exc, queue, started)
-        except Exception as exc:  # noqa: BLE001
-            return self._failure(exc, queue, started)
+        except Exception as exc:  # noqa: BLE001 - every failure reports billing provenance
+            return modelrunner_jobs.failure(
+                "image generation", exc, queue, started, estimate, api_key, collected=collecting
+            )
 
+        cost, billing = modelrunner_jobs.settle(queue, api_key, estimate, collected=collecting)
         return ToolResult(
             success=True,
             data={
@@ -278,23 +284,10 @@ class ModelRunnerImage(BaseTool):
                 "output_path": str(output_paths[0]), "outputs": [str(path) for path in output_paths],
                 "request_id": queue["request_id"], "source_url": source_urls[0],
                 "source_urls": source_urls, "format": output_format,
-                "request_params": payload,
+                "request_params": payload, "billing": billing, "collected": collecting,
             },
             artifacts=[str(path) for path in output_paths],
-            cost_usd=self.estimate_cost({**inputs, "model": model}),
+            cost_usd=cost,
             duration_seconds=round(time.time() - started, 2),
             model=model,
-        )
-
-    def _failure(self, exc: Exception, queue: dict[str, Any], started: float) -> ToolResult:
-        known = queue or getattr(exc, "queue", {})
-        data: dict[str, Any] = {}
-        if known:
-            data = {**known, "billing_status": "possibly_billed"}
-        return ToolResult(
-            success=False,
-            error=f"ModelRunner image generation failed: {exc}",
-            data=data,
-            cost_usd=0.0,
-            duration_seconds=round(time.time() - started, 2),
         )

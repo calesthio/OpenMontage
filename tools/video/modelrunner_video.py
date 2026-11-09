@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from tools import modelrunner_client
+from tools import modelrunner_client, modelrunner_jobs
 from tools.modelrunner_models import PRICING_SNAPSHOT, VIDEO_MODELS, VIDEO_ROUTES
 from tools.base_tool import (
     BaseTool,
@@ -104,6 +104,7 @@ class ModelRunnerVideo(BaseTool):
             "poll_interval": {"type": "number", "default": 5.0},
             "poll_timeout": {"type": "number", "default": 1200.0},
             "output_path": {"type": "string"},
+            **modelrunner_jobs.COLLECT_SCHEMA_PROPERTIES,
         },
     }
 
@@ -150,9 +151,13 @@ class ModelRunnerVideo(BaseTool):
             resolution = str(inputs.get("resolution") or spec["default_resolution"])
             rate = spec["rates_per_output_second"].get(resolution, spec["default_rate"])
             duration = int(inputs.get("duration", spec["default_duration"]))
-            return round(rate * max(duration, 0), 4)
+            # Billed on DELIVERED seconds, which can exceed the request: a 4s
+            # Seedance clip measured 4.1s ($0.2173 vs $0.212). One second of
+            # headroom keeps the reservation an upper bound; the real charge
+            # is read back from the request record after delivery.
+            return round(rate * (max(duration, 0) + 1), 4)
         except Exception:  # noqa: BLE001 - estimates must never raise
-            return 0.75  # default route (wan 2.7) at its 1080P rate for 5s
+            return 0.90  # default route (wan 2.7) at its 1080P rate for 5s + 1s headroom
 
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         return 240.0
@@ -280,60 +285,48 @@ class ModelRunnerVideo(BaseTool):
 
         started = time.time()
         operation = self._resolve_operation(inputs)
+        collecting = modelrunner_jobs.is_collect(inputs)
+        estimate = self.estimate_cost(inputs)
         queue: dict[str, Any] = {}
+        payload: dict[str, Any] = {}
         try:
             poll_interval, poll_timeout = modelrunner_client.parse_poll_controls(inputs, 5.0, 1200.0)
             model = self._resolve_model(str(inputs.get("model", _DEFAULT_MODEL)), operation)
-            payload = self._build_payload(self._resolve_aliases(inputs), model)
-            self._upload_local_media(payload, VIDEO_MODELS[model], api_key)
-            queue = modelrunner_client.submit(model, payload, api_key)
-            data = modelrunner_client.poll(
-                queue["status_url"], api_key,
-                interval=poll_interval,
-                timeout=poll_timeout,
-            )
-            result = modelrunner_client.get_result(queue["response_url"], api_key)
-            source_url = modelrunner_client.extract_outputs(result, "single")[0]
+            if collecting:
+                # Recover an accepted job: poll + download only, never submit.
+                queue = modelrunner_jobs.collect_coordinates(inputs, model)
+            else:
+                payload = self._build_payload(self._resolve_aliases(inputs), model)
+                self._upload_local_media(payload, VIDEO_MODELS[model], api_key)
+                estimate = self.estimate_cost(
+                    {**inputs, "model": model, "resolution": payload["resolution"], "duration": payload["duration"]}
+                )
+                queue = modelrunner_client.submit(model, payload, api_key)
+            source_url = modelrunner_jobs.fetch_outputs(
+                queue, api_key, interval=poll_interval, timeout=poll_timeout, cardinality="single"
+            )[0]
             output_path = Path(inputs.get("output_path") or f"modelrunner_video.{VIDEO_MODELS[model]['output_format']}")
             modelrunner_client.download(source_url, output_path)
-        except (modelrunner_client.ModelRunnerError, ValueError, KeyError) as exc:
-            return self._failure(exc, queue, started)
-        except Exception as exc:  # noqa: BLE001
-            return self._failure(exc, queue, started)
+        except Exception as exc:  # noqa: BLE001 - every failure reports billing provenance
+            return modelrunner_jobs.failure(
+                "video generation", exc, queue, started, estimate, api_key, collected=collecting
+            )
 
         from tools.video._shared import probe_output
 
         probed = probe_output(output_path)
-        cost_inputs = {**inputs, "model": model, "resolution": payload["resolution"], "duration": payload["duration"]}
+        cost, billing = modelrunner_jobs.settle(queue, api_key, estimate, collected=collecting)
         return ToolResult(
             success=True,
             data={
                 "provider": "modelrunner", "model": model, "prompt": inputs.get("prompt", ""),
                 "operation": operation, "output": str(output_path), "output_path": str(output_path),
                 "request_id": queue["request_id"], "source_url": source_url,
-                "format": output_path.suffix.lstrip("."), "request_params": payload, **probed,
+                "format": output_path.suffix.lstrip("."), "request_params": payload,
+                "billing": billing, "collected": collecting, **probed,
             },
             artifacts=[str(output_path)],
-            cost_usd=self.estimate_cost(cost_inputs),
+            cost_usd=cost,
             duration_seconds=round(time.time() - started, 2),
             model=model,
-        )
-
-    def _failure(self, exc: Exception, queue: dict[str, Any], started: float) -> ToolResult:
-        """Failed result with honest billing provenance.
-
-        Pre-submit failures cost nothing. After a submit the job exists
-        server-side, so the queue coordinates and a billing caveat ride along
-        (the request may still complete and bill; never auto-resubmit).
-        """
-        known = queue or getattr(exc, "queue", {})
-        data: dict[str, Any] = {}
-        if known:
-            data = {**known, "billing_status": "possibly_billed"}
-        return ToolResult(
-            success=False,
-            error=f"ModelRunner video generation failed: {exc}",
-            data=data,
-            cost_usd=0.0,
-            duration_seconds=round(time.time() - started, 2),
         )

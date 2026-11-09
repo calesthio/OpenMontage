@@ -32,6 +32,9 @@ interface KPIGridProps {
   animationStyle?: KPIAnimationStyle;
   /** Pixels to keep free at the bottom of the frame, e.g. for burned captions. */
   bottomInset?: number;
+  /** Size of the area the grid fills. Hosts that place it in a smaller panel keep the default. */
+  frameWidth?: number;
+  frameHeight?: number;
 }
 
 export const KPIGrid: React.FC<KPIGridProps> = ({
@@ -47,9 +50,11 @@ export const KPIGrid: React.FC<KPIGridProps> = ({
   negativeColor = "#EF4444",
   animationStyle = "count-up",
   bottomInset = 0,
+  frameWidth: width = 1920,
+  frameHeight: height = 1080,
 }) => {
   const frame = useCurrentFrame();
-  const { fps, durationInFrames, width, height } = useVideoConfig();
+  const { fps, durationInFrames } = useVideoConfig();
 
   const { cardWidth, cardHeight, cards } = kpiGridLayout({
     count: metrics.length,

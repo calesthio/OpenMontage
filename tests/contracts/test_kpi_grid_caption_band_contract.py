@@ -62,7 +62,9 @@ def test_without_captions_the_landscape_layout_does_not_move() -> None:
 def test_explainer_hands_the_band_to_kpi_grid() -> None:
     source = (SRC / "Explainer.tsx").read_text(encoding="utf-8")
     start = source.index("<KPIGrid")
-    assert "bottomInset={captionSafeBottom}" in source[start : source.index("/>", start)]
+    props = source[start : source.index("/>", start)]
+    assert "bottomInset={captionSafeBottom}" in props
+    assert "frameWidth={width}" in props and "frameHeight={height}" in props
     # Shrinking the parent does not move KPIGrid's cards, so it must not rely on that.
     chart_types = source[source.index("const CHART_TYPES") :].split("\n", 1)[0]
     assert "kpi_grid" not in chart_types
@@ -71,3 +73,5 @@ def test_explainer_hands_the_band_to_kpi_grid() -> None:
 def test_kpi_grid_uses_the_shared_layout() -> None:
     source = (SRC / "components/charts/KPIGrid.tsx").read_text(encoding="utf-8")
     assert "kpiGridLayout(" in source
+    # The composition size is wrong for a host that places the grid in a smaller panel.
+    assert "width, height } = useVideoConfig()" not in source

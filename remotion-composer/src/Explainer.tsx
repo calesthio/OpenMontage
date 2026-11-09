@@ -571,9 +571,12 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig; captionSafeBottom?
   theme,
   captionSafeBottom = 0,
 }) => {
+  const { width, height } = useVideoConfig();
   const captionSafe = (element: React.ReactElement) =>
     captionSafeBottom > 0 && CHART_TYPES.has(cut.type ?? "") ? (
-      <AbsoluteFill style={{ height: `calc(100% - ${captionSafeBottom}px)` }}>{element}</AbsoluteFill>
+      <AbsoluteFill style={{ background: bgColor }}>
+        <AbsoluteFill style={{ height: `calc(100% - ${captionSafeBottom}px)` }}>{element}</AbsoluteFill>
+      </AbsoluteFill>
     ) : (
       element
     );
@@ -719,6 +722,8 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig; captionSafeBottom?
         cardBackgroundColor={cut.cardBackgroundColor || theme.surfaceColor}
         textColor={textColor}
         bottomInset={captionSafeBottom}
+        frameWidth={width}
+        frameHeight={height}
       />
     );
   }

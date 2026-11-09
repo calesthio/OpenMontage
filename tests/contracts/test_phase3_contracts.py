@@ -719,6 +719,7 @@ class TestCapabilityMetadata:
             "fal.ai",
             "gemini",
             "google_tts",
+            "iflytek",
             "inworld",
             "kling_official",
             "openai",

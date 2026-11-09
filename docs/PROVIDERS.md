@@ -107,6 +107,10 @@ OPENAI_API_KEY=              # OpenAI TTS + GPT Image 2 images
 XAI_API_KEY=                 # xAI Grok image generation/editing + Grok video generation
 DOUBAO_SPEECH_API_KEY=       # Volcengine Doubao Speech TTS (strong Mandarin narration)
 DOUBAO_SPEECH_VOICE_TYPE=    # Default Doubao speaker/voice type
+IFLYTEK_APP_ID=              # iFlytek (讯飞) long-text TTS — app id, sent in the request body
+IFLYTEK_API_KEY=             # iFlytek key pair; DTS signs each request with these two
+IFLYTEK_API_SECRET=          # iFlytek API secret
+IFLYTEK_TTS_VCN=             # Default iFlytek voice (vcn), e.g. x4_mingge
 DASHSCOPE_API_KEY=           # Alibaba DashScope (Qwen image gen, TTS, ASR with word timestamps)
 
 # AZURE AI SPEECH (optional cloud STT + TTS; one key unlocks both directions)
@@ -721,6 +725,82 @@ Start with `speech_rate: 0` for natural Mandarin delivery. If the approved forma
 #### Pricing
 
 Doubao Speech 2.0 is billed by character package or usage in Volcengine. OpenMontage estimates cost from text length and prefers provider-returned usage metadata when available.
+
+---
+
+### iFlytek — Long-Form Mandarin TTS
+
+> **One request, one narration.** iFlytek's 长文本语音合成 (DTS) accepts up to ~100k characters in a single async task, which suits documentary and audiobook-length Mandarin voiceovers. It also reaches iFlytek's Mandarin dialect voices, which the other Chinese providers do not cover.
+
+**Tools unlocked:** `iflytek_tts`
+**Env vars:** `IFLYTEK_APP_ID`, `IFLYTEK_API_KEY`, `IFLYTEK_API_SECRET`, `IFLYTEK_TTS_VCN`
+
+#### Setup
+
+1. Create an app in the [iFlytek console](https://console.xfyun.cn/) and enable **长文本语音合成**.
+2. Copy the app's APPID, APIKey, and APISecret — all three are needed.
+3. Pick an authorized voice (`vcn`), for example `x4_mingge`.
+4. Add to `.env`:
+   ```bash
+   IFLYTEK_APP_ID=your-app-id
+   IFLYTEK_API_KEY=your-api-key
+   IFLYTEK_API_SECRET=your-api-secret
+   IFLYTEK_TTS_VCN=x4_mingge
+   ```
+
+New accounts get a free daily call quota, so this can be tried without a purchase.
+
+#### API Notes
+
+OpenMontage uses the async long-text endpoints:
+
+```text
+POST https://api-dx.xf-yun.com/v1/private/dts_create
+POST https://api-dx.xf-yun.com/v1/private/dts_query
+```
+
+Two things are unusual compared with the other providers here:
+
+- **The signature goes in query parameters, not headers.** `host`, `date`, and the request line are signed with HMAC-SHA256 using the APISecret, and the result is passed as `?host=...&date=...&authorization=...`. The APPID travels separately, in the JSON body as `header.app_id`.
+- **`payload.audio.audio` is a base64-encoded download URL**, not audio bytes. The tool decodes it, fetches the file, and writes the full query response next to the audio as `<output_path>.json`.
+
+The server rejects a `date` more than 300 seconds from its own clock, so an HTTP 403 usually means the local clock is wrong rather than the credentials.
+
+iFlytek also ships streaming WebSocket TTS (在线语音合成, 超拟人合成). OpenMontage deliberately does not wrap those: they would add a `websocket-client` dependency for a real-time capability a render pipeline never needs. iFlytek publishes standalone skills for them at [iflytek/iFly-Skills](https://github.com/iflytek/iFly-Skills).
+
+#### What It Is Best For
+
+- Long-form Mandarin narration submitted as one task instead of chunked calls
+- Chinese documentary, audiobook, and explainer voiceovers
+- Mandarin dialect narration, selected through the voice rather than a language flag
+
+#### What It Is Not For
+
+- **Subtitle alignment.** DTS returns no word or sentence timings. Use `doubao_tts` when caption timing matters, or transcribe the rendered audio with `azure_stt` / `dashscope_asr`.
+- Real-time or interactive speech, and voice cloning.
+
+#### Pacing
+
+`speed`, `volume`, and `pitch` are all `0-100` with `50` as normal — a different scale from Doubao's `speech_rate` (`-50..100`). Do not copy a value across providers.
+
+#### Retention
+
+Rendered audio is kept on iFlytek's servers for **7 days**. The tool downloads immediately, but the URL recorded in the metadata JSON goes dead after that window.
+
+#### Pricing
+
+iFlytek DTS requires an enabled quota or purchased package. Obtain an account-specific quote and currency conversion before generation. `estimate_cost()` raises `PriceQuoteRequired`; results report `cost_usd=None` and `cost_status="unquoted"` because DTS does not return an actual USD charge. Unknown cost does not mean free usage.
+
+#### Recovering an Accepted Task
+
+As soon as DTS returns a task ID, the tool saves query-only recovery inputs in
+`<metadata_path>.task.json`. If polling or downloading fails, the failed result
+also includes `task_id` and `resume_inputs`, even if saving the checkpoint failed.
+Pass `resume_inputs` to `IFlytekTTS().execute()` to query/download that same task;
+this does not call `dts_create` and does not need text or a voice selection.
+Automatic submission retries are disabled. If submission itself times out before
+a task ID is received, its outcome is unknown: reconcile with the service before
+submitting again. Recovery remains subject to the service's seven-day retention.
 
 ---
 

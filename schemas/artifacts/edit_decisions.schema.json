@@ -18,6 +18,71 @@
           "in_seconds": { "type": "number", "minimum": 0 },
           "out_seconds": { "type": "number", "minimum": 0 },
           "speed": { "type": "number", "minimum": 0.1, "default": 1.0 },
+          "type": {
+            "type": "string",
+            "enum": ["text_card", "stat_card", "callout", "comparison", "hero_title", "bar_chart", "line_chart", "pie_chart", "kpi_grid", "progress_bar", "anime_scene", "terminal_scene", "screenshot_scene", "title"],
+            "description": "Scene component for this cut (see remotion-composer/SCENE_TYPES.md; \"title\" is a CinematicRenderer title card). Omit for a plain image or video cut. video_compose passes cuts to the composition unchanged, so the component props below travel on the cut."
+          },
+          "source_in_seconds": { "type": "number", "minimum": 0, "description": "Seek into a video source before playback" },
+          "animation": { "type": "string", "description": "Camera motion for a still image (zoom-in, zoom-out, pan-left, pan-right, ken-burns, ken-burns-slow-zoom, parallax, static)" },
+          "text": { "type": "string" },
+          "stat": { "type": "string" },
+          "subtitle": { "type": "string" },
+          "caption": { "type": "string", "description": "Subtitle line for HyperFrames text cards when subtitle is absent" },
+          "title": { "type": "string" },
+          "heroSubtitle": { "type": "string" },
+          "titleFontSize": { "type": "number" },
+          "callout_type": { "type": "string", "enum": ["info", "warning", "tip", "quote"] },
+          "leftLabel": { "type": "string" },
+          "leftValue": { "type": "string" },
+          "rightLabel": { "type": "string" },
+          "rightValue": { "type": "string" },
+          "chartData": { "type": "array" },
+          "chartSeries": { "type": "array" },
+          "chartColors": { "type": "array", "items": { "type": "string" } },
+          "chartAnimation": { "type": "string" },
+          "donut": { "type": "boolean" },
+          "centerLabel": { "type": "string" },
+          "centerValue": { "type": "string" },
+          "showGrid": { "type": "boolean" },
+          "showValues": { "type": "boolean" },
+          "showLegend": { "type": "boolean" },
+          "showMarkers": { "type": "boolean" },
+          "xLabel": { "type": "string" },
+          "yLabel": { "type": "string" },
+          "columns": { "type": "integer", "enum": [2, 3, 4] },
+          "cardBackgroundColor": { "type": "string" },
+          "progress": { "type": "number" },
+          "progressLabel": { "type": "string" },
+          "progressColor": { "type": "string" },
+          "progressAnimation": { "type": "string" },
+          "progressSegments": { "type": "array" },
+          "backgroundImage": { "type": "string" },
+          "backgroundVideo": { "type": "string" },
+          "backgroundVideoStart": { "type": "number", "minimum": 0 },
+          "backgroundOverlay": { "type": "number", "minimum": 0, "maximum": 1 },
+          "color": { "type": "string" },
+          "accentColor": { "type": "string" },
+          "fontSize": { "type": "number" },
+          "images": { "type": "array", "items": { "type": "string" } },
+          "particles": { "type": "string" },
+          "particleColor": { "type": "string" },
+          "particleCount": { "type": "number" },
+          "particleIntensity": { "type": "number" },
+          "vignette": { "type": "boolean" },
+          "lightingFrom": { "type": "string" },
+          "lightingTo": { "type": "string" },
+          "steps": { "type": "array" },
+          "terminalTitle": { "type": "string" },
+          "prompt": { "type": "string" },
+          "screenshotSteps": { "type": "array" },
+          "screenshotSize": { "type": "object" },
+          "cursorStartAt": { "type": "array" },
+          "shot_language": { "type": "object", "description": "Same as scene_plan; read by the pre-compose slideshow-risk gate" },
+          "shot_intent": { "type": "string" },
+          "narrative_role": { "type": "string" },
+          "information_role": { "type": "string" },
+          "hero_moment": { "type": "boolean" },
           "layer": {
             "type": "string",
             "enum": ["primary", "overlay", "background"],
@@ -69,26 +134,48 @@
     "overlays": {
       "type": "array",
       "items": {
-        "type": "object",
-        "required": ["asset_id", "start_seconds", "end_seconds", "position"],
-        "properties": {
-          "asset_id": { "type": "string" },
-          "start_seconds": { "type": "number", "minimum": 0 },
-          "end_seconds": { "type": "number", "minimum": 0 },
-          "position": {
+        "oneOf": [
+          {
             "type": "object",
+            "required": ["asset_id", "start_seconds", "end_seconds", "position"],
             "properties": {
-              "x": { "type": "number" },
-              "y": { "type": "number" },
-              "width": { "type": "number" },
-              "height": { "type": "number" }
+              "asset_id": { "type": "string" },
+              "start_seconds": { "type": "number", "minimum": 0 },
+              "end_seconds": { "type": "number", "minimum": 0 },
+              "position": {
+                "type": "object",
+                "properties": {
+                  "x": { "type": "number" },
+                  "y": { "type": "number" },
+                  "width": { "type": "number" },
+                  "height": { "type": "number" }
+                },
+                "required": ["x", "y"]
+              },
+              "animation": { "type": "string" },
+              "opacity": { "type": "number", "minimum": 0, "maximum": 1 }
             },
-            "required": ["x", "y"]
+            "additionalProperties": false
           },
-          "animation": { "type": "string" },
-          "opacity": { "type": "number", "minimum": 0, "maximum": 1 }
-        },
-        "additionalProperties": false
+          {
+            "description": "Explainer component overlay drawn over the cuts (see remotion-composer/SCENE_TYPES.md)",
+            "type": "object",
+            "required": ["type", "in_seconds", "out_seconds"],
+            "properties": {
+              "type": { "type": "string", "enum": ["section_title", "stat_reveal", "hero_title", "provider_chip"] },
+              "in_seconds": { "type": "number", "minimum": 0 },
+              "out_seconds": { "type": "number", "minimum": 0 },
+              "text": { "type": "string" },
+              "subtitle": { "type": "string" },
+              "accentColor": { "type": "string" },
+              "position": { "type": "string" },
+              "providers": { "type": "array", "items": { "type": "string" } },
+              "cycleSeconds": { "type": "number" },
+              "label": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        ]
       }
     },
     "audio": {

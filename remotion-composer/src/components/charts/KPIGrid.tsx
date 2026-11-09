@@ -5,6 +5,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { kpiGridLayout } from "./kpiLayout";
 
 interface Metric {
   label: string;
@@ -29,6 +30,8 @@ interface KPIGridProps {
   positiveColor?: string;
   negativeColor?: string;
   animationStyle?: KPIAnimationStyle;
+  /** Pixels to keep free at the bottom of the frame, e.g. for burned captions. */
+  bottomInset?: number;
 }
 
 export const KPIGrid: React.FC<KPIGridProps> = ({
@@ -43,29 +46,19 @@ export const KPIGrid: React.FC<KPIGridProps> = ({
   positiveColor = "#10B981",
   negativeColor = "#EF4444",
   animationStyle = "count-up",
+  bottomInset = 0,
 }) => {
   const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
+  const { fps, durationInFrames, width, height } = useVideoConfig();
 
-  const cols = Math.min(columns, metrics.length);
-  const rows = Math.ceil(metrics.length / cols);
-
-  // Grid layout constants (within 1920x1080)
-  const gridPadding = 100;
-  const cardGap = 28;
-  const titleHeight = title ? 120 : 0;
-  const gridTop = 80 + titleHeight;
-  const gridWidth = 1920 - gridPadding * 2;
-  const gridHeight = 1080 - gridTop - 80;
-  const cardWidth = (gridWidth - cardGap * (cols - 1)) / cols;
-  const cardHeight = Math.min(
-    (gridHeight - cardGap * (rows - 1)) / rows,
-    320
-  );
-
-  // Center grid vertically
-  const totalGridHeight = rows * cardHeight + (rows - 1) * cardGap;
-  const gridTopOffset = gridTop + (gridHeight - totalGridHeight) / 2;
+  const { cardWidth, cardHeight, cards } = kpiGridLayout({
+    count: metrics.length,
+    columns,
+    hasTitle: Boolean(title),
+    width,
+    height,
+    bottomInset,
+  });
 
   // Fade out near end
   const fadeOut = interpolate(
@@ -107,10 +100,7 @@ export const KPIGrid: React.FC<KPIGridProps> = ({
 
       {/* Cards */}
       {metrics.map((metric, idx) => {
-        const col = idx % cols;
-        const row = Math.floor(idx / cols);
-        const left = gridPadding + col * (cardWidth + cardGap);
-        const top = gridTopOffset + row * (cardHeight + cardGap);
+        const { left, top } = cards[idx];
         const accentColor = colors[idx % colors.length];
 
         const staggerDelay =

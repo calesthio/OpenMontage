@@ -563,7 +563,8 @@ const BackgroundVideoLayer: React.FC<{
 // Chart scenes draw axis labels, legends and bar names down to the bottom
 // edge, exactly where burned captions sit. With captions on, they are laid
 // out in the frame minus this band (the SVG viewBox scales down to fit).
-const CHART_TYPES = new Set(["bar_chart", "line_chart", "pie_chart", "kpi_grid"]);
+// KPIGrid is not SVG: it receives the band as `bottomInset` and reflows its cards.
+const CHART_TYPES = new Set(["bar_chart", "line_chart", "pie_chart"]);
 
 const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig; captionSafeBottom?: number }> = ({
   cut,
@@ -710,14 +711,15 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig; captionSafeBottom?
     );
   }
   if (cut.type === "kpi_grid" && cut.chartData) {
-    return maybeWrapWithBg(captionSafe(
+    return maybeWrapWithBg(
       <KPIGrid
         metrics={cut.chartData} title={cut.title} columns={cut.columns}
         colors={cut.chartColors || theme.chartColors} animationStyle={(cut.chartAnimation as any) || "count-up"}
         backgroundColor={bgColor}
         cardBackgroundColor={cut.cardBackgroundColor || theme.surfaceColor}
         textColor={textColor}
-      />)
+        bottomInset={captionSafeBottom}
+      />
     );
   }
   if (cut.type === "progress_bar" && cut.progress !== undefined) {

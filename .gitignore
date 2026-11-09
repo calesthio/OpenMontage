@@ -23,6 +23,17 @@ htmlcov/
 # Pipeline outputs (regenerable — never commit large media)
 output/
 pipeline/
+# Per-run checkpoints + decision logs written by the checkpoint protocol to
+# pipelines/<project_id>/ (see AGENT_GUIDE "Human Checkpoint Protocol"). These
+# are regenerable run state, not source — the singular pipeline/ rule above
+# does not match this plural path.
+#
+# Anchored to the repo root on purpose: an unanchored `pipelines/` matches a
+# directory of that name at ANY depth, which also swallowed skills/pipelines/
+# (every stage director skill) and tests/pipelines/. Tracked files there stay
+# tracked, so nothing breaks visibly — but a NEW director skill would be
+# silently unstageable, which is a bad way to lose work.
+/pipelines/
 tests/qa/output/
 
 # Project workspaces (generated assets, renders — all regenerable)

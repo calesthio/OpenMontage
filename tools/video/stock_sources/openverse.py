@@ -35,7 +35,7 @@ from .base import Candidate, SearchFilters
 
 _SEARCH_URL = "https://api.openverse.org/v1/images/"
 _TOKEN_URL = "https://api.openverse.org/v1/auth_tokens/token/"
-_USER_AGENT = "OpenMontage/0.1 (+https://github.com/calesthio/OpenMontage)"
+_USER_AGENT = "OpenMontage/0.1 (+https://github.com/OpenMontageInc/OpenMontage)"
 
 # Some hosts behind Openverse (Flickr's CDN in particular) reject any
 # User-Agent containing "Bot" and expect an image Accept header. Both are

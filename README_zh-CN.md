@@ -36,7 +36,7 @@
 <p align="center">
   <a href="https://www.youtube.com/@OpenMontage"><img src="https://img.shields.io/badge/YouTube-%40OpenMontage-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube"></a>
   <a href="https://x.com/calesthioailabs"><img src="https://img.shields.io/badge/X-%40calesthioailabs-111111?style=for-the-badge&logo=x&logoColor=white" alt="X"></a>
-  <a href="https://github.com/calesthio/OpenMontage/discussions"><img src="https://img.shields.io/badge/Community-GitHub%20Discussions-0b1220?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Discussions"></a>
+  <a href="https://github.com/OpenMontageInc/OpenMontage/discussions"><img src="https://img.shields.io/badge/Community-GitHub%20Discussions-0b1220?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Discussions"></a>
 </p>
 
 ---
@@ -124,7 +124,7 @@ OpenMontage 可以从 **YouTube 视频、Short、Reel、TikTok 或本地片段**
 ### 安装与运行
 
 ```bash
-git clone https://github.com/calesthio/OpenMontage.git
+git clone https://github.com/OpenMontageInc/OpenMontage.git
 cd OpenMontage
 make setup
 ```
@@ -642,11 +642,11 @@ OpenMontage 被设计为高度可扩展的。最常见的两种贡献是：
 
 ### 加入社区
 
-我们使用 [GitHub Discussions](https://github.com/calesthio/OpenMontage/discussions) 来分享作品与想法：
+我们使用 [GitHub Discussions](https://github.com/OpenMontageInc/OpenMontage/discussions) 来分享作品与想法：
 
-- **[展示与分享](https://github.com/calesthio/OpenMontage/discussions/categories/show-and-tell)** — 分享您制作的视频、好用的提示词，或您发现的创意工作流
-- **[想法](https://github.com/calesthio/OpenMontage/discussions/categories/ideas)** — 提出新的流水线、工具、风格指南或集成的建议
-- **[问答](https://github.com/calesthio/OpenMontage/discussions/categories/q-a)** — 询问有关设置、流水线或故障排除的问题
+- **[展示与分享](https://github.com/OpenMontageInc/OpenMontage/discussions/categories/show-and-tell)** — 分享您制作的视频、好用的提示词，或您发现的创意工作流
+- **[想法](https://github.com/OpenMontageInc/OpenMontage/discussions/categories/ideas)** — 提出新的流水线、工具、风格指南或集成的建议
+- **[问答](https://github.com/OpenMontageInc/OpenMontage/discussions/categories/q-a)** — 询问有关设置、流水线或故障排除的问题
 
 制作了超酷的内容？发在“展示与分享”里 — 我们非常期待看到您的成果。
 
@@ -656,7 +656,7 @@ OpenMontage 被设计为高度可扩展的。最常见的两种贡献是：
 
 有关更新、发布版以及幕后的开发记录，请关注 [@calesthioailabs](https://x.com/calesthioailabs)。
 
-有关错误反馈、功能请求和工作流讨论，请使用 [GitHub Issues](https://github.com/calesthio/OpenMontage/issues) 和 [GitHub Discussions](https://github.com/calesthio/OpenMontage/discussions)，以确保每件事都能保持可见和可操作。
+有关错误反馈、功能请求和工作流讨论，请使用 [GitHub Issues](https://github.com/OpenMontageInc/OpenMontage/issues) 和 [GitHub Discussions](https://github.com/OpenMontageInc/OpenMontage/discussions)，以确保每件事都能保持可见和可操作。
 
 ---
 

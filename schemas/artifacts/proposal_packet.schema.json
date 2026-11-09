@@ -169,7 +169,7 @@
           "type": "object",
           "description": "Resolved music plan from the proposal stage",
           "properties": {
-            "source_type": { "type": "string", "enum": ["user_library", "ai_generated", "bring_your_own", "none"] },
+            "source_type": { "type": "string", "enum": ["user_library", "royalty_free_search", "ai_generated", "bring_your_own", "none"], "description": "Where the track comes from. royalty_free_search covers a track fetched through a music_search tool such as pixabay_music, which AGENT_GUIDE.md requires the music plan to offer and which user_library (the user's own music_library/ folder) does not describe." },
             "track_path": { "type": "string", "description": "Path to selected track, if known" },
             "provider": { "type": "string", "description": "Music generation provider, if AI-generated" },
             "mood_direction": { "type": "string", "description": "Music mood description from research" },

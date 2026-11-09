@@ -60,7 +60,7 @@ Each tool's `agent_skills[]` field bridges Layer 1 → Layer 3. See `skills/INDE
 
 | File | Purpose |
 |------|---------|
-| `config.yaml` | Global configuration |
+| `config.yaml` | Global configuration — `llm.provider` selects the driving agent's LLM provider (`anthropic` / `openai` / `gemini` / `openrouter` / `orcarouter` / `ollama` / `mistral` / `minimax`), see `docs/PROVIDERS.md` |
 | `lib/config_model.py` | Runtime config loader (Pydantic) |
 | `lib/checkpoint.py` | Checkpoint writer/reader |
 | `lib/pipeline_loader.py` | Pipeline manifest loader + helpers |

@@ -1,0 +1,135 @@
+{
+  "video_id": "v12_europa_clipper",
+  "title": "Could life exist in an ocean that has never seen the sky?",
+  "pipeline": "business-documentary",
+  "total_target_words": 1150,
+  "target_duration_min": 8,
+  "blocks": [
+    {
+      "block_id": "B001",
+      "narrative_role": "hook",
+      "start_s": 0,
+      "text": "Could life exist in an ocean that has never seen the sky?",
+      "claim_ids": [],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "motion_type": "slow_zoom",
+      "music_cue": "intro"
+    },
+    {
+      "block_id": "B002",
+      "narrative_role": "promise",
+      "start_s": 8,
+      "text": "Beneath Europa's icy shell lies an ocean with more than twice the water of all Earth's oceans combined. NASA's Europa Clipper will fly past it 49 times to measure whether that ocean could support life.",
+      "claim_ids": ["C001", "C002", "C003"],
+      "visual_class": "REAL_ARCHIVE",
+      "visual_claim": "ARCHIVE",
+      "motion_type": "pan",
+      "music_cue": "question"
+    },
+    {
+      "block_id": "B003",
+      "narrative_role": "stakes",
+      "start_s": 22,
+      "text": "We have never sampled liquid water beyond Earth. Finding it — or ruling it out — changes how we think about life everywhere.",
+      "claim_ids": ["C004"],
+      "visual_class": "TEXT_CARD",
+      "visual_claim": "DIAGRAM",
+      "motion_type": "static_meaningful",
+      "static_meaningful_reason": "emphatic statement, no illustrative footage needed",
+      "music_cue": "tension"
+    },
+    {
+      "block_id": "B004",
+      "narrative_role": "evidence_cycle_1",
+      "start_s": 38,
+      "text": "Juno's 2022 flyby measured Europa's ice shell at about 29 kilometers thick, plus or minus 10. That estimate comes from a pure water-ice model — salt could reduce it by about 5 kilometers, and the full shell may be thicker still.",
+      "claim_ids": ["C001"],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "motion_type": "slow_zoom",
+      "music_cue": "question"
+    },
+    {
+      "block_id": "B005",
+      "narrative_role": "evidence_cycle_1",
+      "start_s": 62,
+      "text": "On Enceladus, Cassini found sodium phosphates in ice grains. The authors estimate the ocean phosphorus is at least about 100 times Earth's ocean concentration — a geochemical inference, not a direct sample of liquid water.",
+      "claim_ids": ["C002"],
+      "visual_class": "REAL_ARCHIVE",
+      "visual_claim": "ARCHIVE",
+      "motion_type": "pan",
+      "music_cue": "tension"
+    },
+    {
+      "block_id": "B006",
+      "narrative_role": "evidence_cycle_2",
+      "start_s": 86,
+      "text": "Cassini also detected molecular hydrogen in Enceladus's plume — a possible sign of hydrothermal reactions below the ice, though not a direct observation of the process.",
+      "claim_ids": ["C003"],
+      "visual_class": "AI_RECONSTRUCTION",
+      "visual_claim": "AI_RECONSTRUCTION",
+      "motion_type": "lateral_drift",
+      "music_cue": "tension",
+      "disclosure_required": true
+    },
+    {
+      "block_id": "B007",
+      "narrative_role": "evidence_cycle_2",
+      "start_s": 108,
+      "text": "Fresh ice grains from Enceladus contain organic fragments. Some nitrogen- and oxygen-containing identifications are marked tentative by the authors — building blocks detected, not life confirmed.",
+      "claim_ids": ["C005"],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "motion_type": "slow_zoom",
+      "music_cue": "reveal"
+    },
+    {
+      "block_id": "B008",
+      "narrative_role": "mission",
+      "start_s": 130,
+      "text": "Europa Clipper launched October 14, 2024. A Mars gravity assist on March 1, 2025, then an Earth gravity assist on December 3, 2026, sends it to Jupiter orbit in April 2030 — and the first Europa flyby on March 7, 2031.",
+      "claim_ids": ["C006"],
+      "visual_class": "DIAGRAM_DATA",
+      "visual_claim": "DIAGRAM",
+      "motion_type": "pan",
+      "music_cue": "question"
+    },
+    {
+      "block_id": "B009",
+      "narrative_role": "mission",
+      "start_s": 156,
+      "text": "The spacecraft orbits Jupiter, not Europa. It will make 49 close flybys of Europa, measuring the ice, the ocean, and the plumes — but it will not land.",
+      "claim_ids": ["C006", "C007"],
+      "visual_class": "AI_RECONSTRUCTION",
+      "visual_claim": "AI_RECONSTRUCTION",
+      "motion_type": "lateral_drift",
+      "music_cue": "tension",
+      "disclosure_required": true
+    },
+    {
+      "block_id": "B010",
+      "narrative_role": "finale",
+      "start_s": 178,
+      "text": "What we know: Europa has an ocean, Enceladus has phosphates and organics. What we presume: those ingredients could support life. What we have not proven: that life exists there at all.",
+      "claim_ids": ["C004"],
+      "visual_class": "TEXT_CARD",
+      "visual_claim": "DIAGRAM",
+      "motion_type": "static_meaningful",
+      "static_meaningful_reason": "conclusive statement",
+      "music_cue": "resolution"
+    },
+    {
+      "block_id": "B011",
+      "narrative_role": "cta",
+      "start_s": 198,
+      "text": "Europa Clipper arrives at Europa in 2031. Until then, the ocean remains a hypothesis with evidence.",
+      "claim_ids": ["C006"],
+      "visual_class": "TEXT_CARD",
+      "visual_claim": "DIAGRAM",
+      "motion_type": "static_meaningful",
+      "static_meaningful_reason": "closing card",
+      "music_cue": "resolution"
+    }
+  ]
+}

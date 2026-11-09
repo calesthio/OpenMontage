@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import sys
@@ -104,7 +105,16 @@ class PiperTTS(BaseTool):
         # Do not resolve symlinks: a venv interpreter may link to system Python.
         # An explicit path keeps the fallback out of the working directory and
         # lets which apply platform executable permissions and Windows PATHEXT.
-        return shutil.which(str(Path(sys.executable).parent / "piper"))
+        adjacent = Path(sys.executable).parent / "piper"
+        executable = shutil.which(str(adjacent))
+        if executable:
+            return executable
+        if os.name == "nt":
+            # Python 3.10 and 3.11 do not expand PATHEXT for this path.
+            launcher = adjacent.with_suffix(".exe")
+            if launcher.is_file() and os.access(launcher, os.F_OK | os.X_OK):
+                return str(launcher)
+        return None
 
     def get_status(self) -> ToolStatus:
         if self._resolve_executable():

@@ -1,6 +1,7 @@
 """Offline Piper discovery and launch regressions (no voice downloads)."""
 
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -30,6 +31,23 @@ def executable(directory):
 def test_interpreter_adjacent_launcher_is_available(launchers):
     executable(launchers)
     assert PiperTTS().get_status() == ToolStatus.AVAILABLE
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows executable suffixes")
+def test_adjacent_windows_exe_with_legacy_which(launchers, monkeypatch):
+    launcher = executable(launchers)
+    which = shutil.which
+
+    def legacy_which(command):
+        path = Path(command)
+        # Python 3.10/3.11 check directory-qualified paths before PATHEXT.
+        if path.is_absolute() and not path.suffix:
+            return None
+        return which(command)
+
+    monkeypatch.setattr(shutil, "which", legacy_which)
+    assert PiperTTS().get_status() == ToolStatus.AVAILABLE
+    assert PiperTTS()._resolve_executable() == str(launcher)
 
 
 def test_adjacent_launcher_reaches_registry_and_selector(launchers, monkeypatch):

@@ -5,6 +5,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { formatKpiValue } from "./format";
 
 interface Metric {
   label: string;
@@ -275,8 +276,7 @@ const KPICardContent: React.FC<KPICardContentProps> = ({
           config: { damping: 18, stiffness: 60 },
         });
 
-  const displayValue = Math.round(metric.value * countProgress);
-  const formattedValue = formatDisplayValue(displayValue, metric.value);
+  const formattedValue = formatKpiValue(metric.value, countProgress);
 
   // Change indicator animation
   const changeOpacity = interpolate(
@@ -353,16 +353,3 @@ const KPICardContent: React.FC<KPICardContentProps> = ({
     </>
   );
 };
-
-/**
- * Format the animated counter value to match the scale of the target value.
- */
-function formatDisplayValue(current: number, target: number): string {
-  if (target >= 1_000_000) {
-    return `${(current / 1_000_000).toFixed(1)}M`;
-  }
-  if (target >= 1_000) {
-    return `${(current / 1_000).toFixed(1)}K`;
-  }
-  return String(current);
-}

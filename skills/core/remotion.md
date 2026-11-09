@@ -261,7 +261,7 @@ export const ExplainerVideo = {
 
 ### Style Playbook to Theme
 
-Style playbooks (`skills/styles/`) define visual parameters. Map them to Remotion themes:
+Style playbooks (`styles/`) define visual parameters. Map them to Remotion themes:
 
 ```tsx
 // Derived from the style playbook YAML

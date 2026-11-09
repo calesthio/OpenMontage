@@ -1,0 +1,13 @@
+# mcp_servers.yaml
+# MCP provider servers OpenMontage connects to. Default: disabled — enable and
+# add servers, then run an Agent review (skills/meta/mcp-tool-classification.md)
+# to freeze each tool's capability here.
+#
+#   tools.<name>.capability  = "frozen" capability assignment. Written by the
+#   Agent after review, or declared manually (highest priority). Un-declared
+#   tools stay unfrozen: never bridged into a selector, only visible via
+#   mcp_catalog --review.
+mcp:
+  enabled: false
+  list_on_boot: true
+  servers: {}

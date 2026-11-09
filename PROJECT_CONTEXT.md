@@ -85,6 +85,8 @@ Each tool's `agent_skills[]` field bridges Layer 1 → Layer 3. See `skills/INDE
 | `skills/core/hyperframes.md` | Layer 2 — when OpenMontage should pick HyperFrames vs Remotion, artifact → workspace mapping |
 | `schemas/styles/playbook.schema.json` | Playbook schema v2 with design tokens (chart_palette, scale_system, weight_matrix, color_rules) |
 | `tests/qa/` | Quality validation test scripts for tool-by-tool output inspection |
+| `tools/mcp/` | MCP client integration — config, transport, adapter, registry sync, catalog/call |
+| `mcp_servers.yaml` | MCP server declarations + frozen capability assignments (schema in `schemas/mcp_servers.schema.json`) |
 
 ## Available Pipelines
 
@@ -125,3 +127,5 @@ Each tool's `agent_skills[]` field bridges Layer 1 → Layer 3. See `skills/INDE
 6. Let discovery happen through `tools/tool_registry.py`; do not depend on ad hoc imports
 7. Add a JSON schema in `schemas/tools/` if the tool has complex I/O
 8. Add tests only after the runtime path is correct
+9. For MCP-backed providers: declare the server in `mcp_servers.yaml`, run an Agent
+   review to freeze the tool's capability, and let `registry.discover_mcp()` register it.

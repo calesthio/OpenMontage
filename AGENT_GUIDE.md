@@ -519,6 +519,19 @@ Three selector tools abstract multi-provider capabilities. **Selectors auto-disc
 
 Selectors route based on: user preference > availability > discovery order. They adapt input schemas between providers transparently.
 
+### MCP Providers
+
+OpenMontage can act as an **MCP client**: external MCP servers declared in
+`mcp_servers.yaml` expose image/video/tts/analysis tools that are adapted to
+`BaseTool` instances and auto-join the selector / provider-menu ecosystem.
+
+- Capability assignments are **frozen** in `mcp_servers.yaml` by an Agent review
+  (`skills/meta/mcp-tool-classification.md`) — never guessed in Python.
+- `mcp_catalog` lists every configured server's tools (frozen + unfrozen) for
+  review. `mcp_call` reaches any MCP tool directly (raw passthrough).
+- An unfrozen tool is never bridged into a selector until reviewed.
+Read `skills/meta/mcp-tool-classification.md` before the first review.
+
 ## User-Facing Planning Protocol
 
 Before committing to execution, present:

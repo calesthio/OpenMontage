@@ -49,6 +49,18 @@ def _download_file(file_info: dict[str, Any], destination: Path) -> Path:
     return target
 
 
+def _download_companion(file_info: dict[str, Any], directory: Path) -> Path:
+    """Save an OBJ's MTL / texture next to it under its original name so the OBJ's references resolve."""
+    url = str(file_info["url"])
+    name = str(file_info.get("file_name") or Path(urlparse(url).path).name)
+    target = directory / name
+    response = requests.get(url, timeout=180)
+    response.raise_for_status()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(response.content)
+    return target
+
+
 class Fal3D(BaseTool):
     name = "fal_3d"
     version = "0.1.0"
@@ -170,6 +182,7 @@ class Fal3D(BaseTool):
 
             destination = Path(str(inputs["output_path"])).expanduser().resolve()
             file_infos: list[dict[str, Any]] = []
+            companions: list[dict[str, Any]] = []
             if operation == "reconstruct_objects":
                 if data.get("model_glb"):
                     file_infos.append(data["model_glb"])
@@ -179,6 +192,16 @@ class Fal3D(BaseTool):
                 candidate = urls.get("glb") or data.get("model_glb") or urls.get("obj")
                 if candidate:
                     file_infos.append(candidate)
+                # Hunyuan Rapid has no textured-GLB export: it returns an OBJ plus a separate
+                # MTL and texture image. Without those two files the OBJ is untextured, so
+                # fetch them alongside under their original names (the OBJ references them).
+                primary_url = str(candidate.get("url", "")) if candidate else ""
+                if primary_url.lower().endswith(".obj"):
+                    seen: set[str] = set()
+                    for info in (data.get("material_mtl"), data.get("texture"), urls.get("mtl"), urls.get("texture")):
+                        if info and info.get("url") and info["url"] not in seen:
+                            seen.add(info["url"])
+                            companions.append(info)
             if not file_infos:
                 raise RuntimeError("fal.ai completed without a downloadable mesh")
 
@@ -186,6 +209,8 @@ class Fal3D(BaseTool):
             for index, file_info in enumerate(file_infos):
                 target = destination if index == 0 else destination.with_name(f"{destination.stem}-{index:02d}{destination.suffix}")
                 artifacts.append(str(_download_file(file_info, target)))
+            for info in companions:
+                artifacts.append(str(_download_companion(info, destination.parent)))
             provenance = destination.with_suffix(".provenance.json")
             provenance.write_text(json.dumps({
                 "version": "1.0",

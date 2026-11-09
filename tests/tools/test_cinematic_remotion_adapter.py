@@ -58,6 +58,18 @@ def test_cinematic_cut_adapter_preserves_playback_speed() -> None:
     assert scenes[0]["playbackRate"] == 2
 
 
+def test_cinematic_cut_adapter_passes_grade_overrides() -> None:
+    scenes = VideoCompose._cuts_to_cinematic_scenes([
+        {"id": "dark", "source": "clip.mp4", "in_seconds": 0, "out_seconds": 4,
+         "tone": "none", "filter": "contrast(1.02)"},
+        {"id": "plain", "source": "clip.mp4", "in_seconds": 0, "out_seconds": 4},
+    ])
+
+    assert scenes[0]["tone"] == "none"
+    assert scenes[0]["filter"] == "contrast(1.02)"
+    assert "tone" not in scenes[1] and "filter" not in scenes[1]
+
+
 @pytest.mark.parametrize("uri_style", ["standard", "legacy_windows"])
 def test_remotion_media_staging_decodes_file_uris(tmp_path, uri_style) -> None:
     source = tmp_path / "clip with space.mp4"

@@ -76,6 +76,8 @@ If Remotion is not in the available render engines, stop and report to the user 
 
 Only use letterbox, 24fps intent, or heavy grading if they help the piece. Do not apply them because the pipeline name says cinematic.
 
+`CinematicRenderer` grades every video cut by default: a CSS filter, a cold colour wash and a vignette. On footage that is already dark or graded, set `tone` and `filter` on the cut in `edit_decisions.cuts`: `"tone": "none"` and `"filter": "none"` leave the clip's own colour, and only the vignette remains. `tone` also takes `cold`, `steel`, `void` or `neutral`, and `filter` any CSS filter.
+
 ### 2. Preserve Audio Dynamics
 
 The mix should allow:

@@ -61,6 +61,15 @@
             "type": "string",
             "description": "Backing color used behind this cut by composition runtimes"
           },
+          "tone": {
+            "type": "string",
+            "enum": ["cold", "steel", "void", "neutral", "none"],
+            "description": "CinematicRenderer colour wash for this video cut (default cold); none removes it. Title cuts ignore it."
+          },
+          "filter": {
+            "type": "string",
+            "description": "CSS filter for this video cut in CinematicRenderer, replacing the default grade; \"none\" removes it. Title cuts ignore it."
+          },
           "reason": { "type": "string" }
         },
         "additionalProperties": false

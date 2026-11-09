@@ -298,6 +298,27 @@ class TestSchemas:
         }
         validate_artifact("edit_decisions", doc)
 
+    def test_edit_decisions_accepts_cinematic_cut_grade(self):
+        doc = {
+            "version": "1.0",
+            "cuts": [{
+                "id": "cut-1", "source": "asset-1", "in_seconds": 0, "out_seconds": 10,
+                "tone": "none", "filter": "contrast(1.04) saturate(0.95)",
+            }],
+            "render_runtime": "remotion",
+        }
+        validate_artifact("edit_decisions", doc)
+
+    @pytest.mark.parametrize("grade", [{"tone": "warm"}, {"filter": 1.2}])
+    def test_edit_decisions_rejects_invalid_cinematic_cut_grade(self, grade):
+        doc = {
+            "version": "1.0",
+            "cuts": [{"id": "cut-1", "source": "asset-1", "in_seconds": 0, "out_seconds": 10, **grade}],
+            "render_runtime": "remotion",
+        }
+        with pytest.raises(Exception):
+            validate_artifact("edit_decisions", doc)
+
     def test_edit_decisions_end_tag_rejects_negative_offset(self):
         doc = {
             "version": "1.0",

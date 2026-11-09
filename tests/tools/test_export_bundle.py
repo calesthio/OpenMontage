@@ -1,13 +1,15 @@
 """Tests for the export_bundle publisher tool.
 
 Covers the tool contract, registry discovery, the export bundle layout, a
-schema-valid publish_log, chapter formatting, and the missing-video error path.
+schema-valid publish_log, chapter formatting, the missing-video error path, and
+the optional comment-keyword engagement_cta.
 """
 
 import json
 import sys
 from pathlib import Path
 
+import jsonschema
 import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -153,3 +155,119 @@ def test_registry_discovers_export_bundle():
     reg.discover()
     assert reg.get("export_bundle") is not None
     assert reg.get_by_capability("publish")[0].name == "export_bundle"
+
+
+def _cta(**overrides):
+    cta = {
+        "keyword": "GUIDE",
+        "promise": "the free checklist",
+        "caption_line": "Comment GUIDE and I'll send you the checklist",
+        "dm_message": "Here's the checklist: https://example.com/guide",
+        "public_reply": "Sent! Check your DMs",
+        "platforms": ["instagram_reels", "tiktok"],
+    }
+    cta.update(overrides)
+    return cta
+
+
+def test_engagement_cta_is_recorded_in_bundle_and_publish_log(tmp_path):
+    video = tmp_path / "p" / "renders" / "final.mp4"
+    _make_video(video)
+    result = ExportBundle().execute(
+        {
+            "video_path": str(video),
+            "title": "T",
+            "export_dir": str(tmp_path / "out"),
+            "engagement_cta": _cta(keyword="  GUIDE "),
+        }
+    )
+    assert result.success is True, result.error
+    root = Path(result.data["export_path"])
+
+    cta_file = root / "metadata" / "engagement_cta.json"
+    assert str(cta_file) in result.data["files_written"]
+    assert json.loads(cta_file.read_text(encoding="utf-8")) == _cta()
+    assert json.loads((root / "metadata" / "metadata.json").read_text())["engagement_cta"] == _cta()
+
+    plog = result.data["publish_log"]
+    validate_artifact("publish_log", plog)
+    assert plog["metadata"]["engagement_cta"]["keyword"] == "GUIDE"
+    assert result.data["warnings"] == []
+
+
+def test_no_engagement_cta_leaves_bundle_unchanged(tmp_path):
+    video = tmp_path / "p" / "renders" / "final.mp4"
+    _make_video(video)
+    result = ExportBundle().execute(
+        {"video_path": str(video), "title": "T", "export_dir": str(tmp_path / "out")}
+    )
+    assert result.success is True
+    root = Path(result.data["export_path"])
+    assert not (root / "metadata" / "engagement_cta.json").exists()
+    assert "metadata" not in result.data["publish_log"]
+    assert "engagement_cta" not in json.loads((root / "metadata" / "metadata.json").read_text())
+    assert result.data["warnings"] == []
+
+
+@pytest.mark.parametrize(
+    "caption, description, warned",
+    [
+        ("Comment #guide for the checklist", "", False),  # case-insensitive, hashtag ok
+        (None, "Want it? Comment GUIDE below.", False),  # falls back to the description
+        ("Read our guidelines", "", True),  # whole word only
+        (None, "", True),  # nowhere for viewers to read the word
+    ],
+)
+def test_engagement_cta_warns_when_caption_misses_keyword(tmp_path, caption, description, warned):
+    video = tmp_path / "p" / "renders" / "final.mp4"
+    _make_video(video)
+    cta = _cta()
+    del cta["caption_line"]
+    if caption is not None:
+        cta["caption_line"] = caption
+    result = ExportBundle().execute(
+        {
+            "video_path": str(video),
+            "title": "T",
+            "export_dir": str(tmp_path / "out"),
+            "description": description,
+            "engagement_cta": cta,
+        }
+    )
+    assert result.success is True, result.error
+    assert bool(result.data["warnings"]) is warned
+    if warned:
+        assert "GUIDE" in result.data["warnings"][0]
+
+
+@pytest.mark.parametrize(
+    "cta",
+    [
+        {"promise": "no keyword"},
+        {"keyword": "   "},
+        {"keyword": "GUIDE", "unknown_field": True},
+        "GUIDE",
+    ],
+)
+def test_invalid_engagement_cta_errors_before_writing(tmp_path, cta):
+    video = tmp_path / "p" / "renders" / "final.mp4"
+    _make_video(video)
+    out = tmp_path / "out"
+    result = ExportBundle().execute(
+        {"video_path": str(video), "title": "T", "export_dir": str(out), "engagement_cta": cta}
+    )
+    assert result.success is False
+    assert "engagement_cta" in (result.error or "")
+    assert not out.exists()
+
+
+def test_publish_log_schema_engagement_cta_contract():
+    base = {
+        "version": "1.0",
+        "entries": [{"platform": "tiktok", "status": "exported", "timestamp": "2026-06-29T10:30:00+00:00"}],
+    }
+    validate_artifact("publish_log", {**base, "metadata": {"engagement_cta": {"keyword": "GUIDE"}}})
+    # Other metadata keys stay free-form (clip_catalog, platform_copy_map, ...).
+    validate_artifact("publish_log", {**base, "metadata": {"platform_copy_map": {"tiktok": "..."}}})
+    with pytest.raises(jsonschema.ValidationError):
+        validate_artifact("publish_log", {**base, "metadata": {"engagement_cta": {"promise": "x"}}})

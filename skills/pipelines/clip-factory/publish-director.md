@@ -33,6 +33,8 @@ Each platform needs its own tone and packaging:
 - LinkedIn: insight-led and more professional
 - X: short, punchy, opinion-friendly
 
+If a clip asks viewers to comment a word ("comment GUIDE for the checklist"), its TikTok / Reels copy in `platform_copy_map` must repeat that exact word in the first line, before the "more" cut. Record the CTA in `engagement_cta` (below). Don't add a CTA the clip doesn't have.
+
 ### 3. Package The Batch Cleanly
 
 Group by platform and include ready-to-paste text assets, not just video files.
@@ -45,11 +47,13 @@ Store in `publish_log.metadata`:
 - `posting_order`
 - `platform_copy_map`
 - `schedule_notes`
+- `engagement_cta` (only when a clip has a comment-keyword CTA): `keyword` (required), `promise`, `caption_line`, `dm_message` (a draft message that delivers the promise), `public_reply`, `platforms`. Nothing is sent from this stage. If the creator automates the DM with a comment-to-DM tool, list that as a follow-up in the approval summary.
 
 ### 5. Quality Gate
 
 - strongest clips lead the rollout,
 - captions are platform-specific,
+- a comment-keyword CTA uses the same word on screen, in the caption and in `engagement_cta`,
 - export folders are usable without extra cleanup,
 - the batch catalog clearly links ranking, file paths, and publishing intent.
 

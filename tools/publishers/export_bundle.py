@@ -18,6 +18,7 @@ A networked publisher (e.g. a YouTube uploader) can be added later as a separate
 from __future__ import annotations
 
 import json
+import re
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
@@ -38,7 +39,7 @@ from tools.base_tool import (
 
 class ExportBundle(BaseTool):
     name = "export_bundle"
-    version = "0.1.0"
+    version = "0.2.0"
     tier = ToolTier.PUBLISH
     capability = "publish"
     provider = "local"
@@ -52,7 +53,7 @@ class ExportBundle(BaseTool):
 
     agent_skills = []
 
-    capabilities = ["package_export", "write_publish_log"]
+    capabilities = ["package_export", "write_publish_log", "record_engagement_cta"]
     supports = {
         "local_offline": True,
         "free": True,
@@ -106,6 +107,16 @@ class ExportBundle(BaseTool):
                 "description": "Target platform label for the publish_log entry. Defaults to 'local'.",
             },
             "visibility": {"type": "string", "enum": ["public", "private", "unlisted"]},
+            "engagement_cta": {
+                "type": "object",
+                "required": ["keyword"],
+                "description": (
+                    "Comment-keyword CTA when the video asks viewers to comment a word "
+                    "(e.g. 'Comment GUIDE for the checklist'): keyword, promise, caption_line, "
+                    "dm_message, public_reply, platforms. Written to metadata/engagement_cta.json "
+                    "and publish_log.metadata.engagement_cta. Nothing is sent."
+                ),
+            },
             "timestamp": {
                 "type": "string",
                 "description": "Override the ISO-8601 timestamp (mainly for deterministic tests).",
@@ -118,6 +129,7 @@ class ExportBundle(BaseTool):
             "publish_log": {"type": "object"},
             "export_path": {"type": "string"},
             "files_written": {"type": "array", "items": {"type": "string"}},
+            "warnings": {"type": "array", "items": {"type": "string"}},
         },
     }
 
@@ -139,6 +151,26 @@ class ExportBundle(BaseTool):
         if h:
             return f"{h}:{m:02d}:{s:02d}"
         return f"{m}:{s:02d}"
+
+    @staticmethod
+    def _engagement_cta_error(cta: Any) -> Optional[str]:
+        """Validate against the publish_log schema's metadata.engagement_cta definition."""
+        import jsonschema
+
+        from schemas.artifacts import load_schema
+
+        schema = load_schema("publish_log")["properties"]["metadata"]["properties"]["engagement_cta"]
+        try:
+            jsonschema.validate(cta, schema)
+        except jsonschema.ValidationError as exc:
+            return exc.message
+        return None
+
+    @staticmethod
+    def _mentions_keyword(text: str, keyword: str) -> bool:
+        """Case-insensitive whole-word match ('GUIDE' matches '#guide', not 'guidelines')."""
+        pattern = rf"(?<!\w){re.escape(keyword)}(?!\w)"
+        return re.search(pattern, text, flags=re.IGNORECASE) is not None
 
     def _chapter_lines(self, chapters: list[dict[str, Any]]) -> list[str]:
         lines: list[str] = []
@@ -169,6 +201,15 @@ class ExportBundle(BaseTool):
             val = inputs.get(key)
             if val and not Path(val).expanduser().is_file():
                 return ToolResult(success=False, error=f"{key} provided but not found: {val}")
+
+        # Check the CTA before writing anything, so a bad one can't leave a half-built bundle.
+        engagement_cta = inputs.get("engagement_cta")
+        if engagement_cta is not None:
+            if isinstance(engagement_cta, dict) and isinstance(engagement_cta.get("keyword"), str):
+                engagement_cta = {**engagement_cta, "keyword": engagement_cta["keyword"].strip()}
+            cta_error = self._engagement_cta_error(engagement_cta)
+            if cta_error:
+                return ToolResult(success=False, error=f"engagement_cta is invalid: {cta_error}")
 
         export_root = (
             Path(inputs["export_dir"]).expanduser()
@@ -212,6 +253,8 @@ class ExportBundle(BaseTool):
             "hashtags": hashtags,
             "chapters": chapters,
         }
+        if engagement_cta:
+            metadata["engagement_cta"] = engagement_cta
         meta_json = meta_dir / "metadata.json"
         meta_json.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
         files_written.append(str(meta_json))
@@ -248,6 +291,24 @@ class ExportBundle(BaseTool):
             concept.write_text(json.dumps(inputs["thumbnail_concept"], indent=2), encoding="utf-8")
             files_written.append(str(concept))
 
+        warnings: list[str] = []
+        if engagement_cta:
+            cta_json = meta_dir / "engagement_cta.json"
+            cta_json.write_text(json.dumps(engagement_cta, indent=2), encoding="utf-8")
+            files_written.append(str(cta_json))
+            # The caption is where viewers check the word before commenting it.
+            caption = engagement_cta.get("caption_line") or description
+            keyword = engagement_cta["keyword"]
+            if not caption:
+                warnings.append(
+                    f"engagement_cta keyword {keyword!r} has no caption_line or description to appear in"
+                )
+            elif not self._mentions_keyword(caption, keyword):
+                warnings.append(
+                    f"engagement_cta keyword {keyword!r} does not appear in the caption; "
+                    "repeat the exact word in the first caption line"
+                )
+
         timestamp = inputs.get("timestamp") or datetime.now(timezone.utc).isoformat()
         entry: dict[str, Any] = {
             "platform": inputs.get("platform", "local"),
@@ -264,7 +325,9 @@ class ExportBundle(BaseTool):
         if inputs.get("visibility"):
             entry["visibility"] = inputs["visibility"]
 
-        publish_log = {"version": "1.0", "entries": [entry]}
+        publish_log: dict[str, Any] = {"version": "1.0", "entries": [entry]}
+        if engagement_cta:
+            publish_log["metadata"] = {"engagement_cta": engagement_cta}
 
         # Validate against the canonical schema so a bad entry fails here, not at checkpoint.
         try:
@@ -280,6 +343,7 @@ class ExportBundle(BaseTool):
                 "publish_log": publish_log,
                 "export_path": str(export_root),
                 "files_written": files_written,
+                "warnings": warnings,
             },
             artifacts=[str(out_video)],
         )

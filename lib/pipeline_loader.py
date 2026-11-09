@@ -162,6 +162,28 @@ def get_required_tools(manifest: dict) -> set[str]:
     return tools
 
 
+def get_stage_tools(manifest: dict, stage_name: str) -> set[str]:
+    """Collect every tool a stage or one of its sub-stages declares."""
+    tool_fields = (
+        "required_tools",
+        "optional_tools",
+        "preferred_tools",
+        "fallback_tools",
+        "tools_available",
+    )
+    for stage in manifest["stages"]:
+        if stage["name"] != stage_name:
+            continue
+        tools: set[str] = set()
+        for field in tool_fields:
+            tools.update(stage.get(field, []))
+        for sub_stage in stage.get("sub_stages", []):
+            for field in tool_fields:
+                tools.update(sub_stage.get(field, []))
+        return tools
+    return set()
+
+
 def get_stage_skill(manifest: dict, stage_name: str) -> Optional[str]:
     """Get the skill path for an instruction-driven stage."""
     for stage in manifest["stages"]:

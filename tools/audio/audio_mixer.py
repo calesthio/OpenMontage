@@ -7,6 +7,7 @@ not installed.
 
 from __future__ import annotations
 
+import math
 import time
 from pathlib import Path
 from typing import Any
@@ -25,7 +26,7 @@ from tools.base_tool import (
 
 class AudioMixer(BaseTool):
     name = "audio_mixer"
-    version = "0.1.1"
+    version = "0.1.2"
     tier = ToolTier.CORE
     capability = "audio_processing"
     provider = "ffmpeg"
@@ -182,7 +183,10 @@ class AudioMixer(BaseTool):
             "fade_duration": {
                 "type": "number",
                 "default": 0.5,
-                "description": "Duration of fade in/out at segment boundaries (seconds).",
+                "description": (
+                    "Duration of fade in/out at segment boundaries (seconds). "
+                    "Capped at half each segment length for short cues."
+                ),
             },
             "target_duration": {
                 "type": "number",
@@ -268,11 +272,21 @@ class AudioMixer(BaseTool):
                 "-of", "csv=p=0",
                 track["path"],
             ]
-            duration = float(self.run_command(duration_cmd).stdout.strip().split("\n")[0])
+            probed = self.run_command(duration_cmd).stdout.strip().split("\n")[0]
+            try:
+                duration = float(probed)
+            except ValueError:
+                duration = math.nan
+            if not math.isfinite(duration) or duration <= 0:
+                raise ValueError(
+                    f"Audio duration is missing or invalid for {track['path']} "
+                    f"(ffprobe reported {probed!r}); regenerate or repair the "
+                    "track before applying fade_out_seconds."
+                )
             fade_start = max(0.0, duration - float(fade_out))
             filters.append(f"afade=t=out:st={fade_start}:d={fade_out}")
         if delay_ms > 0:
-            filters.append(f"adelay={delay_ms}|{delay_ms}")
+            filters.append(f"adelay={delay_ms}:all=1")
 
         return filters
 
@@ -485,9 +499,6 @@ class AudioMixer(BaseTool):
             "ffmpeg", "-y",
             "-i", str(input_path),
             "-vn",
-            "-acodec", "pcm_s16le",
-            "-ar", "16000",
-            "-ac", "1",
             str(output_path),
         ]
 
@@ -749,13 +760,16 @@ class AudioMixer(BaseTool):
         for seg in sorted(segments, key=lambda s: s["start"]):
             s = seg["start"]
             e = seg["end"]
-            fade_in_end = s + fade_dur
-            fade_out_start = e - fade_dur
+            # Short cues still need disjoint fade-in/fade-out intervals.
+            # Otherwise the fade-in branch can keep playing after `e`.
+            segment_fade = min(fade_dur, (e - s) / 2)
+            fade_in_end = s + segment_fade
+            fade_out_start = e - segment_fade
             parts.append(
                 f"if(lt(t,{s}),0,"
-                f"if(lt(t,{fade_in_end}),{music_volume}*(t-{s})/{fade_dur},"
+                f"if(lt(t,{fade_in_end}),{music_volume}*(t-{s})/{segment_fade},"
                 f"if(lt(t,{fade_out_start}),{music_volume},"
-                f"if(lt(t,{e}),{music_volume}*({e}-t)/{fade_dur},"
+                f"if(lt(t,{e}),{music_volume}*({e}-t)/{segment_fade},"
                 f"0))))"
             )
 

@@ -23,7 +23,42 @@ New asynchronous video/image tools return `resume_job` and optionally save
 another paid request. Unpriced calls return `cost_usd: null` with `cost_status`,
 not zero. Ideogram direct supports an unbilled `dry_run` price quote.
 
-Kling 4/Flash stays gated pending verified public schemas and account access.
+### Kling O3 on fal.ai (separate from official Kling and legacy fal Kling)
+
+`kling_o3_fal_video` uses `FAL_KEY` and exact models `kling-o3-standard`,
+`kling-o3-pro`, or `kling-o3-4k`. Each has `text_to_video`, `image_to_video`,
+`reference_to_video`, `video_to_video_reference`, and `video_to_video_edit`.
+Select video-to-video operation explicitly; all routes use the fal queue and
+return an optional resumable `job_path` checkpoint. `kling_o3_fal_image` uses
+model `kling-o3-image` with `text_to_image` and `image_to_image`. The original
+`kling_video` adapter and its `v3/standard` default are unchanged. These are
+fal-hosted endpoints, **not** `kling_official_video` or `kling_official_image`.
+For the shared selectors, `video_edit` maps to O3's `video_to_video_edit`,
+and `image_selector`'s `generate`/`edit` map to O3 text/image generation.
+
+Example image-reference clip: set `preferred_tool=kling_o3_fal_video`,
+`model=kling-o3-standard`, `operation=reference_to_video`, `prompt` (refer to
+appearance images as `@Image1`, `@Image2`), `start_image_url` for the first
+frame and `image_urls`/`image_paths` (or the selector's
+`reference_image_urls`/`reference_image_paths`) for appearance references.
+Do **not** use `image_url` as a first-frame alias on this route: it can
+appear twice in the reference list. Ordinary `image_to_video` takes
+`image_url` (or `image_path`) and optional `end_image_url`, but **not** `aspect_ratio`.
+Video-to-video reference/edit take `video_url` and `prompt`; edit does not
+accept `duration` or `aspect_ratio`. Native controls such as `elements`,
+`multi_prompt`, `shot_type`, `keep_audio`, and `generate_audio` are validated
+against the selected endpoint's published schema, not blindly copied between
+routes. For image edits, use `image_urls`/`image_paths` with `image_to_image`.
+
+These calls are paid. A configured key is not proof of entitlement or a price
+quote: `estimate_cost` requires a current quote and successful results report
+`cost_usd=null` when the provider gives no usage cost. The tool never retries
+a paid POST automatically. If the POST times out without a request ID, **do
+not resubmit** until checking the fal dashboard. No live paid O3 generation
+was validated; schemas and queue behavior were tested offline.
+
+Kling 4/Flash (a different version from O3 4K output) stays gated pending
+verified public schemas and account access.
 LTX-2.5 local execution requires a supplied ComfyUI API workflow and installed
 weights; the direct LTX API is implemented separately. GPU and paid API output
 quality require live validation in the intended environment.
@@ -51,6 +86,7 @@ quality require live validation in the intended environment.
 | 13 | **pay-as-you-go** | Suno | Full song generation with vocals and lyrics |
 | 14 | **$0 + GPU** | Local video gen | WAN 2.1, Hunyuan, CogVideo, LTX — free, offline |
 | 15 | **$0 + GPU** | Local Diffusion | Stable Diffusion images — free, offline |
+| 16 | **pay-as-you-go** | MiniCut CLI (`minicut login`, no env var) | One sign-in for `minicut_image` (GPT Image 2), `minicut_tts` (ElevenLabs v3) and `minicut_music` (Lyria 3.5); each job shows its price and waits for a yes |
 
 ### Environment Variable Summary
 
@@ -90,6 +126,7 @@ KLING_API_BASE_URL=          # Optional; default https://api-singapore.klingai.c
 ARK_API_KEY=                 # API key body only; do not include the "Bearer " prefix
 
 # VIDEO
+PIKA_API_KEY=                # Pika H3 Flex via the Pika API (native audio, references, 4k)
 HEYGEN_API_KEY=              # HeyGen avatar video gateway
 RUNWAY_API_KEY=              # Runway native + Seedance 2.5, Gemini Omni, MiniMax H3
 SUNO_API_KEY=                # Suno music generation
@@ -119,6 +156,7 @@ speculative model strings.
 | **Gemini Omni Flash** | Google `gemini_omni_video` (`gemini-omni-1.1-flash`) | `gemini_omni_fal` (T2V, I2V, references, editing) | `runway_video` model `gemini_omni_flash` | Legacy `GeminiVideoOmni` mapping is not a stable 1.1 fallback; migrate separately to `GeminiVideoOmniV2` | Not available as local weights |
 | **Seedance 2.5** | Volcengine `seedance_ark` model variant `2.5` | `seedance_video` model version `2.5` | `runway_video` model `seedance2_5` | `ByteDance2TextToVideoNode` (hosted, paid credits) | Not available as local weights |
 | **MiniMax H3** | `minimax_video` model `MiniMax-H3` | `minimax_fal_video` (`hailuo-03`) | `runway_video` model `hailuo3` | `MinimaxHailuo03TextToVideoNode` (hosted, paid credits) | Supported with official open weights and an exported API workflow |
+| **Pika H3 Flex** | Pika API `pika_video` model `pika-h3-flex` | Not offered | Not offered | Not offered | Open-weight LoRA adapters on Hugging Face for a MiniMax H3 ComfyUI graph via `comfyui_video` custom workflows (community path, unverified) |
 
 ComfyUI Partner Nodes run inside the ComfyUI graph but call hosted services;
 they require network access, a logged-in Comfy account, and prepaid credits.
@@ -427,6 +465,85 @@ estimates and generation results.
 
 The tools are automatically discoverable through the image and video selectors;
 choose them with `preferred_provider: "minimax"`.
+
+---
+
+### Pika — Pika H3 Flex Video Generation
+
+> **Pika's post-trained H3 model for professional iteration.** `pika_video`
+> generates 3–15 second clips with native synchronized stereo audio (dialogue,
+> ambience, music) from text, a first and/or last frame, or up to 12 ordered
+> image, video and audio references. 480p and 768p are native; 1080p, 2k and 4k
+> are produced by a single service-side upscale. Open weights are also
+> published on Hugging Face; this tool uses the hosted Pika API.
+
+**Tools unlocked:** `pika_video`
+**Env var:** `PIKA_API_KEY`
+**Support:** [support@pika.art](mailto:support@pika.art) for API, billing and key issues
+
+#### Setup
+
+1. Sign in at [dev.pika.art](https://dev.pika.art) and create an organization.
+2. Open **API Keys** and create a key.
+3. Add funds under **Billing**. Generation is prepaid; jobs fail with
+   `insufficient_balance` until the organization has a balance.
+4. Add to `.env`:
+   ```bash
+   PIKA_API_KEY=your-pika-api-key
+   ```
+
+Optional: `PIKA_API_BASE_URL` overrides `https://api.dev.pika.art`.
+
+#### What It's Best For
+
+- **Native audio in one pass** — dialogue, ambience and music are generated with the picture, lip-synced when the speaker is on screen
+- **Reference-guided animation** — up to 9 images, 3 videos and 3 audio clips steer subject, motion and soundtrack
+- **First/last-frame control** — pin approved stills as the opening and closing frames
+- **Multi-shot storytelling and motion graphics** — "Cut to:" shot lists and on-screen text in a single prompt
+- **One API from draft to delivery** — iterate at 480p, then rerun the approved take at 1080p, 2k or 4k
+
+#### API Notes
+
+The Pika API is asynchronous with a submit-then-poll pattern. Auth is an
+`X-API-Key` header.
+
+```text
+# Submit
+POST https://api.dev.pika.art/v1/media/pika/pika-h3-flex/{text-to-video|image-to-video|reference-to-video}
+
+# Poll until status is completed or failed
+GET  https://api.dev.pika.art/v1/media/jobs/{request_id}
+```
+
+- `duration` is 3–15 whole seconds; output rounds up to the model's frame grid and runs slightly long.
+- `rewrite` (default on) lets Pika improve the prompt. Turn it off for exact prompt control.
+- Audio is always generated; `generate_audio: false` is rejected rather than ignored.
+- Local frames and reference files are uploaded through Pika's presigned upload flow, not a third-party host.
+- Request schemas and prices are pinned in `tools/provider_contracts/pika_h3_flex.json` from the public catalog and validated before any paid submission.
+- `dry_run: true` returns the exact quoted price from Pika's free quote endpoint without generating.
+- On a polling timeout the result carries `resume_job`; pass it back to keep waiting on the same job instead of paying twice. The tool never retries a paid submission automatically.
+
+#### Fallback Tools
+
+If `pika_video` returns an error, the agent may retry with: `minimax_video`, `seedance_video`, `veo_video`, `kling_video`
+
+#### Pricing
+
+Billed per output second, charged only for successful generations, to the
+user's own Pika organization. OpenMontage reports the settled charge from the
+job record as the actual cost.
+
+| Operation | 480p | 768p | 1080p | 2k | 4k |
+|-----------|------|------|-------|----|----|
+| Text-to-video, image-to-video | $0.01/s | $0.02/s | $0.035/s | $0.04/s | $0.08/s |
+| Reference-to-video (output) | $0.03/s | $0.06/s | $0.075/s | $0.08/s | $0.10/s |
+| Reference video input (per input second) | $0.03/s | $0.06/s | $0.075/s | $0.08/s | $0.10/s |
+
+A 768p 10 second clip is about $0.20; a 4k 15 second clip about $1.20.
+OpenMontage's default budget policy asks for approval above $0.50 per action,
+so 4k runs of 7 seconds or more will prompt the user.
+
+> **Free tier:** None guaranteed; generation is prepaid. Pika may run promotional allowances for some operations, in which case the job settles at $0 and the result carries `data.free_generation` with the promo details. Check the balance at [dev.pika.art](https://dev.pika.art) before a production run.
 
 ---
 
@@ -1452,6 +1569,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **Kling Official** | `KLING_API_KEY` | `kling_official_video`, `kling_official_image`, `kling_tts`, `kling_avatar`, `kling_lip_sync` | Pay-as-you-go |
 | **Volcengine Ark** | `ARK_API_KEY` | `seedance_ark` | Pay-as-you-go |
 | **MiniMax direct** | `MINIMAX_API_KEY` | `minimax_image`, `minimax_video` | Pay-as-you-go |
+| **Pika** | `PIKA_API_KEY` | `pika_video` | Prepaid, per output second ($0.01–0.08/s) |
 | **OpenAI** | `OPENAI_API_KEY` | `openai_tts`, `openai_image` | Paid only |
 | **xAI** | `XAI_API_KEY` | `grok_image`, `grok_video` | Paid only |
 | **Runway** | `RUNWAY_API_KEY` | `runway_video` | Free trial + paid |
@@ -1473,7 +1591,7 @@ How many providers cover each capability:
 | Capability | Cloud Providers | Local Providers | Free Options |
 |-----------|----------------|-----------------|--------------|
 | **Image Generation** | FLUX, Kling Official, Grok, Google Imagen, GPT Image 2, Recraft | Local Diffusion | Pexels, Pixabay (stock) |
-| **Video Generation** | Grok, Kling Official, fal.ai, Seedance via Volcengine Ark, Runway, Veo, Gemini Omni, Higgsfield, MiniMax, HeyGen, Tencent Hunyuan, ComfyUI Partner Nodes | WAN, Hunyuan, CogVideo, LTX, ComfyUI WAN, ComfyUI MiniMax H3 | Pexels, Pixabay (stock) |
+| **Video Generation** | Grok, Kling Official, fal.ai, Seedance via Volcengine Ark, Runway, Veo, Gemini Omni, Higgsfield, MiniMax, Pika H3 Flex, HeyGen, Tencent Hunyuan, ComfyUI Partner Nodes | WAN, Hunyuan, CogVideo, LTX, ComfyUI WAN, ComfyUI MiniMax H3 | Pexels, Pixabay (stock) |
 | **Text-to-Speech** | Azure AI Speech, ElevenLabs, fish.audio, Google TTS, Kling Official, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier, Azure free tier, fish.audio s2.1-pro-free |
 | **Music Generation** | ElevenLabs, Suno, Google Lyria | — | ElevenLabs free tier |
 | **Post-Production** | — | FFmpeg (compose, stitch, trim, mix, enhance, grade) | All free |

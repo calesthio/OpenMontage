@@ -15,6 +15,7 @@ import platform
 import subprocess
 import shutil
 import time
+import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
@@ -54,7 +55,7 @@ def _load_dotenv() -> None:
                 if match:
                     value = value[: match.start()]
                 value = value.strip()
-            if key and key not in os.environ:
+            if key and (key not in os.environ or not os.environ[key].strip()):
                 os.environ[key] = value
 
 
@@ -186,6 +187,7 @@ def _instrument_execute(fn: Callable) -> Callable:
         project_dir = infer_project_dir(inputs)
 
         base = {
+            "call_id": uuid.uuid4().hex,
             "tool": tool_name,
             "scene_id": scene_id,
             "depth": depth if depth else None,
@@ -497,7 +499,7 @@ class BaseTool(ABC):
                     )
             elif dep.startswith("env:"):
                 env_name = dep[4:]
-                if not os.environ.get(env_name):
+                if not os.environ.get(env_name, "").strip():
                     raise DependencyError(
                         f"Environment variable {env_name!r} not set. {self.install_instructions}"
                     )

@@ -384,7 +384,7 @@ const TitleCard: React.FC<{
   );
 };
 
-const Soundtrack: React.FC<{
+export const Soundtrack: React.FC<{
   src: string;
   volume: number;
   trimBeforeSeconds?: number;
@@ -462,6 +462,7 @@ export const CinematicRenderer: React.FC<CinematicRendererProps> = ({
   soundtrack,
   music,
   captions,
+  captionProps,
 }) => {
   return (
     <AbsoluteFill style={{ backgroundColor: "#000000" }}>
@@ -521,6 +522,7 @@ export const CinematicRenderer: React.FC<CinematicRendererProps> = ({
           color={captions.color ?? "#F8FAFC"}
           highlightColor={captions.highlightColor ?? "#FBBF24"}
           backgroundColor={captions.backgroundColor ?? "rgba(0, 0, 0, 0.6)"}
+          {...captionProps}
         />
       ) : null}
     </AbsoluteFill>

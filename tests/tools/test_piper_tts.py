@@ -10,6 +10,7 @@ import pytest
 
 from tools.audio.piper_tts import PiperTTS
 from tools.base_tool import ToolStatus
+from tools.provider_routing import filter_explicit_route
 
 
 @pytest.fixture
@@ -76,10 +77,13 @@ def test_launch_uses_discovered_executable(launchers, tmp_path, monkeypatch, on_
 
     def run(argv, **kwargs):
         assert Path(argv[0]) == selected
-        assert argv[1:] == ["--model", "voice.onnx", "--speaker", "0",
+        assert argv[1:] == ["--model", "voice.onnx",
+                            "--data-dir", str(Path.home() / ".piper" / "models"),
+                            "--speaker", "0",
                         "--length-scale", "1.0", "--sentence-silence", "0.3",
                         "--output_file", str(output)]
         assert kwargs == {"input": "Hello", "capture_output": True, "text": True,
+                          "encoding": "utf-8", "env": {**os.environ, "PYTHONIOENCODING": "utf-8"},
                           "timeout": 300}
         output.write_bytes(b"audio")
         return subprocess.CompletedProcess(argv, 0, "", "")
@@ -151,3 +155,61 @@ def test_generation_failures_remain_failures(launchers, tmp_path, monkeypatch, f
     assert not result.success
     assert {"exit": "Piper failed (exit 2)", "missing": "Piper output file missing",
             "timeout": "Local TTS generation failed", "removed": "launcher removed"}[failure] in result.error
+
+@pytest.fixture
+def voices(monkeypatch, tmp_path):
+    """A voice in the cwd (piper's default data dir) and one stored elsewhere."""
+    work, elsewhere = tmp_path / "work", tmp_path / "voices"
+    work.mkdir()
+    elsewhere.mkdir()
+    (work / "es_ES-davefx-medium.onnx").write_bytes(b"")
+    (elsewhere / "es_ES-sharvard-medium.onnx").write_bytes(b"")
+    monkeypatch.chdir(work)
+    return work, elsewhere
+
+
+def test_installed_voice_name_routes_to_piper(voices):
+    piper = PiperTTS()
+
+    assert filter_explicit_route({"model": "es_ES-davefx-medium"}, [piper]) == [piper]
+    # Unconfirmed names fall through to the generic policy (rejected when untargeted).
+    assert filter_explicit_route({"model": "not-installed"}, [piper]) == []
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        "es_ES-davefx-medium.onnx",  # relative path, cwd
+        str(Path("..") / "voices" / "es_ES-sharvard-medium.onnx"),  # relative path, elsewhere
+        "ABS_CWD",
+        "ABS_ELSEWHERE",
+    ],
+)
+def test_onnx_paths_route_to_piper(voices, model):
+    work, elsewhere = voices
+    model = {
+        "ABS_CWD": str(work / "es_ES-davefx-medium.onnx"),
+        "ABS_ELSEWHERE": str(elsewhere / "es_ES-sharvard-medium.onnx"),
+    }.get(model, model)
+    piper = PiperTTS()
+
+    assert filter_explicit_route({"preferred_tool": "piper_tts", "model": model}, [piper]) == [piper]
+    assert filter_explicit_route({"model": model}, [piper]) == [piper]
+
+
+def test_text_is_sent_as_utf8(launchers, monkeypatch, tmp_path):
+    executable(launchers)
+    calls = {}
+
+    def fake_run(cmd, **kwargs):
+        calls.update(kwargs)
+        (tmp_path / "out.wav").write_bytes(b"RIFF")
+        return subprocess.CompletedProcess(cmd, 0, "", "")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    result = PiperTTS()._generate({"text": "Ananké, día", "output_path": str(tmp_path / "out.wav")})
+
+    assert result.success
+    assert calls["input"] == "Ananké, día"
+    assert calls["encoding"] == "utf-8"
+    assert calls["env"]["PYTHONIOENCODING"] == "utf-8"

@@ -92,7 +92,11 @@ function renderSlate(s) {
   return el("header", { class: "slate" },
     el("div", { class: "clapper" }),
     el("div", {},
-      el("a", { class: "wordmark", href: "/", style: "text-decoration:none" }, "Backlot"),
+      el("a", {
+        class: "wordmark", style: "text-decoration:none",
+        href: s.series ? `/?${new URLSearchParams({ series: s.series })}` : "/",
+        title: s.series ? `Back to series ${s.series}` : "Back to library",
+      }, s.series ? `Backlot / ${s.series}` : "Backlot"),
       el("h1", {}, s.title),
     ),
     ...chips,

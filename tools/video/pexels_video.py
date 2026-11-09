@@ -32,7 +32,7 @@ class PexelsVideo(BaseTool):
     determinism = Determinism.DETERMINISTIC
     runtime = ToolRuntime.API
 
-    dependencies = []
+    dependencies = ["env:PEXELS_API_KEY"]
     install_instructions = (
         "Set PEXELS_API_KEY to your Pexels API key.\n"
         "  Get one free at https://www.pexels.com/api/"
@@ -99,15 +99,13 @@ class PexelsVideo(BaseTool):
     user_visible_verification = ["Watch downloaded clip to verify it matches the intended scene"]
 
     def get_status(self) -> ToolStatus:
-        if os.environ.get("PEXELS_API_KEY"):
-            return ToolStatus.AVAILABLE
-        return ToolStatus.UNAVAILABLE
+        return super().get_status()
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         return 0.0
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
-        api_key = os.environ.get("PEXELS_API_KEY")
+        api_key = os.environ.get("PEXELS_API_KEY", "").strip()
         if not api_key:
             return ToolResult(
                 success=False,

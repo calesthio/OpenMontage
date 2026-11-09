@@ -121,7 +121,10 @@ class SilenceCutter(BaseTool):
         min_dur = inputs.get("min_silence_duration", 0.5)
         padding = inputs.get("padding_seconds", 0.08)
 
-        silences = self._detect_silence(input_path, threshold_db, min_dur)
+        try:
+            silences = self._detect_silence(input_path, threshold_db, min_dur)
+        except Exception as exc:
+            return ToolResult(success=False, error=f"Silence detection failed: {exc}")
 
         if not silences:
             elapsed = time.time() - start
@@ -228,12 +231,8 @@ class SilenceCutter(BaseTool):
             "-f", "null", "-",
         ]
 
-        try:
-            result = self.run_command(cmd, timeout=300)
-            output = result.stderr
-        except Exception as e:
-            # FFmpeg writes to stderr even on success for filters
-            output = str(e)
+        result = self.run_command(cmd, timeout=300)
+        output = result.stderr
 
         # Parse silencedetect output
         # Format: [silencedetect @ ...] silence_start: 1.234
@@ -335,7 +334,7 @@ class SilenceCutter(BaseTool):
             list_path = temp_dir / "concat_list.txt"
             with open(list_path, "w", encoding="utf-8") as f:
                 for sf in seg_files:
-                    safe_path = str(sf.resolve()).replace("\\", "/")
+                    safe_path = str(sf.resolve()).replace("\\", "/").replace("'", "'\\''")
                     f.write(f"file '{safe_path}'\n")
 
             cmd = [
@@ -445,7 +444,7 @@ class SilenceCutter(BaseTool):
             list_path = temp_dir / "concat_list.txt"
             with open(list_path, "w", encoding="utf-8") as f:
                 for sf in seg_files:
-                    safe_path = str(sf.resolve()).replace("\\", "/")
+                    safe_path = str(sf.resolve()).replace("\\", "/").replace("'", "'\\''")
                     f.write(f"file '{safe_path}'\n")
 
             cmd = [

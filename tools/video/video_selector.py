@@ -38,7 +38,8 @@ class VideoSelector(BaseTool):
     # Operations that REQUIRE motion: an image-only tool (image_selector) is not
     # an acceptable last-resort fallback for these, so fallback_tools_for() drops it.
     MOTION_REQUIRED_OPERATIONS = frozenset(
-        {"image_to_video", "reference_to_video", "video_edit"}
+        {"image_to_video", "reference_to_video", "video_edit",
+         "video_to_video_edit", "video_to_video_reference"}
     )
     # Default score gap for the preferred_provider override (see input_schema).
     PREFERRED_PROVIDER_GAP = 0.15
@@ -48,6 +49,8 @@ class VideoSelector(BaseTool):
         "image_to_video",
         "reference_to_video",
         "video_edit",
+        "video_to_video_edit",
+        "video_to_video_reference",
         "stock_video",
         "provider_selection",
         "search_video",
@@ -104,6 +107,8 @@ class VideoSelector(BaseTool):
                     "image_to_video",
                     "reference_to_video",
                     "video_edit",
+                    "video_to_video_edit",
+                    "video_to_video_reference",
                     "rank",
                 ],
                 "default": "text_to_video",
@@ -115,6 +120,8 @@ class VideoSelector(BaseTool):
                     "image_to_video",
                     "reference_to_video",
                     "video_edit",
+                    "video_to_video_edit",
+                    "video_to_video_reference",
                 ],
                 "description": "Operation to score when operation='rank'.",
                 "default": "text_to_video",
@@ -317,6 +324,16 @@ class VideoSelector(BaseTool):
         """
         return [t.name for t in self._providers()] + ["image_selector"]
 
+    #: one first-frame image and no operation means image_to_video; without this the
+    #: call scored as text_to_video and an image-only provider was filtered out
+    _FIRST_FRAME_KEYS = ("reference_image_path", "reference_image_url", "image_url")
+
+    @classmethod
+    def _with_operation(cls, inputs: dict[str, object]) -> dict[str, object]:
+        if inputs.get("operation") or not any(inputs.get(k) for k in cls._FIRST_FRAME_KEYS):
+            return inputs
+        return {**inputs, "operation": "image_to_video"}
+
     def fallback_tools_for(self, inputs: dict[str, object]) -> list[str]:
         """Input-aware fallback list used during routing.
 
@@ -328,7 +345,7 @@ class VideoSelector(BaseTool):
         fall back to an image tool when motion was requested.
         """
         tools = [t.name for t in self._providers()]
-        operation = inputs.get("operation", "text_to_video")
+        operation = self._with_operation(inputs).get("operation", "text_to_video")
         if operation in self.MOTION_REQUIRED_OPERATIONS:
             return tools
         return tools + ["image_selector"]
@@ -348,6 +365,7 @@ class VideoSelector(BaseTool):
         return ToolStatus.UNAVAILABLE
 
     def estimate_cost(self, inputs: dict[str, object]) -> float:
+        inputs = self._with_operation(inputs)
         candidates = self._filter_candidates(inputs, self._providers())
         if not candidates:
             return 0.0
@@ -357,6 +375,7 @@ class VideoSelector(BaseTool):
         return tool.estimate_cost(inputs) if tool else 0.0
 
     def estimate_runtime(self, inputs: dict[str, object]) -> float:
+        inputs = self._with_operation(inputs)
         candidates = self._providers()
         if not candidates:
             return 0.0
@@ -368,6 +387,7 @@ class VideoSelector(BaseTool):
     def execute(self, inputs: dict[str, object]) -> ToolResult:
         from lib.scoring import rank_providers
 
+        inputs = self._with_operation(inputs)
         candidates = self._providers()
 
         # Rank mode — return scored provider rankings without generating
@@ -389,8 +409,13 @@ class VideoSelector(BaseTool):
         task_context = self._prepare_task_context(inputs)
         tool, score = self._select_best_tool(inputs, candidates, task_context)
         if tool is None:
+            operation = inputs.get("operation", "text_to_video")
             return ToolResult(
-                success=False, error="No video generation provider available."
+                success=False,
+                error=(
+                    f"No video generation provider available for operation '{operation}'. "
+                    "Pass operation explicitly (image_to_video needs reference_image_path)."
+                ),
             )
 
         # Adapt input keys: stock tools use 'query' while generators use 'prompt'
@@ -406,7 +431,8 @@ class VideoSelector(BaseTool):
         ):
             tool_props = getattr(tool, "input_schema", {}).get("properties", {})
             # If the provider uses image_url (not reference_image_path), upload and convert
-            if "image_url" in tool_props and "image_url" not in adapted:
+            if ("image_url" in tool_props and "image_url" not in adapted
+                    and tool.name != "kling_o3_fal_video"):
                 try:
                     from tools.video._shared import upload_image_fal
 

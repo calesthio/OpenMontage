@@ -249,18 +249,28 @@ class FalMedia(BaseTool):
             headers = {"Authorization": f"Key {key}"}
             if not job:
                 model, operation, endpoint, payload = self.build_request(inputs)
-                submitted = request_json(
-                    "POST",
-                    f"https://queue.fal.run/{endpoint}",
-                    headers=headers,
-                    json=payload,
-                )
-                job = {
-                    k: submitted[k]
-                    for k in ("request_id", "status_url", "response_url")
-                }
+                try:
+                    submitted = request_json(
+                        "POST",
+                        f"https://queue.fal.run/{endpoint}",
+                        headers=headers,
+                        json=payload,
+                    )
+                    job = {
+                        k: submitted[k]
+                        for k in ("request_id", "status_url", "response_url")
+                    }
+                except Exception as exc:
+                    # The provider may have accepted a paid job before a
+                    # transport/response failure. Without its request_id no
+                    # checkpoint can safely be resumed or resubmitted.
+                    raise RuntimeError(
+                        "fal submission outcome unknown; do not resubmit "
+                        "before checking the fal dashboard: " + str(exc)
+                    ) from exc
                 job.update(
-                    model=model, operation=operation, endpoint=endpoint, tool=self.name
+                    model=model, operation=operation, endpoint=endpoint, tool=self.name,
+                    output_format=payload.get("output_format"),
                 )
                 save_job(inputs.get("job_path"), job)
             if job.get("tool") != self.name or self.routes.get(
@@ -287,7 +297,7 @@ class FalMedia(BaseTool):
             ext = (
                 ".mp4"
                 if self.capability == "video_generation"
-                else "." + inputs.get("output_format", "png")
+                else "." + (job.get("output_format") or inputs.get("output_format", "png"))
             )
             path = Path(inputs.get("output_path") or self.name + ext)
             outputs = [

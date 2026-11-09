@@ -97,6 +97,8 @@ print("\n--- Test 1: Compose from edit_decisions ---")
 r1 = tool.execute({
     "operation": "compose",
     "edit_decisions": {
+        "version": "1.0",
+        "render_runtime": "ffmpeg",
         "cuts": [
             {"source": CLIP_A, "in_seconds": 0, "out_seconds": 5},
             {"source": CLIP_B, "in_seconds": 0, "out_seconds": 5},
@@ -114,6 +116,8 @@ print("\n--- Test 2: Compose with subtitles ---")
 r2 = tool.execute({
     "operation": "compose",
     "edit_decisions": {
+        "version": "1.0",
+        "render_runtime": "ffmpeg",
         "cuts": [
             {"source": CLIP_A, "in_seconds": 0, "out_seconds": 5},
             {"source": CLIP_B, "in_seconds": 0, "out_seconds": 5},

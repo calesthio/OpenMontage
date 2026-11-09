@@ -63,7 +63,7 @@ Each tool's `agent_skills[]` field bridges Layer 1 → Layer 3. See `skills/INDE
 | `config.yaml` | Global configuration |
 | `lib/config_model.py` | Runtime config loader (Pydantic) |
 | `lib/checkpoint.py` | Checkpoint writer/reader |
-| `lib/pipeline_loader.py` | Pipeline manifest loader + helpers |
+| `lib/pipeline_loader.py` | Pipeline manifest loader, schema + semantic validation, and helpers |
 | `lib/media_profiles.py` | Platform-specific render profiles |
 | `styles/playbook_loader.py` | Style playbook loader + validator + design intelligence (color/type/a11y) |
 | `tools/base_tool.py` | ToolContract base class |

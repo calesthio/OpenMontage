@@ -166,6 +166,24 @@
         "analysis_tools": { "type": "array", "items": { "type": "string" } }
       }
     },
+    "production_modes": {
+      "type": "array",
+      "description": "Alternative production paths that the idea stage may select.",
+      "items": {
+        "type": "object",
+        "required": ["name", "description", "required_tools", "best_for"],
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "required_tools": { "type": "array", "items": { "type": "string" } },
+          "optional_tools": { "type": "array", "items": { "type": "string" } },
+          "scene_type": { "type": "string" },
+          "agent_skills": { "type": "array", "items": { "type": "string" } },
+          "best_for": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": false
+      }
+    },
     "metadata": { "type": "object" },
     "orchestration": {
       "type": "object",

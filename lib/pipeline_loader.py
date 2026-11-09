@@ -6,12 +6,15 @@ Loads and validates pipeline YAML manifests from pipeline_defs/.
 from __future__ import annotations
 
 import json
+from collections import Counter
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional
 
 import yaml
 import jsonschema
 
+REPO_ROOT = Path(__file__).resolve().parent.parent
 PIPELINE_DEFS_DIR = Path(__file__).resolve().parent.parent / "pipeline_defs"
 SCHEMA_PATH = (
     Path(__file__).resolve().parent.parent
@@ -21,8 +24,16 @@ SCHEMA_PATH = (
 )
 
 
-from functools import lru_cache
+class PipelineSemanticError(ValueError):
+    """Raised when a schema-valid pipeline contains contradictory references."""
 
+    def __init__(self, pipeline_name: str, errors: list[str]) -> None:
+        self.pipeline_name = pipeline_name
+        self.errors = tuple(errors)
+        details = "\n".join(f"- {error}" for error in errors)
+        super().__init__(
+            f"Pipeline {pipeline_name!r} failed semantic validation:\n{details}"
+        )
 
 @lru_cache(maxsize=1)
 def _load_manifest_schema() -> dict:
@@ -66,8 +77,109 @@ def load_pipeline(name: str, defs_dir: Optional[Path] = None) -> dict[str, Any]:
 
     schema = _load_manifest_schema()
     jsonschema.validate(instance=manifest, schema=schema)
+    _validate_pipeline_semantics(
+        manifest,
+        repo_root=defs_dir.parent if defs_dir != PIPELINE_DEFS_DIR else REPO_ROOT,
+    )
 
     return manifest
+
+
+def _validate_pipeline_semantics(
+    manifest: dict[str, Any],
+    *,
+    repo_root: Path,
+) -> None:
+    """Validate cross-field invariants that JSON Schema cannot express.
+
+    The pipeline loader is the seam for manifest correctness, so callers get
+    structural and semantic validation from the same unchanged interface.
+    """
+    errors: list[str] = []
+    stages = manifest["stages"]
+    stage_names = [stage["name"] for stage in stages]
+
+    for stage_name, count in sorted(Counter(stage_names).items()):
+        if count < 2:
+            continue
+        errors.append(f"duplicate stage name: {stage_name}")
+
+    artifact_owners: dict[str, list[tuple[int, str]]] = {}
+    for index, stage in enumerate(stages):
+        sub_stage_names = [sub_stage["name"] for sub_stage in stage.get("sub_stages", [])]
+        for sub_stage_name, count in sorted(Counter(sub_stage_names).items()):
+            if count < 2:
+                continue
+            errors.append(
+                f"stage {stage['name']!r} has duplicate sub-stage name: {sub_stage_name}"
+            )
+
+        for artifact in stage.get("produces", []):
+            artifact_owners.setdefault(artifact, []).append((index, stage["name"]))
+
+    for artifact, owners in sorted(artifact_owners.items()):
+        if len(owners) > 1:
+            owner_names = ", ".join(owner_name for _, owner_name in owners)
+            errors.append(
+                f"artifact {artifact!r} has multiple producing stages: {owner_names}"
+            )
+
+    for index, stage in enumerate(stages):
+        for artifact in stage.get("required_artifacts_in", []):
+            invalid_owners = [
+                owner_name
+                for owner_index, owner_name in artifact_owners.get(artifact, [])
+                if owner_index >= index
+            ]
+            if invalid_owners:
+                errors.append(
+                    f"stage {stage['name']!r} requires artifact {artifact!r} before "
+                    f"its producer: {', '.join(invalid_owners)}"
+                )
+
+        tools_available = set(stage.get("tools_available", []))
+        for tool_field in ("required_tools", "optional_tools"):
+            missing_tools = sorted(set(stage.get(tool_field, [])) - tools_available)
+            if missing_tools:
+                errors.append(
+                    f"stage {stage['name']!r} lists {', '.join(missing_tools)} in "
+                    f"{tool_field} but not tools_available"
+                )
+
+    declared_skills = set(manifest.get("required_skills", []))
+    referenced_skills = {
+        stage["skill"] for stage in stages if stage.get("skill")
+    }
+    orchestration_skill = manifest.get("orchestration", {}).get("skill")
+    if orchestration_skill:
+        referenced_skills.add(orchestration_skill)
+
+    for skill in sorted(referenced_skills - declared_skills):
+        errors.append(f"referenced skill {skill!r} is not listed in required_skills")
+
+    for skill in sorted(declared_skills | referenced_skills):
+        skill_path = Path(skill)
+        if skill_path.suffix != ".md":
+            skill_path = skill_path.with_suffix(".md")
+        if not (repo_root / "skills" / skill_path).is_file():
+            errors.append(f"skill path does not exist: skills/{skill_path.as_posix()}")
+
+    artifact_names = {
+        artifact
+        for stage in stages
+        for field in ("required_artifacts_in", "optional_artifacts_in", "produces")
+        for artifact in stage.get(field, [])
+    }
+    for artifact in sorted(artifact_names):
+        schema_path = repo_root / "schemas" / "artifacts" / f"{artifact}.schema.json"
+        if not schema_path.is_file():
+            errors.append(
+                f"artifact {artifact!r} has no schema at "
+                f"schemas/artifacts/{artifact}.schema.json"
+            )
+
+    if errors:
+        raise PipelineSemanticError(manifest.get("name", "unknown"), errors)
 
 
 def list_pipelines(defs_dir: Optional[Path] = None) -> list[str]:

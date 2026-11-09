@@ -107,6 +107,7 @@ stages:
     tools_available:
       - transcriber
       - scene_detect
+      - audio_enhance
     checkpoint_required: true
     human_approval_default: true
     review_focus:

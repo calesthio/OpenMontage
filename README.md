@@ -206,6 +206,8 @@ That's it. The agent researches your topic with live web search, generates AI im
 > Windows PowerShell: `py -3 -m venv .venv; .\.venv\Scripts\Activate.ps1; python -m pip install 'pip>=26.2.2'; python -m pip install -r requirements.txt; cd remotion-composer; npm install; cd ..; python -m pip install piper-tts; Copy-Item .env.example .env`
 >
 > **Windows:** If `npm install` fails with `ERR_INVALID_ARG_TYPE`, use `npx --yes npm install` instead.
+>
+> **Docker:** `docker build -t openmontage .` builds a CPU image with Python, FFmpeg, Node.js and Remotion. See [`docs/DOCKER.md`](docs/DOCKER.md).
 
 Existing environments: activate the project environment and run `python -m pip install --upgrade 'pip>=26.2.2' 'certifi>=2026.10.19'`, then restart long-running Python processes. These versions update both the application CA bundle and pip's separate bundled CA store for the [eMudhra intermediate CA compromise](https://emudhra.we-have-a-problem.com/). Update the operating system's trust store too: pip may also use system certificates, and custom CA bundles need separate maintenance. `make install` and `make install-dev` enforce the Python package minimums on subsequent installs.
 

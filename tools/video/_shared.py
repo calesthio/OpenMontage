@@ -514,22 +514,39 @@ def poll_heygen(execution_id: str, api_key: str, timeout: int = 600) -> str:
     raise TimeoutError(f"HeyGen execution {execution_id} timed out after {timeout}s")
 
 
-def upload_image_fal(image_path: str) -> str:
-    """Upload a local image to fal.ai storage and return a public URL."""
+_FAL_CONTENT_TYPES = {
+    "png": "image/png",
+    "jpg": "image/jpeg",
+    "jpeg": "image/jpeg",
+    "webp": "image/webp",
+    "glb": "model/gltf-binary",
+    "gltf": "model/gltf+json",
+    "fbx": "application/octet-stream",
+    "obj": "model/obj",
+    "zip": "application/zip",
+    "mp4": "video/mp4",
+    "wav": "audio/wav",
+    "mp3": "audio/mpeg",
+}
+
+
+def upload_file_fal(file_path: str, content_type: str | None = None) -> str:
+    """Upload any local file to fal.ai storage and return a public URL.
+
+    Content type is inferred from the extension (images, GLB/FBX/OBJ meshes, zip, media);
+    pass `content_type` explicitly for anything else.
+    """
     import requests
 
     api_key = os.environ.get("FAL_KEY") or os.environ.get("FAL_AI_API_KEY")
     if not api_key:
-        raise RuntimeError("FAL_KEY or FAL_AI_API_KEY required for image upload")
+        raise RuntimeError("FAL_KEY or FAL_AI_API_KEY required for file upload")
 
-    path = Path(image_path)
+    path = Path(file_path)
     if not path.exists():
-        raise FileNotFoundError(f"Image not found: {image_path}")
+        raise FileNotFoundError(f"File not found: {file_path}")
 
-    suffix = path.suffix.lower()
-    content_type = {"png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg", "webp": "image/webp"}.get(
-        suffix.lstrip("."), "image/png"
-    )
+    content_type = content_type or _FAL_CONTENT_TYPES.get(path.suffix.lower().lstrip("."), "application/octet-stream")
 
     # Initiate upload
     init_resp = requests.post(
@@ -541,16 +558,25 @@ def upload_image_fal(image_path: str) -> str:
     init_resp.raise_for_status()
     data = init_resp.json()
 
-    # Upload file content
+    # Upload file content (meshes with embedded textures run to tens of MB)
     put_resp = requests.put(
         data["upload_url"],
         headers={"Content-Type": content_type},
         data=path.read_bytes(),
-        timeout=60,
+        timeout=300,
     )
     put_resp.raise_for_status()
 
     return data["file_url"]
+
+
+def upload_image_fal(image_path: str) -> str:
+    """Upload a local image to fal.ai storage and return a public URL."""
+    path = Path(image_path)
+    if not path.exists():
+        raise FileNotFoundError(f"Image not found: {image_path}")
+    content_type = _FAL_CONTENT_TYPES.get(path.suffix.lower().lstrip("."), "image/png")
+    return upload_file_fal(image_path, content_type)
 
 
 def upload_image_heygen(image_path: str, api_key: str) -> str:

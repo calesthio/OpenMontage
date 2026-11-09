@@ -62,6 +62,7 @@ Key capability families to look for in the output:
 | `3d_world_generation` | — | Local semantic terrain, procedural scattering, explicit landmarks, diagnostics, and HyperFrames/Three.js fly-through workspaces |
 | `3d_asset_acquisition` | — | Rights-safe local GLTF/GLB catalogs and provenance |
 | `3d_asset_generation` | — | Atlas/fal textured mesh generation and reconstruction for unique scene assets |
+| `character_rigging` | — | fal/Meshy humanoid auto-rigging with preset animation clips (GLB + FBX) |
 | `3d_world_rendering` | — | Blender assembly and production rendering of detailed worlds |
 | `graphics` | — | Local rendering tools |
 | `music_library` | — | Discovers user-provided local tracks |

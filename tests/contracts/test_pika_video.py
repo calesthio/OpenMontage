@@ -260,6 +260,16 @@ class TestEstimates:
                   "provider_params": {"references": [{"type": "image", "url": "https://a/final.png"}]}}
         assert PikaVideo().estimate_cost(inputs) == pytest.approx(0.36)
 
+    def test_resume_estimate_is_the_saved_preflight_estimate(self, fake_http):
+        # A resume carries no prompt and submits nothing; preflight must not fail
+        # on validation or price a job that was already reserved.
+        tool = PikaVideo()
+        saved = {"id": JOB_ID, "tool": "pika_video", "operation": "text_to_video", "estimated_cost_usd": 0.48}
+        assert tool.estimate_cost({"resume_job": saved, "poll_timeout": 600}) == pytest.approx(0.48)
+        assert tool.estimate_cost({"resume_job": {"id": JOB_ID, "tool": "pika_video"}}) == 0.0
+        assert tool.dry_run({"resume_job": saved})["estimated_cost_usd"] == pytest.approx(0.48)
+        assert fake_http.calls == []
+
     def test_estimate_of_local_media_never_uploads(self, fake_http, tmp_path):
         # This need not exist: preflight must not upload or read the reference.
         inputs = {"prompt": "x", "reference_video_paths": [str(tmp_path / "input.mp4")],

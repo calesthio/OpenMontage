@@ -377,6 +377,10 @@ class PikaVideo(BaseTool):
     # ------------------------------------------------------------------
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
+        # Resuming a job submits nothing new; the original preflight estimate stands.
+        resume_job = inputs.get("resume_job")
+        if isinstance(resume_job, dict) and resume_job.get("id"):
+            return float(resume_job.get("estimated_cost_usd") or 0.0)
         # Use the same validated payload as submission, including provider_params,
         # without uploading local files or contacting the provider during preflight.
         _, function, payload = self._build_request({**inputs, "dry_run": True}, {})

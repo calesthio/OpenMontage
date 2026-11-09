@@ -56,22 +56,6 @@
     "text": "Fresh ice grains from Enceladus contain organic fragments. Some nitrogen- and oxygen-containing identifications are marked tentative by the authors \u2014 building blocks detected, not life confirmed."
   },
   {
-    "block_id": "B008",
-    "kokoro_wav": "work/v12/narration_blocks/kokoro/B008.wav",
-    "kokoro_sha256": "21f4ed957869873918f3645fbd15b9037451c95c69b68ad4a696f0fab71dd5b8",
-    "kokoro_duration_s": 21.775,
-    "kokoro_sample_rate": 24000,
-    "text": "Europa Clipper launched October 14, 2024. A Mars gravity assist on March 1, 2025, then an Earth gravity assist on December 3, 2026, sends it to Jupiter orbit in April 2030 \u2014 and the first Europa flyby on March 7, 2031."
-  },
-  {
-    "block_id": "B009",
-    "kokoro_wav": "work/v12/narration_blocks/kokoro/B009.wav",
-    "kokoro_sha256": "35c7a150f455caa3519ea5211bc1126d03b2891392adb48f96747ebb6bbffd8a",
-    "kokoro_duration_s": 10.525,
-    "kokoro_sample_rate": 24000,
-    "text": "The spacecraft orbits Jupiter, not Europa. It will make 49 close flybys of Europa, measuring the ice, the ocean, and the plumes \u2014 but it will not land."
-  },
-  {
     "block_id": "B010",
     "kokoro_wav": "work/v12/narration_blocks/kokoro/B010.wav",
     "kokoro_sha256": "7baba61701066d8b1790eb32cd56df59025a134dac56b5e5a5118f444d3f13ce",
@@ -86,5 +70,21 @@
     "kokoro_duration_s": 8.375,
     "kokoro_sample_rate": 24000,
     "text": "Europa Clipper arrives at Europa in 2031. Until then, the ocean remains a hypothesis with evidence."
+  },
+  {
+    "block_id": "B008",
+    "kokoro_wav": "work/v12/narration_blocks/kokoro/B008.wav",
+    "kokoro_sha256": "614c18489a3b2c0160ca51062b2721ddc21c04402a31ae113d59cc18353a5e3b",
+    "kokoro_duration_s": 18.925,
+    "kokoro_sample_rate": 24000,
+    "text": "Europa Clipper launched October 14, 2024. A Mars gravity assist in 2025, then an Earth gravity assist in 2026, sends it to Jupiter orbit in April 2030 \u2014 first Europa flyby in 2031."
+  },
+  {
+    "block_id": "B009",
+    "kokoro_wav": "work/v12/narration_blocks/kokoro/B009.wav",
+    "kokoro_sha256": "e2f33815e1b8137ab7d2d350ad314faddad4b7ce3c99b60b569c90c1f0afb6e6",
+    "kokoro_duration_s": 9.075,
+    "kokoro_sample_rate": 24000,
+    "text": "The spacecraft orbits Jupiter, not Europa. It will make 49 close flybys of Europa, measuring the ice, the ocean, and the plumes."
   }
 ]

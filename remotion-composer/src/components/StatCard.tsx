@@ -8,6 +8,8 @@ interface StatCardProps {
   color?: string;
   accentColor?: string;
   backgroundColor?: string;
+  /** Font stack for the big number; defaults to Inter. */
+  statFontFamily?: string;
 }
 
 export const StatCard: React.FC<StatCardProps> = ({
@@ -18,6 +20,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   color = "#FFFFFF",
   accentColor = "#F59E0B",
   backgroundColor = "#1F2937",
+  statFontFamily = "Inter, system-ui, sans-serif",
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -50,7 +53,7 @@ export const StatCard: React.FC<StatCardProps> = ({
             transform: `scale(${scale})`,
             fontSize: statFontSize,
             color: accentColor,
-            fontFamily: "Inter, system-ui, sans-serif",
+            fontFamily: statFontFamily,
             fontWeight: 800,
             lineHeight: 1.1,
           }}

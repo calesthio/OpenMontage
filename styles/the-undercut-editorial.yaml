@@ -1,0 +1,157 @@
+# The Undercut — Warm Editorial
+#
+# Channel-level visual identity for The Undercut: premium documentary essays on
+# markets, money, and how they are built. A warm print-magazine look — cream
+# paper, ink, one restrained institutional accent (oxblood), one accent reserved
+# entirely for money (brass) — with occasional full ink-ground sections for
+# act-break contrast. NOT dark mode. Supersedes the-undercut-editorial-dark.yaml
+# (decision d-013). The episode-level realisation lives in each project's
+# hyperframes/frame.md.
+#
+# North star: every frame should look good enough to run as a printed editorial
+# spread.
+
+identity:
+  name: "The Undercut — Warm Editorial"
+  category: cinematic
+  mood: warm, editorial, print-investigative, considered
+  pace: deliberate
+  best_for: "The Undercut channel — long-form documentary explainers on markets and money; warm cream-paper editorial identity, one or two accents per video."
+
+taste_profile:
+  design_read: "A well-funded magazine's investigative feature — Businessweek, The Atlantic — printed, then filmed on a light table. Cream paper, ink, one restrained colour of institutional authority (oxblood), one colour reserved entirely for money (brass). Confident enough to hold a still frame and let type do the work; never needs a dashboard to prove it did research."
+  visual_variance: 4
+  motion_intensity: 3
+  information_density: 5
+  palette_discipline: "Cream ground, ink text, oxblood for structure, brass for numbers only. Occasional inverted ink-ground sections. No gradients, no shadows."
+  layout_variation: "Alternate centered evidence frames for data, editorial split frames for argument, and full-bleed archival / collage moments. Hard alignment to an 8px unit."
+  reference_strategy: "One reference still per scene family before batch generation; the printed-editorial-spread test is applied to every frame."
+  anti_patterns:
+    - "arrows"
+    - "red circles / callout rings"
+    - "zoom-punch"
+    - "stock-ticker scroll effects"
+    - "decorative gradients"
+    - "drop shadows / rounded SaaS card chrome"
+    - "bouncy spring overshoot on data reveals"
+    - "photorealistic AI-generated imagery of real identifiable people"
+    - "generic 'editorial serif headline' defaults (Playfair, EB Garamond, Cormorant, Bodoni)"
+    - "reusing the near-black test-segment palette (superseded)"
+    - "glowing tech visuals, neon, generic stock footage, YouTube clickbait composition"
+  quality_gates:
+    - "Every frame passes the printed-editorial-spread test."
+    - "Every cut lands within 4-7s except the one scripted hold-and-silence beat."
+    - "No two adjacent archival / collage inserts share subject or scale."
+    - "Archival and stock footage stays at or under 35% of runtime."
+
+visual_language:
+  color_palette:
+    primary: ["#1B1714", "#211C18"]
+    accent: ["#7F2B2B", "#B8935A"]
+    background: "#F4EFE4"
+    text: "#1B1714"
+    muted: "#7A7060"
+  composition: "asymmetrical editorial grid with generous margins and hard 8px alignment, one focal idea per frame; alternate centered evidence frames, editorial split frames, and full-bleed archival / collage moments"
+  texture: "warm cream paper ground, never pure white; static low-opacity paper grain (a material property, never animated); faint hairline ledger rules; oversized ghost numerals at 4-6% opacity; no gradients, no drop shadows, sharp 0px corners"
+
+typography:
+  headings:
+    font: "Oswald"
+    weight: 700
+    tracking: "-0.005em"
+  body:
+    font: "Source Serif 4"
+    weight: 400
+    line_height: 1.55
+  code:
+    font: "JetBrains Mono"
+    weight: 400
+  stat_card:
+    font: "JetBrains Mono"
+    weight: 700
+    size_multiplier: 3.2
+  scale_system: "major_third"
+  weight_matrix:
+    title: 700
+    heading: 700
+    body: 400
+    caption: 500
+
+motion:
+  transitions: [fade, hard-cut, dissolve]
+  animation_style: "restrained ease-out, precise type-on and reveal; no bounce, no spring overshoot; grain and texture never animate"
+  pacing_rules:
+    min_scene_hold_seconds: 4
+    max_scene_hold_seconds: 12
+    text_card_hold_seconds: 5.5
+    stat_card_hold_seconds: 5.5
+    transition_duration_seconds: 0.3
+  entrance: "flat fade-in, no positional offset, no overshoot"
+  exit: "flat fade-out; hard cut preferred at act breaks"
+
+audio:
+  voice_style: "measured, unhurried, documentary narrator authority — not an advertising read"
+  music_mood: "restrained instrumental bed, sparse, no drums, no build"
+  music_volume: 0.05
+  sfx_style: "none — no sound-design fill; silence is held where the script calls for it"
+  ducking_threshold_db: -8
+  voice_variation_allowed: false
+  hero_moment_voice_shift: "slower, more deliberate, slight drop in pitch for the signature-device close"
+
+asset_generation:
+  image_prompt_prefix: "warm cream editorial documentary frame, printed-and-filmed-on-a-light-table look, high-contrast ink on paper, restrained, generous negative space, "
+  image_negative_prompt: "arrows, red circles, callout rings, zoom-punch, stock-ticker scroll, decorative gradients, drop shadows, rounded SaaS card chrome, glowing tech visuals, neon, photorealistic AI-generated people, bright saturated colour, clickbait composition"
+  diagram_style: "hand-built thin-line editorial diagram, ink on cream, one oxblood or brass highlight, values labelled directly on the shape, no axis chrome, no gridlines, no legend"
+  consistency_anchors:
+    - "Warm cream paper ground (#F4EFE4), never pure white — paper, not screen"
+    - "Ink (#1B1714) type; warm near-black, never #000"
+    - "Oxblood (#7F2B2B) is the single institutional accent — section markers, rules, the film's own assertions"
+    - "Brass (#B8935A; #8C6937 for text on cream) is reserved exclusively for money and data — numbers only"
+    - "Occasional full ink-ground sections for act-break contrast, with the same devices inverted"
+    - "Editorial collage: cut-out photography, archival images, documents, maps, timelines — designed, not stock-dropped"
+    - "One focal idea per frame; sharp 0px corners; no gradients, no shadows"
+
+overlays:
+  stat_card:
+    bg: "#FBF8F0"
+    border: "#C9BFA8"
+    text: "#1B1714"
+    radius: 0
+    shadow: "none"
+    accent: "#8C6937"
+  key_term:
+    bg: "#EFE7D4"
+    text: "#7F2B2B"
+    radius: 0
+  code_block:
+    bg: "#1B1714"
+    text: "#F4EFE4"
+    highlight: "#B8935A"
+  section_title:
+    bg: "transparent"
+    text: "#7F2B2B"
+    accent: "#7F2B2B"
+
+quality_rules:
+  - "Minimum WCAG AA contrast (4.5:1) for all text; use #8C6937, not #B8935A, for brass text on cream"
+  - "One or two accent colours on screen at once, never more — oxblood for structure, brass for numbers"
+  - "Brass appears only on numeric or data content; brass on anything that isn't a number is a violation"
+  - "Keep one primary focal object or claim per frame"
+  - "Motion reveals hierarchy; it never adds energy — no bounce, no spring, no zoom-punch"
+  - "Paper grain and texture are static — they never animate"
+  - "No arrows, circles / callout rings, stock-ticker scroll, decorative gradients, or drop shadows, ever"
+  - "No pie charts, multi-axis charts, gridlines, legends, or chart-library output — charts are hand-built GSAP+SVG"
+  - "Default cut cadence 4-7s; only the one scripted hold-and-silence beat runs longer"
+  - "Every archival image has a rights-clear, credited source"
+  - "Thumbnails read as a premium magazine cover: one idea, clean composition, minimal text, striking contrast"
+
+chart_palette:
+  - "#7F2B2B"
+  - "#B8935A"
+  - "#1B1714"
+  - "#7A7060"
+
+color_rules:
+  harmony_type: "analogous"
+  contrast_validation: true
+  colorblind_safe: true

@@ -1,0 +1,584 @@
+{
+  "version": "1.0",
+  "project_id": "openmontage-zero-key-setup",
+  "pipeline_type": "screen-demo",
+  "stage": "assets",
+  "status": "completed",
+  "timestamp": "2026-08-30T21:56:54.296653+00:00",
+  "checkpoint_policy": "guided",
+  "human_approval_required": true,
+  "human_approved": true,
+  "artifacts": {
+    "asset_manifest": {
+      "version": "1.0",
+      "assets": [
+        {
+          "id": "narration-s1",
+          "type": "narration",
+          "path": "assets/audio/narration_s1.wav",
+          "source_tool": "piper_tts",
+          "scene_id": "sc-01",
+          "model": "en_US-lessac-medium",
+          "cost_usd": 0.0,
+          "duration_seconds": 7.29,
+          "format": "wav",
+          "provider": "piper",
+          "license": "MIT (Piper) / CC-BY (lessac voice)",
+          "generation_summary": "Section s1, spoken at 0.3s. length_scale 1.0, sentence_silence 0.35, speaker 0.",
+          "voice_performance": {
+            "source_section_id": "s1",
+            "delivery_cues_applied": true,
+            "provider_text_used": true,
+            "provider_settings": {
+              "length_scale": 1.0,
+              "sentence_silence": 0.35,
+              "speaker_id": 0
+            },
+            "sample_approved": false,
+            "sample_path": "snapshots/sc-01_hero_29s.png",
+            "review_notes": "Duration measured post-generation; timeline laid out from this file, not from a probe."
+          }
+        },
+        {
+          "id": "narration-s2",
+          "type": "narration",
+          "path": "assets/audio/narration_s2.wav",
+          "source_tool": "piper_tts",
+          "scene_id": "sc-01",
+          "model": "en_US-lessac-medium",
+          "cost_usd": 0.0,
+          "duration_seconds": 6.93,
+          "format": "wav",
+          "provider": "piper",
+          "license": "MIT (Piper) / CC-BY (lessac voice)",
+          "generation_summary": "Section s2, spoken at 8.09s. length_scale 1.0, sentence_silence 0.35, speaker 0.",
+          "voice_performance": {
+            "source_section_id": "s2",
+            "delivery_cues_applied": true,
+            "provider_text_used": true,
+            "provider_settings": {
+              "length_scale": 1.0,
+              "sentence_silence": 0.35,
+              "speaker_id": 0
+            },
+            "sample_approved": false,
+            "sample_path": "snapshots/sc-01_hero_29s.png",
+            "review_notes": "Duration measured post-generation; timeline laid out from this file, not from a probe."
+          }
+        },
+        {
+          "id": "narration-s3",
+          "type": "narration",
+          "path": "assets/audio/narration_s3.wav",
+          "source_tool": "piper_tts",
+          "scene_id": "sc-01",
+          "model": "en_US-lessac-medium",
+          "cost_usd": 0.0,
+          "duration_seconds": 7.84,
+          "format": "wav",
+          "provider": "piper",
+          "license": "MIT (Piper) / CC-BY (lessac voice)",
+          "generation_summary": "Section s3, spoken at 15.53s. length_scale 1.0, sentence_silence 0.35, speaker 0.",
+          "voice_performance": {
+            "source_section_id": "s3",
+            "delivery_cues_applied": true,
+            "provider_text_used": true,
+            "provider_settings": {
+              "length_scale": 1.0,
+              "sentence_silence": 0.35,
+              "speaker_id": 0
+            },
+            "sample_approved": false,
+            "sample_path": "snapshots/sc-01_hero_29s.png",
+            "review_notes": "Duration measured post-generation; timeline laid out from this file, not from a probe."
+          }
+        },
+        {
+          "id": "narration-s4",
+          "type": "narration",
+          "path": "assets/audio/narration_s4.wav",
+          "source_tool": "piper_tts",
+          "scene_id": "sc-01",
+          "model": "en_US-lessac-medium",
+          "cost_usd": 0.0,
+          "duration_seconds": 5.93,
+          "format": "wav",
+          "provider": "piper",
+          "license": "MIT (Piper) / CC-BY (lessac voice)",
+          "generation_summary": "Section s4, spoken at 23.87s. length_scale 1.0, sentence_silence 0.35, speaker 0.",
+          "voice_performance": {
+            "source_section_id": "s4",
+            "delivery_cues_applied": true,
+            "provider_text_used": true,
+            "provider_settings": {
+              "length_scale": 1.0,
+              "sentence_silence": 0.35,
+              "speaker_id": 0
+            },
+            "sample_approved": false,
+            "sample_path": "snapshots/sc-01_hero_29s.png",
+            "review_notes": "Duration measured post-generation; timeline laid out from this file, not from a probe."
+          }
+        },
+        {
+          "id": "narration-s5",
+          "type": "narration",
+          "path": "assets/audio/narration_s5.wav",
+          "source_tool": "piper_tts",
+          "scene_id": "sc-01",
+          "model": "en_US-lessac-medium",
+          "cost_usd": 0.0,
+          "duration_seconds": 7.44,
+          "format": "wav",
+          "provider": "piper",
+          "license": "MIT (Piper) / CC-BY (lessac voice)",
+          "generation_summary": "Section s5, spoken at 30.3s. length_scale 1.0, sentence_silence 0.35, speaker 0.",
+          "voice_performance": {
+            "source_section_id": "s5",
+            "delivery_cues_applied": true,
+            "provider_text_used": true,
+            "provider_settings": {
+              "length_scale": 1.0,
+              "sentence_silence": 0.35,
+              "speaker_id": 0
+            },
+            "sample_approved": false,
+            "sample_path": "snapshots/sc-01_hero_29s.png",
+            "review_notes": "Duration measured post-generation; timeline laid out from this file, not from a probe."
+          }
+        },
+        {
+          "id": "narration-s6",
+          "type": "narration",
+          "path": "assets/audio/narration_s6.wav",
+          "source_tool": "piper_tts",
+          "scene_id": "sc-01",
+          "model": "en_US-lessac-medium",
+          "cost_usd": 0.0,
+          "duration_seconds": 5.38,
+          "format": "wav",
+          "provider": "piper",
+          "license": "MIT (Piper) / CC-BY (lessac voice)",
+          "generation_summary": "Section s6, spoken at 38.25s. length_scale 1.0, sentence_silence 0.35, speaker 0.",
+          "voice_performance": {
+            "source_section_id": "s6",
+            "delivery_cues_applied": true,
+            "provider_text_used": true,
+            "provider_settings": {
+              "length_scale": 1.0,
+              "sentence_silence": 0.35,
+              "speaker_id": 0
+            },
+            "sample_approved": false,
+            "sample_path": "snapshots/sc-01_hero_29s.png",
+            "review_notes": "Duration measured post-generation; timeline laid out from this file, not from a probe."
+          }
+        },
+        {
+          "id": "narration-master",
+          "type": "audio",
+          "path": "assets/audio/narration_master.wav",
+          "source_tool": "ffmpeg (adelay+amix)",
+          "scene_id": "sc-01",
+          "cost_usd": 0.0,
+          "duration_seconds": 45.02,
+          "format": "wav",
+          "subtype": "narration_bed",
+          "generation_summary": "Six segments placed at their measured offsets on a 45.02s mono 48kHz bed. This is the single audio input to compose."
+        },
+        {
+          "id": "captions-srt",
+          "type": "subtitle",
+          "path": "assets/subtitles/captions.srt",
+          "source_tool": "subtitle_gen",
+          "scene_id": "sc-01",
+          "cost_usd": 0.0,
+          "format": "srt",
+          "generation_summary": "Phrase-level SRT, max 6 words/cue, 42 chars/line. Text is script text; timings from ASR word boundaries."
+        },
+        {
+          "id": "captions-words",
+          "type": "subtitle",
+          "path": "artifacts/remotion_props.json#captions",
+          "source_tool": "transcriber + script alignment",
+          "scene_id": "sc-01",
+          "cost_usd": 0.0,
+          "format": "json",
+          "generation_summary": "120 word-level captions rendered inline by CaptionOverlay at 42px."
+        },
+        {
+          "id": "remotion-props",
+          "type": "animation",
+          "path": "artifacts/remotion_props.json",
+          "source_tool": "asset-director",
+          "scene_id": "sc-01",
+          "cost_usd": 0.0,
+          "format": "json",
+          "generation_summary": "Explainer props: one terminal_scene cut (25 steps), one section_title overlay, 120 caption words, narration master."
+        },
+        {
+          "id": "still-hero",
+          "type": "image",
+          "path": "snapshots/sc-01_hero_29s.png",
+          "source_tool": "remotion still",
+          "scene_id": "sc-01",
+          "cost_usd": 0.0,
+          "resolution": "1920x1080",
+          "format": "png",
+          "subtype": "review_still",
+          "generation_summary": "Review still at frame 870 (29.0s). Not a draft render \u2014 a single frame for the assets gate."
+        },
+        {
+          "id": "still-close",
+          "type": "image",
+          "path": "snapshots/sc-01_close_42s.png",
+          "source_tool": "remotion still",
+          "scene_id": "sc-01",
+          "cost_usd": 0.0,
+          "resolution": "1920x1080",
+          "format": "png",
+          "subtype": "review_still",
+          "generation_summary": "Review still at frame 1260 (42.0s). Not a draft render \u2014 a single frame for the assets gate."
+        }
+      ],
+      "total_cost_usd": 0.0,
+      "metadata": {
+        "narration_mode": "generated_tts_local",
+        "production_mode": "synthetic_terminal",
+        "no_capture_assets": "No screen recording, callout arrows, blur masks, or zoom crops \u2014 all real-capture concepts that do not apply to a synthesized terminal.",
+        "subtitle_zones": {
+          "position": "lower third, centered",
+          "font_size": 42,
+          "words_per_page": 6,
+          "collision_check": "PASS \u2014 verified on both review stills; the terminal window bottom edge sits above the caption band."
+        },
+        "overlay_kit": {
+          "pills": 6,
+          "section_title": 1,
+          "note": "TerminalScene renders pills natively; no overlay image files are generated or needed."
+        },
+        "audio_settings": {
+          "sample_rate": 48000,
+          "channels": 1,
+          "normalize": false,
+          "music": "none (approved at idea stage)",
+          "enhance": "not applied \u2014 synthesized speech has no room tone or keyboard noise to remove; audio_enhance would only add artifacts."
+        },
+        "sensitive_regions": "None. Nothing was captured from a real desktop, which is one reason synthetic mode was chosen.",
+        "caption_provenance": {
+          "rule": "Captions carry SCRIPT text. ASR supplies timing only, never wording.",
+          "method": "Per section, faster-whisper word boundaries are zipped to the script's words when counts match (4 of 6 sections); otherwise script words are distributed across the measured speech span weighted by word length (s4, s6).",
+          "why": "A first pass built captions from ASR text and produced 'two in souls' and 'open Montage Fines' on screen. Caught on the review still."
+        },
+        "known_issues_fixed": [
+          "remotion-composer/src/components/CaptionOverlay.tsx \u2014 word spans used whiteSpace:'nowrap' inside display:inline-block, which trims the trailing wordSeparator. Every space-delimited caption rendered as one glued word. Changed to whiteSpace:'pre'. Affects all pipelines using the Explainer composition, not just this project."
+        ],
+        "timing_note": "Timeline was re-laid out from the shipped WAVs after discovering Piper is non-deterministic. See projects/openmontage-zero-key-setup/skills/piper-timing-nondeterminism.md.",
+        "hero_sample": {
+          "scene_id": "sc-01",
+          "still": "snapshots/sc-01_hero_29s.png",
+          "frame": 870,
+          "presented_for_approval": true
+        },
+        "render_inputs_locked": [
+          "assets/audio/narration_master.wav",
+          "artifacts/remotion_props.json"
+        ]
+      }
+    },
+    "decision_log": {
+      "version": "1.0",
+      "project_id": "openmontage-zero-key-setup",
+      "decisions": [
+        {
+          "decision_id": "d-001",
+          "stage": "idea",
+          "category": "pipeline_selection",
+          "subject": "Pipeline for this deliverable",
+          "options_considered": [
+            {
+              "option_id": "screen-demo",
+              "label": "Screen Demo",
+              "score": 0.95,
+              "reason": "Deliverable is a CLI setup walkthrough \u2014 exactly this pipeline's synthetic_terminal mode, and it needs no image, video, or stock provider."
+            },
+            {
+              "option_id": "animated-explainer",
+              "label": "Animated Explainer",
+              "score": 0.4,
+              "reason": "Would work, but wants generated or stock visuals per scene and none are configured.",
+              "rejected_because": "No image generation or stock footage provider available; visuals would degrade to text cards."
+            },
+            {
+              "option_id": "animation",
+              "label": "Animation",
+              "score": 0.35,
+              "reason": "Motion-graphics-first; strong for abstract ideas.",
+              "rejected_because": "The subject is literal terminal commands \u2014 showing them as abstract motion graphics loses the proof."
+            },
+            {
+              "option_id": "character-animation",
+              "label": "Character Animation",
+              "score": 0.15,
+              "reason": "Fully available locally.",
+              "rejected_because": "A cartoon presenter adds production time without making the install any clearer."
+            }
+          ],
+          "selected": "screen-demo",
+          "reason": "The user picked the OpenMontage setup demo from four offered concepts. Screen Demo's synthetic_terminal mode is purpose-built for install walkthroughs and is fully supported by the currently available toolset.",
+          "user_visible": true,
+          "user_approved": true,
+          "confidence": 0.95
+        },
+        {
+          "decision_id": "d-002",
+          "stage": "idea",
+          "category": "concept_selection",
+          "subject": "Production mode \u2014 synthetic terminal vs real screen capture",
+          "options_considered": [
+            {
+              "option_id": "synthetic_terminal",
+              "label": "Synthetic terminal (Remotion TerminalScene)",
+              "score": 0.95,
+              "reason": "Every command and its output is already known \u2014 they were actually run in this session \u2014 so the whole session can be authored to the frame. Deterministic, privacy-safe, and frame-accurate to narration cues."
+            },
+            {
+              "option_id": "real_capture",
+              "label": "Real screen recording (screen_recorder / cap_recorder)",
+              "score": 0.3,
+              "reason": "screen_recorder and cap_recorder are both available on this machine.",
+              "rejected_because": "The idea-director's test \u2014 'can I predict every command and its output before shooting?' \u2014 is yes here. Real capture would also expose desktop content and re-run a 63 MB download live, with no gain in fidelity."
+            }
+          ],
+          "selected": "synthetic_terminal",
+          "reason": "The demo is a scriptable terminal session whose output is already captured verbatim from a real run, which is the documented trigger for synthetic mode.",
+          "user_visible": true,
+          "user_approved": false,
+          "confidence": 0.93
+        },
+        {
+          "decision_id": "d-003",
+          "stage": "idea",
+          "category": "render_runtime_selection",
+          "subject": "Composition runtime for the final render",
+          "options_considered": [
+            {
+              "option_id": "remotion",
+              "label": "Remotion",
+              "score": 0.95,
+              "reason": "Owns the TerminalScene component (typed commands, scrolling output, floating pills, blinking cursor) and the word-level caption burn. Installed and verified on this machine."
+            },
+            {
+              "option_id": "hyperframes",
+              "label": "HyperFrames",
+              "score": 0.2,
+              "reason": "Installed and available; excellent for HTML/CSS/GSAP motion graphics.",
+              "rejected_because": "The screen-demo idea-director constrains synthetic_terminal mode to Remotion only \u2014 TerminalScene has no HyperFrames equivalent. HyperFrames would be a real choice for a synthetic_ui demo, which this is not."
+            },
+            {
+              "option_id": "ffmpeg",
+              "label": "FFmpeg only",
+              "score": 0.05,
+              "reason": "Available for concat and trim.",
+              "rejected_because": "Cannot synthesize an animated terminal; there is no captured footage to concatenate."
+            }
+          ],
+          "selected": "remotion",
+          "reason": "Mode constraint, not a silent default: synthetic_terminal is Remotion-only per the idea-director's runtime table. Both runtimes are installed here, and HyperFrames is genuinely on the table for other briefs \u2014 it is not for this one.",
+          "user_visible": true,
+          "user_approved": false,
+          "confidence": 0.97
+        },
+        {
+          "decision_id": "d-004",
+          "stage": "idea",
+          "category": "composition_mode",
+          "subject": "Authoring mode \u2014 templated vs atelier",
+          "options_considered": [
+            {
+              "option_id": "templated",
+              "label": "Templated (stock TerminalScene)",
+              "score": 0.85,
+              "reason": "TerminalScene is a purpose-built stock scene type carrying pacing lessons from a prior showcase render. A hand-built terminal would re-derive it with more risk."
+            },
+            {
+              "option_id": "atelier",
+              "label": "Atelier (hand-authored composition)",
+              "score": 0.35,
+              "reason": "Default for hero and brand work; produces a fresh visual language every time.",
+              "rejected_because": "This is a utility documentation clip, not hero marketing. A bespoke terminal look would cost significant iteration and make the demo less familiar, not more persuasive."
+            }
+          ],
+          "selected": "templated",
+          "reason": "AGENT_GUIDE reserves atelier for hero work that must impress. A 45-second setup walkthrough is exactly the low-stakes, high-clarity case templated mode exists for.",
+          "user_visible": true,
+          "user_approved": false,
+          "confidence": 0.85
+        },
+        {
+          "decision_id": "d-005",
+          "stage": "idea",
+          "category": "voice_selection",
+          "subject": "Narration TTS provider",
+          "options_considered": [
+            {
+              "option_id": "piper_lessac",
+              "label": "Piper \u2014 en_US-lessac-medium (local)",
+              "score": 0.9,
+              "reason": "The only TTS available on this machine, verified working this session, and thematically the point of the video: the narration is made by the tool being demonstrated."
+            },
+            {
+              "option_id": "elevenlabs",
+              "label": "ElevenLabs",
+              "score": 0.0,
+              "reason": "Higher expressive quality.",
+              "rejected_because": "No API key configured; tool reports unavailable."
+            },
+            {
+              "option_id": "google_tts",
+              "label": "Google Chirp3 / Cloud TTS",
+              "score": 0.0,
+              "reason": "Strong neutral narration voices.",
+              "rejected_because": "No API key configured; tool reports unavailable."
+            }
+          ],
+          "selected": "piper_lessac",
+          "reason": "Only available provider, and self-referentially correct \u2014 the video's claim is that Piper is enough, so it must be narrated by Piper.",
+          "user_visible": true,
+          "user_approved": false,
+          "confidence": 0.95
+        },
+        {
+          "decision_id": "d-006",
+          "stage": "idea",
+          "category": "playbook_selection",
+          "subject": "Style playbook",
+          "options_considered": [
+            {
+              "option_id": "clean-professional",
+              "label": "Clean Professional",
+              "score": 0.9,
+              "reason": "Recommended for screen-demo; restrained type and contrast keep terminal text legible, which is this pipeline's stated first priority."
+            },
+            {
+              "option_id": "minimalist-diagram",
+              "label": "Minimalist Diagram",
+              "score": 0.5,
+              "reason": "Also listed as recommended for screen-demo.",
+              "rejected_because": "Tuned for diagrammatic explanation; there are no diagrams here, only a terminal window."
+            },
+            {
+              "option_id": "premium-minimalist",
+              "label": "Premium Minimalist",
+              "score": 0.3,
+              "reason": "Attractive for brand work.",
+              "rejected_because": "Not in the pipeline's compatible list, and its restraint would fight the terminal's own visual identity."
+            }
+          ],
+          "selected": "clean-professional",
+          "reason": "Legibility before style is the screen-demo operating principle, and this is the playbook the manifest recommends first.",
+          "user_visible": true,
+          "user_approved": false,
+          "confidence": 0.88
+        },
+        {
+          "decision_id": "d-007",
+          "stage": "idea",
+          "category": "music_source",
+          "subject": "Background music bed",
+          "options_considered": [
+            {
+              "option_id": "none",
+              "label": "No music",
+              "score": 0.7,
+              "reason": "45 seconds of dense technical narration; a bed competes with the exact command names the viewer needs to catch."
+            },
+            {
+              "option_id": "pixabay_music",
+              "label": "Pixabay Music (free, no key)",
+              "score": 0.55,
+              "reason": "Available with no key and would add polish.",
+              "rejected_because": "The tool scrapes the Pixabay site and can break without warning; a soft bed is not worth a fragile dependency on a first render. Easy to add in a revision if the silence feels stark."
+            }
+          ],
+          "selected": "none",
+          "reason": "Clarity over polish for a short technical walkthrough. Reversible \u2014 say the word at the assets gate and I will add a quiet bed.",
+          "user_visible": true,
+          "user_approved": false,
+          "confidence": 0.7
+        },
+        {
+          "decision_id": "d-008",
+          "stage": "assets",
+          "category": "capability_extension",
+          "subject": "learned technique: Piper narration timings are not reproducible",
+          "options_considered": [
+            {
+              "option_id": "measure_shipped",
+              "label": "Lay the timeline out from the shipped WAVs",
+              "score": 0.95,
+              "reason": "The only durations that survive to the render are the files that ship."
+            },
+            {
+              "option_id": "trust_probe",
+              "label": "Keep the pre-generation probe timings",
+              "score": 0.1,
+              "reason": "Would have preserved the approved numbers exactly.",
+              "rejected_because": "Measured drift up to -0.43s per line; commands would have typed out of sync with the narration announcing them."
+            },
+            {
+              "option_id": "force_determinism",
+              "label": "Seed Piper for reproducible output",
+              "score": 0.0,
+              "reason": "Would remove the problem at the source.",
+              "rejected_because": "The piper CLI exposes no seed flag; noise_scale/noise_w are baked into the voice config."
+            }
+          ],
+          "selected": "measure_shipped",
+          "reason": "Piper's duration predictor is stochastic (noise_w=0.8): the same line measured 4.83/4.61/4.60s across three runs. Timeline re-laid out from the real files and re-verified; finding written up as a project-scoped skill.",
+          "user_visible": true,
+          "user_approved": false,
+          "confidence": 0.95
+        },
+        {
+          "decision_id": "d-009",
+          "stage": "assets",
+          "category": "capability_extension",
+          "subject": "CaptionOverlay word-separator rendering bug",
+          "options_considered": [
+            {
+              "option_id": "fix_component",
+              "label": "Fix whiteSpace in CaptionOverlay.tsx",
+              "score": 0.9,
+              "reason": "One-word change; restores spacing for every space-delimited caption in the Explainer composition without altering CJK behaviour, which uses an empty separator."
+            },
+            {
+              "option_id": "nbsp_in_data",
+              "label": "Append non-breaking spaces to caption words",
+              "score": 0.3,
+              "reason": "Would fix this project without touching shared code.",
+              "rejected_because": "Hides a real repo bug behind project-local data and leaves every other English video broken."
+            }
+          ],
+          "selected": "fix_component",
+          "reason": "An inline-block span trims its own trailing whitespace under nowrap, so wordSeparator was silently eaten and captions rendered glued. Caught on the hero review still.",
+          "user_visible": true,
+          "user_approved": false,
+          "confidence": 0.9
+        }
+      ]
+    }
+  },
+  "style_playbook": "clean-professional",
+  "review": {
+    "version": "1.0",
+    "reviewer": "asset-director self-review + EP gate G4",
+    "verdict": "pass",
+    "findings": []
+  },
+  "cost_snapshot": {
+    "spent_usd": 0.0,
+    "budget_usd": 1.0,
+    "remaining_usd": 1.0
+  }
+}

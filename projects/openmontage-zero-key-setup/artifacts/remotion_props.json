@@ -1,0 +1,778 @@
+{
+ "cuts": [
+  {
+   "id": "sc-01",
+   "type": "terminal_scene",
+   "terminalTitle": "bash \u2014 OpenMontage setup",
+   "prompt": "$",
+   "accentColor": "#F59E0B",
+   "backgroundColor": "#1F2937",
+   "steps": [
+    {
+     "kind": "pause",
+     "seconds": 3.0
+    },
+    {
+     "kind": "pill",
+     "text": "no API keys",
+     "color": "#F59E0B",
+     "durationSeconds": 2.6
+    },
+    {
+     "kind": "pause",
+     "seconds": 5.09
+    },
+    {
+     "kind": "cmd",
+     "text": "pip install piper-tts faster-whisper",
+     "typeSpeed": 0.045,
+     "holdSeconds": 0.35
+    },
+    {
+     "kind": "out",
+     "text": "Collecting piper-tts",
+     "holdSeconds": 0.45
+    },
+    {
+     "kind": "out",
+     "text": "Collecting faster-whisper",
+     "holdSeconds": 0.45
+    },
+    {
+     "kind": "out",
+     "text": "Installing collected packages: ctranslate2, onnxruntime, tokenizers, piper-tts, faster-whisper",
+     "holdSeconds": 0.7
+    },
+    {
+     "kind": "out",
+     "text": "Successfully installed faster-whisper-1.2.1 piper-tts-1.7.0 ctranslate2-4.8.1 onnxruntime-1.23.2 ...",
+     "holdSeconds": 1.2
+    },
+    {
+     "kind": "pill",
+     "text": "installed",
+     "color": "#10B981",
+     "durationSeconds": 2.4
+    },
+    {
+     "kind": "pause",
+     "seconds": 2.257
+    },
+    {
+     "kind": "cmd",
+     "text": "python -m piper.download_voices --download-dir ~/.piper/models en_US-lessac-medium",
+     "typeSpeed": 0.04,
+     "holdSeconds": 0.35
+    },
+    {
+     "kind": "out",
+     "text": "INFO:__main__:Downloaded: en_US-lessac-medium",
+     "holdSeconds": 1.0
+    },
+    {
+     "kind": "pill",
+     "text": "voice ready",
+     "color": "#10B981",
+     "durationSeconds": 2.4
+    },
+    {
+     "kind": "pause",
+     "seconds": 3.59
+    },
+    {
+     "kind": "cmd",
+     "text": "make -s preflight | tail -n +2 | jq -c '.tts | {configured, total}'",
+     "typeSpeed": 0.04,
+     "holdSeconds": 0.4
+    },
+    {
+     "kind": "out",
+     "text": "{\"configured\":1,\"total\":10}",
+     "holdSeconds": 1.6
+    },
+    {
+     "kind": "pill",
+     "text": "piper_tts -> available",
+     "color": "#10B981",
+     "durationSeconds": 2.8
+    },
+    {
+     "kind": "pause",
+     "seconds": 1.63
+    },
+    {
+     "kind": "cmd",
+     "text": "echo \"Two installs, no keys.\" | piper -m en_US-lessac-medium --data-dir ~/.piper/models -f vo.wav",
+     "typeSpeed": 0.035,
+     "holdSeconds": 0.4
+    },
+    {
+     "kind": "pill",
+     "text": "vo.wav written",
+     "color": "#10B981",
+     "durationSeconds": 2.2
+    },
+    {
+     "kind": "pause",
+     "seconds": 1.1
+    },
+    {
+     "kind": "cmd",
+     "text": "python -c \"from faster_whisper import WhisperModel as M;s,_=M('tiny').transcribe('vo.wav');print(next(s).text)\"",
+     "typeSpeed": 0.028,
+     "holdSeconds": 0.4
+    },
+    {
+     "kind": "out",
+     "text": " Two installs, no keys.",
+     "holdSeconds": 1.0
+    },
+    {
+     "kind": "pill",
+     "text": "round trip complete",
+     "color": "#10B981",
+     "durationSeconds": 2.6
+    },
+    {
+     "kind": "pause",
+     "seconds": 5.186
+    }
+   ],
+   "in_seconds": 0.0,
+   "out_seconds": 45.02
+  }
+ ],
+ "overlays": [
+  {
+   "type": "section_title",
+   "text": "github.com/calesthio/OpenMontage",
+   "accentColor": "#10B981",
+   "position": "bottom-left",
+   "in_seconds": 41.0,
+   "out_seconds": 45.02
+  }
+ ],
+ "captions": [
+  {
+   "word": "The",
+   "startMs": 300,
+   "endMs": 420
+  },
+  {
+   "word": "voice",
+   "startMs": 420,
+   "endMs": 620
+  },
+  {
+   "word": "you're",
+   "startMs": 620,
+   "endMs": 820
+  },
+  {
+   "word": "hearing",
+   "startMs": 820,
+   "endMs": 1100
+  },
+  {
+   "word": "was",
+   "startMs": 1100,
+   "endMs": 1340
+  },
+  {
+   "word": "made",
+   "startMs": 1340,
+   "endMs": 1520
+  },
+  {
+   "word": "on",
+   "startMs": 1520,
+   "endMs": 1700
+  },
+  {
+   "word": "this",
+   "startMs": 1700,
+   "endMs": 1900
+  },
+  {
+   "word": "machine,",
+   "startMs": 1900,
+   "endMs": 2280
+  },
+  {
+   "word": "by",
+   "startMs": 2639,
+   "endMs": 2820
+  },
+  {
+   "word": "the",
+   "startMs": 2820,
+   "endMs": 2940
+  },
+  {
+   "word": "tool",
+   "startMs": 2940,
+   "endMs": 3159
+  },
+  {
+   "word": "in",
+   "startMs": 3159,
+   "endMs": 3320
+  },
+  {
+   "word": "this",
+   "startMs": 3320,
+   "endMs": 3500
+  },
+  {
+   "word": "video.",
+   "startMs": 3500,
+   "endMs": 3820
+  },
+  {
+   "word": "No",
+   "startMs": 4479,
+   "endMs": 4700
+  },
+  {
+   "word": "API",
+   "startMs": 4700,
+   "endMs": 5120
+  },
+  {
+   "word": "key.",
+   "startMs": 5120,
+   "endMs": 5479
+  },
+  {
+   "word": "Nothing",
+   "startMs": 6120,
+   "endMs": 6460
+  },
+  {
+   "word": "sent",
+   "startMs": 6460,
+   "endMs": 6780
+  },
+  {
+   "word": "to",
+   "startMs": 6780,
+   "endMs": 6979
+  },
+  {
+   "word": "a",
+   "startMs": 6979,
+   "endMs": 7040
+  },
+  {
+   "word": "cloud.",
+   "startMs": 7040,
+   "endMs": 7300
+  },
+  {
+   "word": "Two",
+   "startMs": 8090,
+   "endMs": 8230
+  },
+  {
+   "word": "packages.",
+   "startMs": 8230,
+   "endMs": 8709
+  },
+  {
+   "word": "Piper",
+   "startMs": 9210,
+   "endMs": 9710
+  },
+  {
+   "word": "for",
+   "startMs": 9710,
+   "endMs": 9990
+  },
+  {
+   "word": "speech,",
+   "startMs": 9990,
+   "endMs": 10370
+  },
+  {
+   "word": "faster",
+   "startMs": 10770,
+   "endMs": 11070
+  },
+  {
+   "word": "whisper",
+   "startMs": 11070,
+   "endMs": 11410
+  },
+  {
+   "word": "for",
+   "startMs": 11410,
+   "endMs": 11670
+  },
+  {
+   "word": "transcription.",
+   "startMs": 11670,
+   "endMs": 12309
+  },
+  {
+   "word": "That",
+   "startMs": 12910,
+   "endMs": 13170
+  },
+  {
+   "word": "is",
+   "startMs": 13170,
+   "endMs": 13290
+  },
+  {
+   "word": "the",
+   "startMs": 13290,
+   "endMs": 13450
+  },
+  {
+   "word": "entire",
+   "startMs": 13450,
+   "endMs": 13850
+  },
+  {
+   "word": "cost",
+   "startMs": 13850,
+   "endMs": 14230
+  },
+  {
+   "word": "of",
+   "startMs": 14230,
+   "endMs": 14450
+  },
+  {
+   "word": "entry.",
+   "startMs": 14450,
+   "endMs": 14730
+  },
+  {
+   "word": "Then",
+   "startMs": 15530,
+   "endMs": 15870
+  },
+  {
+   "word": "one",
+   "startMs": 15870,
+   "endMs": 16090
+  },
+  {
+   "word": "command",
+   "startMs": 16090,
+   "endMs": 16430
+  },
+  {
+   "word": "for",
+   "startMs": 16430,
+   "endMs": 16669
+  },
+  {
+   "word": "the",
+   "startMs": 16669,
+   "endMs": 16770
+  },
+  {
+   "word": "voice",
+   "startMs": 16770,
+   "endMs": 16990
+  },
+  {
+   "word": "model.",
+   "startMs": 16990,
+   "endMs": 17370
+  },
+  {
+   "word": "This",
+   "startMs": 17790,
+   "endMs": 18189
+  },
+  {
+   "word": "is",
+   "startMs": 18189,
+   "endMs": 18369
+  },
+  {
+   "word": "the",
+   "startMs": 18369,
+   "endMs": 18509
+  },
+  {
+   "word": "step",
+   "startMs": 18509,
+   "endMs": 18770
+  },
+  {
+   "word": "people",
+   "startMs": 18770,
+   "endMs": 19070
+  },
+  {
+   "word": "miss.",
+   "startMs": 19070,
+   "endMs": 19369
+  },
+  {
+   "word": "Without",
+   "startMs": 20030,
+   "endMs": 20369
+  },
+  {
+   "word": "it,",
+   "startMs": 20369,
+   "endMs": 20650
+  },
+  {
+   "word": "Piper",
+   "startMs": 21030,
+   "endMs": 21250
+  },
+  {
+   "word": "reports",
+   "startMs": 21250,
+   "endMs": 21610
+  },
+  {
+   "word": "that",
+   "startMs": 21610,
+   "endMs": 21950
+  },
+  {
+   "word": "it",
+   "startMs": 21950,
+   "endMs": 22110
+  },
+  {
+   "word": "cannot",
+   "startMs": 22110,
+   "endMs": 22369
+  },
+  {
+   "word": "find",
+   "startMs": 22369,
+   "endMs": 22689
+  },
+  {
+   "word": "a",
+   "startMs": 22689,
+   "endMs": 22830
+  },
+  {
+   "word": "voice.",
+   "startMs": 22830,
+   "endMs": 23130
+  },
+  {
+   "word": "Now",
+   "startMs": 23870,
+   "endMs": 24097
+  },
+  {
+   "word": "OpenMontage",
+   "startMs": 24097,
+   "endMs": 24931
+  },
+  {
+   "word": "finds",
+   "startMs": 24931,
+   "endMs": 25310
+  },
+  {
+   "word": "it",
+   "startMs": 25310,
+   "endMs": 25461
+  },
+  {
+   "word": "on",
+   "startMs": 25461,
+   "endMs": 25613
+  },
+  {
+   "word": "its",
+   "startMs": 25613,
+   "endMs": 25840
+  },
+  {
+   "word": "own.",
+   "startMs": 25840,
+   "endMs": 26143
+  },
+  {
+   "word": "Text",
+   "startMs": 26143,
+   "endMs": 26446
+  },
+  {
+   "word": "to",
+   "startMs": 26446,
+   "endMs": 26598
+  },
+  {
+   "word": "speech",
+   "startMs": 26598,
+   "endMs": 27053
+  },
+  {
+   "word": "goes",
+   "startMs": 27053,
+   "endMs": 27356
+  },
+  {
+   "word": "from",
+   "startMs": 27356,
+   "endMs": 27659
+  },
+  {
+   "word": "zero",
+   "startMs": 27659,
+   "endMs": 27962
+  },
+  {
+   "word": "of",
+   "startMs": 27962,
+   "endMs": 28114
+  },
+  {
+   "word": "ten",
+   "startMs": 28114,
+   "endMs": 28341
+  },
+  {
+   "word": "configured,",
+   "startMs": 28341,
+   "endMs": 29175
+  },
+  {
+   "word": "to",
+   "startMs": 29175,
+   "endMs": 29326
+  },
+  {
+   "word": "one.",
+   "startMs": 29326,
+   "endMs": 29629
+  },
+  {
+   "word": "Text",
+   "startMs": 30300,
+   "endMs": 30540
+  },
+  {
+   "word": "goes",
+   "startMs": 30540,
+   "endMs": 30780
+  },
+  {
+   "word": "in,",
+   "startMs": 30780,
+   "endMs": 31080
+  },
+  {
+   "word": "a",
+   "startMs": 31520,
+   "endMs": 31620
+  },
+  {
+   "word": "wave",
+   "startMs": 31620,
+   "endMs": 31780
+  },
+  {
+   "word": "file",
+   "startMs": 31780,
+   "endMs": 32119
+  },
+  {
+   "word": "comes",
+   "startMs": 32119,
+   "endMs": 32420
+  },
+  {
+   "word": "out,",
+   "startMs": 32420,
+   "endMs": 32640
+  },
+  {
+   "word": "and",
+   "startMs": 32960,
+   "endMs": 33080
+  },
+  {
+   "word": "whisper",
+   "startMs": 33080,
+   "endMs": 33400
+  },
+  {
+   "word": "reads",
+   "startMs": 33400,
+   "endMs": 33660
+  },
+  {
+   "word": "it",
+   "startMs": 33660,
+   "endMs": 33860
+  },
+  {
+   "word": "back",
+   "startMs": 33860,
+   "endMs": 34080
+  },
+  {
+   "word": "with",
+   "startMs": 34080,
+   "endMs": 34340
+  },
+  {
+   "word": "word",
+   "startMs": 34340,
+   "endMs": 34580
+  },
+  {
+   "word": "level",
+   "startMs": 34580,
+   "endMs": 34860
+  },
+  {
+   "word": "timing.",
+   "startMs": 34860,
+   "endMs": 35220
+  },
+  {
+   "word": "That",
+   "startMs": 35700,
+   "endMs": 36120
+  },
+  {
+   "word": "is",
+   "startMs": 36120,
+   "endMs": 36220
+  },
+  {
+   "word": "what",
+   "startMs": 36220,
+   "endMs": 36400
+  },
+  {
+   "word": "drives",
+   "startMs": 36400,
+   "endMs": 36740
+  },
+  {
+   "word": "the",
+   "startMs": 36740,
+   "endMs": 36960
+  },
+  {
+   "word": "captions.",
+   "startMs": 36960,
+   "endMs": 37280
+  },
+  {
+   "word": "Every",
+   "startMs": 38250,
+   "endMs": 38604
+  },
+  {
+   "word": "word",
+   "startMs": 38604,
+   "endMs": 38887
+  },
+  {
+   "word": "you",
+   "startMs": 38887,
+   "endMs": 39100
+  },
+  {
+   "word": "just",
+   "startMs": 39100,
+   "endMs": 39383
+  },
+  {
+   "word": "heard",
+   "startMs": 39383,
+   "endMs": 39738
+  },
+  {
+   "word": "came",
+   "startMs": 39738,
+   "endMs": 40021
+  },
+  {
+   "word": "out",
+   "startMs": 40021,
+   "endMs": 40234
+  },
+  {
+   "word": "of",
+   "startMs": 40234,
+   "endMs": 40375
+  },
+  {
+   "word": "that",
+   "startMs": 40375,
+   "endMs": 40659
+  },
+  {
+   "word": "command.",
+   "startMs": 40659,
+   "endMs": 41226
+  },
+  {
+   "word": "That",
+   "startMs": 41226,
+   "endMs": 41509
+  },
+  {
+   "word": "is",
+   "startMs": 41509,
+   "endMs": 41651
+  },
+  {
+   "word": "two",
+   "startMs": 41651,
+   "endMs": 41863
+  },
+  {
+   "word": "installs,",
+   "startMs": 41863,
+   "endMs": 42501
+  },
+  {
+   "word": "and",
+   "startMs": 42501,
+   "endMs": 42714
+  },
+  {
+   "word": "no",
+   "startMs": 42714,
+   "endMs": 42855
+  },
+  {
+   "word": "keys.",
+   "startMs": 42855,
+   "endMs": 43210
+  }
+ ],
+ "audio": {
+  "narration": {
+   "src": "/home/kali/OpenMontage/projects/openmontage-zero-key-setup/assets/audio/narration_master.wav",
+   "volume": 1.0
+  }
+ },
+ "renderer_family": "screen-demo",
+ "themeConfig": {
+  "primaryColor": "#7C3AED",
+  "accentColor": "#EC4899",
+  "backgroundColor": "#0F172A",
+  "surfaceColor": "#1E293B",
+  "textColor": "#F8FAFC",
+  "mutedTextColor": "#94A3B8",
+  "headingFont": "Space Grotesk",
+  "bodyFont": "Space Grotesk",
+  "monoFont": "Fira Code",
+  "captionHighlightColor": "#22D3EE",
+  "captionBackgroundColor": "rgba(15, 23, 42, 0.75)",
+  "transitionDuration": 0.3
+ }
+}

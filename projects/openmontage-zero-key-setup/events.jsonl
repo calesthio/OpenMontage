@@ -1,0 +1,56 @@
+{"ts": "2026-08-30T21:49:25.442244+00:00", "tool": "piper_tts", "event": "start", "output_path": "projects/openmontage-zero-key-setup/assets/audio/narration_s1.wav"}
+{"ts": "2026-08-30T21:49:27.262760+00:00", "tool": "piper_tts", "event": "finish", "output_path": "projects/openmontage-zero-key-setup/assets/audio/narration_s1.wav", "success": true, "cost_usd": 0.0, "duration_s": 1.82}
+{"ts": "2026-08-30T21:49:27.279733+00:00", "tool": "piper_tts", "event": "start", "output_path": "projects/openmontage-zero-key-setup/assets/audio/narration_s2.wav"}
+{"ts": "2026-08-30T21:49:28.501585+00:00", "tool": "piper_tts", "event": "finish", "output_path": "projects/openmontage-zero-key-setup/assets/audio/narration_s2.wav", "success": true, "cost_usd": 0.0, "duration_s": 1.22}
+{"ts": "2026-08-30T21:49:28.516234+00:00", "tool": "piper_tts", "event": "start", "output_path": "projects/openmontage-zero-key-setup/assets/audio/narration_s3.wav"}
+{"ts": "2026-08-30T21:49:29.785335+00:00", "tool": "piper_tts", "event": "finish", "output_path": "projects/openmontage-zero-key-setup/assets/audio/narration_s3.wav", "success": true, "cost_usd": 0.0, "duration_s": 1.27}
+{"ts": "2026-08-30T21:49:29.802046+00:00", "tool": "piper_tts", "event": "start", "output_path": "projects/openmontage-zero-key-setup/assets/audio/narration_s4.wav"}
+{"ts": "2026-08-30T21:49:30.900814+00:00", "tool": "piper_tts", "event": "finish", "output_path": "projects/openmontage-zero-key-setup/assets/audio/narration_s4.wav", "success": true, "cost_usd": 0.0, "duration_s": 1.1}
+{"ts": "2026-08-30T21:49:30.915384+00:00", "tool": "piper_tts", "event": "start", "output_path": "projects/openmontage-zero-key-setup/assets/audio/narration_s5.wav"}
+{"ts": "2026-08-30T21:49:32.171824+00:00", "tool": "piper_tts", "event": "finish", "output_path": "projects/openmontage-zero-key-setup/assets/audio/narration_s5.wav", "success": true, "cost_usd": 0.0, "duration_s": 1.26}
+{"ts": "2026-08-30T21:49:32.186758+00:00", "tool": "piper_tts", "event": "start", "output_path": "projects/openmontage-zero-key-setup/assets/audio/narration_s6.wav"}
+{"ts": "2026-08-30T21:49:33.329036+00:00", "tool": "piper_tts", "event": "finish", "output_path": "projects/openmontage-zero-key-setup/assets/audio/narration_s6.wav", "success": true, "cost_usd": 0.0, "duration_s": 1.14}
+{"ts": "2026-08-30T21:51:37.229924+00:00", "tool": "transcriber", "event": "start"}
+{"ts": "2026-08-30T21:51:41.435407+00:00", "tool": "transcriber", "event": "finish", "success": true, "cost_usd": 0.0, "duration_s": 4.21}
+{"ts": "2026-08-30T21:51:41.435639+00:00", "tool": "transcriber", "event": "start"}
+{"ts": "2026-08-30T21:51:46.166826+00:00", "tool": "transcriber", "event": "finish", "success": true, "cost_usd": 0.0, "duration_s": 4.73}
+{"ts": "2026-08-30T21:51:46.167042+00:00", "tool": "transcriber", "event": "start"}
+{"ts": "2026-08-30T21:51:49.184953+00:00", "tool": "transcriber", "event": "finish", "success": true, "cost_usd": 0.0, "duration_s": 3.02}
+{"ts": "2026-08-30T21:51:49.185186+00:00", "tool": "transcriber", "event": "start"}
+{"ts": "2026-08-30T21:51:51.643983+00:00", "tool": "transcriber", "event": "finish", "success": true, "cost_usd": 0.0, "duration_s": 2.46}
+{"ts": "2026-08-30T21:51:51.644256+00:00", "tool": "transcriber", "event": "start"}
+{"ts": "2026-08-30T21:51:53.595003+00:00", "tool": "transcriber", "event": "finish", "success": true, "cost_usd": 0.0, "duration_s": 1.95}
+{"ts": "2026-08-30T21:51:53.595236+00:00", "tool": "transcriber", "event": "start"}
+{"ts": "2026-08-30T21:51:55.548323+00:00", "tool": "transcriber", "event": "finish", "success": true, "cost_usd": 0.0, "duration_s": 1.95}
+{"ts": "2026-08-30T21:51:55.549113+00:00", "tool": "subtitle_gen", "event": "start", "output_path": "projects/openmontage-zero-key-setup/assets/subtitles/captions.srt"}
+{"ts": "2026-08-30T21:51:55.550463+00:00", "tool": "subtitle_gen", "event": "finish", "output_path": "projects/openmontage-zero-key-setup/assets/subtitles/captions.srt", "success": true, "cost_usd": 0.0, "duration_s": 0.0}
+{"ts": "2026-08-30T21:52:27.259681+00:00", "tool": "transcriber", "event": "start"}
+{"ts": "2026-08-30T21:52:30.043733+00:00", "tool": "transcriber", "event": "finish", "success": true, "cost_usd": 0.0, "duration_s": 2.78}
+{"ts": "2026-08-30T21:52:30.043972+00:00", "tool": "transcriber", "event": "start"}
+{"ts": "2026-08-30T21:52:31.974193+00:00", "tool": "transcriber", "event": "finish", "success": true, "cost_usd": 0.0, "duration_s": 1.93}
+{"ts": "2026-08-30T21:52:31.974463+00:00", "tool": "transcriber", "event": "start"}
+{"ts": "2026-08-30T21:52:33.986965+00:00", "tool": "transcriber", "event": "finish", "success": true, "cost_usd": 0.0, "duration_s": 2.01}
+{"ts": "2026-08-30T21:52:33.987210+00:00", "tool": "transcriber", "event": "start"}
+{"ts": "2026-08-30T21:52:35.999817+00:00", "tool": "transcriber", "event": "finish", "success": true, "cost_usd": 0.0, "duration_s": 2.01}
+{"ts": "2026-08-30T21:52:36.000359+00:00", "tool": "transcriber", "event": "start"}
+{"ts": "2026-08-30T21:52:38.228903+00:00", "tool": "transcriber", "event": "finish", "success": true, "cost_usd": 0.0, "duration_s": 2.23}
+{"ts": "2026-08-30T21:52:38.229347+00:00", "tool": "transcriber", "event": "start"}
+{"ts": "2026-08-30T21:52:40.456212+00:00", "tool": "transcriber", "event": "finish", "success": true, "cost_usd": 0.0, "duration_s": 2.23}
+{"ts": "2026-08-30T21:52:40.457804+00:00", "tool": "subtitle_gen", "event": "start", "output_path": "projects/openmontage-zero-key-setup/assets/subtitles/captions.srt"}
+{"ts": "2026-08-30T21:52:40.458665+00:00", "tool": "subtitle_gen", "event": "finish", "output_path": "projects/openmontage-zero-key-setup/assets/subtitles/captions.srt", "success": true, "cost_usd": 0.0, "duration_s": 0.0}
+{"ts": "2026-08-30T21:58:38.003964+00:00", "tool": "video_compose", "event": "start", "output_path": "/home/kali/OpenMontage/projects/openmontage-zero-key-setup/renders/openmontage-zero-key-setup.mp4"}
+{"ts": "2026-08-30T22:03:38.525362+00:00", "tool": "video_compose", "event": "finish", "output_path": "/home/kali/OpenMontage/projects/openmontage-zero-key-setup/renders/openmontage-zero-key-setup.mp4", "success": true, "cost_usd": 0.0, "duration_s": 300.52}
+{"ts": "2026-08-30T22:04:44.549249+00:00", "tool": "video_trimmer", "event": "start", "output_path": "/home/kali/OpenMontage/projects/openmontage-zero-key-setup/renders/openmontage-zero-key-setup_final.mp4"}
+{"ts": "2026-08-30T22:04:44.549397+00:00", "tool": "video_trimmer", "event": "error", "error": "'operation'", "duration_s": 0.0}
+{"ts": "2026-08-30T22:04:56.758539+00:00", "tool": "video_trimmer", "event": "start", "output_path": "/home/kali/OpenMontage/projects/openmontage-zero-key-setup/renders/openmontage-zero-key-setup_final.mp4"}
+{"ts": "2026-08-30T22:05:08.729268+00:00", "tool": "video_trimmer", "event": "finish", "output_path": "/home/kali/OpenMontage/projects/openmontage-zero-key-setup/renders/openmontage-zero-key-setup_final.mp4", "success": true, "cost_usd": 0.0, "duration_s": 11.97}
+{"ts": "2026-08-30T22:05:23.213643+00:00", "tool": "video_trimmer", "event": "start", "output_path": "/home/kali/OpenMontage/projects/openmontage-zero-key-setup/renders/openmontage-zero-key-setup_final.mp4"}
+{"ts": "2026-08-30T22:05:23.299692+00:00", "tool": "video_trimmer", "event": "finish", "output_path": "/home/kali/OpenMontage/projects/openmontage-zero-key-setup/renders/openmontage-zero-key-setup_final.mp4", "success": true, "cost_usd": 0.0, "duration_s": 0.09}
+{"ts": "2026-08-30T22:05:41.497946+00:00", "tool": "video_trimmer", "event": "start", "output_path": "/home/kali/OpenMontage/projects/openmontage-zero-key-setup/renders/openmontage-zero-key-setup_final.mp4"}
+{"ts": "2026-08-30T22:05:41.588421+00:00", "tool": "video_trimmer", "event": "finish", "output_path": "/home/kali/OpenMontage/projects/openmontage-zero-key-setup/renders/openmontage-zero-key-setup_final.mp4", "success": true, "cost_usd": 0.0, "duration_s": 0.09}
+{"ts": "2026-08-30T22:09:06.153330+00:00", "tool": "export_bundle", "event": "start"}
+{"ts": "2026-08-30T22:09:06.166955+00:00", "tool": "export_bundle", "event": "finish", "success": true, "cost_usd": 0.0, "duration_s": 0.01}
+{"ts": "2026-08-30T22:09:23.469241+00:00", "tool": "export_bundle", "event": "start"}
+{"ts": "2026-08-30T22:09:23.504839+00:00", "tool": "export_bundle", "event": "finish", "success": true, "cost_usd": 0.0, "duration_s": 0.04}
+{"ts": "2026-08-30T22:09:33.779665+00:00", "tool": "export_bundle", "event": "start"}
+{"ts": "2026-08-30T22:09:33.802006+00:00", "tool": "export_bundle", "event": "finish", "success": true, "cost_usd": 0.0, "duration_s": 0.02}

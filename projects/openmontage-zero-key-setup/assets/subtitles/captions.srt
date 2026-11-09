@@ -1,0 +1,79 @@
+1
+00:00:00,300 --> 00:00:01,520
+The voice you're hearing was made
+
+2
+00:00:01,520 --> 00:00:03,160
+on this machine, by the tool
+
+3
+00:00:03,160 --> 00:00:05,480
+in this video. No API key.
+
+4
+00:00:06,120 --> 00:00:08,230
+Nothing sent to a cloud. Two
+
+5
+00:00:08,230 --> 00:00:11,410
+packages. Piper for speech, faster whisper
+
+6
+00:00:11,410 --> 00:00:13,850
+for transcription. That is the entire
+
+7
+00:00:13,850 --> 00:00:16,430
+cost of entry. Then one command
+
+8
+00:00:16,430 --> 00:00:18,370
+for the voice model. This is
+
+9
+00:00:18,370 --> 00:00:20,650
+the step people miss. Without it,
+
+10
+00:00:21,030 --> 00:00:22,690
+Piper reports that it cannot find
+
+11
+00:00:22,690 --> 00:00:25,462
+a voice. Now OpenMontage finds it
+
+12
+00:00:25,462 --> 00:00:27,053
+on its own. Text to speech
+
+13
+00:00:27,053 --> 00:00:29,175
+goes from zero of ten configured,
+
+14
+00:00:29,175 --> 00:00:31,620
+to one. Text goes in, a
+
+15
+00:00:31,620 --> 00:00:33,400
+wave file comes out, and whisper
+
+16
+00:00:33,400 --> 00:00:34,860
+reads it back with word level
+
+17
+00:00:34,860 --> 00:00:36,960
+timing. That is what drives the
+
+18
+00:00:36,960 --> 00:00:39,738
+captions. Every word you just heard
+
+19
+00:00:39,738 --> 00:00:41,509
+came out of that command. That
+
+20
+00:00:41,509 --> 00:00:43,210
+is two installs, and no keys.

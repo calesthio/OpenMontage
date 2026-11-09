@@ -5,6 +5,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { formatXTick, pickXTicks } from "./xTicks";
 
 interface DataPoint {
   x: number;
@@ -83,12 +84,10 @@ export const LineChart: React.FC<LineChartProps> = ({
     return { value, y };
   });
 
-  const gridLineCountX = Math.min(allPoints.length - 1, 6);
-  const gridLinesX = Array.from({ length: gridLineCountX + 1 }, (_, i) => {
-    const value = xMin + ((xMax - xMin) / gridLineCountX) * i;
-    const x = toSvgX(value);
-    return { value, x };
-  });
+  const gridLinesX = pickXTicks(allPoints.map((p) => p.x)).map((value) => ({
+    value,
+    x: toSvgX(value),
+  }));
 
   // Fade out near end
   const fadeOut = interpolate(
@@ -178,7 +177,7 @@ export const LineChart: React.FC<LineChartProps> = ({
                   fontSize={18}
                   fontWeight={400}
                 >
-                  {formatNumber(line.value)}
+                  {formatXTick(line.value, formatNumber)}
                 </text>
               </g>
             ))}

@@ -15,6 +15,8 @@ type HeroTitleProps = {
   textColor?: string;
   /** Subtitle color. */
   subtitleColor?: string;
+  /** Font family. Pass the theme's heading font; falls back to Space Grotesk. */
+  fontFamily?: string;
   /**
    * Scrim painted behind the title so it separates from whatever is underneath.
    * Defaults to a dark wash; a light theme must pass a light one, otherwise the
@@ -32,6 +34,7 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
   accentColor = "#22D3EE",
   textColor = "#F8FAFC",
   subtitleColor = "#A78BFA",
+  fontFamily = "Space Grotesk, Inter, system-ui, sans-serif",
   scrimBackground = DEFAULT_SCRIM,
 }) => {
   const frame = useCurrentFrame();
@@ -54,7 +57,7 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
           style={{
             fontSize: 72,
             fontWeight: 800,
-            fontFamily: "Space Grotesk, Inter, system-ui, sans-serif",
+            fontFamily,
             lineHeight: 1.2,
             display: "flex",
             justifyContent: "center",
@@ -101,7 +104,7 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
               fontSize: 28,
               fontWeight: 400,
               color: subtitleColor,
-              fontFamily: "Space Grotesk, Inter, system-ui, sans-serif",
+              fontFamily,
               letterSpacing: "0.1em",
               textTransform: "uppercase",
             }}

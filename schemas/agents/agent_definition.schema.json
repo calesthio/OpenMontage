@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openmontage/agents/agent_definition",
+  "title": "Agent Definition Frontmatter",
+  "description": "YAML frontmatter contract for Claude Code subagent definitions in .claude/agents/*.md. The name must be a lowercase-hyphen identifier matching the file stem so the harness can address the agent.",
+  "type": "object",
+  "required": ["name", "description"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Unique agent identifier: lowercase letters, digits, and single hyphens. Must equal the markdown file stem."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 10,
+      "description": "What the agent does and when to use it. Shown in agent pickers, so it must carry meaning on its own."
+    },
+    "color": {
+      "type": "string",
+      "pattern": "^(#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?|[a-z][a-z0-9]*(-[a-z0-9]+)*)$",
+      "description": "Display color: a CSS-style named color (e.g. amber) or a 3- or 6-digit hex value."
+    },
+    "emoji": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16,
+      "description": "Short emoji badge for the agent."
+    },
+    "vibe": {
+      "type": "string",
+      "minLength": 1,
+      "description": "One-line personality tagline."
+    },
+    "tools": {
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        }
+      ],
+      "description": "Optional tool allowlist: a comma-separated string or a list of tool names. Omit to inherit all tools."
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Optional model override for the agent."
+    }
+  },
+  "additionalProperties": true
+}

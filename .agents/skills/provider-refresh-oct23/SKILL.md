@@ -14,7 +14,7 @@ fresh account quote; do not use expired promotions as permanent prices.
 ## Google and ElevenLabs migrations
 
 - `gemini_omni_video`: direct Gemini Interactions API model is
-  `gemini-omni-1.1-flash`. Old preview retired October 22. Continue editing with
+  `gemini-omni-1.2-flash` (1.1 is auto-routed to 1.2 on 2026-12-03). Old preview retired October 22. Continue editing with
   `previous_interaction_id`; do not substitute it inside a Veo request.
 - `veo_video`: Google backend requires Vertex; fal retains its own contracts.
   Gemini API Veo has retired. Select Omni explicitly for the replacement workflow.

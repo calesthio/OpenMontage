@@ -2,7 +2,7 @@
 
 Calls the Gemini Interactions API (``POST /v1beta/interactions``) directly with
 the project's Google API key — the same key that unlocks Imagen images and
-Cloud TTS. Gemini Omni Flash generates 3-10 second 720p/24fps clips with
+Cloud TTS. Gemini Omni Flash generates 3-15 second clips (360p to 4k) with
 synthesized audio, and is the only provider in the fleet with stateful
 conversational editing: pass ``previous_interaction_id`` and describe only the
 delta ("Make the violin invisible. Keep everything else the same.").
@@ -37,15 +37,43 @@ from tools.base_tool import (
 
 _BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
 _UPLOAD_URL = "https://generativelanguage.googleapis.com/upload/v1beta/files"
-_DEFAULT_MODEL = "gemini-omni-1.1-flash"
-# Billed at 5,792 output tokens per second of 720p video, $17.50/1M tokens
-# (ai.google.dev/gemini-api/docs/pricing) — effectively ~$0.10 per second.
+_DEFAULT_MODEL = "gemini-omni-1.2-flash"
+# Gemini Omni 1.1 Flash is auto-routed to 1.2 on 2026-12-03 (Google notice); it is
+# accepted here as a legacy alias and sent to the API as the 1.2 model id.
+_LEGACY_MODEL_ALIASES = {"gemini-omni-1.1-flash": _DEFAULT_MODEL}
+_SUPPORTED_RESOLUTIONS = ("360p", "720p", "1080p", "4k")
+_DEFAULT_RESOLUTION = "720p"
+# Google price page (checked 2026-11-09), USD per second of generated video.
+_PRICE_PER_SECOND_USD = {"360p": 0.023, "720p": 0.07, "1080p": 0.104, "4k": 0.209}
+# Measured 2026-11-09: a 5 s 720p clip reported 28,960 video output tokens
+# (5,792 per second). Assumed identical for other resolutions, so the per-token
+# rate below is derived from the per-second price.
 _OUTPUT_VIDEO_TOKENS_PER_SECOND = 5_792
-_MAX_OUTPUT_DURATION_SECONDS = 10
+_MIN_OUTPUT_DURATION_SECONDS = 3
+_MAX_OUTPUT_DURATION_SECONDS = 15
 _MAX_VIDEO_TOKEN_ESTIMATE = _MAX_OUTPUT_DURATION_SECONDS * _OUTPUT_VIDEO_TOKENS_PER_SECOND
 _INPUT_COST_PER_MILLION_TOKENS = 1.50
 _OUTPUT_TEXT_COST_PER_MILLION_TOKENS = 9.00
-_OUTPUT_VIDEO_COST_PER_MILLION_TOKENS = 17.50
+
+
+def _video_cost_per_million_tokens(resolution: str) -> float:
+    price = _PRICE_PER_SECOND_USD.get(resolution, _PRICE_PER_SECOND_USD["4k"])
+    return price / _OUTPUT_VIDEO_TOKENS_PER_SECOND * 1_000_000
+
+
+def _parse_duration_seconds(value: Any) -> int | None:
+    """Return whole seconds (3-15) from "5", "5s" or 5, else None."""
+    if value is None or isinstance(value, bool):
+        return None
+    text = str(value).strip().lower()
+    if text.endswith("s"):
+        text = text[:-1]
+    if not text.isdigit():
+        return None
+    seconds = int(text)
+    if _MIN_OUTPUT_DURATION_SECONDS <= seconds <= _MAX_OUTPUT_DURATION_SECONDS:
+        return seconds
+    return None
 # Gemini image accounting has a 258-token floor; larger inline images use their
 # base64 byte count as a deliberately conservative token upper estimate.
 _MIN_IMAGE_INPUT_TOKENS = 258
@@ -68,7 +96,7 @@ class GeminiOmniVideo(BaseTool):
     install_instructions = (
         "Set GEMINI_API_KEY or GOOGLE_API_KEY to a Google AI Studio API key.\n"
         "  Get one at https://aistudio.google.com/apikey\n"
-        "  Gemini Omni Flash is paid-tier only (no free tier); ~$0.10 per second of video."
+        "  Gemini Omni Flash is paid-tier only (no free tier); ~$0.07 per second at 720p (360p $0.023, 1080p $0.104, 4k $0.209)."
     )
     agent_skills = ["gemini-omni", "ai-video-gen"]
 
@@ -90,16 +118,16 @@ class GeminiOmniVideo(BaseTool):
     best_for = [
         "iterative natural-language video editing (edit a clip without regenerating it)",
         "reference-image-driven clips via <FIRST_FRAME>/<IMAGE_REF_N> prompt tags",
-        "fast 3-10s clips with synced audio, rendered text, and timecoded beats from one Google key",
+        "fast 3-15s clips with synced audio, rendered text, and timecoded beats from one Google key",
     ]
     not_good_for = [
-        "clips longer than 10 seconds or above 720p",
+        "clips longer than 15 seconds",
         "seed-reproducible output or negative-prompt control",
         "offline generation",
     ]
     fallback_tools = ["veo_video", "sora_video", "kling_video", "minimax_video"]
     # Conversational editing + native audio are unique in the fleet, but this
-    # adapter is capped at 720p/10s — below seedance (0.95) and grok/runway (0.9)
+    # adapter is capped at 15s, below seedance (0.95) and grok/runway (0.9)
     # on raw generation fidelity. Without a quality_score the scorer would only
     # count supports/stability flags and bury the editing capability entirely.
     # See lib/scoring.py.
@@ -124,9 +152,9 @@ class GeminiOmniVideo(BaseTool):
             },
             "model": {
                 "type": "string",
-                "enum": [_DEFAULT_MODEL],
+                "enum": [_DEFAULT_MODEL, *_LEGACY_MODEL_ALIASES],
                 "default": _DEFAULT_MODEL,
-                "description": "Stable Gemini Omni 1.1 Flash model.",
+                "description": "Gemini Omni 1.2 Flash. The legacy 1.1 id is mapped to 1.2.",
             },
             "aspect_ratio": {
                 "type": "string",
@@ -135,16 +163,16 @@ class GeminiOmniVideo(BaseTool):
             },
             "resolution": {
                 "type": "string",
-                "enum": ["720p"],
-                "default": "720p",
-                "description": "The direct adapter currently supports 720p output.",
+                "enum": list(_SUPPORTED_RESOLUTIONS),
+                "default": _DEFAULT_RESOLUTION,
+                "description": "Output resolution; price per second rises with resolution.",
             },
             "duration": {
                 "type": "string",
                 "description": (
-                    "Optional 3-10 second planning/prompt hint for the caller. It is not sent "
-                    "to the provider; the model chooses the actual duration, and this hint does "
-                    "not cap billing or the conservative fallback cost estimate."
+                    "Optional whole seconds, 3 to 15 (for example \"5\" or \"5s\"). Sent to the "
+                    "provider as response_format.duration and used for the fallback cost "
+                    "estimate. Without it the estimate assumes 15 seconds."
                 ),
             },
             "reference_image_path": {
@@ -203,6 +231,7 @@ class GeminiOmniVideo(BaseTool):
         "operation",
         "aspect_ratio",
         "resolution",
+        "duration",
         "previous_interaction_id",
         "resume_video_uri",
     ]
@@ -245,14 +274,18 @@ class GeminiOmniVideo(BaseTool):
             )
         if inputs.get("previous_interaction_id"):
             input_token_upper_bound += _MAX_VIDEO_TOKEN_ESTIMATE
-        output_token_upper_bound = _MAX_VIDEO_TOKEN_ESTIMATE
-        return (
-            input_token_upper_bound * _INPUT_COST_PER_MILLION_TOKENS
-            + output_token_upper_bound * _OUTPUT_VIDEO_COST_PER_MILLION_TOKENS
-        ) / 1_000_000
+        resolution = inputs.get("resolution", _DEFAULT_RESOLUTION)
+        seconds = _parse_duration_seconds(inputs.get("duration")) or _MAX_OUTPUT_DURATION_SECONDS
+        output_cost = seconds * _PRICE_PER_SECOND_USD.get(
+            resolution, _PRICE_PER_SECOND_USD["4k"]
+        )
+        return output_cost + (
+            input_token_upper_bound * _INPUT_COST_PER_MILLION_TOKENS / 1_000_000
+        )
 
     @staticmethod
-    def _cost_from_usage(usage: Any) -> float | None:
+    def _cost_from_usage(usage: Any, resolution: str = _DEFAULT_RESOLUTION) -> float | None:
+        video_rate = _video_cost_per_million_tokens(resolution)
         if not isinstance(usage, dict):
             return None
 
@@ -289,7 +322,7 @@ class GeminiOmniVideo(BaseTool):
         output_cost = 0.0
         breakdown = usage.get("output_tokens_by_modality")
         if breakdown is None:
-            output_cost = output_tokens * _OUTPUT_VIDEO_COST_PER_MILLION_TOKENS
+            output_cost = output_tokens * video_rate
         else:
             if not isinstance(breakdown, list):
                 return None
@@ -308,19 +341,19 @@ class GeminiOmniVideo(BaseTool):
                 rate = (
                     _OUTPUT_TEXT_COST_PER_MILLION_TOKENS
                     if item["modality"].strip().lower() == "text"
-                    else _OUTPUT_VIDEO_COST_PER_MILLION_TOKENS
+                    else video_rate
                 )
                 output_cost += count * rate
             if classified_tokens > output_tokens:
                 return None
             output_cost += (
                 output_tokens - classified_tokens
-            ) * _OUTPUT_VIDEO_COST_PER_MILLION_TOKENS
+            ) * video_rate
 
         return (
             input_tokens * _INPUT_COST_PER_MILLION_TOKENS
             + output_cost
-            + thought_tokens * _OUTPUT_VIDEO_COST_PER_MILLION_TOKENS
+            + thought_tokens * video_rate
         ) / 1_000_000
 
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
@@ -477,6 +510,7 @@ class GeminiOmniVideo(BaseTool):
 
         start = time.time()
         model = inputs.get("model", _DEFAULT_MODEL)
+        model = _LEGACY_MODEL_ALIASES.get(model, model)
         if model != _DEFAULT_MODEL:
             return ToolResult(
                 success=False,
@@ -520,10 +554,24 @@ class GeminiOmniVideo(BaseTool):
         if not prompt:
             return ToolResult(success=False, error="Gemini Omni generation requires a prompt.")
         aspect_ratio = inputs.get("aspect_ratio", "16:9")
-        if inputs.get("resolution", "720p") != "720p":
+        resolution = inputs.get("resolution", _DEFAULT_RESOLUTION)
+        if resolution not in _SUPPORTED_RESOLUTIONS:
             return ToolResult(
                 success=False,
-                error="Gemini Omni direct adapter currently supports only 720p output.",
+                error=(
+                    f"Unsupported resolution {resolution!r}; use one of "
+                    f"{', '.join(_SUPPORTED_RESOLUTIONS)}."
+                ),
+            )
+        duration_input = inputs.get("duration")
+        duration_seconds = _parse_duration_seconds(duration_input)
+        if duration_input not in (None, "") and duration_seconds is None:
+            return ToolResult(
+                success=False,
+                error=(
+                    "duration must be whole seconds between "
+                    f"{_MIN_OUTPUT_DURATION_SECONDS} and {_MAX_OUTPUT_DURATION_SECONDS}."
+                ),
             )
         previous_interaction_id = inputs.get("previous_interaction_id")
 
@@ -560,10 +608,12 @@ class GeminiOmniVideo(BaseTool):
             "response_format": {
                 "type": "video",
                 "aspect_ratio": aspect_ratio,
-                "resolution": "720p",
+                "resolution": resolution,
                 "delivery": "uri",
             },
         }
+        if duration_seconds is not None:
+            payload["response_format"]["duration"] = f"{duration_seconds}s"
         if previous_interaction_id:
             payload["previous_interaction_id"] = previous_interaction_id
         if inputs.get("store") is False:
@@ -608,7 +658,7 @@ class GeminiOmniVideo(BaseTool):
             interaction_id = data.get("id")
             video = self._extract_output_video(data)
             if not video:
-                usage_cost = self._cost_from_usage(usage)
+                usage_cost = self._cost_from_usage(usage, resolution)
                 return ToolResult(
                     success=False,
                     data={"interaction_id": interaction_id} if interaction_id else {},
@@ -644,7 +694,7 @@ class GeminiOmniVideo(BaseTool):
                         "resume_download": resume_download,
                     }
                 )
-            usage_cost = self._cost_from_usage(usage)
+            usage_cost = self._cost_from_usage(usage, resolution)
             return ToolResult(
                 success=False,
                 data=failure_data,
@@ -657,7 +707,7 @@ class GeminiOmniVideo(BaseTool):
             )
 
         editable = inputs.get("store") is not False
-        usage_cost = self._cost_from_usage(usage)
+        usage_cost = self._cost_from_usage(usage, resolution)
         return ToolResult(
             success=True,
             data={

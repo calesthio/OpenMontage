@@ -23,7 +23,7 @@ Generate AI videos from text prompts. Supports multiple providers via four API p
 | **fal.ai** | `FAL_KEY` | **Seedance 2.0** (standard + fast), Kling v3/v2.1, MiniMax, VEO | `seedance_video`, `kling_video`, `minimax_video`, `veo_video` |
 | **HeyGen** | `HEYGEN_API_KEY` | VEO 3.1, Kling Pro, Sora v2, Runway Gen-4, Seedance Pro / Lite (1.x) | `heygen_video` |
 | **Kling Official** | `KLING_API_KEY` | Kling official Classic, Turbo, and basic Omni video | `kling_official_video` |
-| **Gemini API** | `GEMINI_API_KEY` / `GOOGLE_API_KEY` | Gemini Omni 1.2 Flash (`gemini-omni-1.2-flash`, Interactions API `POST /v1beta/interactions`, 3 to 15 s, 360p/720p/1080p/4k, with audio; generation + conversational editing). Note: the `gemini_omni_video` adapter still pins `gemini-omni-1.1-flash` and 720p until it is migrated | `gemini_omni_video` |
+| **Gemini API** | `GEMINI_API_KEY` / `GOOGLE_API_KEY` | Gemini Omni 1.2 Flash (`gemini-omni-1.2-flash`, Interactions API `POST /v1beta/interactions`, 3 to 15 s, 360p/720p/1080p/4k, with audio; generation + conversational editing). | `gemini_omni_video` |
 | **Pika API** | `PIKA_API_KEY` | Pika H3 Flex (native audio, first/last frame, up to 12 references, 4k upscale) | `pika_video` |
 
 **Iterative editing — Gemini Omni.** When the brief calls for *refining an existing clip* (add/remove objects, restyle, change lighting or on-screen text) rather than regenerating, Gemini Omni Flash is the only provider in the fleet with stateful multi-turn editing. See Layer 3 `gemini-omni` for the authoritative prompting guide (reference-image tags, timecode syntax, edit-prompt rules) before writing any prompt for it.

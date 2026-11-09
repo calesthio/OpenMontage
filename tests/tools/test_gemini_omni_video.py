@@ -77,8 +77,11 @@ def test_gemini_omni_is_discovered_as_video_provider():
     assert tool.supports["conversational_editing"] is True
     assert "gemini-omni" in tool.agent_skills
     assert tool.retry_policy.max_retries == 0
-    assert tool.input_schema["properties"]["model"]["enum"] == ["gemini-omni-1.1-flash"]
-    assert tool.input_schema["properties"]["resolution"]["enum"] == ["720p"]
+    assert tool.input_schema["properties"]["model"]["enum"] == [
+        "gemini-omni-1.2-flash",
+        "gemini-omni-1.1-flash",
+    ]
+    assert tool.input_schema["properties"]["resolution"]["enum"] == ["360p", "720p", "1080p", "4k"]
 
 
 def test_gemini_omni_is_routed_by_video_selector():
@@ -99,14 +102,23 @@ def test_gemini_omni_status_tracks_google_api_keys(monkeypatch):
     assert GeminiOmniVideo().get_status() == ToolStatus.AVAILABLE
 
 
-def test_gemini_omni_cost_estimate_uses_max_output_not_duration_hint(gemini_env):
+def test_gemini_omni_cost_estimate_uses_duration_and_resolution(gemini_env):
     from tools.video.gemini_omni_video import GeminiOmniVideo
 
     tool = GeminiOmniVideo()
-    expected = 1.0136015  # 10 * 5,792 * $17.50/M + one input byte at $1.50/M
-    assert tool.estimate_cost({"prompt": "x"}) == pytest.approx(expected)
-    assert tool.estimate_cost({"prompt": "x", "duration": "3"}) == pytest.approx(expected)
-    assert tool.estimate_cost({"prompt": "x", "duration": "30"}) == pytest.approx(expected)
+    one_byte = 1.5 / 1_000_000  # one prompt byte at $1.50/M input
+    # No usable duration: assume the 15 s maximum at the 720p price ($0.07/s).
+    assert tool.estimate_cost({"prompt": "x"}) == pytest.approx(15 * 0.07 + one_byte)
+    assert tool.estimate_cost({"prompt": "x", "duration": "30"}) == pytest.approx(
+        15 * 0.07 + one_byte
+    )
+    assert tool.estimate_cost({"prompt": "x", "duration": "5s"}) == pytest.approx(
+        5 * 0.07 + one_byte
+    )
+    for resolution, price in {"360p": 0.023, "1080p": 0.104, "4k": 0.209}.items():
+        assert tool.estimate_cost(
+            {"prompt": "x", "duration": "10", "resolution": resolution}
+        ) == pytest.approx(10 * price + one_byte)
 
 
 def test_gemini_omni_cost_estimate_includes_available_media_inputs(tmp_path, gemini_env):
@@ -129,8 +141,8 @@ def test_gemini_omni_cost_estimate_includes_available_media_inputs(tmp_path, gem
     )
 
     # One prompt byte + a conservative 258-token image floor + 400 bytes of
-    # base64 image data + a max-duration video-token floor, all billed as input.
-    assert cost == pytest.approx(1.1014685)
+    # base64 image data + a max-duration (15 s) video-token floor, all billed as input.
+    assert cost == pytest.approx(1.05 + 87_539 * 1.5 / 1_000_000)
 
 
 def test_gemini_omni_cost_estimate_includes_prior_video_for_edit(gemini_env):
@@ -144,7 +156,7 @@ def test_gemini_omni_cost_estimate_includes_prior_video_for_edit(gemini_env):
         }
     )
 
-    assert cost == pytest.approx(1.1004815)
+    assert cost == pytest.approx(0.21 + 86_881 * 1.5 / 1_000_000)
 
 
 def test_gemini_omni_usage_cost_prices_modalities_remainder_and_thoughts_conservatively():
@@ -166,7 +178,10 @@ def test_gemini_omni_usage_cost_prices_modalities_remainder_and_thoughts_conserv
         }
     )
 
-    assert cost == pytest.approx(0.01685)
+    # 100 input at $1.50/M, 300 text at $9/M, 800 video-rate tokens (video, audio,
+    # unclassified remainder, thoughts) at the 720p derived rate $0.07/5,792 per token.
+    video_rate = 0.07 / 5_792 * 1_000_000
+    assert cost == pytest.approx((100 * 1.5 + 300 * 9.0 + 800 * video_rate) / 1_000_000)
 
 
 def test_gemini_omni_usage_cost_rejects_fractional_token_counts():
@@ -192,7 +207,7 @@ def test_gemini_omni_rejects_deprecated_preview_before_paid_call(monkeypatch, ge
     )
 
     assert not result.success
-    assert "gemini-omni-1.1-flash" in (result.error or "")
+    assert "gemini-omni-1.2-flash" in (result.error or "")
     assert calls["post"] == []
 
 
@@ -225,8 +240,8 @@ def test_gemini_omni_text_to_video_via_uri_delivery(monkeypatch, tmp_path, gemin
     assert result.data["editable"] is True
 
     payload = calls["post"][0]["json"]
-    assert payload["model"] == "gemini-omni-1.1-flash"
-    assert result.data["model"] == "gemini-omni-1.1-flash"
+    assert payload["model"] == "gemini-omni-1.2-flash"
+    assert result.data["model"] == "gemini-omni-1.2-flash"
     assert payload["input"] == "A marble rolling on a track, single continuous shot."
     assert payload["response_format"] == {
         "type": "video",
@@ -278,7 +293,7 @@ def test_gemini_omni_success_uses_provider_usage_over_short_duration_hint(
     )
 
     assert result.success, result.error
-    assert result.cost_usd == pytest.approx(1.0136105)
+    assert result.cost_usd == pytest.approx(0.7000105)
 
 
 def test_gemini_omni_malformed_usage_falls_back_conservatively(
@@ -315,7 +330,7 @@ def test_gemini_omni_malformed_usage_falls_back_conservatively(
     )
 
     assert result.success, result.error
-    assert result.cost_usd == pytest.approx(1.0136015)
+    assert result.cost_usd == pytest.approx(0.2100015)
 
 
 def test_gemini_omni_uri_delivery_handles_full_download_url(monkeypatch, tmp_path, gemini_env):
@@ -381,7 +396,7 @@ def test_gemini_omni_download_error_preserves_recovery_data_and_cost(
         "interaction_id": "int_private",
         "store": True,
     }
-    assert result.cost_usd == pytest.approx(1.0136105)
+    assert result.cost_usd == pytest.approx(0.7000105)
     assert not output_path.exists()
 
 
@@ -410,7 +425,7 @@ def test_gemini_omni_accepted_response_without_video_preserves_usage_cost(
 
     assert not result.success
     assert result.data == {"interaction_id": "int_no_video"}
-    assert result.cost_usd == pytest.approx(1.0136105)
+    assert result.cost_usd == pytest.approx(0.7000105)
 
 
 def test_gemini_omni_resume_download_uses_get_only(monkeypatch, tmp_path, gemini_env):
@@ -603,7 +618,7 @@ def test_gemini_omni_post_transport_error_marks_submission_unknown(
         "Gemini Omni submission outcome is unknown after transport failure: read timed out. "
         "Do not retry or resubmit; the request may have been accepted and charged."
     )
-    assert result.cost_usd == pytest.approx(1.0136135)
+    assert result.cost_usd == pytest.approx(0.2100135)
     assert len(calls["post"]) == 1
     assert calls["post"][0]["url"].endswith("/interactions")
     assert calls["get"] == []
@@ -771,3 +786,51 @@ def test_gemini_omni_store_false_marks_result_not_editable(monkeypatch, tmp_path
     assert result.data["editable"] is False
     assert calls["post"][0]["json"]["store"] is False
     assert calls["post"][0]["json"]["response_format"]["delivery"] == "uri"
+
+
+def test_gemini_omni_sends_resolution_and_duration_and_maps_legacy_model(
+    monkeypatch, tmp_path, gemini_env
+):
+    from tools.video.gemini_omni_video import GeminiOmniVideo
+
+    calls = _install_fake_requests(
+        monkeypatch,
+        post_responses=[FakeResponse({"id": "int_res", "output_video": {"uri": "files/vid-res"}})],
+        get_responses=[FakeResponse({"state": "ACTIVE"}), FakeResponse(content=b"mp4")],
+    )
+    result = GeminiOmniVideo().execute(
+        {
+            "prompt": "A calm hall.",
+            "model": "gemini-omni-1.1-flash",
+            "resolution": "1080p",
+            "duration": "10",
+            "output_path": str(tmp_path / "hd.mp4"),
+        }
+    )
+
+    assert result.success, result.error
+    payload = calls["post"][0]["json"]
+    assert payload["model"] == "gemini-omni-1.2-flash"
+    assert payload["response_format"] == {
+        "type": "video",
+        "aspect_ratio": "16:9",
+        "resolution": "1080p",
+        "duration": "10s",
+        "delivery": "uri",
+    }
+
+
+@pytest.mark.parametrize(
+    "bad_inputs",
+    [{"resolution": "480p"}, {"duration": "2"}, {"duration": "16"}, {"duration": "abc"}],
+)
+def test_gemini_omni_rejects_invalid_resolution_or_duration_before_paid_call(
+    monkeypatch, gemini_env, bad_inputs
+):
+    from tools.video.gemini_omni_video import GeminiOmniVideo
+
+    calls = _install_fake_requests(monkeypatch, post_responses=[], get_responses=[])
+    result = GeminiOmniVideo().execute({"prompt": "x", **bad_inputs})
+
+    assert not result.success
+    assert calls["post"] == []

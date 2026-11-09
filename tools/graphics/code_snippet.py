@@ -107,7 +107,7 @@ class CodeSnippet(BaseTool):
     resource_profile = ResourceProfile(cpu_cores=1, ram_mb=256, vram_mb=0, disk_mb=50)
     idempotency_key_fields = [
         "code", "language", "theme", "font_size",
-        "padding", "line_numbers", "title",
+        "padding", "line_numbers", "title", "border_radius", "width",
     ]
     side_effects = ["writes image to output_path"]
     user_visible_verification = [
@@ -168,9 +168,34 @@ class CodeSnippet(BaseTool):
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_bytes(image_bytes)
 
+        width = inputs.get("width")
+        if width:
+            img = Image.open(output_path).convert("RGB")
+            if width < img.width:
+                output_path.unlink()  # don't leave a card that ignored the requested width
+                return ToolResult(
+                    success=False,
+                    error=f"width {width} is narrower than the rendered code ({img.width}px); "
+                    "use a smaller font_size or padding, or a larger width",
+                )
+            # Extend with the code's own background colour (bottom-right is padding).
+            canvas = Image.new("RGB", (width, img.height), img.getpixel((img.width - 1, img.height - 1)))
+            canvas.paste(img, (0, 0))
+            canvas.save(output_path, format="PNG")
+
         # Add title bar if requested
         if title:
             self._add_title_bar(output_path, title, theme, font_size)
+
+        radius = inputs.get("border_radius")
+        if radius is None:
+            radius = 12
+        if radius > 0:
+            img = Image.open(output_path).convert("RGBA")
+            mask = Image.new("L", img.size, 0)
+            ImageDraw.Draw(mask).rounded_rectangle([(0, 0), (img.width - 1, img.height - 1)], radius, fill=255)
+            img.putalpha(mask)
+            img.save(output_path, format="PNG")
 
         elapsed = time.time() - start
         img = Image.open(output_path)

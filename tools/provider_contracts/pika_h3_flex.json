@@ -1,0 +1,935 @@
+{
+  "_about": {
+    "provider": "pika",
+    "base_url": "https://api.dev.pika.art",
+    "auth_header": "X-API-Key",
+    "support": "support@pika.art",
+    "submit": "POST /v1/media/{vendor}/{model}/{function}",
+    "poll": "GET /v1/media/jobs/{request_id}",
+    "content": "GET /v1/media/jobs/{request_id}/content",
+    "upload": "POST /v1/media/uploads then PUT the file to upload_url with the returned headers",
+    "quote": "POST /catalog/apis/{api_id}/quote (free, no key required)",
+    "balance": "GET /billing/balance",
+    "job_statuses": [
+      "queued",
+      "running",
+      "completed",
+      "failed"
+    ],
+    "billing_states": [
+      "settled",
+      "pending",
+      "unavailable"
+    ],
+    "source": "https://dev.pika.art/models/quick-start",
+    "verified_on": "2026-11-05"
+  },
+  "text-to-video": {
+    "api_id": "pika/pika-h3-flex/text-to-video",
+    "call": {
+      "method": "POST",
+      "path": "/v1/media/pika/pika-h3-flex/text-to-video"
+    },
+    "description": "Pika H3 Flex Text to Video: generate a 3 to 15 second video with synchronized audio from a text prompt, at 480p or 768p, or upscaled to 1080p, 2K or 4K. Billed per output second.",
+    "input_schema": {
+      "additionalProperties": false,
+      "native_audio": true,
+      "properties": {
+        "prompt": {
+          "maxLength": 8000,
+          "minLength": 1,
+          "title": "Prompt",
+          "type": "string"
+        },
+        "duration": {
+          "default": 5,
+          "description": "Requested video duration in whole seconds, from 3 to 15. Native output rounds up to the model's frame grid and may be slightly longer.",
+          "maximum": 15,
+          "minimum": 3,
+          "title": "Duration",
+          "type": "integer"
+        },
+        "aspect_ratio": {
+          "anyOf": [
+            {
+              "enum": [
+                "auto",
+                "21:9",
+                "16:9",
+                "3:2",
+                "4:3",
+                "5:4",
+                "1:1",
+                "4:5",
+                "3:4",
+                "2:3",
+                "9:16",
+                "9:21"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Output aspect ratio. Auto selects from the original prompt and reference video, even when rewrite is false; with a keyframe it follows the first supplied keyframe. A fixed ratio always wins. When omitted, rewriting enables Auto; without rewriting, the first supplied keyframe sets the ratio, or 16:9 without a keyframe. Keyframes are resized and center-cropped to fit.",
+          "title": "Aspect Ratio"
+        },
+        "resolution": {
+          "default": "768p",
+          "description": "480p/768p are native. 1080p/2k/4k generates at 768p, then upscales once with the V1 model, preserving audio and frame rate.",
+          "enum": [
+            "480p",
+            "768p",
+            "1080p",
+            "2k",
+            "4k"
+          ],
+          "title": "Resolution",
+          "type": "string"
+        },
+        "seed": {
+          "default": 0,
+          "maximum": 9223372036854775807,
+          "minimum": 0,
+          "title": "Seed",
+          "type": "integer"
+        },
+        "rewrite": {
+          "default": true,
+          "description": "Improve the prompt before generation; disable to use the original prompt.",
+          "title": "Rewrite",
+          "type": "boolean"
+        },
+        "output_mode": {
+          "default": "video",
+          "description": "audio-stems (Flex in production, every H3 family in staging) returns the original video with audio plus Dialogue, Music and Effect WAV files. Uses standard retention and adds the catalog's separation fee. Flex bills the sum of all decoded output-stem durations, without a channel multiplier. The default returns only the video.",
+          "enum": [
+            "video",
+            "audio-stems"
+          ],
+          "title": "Output Mode",
+          "type": "string"
+        },
+        "channel_mode": {
+          "default": "mono",
+          "description": "Audio stems only: mono (default) downmixes before separation; explicit stereo preserves both channels. The video's audio is unchanged.",
+          "enum": [
+            "stereo",
+            "mono"
+          ],
+          "title": "Channel Mode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "prompt"
+      ],
+      "title": "PikaH3FlexRequest",
+      "type": "object"
+    },
+    "pricing": {
+      "components": [
+        {
+          "role": "output",
+          "unit": {
+            "type": "second",
+            "quantity": 1,
+            "included": 0
+          },
+          "starting_at": {
+            "spec": {
+              "resolution": "480p"
+            },
+            "sell_usd": "0.01",
+            "micro_usd": 10000
+          },
+          "price_tiers": [
+            {
+              "spec": {
+                "resolution": "480p"
+              },
+              "sell_usd": "0.01",
+              "micro_usd": 10000
+            },
+            {
+              "spec": {
+                "resolution": "768p"
+              },
+              "sell_usd": "0.02",
+              "micro_usd": 20000
+            },
+            {
+              "spec": {
+                "resolution": "1080p"
+              },
+              "sell_usd": "0.035",
+              "micro_usd": 35000
+            },
+            {
+              "spec": {
+                "resolution": "2k"
+              },
+              "sell_usd": "0.04",
+              "micro_usd": 40000
+            },
+            {
+              "spec": {
+                "resolution": "4k"
+              },
+              "sell_usd": "0.08",
+              "micro_usd": 80000
+            }
+          ]
+        }
+      ]
+    },
+    "source": "https://api.dev.pika.art/catalog/apis/pika%2Fpika-h3-flex%2Ftext-to-video?expand=inputs",
+    "docs": "https://dev.pika.art/models/pika/pika-h3-flex/text-to-video",
+    "verified_on": "2026-11-05"
+  },
+  "image-to-video": {
+    "api_id": "pika/pika-h3-flex/image-to-video",
+    "call": {
+      "method": "POST",
+      "path": "/v1/media/pika/pika-h3-flex/image-to-video"
+    },
+    "description": "Pika H3 Flex Image to Video: animate a first frame, last frame or both into a 3 to 15 second video with synchronized audio, at 480p or 768p, or upscaled to 1080p, 2K or 4K. Billed per output second.",
+    "input_schema": {
+      "additionalProperties": false,
+      "anyOf": [
+        {
+          "properties": {
+            "image": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "image"
+          ]
+        },
+        {
+          "properties": {
+            "last_frame_image": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "last_frame_image"
+          ]
+        }
+      ],
+      "native_audio": true,
+      "properties": {
+        "prompt": {
+          "maxLength": 8000,
+          "minLength": 1,
+          "title": "Prompt",
+          "type": "string"
+        },
+        "duration": {
+          "default": 5,
+          "description": "Requested video duration in whole seconds, from 3 to 15. Native output rounds up to the model's frame grid and may be slightly longer.",
+          "maximum": 15,
+          "minimum": 3,
+          "title": "Duration",
+          "type": "integer"
+        },
+        "aspect_ratio": {
+          "anyOf": [
+            {
+              "enum": [
+                "auto",
+                "21:9",
+                "16:9",
+                "3:2",
+                "4:3",
+                "5:4",
+                "1:1",
+                "4:5",
+                "3:4",
+                "2:3",
+                "9:16",
+                "9:21"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Output aspect ratio. Auto selects from the original prompt and reference video, even when rewrite is false; with a keyframe it follows the first supplied keyframe. A fixed ratio always wins. When omitted, rewriting enables Auto; without rewriting, the first supplied keyframe sets the ratio, or 16:9 without a keyframe. Keyframes are resized and center-cropped to fit.",
+          "title": "Aspect Ratio"
+        },
+        "resolution": {
+          "default": "768p",
+          "description": "480p/768p are native. 1080p/2k/4k generates at 768p, then upscales once with the V1 model, preserving audio and frame rate.",
+          "enum": [
+            "480p",
+            "768p",
+            "1080p",
+            "2k",
+            "4k"
+          ],
+          "title": "Resolution",
+          "type": "string"
+        },
+        "seed": {
+          "default": 0,
+          "maximum": 9223372036854775807,
+          "minimum": 0,
+          "title": "Seed",
+          "type": "integer"
+        },
+        "rewrite": {
+          "default": true,
+          "description": "Improve the prompt before generation; disable to use the original prompt.",
+          "title": "Rewrite",
+          "type": "boolean"
+        },
+        "output_mode": {
+          "default": "video",
+          "description": "audio-stems (Flex in production, every H3 family in staging) returns the original video with audio plus Dialogue, Music and Effect WAV files. Uses standard retention and adds the catalog's separation fee. Flex bills the sum of all decoded output-stem durations, without a channel multiplier. The default returns only the video.",
+          "enum": [
+            "video",
+            "audio-stems"
+          ],
+          "title": "Output Mode",
+          "type": "string"
+        },
+        "channel_mode": {
+          "default": "mono",
+          "description": "Audio stems only: mono (default) downmixes before separation; explicit stereo preserves both channels. The video's audio is unchanged.",
+          "enum": [
+            "stereo",
+            "mono"
+          ],
+          "title": "Channel Mode",
+          "type": "string"
+        },
+        "image": {
+          "anyOf": [
+            {
+              "maxLength": 8192,
+              "media_kinds": [
+                "image"
+              ],
+              "pattern": "^https?://",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "First-frame image URL (static JPEG, PNG or WebP; up to 24 MiB and 40 million pixels). Validated before acceptance. Large images are automatically prepared for the model; keyframes are resized and center-cropped to the selected canvas.",
+          "title": "Image"
+        },
+        "last_frame_image": {
+          "anyOf": [
+            {
+              "maxLength": 8192,
+              "media_kinds": [
+                "image"
+              ],
+              "pattern": "^https?://",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Last-frame image URL, with the same format and size limits as image. Provide image, last_frame_image, or both. Output uses aspect_ratio when supplied, otherwise the nearest supported ratio to the first supplied keyframe. Keyframes are resized and center-cropped to the same canvas.",
+          "title": "Last Frame Image"
+        }
+      },
+      "required": [
+        "prompt"
+      ],
+      "title": "PikaH3FlexImageRequest",
+      "type": "object"
+    },
+    "pricing": {
+      "components": [
+        {
+          "role": "output",
+          "unit": {
+            "type": "second",
+            "quantity": 1,
+            "included": 0
+          },
+          "starting_at": {
+            "spec": {
+              "resolution": "480p"
+            },
+            "sell_usd": "0.01",
+            "micro_usd": 10000
+          },
+          "price_tiers": [
+            {
+              "spec": {
+                "resolution": "480p"
+              },
+              "sell_usd": "0.01",
+              "micro_usd": 10000
+            },
+            {
+              "spec": {
+                "resolution": "768p"
+              },
+              "sell_usd": "0.02",
+              "micro_usd": 20000
+            },
+            {
+              "spec": {
+                "resolution": "1080p"
+              },
+              "sell_usd": "0.035",
+              "micro_usd": 35000
+            },
+            {
+              "spec": {
+                "resolution": "2k"
+              },
+              "sell_usd": "0.04",
+              "micro_usd": 40000
+            },
+            {
+              "spec": {
+                "resolution": "4k"
+              },
+              "sell_usd": "0.08",
+              "micro_usd": 80000
+            }
+          ]
+        }
+      ]
+    },
+    "source": "https://api.dev.pika.art/catalog/apis/pika%2Fpika-h3-flex%2Fimage-to-video?expand=inputs",
+    "docs": "https://dev.pika.art/models/pika/pika-h3-flex/image-to-video",
+    "verified_on": "2026-11-05"
+  },
+  "reference-to-video": {
+    "api_id": "pika/pika-h3-flex/reference-to-video",
+    "call": {
+      "method": "POST",
+      "path": "/v1/media/pika/pika-h3-flex/reference-to-video"
+    },
+    "description": "Pika H3 Flex Reference to Video: generate a 3 to 15 second video with native audio guided by image, video and audio references, at 480p or 768p, or upscaled to 1080p, 2K or 4K. Billed per output second, plus reference video seconds.",
+    "input_schema": {
+      "$defs": {
+        "H3AudioReference": {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "audio",
+              "title": "Type",
+              "type": "string"
+            },
+            "url": {
+              "maxLength": 8192,
+              "media_kinds": [
+                "audio"
+              ],
+              "pattern": "^https?://",
+              "title": "Url",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "url"
+          ],
+          "title": "H3AudioReference",
+          "type": "object"
+        },
+        "H3ImageReference": {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "image",
+              "title": "Type",
+              "type": "string"
+            },
+            "url": {
+              "maxLength": 8192,
+              "media_kinds": [
+                "image"
+              ],
+              "pattern": "^https?://",
+              "title": "Url",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "url"
+          ],
+          "title": "H3ImageReference",
+          "type": "object"
+        },
+        "H3VideoReference": {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "video",
+              "title": "Type",
+              "type": "string"
+            },
+            "url": {
+              "maxLength": 8192,
+              "media_kinds": [
+                "video"
+              ],
+              "pattern": "^https?://",
+              "title": "Url",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "url"
+          ],
+          "title": "H3VideoReference",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "native_audio": true,
+      "properties": {
+        "prompt": {
+          "maxLength": 8000,
+          "minLength": 1,
+          "title": "Prompt",
+          "type": "string"
+        },
+        "duration": {
+          "default": 5,
+          "description": "Requested video duration in whole seconds, from 3 to 15. Native output rounds up to the model's frame grid and may be slightly longer.",
+          "maximum": 15,
+          "minimum": 3,
+          "title": "Duration",
+          "type": "integer"
+        },
+        "aspect_ratio": {
+          "anyOf": [
+            {
+              "enum": [
+                "auto",
+                "21:9",
+                "16:9",
+                "3:2",
+                "4:3",
+                "5:4",
+                "1:1",
+                "4:5",
+                "3:4",
+                "2:3",
+                "9:16",
+                "9:21"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Output aspect ratio. Auto selects from the original prompt and reference video, even when rewrite is false; with a keyframe it follows the first supplied keyframe. A fixed ratio always wins. When omitted, rewriting enables Auto; without rewriting, the first supplied keyframe sets the ratio, or 16:9 without a keyframe. Keyframes are resized and center-cropped to fit.",
+          "title": "Aspect Ratio"
+        },
+        "resolution": {
+          "default": "768p",
+          "description": "480p/768p are native. 1080p/2k/4k generates at 768p, then upscales once with the V1 model, preserving audio and frame rate.",
+          "enum": [
+            "480p",
+            "768p",
+            "1080p",
+            "2k",
+            "4k"
+          ],
+          "title": "Resolution",
+          "type": "string"
+        },
+        "seed": {
+          "default": 0,
+          "maximum": 9223372036854775807,
+          "minimum": 0,
+          "title": "Seed",
+          "type": "integer"
+        },
+        "rewrite": {
+          "default": true,
+          "description": "Improve the prompt before generation; disable to use the original prompt.",
+          "title": "Rewrite",
+          "type": "boolean"
+        },
+        "output_mode": {
+          "default": "video",
+          "description": "audio-stems (Flex in production, every H3 family in staging) returns the original video with audio plus Dialogue, Music and Effect WAV files. Uses standard retention and adds the catalog's separation fee. Flex bills the sum of all decoded output-stem durations, without a channel multiplier. The default returns only the video.",
+          "enum": [
+            "video",
+            "audio-stems"
+          ],
+          "title": "Output Mode",
+          "type": "string"
+        },
+        "channel_mode": {
+          "default": "mono",
+          "description": "Audio stems only: mono (default) downmixes before separation; explicit stereo preserves both channels. The video's audio is unchanged.",
+          "enum": [
+            "stereo",
+            "mono"
+          ],
+          "title": "Channel Mode",
+          "type": "string"
+        },
+        "references": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "type": {
+                    "const": "image"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "maxContains": 9,
+              "minContains": 0
+            },
+            {
+              "contains": {
+                "properties": {
+                  "type": {
+                    "const": "video"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "maxContains": 3,
+              "minContains": 0
+            },
+            {
+              "contains": {
+                "properties": {
+                  "type": {
+                    "const": "audio"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "maxContains": 3,
+              "minContains": 0
+            }
+          ],
+          "contains": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "image",
+                  "video"
+                ]
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "description": "Up to 12 ordered references: at most 9 images, 3 videos and 3 audio clips. At least one image or video is required. Each original file may be up to 50 MiB. Oversized files are compressed on CPU before rewriting or generation to fit 24 MiB each; the prepared set must fit 64 MiB after base64 encoding (approximately 48 MiB raw). Already-compliant files retain their original bytes. Images must be PNG, JPEG or WebP, up to 40 million source pixels and between 1:4 and 4:1; oversized images are resized proportionally to a short side of at most 2048 and at most 16 million pixels. Video source limits are 16 million pixels per frame, 4 billion total pixels and 2000 frames. Clips must be 2–15 seconds, at most 15 seconds combined per video/audio type. Oversized media requires a single video track and mono/stereo audio. Reference rewriting uses image previews and sparse video frames, not audio transcription.",
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "audio": "#/$defs/H3AudioReference",
+                "image": "#/$defs/H3ImageReference",
+                "video": "#/$defs/H3VideoReference"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/H3ImageReference"
+              },
+              {
+                "$ref": "#/$defs/H3VideoReference"
+              },
+              {
+                "$ref": "#/$defs/H3AudioReference"
+              }
+            ]
+          },
+          "maxItems": 12,
+          "minContains": 1,
+          "minItems": 1,
+          "title": "References",
+          "type": "array"
+        }
+      },
+      "required": [
+        "prompt",
+        "references"
+      ],
+      "title": "PikaH3FlexReferenceRequest",
+      "type": "object"
+    },
+    "pricing": {
+      "components": [
+        {
+          "name": "output",
+          "role": "output",
+          "unit": {
+            "type": "output_second",
+            "quantity": 1,
+            "included": 0
+          },
+          "starting_at": {
+            "spec": {
+              "resolution": "480p"
+            },
+            "sell_usd": "0.03",
+            "micro_usd": 30000
+          },
+          "price_tiers": [
+            {
+              "spec": {
+                "resolution": "480p"
+              },
+              "sell_usd": "0.03",
+              "micro_usd": 30000
+            },
+            {
+              "spec": {
+                "resolution": "480p",
+                "duration_s": 5
+              },
+              "sell_usd": "0.03",
+              "micro_usd": 30000
+            },
+            {
+              "spec": {
+                "resolution": "480p",
+                "duration_s": 10
+              },
+              "sell_usd": "0.03",
+              "micro_usd": 30000
+            },
+            {
+              "spec": {
+                "resolution": "480p",
+                "duration_s": 15
+              },
+              "sell_usd": "0.03",
+              "micro_usd": 30000
+            },
+            {
+              "spec": {
+                "resolution": "768p"
+              },
+              "sell_usd": "0.06",
+              "micro_usd": 60000
+            },
+            {
+              "spec": {
+                "resolution": "768p",
+                "duration_s": 5
+              },
+              "sell_usd": "0.06",
+              "micro_usd": 60000
+            },
+            {
+              "spec": {
+                "resolution": "768p",
+                "duration_s": 10
+              },
+              "sell_usd": "0.06",
+              "micro_usd": 60000
+            },
+            {
+              "spec": {
+                "resolution": "768p",
+                "duration_s": 15
+              },
+              "sell_usd": "0.06",
+              "micro_usd": 60000
+            },
+            {
+              "spec": {
+                "resolution": "1080p"
+              },
+              "sell_usd": "0.075",
+              "micro_usd": 75000
+            },
+            {
+              "spec": {
+                "resolution": "2k"
+              },
+              "sell_usd": "0.08",
+              "micro_usd": 80000
+            },
+            {
+              "spec": {
+                "resolution": "4k"
+              },
+              "sell_usd": "0.1",
+              "micro_usd": 100000
+            }
+          ]
+        },
+        {
+          "name": "video_input",
+          "role": "input",
+          "unit": {
+            "type": "video_input_second",
+            "quantity": 1,
+            "included": 0
+          },
+          "starting_at": {
+            "spec": {
+              "resolution": "480p"
+            },
+            "sell_usd": "0.03",
+            "micro_usd": 30000
+          },
+          "price_tiers": [
+            {
+              "spec": {
+                "resolution": "480p"
+              },
+              "sell_usd": "0.03",
+              "micro_usd": 30000
+            },
+            {
+              "spec": {
+                "resolution": "768p"
+              },
+              "sell_usd": "0.06",
+              "micro_usd": 60000
+            },
+            {
+              "spec": {
+                "resolution": "1080p"
+              },
+              "sell_usd": "0.075",
+              "micro_usd": 75000
+            },
+            {
+              "spec": {
+                "resolution": "2k"
+              },
+              "sell_usd": "0.08",
+              "micro_usd": 80000
+            },
+            {
+              "spec": {
+                "resolution": "4k"
+              },
+              "sell_usd": "0.1",
+              "micro_usd": 100000
+            }
+          ]
+        }
+      ]
+    },
+    "source": "https://api.dev.pika.art/catalog/apis/pika%2Fpika-h3-flex%2Freference-to-video?expand=inputs",
+    "docs": "https://dev.pika.art/models/pika/pika-h3-flex/reference-to-video",
+    "verified_on": "2026-11-05"
+  },
+  "draft-to-video": {
+    "api_id": "pika/pika-h3-flex/draft-to-video",
+    "call": {
+      "method": "POST",
+      "path": "/v1/media/pika/pika-h3-flex/draft-to-video"
+    },
+    "description": "Pika H3 Flex Draft to Video: finish a 480p or 768p Flex draft, or an external video, at 1080p, 2K or 4K, keeping the same take and audio. Billed as the final price minus the draft's price.",
+    "input_schema": {
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "properties": {
+            "draft_job_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "draft_job_id"
+          ]
+        },
+        {
+          "properties": {
+            "video": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "video"
+          ]
+        }
+      ],
+      "properties": {
+        "draft_job_id": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Completed 480p/768p Pika H3 Flex request ID from this organization. Supply draft_job_id or video, not both.",
+          "title": "Draft Job Id"
+        },
+        "video": {
+          "anyOf": [
+            {
+              "maxLength": 2083,
+              "media_kinds": [
+                "video"
+              ],
+              "pattern": "^https?://",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "HTTP(S) URL of an external 480p/768p video, with a short edge at most 768 pixels. The measured short edge selects the 480p or 768p native tier; the nearest native aspect bucket selects the aligned target canvas. Only upscaling runs, preserving source frames, frame rate and audio. The worker admits up to 512 MiB compressed and 1441 frames. Billing uses the target-minus-native generation rate per actual output second.",
+          "title": "Video"
+        },
+        "resolution": {
+          "default": "2k",
+          "description": "Final resolution. Only the upscale stage runs; the original draft and its audio are preserved.",
+          "enum": [
+            "1080p",
+            "2k",
+            "4k"
+          ],
+          "title": "Resolution",
+          "type": "string"
+        }
+      },
+      "title": "PikaH3FlexDraftRequest",
+      "type": "object"
+    },
+    "pricing": {
+      "components": [],
+      "mode": "flex_draft_difference",
+      "description": "Direct final-generation price minus the amount paid for an owned draft, or minus the measured video's fitted 480p/768p generation rate. Supply a draft or video for an exact quote."
+    },
+    "source": "https://api.dev.pika.art/catalog/apis/pika%2Fpika-h3-flex%2Fdraft-to-video?expand=inputs",
+    "docs": "https://dev.pika.art/models/pika/pika-h3-flex/draft-to-video",
+    "verified_on": "2026-11-05"
+  }
+}

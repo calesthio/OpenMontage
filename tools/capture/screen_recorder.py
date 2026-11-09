@@ -54,6 +54,28 @@ def _detect_audio_device_windows() -> str | None:
     return None
 
 
+def _detect_screen_device_mac(screen_index: int) -> str | None:
+    """Map a monitor index to its avfoundation device index.
+
+    avfoundation numbers cameras before screens, so device 0 is a webcam on
+    any Mac with a camera — passing the monitor index straight through would
+    silently record the camera instead of the screen.
+    """
+    try:
+        result = subprocess.run(
+            ["ffmpeg", "-f", "avfoundation", "-list_devices", "true", "-i", ""],
+            capture_output=True, text=True, timeout=10,
+        )
+        for line in result.stderr.splitlines():
+            if f"] Capture screen {screen_index}" in line and "[" in line:
+                idx = line.split("[")[-1].split("]")[0].strip()
+                if idx.isdigit():
+                    return idx
+    except (subprocess.TimeoutExpired, FileNotFoundError, IndexError):
+        pass
+    return None
+
+
 def _detect_audio_device_mac() -> str | None:
     """Find the default audio input index on macOS via avfoundation."""
     try:
@@ -328,12 +350,14 @@ class ScreenRecorder(BaseTool):
         cmd += ["-framerate", str(fps)]
         cmd += ["-t", str(duration)]
 
+        screen_device = _detect_screen_device_mac(screen_index) or str(screen_index)
+
         if region:
             # avfoundation doesn't support region directly — we crop in post
-            cmd += ["-i", f"{screen_index}:{audio_idx}"]
+            cmd += ["-i", f"{screen_device}:{audio_idx}"]
             cmd += ["-vf", f"crop={region['width']}:{region['height']}:{region.get('x', 0)}:{region.get('y', 0)}"]
         else:
-            cmd += ["-i", f"{screen_index}:{audio_idx}"]
+            cmd += ["-i", f"{screen_device}:{audio_idx}"]
 
         cmd += ["-c:v", "libx264", "-preset", "ultrafast", "-crf", "23"]
         if capture_audio and audio_idx != "none":

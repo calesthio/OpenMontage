@@ -1,0 +1,14 @@
+# Hermes Creative Intelligence Layer — tools/intelligence
+#
+# Pure-stdlib implementation. No numpy / sklearn / torch required.
+# Semantic similarity uses a deterministic bag-of-tokens hashed embedding
+# (see embedding.py); swap embedding.Embedding for a real sentence-transformer
+# in production without touching the engines below.
+
+__init__.py          # re-exports
+embedding.py         # deterministic token embedding + cosine (stdlib only)
+knowledge_graph.py   # concept nodes + viewer-overlap graph + combination synth
+novelty_engine.py     # similarity gate that rejects imitations (cos > 0.9)
+opportunity.py       # multiplicative Opportunity Score over idea SPACES
+retention.py         # heuristic retention predictor over 12 features
+seed_miner.py        # ranks novel, low-saturation spaces -> seeds the flywheel

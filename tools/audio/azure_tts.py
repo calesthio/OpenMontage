@@ -19,7 +19,11 @@ import os
 import time
 from pathlib import Path
 from typing import Any
-from xml.sax.saxutils import escape, quoteattr
+from html import escape
+
+
+def quoteattr(s: str) -> str:
+    return f'"{escape(str(s), quote=True)}"'
 
 from tools.base_tool import (
     BaseTool,

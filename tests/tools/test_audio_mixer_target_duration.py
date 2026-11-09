@@ -92,3 +92,37 @@ def test_full_mix_rejects_invalid_target_duration(tmp_path, target) -> None:
 
     assert result.success is False
     assert "target_duration" in result.error
+
+
+def test_full_mix_target_duration_is_stable_across_runs(tmp_path) -> None:
+    # Several short tracks of different lengths: with apad=whole_dur on the final
+    # premix, FFmpeg n9.0.2 returned 2 s, 3 s or 6 s mixes at random for the same
+    # inputs. Repeat the same mix so a nondeterministic cut shows up.
+    speech = tmp_path / "speech.wav"
+    music = tmp_path / "music.wav"
+    sfx = tmp_path / "sfx.wav"
+    _tone(speech, 440, 2)
+    _tone(music, 220, 6)
+    _tone(sfx, 880, 1)
+    tracks = [
+        {"path": str(speech), "role": "speech"},
+        {"path": str(speech), "role": "speech", "start_seconds": 1},
+        {"path": str(music), "role": "music"},
+        {"path": str(sfx), "role": "sfx"},
+    ]
+
+    durations = []
+    for run in range(8):
+        output = tmp_path / f"mix_{run}.wav"
+        result = AudioMixer().execute({
+            "operation": "full_mix",
+            "tracks": tracks,
+            "ducking": {"enabled": True, "attack_ms": 100, "release_ms": 200},
+            "normalize": False,
+            "target_duration": 6,
+            "output_path": str(output),
+        })
+        assert result.success, result.error
+        durations.append(round(_duration(output), 2))
+
+    assert durations == [pytest.approx(6.0, abs=0.05)] * len(durations), durations

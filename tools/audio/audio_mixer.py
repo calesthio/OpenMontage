@@ -672,7 +672,7 @@ class AudioMixer(BaseTool):
         premix_label = "premix"
         if target is not None:
             filter_parts.append(
-                f"[premix]apad=whole_dur={target},atrim=duration={target},"
+                f"[premix]apad,atrim=duration={target},"
                 "asetpts=PTS-STARTPTS[premix_duration]"
             )
             premix_label = "premix_duration"

@@ -38,9 +38,14 @@ except Exception:  # pragma: no cover
 
 # ---------------------------------------------------------------------------
 # Thresholds (V8 §8.5: 15 s is a warning/review threshold, not an absolute law)
+# V8 QC hard gates: static segment > 6 s = FAIL; peak > -1.5 dBFS = FAIL;
+# audio channels not 1-2 = FAIL.
 # ---------------------------------------------------------------------------
-STATIC_MAX_SEC = 15.0        # max_static_segment_sec: <= 15 is PASS, > 15 is advisory WARNING
+STATIC_MAX_SEC = 15.0        # max_static_segment_sec advisory (15 s)
+STATIC_FAIL_SEC = 6.0        # static segment > 6 s = hard FAIL (V8 QC gate)
 CHANGE_INTERVAL_MAX_SEC = 15.0  # avg_visual_change_interval_sec advisory threshold
+AUDIO_PEAK_MAX_DBFS = -1.5   # true peak > -1.5 dBFS = FAIL
+AUDIO_CHANNELS_OK = {1, 2}   # mono or stereo OK; anything else = FAIL
 
 
 @dataclass
@@ -172,25 +177,18 @@ def run_checklist(video: str | Path, baseline_out: str | Path | None = None) -> 
 
     results: list[CheckResult] = []
 
-    # --- max_static_segment_sec (V8 §8.5: advisory threshold, not law) ---
+    # --- max_static_segment_sec (V8 QC gate: static > 6 s = FAIL) ---
     segs = frozen_segments(video)
     max_static = max((s["duration"] for s in segs), default=0.0)
-    if max_static <= STATIC_MAX_SEC:
-        passed = True
-        status = "success"
-        note = f"{len(segs)} frozen segment(s); limit {STATIC_MAX_SEC}s"
-    else:
-        passed = None  # advisory, not blocking
-        status = "warning"
-        note = (f"{len(segs)} frozen segment(s); max_static={max_static:.3f}s "
-                f"exceeds advisory limit {STATIC_MAX_SEC}s — review, not a hard fail")
+    static_fail = max_static > STATIC_FAIL_SEC
     results.append(CheckResult(
         check_id="max_static_segment_sec",
-        status=status,
+        status="failed" if static_fail else ("warning" if max_static > STATIC_MAX_SEC else "success"),
         measured=round(max_static, 3),
-        threshold=STATIC_MAX_SEC,
-        passed=passed,
-        note=note,
+        threshold=STATIC_FAIL_SEC,
+        passed=not static_fail,
+        note=(f"{len(segs)} frozen segment(s); max_static={max_static:.3f}s; "
+              f"gate: > {STATIC_FAIL_SEC}s = FAIL, > {STATIC_MAX_SEC}s = review"),
     ))
 
     # --- avg_visual_change_interval_sec (V8 §8.5: advisory threshold) ---
@@ -218,6 +216,48 @@ def run_checklist(video: str | Path, baseline_out: str | Path | None = None) -> 
         threshold=CHANGE_INTERVAL_MAX_SEC,
         passed=vci_passed,
         note=vci_note,
+    ))
+
+    # --- Audio true peak + channels (V8 hard gates) ---
+    audio_qc = audio_peak_and_channels(video)
+    tp = audio_qc.get("true_peak_dbfs")
+    ch = audio_qc.get("channels")
+
+    peak_ok = tp is not None and tp <= AUDIO_PEAK_MAX_DBFS
+    channels_ok = ch is not None and ch in AUDIO_CHANNELS_OK
+
+    peak_status = "failed" if tp is not None and not peak_ok else ("success" if peak_ok else "fallback_used")
+    peak_note = (f"true_peak={tp:.2f} dBFS; gate: > {AUDIO_PEAK_MAX_DBFS} dBFS = FAIL"
+                 if tp is not None else "true peak not measurable")
+    results.append(CheckResult(
+        check_id="audio_true_peak_dbfs",
+        status=peak_status,
+        measured=round(tp, 3) if tp is not None else None,
+        threshold=AUDIO_PEAK_MAX_DBFS,
+        passed=peak_ok,
+        note=peak_note,
+    ))
+
+    ch_status = "failed" if ch is not None and not channels_ok else ("success" if channels_ok else "fallback_used")
+    ch_note = (f"channels={ch}; gate: not 1-2 = FAIL" if ch is not None
+               else "channel count not measurable")
+    results.append(CheckResult(
+        check_id="audio_channels",
+        status=ch_status,
+        measured=ch,
+        threshold="1-2",
+        passed=channels_ok,
+        note=ch_note,
+    ))
+
+    # --- Integrated loudness (info only) ---
+    ilufs = audio_qc.get("integrated_lufs")
+    results.append(CheckResult(
+        check_id="audio_integrated_lufs",
+        status="success" if ilufs is not None else "fallback_used",
+        measured=round(ilufs, 2) if ilufs is not None else None,
+        passed=ilufs is not None,
+        note=f"integrated={ilufs:.1f} LUFS" if ilufs is not None else "not measurable",
     ))
 
     # --- hook: first 30 seconds (V8 §4.2 YouTube Intro) ---
@@ -276,6 +316,9 @@ def run_checklist(video: str | Path, baseline_out: str | Path | None = None) -> 
         "metrics": {
             "max_static_segment_sec": round(max_static, 3),
             "avg_visual_change_interval_sec": avg_ivc,
+            "audio_true_peak_dbfs": round(tp, 3) if tp is not None else None,
+            "audio_channels": ch,
+            "audio_integrated_lufs": round(ilufs, 2) if ilufs is not None else None,
         },
         "checks": [r.to_dict() for r in results],
     }
@@ -355,6 +398,65 @@ def _silence_ratio_in_range(video: Path, start_s: float, end_s: float) -> float 
         return total_silent / seg_dur if seg_dur > 0 else 0.0
     except Exception:  # noqa: BLE001
         return None
+
+
+# ---------------------------------------------------------------------------
+# Audio QC: ebur128 true peak + channel count (V8 hard gates)
+# ---------------------------------------------------------------------------
+
+def audio_peak_and_channels(video: Path) -> dict[str, Any]:
+    """Return true peak (dBFS) and channel count via ebur128 + ffprobe."""
+    result: dict[str, Any] = {
+        "true_peak_dbfs": None,
+        "channels": None,
+        "integrated_lufs": None,
+        "note": "",
+    }
+
+    # Channel count from ffprobe.
+    out = _run([
+        "ffprobe", "-v", "error", "-select_streams", "a:0",
+        "-show_entries", "stream=channels",
+        "-of", "default=noprint_wrappers=1:nokey=1", str(video),
+    ])
+    try:
+        result["channels"] = int(out.stdout.strip())
+    except ValueError:
+        result["channels"] = None
+
+    # True peak + integrated loudness via ebur128.
+    # NOTE: -loglevel error suppresses the ebur128 Summary block entirely;
+    # the per-frame progress lines carry the same data but the Summary
+    # (I: -25.5 LUFS, LRA, True peak) only appears with default loglevel.
+    out = _run([
+        "ffmpeg", "-hide_banner", "-i", str(video),
+        "-af", "ebur128=peak=true", "-f", "null", "-",
+    ])
+    text = out.stderr or ""
+    import re as _re
+
+    # Integrated loudness from Summary block only.
+    # Per-frame lines also contain "I: -70.0 LUFS" — must not match those.
+    summary = text[text.find("Summary:"):] if "Summary:" in text else ""
+    m = _re.search(r"I:\s*([-\d.]+)\s+LUFS", summary)
+    if m:
+        result["integrated_lufs"] = float(m.group(1))
+
+    # True peak from Summary block. ebur128 may render the summary as
+    #   True peak:\n    Peak:       -3.4 dBFS
+    # or on one line: True peak: Peak: -3.4 dBFS
+    m = _re.search(r"True peak:\s*Peak:\s*([-\d.]+)\s+dBFS", summary)
+    if not m:
+        m = _re.search(r"True peak:\s*\n\s*Peak:\s*([-\d.]+)\s+dBFS", summary)
+    if m:
+        result["true_peak_dbfs"] = float(m.group(1))
+
+    if result["true_peak_dbfs"] is None:
+        result["note"] = "true peak not detectable"
+    if result["channels"] is None:
+        result["note"] = (result["note"] + " channel count not detectable").strip()
+
+    return result
 
 
 if __name__ == "__main__":

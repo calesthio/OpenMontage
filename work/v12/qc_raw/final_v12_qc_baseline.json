@@ -1,13 +1,13 @@
 {
   "video": "work/v12/render/final_v12.mp4",
-  "created_at": "2026-11-09T07:16:04.487406+00:00",
-  "overall_passed": false,
+  "created_at": "2026-11-09T07:49:08.574022+00:00",
+  "overall_passed": true,
   "metrics": {
     "max_static_segment_sec": 0.0,
     "avg_visual_change_interval_sec": 1.545,
-    "audio_true_peak_dbfs": null,
+    "audio_true_peak_dbfs": -3.4,
     "audio_channels": 1,
-    "audio_integrated_lufs": null
+    "audio_integrated_lufs": -25.5
   },
   "checks": [
     {
@@ -28,11 +28,11 @@
     },
     {
       "check_id": "audio_true_peak_dbfs",
-      "status": "fallback_used",
-      "measured": null,
+      "status": "success",
+      "measured": -3.4,
       "threshold": -1.5,
-      "passed": false,
-      "note": "true peak not measurable"
+      "passed": true,
+      "note": "true_peak=-3.40 dBFS; gate: > -1.5 dBFS = FAIL"
     },
     {
       "check_id": "audio_channels",
@@ -44,11 +44,11 @@
     },
     {
       "check_id": "audio_integrated_lufs",
-      "status": "fallback_used",
-      "measured": null,
+      "status": "success",
+      "measured": -25.5,
       "threshold": null,
-      "passed": false,
-      "note": "not measurable"
+      "passed": true,
+      "note": "integrated=-25.5 LUFS"
     },
     {
       "check_id": "hook_first30s_static_sec",

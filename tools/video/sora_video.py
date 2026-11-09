@@ -1,4 +1,20 @@
-"""OpenAI Sora video generation via the OpenAI Video API."""
+"""OpenAI Sora video generation via the OpenAI Video API.
+
+END OF LIFE. OpenAI notified developers on 2026-03-24 that the Videos API and
+the Sora 2 model aliases are removed from the API on 2026-09-24, with no
+announced successor. The consumer app was already withdrawn on 2026-04-26.
+
+This tool keeps working normally until that date. After it, `get_status()`
+reports UNAVAILABLE, which drops it out of every selector and fallback chain
+(the registry only falls back to AVAILABLE tools), and `execute()` refuses
+immediately rather than spending a request on an endpoint that is gone.
+
+Until then the shutdown date is surfaced at preflight through the runtime
+warnings, so a project does not get built around a provider with four weeks
+left in it.
+
+See: https://developers.openai.com/api/docs/deprecations
+"""
 
 from __future__ import annotations
 
@@ -6,6 +22,7 @@ import base64
 import mimetypes
 import os
 import time
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -30,6 +47,14 @@ _ALLOWED_MODELS = ["sora-2", "sora-2-pro"]
 _ALLOWED_SIZES = ["1280x720", "720x1280", "1024x1792", "1792x1024"]
 _ALLOWED_SECONDS = ["4", "8", "12"]
 _MIN_OPENAI_VERSION = (2, 44, 0)
+
+# Announced 2026-03-24, effective 2026-09-24.
+_API_SHUTDOWN = date(2026, 9, 24)
+_SUCCESSORS = "veo_video, kling_video, seedance_video, gemini_omni_video or minimax_video"
+
+
+def _api_is_gone(today: date | None = None) -> bool:
+    return (today or date.today()) >= _API_SHUTDOWN
 
 
 class SoraVideo(BaseTool):
@@ -64,7 +89,13 @@ class SoraVideo(BaseTool):
         "short cinematic product-ad inserts with native ambience or dialogue",
         "4, 8, or 12 second social-video clips that OpenMontage can stitch and compose",
     ]
-    not_good_for = ["offline generation", "long continuous scenes", "projects without Sora API access"]
+    not_good_for = [
+        "offline generation",
+        "long continuous scenes",
+        "projects without Sora API access",
+        f"anything that has to still work after {_API_SHUTDOWN.isoformat()}, when OpenAI "
+        "removes the Videos API",
+    ]
     fallback_tools = ["veo_video", "gemini_omni_video", "seedance_video", "kling_video", "minimax_video"]
 
     input_schema = {
@@ -123,11 +154,44 @@ class SoraVideo(BaseTool):
     user_visible_verification = ["Watch generated clip for motion coherence, artifacts, and audio quality"]
 
     def get_status(self) -> ToolStatus:
+        if _api_is_gone():
+            # Not DEGRADED: the registry falls back only to AVAILABLE tools, so
+            # UNAVAILABLE is what actually stops a chain routing into a dead
+            # endpoint. Before the date it stays AVAILABLE, because until then
+            # it genuinely works and removing it early would be a regression.
+            return ToolStatus.UNAVAILABLE
         if not os.environ.get("OPENAI_API_KEY"):
             return ToolStatus.UNAVAILABLE
         if not self._openai_sdk_supports_videos():
             return ToolStatus.UNAVAILABLE
         return ToolStatus.AVAILABLE
+
+    def get_info(self) -> dict[str, Any]:
+        """Carry the shutdown date into the preflight capability menu.
+
+        `resource_profile_note` is the registry's channel for "this looks
+        available but there is a catch" — it is copied verbatim into
+        `provider_menu_summary()["runtime_warnings"]`, which the agent is
+        required to read out before any production work. A provider with weeks
+        left is exactly that kind of catch.
+        """
+        info = super().get_info()
+        remaining = (_API_SHUTDOWN - date.today()).days
+        if remaining > 0:
+            info["resource_profile_note"] = (
+                f"OpenAI removes the Videos API and the Sora 2 models on "
+                f"{_API_SHUTDOWN.isoformat()} ({remaining} days from now) with no "
+                f"announced successor. Do not build a pipeline on this provider; "
+                f"prefer {_SUCCESSORS}."
+            )
+        else:
+            info["resource_profile_note"] = (
+                f"OpenAI removed the Videos API and the Sora 2 models on "
+                f"{_API_SHUTDOWN.isoformat()}. This tool cannot succeed. "
+                f"Use {_SUCCESSORS}."
+            )
+        info["end_of_life"] = _API_SHUTDOWN.isoformat()
+        return info
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         seconds = int(self._normalize_seconds(inputs))
@@ -139,6 +203,15 @@ class SoraVideo(BaseTool):
         return 120.0 * (seconds / 4)
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
+        if _api_is_gone():
+            return ToolResult(
+                success=False,
+                error=(
+                    f"OpenAI removed the Videos API and the Sora 2 models on "
+                    f"{_API_SHUTDOWN.isoformat()}; there is no successor endpoint. "
+                    f"Use {_SUCCESSORS} instead."
+                ),
+            )
         if not os.environ.get("OPENAI_API_KEY"):
             return ToolResult(
                 success=False,

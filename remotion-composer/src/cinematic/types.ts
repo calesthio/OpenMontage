@@ -1,5 +1,5 @@
 import type { CaptionProps } from "../components/CaptionOverlay";
-export type CinematicTone = "cold" | "steel" | "void" | "neutral";
+export type CinematicTone = "cold" | "steel" | "void" | "neutral" | "none";
 
 export interface CinematicBaseScene {
   id: string;

@@ -849,6 +849,11 @@ class VideoCompose(BaseTool):
                     scene["fadeInFrames"] = 0
                 if str(cut.get("transition_out") or "").lower() in hard_transitions:
                     scene["fadeOutFrames"] = 0
+                # Per-cut grade overrides. Without them CinematicRenderer applies
+                # its default filter and cold tone, which darken every clip.
+                for key in ("tone", "filter"):
+                    if cut.get(key):
+                        scene[key] = str(cut[key])
 
             scenes.append(scene)
             timeline_cursor += duration

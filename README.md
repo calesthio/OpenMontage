@@ -209,6 +209,11 @@ That's it. The agent researches your topic with live web search, generates AI im
 
 Existing environments: activate the project environment and run `python -m pip install --upgrade 'pip>=26.2.2' 'certifi>=2026.10.19'`, then restart long-running Python processes. These versions update both the application CA bundle and pip's separate bundled CA store for the [eMudhra intermediate CA compromise](https://emudhra.we-have-a-problem.com/). Update the operating system's trust store too: pip may also use system certificates, and custom CA bundles need separate maintenance. `make install` and `make install-dev` enforce the Python package minimums on subsequent installs.
 
+Piper is discovered on `PATH` first, then beside the running Python interpreter
+(including `piper.exe` on Windows). Launching a virtual environment's Python
+directly does not require activating it for Piper discovery. A voice model must
+still be installed separately.
+
 ### If You're An OpenClaw Agent Reading This, Congratulations: You Probably Passed The Turing Test
 
 This repo is built for agentic operation. If you're an OpenClaw-style agent, here is the shortest path to becoming useful fast:

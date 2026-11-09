@@ -118,6 +118,15 @@ class VideoCompose(BaseTool):
                     "edit_decisions.metadata.proposal_render_runtime."
                 ),
             },
+            "scene_plan": {
+                "type": ["array", "object"],
+                "description": (
+                    "Optional scene_plan artifact (or its scenes list). The "
+                    "render pre-compose gate scores slideshow risk from these "
+                    "scenes; without it the score is estimated from the cuts, "
+                    "which carry no shot metadata."
+                ),
+            },
             "narration_transcript_path": {
                 "type": "string",
                 "description": (
@@ -1472,7 +1481,7 @@ class VideoCompose(BaseTool):
         self,
         edit_decisions: dict[str, Any],
         resolved_cuts: list[dict],
-        scene_plan: list[dict] | None = None,
+        scene_plan: list[dict] | dict | None = None,
     ) -> ToolResult | None:
         """Pre-compose quality gate — blocks render on critical violations.
 
@@ -1508,6 +1517,8 @@ class VideoCompose(BaseTool):
 
         # --- 2. Slideshow risk check ---
         renderer_family = edit_decisions.get("renderer_family")
+        if isinstance(scene_plan, dict):  # the artifact, not just its scenes
+            scene_plan = scene_plan.get("scenes")
         scenes = scene_plan or []
 
         # If no scene_plan passed, try to extract scene info from cuts

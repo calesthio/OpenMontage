@@ -1,0 +1,74 @@
+asset_generation:
+  consistency_anchors:
+  - calm color palette
+  - cinematic visual language
+  image_prompt_prefix: calm cinematic style
+audio:
+  music_mood: calm
+  music_volume: 0.15
+  voice_style: clear, conversational, authoritative
+chart_palette:
+- '#2563EB'
+- '#F59E0B'
+- '#10B981'
+- '#EF4444'
+- '#8B5CF6'
+identity:
+  best_for: Custom playbook for cinematic calm content
+  category: cinematic
+  mood: calm
+  name: tea-craft
+  pace: slow
+motion:
+  animation_style: spring-based with moderate damping
+  pacing_rules:
+    max_scene_hold_seconds: 6.0
+    min_scene_hold_seconds: 2.0
+    stat_card_hold_seconds: 3.0
+    text_card_hold_seconds: 2.5
+    transition_duration_seconds: 0.4
+  transitions:
+  - crossfade
+  - cut
+quality_rules:
+- Maintain color consistency across all scenes
+- Text must be legible on all backgrounds
+- Transitions should be purposeful, not decorative
+taste_profile:
+  anti_patterns:
+  - text on every beat
+  - generic stock-latte montage
+  - health claims
+  - brand names or logos on tins
+  - readable text generated inside video frames
+  design_read: 'Tactile craft short for latte drinkers: slow, close and quiet, so
+    an hour of grinding feels long; real textures over graphics.'
+  information_density: 2
+  layout_variation: Macro detail, wide field, macro detail, top-down bowl; one stat
+    overlay and one closing line.
+  motion_intensity: 3
+  palette_discipline: Tea green, charcoal granite, paper white; the green is the only
+    accent.
+  quality_gates:
+  - Stone and powder must read as stone and powder at phone size
+  - No number on screen that was not confirmed on its source page
+  reference_strategy: One Qwen-Image still per image-led scene family (tin and mill,
+    shaded field), approved before H3 animates it.
+  visual_variance: 4
+typography:
+  body:
+    font: Inter
+    weight: 400
+  headings:
+    font: Fraunces
+    weight: 700
+visual_language:
+  color_palette:
+    accent:
+    - '#8BC34A'
+    background: '#1C1D1A'
+    primary:
+    - '#2F5D3A'
+    text: '#F4F0E6'
+  composition: balanced grid with breathing room
+  texture: clean digital

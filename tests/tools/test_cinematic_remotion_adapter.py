@@ -58,6 +58,23 @@ def test_cinematic_cut_adapter_preserves_playback_speed() -> None:
     assert scenes[0]["playbackRate"] == 2
 
 
+def test_cinematic_cut_adapter_slow_motion_scales_duration() -> None:
+    scenes = VideoCompose._cuts_to_cinematic_scenes([
+        {
+            "id": "slow",
+            "source": "clip.mp4",
+            "in_seconds": 1,
+            "out_seconds": 4,
+            "speed": 0.5,
+        }
+    ])
+
+    assert scenes[0]["durationSeconds"] == 6.0
+    assert scenes[0]["playbackRate"] == 0.5
+    assert scenes[0]["trimBeforeSeconds"] == 1.0
+    assert scenes[0]["trimAfterSeconds"] == 4.0
+
+
 @pytest.mark.parametrize("uri_style", ["standard", "legacy_windows"])
 def test_remotion_media_staging_decodes_file_uris(tmp_path, uri_style) -> None:
     source = tmp_path / "clip with space.mp4"

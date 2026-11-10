@@ -181,8 +181,10 @@ And when a run is done, hit **▶ REPLAY RUN** — the whole production replays 
 
 ### Install & Run
 
+**Security:** Install from the [official OpenMontage repository](https://github.com/OpenMontageInc/OpenMontage) using the setup steps below. This project does not distribute prebuilt platform installers; downloads from similarly named repositories are unofficial.
+
 ```bash
-git clone https://github.com/calesthio/OpenMontage.git
+git clone https://github.com/OpenMontageInc/OpenMontage.git
 cd OpenMontage
 make setup
 ```

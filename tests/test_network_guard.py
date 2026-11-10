@@ -44,6 +44,44 @@ class TestGuardBlocksOutbound:
             server.close()
 
 
+class TestGuardBlocksLocalGenerationServers:
+    """A ComfyUI on loopback is a real GPU, often a rented one behind an SSH
+    tunnel. A test that reaches it queues a real job, so loopback is not enough
+    of a reason to let the connection through."""
+
+    @pytest.mark.parametrize("host", ["127.0.0.1", "localhost"])
+    def test_default_comfyui_port_is_blocked(self, host):
+        with pytest.raises(Exception) as exc:
+            socket.create_connection((host, 8188), timeout=5)
+        assert "Blocked a network connection" in str(exc.value)
+        assert "ComfyUI" in str(exc.value)
+
+    def test_comfyui_client_sees_no_server_even_when_one_is_running(self):
+        from tools._comfyui.client import ComfyUIClient
+
+        assert ComfyUIClient().is_available() is False
+
+    def test_selector_cannot_generate_on_a_local_comfyui(self, tmp_path, monkeypatch):
+        """The unmocked selector call that generated real images through a tunnel."""
+        from tools.graphics.comfyui_image import ComfyUIImage
+
+        monkeypatch.chdir(tmp_path)
+        result = ComfyUIImage().execute({"prompt": "this must never reach a GPU"})
+        assert result.success is False
+        assert list(tmp_path.iterdir()) == []
+
+    def test_a_tunnel_on_another_local_port_is_covered_too(self, monkeypatch):
+        from tests import conftest as guard
+
+        for var in guard._COMFYUI_ENV_VARS:
+            monkeypatch.delenv(var, raising=False)
+        monkeypatch.setenv("COMFYUI_VIDEO_SERVER_URL", "http://127.0.0.1:8189")
+        monkeypatch.setenv("COMFYUI_TTS_SERVER_URL", "http://localhost:8190/")
+        # Not loopback: the outbound guard already refuses it.
+        monkeypatch.setenv("COMFYUI_IMAGE_SERVER_URL", "http://gpu-box:8191")
+        assert guard._local_generation_ports() == {8188, 8189, 8190}
+
+
 class TestPaidToolsCannotSpend:
     """The guard must hold even with a real key present in the environment."""
 

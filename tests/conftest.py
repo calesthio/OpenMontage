@@ -11,6 +11,12 @@ openai, boto3), `httpx`, and raw `urllib`. Everything bottoms out in
 
 Loopback is still allowed — local servers, ffmpeg RPC, and Backlot fixtures need it.
 
+One loopback target is refused all the same: a ComfyUI server, on its default
+port 8188 or wherever a ``COMFYUI_*_SERVER_URL`` variable points on this machine.
+It is a real GPU, often a rented one behind an SSH tunnel, and a test that runs
+an unmocked tool against it queues a real job (an unmocked ``image_selector``
+call generated three images on a rented GPU before this was added).
+
 To write a test that genuinely hits a live API:
 
     @pytest.mark.live_api
@@ -30,6 +36,7 @@ from __future__ import annotations
 
 import os
 import socket
+from urllib.parse import urlparse
 
 import pytest
 
@@ -67,7 +74,60 @@ def _is_loopback(address) -> bool:
     return host.startswith("127.")
 
 
+# ---- Local generation servers (ComfyUI) ----
+
+_COMFYUI_ENV_VARS = (
+    "COMFYUI_SERVER_URL",
+    "COMFYUI_IMAGE_SERVER_URL",
+    "COMFYUI_VIDEO_SERVER_URL",
+    "COMFYUI_MUSIC_SERVER_URL",
+    "COMFYUI_TTS_SERVER_URL",
+)
+_COMFYUI_DEFAULT_PORT = 8188
+
+
+def _local_generation_ports() -> set[int]:
+    """Loopback ports a ComfyUI server may answer on, per the environment."""
+    ports = {_COMFYUI_DEFAULT_PORT}
+    for var in _COMFYUI_ENV_VARS:
+        try:
+            parsed = urlparse(os.environ.get(var) or "")
+            port = parsed.port
+        except ValueError:
+            continue
+        if port and parsed.hostname and _is_loopback((parsed.hostname, port)):
+            ports.add(port)
+    return ports
+
+
+# Filled when the guard is installed, after collection has imported the tools
+# (and with them any .env file), and before a test changes the environment.
+_generation_ports: set[int] = {_COMFYUI_DEFAULT_PORT}
+
+
+def _is_generation_server(address) -> bool:
+    return (
+        isinstance(address, (tuple, list))
+        and len(address) >= 2
+        and address[1] in _generation_ports
+        and _is_loopback(address)
+    )
+
+
+def _refused(address) -> bool:
+    return not _is_loopback(address) or _is_generation_server(address)
+
+
 def _blocked(address) -> NetworkCallInTestError:
+    if _is_generation_server(address):
+        return NetworkCallInTestError(
+            f"Blocked a network connection to {address!r} during a test: that is a "
+            f"local generation server (ComfyUI).\n"
+            f"\n"
+            f"A job queued there is real work on a GPU. Fake the client instead\n"
+            f"(see tests/contracts/test_comfyui_tools.py), or mark the test\n"
+            f"@pytest.mark.live_api and run it deliberately with {_ALLOW_ENV_FLAG}=1."
+        )
     return NetworkCallInTestError(
         f"Blocked a network connection to {address!r} during a test.\n"
         f"\n"
@@ -85,18 +145,20 @@ def _block_network():
         yield
         return
 
+    _generation_ports.update(_local_generation_ports())
+
     def guarded_connect(self, address, *args, **kwargs):
-        if not _is_loopback(address):
+        if _refused(address):
             raise _blocked(address)
         return _real_connect(self, address, *args, **kwargs)
 
     def guarded_connect_ex(self, address, *args, **kwargs):
-        if not _is_loopback(address):
+        if _refused(address):
             raise _blocked(address)
         return _real_connect_ex(self, address, *args, **kwargs)
 
     def guarded_create_connection(address, *args, **kwargs):
-        if not _is_loopback(address):
+        if _refused(address):
             raise _blocked(address)
         return _real_create_connection(address, *args, **kwargs)
 

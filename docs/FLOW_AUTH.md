@@ -39,13 +39,37 @@ pkill -f "Xvfb :99"
 
 ## Известная проблема (документирована)
 
-После прохождения входа в браузере `gflow doctor` может сообщать `Google Flow login is required`, несмотря на наличие cookies (`flow.google.com: OSID, __Secure-OSID` и `google.com: SID, LSID, PSID`). Причины posibles:
+После прохождения входа в браузере `gflow doctor` может сообщать `Google Flow login is required`, несмотря на наличие cookies (`flow.google.com: OSID, __Secure-OSID` и `google.com: SID, LSID, PSID`). Причины:
 
 1. Страница `flow.google.com` не успела загрузиться (SPA) — подождать 20–30 с и повторить `gflow doctor` один раз.
 2. На странице отображается экран приветствия/согласия Flow, который требует ручного нажатия через VNC.
 3. Chrome, запущенный вручную, удерживает профиль (SingletonLock) — убить вручную launched Chrome и повторить `gflow doctor`.
+4. **Интерфейс Flow на русском языке**, а gflow v1.3.0 ищет английские селекторы (`new project`, `Start generation`). `gflow doctor` проходит Flow-проверку, но `gflow image` падает с `Could not find the Flow prompt box` — селектор `newProjectButton` (`/new project|Новый проект|Создать|Отправить/i`) не находит кнопку «Новый проект» на русском UI, либо клик не срабатывает из-за перекрывающих диалогов согласия.
 
 Не запускать `gflow doctor` в цикле — каждый вызов закрывает окно входа и перезапускает автоматизацию, что ломает сессию.
+
+## Локальный патч с русскими локаторами (не в системную установку)
+
+Пакет скопирован в `~/gflow-local/` (не в системную установку npm). В `~/gflow-local/dist/src/flow/locators.js` добавлены русские варианты:
+
+- `dashboardMarker` / `newProjectButton`: `/new project|Новый проект|Создать|Отправить/i`
+- `submitButton` / `characterCreateButton`: `/Start generation|Начать генерацию|Создать|Отправить|arrow_forward/i`
+- `agentInstructionsButton`: `/Agent instructions|Инструкции для агента/i`
+- `addIngredientButton`: `/Add ingredients to the prompt box|Добавить ингредиенты в окно запроса/i`
+- `settingsSaveButton`: `/Save|Сохранить/i`
+- Маркеры ошибок: добавлены русские паттерны (`необычн`, `кредит`, `политик`, `ошибк`, `подтвержд` и др.)
+
+В `~/gflow-local/dist/src/flow/page.js`:
+- `open()`: не делает `goto` если уже на `flow.google.com`; после загрузки вызывает `dismissConsentDialogs()` (3 попытки с паузой 500 мс).
+- `dismissConsentDialogs()`: клик по кнопкам `ОК`, `Включить`, `Закрыть сообщение`, `Закрыть баннер`, `Отмена`, `OK`, `Enable`, `Close message`, `Close banner`, `Cancel`.
+- `ensureProject()`: после клика «Новый проект» — 5 попыток dismissed dialogs + waitFor promptBox с таймаутом 5 с.
+- `assertReady()`: пропускает DOM-проверку (знак готовости подтверждён через куки и ручную навигацию).
+
+Запуск локальной копии: `cd ~/gflow-local && node run.js <command>`.
+
+## Альтернатива (работает)
+
+Прямая CDP-автоматизация Chrome с профилем gflow подтверждена рабочей: вход, диалоги, «Новый проект», ввод промпта, клик «Начать генерацию», загрузка результата — выполнено успешно через WebSocket DevTools API. Генерация одной тестовой картинки `simple blue circle on white` (16:9) подтверждена.
 
 ## Что НЕ делать
 

@@ -5,20 +5,25 @@ Connects to a running Chrome instance with the gflow profile via the DevTools
 WebSocket, opens flow.google.com, dismisses Russian consent dialogs, creates
 a project, types the prompt using CDP Input.insertText (not JS — the framework
 editor doesn't see JS-assigned values), submits with Input.dispatchKeyEvent
-Enter, waits for generated images, and downloads them via Page.captureScreenshot
-with element clip coordinates.
+Enter, waits for generated images, downloads full-resolution images via
+fetch() in page context (base64), falls back to Page.captureScreenshot with
+element clip coordinates, and writes a manifest.
 
 Security:
   - Never prints cookies, tokens, profile contents, Local State, or DevToolsActivePort.
   - Does not read the profile directory.
   - Only downloads generated image files.
   - Strips Authorization/Cookie headers from network logs.
+  - Veo/video not used. No publishing.
 
 Usage:
   python scripts/flow_cdp_image.py \
     --prompt "simple blue circle on white background" \
     --ratio 16:9 --out /tmp/flow-test/test-photo.png \
     [--ws-port 35029] [--page-id <cdp page id>] [--timeout 120]
+
+Batch mode:
+  python scripts/flow_cdp_image.py --prompts-file prompts.json --out-dir /tmp/flow-test/batch
 
 Prerequisites:
   1. Chrome with gflow profile running with remote debugging port:
@@ -42,7 +47,6 @@ import hashlib
 import json
 import math
 import os
-import re
 import sys
 from datetime import datetime, timezone
 from typing import Any
@@ -60,7 +64,11 @@ class CDPSession:
         self.log = log
         self._seq = 0
         self.ws = None
-        self.network_events: list[dict[str, Any]] = []
+
+    def log_append(self, message: str) -> None:
+        line = f"{ts()} {message}"
+        self.log.append(line)
+        print(line)
 
     async def connect(self) -> None:
         import websockets  # imported lazily so import without dep is OK
@@ -72,11 +80,6 @@ class CDPSession:
             await self._recv_until_id(self._seq)
         await self._send({"method": "Network.setCacheDisabled", "params": {"cacheDisabled": True}})
         await self._recv_until_id(self._seq)
-
-    def log_append(self, message: str) -> None:
-        line = f"{ts()} {message}"
-        self.log.append(line)
-        print(line)
 
     async def close(self) -> None:
         if self.ws:
@@ -95,30 +98,38 @@ class CDPSession:
             if msg.get("id") == target_id:
                 return msg
 
-    async def eval(self, expression: str) -> Any:
-        """Evaluate JS in the page context and return the parsed result value."""
+    async def eval_js(self, expression: str) -> Any:
+        """Evaluate JS in the page context and return the parsed result value.
+        Uses awaitPromise: true so async IIFEs resolve before returning."""
         await self._send(
             {
                 "method": "Runtime.evaluate",
-                "params": {"expression": expression, "returnByValue": True},
+                "params": {
+                    "expression": expression,
+                    "returnByValue": True,
+                    "awaitPromise": True,
+                },
             }
         )
         msg = await self._recv_until_id(self._seq)
         result = msg.get("result", {})
         if "exceptionDetails" in result:
             raise RuntimeError(f"JS error: {result['exceptionDetails']}")
-        val = result["result"]["value"]
-        if isinstance(val, str):
+        val = result["result"]
+        if val.get("type") == "undefined":
+            return None
+        v = val.get("value")
+        if isinstance(v, str):
             try:
-                return json.loads(val)
+                return json.loads(v)
             except json.JSONDecodeError:
-                return val
-        return val
+                return v
+        return v
 
-    async def action(self, js_body: str) -> str:
+    async def action_js(self, js_body: str) -> str:
         """Run an IIFE action (may contain return statements) and return its string result."""
         expr = f"(function() {{ {js_body} }})()"
-        val = await self.eval(expr)
+        val = await self.eval_js(expr)
         if isinstance(val, str):
             return val
         return str(val)
@@ -167,7 +178,7 @@ class CDPSession:
         img_bytes = base64.b64decode(data)
         with open(path, "wb") as f:
             f.write(img_bytes)
-        self.log_append(f"screenshot saved: {path} ({len(img_bytes)} bytes)")
+        self.log_append(f"screenshot saved: {path} ({len(img_bytes)} bytes) [low_res]")
 
 
 async def dismiss_dialogs(session: CDPSession) -> None:
@@ -175,7 +186,7 @@ async def dismiss_dialogs(session: CDPSession) -> None:
     labels = ["ОК", "Включить", "Закрыть сообщение", "Закрыть баннер", "Отмена"]
     for label in labels:
         try:
-            result = await session.eval(
+            result = await session.eval_js(
                 f"""
                 (function() {{
                     var btns = Array.from(document.querySelectorAll('button')).filter(
@@ -192,15 +203,49 @@ async def dismiss_dialogs(session: CDPSession) -> None:
         await asyncio.sleep(0.3)
 
 
+async def fetch_fullres(session: CDPSession, src: str) -> dict[str, Any] | None:
+    """Download full-resolution image via fetch() in page context (has cookies).
+    Returns dict with bytes, size, sha256, or None on failure."""
+    result = await session.eval_js(
+        f"""
+        (async () => {{
+            try {{
+                const resp = await fetch({json.dumps(src)});
+                const ab = await resp.arrayBuffer();
+                const uint8 = new Uint8Array(ab);
+                const hex = Array.from(uint8).map(b => b.toString(16).padStart(2,'0')).join('');
+                return {{status: resp.status, size: ab.byteLength, hex: hex, ct: resp.headers.get('content-type')||''}};
+            }} catch(e) {{
+                return {{status: 0, error: e.message}};
+            }}
+        }})()
+        """
+    )
+    if isinstance(result, dict) and result.get("status") == 200 and result.get("hex"):
+        img_bytes = bytes.fromhex(result["hex"])
+        return {
+            "bytes": img_bytes,
+            "size": len(img_bytes),
+            "sha256": hashlib.sha256(img_bytes).hexdigest(),
+            "ct": result.get("ct", ""),
+        }
+    session.log_append(f"  fetch failed: status={result.get('status') if isinstance(result, dict) else 'N/A'}")
+    return None
+
+
 async def main() -> int:
     parser = argparse.ArgumentParser(
         description="Generate an image via Google Flow using CDP"
     )
     parser.add_argument("--prompt", default="simple blue circle on white background",
-                        help="generation prompt")
+                        help="generation prompt (single mode)")
+    parser.add_argument("--prompts-file", default=None,
+                        help="JSON file with list of prompts (batch mode, max 12)")
     parser.add_argument("--ratio", default="16:9", help="aspect ratio (16:9, 9:16, 1:1, 4:3, 3:4)")
     parser.add_argument("--out", default="/tmp/flow-test/test-photo.png",
-                        help="output image path")
+                        help="output image path (single mode)")
+    parser.add_argument("--out-dir", default="/tmp/flow-test/batch",
+                        help="output directory (batch mode)")
     parser.add_argument("--ws-port", type=int, default=35029, help="CDP websocket port")
     parser.add_argument(
         "--page-id", default="", help="CDP page target id for flow.google.com"
@@ -208,10 +253,33 @@ async def main() -> int:
     parser.add_argument(
         "--timeout", type=int, default=120, help="max seconds to wait for image"
     )
+    parser.add_argument(
+        "--delay", type=int, default=25, help="seconds between batch prompts (20-30)"
+    )
     args = parser.parse_args()
 
     log: list[str] = []
-    log_append = lambda m: None  # placeholder, replaced by session.log_append
+
+    # Load prompts
+    prompts: list[str] = []
+    if args.prompts_file:
+        with open(args.prompts_file) as f:
+            data = json.load(f)
+        if isinstance(data, list):
+            prompts = [str(p) for p in data[:12]]
+        elif isinstance(data, dict) and "prompts" in data:
+            prompts = [str(p) for p in data["prompts"][:12]]
+        else:
+            print("ERROR: prompts-file must contain a list or {prompts: [...]}")
+            return 1
+        if not prompts:
+            print("ERROR: no prompts found in prompts-file")
+            return 1
+    else:
+        prompts = [args.prompt]
+
+    os.makedirs(args.out_dir, exist_ok=True)
+    os.makedirs("manifests", exist_ok=True)
 
     ws_uri = f"ws://127.0.0.1:{args.ws_port}/devtools/page/{args.page_id}"
     session = CDPSession(ws_uri, log)
@@ -219,170 +287,251 @@ async def main() -> int:
     try:
         await session.connect()
 
-        # Ensure we're on flow.google.com
-        current_url = await session.eval("window.location.href")
+        # Ensure on flow.google.com
+        current_url = await session.eval_js("window.location.href")
         session.log_append(f"current url: {current_url}")
         if "flow.google.com" not in str(current_url):
-            await session.eval("window.location.href = 'https://flow.google.com'")
+            await session.eval_js("window.location.href = 'https://flow.google.com'")
             await asyncio.sleep(2)
 
-        # Dismiss consent dialogs
-        await dismiss_dialogs(session)
-        await asyncio.sleep(1)
+        manifest_path = "manifests/ai_images.json"
+        existing: list[dict[str, Any]] = []
+        if os.path.exists(manifest_path):
+            try:
+                with open(manifest_path) as f:
+                    existing = json.load(f).get("images", [])
+            except Exception:
+                existing = []
 
-        # Click "Новый проект" (New project)
-        session.log_append("clicking Новый проект")
-        click_result = await session.action(
-            """
-            var els = Array.from(document.querySelectorAll('button')).filter(
-                b => /Новый проект/.test(b.textContent || '')
-            );
-            if (els.length > 0) { els[0].click(); return 'clicked ' + els.length; }
-            return 'no elements';
-            """
-        )
-        session.log_append(f"new project: {click_result}")
-        await asyncio.sleep(2)
+        for idx, prompt in enumerate(prompts):
+            session.log_append(f"=== Prompt {idx + 1}/{len(prompts)}: {prompt[:80]} ===")
 
-        # Dismiss dialogs again (they reappear on new project)
-        await dismiss_dialogs(session)
-        await asyncio.sleep(1)
+            # Dismiss consent dialogs
+            await dismiss_dialogs(session)
+            await asyncio.sleep(1)
 
-        # Wait for prompt box
-        session.log_append("waiting for prompt box")
-        prompt_found = False
-        deadline = asyncio.get_event_loop().time() + 30
-        while asyncio.get_event_loop().time() < deadline:
-            has_pb = await session.eval(
+            # Click "Новый проект" (New project) only if not already in a project
+            session.log_append("checking for new project button")
+            has_pb = await session.eval_js(
                 "!!document.querySelector('[role=\"textbox\"][contenteditable=\"true\"]')"
             )
-            if has_pb:
-                prompt_found = True
-                session.log_append("prompt box found")
-                break
-            await asyncio.sleep(2)
-        if not prompt_found:
-            session.log_append("ERROR: prompt box not found within 30s")
-            return 1
+            if not has_pb:
+                click_result = await session.action_js(
+                    """
+                    var els = Array.from(document.querySelectorAll('button')).filter(
+                        b => /Новый проект/.test(b.textContent || '')
+                    );
+                    if (els.length > 0) { els[0].click(); return 'clicked ' + els.length; }
+                    return 'no elements';
+                    """
+                )
+                session.log_append(f"new project: {click_result}")
+                await asyncio.sleep(2)
 
-        # Focus the textbox via DOM click
-        session.log_append("focusing prompt textbox")
-        focus_result = await session.action(
+                # Dismiss dialogs again (they reappear on new project)
+                await dismiss_dialogs(session)
+                await asyncio.sleep(1)
+            else:
+                session.log_append("already in a project, skipping new project click")
+
+            # Wait for prompt box
+            session.log_append("waiting for prompt box")
+            prompt_found = False
+            deadline = asyncio.get_event_loop().time() + 30
+            while asyncio.get_event_loop().time() < deadline:
+                has_pb = await session.eval_js(
+                    "!!document.querySelector('[role=\"textbox\"][contenteditable=\"true\"]')"
+                )
+                if has_pb:
+                    prompt_found = True
+                    session.log_append("prompt box found")
+                    break
+                await asyncio.sleep(2)
+            if not prompt_found:
+                session.log_append("ERROR: prompt box not found within 30s")
+                continue
+
+            # Focus the textbox via DOM click, clear existing text, type new prompt via CDP
+            session.log_append("focusing and clearing prompt textbox")
+            await session.eval_js(
+                """
+                var pb = document.querySelector('[role="textbox"][contenteditable="true"]');
+                pb.focus();
+                pb.textContent = '';
+                pb.dispatchEvent(new Event('input', {bubbles: true}));
             """
-            var pb = document.querySelector('[role="textbox"][contenteditable="true"]');
-            if (pb) { pb.focus(); return 'focused'; }
-            return 'not found';
-            """
-        )
-        session.log_append(f"focus: {focus_result}")
-        await asyncio.sleep(0.5)
-
-        # Type the prompt via CDP Input.insertText (NOT JS — framework editor
-        # doesn't see JS-assigned values)
-        session.log_append(f"inserting text via CDP: '{args.prompt}'")
-        await session.insert_text(args.prompt)
-        await asyncio.sleep(0.5)
-
-        # Verify text was inserted
-        text_check = await session.eval(
-            "document.querySelector('[role=\"textbox\"][contenteditable=\"true\"]').textContent"
-        )
-        session.log_append(f"textbox content: {text_check!r}")
-
-        # Screenshot after text input
-        await session.screenshot(f"{args.out}.after_input.png")
-
-        # Press Enter via CDP Input.dispatchKeyEvent (NOT JS click — framework
-        # may not register JS-dispatched clicks on framework buttons)
-        session.log_append("dispatching Enter key via CDP")
-        await session.dispatch_key("Enter", "Enter", 13)
-        await asyncio.sleep(0.5)
-
-        # Screenshot after submit
-        await session.screenshot(f"{args.out}.after_submit.png")
-
-        # Wait for result image (poll every 5s, up to timeout)
-        session.log_append(f"waiting for image (timeout {args.timeout}s)")
-        deadline = asyncio.get_event_loop().time() + args.timeout
-        shot_offsets = [5, 30, 90]
-        next_shot_idx = 0
-        found = False
-        start_time = asyncio.get_event_loop().time()
-
-        while asyncio.get_event_loop().time() < deadline:
-            await asyncio.sleep(5)
-            elapsed = int(asyncio.get_event_loop().time() - start_time)
-
-            # Checkpoint screenshots at 5s, 30s, 90s
-            while (
-                next_shot_idx < len(shot_offsets)
-                and elapsed >= shot_offsets[next_shot_idx]
-            ):
-                await session.screenshot(f"{args.out}.shot{next_shot_idx + 1}s.png")
-                session.log_append(f"checkpoint screenshot t+{shot_offsets[next_shot_idx]}s")
-                next_shot_idx += 1
-
-            img_count = await session.eval(
-                "document.querySelectorAll('flow-image-tile img[data-media-id], img[data-media-id]').length"
             )
-            session.log_append(f"images found: {img_count}")
-            if isinstance(img_count, (int, float)) and img_count > 0:
-                found = True
-                break
+            await asyncio.sleep(0.5)
 
-        # Final screenshot
-        await session.screenshot(f"{args.out}.final.png")
+            # Type the prompt via CDP Input.insertText (NOT JS)
+            session.log_append(f"inserting text via CDP: '{prompt}'")
+            await session.insert_text(prompt)
+            await asyncio.sleep(0.5)
 
-        # Dump page text for debugging
-        body_text = await session.eval("document.body.innerText")
-        lines = str(body_text).split("\n")
-        session.log_append("=== PAGE TEXT (first 50 lines) ===")
-        for i, line in enumerate(lines[:50]):
-            session.log_append(f"  {i + 1}: {line}")
-        session.log_append("=== END PAGE TEXT ===")
-
-        if not found:
-            session.log_append("ERROR: no images found within timeout")
-            return 1
-
-        # Get image element bounding boxes and capture each via screenshot clip
-        img_rects = await session.eval(
-            """
-            JSON.stringify(Array.from(document.querySelectorAll('flow-image-tile img[data-media-id], img[data-media-id]')).map(img => {
-                const rect = img.getBoundingClientRect();
-                return {x: rect.x, y: rect.y, w: rect.width, h: rect.height};
-            }))
-            """
-        )
-        if not isinstance(img_rects, list) or len(img_rects) == 0:
-            session.log_append("ERROR: no image rects found")
-            return 1
-
-        base_out = os.path.splitext(args.out)[0]
-        ext = os.path.splitext(args.out)[1] or ".png"
-        downloaded = 0
-        for i, rect in enumerate(img_rects):
-            clip = {
-                "x": math.floor(rect["x"]),
-                "y": math.floor(rect["y"]),
-                "width": math.floor(rect["w"]),
-                "height": math.floor(rect["h"]),
-                "scale": 1,
-            }
-            out_path = f"{base_out}_{i + 1}{ext}"
-            await session.screenshot(out_path, clip)
-
-            # Verify and compute sha256
-            with open(out_path, "rb") as f:
-                file_bytes = f.read()
-            sha256 = hashlib.sha256(file_bytes).hexdigest()
-            size = len(file_bytes)
-            session.log_append(
-                f"saved: {out_path} ({size} bytes, sha256={sha256})"
+            # Verify text was inserted (should be only the new prompt)
+            text_check = await session.eval_js(
+                "document.querySelector('[role=\"textbox\"][contenteditable=\"true\"]').textContent"
             )
-            downloaded += 1
+            session.log_append(f"textbox content: {text_check!r}")
 
-        session.log_append(f"done — {downloaded} image(s) downloaded")
+            # Screenshot after text input
+            await session.screenshot(f"{args.out_dir}/after_input_{idx + 1}.png")
+
+            # Press Enter via CDP Input.dispatchKeyEvent (NOT JS click)
+            session.log_append("dispatching Enter key via CDP")
+            await session.dispatch_key("Enter", "Enter", 13)
+            await asyncio.sleep(0.5)
+
+            # Screenshot after submit
+            await session.screenshot(f"{args.out_dir}/after_submit_{idx + 1}.png")
+
+            # Wait for result image (poll every 5s, up to timeout)
+            session.log_append(f"waiting for image (timeout {args.timeout}s)")
+            deadline = asyncio.get_event_loop().time() + args.timeout
+            found = False
+            start_time = asyncio.get_event_loop().time()
+
+            while asyncio.get_event_loop().time() < deadline:
+                await asyncio.sleep(5)
+                elapsed = int(asyncio.get_event_loop().time() - start_time)
+
+                # Checkpoint screenshots at 5s, 30s, 90s
+                if elapsed in (5, 30, 90):
+                    await session.screenshot(f"{args.out_dir}/shot_{idx + 1}_{elapsed}s.png")
+
+                img_count = await session.eval_js(
+                    "document.querySelectorAll('flow-image-tile img[data-media-id], img[data-media-id]').length"
+                )
+                session.log_append(f"images found: {img_count}")
+                if isinstance(img_count, (int, float)) and img_count > 0:
+                    found = True
+                    break
+
+            # Final screenshot
+            await session.screenshot(f"{args.out_dir}/final_{idx + 1}.png")
+
+            # Dump page text for debugging
+            body_text = await session.eval_js("document.body.innerText")
+            lines = str(body_text).split("\n")
+            session.log_append("=== PAGE TEXT (first 50 lines) ===")
+            for i, line in enumerate(lines[:50]):
+                session.log_append(f"  {i + 1}: {line}")
+            session.log_append("=== END PAGE TEXT ===")
+
+            if not found:
+                session.log_append("ERROR: no images found within timeout")
+                continue
+
+            # Get image element bounding boxes and download full-res via fetch
+            img_rects = await session.eval_js(
+                "JSON.stringify(Array.from(document.querySelectorAll('flow-image-tile img[data-media-id], img[data-media-id]')).map(img => { const rect = img.getBoundingClientRect(); return {x: rect.x, y: rect.y, w: rect.width, h: rect.height, src: img.src, mediaId: img.getAttribute('data-media-id')}; }))"
+            )
+            if not isinstance(img_rects, list) or len(img_rects) == 0:
+                session.log_append("ERROR: no image rects found")
+                continue
+
+            base_out = os.path.join(args.out_dir, f"img_{idx + 1}")
+            downloaded = 0
+
+            for j, rect in enumerate(img_rects):
+                src = rect["src"]
+                media_id = rect.get("mediaId", f"img_{idx + 1}_{j + 1}")
+                session.log_append(f"image {j + 1}: mediaId={media_id}, src_prefix={src[:80]}...")
+
+                # Try full-res download via fetch() in page context (has cookies)
+                fetched = await fetch_fullres(session, src)
+
+                if fetched:
+                    out_path = f"{base_out}_{j + 1}.png"
+                    with open(out_path, "wb") as f:
+                        f.write(fetched["bytes"])
+                    session.log_append(
+                        f"saved full-res: {out_path} ({fetched['size']} bytes, sha256={fetched['sha256']}, ct={fetched['ct']})"
+                    )
+
+                    rect_w = rect.get("w", 0)
+                    rect_h = rect.get("h", 0)
+                    session.log_append(
+                        f"  display rect: {rect_w}x{rect_h}, downloaded: {fetched['size']} bytes"
+                    )
+
+                    manifest_entry = {
+                        "asset_id": media_id,
+                        "prompt": prompt,
+                        "model": "Nano Banana 2.1",
+                        "source_type": "newly_generated",
+                        "asset_origin": "newly_generated",
+                        "provider": "google-flow",
+                        "file_path": out_path,
+                        "file_size_bytes": fetched["size"],
+                        "sha256": fetched["sha256"],
+                        "display_width": rect_w,
+                        "display_height": rect_h,
+                        "visual_class": "AI_RECONSTRUCTION",
+                        "visual_claim": "AI_RECONSTRUCTION",
+                        "disclosure_required": True,
+                        "created_at": datetime.now(timezone.utc).isoformat(),
+                        "labels": ["AI-generated visualization"],
+                    }
+                    existing.append(manifest_entry)
+                    downloaded += 1
+                else:
+                    # Fallback: screenshot with clip (low resolution)
+                    session.log_append("  full-res fetch failed, falling back to screenshot")
+                    clip = {
+                        "x": math.floor(rect["x"]),
+                        "y": math.floor(rect["y"]),
+                        "width": math.floor(rect["w"]),
+                        "height": math.floor(rect["h"]),
+                        "scale": 1,
+                    }
+                    out_path = f"{base_out}_{j + 1}.png"
+                    await session.screenshot(out_path, clip)
+                    with open(out_path, "rb") as f:
+                        file_bytes = f.read()
+                    sha256 = hashlib.sha256(file_bytes).hexdigest()
+                    session.log_append(
+                        f"saved low-res screenshot: {out_path} ({len(file_bytes)} bytes, sha256={sha256}) [low_res]"
+                    )
+
+                    manifest_entry = {
+                        "asset_id": media_id,
+                        "prompt": prompt,
+                        "model": "Nano Banana 2.1",
+                        "source_type": "newly_generated",
+                        "asset_origin": "newly_generated",
+                        "provider": "google-flow",
+                        "file_path": out_path,
+                        "file_size_bytes": len(file_bytes),
+                        "sha256": sha256,
+                        "display_width": rect.get("w", 0),
+                        "display_height": rect.get("h", 0),
+                        "visual_class": "AI_RECONSTRUCTION",
+                        "visual_claim": "AI_RECONSTRUCTION",
+                        "disclosure_required": True,
+                        "created_at": datetime.now(timezone.utc).isoformat(),
+                        "labels": ["AI-generated visualization", "low_res"],
+                    }
+                    existing.append(manifest_entry)
+
+            # Write manifest after each prompt
+            with open(manifest_path, "w") as f:
+                json.dump(
+                    {"generated_at": datetime.now(timezone.utc).isoformat(), "images": existing},
+                    f,
+                    indent=2,
+                    ensure_ascii=False,
+                )
+            session.log_append(f"manifest written: {manifest_path} ({len(existing)} total entries)")
+            session.log_append(f"prompt {idx + 1} done — {downloaded} full-res image(s)")
+
+            # Delay between prompts (20-30s)
+            if idx < len(prompts) - 1:
+                delay = args.delay
+                session.log_append(f"waiting {delay}s before next prompt")
+                await asyncio.sleep(delay)
+
+        session.log_append(f"done — {len(existing)} total images in manifest")
         return 0
 
     finally:

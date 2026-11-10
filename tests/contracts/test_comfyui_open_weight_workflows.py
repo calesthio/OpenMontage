@@ -446,7 +446,7 @@ def test_h3_i2v_execute_uses_the_i2v_workflow(tmp_path):
 
 
 def test_video_tool_info_lists_the_h3_stack():
-    info = ComfyUIVideo().get_info()
+    info = _video_tool().get_info()
     assert len(info["bundled_model_stacks"]["minimax_h3_local"]) == 4
 
 
@@ -607,9 +607,14 @@ def test_flux_builder_does_not_apply_qwen_size_rules():
     assert (params["width"], params["height"]) == (1000, 600)
 
 
-def test_execute_defaults_to_flux_and_reports_its_missing_models(tmp_path):
-    flux_names = [i["name"] for i in BUNDLED_MODEL_STACKS["flux2-txt2img"]]
-    result = _image_tool(missing=flux_names).execute(
+def test_execute_reports_flux_models_when_no_family_is_installed(tmp_path):
+    """flux2 stays the documented default: with nothing installed, its files are the ones named."""
+    names = [
+        i["name"]
+        for stack in ("flux2-txt2img", QWEN_STACK)
+        for i in BUNDLED_MODEL_STACKS[stack]
+    ]
+    result = _image_tool(missing=names).execute(
         {"prompt": "x", "output_path": str(tmp_path / "i.png")}
     )
     assert result.success is False
@@ -674,7 +679,7 @@ def test_image_status_is_available_when_either_family_is_complete():
 
 
 def test_image_tool_info_lists_both_stacks():
-    info = ComfyUIImage().get_info()
+    info = _image_tool().get_info()
     assert set(info["bundled_model_stacks"]) == {"flux2", "qwen_image_2.1"}
     # Existing consumers read the single-stack key.
     assert info["bundled_model_stack"] == BUNDLED_MODEL_STACKS["flux2-txt2img"]
@@ -706,3 +711,255 @@ def test_vast_guide_downloads_every_file_in_the_bundled_stacks(stack):
         folder = item["destination_hint"].rstrip("/").split("/")[-1]
         line = next(ln for ln in text.splitlines() if item["name"] in ln and "fetch" in ln)
         assert folder in line, f"{item['name']} is fetched into the wrong folder: {line}"
+
+
+# ------------------------------------------------------------------
+# A server that only has the open-weight stacks (no WAN 2.2, no FLUX 2)
+#
+# This is what a rented GPU set up for MiniMax H3 and Qwen-Image-2.1 looks
+# like. Preflight and the selectors must see it as ready, and a call that
+# names no model_family must run on what is installed.
+# ------------------------------------------------------------------
+
+
+def _wan_names() -> set[str]:
+    from tools.video.comfyui_video import _REQUIRED_MODELS_I2V, _REQUIRED_MODELS_T2V
+
+    return set(_REQUIRED_MODELS_T2V) | set(_REQUIRED_MODELS_I2V)
+
+
+def _stack_names(stack: str) -> set[str]:
+    return {item["name"] for item in BUNDLED_MODEL_STACKS[stack]}
+
+
+def test_video_is_available_when_only_the_h3_stack_is_installed():
+    from tools.base_tool import ToolStatus
+
+    tool = _video_tool(missing=_wan_names())
+    assert tool.get_status() == ToolStatus.AVAILABLE
+    assert tool.operation_statuses() == {
+        "text_to_video": "available",
+        "image_to_video": "available",
+    }
+    assert tool.is_operation_available("text_to_video") is True
+    assert tool.is_operation_available("image_to_video") is True
+
+
+def test_video_is_degraded_when_no_bundled_stack_is_complete():
+    from tools.base_tool import ToolStatus
+
+    tool = _video_tool(missing=_wan_names() | _stack_names(H3_STACK))
+    assert tool.get_status() == ToolStatus.DEGRADED
+    assert tool.operation_statuses() == {
+        "text_to_video": "degraded",
+        "image_to_video": "degraded",
+    }
+
+
+@pytest.mark.parametrize("operation", ["text_to_video", "image_to_video"])
+def test_video_selector_keeps_comfyui_when_only_h3_is_installed(operation):
+    from tools.video.video_selector import VideoSelector
+
+    tool = _video_tool(missing=_wan_names())
+    kept = VideoSelector()._filter_candidates({"operation": operation}, [tool])
+    assert kept == [tool]
+
+
+def test_video_execute_without_model_family_runs_h3_when_wan_is_missing(tmp_path):
+    seen = {}
+    tool = _video_tool(missing=_wan_names(), generated=seen)
+    result = tool.execute(
+        {"prompt": "A fox runs", "seed": 3, "output_path": str(tmp_path / "fox.mp4")}
+    )
+    assert result.success, result.error
+    assert seen["output_node"] == "92"
+    assert result.data["model_family"] == "minimax_h3_local"
+    assert result.data["model_family_auto_selected"] is True
+    assert result.data["workflow_provenance"]["workflow"] == "minimax-h3-t2v.json"
+
+
+def test_video_execute_without_model_family_keeps_wan_when_wan_is_installed(tmp_path):
+    seen = {}
+    tool = _video_tool(generated=seen)
+    result = tool.execute({"prompt": "x", "output_path": str(tmp_path / "o.mp4")})
+    assert result.success, result.error
+    assert seen["output_node"] == "16"
+    assert result.data["model_family"] == "wan2.2"
+    assert result.data["model_family_auto_selected"] is True
+
+
+def test_video_execute_reports_wan_models_when_no_stack_is_installed(tmp_path):
+    tool = _video_tool(missing=_wan_names() | _stack_names(H3_STACK))
+    result = tool.execute({"prompt": "x", "output_path": str(tmp_path / "o.mp4")})
+    assert result.success is False
+    assert result.data["workflow"] == "wan22-t2v-4step.json"
+
+
+def test_video_explicit_wan_family_is_never_swapped_for_h3(tmp_path):
+    tool = _video_tool(missing=_wan_names())
+    result = tool.execute(
+        {
+            "prompt": "x",
+            "model_family": "wan2.2",
+            "output_path": str(tmp_path / "o.mp4"),
+        }
+    )
+    assert result.success is False
+    assert result.data["workflow"] == "wan22-t2v-4step.json"
+
+
+def test_video_explicit_family_is_not_marked_auto_selected(tmp_path):
+    result = _video_tool().execute(
+        {
+            "prompt": "x",
+            "model_family": "minimax_h3_local",
+            "output_path": str(tmp_path / "o.mp4"),
+        }
+    )
+    assert result.success, result.error
+    assert result.data["model_family"] == "minimax_h3_local"
+    assert result.data["model_family_auto_selected"] is False
+
+
+def test_video_info_reports_family_statuses_and_the_resolved_default():
+    info = _video_tool(missing=_wan_names()).get_info()
+    assert info["model_family_statuses"] == {
+        "wan2.2": {"text_to_video": "degraded", "image_to_video": "degraded"},
+        "minimax_h3_local": {
+            "text_to_video": "available",
+            "image_to_video": "available",
+        },
+    }
+    assert info["default_model_family"] == {
+        "text_to_video": "minimax_h3_local",
+        "image_to_video": "minimax_h3_local",
+    }
+
+
+def test_video_info_survives_an_unreachable_server():
+    tool = ComfyUIVideo()
+    tool._client.is_available = lambda: False
+    info = tool.get_info()
+    assert info["default_model_family"] == {
+        "text_to_video": "wan2.2",
+        "image_to_video": "wan2.2",
+    }
+    assert info["model_family_statuses"]["minimax_h3_local"] == {
+        "text_to_video": "unavailable",
+        "image_to_video": "unavailable",
+    }
+
+
+def test_image_execute_without_model_family_runs_qwen_when_flux_is_missing(tmp_path):
+    seen = {}
+    tool = _image_tool(missing=_stack_names("flux2-txt2img"), generated=seen)
+    result = tool.execute(
+        {"prompt": "a lighthouse", "output_path": str(tmp_path / "i.png")}
+    )
+    assert result.success, result.error
+    assert seen["output_node"] == "461"
+    assert result.model == "qwen-image-2.1"
+    assert result.data["steps"] == 40
+    assert result.data["model_family"] == "qwen_image_2.1"
+    assert result.data["model_family_auto_selected"] is True
+
+
+def test_image_execute_without_model_family_keeps_flux_when_flux_is_installed(tmp_path):
+    seen = {}
+    result = _image_tool(generated=seen).execute(
+        {"prompt": "x", "output_path": str(tmp_path / "i.png")}
+    )
+    assert result.success, result.error
+    assert seen["output_node"] == "13"
+    assert result.data["model_family"] == "flux2"
+    assert result.data["model_family_auto_selected"] is True
+
+
+def test_image_explicit_flux_family_is_never_swapped_for_qwen(tmp_path):
+    tool = _image_tool(missing=_stack_names("flux2-txt2img"))
+    result = tool.execute(
+        {"prompt": "x", "model_family": "flux2", "output_path": str(tmp_path / "i.png")}
+    )
+    assert result.success is False
+    assert result.data["workflow"] == "flux2-txt2img.json"
+
+
+def test_image_info_reports_family_statuses_and_the_resolved_default():
+    info = _image_tool(missing=_stack_names("flux2-txt2img")).get_info()
+    assert info["model_family_statuses"] == {
+        "flux2": "degraded",
+        "qwen_image_2.1": "available",
+    }
+    assert info["default_model_family"] == "qwen_image_2.1"
+
+
+# ------------------------------------------------------------------
+# Client: one model listing per preflight, not one per question
+# ------------------------------------------------------------------
+
+_LOADER_FIELD_NAMES = ("ckpt_name", "unet_name", "vae_name", "clip_name", "lora_name")
+
+
+class _ObjectInfoResponse:
+    def __init__(self, node: str) -> None:
+        self._node = node
+
+    def raise_for_status(self) -> None:
+        return None
+
+    def json(self) -> dict:
+        fields = {name: [["a.safetensors"]] for name in _LOADER_FIELD_NAMES}
+        return {self._node: {"input": {"required": fields}}}
+
+
+def _count_object_info_requests(monkeypatch, *, failing=None):
+    calls: list[str] = []
+
+    def fake_get(url, timeout=None, **_kwargs):
+        calls.append(url)
+        if failing is not None and failing["on"]:
+            raise OSError("server went away")
+        return _ObjectInfoResponse(url.rsplit("/", 1)[-1])
+
+    monkeypatch.setattr("tools._comfyui.client.requests.get", fake_get)
+    return calls
+
+
+def test_client_reuses_one_model_listing_for_consecutive_stack_checks(monkeypatch):
+    from tools._comfyui.client import ComfyUIClient
+
+    calls = _count_object_info_requests(monkeypatch)
+    client = ComfyUIClient("http://comfy.test")
+
+    assert client.check_models(["a.safetensors"]) == (["a.safetensors"], [])
+    assert client.check_models(["b.safetensors"]) == ([], ["b.safetensors"])
+    assert client.check_models(["a.safetensors", "b.safetensors"]) == (
+        ["a.safetensors"],
+        ["b.safetensors"],
+    )
+    assert len(calls) == 5, "one request per loader node, once"
+
+
+def test_client_asks_again_after_the_listing_expires(monkeypatch):
+    from tools._comfyui.client import ComfyUIClient
+
+    calls = _count_object_info_requests(monkeypatch)
+    client = ComfyUIClient("http://comfy.test")
+    client._MODEL_LIST_TTL = 0.0
+
+    client.check_models(["a.safetensors"])
+    client.check_models(["a.safetensors"])
+    assert len(calls) == 10
+
+
+def test_client_does_not_keep_a_listing_from_a_failed_request(monkeypatch):
+    """A dropped tunnel must not make every model look missing for the next checks."""
+    from tools._comfyui.client import ComfyUIClient
+
+    failing = {"on": True}
+    _count_object_info_requests(monkeypatch, failing=failing)
+    client = ComfyUIClient("http://comfy.test")
+
+    assert client.check_models(["a.safetensors"]) == ([], ["a.safetensors"])
+    failing["on"] = False
+    assert client.check_models(["a.safetensors"]) == (["a.safetensors"], [])

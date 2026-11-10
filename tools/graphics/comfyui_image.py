@@ -250,6 +250,29 @@ class ComfyUIImage(BaseTool):
                 return ToolStatus.AVAILABLE
         return ToolStatus.DEGRADED
 
+    def model_family_statuses(self) -> dict[str, str]:
+        """Return the readiness of each bundled family on the connected server."""
+        if not self._client.is_available():
+            return {family: "unavailable" for family in _FAMILIES}
+        statuses: dict[str, str] = {}
+        for family, required in _REQUIRED_BY_FAMILY.items():
+            _, missing = self._client.check_models(required)
+            statuses[family] = "available" if not missing else "degraded"
+        return statuses
+
+    def default_model_family(self, family_statuses: dict[str, str] | None = None) -> str:
+        """Return the family a call without ``model_family`` runs.
+
+        The first installed family wins, in ``_FAMILIES`` order (flux2 first).
+        With none installed it stays flux2, so the missing-model report names
+        the documented default.
+        """
+        statuses = family_statuses or self.model_family_statuses()
+        return next(
+            (family for family in _FAMILIES if statuses[family] == "available"),
+            _DEFAULT_FAMILY,
+        )
+
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         return 0.0
 
@@ -267,6 +290,9 @@ class ComfyUIImage(BaseTool):
             key: BUNDLED_MODEL_STACKS[family.stack] for key, family in _FAMILIES.items()
         }
         info["license_notes"] = {"qwen_image_2.1": MODEL_LICENSE_NOTES["qwen-image-2.1"]}
+        family_statuses = self.model_family_statuses()
+        info["model_family_statuses"] = family_statuses
+        info["default_model_family"] = self.default_model_family(family_statuses)
         return info
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
@@ -280,6 +306,9 @@ class ComfyUIImage(BaseTool):
                 ),
             )
 
+        # A caller that names no family gets whichever bundled family the server
+        # has; an explicit choice is never swapped for another model.
+        auto_family = not custom_workflow and not inputs.get("model_family")
         family_key = str(inputs.get("model_family") or _DEFAULT_FAMILY)
         if not custom_workflow and family_key not in _FAMILIES:
             return ToolResult(
@@ -296,6 +325,10 @@ class ComfyUIImage(BaseTool):
                 success=False,
                 error=self._client.unavailable_reason(),
             )
+
+        if auto_family:
+            family_key = self.default_model_family()
+            family = _FAMILIES[family_key]
 
         if not custom_workflow:
             _, missing = self._client.check_models(_REQUIRED_BY_FAMILY[family_key])
@@ -359,6 +392,8 @@ class ComfyUIImage(BaseTool):
                 "output": str(paths[0]),
                 "format": "png",
                 "workflow_provenance": provenance,
+                "model_family": None if custom_workflow else family_key,
+                "model_family_auto_selected": auto_family,
             },
             artifacts=[str(p) for p in paths],
             cost_usd=0.0,

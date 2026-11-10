@@ -110,6 +110,12 @@ class ComfyUIClient:
       4. POST /upload/image     → stage a local image for I2V workflows
     """
 
+    # Seconds a complete model listing is reused. A preflight asks one client
+    # about several model stacks in a row, and each listing is five
+    # /object_info requests: over an SSH tunnel to a rented GPU that is the
+    # difference between about one second and about ten per tool.
+    _MODEL_LIST_TTL = 10.0
+
     def __init__(
         self, server_url: str | None = None, capability: str | None = None
     ) -> None:
@@ -134,6 +140,7 @@ class ComfyUIClient:
         # Populated by generate(): splits queue / execution / download so
         # callers don't have to treat wall time as GPU time.
         self.last_timing: dict[str, Any] | None = None
+        self._model_list: tuple[float, dict[str, list[str]]] | None = None
 
     def _capability_url(self) -> str | None:
         if self._capability_env_var:
@@ -198,7 +205,14 @@ class ComfyUIClient:
             "CLIPLoader": ("clip_name", "clip"),
             "LoraLoaderModelOnly": ("lora_name", "loras"),
         }
+        if (
+            self._model_list is not None
+            and time.monotonic() - self._model_list[0] < self._MODEL_LIST_TTL
+        ):
+            return self._model_list[1]
+
         result: dict[str, list[str]] = {}
+        complete = True
         for node_class, (field, group) in node_to_key.items():
             try:
                 resp = requests.get(
@@ -216,6 +230,10 @@ class ComfyUIClient:
                     result[group] = options
             except Exception:
                 result[group] = []
+                complete = False
+        # A listing with a failed request is not kept: it would make every
+        # model of that group look missing until it expired.
+        self._model_list = (time.monotonic(), result) if complete else None
         return result
 
     def check_models(self, required: list[str]) -> tuple[list[str], list[str]]:

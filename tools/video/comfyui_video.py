@@ -152,6 +152,12 @@ _REQUIRED_MODELS_T2V = [
 # are checked against the same metadata stack by the contract tests.
 _REQUIRED_MODELS_H3 = [item["name"] for item in BUNDLED_MODEL_STACKS[_H3_STACK]]
 
+# Bundled local families, in the order a call that names no model_family tries
+# them. wan2.2 stays first so servers that have it behave as they always did.
+_DEFAULT_FAMILY = "wan2.2"
+_LOCAL_FAMILY_ORDER = (_DEFAULT_FAMILY, "minimax_h3_local")
+_OPERATIONS = ("text_to_video", "image_to_video")
+
 _RESOURCE_PROFILES = {
     "provider_floor": {
         "vram_mb": 8000,
@@ -432,19 +438,71 @@ class ComfyUIVideo(BaseTool):
             return ToolStatus.DEGRADED
         return ToolStatus.UNAVAILABLE
 
-    def operation_statuses(self) -> dict[str, str]:
-        """Return per-operation readiness for selector routing and preflight."""
+    def model_family_statuses(self) -> dict[str, dict[str, str]]:
+        """Return per-operation readiness of each bundled local family.
+
+        A server set up for MiniMax H3 has none of the WAN 2.2 files, so
+        readiness has to be judged per family, not on WAN alone.
+        """
         if not self._client.is_available():
             return {
-                "text_to_video": "unavailable",
-                "image_to_video": "unavailable",
+                family: {operation: "unavailable" for operation in _OPERATIONS}
+                for family in _LOCAL_FAMILY_ORDER
             }
 
-        _, missing_t2v = self._client.check_models(_REQUIRED_MODELS_T2V)
-        _, missing_i2v = self._client.check_models(_REQUIRED_MODELS_I2V)
+        def ready(required: list[str]) -> str:
+            _, missing = self._client.check_models(required)
+            return "available" if not missing else "degraded"
+
+        h3 = ready(_REQUIRED_MODELS_H3)
         return {
-            "text_to_video": "available" if not missing_t2v else "degraded",
-            "image_to_video": "available" if not missing_i2v else "degraded",
+            "wan2.2": {
+                "text_to_video": ready(_REQUIRED_MODELS_T2V),
+                "image_to_video": ready(_REQUIRED_MODELS_I2V),
+            },
+            # One checkpoint serves both H3 operations.
+            "minimax_h3_local": {operation: h3 for operation in _OPERATIONS},
+        }
+
+    def operation_statuses(
+        self, family_statuses: dict[str, dict[str, str]] | None = None
+    ) -> dict[str, str]:
+        """Return per-operation readiness for selector routing and preflight.
+
+        An operation is ready when any bundled local family can run it.
+        """
+        families = family_statuses or self.model_family_statuses()
+        statuses: dict[str, str] = {}
+        for operation in _OPERATIONS:
+            states = {families[family][operation] for family in _LOCAL_FAMILY_ORDER}
+            if "available" in states:
+                statuses[operation] = "available"
+            elif states == {"unavailable"}:
+                statuses[operation] = "unavailable"
+            else:
+                statuses[operation] = "degraded"
+        return statuses
+
+    def default_model_family(
+        self, family_statuses: dict[str, dict[str, str]] | None = None
+    ) -> dict[str, str]:
+        """Return the family a call without ``model_family`` runs, per operation.
+
+        The first installed family in ``_LOCAL_FAMILY_ORDER`` wins. With none
+        installed it stays ``wan2.2``, so the missing-model report names the
+        documented default.
+        """
+        families = family_statuses or self.model_family_statuses()
+        return {
+            operation: next(
+                (
+                    family
+                    for family in _LOCAL_FAMILY_ORDER
+                    if families[family][operation] == "available"
+                ),
+                _DEFAULT_FAMILY,
+            )
+            for operation in _OPERATIONS
         }
 
     def is_operation_available(self, operation: str) -> bool:
@@ -454,7 +512,10 @@ class ComfyUIVideo(BaseTool):
 
     def get_info(self) -> dict[str, Any]:
         info = super().get_info()
-        info["operation_statuses"] = self.operation_statuses()
+        family_statuses = self.model_family_statuses()
+        info["operation_statuses"] = self.operation_statuses(family_statuses)
+        info["model_family_statuses"] = family_statuses
+        info["default_model_family"] = self.default_model_family(family_statuses)
         info["resource_profiles"] = _RESOURCE_PROFILES
         info["setup_offer"] = self.setup_offer
         info["bundled_model_stacks"] = {
@@ -531,7 +592,10 @@ class ComfyUIVideo(BaseTool):
         custom_workflow = bool(
             inputs.get("workflow_json") or inputs.get("workflow_path")
         )
-        model_family = str(inputs.get("model_family", "wan2.2"))
+        # A caller that names no family gets whichever bundled local family the
+        # server has; an explicit choice is never swapped for another model.
+        auto_family = not custom_workflow and not inputs.get("model_family")
+        model_family = str(inputs.get("model_family") or _DEFAULT_FAMILY)
         partner_nodes = {
             "gemini_omni_flash": "GeminiVideoOmni",
             "seedance_2.5": "ByteDance2TextToVideoNode",
@@ -570,6 +634,11 @@ class ComfyUIVideo(BaseTool):
             )
 
         operation = inputs.get("operation", "text_to_video")
+
+        if auto_family:
+            model_family = self.default_model_family().get(operation, _DEFAULT_FAMILY)
+        # Model naming and provenance read the family from the inputs.
+        inputs = {**inputs, "model_family": model_family}
 
         if not custom_workflow and model_family == "wan2.2":
             required = (
@@ -689,6 +758,8 @@ class ComfyUIVideo(BaseTool):
             "workflow_provenance": provenance,
             "hosted": partner_execution,
             "network_required": partner_execution,
+            "model_family": model_family,
+            "model_family_auto_selected": auto_family,
         }
         if partner_execution:
             result_data.update(

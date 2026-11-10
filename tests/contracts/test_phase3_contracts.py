@@ -712,6 +712,7 @@ class TestCapabilityMetadata:
             "minicut",
             "azure",
             "cartesia",
+            "comfyui",
             "dashscope",
             "doubao",
             "elevenlabs",

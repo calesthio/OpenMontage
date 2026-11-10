@@ -1,0 +1,25 @@
+{
+  "1": {
+    "class_type": "VoxCPM_TTS",
+    "inputs": {
+      "model_name": "VoxCPM2",
+      "lora_name": "None",
+      "text": "",
+      "voice_design": "",
+      "cfg": 2.0,
+      "steps": 10,
+      "normalize_text": false,
+      "seed": 0,
+      "force_offload": true,
+      "device": "cuda",
+      "dtype": "auto"
+    }
+  },
+  "2": {
+    "class_type": "SaveAudio",
+    "inputs": {
+      "audio": ["1", 0],
+      "filename_prefix": "audio/openmontage_tts"
+    }
+  }
+}

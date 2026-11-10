@@ -1,7 +1,8 @@
 """Thin REST client for a running ComfyUI server.
 
 Handles the full generation cycle: submit workflow, poll for completion,
-download artifacts.  Used by comfyui_image, comfyui_video, and comfyui_music.
+download artifacts.  Used by comfyui_image, comfyui_video, comfyui_music and
+comfyui_tts.
 """
 
 from __future__ import annotations
@@ -495,6 +496,69 @@ class ComfyUIClient:
             )
         resp.raise_for_status()
         return resp.json()["name"]
+
+    def upload_audio(self, local_path: Path, name: str) -> str:
+        """Upload a local audio file so LoadAudio nodes can reference it.
+
+        ComfyUI's ``/upload/image`` stores any file in its input folder; the
+        ``image`` field name is the endpoint's, not a type check. An existing
+        file of the same name is replaced, so a caller that derives *name*
+        from the content gets a stable, reusable upload.
+
+        Returns the server-side filename.
+        """
+        with open(local_path, "rb") as f:
+            resp = requests.post(
+                f"{self.server_url}/upload/image",
+                files={"image": (name, f, "application/octet-stream")},
+                data={"overwrite": "true"},
+                timeout=60,
+            )
+        resp.raise_for_status()
+        return resp.json()["name"]
+
+    def input_file_text(self, filename: str) -> str | None:
+        """Return the text of a file in the server's input folder, or ``None``.
+
+        Used for the transcript that sits next to a reference voice
+        (``<voice>.reference.txt``). The server sends ``text/plain`` without a
+        charset, so the bytes are decoded as UTF-8 here.
+        """
+        try:
+            resp = requests.get(
+                f"{self.server_url}/view",
+                params={"filename": filename, "subfolder": "", "type": "input"},
+                timeout=30,
+            )
+            if resp.status_code != 200:
+                return None
+            return resp.content.decode("utf-8")
+        except Exception:
+            return None
+
+    def list_input_audio(self) -> list[str]:
+        """Return the audio files a LoadAudio node on the server can load."""
+        try:
+            resp = requests.get(f"{self.server_url}/object_info/LoadAudio", timeout=10)
+            resp.raise_for_status()
+            spec = (
+                resp.json()
+                .get("LoadAudio", {})
+                .get("input", {})
+                .get("required", {})
+                .get("audio", [[]])
+            )
+        except Exception:
+            return []
+        # Older nodes list the choices first; V3 nodes send
+        # ["COMBO", {"options": [...]}].
+        if spec and isinstance(spec[0], list):
+            return list(spec[0])
+        if len(spec) > 1 and isinstance(spec[1], dict):
+            options = spec[1].get("options")
+            if isinstance(options, list):
+                return list(options)
+        return []
 
     # ------------------------------------------------------------------
     # High-level helper

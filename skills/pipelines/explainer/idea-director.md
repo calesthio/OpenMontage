@@ -52,7 +52,7 @@ For each angle, specify:
 |-------|------|-------------|
 | `name` | Short title (5-8 words) | Specific, not generic. "Why Vector Search Beats SQL LIKE" not "About Vector Databases" |
 | `hook` | Opening line/question (under 15 words) | Must create curiosity or surprise in one sentence |
-| `narrative_structure` | How the story unfolds | One of: analogy, problem-solution, journey, debate, myth-busting, timeline, comparison |
+| `narrative_structure` | How the story unfolds | Use one exact `proposal_packet` value: `analogy`, `problem_solution`, `journey`, `debate`, `myth_busting`, `timeline`, `comparison`, `tutorial`, `story`, or `data_narrative`. Keep the schema's underscore spelling. |
 | `visual_approach` | Primary visual style | e.g., "animated diagrams with vector space visualizations" |
 | `suggested_playbook` | Best-matching style playbook | Reference available playbooks in `styles/` |
 | `target_audience` | Who this angle serves best | Specific: "mid-level developers evaluating databases" not "developers" |
@@ -64,6 +64,8 @@ For each angle, specify:
 - [ ] At least one angle is provocative/surprising (challenges assumptions)
 - [ ] No two angles use the same narrative structure
 - [ ] Each angle suggests a different visual approach
+
+When carrying the selected structure into `proposal_packet.concept_options[].narrative_structure`, preserve the exact enum value. For `brief.target_platform`, choose exactly one of `youtube`, `instagram`, `tiktok`, `linkedin`, or `generic`; do not combine the options into one string.
 
 ### Step 4: Present to User and Select
 
@@ -89,7 +91,7 @@ Build the `brief` artifact with all required and relevant optional fields:
   "tone": "...",
   "style": "...",
   "target_audience": "...",
-  "target_platform": "youtube|instagram|tiktok|linkedin|generic",
+  "target_platform": "youtube",
   "target_duration_seconds": 60,
   "reference_material": ["..."],
   "angle_options": [

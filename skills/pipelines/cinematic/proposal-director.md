@@ -156,7 +156,7 @@ For cinematic, explicitly classify:
 
 ```yaml
 delivery_promise:
-  promise_type: motion_led  # or source_led, hybrid
+  promise_type: motion_led  # one of motion_led, source_led, data_explainer, teacher_explainer, screen_demo, avatar_presenter, hybrid, localization
   motion_required: true     # false only if user approves still-led
   source_required: false    # true if user has footage
   tone_mode: cinematic      # cinematic, raw, intimate, epic

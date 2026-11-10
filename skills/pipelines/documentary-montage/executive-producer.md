@@ -43,7 +43,7 @@ across all stages is to:
 | Stage | Director skill | Produces |
 |-------|----------------|----------|
 | `idea` | `idea-director.md` | brief (topic, tone, duration, shape) |
-| `scene` | `scene-director.md` | shot_list (slot descriptions + queries) |
+| `scene_plan` | `scene-director.md` | `scene_plan` (ordered slots + queries) |
 | `assets` | `asset-director.md` | asset_manifest (corpus built + per-slot picks) |
 | `edit` | `edit-director.md` | edit_decisions (timeline + transitions + music) |
 | `compose` | `compose-director.md` | render_report (final mp4) |

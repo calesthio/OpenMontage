@@ -1,16 +1,16 @@
 ---
 name: comfyui
-description: Use when working with ComfyUI workflows in OpenMontage, including comfyui_image/comfyui_video/comfyui_music, custom workflow_json/workflow_path inputs, output_node selection, missing model setup, LoRAs, low-VRAM workflow choices, and community workflow imports.
+description: Use when working with ComfyUI workflows in OpenMontage, including comfyui_image/comfyui_video/comfyui_music/comfyui_tts, custom workflow_json/workflow_path inputs, output_node selection, missing model setup, LoRAs, low-VRAM workflow choices, narration voices, and community workflow imports.
 ---
 
 # ComfyUI Workflows in OpenMontage
 
-Use this skill before calling `comfyui_image`, `comfyui_video`, or `comfyui_music`, and when converting a community ComfyUI workflow into an OpenMontage tool call.
+Use this skill before calling `comfyui_image`, `comfyui_video`, `comfyui_music`, or `comfyui_tts`, and when converting a community ComfyUI workflow into an OpenMontage tool call.
 
 ## Server Contract
 
 - ComfyUI must be running before the tool can generate. The default server is `http://localhost:8188`; override it with `COMFYUI_SERVER_URL`.
-- Running separate ComfyUI instances per capability (different GPU, different model set)? `COMFYUI_IMAGE_SERVER_URL` / `COMFYUI_VIDEO_SERVER_URL` / `COMFYUI_MUSIC_SERVER_URL` each override `COMFYUI_SERVER_URL` for that one tool only. Optional -- a single-server setup needs none of these.
+- Running separate ComfyUI instances per capability (different GPU, different model set)? `COMFYUI_IMAGE_SERVER_URL` / `COMFYUI_VIDEO_SERVER_URL` / `COMFYUI_MUSIC_SERVER_URL` / `COMFYUI_TTS_SERVER_URL` each override `COMFYUI_SERVER_URL` for that one tool only. Optional -- a single-server setup needs none of these.
 - Health and hardware status come from `GET /system_stats`.
 - Jobs are submitted to `POST /prompt`, completed outputs are read from `GET /history/{prompt_id}`, and artifact bytes are downloaded with `GET /view`.
 - Long waits (video, music) prefer ComfyUI's websocket feed for immediate completion/error detection and transparently fall back to REST polling if `websocket-client` isn't installed. Either way, a timeout is recoverable: pass the error's `prompt_id` back in as `resume_prompt_id` to resume waiting on the same job instead of resubmitting it.
@@ -41,7 +41,14 @@ Use this skill before calling `comfyui_image`, `comfyui_video`, or `comfyui_musi
   - Text-to-image only. Defaults: 40 steps (the model card's setting; 25 is faster but fixed fewer prompt-adherence errors in our eval), CFG 1.0 (base Qwen-Image-2.1 runs at CFG 1, so `negative_prompt` has little effect). Do not reuse FLUX's guidance 3.5. Each side must be a multiple of 32 within 256-2752 and the area at most 2400x1792.
   - Edit, multi-reference and the prompt enhancer are not bundled; use a custom workflow.
   - Licence: Qwen Research License, non-commercial only (`get_info()["license_notes"]`). Tell the user before using it.
-- Both bundled graphs were written by hand in API format from the official Comfy-Org templates and checked against the node schemas and by contract tests. The Qwen-Image-2.1 graph matches one that has been run on a rented RTX 4090; the MiniMax H3 T2V/I2V graphs have **not been run end-to-end on a GPU yet** (they reuse the loader/sampler/decode chain of H3 graphs that have). Treat the first H3 generation on a new server as the real validation and report any `/prompt` validation error verbatim.
+- The bundled graphs were written by hand in API format from the official Comfy-Org templates and are checked against the node schemas by contract tests. All three ran through these tools on a rented RTX 5090 with ComfyUI 0.44.0 on 2026-11-10: Qwen-Image-2.1 at 1344x768 with 40 steps in 24 s, and a 4 s MiniMax H3 clip at 1344x768 with 20 steps in 185 s (text-to-video) and 178 s (image-to-video, first frame from the Qwen image). A server with other ComfyUI or node versions can still reject a graph: report any `/prompt` validation error verbatim. `tests/tools/test_comfyui_live_gpu.py` repeats the run against whatever server `COMFYUI_SERVER_URL` points at.
+
+## Which model runs when none is named
+
+- `comfyui_video` and `comfyui_image` each bundle more than one model family, and a server usually has only one of them installed. A call without `model_family` (which is what `video_selector` and `image_selector` send) runs the first installed family: `wan2.2` then `minimax_h3_local` for video, `flux2` then `qwen_image_2.1` for images. With nothing installed the missing-model report names the first one.
+- An explicit `model_family` is never swapped for another model. If its files are missing, the call fails with `data.missing_models[]`.
+- Read the choice **before** you announce a generation: `get_info()["default_model_family"]` is the family a call without `model_family` will run (per operation for video), and `get_info()["model_family_statuses"]` shows what is installed. The result repeats it as `data.model_family` with `data.model_family_auto_selected`.
+- The families differ in more than quality. `minimax_h3_local` takes `duration` (4-15 s), not `num_frames`, makes 24 fps clips with audio, and is far slower than the 4-step WAN graph. `qwen_image_2.1` runs 40 steps at CFG 1. Size the request for the family that will run, and tell the user its licence note.
 
 ## Choosing a Workflow
 
@@ -96,3 +103,21 @@ Use this skill before calling `comfyui_image`, `comfyui_video`, or `comfyui_musi
 - Need ACE-Step 1.5, a different node pack, or a non-ACE-Step audio model? Fall back to `workflow_json`/`workflow_path` + `output_node`, exactly like a custom image/video workflow -- in that mode `prompt` becomes provenance/logging only again and must already be baked into the graph.
 - `output_node` (bundled or custom) should be the node that writes the final audio -- the bundled workflow's is `SaveAudioMP3`. The client reads artifacts from that node's `"audio"` output key (parallel to `"images"` for image/video savers).
 - For custom workflows, provide `workflow_name`/`workflow_model`/`workflow_model_stack` for provenance exactly as you would for a custom image/video workflow.
+
+## Speech (`comfyui_tts`)
+
+- Narration through VoxCPM2 (model and node pack Apache-2.0) on the same ComfyUI server. It needs the `wildminder/ComfyUI-VoxCPM` node pack; without it the tool is `degraded` and `execute()` returns `data.setup` with what to install. No API key, no per-character cost.
+- Pick the voice in one of three ways (the first one given wins):
+  - `reference_audio_path` (+ `reference_text`): a local clip of 5-20 s is uploaded and cloned. With the exact transcript the take continues from the clip, which is the closest match; without it only the timbre is used.
+  - `voice`: an audio file already in the server's `ComfyUI/input` folder, with or without its extension. `<voice>.reference.txt` next to it is read as the transcript. `get_info()["server_voices"]` lists what is there.
+  - `voice_description`: voice design in plain words (`"A calm woman in her thirties with a low, warm voice"`). A call with only `text` uses a neutral narrator description.
+- **One narrator across a script:** each call is a separate generation, and a designed voice is not guaranteed to come out the same twice. Generate the first section with `voice_description`, listen to it with the user, then pass that file as `reference_audio_path` and its text as `reference_text` for every later section. A server-side `voice` gives the same consistency.
+- The seed defaults to a fixed value, not a random one. Change `seed` to get a different take of the same line.
+- Punctuation sets the pacing: a period or `?` is a clear pause, a comma a short one. Write numbers and symbols the way they should be spoken; `normalize_text` is off by default.
+- The language follows the text. A voice cloned from a speaker of another language keeps that speaker's accent.
+- The server saves FLAC and the tool converts it locally to the extension of `output_path` (`.wav` by default, `.mp3`, `.flac` as is). There are no word timestamps: run `transcriber` on the file for captions.
+- VoxCPM2 is unloaded after each take (`keep_model_loaded: false`) so the video model has the VRAM. Set it to `true` only for a run of narration takes with no video generation in between.
+- Loudness is not normalised and differs between takes (mean level -31 to -19 dB in one run of four). Level the narration in the mix (`audio_mixer` has a loudness target), not by ear per take.
+- Measured on a rented RTX 5090 (2026-11-10): 11-13.5 s per one-sentence take, 26.5 s for the first take after ComfyUI started. A speech take right after an H3 clip ran without a VRAM error.
+- Only clone a voice you have consent for. Do not clone a real person from a clip found online.
+- Offline fallback: `piper_tts` runs on the local CPU and is what `tts_selector` picks when no ComfyUI server answers. It needs a voice in `~/.piper/models` (`get_info()["installed_voices"]`).

@@ -260,10 +260,13 @@ class ComfyUITTS(BaseTool):
         return 0.0
 
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
-        # Model load plus generation at about half real time, taking speech as
-        # roughly 15 characters per second. An estimate, not a measurement.
+        # Measured through this tool on a rented RTX 5090 (2026-11-10): 11-13.5 s
+        # per one-sentence take (3.5-5 s of speech) with the model reloaded for
+        # each take, and 26.5 s for the first take after ComfyUI started. Longer
+        # texts are extrapolated at about half real time, taking speech as
+        # roughly 15 characters per second.
         text = str(inputs.get("text") or "")
-        return round(12.0 + len(text) / 15.0 * 0.5, 1)
+        return round(10.0 + len(text) / 15.0 * 0.5, 1)
 
     def get_info(self) -> dict[str, Any]:
         info = super().get_info()

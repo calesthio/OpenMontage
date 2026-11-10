@@ -3,8 +3,10 @@
 How to rent one vast.ai machine, put the open-weight models OpenMontage can drive
 on it, and connect OpenMontage to it from your laptop.
 
-**Last checked: 2026-11-06.** Live prices, file sizes and licences below were read
-that day. Re-check anything marked *snapshot* before you rent.
+**Last checked: 2026-11-06** for prices, file sizes and licences: re-check anything
+marked *snapshot* before you rent. **2026-11-10:** every bundled workflow was run
+through OpenMontage on a rented RTX 5090 (South Korea host, ComfyUI 0.44.0, cu130
+PyTorch); the results are in the table below and in section 7.
 
 ## What is verified and what is not
 
@@ -14,10 +16,11 @@ that day. Re-check anything marked *snapshot* before you rent.
 | Hugging Face repos, file names and sizes | Read live on 2026-11-06 |
 | MiniMax H3 and Qwen-Image-2.1 licence terms | Read from the licence files on 2026-11-06 |
 | Instance setup steps (ComfyUI upgrade, cu130 PyTorch, SageAttention) | Taken from a setup script used on RTX 5090 instances in 2026-09/10. **Not re-run on an RTX PRO 6000.** |
-| Qwen-Image-2.1 bundled graph | Same nodes and inputs as a graph run on a rented RTX 4090 |
-| **MiniMax H3 bundled T2V/I2V graphs** | **Not yet run on a GPU.** Section 6 is the first-run checklist. |
+| Qwen-Image-2.1 bundled graph | Run through `image_selector` on a rented RTX 5090 on 2026-11-10 (1344x768, 40 steps) |
+| MiniMax H3 bundled T2V/I2V graphs | Both run through `video_selector` on that RTX 5090 on 2026-11-10 (4 s, 1344x768, 20 steps, audio in the file). Not run on an RTX PRO 6000. Section 6 stays the checklist for a new server. |
+| `comfyui_tts` (VoxCPM2) and `comfyui_music` (ACE-Step v1) | Run on the same machine that day: voice design, cloning a server-side voice, cloning an uploaded clip; the words were read back by `transcriber` |
 | Drama 3 and Nemotron serving commands | Copied from vendor docs and research notes. Not run by us. OpenMontage has no tool for them. |
-| H3 time on an RTX PRO 6000 | **Not measured.** See section 7. |
+| H3 time on an RTX PRO 6000 | **Not measured.** Section 7 has the RTX 5090 numbers. |
 
 ## 1. What runs on the machine
 
@@ -27,7 +30,8 @@ that day. Re-check anything marked *snapshot* before you rent.
 | Image | Qwen-Image-2.1 (INT8) | ComfyUI | `comfyui_image`, `model_family: "qwen_image_2.1"`, text-to-image | 17.3 GB |
 | Music with vocals | YuE2-3B, or ACE-Step 1.5 XL | ComfyUI | Custom workflow only (the bundled music workflow is ACE-Step **v1**) | 5.4 GB / ~19 GB |
 | Instrumental music | Stable Audio 3 Medium | ComfyUI | Custom workflow only | 10.4 GB |
-| Speech (TTS) | Fish Audio Drama 3 (int4) | SGLang-Omni (separate server) | **No tool.** `fish_audio_tts` calls the hosted API only. | 24.0 GB |
+| Speech (TTS) | VoxCPM2 | ComfyUI (`ComfyUI-VoxCPM` nodes) | `comfyui_tts`: voice design, or cloning a reference clip | 4.6 GB |
+| Speech (TTS), larger model | Fish Audio Drama 3 (int4) | SGLang-Omni (separate server) | **No tool.** `fish_audio_tts` calls the hosted API only. | 24.0 GB |
 | Speech to text | Nemotron 3.5 Transcribe (FP8) | vLLM (separate server) | **No tool.** | 34.7 GB |
 
 Everything under "ComfyUI" shares one server and one port. Drama 3 and Nemotron are
@@ -239,7 +243,33 @@ Two choices worth knowing about:
   `tools/_comfyui/workflows/minimax-h3-*.json` and the stack in `metadata.py`
   together. A contract test fails if they disagree.
 
-### 4.2 Optional: music for custom ComfyUI workflows
+### 4.2 Speech: VoxCPM2 nodes for `comfyui_tts` (4.6 GB)
+
+`comfyui_tts` runs the `VoxCPM_TTS` node of `wildminder/ComfyUI-VoxCPM`. The model and
+the node pack are Apache-2.0. Without the node pack the tool reports `degraded` and
+names what to install.
+
+```bash
+cd /workspace/ComfyUI/custom_nodes
+git clone https://github.com/wildminder/ComfyUI-VoxCPM.git
+# the revision that loaded on ComfyUI 0.44.0 on 2026-11-10; newer ones are untested here
+git -C ComfyUI-VoxCPM checkout 2d1e32ec7d69cf2d002b0480c6113c0b68e0baef
+/venv/main/bin/python -m pip install -r ComfyUI-VoxCPM/requirements.txt
+
+# The nodes look for models/tts/VoxCPM/<name>. Download once and link it.
+snap=$(/venv/main/bin/python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/VoxCPM2'))")
+mkdir -p "$MODELS/tts/VoxCPM" && ln -sfn "$snap" "$MODELS/tts/VoxCPM/VoxCPM2"
+
+supervisorctl restart comfyui     # stops any running job: do it before you generate
+curl -s http://127.0.0.1:18188/object_info/VoxCPM_TTS | head -c 80   # must not be {}
+```
+
+A reference voice for cloning is any audio file in `/workspace/ComfyUI/input`. Put the
+exact transcript next to it as `<name>.reference.txt` and `comfyui_tts` uses both when
+called with `voice: "<name>"`. Without a server-side voice, pass `reference_audio_path`
+(the tool uploads the clip) or `voice_description`.
+
+### 4.3 Optional: music for custom ComfyUI workflows
 
 These have no bundled OpenMontage workflow. Load the official templates in the ComfyUI
 Template Library and let it list what is missing. File names below are from the repos
@@ -265,7 +295,7 @@ For YuE2, keep the generation budget at least 20 to 30 s longer than the clip yo
 want, or the song is truncated. Prompts are baked into a custom workflow; the
 `comfyui_music` tool does not inject them.
 
-### 4.3 Optional: separate servers (no OpenMontage tool)
+### 4.4 Optional: separate servers (no OpenMontage tool)
 
 ```bash
 hf download fishaudio/drama-3-int4 --local-dir /workspace/models/drama-3-int4                                  # 24.0 GB
@@ -307,27 +337,39 @@ print(json.dumps(registry.provider_menu_summary(), indent=2))
 "
 ```
 
-Separate ComfyUI machines per capability can use `COMFYUI_VIDEO_SERVER_URL` and
-`COMFYUI_IMAGE_SERVER_URL`. If the tunnel drops mid-job, the job keeps running on the
+Separate ComfyUI machines per capability can use `COMFYUI_VIDEO_SERVER_URL`,
+`COMFYUI_IMAGE_SERVER_URL`, `COMFYUI_MUSIC_SERVER_URL` and `COMFYUI_TTS_SERVER_URL`. If the tunnel drops mid-job, the job keeps running on the
 server. Reconnect and pass the `prompt_id` from the timeout error back as
 `resume_prompt_id`.
 
-Check both tools see their models. Missing files are listed with destinations and
-download URLs in `data.missing_models`:
+Check that the tools see their models and nodes. Missing files are listed with
+destinations and download URLs in `data.missing_models`:
 
 ```bash
 python -c "
 from tools.video.comfyui_video import ComfyUIVideo
 from tools.graphics.comfyui_image import ComfyUIImage
-print(ComfyUIVideo().operation_statuses())
-print(ComfyUIImage().get_status())
+from tools.audio.comfyui_tts import ComfyUITTS
+video, image = ComfyUIVideo().get_info(), ComfyUIImage().get_info()
+print(video['operation_statuses'], video['default_model_family'])
+print(image['model_family_statuses'], image['default_model_family'])
+print(ComfyUITTS().get_status())
 "
 ```
 
+On a machine that holds only the files of section 4.1, WAN 2.2 and FLUX 2 are
+`degraded` and the defaults read `minimax_h3_local` and `qwen_image_2.1`: a call that
+names no `model_family`, which is what the selectors send, runs those. The provider
+menu then lists `comfyui` under image, video, music and speech generation.
+
 ## 6. First-run checklist for the H3 graphs
 
-The bundled H3 T2V and I2V graphs have not been run yet. Treat your first run as the
-validation, and keep it small.
+The bundled H3 T2V and I2V graphs ran on one server (RTX 5090, ComfyUI 0.44.0,
+2026-11-10). A different ComfyUI version can still reject them, so treat the first run
+on a new server as its validation, and keep it small.
+`OPENMONTAGE_ALLOW_NETWORK=1 python -m pytest tests/tools/test_comfyui_live_gpu.py -m live_api -v -s`
+runs one small generation per capability against `COMFYUI_SERVER_URL` and takes about
+nine minutes on that machine.
 
 1. Open ComfyUI through the tunnel, load the **MiniMax H3 T2V** template from the
    Template Library, and confirm all four model files load without a missing-model
@@ -351,7 +393,11 @@ validation, and keep it small.
 | H3, 5 s product shot, 0.98 MP, RTX 5090, cu130 PyTorch | 120 s (133 s on cu128) | Our run, 2026-09-29 |
 | H3, 5 s clip, 1344x768, 8-step Turbo LoRA, RTX 5090 | 85 s | Third-party benchmark (`yix081/vdn-minimax-h3-consumer-gpus`), cited in our 2026-09-24 notes |
 | H3, 5 s clip, RTX PRO 6000, same setting | reported as the same 85 s | Same third-party benchmark, run on SGLang, not ComfyUI; not measured by us |
-| H3, 5 s clip, 20 base steps | **not measured** | `estimate_runtime` extrapolates the 85 s figure linearly: about 270 s |
+| H3 bundled graph, 4 s clip (107 frames), 1344x768, 20 base steps, RTX 5090, cu130 PyTorch, SageAttention | 185 s text-to-video (weights not yet loaded), 178 s image-to-video right after | Our run through `comfyui_video`, 2026-11-10 |
+| H3, other clip lengths, step counts or GPUs | **not measured** | `estimate_runtime` extrapolates linearly from the row above |
+| Qwen-Image-2.1 bundled graph, 1344x768, 40 steps, same RTX 5090 | 24 s (first image, weights not yet loaded) | Our run through `comfyui_image`, 2026-11-10 |
+| ACE-Step v1 bundled graph, 10 s of music, 50 steps, same RTX 5090 | 19 s | Our run through `comfyui_music`, 2026-11-10 |
+| VoxCPM2 speech, one sentence (3.5-5 s of audio), 10 steps, same RTX 5090 | 26.5 s for the first take, then 11-13.5 s per take with the model unloaded after each | Our run through `comfyui_tts`, 2026-11-10 |
 | Qwen-Image-2.1, 1024x1024, warm | 5.8 s at 25 steps, 9.1 s at 40 steps on one RTX 4090 host; 24 s on another RTX 4090 host (cause not found) | Our eval, 2026-10 |
 | Qwen-Image-2.1 peak VRAM | 16.9 GB at 1024x1024, 20.2 GB at 2048x2048 | Same RTX 4090 tests |
 

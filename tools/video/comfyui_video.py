@@ -62,11 +62,13 @@ _H3_LONG_EDGE = 1344  # native 16:9 canvas is 1344x768
 _H3_SHORT_EDGE = 768
 _H3_CANVAS_STEP = 32
 _H3_DEFAULT_STEPS = 20
-# Seconds per sampling step for a 5 s clip, from a third-party 8-step Turbo
-# benchmark at 1344x768 (85 s on RTX 5090 and RTX PRO 6000-class GPUs).
-# Extrapolating it linearly to 20 base steps is an estimate; it has not been
-# measured here.
-_H3_SECONDS_PER_STEP_PER_5S = 85 / 8
+# Runtime estimate, calibrated on one measured setting: a 4 s clip (107 frames)
+# at 1344x768 with 20 base steps took 185 s (text-to-video, weights not yet
+# loaded) and 178 s (image-to-video, right after it) through this tool on a
+# rented RTX 5090 with cu130 PyTorch and SageAttention (2026-11-10). The split
+# between loading and sampling below is assumed, not measured, and other GPUs,
+# step counts and clip lengths are extrapolated linearly from that point.
+_H3_SECONDS_PER_STEP_PER_5S = 7.5
 _H3_LOAD_OVERHEAD_SECONDS = 60
 
 

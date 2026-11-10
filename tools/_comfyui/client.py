@@ -7,6 +7,7 @@ download artifacts.  Used by comfyui_image, comfyui_video, and comfyui_music.
 from __future__ import annotations
 
 import copy
+import ipaddress
 import json
 import os
 import random
@@ -14,6 +15,7 @@ import time
 import uuid
 from pathlib import Path
 from typing import Any, Callable
+from urllib.parse import urlparse
 
 import requests
 
@@ -166,10 +168,29 @@ class ComfyUIClient:
             f"Check that ComfyUI is running and the URL is correct."
         )
 
+    def _probe_timeout(self) -> tuple[float, float]:
+        """(connect, read) timeout for the health probe.
+
+        A server on this machine completes the TCP handshake in well under a
+        millisecond, so a short connect timeout loses nothing. It matters on
+        Windows, where a connect to a closed port is retried for ~2s per
+        address instead of failing at once; ``localhost`` resolves to both
+        ``::1`` and ``127.0.0.1``, so every probe of an absent default server
+        cost ~4s -- and the registry probes it once per ComfyUI tool.
+        """
+        host = urlparse(self.server_url).hostname or ""
+        try:
+            loopback = host == "localhost" or ipaddress.ip_address(host).is_loopback
+        except ValueError:
+            loopback = False
+        return (0.5 if loopback else 5, 5)
+
     def is_available(self) -> bool:
         """Return True if the ComfyUI server is reachable."""
         try:
-            resp = requests.get(f"{self.server_url}/system_stats", timeout=5)
+            resp = requests.get(
+                f"{self.server_url}/system_stats", timeout=self._probe_timeout()
+            )
             return resp.status_code == 200
         except Exception:
             return False

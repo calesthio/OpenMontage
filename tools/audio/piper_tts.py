@@ -5,12 +5,14 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+import sys
 import time
 from pathlib import Path
 from typing import Any
 
 from tools.base_tool import (
     BaseTool,
+    DependencyError,
     Determinism,
     ExecutionMode,
     ResourceProfile,
@@ -113,8 +115,24 @@ class PiperTTS(BaseTool):
     def _voice_data_dir() -> Path:
         return Path.home() / ".piper" / "models"
 
+    @classmethod
+    def _find_piper(cls) -> str | None:
+        """Find the piper executable, checking next to sys.executable before PATH."""
+        py_dir = Path(sys.executable).parent
+        for candidate_name in ("piper", "piper.exe"):
+            candidate = py_dir / candidate_name
+            if candidate.is_file() and os.access(candidate, os.X_OK):
+                return str(candidate)
+        return shutil.which("piper")
+
+    def check_dependencies(self) -> None:
+        if not self._find_piper():
+            raise DependencyError(
+                f"Command 'piper' not found. {self.install_instructions}"
+            )
+
     def get_status(self) -> ToolStatus:
-        if shutil.which("piper"):
+        if self._find_piper():
             return ToolStatus.AVAILABLE
         return ToolStatus.UNAVAILABLE
 
@@ -138,9 +156,10 @@ class PiperTTS(BaseTool):
         output_path = Path(inputs.get("output_path", "tts_output.wav"))
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
+        piper_bin = self._find_piper() or "piper"
         proc = subprocess.run(
             [
-                "piper",
+                piper_bin,
                 "--model", inputs.get("model", "en_US-lessac-medium"),
                 "--data-dir", str(self._voice_data_dir()),
                 "--speaker", str(inputs.get("speaker_id", 0)),

@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import base64
 import hashlib
 import json
 import os
@@ -54,6 +55,8 @@ class CDPSession:
         self.ws = await websockets.connect(self.ws_uri)
         self.log.append(f"CDP connected: {self.ws_uri}")
         await self._send({"method": "Runtime.enable"})
+        await self._recv_until_id(self._seq)
+        await self._send({"method": "Page.enable"})
         await self._recv_until_id(self._seq)
 
     async def close(self) -> None:
@@ -100,6 +103,21 @@ class CDPSession:
         if isinstance(val, str):
             return val
         return str(val)
+
+    async def screenshot(self, path: str) -> None:
+        """Capture a screenshot via Page.captureScreenshot and save to path."""
+        await self._send({"method": "Page.captureScreenshot", "params": {}})
+        msg = await self._recv_until_id(self._seq)
+        result = msg.get("result", {})
+        if "exceptionDetails" in result:
+            raise RuntimeError(f"Screenshot error: {result['exceptionDetails']}")
+        data = result.get("data")
+        if data is None:
+            raise RuntimeError(f"Screenshot: no data in response: {msg}")
+        img_bytes = base64.b64decode(data)
+        with open(path, "wb") as f:
+            f.write(img_bytes)
+        step_log(self.log, f"screenshot saved: {path} ({len(img_bytes)} bytes)")
 
 
 def step_log(log: list[str], message: str) -> None:
@@ -234,6 +252,14 @@ async def main() -> int:
         # Wait for result image (poll every POLL_INTERVAL s, up to timeout)
         step_log(log, f"waiting for image (timeout {args.timeout}s)")
         deadline = asyncio.get_event_loop().time() + args.timeout
+        screenshot_times = [
+            deadline - args.timeout + 30,
+            deadline - args.timeout + 90,
+            deadline - args.timeout + 180,
+        ]
+        next_shot = 0
+        found = False
+
         while asyncio.get_event_loop().time() < deadline:
             await asyncio.sleep(POLL_INTERVAL)
             img_count = await session.eval(
@@ -241,14 +267,35 @@ async def main() -> int:
             )
             step_log(log, f"images found: {img_count}")
             if isinstance(img_count, (int, float)) and img_count > 0:
+                found = True
                 break
+
+            # Checkpoint screenshots at 30s, 90s, 180s
+            elapsed = asyncio.get_event_loop().time() - (deadline - args.timeout)
+            while (
+                next_shot < len(screenshot_times)
+                and elapsed >= screenshot_times[next_shot]
+            ):
+                await session.screenshot(f"{args.out}.shot{next_shot + 1}.png")
+                next_shot += 1
+
+        # Final screenshot
+        await session.screenshot(f"{args.out}.final.png")
+
+        # Dump page text for debugging
+        body_text = await session.eval("document.body.innerText")
+        lines = str(body_text).split("\n")
+        step_log(log, "=== PAGE TEXT (first 40 lines) ===")
+        for i, line in enumerate(lines[:40]):
+            step_log(log, f"  {i + 1}: {line}")
+        step_log(log, "=== END PAGE TEXT ===")
 
         # Get image URLs
         img_data = await session.eval(
             "JSON.stringify(Array.from(document.querySelectorAll('flow-image-tile img[data-media-id], img[data-media-id]')).map(img => ({src: img.src, mediaId: img.getAttribute('data-media-id')})).slice(0, 3))"
         )
         if not isinstance(img_data, list) or len(img_data) == 0:
-            step_log(log, "ERROR: no image URLs found")
+            step_log(log, "ERROR: no image URLs found - Flow may be rate-limited or out of credits")
             return 1
 
         img_url = img_data[0]["src"]

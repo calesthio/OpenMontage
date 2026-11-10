@@ -458,6 +458,33 @@ class TestClientHelpers:
         assert "myhost:9999" in msg
         assert "COMFYUI_SERVER_URL" not in msg
 
+    @pytest.mark.parametrize(
+        "url, connect_timeout",
+        [
+            ("http://localhost:8188", 0.5),
+            ("http://127.0.0.1:8188", 0.5),
+            ("http://[::1]:8188", 0.5),
+            ("http://192.168.1.20:8188", 5),
+            ("https://comfy.example.com", 5),
+        ],
+    )
+    def test_health_probe_connect_timeout_short_only_for_loopback(
+        self, monkeypatch, url, connect_timeout
+    ):
+        # A closed local port takes ~2s per address to refuse on Windows, so
+        # the probe of an absent local server must not wait the full 5s.
+        from tools._comfyui.client import ComfyUIClient
+
+        seen = {}
+
+        def fake_get(url, timeout=None):
+            seen["timeout"] = timeout
+            return type("R", (), {"status_code": 200})()
+
+        monkeypatch.setattr("tools._comfyui.client.requests.get", fake_get)
+        assert ComfyUIClient(url).is_available() is True
+        assert seen["timeout"] == (connect_timeout, 5)
+
     def test_submit_includes_client_id_for_websocket_targeting(self, monkeypatch):
         from tools._comfyui.client import ComfyUIClient
 

@@ -127,6 +127,7 @@ ARK_API_KEY=                 # API key body only; do not include the "Bearer " p
 
 # VIDEO
 PIKA_API_KEY=                # Pika H3 Flex via the Pika API (native audio, references, 4k)
+UBERLLM_API_KEY=             # UberLLM video: Seedance 2.0, Wan 2.7, Kling 3, Veo 3.1 Fast, LTX 2.3, Hailuo 02, Vidu Q3
 HEYGEN_API_KEY=              # HeyGen avatar video gateway
 RUNWAY_API_KEY=              # Runway native + Seedance 2.5, Gemini Omni, MiniMax H3
 SUNO_API_KEY=                # Suno music generation
@@ -544,6 +545,72 @@ OpenMontage's default budget policy asks for approval above $0.50 per action,
 so 4k runs of 7 seconds or more will prompt the user.
 
 > **Free tier:** None guaranteed; generation is prepaid. Pika may run promotional allowances for some operations, in which case the job settles at $0 and the result carries `data.free_generation` with the promo details. Check the balance at [dev.pika.art](https://dev.pika.art) before a production run.
+
+---
+
+### UberLLM — Video Generation
+
+> **Several video model families on one key.** `uberllm_video` sends
+> text-to-video, image-to-video (first frame) and reference-to-video jobs to
+> UberLLM for Seedance 2.0, Wan 2.7, Kling 3 Standard, Veo 3.1 Fast, LTX 2.3
+> Fast, Hailuo 02 Standard and Vidu Q3 Turbo. The same key and prepaid balance
+> also serve UberLLM's image, music and speech models.
+
+**Tools unlocked:** `uberllm_video`
+**Env var:** `UBERLLM_API_KEY`
+**Skill:** `.agents/skills/uberllm-video/SKILL.md`
+
+#### Setup
+
+1. Sign up at [uberllm.dev/signup](https://uberllm.dev/signup) and create a key (it starts with `ull_`).
+2. Add credit under **Dashboard → Credits**. Usage is prepaid, pay as you go from $5.
+3. Add to `.env`:
+   ```bash
+   UBERLLM_API_KEY=ull_your-key
+   ```
+
+Optional: `UBERLLM_BASE_URL` overrides `https://api.uberllm.dev`.
+
+#### What It's Best For
+
+- **One key across families**: pick `seedance-2.0`, `wan-2.7`, `kling-3-standard`, `veo-3.1-fast`, `ltx-2.3-fast`, `hailuo-02-standard` or `vidu-q3-turbo` as `model`; the operation picks the family's text, image or reference route
+- **Cheap drafts, premium finals**: draft on Vidu Q3 Turbo or Hailuo 02, then rerun the approved take on Seedance 2.0 or Veo 3.1 Fast
+- **Free exact price check**: `dry_run: true` returns UberLLM's quote without generating or charging
+
+#### API Notes
+
+The UberLLM media API is asynchronous. Auth is `Authorization: Bearer <UBERLLM_API_KEY>`.
+
+```text
+# Submit (Idempotency-Key header on every submission)
+POST https://api.uberllm.dev/v1/video/generations
+
+# Poll until status is succeeded, failed, canceled or expired
+GET  https://api.uberllm.dev/v1/video/generations/{id}
+```
+
+- Each model makes fixed clip lengths (Seedance 2.0 text: 5–15 s; Veo 3.1 Fast: 4, 6, 8 s). A length, resolution or aspect ratio the model does not offer is refused before anything is sent, and asking for a setting the model lacks is an error rather than silently ignored.
+- Request schemas (from `GET /v1/models/{model_id}`) and per-second rates (from the free `validate` quote) are pinned in `tools/provider_contracts/uberllm_video.json` and checked before any paid submission.
+- Local first frames and reference pictures are uploaded to UberLLM's file store (`POST /v1/files`, kept 24 hours). `dry_run` sends them inline for the check instead.
+- `max_cost_usd` has UberLLM refuse a job at no charge when it could cost more than that.
+- On a polling timeout the result carries `resume_job`; pass it back to keep waiting on the same job instead of paying twice. The tool never retries a paid submission automatically.
+
+#### Fallback Tools
+
+If `uberllm_video` returns an error, the agent may retry with: `seedance_video`, `kling_video`, `veo_video`, `minimax_video`
+
+#### Pricing
+
+Billed per clip second; a job is never billed more than the `max_cost_usd`
+held when it starts, and failed, canceled and expired jobs cost nothing. OpenMontage reports the job's `usage.cost_usd`
+as the actual cost. Live per-model prices are at
+[uberllm.dev/models](https://uberllm.dev/models); `get_info()["model_catalog"]`
+lists the pinned rate per resolution used for preflight estimates. A 1 second
+360p Vidu Q3 Turbo draft is about $0.03; a 5 second Seedance 2.0 text-to-video
+clip is about $0.76, which OpenMontage's default budget policy asks the user to
+approve.
+
+> **Free tier:** None; usage is prepaid credit.
 
 ---
 
@@ -1570,6 +1637,7 @@ These tools require only FFmpeg or Python packages — no GPU, no API key.
 | **Volcengine Ark** | `ARK_API_KEY` | `seedance_ark` | Pay-as-you-go |
 | **MiniMax direct** | `MINIMAX_API_KEY` | `minimax_image`, `minimax_video` | Pay-as-you-go |
 | **Pika** | `PIKA_API_KEY` | `pika_video` | Prepaid, per output second ($0.01–0.08/s) |
+| **UberLLM** | `UBERLLM_API_KEY` | `uberllm_video` | Prepaid, per clip second (live prices at uberllm.dev/models) |
 | **OpenAI** | `OPENAI_API_KEY` | `openai_tts`, `openai_image` | Paid only |
 | **xAI** | `XAI_API_KEY` | `grok_image`, `grok_video` | Paid only |
 | **Runway** | `RUNWAY_API_KEY` | `runway_video` | Free trial + paid |
@@ -1591,7 +1659,7 @@ How many providers cover each capability:
 | Capability | Cloud Providers | Local Providers | Free Options |
 |-----------|----------------|-----------------|--------------|
 | **Image Generation** | FLUX, Kling Official, Grok, Google Imagen, GPT Image 2, Recraft | Local Diffusion | Pexels, Pixabay (stock) |
-| **Video Generation** | Grok, Kling Official, fal.ai, Seedance via Volcengine Ark, Runway, Veo, Gemini Omni, Higgsfield, MiniMax, Pika H3 Flex, HeyGen, Tencent Hunyuan, ComfyUI Partner Nodes | WAN, Hunyuan, CogVideo, LTX, ComfyUI WAN, ComfyUI MiniMax H3 | Pexels, Pixabay (stock) |
+| **Video Generation** | Grok, Kling Official, fal.ai, Seedance via Volcengine Ark, Runway, Veo, Gemini Omni, Higgsfield, MiniMax, Pika H3 Flex, UberLLM, HeyGen, Tencent Hunyuan, ComfyUI Partner Nodes | WAN, Hunyuan, CogVideo, LTX, ComfyUI WAN, ComfyUI MiniMax H3 | Pexels, Pixabay (stock) |
 | **Text-to-Speech** | Azure AI Speech, ElevenLabs, fish.audio, Google TTS, Kling Official, OpenAI | Piper | Piper, Google free tier, ElevenLabs free tier, Azure free tier, fish.audio s2.1-pro-free |
 | **Music Generation** | ElevenLabs, Suno, Google Lyria | — | ElevenLabs free tier |
 | **Post-Production** | — | FFmpeg (compose, stitch, trim, mix, enhance, grade) | All free |

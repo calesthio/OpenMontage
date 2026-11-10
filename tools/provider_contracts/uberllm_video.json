@@ -1,0 +1,1101 @@
+{
+  "_about": {
+    "provider": "uberllm",
+    "base_url": "https://api.uberllm.dev",
+    "auth_header": "Authorization: Bearer <UBERLLM_API_KEY>",
+    "docs": "https://uberllm.dev/docs/media",
+    "models_list": "GET /v1/models?type=video (public)",
+    "model_schema": "GET /v1/models/{model_id} (public; parameters is the request JSON Schema)",
+    "submit": "POST /v1/video/generations (Idempotency-Key header)",
+    "poll": "GET /v1/video/generations/{id} (202 while running, 200 once ended)",
+    "cancel": "DELETE /v1/video/generations/{id}",
+    "content": "GET /v1/media/artifacts/{id}/{index} (same key; kept about 3 hours)",
+    "upload": "POST /v1/files (multipart file; kept 24 hours, usable as image_url)",
+    "quote": "same body as submit with validate: true (free, nothing made or charged)",
+    "balance": "GET /v1/balance",
+    "job_statuses": [
+      "queued",
+      "running",
+      "succeeded",
+      "failed",
+      "canceled",
+      "expired"
+    ],
+    "billing": "failed, canceled and expired jobs cost nothing; a finished job is billed what the provider charged, never more than max_cost_usd (what is held when it starts); estimated_cost_usd is the listed price",
+    "pricing_note": "usd_per_second is the highest listed rate the free validate quote returned for each resolution (any audio setting), per clip second, so preflight estimates do not undercount; dry_run returns the exact quote. Regenerate from GET /v1/models/{model_id} and validate quotes when models change.",
+    "verified_on": "2026-11-10"
+  },
+  "families": {
+    "seedance-2.0": {
+      "text_to_video": "bytedance/seedance-2-0-text-to-video",
+      "image_to_video": "bytedance/seedance-2-0-image-to-video",
+      "reference_to_video": "bytedance/seedance-2-0-reference-to-video"
+    },
+    "wan-2.7": {
+      "text_to_video": "wan/wan-2-7-text-to-video",
+      "image_to_video": "wan/wan-2-7-image-to-video",
+      "reference_to_video": "wan/wan-2-7-reference-to-video"
+    },
+    "kling-3-standard": {
+      "text_to_video": "fal-ai/kling-video/v3/standard/text-to-video",
+      "image_to_video": "fal-ai/kling-video/v3/standard/image-to-video"
+    },
+    "veo-3.1-fast": {
+      "text_to_video": "fal-ai/veo3.1/fast",
+      "image_to_video": "fal-ai/veo3.1/fast/image-to-video"
+    },
+    "ltx-2.3-fast": {
+      "text_to_video": "fal-ai/ltx-2.3/text-to-video/fast",
+      "image_to_video": "fal-ai/ltx-2.3/image-to-video/fast"
+    },
+    "hailuo-02-standard": {
+      "text_to_video": "fal-ai/minimax/hailuo-02/standard/text-to-video",
+      "image_to_video": "fal-ai/minimax/hailuo-02/standard/image-to-video"
+    },
+    "vidu-q3-turbo": {
+      "text_to_video": "fal-ai/vidu/q3/text-to-video/turbo",
+      "image_to_video": "fal-ai/vidu/q3/image-to-video/turbo"
+    }
+  },
+  "models": {
+    "bytedance/seedance-2-0-text-to-video": {
+      "family": "seedance-2.0",
+      "operation": "text_to_video",
+      "display_name": "Seedance 2.0 Text-to-Video",
+      "usd_per_second": {
+        "default": 0.152
+      },
+      "input_schema": {
+        "properties": {
+          "duration_seconds": {
+            "description": "Length in seconds. Left out: the model's shortest.",
+            "enum": [
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "type": "number"
+          },
+          "model": {
+            "const": "bytedance/seedance-2-0-text-to-video",
+            "type": "string"
+          },
+          "prompt": {
+            "description": "What to make.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "prompt"
+        ],
+        "type": "object"
+      }
+    },
+    "bytedance/seedance-2-0-image-to-video": {
+      "family": "seedance-2.0",
+      "operation": "image_to_video",
+      "display_name": "Seedance 2.0 (image-to-video)",
+      "usd_per_second": {
+        "default": 0.0704,
+        "480p": 0.0704,
+        "720p": 0.152,
+        "1080p": 0.3744
+      },
+      "input_schema": {
+        "anyOf": [
+          {
+            "required": [
+              "image_url"
+            ]
+          },
+          {
+            "required": [
+              "input_images"
+            ]
+          }
+        ],
+        "properties": {
+          "aspect_ratio": {
+            "description": "Shape of the video.",
+            "enum": [
+              "21:9",
+              "16:9",
+              "4:3",
+              "1:1",
+              "3:4",
+              "9:16"
+            ],
+            "type": "string"
+          },
+          "audio": {
+            "description": "Add a sound track.",
+            "type": "boolean"
+          },
+          "duration_seconds": {
+            "description": "Length in seconds. Left out: the model's shortest.",
+            "enum": [
+              5,
+              10,
+              15
+            ],
+            "type": "number"
+          },
+          "image_url": {
+            "description": "The first frame: an https:// link or a data: URI.",
+            "type": "string"
+          },
+          "input_images": {
+            "description": "Several pictures (https:// links or data: URIs).",
+            "items": {
+              "description": "A picture as an https:// link or a data: URI.",
+              "type": "string"
+            },
+            "maxItems": 8,
+            "type": "array"
+          },
+          "model": {
+            "const": "bytedance/seedance-2-0-image-to-video",
+            "type": "string"
+          },
+          "prompt": {
+            "description": "What to make.",
+            "type": "string"
+          },
+          "resolution": {
+            "description": "",
+            "enum": [
+              "480p",
+              "720p",
+              "1080p"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "prompt"
+        ],
+        "type": "object"
+      }
+    },
+    "bytedance/seedance-2-0-reference-to-video": {
+      "family": "seedance-2.0",
+      "operation": "reference_to_video",
+      "display_name": "Seedance 2.0 (reference-to-video)",
+      "usd_per_second": {
+        "default": 0.05368,
+        "480p": 0.05368,
+        "720p": 0.1159,
+        "1080p": 0.28548
+      },
+      "input_schema": {
+        "anyOf": [
+          {
+            "required": [
+              "image_url"
+            ]
+          },
+          {
+            "required": [
+              "input_images"
+            ]
+          }
+        ],
+        "properties": {
+          "aspect_ratio": {
+            "default": "16:9",
+            "description": "Shape of the video. The seller needs one: left out, 16:9 is sent.",
+            "enum": [
+              "21:9",
+              "16:9",
+              "4:3",
+              "1:1",
+              "3:4",
+              "9:16"
+            ],
+            "type": "string"
+          },
+          "audio": {
+            "description": "Add a sound track.",
+            "type": "boolean"
+          },
+          "duration_seconds": {
+            "description": "Length in seconds. Left out: the model's shortest.",
+            "enum": [
+              5,
+              10,
+              15
+            ],
+            "type": "number"
+          },
+          "image_url": {
+            "description": "The first frame: an https:// link or a data: URI.",
+            "type": "string"
+          },
+          "input_images": {
+            "description": "Several pictures (https:// links or data: URIs).",
+            "items": {
+              "description": "A picture as an https:// link or a data: URI.",
+              "type": "string"
+            },
+            "maxItems": 8,
+            "type": "array"
+          },
+          "model": {
+            "const": "bytedance/seedance-2-0-reference-to-video",
+            "type": "string"
+          },
+          "prompt": {
+            "description": "What to make.",
+            "type": "string"
+          },
+          "resolution": {
+            "description": "",
+            "enum": [
+              "480p",
+              "720p",
+              "1080p"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "prompt"
+        ],
+        "type": "object"
+      }
+    },
+    "wan/wan-2-7-text-to-video": {
+      "family": "wan-2.7",
+      "operation": "text_to_video",
+      "display_name": "Wan 2.7 Text-to-Video",
+      "usd_per_second": {
+        "default": 0.11
+      },
+      "input_schema": {
+        "properties": {
+          "duration_seconds": {
+            "description": "Length in seconds. Left out: the model's shortest.",
+            "enum": [
+              5,
+              10,
+              15
+            ],
+            "type": "number"
+          },
+          "model": {
+            "const": "wan/wan-2-7-text-to-video",
+            "type": "string"
+          },
+          "prompt": {
+            "description": "What to make.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "prompt"
+        ],
+        "type": "object"
+      }
+    },
+    "wan/wan-2-7-image-to-video": {
+      "family": "wan-2.7",
+      "operation": "image_to_video",
+      "display_name": "Wan 2.7 (image-to-video)",
+      "usd_per_second": {
+        "default": 0.066,
+        "1080p": 0.084,
+        "720p": 0.066
+      },
+      "input_schema": {
+        "anyOf": [
+          {
+            "required": [
+              "image_url"
+            ]
+          },
+          {
+            "required": [
+              "input_images"
+            ]
+          }
+        ],
+        "properties": {
+          "duration_seconds": {
+            "description": "Length in seconds. Left out: the model's shortest.",
+            "enum": [
+              5,
+              10,
+              15
+            ],
+            "type": "number"
+          },
+          "image_url": {
+            "description": "The first frame: an https:// link or a data: URI.",
+            "type": "string"
+          },
+          "input_images": {
+            "description": "Several pictures (https:// links or data: URIs).",
+            "items": {
+              "description": "A picture as an https:// link or a data: URI.",
+              "type": "string"
+            },
+            "maxItems": 8,
+            "type": "array"
+          },
+          "model": {
+            "const": "wan/wan-2-7-image-to-video",
+            "type": "string"
+          },
+          "prompt": {
+            "description": "What to make.",
+            "type": "string"
+          },
+          "resolution": {
+            "description": "",
+            "enum": [
+              "1080p",
+              "720p"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "prompt"
+        ],
+        "type": "object"
+      }
+    },
+    "wan/wan-2-7-reference-to-video": {
+      "family": "wan-2.7",
+      "operation": "reference_to_video",
+      "display_name": "Wan 2.7 (reference-to-video)",
+      "usd_per_second": {
+        "default": 0.11,
+        "1080p": 0.14,
+        "720p": 0.11
+      },
+      "input_schema": {
+        "anyOf": [
+          {
+            "required": [
+              "image_url"
+            ]
+          },
+          {
+            "required": [
+              "input_images"
+            ]
+          }
+        ],
+        "properties": {
+          "audio": {
+            "description": "Add a sound track.",
+            "type": "boolean"
+          },
+          "duration_seconds": {
+            "description": "Length in seconds. Left out: the model's shortest.",
+            "enum": [
+              5,
+              10
+            ],
+            "type": "number"
+          },
+          "image_url": {
+            "description": "The first frame: an https:// link or a data: URI.",
+            "type": "string"
+          },
+          "input_images": {
+            "description": "Several pictures (https:// links or data: URIs).",
+            "items": {
+              "description": "A picture as an https:// link or a data: URI.",
+              "type": "string"
+            },
+            "maxItems": 8,
+            "type": "array"
+          },
+          "model": {
+            "const": "wan/wan-2-7-reference-to-video",
+            "type": "string"
+          },
+          "prompt": {
+            "description": "What to make.",
+            "type": "string"
+          },
+          "resolution": {
+            "description": "",
+            "enum": [
+              "1080p",
+              "720p"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "prompt"
+        ],
+        "type": "object"
+      }
+    },
+    "fal-ai/kling-video/v3/standard/text-to-video": {
+      "family": "kling-3-standard",
+      "operation": "text_to_video",
+      "display_name": "Kling 3 Standard Text to Video",
+      "usd_per_second": {
+        "default": 0.1
+      },
+      "input_schema": {
+        "properties": {
+          "aspect_ratio": {
+            "description": "Shape of the video.",
+            "enum": [
+              "16:9",
+              "9:16",
+              "1:1"
+            ],
+            "type": "string"
+          },
+          "audio": {
+            "description": "Add a sound track.",
+            "type": "boolean"
+          },
+          "duration_seconds": {
+            "description": "Length in seconds. Left out: the model's shortest.",
+            "enum": [
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "type": "number"
+          },
+          "model": {
+            "const": "fal-ai/kling-video/v3/standard/text-to-video",
+            "type": "string"
+          },
+          "prompt": {
+            "description": "What to make.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "prompt"
+        ],
+        "type": "object"
+      }
+    },
+    "fal-ai/kling-video/v3/standard/image-to-video": {
+      "family": "kling-3-standard",
+      "operation": "image_to_video",
+      "display_name": "Kling 3 Standard Image to Video",
+      "usd_per_second": {
+        "default": 0.1
+      },
+      "input_schema": {
+        "anyOf": [
+          {
+            "required": [
+              "image_url"
+            ]
+          },
+          {
+            "required": [
+              "input_images"
+            ]
+          }
+        ],
+        "properties": {
+          "audio": {
+            "description": "Add a sound track.",
+            "type": "boolean"
+          },
+          "duration_seconds": {
+            "description": "Length in seconds. Left out: the model's shortest.",
+            "enum": [
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "type": "number"
+          },
+          "image_url": {
+            "description": "The first frame: an https:// link or a data: URI.",
+            "type": "string"
+          },
+          "input_images": {
+            "description": "Several pictures (https:// links or data: URIs).",
+            "items": {
+              "description": "A picture as an https:// link or a data: URI.",
+              "type": "string"
+            },
+            "maxItems": 8,
+            "type": "array"
+          },
+          "model": {
+            "const": "fal-ai/kling-video/v3/standard/image-to-video",
+            "type": "string"
+          },
+          "prompt": {
+            "description": "What to make.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "prompt"
+        ],
+        "type": "object"
+      }
+    },
+    "fal-ai/veo3.1/fast": {
+      "family": "veo-3.1-fast",
+      "operation": "text_to_video",
+      "display_name": "Veo 3.1 Fast Text to Video",
+      "usd_per_second": {
+        "default": 0.085,
+        "720p": 0.085,
+        "1080p": 0.085,
+        "4k": 0.255
+      },
+      "input_schema": {
+        "properties": {
+          "aspect_ratio": {
+            "description": "Shape of the video.",
+            "enum": [
+              "16:9",
+              "9:16"
+            ],
+            "type": "string"
+          },
+          "audio": {
+            "description": "Add a sound track.",
+            "type": "boolean"
+          },
+          "duration_seconds": {
+            "description": "Length in seconds. Left out: the model's shortest.",
+            "enum": [
+              4,
+              6,
+              8
+            ],
+            "type": "number"
+          },
+          "model": {
+            "const": "fal-ai/veo3.1/fast",
+            "type": "string"
+          },
+          "prompt": {
+            "description": "What to make.",
+            "type": "string"
+          },
+          "resolution": {
+            "description": "",
+            "enum": [
+              "720p",
+              "1080p",
+              "4k"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "prompt"
+        ],
+        "type": "object"
+      }
+    },
+    "fal-ai/veo3.1/fast/image-to-video": {
+      "family": "veo-3.1-fast",
+      "operation": "image_to_video",
+      "display_name": "Veo 3.1 Fast Image to Video",
+      "usd_per_second": {
+        "default": 0.085,
+        "720p": 0.085,
+        "1080p": 0.085,
+        "4k": 0.255
+      },
+      "input_schema": {
+        "anyOf": [
+          {
+            "required": [
+              "image_url"
+            ]
+          },
+          {
+            "required": [
+              "input_images"
+            ]
+          }
+        ],
+        "properties": {
+          "audio": {
+            "description": "Add a sound track.",
+            "type": "boolean"
+          },
+          "duration_seconds": {
+            "description": "Length in seconds. Left out: the model's shortest.",
+            "enum": [
+              4,
+              6,
+              8
+            ],
+            "type": "number"
+          },
+          "image_url": {
+            "description": "The first frame: an https:// link or a data: URI.",
+            "type": "string"
+          },
+          "input_images": {
+            "description": "Several pictures (https:// links or data: URIs).",
+            "items": {
+              "description": "A picture as an https:// link or a data: URI.",
+              "type": "string"
+            },
+            "maxItems": 8,
+            "type": "array"
+          },
+          "model": {
+            "const": "fal-ai/veo3.1/fast/image-to-video",
+            "type": "string"
+          },
+          "prompt": {
+            "description": "What to make.",
+            "type": "string"
+          },
+          "resolution": {
+            "description": "",
+            "enum": [
+              "720p",
+              "1080p",
+              "4k"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "prompt"
+        ],
+        "type": "object"
+      }
+    },
+    "fal-ai/ltx-2.3/text-to-video/fast": {
+      "family": "ltx-2.3-fast",
+      "operation": "text_to_video",
+      "display_name": "LTX 2.3 Fast Text to Video",
+      "usd_per_second": {
+        "default": 0.051,
+        "1080p": 0.051,
+        "1440p": 0.102,
+        "2160p": 0.204
+      },
+      "input_schema": {
+        "properties": {
+          "aspect_ratio": {
+            "description": "Shape of the video.",
+            "enum": [
+              "16:9",
+              "9:16"
+            ],
+            "type": "string"
+          },
+          "duration_seconds": {
+            "description": "Length in seconds. Left out: the model's shortest.",
+            "enum": [
+              6,
+              8,
+              10
+            ],
+            "type": "number"
+          },
+          "model": {
+            "const": "fal-ai/ltx-2.3/text-to-video/fast",
+            "type": "string"
+          },
+          "prompt": {
+            "description": "What to make.",
+            "type": "string"
+          },
+          "resolution": {
+            "description": "",
+            "enum": [
+              "1080p",
+              "1440p",
+              "2160p"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "prompt"
+        ],
+        "type": "object"
+      }
+    },
+    "fal-ai/ltx-2.3/image-to-video/fast": {
+      "family": "ltx-2.3-fast",
+      "operation": "image_to_video",
+      "display_name": "LTX 2.3 Fast Image to Video",
+      "usd_per_second": {
+        "default": 0.051,
+        "1080p": 0.051,
+        "1440p": 0.102,
+        "2160p": 0.204
+      },
+      "input_schema": {
+        "anyOf": [
+          {
+            "required": [
+              "image_url"
+            ]
+          },
+          {
+            "required": [
+              "input_images"
+            ]
+          }
+        ],
+        "properties": {
+          "duration_seconds": {
+            "description": "Length in seconds. Left out: the model's shortest.",
+            "enum": [
+              6,
+              8,
+              10
+            ],
+            "type": "number"
+          },
+          "image_url": {
+            "description": "The first frame: an https:// link or a data: URI.",
+            "type": "string"
+          },
+          "input_images": {
+            "description": "Several pictures (https:// links or data: URIs).",
+            "items": {
+              "description": "A picture as an https:// link or a data: URI.",
+              "type": "string"
+            },
+            "maxItems": 8,
+            "type": "array"
+          },
+          "model": {
+            "const": "fal-ai/ltx-2.3/image-to-video/fast",
+            "type": "string"
+          },
+          "prompt": {
+            "description": "What to make.",
+            "type": "string"
+          },
+          "resolution": {
+            "description": "",
+            "enum": [
+              "1080p",
+              "1440p",
+              "2160p"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "prompt"
+        ],
+        "type": "object"
+      }
+    },
+    "fal-ai/minimax/hailuo-02/standard/text-to-video": {
+      "family": "hailuo-02-standard",
+      "operation": "text_to_video",
+      "display_name": "Hailuo 02 Standard Text to Video",
+      "usd_per_second": {
+        "default": 0.025
+      },
+      "input_schema": {
+        "properties": {
+          "duration_seconds": {
+            "description": "Length in seconds. Left out: the model's shortest.",
+            "enum": [
+              6,
+              10
+            ],
+            "type": "number"
+          },
+          "model": {
+            "const": "fal-ai/minimax/hailuo-02/standard/text-to-video",
+            "type": "string"
+          },
+          "prompt": {
+            "description": "What to make.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "prompt"
+        ],
+        "type": "object"
+      }
+    },
+    "fal-ai/minimax/hailuo-02/standard/image-to-video": {
+      "family": "hailuo-02-standard",
+      "operation": "image_to_video",
+      "display_name": "Hailuo 02 Standard Image to Video",
+      "usd_per_second": {
+        "default": 0.025,
+        "768P": 0.025,
+        "512P": 0.01445
+      },
+      "input_schema": {
+        "anyOf": [
+          {
+            "required": [
+              "image_url"
+            ]
+          },
+          {
+            "required": [
+              "input_images"
+            ]
+          }
+        ],
+        "properties": {
+          "duration_seconds": {
+            "description": "Length in seconds. Left out: the model's shortest.",
+            "enum": [
+              6,
+              10
+            ],
+            "type": "number"
+          },
+          "image_url": {
+            "description": "The first frame: an https:// link or a data: URI.",
+            "type": "string"
+          },
+          "input_images": {
+            "description": "Several pictures (https:// links or data: URIs).",
+            "items": {
+              "description": "A picture as an https:// link or a data: URI.",
+              "type": "string"
+            },
+            "maxItems": 8,
+            "type": "array"
+          },
+          "model": {
+            "const": "fal-ai/minimax/hailuo-02/standard/image-to-video",
+            "type": "string"
+          },
+          "prompt": {
+            "description": "What to make.",
+            "type": "string"
+          },
+          "resolution": {
+            "description": "",
+            "enum": [
+              "768P",
+              "512P"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "prompt"
+        ],
+        "type": "object"
+      }
+    },
+    "fal-ai/vidu/q3/text-to-video/turbo": {
+      "family": "vidu-q3-turbo",
+      "operation": "text_to_video",
+      "display_name": "Vidu Q3 Turbo Text to Video",
+      "usd_per_second": {
+        "default": 0.06545,
+        "720p": 0.06545,
+        "360p": 0.02975,
+        "540p": 0.02975,
+        "1080p": 0.06545
+      },
+      "input_schema": {
+        "properties": {
+          "aspect_ratio": {
+            "description": "Shape of the video.",
+            "enum": [
+              "16:9",
+              "9:16",
+              "4:3",
+              "3:4",
+              "1:1"
+            ],
+            "type": "string"
+          },
+          "duration_seconds": {
+            "description": "Length in seconds. Left out: the model's shortest.",
+            "enum": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "type": "number"
+          },
+          "model": {
+            "const": "fal-ai/vidu/q3/text-to-video/turbo",
+            "type": "string"
+          },
+          "prompt": {
+            "description": "What to make.",
+            "type": "string"
+          },
+          "resolution": {
+            "description": "",
+            "enum": [
+              "720p",
+              "360p",
+              "540p",
+              "1080p"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "prompt"
+        ],
+        "type": "object"
+      }
+    },
+    "fal-ai/vidu/q3/image-to-video/turbo": {
+      "family": "vidu-q3-turbo",
+      "operation": "image_to_video",
+      "display_name": "Vidu Q3 Turbo Image to Video",
+      "usd_per_second": {
+        "default": 0.06545,
+        "720p": 0.06545,
+        "360p": 0.02975,
+        "540p": 0.02975,
+        "1080p": 0.06545
+      },
+      "input_schema": {
+        "anyOf": [
+          {
+            "required": [
+              "image_url"
+            ]
+          },
+          {
+            "required": [
+              "input_images"
+            ]
+          }
+        ],
+        "properties": {
+          "duration_seconds": {
+            "description": "Length in seconds. Left out: the model's shortest.",
+            "enum": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "type": "number"
+          },
+          "image_url": {
+            "description": "The first frame: an https:// link or a data: URI.",
+            "type": "string"
+          },
+          "input_images": {
+            "description": "Several pictures (https:// links or data: URIs).",
+            "items": {
+              "description": "A picture as an https:// link or a data: URI.",
+              "type": "string"
+            },
+            "maxItems": 8,
+            "type": "array"
+          },
+          "model": {
+            "const": "fal-ai/vidu/q3/image-to-video/turbo",
+            "type": "string"
+          },
+          "prompt": {
+            "description": "What to make.",
+            "type": "string"
+          },
+          "resolution": {
+            "description": "",
+            "enum": [
+              "720p",
+              "360p",
+              "540p",
+              "1080p"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "prompt"
+        ],
+        "type": "object"
+      }
+    }
+  }
+}

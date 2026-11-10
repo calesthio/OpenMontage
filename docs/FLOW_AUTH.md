@@ -71,6 +71,82 @@ pkill -f "Xvfb :99"
 
 Прямая CDP-автоматизация Chrome с профилем gflow подтверждена рабочей: вход, диалоги, «Новый проект», ввод промпта, клик «Начать генерацию», загрузка результата — выполнено успешно через WebSocket DevTools API. Генерация одной тестовой картинки `simple blue circle on white` (16:9) подтверждена.
 
+## CDP-скрипт: `scripts/flow_cdp_image.py`
+
+Генерирует одну картинку через Google Flow, подключаясь к уже запущенному Chrome с профилем gflow по DevTools WebSocket.
+
+### Предварительные условия
+
+1. **Chrome с профилем gflow должен быть запущен с отладочным портом** (подключён к аккаунту, cookies Flow есть).
+2. **Xvfb :99, x11vnc, websockify:6080** запущены (только при необходимости входа/отладки).
+3. **DevTools port** известен (файл `.gflow/profiles/default/DevToolsActivePort`, первая строка — порт).
+
+### Запуск Chrome с отладочным портом
+
+```bash
+export DISPLAY=:99
+export GFLOW_CHROME_PATH=/opt/google/chrome/chrome
+
+/opt/google/chrome/chrome \
+  --user-data-dir=/workspaces/OpenMontage/.gflow/profiles/default \
+  --remote-debugging-port=0 \
+  --remote-allow-origins=* \
+  --no-first-run \
+  --no-default-browser-check \
+  --disable-blink-features=AutomationControlled \
+  --lang=en-US \
+  --accept-lang=en-US \
+  https://flow.google.com \
+  > /tmp/chrome_debug.log 2>&1 &
+```
+
+Узнать порт DevTools:
+```bash
+cat /workspaces/OpenMontage/.gflow/profiles/default/DevToolsActivePort
+# первая строка — номер порта (например, 35029)
+```
+
+Узнать page-id для flow.google.com:
+```bash
+curl -s http://127.0.0.1:<PORT>/json/list | python3 -c "
+import sys,json
+data=json.load(sys.stdin)
+for t in data:
+    if t.get('url','').startswith('https://flow.google.com/') and t.get('type')=='page':
+        print(t['id'])
+"
+```
+
+### Запуск генерации
+
+```bash
+python scripts/flow_cdp_image.py \
+  --prompt "simple blue circle on white background" \
+  --ratio 16:9 \
+  --out /tmp/flow-test/test-photo.png \
+  --ws-port 35029 \
+  --page-id <page-id> \
+  --timeout 120
+```
+
+### Ограничения
+
+- **Один запуск = одна картинка.** Не более 12 генераций без новой команды владельца.
+- **Veo не трогать** — только изображения (`image t2i`).
+- **Видео не запускать.**
+- Chrome/Xvfb/x11vnc/websockify запускать только когда нужен вход; после использования остановить.
+- Ожидание ручных шагов — короткими вызовами до 90 с, без циклов на 25 минут.
+- Секреты/куки/токены не выводить; `.gflow/` не коммитить в git.
+
+### Остановка после использования
+
+```bash
+pkill -f "chrome.*gflow/profiles/default" 2>/dev/null || true
+pkill -f "x11vnc -display :99" 2>/dev/null || true
+pkill -f "websockify.*6080" 2>/dev/null || true
+pkill -f "Xvfb :99" 2>/dev/null || true
+```
+
 ## Что НЕ делать
 
 - Не запускать `gflow doctor` в цикле длительностью 25 минут.

@@ -4,7 +4,7 @@
 
 The timeline exists. Every cut has an in/out, transitions are
 chosen, the music bed is locked. You now have to render the piece
-and apply the register-smoothing pass (uniform crop + LUT + audio
+and apply the register-smoothing pass (uniform crop + color grade + audio
 mix) that makes a mixed-era corpus feel like one film.
 
 The output is a single mp4 plus a `render_report` artifact.
@@ -26,7 +26,7 @@ This pipeline currently REQUIRES `render_runtime="remotion"`. The end-tag stack 
 | Prior artifact | `state.artifacts["assets"]["asset_manifest"]` | File paths, durations, providers |
 | Tool | `video_compose` (Remotion-first + FFmpeg fallback) | Primary render engine |
 | Tool | `audio_mixer` | Music fade, silence window, L-cuts |
-| Tool (optional) | `color_grade` | Uniform LUT across mixed-era clips |
+| Tool | `color_grade` | Uniform grade across mixed-era clips |
 | Tool (optional) | `video_trimmer`, `video_stitch` | Lower-level helpers if needed |
 
 ## Mental Model
@@ -40,7 +40,7 @@ Three things must happen here that cannot happen earlier:
 
 1. **Uniform aspect and letterbox.** Pexels 1920x1080, Prelinger
    640x480 4:3, NASA 1280x720 all need to land on one canvas.
-2. **Uniform color grade.** A single LUT across the whole timeline
+2. **Uniform color grade.** One grade across the whole timeline
    is what makes the 1962 home movie sit next to the 2023 kitchen
    without jumping out.
 3. **Audio mix.** Music level, silence window, L-cut ambient
@@ -108,26 +108,46 @@ writing the call. Do not invent parameters.
 `edit_decisions_with_renderer_family` means the normal edit artifact
 with `renderer_family = "documentary-montage"` preserved intact.
 
-### 3. Apply Grade Via LUT, Not Per Clip
+### 3. Apply One Grade To The Rendered Video
 
-Read `edit_decisions.metadata.grade_profile`. Map it to a LUT file:
+`video_compose` does not read `edit_decisions.metadata.grade_profile`.
+Choose a `color_grade` profile and pass its exact ID as `profile` when
+grading the rendered video. Keep the selected ID in project metadata for
+provenance; do not expect the render call to apply it automatically.
 
-| Profile | LUT | Suits |
-|---------|-----|-------|
-| `warm_film_100` | vintage film warmth, slight lift | elegiac, dreamlike |
-| `cool_archive_60` | cool highlights, crushed blacks | urgent, wry |
-| `neutral_doc_20` | barely-there neutral balance | reverent |
-| `bleach_bypass_80` | desaturated, high contrast | wry, documentary-harsh |
+The supported built-in profiles are:
 
-If the profile isn't in the styles library, use `neutral_doc_20` and
-note it in `warnings`. Do not try to auto-grade — the LUT is the
-whole point of the register-smoothing pass.
+| Profile | Look |
+|---------|------|
+| `cinematic_warm` | Warm cinematic look with lifted shadows and orange highlights |
+| `cinematic_cool` | Cool teal-and-orange cinematic grade |
+| `moody_dark` | Crushed blacks, desaturated midtones, dark atmosphere |
+| `bright_clean` | Bright, clean look with lifted shadows and vivid color |
+| `vintage_film` | Faded film look with warm tint and reduced saturation |
+| `high_contrast` | Punchy high-contrast grade for dynamic content |
+| `neutral` | Minimal correction with normalized levels and light contrast |
 
-Apply the LUT at the composition level, not per clip. One LUT, one
-timeline, one consistent look. This is what makes a 1962 Prelinger
-clip and a 2023 Pexels clip feel like the same film.
+Use `neutral` and note the fallback in `warnings` if no other supported
+profile matches the approved look. Apply one profile to the assembled video
+so the whole timeline gets the same grade.
 
-### 4. Mix The Audio Once, In Compose
+### 4. Mix The Audio Explicitly
+
+`video_compose.render` does not read `edit_decisions.audio` or mix its
+planned music automatically. It accepts an explicit `audio_path` for a
+prepared mix, and that mix replaces the rendered video's audio track. Build
+the mix with `audio_mixer`, passing the approved asset paths, levels, fades,
+and timing as explicit inputs; the mixer does not take the full
+`edit_decisions` artifact as an automatic recipe. Include every approved
+narration, music, and SFX track in a mix passed through `audio_path`.
+
+For a planned music silence window, use `audio_mixer`'s `segmented_music`
+operation with explicit `video_path`, `music_path`, and `segments` from the
+approved plan, then use its returned video as the final output. The input
+video must have an audio stream for this operation. Its segment fades are
+controlled by `fade_duration`; if the approved hold or ramp behavior cannot
+be represented by the tool inputs, record that limitation instead of claiming
+the mix followed the plan.
 
 The edit artifact already decided volumes, fades, silence windows,
 and L-cut sfx layers. Your job is to execute them faithfully:
@@ -178,8 +198,10 @@ appears on top of live footage rather than cutting to a black card.
 
 **Execution:**
 
-1. Compose the body via FFmpeg (cuts + LUT + music + silence window).
-   Save as `projects/<name>/renders/body.mp4`. Note the body fps.
+1. Render the body through `video_compose` using the approved Remotion
+   runtime. Apply `color_grade` to the assembled video. Prepare and apply
+   audio explicitly as described in §4. Save the resulting body as
+   `projects/<name>/renders/body.mp4`. Note the body fps.
 2. Compute `durationInFrames = round(duration_seconds × body_fps)`.
 3. Render the end-tag with alpha via Remotion CLI:
    ```bash
@@ -320,7 +342,7 @@ Record verifications in `render_report.verification_notes`.
     "pipeline": "documentary-montage",
     "canvas": { "width": 1920, "height": 1080 },
     "letterbox": "2.35:1",
-    "lut": "warm_film_100",
+    "color_grade_profile": "cinematic_warm",
     "music_present": true
   }
 }
@@ -331,7 +353,7 @@ Record verifications in `render_report.verification_notes`.
 - Output file exists and plays.
 - Duration within ±1s of `brief.duration_seconds` (body + end-tag inclusive).
 - Resolution matches `target_platform` canvas.
-- LUT was applied (or a warning logged).
+- The selected color grade was applied (or a warning logged).
 - **Music is present** unless `brief.metadata.music_plan.source == "none"` with an explicit opt-out reason.
 - **End-tag MP4 was rendered and concatenated** unless `brief.metadata.end_tag_plan` is null with an explicit opt-out reason. Last frame of final MP4 must be the end-tag card in that case.
 - First and last frames verified.
@@ -343,7 +365,7 @@ Record verifications in `render_report.verification_notes`.
 ## Common Pitfalls
 
 - **Letting mixed-era clips render un-graded.** The piece will look
-  like a PowerPoint slideshow of internet clips. The LUT is
+  like a PowerPoint slideshow of internet clips. A uniform grade is
   non-negotiable.
 - **Upscaling to match the canvas instead of letterboxing.**
   Prelinger 640x480 upscaled to 1920x1080 looks pixelated and wrong.
@@ -351,7 +373,7 @@ Record verifications in `render_report.verification_notes`.
   design choice.
 - **Narration or ambient SFX added "to fill the gap".** Major
   change, needs user approval.
-- **Per-clip color grading.** One LUT across the whole piece. Do
+- **Per-clip color grading.** One profile across the whole piece. Do
   not try to balance each clip individually — it takes 10x the time
   and makes the register LESS consistent, not more.
 - **Quiet FFmpeg downgrade.** If Remotion is blocked and you route to

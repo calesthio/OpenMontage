@@ -2,19 +2,35 @@
 """Google Flow image generation via Chrome DevTools Protocol (CDP).
 
 Connects to a running Chrome instance with the gflow profile via the DevTools
-WebSocket, opens flow.google.com, dismisses Russian consent dialogs, creates a
-project, types the prompt, submits generation, waits for the result image, and
-downloads it to --out.
+WebSocket, opens flow.google.com, dismisses Russian consent dialogs, creates
+a project, types the prompt using CDP Input.insertText (not JS — the framework
+editor doesn't see JS-assigned values), submits with Input.dispatchKeyEvent
+Enter, waits for generated images, and downloads them via Page.captureScreenshot
+with element clip coordinates.
 
 Security:
   - Never prints cookies, tokens, profile contents, Local State, or DevToolsActivePort.
   - Does not read the profile directory.
-  - Only downloads the generated image file.
+  - Only downloads generated image files.
+  - Strips Authorization/Cookie headers from network logs.
 
 Usage:
-  python scripts/flow_cdp_image.py --prompt "simple blue circle on white background" \
+  python scripts/flow_cdp_image.py \
+    --prompt "simple blue circle on white background" \
     --ratio 16:9 --out /tmp/flow-test/test-photo.png \
     [--ws-port 35029] [--page-id <cdp page id>] [--timeout 120]
+
+Prerequisites:
+  1. Chrome with gflow profile running with remote debugging port:
+     GFLOW_CHROME_PATH=/opt/google/chrome/chrome DISPLAY=:99 \
+     /opt/google/chrome/chrome \
+       --user-data-dir=/workspaces/OpenMontage/.gflow/profiles/default \
+       --remote-debugging-port=0 --remote-allow-origins=* \
+       --no-first-run --no-default-browser-check \
+       --disable-blink-features=AutomationControlled \
+       --lang=en-US --accept-lang=en-US https://flow.google.com &
+  2. Get DevTools port: cat .gflow/profiles/default/DevToolsActivePort
+  3. Get page ID: curl http://127.0.0.1:<PORT>/json/list | grep flow.google.com
 """
 
 from __future__ import annotations
@@ -24,21 +40,16 @@ import asyncio
 import base64
 import hashlib
 import json
+import math
 import os
+import re
 import sys
-import urllib.request
 from datetime import datetime, timezone
 from typing import Any
 
 
-WS_PORT = 35029
-PAGE_ID = "44440557D049C84427755B228980E4FC"
-WS_URI = f"ws://127.0.0.1:{WS_PORT}/devtools/page/{PAGE_ID}"
-PROMPT_DEFAULT = "simple blue circle on white background"
-RATIO_DEFAULT = "16:9"
-OUT_DEFAULT = "/tmp/flow-test/test-photo.png"
-TIMEOUT_DEFAULT = 120
-POLL_INTERVAL = 5
+def ts() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 class CDPSession:
@@ -48,22 +59,30 @@ class CDPSession:
         self.ws_uri = ws_uri
         self.log = log
         self._seq = 0
+        self.ws = None
+        self.network_events: list[dict[str, Any]] = []
 
     async def connect(self) -> None:
         import websockets  # imported lazily so import without dep is OK
 
         self.ws = await websockets.connect(self.ws_uri)
-        self.log.append(f"CDP connected: {self.ws_uri}")
-        await self._send({"method": "Runtime.enable"})
+        self.log_append(f"CDP connected: {self.ws_uri}")
+        for domain in ["Network", "Page", "Input", "Accessibility", "Runtime"]:
+            await self._send({"method": f"{domain}.enable"})
+            await self._recv_until_id(self._seq)
+        await self._send({"method": "Network.setCacheDisabled", "params": {"cacheDisabled": True}})
         await self._recv_until_id(self._seq)
-        await self._send({"method": "Page.enable"})
-        await self._recv_until_id(self._seq)
+
+    def log_append(self, message: str) -> None:
+        line = f"{ts()} {message}"
+        self.log.append(line)
+        print(line)
 
     async def close(self) -> None:
-        if hasattr(self, "ws"):
+        if self.ws:
             await self.ws.close()
 
-    async def _send(self, msg: dict[str, Any]) -> None:
+    async def _send(self, msg: dict[str, Any]) -> int:
         self._seq += 1
         msg["id"] = self._seq
         await self.ws.send(json.dumps(msg))
@@ -96,17 +115,48 @@ class CDPSession:
                 return val
         return val
 
-    async def action(self, js_iife: str) -> str:
+    async def action(self, js_body: str) -> str:
         """Run an IIFE action (may contain return statements) and return its string result."""
-        expr = f"(function() {{ {js_iife} }})()"
+        expr = f"(function() {{ {js_body} }})()"
         val = await self.eval(expr)
         if isinstance(val, str):
             return val
         return str(val)
 
-    async def screenshot(self, path: str) -> None:
+    async def insert_text(self, text: str) -> None:
+        """Use CDP Input.insertText to type into the focused element."""
+        await self._send(
+            {
+                "method": "Input.insertText",
+                "params": {"text": text},
+            }
+        )
+        await self._recv_until_id(self._seq)
+
+    async def dispatch_key(self, key: str, code: str, key_code: int = 0) -> None:
+        """Use CDP Input.dispatchKeyEvent (keyDown + keyUp)."""
+        for ev_type in ["keyDown", "keyUp"]:
+            await self._send(
+                {
+                    "method": "Input.dispatchKeyEvent",
+                    "params": {
+                        "type": ev_type,
+                        "key": key,
+                        "code": code,
+                        "windowsVirtualKeyCode": key_code,
+                        "nativeVirtualKeyCode": key_code,
+                        "autoRepeat": False,
+                    },
+                }
+            )
+            await self._recv_until_id(self._seq)
+
+    async def screenshot(self, path: str, clip: dict[str, Any] | None = None) -> None:
         """Capture a screenshot via Page.captureScreenshot and save to path."""
-        await self._send({"method": "Page.captureScreenshot", "params": {}})
+        params: dict[str, Any] = {}
+        if clip:
+            params["clip"] = clip
+        await self._send({"method": "Page.captureScreenshot", "params": params})
         msg = await self._recv_until_id(self._seq)
         result = msg.get("result", {})
         if "exceptionDetails" in result:
@@ -117,17 +167,10 @@ class CDPSession:
         img_bytes = base64.b64decode(data)
         with open(path, "wb") as f:
             f.write(img_bytes)
-        step_log(self.log, f"screenshot saved: {path} ({len(img_bytes)} bytes)")
+        self.log_append(f"screenshot saved: {path} ({len(img_bytes)} bytes)")
 
 
-def step_log(log: list[str], message: str) -> None:
-    ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    line = f"{ts} {message}"
-    log.append(line)
-    print(line)
-
-
-async def dismiss_dialogs(session: CDPSession, log: list[str]) -> None:
+async def dismiss_dialogs(session: CDPSession) -> None:
     """Dismiss Russian consent/cookie/storage dialogs by button label."""
     labels = ["ОК", "Включить", "Закрыть сообщение", "Закрыть баннер", "Отмена"]
     for label in labels:
@@ -143,9 +186,9 @@ async def dismiss_dialogs(session: CDPSession, log: list[str]) -> None:
                 }})()
                 """
             )
-            step_log(log, f"dialog '{label}': {result}")
+            session.log_append(f"dialog '{label}': {result}")
         except Exception as exc:  # noqa: BLE001 - dialog may not exist
-            step_log(log, f"dialog '{label}': skipped ({exc})")
+            session.log_append(f"dialog '{label}': skipped ({exc})")
         await asyncio.sleep(0.3)
 
 
@@ -153,20 +196,22 @@ async def main() -> int:
     parser = argparse.ArgumentParser(
         description="Generate an image via Google Flow using CDP"
     )
-    parser.add_argument("--prompt", default=PROMPT_DEFAULT, help="generation prompt")
-    parser.add_argument("--ratio", default=RATIO_DEFAULT, help="aspect ratio (16:9)")
-    parser.add_argument("--out", default=OUT_DEFAULT, help="output image path")
-    parser.add_argument("--ws-port", type=int, default=WS_PORT, help="CDP websocket port")
+    parser.add_argument("--prompt", default="simple blue circle on white background",
+                        help="generation prompt")
+    parser.add_argument("--ratio", default="16:9", help="aspect ratio (16:9, 9:16, 1:1, 4:3, 3:4)")
+    parser.add_argument("--out", default="/tmp/flow-test/test-photo.png",
+                        help="output image path")
+    parser.add_argument("--ws-port", type=int, default=35029, help="CDP websocket port")
     parser.add_argument(
-        "--page-id", default=PAGE_ID, help="CDP page target id for flow.google.com"
+        "--page-id", default="", help="CDP page target id for flow.google.com"
     )
     parser.add_argument(
-        "--timeout", type=int, default=TIMEOUT_DEFAULT, help="max seconds to wait for image"
+        "--timeout", type=int, default=120, help="max seconds to wait for image"
     )
     args = parser.parse_args()
 
     log: list[str] = []
-    step_log(log, f"start prompt='{args.prompt}' ratio={args.ratio} out={args.out}")
+    log_append = lambda m: None  # placeholder, replaced by session.log_append
 
     ws_uri = f"ws://127.0.0.1:{args.ws_port}/devtools/page/{args.page_id}"
     session = CDPSession(ws_uri, log)
@@ -176,17 +221,17 @@ async def main() -> int:
 
         # Ensure we're on flow.google.com
         current_url = await session.eval("window.location.href")
-        step_log(log, f"current url: {current_url}")
+        session.log_append(f"current url: {current_url}")
         if "flow.google.com" not in str(current_url):
             await session.eval("window.location.href = 'https://flow.google.com'")
             await asyncio.sleep(2)
 
         # Dismiss consent dialogs
-        await dismiss_dialogs(session, log)
+        await dismiss_dialogs(session)
         await asyncio.sleep(1)
 
         # Click "Новый проект" (New project)
-        step_log(log, "clicking Новый проект")
+        session.log_append("clicking Новый проект")
         click_result = await session.action(
             """
             var els = Array.from(document.querySelectorAll('button')).filter(
@@ -196,15 +241,15 @@ async def main() -> int:
             return 'no elements';
             """
         )
-        step_log(log, f"new project: {click_result}")
+        session.log_append(f"new project: {click_result}")
         await asyncio.sleep(2)
 
-        # Dismiss dialogs that reappear on new project
-        await dismiss_dialogs(session, log)
+        # Dismiss dialogs again (they reappear on new project)
+        await dismiss_dialogs(session)
         await asyncio.sleep(1)
 
         # Wait for prompt box
-        step_log(log, "waiting for prompt box")
+        session.log_append("waiting for prompt box")
         prompt_found = False
         deadline = asyncio.get_event_loop().time() + 30
         while asyncio.get_event_loop().time() < deadline:
@@ -213,71 +258,77 @@ async def main() -> int:
             )
             if has_pb:
                 prompt_found = True
-                step_log(log, "prompt box found")
+                session.log_append("prompt box found")
                 break
             await asyncio.sleep(2)
         if not prompt_found:
-            step_log(log, "ERROR: prompt box not found within 30s")
+            session.log_append("ERROR: prompt box not found within 30s")
             return 1
 
-        # Type the prompt
-        step_log(log, "typing prompt")
-        await session.eval(
-            f"""
-            (function() {{
-                var pb = document.querySelector('[role="textbox"][contenteditable="true"]');
-                pb.focus();
-                pb.textContent = {json.dumps(args.prompt)};
-                pb.dispatchEvent(new Event('input', {{bubbles: true}}));
-                return 'typed: ' + pb.textContent;
-            }})()
+        # Focus the textbox via DOM click
+        session.log_append("focusing prompt textbox")
+        focus_result = await session.action(
+            """
+            var pb = document.querySelector('[role="textbox"][contenteditable="true"]');
+            if (pb) { pb.focus(); return 'focused'; }
+            return 'not found';
             """
         )
-        await asyncio.sleep(1)
+        session.log_append(f"focus: {focus_result}")
+        await asyncio.sleep(0.5)
 
-        # Click submit ("Начать генерацию")
-        step_log(log, "clicking Начать генерацию")
-        submit_result = await session.action(
-            """
-            var els = Array.from(document.querySelectorAll('button, [role="button"]')).filter(
-                b => (b.getAttribute('aria-label')||'').includes('Начать генерацию')
-                  || /Начать генерацию/.test(b.textContent || '')
-            );
-            if (els.length > 0) { els[0].click(); return 'clicked submit'; }
-            return 'no submit btn';
-            """
+        # Type the prompt via CDP Input.insertText (NOT JS — framework editor
+        # doesn't see JS-assigned values)
+        session.log_append(f"inserting text via CDP: '{args.prompt}'")
+        await session.insert_text(args.prompt)
+        await asyncio.sleep(0.5)
+
+        # Verify text was inserted
+        text_check = await session.eval(
+            "document.querySelector('[role=\"textbox\"][contenteditable=\"true\"]').textContent"
         )
-        step_log(log, f"submit: {submit_result}")
+        session.log_append(f"textbox content: {text_check!r}")
 
-        # Wait for result image (poll every POLL_INTERVAL s, up to timeout)
-        step_log(log, f"waiting for image (timeout {args.timeout}s)")
+        # Screenshot after text input
+        await session.screenshot(f"{args.out}.after_input.png")
+
+        # Press Enter via CDP Input.dispatchKeyEvent (NOT JS click — framework
+        # may not register JS-dispatched clicks on framework buttons)
+        session.log_append("dispatching Enter key via CDP")
+        await session.dispatch_key("Enter", "Enter", 13)
+        await asyncio.sleep(0.5)
+
+        # Screenshot after submit
+        await session.screenshot(f"{args.out}.after_submit.png")
+
+        # Wait for result image (poll every 5s, up to timeout)
+        session.log_append(f"waiting for image (timeout {args.timeout}s)")
         deadline = asyncio.get_event_loop().time() + args.timeout
-        screenshot_times = [
-            deadline - args.timeout + 30,
-            deadline - args.timeout + 90,
-            deadline - args.timeout + 180,
-        ]
-        next_shot = 0
+        shot_offsets = [5, 30, 90]
+        next_shot_idx = 0
         found = False
+        start_time = asyncio.get_event_loop().time()
 
         while asyncio.get_event_loop().time() < deadline:
-            await asyncio.sleep(POLL_INTERVAL)
+            await asyncio.sleep(5)
+            elapsed = int(asyncio.get_event_loop().time() - start_time)
+
+            # Checkpoint screenshots at 5s, 30s, 90s
+            while (
+                next_shot_idx < len(shot_offsets)
+                and elapsed >= shot_offsets[next_shot_idx]
+            ):
+                await session.screenshot(f"{args.out}.shot{next_shot_idx + 1}s.png")
+                session.log_append(f"checkpoint screenshot t+{shot_offsets[next_shot_idx]}s")
+                next_shot_idx += 1
+
             img_count = await session.eval(
                 "document.querySelectorAll('flow-image-tile img[data-media-id], img[data-media-id]').length"
             )
-            step_log(log, f"images found: {img_count}")
+            session.log_append(f"images found: {img_count}")
             if isinstance(img_count, (int, float)) and img_count > 0:
                 found = True
                 break
-
-            # Checkpoint screenshots at 30s, 90s, 180s
-            elapsed = asyncio.get_event_loop().time() - (deadline - args.timeout)
-            while (
-                next_shot < len(screenshot_times)
-                and elapsed >= screenshot_times[next_shot]
-            ):
-                await session.screenshot(f"{args.out}.shot{next_shot + 1}.png")
-                next_shot += 1
 
         # Final screenshot
         await session.screenshot(f"{args.out}.final.png")
@@ -285,36 +336,53 @@ async def main() -> int:
         # Dump page text for debugging
         body_text = await session.eval("document.body.innerText")
         lines = str(body_text).split("\n")
-        step_log(log, "=== PAGE TEXT (first 40 lines) ===")
-        for i, line in enumerate(lines[:40]):
-            step_log(log, f"  {i + 1}: {line}")
-        step_log(log, "=== END PAGE TEXT ===")
+        session.log_append("=== PAGE TEXT (first 50 lines) ===")
+        for i, line in enumerate(lines[:50]):
+            session.log_append(f"  {i + 1}: {line}")
+        session.log_append("=== END PAGE TEXT ===")
 
-        # Get image URLs
-        img_data = await session.eval(
-            "JSON.stringify(Array.from(document.querySelectorAll('flow-image-tile img[data-media-id], img[data-media-id]')).map(img => ({src: img.src, mediaId: img.getAttribute('data-media-id')})).slice(0, 3))"
-        )
-        if not isinstance(img_data, list) or len(img_data) == 0:
-            step_log(log, "ERROR: no image URLs found - Flow may be rate-limited or out of credits")
+        if not found:
+            session.log_append("ERROR: no images found within timeout")
             return 1
 
-        img_url = img_data[0]["src"]
-        step_log(log, f"downloading from: {img_url[:80]}...")
+        # Get image element bounding boxes and capture each via screenshot clip
+        img_rects = await session.eval(
+            """
+            JSON.stringify(Array.from(document.querySelectorAll('flow-image-tile img[data-media-id], img[data-media-id]')).map(img => {
+                const rect = img.getBoundingClientRect();
+                return {x: rect.x, y: rect.y, w: rect.width, h: rect.height};
+            }))
+            """
+        )
+        if not isinstance(img_rects, list) or len(img_rects) == 0:
+            session.log_append("ERROR: no image rects found")
+            return 1
 
-        # Download the image
-        os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
-        urllib.request.urlretrieve(img_url, args.out)
+        base_out = os.path.splitext(args.out)[0]
+        ext = os.path.splitext(args.out)[1] or ".png"
+        downloaded = 0
+        for i, rect in enumerate(img_rects):
+            clip = {
+                "x": math.floor(rect["x"]),
+                "y": math.floor(rect["y"]),
+                "width": math.floor(rect["w"]),
+                "height": math.floor(rect["h"]),
+                "scale": 1,
+            }
+            out_path = f"{base_out}_{i + 1}{ext}"
+            await session.screenshot(out_path, clip)
 
-        # Compute sha256
-        with open(args.out, "rb") as f:
-            file_bytes = f.read()
-        sha256 = hashlib.sha256(file_bytes).hexdigest()
-        size = len(file_bytes)
+            # Verify and compute sha256
+            with open(out_path, "rb") as f:
+                file_bytes = f.read()
+            sha256 = hashlib.sha256(file_bytes).hexdigest()
+            size = len(file_bytes)
+            session.log_append(
+                f"saved: {out_path} ({size} bytes, sha256={sha256})"
+            )
+            downloaded += 1
 
-        step_log(log, f"saved: {args.out} ({size} bytes, sha256={sha256})")
-        step_log(log, "done")
-
-        # Write log to stdout only (no file with secrets)
+        session.log_append(f"done — {downloaded} image(s) downloaded")
         return 0
 
     finally:

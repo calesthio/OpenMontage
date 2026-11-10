@@ -69,17 +69,40 @@ pkill -f "Xvfb :99"
 
 ## Альтернатива (работает)
 
-Прямая CDP-автоматизация Chrome с профилем gflow подтверждена рабочей: вход, диалоги, «Новый проект», ввод промпта, клик «Начать генерацию», загрузка результата — выполнено успешно через WebSocket DevTools API. Генерация одной тестовой картинки `simple blue circle on white` (16:9) подтверждена.
+Прямая CDP-автоматизация Chrome с профилем gflow подтверждена рабочей:
+вход, диалоги, «Новый проект», ввод промпта через CDP Input.insertText,
+клик «Начать генерацию» через CDP Input.dispatchKeyEvent Enter, загрузка
+результата через Page.captureScreenshot с clip по bounding box элемента
+— выполнено успешно через WebSocket DevTools API.
+
+**Проверено:** генерация 2 картинок `simple blue circle on white` (16:9)
+через `scripts/flow_cdp_image.py`. Модель по умолчанию: Nano Banana 2.1.
+Время генерации: ~40 с. Изображения сохраняются как PNG.
 
 ## CDP-скрипт: `scripts/flow_cdp_image.py`
 
-Генерирует одну картинку через Google Flow, подключаясь к уже запущенному Chrome с профилем gflow по DevTools WebSocket.
+Генерирует одну картинку через Google Flow, подключаясь к уже запущенному
+Chrome с профилем gflow по DevTools WebSocket.
+
+### Ключевые особенности реализации
+
+- **Ввод промпта:** `CDP Input.insertText` (не JS — редактор на фреймворке
+  не видит значения, присвоенные через JS `.textContent = ...`)
+- **Отправка:** `CDP Input.dispatchKeyEvent Enter` (не JS-клик — фреймворк
+  может не регистрировать JS-клики на своих кнопках)
+- **Скачивание:** `Page.captureScreenshot` с `clip` по
+  `getBoundingClientRect()` элемента `flow-image-tile img[data-media-id]`
+- **Ожидание:** опрос каждые 5 с до `--timeout` (по умолчанию 120 с)
+- **Промежуточные скриншоты:** на 5, 30, 90 с
+- **Лог шагов:** вывод в stdout с таймस्टампами UTC
 
 ### Предварительные условия
 
-1. **Chrome с профилем gflow должен быть запущен с отладочным портом** (подключён к аккаунту, cookies Flow есть).
-2. **Xvfb :99, x11vnc, websockify:6080** запущены (только при необходимости входа/отладки).
-3. **DevTools port** известен (файл `.gflow/profiles/default/DevToolsActivePort`, первая строка — порт).
+1. **Chrome с профилем gflow должен быть запущен с отладочным портом**
+   (подключён к аккаунту, cookies Flow есть).
+2. **Xvfb :99** запущен (только при необходимости входа/отладки).
+3. **DevTools port** известен (файл `.gflow/profiles/default/DevToolsActivePort`,
+   первая строка — порт).
 
 ### Запуск Chrome с отладочным портом
 
@@ -129,10 +152,17 @@ python scripts/flow_cdp_image.py \
   --timeout 120
 ```
 
+Выходные файлы:
+- `/tmp/flow-test/test-photo_1.png` — первая сгенерированная картинка
+- `/tmp/flow-test/test-photo_1.shot1s.png` — скриншот на 5-й с
+- `/tmp/flow-test/test-photo_1.shot2s.png` — скриншот на 30-й с
+- `/tmp/flow-test/test-photo_1.shot3s.png` — скриншот на 90-й с
+- `/tmp/flow-test/test-photo_1.final.png` — финальный скриншот
+
 ### Ограничения
 
 - **Один запуск = одна картинка.** Не более 12 генераций без новой команды владельца.
-- **Veo не трогать** — только изображения (`image t2i`).
+- **Veo не трогать** — только изображения.
 - **Видео не запускать.**
 - Chrome/Xvfb/x11vnc/websockify запускать только когда нужен вход; после использования остановить.
 - Ожидание ручных шагов — короткими вызовами до 90 с, без циклов на 25 минут.

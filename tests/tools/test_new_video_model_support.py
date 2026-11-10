@@ -289,7 +289,11 @@ def test_comfyui_partner_workflows_and_local_h3_metadata():
         assert workflow["2"]["class_type"] == "SaveVideo"
         assert output_node == "2"
 
+    # minimax_h3_local now ships a bundled workflow: without a reachable server
+    # it fails like the other local families, and its four-file stack is
+    # advertised through get_info() for setup guidance.
+    tool._client.is_available = lambda: False
     local = tool.execute({"prompt": "x", "model_family": "minimax_h3_local"})
     assert not local.success
-    assert local.data["model"] == "MiniMax-H3"
-    assert len(local.data["model_stack"]) == 4
+    assert "COMFYUI_SERVER_URL" in (local.error or "")
+    assert len(tool.get_info()["bundled_model_stacks"]["minimax_h3_local"]) == 4

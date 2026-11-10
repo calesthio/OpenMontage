@@ -1,8 +1,9 @@
 """ComfyUI video generation via a local or remote ComfyUI server.
 
 Supports text-to-video and image-to-video using WAN 2.2 14B with
-4-step LightX2V LoRA acceleration.  Custom workflows are accepted
-via the ``workflow_json`` input.
+4-step LightX2V LoRA acceleration, and MiniMax H3 open weights
+(``model_family="minimax_h3_local"``, 20-step base mode with native audio).
+Custom workflows are accepted via the ``workflow_json`` input.
 """
 
 from __future__ import annotations
@@ -30,6 +31,7 @@ from tools._comfyui.client import ComfyUIClient, ComfyUIError
 from tools._comfyui.metadata import (
     BUNDLED_MODEL_STACKS,
     COMFYUI_SETUP_OFFER,
+    MODEL_LICENSE_NOTES,
     missing_models_payload,
     model_stack,
     workflow_hash,
@@ -41,6 +43,89 @@ _WORKFLOWS = Path(__file__).resolve().parent.parent / "_comfyui" / "workflows"
 # Output node IDs in the bundled workflows
 _T2V_OUTPUT_NODE = "16"
 _I2V_OUTPUT_NODE = "108"
+
+# --- MiniMax H3 (local open weights) -------------------------------------
+# Node IDs follow the official Comfy-Org templates (video_minimax_h3_t2v /
+# video_minimax_h3_i2v); the bundled JSON is their API-format equivalent.
+_H3_STACK = "minimax-h3-local"
+_H3_WORKFLOWS = {
+    "text_to_video": "minimax-h3-t2v.json",
+    "image_to_video": "minimax-h3-i2v.json",
+}
+_H3_OUTPUT_NODE = "92"
+_H3_FPS = 24
+_H3_FRAME_STEP = 17  # valid frame counts are 17k + 5
+_H3_FRAME_OFFSET = 5
+_H3_MIN_SECONDS = 4
+_H3_MAX_SECONDS = 15  # ~362 frames, the top of the trained range
+_H3_LONG_EDGE = 1344  # native 16:9 canvas is 1344x768
+_H3_SHORT_EDGE = 768
+_H3_CANVAS_STEP = 32
+_H3_DEFAULT_STEPS = 20
+# Seconds per sampling step for a 5 s clip, from a third-party 8-step Turbo
+# benchmark at 1344x768 (85 s on RTX 5090 and RTX PRO 6000-class GPUs).
+# Extrapolating it linearly to 20 base steps is an estimate; it has not been
+# measured here.
+_H3_SECONDS_PER_STEP_PER_5S = 85 / 8
+_H3_LOAD_OVERHEAD_SECONDS = 60
+
+
+def h3_frame_count(seconds: float) -> int:
+    """Return the H3 frame count for *seconds* at 24 fps.
+
+    H3 only accepts counts on the ``17k + 5`` grid; ComfyUI snaps an off-grid
+    ``length`` up, so snapping here keeps the reported duration honest.
+    """
+    frames = max(_H3_FRAME_OFFSET, round(seconds * _H3_FPS))
+    return frames + (_H3_FRAME_OFFSET - frames % _H3_FRAME_STEP) % _H3_FRAME_STEP
+
+
+def _snap_canvas_edge(value: float) -> int:
+    """Round to the nearest multiple of 32 (ties up), never below 32."""
+    return max(
+        _H3_CANVAS_STEP, int(value / _H3_CANVAS_STEP + 0.5) * _H3_CANVAS_STEP
+    )
+
+
+def h3_canvas_for_ratio(ratio_w: float, ratio_h: float) -> tuple[int, int]:
+    """Return the largest H3 canvas (width, height) with the given aspect ratio.
+
+    The short edge is 768 unless that would push the long edge past 1344, in
+    which case the long edge is pinned to 1344 (e.g. 21:9 -> 1344x576).
+    """
+    if ratio_w <= 0 or ratio_h <= 0:
+        raise ValueError(f"aspect ratio must be positive, got {ratio_w}:{ratio_h}")
+    landscape = ratio_w >= ratio_h
+    ratio = max(ratio_w, ratio_h) / min(ratio_w, ratio_h)
+    short = _H3_SHORT_EDGE
+    long = _snap_canvas_edge(short * ratio)
+    if long > _H3_LONG_EDGE:
+        long = _H3_LONG_EDGE
+        short = _snap_canvas_edge(long / ratio)
+    return (long, short) if landscape else (short, long)
+
+
+def h3_snap_canvas(width: int, height: int) -> tuple[int, int]:
+    """Snap an explicit size to multiples of 32 and enforce H3's native canvas."""
+    w, h = _snap_canvas_edge(width), _snap_canvas_edge(height)
+    if max(w, h) > _H3_LONG_EDGE or min(w, h) > _H3_SHORT_EDGE:
+        raise ValueError(
+            f"{w}x{h} is past MiniMax H3's native canvas (long edge <= "
+            f"{_H3_LONG_EDGE}, short edge <= {_H3_SHORT_EDGE}). Use 1344x768 "
+            "(16:9) or 768x1344 (9:16); the 1.0 MP preset gives a 1376 px edge "
+            "and is over the limit."
+        )
+    return w, h
+
+
+def _parse_aspect_ratio(value: str) -> tuple[float, float]:
+    try:
+        left, right = str(value).split(":")
+        return float(left), float(right)
+    except ValueError as exc:
+        raise ValueError(
+            f"aspect_ratio must look like '16:9', got {value!r}"
+        ) from exc
 
 # Models required by the bundled WAN 2.2 workflows
 _REQUIRED_MODELS_COMMON = [
@@ -62,6 +147,10 @@ _REQUIRED_MODELS_T2V = [
     "wan2.2_t2v_lightx2v_4steps_lora_v1.1_high_noise.safetensors",
     "wan2.2_t2v_lightx2v_4steps_lora_v1.1_low_noise.safetensors",
 ]
+
+# Single source of truth: the loaders in the bundled H3 graphs and this list
+# are checked against the same metadata stack by the contract tests.
+_REQUIRED_MODELS_H3 = [item["name"] for item in BUNDLED_MODEL_STACKS[_H3_STACK]]
 
 _RESOURCE_PROFILES = {
     "provider_floor": {
@@ -109,7 +198,10 @@ class ComfyUIVideo(BaseTool):
         "Start a ComfyUI server and set COMFYUI_SERVER_URL "
         "(default http://localhost:8188).\n"
         "Bundled local WAN requires WAN 2.2 models and LightX2V LoRAs. Local "
-        "MiniMax H3 requires its official model stack and exported API workflow.\n"
+        "MiniMax H3 (model_family=minimax_h3_local) runs a bundled 20-step "
+        "workflow once the four files in the Comfy-Org/MiniMax-H3 stack are "
+        "installed; it needs a large GPU (see docs) and its licence excludes "
+        "the EU, UK, South Korea and the US.\n"
         "Gemini Omni, Seedance 2.5, and MiniMax H3 Partner Nodes require a "
         "logged-in Comfy account, credits, and network access.\n"
         "Running a separate ComfyUI instance for video? Set COMFYUI_VIDEO_SERVER_URL "
@@ -179,8 +271,9 @@ class ComfyUIVideo(BaseTool):
                 "default": "wan2.2",
                 "description": (
                     "Built-in execution family. The three *_api/hosted families use "
-                    "ComfyUI Partner Nodes and credits; minimax_h3_local uses open weights "
-                    "through a caller-supplied official/custom workflow."
+                    "ComfyUI Partner Nodes and credits; minimax_h3_local runs the open "
+                    "weights through a bundled T2V/I2V workflow (or a caller-supplied "
+                    "workflow_path/workflow_json)."
                 ),
             },
             "reference_image_path": {
@@ -211,7 +304,19 @@ class ComfyUIVideo(BaseTool):
                 "minimum": 3,
                 "maximum": 30,
                 "default": 5,
-                "description": "Partner Node duration; bundled WAN still uses num_frames.",
+                "description": (
+                    "Clip length in seconds for Partner Nodes and minimax_h3_local "
+                    "(local H3 accepts 4-15 s and snaps up to the 17k+5 frame grid "
+                    "at 24 fps). Bundled WAN still uses num_frames."
+                ),
+            },
+            "steps": {
+                "type": "integer",
+                "minimum": 1,
+                "description": (
+                    "Sampling steps for minimax_h3_local (default 20; the model card "
+                    "uses 50 for maximum quality). Ignored by other families."
+                ),
             },
             "aspect_ratio": {
                 "type": "string",
@@ -355,7 +460,9 @@ class ComfyUIVideo(BaseTool):
         info["bundled_model_stacks"] = {
             "text_to_video": BUNDLED_MODEL_STACKS["wan22-t2v-4step"],
             "image_to_video": BUNDLED_MODEL_STACKS["wan22-i2v-4step"],
+            "minimax_h3_local": BUNDLED_MODEL_STACKS[_H3_STACK],
         }
+        info["license_notes"] = {"minimax_h3_local": MODEL_LICENSE_NOTES["minimax-h3"]}
         info["resource_profile_note"] = (
             "The top-level resource_profile is a ComfyUI provider floor, not a "
             "promise that every workflow fits 8GB VRAM. Bundled WAN 2.2 14B FP8 "
@@ -405,6 +512,16 @@ class ComfyUIVideo(BaseTool):
         return 0.0
 
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
+        if str(inputs.get("model_family")) == "minimax_h3_local" and not (
+            inputs.get("workflow_json") or inputs.get("workflow_path")
+        ):
+            steps = int(inputs.get("steps", _H3_DEFAULT_STEPS))
+            duration = float(inputs.get("duration", 5))
+            return round(
+                _H3_LOAD_OVERHEAD_SECONDS
+                + _H3_SECONDS_PER_STEP_PER_5S * steps * duration / 5,
+                1,
+            )
         operation = inputs.get("operation", "text_to_video")
         if operation == "image_to_video":
             return 210.0  # ~3.5 min
@@ -425,20 +542,6 @@ class ComfyUIVideo(BaseTool):
                 success=False,
                 error="LTX-2.5 local requires an installed model stack and an exported ComfyUI API workflow via workflow_path/workflow_json plus output_node. No older LTX or WAN fallback is performed.",
                 data={"model": "LTX-2.5", "setup_required": True},
-            )
-        if model_family == "minimax_h3_local" and not custom_workflow:
-            return ToolResult(
-                success=False,
-                data={
-                    "provider": "comfyui",
-                    "model": "MiniMax-H3",
-                    "workflow_template": "https://github.com/Comfy-Org/workflow_templates/blob/main/templates/video_minimax_h3_t2v.json",
-                    "model_stack": BUNDLED_MODEL_STACKS["minimax-h3-local"],
-                },
-                error=(
-                    "minimax_h3_local requires the official MiniMax H3 ComfyUI workflow "
-                    "exported in API format via workflow_json/workflow_path plus output_node."
-                ),
             )
         if (
             model_family in partner_nodes
@@ -495,16 +598,39 @@ class ComfyUIVideo(BaseTool):
                         f"See data.missing_models for destination hints and download URLs."
                     ),
                 )
+        if not custom_workflow and model_family == "minimax_h3_local":
+            _, missing = self._client.check_models(_REQUIRED_MODELS_H3)
+            if missing:
+                return ToolResult(
+                    success=False,
+                    data=missing_models_payload(
+                        missing,
+                        workflow_key=_H3_STACK,
+                        workflow_name=_H3_WORKFLOWS[operation],
+                        operation=operation,
+                    ),
+                    error=(
+                        f"ComfyUI server is running but missing MiniMax H3 models: "
+                        f"{', '.join(missing)}.\n"
+                        f"See data.missing_models for destination hints and download URLs."
+                    ),
+                )
+
         start = time.time()
         seed = inputs.get("seed") or ComfyUIClient.random_seed()
         output_path = Path(
             inputs.get("output_path", f"comfyui_video_{operation}_{seed}.mp4")
         )
+        h3_params: dict[str, Any] | None = None
 
         try:
             if custom_workflow:
                 workflow = self._load_custom_workflow(inputs)
                 output_node = str(inputs["output_node"])
+            elif model_family == "minimax_h3_local":
+                workflow, output_node, h3_params = self._build_h3_local(
+                    inputs, seed, output_path, operation
+                )
             elif model_family in partner_nodes:
                 node_class = partner_nodes[model_family]
                 if not self._client.has_node(node_class):
@@ -572,6 +698,15 @@ class ComfyUIVideo(BaseTool):
                     "aspect_ratio": inputs.get("aspect_ratio", "16:9"),
                     "resolution": inputs.get("resolution", "720p"),
                     "billing": "ComfyUI Partner Node credits",
+                }
+            )
+        elif h3_params is not None:
+            result_data.update(
+                {
+                    **h3_params,
+                    "fps": _H3_FPS,
+                    "duration_seconds": round(h3_params["num_frames"] / _H3_FPS, 2),
+                    "has_audio": True,
                 }
             )
         else:
@@ -653,26 +788,7 @@ class ComfyUIVideo(BaseTool):
         height = inputs.get("height", 640)
         num_frames = inputs.get("num_frames", 81)
 
-        # Resolve reference image
-        ref_path = inputs.get("reference_image_path")
-        ref_url = inputs.get("reference_image_url")
-
-        if ref_url and not ref_path:
-            # Download to a temp location
-            resp = requests.get(ref_url, timeout=60)
-            resp.raise_for_status()
-            ref_path = str(output_path.with_suffix(".ref.png"))
-            Path(ref_path).parent.mkdir(parents=True, exist_ok=True)
-            Path(ref_path).write_bytes(resp.content)
-
-        if not ref_path:
-            raise ComfyUIError(
-                "image_to_video requires reference_image_path or reference_image_url"
-            )
-
-        # Upload to ComfyUI
-        upload_name = f"om_{output_path.stem}.png"
-        server_name = self._client.upload_image(Path(ref_path), upload_name)
+        server_name, _ = self._stage_reference_image(inputs, output_path)
 
         workflow = ComfyUIClient.load_workflow(_WORKFLOWS / "wan22-i2v-4step.json")
         workflow = ComfyUIClient.patch_workflow(
@@ -686,6 +802,105 @@ class ComfyUIVideo(BaseTool):
             },
         )
         return workflow, _I2V_OUTPUT_NODE
+
+    def _stage_reference_image(
+        self, inputs: dict[str, Any], output_path: Path
+    ) -> tuple[str, Path]:
+        """Resolve the reference image and upload it to ComfyUI.
+
+        Returns ``(server_side_name, local_path)``. A ``reference_image_url`` is
+        downloaded next to *output_path* first.
+        """
+        ref_path = inputs.get("reference_image_path")
+        ref_url = inputs.get("reference_image_url")
+
+        if ref_url and not ref_path:
+            resp = requests.get(ref_url, timeout=60)
+            resp.raise_for_status()
+            ref_path = str(output_path.with_suffix(".ref.png"))
+            Path(ref_path).parent.mkdir(parents=True, exist_ok=True)
+            Path(ref_path).write_bytes(resp.content)
+
+        if not ref_path:
+            raise ComfyUIError(
+                "image_to_video requires reference_image_path or reference_image_url"
+            )
+
+        upload_name = f"om_{output_path.stem}.png"
+        server_name = self._client.upload_image(Path(ref_path), upload_name)
+        return server_name, Path(ref_path)
+
+    def _build_h3_local(
+        self,
+        inputs: dict[str, Any],
+        seed: int,
+        output_path: Path,
+        operation: str,
+    ) -> tuple[dict, str, dict[str, Any]]:
+        """Patch the bundled MiniMax H3 T2V/I2V graph.
+
+        Returns ``(workflow, output_node, params)``. Bad durations or canvases
+        raise :class:`ComfyUIError` so they surface as a normal tool error.
+        """
+        try:
+            duration = float(inputs.get("duration", 5))
+            if not _H3_MIN_SECONDS <= duration <= _H3_MAX_SECONDS:
+                raise ValueError(
+                    f"duration must be between {_H3_MIN_SECONDS} and "
+                    f"{_H3_MAX_SECONDS} seconds for minimax_h3_local, got {duration:g}"
+                )
+            num_frames = h3_frame_count(duration)
+            steps = int(inputs.get("steps", _H3_DEFAULT_STEPS))
+            if steps < 1:
+                raise ValueError(f"steps must be at least 1, got {steps}")
+
+            explicit = inputs.get("width") is not None and inputs.get("height") is not None
+            server_name: str | None = None
+            if operation == "image_to_video":
+                # The first frame is stretched to the canvas, so an unspecified
+                # canvas follows the reference image's aspect ratio.
+                server_name, local_path = self._stage_reference_image(inputs, output_path)
+                if explicit:
+                    width, height = h3_snap_canvas(inputs["width"], inputs["height"])
+                else:
+                    from PIL import Image
+
+                    with Image.open(local_path) as image:
+                        width, height = h3_canvas_for_ratio(*image.size)
+            elif explicit:
+                width, height = h3_snap_canvas(inputs["width"], inputs["height"])
+            else:
+                width, height = h3_canvas_for_ratio(
+                    *_parse_aspect_ratio(inputs.get("aspect_ratio") or "16:9")
+                )
+        except ValueError as exc:
+            raise ComfyUIError(str(exc)) from exc
+
+        patches: dict[str, dict[str, Any]] = {
+            "131": {
+                "prompt": inputs["prompt"],
+                "width": width,
+                "height": height,
+                "length": num_frames,
+            },
+            "129": {"noise_seed": seed},
+            "124": {"steps": steps},
+            "92": {"filename_prefix": f"video/{output_path.stem}"},
+        }
+        if server_name is not None:
+            patches["114"] = {"image": server_name}
+
+        workflow = ComfyUIClient.patch_workflow(
+            ComfyUIClient.load_workflow(_WORKFLOWS / _H3_WORKFLOWS[operation]),
+            patches,
+        )
+        params = {
+            "width": width,
+            "height": height,
+            "num_frames": num_frames,
+            "steps": steps,
+        }
+        return workflow, _H3_OUTPUT_NODE, params
 
     @staticmethod
     def _probe_media(path: Path) -> dict[str, Any]:
@@ -731,6 +946,7 @@ class ComfyUIVideo(BaseTool):
                 "gemini_omni_flash": "gemini-omni-flash-preview (ComfyUI Partner Node)",
                 "seedance_2.5": "Seedance 2.5 (ComfyUI Partner Node)",
                 "minimax_h3_api": "MiniMax-H3 (ComfyUI Partner Node)",
+                "minimax_h3_local": "MiniMax-H3 FL2VA int8 (ComfyUI local)",
             }.get(str(inputs.get("model_family", "wan2.2")), "custom-comfyui-model")
         if str(inputs.get("model_family")) == "ltx_2.5_local":
             return inputs.get("workflow_model") or "LTX-2.5 (local ComfyUI workflow)"
@@ -765,6 +981,14 @@ class ComfyUIVideo(BaseTool):
                 "network_required": True,
                 "billing": "ComfyUI Partner Node credits",
                 "workflow_hash_sha256": workflow_hash(workflow),
+                "output_node": output_node,
+            }
+        if not custom_workflow and model_family == "minimax_h3_local":
+            return {
+                "source": "bundled",
+                "workflow": _H3_WORKFLOWS[operation],
+                "workflow_hash_sha256": workflow_hash(workflow),
+                "model_stack": model_stack(_H3_STACK, inputs),
                 "output_node": output_node,
             }
         if not custom_workflow:

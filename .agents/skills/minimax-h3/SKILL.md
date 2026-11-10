@@ -18,12 +18,16 @@ MiniMax H3 is the Hailuo 3.0 family. The first-party API identifier is
 | fal.ai | `minimax_fal_video` | Hosted gateway; T2V, I2V, reference-to-video |
 | Runway | `runway_video`, `model: "hailuo3"` | Hosted; 768P or 2K, 5–15 seconds |
 | ComfyUI Partner Node | `comfyui_video`, `model_family: "minimax_h3_api"` | Hosted and billed in Comfy credits |
-| ComfyUI open weights | `comfyui_video`, `model_family: "minimax_h3_local"` | Local GPU with official workflow and model stack |
+| ComfyUI open weights | `comfyui_video`, `model_family: "minimax_h3_local"` | Local GPU, bundled T2V/I2V workflow plus model stack |
 
-For local ComfyUI, export the official workflow in API format and pass
-`workflow_json` or `workflow_path` plus `output_node`. OpenMontage reports the
-required diffusion model, Qwen3-VL text encoder, video VAE, and audio VAE; it
-does not silently download large weights.
+For local ComfyUI, OpenMontage ships a bundled T2V and I2V workflow, so no
+export is needed: pass `operation` (`text_to_video` or `image_to_video`),
+`duration` (4–15 s) and optionally `aspect_ratio`, `steps` or an explicit
+`width`/`height`. Pass `workflow_json` or `workflow_path` plus `output_node`
+only to override the bundled graph. OpenMontage reports the required diffusion
+model, Qwen3-VL text encoder, video VAE, and audio VAE when they are missing; it
+does not silently download large weights. Local H3 is 768p only (1344x768 or
+768x1344), and its licence excludes the EU, UK, South Korea and the US.
 
 ## Operations and prompting
 

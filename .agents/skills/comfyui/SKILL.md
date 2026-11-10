@@ -23,9 +23,25 @@ Use this skill before calling `comfyui_image`, `comfyui_video`, or `comfyui_musi
   require network access, a logged-in Comfy account, and prepaid credits.
 - Do not describe Partner Nodes as local, offline, or free merely because the
   graph runs in a local ComfyUI process.
-- `minimax_h3_local` is a separate open-weight path. It requires the official
-  MiniMax H3 workflow exported in API format, its `output_node`, and the model
-  stack reported by the tool.
+- `minimax_h3_local` is a separate open-weight path that runs locally. It uses a
+  bundled T2V/I2V workflow (20-step base mode, native stereo audio) once the four
+  model files in `get_info()["bundled_model_stacks"]["minimax_h3_local"]` are
+  installed. Pass `workflow_path`/`workflow_json` + `output_node` only to
+  override it. See "Bundled open-weight workflows" below for limits and licences.
+
+## Bundled open-weight workflows
+
+- **MiniMax H3 (`comfyui_video`, `model_family: "minimax_h3_local"`)**
+  - `duration` is 4-15 s and snaps up to the `17k + 5` frame grid at 24 fps (5 s = 124 frames). `steps` defaults to 20.
+  - Canvas: 1344x768 (16:9) or 768x1344 (9:16), long edge <= 1344 and short edge <= 768, multiples of 32. Larger sizes (including the 1.0 MP preset, which gives a 1376 px edge) are rejected. Local H3 is 768p only; 2K regeneration is API-only.
+  - Image-to-video stretches the first frame to the canvas, so an unspecified canvas follows the reference image's aspect ratio. Keep the reference close to 16:9 or 9:16.
+  - The weights are heavy on host RAM as well as VRAM. The bundled graph has no Turbo LoRA; use a custom workflow for 8-step drafts.
+  - Licence: not authorised in the EU, UK, South Korea or the US, outputs included (`get_info()["license_notes"]`). Tell the user before using it.
+- **Qwen-Image-2.1 (`comfyui_image`, `model_family: "qwen_image_2.1"`)**
+  - Text-to-image only. Defaults: 40 steps (the model card's setting; 25 is faster but fixed fewer prompt-adherence errors in our eval), CFG 1.0 (base Qwen-Image-2.1 runs at CFG 1, so `negative_prompt` has little effect). Do not reuse FLUX's guidance 3.5. Each side must be a multiple of 32 within 256-2752 and the area at most 2400x1792.
+  - Edit, multi-reference and the prompt enhancer are not bundled; use a custom workflow.
+  - Licence: Qwen Research License, non-commercial only (`get_info()["license_notes"]`). Tell the user before using it.
+- Both bundled graphs were written by hand in API format from the official Comfy-Org templates and checked against the node schemas and by contract tests. The Qwen-Image-2.1 graph matches one that has been run on a rented RTX 4090; the MiniMax H3 T2V/I2V graphs have **not been run end-to-end on a GPU yet** (they reuse the loader/sampler/decode chain of H3 graphs that have). Treat the first H3 generation on a new server as the real validation and report any `/prompt` validation error verbatim.
 
 ## Choosing a Workflow
 

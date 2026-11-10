@@ -58,6 +58,40 @@ BUNDLED_MODEL_STACKS: dict[str, list[dict[str, Any]]] = {
             "download_url": "https://huggingface.co/Comfy-Org/MiniMax-H3/tree/main/vae",
         },
     ],
+    # Qwen-Image-2.1 base text-to-image (Comfy-Org repackage). The optional
+    # prompt-enhancer text encoders and the Turbo checkpoints live in the same
+    # repo but are deliberately not part of the base stack.
+    "qwen-image-2-1-t2i": [
+        {
+            "role": "diffusion_model",
+            "name": "qwen_image_2.1_int8_convrot.safetensors",
+            "quantization": "INT8 ConvRot",
+            "destination_hint": "ComfyUI/models/diffusion_models/",
+            "download_url": (
+                "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/blob/main/"
+                "diffusion_models/qwen_image_2.1_int8_convrot.safetensors"
+            ),
+        },
+        {
+            "role": "text_encoder",
+            "name": "qwen3vl_8b_int8_convrot.safetensors",
+            "quantization": "INT8 ConvRot",
+            "destination_hint": "ComfyUI/models/text_encoders/",
+            "download_url": (
+                "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/blob/main/"
+                "text_encoders/qwen3vl_8b_int8_convrot.safetensors"
+            ),
+        },
+        {
+            "role": "vae",
+            "name": "qwen_image_2.1_vae_bf16.safetensors",
+            "destination_hint": "ComfyUI/models/vae/",
+            "download_url": (
+                "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/blob/main/"
+                "vae/qwen_image_2.1_vae_bf16.safetensors"
+            ),
+        },
+    ],
     "flux2-txt2img": [
         {
             "role": "diffusion_model",
@@ -223,6 +257,33 @@ BUNDLED_MODEL_STACKS: dict[str, list[dict[str, Any]]] = {
             ),
         },
     ],
+}
+
+
+# Licence caveats for the open-weight models that ship a bundled workflow.
+# These summarise the licence texts (read 2026-11-06) so the agent can surface
+# them in the "announce before execution" step; they are not legal advice and
+# the linked licence is the authority.
+MODEL_LICENSE_NOTES: dict[str, dict[str, str]] = {
+    "minimax-h3": {
+        "license": "MiniMax H3 licence (territory-limited)",
+        "license_url": "https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/LICENSE",
+        "summary": (
+            "Use, including use of outputs, is not authorised in the European Union, "
+            "the United Kingdom, the Republic of Korea or the United States. "
+            "Commercial products above US$20M need written authorisation from MiniMax "
+            "and must display 'MiniMax H3'. Check where the GPU host and the "
+            "audience are before relying on this model."
+        ),
+    },
+    "qwen-image-2.1": {
+        "license": "Qwen RESEARCH LICENSE AGREEMENT",
+        "license_url": "https://huggingface.co/Qwen/Qwen-Image-2.1/blob/main/LICENSE",
+        "summary": (
+            "Research and evaluation use only. Any commercial use needs a separate "
+            "licence from the Qwen team."
+        ),
+    },
 }
 
 

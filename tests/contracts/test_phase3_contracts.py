@@ -120,12 +120,15 @@ class TestPiperTTS:
         assert "offline_generation" in tool.capabilities
 
     def test_status_requires_piper_executable_even_if_python_package_imports(
-        self, monkeypatch
+        self, monkeypatch, tmp_path
     ):
         """F-12 regression: Piper generation shells out to `piper`, so importing
         the Python package is not enough to mark the provider available."""
         original_import = builtins.__import__
         original_which = shutil.which
+        # The command is also looked for next to the interpreter (a venv that is
+        # not activated), so "no executable" needs an interpreter folder without it.
+        monkeypatch.setattr(sys, "executable", str(tmp_path / "python"))
 
         def fake_import(name, *args, **kwargs):
             if name == "piper":

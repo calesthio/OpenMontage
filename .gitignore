@@ -116,3 +116,9 @@ pytest-of-*/
 
 # GFPGAN/facexlib download face-detection weights to ./gfpgan/weights at runtime
 gfpgan/
+
+# autoharness: per-session state and landing ledgers stay local; landed skills are tracked
+.claude/autoharness/
+.claude/skills/*/.ledger.jsonl
+.claude/skills/*/.sidecar.json
+.claude/skills/.archive/

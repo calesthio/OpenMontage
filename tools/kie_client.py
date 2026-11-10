@@ -125,14 +125,20 @@ def create_task(
     return str(task_id)
 
 
-def poll_task(
+def poll_task_raw(
     task_id: str,
     api_key: str,
     interval: float = 3.0,
     timeout: float = 600.0,
     request_timeout: int = 30,
-) -> list[str]:
-    """Poll a task until it terminates. Returns the list of result URLs.
+) -> dict[str, Any]:
+    """Poll a task until it terminates. Returns the parsed resultJson dict as-is.
+
+    Most Market models answer with ``{"resultUrls": [...]}``; a few (notably
+    the Suno music endpoints) answer with a divergent shape such as
+    ``{"data": [{"audio_url": ...}, ...]}``. Callers that know the model's
+    exact result shape should use this and parse it themselves; `poll_task`
+    below is the convenience wrapper for the common ``resultUrls`` shape.
 
     Raises KieError on reported failure or when `timeout` seconds elapse.
     """
@@ -174,10 +180,7 @@ def poll_task(
                 parsed = json.loads(result_json) if isinstance(result_json, str) else result_json
             except Exception as exc:  # noqa: BLE001
                 raise KieError(f"Task {task_id} returned unparsable resultJson: {exc}") from exc
-            urls = parsed.get("resultUrls") or []
-            if not urls:
-                raise KieError(f"Task {task_id} succeeded but resultJson had no resultUrls: {parsed}")
-            return [str(url) for url in urls]
+            return parsed
         if last_state in TERMINAL_FAILURE:
             error = data.get("failMsg") or "no error detail provided"
             raise KieError(f"KIE AI generation failed ({last_state}): {error}")
@@ -190,6 +193,28 @@ def poll_task(
         f"(last state: {last_state}). The job may still complete -- "
         f"check {RECORD_INFO_ENDPOINT}?taskId={task_id}"
     )
+
+
+def poll_task(
+    task_id: str,
+    api_key: str,
+    interval: float = 3.0,
+    timeout: float = 600.0,
+    request_timeout: int = 30,
+) -> list[str]:
+    """Poll a task until it terminates. Returns the list of result URLs.
+
+    Convenience wrapper over `poll_task_raw` for the common
+    ``{"resultUrls": [...]}`` response shape. Raises KieError if that key is
+    absent -- use `poll_task_raw` directly for models with a divergent shape.
+    """
+    parsed = poll_task_raw(
+        task_id, api_key, interval=interval, timeout=timeout, request_timeout=request_timeout
+    )
+    urls = parsed.get("resultUrls") or []
+    if not urls:
+        raise KieError(f"Task {task_id} succeeded but resultJson had no resultUrls: {parsed}")
+    return [str(url) for url in urls]
 
 
 def upload_file(file_path: str | Path, api_key: str, upload_path: str = "openmontage", timeout: int = 120) -> str:

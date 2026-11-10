@@ -103,11 +103,26 @@ class KieVideo(BaseTool):
             "poll_interval": {"type": "number", "default": 5.0},
             "poll_timeout": {"type": "number", "default": 900.0},
             "output_path": {"type": "string"},
+            "resume_task_id": {
+                "type": "string",
+                "description": (
+                    "A taskId from a previous call whose submission succeeded but polling or "
+                    "download failed (surfaced in that failed ToolResult's data.task_id). When "
+                    "set, this call skips createTask entirely and only polls/downloads that "
+                    "existing task -- it never submits a new (paid) generation. Use this to "
+                    "recover from a timeout instead of re-calling without resume_task_id, which "
+                    "would create and pay for a second job."
+                ),
+            },
         },
     }
 
     resource_profile = ResourceProfile(cpu_cores=1, ram_mb=512, disk_mb=800, network_required=True)
-    retry_policy = RetryPolicy(max_retries=2, retryable_errors=["rate_limit", "timeout"])
+    # "timeout" is deliberately NOT retryable: createTask is not idempotent on KIE's side, and a
+    # timed-out job can still complete (and bill) server-side. Blindly retrying execute() after a
+    # timeout would submit a second paid job. Recover with resume_task_id instead -- see
+    # docs/PROVIDERS.md "KIE AI" section.
+    retry_policy = RetryPolicy(max_retries=2, retryable_errors=["rate_limit"])
     idempotency_key_fields = ["prompt", "kie_model", "operation", "aspect_ratio", "resolution", "duration"]
     side_effects = ["writes video file to output_path", "calls KIE AI API"]
     user_visible_verification = ["Watch the result for motion fidelity and native audio"]
@@ -160,18 +175,38 @@ class KieVideo(BaseTool):
 
         kie_model = str(inputs.get("kie_model", _DEFAULT_MODEL))
         started = time.time()
-        try:
-            if kie_model == _DEFAULT_MODEL:
-                market_input = self._build_veo_input(inputs, api_key)
-            else:
-                market_input = {"prompt": inputs.get("prompt", "")}
-            extra = inputs.get("extra_input")
-            if isinstance(extra, dict):
-                market_input.update(extra)
+        market_input: dict[str, Any] | None = None
 
-            task_id = kie_client.create_task(
-                kie_model, market_input, api_key, callback_url=inputs.get("callback_url")
-            )
+        resume_task_id = inputs.get("resume_task_id")
+        if resume_task_id:
+            task_id = str(resume_task_id)
+        else:
+            try:
+                if kie_model == _DEFAULT_MODEL:
+                    market_input = self._build_veo_input(inputs, api_key)
+                else:
+                    market_input = {"prompt": inputs.get("prompt", "")}
+                extra = inputs.get("extra_input")
+                if isinstance(extra, dict):
+                    market_input.update(extra)
+
+                task_id = kie_client.create_task(
+                    kie_model, market_input, api_key, callback_url=inputs.get("callback_url")
+                )
+            except (kie_client.KieError, ValueError, KeyError) as exc:
+                return ToolResult(
+                    success=False,
+                    error=(
+                        f"KIE AI video task submission failed: {exc}. If this was a network/timeout "
+                        f"error rather than a clear rejection, check https://kie.ai/logs before "
+                        f"retrying -- the job may have been created and billed even though this call "
+                        f"never saw a taskId."
+                    ),
+                )
+            except Exception as exc:  # noqa: BLE001
+                return ToolResult(success=False, error=f"KIE AI video task submission failed unexpectedly: {exc}")
+
+        try:
             urls = kie_client.poll_task(
                 task_id,
                 api_key,
@@ -181,9 +216,22 @@ class KieVideo(BaseTool):
             output_path = Path(inputs.get("output_path") or "kie_video_output.mp4")
             kie_client.download(urls[0], output_path)
         except (kie_client.KieError, ValueError, KeyError) as exc:
-            return ToolResult(success=False, error=f"KIE AI video generation failed: {exc}")
+            return ToolResult(
+                success=False,
+                error=(
+                    f"KIE AI video task {task_id} was accepted but polling/download failed: {exc}. "
+                    f"The job may still complete (and may already be billed) -- do NOT resubmit. "
+                    f"Call this tool again with resume_task_id={task_id!r} to retry polling/download "
+                    f"for this exact job without creating a new one."
+                ),
+                data={"provider": "kie", "model": kie_model, "task_id": task_id},
+            )
         except Exception as exc:  # noqa: BLE001
-            return ToolResult(success=False, error=f"KIE AI video generation failed: {exc}")
+            return ToolResult(
+                success=False,
+                error=f"KIE AI video task {task_id} polling/download failed unexpectedly: {exc}",
+                data={"provider": "kie", "model": kie_model, "task_id": task_id},
+            )
 
         return ToolResult(
             success=True,

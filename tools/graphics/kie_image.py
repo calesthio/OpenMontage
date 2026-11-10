@@ -92,11 +92,26 @@ class KieImage(BaseTool):
             "poll_interval": {"type": "number", "default": 2.0},
             "poll_timeout": {"type": "number", "default": 300.0},
             "output_path": {"type": "string"},
+            "resume_task_id": {
+                "type": "string",
+                "description": (
+                    "A taskId from a previous call whose submission succeeded but polling or "
+                    "download failed (surfaced in that failed ToolResult's data.task_id). When "
+                    "set, this call skips createTask entirely and only polls/downloads that "
+                    "existing task -- it never submits a new (paid) generation. Use this to "
+                    "recover from a timeout instead of re-calling without resume_task_id, which "
+                    "would create and pay for a second job."
+                ),
+            },
         },
     }
 
     resource_profile = ResourceProfile(cpu_cores=1, ram_mb=512, disk_mb=200, network_required=True)
-    retry_policy = RetryPolicy(max_retries=2, retryable_errors=["rate_limit", "timeout"])
+    # "timeout" is deliberately NOT retryable: createTask is not idempotent on KIE's side, and a
+    # timed-out job can still complete (and bill) server-side. Blindly retrying execute() after a
+    # timeout would submit a second paid job. Recover with resume_task_id instead -- see
+    # docs/PROVIDERS.md "KIE AI" section.
+    retry_policy = RetryPolicy(max_retries=2, retryable_errors=["rate_limit"])
     idempotency_key_fields = ["prompt", "kie_model", "aspect_ratio"]
     side_effects = ["writes image file to output_path", "calls KIE AI API"]
     user_visible_verification = ["Inspect the generated image for prompt fidelity"]
@@ -123,24 +138,43 @@ class KieImage(BaseTool):
         is_edit = bool(images)
 
         kie_model = str(inputs.get("kie_model") or (_DEFAULT_EDIT_MODEL if is_edit else _DEFAULT_MODEL))
-
         started = time.time()
+        market_input: dict[str, Any] | None = None
+
+        resume_task_id = inputs.get("resume_task_id")
+        if resume_task_id:
+            task_id = str(resume_task_id)
+        else:
+            try:
+                market_input = {
+                    "prompt": inputs.get("prompt", ""),
+                    "aspect_ratio": inputs.get("aspect_ratio", "1:1"),
+                    "output_format": inputs.get("output_format", "png"),
+                }
+                if is_edit:
+                    market_input["image_urls"] = [kie_client.resolve_media(value, api_key) for value in images]
+
+                extra = inputs.get("extra_input")
+                if isinstance(extra, dict):
+                    market_input.update(extra)
+
+                task_id = kie_client.create_task(
+                    kie_model, market_input, api_key, callback_url=inputs.get("callback_url")
+                )
+            except (kie_client.KieError, ValueError, KeyError) as exc:
+                return ToolResult(
+                    success=False,
+                    error=(
+                        f"KIE AI image task submission failed: {exc}. If this was a network/timeout "
+                        f"error rather than a clear rejection, check https://kie.ai/logs before "
+                        f"retrying -- the job may have been created and billed even though this call "
+                        f"never saw a taskId."
+                    ),
+                )
+            except Exception as exc:  # noqa: BLE001
+                return ToolResult(success=False, error=f"KIE AI image task submission failed unexpectedly: {exc}")
+
         try:
-            market_input: dict[str, Any] = {
-                "prompt": inputs.get("prompt", ""),
-                "aspect_ratio": inputs.get("aspect_ratio", "1:1"),
-                "output_format": inputs.get("output_format", "png"),
-            }
-            if is_edit:
-                market_input["image_urls"] = [kie_client.resolve_media(value, api_key) for value in images]
-
-            extra = inputs.get("extra_input")
-            if isinstance(extra, dict):
-                market_input.update(extra)
-
-            task_id = kie_client.create_task(
-                kie_model, market_input, api_key, callback_url=inputs.get("callback_url")
-            )
             urls = kie_client.poll_task(
                 task_id,
                 api_key,
@@ -156,9 +190,22 @@ class KieImage(BaseTool):
                 kie_client.download(url, output_path)
                 output_paths.append(output_path)
         except (kie_client.KieError, ValueError, KeyError) as exc:
-            return ToolResult(success=False, error=f"KIE AI image generation failed: {exc}")
+            return ToolResult(
+                success=False,
+                error=(
+                    f"KIE AI image task {task_id} was accepted but polling/download failed: {exc}. "
+                    f"The job may still complete (and may already be billed) -- do NOT resubmit. "
+                    f"Call this tool again with resume_task_id={task_id!r} to retry polling/download "
+                    f"for this exact job without creating a new one."
+                ),
+                data={"provider": "kie", "model": kie_model, "task_id": task_id},
+            )
         except Exception as exc:  # noqa: BLE001
-            return ToolResult(success=False, error=f"KIE AI image generation failed: {exc}")
+            return ToolResult(
+                success=False,
+                error=f"KIE AI image task {task_id} polling/download failed unexpectedly: {exc}",
+                data={"provider": "kie", "model": kie_model, "task_id": task_id},
+            )
 
         return ToolResult(
             success=True,

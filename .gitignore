@@ -105,3 +105,4 @@ venv/
 # Local Wan / diffusers GPU environment
 .venv-wan/
 .gflow/
+work/flow_images/

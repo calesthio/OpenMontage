@@ -5,9 +5,10 @@ Connects to a running Chrome instance with the gflow profile via the DevTools
 WebSocket, opens flow.google.com, dismisses Russian consent dialogs, creates
 a project, types the prompt using CDP Input.insertText (not JS — the framework
 editor doesn't see JS-assigned values), submits with Input.dispatchKeyEvent
-Enter, waits for generated images, downloads full-resolution images via
-fetch() in page context (base64), falls back to Page.captureScreenshot with
-element clip coordinates, and writes a manifest.
+Enter, waits for NEW generated images (tracking data-media-id before send),
+downloads full-resolution images via fetch() in page context (base64),
+compares pixel hash with existing images to detect duplicates, discards black
+frames, converts to real PNG via PIL (no resize), and writes a manifest.
 
 Security:
   - Never prints cookies, tokens, profile contents, Local State, or DevToolsActivePort.
@@ -23,7 +24,7 @@ Usage:
     [--ws-port 35029] [--page-id <cdp page id>] [--timeout 120]
 
 Batch mode:
-  python scripts/flow_cdp_image.py --prompts-file prompts.json --out-dir /tmp/flow-test/batch
+  python scripts/flow_cdp_image.py --prompts-file prompts.json --out-dir work/flow_images
 
 Prerequisites:
   1. Chrome with gflow profile running with remote debugging port:
@@ -233,6 +234,21 @@ async def fetch_fullres(session: CDPSession, src: str) -> dict[str, Any] | None:
     return None
 
 
+def pixel_hash(image_bytes: bytes) -> tuple[str, float]:
+    """Compute 16x16 MD5 pixel hash and black pixel ratio."""
+    from PIL import Image
+    import io
+    im = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    small = im.resize((16, 16), Image.LANCZOS)
+    px_bytes = small.tobytes()
+    ph = hashlib.md5(px_bytes).hexdigest()
+    pixels = list(small.getdata())
+    total = len(pixels)
+    black = sum(1 for p in pixels if p[0] < 30 and p[1] < 30 and p[2] < 30)
+    black_ratio = black / total if total > 0 else 0
+    return ph[:12], round(black_ratio, 4), im.size
+
+
 async def main() -> int:
     parser = argparse.ArgumentParser(
         description="Generate an image via Google Flow using CDP"
@@ -303,6 +319,20 @@ async def main() -> int:
             except Exception:
                 existing = []
 
+        # Track known media IDs BEFORE sending each prompt (to detect NEW ones)
+        known_media_ids: set[str] = set()
+        # Track known pixel hashes (to detect duplicate images)
+        known_phashes: set[str] = set()
+
+        # Load existing manifest to get known media IDs and phashes
+        for entry in existing:
+            mid = entry.get("asset_id")
+            if mid:
+                known_media_ids.add(mid)
+            ph = entry.get("phash")
+            if ph:
+                known_phashes.add(ph)
+
         for idx, prompt in enumerate(prompts):
             session.log_append(f"=== Prompt {idx + 1}/{len(prompts)}: {prompt[:80]} ===")
 
@@ -351,7 +381,7 @@ async def main() -> int:
                 session.log_append("ERROR: prompt box not found within 30s")
                 continue
 
-            # Focus the textbox via DOM click, clear existing text, type new prompt via CDP
+            # Focus the textbox via DOM click, clear existing text
             session.log_append("focusing and clearing prompt textbox")
             await session.eval_js(
                 """
@@ -368,7 +398,7 @@ async def main() -> int:
             await session.insert_text(prompt)
             await asyncio.sleep(0.5)
 
-            # Verify text was inserted (should be only the new prompt)
+            # Verify text was inserted
             text_check = await session.eval_js(
                 "document.querySelector('[role=\"textbox\"][contenteditable=\"true\"]').textContent"
             )
@@ -376,6 +406,15 @@ async def main() -> int:
 
             # Screenshot after text input
             await session.screenshot(f"{args.out_dir}/after_input_{idx + 1}.png")
+
+            # Capture existing media IDs BEFORE sending (to detect NEW ones)
+            before_ids = await session.eval_js(
+                "JSON.stringify(Array.from(document.querySelectorAll('flow-image-tile img[data-media-id], img[data-media-id]')).map(img => img.getAttribute('data-media-id')).filter(Boolean))"
+            )
+            if not isinstance(before_ids, list):
+                before_ids = []
+            before_set = set(before_ids)
+            session.log_append(f"existing media IDs before send: {len(before_set)}")
 
             # Press Enter via CDP Input.dispatchKeyEvent (NOT JS click)
             session.log_append("dispatching Enter key via CDP")
@@ -385,27 +424,25 @@ async def main() -> int:
             # Screenshot after submit
             await session.screenshot(f"{args.out_dir}/after_submit_{idx + 1}.png")
 
-            # Wait for result image (poll every 5s, up to timeout)
-            session.log_append(f"waiting for image (timeout {args.timeout}s)")
+            # Wait for NEW images (poll every 5s, up to timeout)
+            session.log_append(f"waiting for NEW images (timeout {args.timeout}s)")
             deadline = asyncio.get_event_loop().time() + args.timeout
-            found = False
-            start_time = asyncio.get_event_loop().time()
+            new_media_ids: list[str] = []
 
             while asyncio.get_event_loop().time() < deadline:
                 await asyncio.sleep(5)
-                elapsed = int(asyncio.get_event_loop().time() - start_time)
-
-                # Checkpoint screenshots at 5s, 30s, 90s
-                if elapsed in (5, 30, 90):
-                    await session.screenshot(f"{args.out_dir}/shot_{idx + 1}_{elapsed}s.png")
-
-                img_count = await session.eval_js(
-                    "document.querySelectorAll('flow-image-tile img[data-media-id], img[data-media-id]').length"
+                current_ids = await session.eval_js(
+                    "JSON.stringify(Array.from(document.querySelectorAll('flow-image-tile img[data-media-id], img[data-media-id]')).map(img => img.getAttribute('data-media-id')).filter(Boolean))"
                 )
-                session.log_append(f"images found: {img_count}")
-                if isinstance(img_count, (int, float)) and img_count > 0:
-                    found = True
+                if not isinstance(current_ids, list):
+                    current_ids = []
+                current_set = set(current_ids)
+                new_ids = current_set - before_set
+                if new_ids:
+                    new_media_ids = sorted(new_ids)
+                    session.log_append(f"NEW media IDs: {new_media_ids}")
                     break
+                session.log_append("no new images yet, waiting...")
 
             # Final screenshot
             await session.screenshot(f"{args.out_dir}/final_{idx + 1}.png")
@@ -418,11 +455,11 @@ async def main() -> int:
                 session.log_append(f"  {i + 1}: {line}")
             session.log_append("=== END PAGE TEXT ===")
 
-            if not found:
-                session.log_append("ERROR: no images found within timeout")
+            if not new_media_ids:
+                session.log_append("ERROR: no NEW images found within timeout")
                 continue
 
-            # Get image element bounding boxes and download full-res via fetch
+            # Get image rects and download NEW images via fetch
             img_rects = await session.eval_js(
                 "JSON.stringify(Array.from(document.querySelectorAll('flow-image-tile img[data-media-id], img[data-media-id]')).map(img => { const rect = img.getBoundingClientRect(); return {x: rect.x, y: rect.y, w: rect.width, h: rect.height, src: img.src, mediaId: img.getAttribute('data-media-id')}; }))"
             )
@@ -430,89 +467,76 @@ async def main() -> int:
                 session.log_append("ERROR: no image rects found")
                 continue
 
+            # Filter to only NEW media IDs
+            new_rects = [r for r in img_rects if r.get("mediaId") in new_media_ids]
+            session.log_append(f"new rects to process: {len(new_rects)}")
+
             base_out = os.path.join(args.out_dir, f"img_{idx + 1}")
             downloaded = 0
+            attempt = 0
 
-            for j, rect in enumerate(img_rects):
+            for rect in new_rects:
+                if downloaded >= 2:
+                    session.log_append("max 2 images per prompt reached, stopping")
+                    break
+
                 src = rect["src"]
-                media_id = rect.get("mediaId", f"img_{idx + 1}_{j + 1}")
-                session.log_append(f"image {j + 1}: mediaId={media_id}, src_prefix={src[:80]}...")
+                media_id = rect.get("mediaId", f"img_{idx + 1}_{len(new_rects)}")
+                session.log_append(f"image mediaId={media_id}, src_prefix={src[:80]}...")
 
                 # Try full-res download via fetch() in page context (has cookies)
                 fetched = await fetch_fullres(session, src)
 
-                if fetched:
-                    out_path = f"{base_out}_{j + 1}.png"
-                    with open(out_path, "wb") as f:
-                        f.write(fetched["bytes"])
-                    session.log_append(
-                        f"saved full-res: {out_path} ({fetched['size']} bytes, sha256={fetched['sha256']}, ct={fetched['ct']})"
-                    )
+                if not fetched:
+                    session.log_append("  full-res fetch failed, skipping")
+                    continue
 
-                    rect_w = rect.get("w", 0)
-                    rect_h = rect.get("h", 0)
-                    session.log_append(
-                        f"  display rect: {rect_w}x{rect_h}, downloaded: {fetched['size']} bytes"
-                    )
+                # Compute pixel hash and check for duplicates
+                ph, black_ratio, img_size = pixel_hash(fetched["bytes"])
+                session.log_append(f"  phash={ph}, black_ratio={black_ratio}, px={img_size[0]}x{img_size[1]}")
 
-                    manifest_entry = {
-                        "asset_id": media_id,
-                        "prompt": prompt,
-                        "model": "Nano Banana 2.1",
-                        "source_type": "newly_generated",
-                        "asset_origin": "newly_generated",
-                        "provider": "google-flow",
-                        "file_path": out_path,
-                        "file_size_bytes": fetched["size"],
-                        "sha256": fetched["sha256"],
-                        "display_width": rect_w,
-                        "display_height": rect_h,
-                        "visual_class": "AI_RECONSTRUCTION",
-                        "visual_claim": "AI_RECONSTRUCTION",
-                        "disclosure_required": True,
-                        "created_at": datetime.now(timezone.utc).isoformat(),
-                        "labels": ["AI-generated visualization"],
-                    }
-                    existing.append(manifest_entry)
-                    downloaded += 1
-                else:
-                    # Fallback: screenshot with clip (low resolution)
-                    session.log_append("  full-res fetch failed, falling back to screenshot")
-                    clip = {
-                        "x": math.floor(rect["x"]),
-                        "y": math.floor(rect["y"]),
-                        "width": math.floor(rect["w"]),
-                        "height": math.floor(rect["h"]),
-                        "scale": 1,
-                    }
-                    out_path = f"{base_out}_{j + 1}.png"
-                    await session.screenshot(out_path, clip)
-                    with open(out_path, "rb") as f:
-                        file_bytes = f.read()
-                    sha256 = hashlib.sha256(file_bytes).hexdigest()
-                    session.log_append(
-                        f"saved low-res screenshot: {out_path} ({len(file_bytes)} bytes, sha256={sha256}) [low_res]"
-                    )
+                # Discard black frames
+                if black_ratio > 0.5:
+                    session.log_append(f"  DISCARDED: black frame (ratio={black_ratio})")
+                    continue
 
-                    manifest_entry = {
-                        "asset_id": media_id,
-                        "prompt": prompt,
-                        "model": "Nano Banana 2.1",
-                        "source_type": "newly_generated",
-                        "asset_origin": "newly_generated",
-                        "provider": "google-flow",
-                        "file_path": out_path,
-                        "file_size_bytes": len(file_bytes),
-                        "sha256": sha256,
-                        "display_width": rect.get("w", 0),
-                        "display_height": rect.get("h", 0),
-                        "visual_class": "AI_RECONSTRUCTION",
-                        "visual_claim": "AI_RECONSTRUCTION",
-                        "disclosure_required": True,
-                        "created_at": datetime.now(timezone.utc).isoformat(),
-                        "labels": ["AI-generated visualization", "low_res"],
-                    }
-                    existing.append(manifest_entry)
+                # Check for duplicate pixel hash
+                if ph in known_phashes:
+                    session.log_append(f"  DISCARDED: duplicate pixel hash (phash={ph})")
+                    continue
+
+                # Save as real PNG via PIL (no resize)
+                from PIL import Image
+                import io
+                im = Image.open(io.BytesIO(fetched["bytes"])).convert("RGB")
+                out_path = f"{base_out}_{media_id[:8]}.png"
+                im.save(out_path, "PNG")
+                session.log_append(f"  saved PNG: {out_path} ({im.size[0]}x{im.size[1]}, {len(fetched['bytes'])} bytes)")
+
+                known_phashes.add(ph)
+                known_media_ids.add(media_id)
+                downloaded += 1
+
+                manifest_entry = {
+                    "asset_id": media_id,
+                    "prompt": prompt,
+                    "model": "Nano Banana 2.1",
+                    "source_type": "newly_generated",
+                    "asset_origin": "newly_generated",
+                    "provider": "google-flow",
+                    "file_path": out_path,
+                    "file_size_bytes": len(fetched["bytes"]),
+                    "sha256": fetched["sha256"],
+                    "phash": ph,
+                    "display_width": img_size[0],
+                    "display_height": img_size[1],
+                    "visual_class": "AI_RECONSTRUCTION",
+                    "visual_claim": "AI_RECONSTRUCTION",
+                    "disclosure_required": True,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "labels": ["AI-generated visualization"],
+                }
+                existing.append(manifest_entry)
 
             # Write manifest after each prompt
             with open(manifest_path, "w") as f:
@@ -523,7 +547,7 @@ async def main() -> int:
                     ensure_ascii=False,
                 )
             session.log_append(f"manifest written: {manifest_path} ({len(existing)} total entries)")
-            session.log_append(f"prompt {idx + 1} done — {downloaded} full-res image(s)")
+            session.log_append(f"prompt {idx + 1} done — {downloaded} new unique image(s)")
 
             # Delay between prompts (20-30s)
             if idx < len(prompts) - 1:

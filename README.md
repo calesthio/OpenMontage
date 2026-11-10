@@ -366,7 +366,7 @@ Each pipeline is a complete production workflow, from idea to finished video.
 | **Screen Demo** | Polished software screen recordings and walkthroughs | Product demos, tutorials, documentation |
 | **Talking Head** | Footage-led speaker videos | Presentations, vlogs, interviews |
 
-Every pipeline follows the same structured flow:
+Each pipeline's exact stage sequence is defined by its manifest. A common research-led flow is:
 
 ```
 research -> proposal -> script -> scene_plan -> assets -> edit -> compose
@@ -374,7 +374,7 @@ research -> proposal -> script -> scene_plan -> assets -> edit -> compose
 
 Each stage has a dedicated **director skill** — a markdown instruction file that teaches the agent exactly how to execute that stage. The agent reads the skill, uses the tools, self-reviews, checkpoints state, and asks for human approval at creative decision points.
 
-> **Web research is a first-class stage.** Before writing a single word of script, the agent searches YouTube, Reddit, Hacker News, news sites, and academic sources. It gathers data points, audience questions, trending angles, and visual references — then cites everything in a structured research brief. Your videos are grounded in real, current information, not hallucinated facts.
+> **Research-led pipelines use web research as a first-class stage.** Before their script stage, the agent searches YouTube, Reddit, Hacker News, news sites, and academic sources. It gathers data points, audience questions, trending angles, and visual references — then cites everything in a structured research brief. Other pipelines follow their own manifest and may not include research or script stages.
 
 ---
 

@@ -66,10 +66,17 @@ const SceneVideo: React.FC<{ scene: CinematicVideoScene }> = ({ scene }) => {
     scene.trimBeforeSeconds !== undefined
       ? Math.round(scene.trimBeforeSeconds * fps)
       : undefined;
+  // When playbackRate is not 1, Remotion's OffthreadVideo inner Sequence uses
+  // trimAfter directly as timeline frames without dividing by playbackRate,
+  // causing clips with speed < 1 to cut off early and leave the rest of the
+  // scene black. The parent Sequence already limits the scene duration, so
+  // omit trimAfter when playbackRate is modified (fixes #855).
   const trimAfter =
-    scene.trimAfterSeconds !== undefined
-      ? Math.round(scene.trimAfterSeconds * fps)
-      : undefined;
+    scene.playbackRate !== undefined && scene.playbackRate !== 1
+      ? undefined
+      : scene.trimAfterSeconds !== undefined
+        ? Math.round(scene.trimAfterSeconds * fps)
+        : undefined;
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#020407", opacity }}>

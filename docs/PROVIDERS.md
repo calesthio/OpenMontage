@@ -573,6 +573,98 @@ machine-readable Atlas page and should be reconfirmed before a paid batch.
 
 ---
 
+### KIE AI — Multi-Model Gateway
+
+**Tools:** `kie_video`, `kie_image`, `kie_tts`, `kie_music`
+**Env var:** `KIE_API_KEY` (alias: `KIEAI_API_KEY`)
+**Client:** `tools/kie_client.py` (shared `createTask`/`recordInfo` plumbing)
+
+KIE AI (<https://kie.ai>) is a multi-model aggregator: one API key and one
+unified async task contract (`POST /api/v1/jobs/createTask`, poll
+`GET /api/v1/jobs/recordInfo`) in front of hundreds of third-party Market
+models (Veo, Kling, Runway, Seedream, Nano Banana, GPT Image, Suno, ElevenLabs,
+Gemini TTS, ...).
+
+#### Setup
+
+1. Create an account at <https://kie.ai> and generate a key at
+   <https://kie.ai/api-key>.
+2. Add to `.env`:
+   ```bash
+   KIE_API_KEY=your-key-here
+   ```
+3. Check balance any time with `GET /api/v1/chat/credit` (see
+   `tools/kie_client.py::CREDIT_ENDPOINT`) — 1 KIE credit is roughly $0.005,
+   confirm the current rate at <https://kie.ai/pricing> before a paid batch.
+
+#### Default models per tool
+
+| Tool | Default Market model | Notes |
+|---|---|---|
+| `kie_video` | `veo-3-1` | Text/image/reference-to-video, native audio, 720p–4K |
+| `kie_image` | `google/nano-banana` (or `google/nano-banana-edit` when `image_urls` is set) | Cheap, fast, well documented |
+| `kie_tts` | `google/gemini-3-8-flash-tts` | Multi-speaker dialogue model; verified working for Vietnamese (`vi`) narration |
+| `kie_music` | `ai-music-api/generate` (Suno V6) | Returns 2 variations; `variation_index` selects which to download |
+
+Every tool also accepts `kie_model` + `extra_input` to call **any** other KIE
+Market model without a code change — check <https://kie.ai/market> for that
+model's exact `input` schema before switching `kie_model`.
+
+#### Paid-job lifecycle: resume instead of resubmit
+
+`createTask` is **not idempotent** on KIE's side — calling it twice creates
+and bills two separate jobs, even for an identical prompt. A job can also keep
+running (and bill) after this process stops waiting on it (a timeout, a
+dropped connection, the process being killed mid-poll).
+
+Because of this, each tool's `execute()` is split into two phases:
+
+1. **Submit** — build the Market `input`, call `create_task()`, get back a
+   `taskId`. If this phase itself fails (e.g. a network error before any
+   response), the outcome is genuinely unknown and there is no `taskId` to
+   report — the tool says so explicitly and points at
+   <https://kie.ai/logs> instead of guessing.
+2. **Poll + download** — once a `taskId` exists, poll
+   `GET /api/v1/jobs/recordInfo` and download the result. If *this* phase
+   fails (timeout, dropped connection, local disk error), the job was already
+   accepted (and may already be billed), so the failed `ToolResult` carries
+   `data.task_id` and the error text names it explicitly.
+
+To recover without creating a second paid job, pass the `taskId` from a failed
+result's `data.task_id` back in as **`resume_task_id`**: this skips `create_task`
+entirely and only polls/downloads the existing job. `retry_policy.retryable_errors`
+deliberately excludes `"timeout"` for all four KIE tools — an automatic retry
+executor must not blindly re-call `execute()` after a timeout; it should
+re-call with `resume_task_id` instead.
+
+```python
+result = registry.get("kie_video").execute({"prompt": "...", "output_path": "clip.mp4"})
+if not result.success and result.data.get("task_id"):
+    # Poll-only recovery -- does not create a new job.
+    result = registry.get("kie_video").execute({
+        "resume_task_id": result.data["task_id"],
+        "output_path": "clip.mp4",
+    })
+```
+
+#### Notes
+
+- File uploads (turning a local reference image/audio into the URL a Market
+  model expects) go through `kie_client.upload_file()` /
+  `kie_client.resolve_media()` — a different host
+  (`https://kieai.redpandaai.co`) than the task API. Uploaded files are
+  retained 24 hours; generated outputs 14 days — download promptly.
+- Suno's music endpoint answers with a shape that diverges from the generic
+  `{"resultUrls": [...]}` envelope (`{"data": [{"audio_url": ...}, ...]}`), so
+  `kie_music` uses `kie_client.poll_task_raw()` and parses it itself rather
+  than the shared `poll_task()` helper.
+- `kie_tts`'s default model needs the `vietnamese` subset/language explicitly
+  when writing captions elsewhere in the pipeline that reuse Google fonts —
+  see `remotion-composer/src/Explainer.tsx`'s `Baloo2` `loadFont` call for the
+  pattern (plain `latin` subset silently drops Vietnamese diacritics).
+
+---
+
 ### Kling Official — Direct API
 
 > **Official Kling path.** This is separate from `kling_video` via fal.ai: it uses Kling's official `Authorization: Bearer <KLING_API_KEY>` API, provider name `kling_official`, and direct Classic/Turbo/Omni task protocols.

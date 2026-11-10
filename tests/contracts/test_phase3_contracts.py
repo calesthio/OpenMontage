@@ -720,6 +720,7 @@ class TestCapabilityMetadata:
             "gemini",
             "google_tts",
             "inworld",
+            "kie",
             "kling_official",
             "openai",
             "piper",

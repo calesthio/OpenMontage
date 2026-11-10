@@ -479,6 +479,15 @@ class VideoCompose(BaseTool):
         output_path = Path(inputs.get("output_path", "composed_output.mp4"))
         output_path.parent.mkdir(parents=True, exist_ok=True)
         audio_path = inputs.get("audio_path")
+        if not audio_path and edit_decisions:
+            music_cfg = (
+                (edit_decisions.get("audio") or {}).get("music")
+                or edit_decisions.get("music")
+            )
+            if isinstance(music_cfg, dict):
+                cand = music_cfg.get("src") or music_cfg.get("source") or music_cfg.get("path")
+                if cand and Path(cand).exists():
+                    audio_path = str(Path(cand).resolve())
         subtitle_path = inputs.get("subtitle_path")
         codec = inputs.get("codec", "libx264")
         crf = inputs.get("crf", 23)
@@ -854,6 +863,100 @@ class VideoCompose(BaseTool):
             timeline_cursor += duration
 
         return scenes
+
+    @classmethod
+    def _resolve_music(
+        cls,
+        edit_decisions: dict[str, Any],
+        asset_lookup: dict[str, Any],
+    ) -> tuple[dict[str, Any] | None, str | None]:
+        """Resolve music configuration from edit_decisions and asset manifest.
+
+        Supports canonical `edit_decisions.audio.music` and legacy `edit_decisions.music`.
+        Resolves `asset_id` against `asset_lookup` to a local file path and adapts
+        snake_case fade settings (`fade_in_seconds`, `fade_out_seconds`) to the camelCase
+        properties (`fadeInSeconds`, `fadeOutSeconds`) expected by Remotion compositions.
+
+        Returns (resolved_music_dict, error_string). If an explicit asset_id is present
+        but cannot be found in asset_lookup, returns (None, error_string) to fail loudly.
+        """
+        music_cfg = (
+            (edit_decisions.get("audio") or {}).get("music")
+            or edit_decisions.get("music")
+        )
+        if not music_cfg or not isinstance(music_cfg, dict):
+            return None, None
+
+        music_asset_id = music_cfg.get("asset_id")
+        music_source = (
+            music_asset_id
+            or music_cfg.get("src")
+            or music_cfg.get("source")
+            or music_cfg.get("path")
+        )
+        if not music_source:
+            return None, None
+
+        resolved_path = None
+        if music_source in asset_lookup:
+            resolved_path = asset_lookup[music_source].get("path", music_source)
+        elif Path(music_source).exists():
+            resolved_path = str(Path(music_source).resolve())
+        elif music_asset_id:
+            return None, f"Music asset_id {music_asset_id!r} not found in asset_manifest."
+        else:
+            resolved_path = music_source
+
+        volume = music_cfg.get("volume", 0.15)
+        try:
+            volume = float(volume)
+        except (TypeError, ValueError):
+            volume = 0.15
+
+        fade_in = music_cfg.get(
+            "fade_in_seconds", music_cfg.get("fadeInSeconds", 2.0)
+        )
+        try:
+            fade_in = float(fade_in)
+        except (TypeError, ValueError):
+            fade_in = 2.0
+
+        fade_out = music_cfg.get(
+            "fade_out_seconds", music_cfg.get("fadeOutSeconds", 3.0)
+        )
+        try:
+            fade_out = float(fade_out)
+        except (TypeError, ValueError):
+            fade_out = 3.0
+
+        resolved: dict[str, Any] = {
+            "src": str(resolved_path),
+            "volume": volume,
+            "fadeInSeconds": fade_in,
+            "fadeOutSeconds": fade_out,
+            "fade_in_seconds": fade_in,
+            "fade_out_seconds": fade_out,
+        }
+        if music_asset_id:
+            resolved["asset_id"] = music_asset_id
+        if "ducking" in music_cfg:
+            resolved["ducking"] = music_cfg["ducking"]
+        if "loop" in music_cfg:
+            resolved["loop"] = music_cfg["loop"]
+        if "trim_before_seconds" in music_cfg or "trimBeforeSeconds" in music_cfg:
+            resolved["trimBeforeSeconds"] = music_cfg.get(
+                "trim_before_seconds", music_cfg.get("trimBeforeSeconds")
+            )
+        if "trim_after_seconds" in music_cfg or "trimAfterSeconds" in music_cfg:
+            resolved["trimAfterSeconds"] = music_cfg.get(
+                "trim_after_seconds", music_cfg.get("trimAfterSeconds")
+            )
+        if "offset_seconds" in music_cfg or "offsetSeconds" in music_cfg:
+            resolved["offsetSeconds"] = music_cfg.get(
+                "offset_seconds", music_cfg.get("offsetSeconds")
+            )
+
+        return resolved, None
 
     @staticmethod
     def _file_uri_to_raw_path(uri: str) -> str:
@@ -1684,9 +1787,21 @@ class VideoCompose(BaseTool):
                 resolved_cut["source"] = asset_lookup[source_id]["path"]
             resolved_cuts.append(resolved_cut)
 
+        # Resolve music config from edit_decisions
+        resolved_music, music_err = self._resolve_music(edit_decisions, asset_lookup)
+        if music_err:
+            return ToolResult(success=False, error=music_err)
+
+        resolved_edit_decisions = dict(edit_decisions, cuts=resolved_cuts)
+        if resolved_music:
+            resolved_edit_decisions["music"] = resolved_music
+            audio_dict = dict(resolved_edit_decisions.get("audio") or {})
+            audio_dict["music"] = resolved_music
+            resolved_edit_decisions["audio"] = audio_dict
+
         # --- Pre-compose validation gate ---
         scene_plan = inputs.get("scene_plan")
-        validation_block = self._pre_compose_validation(edit_decisions, resolved_cuts, scene_plan)
+        validation_block = self._pre_compose_validation(resolved_edit_decisions, resolved_cuts, scene_plan)
         if validation_block is not None:
             return validation_block
 
@@ -1696,7 +1811,7 @@ class VideoCompose(BaseTool):
         if render_runtime == "hyperframes":
             return self._render_via_hyperframes(
                 inputs=inputs,
-                edit_decisions=edit_decisions,
+                edit_decisions=resolved_edit_decisions,
                 asset_manifest=asset_manifest,
                 resolved_cuts=resolved_cuts,
                 output_path=output_path,
@@ -1706,7 +1821,7 @@ class VideoCompose(BaseTool):
             # Caller explicitly asked for FFmpeg — don't auto-upgrade to Remotion.
             return self._render_via_ffmpeg(
                 inputs=inputs,
-                edit_decisions=edit_decisions,
+                edit_decisions=resolved_edit_decisions,
                 resolved_cuts=resolved_cuts,
                 output_path=output_path,
                 profile=profile,
@@ -1714,7 +1829,7 @@ class VideoCompose(BaseTool):
         # --- Explicit Remotion path (render_runtime == 'remotion') ---
         if self._needs_remotion(resolved_cuts):
             remotion_inputs: dict[str, Any] = {
-                "edit_decisions": dict(edit_decisions, cuts=resolved_cuts),
+                "edit_decisions": resolved_edit_decisions,
                 "output_path": str(output_path),
             }
             if profile:
@@ -2039,6 +2154,22 @@ class VideoCompose(BaseTool):
 
         # Deep-copy props so we don't mutate the original
         props = json.loads(json.dumps(composition_data))
+
+        # Adapt audio.music <-> top-level music and snake_case <-> camelCase for Remotion
+        music_block = (props.get("audio") or {}).get("music") or props.get("music")
+        if isinstance(music_block, dict):
+            if "fade_in_seconds" in music_block and "fadeInSeconds" not in music_block:
+                music_block["fadeInSeconds"] = music_block["fade_in_seconds"]
+            if "fade_out_seconds" in music_block and "fadeOutSeconds" not in music_block:
+                music_block["fadeOutSeconds"] = music_block["fade_out_seconds"]
+            if "source" in music_block and "src" not in music_block:
+                music_block["src"] = music_block["source"]
+            if "music" not in props:
+                props["music"] = music_block
+            if "audio" not in props or not isinstance(props["audio"], dict):
+                props["audio"] = {}
+            if "music" not in props["audio"]:
+                props["audio"]["music"] = music_block
 
         # Build a custom themeConfig from the playbook's actual colors.
         # This ensures every video gets a unique visual identity derived

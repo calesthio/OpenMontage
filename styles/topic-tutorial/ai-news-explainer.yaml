@@ -1,0 +1,70 @@
+identity:
+  name: "AI News Explainer"
+  category: motion-graphics
+  mood: "energetic, forward-looking, analytical"
+  pace: fast
+  best_for: "AI model benchmarks, paper breakthroughs, article spotlights, timeline cards"
+
+visual_language:
+  color_palette:
+    primary: ["#111827", "#1F2937"]
+    accent: ["#8B5CF6", "#06B6D4"]
+    background: "#0B0F19"
+    text: "#F3F4F6"
+    muted: "#9CA3AF"
+  composition: "dynamic editorial cards, bold metric spotlights, high contrast"
+  texture: "clean modern UI, subtle dark glass glow"
+
+typography:
+  headings:
+    font: "Inter"
+    weight: 700
+    tracking: "-0.02em"
+  body:
+    font: "Inter"
+    weight: 400
+    line_height: 1.5
+  code:
+    font: "JetBrains Mono"
+    weight: 400
+  stat_card:
+    font: "Inter"
+    weight: 800
+    size_multiplier: 3.2
+  scale_system: "major_third"
+  weight_matrix:
+    title: 800
+    heading: 700
+    body: 400
+    caption: 400
+
+motion:
+  transitions: [slide-left, fade, zoom-in]
+  animation_style: "fast punchy springs, high energy transitions"
+  pacing_rules:
+    min_scene_hold_seconds: 2.0
+    max_scene_hold_seconds: 10.0
+    text_card_hold_seconds: 2.8
+    stat_card_hold_seconds: 2.5
+    transition_duration_seconds: 0.28
+  entrance: "scale-up with snap (0.92 -> 1.0)"
+  exit: "slide-left fade-out"
+
+audio:
+  voice_style: "energetic, journalistic, concise, engaging"
+  music_mood: "modern tech pulse, upbeat synth bass"
+  music_volume: 0.08
+  sfx_style: "crisp digital swooshes and riser hits"
+  ducking_threshold_db: -3.5
+
+asset_generation:
+  image_prompt_prefix: "modern tech product UI, AI benchmark dashboard, glowing dark background"
+  consistency_anchors:
+    - "deep space navy #0B0F19"
+    - "electric violet and cyan accents #8B5CF6 #06B6D4"
+    - "glassmorphism card overlays"
+
+quality_rules:
+  - "Benchmark charts must include clearly labeled axes, units, and model names"
+  - "News quotes must be presented in distinct quote cards with publisher attribution"
+  - "Pacing must keep viewers engaged without visual clutter"

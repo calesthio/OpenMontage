@@ -1,0 +1,206 @@
+name: topic-tutorial
+version: "2.0"
+description: >
+  Local-first hybrid tutorial and explainer video pipeline. Ingests local files,
+  code repositories, documentation, and media via universal_ingestor, synthesizes high-quality
+  narration using Apple Silicon MLX Audio (or Piper TTS fallback), plans subject-specific visual
+  scenes, and provides graceful degradation for presenter avatars at $0 recurring cost.
+category: hybrid
+stability: production
+default_checkpoint_policy: guided
+
+reference_input:
+  supported: true
+  analysis_depth: standard
+  analysis_tools:
+    - video_analyzer
+    - transcript_fetcher
+    - video_downloader
+    - scene_detect
+    - frame_sampler
+
+orchestration:
+  mode: executive-producer
+  skill: pipelines/topic-tutorial/executive-producer
+  budget_default_usd: 0.00
+  max_revisions_per_stage: 3
+  max_send_backs: 3
+  max_wall_time_minutes: 20
+
+extensions:
+  custom_scripts: true
+  custom_playbooks: true
+  custom_skills: true
+  custom_tools: true
+
+required_skills:
+  - pipelines/topic-tutorial/executive-producer
+  - pipelines/topic-tutorial/research-director
+  - pipelines/topic-tutorial/proposal-director
+  - pipelines/topic-tutorial/script-director
+  - pipelines/topic-tutorial/scene-director
+  - pipelines/topic-tutorial/asset-director
+  - pipelines/topic-tutorial/presenter-director
+  - pipelines/topic-tutorial/edit-director
+  - pipelines/topic-tutorial/compose-director
+  - pipelines/topic-tutorial/publish-director
+  - pipelines/topic-tutorial/review-director
+  - meta/reviewer
+  - meta/checkpoint-protocol
+
+compatible_playbooks:
+  recommended:
+    - clean-professional
+    - software-technical
+    - ai-news-explainer
+  also_works:
+    - flat-motion-graphics
+    - minimalist-diagram
+    - science-math
+    - history-timeline
+    - finance-data
+  custom_allowed: true
+
+stages:
+  - name: research
+    skill: pipelines/topic-tutorial/research-director
+    optional_artifacts_in:
+      - source_media_review
+      - video_analysis_brief
+    produces:
+      - research_brief
+    tools_available:
+      - universal_ingestor
+    checkpoint_required: false
+    human_approval_default: false
+    review_focus:
+      - Material intake is properly parsed and indexed
+      - Secrets and credentials are completely redacted
+      - Core facts and citations are verified
+    success_criteria:
+      - Schema-valid research_brief with at least 3 data points
+      - At least 3 angles discovered
+      - All sources cited with valid URIs or file paths
+
+  - name: proposal
+    skill: pipelines/topic-tutorial/proposal-director
+    required_artifacts_in:
+      - research_brief
+    produces:
+      - proposal_packet
+      - decision_log
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Concepts reflect source material accurately
+      - Cost estimate confirms $0.00 for local production
+      - Composition runtime choice is explicitly logged
+    success_criteria:
+      - Schema-valid proposal_packet with at least 2 distinct concepts
+      - Itemized cost breakdown totaling $0.00
+      - decision_log with render_runtime_selection entry
+
+  - name: script
+    skill: pipelines/topic-tutorial/script-director
+    required_artifacts_in:
+      - proposal_packet
+    produces:
+      - script
+    tools_available: []
+    checkpoint_required: false
+    human_approval_default: false
+    review_focus:
+      - Narrative flow is logical and engaging
+      - Speech pacing is appropriate for technical clarity (140-160 WPM)
+      - Factual assertions link to source material
+    success_criteria:
+      - Schema-valid script artifact
+      - All scenes have narration text and estimated duration
+
+  - name: scene_plan
+    skill: pipelines/topic-tutorial/scene-director
+    required_artifacts_in:
+      - script
+    produces:
+      - scene_plan
+    tools_available: []
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Scene layout matches content type (code, diagram, stat card, text card)
+      - Presenter scenes have graceful degradation plan
+      - Visual hierarchy and readability
+    success_criteria:
+      - Schema-valid scene_plan artifact
+      - Every script scene has corresponding visual props and layout specification
+
+  - name: assets
+    skill: pipelines/topic-tutorial/asset-director
+    required_artifacts_in:
+      - scene_plan
+    produces:
+      - asset_manifest
+    tools_available:
+      - mlx_tts
+      - piper_tts
+      - local_talking_head
+    checkpoint_required: false
+    human_approval_default: false
+    review_focus:
+      - Narration audio generated with clean speech and dynamic sample rate
+      - Word timestamps aligned with speech duration
+      - Presenter status correctly logged
+    success_criteria:
+      - Schema-valid asset_manifest artifact
+      - All audio files exist and are verified by ffprobe
+
+  - name: edit
+    skill: pipelines/topic-tutorial/edit-director
+    required_artifacts_in:
+      - asset_manifest
+      - scene_plan
+    produces:
+      - edit_decisions
+    tools_available: []
+    checkpoint_required: false
+    human_approval_default: false
+    review_focus:
+      - Exact frame counts computed at 30 fps
+      - Caption timestamps match word timings
+      - Visual cut transitions and durations
+    success_criteria:
+      - Schema-valid edit_decisions artifact
+      - Frame durations sum to total video duration
+
+  - name: compose
+    skill: pipelines/topic-tutorial/compose-director
+    required_artifacts_in:
+      - edit_decisions
+    produces:
+      - render_report
+    tools_available:
+      - video_compose
+    checkpoint_required: true
+    human_approval_default: true
+    review_focus:
+      - Render succeeds at target resolution and frame rate
+      - Video and audio streams are synchronized
+      - No frozen or black frames
+    success_criteria:
+      - Schema-valid render_report artifact
+      - Final MP4 exists in renders/ directory and passes ffprobe
+
+  - name: publish
+    skill: pipelines/topic-tutorial/publish-director
+    required_artifacts_in:
+      - render_report
+    produces:
+      - publish_log
+    tools_available: []
+    checkpoint_required: false
+    human_approval_default: false
+    review_focus:
+      - Deliverables bundled and ready
+    success_criteria:
+      - Schema-valid publish_log artifact

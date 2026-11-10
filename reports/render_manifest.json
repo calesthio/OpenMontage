@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-11-09T10:15:45Z",
+  "project_id": "tutorial-pipeline-mastery",
+  "pipeline": "topic-tutorial",
+  "host_hardware": {
+    "platform": "Apple Silicon Mac mini M6",
+    "cpu_cores": 12,
+    "unified_memory_gb": 24,
+    "os": "macOS (darwin)"
+  },
+  "deliverables": {
+    "master_1080p": {
+      "file_path": "/Users/nathan/workspace/OpenMontage/projects/tutorial-pipeline-mastery/renders/master_1080p_mastered.mp4",
+      "resolution": "1920x1080",
+      "fps": 30.0,
+      "duration_seconds": 46.37,
+      "video_codec": "h264",
+      "audio_codec": "aac",
+      "file_size_mb": 8.16,
+      "sha256": "bc84b7eb3fe9a343a7b2a4dce1294b112d0e6c6e403f6385fcf321f5ecdfbb85"
+    },
+    "benchmark_4k": {
+      "file_path": "/Users/nathan/workspace/OpenMontage/projects/tutorial-pipeline-mastery/renders/benchmark_4k_test.mp4",
+      "resolution": "3840x2160",
+      "duration_seconds": 60.053333,
+      "render_time_seconds": 90.83
+    }
+  },
+  "audio_mastering": {
+    "integrated_lufs": -14.49,
+    "true_peak_dbtp": -1.0,
+    "lra_lu": 1.7
+  },
+  "caching_verification": {
+    "scenes_tested": 5,
+    "scene_mutated": "s2",
+    "unchanged_scenes_cache_hit": [
+      "s1",
+      "s3",
+      "s4",
+      "s5"
+    ],
+    "verification_passed": true
+  },
+  "cost_audit": {
+    "total_cost_usd": 0.0,
+    "paid_apis_called": 0,
+    "policy": "ALLOW_PAID_APIS=false"
+  },
+  "quality_audit": {
+    "resolution_verified": true,
+    "fps_verified": true,
+    "loudness_compliant": true,
+    "true_peak_compliant": true,
+    "black_frames": 0,
+    "frozen_frames": 0
+  }
+}

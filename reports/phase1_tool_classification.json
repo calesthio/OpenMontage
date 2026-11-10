@@ -1,0 +1,1314 @@
+{
+  "action_timeline_compiler": {
+    "capability": "character_animation",
+    "provider": "openmontage",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": ""
+  },
+  "atlas_3d": {
+    "capability": "3d_asset_generation",
+    "provider": "atlas_cloud",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set ATLASCLOUD_API_KEY (ATLAS_CLOUD_API_KEY and ATLAS_API_KEY are also accepted). Create a key at https://www.atlascloud.ai/."
+  },
+  "atlas_image": {
+    "capability": "image_generation",
+    "provider": "atlascloud",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set ATLASCLOUD_API_KEY to your Atlas Cloud API key.\n  Get one at https://www.atlascloud.ai/ -> Dashboard -> API Keys"
+  },
+  "atlas_refresh_image": {
+    "capability": "image_generation",
+    "provider": "atlascloud",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure ATLASCLOUD_API_KEY."
+  },
+  "atlas_video": {
+    "capability": "video_generation",
+    "provider": "atlascloud",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set ATLASCLOUD_API_KEY to your Atlas Cloud API key.\n  Get one at https://www.atlascloud.ai/ -> Dashboard -> API Keys"
+  },
+  "audio_energy": {
+    "capability": "analysis",
+    "provider": "ffmpeg",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Install ffmpeg:\n  Windows: winget install ffmpeg\n  macOS: brew install ffmpeg\n  Linux: sudo apt install ffmpeg"
+  },
+  "audio_enhance": {
+    "capability": "audio_processing",
+    "provider": "ffmpeg",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Install FFmpeg: https://ffmpeg.org/download.html"
+  },
+  "audio_mixer": {
+    "capability": "audio_processing",
+    "provider": "ffmpeg",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "FFmpeg is required. pydub is optional for advanced mixing:\npip install pydub"
+  },
+  "audio_probe": {
+    "capability": "analysis",
+    "provider": "ffprobe",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Install ffmpeg (includes ffprobe):\n  Windows: winget install ffmpeg\n  macOS: brew install ffmpeg\n  Linux: sudo apt install ffmpeg"
+  },
+  "auto_reframe": {
+    "capability": "video_post",
+    "provider": "ffmpeg",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "FFmpeg is required. For face-tracked reframing, also install:\npip install mediapipe opencv-python\n\nWithout MediaPipe/OpenCV, falls back to center-crop."
+  },
+  "azure_stt": {
+    "capability": "analysis",
+    "provider": "azure",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set your Azure AI Speech credentials:\n  export AZURE_SPEECH_KEY=your_speech_resource_key\n  export AZURE_SPEECH_REGION=eastus   # your Speech resource region\nCreate a Speech resource in the Azure portal (https://portal.azure.com) \u2014 the key and region are on its 'Keys and Endpoint' page. Optionally set AZURE_SPEECH_ENDPOINT to a full custom endpoint URL instead of the region."
+  },
+  "azure_tts": {
+    "capability": "tts",
+    "provider": "azure",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set your Azure AI Speech credentials (same resource as azure_stt):\n  export AZURE_SPEECH_KEY=your_speech_resource_key\n  export AZURE_SPEECH_REGION=eastus   # your Speech resource region\nCreate a Speech resource in the Azure portal (https://portal.azure.com) \u2014 the key and region are on its 'Keys and Endpoint' page. Optionally set AZURE_TTS_ENDPOINT to a full custom TTS host (e.g. https://<region>.tts.speech.microsoft.com)."
+  },
+  "bfl_image": {
+    "capability": "image_generation",
+    "provider": "bfl",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure BFL_API_KEY from https://dashboard.bfl.ai/."
+  },
+  "bg_remove": {
+    "capability": "enhancement",
+    "provider": "rembg",
+    "runtime": "hybrid",
+    "status": "unavailable",
+    "category": "cuda_only_incompatible",
+    "install_instructions": "pip install rembg       # CPU mode\npip install rembg[gpu]  # GPU mode (requires CUDA + onnxruntime-gpu)"
+  },
+  "bgm_montage_lite": {
+    "capability": "video_post",
+    "provider": "bmts-lite",
+    "runtime": "local",
+    "status": "unavailable",
+    "category": "missing_dependency",
+    "install_instructions": "Clone https://github.com/sharbvane/BMTS-Lite, create an isolated Python 3.11 environment, and install its requirements-runtime.txt. Set BGM_MONTAGE_LITE_ROOT to that checkout and optionally BGM_MONTAGE_LITE_PYTHON to the environment's interpreter. Install FFmpeg and ffprobe on PATH. See docs/bgm-montage-lite.md."
+  },
+  "blender_world": {
+    "capability": "3d_world_rendering",
+    "provider": "blender",
+    "runtime": "local_gpu",
+    "status": "unavailable",
+    "category": "cuda_only_incompatible",
+    "install_instructions": "Install Blender 4.5 LTS, set BLENDER_PATH, or place the portable runtime at .runtime/blender/blender-4.5.10-windows-x64/blender.exe."
+  },
+  "bria_fal_image": {
+    "capability": "image_generation",
+    "provider": "fal.ai",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure FAL_KEY using https://fal.ai/dashboard/keys."
+  },
+  "bria_image": {
+    "capability": "image_generation",
+    "provider": "bria",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure BRIA_API_TOKEN from https://platform.bria.ai/."
+  },
+  "cap_recorder": {
+    "capability": "screen_capture",
+    "provider": "cap",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Cap is a free, open-source Loom alternative.\n\nInstall from: https://cap.so/download\n  - Windows: Download and run the installer\n  - macOS: Download the .dmg or use: brew install --cask cap\n  - Linux: Download the AppImage from GitHub releases\n\nSource code: https://github.com/CapSoftware/cap\n\nCap provides webcam overlay, cursor highlighting, and a polished\nrecording UI that FFmpeg-based recording cannot match."
+  },
+  "cartesia_tts": {
+    "capability": "tts",
+    "provider": "cartesia",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure CARTESIA_API_KEY from the Cartesia dashboard."
+  },
+  "character_animation_reviewer": {
+    "capability": "character_animation",
+    "provider": "openmontage",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": ""
+  },
+  "character_rig_renderer": {
+    "capability": "character_animation",
+    "provider": "openmontage",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": ""
+  },
+  "character_spec_generator": {
+    "capability": "character_animation",
+    "provider": "openmontage",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": ""
+  },
+  "clip_search": {
+    "capability": "clip_retrieval",
+    "provider": "openmontage",
+    "runtime": "local",
+    "status": "unavailable",
+    "category": "missing_dependency",
+    "install_instructions": "pip install numpy transformers torch\nRequires a corpus built by corpus_builder at <corpus_dir>."
+  },
+  "code_snippet": {
+    "capability": "graphics",
+    "provider": "pygments",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "pip install Pygments Pillow"
+  },
+  "cogvideo_video": {
+    "capability": "video_generation",
+    "provider": "cogvideo",
+    "runtime": "local_gpu",
+    "status": "unavailable",
+    "category": "cuda_only_incompatible",
+    "install_instructions": "Enable local video generation and install the diffusers stack:\n  export VIDEO_GEN_LOCAL_ENABLED=true\n  uv pip install diffusers transformers accelerate torch pillow requests\n\nGPU support \u2014 pick what matches your hardware:\n  NVIDIA CUDA    \u2014 works out of the box with the above\n  Apple Silicon (MPS, macOS >= 12.3) \u2014 works out of the box; no extra build\n  CPU fallback   \u2014 slow but functional on any machine\n\nVRAM profile: see the selected tool's resource_profile for minimum VRAM."
+  },
+  "color_grade": {
+    "capability": "enhancement",
+    "provider": "ffmpeg",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Install FFmpeg: https://ffmpeg.org/download.html"
+  },
+  "comfyui_image": {
+    "capability": "image_generation",
+    "provider": "comfyui",
+    "runtime": "local_gpu",
+    "status": "unavailable",
+    "category": "cuda_only_incompatible",
+    "install_instructions": "Start a ComfyUI server and set COMFYUI_SERVER_URL (default http://localhost:8188).\nSee https://github.com/comfyanonymous/ComfyUI for setup.\nRunning a separate ComfyUI instance for images? Set COMFYUI_IMAGE_SERVER_URL instead -- it takes priority over COMFYUI_SERVER_URL for this tool only."
+  },
+  "comfyui_music": {
+    "capability": "music_generation",
+    "provider": "comfyui",
+    "runtime": "local_gpu",
+    "status": "unavailable",
+    "category": "cuda_only_incompatible",
+    "install_instructions": "Start a ComfyUI server and set COMFYUI_SERVER_URL (default http://localhost:8188).\nRequires ace_step_v1_3.5b.safetensors in ComfyUI's checkpoints directory for the bundled workflow.\nRunning a separate ComfyUI instance for music? Set COMFYUI_MUSIC_SERVER_URL instead -- it takes priority over COMFYUI_SERVER_URL for this tool only."
+  },
+  "comfyui_video": {
+    "capability": "video_generation",
+    "provider": "comfyui",
+    "runtime": "local_gpu",
+    "status": "unavailable",
+    "category": "cuda_only_incompatible",
+    "install_instructions": "Start a ComfyUI server and set COMFYUI_SERVER_URL (default http://localhost:8188).\nBundled local WAN requires WAN 2.2 models and LightX2V LoRAs. Local MiniMax H3 requires its official model stack and exported API workflow.\nGemini Omni, Seedance 2.5, and MiniMax H3 Partner Nodes require a logged-in Comfy account, credits, and network access.\nRunning a separate ComfyUI instance for video? Set COMFYUI_VIDEO_SERVER_URL instead -- it takes priority over COMFYUI_SERVER_URL for this tool only."
+  },
+  "composition_validator": {
+    "capability": "analysis",
+    "provider": "local",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Requires ffprobe on PATH (part of ffmpeg)."
+  },
+  "corpus_builder": {
+    "capability": "corpus_population",
+    "provider": "openmontage",
+    "runtime": "hybrid",
+    "status": "degraded",
+    "category": "missing_dependency",
+    "install_instructions": "pip install opencv-python numpy requests pillow transformers torch\nAt least one stock source must be configured:\n  PEXELS_API_KEY for Pexels (free at https://www.pexels.com/api/)\n  UNSPLASH_ACCESS_KEY for Unsplash (see https://unsplash.com/documentation)\n  archive.org, nasa, and wikimedia work without API keys"
+  },
+  "dashscope_asr": {
+    "capability": "analysis",
+    "provider": "dashscope",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set DASHSCOPE_API_KEY to your Alibaba Cloud DashScope API key.\n  Get one at https://dashscope.aliyun.com/"
+  },
+  "dashscope_image": {
+    "capability": "image_generation",
+    "provider": "dashscope",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set DASHSCOPE_API_KEY to your Alibaba Cloud DashScope API key.\n  Get one at https://dashscope.aliyun.com/"
+  },
+  "dashscope_tts": {
+    "capability": "tts",
+    "provider": "dashscope",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set DASHSCOPE_API_KEY to your Alibaba Cloud DashScope API key.\n  Get one at https://dashscope.aliyun.com/"
+  },
+  "diagram_gen": {
+    "capability": "graphics",
+    "provider": "mermaid",
+    "runtime": "local",
+    "status": "degraded",
+    "category": "missing_dependency",
+    "install_instructions": "For Mermaid diagrams:\n  npm install -g @mermaid-js/mermaid-cli\nFor Pillow-based diagrams (fallback):\n  pip install Pillow"
+  },
+  "direct_clip_search": {
+    "capability": "clip_acquisition",
+    "provider": "openmontage",
+    "runtime": "hybrid",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "At least one stock source must be configured:\n  PEXELS_API_KEY for Pexels (free at https://www.pexels.com/api/)\n  UNSPLASH_ACCESS_KEY for Unsplash (see https://unsplash.com/documentation)\n  archive.org, nasa, and wikimedia work without API keys"
+  },
+  "doubao_tts": {
+    "capability": "tts",
+    "provider": "doubao",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set DOUBAO_SPEECH_API_KEY to a Volcengine Doubao Speech API Key.\nOptional: set DOUBAO_SPEECH_VOICE_TYPE to the default speaker voice.\nUse the new console API key flow; do not pass app id/access token as the API key."
+  },
+  "elevenlabs_soundtrack": {
+    "capability": "music_generation",
+    "provider": "elevenlabs",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure ELEVENLABS_API_KEY with video-to-music access."
+  },
+  "elevenlabs_tts": {
+    "capability": "tts",
+    "provider": "elevenlabs",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set the ELEVENLABS_API_KEY environment variable:\n  export ELEVENLABS_API_KEY=your_key_here\nGet a key at https://elevenlabs.io\nIf fal_elevenlabs_tts is available, use it instead to access ElevenLabs speech through fal.ai without a separate ElevenLabs key."
+  },
+  "export_bundle": {
+    "capability": "publish",
+    "provider": "local",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "No setup required \u2014 runs locally with the Python standard library."
+  },
+  "eye_enhance": {
+    "capability": "enhancement",
+    "provider": "mediapipe",
+    "runtime": "local",
+    "status": "unavailable",
+    "category": "missing_dependency",
+    "install_instructions": "For best results install MediaPipe and OpenCV:\npip install mediapipe opencv-python numpy\n\nWithout MediaPipe, falls back to FFmpeg eye-region filter (less precise)."
+  },
+  "face_enhance": {
+    "capability": "enhancement",
+    "provider": "ffmpeg",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Install FFmpeg: https://ffmpeg.org/download.html"
+  },
+  "face_restore": {
+    "capability": "enhancement",
+    "provider": "codeformer",
+    "runtime": "local_gpu",
+    "status": "unavailable",
+    "category": "cuda_only_incompatible",
+    "install_instructions": "uv pip install gfpgan torch\nWorks on: CUDA (NVIDIA), MPS (Apple Silicon M-series, macOS >= 12.3), CPU fallback.\nNo CUDA build needed on macOS \u2014 uv pip install torch includes MPS support."
+  },
+  "face_tracker": {
+    "capability": "analysis",
+    "provider": "mediapipe",
+    "runtime": "local",
+    "status": "unavailable",
+    "category": "missing_dependency",
+    "install_instructions": "For best results install MediaPipe:\npip install mediapipe opencv-python\n\nFalls back to OpenCV Haar cascade (ships with opencv-python)."
+  },
+  "fal_3d": {
+    "capability": "3d_asset_generation",
+    "provider": "fal",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set FAL_KEY (or FAL_AI_API_KEY). Create a key at https://fal.ai/dashboard/keys."
+  },
+  "fal_elevenlabs_music": {
+    "capability": "music_generation",
+    "provider": "fal.ai",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set FAL_KEY to a fal.ai API key. Get one at https://fal.ai/dashboard/keys"
+  },
+  "fal_elevenlabs_tts": {
+    "capability": "tts",
+    "provider": "fal.ai",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set FAL_KEY to a fal.ai API key. No separate ElevenLabs key is needed. Get a fal.ai key at https://fal.ai/dashboard/keys"
+  },
+  "fish_audio_tts": {
+    "capability": "tts",
+    "provider": "fish_audio",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set FISH_AUDIO_API_KEY to an API key from https://fish.audio/go-api/api-keys/\nCreate voice models in the fish.audio playground and pass their id as\nreference_id to reuse a cloned voice."
+  },
+  "flux3_fal_image": {
+    "capability": "image_generation",
+    "provider": "fal.ai",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure FAL_KEY using https://fal.ai/dashboard/keys."
+  },
+  "flux3_replicate_image": {
+    "capability": "image_generation",
+    "provider": "replicate",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure REPLICATE_API_TOKEN."
+  },
+  "flux3_video": {
+    "capability": "video_generation",
+    "provider": "fal.ai",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure FAL_KEY using https://fal.ai/dashboard/keys."
+  },
+  "flux_image": {
+    "capability": "image_generation",
+    "provider": "flux",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set FAL_KEY to your fal.ai API key.\n  Get one at https://fal.ai/dashboard/keys"
+  },
+  "frame_sampler": {
+    "capability": "analysis",
+    "provider": "ffmpeg",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Install FFmpeg: https://ffmpeg.org/download.html"
+  },
+  "freesound_music": {
+    "capability": "music_search",
+    "provider": "freesound",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set the FREESOUND_API_KEY environment variable:\n  export FREESOUND_API_KEY=your_key_here\nGet a free key at https://freesound.org/apiv2/apply/"
+  },
+  "gemini_fal_image": {
+    "capability": "image_generation",
+    "provider": "fal.ai",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure FAL_KEY using https://fal.ai/dashboard/keys."
+  },
+  "gemini_omni_fal": {
+    "capability": "video_generation",
+    "provider": "gemini_omni",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set FAL_KEY (or FAL_AI_API_KEY) from https://fal.ai/dashboard/keys."
+  },
+  "gemini_omni_video": {
+    "capability": "video_generation",
+    "provider": "gemini_omni",
+    "runtime": "api",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Set GEMINI_API_KEY or GOOGLE_API_KEY to a Google AI Studio API key.\n  Get one at https://aistudio.google.com/apikey\n  Gemini Omni Flash is paid-tier only (no free tier); ~$0.10 per second of video."
+  },
+  "gemini_replicate_image": {
+    "capability": "image_generation",
+    "provider": "replicate",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure REPLICATE_API_TOKEN."
+  },
+  "gemini_tts": {
+    "capability": "tts",
+    "provider": "gemini",
+    "runtime": "api",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Configure Gemini credentials and google-genai >= 2.25.0."
+  },
+  "google_imagen": {
+    "capability": "image_generation",
+    "provider": "google_imagen",
+    "runtime": "api",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Auth option A \u2014 API key (AI Studio): set GOOGLE_API_KEY (or GEMINI_API_KEY).\n  Get one at https://aistudio.google.com/apikey\nAuth option B \u2014 service account (Vertex AI): set GOOGLE_APPLICATION_CREDENTIALS\n  to a service-account JSON key (needs the 'google-auth' package), plus\n  GOOGLE_CLOUD_PROJECT and optionally GOOGLE_CLOUD_LOCATION (default us-central1).\n  Requires the Vertex AI API enabled and billing on the project."
+  },
+  "google_music": {
+    "capability": "music_generation",
+    "provider": "google",
+    "runtime": "api",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Configure Google credentials:\n  - Set GEMINI_API_KEY (or GOOGLE_API_KEY) in environment.\n  - Or set GOOGLE_APPLICATION_CREDENTIALS for Vertex AI service account."
+  },
+  "google_tts": {
+    "capability": "tts",
+    "provider": "google_tts",
+    "runtime": "api",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Auth option A \u2014 TTS-only API key: set GOOGLE_TTS_API_KEY.\n  GOOGLE_API_KEY or GEMINI_API_KEY remain supported for broader Google setups.\n  Google Cloud API key with Text-to-Speech enabled.\n  Enable the API at https://console.cloud.google.com/apis/library/texttospeech.googleapis.com\nAuth option B \u2014 service account: set GOOGLE_APPLICATION_CREDENTIALS to the\n  path of a service-account JSON key (needs the 'google-auth' package)."
+  },
+  "green_screen_composite": {
+    "capability": "video_post",
+    "provider": "ffmpeg",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Install FFmpeg: https://ffmpeg.org/download.html \u2014 pip install numpy Pillow"
+  },
+  "green_screen_processor": {
+    "capability": "video_post",
+    "provider": "ffmpeg",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Install FFmpeg: https://ffmpeg.org/download.html  For rembg method: pip install rembg[gpu] onnxruntime"
+  },
+  "grok_image": {
+    "capability": "image_generation",
+    "provider": "grok",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set XAI_API_KEY to your xAI API key.\n  Get one from the xAI developer console"
+  },
+  "grok_tts": {
+    "capability": "tts",
+    "provider": "grok",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure XAI_API_KEY from https://console.x.ai/."
+  },
+  "grok_video": {
+    "capability": "video_generation",
+    "provider": "grok",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set XAI_API_KEY to your xAI API key.\n  Get one from the xAI developer console"
+  },
+  "h3_max_video": {
+    "capability": "video_generation",
+    "provider": "fal.ai",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure FAL_KEY using https://fal.ai/dashboard/keys."
+  },
+  "heygen_avatar": {
+    "capability": "avatar",
+    "provider": "heygen",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure HEYGEN_API_KEY from your HeyGen API account."
+  },
+  "heygen_catalog_tts": {
+    "capability": "tts",
+    "provider": "heygen",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure HEYGEN_API_KEY; use a catalog voice from /v3/voices."
+  },
+  "heygen_tts": {
+    "capability": "tts",
+    "provider": "heygen",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure HEYGEN_API_KEY from https://platform.heygen.com/api-keys."
+  },
+  "heygen_video": {
+    "capability": "video_generation",
+    "provider": "heygen",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set the HEYGEN_API_KEY environment variable:\n  set HEYGEN_API_KEY=your_key_here\nGet a key at https://app.heygen.com/settings/api"
+  },
+  "heygen_voice_convert": {
+    "capability": "voice_conversion",
+    "provider": "heygen",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure HEYGEN_API_KEY; use an ACTIVE workspace instant voice."
+  },
+  "higgsfield_video": {
+    "capability": "video_generation",
+    "provider": "higgsfield",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set HIGGSFIELD_API_KEY and HIGGSFIELD_API_SECRET for your Higgsfield Cloud credentials.\n  Get them at https://cloud.higgsfield.ai/api-keys\n  Alternatively, set HIGGSFIELD_KEY as a combined key:secret value."
+  },
+  "hunyuan_cloud_video": {
+    "capability": "video_generation",
+    "provider": "hunyuan_cloud",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set TENCENT_TOKENHUB_API_KEY to your Tencent Cloud TokenHub API key.\n  Get it at https://console.cloud.tencent.com/tokenhub"
+  },
+  "hunyuan_image": {
+    "capability": "image_generation",
+    "provider": "hunyuan_cloud",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set TENCENT_TOKENHUB_API_KEY to your Tencent Cloud TokenHub API key.\n  Get it at https://console.cloud.tencent.com/tokenhub"
+  },
+  "hunyuan_video": {
+    "capability": "video_generation",
+    "provider": "hunyuan",
+    "runtime": "local_gpu",
+    "status": "unavailable",
+    "category": "cuda_only_incompatible",
+    "install_instructions": "Enable local video generation and install the diffusers stack:\n  export VIDEO_GEN_LOCAL_ENABLED=true\n  uv pip install diffusers transformers accelerate torch pillow requests\n\nGPU support \u2014 pick what matches your hardware:\n  NVIDIA CUDA    \u2014 works out of the box with the above\n  Apple Silicon (MPS, macOS >= 12.3) \u2014 works out of the box; no extra build\n  CPU fallback   \u2014 slow but functional on any machine\n\nVRAM profile: see the selected tool's resource_profile for minimum VRAM."
+  },
+  "hyperframes_compose": {
+    "capability": "video_post",
+    "provider": "hyperframes",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Requires Node.js >= 22 (https://nodejs.org/) and FFmpeg (https://ffmpeg.org/download.html). The HyperFrames CLI is fetched on first use via `npx hyperframes` (npm package: `hyperframes`). Note: the upstream monorepo develops the package as `@hyperframes/cli`, but it publishes to npm as `hyperframes`. `npx @hyperframes/cli` returns 404 -- do NOT use that form. Verify setup with `npx hyperframes doctor` or run the `doctor` operation on this tool."
+  },
+  "ideogram_fal_image": {
+    "capability": "image_generation",
+    "provider": "fal.ai",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure FAL_KEY using https://fal.ai/dashboard/keys."
+  },
+  "ideogram_image": {
+    "capability": "image_generation",
+    "provider": "ideogram",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure IDEOGRAM_API_KEY."
+  },
+  "image_gen": {
+    "capability": "image_generation",
+    "provider": "multi",
+    "runtime": "hybrid",
+    "status": "unavailable",
+    "category": "missing_dependency",
+    "install_instructions": "Set one of these environment variables:\n  OPENAI_API_KEY \u2014 for GPT Image 2\n  FAL_KEY \u2014 for FLUX via fal.ai\nOr install diffusers for local generation:\n  pip install diffusers transformers accelerate torch"
+  },
+  "image_selector": {
+    "capability": "image_generation",
+    "provider": "selector",
+    "runtime": "hybrid",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": ""
+  },
+  "inworld_tts": {
+    "capability": "tts",
+    "provider": "inworld",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure INWORLD_API_KEY with the Base64 credential from the Inworld Portal."
+  },
+  "jimeng_video": {
+    "capability": "video_generation",
+    "provider": "volcengine",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set VOLC_ACCESSKEY and VOLC_SECRETKEY to your Volcengine IAM credentials.\n  Get them at https://console.volcengine.com/iam/keymanage\n  Ensure your account has access to Jimeng AI (\u5373\u68a6) video generation."
+  },
+  "kling_avatar": {
+    "capability": "avatar",
+    "provider": "kling_official",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set KLING_API_KEY in .env for the official Kling API. Provide an avatar image plus either audio_id or sound_file/audio_path."
+  },
+  "kling_lip_sync": {
+    "capability": "avatar",
+    "provider": "kling_official",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set KLING_API_KEY in .env for the official Kling API. Use identify_face first for multi-person clips, then pass face_choose or face_id."
+  },
+  "kling_o3_fal_image": {
+    "capability": "image_generation",
+    "provider": "fal.ai",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure FAL_KEY using https://fal.ai/dashboard/keys."
+  },
+  "kling_o3_fal_video": {
+    "capability": "video_generation",
+    "provider": "fal.ai",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure FAL_KEY using https://fal.ai/dashboard/keys."
+  },
+  "kling_official_image": {
+    "capability": "image_generation",
+    "provider": "kling_official",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set KLING_API_KEY in .env for the official Kling API. Optionally set KLING_API_BASE_URL to override the default Singapore endpoint."
+  },
+  "kling_official_video": {
+    "capability": "video_generation",
+    "provider": "kling_official",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set KLING_API_KEY in .env for the official Kling API. Optionally set KLING_API_BASE_URL to override the default Singapore endpoint."
+  },
+  "kling_tts": {
+    "capability": "tts",
+    "provider": "kling_official",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set KLING_API_KEY in .env for the official Kling API. Pass voice_id explicitly; OpenMontage does not guess Kling voice IDs."
+  },
+  "kling_video": {
+    "capability": "video_generation",
+    "provider": "kling",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set FAL_KEY to your fal.ai API key.\n  Get one at https://fal.ai/dashboard/keys"
+  },
+  "lip_sync": {
+    "capability": "avatar",
+    "provider": "wav2lip",
+    "runtime": "local_gpu",
+    "status": "unavailable",
+    "category": "cuda_only_incompatible",
+    "install_instructions": "Option 1: pip install wav2lip (if available)\nOption 2: Clone https://github.com/Rudrabha/Wav2Lip and set WAV2LIP_PATH env var\nRequires: PyTorch with CUDA, ffmpeg"
+  },
+  "local_diffusion": {
+    "capability": "image_generation",
+    "provider": "local_diffusion",
+    "runtime": "local_gpu",
+    "status": "unavailable",
+    "category": "cuda_only_incompatible",
+    "install_instructions": "Install diffusers for local Stable Diffusion:\n  pip install diffusers transformers accelerate torch"
+  },
+  "ltx_api_video": {
+    "capability": "video_generation",
+    "provider": "ltx",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure LTX_API_KEY from https://console.ltx.io."
+  },
+  "ltx_video_local": {
+    "capability": "video_generation",
+    "provider": "ltx",
+    "runtime": "local_gpu",
+    "status": "unavailable",
+    "category": "cuda_only_incompatible",
+    "install_instructions": "Enable local video generation and install the diffusers stack:\n  export VIDEO_GEN_LOCAL_ENABLED=true\n  uv pip install diffusers transformers accelerate torch pillow requests\n\nGPU support \u2014 pick what matches your hardware:\n  NVIDIA CUDA    \u2014 works out of the box with the above\n  Apple Silicon (MPS, macOS >= 12.3) \u2014 works out of the box; no extra build\n  CPU fallback   \u2014 slow but functional on any machine\n\nVRAM profile: see the selected tool's resource_profile for minimum VRAM."
+  },
+  "ltx_video_modal": {
+    "capability": "video_generation",
+    "provider": "ltx-modal",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set the MODAL_LTX2_ENDPOINT_URL environment variable to your deployed LTX endpoint:\n  set MODAL_LTX2_ENDPOINT_URL=https://<your-modal-endpoint>"
+  },
+  "mai_image": {
+    "capability": "image_generation",
+    "provider": "microsoft_mai",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure MAI_API_KEY, MAI_ENDPOINT (Foundry resource HTTPS origin), MAI_IMAGE_DEPLOYMENT and MAI_IMAGE_MODEL (MAI-Image-2.6 or MAI-Image-2.6-Flash)."
+  },
+  "mai_tts": {
+    "capability": "tts",
+    "provider": "microsoft_mai",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set your Azure AI Speech credentials (same resource as azure_stt):\n  export AZURE_SPEECH_KEY=your_speech_resource_key\n  export AZURE_SPEECH_REGION=eastus   # your Speech resource region\nCreate a Speech resource in the Azure portal (https://portal.azure.com) \u2014 the key and region are on its 'Keys and Endpoint' page. Optionally set AZURE_TTS_ENDPOINT to a full custom TTS host (e.g. https://<region>.tts.speech.microsoft.com)."
+  },
+  "math_animate": {
+    "capability": "graphics",
+    "provider": "manim",
+    "runtime": "local",
+    "status": "unavailable",
+    "category": "missing_dependency",
+    "install_instructions": "Install ManimCE:\n  pip install manim\n  manim checkhealth\nRequires: Python 3.8+, FFmpeg, LaTeX (optional, for math formulas)\n  Windows: choco install miktex ffmpeg\n  macOS: brew install mactex ffmpeg\n  Linux: sudo apt install texlive-full ffmpeg"
+  },
+  "minicut_image": {
+    "capability": "image_generation",
+    "provider": "minicut",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Install the MiniCut CLI: curl -fsSL https://minicut.ai/install.sh | bash\n  Then sign in once: minicut login"
+  },
+  "minicut_music": {
+    "capability": "music_generation",
+    "provider": "minicut",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Install the MiniCut CLI: curl -fsSL https://minicut.ai/install.sh | bash\n  Then sign in once: minicut login"
+  },
+  "minicut_music_fit": {
+    "capability": "music_generation",
+    "provider": "minicut",
+    "runtime": "local",
+    "status": "unavailable",
+    "category": "missing_dependency",
+    "install_instructions": "Install the MiniCut CLI: curl -fsSL https://minicut.ai/install.sh | bash\n  Then sign in once: minicut login\n  Then add the music tools once (instrument samples, about 396 MB): minicut setup"
+  },
+  "minicut_sfx": {
+    "capability": "sound_effects",
+    "provider": "minicut",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Install the MiniCut CLI: curl -fsSL https://minicut.ai/install.sh | bash\n  Then sign in once: minicut login"
+  },
+  "minicut_tts": {
+    "capability": "tts",
+    "provider": "minicut",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Install the MiniCut CLI: curl -fsSL https://minicut.ai/install.sh | bash\n  Then sign in once: minicut login"
+  },
+  "minicut_upscale": {
+    "capability": "enhancement",
+    "provider": "minicut",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Install the MiniCut CLI: curl -fsSL https://minicut.ai/install.sh | bash\n  Then sign in once: minicut login"
+  },
+  "minimax_fal_video": {
+    "capability": "video_generation",
+    "provider": "minimax",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set FAL_KEY (or FAL_AI_API_KEY) from https://fal.ai/dashboard/keys."
+  },
+  "minimax_image": {
+    "capability": "image_generation",
+    "provider": "minimax",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set MINIMAX_API_KEY to your MiniMax API key. Optionally set MINIMAX_REGION to global or cn."
+  },
+  "minimax_video": {
+    "capability": "video_generation",
+    "provider": "minimax",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set MINIMAX_API_KEY to your MiniMax API key.\n  Get one at https://platform.minimax.io/ (global) or https://platform.minimaxi.com/ (CN).\n  Optionally set MINIMAX_REGION=cn to route to the mainland China host, or MINIMAX_BASE_URL to override the endpoint entirely."
+  },
+  "mistral_stt": {
+    "capability": "analysis",
+    "provider": "mistral",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure MISTRAL_API_KEY from https://console.mistral.ai/."
+  },
+  "mistral_tts": {
+    "capability": "tts",
+    "provider": "mistral",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure MISTRAL_API_KEY from https://console.mistral.ai/."
+  },
+  "music_gen": {
+    "capability": "music_generation",
+    "provider": "elevenlabs",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set the ELEVENLABS_API_KEY environment variable:\n  export ELEVENLABS_API_KEY=your_key_here\nGet a key at https://elevenlabs.io"
+  },
+  "music_library": {
+    "capability": "music_library",
+    "provider": "local",
+    "runtime": "local",
+    "status": "unavailable",
+    "category": "missing_dependency",
+    "install_instructions": "Create a 'music_library/' folder in the project root and drop royalty-free audio tracks into it (e.g. .mp3, .wav, .m4a, .flac, .ogg). Sources: your own files, YouTube Audio Library, Jamendo, Freesound, etc. Override the location with the MUSIC_LIBRARY_DIR environment variable."
+  },
+  "openai_fal_image": {
+    "capability": "image_generation",
+    "provider": "fal.ai",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure FAL_KEY using https://fal.ai/dashboard/keys."
+  },
+  "openai_image": {
+    "capability": "image_generation",
+    "provider": "openai",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set OPENAI_API_KEY to your OpenAI API key.\n  pip install openai"
+  },
+  "openai_tts": {
+    "capability": "tts",
+    "provider": "openai",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set the OPENAI_API_KEY environment variable:\n  export OPENAI_API_KEY=your_key_here\nGet a key at https://platform.openai.com/"
+  },
+  "pexels_image": {
+    "capability": "image_generation",
+    "provider": "pexels",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set PEXELS_API_KEY to your Pexels API key.\n  Get one free at https://www.pexels.com/api/"
+  },
+  "pexels_video": {
+    "capability": "video_generation",
+    "provider": "pexels",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set PEXELS_API_KEY to your Pexels API key.\n  Get one free at https://www.pexels.com/api/"
+  },
+  "pika_video": {
+    "capability": "video_generation",
+    "provider": "pika",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set PIKA_API_KEY to a Pika API key.\n  1. Sign in at https://dev.pika.art and create an organization.\n  2. Open API Keys and create a key.\n  3. Add funds under Billing; generation is prepaid with no free tier.\n  Optional: PIKA_API_BASE_URL overrides https://api.dev.pika.art.\n  Support: support@pika.art"
+  },
+  "piper_tts": {
+    "capability": "tts",
+    "provider": "piper",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Install Piper TTS:\n  pip install piper-tts\nOr download from https://github.com/rhasspy/piper/releases\nThen download a voice model:\n  python -m piper.download_voices --download-dir ~/.piper/models en_US-lessac-medium"
+  },
+  "pixabay_image": {
+    "capability": "image_generation",
+    "provider": "pixabay",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set PIXABAY_API_KEY to your Pixabay API key.\n  Get one free at https://pixabay.com/api/docs/"
+  },
+  "pixabay_music": {
+    "capability": "music_search",
+    "provider": "pixabay_music",
+    "runtime": "api",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "No setup required. Pixabay Music is free and needs no API key.\nNote: This tool scrapes the Pixabay website. If it breaks, the\nsite's HTML structure may have changed. Use freesound_music as fallback."
+  },
+  "pixabay_video": {
+    "capability": "video_generation",
+    "provider": "pixabay",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set PIXABAY_API_KEY to your Pixabay API key.\n  Get one free at https://pixabay.com/api/docs/"
+  },
+  "pose_library_builder": {
+    "capability": "character_animation",
+    "provider": "openmontage",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": ""
+  },
+  "qwen_image_21": {
+    "capability": "image_generation",
+    "provider": "qwen_local",
+    "runtime": "local_gpu",
+    "status": "unavailable",
+    "category": "cuda_only_incompatible",
+    "install_instructions": "Install Diffusers with QwenImage21Pipeline, torch, transformers >=5.17, accelerate and Pillow. Download Qwen/Qwen-Image-2.1 separately and set QWEN_IMAGE_21_PATH to its local directory."
+  },
+  "realtime_audio": {
+    "capability": "realtime_audio",
+    "provider": "realtime_audio",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure XAI_API_KEY, ELEVENLABS_API_KEY, or MAI_API_KEY + MAI_ENDPOINT + MAI_TRANSCRIBE_DEPLOYMENT for the selected provider."
+  },
+  "recraft_image": {
+    "capability": "image_generation",
+    "provider": "recraft",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set FAL_KEY to your fal.ai API key.\n  Get one at https://fal.ai/dashboard/keys"
+  },
+  "remotion_caption_burn": {
+    "capability": "subtitle",
+    "provider": "remotion",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Remotion (optional, preferred): npm install in remotion-composer/\nFFmpeg (required for fallback): https://ffmpeg.org/download.html"
+  },
+  "runway_video": {
+    "capability": "video_generation",
+    "provider": "runway",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set RUNWAY_API_KEY to your Runway API secret.\n  Get one at https://dev.runwayml.com/"
+  },
+  "scene_detect": {
+    "capability": "analysis",
+    "provider": "ffmpeg",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "FFmpeg is required. For better detection install PySceneDetect:\npip install scenedetect[opencv]"
+  },
+  "screen_capture_selector": {
+    "capability": "screen_capture",
+    "provider": "selector",
+    "runtime": "hybrid",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": ""
+  },
+  "screen_recorder": {
+    "capability": "screen_capture",
+    "provider": "ffmpeg",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Install ffmpeg:\n  Windows: winget install ffmpeg\n  macOS: brew install ffmpeg\n  Linux: sudo apt install ffmpeg"
+  },
+  "seedance_ark": {
+    "capability": "video_generation",
+    "provider": "ark",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set ARK_API_KEY to the API Key body from Volcengine Ark (without the 'Bearer ' prefix). Optional: ARK_SEEDANCE_MODEL and ARK_BASE_URL."
+  },
+  "seedance_replicate": {
+    "capability": "video_generation",
+    "provider": "seedance",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set REPLICATE_API_TOKEN to your Replicate API token.\n  Get one at https://replicate.com/account/api-tokens"
+  },
+  "seedance_video": {
+    "capability": "video_generation",
+    "provider": "seedance",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set FAL_KEY to your fal.ai API key.\n  Get one at https://fal.ai/dashboard/keys"
+  },
+  "seedream_image": {
+    "capability": "image_generation",
+    "provider": "bytedance",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set FAL_KEY to your fal.ai API key.\n  Get one at https://fal.ai/dashboard/keys"
+  },
+  "showcase_card": {
+    "capability": "video_post",
+    "provider": "ffmpeg",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Install FFmpeg: https://ffmpeg.org/download.html"
+  },
+  "silence_cutter": {
+    "capability": "video_post",
+    "provider": "ffmpeg",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Install FFmpeg: https://ffmpeg.org/download.html"
+  },
+  "sora_video": {
+    "capability": "video_generation",
+    "provider": "openai",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set OPENAI_API_KEY to your OpenAI API key with Sora API access.\n  pip install 'openai>=2.44.0'"
+  },
+  "subtitle_gen": {
+    "capability": "subtitle",
+    "provider": "openmontage",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "No external dependencies required."
+  },
+  "suno_music": {
+    "capability": "music_generation",
+    "provider": "suno",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Set the SUNO_API_KEY environment variable:\n  export SUNO_API_KEY=your_key_here\nGet a key at https://sunoapi.org/api-key"
+  },
+  "svg_rig_builder": {
+    "capability": "character_animation",
+    "provider": "openmontage",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": ""
+  },
+  "talking_head": {
+    "capability": "avatar",
+    "provider": "sadtalker",
+    "runtime": "local_gpu",
+    "status": "unavailable",
+    "category": "cuda_only_incompatible",
+    "install_instructions": "Clone https://github.com/OpenTalker/SadTalker and set SADTALKER_PATH env var\nRequires: PyTorch with CUDA, ffmpeg\npip install sadtalker  # or clone the repo"
+  },
+  "threejs_asset_catalog": {
+    "capability": "3d_asset_acquisition",
+    "provider": "multi",
+    "runtime": "hybrid",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Network access for install; no API key. Bundled catalogs are CC0."
+  },
+  "threejs_world": {
+    "capability": "3d_world_generation",
+    "provider": "threejs",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "World authoring is dependency-free. Final rendering requires the configured HyperFrames runtime (Node.js >= 22, npx, and FFmpeg)."
+  },
+  "transcriber": {
+    "capability": "analysis",
+    "provider": "whisperx",
+    "runtime": "local",
+    "status": "unavailable",
+    "category": "cuda_only_incompatible",
+    "install_instructions": "pip install faster-whisper  # CPU mode\npip install faster-whisper[gpu]  # GPU mode (requires CUDA)\npip install whisperx  # For diarization support"
+  },
+  "transcript_fetcher": {
+    "capability": "analysis",
+    "provider": "youtube-transcript-api",
+    "runtime": "local",
+    "status": "unavailable",
+    "category": "missing_dependency",
+    "install_instructions": "Install youtube-transcript-api: pip install youtube-transcript-api"
+  },
+  "tts_selector": {
+    "capability": "tts",
+    "provider": "selector",
+    "runtime": "hybrid",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": ""
+  },
+  "upscale": {
+    "capability": "enhancement",
+    "provider": "realesrgan",
+    "runtime": "local_gpu",
+    "status": "unavailable",
+    "category": "cuda_only_incompatible",
+    "install_instructions": "uv pip install realesrgan torch\nWorks on: CUDA (NVIDIA), MPS (Apple Silicon M-series, macOS >= 12.3), CPU fallback.\nNo separate CUDA build needed on macOS \u2014 uv pip install torch includes MPS support."
+  },
+  "veo_video": {
+    "capability": "video_generation",
+    "provider": "veo",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure at least one backend API key:\n  - Direct Google backend: Configure Vertex AI service-account credentials.\n    Get a key at https://aistudio.google.com/\n    Or set GOOGLE_APPLICATION_CREDENTIALS for Vertex AI service account.\n  - FAL.ai backend: Set FAL_KEY (or FAL_AI_API_KEY).\n    Get one at https://fal.ai/dashboard/keys"
+  },
+  "video_analyzer": {
+    "capability": "analysis",
+    "provider": "multi",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Core: FFmpeg is required (https://ffmpeg.org/download.html)\nFor URL downloads: pip install yt-dlp\nFor YouTube transcripts: pip install youtube-transcript-api\nFor local transcription: pip install faster-whisper\nFor scene detection: pip install scenedetect[opencv]\nAll dependencies are free and local \u2014 no API keys needed."
+  },
+  "video_compose": {
+    "capability": "video_post",
+    "provider": "ffmpeg",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Install FFmpeg: https://ffmpeg.org/download.html"
+  },
+  "video_downloader": {
+    "capability": "source_ingest",
+    "provider": "yt-dlp",
+    "runtime": "local",
+    "status": "unavailable",
+    "category": "missing_dependency",
+    "install_instructions": "Install yt-dlp: pip install yt-dlp\nFor YouTube support, also install Deno (JS runtime): https://deno.land/#installation\nWithout Deno, YouTube downloads may fail but other platforms still work."
+  },
+  "video_selector": {
+    "capability": "video_generation",
+    "provider": "selector",
+    "runtime": "hybrid",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": ""
+  },
+  "video_stitch": {
+    "capability": "video_post",
+    "provider": "ffmpeg",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Install FFmpeg: https://ffmpeg.org/download.html\nWindows: winget install FFmpeg\nmacOS: brew install ffmpeg\nLinux: sudo apt install ffmpeg"
+  },
+  "video_trimmer": {
+    "capability": "video_post",
+    "provider": "ffmpeg",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Install FFmpeg: https://ffmpeg.org/download.html\nWindows: winget install FFmpeg\nmacOS: brew install ffmpeg\nLinux: sudo apt install ffmpeg"
+  },
+  "video_understand": {
+    "capability": "analysis",
+    "provider": "transformers",
+    "runtime": "local_gpu",
+    "status": "unavailable",
+    "category": "cuda_only_incompatible",
+    "install_instructions": "pip install transformers torch  # For CLIP/BLIP-2 visual understanding"
+  },
+  "vidu_video": {
+    "capability": "video_generation",
+    "provider": "fal.ai",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure FAL_KEY using https://fal.ai/dashboard/keys."
+  },
+  "visual_qa": {
+    "capability": "analysis",
+    "provider": "ffmpeg",
+    "runtime": "local",
+    "status": "available",
+    "category": "verified_on_m6",
+    "install_instructions": "Install FFmpeg: https://ffmpeg.org/download.html"
+  },
+  "wan_atlas_video": {
+    "capability": "video_generation",
+    "provider": "atlascloud",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure ATLASCLOUD_API_KEY."
+  },
+  "wan_fal_video": {
+    "capability": "video_generation",
+    "provider": "fal.ai",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure FAL_KEY using https://fal.ai/dashboard/keys."
+  },
+  "wan_replicate_video": {
+    "capability": "video_generation",
+    "provider": "replicate",
+    "runtime": "api",
+    "status": "unavailable",
+    "category": "paid_api_disabled",
+    "install_instructions": "Configure REPLICATE_API_TOKEN."
+  },
+  "wan_video": {
+    "capability": "video_generation",
+    "provider": "wan",
+    "runtime": "local_gpu",
+    "status": "unavailable",
+    "category": "cuda_only_incompatible",
+    "install_instructions": "Enable local video generation and install the diffusers stack:\n  export VIDEO_GEN_LOCAL_ENABLED=true\n  uv pip install diffusers transformers accelerate torch pillow requests\n\nGPU support \u2014 pick what matches your hardware:\n  NVIDIA CUDA    \u2014 works out of the box with the above\n  Apple Silicon (MPS, macOS >= 12.3) \u2014 works out of the box; no extra build\n  CPU fallback   \u2014 slow but functional on any machine\n\nVRAM profile: see the selected tool's resource_profile for minimum VRAM."
+  }
+}

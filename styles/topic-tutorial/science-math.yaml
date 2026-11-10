@@ -1,0 +1,70 @@
+identity:
+  name: "Science & Math"
+  category: minimalist
+  mood: "contemplative, elegant, clear"
+  pace: deliberate
+  best_for: "Manim / conceptual simulations, annotated formulas, process flows, physical concepts"
+
+visual_language:
+  color_palette:
+    primary: ["#27272A", "#3F3F46"]
+    accent: ["#10B981", "#3B82F6"]
+    background: "#18181B"
+    text: "#FAFAFA"
+    muted: "#A1A1AA"
+  composition: "generous negative space, focal center for mathematical/scientific diagrams"
+  texture: "clean matte blackboard feel, crisp vector lines"
+
+typography:
+  headings:
+    font: "KaTeX_Main"
+    weight: 700
+    tracking: "0.0em"
+  body:
+    font: "Inter"
+    weight: 400
+    line_height: 1.6
+  code:
+    font: "JetBrains Mono"
+    weight: 400
+  stat_card:
+    font: "KaTeX_Main"
+    weight: 800
+    size_multiplier: 2.6
+  scale_system: "major_third"
+  weight_matrix:
+    title: 800
+    heading: 700
+    body: 400
+    caption: 400
+
+motion:
+  transitions: [fade, dissolve]
+  animation_style: "smooth continuous interpolation, deliberate contemplation"
+  pacing_rules:
+    min_scene_hold_seconds: 3.5
+    max_scene_hold_seconds: 18.0
+    text_card_hold_seconds: 4.0
+    stat_card_hold_seconds: 3.5
+    transition_duration_seconds: 0.5
+  entrance: "gentle fade-in"
+  exit: "smooth fade-out"
+
+audio:
+  voice_style: "patient, clear, conversational, academic without pretension"
+  music_mood: "ambient acoustic guitar and soft piano"
+  music_volume: 0.05
+  sfx_style: "subtle soft pencil strokes and resonant chimes"
+  ducking_threshold_db: -4.0
+
+asset_generation:
+  image_prompt_prefix: "3Blue1Brown style mathematical visualization, dark background, glowing geometric curves"
+  consistency_anchors:
+    - "slate chalkboard background #18181B"
+    - "emerald and electric blue curves #10B981 #3B82F6"
+    - "precise vector geometry"
+
+quality_rules:
+  - "Equations and formulas must be crisp, centered, and rendered with valid KaTeX / LaTeX typography"
+  - "Geometric proofs must highlight step-by-step transformations with color-coded variables"
+  - "Audio pacing must pause after complex formula explanations to allow comprehension"

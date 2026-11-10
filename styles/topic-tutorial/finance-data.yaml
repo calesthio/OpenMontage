@@ -1,0 +1,70 @@
+identity:
+  name: "Finance & Data"
+  category: motion-graphics
+  mood: "analytical, quantitative, authoritative"
+  pace: moderate
+  best_for: "Deterministic code-generated financial charts, metric callouts, comparison tables"
+
+visual_language:
+  color_palette:
+    primary: ["#1E293B", "#334155"]
+    accent: ["#10B981", "#EF4444"]
+    background: "#0F172A"
+    text: "#F8FAFC"
+    muted: "#94A3B8"
+  composition: "dashboard data cards, tabular comparisons, prominent delta pills"
+  texture: "clean fintech dark theme, subtle border highlights"
+
+typography:
+  headings:
+    font: "Inter"
+    weight: 700
+    tracking: "-0.01em"
+  body:
+    font: "Inter"
+    weight: 400
+    line_height: 1.55
+  code:
+    font: "JetBrains Mono"
+    weight: 400
+  stat_card:
+    font: "Inter"
+    weight: 800
+    size_multiplier: 3.0
+  scale_system: "major_third"
+  weight_matrix:
+    title: 800
+    heading: 700
+    body: 400
+    caption: 400
+
+motion:
+  transitions: [slide-up, fade, dissolve]
+  animation_style: "interpolated count-ups, smooth bar chart growth, crisp ease-out"
+  pacing_rules:
+    min_scene_hold_seconds: 2.5
+    max_scene_hold_seconds: 14.0
+    text_card_hold_seconds: 3.2
+    stat_card_hold_seconds: 2.8
+    transition_duration_seconds: 0.35
+  entrance: "fade-up with number ticker counter"
+  exit: "fade-out"
+
+audio:
+  voice_style: "calm professional market analyst, clear and objective"
+  music_mood: "subtle fintech data pulse, steady momentum"
+  music_volume: 0.06
+  sfx_style: "soft tactile data clicks"
+  ducking_threshold_db: -3.0
+
+asset_generation:
+  image_prompt_prefix: "fintech data dashboard, trading charts, clean typography, dark blue slate aesthetic"
+  consistency_anchors:
+    - "slate background #0F172A"
+    - "emerald gains and crimson losses #10B981 #EF4444"
+    - "tabular data grid styling"
+
+quality_rules:
+  - "Metric cards must always declare units (USD, percentage, basis points) and reference periods"
+  - "Chart axes must start from zero or explicitly note truncation"
+  - "Positive and negative deltas must consistently adhere to green/red semantic coloring"

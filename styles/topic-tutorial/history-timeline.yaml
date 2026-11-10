@@ -1,0 +1,70 @@
+identity:
+  name: "History & Timeline"
+  category: cinematic
+  mood: "reverent, documentary, contextual"
+  pace: deliberate
+  best_for: "Chronological timelines, maps, archival Wikimedia / Archive.org media with citations"
+
+visual_language:
+  color_palette:
+    primary: ["#292524", "#44403C"]
+    accent: ["#D97706", "#CA8A04"]
+    background: "#1C1917"
+    text: "#F5F5F4"
+    muted: "#A8A29E"
+  composition: "cinematic letterbox, horizontal timeline tracks, historical document framing"
+  texture: "warm archival parchment texture, subtle film grain"
+
+typography:
+  headings:
+    font: "Merriweather"
+    weight: 700
+    tracking: "0.01em"
+  body:
+    font: "Inter"
+    weight: 400
+    line_height: 1.65
+  code:
+    font: "JetBrains Mono"
+    weight: 400
+  stat_card:
+    font: "Merriweather"
+    weight: 800
+    size_multiplier: 2.8
+  scale_system: "major_third"
+  weight_matrix:
+    title: 800
+    heading: 700
+    body: 400
+    caption: 400
+
+motion:
+  transitions: [dissolve, crossfade, pan-horizontal]
+  animation_style: "slow cinematic pan, gentle Ken Burns zoom"
+  pacing_rules:
+    min_scene_hold_seconds: 3.0
+    max_scene_hold_seconds: 20.0
+    text_card_hold_seconds: 4.0
+    stat_card_hold_seconds: 3.5
+    transition_duration_seconds: 0.6
+  entrance: "crossfade with slow scale (1.0 -> 1.04)"
+  exit: "crossfade dissolve"
+
+audio:
+  voice_style: "warm narrative storyteller, resonant and measured"
+  music_mood: "documentary orchestral ambient, deep strings and cello"
+  music_volume: 0.07
+  sfx_style: "vintage page turns, subtle mechanical tape clicks"
+  ducking_threshold_db: -3.0
+
+asset_generation:
+  image_prompt_prefix: "historical archival photograph, documentary framing, warm sepia tones, authentic historical detail"
+  consistency_anchors:
+    - "warm stone dark background #1C1917"
+    - "amber and ochre timeline accents #D97706 #CA8A04"
+    - "archival document aesthetic"
+
+quality_rules:
+  - "Archival images must include transparent source attribution and dating"
+  - "Timeline dates must progress strictly chronologically with labeled milestones"
+  - "Primary sources must be visually distinguished from modern analytical commentary"

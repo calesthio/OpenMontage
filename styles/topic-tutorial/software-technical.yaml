@@ -1,0 +1,71 @@
+identity:
+  name: "Software Technical"
+  category: motion-graphics
+  mood: "sharp, precise, modern"
+  pace: moderate
+  best_for: "Architecture flowcharts, tool matrices, declarative browser/CLI showcases, code walkthroughs"
+
+visual_language:
+  color_palette:
+    primary: ["#1E293B", "#334155"]
+    accent: ["#38BDF8", "#818CF8"]
+    background: "#0F172A"
+    text: "#F8FAFC"
+    muted: "#94A3B8"
+  composition: "technical grid, balanced margins, side-by-side code and visual panels"
+  texture: "clean vector, subtle blueprint grid"
+
+typography:
+  headings:
+    font: "Inter"
+    weight: 700
+    tracking: "-0.02em"
+  body:
+    font: "Inter"
+    weight: 400
+    line_height: 1.6
+  code:
+    font: "JetBrains Mono"
+    weight: 400
+  stat_card:
+    font: "JetBrains Mono"
+    weight: 800
+    size_multiplier: 2.8
+  scale_system: "major_third"
+  weight_matrix:
+    title: 800
+    heading: 700
+    body: 400
+    caption: 400
+
+motion:
+  transitions: [fade, slide-left, dissolve]
+  animation_style: "snappy ease-out, zero bounce, deterministic timing"
+  pacing_rules:
+    min_scene_hold_seconds: 2.5
+    max_scene_hold_seconds: 15.0
+    text_card_hold_seconds: 3.5
+    stat_card_hold_seconds: 3.0
+    transition_duration_seconds: 0.35
+  entrance: "fade-up with subtle translateY"
+  exit: "fade-out"
+
+audio:
+  voice_style: "clear, authoritative technical instructor, moderate pace"
+  music_mood: "minimal electronic synth, ambient focus"
+  music_volume: 0.06
+  sfx_style: "subtle soft mechanical clicks"
+  ducking_threshold_db: -3.0
+
+asset_generation:
+  image_prompt_prefix: "technical software architecture diagram, dark theme, crisp modern UI"
+  consistency_anchors:
+    - "dark slate theme #0F172A"
+    - "cyan and indigo accents #38BDF8 #818CF8"
+    - "clean modern developer documentation aesthetics"
+  diagram_style: "declarative vector diagram, sharp rectangular nodes, labeled arrows"
+
+quality_rules:
+  - "Code blocks must use monospace JetBrains Mono with syntax highlighting contrast"
+  - "Flowchart connectors must never intersect confusingly with text labels"
+  - "All technical terms must match verbatim the source code identifiers"

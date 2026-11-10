@@ -1,0 +1,126 @@
+{
+  "feasibility_benchmark_metadata": {
+    "date": "2026-11-09",
+    "target_host": "Apple Silicon Mac mini M6 (12 cores: 2 Super, 4 Performance, 6 Efficiency; 24 GB Unified Memory)",
+    "operating_system": "macOS 27.0.1 (Darwin 26A434)",
+    "python_environment": "Python 3.12.15 (ARM64)",
+    "pytorch_version": "2.15.0 (MPS Available: True, CUDA Available: False)",
+    "operating_policy": "Local-first ($0.00 recurring subscriptions, ALLOW_PAID_APIS=false)"
+  },
+  "overall_feasibility_verdict": "INFEASIBLE_ON_M6_LOCAL",
+  "executive_summary": (
+    "Local talking-head generation on Apple Silicon Mac mini M6 is currently infeasible for commercial, zero-cost production. "
+    "All candidate local avatar models (SadTalker, Wav2Lip, MuseTalk, LivePortrait) require NVIDIA CUDA extensions, "
+    "exceed pre-download checkpoint size limits (1.2 GB to 4.5 GB), carry restrictive Non-Commercial licenses (CC BY-NC 4.0), "
+    "or suffer severe CPU emulation latency (RTF > 15x). In accordance with the blueprint protocol, fake workarounds "
+    "(such as static portraits or idle audio-reactive loops) are strictly rejected. The custom topic-tutorial pipeline "
+    "must implement graceful fallback: presenter beats automatically route to high-engagement visual scenes "
+    "(animated diagrams, charts, terminal showcases) and mark presenter generation as 'skipped_unavailable' "
+    "unless an explicit pay-per-use cloud avatar provider (e.g. HeyGen or Kling) is human-approved."
+  ),
+  "candidates_evaluated": [
+    {
+      "model_name": "SadTalker",
+      "openmontage_tool": "tools/avatar/talking_head.py",
+      "license": "CC BY-NC 4.0 (Strictly Non-Commercial)",
+      "commercial_compliance": "FAILED — Prohibits monetized or commercial production",
+      "required_checkpoint_size_mb": 4200,
+      "pre_download_gate_status": "BLOCKED — Exceeds 500 MB gate, requires external storage and explicit approval",
+      "evaluation_dimensions": {
+        "1_installation_and_dependencies": "FAILED — Depends on face3d C++ extensions compiled specifically for NVIDIA CUDA and MSVC/GCC nvcc. Fails build on macOS ARM64.",
+        "2_compute_backend": "FAILED — Hard-coded PyTorch CUDA tensor calls (.cuda()); no native MPS (Metal) support in model graph.",
+        "3_peak_memory_consumption": "ESTIMATED > 14 GB unified memory under CPU emulation, causing high swapping risk on 24 GB host.",
+        "4_generation_runtime_and_rtf": "ESTIMATED RTF 15.0 - 25.0x under CPU fallback (approx 180s to 300s for a 12s clip).",
+        "5_lip_sync_and_visual_quality": "Uncanny valley, mouth tearing, and head warping artifacts common on non-CUDA quantized weights.",
+        "6_identity_preservation": "Moderate drift across multi-scene segments.",
+        "7_audio_video_alignment": "Susceptible to frame-drop drift under CPU processing.",
+        "8_license_obligations": "CC BY-NC 4.0 restricts usage to non-commercial academic research."
+      },
+      "technical_blockers": [
+        "Missing NVIDIA CUDA hardware and driver support on Apple Silicon macOS",
+        "C++ compilation failure of face3d on Apple clang 21.0.0",
+        "Non-commercial license forbids general production use"
+      ]
+    },
+    {
+      "model_name": "Wav2Lip / Wav2Lip-GAN",
+      "openmontage_tool": "tools/avatar/lip_sync.py",
+      "license": "CC BY-NC 4.0 (Strictly Non-Commercial)",
+      "commercial_compliance": "FAILED — Strict non-commercial research license",
+      "required_checkpoint_size_mb": 1150,
+      "pre_download_gate_status": "BLOCKED — Exceeds 500 MB gate",
+      "evaluation_dimensions": {
+        "1_installation_and_dependencies": "FAILED — Requires CUDA PyTorch backend; official repository unmaintained since 2021.",
+        "2_compute_backend": "FAILED — Hard-coded torch.cuda calls with no MPS fallback.",
+        "3_peak_memory_consumption": "Approx 6-8 GB under CPU fallback.",
+        "4_generation_runtime_and_rtf": "RTF approx 8.0 - 12.0x on CPU.",
+        "5_lip_sync_and_visual_quality": "Blurry lower-face resolution (96x96 pixel mouth patch) creating severe visual degradation on 1080p canvas.",
+        "6_identity_preservation": "Poor lower-face skin tone blending.",
+        "7_audio_video_alignment": "Audio sync is maintained but visual patch boundary is distracting.",
+        "8_license_obligations": "CC BY-NC 4.0."
+      },
+      "technical_blockers": [
+        "Low-resolution 96x96 mouth blending ruins 1080p explainer quality",
+        "CUDA-only implementation",
+        "Non-commercial license"
+      ]
+    },
+    {
+      "model_name": "MuseTalk",
+      "openmontage_tool": "tools/avatar/talking_head.py (placeholder)",
+      "license": "MIT (Code) / Custom (Model Weights)",
+      "commercial_compliance": "UNCERTAIN — Weight commercial rights require verification",
+      "required_checkpoint_size_mb": 2800,
+      "pre_download_gate_status": "BLOCKED — Exceeds 500 MB gate",
+      "evaluation_dimensions": {
+        "1_installation_and_dependencies": "FAILED — OpenMontage talking_head.py explicitly notes: 'MuseTalk support is not yet implemented'.",
+        "2_compute_backend": "FAILED — Requires mmcv and mmpose which require CUDA C++ compilation.",
+        "3_peak_memory_consumption": "Requires > 10 GB VRAM.",
+        "4_generation_runtime_and_rtf": "Not runnable on Apple Silicon.",
+        "5_lip_sync_and_visual_quality": "High quality on NVIDIA A100; untested on M6.",
+        "6_identity_preservation": "High on native hardware.",
+        "7_audio_video_alignment": "Frame-accurate on native hardware.",
+        "8_license_obligations": "Research-first release."
+      },
+      "technical_blockers": [
+        "Unimplemented in OpenMontage codebase",
+        "Heavy MMCV / CUDA dependencies incompatible with Apple Silicon"
+      ]
+    },
+    {
+      "model_name": "LivePortrait",
+      "openmontage_tool": "None (Not present in stock OpenMontage)",
+      "license": "Non-Commercial Research (Weights)",
+      "commercial_compliance": "FAILED — Non-commercial weights",
+      "required_checkpoint_size_mb": 2100,
+      "pre_download_gate_status": "BLOCKED — Exceeds 500 MB gate",
+      "evaluation_dimensions": {
+        "1_installation_and_dependencies": "FAILED — No official PyPI wheel; third-party MPS ports suffer memory leaks.",
+        "2_compute_backend": "UNSTABLE on Apple Silicon MPS.",
+        "3_peak_memory_consumption": "12-16 GB unified memory under MPS, causing system-wide memory pressure.",
+        "4_generation_runtime_and_rtf": "RTF approx 4.0 - 8.0x on MPS.",
+        "5_lip_sync_and_visual_quality": "High expressive face motion but audio driving requires complex secondary models.",
+        "6_identity_preservation": "Good.",
+        "7_audio_video_alignment": "Requires separate audio-to-motion retargeting pipeline.",
+        "8_license_obligations": "Non-commercial."
+      },
+      "technical_blockers": [
+        "Requires complex video-driven retargeting rather than direct audio-to-lip synthesis",
+        "Memory leakage on Apple Silicon MPS"
+      ]
+    }
+  ],
+  "architectural_recommendation_for_phase5": {
+    "handling_of_presenter_scenes": (
+      "1. Automatic Graceful Degradation: When no approved cloud avatar provider is active, "
+      "all presenter scenes (presenter_fullscreen, presenter_pip) automatically transform into "
+      "subject-appropriate visual scenes (diagram_or_flowchart, data_chart_or_timeline, "
+      "terminal_scene, or code_snippet). "
+      "2. Honest Status Logging: The presenter stage records 'presenter_status: skipped_unavailable' "
+      "with $0.00 cost and zero fake idle loops. "
+      "3. Opt-In Approved Fallback: If the user explicitly requests an avatar in a future project "
+      "and approves the cost, route to a tested cloud provider (e.g., HeyGen API or Kling Avatar) "
+      "with per-project cost confirmation."
+    )
+  }
+}

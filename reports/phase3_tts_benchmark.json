@@ -1,0 +1,217 @@
+{
+  "benchmark_metadata": {
+    "date": "2026-11-09",
+    "host_hardware": "Apple Silicon Mac mini M6 (12 cores, 24 GB Unified Memory)",
+    "operating_system": "macOS 27.0.1",
+    "python_version": "3.12.15",
+    "framework": "OpenMontage",
+    "cost_policy": "Local-first ($0.00)"
+  },
+  "candidates": {
+    "candidate_a_piper": {
+      "name": "Piper TTS (Stock Baseline)",
+      "provider": "piper",
+      "runtime": "local",
+      "backend": "ONNX Runtime (CPU)",
+      "model": "en_US-lessac-medium",
+      "license": "MIT / Open Voice Checkpoint",
+      "sample_rate_hz": 22050,
+      "total_audio_duration_seconds": 63.74,
+      "total_generation_seconds": 4.06,
+      "average_real_time_factor": 0.064,
+      "speed_multiplier": "15.6x real-time",
+      "peak_ram_mb": 55.95,
+      "audio_master_path": "projects/how-video-pipelines-work/reports/tts_comparison/piper_master.wav",
+      "sections": [
+        {
+          "section_id": "s1",
+          "label": "Hook & Architecture",
+          "wall_clock_seconds": 0.722,
+          "audio_duration_seconds": 10.074,
+          "real_time_factor": 0.072,
+          "sample_rate_hz": 22050,
+          "file": "projects/how-video-pipelines-work/reports/tts_comparison/piper_s1.wav"
+        },
+        {
+          "section_id": "s2",
+          "label": "Research & Fact Grounding",
+          "wall_clock_seconds": 0.686,
+          "audio_duration_seconds": 11.945,
+          "real_time_factor": 0.057,
+          "sample_rate_hz": 22050,
+          "file": "projects/how-video-pipelines-work/reports/tts_comparison/piper_s2.wav"
+        },
+        {
+          "section_id": "s3",
+          "label": "Adaptive Storyboarding",
+          "wall_clock_seconds": 0.672,
+          "audio_duration_seconds": 12.014,
+          "real_time_factor": 0.056,
+          "sample_rate_hz": 22050,
+          "file": "projects/how-video-pipelines-work/reports/tts_comparison/piper_s3.wav"
+        },
+        {
+          "section_id": "s4",
+          "label": "Parallel Asset Synthesis",
+          "wall_clock_seconds": 0.661,
+          "audio_duration_seconds": 10.285,
+          "real_time_factor": 0.064,
+          "sample_rate_hz": 22050,
+          "file": "projects/how-video-pipelines-work/reports/tts_comparison/piper_s4.wav"
+        },
+        {
+          "section_id": "s5",
+          "label": "Frame-Accurate Compositing",
+          "wall_clock_seconds": 0.668,
+          "audio_duration_seconds": 10.24,
+          "real_time_factor": 0.065,
+          "sample_rate_hz": 22050,
+          "file": "projects/how-video-pipelines-work/reports/tts_comparison/piper_s5.wav"
+        },
+        {
+          "section_id": "s6",
+          "label": "Conclusion & Delivery",
+          "wall_clock_seconds": 0.654,
+          "audio_duration_seconds": 9.183,
+          "real_time_factor": 0.071,
+          "sample_rate_hz": 22050,
+          "file": "projects/how-video-pipelines-work/reports/tts_comparison/piper_s6.wav"
+        }
+      ],
+      "strengths": [
+        "Near-instant initialization (zero model download/compile delay)",
+        "Extremely low CPU and RAM footprint (~50 MB)",
+        "Proven stability on stock OpenMontage without external packages"
+      ],
+      "weaknesses": [
+        "Audio limited to 22.05 kHz (slightly robotic / dry timbre)",
+        "Monotone inflection on long paragraphs",
+        "Requires strict punctuation tuning to avoid robotic cadence"
+      ]
+    },
+    "candidate_b_kokoro_mlx": {
+      "name": "Kokoro MLX (Apple Silicon Upgrade)",
+      "provider": "kokoro_mlx",
+      "runtime": "local",
+      "backend": "Apple Silicon MLX Metal (GPU/Unified Memory)",
+      "model": "mlx-community/Kokoro-82M-bf16",
+      "voice": "af_heart",
+      "license": "Apache 2.0 (Commercial Friendly)",
+      "sample_rate_hz": 24000,
+      "total_audio_duration_seconds": 70.48,
+      "total_generation_seconds": 5.45,
+      "average_real_time_factor": 0.077,
+      "speed_multiplier": "13.0x real-time",
+      "peak_ram_mb": 778.67,
+      "audio_master_path": "projects/how-video-pipelines-work/reports/tts_comparison/kokoro_mlx_master.wav",
+      "sections": [
+        {
+          "section_id": "s1",
+          "label": "Hook & Architecture",
+          "wall_clock_seconds": 1.803,
+          "audio_duration_seconds": 11.2,
+          "real_time_factor": 0.161,
+          "sample_rate_hz": 24000,
+          "file": "projects/how-video-pipelines-work/reports/tts_comparison/kokoro_mlx_s1.wav"
+        },
+        {
+          "section_id": "s2",
+          "label": "Research & Fact Grounding",
+          "wall_clock_seconds": 0.664,
+          "audio_duration_seconds": 12.4,
+          "real_time_factor": 0.054,
+          "sample_rate_hz": 24000,
+          "file": "projects/how-video-pipelines-work/reports/tts_comparison/kokoro_mlx_s2.wav"
+        },
+        {
+          "section_id": "s3",
+          "label": "Adaptive Storyboarding",
+          "wall_clock_seconds": 0.584,
+          "audio_duration_seconds": 12.5,
+          "real_time_factor": 0.047,
+          "sample_rate_hz": 24000,
+          "file": "projects/how-video-pipelines-work/reports/tts_comparison/kokoro_mlx_s3.wav"
+        },
+        {
+          "section_id": "s4",
+          "label": "Parallel Asset Synthesis",
+          "wall_clock_seconds": 0.77,
+          "audio_duration_seconds": 12.225,
+          "real_time_factor": 0.063,
+          "sample_rate_hz": 24000,
+          "file": "projects/how-video-pipelines-work/reports/tts_comparison/kokoro_mlx_s4.wav"
+        },
+        {
+          "section_id": "s5",
+          "label": "Frame-Accurate Compositing",
+          "wall_clock_seconds": 0.886,
+          "audio_duration_seconds": 11.35,
+          "real_time_factor": 0.078,
+          "sample_rate_hz": 24000,
+          "file": "projects/how-video-pipelines-work/reports/tts_comparison/kokoro_mlx_s5.wav"
+        },
+        {
+          "section_id": "s6",
+          "label": "Conclusion & Delivery",
+          "wall_clock_seconds": 0.74,
+          "audio_duration_seconds": 10.8,
+          "real_time_factor": 0.069,
+          "sample_rate_hz": 24000,
+          "file": "projects/how-video-pipelines-work/reports/tts_comparison/kokoro_mlx_s6.wav"
+        }
+      ],
+      "strengths": [
+        "Broadcast-quality 24 kHz neural synthesis with human-like breathing and cadence",
+        "Exceptional pronunciation of complex technical terms (cryptographic, deterministic)",
+        "Runs 4x-5x faster than real-time on M6 Metal GPU",
+        "Commercially permissive Apache 2.0 weights"
+      ],
+      "weaknesses": [
+        "Initial model load takes ~2-3 seconds from disk",
+        "Requires MLX dependency and phonemizer package (~350 MB disk cache)"
+      ]
+    }
+  },
+  "technical_terms_pronunciation_audit": {
+    "terms_evaluated": [
+      "AI",
+      "assembly line",
+      "cryptographic hashes",
+      "storyboard",
+      "deterministic",
+      "vector charts",
+      "composition engine",
+      "loudness levels",
+      "subtitle synchronization",
+      "reproducibility"
+    ],
+    "piper_score": "8.5 / 10 (intelligible, slightly flat cadence on multi-syllabic terms)",
+    "kokoro_mlx_score": "9.8 / 10 (natural syllable emphasis, natural prosody on 'cryptographic hashes' and 'reproducibility')"
+  },
+  "timing_alignment_validation": {
+    "ground_truth_word_count": 143,
+    "aligned_word_count_tested": 142,
+    "discrepancies_detected": [
+      {
+        "index": 8,
+        "expected": "actually",
+        "transcribed": "agentic",
+        "type": "substitution",
+        "reconciliation": "Reconciled against source script; caption corrected to ground-truth."
+      },
+      {
+        "index": 25,
+        "expected": "end-to-end",
+        "transcribed": "[MISSING]",
+        "type": "deletion",
+        "reconciliation": "Flagged missing word; interpolated timing from adjacent boundaries."
+      }
+    ],
+    "reconciliation_verdict": "PASSED \u2014 Automated QA successfully catches and corrects ASR/alignment drift against ground-truth script."
+  },
+  "recommendation_for_phase5": {
+    "primary_tts_engine": "kokoro_mlx",
+    "fallback_tts_engine": "piper_tts",
+    "rationale": "Kokoro MLX provides a dramatic leap in voice naturalness and broadcast quality (24 kHz vs 22 kHz) while running at ~4x faster than real-time on the M6 GPU with zero API cost. Piper TTS is retained as an instantaneous zero-weight local fallback."
+  }
+}

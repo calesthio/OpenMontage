@@ -52,9 +52,13 @@ def load_playbook(name: str, styles_dir: Optional[Path] = None) -> dict[str, Any
     if not path.exists():
         path = styles_dir / CUSTOM_SUBDIR / f"{name}.yaml"
     if not path.exists():
+        path = styles_dir / "topic-tutorial" / f"{name}.yaml"
+    if not path.exists() and (styles_dir / name).is_file():
+        path = styles_dir / name
+    if not path.exists():
         raise FileNotFoundError(
             f"Playbook not found: {name!r} "
-            f"(searched {styles_dir} and {styles_dir / CUSTOM_SUBDIR})"
+            f"(searched {styles_dir}, {styles_dir / CUSTOM_SUBDIR}, and {styles_dir / 'topic-tutorial'})"
         )
 
     with open(path, encoding="utf-8") as f:
@@ -81,6 +85,9 @@ def list_playbooks(styles_dir: Optional[Path] = None) -> list[str]:
     custom_dir = styles_dir / CUSTOM_SUBDIR
     if custom_dir.exists():
         names.extend(p.stem for p in custom_dir.glob("*.yaml"))
+    topic_tutorial_dir = styles_dir / "topic-tutorial"
+    if topic_tutorial_dir.exists():
+        names.extend(p.stem for p in topic_tutorial_dir.glob("*.yaml"))
     return sorted(set(names))
 
 

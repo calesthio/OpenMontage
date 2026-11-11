@@ -8,6 +8,7 @@ import {
   staticFile,
   Easing,
 } from "remotion";
+import { splitGraphemes } from "../lib/graphemes";
 
 export type ProductRevealProps = {
   productImage: string;
@@ -52,7 +53,7 @@ export const ProductReveal: React.FC<ProductRevealProps> = ({
 
   // === PHASE 2: Product name springs in letter by letter (1s delay) ===
   const nameDelay = fps * 1.2;
-  const nameChars = productName.split("");
+  const nameChars = splitGraphemes(productName);
 
   // === PHASE 3: Price reveals (3s delay) ===
   const priceDelay = fps * 3.2;

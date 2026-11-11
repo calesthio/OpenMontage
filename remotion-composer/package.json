@@ -8,6 +8,7 @@
   "scripts": {
     "start": "npx remotion studio",
     "build": "npx remotion render src/index.tsx Explainer out/video.mp4",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "upgrade": "npx remotion upgrade"
   },
   "dependencies": {

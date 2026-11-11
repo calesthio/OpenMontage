@@ -5,6 +5,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { splitGraphemes } from "../lib/graphemes";
 
 type HeroTitleProps = {
   title: string;
@@ -37,8 +38,9 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Staggered letter-by-letter spring
-  const titleChars = title.split("");
+  // Staggered letter-by-letter spring. Split by grapheme: a UTF-16 split
+  // breaks emoji into U+FFFD boxes and strips Thai vowels/tone marks.
+  const titleChars = splitGraphemes(title);
   // Characters are grouped by word so a title wider than the frame (9:16
   // shorts) wraps between words, never inside one. `start` keeps each
   // character's index in the full title, so stagger and accent are unchanged.
@@ -46,7 +48,7 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
     (words, word) => {
       const last = words[words.length - 1];
       const start = last ? last.start + last.chars.length + 1 : 0;
-      return [...words, { chars: word.split(""), start }];
+      return [...words, { chars: splitGraphemes(word), start }];
     },
     [],
   );
@@ -92,7 +94,9 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
                       display: "inline-block",
                       opacity: charSpring,
                       transform: `translateY(${interpolate(charSpring, [0, 1], [30, 0])}px)`,
-                      color: i < 8 ? accentColor : textColor, // Accent first word
+                      // Accent the whole first word. A fixed character
+                      // count switched colour mid-word: "Your rai|nbow".
+                      color: w === 0 ? accentColor : textColor,
                     }}
                   >
                     {char}

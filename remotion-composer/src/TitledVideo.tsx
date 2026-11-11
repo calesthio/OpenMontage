@@ -11,6 +11,7 @@ import {
 import { getVideoMetadata } from "@remotion/media-utils";
 import { loadPlayfair } from "./lib/localFonts";
 import { resolveAsset } from "./lib/resolveAsset";
+import { splitGraphemes } from "./lib/graphemes";
 
 // Editorial serif for the tagline — Playfair Display at its boldest weight.
 // Loaded once at module scope so every render reuses the same font face.
@@ -47,7 +48,7 @@ const EditorialTagline: React.FC<{
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
 
-  const chars = text.split("");
+  const chars = splitGraphemes(text);
 
   // Hold the title until the last 8 frames, then ease out.
   const fadeOut = interpolate(

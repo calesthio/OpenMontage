@@ -850,6 +850,7 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
 
   // Resolve theme from props — playbook name, theme name, or custom themeConfig
   const theme = resolveTheme(props as Record<string, unknown>);
+  const lastOutSeconds = Math.max(0, ...cuts.map((c) => c.out_seconds || 0));
 
   return (
     <AbsoluteFill style={{ background: theme.backgroundColor, fontFamily: theme.headingFont || fontFamily }}>
@@ -859,7 +860,13 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
       {/* Layer 1: Visual scenes */}
       {cuts.map((cut) => {
         const from = Math.round(cut.in_seconds * fps);
-        const duration = Math.round((cut.out_seconds - cut.in_seconds) * fps);
+        // The composition runs `tailPaddingSeconds` (default 1) past the last
+        // cut. Hold the last-ending cut through that tail; otherwise the
+        // final second renders as bare background.
+        const isLast = cut.out_seconds >= lastOutSeconds;
+        const duration = isLast
+          ? Math.max(1, durationInFrames - from)
+          : Math.round((cut.out_seconds - cut.in_seconds) * fps);
 
         return (
           <Sequence key={cut.id} from={from} durationInFrames={duration}>

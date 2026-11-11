@@ -209,11 +209,15 @@ registry (`src/components`, `src/Explainer`, etc.), and warns if `art_direction`
   (`projects/<slug>/hyperframes/`), `edit_decisions` with **at least one cut** (the scaffold
   rejects an empty `cuts[]`), `asset_manifest` (asset ids → file paths, copied into `assets/`),
   and optionally `playbook`, `profile`, `fps`. It writes `index.html`, `hyperframes.json`,
-  `DESIGN.md`, `compositions/` and `assets/`. The generated `index.html`
+  `DESIGN.md`, `compositions/`, `assets/` and `gsap.min.js` (the pinned local GSAP build;
+  the result's `gsap_src` is a CDN URL instead when GSAP is not installed — run `make setup`).
+  The generated `index.html`
   is only a functional skeleton (root `data-*` attributes, a paused GSAP timeline registered in
   `window.__timelines`, one `.clip` per cut). **Scaffold once:** `scaffold_workspace` and
   `operation="render"` both overwrite `index.html`.
-- Author `index.html` by hand. Every clip needs `class="clip"` + the three `data-*` timing
+- Author `index.html` by hand. Load GSAP with `<script src="gsap.min.js"></script>`, not the
+  CDN tag the `.agents/skills/hyperframes-*` examples show, so the render needs no network;
+  sub-compositions use the host's GSAP and load none themselves. Every clip needs `class="clip"` + the three `data-*` timing
   attrs + a stable `id`. Mount sub-compositions via `data-composition-src` once the timeline
   on one file grows past 4 clips (the lint catches density).
 - For music-driven pieces, run `npx hyperframes beats .` after dropping the track in

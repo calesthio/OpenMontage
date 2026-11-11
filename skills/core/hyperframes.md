@@ -460,6 +460,12 @@ the `deterministicFonts.ts` mapping table. Safe bets: `Outfit`,
 - ❌ Using HyperFrames as "React without Remotion." HyperFrames is
   HTML-first with GSAP. If your scene is authored as React JSX, it belongs
   in Remotion.
+- ❌ Loading GSAP from a CDN in a hand-authored `index.html`. `scaffold_workspace`
+  copies the pinned build installed by `make setup` (`remotion-composer/node_modules/gsap`)
+  to `gsap.min.js` in the workspace; use `<script src="gsap.min.js"></script>` so the
+  render works offline. The CDN tags in the `.agents/skills/hyperframes-*` examples need
+  network at render time. Sub-compositions load no GSAP: the runtime clones only their
+  `<template>` into a host that already has it.
 - ❌ Using `repeat: -1` in GSAP inside HyperFrames. Infinite tweens break the
   deterministic seek-and-capture render. Always bounded repeats.
 - ❌ Animating from `async` context, `setTimeout`, or Promises during

@@ -29,6 +29,7 @@ from tools.base_tool import (
     ToolTier,
 )
 from tools.gsap_runtime import GSAP_FILENAME, stage_gsap
+from tools.three_runtime import stage_three
 
 
 _HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
@@ -670,10 +671,12 @@ class ThreeJSWorld(BaseTool):
             catalog_index["catalogs"].append(copied)
 
         gsap_src = stage_gsap(workspace)
+        three_imports, three_files = stage_three(workspace)
         index_template = (template_dir / "index.html").read_text(encoding="utf-8")
         index_html = (
             index_template.replace("__TITLE__", html.escape(spec["title"], quote=True))
             .replace("__GSAP_SRC__", html.escape(gsap_src, quote=True))
+            .replace("__THREE_IMPORT_MAP__", json.dumps({"imports": three_imports}))
             .replace("__DURATION__", f"{duration:g}")
             .replace("__WIDTH__", str(width))
             .replace("__HEIGHT__", str(height))
@@ -732,4 +735,4 @@ class ThreeJSWorld(BaseTool):
             str(catalog_index_path),
             str(catalog_js_path),
             str(config_path),
-        ] + ([str(workspace / GSAP_FILENAME)] if gsap_src == GSAP_FILENAME else [])
+        ] + ([str(workspace / GSAP_FILENAME)] if gsap_src == GSAP_FILENAME else []) + three_files

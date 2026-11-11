@@ -63,7 +63,7 @@ setup: bootstrap
 	@echo "==> Installing Python dependencies..."
 	$(PIP) install -r requirements.txt
 	@echo ""
-	@echo "==> Installing Remotion composer (and the GSAP build HyperFrames renders use offline)..."
+	@echo "==> Installing Remotion composer (and the GSAP and three.js builds HyperFrames renders use offline)..."
 	cd remotion-composer && npm install
 	@echo ""
 	@echo "==> Installing free offline TTS (Piper)..."

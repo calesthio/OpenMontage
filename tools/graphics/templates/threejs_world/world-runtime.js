@@ -1,5 +1,6 @@
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.2/+esm";
-import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.181.2/examples/jsm/loaders/GLTFLoader.js";
+// Resolved by the import map in index.html (tools/three_runtime.py).
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { WORLD_SPEC } from "./world-spec.js";
 import { ASSET_CATALOG } from "./asset-catalog.js";
 

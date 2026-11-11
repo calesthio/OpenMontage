@@ -27,7 +27,11 @@ proposal unless a `render_runtime_selection` decision explicitly changed it.
 ## Review Workflow
 
 1. Run `character_rig_renderer` to produce or refresh the HyperFrames package.
-   The browser preview is a QA/debug artifact only, not the render path.
+   The browser preview is a QA/debug artifact only, not the render path. Pass
+   it the same `profile` you will pass to `video_compose` (omit it on both for
+   the 1920x1080 default): the profile sizes the HyperFrames canvas, and the
+   composition declares that size (`canvas` in the result). Its layout is in
+   percentages, so the scene fills the frame in any aspect ratio.
 2. Verify the renderer emitted its handoff: `hyperframes_workspace` (the
    workspace directory — the input is called `workspace_path`, the output key is
    not), `composition_path` (the composition HTML), `preview_path`,
@@ -48,7 +52,7 @@ proposal unless a `render_runtime_selection` decision explicitly changed it.
      character animation, and say so if it is all that rendered.
 3. Run `character_animation_reviewer` against rig, poses, timeline, and preview.
 4. Render final video through `video_compose` using the renderer handoff or the
-   approved Remotion/HyperFrames package. The deliverable path is
+   approved Remotion/HyperFrames package, with the `profile` from step 1. The deliverable path is
    `projects/<project-name>/renders/final.mp4`, matching the standard
    OpenMontage project convention.
 5. Run standard `final_review`: ffprobe, frame sampling, visual spotcheck, audio

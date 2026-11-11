@@ -27,6 +27,7 @@ from tools.base_tool import (
     ToolTier,
 )
 from tools.gsap_runtime import stage_gsap
+from tools.video.hyperframes_compose import HyperFramesCompose
 
 
 def _write_json(path: str | None, data: dict[str, Any]) -> list[str]:
@@ -506,12 +507,23 @@ class CharacterRigRenderer(BaseTool):
             "render_video": {"type": "boolean", "default": False},
             "duration_seconds": {"type": "number", "minimum": 0.1, "default": 3},
             "fps": {"type": "integer", "minimum": 1, "default": 12},
+            "profile": {
+                "type": "string",
+                "description": (
+                    "Media profile name (lib/media_profiles.py) the final render uses. "
+                    "Pass the same value to video_compose: it sets the HyperFrames "
+                    "canvas, and the composition is declared at that size. "
+                    "Default 1920x1080, the HyperFrames default."
+                ),
+            },
         },
     }
     output_schema = {
         "type": "object",
         "properties": {
             "preview_path": {"type": "string"},
+            "gsap_src": {"type": "string"},
+            "canvas": {"type": "object"},
             "hyperframes_workspace": {"type": "string"},
             "composition_path": {"type": "string"},
             "video_path": {"type": "string"},
@@ -531,6 +543,9 @@ class CharacterRigRenderer(BaseTool):
         output_path = Path(inputs.get("output_path") or PROJECTS_DIR / "character-preview" / "preview.html")
         output_path.parent.mkdir(parents=True, exist_ok=True)
         gsap_src = stage_gsap(output_path.parent)
+        profile = inputs.get("profile")
+        # Same resolution as the scaffold that mounts the composition.
+        canvas_width, canvas_height, _ = HyperFramesCompose._resolve_dimensions(profile, 30)
         timeline_json = json.dumps(inputs["action_timeline"])
         rig_characters = (inputs.get("rig_plan") or {}).get("characters", [])
         if not rig_characters:
@@ -544,16 +559,22 @@ class CharacterRigRenderer(BaseTool):
                 {"character_id": "main_character"}
             ]
         count = len(rig_characters)
-        spacing = 620 / max(count, 1)
+        # Figures are drawn around x=320 (arms reach 180..475) standing on
+        # y=560. Spread them evenly about the viewBox centre and scale them
+        # about their feet, so every figure stays inside 0..640 and on the
+        # ground. The placement sits on an outer group: GSAP animates the
+        # inner .character group and would overwrite a transform on it.
+        spacing = 620 / count
+        scale = 1.0 if count == 1 else round(min(0.82, 1.6 / count), 3)
         character_svgs = []
         for index, character in enumerate(rig_characters):
             cid = _slug(character.get("character_id", f"character-{index + 1}"))
-            x = 110 + spacing * index if count > 1 else 320
-            scale = 0.82 if count > 1 else 1
+            x = 320 + (index - (count - 1) / 2) * spacing
             body_fill, head_fill = _character_color(index)
             character_svgs.append(
                 f"""
-      <g class=\"character\" id=\"character_{cid}\" data-character=\"{cid}\" transform=\"translate({x - 320:.1f} 0) scale({scale})\">
+      <g transform=\"translate({x - 320 * scale:.1f} {560 * (1 - scale):.1f}) scale({scale:.3f})\">
+      <g class=\"character\" id=\"character_{cid}\" data-character=\"{cid}\">
         <ellipse class=\"shadow\" cx=\"320\" cy=\"560\" rx=\"120\" ry=\"22\" fill=\"rgba(0,0,0,.18)\" />
         <ellipse class=\"body outline\" cx=\"320\" cy=\"400\" rx=\"80\" ry=\"120\" fill=\"{body_fill}\" />
         <circle class=\"head outline\" cx=\"320\" cy=\"230\" r=\"90\" fill=\"{head_fill}\" />
@@ -564,6 +585,7 @@ class CharacterRigRenderer(BaseTool):
         <path class=\"mouth outline\" d=\"M285 275 Q320 305 355 275\" fill=\"none\" />
         <path class=\"arm arm-left outline\" d=\"M255 360 C210 380 190 420 180 455\" fill=\"none\" />
         <path class=\"arm arm-right outline\" d=\"M385 360 C440 330 465 290 475 240\" fill=\"none\" />
+      </g>
       </g>"""
             )
         html = f"""<!doctype html>
@@ -656,13 +678,13 @@ class CharacterRigRenderer(BaseTool):
         finite_bounce_repeats = max(0, int(total_duration / 0.9) - 1)
         finite_acting_repeats = max(0, int(total_duration / 2.1) - 1)
         composition_html = f"""<template id=\"character-scene-template\">
-  <div data-composition-id=\"character-scene\" data-start=\"0\" data-duration=\"{total_duration:.3f}\" data-width=\"1280\" data-height=\"720\">
+  <div data-composition-id=\"character-scene\" data-start=\"0\" data-duration=\"{total_duration:.3f}\" data-width=\"{canvas_width}\" data-height=\"{canvas_height}\">
     <style>
-      [data-composition-id=\"character-scene\"] {{ position: relative; width: 1280px; height: 720px; overflow: hidden; background: linear-gradient(#9bd7ff 0 65%, #75c878 65%); }}
-      [data-composition-id=\"character-scene\"] svg {{ width: 920px; position: absolute; left: 180px; top: 42px; overflow: visible; }}
+      [data-composition-id=\"character-scene\"] {{ position: relative; width: 100%; height: 100%; overflow: hidden; background: linear-gradient(#9bd7ff 0 65%, #75c878 65%); }}
+      [data-composition-id=\"character-scene\"] svg {{ position: absolute; left: 5%; top: 5%; width: 90%; height: 90%; overflow: visible; }}
       [data-composition-id=\"character-scene\"] .outline {{ stroke: #202632; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }}
     </style>
-    <svg viewBox=\"0 0 640 640\" role=\"img\" aria-label=\"Character animation scene\">
+    <svg viewBox=\"0 0 640 640\" preserveAspectRatio=\"xMidYMid meet\" role=\"img\" aria-label=\"Character animation scene\">
 {''.join(character_svgs)}
     </svg>
     <script>
@@ -728,6 +750,7 @@ class CharacterRigRenderer(BaseTool):
         data: dict[str, Any] = {
             "preview_path": str(output_path),
             "gsap_src": gsap_src,
+            "canvas": {"width": canvas_width, "height": canvas_height, "profile": profile},
             "render_package": "hyperframes_workspace",
             "hyperframes_workspace": str(workspace_path),
             "composition_path": str(composition_path),

@@ -555,12 +555,26 @@ def _resolved_download_url(monkeypatch, page, tmp_path, soup_cls=_EmptySoup):
 def test_mixkit_download_resolves_from_json_ld_alone(monkeypatch, tmp_path):
     # No download button and no <video> anywhere in the DOM stub: the
     # structured metadata has to carry the resolution on its own.
-    page = _ld_page(f'{{"@type":"VideoObject","contentUrl":"{_CONTENT_URL}"}}')
+    page = _ld_page(
+        f'{{"@type":"VideoObject","copyrightNotice":"Free",'
+        f'"license":"https://mixkit.co/license/#videoFree","contentUrl":"{_CONTENT_URL}"}}'
+    )
     assert _resolved_download_url(monkeypatch, page, tmp_path) == _CONTENT_URL
 
 
+def test_mixkit_download_refuses_a_page_that_states_no_licence(monkeypatch, tmp_path):
+    # A published file is not enough: without a stated licence the clip may be
+    # Restricted (personal use only), so commercial-use downloads refuse it.
+    page = _ld_page(f'{{"@type":"VideoObject","contentUrl":"{_CONTENT_URL}"}}')
+    with pytest.raises(RuntimeError, match="does not state its licence"):
+        _resolved_download_url(monkeypatch, page, tmp_path)
+
+
 def test_mixkit_download_falls_back_to_src_on_the_video_tag(monkeypatch, tmp_path):
-    page = "<html><body><video src='...'></video></body></html>"
+    page = (
+        '<html><body><a href="/license/#videoFree" data-license="videoFree">'
+        "Mixkit Stock Video Free License</a><video src='...'></video></body></html>"
+    )
     assert (
         _resolved_download_url(
             monkeypatch, page, tmp_path, soup_cls=_VideoTagSoup
@@ -757,8 +771,11 @@ def test_mixkit_falls_back_to_json_ld_video_objects(monkeypatch):
     assert len(results) == 1
     clip = results[0]
     assert clip.source_id == "mixkit_3458"
-    assert clip.download_url == "https://assets.mixkit.co/videos/3458/3458-1080.mp4"
-    assert clip.extra["detail_url"] == clip.download_url
+    # The file is resolved (and its licence re-verified) from the detail page
+    # at download time, so the candidate points at that page, not at a file.
+    detail = "https://mixkit.co/free-stock-video/candle-lighting-in-the-dark-3458/"
+    assert clip.download_url == detail
+    assert clip.extra["detail_url"] == detail
     assert "Candle lighting in the dark" in clip.source_tags
     # No declared size: stay unknown rather than guessing from the "-1080" suffix.
     assert (clip.width, clip.height) == (0, 0)

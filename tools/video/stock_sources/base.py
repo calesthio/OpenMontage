@@ -107,6 +107,7 @@ class SearchFilters:
     min_width: Optional[int] = None         # resolution floor in pixels
     per_page: int = 20
     page: int = 1
+    require_commercial_use: bool = True     # drop items whose licence forbids commercial use (where the source exposes it)
 
 
 @runtime_checkable

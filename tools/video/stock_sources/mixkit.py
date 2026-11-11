@@ -1,33 +1,57 @@
 """Mixkit (by Envato) stock video source adapter.
 
-Scrapes the Mixkit website (``mixkit.co``) for free stock video clips.
-Mixkit offers curated, high-quality footage (HD and 4K) under a free
-licence with no attribution required. The library is smaller than
-Pixabay/Pexels but has higher average quality due to Envato's curation.
+Scrapes the Mixkit website (``mixkit.co``) for stock video clips. No API
+is available, so this adapter reads Mixkit's listing and detail pages.
 
-No API available — this adapter scrapes Mixkit search pages.
+Licensing — read before using footage
+-------------------------------------
+Mixkit publishes video under two different licences, chosen per clip:
 
-What Mixkit is good for
------------------------
-- High-quality curated B-roll (nature, business, technology, lifestyle)
-- Clean, modern footage with consistent quality
-- No-attribution-needed clips for quick gap-fills
-- Nature and landscape establishing shots
+- **Stock Video Free License** (``videoFree``): commercial and personal use,
+  including YouTube, ads and broadcast; no attribution required.
+- **Stock Video Restricted License** (``videoRestricted``): the free 720p file
+  is for *personal projects only*. Commercial projects, advertising, company
+  social media and YouTube videos are explicitly not allowed.
+
+See https://mixkit.co/license/ . Because the licence varies per clip, this
+adapter never assumes it:
+
+1. ``search`` labels each candidate with the licence the listing page's
+   schema.org data declares and, by default
+   (``SearchFilters.require_commercial_use``), drops Restricted clips.
+2. ``download`` re-reads the clip's detail page, which is authoritative.
+   When commercial use is required it refuses Restricted clips and clips
+   whose licence the page does not state. It downloads only files the page
+   itself publishes — its download renditions (best first), then the
+   JSON-LD ``contentUrl``, then the ``<video>`` source — never a guessed
+   URL. The verified licence and its evidence are written back onto the
+   candidate (``license`` and ``extra["license_evidence"]``).
 """
 from __future__ import annotations
 
 import json
 import logging
 import re
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from .base import Candidate, SearchFilters
 
 _log = logging.getLogger(__name__)
 
-_SEARCH_URL = "https://mixkit.co/free-stock-video/"
-_LICENSE = "Mixkit License (free for commercial and personal use, no attribution required)"
+_BASE = "https://mixkit.co"
+_SEARCH_URL = f"{_BASE}/free-stock-video/"
+_UA = {"User-Agent": "OpenMontage/1.0"}
+
+LICENSE_FREE = "videoFree"
+LICENSE_RESTRICTED = "videoRestricted"
+_LICENSE_LABELS = {
+    LICENSE_FREE: "Mixkit Stock Video Free License (commercial and personal use, no attribution required)",
+    LICENSE_RESTRICTED: "Mixkit Stock Video Restricted License (personal projects only; no commercial use, ads or YouTube)",
+}
+_UNRESOLVED = "Mixkit (licence not yet verified; resolved from the detail page at download)"
+_RES_ORDER = {"2160p": 4, "4k": 4, "1080p": 3, "720p": 2, "480p": 1, "360p": 0}
 
 _JSON_LD_RE = re.compile(
     r"<script[^>]+type=[\"']application/ld\+json[\"'][^>]*>(.*?)</script>",
@@ -35,17 +59,16 @@ _JSON_LD_RE = re.compile(
 )
 
 
-def _content_url_from_json_ld(html: str) -> str:
-    """Return the ``VideoObject.contentUrl`` a Mixkit page declares, or ``""``.
+class MixkitLicenseError(RuntimeError):
+    """The clip's published licence does not allow the required use."""
 
-    Mixkit ships schema.org metadata on every clip page and names the media
-    file there directly, so this survives player and markup redesigns —
-    unlike the CSS selectors in `download()`, which is what broke.
 
-    Takes raw HTML rather than a parsed soup: the payload is JSON inside a
-    script tag, so it needs `json`, not a DOM, and keeping it string-based
-    lets it be tested without beautifulsoup4 (an optional dependency here).
-    """
+# ---------------------------------------------------------------------------
+# JSON-LD helpers (string based, so they work without beautifulsoup4)
+# ---------------------------------------------------------------------------
+
+def _json_ld_nodes(html: str):
+    """Yield every dict node in the page's JSON-LD blocks (any nesting shape)."""
     for block in _JSON_LD_RE.findall(html):
         try:
             payload = json.loads(block)
@@ -53,35 +76,36 @@ def _content_url_from_json_ld(html: str) -> str:
             # Third-party pages ship malformed or half-templated JSON-LD:
             # one bad block must not hide a good one later in the page
             continue
-
-        # A block is a single node, a list of nodes, or a wrapper carrying
-        # "@graph" — walk all three shapes instead of assuming one
-        pending: list[Any] = payload if isinstance(payload, list) else [payload]
+        pending: list[Any] = [payload]
         while pending:
             node = pending.pop(0)
             if isinstance(node, list):
                 pending.extend(node)
-                continue
-            if not isinstance(node, dict):
-                continue
+            elif isinstance(node, dict):
+                yield node
+                pending.extend(v for v in node.values() if isinstance(v, (list, dict)))
 
-            graph = node.get("@graph")
-            if graph:
-                pending.append(graph)
 
-            node_types = node.get("@type", "")
-            if "VideoObject" not in (
-                node_types if isinstance(node_types, list) else [node_types]
-            ):
-                continue
+def _is_video_object(node: dict) -> bool:
+    types_ = node.get("@type", "")
+    return "VideoObject" in (types_ if isinstance(types_, list) else [types_])
 
-            url = node.get("contentUrl", "")
-            # Singular in schema.org, but pages do ship a list of renditions
-            if isinstance(url, list):
-                url = next((u for u in url if isinstance(u, str) and u.strip()), "")
-            if isinstance(url, str) and url.strip():
-                return url.strip()
 
+def _content_url_from_json_ld(html: str) -> str:
+    """Return the ``VideoObject.contentUrl`` a Mixkit page declares, or ``""``.
+
+    Mixkit ships schema.org metadata on every clip page and names a media
+    file there directly, so this survives player and markup redesigns.
+    """
+    for node in _json_ld_nodes(html):
+        if not _is_video_object(node):
+            continue
+        url = node.get("contentUrl", "")
+        # Singular in schema.org, but pages do ship a list of renditions
+        if isinstance(url, list):
+            url = next((u for u in url if isinstance(u, str) and u.strip()), "")
+        if isinstance(url, str) and url.strip():
+            return url.strip()
     return ""
 
 
@@ -99,6 +123,102 @@ def _ld_dimension(value: Any) -> int:
     return 0
 
 
+def license_key_from(value: Any) -> Optional[str]:
+    """Map a Mixkit licence notice or URL to ``videoFree`` / ``videoRestricted``."""
+    v = (value if isinstance(value, str) else "").lower()
+    if "restricted" in v:
+        return LICENSE_RESTRICTED
+    if "videofree" in v or v.strip() == "free" or "free license" in v:
+        return LICENSE_FREE
+    return None
+
+
+def _node_license(node: dict) -> Optional[str]:
+    return license_key_from(node.get("copyrightNotice", "")) or license_key_from(node.get("license", ""))
+
+
+def listing_licenses(html: str) -> dict[str, str]:
+    """Return ``{detail_url: licence_key}`` from a page's schema.org VideoObjects."""
+    out: dict[str, str] = {}
+    for node in _json_ld_nodes(html):
+        if not _is_video_object(node):
+            continue
+        key = _node_license(node)
+        url = (node.get("@id") or node.get("url") or "").split("#", 1)[0]
+        if key and url:
+            out[url.rstrip("/") + "/"] = key
+    return out
+
+
+def page_license(html: str) -> Optional[str]:
+    """The licence a clip detail page states for its own clip.
+
+    The download block's ``data-license`` (what the free download is offered
+    under) wins; the page's VideoObject ``copyrightNotice``/``license`` is the
+    fallback. ``None`` means the page does not say.
+    """
+    for block in re.findall(r'class="download-video-options__download[^"]*"(.*?)</div>', html, re.S):
+        m = re.search(r'data-license="([A-Za-z]+)"', block)
+        if m and license_key_from(m.group(1)):
+            return license_key_from(m.group(1))
+    m = re.search(r'data-license="(video[A-Za-z]+)"', html)
+    if m and license_key_from(m.group(1)):
+        return license_key_from(m.group(1))
+    for node in _json_ld_nodes(html):
+        if _is_video_object(node) and _node_license(node):
+            return _node_license(node)
+    return None
+
+
+def detail_renditions(html: str) -> list[dict[str, str]]:
+    """Download renditions the detail page's download block publishes, best first.
+
+    Free clips list radio options (``?type=720p`` / ``?type=1080p``); Restricted
+    clips publish a single personal-use 720p link on a button.
+    """
+    out: list[dict[str, str]] = []
+    for value in re.findall(r'name="download-option"[^>]*value="([^"]+)"', html) + \
+            re.findall(r'value="([^"]+)"[^>]*name="download-option"', html):
+        path = value.replace("&amp;", "&")
+        m = re.search(r"type=([0-9a-zA-Z]+)", path)
+        out.append({"label": m.group(1).lower() if m else "", "path": path})
+    if not out:
+        for path in re.findall(r'data-download--button-modal-url-value="([^"]+)"', html):
+            title = re.search(r'download-title">([^<]*)<', html)
+            m = re.search(r"(\d{3,4}p)", title.group(1)) if title else None
+            out.append({"label": m.group(1).lower() if m else "", "path": path.replace("&amp;", "&")})
+    seen, uniq = set(), []
+    for r in out:
+        if r["path"] not in seen:
+            seen.add(r["path"])
+            uniq.append(r)
+    uniq.sort(key=lambda r: _RES_ORDER.get(r["label"], -1), reverse=True)
+    return uniq
+
+
+def parse_detail_offer(html: str) -> dict[str, Any]:
+    """Licence plus published download renditions of a clip detail page.
+
+    Returns ``{"license_key", "license_label", "renditions"}``; raises
+    ``ValueError`` when the page states no licence or publishes no rendition.
+    """
+    key = page_license(html)
+    if key is None:
+        raise ValueError("detail page publishes no licence for this clip")
+    renditions = detail_renditions(html)
+    if not renditions:
+        raise ValueError("detail page publishes no download rendition")
+    return {"license_key": key, "license_label": _LICENSE_LABELS[key], "renditions": renditions}
+
+
+def parse_modal_file_url(html: str) -> str:
+    """Read the file URL a Mixkit download modal publishes."""
+    m = re.search(r'data-download--modal-url-value="([^"]+)"', html)
+    if not m:
+        raise ValueError("download modal publishes no file URL")
+    return m.group(1)
+
+
 class MixkitSource:
     """Mixkit video adapter. Satisfies `StockSource`."""
 
@@ -108,7 +228,10 @@ class MixkitSource:
     priority = 19
     install_instructions = (
         "Mixkit works without an API key. Scrapes the Mixkit website. "
-        "Requires beautifulsoup4: pip install beautifulsoup4"
+        "Requires beautifulsoup4: pip install beautifulsoup4. "
+        "Licence varies per clip (Free vs Restricted = personal use only); "
+        "Restricted or unstated-licence clips are excluded unless "
+        "SearchFilters.require_commercial_use=False."
     )
     supports = {"video": True, "image": False}
 
@@ -126,17 +249,12 @@ class MixkitSource:
         kind = (filters.kind or "video").lower()
         if kind == "image":
             return []
+        require_commercial = getattr(filters, "require_commercial_use", True)
 
-        # Mixkit search URL pattern
         slug = query.lower().replace(" ", "-")
-        search_url = f"https://mixkit.co/free-stock-video/{slug}/"
-
+        search_url = f"{_SEARCH_URL}{slug}/"
         try:
-            r = requests.get(
-                search_url,
-                timeout=30,
-                headers={"User-Agent": "OpenMontage/1.0"},
-            )
+            r = requests.get(search_url, timeout=30, headers=_UA)
             r.raise_for_status()
         except Exception as e:
             # Contract: an empty list means "nothing matched", so a
@@ -144,24 +262,27 @@ class MixkitSource:
             _log.warning("Mixkit search failed: %s", e)
             raise
 
+        declared = listing_licenses(r.text)
         soup = BeautifulSoup(r.text, "html.parser")
         out: list[Candidate] = []
 
-        # Mixkit lists video cards with preview videos and download links
-        cards = soup.select(".item-grid__item, .video-item, article, [class*='VideoCard']")
-        for card in cards[:filters.per_page]:
+        cards = soup.select(".item-grid-card, .item-grid__item, .video-item, article, [class*='VideoCard']")
+        for card in cards:
+            if len(out) >= filters.per_page:
+                break
             link_el = card.select_one("a[href]")
             if not link_el:
                 continue
-
             href = link_el.get("href", "")
             if not href:
                 continue
             if not href.startswith("http"):
-                href = f"https://mixkit.co{href}"
-
-            # Skip non-video links
+                href = f"{_BASE}{href}"
             if "/free-stock-video/" not in href and "/video/" not in href:
+                continue
+
+            licence_key = declared.get(href.rstrip("/") + "/")
+            if licence_key == LICENSE_RESTRICTED and require_commercial:
                 continue
 
             title = ""
@@ -171,169 +292,150 @@ class MixkitSource:
             if not title:
                 title = link_el.get_text(strip=True)
 
-            # Thumbnail
             thumb = ""
             img_el = card.select_one("img")
             if img_el:
                 thumb = img_el.get("src", "") or img_el.get("data-src", "") or ""
 
-            # Video preview
             video_el = card.select_one("video source[src], video[src]")
-            preview_url = ""
-            if video_el:
-                preview_url = video_el.get("src", "") or ""
+            preview_url = video_el.get("src", "") if video_el else ""
 
-            # Extract ID from URL
-            clip_id = href.rstrip("/").rsplit("/", 1)[-1] if href else ""
-
-            out.append(
-                Candidate(
-                    source=self.name,
-                    source_id=f"mixkit_{clip_id}",
-                    source_url=href,
-                    download_url=href,  # Resolved in download()
-                    kind="video",
-                    width=0,
-                    height=0,
-                    duration=0.0,
-                    creator="Mixkit",
-                    license=_LICENSE,
-                    source_tags=f"{title} {query}",
-                    thumbnail_url=thumb,
-                    extra={
-                        "detail_url": href,
-                        "preview_url": preview_url,
-                    },
-                )
-            )
+            clip_id = href.rstrip("/").rsplit("/", 1)[-1]
+            out.append(self._candidate(href, clip_id, f"{title} {query}", licence_key, require_commercial,
+                                       thumb=thumb, preview_url=preview_url))
 
         if not out:
-            out = self._parse_json_ld(soup, query, filters)
+            out = self._parse_json_ld(r.text, query, filters, require_commercial)
         return out
 
-    def _parse_json_ld(self, soup, query: str, filters: SearchFilters) -> list[Candidate]:
+    def _parse_json_ld(self, html: str, query: str, filters: SearchFilters,
+                       require_commercial: bool) -> list[Candidate]:
         """Read results from the page's schema.org VideoObject entries.
 
-        Mixkit's current markup no longer exposes the card classes above, but
-        every result is still described in JSON-LD with a direct contentUrl.
+        Used when the listing exposes no result cards. Licence filtering and
+        labelling match the card path; the file is still resolved (and the
+        licence re-verified) from the detail page at download time.
         """
-        import json
-
         out: list[Candidate] = []
-        for script in soup.select('script[type="application/ld+json"]'):
-            try:
-                data = json.loads(script.string or "")
-            except (ValueError, TypeError):
+        for node in _json_ld_nodes(html):
+            if not _is_video_object(node):
                 continue
-            nodes = data.get("@graph", [data]) if isinstance(data, dict) else data
-            for node in nodes if isinstance(nodes, list) else []:
-                if not isinstance(node, dict) or node.get("@type") != "VideoObject":
-                    continue
-                content_url = node.get("contentUrl") or ""
-                if not content_url.lower().endswith(".mp4"):
-                    continue
-                href = (node.get("@id") or "").split("#", 1)[0]
-                clip_id = href.rstrip("/").rsplit("-", 1)[-1] if href else content_url
-                out.append(
-                    Candidate(
-                        source=self.name,
-                        source_id=f"mixkit_{clip_id}",
-                        source_url=href or content_url,
-                        download_url=content_url,
-                        kind="video",
-                        # Only trust declared dimensions; the "-1080" filename suffix
-                        # says nothing about orientation. 0 = unknown until probed.
-                        width=_ld_dimension(node.get("width")),
-                        height=_ld_dimension(node.get("height")),
-                        duration=0.0,
-                        creator="Mixkit",
-                        license=_LICENSE,
-                        source_tags=f"{node.get('name', '')} {node.get('description', '')} {query}".strip(),
-                        thumbnail_url=node.get("thumbnailUrl", ""),
-                        extra={"detail_url": content_url, "preview_url": node.get("embedUrl", "")},
-                    )
-                )
-                if len(out) >= filters.per_page:
-                    return out
+            content_url = node.get("contentUrl") or ""
+            if not isinstance(content_url, str) or not content_url.lower().endswith(".mp4"):
+                continue
+            licence_key = _node_license(node)
+            if licence_key == LICENSE_RESTRICTED and require_commercial:
+                continue
+            href = (node.get("@id") or "").split("#", 1)[0]
+            clip_id = href.rstrip("/").rsplit("-", 1)[-1] if href else content_url
+            out.append(self._candidate(
+                href or content_url, clip_id,
+                f"{node.get('name', '')} {node.get('description', '')} {query}".strip(),
+                licence_key, require_commercial,
+                thumb=node.get("thumbnailUrl", ""), preview_url=node.get("embedUrl", ""),
+                # Only trust declared dimensions; the "-1080" filename suffix
+                # says nothing about orientation. 0 = unknown until probed.
+                width=_ld_dimension(node.get("width")), height=_ld_dimension(node.get("height")),
+            ))
+            if len(out) >= filters.per_page:
+                break
         return out
 
-    def download(self, candidate: Candidate, out_path: Path) -> Path:
-        """Download by resolving the detail page for the actual download URL."""
-        import requests
+    def _candidate(self, href: str, clip_id: str, tags: str, licence_key: Optional[str],
+                   require_commercial: bool, *, thumb: str = "", preview_url: str = "",
+                   width: int = 0, height: int = 0) -> Candidate:
+        return Candidate(
+            source=self.name,
+            source_id=f"mixkit_{clip_id}",
+            source_url=href,
+            download_url=href,  # resolved from the detail page in download()
+            kind="video",
+            width=width,
+            height=height,
+            creator="Mixkit",
+            license=_LICENSE_LABELS.get(licence_key, _UNRESOLVED),
+            source_tags=tags,
+            thumbnail_url=thumb,
+            extra={
+                "detail_url": href,
+                "preview_url": preview_url,
+                "listing_license": licence_key,
+                "require_commercial_use": require_commercial,
+            },
+        )
+
+    def _published_files(self, detail_html: str) -> list[dict[str, str]]:
+        """Files the detail page publishes, best first: download renditions (via
+        their modal), then the JSON-LD contentUrl, then the <video> source."""
         from bs4 import BeautifulSoup
+
+        files = [{"label": r["label"], "modal": r["path"]} for r in detail_renditions(detail_html)]
+        content_url = _content_url_from_json_ld(detail_html)
+        if content_url:
+            files.append({"label": "json-ld contentUrl", "url": content_url})
+        soup = BeautifulSoup(detail_html, "html.parser")
+        for el in soup.select("video source[src], video[src]"):
+            src = el.get("src", "")
+            if src and any(ext in src.lower() for ext in (".mp4", ".mov")):
+                files.append({"label": "video src", "url": src if src.startswith("http") else f"{_BASE}{src}"})
+                break
+        return files
+
+    def download(self, candidate: Candidate, out_path: Path) -> Path:
+        """Verify the clip's licence on its detail page, then fetch a file it publishes."""
+        import requests
 
         out_path = Path(out_path)
         out_path.parent.mkdir(parents=True, exist_ok=True)
+        detail_url = candidate.extra.get("detail_url") or candidate.source_url
+        require_commercial = candidate.extra.get("require_commercial_use", True)
 
-        detail_url = candidate.extra.get("detail_url", candidate.download_url)
+        r = requests.get(detail_url, timeout=30, headers=_UA)
+        r.raise_for_status()
+        html = r.text
 
-        # Direct media URL
-        if any(detail_url.lower().endswith(ext) for ext in (".mp4", ".mov", ".webm")):
-            return self._stream_download(detail_url, out_path)
+        files = self._published_files(html)
+        if not files:
+            raise RuntimeError(f"Mixkit download failed for {detail_url}: Could not find download URL on Mixkit page")
 
-        try:
-            r = requests.get(
-                detail_url, timeout=30,
-                headers={"User-Agent": "OpenMontage/1.0"},
-            )
-            r.raise_for_status()
-            soup = BeautifulSoup(r.text, "html.parser")
+        licence_key = page_license(html)
+        if require_commercial and licence_key != LICENSE_FREE:
+            why = ("is published under the Mixkit Restricted License (personal use only)"
+                   if licence_key == LICENSE_RESTRICTED else "does not state its licence")
+            raise MixkitLicenseError(f"{detail_url} {why}; excluded because commercial use is required")
 
-            # Structured metadata first: the JSON-LD VideoObject names the
-            # file outright, so it is the only signal here that does not
-            # depend on Mixkit's current class names or player markup
-            download_url = _content_url_from_json_ld(r.text) or None
-
-            # Look for download button/link
-            if not download_url:
-                for a in soup.select("a[href]"):
-                    href = a.get("href", "")
-                    text = (a.get_text(strip=True) or "").lower()
-                    classes = " ".join(a.get("class", []))
-                    if "download" in text or "download" in classes:
-                        if href and any(ext in href.lower() for ext in [".mp4", ".mov", ".webm"]):
-                            download_url = href
-                            break
-                        elif href and "/download/" in href:
-                            download_url = href
-                            break
-
-            # Look for video source tags. Mixkit now puts `src` on the
-            # <video> element itself rather than a nested <source>, so match
-            # both shapes — same selector `search()` already uses
-            if not download_url:
-                for source in soup.select("video source[src], video[src]"):
-                    src = source.get("src", "")
-                    if src and any(ext in src.lower() for ext in [".mp4", ".mov"]):
-                        download_url = src
-                        break
-
-            # Look for data attributes with video URLs
-            if not download_url:
-                for el in soup.select("[data-video-url], [data-download-url], [data-src]"):
-                    url = el.get("data-video-url") or el.get("data-download-url") or el.get("data-src") or ""
-                    if url and any(ext in url.lower() for ext in [".mp4", ".mov"]):
-                        download_url = url
-                        break
-
-            if not download_url:
-                raise ValueError(f"Could not find download URL on Mixkit page: {detail_url}")
-
-            if not download_url.startswith("http"):
-                download_url = f"https://mixkit.co{download_url}"
-
-            return self._stream_download(download_url, out_path)
-
-        except Exception as e:
-            raise RuntimeError(f"Mixkit download failed for {detail_url}: {e}") from e
+        errors: list[str] = []
+        for item in files:
+            try:
+                file_url = item.get("url")
+                if not file_url:
+                    modal = item["modal"] if item["modal"].startswith("http") else f"{_BASE}{item['modal']}"
+                    m = requests.get(modal, timeout=30, headers=_UA)
+                    m.raise_for_status()
+                    file_url = parse_modal_file_url(m.text)
+                self._stream_download(file_url, out_path)
+            except Exception as e:  # try the next file the page publishes
+                errors.append(f"{item['label'] or '?'}: {e}")
+                continue
+            label = _LICENSE_LABELS.get(licence_key, _UNRESOLVED)
+            candidate.download_url = file_url
+            candidate.license = label
+            candidate.extra["license_evidence"] = {
+                "license_key": licence_key,
+                "license_label": label,
+                "detail_url": detail_url,
+                "rendition": item["label"],
+                "file_url": file_url,
+                "license_terms_url": f"{_BASE}/license/#{licence_key}" if licence_key else f"{_BASE}/license/",
+                "verified_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            }
+            return out_path
+        raise RuntimeError(f"Mixkit download failed for {detail_url}: " + "; ".join(errors))
 
     def _stream_download(self, url: str, out_path: Path) -> Path:
         import requests
 
-        with requests.get(
-            url, stream=True, timeout=120,
-            headers={"User-Agent": "OpenMontage/1.0"},
-        ) as r:
+        with requests.get(url, stream=True, timeout=120, headers=_UA) as r:
             r.raise_for_status()
             with open(out_path, "wb") as f:
                 for chunk in r.iter_content(chunk_size=1 << 16):

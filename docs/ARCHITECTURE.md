@@ -33,7 +33,7 @@ Final video output
 ```
 OpenMontage/
 ├── lib/                    # Core runtime infrastructure (Python)
-│   ├── config_model.py     # Pydantic config: LLM, budget, checkpoint, output, paths
+│   ├── config_model.py     # Pydantic config: LLM, budget, checkpoint, output
 │   ├── checkpoint.py       # Pipeline state persistence & stage transitions
 │   ├── pipeline_loader.py  # YAML manifest loading & validation
 │   ├── media_profiles.py   # Platform-specific render profiles (YouTube, TikTok, etc.)
@@ -191,8 +191,10 @@ default_checkpoint_policy: guided
 orchestration:
   mode: executive-producer
   skill: pipelines/explainer/executive-producer
-  budget_default_usd: 2.00
-  max_revisions_per_stage: 3
+  budget_default_usd: 2.00       # the run's default budget (tools.cost_tracker.resolve_budget_usd)
+  max_revisions_per_stage: 3     # the executive-producer skill reads these three limits
+  max_send_backs: 3
+  max_wall_time_minutes: 20
 
 compatible_playbooks:
   - clean-professional
@@ -203,7 +205,7 @@ stages:
     skill: pipelines/explainer/research-director
     produces: [research_brief]
     tools_available: []
-    checkpoint_required: false
+    checkpoint_required: true
     human_approval_default: false
     review_focus: [...]
     success_criteria: [...]
@@ -252,7 +254,7 @@ Specialized pipelines may insert domain-specific stages. For example,
 
 ## Checkpoint System
 
-Checkpoints persist pipeline state as JSON in the project's `pipeline/` directory.
+Checkpoints persist pipeline state as JSON in the project workspace: `projects/<project_id>/checkpoint_<stage>.json`.
 
 ```json
 {
@@ -272,12 +274,16 @@ Checkpoints persist pipeline state as JSON in the project's `pipeline/` director
 
 **Status values:** `pending` | `in_progress` | `awaiting_human` | `completed` | `failed`
 
-**Checkpoint policies:**
-- `guided` — checkpoint at key creative stages, auto-proceed on mechanical ones
-- `manual_all` — human approval at every stage
-- `auto_noncreative` — auto-proceed unless stage is creative (assets, edit)
+**Checkpoint policies** (`lib.checkpoint.resolve_checkpoint_policy` — the strictest of the caller's argument, `checkpoint.policy` in `config.yaml`, and the manifest's `default_checkpoint_policy`):
+- `guided` — stop for approval at the stages the manifest gates (`human_approval_default: true`)
+- `manual_all` — stop for approval at every stage; set it in `config.yaml` to gate every pipeline
+- `auto_noncreative` — accepted, but a manifest gate is binding, so it cannot skip one and behaves as `guided`
 
-**Functions:** `write_checkpoint()`, `read_checkpoint()`, `get_latest_checkpoint()`, `get_completed_stages()`, `get_next_stage()`
+**Functions:** `write_checkpoint()`, `read_checkpoint()`, `get_latest_checkpoint()`, `get_completed_stages()`, `get_next_stage()`, `get_stale_stages()`, `get_unreviewed_stages()`, `append_decisions()`, `read_decision_log()`, `decision_log_drift()`
+
+**What `write_checkpoint` fills in by itself:** the checkpoint policy (above); `cost_snapshot` from the spend the tools reported (`tools.cost_tracker.project_cost_snapshot`); `review` from the `awaiting_human` checkpoint being approved (marked `carried_from`); and any decision that was saved to `artifacts/decision_log.json` instead of the project decision log. A stage written `completed`/`awaiting_human` with no review is logged, shows on the board as `NO REVIEW`, and is listed by `get_unreviewed_stages()`.
+
+**One decision log:** `projects/<project_id>/decision_log.json`. Decisions reach it through a checkpoint's `decision_log` artifact or `append_decisions()`. A stage that the manifest adds beyond the nine canonical ones (`character_design`, `rig_plan`) must hand over the first artifact of its `produces` list, the same way a canonical stage hands over its canonical artifact.
 
 ### Canonical Artifacts (20 schemas in `schemas/artifacts/`, all JSON-schema validated)
 
@@ -313,12 +319,37 @@ The `CostTracker` enforces spending controls across the pipeline.
 ### Lifecycle
 
 ```
+tracker = CostTracker.for_project(PROJECTS_DIR / project_id)   # one budget (below), projects/<id>/cost_log.json
+        |
 estimate(tool, operation, $) → entry_id
         |
-reserve(entry_id)          # locks budget
+reserve(entry_id)          # locks budget; raises ApprovalRequiredError when the user must be asked first
+reserve(entry_id, approved=True)   # ...then this, once the user has approved that action
         |
 reconcile(entry_id, $)     # records actual spend
 ```
+
+Spend is recorded even when nobody runs that lifecycle:
+
+- Every tool call reports its cost into `projects/<id>/events.jsonl` (the `BaseTool` instrumentation). `CostTracker.sync_tool_events()` turns those reports into ledger entries, keyed by `call_id`, and matches a call that was also reconciled by hand instead of counting it twice.
+- `write_checkpoint` calls `project_cost_snapshot()` when no `cost_snapshot` is passed, so every checkpoint carries the recorded spend. Pass an explicit snapshot only to override it.
+- Cost no tool reports — rented GPU time, a licence — goes in through `record_rental()` / `record_spend()`, or from the shell:
+
+```bash
+python -m tools.cost_tracker record <project-id> --tool vastai_gpu --hours 0.52 --rate 0.40 --details "assets stage"
+python -m tools.cost_tracker budget <project-id> --usd 0.64      # the amount approved at proposal
+python -m tools.cost_tracker show   <project-id>
+```
+
+### One budget
+
+`tools.cost_tracker.resolve_budget_usd()` is the only place a run's budget is decided:
+
+1. the amount the user approved at proposal (`proposal_packet.approval.approved_budget_usd` → `set_budget()`);
+2. else the pipeline's `orchestration.budget_default_usd`, capped by `budget.total_usd` in `config.yaml`;
+3. else `budget.total_usd`.
+
+The source is stored in the cost log (`metadata.budget_source`).
 
 ### Budget Modes
 
@@ -326,14 +357,15 @@ reconcile(entry_id, $)     # records actual spend
 |------|----------|
 | `observe` | Track costs, no enforcement |
 | `warn` | Log warnings on overruns, allow execution |
-| `cap` | Reject operations that exceed remaining budget |
+| `cap` | Reject operations that exceed remaining budget — in `reserve()`, and in the tool layer itself: a paid call attributed to a project that does not fit in what is left returns `BUDGET CAP` without reaching the provider |
 
 ### Controls
-- **Total budget** (default: $10.00)
+- **Total budget** — see "One budget" above (`config.yaml` ceiling: $10.00)
 - **Reserve holdback** (default: 10%) — kept as safety margin
 - **Single-action approval threshold** (default: $0.50) — pause for approval above this
 - **New paid tool approval** — first-time use of any paid tool requires confirmation
-- Persists to `cost_log.json` per project
+- Persists to `cost_log.json` per project (written atomically; schema: `schemas/artifacts/cost_log.schema.json`)
+- The log's recorded budget is authoritative once it exists — change it with `set_budget()`, not the constructor
 
 ---
 
@@ -377,8 +409,7 @@ budget:
   single_action_approval_usd: 0.50
 
 checkpoint:
-  policy: guided
-  storage_dir: pipeline
+  policy: guided          # guided | manual_all
 
 output:
   default_format: mp4
@@ -387,13 +418,6 @@ output:
   default_resolution: 1920x1080
   default_fps: 30
   default_crf: 23
-
-paths:
-  pipeline_dir: pipeline
-  library_dir: library
-  styles_dir: styles
-  skills_dir: skills
-  output_dir: output
 ```
 
 All config is validated via Pydantic models in `lib/config_model.py`.

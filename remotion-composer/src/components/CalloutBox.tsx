@@ -5,6 +5,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { parseCalloutText } from "../lib/calloutText";
 
 type CalloutType = "info" | "warning" | "tip" | "quote";
 
@@ -201,9 +202,23 @@ export const CalloutBox: React.FC<CalloutBoxProps> = ({
                 fontSize,
                 color: textColor,
                 lineHeight: 1.6,
+                display: "flex",
+                flexDirection: "column",
+                gap: Math.round(fontSize * 0.3),
               }}
             >
-              {text}
+              {parseCalloutText(text).map((line, i) =>
+                line.kind === "bullet" ? (
+                  <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 16 }}>
+                    <span style={{ color: resolvedBorder, fontWeight: 700, flexShrink: 0 }}>
+                      {"•"}
+                    </span>
+                    <span>{line.text}</span>
+                  </div>
+                ) : (
+                  <div key={i}>{line.text}</div>
+                ),
+              )}
             </div>
           </div>
         </div>

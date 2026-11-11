@@ -160,7 +160,7 @@ Stage director skills teach the agent HOW to execute each pipeline stage. Each s
 | Compose Director | `pipelines/explainer/compose-director.md` | `compose` | FFmpeg/Remotion render, audio mixing |
 | Publish Director | `pipelines/explainer/publish-director.md` | `publish` | SEO metadata, chapters, export packaging |
 
-> **Note:** The old `idea-director.md` still exists for reference but is superseded by the research + proposal two-stage flow in v2.0. The talking-head pipeline continues to use its own `idea-director`.
+> **Note:** This pipeline has no `idea` stage. `pipelines/explainer/idea-director.md` is only a superseded stub that points to `proposal-director.md`; do not use it. Pipelines whose manifest has an `idea` stage (talking-head, screen-demo, clip-factory, podcast-repurpose, hybrid, avatar-spokesperson, localization-dub, documentary-montage) keep their own `idea-director`.
 
 ### Talking Head Pipeline (`pipelines/talking-head/`)
 
@@ -217,14 +217,17 @@ Stage director skills teach the agent HOW to execute each pipeline stage. Each s
 
 | Skill | File | Stage | Key Capabilities |
 |-------|------|-------|-----------------|
-| **Executive Producer** | `pipelines/cinematic/executive-producer.md` | `all` | **7-stage serial orchestration, emotional pacing gates, color consistency, audio dynamics** |
-| Idea Director | `pipelines/cinematic/idea-director.md` | `idea` | Emotional arc selection, source truth, delivery-shape planning |
+| **Executive Producer** | `pipelines/cinematic/executive-producer.md` | `all` | **8-stage serial orchestration, emotional pacing gates, color consistency, audio dynamics** |
+| **Research Director** | `pipelines/cinematic/research-director.md` | `research` | **Visual reference mining, mood and emotional language, sound/music landscape, motion precedents** |
+| **Proposal Director** | `pipelines/cinematic/proposal-director.md` | `proposal` | **Concept directions from research, renderer family + runtime selection, cost estimate, approval gate** |
 | Script Director | `pipelines/cinematic/script-director.md` | `script` | Beat mapping, dialogue selects, title-card restraint |
 | Scene Director | `pipelines/cinematic/scene-director.md` | `scene_plan` | Hero-frame planning, reveal structure, transition limits |
 | Asset Director | `pipelines/cinematic/asset-director.md` | `assets` | Source selects, support-insert discipline, music/ambience planning |
 | Edit Director | `pipelines/cinematic/edit-director.md` | `edit` | Emotion-first pacing, reveal timing, audio-driven rhythm |
 | Compose Director | `pipelines/cinematic/compose-director.md` | `compose` | Grade and mix finishing, frame-treatment judgment |
 | Publish Director | `pipelines/cinematic/publish-director.md` | `publish` | Hero vs teaser packaging, poster-frame concepts |
+
+> **Note:** This pipeline has no `idea` stage. `pipelines/cinematic/idea-director.md` is only a superseded stub that points to `proposal-director.md`; do not use it.
 
 ### Animation Pipeline (`pipelines/animation/`) — v2.0
 
@@ -240,7 +243,7 @@ Stage director skills teach the agent HOW to execute each pipeline stage. Each s
 | Compose Director | `pipelines/animation/compose-director.md` | `compose` | Sharp render output, timing integrity, safe-zone checks |
 | Publish Director | `pipelines/animation/publish-director.md` | `publish` | Animation-mode packaging, thumbnail-system alignment |
 
-> **Note:** The old `idea-director.md` still exists for reference but is superseded by the research + proposal two-stage flow in v2.0.
+> **Note:** This pipeline has no `idea` stage. `pipelines/animation/idea-director.md` is only a superseded stub that points to `proposal-director.md`; do not use it.
 
 ### Hybrid Pipeline (`pipelines/hybrid/`) — v2.0
 
@@ -327,7 +330,7 @@ Load via `styles/playbook_loader.py`: `load_playbook("clean-professional")`. `li
 ## Installed Agent Skills (Layer 3)
 
 All agent skills live in `.agents/skills/` and are managed via `npx skills add`.
-`ls .agents/skills` is the authoritative list (92 skill directories as of 2026-10-25); the table below groups them by what they are for.
+`ls .agents/skills` is the authoritative list (93 directories as of 2026-11-11: 92 with a `SKILL.md`, plus the README-only `gsap` router); the table below groups them by what they are for.
 Claude Code accesses them via symlinks in `.claude/skills/`.
 
 | Category | Installed Skills | Source |
@@ -348,6 +351,6 @@ Claude Code accesses them via symlinks in `.claude/skills/`.
 | **Animation (GSAP)** | `gsap` (router), `gsap-core`, `gsap-timeline`, `gsap-plugins`, `gsap-utils`, `gsap-react`, `gsap-performance`, `gsap-scrolltrigger`, `gsap-frameworks` | See each skill's `SKILL.md` |
 | **Character Animation** | `character-rigging`, `svg-character-animation`, `pose-library-design`, `canvas-procedural-animation`, `character-animation-qa` | Local OpenMontage skill |
 | **3D Assets** | `3d-asset-generation`, `atlas-cloud` | Local OpenMontage skill |
-| **Providers (video / image / TTS / music)** | `gemini-omni`, `minimax-h3`, `comfyui`, `dashscope`, `doubao-tts`, `azure-text-to-speech`, `lyria` | Local OpenMontage skill; see each skill's `SKILL.md` |
+| **Providers (video / image / TTS / music)** | `gemini-omni`, `minimax-h3`, `pika-h3-flex`, `comfyui`, `dashscope`, `doubao-tts`, `azure-text-to-speech`, `lyria` | Local OpenMontage skill; see each skill's `SKILL.md` |
 | **Screen Capture** | `synthetic-screen-recording` (Remotion TerminalScene demos) | Local OpenMontage skill |
 | **Maintenance** | `provider-model-refresh`, `provider-refresh-oct23` (provider/model refresh procedures) | Local OpenMontage skill |

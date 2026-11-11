@@ -11,14 +11,14 @@ Before any other work, read `edit_decisions.render_runtime`. It was locked at pr
 - **`render_runtime="hyperframes"`** — HTML/CSS/GSAP render. Do NOT follow the Remotion-specific sections below (public/ staging, Remotion composition JSON). Instead:
   1. Read `skills/core/hyperframes.md` for the full routing model.
   2. Read `.agents/skills/hyperframes/SKILL.md` and `.agents/skills/hyperframes-cli/SKILL.md` for authoring contract and CLI usage.
-  3. Call `video_compose` with `edit_decisions.render_runtime="hyperframes"` — it delegates to `hyperframes_compose`, which owns workspace materialization under `projects/<name>/hyperframes/`, runs `hyperframes check → render`, and returns the MP4 path.
-  4. `hyperframes check` MUST pass before render. It unifies lint, runtime, layout, motion, and WCAG contrast checks; contrast can be deferred with `skip_contrast=true` during iteration but not for final delivery.
+  3. Call `video_compose` with `edit_decisions.render_runtime="hyperframes"` — it delegates to `hyperframes_compose`, which owns workspace materialization under `projects/<name>/hyperframes/` and returns the MP4 path.
+  4. **HyperFrames gate (what `hyperframes_compose` actually runs):** a templated workspace (scaffolded from `edit_decisions`) goes `lint → validate → render`; a `validate` failure always blocks the render, but `lint` findings block it only with `strict: true` — otherwise they are logged under `steps.lint` and the render continues, so pass `strict: true` on the final render. An authored (atelier) workspace (`composition_mode: "atelier"`) goes `hyperframes check → render --strict` instead, and `check` must pass. `skip_contrast: true` is for iteration only, never for final delivery.
 - **`render_runtime="ffmpeg"`** — simple concat/trim with no composition. Call `video_compose` directly; it will not auto-upgrade to Remotion.
 - **Runtime unavailable** — do NOT silently swap to a different engine. Surface the blocker to the user per AGENT_GUIDE.md > "Escalate Blockers Explicitly" and wait for approval (recorded as a `render_runtime_selection` decision in decision_log) before switching.
 
 The post-render self-review (final_review) is identical across runtimes — same ffprobe probe, frame sampling, audio spotcheck, and promise preservation checks. `final_review.checks.promise_preservation.render_runtime_used` must equal the runtime that actually ran.
 
-**Pass `proposal_packet` to `video_compose.execute()`** when you invoke it. That lets the tool directly compare the proposal-locked runtime against the runtime recorded in `edit_decisions` and flip `runtime_swap_detected=true` if they diverge. Without it, the check is `skipped` and the reviewer skill has to catch swaps via cross-artifact comparison instead.
+**Pass `proposal_packet` to `video_compose.execute()`** when you invoke it. That lets the tool directly compare the proposal-locked runtime against the runtime recorded in `edit_decisions` and flip `runtime_swap_detected=true` if they diverge. Without it the tool falls back to `edit_decisions.metadata.proposal_render_runtime` (the edit stage copies it there); only when both are missing is the check `skipped`, and the reviewer skill has to catch swaps via cross-artifact comparison instead.
 
 ## Prerequisites
 
@@ -34,29 +34,15 @@ The post-render self-review (final_review) is identical across runtimes — same
 
 ## Process
 
-### 1. Ensure Assets Are in Remotion's Public Directory
+### 1. Reference Assets by Their Real Paths
 
-**CRITICAL:** Remotion can only access files via `staticFile()`, which resolves from `remotion-composer/public/`. Generated images and music files MUST be copied or symlinked into this directory before rendering.
+Remotion reads files through `staticFile()`, which resolves from its public dir. You do not copy anything there yourself: `video_compose` (`operation: "render"`) copies every existing file named by `source`, `src`, `images`, `backgroundImage` or `backgroundVideo` into a per-render public dir and rewrites the reference. Give those keys the real paths, e.g. `projects/<name>/assets/images/scene1-a.png` (repo-relative or absolute). A path that is not an existing file is treated as relative to `remotion-composer/public/`.
 
-```
-Project structure:
-  projects/<name>/assets/images/*.png     ← where images were generated
-  remotion-composer/public/<name>/*.png   ← where Remotion reads them
-
-Required: Copy or symlink images AND music into public/<project-name>/
-```
-
-Image paths in the composition JSON are relative to `remotion-composer/public/`:
-```json
-"images": ["deep-ocean/scene1-a.png", "deep-ocean/scene1-b.png"]
-"src": "deep-ocean/ambient-music.mp3"
-```
-
-**If you skip this step, the render will fail with missing file errors or produce black frames.**
+**A path that exists nowhere renders as a missing file or a black frame.**
 
 ### 2. Build the Composition JSON (image_animation approach)
 
-For `anime_scene` compositions, build a JSON file at `remotion-composer/public/demo-props/<name>.json`.
+For `anime_scene` compositions, build a JSON file at `projects/<name>/artifacts/remotion_composition.json`. This is the Remotion composition object described in `skills/core/remotion.md` ("Flat props format"): it carries the Remotion-only fields (`type`, `images`, `particles`, Remotion `overlays`, `audio.music.src`) that the closed `edit_decisions` schema rejects. The canonical `edit_decisions` artifact is not modified — it keeps schema fields only.
 
 **Required structure:**
 
@@ -69,7 +55,7 @@ For `anime_scene` compositions, build a JSON file at `remotion-composer/public/d
       "in_seconds": 0,
       "out_seconds": 5,
       "type": "anime_scene",
-      "images": ["<project>/<image-a>.png", "<project>/<image-b>.png"],
+      "images": ["projects/<project>/assets/images/<image-a>.png", "projects/<project>/assets/images/<image-b>.png"],
       "animation": "<camera-motion>",
       "particles": "<particle-type>",
       "particleColor": "#HEXCOLOR",
@@ -82,7 +68,7 @@ For `anime_scene` compositions, build a JSON file at `remotion-composer/public/d
     }
   ],
   "overlays": [...],
-  "audio": { "music": { "src": "<project>/music.mp3", "volume": 0.15, "fadeInSeconds": 2, "fadeOutSeconds": 3 } }
+  "audio": { "music": { "src": "projects/<project>/assets/music/music.mp3", "volume": 0.15, "fadeInSeconds": 2, "fadeOutSeconds": 3 } }
 }
 ```
 
@@ -91,7 +77,7 @@ For `anime_scene` compositions, build a JSON file at `remotion-composer/public/d
 | JSON Field | Type | Values | Required |
 |------------|------|--------|----------|
 | `type` | string | `"anime_scene"` | YES |
-| `images` | string[] | 1-4 image paths relative to `public/` | YES |
+| `images` | string[] | 1-4 image paths (real file paths; see section 1) | YES |
 | `animation` | string | `zoom-in`, `zoom-out`, `pan-left`, `pan-right`, `ken-burns`, `drift-up`, `drift-down`, `parallax`, `static` | No (default: `ken-burns`) |
 | `particles` | string | `fireflies`, `petals`, `sparkles`, `mist`, `light-rays` | No |
 | `particleColor` | string | Hex color | No (default: `#FFE082`) |
@@ -144,6 +130,11 @@ This tool:
 
 **If the tool says `needs_loop: true`:** set `"loop": true` in the composition JSON. Remotion will loop the audio seamlessly with the volume fade resetting per loop.
 
+**Music under narration.** The `Explainer` composition plays `audio.music` at one flat `volume` (with the fades) and never ducks; `audio_mixer` is the only tool that ducks. Follow `edit_decisions.metadata.audio_mix_plan`:
+
+- `premix` — run `audio_mixer` with `operation: "full_mix"`: each narration take as a `role: "speech"` track with its `start_seconds`, the music as a `role: "music"` track, `ducking: {"enabled": true, "music_volume_during_speech": 0.15}`, `target_duration` set to the video length, `normalize: true`. Put the mixed file in the composition JSON as `audio.narration.src` (volume 1) and leave `audio.music` out, so the bed is not played twice. `audio_mixer` has no in-point or loop option (`target_duration` only pads with silence or trims), so apply the recommended offset — and any looping — to the music file with FFmpeg before mixing (e.g. `ffmpeg -ss <offset> -i music.mp3 music_from_offset.wav`).
+- `flat` (or a music-only piece) — keep the `audio.music` block above with `volume` at 0.08–0.12 when narration plays over it.
+
 ### 4. Pre-Render Validation (MANDATORY — NO EXCEPTIONS)
 
 Run `composition_validator` before every render:
@@ -151,16 +142,18 @@ Run `composition_validator` before every render:
 ```python
 from tools.analysis.composition_validator import CompositionValidator
 result = CompositionValidator().execute({
-    "composition_path": "remotion-composer/public/demo-props/<name>.json",
+    "composition_path": "projects/<name>/artifacts/remotion_composition.json",
     "assets_root": "remotion-composer/public",
 })
 # result.data["valid"] MUST be True before proceeding
 ```
 
 This catches:
-- Missing image/audio files that would cause black frames or render errors
+- Missing files named by `cuts[].source`, `cuts[].backgroundImage`, `audio.narration.src`, and `audio.music.src`
 - Invalid cut timings (out ≤ in)
-- Audio longer than video duration
+- Narration longer than the video (music shorter than the video is only a warning)
+
+It does **not** check `anime_scene` images: those cuts carry `"source": ""` and list their files in `images[]`, which the validator never reads. Before rendering, confirm every `images[]` path exists yourself (e.g. a short loop over the composition JSON with `Path(...).exists()`) — a missing image renders as a black frame, not an error.
 
 **If validation fails, fix the issue BEFORE rendering. Do not render an invalid composition.**
 
@@ -174,15 +167,21 @@ Animation often fails on export through soft text, muddy thin lines, or cramped 
 
 ### 7. Render
 
-```bash
-cd remotion-composer
-npx remotion render Explainer \
-  --props="public/demo-props/<name>.json" \
-  --output="<output-path>/final.mp4" \
-  --codec=h264 --crf=18
-```
+Do not shell out to `npx remotion render`: call `video_compose` (`skills/core/remotion.md`, "Render Invocation"). It stages the media, runs the render and returns the `final_review`.
 
-**Note:** The composition name is `Explainer` (not `ExplainerVideo`). Do NOT specify `src/index.ts` as entry point — Remotion auto-discovers it.
+```
+{
+  "operation": "render",
+  "edit_decisions": <the remotion_composition.json object from section 2>,
+  "asset_manifest": <asset_manifest artifact>,
+  "proposal_packet": <proposal_packet artifact>,
+  "scene_plan": <scene_plan.scenes — the list>,
+  "profile": "youtube_landscape",
+  "output_path": "projects/<name>/renders/final.mp4",
+  "narration_transcript_path": "<word-level transcript JSON from transcriber>",
+  "script_text": "<the narration script>"
+}
+```
 
 ### 8. Post-Render Self-Review (MANDATORY)
 
@@ -224,10 +223,10 @@ Recommended metadata keys:
 
 ## Common Pitfalls
 
-- **Forgetting to copy assets to `remotion-composer/public/`** — the #1 cause of render failures. Images generate to `projects/<name>/assets/` but Remotion reads from `public/`.
+- **Naming a file that does not exist** — the #1 cause of render failures. `video_compose` stages only files that exist at the path given (section 1).
 - Soft or aliased text after rendering.
 - Compression choices that damage diagrams.
 - Scene cadence changing between preview and final.
-- **Skipping `composition_validator`** — catches missing files, bad timings, audio mismatches before you waste render time.
+- **Skipping `composition_validator`** — catches missing `source`/`backgroundImage`/audio files, bad timings, and narration overrun before you waste render time. It does not look at `images[]`, so check `anime_scene` image paths yourself.
 - **Not extracting frames for self-review** — a rendered video is not "done" until frames are visually inspected. Black frames, missing particles, or invisible images are not always obvious from file size alone.
 - **Using `durationInFrames` from `useVideoConfig()` for scene-level timing** — this returns the FULL composition duration, not the scene's Sequence duration. See `skills/core/remotion.md` Critical Constraints.

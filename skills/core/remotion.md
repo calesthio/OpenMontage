@@ -15,17 +15,24 @@ stages, how artifacts flow in, and how renders are triggered.
 
 ## Remotion-First Routing
 
-**Remotion is the DEFAULT composition engine for ALL final renders when available.**
-It handles video clips (via `<OffthreadVideo>`), still images, animated scenes,
-component types, transitions, and mixed content — all in a single React-based
-render pass.
+**When `render_runtime == "remotion"` is the runtime locked at proposal, Remotion
+composes the whole final render.** It handles video clips (via `<OffthreadVideo>`),
+still images, animated scenes, component types, transitions, and mixed content —
+all in a single React-based render pass.
 
-FFmpeg is the **fallback** — used only when Remotion is unavailable, or for
-simple standalone operations that don't benefit from React rendering.
+Remotion is not a machine-wide default. `render_runtime` (`remotion` / `hyperframes` /
+`ffmpeg`) is chosen with the user at proposal — `AGENT_GUIDE.md` → "Present Both
+Composition Runtimes (HARD RULE)" — and `video_compose` rejects `operation='render'`
+when `edit_decisions.render_runtime` is empty. Everything below applies inside a
+Remotion-locked run.
 
-| Use Case | Backend | Why |
+FFmpeg is for simple standalone operations that don't benefit from React rendering
+(and for a whole render only when `render_runtime == "ffmpeg"` is the approved runtime).
+It is **not** a fallback for a Remotion-locked run.
+
+| Use Case (`render_runtime == "remotion"`) | Backend | Why |
 |----------|---------|-----|
-| Final video render (any content type) | **Remotion** | Default for all compositions |
+| Final video render (any content type) | **Remotion** | The locked runtime composes everything |
 | Video clips + animated stills + text cards | **Remotion** | Mixed content in one pass |
 | Video-only cuts with transitions | **Remotion** | Native `<OffthreadVideo>` + transitions |
 | Animated diagrams/text cards | **Remotion** | Frame-by-frame control |
@@ -35,17 +42,31 @@ simple standalone operations that don't benefit from React rendering.
 | Simple trim, concat (no composition) | FFmpeg | Instant, no Node dependency |
 | Subtitle burn-in (standalone, post-hoc) | FFmpeg | Only for adding subs to an already-rendered video without re-rendering |
 | Face enhance, color grade | FFmpeg | Filter-based, deterministic |
-| Remotion unavailable | FFmpeg | Automatic fallback |
+| Remotion unavailable | **None — blocker** | Escalate; never swap runtime silently (see the note below) |
 
-**Note:** The `render` operation auto-routes to Remotion by default. FFmpeg is
-only selected when Remotion is not installed or the agent explicitly calls
-`operation='compose'` for standalone operations. The agent can also write custom
+**Note:** With `render_runtime == "remotion"`, the `render` operation routes to
+Remotion. FFmpeg is the agent's explicit choice only: `operation='compose'` for
+standalone operations, or a run whose approved runtime is `ffmpeg`. The agent can also write custom
 Remotion compositions on the fly via the capability-extension protocol when no
 existing composition covers the layout (e.g., custom PiP, split-screen).
 
+**Remotion unavailable in a Remotion-locked run is a blocker, not an automatic
+fallback.** Before calling `render`, check
+`video_compose.get_info()["render_engines"]["remotion"]`. If it is `False`, do not
+call `render`: surface the blocker per `AGENT_GUIDE.md` → "Escalate Blockers
+Explicitly", wait for the user's approval, and log a `render_runtime_selection`
+decision before rendering on any other runtime. Do this check yourself — the tool
+does not enforce it yet: with Remotion missing, a templated `render` of video-only
+cuts is still composed by FFmpeg and returns success (`data.operation == "compose"`)
+while `final_review.checks.promise_preservation.render_runtime_used` still says
+`"remotion"`.
+
 ## Supported Scene Types (Cut Types)
 
-The Explainer composition supports the following cut types:
+The Explainer composition supports the following cut types. `type` and the props
+in this table are **Remotion composition fields, not `edit_decisions` schema
+fields** — they go in `artifacts/remotion_composition.json`, never in the canonical
+`edit_decisions` artifact (see "Flat props format" below).
 
 | Type | Props Required | Best For |
 |------|---------------|----------|
@@ -90,8 +111,24 @@ These rules were discovered through systematic render testing and produce cinema
 This prevents jarring white↔dark flash transitions and makes chart colors pop dramatically.
 The goal is visual cohesion, not a mandatory dark theme.
 
-**2. Flat props format.** All scene properties go at the TOP LEVEL of the cut object
+**2. Flat props format — in the Remotion composition object, not the canonical artifact.**
+All scene properties go at the TOP LEVEL of the cut object
 (e.g., `cut.text`, `cut.chartData`), NOT nested under a `props` key.
+
+That cut object is **not** the canonical `edit_decisions` artifact.
+`schemas/artifacts/edit_decisions.schema.json` is closed: a cut may hold only `id`,
+`source`, `in_seconds`, `out_seconds`, `speed`, `layer`, `transform`, `transition_in`,
+`transition_out`, `transition_duration`, `backgroundColor` and `reason` (the first
+four are required), and `write_checkpoint` validates `edit_decisions` on every
+checkpoint that carries it — a `type`, `text` or `chartData` key there raises
+`CheckpointValidationError`. So keep two objects:
+
+- **`edit_decisions`** (canonical, checkpointed) — schema fields only; notes go in `metadata`.
+- **`projects/<project>/artifacts/remotion_composition.json`** — the same cuts plus the
+  Remotion-only fields (`type`, `text`, `stat`, `chartData`, Remotion `overlays`,
+  `captions`, …). **This object is what you pass as `edit_decisions` to
+  `video_compose` (`operation="render"`).** It must repeat the locked `render_runtime`
+  and `renderer_family` unchanged — `video_compose` rejects the render without them.
 
 **3. KPI Grid data rules:**
 - `value` must be a small, human-readable number. The component auto-formats ≥1M→"XM", ≥1K→"XK".
@@ -144,20 +181,23 @@ result = CompositionValidator().execute({
 ```
 remotion-composer/
 ├── src/
-│   ├── Root.tsx              # Composition registry
-│   ├── compositions/         # One file per pipeline type
-│   │   ├── Explainer.tsx     # Generated explainer composition
-│   │   ├── AnimatedScene.tsx # Individual animated scene
-│   │   └── TitleCard.tsx     # Standalone title card
+│   ├── index.tsx             # Entry point (registerRoot)
+│   ├── Root.tsx              # Composition registry + built-in themes
+│   ├── Explainer.tsx         # Explainer composition (the cut types above)
+│   ├── CinematicRenderer.tsx # Cinematic composition (scenes; types in cinematic/)
+│   ├── TalkingHead.tsx       # Avatar / presenter composition
+│   ├── TitledVideo.tsx, CollageBurst.tsx, LyricOverlay.tsx
 │   ├── components/           # Reusable visual building blocks
-│   │   ├── Caption.tsx       # Subtitle/caption renderer
-│   │   ├── DiagramOverlay.tsx
-│   │   ├── ProgressBar.tsx
-│   │   └── TransitionWrapper.tsx
-│   └── styles/               # Tailwind + playbook-derived styles
-├── public/                   # Static assets (fonts, LUTs)
+│   │   ├── CaptionOverlay.tsx  # Word-level caption renderer
+│   │   ├── TextCard.tsx, StatCard.tsx, HeroTitle.tsx, CalloutBox.tsx, ComparisonCard.tsx
+│   │   ├── ProgressBar.tsx, AnimeScene.tsx, TerminalScene.tsx, ScreenshotScene.tsx, …
+│   │   └── charts/           # BarChart, LineChart, PieChart, KPIGrid
+│   ├── lib/                  # resolveAsset.ts, localFonts.ts
+│   └── fonts/                # Bundled font files
+├── public/                   # Static assets (demo-props/)
+├── projects/                 # Atelier projects staged for the bundler
+├── SCENE_TYPES.md            # Authoritative cut-type list
 ├── package.json
-├── remotion.config.ts
 └── tsconfig.json
 ```
 
@@ -168,7 +208,7 @@ remotion-composer/
 | OpenMontage Artifact | Remotion Prop | Maps To |
 |---------------------|---------------|---------|
 | `scene_plan.json` → `scenes[]` | `scenes` prop | `<TransitionSeries>` children |
-| `scene.type` | Component selector | `talking_head` → `<Video>`, `diagram` → `<DiagramOverlay>`, etc. |
+| `cut.type` (in the Remotion composition object) | Component selector | `text_card` → `<TextCard>`, `stat_card` → `<StatCard>`, `bar_chart` → `<BarChart>`, etc. |
 | `scene.start_seconds` / `end_seconds` | `from` / `durationInFrames` | `fps * seconds` conversion |
 | `scene.transition_in` / `transition_out` | `<TransitionSeries.Transition>` | `fade`, `slide`, `wipe` |
 | `asset_manifest.json` → assets | `assets` prop | `staticFile()` or absolute paths |
@@ -196,18 +236,32 @@ npx remotion render Explainer \
 
 **Note:** Do NOT specify `src/index.ts` as entry point — Remotion auto-discovers compositions. The composition name is `Explainer` (not `ExplainerVideo`).
 
-In Python, invoke via `subprocess` from `video_compose.py` when `backend="remotion"`.
+In a pipeline, do not shell out yourself: call `video_compose` with `operation="render"`
+and `edit_decisions.render_runtime == "remotion"`. It runs `npx remotion render` from
+`remotion-composer/` as a subprocess. (`video_compose` has no `backend` parameter.)
 
 ### Media Profile Mapping
 
-| OpenMontage Profile | Remotion Config |
+Profile names are the keys of `ALL_PROFILES` in `lib/media_profiles.py` — pass one
+of these exactly as `profile` to `video_compose`:
+
+| OpenMontage Profile | Profile dimensions |
 |--------------------|-----------------|
 | `youtube_landscape` | `width: 1920, height: 1080, fps: 30` |
+| `youtube_4k` | `width: 3840, height: 2160, fps: 30` |
 | `youtube_shorts` | `width: 1080, height: 1920, fps: 30` |
-| `tiktok_vertical` | `width: 1080, height: 1920, fps: 30` |
 | `instagram_reels` | `width: 1080, height: 1920, fps: 30` |
-| `instagram_square` | `width: 1080, height: 1080, fps: 30` |
-| `cinematic_wide` | `width: 2560, height: 1080, fps: 24` |
+| `instagram_feed` | `width: 1080, height: 1080, fps: 30` |
+| `tiktok` | `width: 1080, height: 1920, fps: 30` |
+| `linkedin` | `width: 1920, height: 1080, fps: 30` |
+| `cinematic` | `width: 2560, height: 1080, fps: 24` |
+| `generic_hd` | `width: 1920, height: 1080, fps: 30` |
+
+There is no `tiktok_vertical`, `instagram_square` or `cinematic_wide`. **Spell the
+name exactly:** `video_compose` does not report an unknown profile — it ignores it
+and renders at the composition's registered size (1920x1080 for `Explainer` and
+`CinematicRenderer`). On the Remotion path only the profile's `width` and `height`
+are applied; fps stays at the composition's 30.
 
 ## Key Patterns
 
@@ -216,7 +270,7 @@ In Python, invoke via `subprocess` from `video_compose.py` when `backend="remoti
 Each scene in `scene_plan.json` becomes a child of `<TransitionSeries>`:
 
 ```tsx
-// Pseudocode — actual component in remotion-composer/src/compositions/Explainer.tsx
+// Pseudocode — actual component in remotion-composer/src/Explainer.tsx
 const Explainer: React.FC<ExplainerProps> = ({ scenes, theme, assets }) => {
   return (
     <TransitionSeries>
@@ -261,7 +315,7 @@ export const ExplainerVideo = {
 
 ### Style Playbook to Theme
 
-Style playbooks (`skills/styles/`) define visual parameters. Map them to Remotion themes:
+Style playbooks (`styles/*.yaml`, custom ones in `styles/custom/`) define visual parameters. Map them to Remotion themes:
 
 ```tsx
 // Derived from the style playbook YAML
@@ -314,10 +368,12 @@ Narration + background music + SFX as parallel `<Audio>` components.
 
 ### Cost Tracking
 
-Remotion renders are CPU-intensive but $0 API cost. Track via cost_tracker:
-- `estimate`: based on composition duration × resolution tier
+Remotion renders are CPU-intensive but $0 API cost. `cost_tracker` tracks USD only:
+- `estimate`: `video_compose.estimate_cost()` is `0.0` — there is no duration × resolution estimate
 - `reserve`: 0 (no API spend)
-- `reconcile`: wall-clock render time for benchmarking
+- `reconcile`: `CostTracker.reconcile(entry_id, actual_usd)` takes USD, so `0.0` — never
+  seconds. Wall-clock render time is not a cost entry; record it in
+  `render_report.render_time_seconds`
 
 ## Critical Constraints
 

@@ -13,9 +13,9 @@ The output is a single mp4 plus a `render_report` artifact.
 
 This pipeline currently REQUIRES `render_runtime="remotion"`. The end-tag stack (ProRes 4444 overlay composited on final scenes, or concat fallback) depends on Remotion's `CinematicRenderer` composition and its alpha-preserving render path. HyperFrames end-tag parity is explicitly Wave 3 / deferred work (see `skills/core/hyperframes.md` → "What stays Remotion-only in Phase 1").
 
-- If `edit_decisions.render_runtime` is anything other than `remotion`, stop. This is a CRITICAL governance violation. Surface the conflict to the user, route the decision back to proposal to re-lock `render_runtime="remotion"`, log a `render_runtime_selection` correction in decision_log, and resume.
+- If `edit_decisions.render_runtime` is anything other than `remotion`, stop. This is a CRITICAL governance violation. Surface the conflict to the user, route the decision back to the idea stage (this pipeline has no proposal stage) to re-lock `render_runtime="remotion"`, log a `render_runtime_selection` correction in decision_log, and resume.
 - Never silently proceed by rewriting render_runtime in edit_decisions. The documentary promise (motion-led, mood-driven, uniform grade) is preserved by the Remotion stack, and that promise is what the user approved.
-- Pass `proposal_packet` to `video_compose.execute()` so the in-tool `runtime_swap_detected` check actively confirms the runtime stayed `remotion` end-to-end. A `skipped` check on this pipeline means you forgot to pass the proposal artifact.
+- This pipeline has no proposal stage, so there is no `proposal_packet` to pass to `video_compose.execute()`. The in-tool `runtime_swap_detected` check instead compares `edit_decisions.render_runtime` with `edit_decisions.metadata.proposal_render_runtime`, which the edit stage sets to the runtime locked at idea. A `skipped` check on this pipeline means that metadata key is missing — send it back to the edit stage rather than patching `edit_decisions` here.
 
 ## Prerequisites
 
@@ -72,12 +72,12 @@ Read `brief.target_platform`:
 
 | Target | Canvas | Letterbox |
 |--------|--------|-----------|
-| `social_short` (Instagram/TikTok) | 1080x1920 (9:16) | Top/bottom crop; center-anchor each clip |
+| `instagram` / `tiktok` (vertical social short) | 1080x1920 (9:16) | Top/bottom crop; center-anchor each clip |
 | `youtube` / `generic` | 1920x1080 (16:9) | None; optionally 2.35:1 top/bottom bars for cinematic feel |
 | `linkedin` | 1920x1080 (16:9) | None |
 
 Every clip in the timeline must be scaled/cropped to this canvas.
-For `social_short`, this usually means center-cropping 16:9 footage.
+For `instagram` / `tiktok`, this usually means center-cropping 16:9 footage.
 For `youtube` with the cinematic 2.35:1 bar treatment, pad 140px
 black top and bottom on a 1920x1080 canvas.
 
@@ -110,17 +110,21 @@ with `renderer_family = "documentary-montage"` preserved intact.
 
 ### 3. Apply Grade Via LUT, Not Per Clip
 
-Read `edit_decisions.metadata.grade_profile`. Map it to a LUT file:
+Read `edit_decisions.metadata.grade_profile`. It names a built-in
+`color_grade` profile — pass it as `profile` (a custom `.cube` LUT file
+goes in `lut_path` instead):
 
-| Profile | LUT | Suits |
-|---------|-----|-------|
-| `warm_film_100` | vintage film warmth, slight lift | elegiac, dreamlike |
-| `cool_archive_60` | cool highlights, crushed blacks | urgent, wry |
-| `neutral_doc_20` | barely-there neutral balance | reverent |
-| `bleach_bypass_80` | desaturated, high contrast | wry, documentary-harsh |
+| Profile | Look | Suits |
+|---------|------|-------|
+| `vintage_film` | faded film look, warm tint | elegiac, dreamlike |
+| `cinematic_cool` | cool teal-and-orange grade | urgent, wry |
+| `neutral` | minimal correction, barely-there balance | reverent |
+| `moody_dark` | crushed blacks, desaturated midtones | wry, documentary-harsh |
 
-If the profile isn't in the styles library, use `neutral_doc_20` and
-note it in `warnings`. Do not try to auto-grade — the LUT is the
+`cinematic_warm`, `bright_clean`, and `high_contrast` also exist; use
+`intensity` (0-1) to soften any of them. If the hint is not one of the
+`color_grade` profiles and no `.cube` file was supplied, use `neutral`
+and note it in `warnings`. Do not try to auto-grade — the LUT is the
 whole point of the register-smoothing pass.
 
 Apply the LUT at the composition level, not per clip. One LUT, one
@@ -180,19 +184,32 @@ appears on top of live footage rather than cutting to a black card.
 
 1. Compose the body via FFmpeg (cuts + LUT + music + silence window).
    Save as `projects/<name>/renders/body.mp4`. Note the body fps.
-2. Compute `durationInFrames = round(duration_seconds × body_fps)`.
+2. Work out the tag timing. `EndTagOverlay` is registered in
+   `remotion-composer/src/Root.tsx` at 30 fps, 1920x1080, with a fixed
+   length of 246 frames (8.2s) and no `calculateMetadata`: it takes no
+   `durationInFrames` prop and does not follow the body fps. The tag's
+   screen time is `fadeInSeconds + holdSeconds + fadeOutSeconds` — set
+   those three props so they sum to `end_tag_plan.duration_seconds`
+   (8.2s at most) — and the clip length is trimmed with
+   `--frames=0-<tag_frames - 1>`, where
+   `tag_frames = round(duration_seconds × 30)`.
 3. Render the end-tag with alpha via Remotion CLI:
    ```bash
    npx remotion render src/index.tsx EndTagOverlay \
      projects/<name>/renders/end_tag_overlay.mov \
      --codec=prores --prores-profile=4444 \
      --pixel-format=yuva444p10le --image-format=png \
+     --frames=0-164 \
      --props='{"text":"...","palette":"...","overlay":true,
                "fadeInSeconds":1.0,"holdSeconds":3.0,"fadeOutSeconds":1.5}'
    ```
+   (5.5s at 30 fps = 165 frames → `--frames=0-164`; 1.0 + 3.0 + 1.5 = 5.5s.)
    Use the `EndTagOverlay` composition with `overlay: true`. This
-   produces a ProRes 4444 MOV with a real alpha channel
-   (pix_fmt=yuva444p12le). Canvas must match body canvas.
+   produces a ProRes 4444 MOV with a real alpha channel: you pass
+   `yuva444p10le` to Remotion, and `ffprobe` reports the finished file
+   as `pix_fmt=yuva444p12le` (the ProRes decoder reports 4444 as
+   12-bit) — the `a` is what confirms the alpha. Canvas must match body
+   canvas: add `--width`/`--height` when it is not 1920x1080.
 4. Compute the overlay offset:
    - Read `edit_decisions.end_tag.offset_seconds` if present.
    - Otherwise auto-compute: `offset = body_duration - tag_duration`.
@@ -228,23 +245,32 @@ this only when `end_tag_plan.mode == "concat"`.
    ```bash
    npx remotion render src/index.tsx EndTag \
      projects/<name>/renders/end_tag.mp4 \
-     --props='{"text":"...","palette":"...","durationInFrames":132}'
+     --props='{"text":"...","palette":"...",
+               "fadeInSeconds":0.6,"holdSeconds":4.3,"fadeOutSeconds":0.6}'
    ```
-   (5.5s at 24fps = 132 frames). Canvas must match body canvas.
+   `EndTag` is registered at 30 fps with a fixed 165 frames (5.5s);
+   `durationInFrames` is not a prop and is ignored. For a shorter tag,
+   make the three fade/hold props sum to `duration_seconds` and add
+   `--frames=0-<round(duration_seconds × 30) - 1>`; the card cannot run
+   longer than 5.5s. Canvas must match body canvas (`--width`/`--height`
+   when it is not 1920x1080).
 3. Concat body + end_tag:
    ```bash
    ffmpeg -f concat -safe 0 -i list.txt -c copy final.mp4
    ```
-   Or re-encode if codecs don't match.
+   `-c copy` needs matching fps, resolution, and codec parameters. The
+   tag renders at 30 fps and the body is 24 fps, so re-encode the
+   concat at the body fps unless they all match.
 
 #### Common Rules (Both Modes)
 
 **End-tag is MANDATORY.** The ONLY way to skip it is an explicit user
-opt-out recorded as `end_tag_plan: null` with an `end_tag_opt_out_reason`.
+opt-out recorded as `brief.metadata.end_tag_plan: null` with an `end_tag_opt_out_reason`.
 If the brief has an end-tag plan but you skipped rendering it, that is
 a contract violation. Stop and surface before finalizing.
 
-Record in `render_report`:
+Record in `render_report.metadata` (the schema rejects unknown
+top-level keys, so these must NOT sit at the top level):
 - `end_tag_rendered: true | false`
 - `end_tag_mode: "overlay" | "concat"`
 - `end_tag_path: "projects/<name>/renders/end_tag_overlay.mov"` (or `.mp4` for concat)
@@ -252,7 +278,7 @@ Record in `render_report`:
 - `end_tag_text: "..."` (for audit trail)
 
 If the brief says "no music" and the edit correctly has no music
-entry AND `music_plan.source == "none"` with an opt-out reason, render
+entry AND `brief.metadata.music_plan.source == "none"` with an opt-out reason, render
 silent. Do NOT add ambient noise "to fill the gap".
 
 ### 5. Render At Documentary Spec
@@ -276,14 +302,20 @@ mixed-source footage looks awful.
 
 After the render succeeds, actually probe the output file and check:
 
-- **Duration.** Should match `sum(out - in for cut in cuts) + fade
-  in/out` within ±0.5s.
+- **Duration.** Should match the planned timeline within ±1s:
+  `edit_decisions.metadata.total_duration_seconds` (the sum of cut
+  durations) in overlay mode — the tag sits on top of the body and adds
+  nothing — or that sum plus the end-tag duration in concat mode.
 - **Resolution.** Should match the canvas.
 - **Audio presence.** If music was in the plan, the output must
   have an audio stream. If silence was planned, confirm.
 - **First and last frame.** Open the file, seek to 0s and to
   duration-0.1s. The first frame should be a fade-in. The last
   frame should be (or be fading to) black.
+- **End-tag.** Overlay mode: a frame inside the overlay window (e.g.
+  `offset + 2s`) shows the tag text over footage, not over black.
+  Concat mode: the film closes on the end-tag card (seek into the last
+  `duration_seconds` of the file).
 - **Silence window.** Seek to the silence_window start. Audio level
   should drop visibly in the waveform.
 
@@ -320,8 +352,13 @@ Record verifications in `render_report.verification_notes`.
     "pipeline": "documentary-montage",
     "canvas": { "width": 1920, "height": 1080 },
     "letterbox": "2.35:1",
-    "lut": "warm_film_100",
-    "music_present": true
+    "lut": "vintage_film",
+    "music_mixed": true,
+    "end_tag_rendered": true,
+    "end_tag_mode": "overlay",
+    "end_tag_path": "projects/<name>/renders/end_tag_overlay.mov",
+    "end_tag_offset_seconds": 84.3,
+    "end_tag_text": "THE CITY KEEPS ITS OWN VIGIL."
   }
 }
 ```
@@ -329,11 +366,11 @@ Record verifications in `render_report.verification_notes`.
 ### 8. Quality Gate
 
 - Output file exists and plays.
-- Duration within ±1s of `brief.duration_seconds` (body + end-tag inclusive).
-- Resolution matches `target_platform` canvas.
+- Duration within ±1s of the planned timeline (`edit_decisions.metadata.total_duration_seconds` in overlay mode; that plus the end-tag duration in concat mode).
+- Resolution matches the `brief.target_platform` canvas.
 - LUT was applied (or a warning logged).
 - **Music is present** unless `brief.metadata.music_plan.source == "none"` with an explicit opt-out reason.
-- **End-tag MP4 was rendered and concatenated** unless `brief.metadata.end_tag_plan` is null with an explicit opt-out reason. Last frame of final MP4 must be the end-tag card in that case.
+- **End-tag was rendered and composited** unless `brief.metadata.end_tag_plan` is null with an explicit opt-out reason. Overlay mode (default): a frame from the overlay window shows the tag text over footage, not over black. Concat mode: the film closes on the end-tag card.
 - First and last frames verified.
 - Silence window (if any) verified in the waveform.
 - No narration unless brief-approved.

@@ -25,7 +25,7 @@ Use:
 - `1:1` when speaker plus context both matter,
 - `16:9` when slides, demos, or multi-speaker width are essential.
 
-OpenMontage does not yet have first-class auto-reframe. If a vertical crop is weak, plan a safer aspect ratio instead of pretending the crop will work.
+The `auto_reframe` tool can produce the crop at compose time: it tracks the speaker's face and keeps it centered (center-crop only when MediaPipe/OpenCV is not installed). It does not understand slides, demos, or multi-speaker width — if a vertical crop is weak, plan a safer aspect ratio instead of pretending the crop will work. Record where `auto_reframe` should run in `scene_plan.metadata.crop_variants`.
 
 ### 2. Plan First-Second Composition
 

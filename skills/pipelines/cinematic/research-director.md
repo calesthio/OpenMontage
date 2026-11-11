@@ -14,7 +14,7 @@ Unlike explainer research (which focuses on facts, data, and content gaps), cine
 |-------|----------|---------|
 | Schema | `schemas/artifacts/research_brief.schema.json` | Artifact validation |
 | User input | Subject, mood hints, footage situation, references | Research scope |
-| Tools | Web search, web fetch | Research execution |
+| Tools | Your own web search and web fetch (agent-native: `web_search` in the manifest's `tools_available` is not a registry tool, so do not look it up in `tools/`) | Research execution |
 
 ## Process
 
@@ -40,7 +40,9 @@ riff on.
      reference while keeping the elements the user loved?" + "What mood/tone territory
      is adjacent but unexplored?"
 
-3. In the research_brief, add a `reference_context` section:
+3. In the research_brief, record a `reference_context` object under the top-level
+   `metadata` (`research_brief.metadata.reference_context` — the brief root is closed in
+   the schema, so a top-level `reference_context` key fails the checkpoint):
    - The reference's cinematic language (shot types, pacing, color palette)
    - What emotional territory it occupies
    - Adjacent emotional territories we could explore instead
@@ -158,17 +160,28 @@ Q14: "[subject]" site:reddit.com (mood OR aesthetic OR vibe)
 
 Using everything from Steps 2-6, identify at least 3 genuinely different cinematic directions:
 
-For each direction, specify:
+For each direction, write one `angles_discovered[]` entry. The entry is closed in the schema — it holds exactly these keys, and `name`, `hook`, `type`, `why_now` are required:
 
 | Field | What | Quality Bar |
 |-------|------|-------------|
 | `name` | Short direction title (5-8 words) | Specific mood, not just the subject |
 | `hook` | One-sentence emotional pitch | Must evoke a feeling, not explain |
-| `type` | `mood_piece`, `tension_arc`, `reveal`, `intimate`, `epic`, `raw` | Categorize honestly |
-| `visual_references` | Which found references inform this direction | Specific URLs and descriptions |
-| `audio_direction` | Music mood, sound design approach | Informed by Step 3 findings |
-| `motion_commitment` | What motion is required and how it'll be achieved | Honest about capabilities |
+| `type` | Schema enum: `trending`, `evergreen`, `contrarian`, `narrative`, `data_driven` (a mood piece or reveal is usually `narrative`) | Categorize honestly |
+| `why_now` | Why this direction is compelling now | Cite specific findings from Steps 2-6 |
 | `grounded_in` | Which research findings support this direction | Cross-reference your findings |
+
+The cinematic detail of each direction goes under `research_brief.metadata.direction_details`, keyed by the direction's `name`:
+
+```json
+{
+  "<direction name>": {
+    "direction_type": "mood_piece | tension_arc | reveal | intimate | epic | raw",
+    "visual_references": ["<URLs / descriptions of the references that inform it>"],
+    "audio_direction": "<music mood, sound design approach — informed by Step 3>",
+    "motion_commitment": "<what motion is required and how it will be achieved — honest about capabilities>"
+  }
+}
+```
 
 **Direction diversity checklist:**
 - [ ] At least one direction uses a different emotional arc than the others
@@ -185,7 +198,8 @@ Compile all URLs used. Minimum 5 sources.
 Build the `research_brief` artifact per the schema. Include:
 
 1. `research_summary` — one paragraph capturing the strongest creative direction found
-2. All sections from Steps 2-8
+2. All sections from Steps 2-8, in the schema's fields: the reference films go in `landscape.existing_content` (at least 3, each with `title`, `source`, `angle`, `what_it_covers`) and `visual_references` (`description`, `url`, `what_works`); at least one `landscape.underserved_gaps` entry; at least 3 `data_points` (subject facts from Step 4, each with `claim`, `source_url`, `credibility`); `audience_insights` with at least 3 `common_questions`, `misconceptions`, and `knowledge_level` (Step 6); at least 5 `sources`
+3. `metadata` — what the schema has no field for: `reference_context` (Step 0), the sound and music notes from Step 3 (`audio_landscape`), the camera and pacing techniques from Step 5 (`motion_language`), and `direction_details` (Step 7). The brief root and its nested entries are closed, so these keys anywhere else fail the checkpoint.
 
 Validate against `schemas/artifacts/research_brief.schema.json` before submitting.
 

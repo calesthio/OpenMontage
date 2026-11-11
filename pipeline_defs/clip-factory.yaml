@@ -97,6 +97,7 @@ stages:
       - frame_sampler
     tools_available:
       - frame_sampler
+      - scene_detect
     checkpoint_required: true
     human_approval_default: true
     review_focus:
@@ -175,6 +176,7 @@ stages:
       - audio_mixer
       - audio_enhance
       - color_grade
+      - auto_reframe
     checkpoint_required: true
     human_approval_default: false
     review_focus:

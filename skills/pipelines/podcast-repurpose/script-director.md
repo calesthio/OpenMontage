@@ -20,7 +20,7 @@ If the source audio is weak, use `audio_enhance` before or alongside transcripti
 
 ### 2. Produce A Speaker-Aware Transcript
 
-Diarization is not optional for multi-speaker episodes. Verify speaker mapping early and store the richer diarization detail in `script.metadata`.
+Diarization is not optional for multi-speaker episodes — but `transcriber` does not diarize unless asked: pass `"diarize": true` (the default is `false`). Then check that the returned `segments` carry `speaker` labels. Without the `whisperx` package and an `HF_TOKEN`, the tool silently returns undiarized segments with no error, so a successful call proves nothing. If no labels came back, tell the user and have the speaker mapping confirmed manually before attributing any quote. Verify speaker mapping early and store the richer diarization detail in `script.metadata`.
 
 Recommended metadata keys:
 
@@ -70,9 +70,11 @@ If you encounter uncertainty during script writing:
 - Use `web_search` to find reference images for visual accuracy
 - Log verification in the decision log: `category="visual_accuracy_check"`
 
-Every factual claim in the script should be traceable to the `research_brief`.
-If you make a claim that isn't in the research, do additional research and
-add the source. Do not invent statistics, dates, or attributions.
+Every factual claim in the script should be traceable to the `brief` or the
+user's source material (footage, transcript, supplied copy) — this pipeline has
+no research stage and no `research_brief`. If you make a claim that isn't in
+either, verify it with `web_search` and add the source. Do not invent
+statistics, dates, or attributions.
 
 ## Common Pitfalls
 

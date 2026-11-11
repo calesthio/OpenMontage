@@ -26,7 +26,7 @@ EP_STATE:
   budget_spent_usd: 0.0
 
   # Avatar-specific
-  avatar_path: null            # heygen_api / sadtalker / musetalk / stock
+  avatar_path: null            # platform_avatar / photo_talking_head / presenter_plate_lip_sync (brief.metadata.avatar_path)
   narration_source: null       # tts / provided_audio
   cta_type: null               # what the viewer should do after watching
   presenter_framing: null      # layout: center, left-third, etc.
@@ -46,17 +46,24 @@ EP_STATE:
 
 ## Pivot Decision Matrix
 
-`talking_head` is the preferred tool but commonly unavailable (requires GPU or HeyGen API key). When blocked, the EP must route the project explicitly — not improvise.
+Each avatar path has its own tool, and each is commonly unavailable: `talking_head` (`photo_talking_head` — local SadTalker on the local GPU; needs `SADTALKER_PATH` or the `sadtalker` package, no HeyGen key involved), `heygen_avatar` (`platform_avatar` — HeyGen API, needs `HEYGEN_API_KEY`), and `lip_sync` (`presenter_plate_lip_sync`). When blocked, the EP must route the project explicitly — not improvise.
 
 ```
+IF the brief's avatar_path is platform_avatar and heygen_avatar AVAILABLE:
+  → Platform-avatar path (HeyGen digital twin — see asset-director "HeyGen Avatar V").
+
 IF talking_head AVAILABLE:
-  → Standard avatar path. Proceed as normal.
+  → Standard avatar path (photo_talking_head). Proceed as normal.
 
 IF talking_head UNAVAILABLE and lip_sync AVAILABLE:
-  → Lip-sync path. User must supply a presenter plate (existing footage).
+  → Lip-sync path (presenter_plate_lip_sync). User must supply a presenter plate (existing footage).
     Script and scene plan stay the same.
 
-IF NEITHER talking_head NOR lip_sync AVAILABLE:
+IF talking_head and lip_sync UNAVAILABLE and heygen_avatar AVAILABLE:
+  → Offer the platform-avatar path. It needs a HeyGen digital twin the user
+    approves; this is a provider change, so ask before proceeding.
+
+IF NONE of heygen_avatar, talking_head, lip_sync AVAILABLE:
   → Narration-Over-Graphics pivot.
     Tell the user: "No avatar tool is configured. I can produce a
     narration-over-graphics video instead — your script and CTA stay the same,
@@ -157,11 +164,15 @@ CHECK: Output validation
 
 | Limit | Value |
 |-------|-------|
-| Max revisions per stage | 3 |
-| Max send-backs per stage pair | 1 |
-| Max total send-backs | 3 |
-| Max total budget | Configurable (default $2) |
-| Max total wall-time | 12 minutes |
+| Max revisions per stage | manifest `orchestration.max_revisions_per_stage` |
+| Max send-backs per stage pair | 1 (guidance; no manifest field) |
+| Max total send-backs | manifest `orchestration.max_send_backs` |
+| Max total budget | The run budget from `tools/cost_tracker.py::resolve_budget_usd`: the amount the user approved (record it with `python -m tools.cost_tracker budget <project-id> --usd <amount>`), else manifest `orchestration.budget_default_usd` capped at `config.yaml` `budget.total_usd`. Enforcement follows `config.yaml` `budget.mode`: `observe` records only, `warn` records and flags overruns, `cap` refuses a paid call that does not fit the remaining budget |
+| Max total wall-time | manifest `orchestration.max_wall_time_minutes` |
+
+Read the manifest-backed values from `pipeline_defs/avatar-spokesperson.yaml` at the start of the run; never substitute numbers of your own.
+
+After any limit is hit: **proceed with warnings**, never block indefinitely. A limit never approves a human-gated stage (any stage with `human_approval_default: true` in the manifest): write `awaiting_human` with the warnings attached, end the turn, and let the user decide.
 
 ## Common Pitfalls
 

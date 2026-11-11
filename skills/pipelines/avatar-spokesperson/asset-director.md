@@ -10,7 +10,7 @@ This stage prepares the actual spokesperson ingredients: narration, avatar or li
 |-------|----------|---------|
 | Schema | `schemas/artifacts/asset_manifest.schema.json` | Artifact validation |
 | Prior artifacts | `state.artifacts["scene_plan"]["scene_plan"]`, `state.artifacts["script"]["script"]`, `state.artifacts["idea"]["brief"]` | Presenter plan and narration needs |
-| Tools | `talking_head`, `lip_sync`, `tts_selector`, `subtitle_gen`, `image_selector`, `audio_enhance` — selectors auto-discover all available providers from the registry | Avatar, narration, and support asset options |
+| Tools | `heygen_avatar`, `talking_head`, `lip_sync`, `tts_selector`, `subtitle_gen`, `image_selector`, `audio_enhance` — selectors auto-discover all available providers from the registry | Avatar, narration, and support asset options |
 | Playbook | Active style playbook | Background, type, and subtitle rules |
 
 ## Process
@@ -19,8 +19,9 @@ This stage prepares the actual spokesperson ingredients: narration, avatar or li
 
 Use one primary path and record it clearly:
 
-- `talking_head` from still image plus audio,
-- `lip_sync` from existing presenter plate plus new audio,
+- `talking_head` from still image plus audio (`photo_talking_head`),
+- `lip_sync` from existing presenter plate plus new audio (`presenter_plate_lip_sync`),
+- `heygen_avatar` from an approved HeyGen digital twin (`platform_avatar` — see "HeyGen Avatar V" below),
 - externally supplied avatar render if created outside the current runtime.
 
 Do not hide a blocked avatar path. Record it.
@@ -74,7 +75,7 @@ Recommended metadata keys:
 
 ## No-Avatar Path
 
-When the EP has triggered a narration-over-graphics pivot (neither `talking_head` nor `lip_sync` available), skip avatar generation entirely and produce a graphics-driven asset kit instead:
+When the EP has triggered a narration-over-graphics pivot (none of `heygen_avatar`, `talking_head`, `lip_sync` available), skip avatar generation entirely and produce a graphics-driven asset kit instead:
 
 ### What to produce:
 1. **Narration audio** — via `tts_selector` (mandatory; block the project if no TTS is available either).
@@ -84,9 +85,9 @@ When the EP has triggered a narration-over-graphics pivot (neither `talking_head
 5. **Backgrounds** — consistent family matching the playbook.
 
 ### What to skip:
-- No `talking_head` or `lip_sync` calls.
+- No `heygen_avatar`, `talking_head`, or `lip_sync` calls.
 - No presenter framing metadata.
-- `avatar_generation_path` should be set to `"none — narration-over-graphics pivot"`.
+- `avatar_generation_path` should be set to `"narration_over_graphics"`.
 
 ### Metadata for this path:
 - `avatar_generation_path`: `"narration_over_graphics"`

@@ -1,7 +1,7 @@
 # Lip Sync Usage for OpenMontage
 
 > Sources: Wav2Lip paper (Prajwal et al. 2020), Wav2Lip-GAN documentation, OpenMontage
-> `tools/lip_sync.py` implementation
+> `tools/avatar/lip_sync.py` implementation
 
 ## Quick Reference Card
 

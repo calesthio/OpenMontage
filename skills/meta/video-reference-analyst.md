@@ -66,7 +66,7 @@ Now let me check what I can do with your current setup..."
 The 5-aspect block above is the **canonical form** that `proposal-director`, `script-director`, and `scene-director` will read. Do not collapse it back into prose — keep the labels.
 
 **Motion classification is critical.** The VideoAnalysisBrief now includes per-scene
-`motion_type` ("motion_clip", "animated_still", "static_image") and `flow_variance`.
+`motion_type` ("motion_clip", "animated_still", "static_image", or "unknown") and `flow_variance`.
 Use this to determine the production approach:
 
 - If most scenes are `motion_clip` → the reference uses **video generation** (Kling,
@@ -74,6 +74,10 @@ Use this to determine the production approach:
 - If most scenes are `animated_still` → the reference uses **still images with
   Ken Burns / pan-zoom** → image gen + Remotion/FFmpeg composition is appropriate
 - If mixed → note which sections use motion and which use stills
+- If a scene is `unknown` (`flow_variance: -1` — OpenCV is not installed, the video
+  could not be opened, or no frame pair was readable), or `motion_type` is absent
+  (motion classification did not run), the motion is **not classified**. Say so; do
+  not count those scenes as stills or as motion
 
 **Never guess** whether a reference uses images or video. Read the `motion_type` field.
 Getting this wrong leads to proposing the wrong pipeline and wrong tool path.
@@ -228,7 +232,9 @@ Use this structure for each variant:
 **Visual plan:**
 - Playbook: [closest match + customizations]
 - Visual treatment: [how visuals will be created — which tools, which providers]
-- Composition: [Remotion (default when available) / FFmpeg (fallback only)]
+- Composition: [which available runtimes could realize this concept — Remotion /
+  HyperFrames / FFmpeg — with the tradeoff for this concept. Do NOT name a default
+  or lock one here; `render_runtime` is chosen with the user at the proposal stage]
 - Motion: [video gen clips / Remotion spring animations on stills / etc.]
 - Clip duration strategy: [maximize clip duration to minimize API calls and cost.
   Most providers support 5s and 10s clips. Prefer 10s clips and consolidate
@@ -321,13 +327,54 @@ elevenlabs_tts    elevenlabs, text-to-speech [ ]
 video_compose     remotion-best-practices   [ ]
 ```
 
-Do NOT proceed to Step 5 until all relevant Layer 3 skills are read.
+Do NOT generate anything — the Step 6 sample included — until all relevant Layer 3 skills are read.
 The difference between a generic prompt and a skill-informed prompt is
 the difference between "usable" and "cinematic."
 
-### Step 5: Sample-First Production (MANDATORY)
+### Step 5: Enter Pipeline (HARD REDIRECT)
 
-After the user picks a variant, ALWAYS say:
+After the user picks a variant, the agent MUST enter the pipeline. This is not optional,
+and it comes **before** the sample: the sample is produced inside the pipeline's
+`proposal` stage (Step 6), never ahead of the pipeline.
+
+**Mandatory steps:**
+1. Read the pipeline manifest: `pipeline_defs/animation.yaml` (or whichever
+   pipeline matches the production type)
+2. Execute **stage by stage** in order — research → proposal → script →
+   scene_plan → assets → edit → compose → publish
+3. Before EACH stage, read its director skill from
+   `skills/pipelines/<pipeline>/<stage>-director.md`
+4. Produce the required artifacts at each stage
+5. Hit every checkpoint where `checkpoint_required: true`
+6. Get user approval where `human_approval_default: true`
+
+**Do NOT collapse stages.** Do not jump from "user approved proposal" to
+"generate all assets." The pipeline stages exist to enforce quality gates,
+artifact dependencies, and review checkpoints. Skipping them is a governance
+violation.
+
+**Context to carry into the pipeline:**
+- VideoAnalysisBrief as grounding context in the research/proposal stage
+- User's chosen variant as the approved direction
+- Sample feedback (Step 6), once the sample is approved, carried into `script` and later stages
+- All creative differentiation decisions recorded in the decision_log
+- Audio architecture and voice casting decisions from Step 3
+- Layer 3 skills already read from Step 4b
+
+The pipeline takes over from here. The VideoAnalysisBrief travels alongside the
+standard artifacts, providing reference grounding at every stage.
+
+### Step 6: Sample-First Production (MANDATORY) — inside the `proposal` stage
+
+The sample is not a step ahead of the pipeline. It is the `sample` sub-stage of
+`proposal` in the pipeline manifests (`animated-explainer`, `animation`,
+`character-animation`, `cinematic`: `condition: video_analysis_brief_exists`,
+`human_approval_default: true`). Produce it after `research`, once the proposal
+is approved — concept, production plan, cost and `render_runtime` — and before
+`script`. See the proposal director's "Mandatory Sample Protocol" and
+`skills/meta/checkpoint-protocol.md` → "Sample Checkpoint".
+
+Once the proposal is approved, ALWAYS say:
 
 ```
 "Great choice. Before I commit to the full [X]-second video, I'll produce a
@@ -362,37 +409,6 @@ adjust: voice, visual style, pacing, music, colors."
 
 Iterate on sample feedback until approved. Store samples at:
 `projects/<name>/assets/sample/sample_v{N}.mp4`
-
-### Step 6: Enter Pipeline (HARD REDIRECT)
-
-After sample approval, the agent MUST enter the pipeline. This is not optional.
-
-**Mandatory steps:**
-1. Read the pipeline manifest: `pipeline_defs/animation.yaml` (or whichever
-   pipeline matches the production type)
-2. Execute **stage by stage** in order — research → proposal → script →
-   scene_plan → assets → edit → compose → publish
-3. Before EACH stage, read its director skill from
-   `skills/pipelines/<pipeline>/<stage>-director.md`
-4. Produce the required artifacts at each stage
-5. Hit every checkpoint where `checkpoint_required: true`
-6. Get user approval where `human_approval_default: true`
-
-**Do NOT collapse stages.** Do not jump from "user approved proposal" to
-"generate all assets." The pipeline stages exist to enforce quality gates,
-artifact dependencies, and review checkpoints. Skipping them is a governance
-violation.
-
-**Context to carry into the pipeline:**
-- VideoAnalysisBrief as grounding context in the research/proposal stage
-- User's chosen variant as the approved direction
-- Sample feedback incorporated into the brief
-- All creative differentiation decisions recorded in the decision_log
-- Audio architecture and voice casting decisions from Step 3
-- Layer 3 skills already read from Step 4b
-
-The pipeline takes over from here. The VideoAnalysisBrief travels alongside the
-standard artifacts, providing reference grounding at every stage.
 
 ## Multiple Reference Videos
 

@@ -31,6 +31,32 @@ Build a timeline map:
 ...
 ```
 
+### Step 1b: Runtime Carry-Forward (REQUIRED)
+
+The schema rejects `edit_decisions` without `version`, `cuts`, and `render_runtime`, and `video_compose` refuses to render when `render_runtime` or `renderer_family` is missing. Both were locked at proposal — copy them from the approved `proposal_packet.production_plan`; never choose or default them here:
+
+```json
+{
+  "version": "1.0",
+  "render_runtime": "remotion",
+  "renderer_family": "explainer-data",
+  "metadata": {
+    "proposal_render_runtime": "remotion",
+    "delivery_promise": {
+      "promise_type": "data_explainer",
+      "motion_required": false,
+      "tone_mode": "educational",
+      "quality_floor": "presentable"
+    }
+  }
+}
+```
+
+- `render_runtime` — exactly `production_plan.render_runtime` (`remotion`, `hyperframes`, or `ffmpeg`). A different value needs user approval and a `render_runtime_selection` entry in `decision_log`.
+- `renderer_family` — exactly `production_plan.renderer_family`. Copy `composition_mode` as well when the proposal set it.
+- `metadata.proposal_render_runtime` — the same locked runtime again. `video_compose` falls back to it for runtime-swap detection when it is not handed the `proposal_packet`.
+- `metadata.delivery_promise` — a verbatim copy of `production_plan.delivery_promise` (keep `promise_type`). `video_compose` checks the cuts against it before rendering and again in `final_review`; without it the promise check is skipped with a warning.
+
 ### Step 2: Define Cuts
 
 Each cut defines what visual is shown and when:
@@ -57,6 +83,8 @@ Each cut defines what visual is shown and when:
 - `primary` — main visual (one at a time)
 - `overlay` — text cards, stat cards, key terms (on top of primary)
 - `background` — solid color or texture behind everything
+
+**Cuts hold schema fields only.** `cuts[]` is closed: besides the fields above only `speed`, `transform.crop`, `backgroundColor`, and `reason` exist. The props the Remotion `Explainer` composition needs — `type` (`text_card`, `stat_card`, `bar_chart`, ...), that template's own props (`stat`, `backgroundVideo`, chart data), Remotion `overlays`, `captions`, `audio.narration.src` — have no place in this artifact and fail the checkpoint if you add them. Name the intended render template in the cut's `reason` (and, when you need structure, under `metadata.remotion_cuts` keyed by cut id). The Compose stage writes those props into a second file, `artifacts/remotion_composition.json`, which is the object actually handed to `video_compose` (compose-director Step 2).
 
 ### Step 3: Configure Subtitles
 
@@ -110,7 +138,15 @@ Use the playbook's typography for font choices.
 }
 ```
 
-**Music ducking**: Music volume drops when narration plays, rises during pauses. Use playbook's `audio.ducking_threshold_db`.
+**Music ducking — what actually happens**: `audio.music.ducking` records the intent (use the playbook's `audio.ducking_threshold_db` for `threshold_db`); whether the music really dips depends on the render path:
+
+- `audio_mixer` (`operation: "full_mix"`) is the only tool that ducks. It sidechains the music under the narration and honours `enabled`, `attack_ms`, and `release_ms`; the depth comes from its own `music_volume_during_speech` (default 0.15), not from `threshold_db`/`reduction_db`.
+- The Remotion `Explainer` composition never ducks. It plays the music at one flat `volume` with a fade in and out and ignores `ducking` entirely.
+
+So decide the mix here and record it in `metadata.audio_mix_plan`:
+
+- `"premix"` (**recommended whenever narration and music play together**) — keep `ducking.enabled: true`. The Compose stage mixes narration + music with `audio_mixer` and passes the mixed track to `video_compose` as `audio_path`.
+- `"flat"` — set `"ducking": {"enabled": false}` and keep `volume` low (0.08–0.12) so the bed never competes with the voice. Honest for music-light pieces; say so in the gate summary.
 
 ### Step 5: Apply Pacing Rules
 
@@ -134,10 +170,14 @@ Adjust cut timing if any violates these rules.
 - [ ] Every narration segment references a valid audio asset
 - [ ] Music asset exists
 
+**Render locks:**
+- [ ] `version`, `render_runtime`, and `renderer_family` are set and equal the proposal's locked values
+- [ ] `metadata.proposal_render_runtime` and `metadata.delivery_promise` are copied from the proposal
+
 **Audio sync:**
 - [ ] Narration segments are ordered and non-overlapping
 - [ ] Narration timing aligns with corresponding visual cuts
-- [ ] Music ducking is configured
+- [ ] Music ducking is configured and `metadata.audio_mix_plan` says who performs it (`premix`) or that the bed is flat (`flat`)
 
 **Subtitles:**
 - [ ] Subtitles enabled
@@ -165,6 +205,6 @@ Validate the edit_decisions artifact against the schema and persist via checkpoi
 
 - **Forgetting gaps**: If scene-1 ends at 10s and scene-2 starts at 10.5s, there's a 0.5s black frame. Check for gaps.
 - **Audio drift**: Narration audio may be slightly longer/shorter than planned. Adjust visual cuts to match actual narration durations, not planned durations.
-- **No ducking**: Music playing at full volume under narration makes the video unwatchable. Always configure ducking.
+- **No ducking**: Music playing at full volume under narration makes the video unwatchable. Always decide how the music sits under the voice — and remember that writing `ducking` into the artifact does nothing on the Remotion path by itself: either the Compose stage pre-mixes with `audio_mixer` (`premix`) or the music stays flat and low (`flat`).
 - **Same transition everywhere**: Varying transitions creates rhythm. Use the playbook's allowed set, but don't use the same one for every cut.
 - **Subtitle font mismatch**: Subtitles should use the playbook's body font, not a random default.

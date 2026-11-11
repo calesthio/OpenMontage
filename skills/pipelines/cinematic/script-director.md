@@ -65,8 +65,8 @@ Recommended metadata keys:
 ### Mid-Production Fact Verification
 
 If you encounter uncertainty during script writing:
-- Use `web_search` to verify factual claims before committing them to the script
-- Use `web_search` to find reference images for visual accuracy
+- Use your own web search (agent-native `web_search`, not a registry tool) to verify factual claims before committing them to the script
+- Use the same web search to find reference images for visual accuracy
 - Log verification in the decision log: `category="visual_accuracy_check"`
 
 Every factual claim in the script should be traceable to the `research_brief`.

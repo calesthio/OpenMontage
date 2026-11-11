@@ -71,7 +71,12 @@ The canonical `scene_plan.scenes[].type` vocabulary is `talking_head`, `broll`,
 and chart/card variants below are downstream Remotion `cut.type` templates,
 not valid scene-plan types. During scene planning, use `text_card` or
 `animation` as appropriate and state the intended render template in the scene
-description; the Edit stage converts that intent into `cut.type`.
+description (and, when you want it structured, in `scene_plan.metadata.render_templates`
+keyed by scene `id`). The Edit stage carries that intent in each cut's `reason` /
+`edit_decisions.metadata.remotion_cuts` — `edit_decisions` cuts are closed and have no
+`type` — and the Compose stage writes the Remotion `type` into
+`artifacts/remotion_composition.json`, the object it passes as `edit_decisions` to
+`video_compose` (see `skills/core/remotion.md`).
 
 | Render template or scene type | Best For | Available Tools | Duration Guidance |
 |------|----------|-----------------|-------------------|
@@ -170,7 +175,7 @@ If the video includes narration, the script **must** be written to fit the video
 
 ### Step 4c: 5-Aspect Scene-Plan Checklist
 
-> Every scene must specify all five aspects. For diagram, chart, and Remotion-native scenes, "Subject" can map to a foregrounded data element and "Camera" can be marked N/A — but only EXPLICITLY (e.g., `"camera": "N/A — Remotion native scene, no virtual camera"`). Silent omission is the most common failure mode and produces unpredictable model output, brittle prompts, and reviewer churn.
+> Every scene must specify all five aspects. For diagram, chart, and Remotion-native scenes, "Subject" can map to a foregrounded data element and "Camera" can be marked N/A — but only EXPLICITLY (e.g., end the scene's `description` with "Camera: N/A — Remotion native scene, no virtual camera"; scenes are closed in the schema, so there is no `camera` key — a real camera move goes in `shot_language.camera_movement`). Silent omission is the most common failure mode and produces unpredictable model output, brittle prompts, and reviewer churn.
 >
 > 1. **Subject** — type + key visual attributes; if multiple, how to disambiguate. For diagram/chart scenes, this is the foregrounded data element (the node, the bar, the KPI being highlighted). For generated images, it's the person/object/concept being illustrated.
 > 2. **Subject Motion** — actions in temporal order; for animated diagrams, the order in which nodes/edges/values appear or change.
@@ -180,7 +185,7 @@ If the video includes narration, the script **must** be written to fit the video
 >
 > See `skills/creative/video-gen-prompting.md` for the primitive vocabulary.
 
-> **Overlays callout.** Overlays (titles, subtitles, HUD, watermarks, framing graphics, lower-thirds, section_title bars, stat_reveal chips, hero_title overlays, provider chips) are NOT part of the scene's foreground/midground/background depth axis. List them separately in scene metadata (`overlays: [...]`) with content and placement. Never describe an overlay as "in the foreground" — that confuses both downstream tools and any video-understanding model that re-analyzes the output.
+> **Overlays callout.** Overlays (titles, subtitles, HUD, watermarks, framing graphics, lower-thirds, section_title bars, stat_reveal chips, hero_title overlays, provider chips) are NOT part of the scene's foreground/midground/background depth axis. List them separately in the scene's `overlay_notes` string with content and placement (scenes are closed in the schema — there is no scene-level `overlays` or `metadata` key; a structured list, if you need one, goes in `scene_plan.metadata.overlays` keyed by scene `id`). Never describe an overlay as "in the foreground" — that confuses both downstream tools and any video-understanding model that re-analyzes the output.
 
 ### Step 5: Validate Against Playbook
 

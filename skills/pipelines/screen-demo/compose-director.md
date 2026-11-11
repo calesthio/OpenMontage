@@ -15,7 +15,7 @@ Read `edit_decisions.render_runtime` first. Screen-demo compositions use three d
 
 Silent swaps between runtimes are CRITICAL governance violations. If the locked runtime is unavailable, escalate per AGENT_GUIDE.md before substituting.
 
-**Pass `proposal_packet` to `video_compose.execute()`** so the tool can directly confirm the runtime locked at proposal matches what edit_decisions says. Without it the in-tool swap check is skipped and you rely entirely on the reviewer skill to catch drift.
+**Confirm `edit_decisions.metadata.proposal_render_runtime` is set** (the edit stage copies the runtime locked at idea into it). This pipeline has no proposal stage, so there is no `proposal_packet` to pass to `video_compose.execute()`; the in-tool swap check compares that metadata key with `edit_decisions.render_runtime` instead. Without it the check is `skipped` and you rely entirely on the reviewer skill to catch drift — send it back to the edit stage rather than patching `edit_decisions` here.
 
 ## Prerequisites
 

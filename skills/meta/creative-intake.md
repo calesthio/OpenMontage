@@ -1,6 +1,6 @@
 # Creative Intake
 
-Before the research stage, gather user intent through targeted questions.
+Before the pipeline's first stage (`research` or `idea`, depending on the pipeline), gather user intent through targeted questions.
 Do NOT start production on a vague brief.
 
 ## Required Questions (ask conversationally, not as a survey)
@@ -31,7 +31,7 @@ When the user says something like "make me a video about X":
 1. Acknowledge the topic — show you understood.
 2. Ask the single most important missing question first (usually purpose or audience).
 3. Based on their answer, ask the next most important gap.
-4. Stop asking when you have enough to start research. You don't need perfect answers — research will fill in details.
+4. Stop asking when you have enough to start the pipeline's first stage. You don't need perfect answers — that stage will fill in details.
 
 ## Handling Detailed Briefs
 
@@ -44,16 +44,16 @@ When the user provides a multi-paragraph brief or a document:
 ## Output
 
 Produce an `intake_brief` (informal, not schema-validated) that the
-research stage uses as its starting context. Include:
+pipeline's first stage uses as its starting context. Include:
 
 - Direct quotes from the user where their language reveals intent
 - Explicit answers to each of the 7 questions (mark any that were inferred vs stated)
 - Any reference videos/images the user mentioned
 - Constraints that must be honored (budget, timeline, must-include)
 
-The intake_brief is passed as context to the research-director, not as a
-formal artifact. It exists to prevent the research stage from inventing
-intent that the user never expressed.
+The intake_brief is passed as context to the first stage's director
+(`research-director` or `idea-director`), not as a formal artifact. It exists
+to prevent that stage from inventing intent that the user never expressed.
 
 ## Handling Reference Video Input
 
@@ -80,5 +80,5 @@ When the user provides a video URL or file as their starting point:
 - Do not present a numbered survey. This is a conversation, not a form.
 - Do not ask questions the user already answered in their initial message.
 - Do not delay production unnecessarily — if the brief is clear, move on.
-- Do not invent answers for questions the user didn't address. Mark them as "not specified" and let the research stage handle ambiguity.
+- Do not invent answers for questions the user didn't address. Mark them as "not specified" and let the pipeline's first stage handle ambiguity.
 - Do not assume the user wants an explainer. Many users want cinematic, animation, or source-led work. Listen for signals.

@@ -44,12 +44,12 @@ KEY RULE:         Generate audio FIRST, then pass to talking_head
 
 ## Model Selection
 
-| Model | Strengths | Weaknesses |
-|-------|----------|------------|
-| sadtalker | Natural head motion, good expression range, well-tested | Can struggle with extreme expressions |
-| musetalk | Higher quality lip sync, sharper mouth region | More constrained head motion |
+| Model | Status | Strengths | Weaknesses |
+|-------|--------|----------|------------|
+| sadtalker | **Works — the default** | Natural head motion, good expression range, well-tested | Can struggle with extreme expressions |
+| musetalk | **Not implemented** — `model="musetalk"` returns `success=false` ("MuseTalk support is not yet implemented") | — | — |
 
-**Default to `sadtalker`** unless lip sync precision is the top priority.
+**Always use `sadtalker`.** If lip sync precision is the top priority, lip-sync an existing video with the `lip_sync` tool instead of asking for `musetalk`.
 
 ## Settings Reference
 

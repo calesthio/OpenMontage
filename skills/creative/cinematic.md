@@ -135,7 +135,7 @@ Add a subtle ambient layer to fill silence and create depth:
 When building cinematic-style content:
 
 1. **Set aspect ratio** — use 2.39:1 letterbox for true cinematic, or 16:9 with `cinematic_warm` grade for subtle
-2. **Render at 24fps** if the content is purely generated/animated (set in `video_compose`)
+2. **Render at 24fps** if the content is purely generated/animated — in `video_compose` pass `profile: "cinematic"` (the only 24fps media profile; it also sets 2560x1080 ultra-wide). The `fps` input (24 | 30 | 60) only applies to HyperFrames renders; every other profile is 30fps
 3. **Shot duration 4-8 seconds average** — vary deliberately, never same length 3x
 4. **Layer audio** — narration + music + ambient minimum; add Foley SFX at key moments
 5. **Music at 60-90 BPM**, dynamic (not looping) — use `music_gen` with "cinematic orchestral" prompt

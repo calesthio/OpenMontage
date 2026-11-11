@@ -101,6 +101,8 @@ stages:
       - corpus_builder
       - clip_search
       - music_gen
+      - tts_selector
+      - subtitle_gen
     checkpoint_required: true
     human_approval_default: true
     review_focus:
@@ -122,7 +124,8 @@ stages:
       - asset_manifest
     produces:
       - edit_decisions
-    tools_available: []
+    tools_available:
+      - video_analyzer
     checkpoint_required: true
     human_approval_default: true
     review_focus:

@@ -46,3 +46,17 @@ be built with the available rigs, assets, or runtime, surface a blocker.
 - `pose_library` has no readable acting poses.
 - `action_timeline` has actions that cannot be rendered by the rig.
 - Compose used a runtime not approved in proposal.
+
+## Execution Limits
+
+| Limit | Value |
+|-------|-------|
+| Max revisions per stage | manifest `orchestration.max_revisions_per_stage` |
+| Max send-backs per stage pair | 1 (guidance; no manifest field) |
+| Max total send-backs | manifest `orchestration.max_send_backs` |
+| Max total budget | The run budget from `tools/cost_tracker.py::resolve_budget_usd`: the amount the user approved at the proposal gate (`approval.approved_budget_usd`; record it with `python -m tools.cost_tracker budget <project-id> --usd <amount>`), else manifest `orchestration.budget_default_usd` capped at `config.yaml` `budget.total_usd`. Enforcement follows `config.yaml` `budget.mode`: `observe` records only, `warn` records and flags overruns, `cap` refuses a paid call that does not fit the remaining budget |
+| Max total wall-time | manifest `orchestration.max_wall_time_minutes` |
+
+Read the manifest-backed values from `pipeline_defs/character-animation.yaml` at the start of the run; never substitute numbers of your own.
+
+After any limit is hit: **proceed with warnings**, never block indefinitely. A limit never approves a human-gated stage (any stage with `human_approval_default: true` in the manifest): write `awaiting_human` with the warnings attached, end the turn, and let the user decide.

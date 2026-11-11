@@ -10,7 +10,7 @@ Phase 1 deferred from HyperFrames. `edit_decisions.render_runtime` must be `"rem
 
 - If `edit_decisions.render_runtime == "hyperframes"`, stop. Re-open the idea stage and surface the constraint. Silent rewrite is a governance violation.
 - Per AGENT_GUIDE.md → "Present Both Composition Runtimes (HARD RULE)": the lock to remotion is NOT an excuse to skip the conversation. The user deserves to know that HyperFrames exists as a runtime and why it isn't viable for avatar-spokesperson. Log a `render_runtime_selection` decision with hyperframes `rejected_because: "TalkingHead + caption parity deferred on avatar-spokesperson"`.
-- Pass `proposal_packet`/`brief` to `video_compose.execute()` for in-tool runtime-swap detection.
+- This pipeline has no proposal stage, so there is no `proposal_packet` to pass, and `video_compose.execute()` does not accept `brief`. The in-tool runtime-swap check instead compares `edit_decisions.render_runtime` with `edit_decisions.metadata.proposal_render_runtime` (set by the edit stage to the runtime locked at idea). If that key is missing the check reports `skipped` — send it back to the edit stage rather than patching `edit_decisions` here.
 
 ## Prerequisites
 

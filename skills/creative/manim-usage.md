@@ -6,7 +6,7 @@
 ## Quick Reference Card
 
 ```
-RENDER QUALITY:   -qh (1080p60) for YouTube  |  -qm (720p30) for drafts
+RENDER QUALITY:   quality="high" (1080p60) for YouTube  |  quality="medium" (720p30, the default) for drafts
 BACKGROUND:       Dark (#1a1a2e or BLACK)
 MAX ELEMENTS:     3-4 new visual elements revealed simultaneously
 PACING:           One concept per scene, build incrementally
@@ -18,15 +18,19 @@ WAIT AFTER:       1.0-2.0s (longer for complex equations)
 
 ## Render Settings for OpenMontage
 
-| Flag | Resolution | FPS | Use Case |
-|------|-----------|-----|----------|
-| `-ql` | 480x360 | 15 | Development/testing |
-| `-qm` | 1280x720 | 30 | Draft review |
-| `-qh` | 1920x1080 | 60 | Standard YouTube upload |
-| `-qp` | 2560x1440 | 60 | High-quality export |
-| `-qk` | 3840x2160 | 60 | 4K archival/premium |
+`math_animate` takes a `quality` name, not a Manim CLI flag:
 
-For OpenMontage's YouTube landscape profile (1920x1080/30fps), render at `-qh` and transcode to 30fps, or set custom config:
+| `quality` | Manim flag it maps to | Resolution | FPS | Use Case |
+|-----------|----------------------|-----------|-----|----------|
+| `low` | `-ql` | 854x480 | 15 | Development/testing |
+| `medium` (default) | `-qm` | 1280x720 | 30 | Draft review |
+| `high` | `-qh` | 1920x1080 | 60 | Standard YouTube upload |
+| `4k` | `-qk` | 3840x2160 | 60 | 4K archival/premium |
+| `preview` | `-ql --format gif` | 854x480 | 15 | Quick GIF preview |
+
+There is no 1440p (`-qp`) preset. Omitting `quality` renders 720p30, not 1080p.
+
+For OpenMontage's YouTube landscape profile (1920x1080/30fps), render with `quality: "high"` and transcode to 30fps. `math_animate` runs Manim from a temporary directory, so a project `manim.cfg` like the one below is not picked up by the tool — it only applies when you run the `manim` CLI yourself:
 
 ```ini
 [CLI]
@@ -91,7 +95,7 @@ frame_rate = 30
 
 When using the `math_animate` tool:
 
-1. **Render at `-qh`** (1080p60) for final output, `-qm` for drafts
+1. **Render with `quality: "high"`** (1080p60) for final output, `"medium"` (the default) for drafts — pass the names `low` | `medium` | `high` | `4k` | `preview`, never `-qh`-style flags
 2. **One concept per scene** — break complex proofs into multiple Manim scenes
 3. **Use timing table above** — don't rush equations (1.5-2.0s for writes)
 4. **Wait after reveals** — `self.wait(1.5)` minimum after key insights

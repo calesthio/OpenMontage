@@ -67,7 +67,7 @@ stages:
     produces:
       - research_brief
     tools_available: []
-    checkpoint_required: false
+    checkpoint_required: true
     human_approval_default: false
     review_focus:
       - Content landscape mapped with at least 3 existing pieces
@@ -102,10 +102,10 @@ stages:
       - "render_runtime chosen explicitly — remotion for React scene stack, hyperframes for HTML/GSAP motion graphics, ffmpeg for simple concat. See skills/core/hyperframes.md and skills/meta/animation-runtime-selector.md for the decision matrix. Record in decision_log with category render_runtime_selection."
     success_criteria:
       - Schema-valid proposal_packet with at least 3 concept_options
-      - selected_concept includes animation_mode and reuse_strategy
-      - selected_concept includes audio_architecture (single_narrator | character_dialogue | narrator_plus_characters)
+      - proposal_packet.metadata records animation_mode and reuse_strategy for the selected concept (selected_concept is closed to concept_id, rationale, modifications)
+      - proposal_packet.metadata records audio_architecture (single_narrator | character_dialogue | narrator_plus_characters)
       - cost_estimate has itemized line_items with per-tool costs
-      - cost_estimate includes provider_comparison table with at least 2 provider options
+      - production_plan.provider_rankings compares at least 2 provider options (cost_estimate is closed and has no comparison field)
       - approval.status is "approved" or "approved_with_changes" before proceeding
     sub_stages:
       - name: sample
@@ -262,6 +262,10 @@ stages:
       - hyperframes_compose
       - audio_mixer
       - video_stitch
+      - composition_validator
+      - audio_probe
+      - audio_energy
+      - pixabay_music
     checkpoint_required: true
     human_approval_default: false
     review_focus:
@@ -287,7 +291,8 @@ stages:
       - script
     produces:
       - publish_log
-    tools_available: []
+    tools_available:
+      - export_bundle
     checkpoint_required: true
     human_approval_default: true
     review_focus:

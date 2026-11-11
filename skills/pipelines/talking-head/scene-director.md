@@ -15,6 +15,7 @@ You are not just a processor. You are a creative director. Your job is to figure
 | Tools | `frame_sampler` (optional) | Extract representative frames |
 | Tools | `face_tracker` (optional) | Analyze speaker face position for reframing |
 | Tools | `silence_cutter` (optional) | Detect silence for jump cut planning |
+| Tools | `visual_qa` (optional) | Extract review frames to confirm background type |
 
 ## Process
 
@@ -28,7 +29,7 @@ Before watching the content, analyze the raw footage to understand the physical 
    ```
 
 2. **Run visual_qa or histogram analysis** on each sampled frame to detect:
-   - **Background type:** Green screen / blue screen / natural background. Green/blue screens show a dominant narrow-band color spike in the histogram. Use `visual_qa` with prompt "Is this a green screen or blue screen background?" for confirmation.
+   - **Background type:** Green screen / blue screen / natural background. Green/blue screens show a dominant narrow-band color spike in the histogram. For confirmation, use `visual_qa` (`operation: "review"` with `timestamps`) to extract frames and look at them yourself — the tool takes no prompt and makes no judgement of its own.
    - **Speaker position:** Center, left, or right of frame. Estimate the approximate bounding box (e.g., "speaker occupies center 40% of frame, from x=30% to x=70%").
    - **Lighting quality:** Even studio lighting, harsh shadows, backlit, mixed color temperature. Note any issues that may affect chroma keying.
 
@@ -75,7 +76,7 @@ Based on your content analysis, propose **on-screen graphics** that will appear 
 | **Comparison** | `comparison` | When the speaker compares two things (A vs B) — show side-by-side |
 | **Data chart** | `bar_chart` / `pie_chart` / `line_chart` | When the speaker references data or rankings |
 | **KPI dashboard** | `kpi_grid` | When multiple numbers are mentioned together |
-| **Progress indicator** | `progress_bar` | When the speaker describes a process or percentage |
+| **Progress / percentage** | `stat_card` | When the speaker describes a process or percentage (the TalkingHead composition has no `progress_bar`) |
 | **Section title** | `hero_title` | At major topic transitions — show the new section title |
 | **Callout/quote** | `callout` | When the speaker makes a key point worth emphasizing |
 | **Lower third** | `text_card` | Speaker identification at the start |
@@ -91,7 +92,6 @@ Based on your content analysis, propose **on-screen graphics** that will appear 
 | callout | 400px | YES | string |
 | hero_title | 400px | YES | string |
 | line_chart | 500px | YES | numeric |
-| progress_bar | 600px | YES | numeric |
 | stat_reveal | 300px | YES | string OK |
 
 When a component's minimum width exceeds the available space (e.g., `comparison` at 900px won't fit in a 720px portrait frame), substitute with the recommended alternative. For `comparison`, use two `stat_card` components shown sequentially instead.
@@ -181,28 +181,46 @@ For talking-head, the base is simple: one scene per script section, all type `ta
 
 ### Step 6: Build Overlay Scenes
 
-For each approved overlay from Step 3, create an overlay scene entry:
+`scene_plan.schema.json` has no `overlay` scene type and rejects extra keys on a scene, so overlays do NOT go in `scenes[]`. For each approved overlay from Step 3, add an entry to `scene_plan.metadata.overlays[]` and name it in the base scene's `overlay_notes`:
 ```json
 {
-  "id": "overlay_1",
-  "type": "overlay",
-  "overlay_type": "text_card",
-  "start_seconds": 22.0,
-  "duration_seconds": 4.0,
-  "content": {
-    "text": "Agentic AI",
-    "subtext": "Software that acts autonomously toward goals",
-    "backgroundColor": "<theme_background>",
-    "accentColor": "<theme_accent>"
-  },
-  "position": "lower_third"
+  "version": "1.0",
+  "scenes": [
+    {
+      "id": "scene_1",
+      "type": "talking_head",
+      "description": "Speaker introduces agentic AI",
+      "start_seconds": 0.0,
+      "end_seconds": 45.0,
+      "script_section_id": "s1",
+      "overlay_notes": "overlay_1 (text_card) at 22.0s"
+    }
+  ],
+  "metadata": {
+    "overlays": [
+      {
+        "id": "overlay_1",
+        "scene_id": "scene_1",
+        "overlay_type": "text_card",
+        "start_seconds": 22.0,
+        "duration_seconds": 4.0,
+        "content": {
+          "text": "Agentic AI",
+          "subtext": "Software that acts autonomously toward goals",
+          "backgroundColor": "<theme_background>",
+          "accentColor": "<theme_accent>"
+        },
+        "position": "lower_third"
+      }
+    ]
+  }
 }
 ```
 
 **Overlay position options:**
 - `lower_third` — bottom 30% of frame (safest, doesn't occlude face)
 - `upper_third` — top 30% of frame (good for titles)
-- `side_panel` — left or right 40% (for charts/comparisons, speaker shifts to other side)
+- `left_panel` / `right_panel` — left or right ~45% of frame (for charts/comparisons, on the side away from the speaker)
 - `full_overlay` — brief full-screen graphic (1-2s max, for dramatic emphasis)
 
 ### Step 7: Plan Reframing & Cuts
@@ -219,11 +237,13 @@ If silence detection found segments to cut:
 ### Step 8: Build Scene Plan
 
 Assemble the full scene plan with:
-- Base scenes (one per script section, type `talking_head`)
-- Overlay scenes (from Step 6, type `overlay`)
-- Enhancement chain decisions (silence cut mode, speed factor, reframe target)
-- Music recommendation
-- Estimated final duration
+- Base scenes (one per script section, type `talking_head`) in `scenes[]`
+- Overlay entries (from Step 6) in `metadata.overlays[]`
+- Enhancement chain decisions (silence cut mode, speed factor, reframe target) in `metadata`
+- Music recommendation in `metadata`
+- Estimated final duration in `metadata`
+
+The schema allows only its own keys at the top level and on each scene; everything else lives under `scene_plan.metadata`.
 
 ### Step 9: Self-Evaluate
 

@@ -13,6 +13,7 @@ You have a scene plan and script. Your job is to generate the supporting assets 
 | Tools | `subtitle_gen`, `audio_mixer` | Subtitle and audio generation |
 | Tools | `image_selector` (optional) | Stock images for overlays |
 | Tools | `pixabay_music` (optional) | Royalty-free background music |
+| Tools | `audio_energy` (optional) | Find the best music start offset |
 
 ## Process
 
@@ -60,7 +61,7 @@ Record the music path, offset, and whether looping is needed in the asset manife
 
 ### Step 4: Generate Overlay Assets
 
-If the scene plan includes overlay scenes (from the scene-director's Watch & Propose step), generate the assets for each.
+If the scene plan includes overlays (`scene_plan.metadata.overlays[]`, from the scene-director's Watch & Propose step), generate the assets for each.
 
 **For Remotion-rendered overlays** (charts, comparisons, KPI grids, stat cards):
 
@@ -89,13 +90,13 @@ Create a composition JSON snippet for each overlay. These will be rendered by th
 | Scene Plan Overlay | Remotion `type` | Required Props |
 |-------------------|-----------------|----------------|
 | Key term definition | `callout` | `text`, `icon` (optional) |
-| Statistic/number | `stat_card` | `stat` (the number), `text` (label) |
+| Statistic/number | `stat_card` | `stat` (the number), `subtitle` (label) |
 | Comparison | `comparison` | `leftLabel`, `rightLabel`, `leftValue`, `rightValue` |
 | Data chart | `bar_chart` | `chartData` (array of `{label, value}`) |
 | Pie chart | `pie_chart` | `chartData` (array of `{label, value}`) |
 | Line chart | `line_chart` | `chartSeries` (array of `{name, data: number[]}`) |
-| KPI dashboard | `kpi_grid` | `chartData` (array of `{label, value}`) — keep numbers small with suffix (e.g. "2.4M") |
-| Progress indicator | `progress_bar` | `progress` (0-100), `text` |
+| KPI dashboard | `kpi_grid` | `chartData` (array of `{label, value}`) — `value` must be numeric; put the unit in `suffix`/`prefix` (e.g. `{"label": "Users", "value": 2.4, "suffix": "M"}`) |
+| Progress / percentage | `stat_card` | `stat` (e.g. `"65%"`), `subtitle` (label) — the TalkingHead composition has no `progress_bar` |
 | Section title | `hero_title` | `text`, `subtitle` (optional) |
 | Callout/quote | `callout` | `text`, `icon` |
 | Lower third | `text_card` | `text` |
@@ -119,7 +120,6 @@ The Explainer composition now includes an `AnimatedBackground` component that re
 | callout | 400px | YES | string |
 | hero_title | 400px | YES | string |
 | line_chart | 500px | YES | numeric |
-| progress_bar | 600px | YES | numeric |
 | stat_reveal | 300px | YES | string OK |
 
 Key rules:
@@ -135,33 +135,52 @@ Generate PNG images using FFmpeg or PIL, stored at `<project>/assets/overlays/ov
 
 ### Step 5: Build Asset Manifest
 
-Document all generated assets with paths, types, and tool references:
+Document all generated assets with paths, types, and tool references. `asset_manifest.schema.json` requires `version` and `assets[]` and rejects any other top-level key: every file is one `assets[]` entry (`id`, `type`, `path`, `source_tool`, `scene_id`), and everything that is not a file — music offset, overlay props, the transcript path — goes under `metadata`:
 
 ```json
 {
-  "subtitles": {
-    "path": "assets/subtitles/subtitles.srt",
-    "format": "srt",
-    "word_count": 208
-  },
-  "music": {
-    "path": "assets/audio/bg_music.mp3",
-    "offset_seconds": 3.5,
-    "needs_loop": true
-  },
-  "overlays": [
+  "version": "1.0",
+  "assets": [
     {
-      "overlay_id": "overlay_1",
-      "type": "callout",
-      "timestamp": 22.0,
-      "duration": 4.0,
-      "remotion_cut": { ... },
-      "position": "lower_third"
+      "id": "subtitles_main",
+      "type": "subtitle",
+      "path": "projects/<project>/assets/subtitles/subtitles.srt",
+      "source_tool": "subtitle_gen",
+      "scene_id": "global",
+      "format": "srt"
+    },
+    {
+      "id": "bg_music",
+      "type": "music",
+      "path": "projects/<project>/assets/audio/bg_music.mp3",
+      "source_tool": "pixabay_music",
+      "scene_id": "global",
+      "format": "mp3"
     }
   ],
-  "transcript_segments": "assets/audio/transcript.json"
+  "metadata": {
+    "subtitles": { "asset_id": "subtitles_main", "word_count": 208 },
+    "music": { "asset_id": "bg_music", "offset_seconds": 3.5, "needs_loop": true },
+    "overlays": [
+      {
+        "overlay_id": "overlay_1",
+        "type": "callout",
+        "timestamp": 22.0,
+        "duration": 4.0,
+        "remotion_cut": {
+          "id": "term-agentic-ai",
+          "type": "callout",
+          "text": "Agentic AI: software that acts autonomously toward goals"
+        },
+        "position": "lower_third"
+      }
+    ],
+    "transcript_segments": "projects/<project>/assets/audio/transcript.json"
+  }
 }
 ```
+
+PNG overlays generated as files (see "For simple text overlays" above) are `assets[]` entries with `type: "image"`.
 
 ### Step 6: Self-Evaluate
 

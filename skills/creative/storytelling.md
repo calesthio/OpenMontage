@@ -183,7 +183,7 @@ When writing a **script artifact** for the animated-explainer pipeline:
 2. Structure sections using the Explainer Arc template
 3. Apply "but-therefore" connectors between sections
 4. Consider the misconception-first approach for science/technical topics
-5. Set `narration_wpm: 155` in the script to calculate accurate timing
+5. Set `narration_wpm: 155` under the script's `metadata` (`metadata.narration_wpm`) to calculate accurate timing — the script schema rejects unknown top-level keys
 6. Plan visual changes every 3-5 seconds in the scene_plan
 7. Mark "silence" beats in the script for key insights
 8. Validate: total concepts should not exceed the scaling table above

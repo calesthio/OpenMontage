@@ -57,4 +57,4 @@ For a character that walks / dances / etc., do NOT hand-author motion (sine curv
 
 ## Reference builds
 
-- `projects/ink-theater-reel/` — capabilities reel. · `projects/ink-theater-momentum/` — "Momentum" story (handwriting via HTML divs).
+- `ink-theater/examples/mocap-figure/` — the pencil figure draws itself, then walks / runs / dances / kicks / sits / waves via real CMU mocap. Self-contained and lintable (`npx hyperframes lint ink-theater/examples/mocap-figure`); see `ink-theater/examples/README.md`.

@@ -29,8 +29,8 @@ TARGET LUFS:    -14 LUFS (YouTube/TikTok/IG) | -16 LUFS (podcasts)
 **Ducking rules:**
 - W3C accessibility: music must be **20 dB lower** than foreground speech
 - BBC guideline: lower music by an additional **4 dB** from where you think it sounds right
-- Duck music **6-12 dB** when narration is active; for complex educational topics, duck up to **22 dB**
-- EQ trick: cut **2-4 kHz** on background music to make room for speech clarity
+- Duck music **6-12 dB** when narration is active as a bare minimum (`audio_mixer`'s default `duck_level` is -12); the OpenMontage target is **18-20 dB** (see the table above); for complex educational topics, duck up to **22 dB**
+- EQ trick: cut **2-4 kHz** on background music to make room for speech clarity — `audio_mixer` has no EQ, so do this on the music file first with `audio_enhance` (`custom_af`, an FFmpeg `equalizer` filter around 3 kHz)
 - When testing, adjust in **1 dB increments** from a -20 dB baseline upward
 
 ## Music Selection by Content Type
@@ -124,7 +124,7 @@ TARGET LUFS:    -14 LUFS (YouTube/TikTok/IG) | -16 LUFS (podcasts)
 - AI TTS has inconsistent dynamics — compression is more important than for human speech
 - ElevenLabs may have subtle artifacts in 4-6 kHz; use narrow notch cut if detected
 - Sidechain background music to voiceover track for automatic ducking
-- Cut 2-4 kHz on the music bed to clear the "intelligibility band" for voice
+- Cut 2-4 kHz on the music bed to clear the "intelligibility band" for voice (`audio_enhance` `custom_af` on the music file before mixing — `audio_mixer` cannot EQ)
 - Always test on phone speakers — if voice disappears, boost 2-4 kHz more aggressively
 
 ## Applying to OpenMontage
@@ -132,10 +132,10 @@ TARGET LUFS:    -14 LUFS (YouTube/TikTok/IG) | -16 LUFS (podcasts)
 When the **audio_mixer** tool is used in the compose stage:
 
 1. Set narration as primary track, music as secondary
-2. Apply ducking: music -18 to -20 dB below narration during speech
+2. Apply ducking: music -18 to -20 dB below narration during speech — in the `duck` operation pass `duck_level: -18` to `-20` (the tool default is -12, which is too loud for a narration bed — always pass it explicitly). `full_mix` does not read `duck_level`: set `ducking.music_volume_during_speech` instead (default 0.15; the tool's own dB conversion gives 0.126 for -18 dB and 0.1 for -20 dB)
 3. Select music BPM from the table above based on the playbook mood
 4. Place SFX at transition points with 10-20ms audio lead
-5. Target -14 LUFS integrated for YouTube output
+5. Target -14 LUFS integrated for YouTube output — pass `loudnorm_target: -14` to `mix` / `full_mix`; the tool default is -16 (the `duck` operation does not normalize loudness)
 6. Keep true peak below -1.5 dBTP
 7. For AI TTS narration, apply the processing chain above before mixing
 8. Test the final mix on phone speakers — most viewers watch on mobile

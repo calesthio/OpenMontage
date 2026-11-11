@@ -129,7 +129,7 @@ When using the `music_gen` tool:
 3. **Include "background" or "underscore"** in every prompt
 4. **Set duration to match video length** — avoid looping when possible
 5. **Budget check** — at $0.05/30s, a 3-minute video costs ~$0.30 for music
-6. **Duck music 18-20 dB below narration** — see `skills/creative/sound-design.md` for ducking rules
-7. **Cut 2-4 kHz on the music bed** in `audio_mixer` to clear the speech intelligibility band
+6. **Duck music 18-20 dB below narration** — `audio_mixer` `duck_level: -18` to `-20` (the tool default is -12); see `skills/creative/sound-design.md` for ducking rules
+7. **Cut 2-4 kHz on the music bed** to clear the speech intelligibility band — `audio_mixer` has no EQ; run the music file through `audio_enhance` with `custom_af` (an FFmpeg `equalizer` filter around 3 kHz) before mixing
 8. **Test on phone speakers** — if narration disappears behind music, duck more aggressively
 9. **One track per video** — avoid switching music styles mid-video unless there's a clear narrative shift

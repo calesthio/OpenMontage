@@ -43,7 +43,7 @@ Use:
 
 **For `image_animation` approach (anime/illustration style):**
 
-Use `anime_scene` type for each scene. Plan:
+Give each scene `"type": "animation"` in the scene plan — the scene `type` enum is `talking_head`, `broll`, `animation`, `character_scene`, `diagram`, `text_card`, `transition`, `generated`, `screen_recording`, and `anime_scene` is not one of them. `anime_scene` is the Remotion **cut** type the Compose stage writes into its composition JSON (`remotion-composer/SCENE_TYPES.md`, `skills/core/remotion.md`). Record the intent per scene in `scene_plan.metadata.tool_path_map` (see section 4) as `"remotion_cut_type": "anime_scene"` together with the plan below, and the camera move in the scene's `shot_language.camera_movement` (schema values such as `zoom_in`, `pan_right`, `static`). Plan:
 
 - **Images per scene**: 2-3 images built from the same visual system and nearby seeds for crossfade effect
 - **Camera motion**: choose from `zoom-in`, `zoom-out`, `pan-left`, `pan-right`, `ken-burns`, `drift-up`, `drift-down`, `parallax`, `static` — vary per scene to prevent monotony
@@ -56,9 +56,9 @@ Use `anime_scene` type for each scene. Plan:
 - Don't use the same camera motion for consecutive scenes
 - Alternate between warm and cool particle types
 - Mix close-up and wide establishing shots
-- Use overlays (`hero_title`, `section_title`) to add narrative structure
+- Use overlays (`hero_title`, `section_title`) to add narrative structure — describe them in the scene's `overlay_notes` string
 
-**JSON prop name mapping** (use these exact field names in the composition JSON):
+**JSON prop name mapping** (the exact field names the Compose stage uses in the Remotion composition JSON — use them as the keys of each scene's `tool_path_map` entry so the mapping is mechanical; they are not scene fields):
 
 | Concept | JSON Field | Example Values |
 |---------|-----------|----------------|
@@ -74,12 +74,12 @@ Use `anime_scene` type for each scene. Plan:
 
 ### 4. Use Metadata For Timing Rules
 
-Recommended metadata keys:
+Recommended metadata keys (top-level `scene_plan.metadata` — each scene is closed in the schema and has no `metadata` of its own):
 
 - `animatic_rules`
 - `transition_rules`
 - `hold_rules`
-- `tool_path_map`
+- `tool_path_map` — keyed by scene `id`: that scene's `animation_mode` (one of `image_animation`, `clip_video`, `manim`, `remotion_dataviz`, `diagram_stills`), its tool, and for `image_animation` scenes the Remotion plan, e.g. `{"scene-1": {"animation_mode": "image_animation", "tool": "image_selector", "remotion_cut_type": "anime_scene", "image_count": 3, "animation": "zoom-in", "particles": "fireflies", "vignette": true}}`
 - `reusable_motifs`
 
 ### 5. 5-Aspect Scene-Plan Checklist
@@ -92,15 +92,15 @@ Recommended metadata keys:
 > 4. **Spatial Framing** — shot size + position-in-frame + depth (FG/MG/BG) + camera-height-relative; and how those CHANGE. Manim cares about layout grid + element positions; AI-video cares about full cinematographic framing.
 > 5. **Camera** — playback speed → lens distortion → height → angle → focus/DoF → steadiness → movement. For Manim and pure motion-graphics, default to N/A unless using a virtual camera move (`MoveCamera`, `self.frame`). For `anime_scene` and AI-video, specify fully.
 >
-> Tie this back to `animation_mode` in scene metadata: a Manim scene that lists Camera fully is over-specified; an AI-video scene that omits Camera is under-specified. See `skills/creative/video-gen-prompting.md` for the primitive vocabulary.
+> Tie this back to the scene's `animation_mode` in `scene_plan.metadata.tool_path_map` (scenes have no metadata of their own): a Manim scene that lists Camera fully is over-specified; an AI-video scene that omits Camera is under-specified. See `skills/creative/video-gen-prompting.md` for the primitive vocabulary.
 
-> **Overlays callout.** Overlays (titles, subtitles, HUD, watermarks, framing graphics, lower-thirds, `hero_title`, `section_title`, `provider_chip`) are NOT part of the scene's foreground/midground/background depth axis. List them separately in scene metadata (`overlays: [...]`) with content and placement. Never describe an overlay as "in the foreground" — that confuses both downstream tools and any video-understanding model that re-analyzes the output.
+> **Overlays callout.** Overlays (titles, subtitles, HUD, watermarks, framing graphics, lower-thirds, `hero_title`, `section_title`, `provider_chip`) are NOT part of the scene's foreground/midground/background depth axis. List them separately in the scene's `overlay_notes` string with content and placement (scenes are closed in the schema — there is no scene-level `overlays` or `metadata` key; a structured list, if you need one, goes in `scene_plan.metadata.overlays` keyed by scene `id`). Never describe an overlay as "in the foreground" — that confuses both downstream tools and any video-understanding model that re-analyzes the output.
 
 ### 6. Quality Gate
 
 - every scene has a clear timing intent,
 - the 5-aspect checklist is satisfied for the scene's `animation_mode` (with explicit N/A where appropriate),
-- overlays live under `overlays:`, never inside the framing description,
+- overlays live in `overlay_notes`, never inside the framing description,
 - the transition system is limited and meaningful,
 - the tool path is explicit,
 - the sequence feels like one designed system.

@@ -38,7 +38,9 @@ riff on.
    - Reference-driven research: "What is interesting about this topic that the
      reference video DIDN'T cover?" + "What would make our version DIFFERENT and BETTER?"
 
-3. In the research_brief, add a `reference_context` section:
+3. In the research_brief, record a `reference_context` object under the top-level
+   `metadata` (`research_brief.metadata.reference_context` — the brief root is closed in
+   the schema, so a top-level `reference_context` key fails the checkpoint):
    - What the reference covered
    - What it missed (your differentiation opportunity)
    - What claims it made that you can verify or update

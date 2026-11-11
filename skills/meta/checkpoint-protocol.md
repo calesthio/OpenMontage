@@ -2,7 +2,7 @@
 
 ## When to Use
 
-After completing a stage's work AND passing review. This skill teaches you when and how to checkpoint, and when to ask the human for approval. It replaces the Python `checkpoint_policy.py` with an instruction-driven protocol.
+After completing a stage's work AND passing review. This skill teaches you when and how to checkpoint, and when to ask the human for approval.
 
 Checkpoints are the save points of a pipeline. They enable resume-from-failure, human oversight, and audit trails.
 
@@ -22,7 +22,7 @@ Read the current stage's configuration from the pipeline manifest:
 |----------------------|------------------------|--------|
 | true | true | Checkpoint + present to human for approval |
 | true | false | Checkpoint + proceed automatically |
-| false | * | Skip checkpoint entirely (rare) |
+| false | * | Only a pipeline's **last** stage may skip its checkpoint. Any stage with a successor must be checkpointed `completed`: `lib/checkpoint.py` refuses to advance a later stage (`PREREQUISITE VIOLATION`) until every earlier stage has one. |
 
 ### Step 2: Prepare Checkpoint Data
 
@@ -30,8 +30,10 @@ Gather everything needed for the checkpoint:
 
 1. **Stage name** — which stage just completed
 2. **Status** — `"completed"` (or `"awaiting_human"` if approval needed)
-3. **Artifacts** — the canonical artifact(s) produced by this stage
-4. **Metadata** — review findings, cost snapshot, timing info
+3. **Artifacts** — the canonical artifact(s) produced by this stage. A stage a manifest adds beyond the nine canonical ones (`character_design`, `rig_plan`) must carry the first artifact of its `produces` list, exactly like a canonical stage carries its canonical artifact.
+4. **Review** — the reviewer's findings, passed as `review={...}` (not inside `metadata`)
+5. **New decisions** — as the `decision_log` artifact (see "The decision log" below)
+6. **Metadata** — timing info, `partial_progress`, `approval_basis`
 
 ### Step 3: Write Checkpoint
 
@@ -39,11 +41,13 @@ Call the checkpoint utility:
 
 ```python
 write_checkpoint(
-    pipeline_dir,      # Project working directory
+    pipeline_dir,      # the projects/ root (lib.checkpoint.PROJECTS_DIR) — NOT the project's own folder
     project_name,      # Project identifier
     stage_name,        # e.g., "idea"
     status,            # "completed" or "awaiting_human"
     artifacts,         # {"brief": {...}} — the stage's output
+    pipeline_type="...",   # always: gates and stage order come from the manifest
+    review={...},          # the reviewer's result for this stage
 )
 ```
 
@@ -53,6 +57,12 @@ The checkpoint utility will:
 - Archive any superseded checkpoint to `projects/<id>/history/` (stage versions and gate transitions are never destroyed)
 - Write the checkpoint JSON to disk
 - Include timestamp and stage metadata
+
+It also fills in three things so they do not depend on you remembering them:
+
+- **`cost_snapshot`** — leave it out. The writer syncs the cost every tool call reported into `projects/<id>/cost_log.json` and snapshots it. Passing your own snapshot overrides that, so only do it deliberately.
+- **`review`** — on the approval re-write (`awaiting_human` → `completed`) the review you passed at the gate is carried over, marked `carried_from`. If a stage reaches a gate or finishes with no review at all, the writer logs it, `get_unreviewed_stages()` lists it, and the board shows NO REVIEW on that stage. The reviewer is advisory, so nothing is blocked — but it is no longer invisible.
+- **`checkpoint_policy`** — the strictest of `checkpoint.policy` in `config.yaml` and the manifest's `default_checkpoint_policy`. Under `manual_all` every stage is gated, including the ones the manifest leaves open: write `awaiting_human`, end your turn, and complete it with `human_approved=True` after the user answers.
 
 Canonical location: `projects/<project_id>/checkpoint_<stage>.json` — always
 pass the repo's `projects/` directory as `pipeline_dir` (or use
@@ -123,7 +133,7 @@ When `human_approval_default: true`:
    [Summary from reviewer: N critical (all fixed), N suggestions]
 
    ### Cost So Far
-   [Budget spent / total, breakdown by tool]
+   [Budget spent / total, breakdown by tool — from `python -m tools.cost_tracker show <project-id>`]
 
    ### Action Required
    Please review and approve to continue, or provide feedback for revision.
@@ -171,18 +181,21 @@ When `human_approval_default: true`:
 After checkpoint is written and approved (if needed):
 
 ```python
-next_stage = get_next_stage(pipeline_dir, project_name)
+next_stage = get_next_stage(pipeline_dir, project_name, pipeline_type)
 ```
 
-This reads all existing checkpoints and returns the next stage that needs to run, or `None` if the pipeline is complete.
+This reads all existing checkpoints and returns the next stage that needs to run, or `None` if the pipeline is complete. Pass `pipeline_type` (it falls back to the project marker written by `init_project()`): stage order is per pipeline, and the generic order names stages your pipeline may not have.
 
 ### Step 7: Resume Protocol
 
 At the START of any pipeline run (not just after a stage), always check for existing progress:
 
 ```python
-next_stage = get_next_stage(pipeline_dir, project_name)
+next_stage = get_next_stage(pipeline_dir, project_name, pipeline_type)
+stale = get_stale_stages(pipeline_dir, project_name, pipeline_type)
 ```
+
+`get_next_stage` only looks at completion. If an earlier stage was re-run after later ones finished (a revised script after the assets were generated), those later stages still read `completed`. `get_stale_stages` lists them as `{"stage": ..., "superseded_by": ...}`. When it is not empty, tell the human which stages were built from the superseded artifact and ask whether to re-run them — do not resume past them silently.
 
 If `next_stage` is not the first stage:
 1. Inform the human: "Found existing progress. Resuming from stage: [next_stage]"
@@ -233,13 +246,34 @@ preview clip stored at `projects/<name>/assets/sample/sample_v{N}.mp4`.
 Does this feel right? I can adjust: voice, visual style, pacing, music, colors.
 ```
 
+## The Decision Log
+
+There is one decision log per project: `projects/<project_id>/decision_log.json`. You never open or write that file yourself.
+
+- **At a checkpoint**: put the stage's new decisions in the checkpoint's artifacts — `artifacts={"<canonical>": {...}, "decision_log": {"version": "1.0", "project_id": "<id>", "decisions": [...]}}`. The writer appends them to the project log.
+- **Between checkpoints** (the user swaps the voice mid-assets, a fallback kicks in): `from lib.checkpoint import append_decisions, PROJECTS_DIR; append_decisions(PROJECTS_DIR, "<id>", [{...}])`.
+- **To read it**: `read_decision_log(PROJECTS_DIR, "<id>")`.
+- The log is append-only. A changed choice is a NEW entry with a new `decision_id` and the same `category` and `subject`; re-using a `decision_id` with a different `selected` is rejected.
+- Do not save a copy under `artifacts/decision_log.json`. If one exists, the writer folds any decision it does not have into the project log at the next checkpoint and the board flags the drift — but an entry that only lives there is not in the audit trail until then.
+
+## Resuming A Run
+
+```python
+from lib import checkpoint
+checkpoint.get_next_stage(checkpoint.PROJECTS_DIR, "<id>")          # where to continue
+checkpoint.get_stale_stages(checkpoint.PROJECTS_DIR, "<id>")        # completed stages built on a superseded upstream
+checkpoint.get_unreviewed_stages(checkpoint.PROJECTS_DIR, "<id>")   # stages checkpointed with no review
+```
+
+A misspelled or removed pipeline name raises `UnknownPipelineError` instead of quietly resuming against the canonical stage list. Tell the user about stale and unreviewed stages before continuing.
+
 ## Key Principles
 
-1. **Always checkpoint completed work.** Even if `checkpoint_required: false`, consider checkpointing anyway if the stage took significant time or cost. Losing work is worse than an extra file on disk.
+1. **Always checkpoint completed work.** Every stage that has a successor needs a `completed` checkpoint before the next stage can advance, whatever `checkpoint_required` says. Losing work is worse than an extra file on disk.
 
 2. **Never skip human approval on creative stages.** `idea` and `script` shape everything. Rushing past them to save time produces videos nobody wants.
 
-3. **Include cost snapshots.** The human should know how much has been spent and how much remains before approving expensive downstream stages (assets, compose).
+3. **Show the cost, do not type it.** The human should know how much has been spent and how much remains before approving expensive downstream stages (assets, compose). The checkpoint writer takes the snapshot from the project's cost ledger by itself — do not pass `cost_snapshot`. Read the numbers for the approval message with `python -m tools.cost_tracker show <project-id>`. Two things the ledger cannot know unless you tell it: the budget the user approved at proposal (`python -m tools.cost_tracker budget <project-id> --usd <amount>`), and spend no tool reports, such as rented GPU time (`python -m tools.cost_tracker record <project-id> --tool vastai_gpu --hours 0.52 --rate 0.40`).
 
 4. **Checkpoints enable resume.** If the pipeline crashes at `compose`, the human can restart and it picks up from `compose` — not from `idea`. This is the whole point.
 

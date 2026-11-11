@@ -5,7 +5,7 @@
 Produce `character_design`: a small cast with clear silhouettes, roles,
 emotions, actions, and style anchors.
 
-> **Hand-drawn ink "doodle" character?** (a stick/pencil figure that draws itself, then walks / dances / waves / jumps) → use the **Ink Puppet** system: `skills/creative/ink-theater.md` + `ink-theater/README.md`. The rig is proportion-agnostic and plays **real mocap** clips via `InkPuppet.choreograph([{clip:'wave'},{clip:'twist'},…])` — clip names come from `ink-theater/mocap/catalog.json` (12 CMU-sourced moves); the agent only chooses named moves, **never hand-tunes motion**; add moves with `node ink-theater/mocap/add-motion.mjs`. Command: `/ink-art`.
+> **Hand-drawn ink "doodle" character?** (a stick/pencil figure that draws itself, then walks / dances / waves / jumps) → use the **Ink Puppet** system: `skills/creative/ink-theater.md` + `ink-theater/README.md`. The rig is proportion-agnostic and plays **real mocap** clips via `InkPuppet.choreograph(tl, puppet, [{clip:'wave', dur:3}, {clip:'twist', dur:3}, …], {start: 2.6})` — `tl` is the GSAP timeline, `puppet` comes from `InkPuppet.create(mount, {cx, ground})`, and every segment needs a `dur` in seconds (see `ink-theater/ink-puppet.js`); clip names come from `ink-theater/mocap/catalog.json` (12 CMU-sourced moves); the agent only chooses named moves, **never hand-tunes motion**; add moves with `node ink-theater/mocap/add-motion.mjs`. Command: `/ink-art`.
 
 ## Process
 

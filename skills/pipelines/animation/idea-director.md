@@ -1,81 +1,10 @@
-# Idea Director - Animation Pipeline
+# Idea Director - Animation Pipeline (superseded)
 
-## When To Use
+**Do not use this file.** The animation pipeline (`pipeline_defs/animation.yaml`) has no `idea` stage. It starts at `research` → `proposal`:
 
-Use this pipeline when the video should be built primarily through designed motion: motion graphics, kinetic typography, diagram-led explainers, math visuals, or illustrative animation.
+| Stage | Director skill |
+|-------|----------------|
+| `research` | `skills/pipelines/animation/research-director.md` |
+| `proposal` | `skills/pipelines/animation/proposal-director.md` — animation mode selection, reuse strategy, cost estimate, approval gate |
 
-Do not use this pipeline when the project is really footage-led with a few overlays. That belongs in `hybrid`.
-
-## Reference Inputs
-
-- `skills/creative/animation-pipeline.md`
-- `skills/creative/storytelling.md`
-- `skills/creative/ink-theater.md` — for hand-drawn **ink "doodle"** briefs: a character that draws itself and performs, or a deadpan contraption explainer (Ink Theater engine + Ink Puppet mocap; command `/ink-art`). A stick/pencil character that walks or dances belongs in the `character-animation` pipeline.
-
-## Process
-
-### 1. Classify The Animation Mode
-
-Choose the primary mode:
-
-- `diagrammatic`
-- `motion_graphics`
-- `kinetic_type`
-- `math_animation`
-- `illustrative`
-- `mixed_animation`
-
-### 2. Decide The Visual Path Early
-
-Figure out which tools are supposed to do the work:
-
-- `diagram_gen`
-- `math_animate`
-- `code_snippet`
-- `image_selector`
-- `video_selector` or a concrete video provider tool
-- source-provided art
-
-If the requested mode depends on unavailable tools, say so in the brief metadata immediately.
-
-### 3. Choose A Reuse Strategy
-
-Animation gets expensive when every scene is unique. Define:
-
-- recurring motifs,
-- layout system,
-- transition family,
-- typography hierarchy.
-
-### 4. Build The Brief
-
-Recommended metadata keys:
-
-- `animation_mode`
-- `visual_path`
-- `narration_strategy`
-- `reuse_strategy`
-- `timing_style`
-- `blocked_capabilities`
-
-### 5. Quality Gate
-
-- the animation mode is explicit,
-- the visual path is feasible,
-- the project is designed for reuse,
-- the brief is honest about missing tools.
-
-## Common Pitfalls
-
-- Treating all animation as one generic category.
-- Planning bespoke visuals for every scene.
-- Hiding missing tool paths until the asset stage.
-
----
-
-## Gate Reminder (Binding)
-
-This stage gates on human approval (`human_approval_default: true`). After review passes:
-checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
-the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
-Approval is per-gate — an earlier "go ahead" does not cover this gate.
+The manifest's `stages` list is the only authority on which director skill runs at each stage. This stub exists so a stale reference lands on a pointer instead of an old process; the former content is in git history.

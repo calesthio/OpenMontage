@@ -310,7 +310,7 @@ Let the user:
 
 Each step is a chance for the user to course-correct before the next step builds on it. This prevents the "I approved a proposal and then the video wasn't what I expected" failure mode.
 
-Record the selection in `selected_concept` with rationale and any modifications.
+Record the selection in `selected_concept` with rationale and any modifications — it holds only `concept_id` (the chosen entry's `id`), `rationale`, and `modifications`; never copy the concept's fields into it.
 
 ### Step 5: Build the Production Plan
 
@@ -399,8 +399,8 @@ Would you like to:
 **Rules:**
 - Always check `music_library/` first — user-provided music is free and intentional
 - Always report music API status (available, unavailable, quota remaining if checkable)
-- Record the music decision in `proposal_packet.production_plan.music_source`
-- If the user picks a library track, record its path for the asset director
+- Record the music decision in `proposal_packet.production_plan.music_source`. Its `source_type` is one of `user_library`, `ai_generated`, `bring_your_own`, `none`. A royalty-free stock choice (option b) has no `source_type` value yet: leave `source_type` out, set `provider` to the search tool (e.g. `pixabay_music`) and `mood_direction`, and note `"music_plan": "royalty_free_stock"` in `proposal_packet.metadata`
+- If the user picks a library track, record its path for the asset director (`music_source.track_path`)
 
 ### Step 6: Build the Cost Estimate
 
@@ -454,13 +454,13 @@ Validate the `proposal_packet` artifact against `schemas/artifacts/proposal_pack
 
 | Downstream Stage | What It Takes From proposal_packet |
 |------------------|------------------------------------|
-| Script Director | `selected_concept` (title, hook, key_points, core_message, tone, narrative_structure) + research_brief data points |
-| Scene Director | `selected_concept.visual_approach` + `production_plan.playbook` |
+| Script Director | The approved concept — the `concept_options[]` entry whose `id` equals `selected_concept.concept_id` (title, hook, key_points, core_message, tone, narrative_structure) — plus `selected_concept.modifications` + research_brief data points |
+| Scene Director | That concept's `visual_approach` + `production_plan.playbook` |
 | Asset Director | `production_plan.stages[assets].tools` — knows exactly which providers to use |
 | Executive Producer | `cost_estimate` — initializes budget tracking |
-| All stages | `approval.approved_budget_usd` — hard spending cap |
+| All stages | `approval.approved_budget_usd` — becomes the run budget (`tools/cost_tracker.py::resolve_budget_usd`); how strictly it is enforced follows `config.yaml` `budget.mode` |
 
-The `selected_concept` in the proposal_packet effectively replaces what the old `brief` artifact used to be — but it's grounded in research and comes with an explicit production plan attached.
+`selected_concept` itself holds only `concept_id`, `rationale`, and `modifications` (the schema closes it) — every downstream reader dereferences the concept through `concept_options[]`. The approved concept effectively replaces what the old `brief` artifact used to be — but it's grounded in research and comes with an explicit production plan attached.
 
 ## Common Pitfalls
 

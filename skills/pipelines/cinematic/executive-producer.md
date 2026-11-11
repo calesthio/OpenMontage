@@ -11,7 +11,7 @@ The cinematic pipeline now starts with **research** and **proposal** stages — 
 | Layer | Resource | Purpose |
 |-------|----------|---------|
 | Pipeline | `pipeline_defs/cinematic.yaml` | Stage definitions |
-| Skills | All 9 director skills + `meta/reviewer` | Stage execution |
+| Skills | All 8 director skills (one per stage) + `meta/reviewer` | Stage execution |
 | Schemas | All artifact schemas | Validation |
 | Playbook | Active style playbook | Quality constraints |
 
@@ -21,14 +21,14 @@ The cinematic pipeline now starts with **research** and **proposal** stages — 
 EP_STATE:
   pipeline: cinematic
   playbook: <selected>
-  target_duration_seconds: <from proposal_packet>
-  budget_total_usd: <configured>
+  target_duration_seconds: <from the approved concept: concept_options[] entry whose id == selected_concept.concept_id>
+  budget_total_usd: <run budget from tools/cost_tracker.py::resolve_budget_usd — see Execution Limits>
   budget_spent_usd: 0.0
 
   # Cinematic-specific
-  emotional_arc: null         # from proposal_packet: build → reveal → landing
-  delivery_promise: null      # from proposal_packet: motion_required, tone_mode, quality_floor
-  renderer_family: null       # from proposal_packet: locked at proposal stage
+  emotional_arc: null         # from proposal_packet.metadata.emotional_arc: build → reveal → landing
+  delivery_promise: null      # from proposal_packet.production_plan.delivery_promise: motion_required, tone_mode, quality_floor
+  renderer_family: null       # from proposal_packet.production_plan.renderer_family: locked at proposal stage
   color_grade_target: null    # mood-driven color palette
   hero_moments: []            # key reveal/climax frames
   music_beat_map: null        # audio-driven pacing reference
@@ -175,11 +175,15 @@ CHECK: Output validation
 
 | Limit | Value |
 |-------|-------|
-| Max revisions per stage | 3 |
-| Max send-backs per stage pair | 1 |
-| Max total send-backs | 3 |
-| Max total budget | Configurable (default $2) |
-| Max total wall-time | 12 minutes |
+| Max revisions per stage | manifest `orchestration.max_revisions_per_stage` |
+| Max send-backs per stage pair | 1 (guidance; no manifest field) |
+| Max total send-backs | manifest `orchestration.max_send_backs` |
+| Max total budget | The run budget from `tools/cost_tracker.py::resolve_budget_usd`: the amount the user approved at the proposal gate (`approval.approved_budget_usd`; record it with `python -m tools.cost_tracker budget <project-id> --usd <amount>`), else manifest `orchestration.budget_default_usd` capped at `config.yaml` `budget.total_usd`. Enforcement follows `config.yaml` `budget.mode`: `observe` records only, `warn` records and flags overruns, `cap` refuses a paid call that does not fit the remaining budget |
+| Max total wall-time | manifest `orchestration.max_wall_time_minutes` |
+
+Read the manifest-backed values from `pipeline_defs/cinematic.yaml` at the start of the run; never substitute numbers of your own.
+
+After any limit is hit: **proceed with warnings**, never block indefinitely. A limit never approves a human-gated stage (any stage with `human_approval_default: true` in the manifest): write `awaiting_human` with the warnings attached, end the turn, and let the user decide.
 
 ## Common Pitfalls
 

@@ -27,6 +27,13 @@ Character differences are data. The renderer should not need one-off code for a
 mouse versus a bird. A bird may have `wing_left`; a mouse may have `tail`, but
 both feed the same pose interpolation and timeline compiler.
 
+That is the target design, not today's renderer: `character_rig_renderer`
+currently reads only the character ids from `rig_plan`, ignores `pose_library`
+and the rig parts, and draws the same built-in placeholder figure for every
+character (see compose-director). The rig plan and pose library are checked by
+`character_animation_reviewer`; the acted render has to come from the approved
+Remotion/HyperFrames package built from them.
+
 ## Quality Checks
 
 - Every moving part has a pivot.

@@ -10,7 +10,7 @@ Phase 1 deferred from HyperFrames. `edit_decisions.render_runtime` must be `"rem
 
 - If `edit_decisions.render_runtime == "hyperframes"`, stop. Re-open the idea stage and surface the constraint to the user. Never silently rewrite the runtime.
 - Per AGENT_GUIDE.md → "Present Both Composition Runtimes (HARD RULE)": tell the user HyperFrames exists and why it isn't viable on this pipeline, rather than silently locking remotion. Record a `render_runtime_selection` decision with hyperframes `rejected_because: "caption-burn parity deferred on podcast-repurpose"`.
-- Pass `proposal_packet`/`brief` to `video_compose.execute()` for end-to-end runtime-swap detection.
+- This pipeline has no proposal stage, so there is no `proposal_packet` to pass, and `video_compose.execute()` does not accept `brief`. The in-tool runtime-swap check instead compares `edit_decisions.render_runtime` with `edit_decisions.metadata.proposal_render_runtime` (set by the edit stage to the runtime locked at idea). If that key is missing the check reports `skipped` — send it back to the edit stage rather than patching `edit_decisions` here.
 
 ## Prerequisites
 

@@ -29,7 +29,14 @@ classification, keyframes, color, and production complexity.
 
 ## Output Guidance
 
-The `research_brief` should include:
+The `research_brief` must first satisfy its schema: `version`, `topic`,
+`research_date`, `landscape` (at least 3 `existing_content` entries and one
+`underserved_gaps` entry), at least 3 `data_points`, `audience_insights` (at least
+3 `common_questions`, `misconceptions`, `knowledge_level`), at least 3
+`angles_discovered`, and at least 5 `sources`. The brief root and those entries are
+closed, so the character-animation findings below go under the top-level
+`research_brief.metadata` (e.g. `metadata.character_animation_fit`), never as new
+top-level keys:
 
 - `character_animation_fit`: high/medium/low,
 - `reference_motion_type`,

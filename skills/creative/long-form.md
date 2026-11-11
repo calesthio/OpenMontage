@@ -136,14 +136,14 @@ Chapters improve navigation and can boost retention by letting viewers skip to r
 | Rule | Value |
 |------|-------|
 | Music presence | Continuous throughout (no silent gaps) |
-| Ducking during speech | -18 to -20 dB below narration |
+| Ducking during speech | -18 to -20 dB below narration (`audio_mixer` `duck_level: -18` to `-20`; the tool default is -12) |
 | Music transitions | 2-3 second crossfade between sections |
 | Energy matching | Shift music energy at chapter boundaries |
 | BPM consistency | Stay within ±10 BPM across the video |
 
 ### LUFS Over Long Duration
 
-- Target: **-14 LUFS integrated** (YouTube standard)
+- Target: **-14 LUFS integrated** (YouTube standard) — pass `loudnorm_target: -14` to `audio_mixer`; its default is -16
 - Dynamic range: **6-12 dB** for speech-heavy content
 - Check LUFS per chapter — variation between chapters should be < 2 LUFS
 - Use a limiter at **-1.5 dBTP** on the final mix

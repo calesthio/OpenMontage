@@ -57,7 +57,7 @@ Start with:
 
 These are the primary materials. Everything else is support.
 
-If `proposal_packet.metadata.motion_required = true`, actual moving footage or generated video clips are mandatory. In that case:
+If `proposal_packet.production_plan.delivery_promise.motion_required = true`, actual moving footage or generated video clips are mandatory. In that case:
 
 - stills may be used only as reference material or backing elements inside a larger motion composition,
 - stills may not replace the planned motion shots,
@@ -70,7 +70,7 @@ Before batch-generating support assets, produce one sample of each expensive gen
 1. **Generated insert sample** (if using `image_selector` or `video_selector`): Generate one representative visual. Confirm it complements the source footage before batching.
 2. **Music sample** (try `pixabay_music` first — free, searchable by mood/BPM; fall back to `freesound_music` for cues and ambience; only reach for `music_gen` when the search tools miss the brief): sample or retrieve a short clip. Confirm mood and energy match the beat plan.
 
-If `motion_required = true`, the representative visual must be a video clip sample, not a still image sample.
+If `production_plan.delivery_promise.motion_required = true`, the representative visual must be a video clip sample, not a still image sample.
 
 If rejected, adjust parameters and retry (max 3 iterations). Do not batch until approved.
 
@@ -129,7 +129,7 @@ Recommended metadata keys:
 >
 > **Step 3 — Post-caption pass.** Rewrite filling the missing aspects, fixing confusable terms, and replacing subjective language. The post-caption is what gets sent to the generation tool.
 >
-> Log the (pre, critique, post) triplet in the asset metadata for traceability. This mirrors the CHAI workflow and creates a record the reviewer can audit.
+> Log the (pre, critique, post) triplet in the asset manifest's top-level `metadata` (keyed by asset id — individual assets are closed in the schema and take no extra keys) for traceability. This mirrors the CHAI workflow and creates a record the reviewer can audit.
 
 ### 5. Quality Gate
 

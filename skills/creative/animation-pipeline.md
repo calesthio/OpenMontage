@@ -143,4 +143,4 @@ When building animation/motion graphics content:
 6. **Audio leads visual** — SFX starts 10-20ms before transition (see sound-design.md)
 7. **Max 5 palette colors** — enforce from the style playbook
 8. **Anticipation + overshoot** on important movements for polish
-9. **Export H.264 CRF 18-20** for final output via `video_compose`
+9. **Export H.264 CRF 18-20** for final output via `video_compose` — pass `crf: 18` (the tool default is 23, and a `profile` does not change it)

@@ -53,9 +53,11 @@ If you encounter uncertainty during script writing:
 - Use `web_search` to find reference images for visual accuracy
 - Log verification in the decision log: `category="visual_accuracy_check"`
 
-Every factual claim in the script should be traceable to the `research_brief`.
-If you make a claim that isn't in the research, do additional research and
-add the source. Do not invent statistics, dates, or attributions.
+Every factual claim in the script should be traceable to the `brief` or the
+user's source material (footage, transcript, supplied copy) — this pipeline has
+no research stage and no `research_brief`. If you make a claim that isn't in
+either, verify it with `web_search` and add the source. Do not invent
+statistics, dates, or attributions.
 
 ## Common Pitfalls
 

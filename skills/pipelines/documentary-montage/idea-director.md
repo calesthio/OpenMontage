@@ -88,7 +88,7 @@ Silent-by-design briefs that feel "pure" at the idea stage regularly look
 like abandoned footage at compose time. Do not assume silence will earn
 itself. If the user has not mentioned music, ASSUME THEY WANT IT and pick:
 
-- user-provided track (put path in `music_plan.source_path`),
+- user-provided track (put path in `music_plan.path`),
 - music library pick (query `registry.get_by_capability("music_library")` and list tracks),
 - royalty-free search (query `registry.get_by_capability("music_search")`, report provider and license),
 - generated (name the tool and prompt seed with register),
@@ -136,7 +136,8 @@ Fields:
 - `text` — 3-9 words. A thesis, not a summary.
 - `palette` — `"cool_offwhite_on_black"` or `"warm_ivory_on_black"`.
 - `duration_seconds` — total tag screen time (fade-in + hold + fade-out).
-  5-8s is the sweet spot.
+  5-8s is the sweet spot. The Remotion compositions have fixed lengths:
+  overlay mode tops out at 8.2s, concat mode at 5.5s.
 - `render_engine` — always `"remotion"`.
 - `component` — always `"EndTag"`.
 - `mode` — `"overlay"` (default) or `"concat"`.
@@ -156,34 +157,60 @@ there's no narration — don't leave the field missing.
 
 ### 7. Record The Brief
 
+`brief.schema.json` rejects unknown top-level keys, so the checkpoint
+fails if a documentary-specific field sits at the top level. The schema
+fields carry the essentials (`title`, `hook`, `key_points`, `tone`,
+`style`, `target_platform`, `target_duration_seconds`); everything this
+pipeline adds — `thematic_question`, `shape`, `sources_allowed`,
+`generated_clips_allowed`, `narration`, `music_plan`, `end_tag_plan`
+(or `end_tag_opt_out_reason`), `era_mix` — goes under `brief.metadata`.
+Downstream stages read them as `brief.metadata.<field>`.
+
 Minimum fields the brief must carry:
 
 ```json
 {
-  "topic": "A minute in the rain",
-  "thematic_question": "What does rain show you about a city?",
+  "version": "1.0",
+  "title": "A Minute in the Rain",
+  "hook": "A single raindrop hits dry asphalt under a streetlamp.",
+  "key_points": [
+    "Rain slows a city down to walking pace",
+    "Strangers share doorways and awnings",
+    "Wet streets hold the light the city throws away"
+  ],
   "tone": "elegiac",
-  "duration_seconds": 90,
-  "shape": "list",
-  "sources_allowed": ["pexels", "pixabay_video", "coverr", "mixkit", "archive_org", "nara", "nasa"],
-  "generated_clips_allowed": false,
-  "narration": "none",
-  "music_plan": {
-    "source": "generated",
-    "provider": "elevenlabs",
-    "prompt_seed": "slow ambient drone in A minor, no percussion, 60s sustained swell, Max Richter register"
-  },
-  "end_tag_plan": {
-    "text": "THE CITY KEEPS ITS OWN VIGIL.",
-    "palette": "cool_offwhite_on_black",
-    "duration_seconds": 5.5,
-    "render_engine": "remotion",
-    "component": "EndTag"
-  },
-  "era_mix": "any",
-  "target_platform": "social_short"
+  "style": "elegiac tone poem — long holds, muted warm grade",
+  "target_platform": "instagram",
+  "target_duration_seconds": 90,
+  "metadata": {
+    "thematic_question": "What does rain show you about a city?",
+    "shape": "list",
+    "sources_allowed": ["pexels", "pixabay_video", "coverr", "mixkit", "archive_org", "nara", "nasa"],
+    "generated_clips_allowed": false,
+    "narration": "none",
+    "music_plan": {
+      "source": "generated",
+      "provider": "elevenlabs",
+      "prompt_seed": "slow ambient drone in A minor, no percussion, 60s sustained swell, Max Richter register"
+    },
+    "end_tag_plan": {
+      "text": "THE CITY KEEPS ITS OWN VIGIL.",
+      "palette": "cool_offwhite_on_black",
+      "duration_seconds": 5.5,
+      "render_engine": "remotion",
+      "component": "EndTag",
+      "mode": "overlay"
+    },
+    "era_mix": "any"
+  }
 }
 ```
+
+`title` is the working title, `hook` is the opening image in one line,
+and `key_points` are the 2-4 associations the montage accumulates (meaning,
+not a shot list). `target_platform` must be one of the schema's values:
+`youtube`, `instagram`, `tiktok`, `linkedin`, `generic` — use `instagram`
+or `tiktok` for a vertical social short.
 
 `era_mix` is a documentary-specific field: "modern" biases toward
 Pexels, "vintage" biases toward Archive.org Prelinger, "any" leaves it
@@ -194,10 +221,12 @@ open for the scene director to decide per slot.
 - Thematic question is ONE sentence.
 - Tone is ONE register from the fixed list.
 - Duration and shape are concrete numbers / enum values.
-- `music_plan` is present AND either names a real source OR has
+- The brief validates against `brief.schema.json` (no documentary field
+  at the top level).
+- `metadata.music_plan` is present AND either names a real source OR has
   `source: "none"` + `opt_out_reason` (explicit user decision).
-- `end_tag_plan` is present AND either has a non-empty `text` OR is
-  `null` with `end_tag_opt_out_reason` (explicit user decision).
+- `metadata.end_tag_plan` is present AND either has a non-empty `text` OR is
+  `null` with `metadata.end_tag_opt_out_reason` (explicit user decision).
 - Sources list is non-empty and at least one requested source is
   `available` per `corpus_builder.source_provider_menu` surfaced in
   preflight.

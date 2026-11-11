@@ -859,10 +859,14 @@ class TestStylePlaybooks:
 class TestSkillsExist:
     SKILLS_DIR = PROJECT_ROOT / "skills"
 
+    # The explainer manifest starts at research -> proposal; its old
+    # idea-director.md is a superseded stub (see test_superseded_idea_directors
+    # in test_agent_instruction_integrity.py).
     @pytest.mark.parametrize(
         "skill_path",
         [
-            "pipelines/explainer/idea-director.md",
+            "pipelines/explainer/research-director.md",
+            "pipelines/explainer/proposal-director.md",
             "pipelines/explainer/script-director.md",
             "pipelines/explainer/scene-director.md",
             "pipelines/explainer/asset-director.md",
@@ -894,7 +898,6 @@ class TestSkillsExist:
     @pytest.mark.parametrize(
         "skill_path",
         [
-            "pipelines/explainer/idea-director.md",
             "pipelines/explainer/script-director.md",
             "pipelines/explainer/scene-director.md",
             "pipelines/explainer/asset-director.md",

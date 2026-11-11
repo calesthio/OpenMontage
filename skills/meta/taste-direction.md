@@ -65,7 +65,7 @@ Use the dials to pick one of three paths:
 | Path | Use When | Artifact |
 |------|----------|----------|
 | Existing playbook | A preset honestly matches the read | `production_plan.playbook` |
-| Custom playbook | The subject has its own visual world | generated `styles/<name>.yaml` with `taste_profile` |
+| Custom playbook | The subject has its own visual world | generated `styles/custom/<name>.yaml` with `taste_profile` (where `lib/playbook_generator.py` `save_playbook` writes it) |
 | Atelier art direction | Hero work needs a one-off language | `production_plan.art_direction` plus `taste_profile` |
 
 Do not let preset availability override the design read. If the content calls for a custom visual world, write the custom playbook or art direction.

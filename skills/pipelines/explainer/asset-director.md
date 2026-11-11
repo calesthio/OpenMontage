@@ -31,7 +31,7 @@ Quick routing for common explainer needs:
 | Schema | `schemas/artifacts/asset_manifest.schema.json` | Artifact validation |
 | Prior artifacts | `state.artifacts["scene_plan"]["scene_plan"]`, `state.artifacts["script"]["script"]`, `state.artifacts["proposal"]["proposal_packet"]` | What to produce |
 | Playbook | Active style playbook | Image prompts, diagram style, audio preferences |
-| Tools | `tts_selector`, `image_selector`, `video_selector`, `diagram_gen`, `code_snippet`, `music_gen` — selectors auto-discover all available providers from the registry | Generation capabilities |
+| Tools | `tts_selector`, `image_selector`, `video_selector`, `diagram_gen`, `code_snippet`, `music_gen`, `suno_music`, `music_library`, `pixabay_music` — selectors auto-discover all available providers from the registry | Generation capabilities |
 | Cost tracker | `tools/cost_tracker.py` | Budget governance |
 
 ## Process
@@ -136,13 +136,14 @@ Process asset tasks grouped by tool for efficiency:
 2. Check the music decision from `proposal_packet.production_plan.music_source` (set by the Proposal Director)
 3. Source the background track in this priority order:
    - **User-selected library track**: If the proposal specified a track from `music_library/`, copy it to `projects/<project>/assets/music/background_music.mp3`
-   - **User music library (`music_library/`)**: If the folder exists and has tracks, pick the best match for the playbook's `audio.music_mood`. List candidates by filename and let the EP decide.
+   - **User music library (`music_library/`)**: If the folder exists and has tracks (the `music_library` tool lists them), pick the best match for the playbook's `audio.music_mood`. List candidates by filename and let the EP decide.
    - **Music generation API**: Use `music_gen` (ElevenLabs) or `suno_music` if available. Check status via registry first — if the tool is unavailable or quota-exhausted, skip immediately (do NOT attempt and fail silently).
-   - **No music available**: Log this clearly in the asset manifest as `"music_status": "unavailable"` with the reason. Do NOT silently produce a video without music — the EP and user should know.
+   - **Royalty-free stock**: `pixabay_music` (no API key) when the proposal chose stock music or the options above are unavailable. Changing the music source from what the proposal approved is a decision the user makes — ask first.
+   - **No music available**: Log this clearly in the asset manifest's top-level `metadata` as `"music_status": "unavailable"` with a `"music_status_reason"` (the manifest root is closed — only `version`, `assets`, `total_cost_usd`, and `metadata` exist). Do NOT silently produce a video without music — the EP and user should know.
 4. Duration should be at least as long as total video duration. If shorter, it can be looped by the compose stage.
 5. Verify the audio file exists at `projects/<project>/assets/music/background_music.mp3`
 
-**Critical:** If music generation fails or is unavailable, report it immediately in the asset manifest — do not defer the problem to the compose stage.
+**Critical:** If music generation fails or is unavailable, report it immediately in the asset manifest — do not defer the problem to the compose stage. Compose only mixes and renders what this stage delivered; it does not source music or regenerate narration.
 
 ### Step 6: Build Asset Manifest
 
@@ -176,19 +177,24 @@ Assemble all generated assets into the manifest:
       "subtype": "music",
       "path": "assets/music/background.mp3",
       "source_tool": "music_gen",
+      "scene_id": "global",
       "duration_seconds": 62,
       "cost_usd": 0.05
     }
   ],
   "total_cost_usd": 0.053,
-  "generation_summary": {
-    "narration_sections": 5,
-    "images_generated": 8,
-    "diagrams_generated": 2,
-    "music_tracks": 1
+  "metadata": {
+    "generation_summary": {
+      "narration_sections": 5,
+      "images_generated": 8,
+      "diagrams_generated": 2,
+      "music_tracks": 1
+    }
   }
 }
 ```
+
+Every asset needs `id`, `type`, `path`, `source_tool`, and `scene_id` — a whole-video asset such as the music bed uses `"scene_id": "global"`. The manifest root and each asset are closed in the schema: run-level notes (`generation_summary`, `music_status`, the prompt self-review triplets) go under the top-level `metadata`. On an asset, `generation_summary` is a short string, not an object.
 
 ### Pre/Post Self-Review for Generation Prompts
 
@@ -204,7 +210,7 @@ Assemble all generated assets into the manifest:
 >
 > **Step 3 — Post-caption pass.** Rewrite filling the missing aspects, fixing confusable terms, and replacing subjective language. The post-caption is what gets sent to the generation tool.
 >
-> Log the (pre, critique, post) triplet in the asset metadata for traceability. This mirrors the CHAI workflow and creates a record the reviewer can audit.
+> Log the (pre, critique, post) triplet in the asset manifest's top-level `metadata` (keyed by asset id — individual assets are closed in the schema and take no extra keys) for traceability. This mirrors the CHAI workflow and creates a record the reviewer can audit.
 
 ### Step 7: Verify All Assets
 

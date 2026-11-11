@@ -18,19 +18,19 @@ This stage turns the approved proposal into animation-ready beats. The script mu
 
 ### 1. Absorb the Proposal
 
-Read the `proposal_packet.selected_concept` thoroughly. Extract:
+Read the approved concept thoroughly. `proposal_packet.selected_concept` holds only `concept_id`, `rationale`, and `modifications`; the concept itself is the `proposal_packet.concept_options[]` entry whose `id` equals `selected_concept.concept_id` (apply `selected_concept.modifications` on top). Extract:
 
-- **Title and hook** — the opening must deliver on this promise
-- **Animation mode** — `manim`, `remotion`, `ai_video`, `diagram_stills`, or `mixed`. This constrains how you write.
-- **Narrative structure** — `progressive_build`, `myth_busting`, `journey`, etc. Follow it.
-- **Target duration** — word budget = target_seconds × 2.5 words/sec (at 150 WPM)
-- **Key points** — from `selected_concept.key_points`
-- **Reuse strategy** — recurring motifs mean recurring script structures
+- **Title and hook** — `title`, `hook`; the opening must deliver on this promise
+- **Animation mode** — `proposal_packet.metadata.animation_mode`: `image_animation`, `clip_video`, `manim`, `remotion_dataviz`, `diagram_stills`, or `mixed`. This constrains how you write.
+- **Narrative structure** — the concept's `narrative_structure` (`journey`, `myth_busting`, `comparison`, etc.; a progressive build is noted as `structure_style` in `proposal_packet.metadata.concept_details`). Follow it.
+- **Target duration** — `target_duration_seconds`; word budget = target_seconds × 2.5 words/sec (at 150 WPM)
+- **Key points** — the concept's `key_points`
+- **Reuse strategy** — `proposal_packet.metadata.reuse_strategy`; recurring motifs mean recurring script structures
 
 If `research_brief` is available, also extract:
 - **Data points** — weave specific, sourced facts into the narration (not vague claims)
 - **Audience misconceptions** — address them directly in the script
-- **Mathematical accuracy notes** — constraints on what can and cannot be simplified
+- **Mathematical accuracy notes** — `research_brief.metadata.technical_accuracy`: constraints on what can and cannot be simplified
 
 ### 2. Write in Animation Beats
 
@@ -51,11 +51,12 @@ animation, and mark emphasis where a reveal, transform, or comparison lands.
 
 | Mode | Writing Style |
 |------|---------------|
-| Manim | Precise, mathematical. Each beat maps to a specific geometric transformation. Write narration that describes what's being shown. |
-| Remotion | Data-driven, punchy. Each beat maps to a chart/component animation. Narration complements the visual data. |
-| AI Video | Descriptive, evocative. Each beat describes a scene the AI should generate. Narration adds context the visual can't convey. |
-| Diagram Stills | Explanatory, progressive. Each beat adds a layer to a building diagram. Narration walks through the build. |
-| Mixed | Varies per section — tag each section's mode in metadata. |
+| `manim` | Precise, mathematical. Each beat maps to a specific geometric transformation. Write narration that describes what's being shown. |
+| `remotion_dataviz` | Data-driven, punchy. Each beat maps to a chart/component animation. Narration complements the visual data. |
+| `clip_video` | Descriptive, evocative. Each beat describes a scene the AI should generate. Narration adds context the visual can't convey. |
+| `image_animation` | Painterly, atmospheric. Each beat is one illustrated moment (2-3 stills crossfading). Narration carries the story the stills only suggest. |
+| `diagram_stills` | Explanatory, progressive. Each beat adds a layer to a building diagram. Narration walks through the build. |
+| `mixed` | Varies per section — tag each section's mode in `script.metadata.section_notes` (section 5). |
 
 ### 3. Keep On-Screen Text Tight
 
@@ -80,16 +81,18 @@ Do NOT fill every second with new information. The scene plan will need time for
 
 ### 5. Use Metadata for Motion Intent
 
-Recommended metadata keys per section:
+Script sections are closed in the schema — a section holds only `id`, `label`, `text`, `start_seconds`, `end_seconds`, `speaker_directions`, `delivery_cues`, `enhancement_cues`, `pronunciation_guides`, and `source_ref`. Two of the per-section notes below are real section fields; the rest go in the top-level `script.metadata.section_notes`, keyed by section `id`:
 
-- `beat_type`: statement / demonstration / transformation / comparison / conclusion
-- `animation_mode`: which mode this section uses (important for mixed mode)
-- `text_constraints`: max words for on-screen text in this section
-- `narration_plan`: how narration relates to visual (describes / complements / silent)
-- `visual_priority`: what the viewer should focus on (the animation, the text, the data)
-- `hold_time_seconds`: minimum visual hold time after this section's content
-- `delivery_cues`: pace, energy, emphasis, pause timing, and provider-ready narration text for TTS
-- `data_source`: if this section uses a research data point, reference it
+- `delivery_cues` — **a section field**: pace, energy, emphasis, pause timing, and provider-ready narration text for TTS
+- `source_ref` — **a section field**: if this section uses a research data point, reference it here
+- `beat_type` (in `section_notes`): statement / demonstration / transformation / comparison / conclusion
+- `animation_mode` (in `section_notes`): which mode this section uses (important for `mixed`)
+- `text_constraints` (in `section_notes`): max words for on-screen text in this section
+- `narration_plan` (in `section_notes`): how narration relates to visual (describes / complements / silent)
+- `visual_priority` (in `section_notes`): what the viewer should focus on (the animation, the text, the data)
+- `hold_time_seconds` (in `section_notes`): minimum visual hold time after this section's content
+
+Example: `"metadata": {"section_notes": {"s2": {"beat_type": "demonstration", "animation_mode": "manim", "hold_time_seconds": 2}}}`.
 
 ### 6. Research Integration
 

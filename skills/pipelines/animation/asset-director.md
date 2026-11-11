@@ -63,7 +63,7 @@ If rejected, adjust parameters and retry (max 3 iterations). Do not batch until 
 
 ### 1c. Multi-Image Generation for Image-Based Animation (Approach A)
 
-When `animation_mode == "image_animation"`, each scene needs **2-3 images** for crossfade animation. This is what makes stills look like movement.
+When `proposal_packet.metadata.animation_mode == "image_animation"` (or, in a `mixed` project, the scene's `animation_mode` in `scene_plan.metadata.tool_path_map` is `image_animation`), each scene needs **2-3 images** for crossfade animation. This is what makes stills look like movement.
 
 **Image generation workflow:**
 

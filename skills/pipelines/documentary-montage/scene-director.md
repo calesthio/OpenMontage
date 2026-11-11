@@ -38,8 +38,8 @@ category label CLIP will match weakly and indiscriminately.
 
 ### 1. Turn The Shape Into A Beat Count
 
-Read the brief's `duration_seconds` and `shape`. Derive the number of
-slots. Use these defaults unless the tone says otherwise:
+Read `brief.target_duration_seconds` and `brief.metadata.shape`. Derive
+the number of slots. Use these defaults unless the tone says otherwise:
 
 | Tone | Average hold | Slots per 60s |
 |------|--------------|---------------|
@@ -139,7 +139,7 @@ each. No filler words.
 
 ### 5. Target Sources Per Slot (Era-Aware)
 
-Read `brief.era_mix`. Assign each slot one or more `preferred_sources`
+Read `brief.metadata.era_mix`. Assign each slot one or more `preferred_sources`
 based on what footage lives where:
 
 | Source | Strengths | Use when |
@@ -287,7 +287,7 @@ retrieval-specific fields (`queries`, `preferred_sources`, `hero`,
   no emotion words, no verbs of intention.
 - Every slot has 2-3 short queries (5 words or fewer each).
 - At least 2 slots are marked `hero`.
-- Sum of `target_hold_seconds` is within ±10% of `brief.duration_seconds`.
+- Sum of `target_hold_seconds` is within ±10% of `brief.target_duration_seconds`.
 - If `era_mix = "vintage"`, at least 60% of slots list `archive_org`
   in `preferred_sources`.
 - `metadata.thematic_question` echoes the brief verbatim (sanity check

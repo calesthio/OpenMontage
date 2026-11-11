@@ -22,7 +22,7 @@ The EP solves all of these by maintaining cumulative state and applying judgment
 | Layer | Resource | Purpose |
 |-------|----------|---------|
 | Pipeline | `pipeline_defs/animated-explainer.yaml` | Stage definitions, review focus, success criteria |
-| Skills | All 7 director skills + `meta/reviewer` | Stage execution knowledge |
+| Skills | All 8 director skills (one per stage) + `meta/reviewer` | Stage execution knowledge |
 | Schemas | All artifact schemas | Validation |
 | Playbook | Active style playbook | Quality constraints |
 | Tools | Full tool registry | Available capabilities |
@@ -35,8 +35,8 @@ The EP maintains a running state object that flows through the entire pipeline:
 EP_STATE:
   pipeline: animated-explainer
   playbook: <selected playbook name>
-  target_duration_seconds: <from proposal_packet.selected_concept>
-  budget_total_usd: <from proposal_packet.approval.approved_budget_usd or configured limit>
+  target_duration_seconds: <from the approved concept: concept_options[] entry whose id == selected_concept.concept_id>
+  budget_total_usd: <run budget from tools/cost_tracker.py::resolve_budget_usd — see Execution Limits>
   budget_spent_usd: 0.0
   budget_remaining_usd: <budget_total>
 
@@ -53,7 +53,7 @@ EP_STATE:
 
   # Pre-production context (carried forward from research + proposal)
   research_brief: null         # full research_brief artifact — available to all downstream stages
-  selected_concept: null       # the approved concept from proposal_packet
+  selected_concept: null       # the approved concept: concept_options[] entry matched by selected_concept.concept_id
   production_plan: null        # the approved tool/provider plan
   approved_budget_usd: null    # explicit user-approved spend cap
 
@@ -72,7 +72,7 @@ EP_STATE:
 
 1. Load the pipeline manifest (`animated-explainer.yaml`)
 2. Load the playbook (from user selection or default)
-3. Set budget from configuration or user input (default: $2.00)
+3. Set the budget: `tools/cost_tracker.py::resolve_budget_usd` (the manifest's `orchestration.budget_default_usd`, capped at `config.yaml` `budget.total_usd`, until the user approves an amount at the proposal gate — see Execution Limits)
 4. Initialize EP_STATE
 
 ### Phase 1: Execute Stages Serially
@@ -85,10 +85,10 @@ For each stage in order: `research → proposal → script → scene_plan → as
 - The pipeline MUST NOT proceed past proposal without `approval.status == "approved"` or `"approved_with_changes"`
 
 After proposal approval, extract and store in EP_STATE:
-- `selected_concept` from `proposal_packet.selected_concept` (drives script, scene, visual decisions)
+- `selected_concept` — the `proposal_packet.concept_options[]` entry whose `id` equals `selected_concept.concept_id` (drives script, scene, visual decisions; `selected_concept` itself holds only `concept_id`, `rationale`, `modifications`)
 - `production_plan` from `proposal_packet.production_plan` (drives tool selection in assets stage)
-- `approved_budget_usd` from `proposal_packet.approval.approved_budget_usd` (overrides default budget)
-- `playbook` from `proposal_packet.selected_concept → concept_options[selected].suggested_playbook`
+- `approved_budget_usd` from `proposal_packet.approval.approved_budget_usd` (replaces the default budget)
+- `playbook` from `production_plan.playbook`, else that concept's `suggested_playbook`
 
 ```
 EXECUTE_STAGE(stage_name):
@@ -118,8 +118,9 @@ EXECUTE_STAGE(stage_name):
 
      If REVISE:
        - Increment revision_counts[stage_name]
-       - If revision_counts[stage_name] >= 3:
-           - PASS WITH WARNINGS (never block forever)
+       - If revision_counts[stage_name] >= orchestration.max_revisions_per_stage (manifest):
+           - PASS WITH WARNINGS (never block forever) — at a human-gated stage this
+             still means awaiting_human, never an approval
            - Log unresolved issues
        - Else:
            - Compose specific feedback for the director
@@ -137,7 +138,7 @@ EXECUTE_STAGE(stage_name):
 
 ### Phase 2: Final Quality Assurance
 
-After all 7 stages complete, the EP performs a holistic review:
+After all 8 stages complete, the EP performs a holistic review:
 
 ```
 FINAL_QA:
@@ -181,7 +182,7 @@ CHECK: Research depth
   - At least 3 angles_discovered with grounded_in references?
   - At least 5 sources cited?
   - If any minimum not met: REVISE research
-  - Note: Do NOT checkpoint with user — research is informational, not a decision point
+  - Note: Do NOT stop for user approval — research is informational, not a decision point (still write its `completed` checkpoint)
 ```
 
 ### After PROPOSAL stage:
@@ -189,7 +190,7 @@ CHECK: Research depth
 CHECK: Approval gate (CRITICAL — the entire point of pre-production)
   - Is approval.status == "approved" or "approved_with_changes"?
   - If "pending" or "rejected": STOP. Present to user and wait.
-  - If "approved_with_changes": apply modifications to selected_concept before proceeding
+  - If "approved_with_changes": apply selected_concept.modifications to the approved concept before proceeding
   - Extract: target_duration_seconds, playbook, budget, tool selections
   - Initialize budget from approved_budget_usd (not default)
 
@@ -256,7 +257,11 @@ CHECK: Style consistency
 CHECK: Timeline completeness
   - Verify edit decisions cover 0 to total_duration with no gaps
   - Verify all asset references point to existing files
-  - Verify audio ducking is configured for all narration segments
+  - Verify the music plan under narration is one that actually happens: only `audio_mixer`
+    ducks; the Remotion `Explainer` composition plays music at one flat volume and ignores
+    `audio.music.ducking`. `edit_decisions.metadata.audio_mix_plan` must say `premix`
+    (compose mixes narration + music with `audio_mixer`, ducking on) or `flat` (ducking off,
+    music volume 0.08–0.12) — see edit-director Step 4
 
 CHECK: A/V sync pre-validation
   - For each cut: narration_start aligns with visual_start (±0.5s)
@@ -331,13 +336,15 @@ Actual: {what was produced}
 
 | Limit | Value | Rationale |
 |-------|-------|-----------|
-| Max revisions per stage | 3 | Prevent perfectionism loops |
-| Max send-backs per stage pair | 1 | Prevent ping-pong between stages |
-| Max total send-backs | 3 | Cap total pipeline re-work |
-| Max total budget | Configurable (default $2) | Hard stop on spending |
-| Max total wall-time | 15 minutes | Timeout for entire pipeline |
+| Max revisions per stage | manifest `orchestration.max_revisions_per_stage` | Prevent perfectionism loops |
+| Max send-backs per stage pair | 1 (guidance; no manifest field) | Prevent ping-pong between stages |
+| Max total send-backs | manifest `orchestration.max_send_backs` | Cap total pipeline re-work |
+| Max total budget | The run budget from `tools/cost_tracker.py::resolve_budget_usd`: the amount the user approved at the proposal gate (`approval.approved_budget_usd`; record it with `python -m tools.cost_tracker budget <project-id> --usd <amount>`), else manifest `orchestration.budget_default_usd` capped at `config.yaml` `budget.total_usd` | Enforcement follows `config.yaml` `budget.mode`: `observe` records only, `warn` records and flags overruns, `cap` refuses a paid call that does not fit the remaining budget |
+| Max total wall-time | manifest `orchestration.max_wall_time_minutes` | Timeout for entire pipeline |
 
-After any limit is hit: **proceed with warnings**, never block indefinitely.
+Read the manifest-backed values from `pipeline_defs/animated-explainer.yaml` at the start of the run; never substitute numbers of your own.
+
+After any limit is hit: **proceed with warnings**, never block indefinitely. A limit never approves a human-gated stage (any stage with `human_approval_default: true` in the manifest): write `awaiting_human` with the warnings attached, end the turn, and let the user decide.
 
 ## Integration with Existing Skills
 
@@ -352,7 +359,7 @@ The EP doesn't replace any director skill — it wraps them. Each director skill
 
 ```
 [EP] Starting pipeline: animated-explainer v2.0
-[EP] Default budget: $2.00 | Target: TBD (set after proposal)
+[EP] Default budget: $2.00 (manifest orchestration.budget_default_usd) | Target: TBD (set after proposal)
 
 [EP] === STAGE 1: research ===
 [EP] Spawning research-director... Topic: "How DNS Works"
@@ -396,7 +403,7 @@ The EP doesn't replace any director skill — it wraps them. Each director skill
 
 [EP] === STAGE 6: edit ===
 [EP] Spawning edit-director with adjusted scene_plan + asset_manifest...
-[EP] G6 PASS — Timeline complete, audio ducking configured.
+[EP] G6 PASS — Timeline complete, audio_mix_plan: premix (audio_mixer ducks the music at compose).
 
 [EP] === STAGE 7: compose ===
 [EP] Spawning compose-director with edit_decisions + asset_manifest...

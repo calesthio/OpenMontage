@@ -39,15 +39,24 @@ scene analysis from dialogue.
 
 ### Word Timestamps for Subtitles
 
-The transcriber produces word-level timestamps with confidence scores. The `subtitle_gen` tool consumes these directly:
+The transcriber produces word-level timestamps with confidence scores, in two shapes: nested per segment (`segments[].words`) and as one flat list (`word_timestamps`):
 
 ```
+segments: [
+  {"id": 0, "start": 0.5, "end": 1.2, "text": "Hello world", "words": [
+    {"word": "Hello", "start": 0.5, "end": 0.8, "probability": 0.95},
+    {"word": "world", "start": 0.9, "end": 1.2, "probability": 0.92}
+  ]},
+  ...
+]
 word_timestamps: [
   {"word": "Hello", "start": 0.5, "end": 0.8, "probability": 0.95},
   {"word": "world", "start": 0.9, "end": 1.2, "probability": 0.92},
   ...
 ]
 ```
+
+The `subtitle_gen` tool takes **`segments`** (its only required input) and reads the words from `segments[].words` — pass the transcriber's `segments`, not the flat `word_timestamps` list, which `subtitle_gen` does not accept.
 
 ### Language Detection
 

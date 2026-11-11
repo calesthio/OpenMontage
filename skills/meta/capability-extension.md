@@ -99,13 +99,13 @@ Every extension must be logged:
 
 ```json
 {
-  "decision_id": "ext-001",
+  "decision_id": "ext-<NNN>",
   "stage": "<current stage>",
   "category": "capability_extension",
   "subject": "Created custom <script|playbook|skill|tool> for <purpose>",
   "options_considered": [
-    {"option_id": "existing-tool", "label": "<closest existing tool>", "rejected_because": "<why it doesn't work>"},
-    {"option_id": "extension", "label": "<what was created>", "reason": "<why this approach>"}
+    {"option_id": "existing-tool", "label": "<closest existing tool>", "score": 0.3, "reason": "<what it covers and where it falls short>", "rejected_because": "<why it doesn't work>"},
+    {"option_id": "extension", "label": "<what was created>", "score": 0.8, "reason": "<why this approach>"}
   ],
   "selected": "extension",
   "reason": "<concise justification>",
@@ -113,3 +113,7 @@ Every extension must be logged:
   "confidence": 0.8
 }
 ```
+
+- `decision_id` must be unique in the project's decision log (`ext-001`, `ext-002`, … — read the log first and take the next free number). The log is append-only: a re-used id with the same `selected` replaces the earlier entry, and with a different `selected` `write_checkpoint` raises a DECISION LOG VIOLATION.
+- Every option needs all four of `option_id`, `label`, `score` (0–1, 1 is best) and `reason`; `rejected_because` is the only optional field. The schema (`schemas/artifacts/decision_log.schema.json`) is closed, so a missing `score`/`reason` or an extra key fails `write_checkpoint`.
+- The entry goes inside a `decision_log` artifact (`{"version": "1.0", "project_id": "<project-id>", "decisions": [ ... ]}`) passed to `write_checkpoint`, or through `lib.checkpoint.append_decisions` between checkpoints.

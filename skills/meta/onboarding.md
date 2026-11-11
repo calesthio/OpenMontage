@@ -30,8 +30,8 @@ print(json.dumps(menu, indent=2))
 
 Parse the output into three buckets:
 
-1. **Available** — tools with `status: AVAILABLE`
-2. **Quick unlocks** — tools with `status: UNAVAILABLE` whose `install_instructions` reference an env var (1-minute fixes)
+1. **Available** — tools with `"status": "available"` (the JSON values are lowercase: `available`, `unavailable`, `degraded`)
+2. **Quick unlocks** — tools with `"status": "unavailable"` whose `install_instructions` reference an env var (1-minute fixes)
 3. **Hardware unlocks** — tools requiring GPU or local model downloads
 
 ### Step 2: Determine the User's Setup Tier
@@ -53,7 +53,8 @@ entries in the provider menu. Report each one's availability separately:
   Best for React-based scene components (text cards, stat cards, charts),
   word-level captions, and the `TalkingHead` avatar composition.
 - **HyperFrames** requires Node.js ≥ 22 + `npx` + FFmpeg. Consumed via
-  `npx @hyperframes/cli` (no monorepo checkout required). Best for
+  `npx hyperframes` (the published npm package is `hyperframes`; no monorepo
+  checkout required). Best for
   HTML/CSS/GSAP motion graphics — kinetic typography, product promos,
   launch reels, website-to-video workflows, registry blocks.
 

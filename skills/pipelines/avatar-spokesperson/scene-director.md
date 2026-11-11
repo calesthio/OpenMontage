@@ -56,7 +56,7 @@ Default to one hero cut first. Only plan vertical or square variants if the pres
 
 ## Narration-Over-Graphics Fallback
 
-When the EP triggers a no-avatar pivot (no `talking_head` or `lip_sync` available), redesign the visual system to carry the story with graphics and voice-over instead of a presenter:
+When the EP triggers a no-avatar pivot (no `heygen_avatar`, `talking_head`, or `lip_sync` available), redesign the visual system to carry the story with graphics and voice-over instead of a presenter:
 
 ### Layout changes:
 - **Primary frame**: full-screen visual (background, image, diagram, or motion graphic) with voice-over narration underneath.

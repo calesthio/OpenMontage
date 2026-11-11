@@ -32,6 +32,7 @@ orchestration:
   budget_default_usd: 0.50
   max_revisions_per_stage: 3
   max_send_backs: 3
+  max_wall_time_minutes: 10
 
 compatible_playbooks:
   recommended:
@@ -96,6 +97,7 @@ stages:
       - frame_sampler
       - face_tracker
       - silence_cutter
+      - visual_qa
     checkpoint_required: true
     human_approval_default: true
     review_focus:
@@ -123,6 +125,8 @@ stages:
       - subtitle_gen
       - audio_mixer
       - image_selector
+      - pixabay_music
+      - audio_energy
     checkpoint_required: true
     human_approval_default: true
     review_focus:
@@ -200,6 +204,8 @@ stages:
       - showcase_card
       - video_stitch
       - visual_qa
+      - green_screen_processor
+      - green_screen_composite
     checkpoint_required: true
     human_approval_default: false
     review_focus:

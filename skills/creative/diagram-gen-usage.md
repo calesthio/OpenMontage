@@ -10,10 +10,11 @@ MAX NODES (1080p):  15-20 nodes, 20-25 edges
 MAX NODES (4K):     25-35 nodes, 35-45 edges
 MAX NODES (vert):   10-12 nodes, 12-15 edges
 MIN FONT SIZE:      16px at 1080p, 14px at 4K
-RENDER WIDTH:       Minimum 1200px
-RENDER VIEWPORT:    3840x2160 (4K) for high-res PNG export
-THEME (dark bg):    tokyo-night or dracula
-THEME (light bg):   github-light or catppuccin-latte
+RENDER WIDTH:       Minimum 1200px (the `width` default) — raise `width` for high-res PNG export
+RENDER VIEWPORT:    Not settable — for Mermaid only `width` reaches the renderer
+THEME (dark bg):    dark (default)
+THEME (light bg):   light
+THEME VALUES:       dark | light | neutral — nothing else
 ```
 
 ## Diagram Type Selection
@@ -46,13 +47,19 @@ Video is transient — viewers can't zoom or scroll. Cut complexity in half comp
 
 | Use Case | Theme | Why |
 |----------|-------|-----|
-| Dark video background | `tokyo-night` or `dracula` | High contrast, readable |
-| Light video background | `github-light` or `catppuccin-latte` | Soft, professional |
-| Code/developer content | `one-dark` | Familiar to dev audience |
-| Maximum contrast | `zinc-dark` | Neutral, no color bias |
-| Corporate/presentation | `nord-light` | Calm, professional |
+| Dark video background | `dark` (default) | High contrast, readable |
+| Light video background | `light` | Soft, professional |
+| Code/developer content | `dark` | Familiar to dev audience |
+| No color bias | `neutral` | Neutral, no color bias |
+| Corporate/presentation | `light` or `neutral` | Calm, professional |
 
-**Match the playbook:** The diagram theme should complement the style playbook's color palette.
+`diagram_gen`'s `theme` accepts only `dark`, `light` and `neutral`. The named palettes in the
+Layer 3 `beautiful-mermaid` skill (`tokyo-night`, `dracula`, `github-light`, `nord-light`, ...) are
+**not** `diagram_gen` themes. They are not rejected either: box/flowchart diagrams silently render
+with the `neutral` palette, and Mermaid has no theme by those names — so you do not get the look
+you asked for.
+
+**Match the playbook:** The diagram theme should complement the style playbook's color palette. Pick the closest of the three themes and set exact playbook colors inside the definition with `classDef` (see below).
 
 ## Progressive Building for Video
 
@@ -102,10 +109,10 @@ Generate one PNG per step with different `classDef` assignments, then sequence t
 When using the `diagram_gen` tool:
 
 1. **Check complexity** — max 15-20 nodes at 1080p. Split larger diagrams into multiple frames
-2. **Choose theme** to match the video's style playbook and background
+2. **Choose theme** (`dark`, `light` or `neutral`) to match the video's style playbook and background
 3. **Use progressive building** — render stages and crossfade for "building" effect in video
 4. **Highlight with classDef** — show the current step in orange/red, completed in green, upcoming in grey
 5. **Keep text minimal** — 3-5 words per node, 1-2 words per edge label
-6. **Default to flowchart TD** unless the content specifically requires another diagram type
-7. **Render at 4K viewport** (3840x2160) even for 1080p output — ensures crisp text when scaled
+6. **Default to flowchart TD** unless the content specifically requires another diagram type — pass every Mermaid diagram (flowcharts included) as `diagram_type: "mermaid"` + `definition`. `diagram_type: "flowchart"` is NOT Mermaid: like `boxes`, it draws the `boxes` / `connections` arrays with Pillow
+7. **Render wide** — pass a larger `width` (default 1200) for 1080p/4K output. A 3840x2160 viewport cannot be requested: for Mermaid, `width` is the only size input that reaches the renderer (`height` applies to `flowchart` / `boxes` only). Check the PNG's real pixel size before composing
 8. **Test readability** — view the rendered PNG at actual video frame size before composing

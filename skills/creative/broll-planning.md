@@ -132,14 +132,16 @@ However, best practice is to track sources in the asset manifest:
 {
   "id": "broll-scene-3",
   "type": "image",
+  "path": "assets/images/broll-scene-3.jpg",
   "source_tool": "pexels_image",
+  "scene_id": "scene-3",
   "provider": "pexels",
-  "attribution": {
-    "photographer": "Joey Farina",
-    "source_url": "https://www.pexels.com/photo/...",
-    "license": "Pexels License"
-  }
+  "license": "Pexels License",
+  "original_url": "https://www.pexels.com/photo/...",
+  "generation_summary": "Stock photo by Joey Farina (Pexels)"
 }
 ```
 
-This data is available in the tool's response (`photographer`, `pexels_url` / `page_url`). Include it in the asset manifest for transparency.
+`path` and `scene_id` are required, and asset entries reject unknown keys — there is no
+`attribution` object. This data is available in the tool's response (`photographer` / `user`,
+`pexels_url` / `page_url`). Include it in the asset manifest for transparency.

@@ -9,7 +9,7 @@
 
 | Tool | Provider | Cost | Speed | Best For |
 |------|----------|------|-------|----------|
-| `flux_image` | FLUX 2 Pro via fal.ai | ~$0.03-0.05 | ~5-10s | Photorealism, general purpose, workhorse |
+| `flux_image` | FLUX 1.1 Pro via fal.ai (`flux-pro/v1.1` default; also `flux-pro`, `flux/dev`) | $0.05 (`flux-pro/v1.1`, `flux-pro`) / $0.03 (`flux/dev`) | ~5-10s | Photorealism, general purpose, workhorse |
 | `grok_image` | Grok Imagine Image (xAI) | $0.02/output + $0.002/input edit image | ~5-15s | Image edits, style transfer, multi-image compositing |
 | `openai_image` | GPT Image 2 (OpenAI) | ~$0.01-0.21 | ~5-15s | Complex instructions, text in images, multi-element |
 | `recraft_image` | Recraft V4 via fal.ai | ~$0.04-0.25 | ~5-10s | Logos, SVG vectors, brand assets, text rendering (see caveat below) |
@@ -57,14 +57,14 @@
 ```
 
 PRODUCTION PATH: Premium
-├── Hero images: flux_image ($0.05/img)
-├── Supporting visuals: flux_image ($0.03/img)
+├── Hero images: flux_image ($0.05/img — default flux-pro/v1.1)
+├── Supporting visuals: flux_image ($0.03/img — only with model="flux/dev")
 ├── Text overlays: openai_image ($0.05/img medium)
 ├── B-roll stills: pexels_image ($0.00)
 └── Total for 10 images: ~$0.35
 
 PRODUCTION PATH: Standard
-├── All generated: flux_image ($0.03/img)
+├── All generated: flux_image ($0.03/img — only with model="flux/dev"; the default model is $0.05)
 ├── B-roll stills: pexels_image ($0.00)
 └── Total for 10 images: ~$0.25
 

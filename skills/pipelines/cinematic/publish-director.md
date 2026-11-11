@@ -42,7 +42,18 @@ Store in `publish_log.metadata`:
 - `poster_frame_notes`
 - `distribution_notes`
 
-### 4. Quality Gate
+### 4. Package The Export
+
+Use `export_bundle` (local and offline; it never uploads) once per deliverable,
+starting with the hero. Pass the `video_path` from `render_report`, the `title`,
+and the metadata you prepared. It writes the export directory
+(`projects/<project>/exports/` for a video in the project's `renders/`) and
+returns a schema-valid `publish_log` in `data["publish_log"]`. Persist the hero's
+as the stage artifact and add the fields above under its `metadata`. See
+`skills/pipelines/explainer/publish-director.md` Step 5 for the full input list
+and export layout.
+
+### 5. Quality Gate
 
 - hero export is clearly identified,
 - derivative exports are labeled by purpose,

@@ -176,6 +176,7 @@ stages:
       - audio_mixer
       - video_stitch
       - audio_enhance
+      - remotion_caption_burn
     checkpoint_required: true
     human_approval_default: false
     review_focus:

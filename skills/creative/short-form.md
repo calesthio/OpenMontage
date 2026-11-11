@@ -14,7 +14,7 @@ HOOK:             First 1-2 seconds — visual or text pattern interrupt
 CAPTIONS:         Mandatory (85% watch muted on mobile)
 TEXT SIZE:         42px+ minimum, bold sans-serif
 PACING:           Visual change every 1-3 seconds
-TARGET LUFS:      -14 LUFS, true peak -1 dBTP
+TARGET LUFS:      -14 LUFS, true peak -1 dBTP (audio_mixer: pass loudnorm_target=-14 — its default is -16)
 MUSIC:            120-140 BPM for energetic, 90-110 for explainers
 ```
 

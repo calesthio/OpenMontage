@@ -24,14 +24,16 @@ formatting, and readability for both vertical and horizontal video.
 
 ### Vertical Short-form (TikTok, Reels, Shorts)
 
-- **Max 3-4 words per cue** — screen is narrow, text must be large enough to read
-- **Max 20 characters per line** — prevents wrapping on narrow screens
+- **Max 3-4 words per cue** (`max_words_per_cue: 4`) — screen is narrow, text must be large enough to read
+- **Max 20 characters per line** (`max_chars_per_line: 20`) — prevents wrapping on narrow screens
 - Subtitles are **mandatory** (most viewers watch muted)
+- Pass both parameters explicitly: `subtitle_gen` does not know the format and
+  defaults to the horizontal values below
 
 ### Horizontal Standard (YouTube, web)
 
-- **Max 6-8 words per cue** — wider screen accommodates more text
-- **Max 42 characters per line** — standard broadcast limit
+- **Max 6-8 words per cue** (`max_words_per_cue: 8`, the `subtitle_gen` default) — wider screen accommodates more text
+- **Max 42 characters per line** (`max_chars_per_line: 42`, the `subtitle_gen` default) — standard broadcast limit
 
 ### General Rules
 
@@ -90,8 +92,12 @@ alignment: 2
 ### Word Boundary Grouping
 
 The `subtitle_gen` tool groups words respecting `max_words_per_cue` and
-`max_chars_per_line`. When word timestamps are unavailable, it falls back
-to segment-level timing with even distribution.
+`max_chars_per_line`. When a segment has no word timestamps (no `words`), it
+falls back to segment-level timing **without splitting**: the whole segment text
+becomes one unit with the segment's own start and end. Nothing is distributed
+across the segment, so a long segment yields one long cue that exceeds both
+limits (and short neighbouring segments may be merged into one cue). If cue
+length matters, re-transcribe so every segment carries `words`.
 
 ## Quality Checklist
 

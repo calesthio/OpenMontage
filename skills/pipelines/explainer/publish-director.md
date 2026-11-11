@@ -93,21 +93,26 @@ It lays out the export directory, writes the metadata files, and returns a
 schema-valid `publish_log` (`status: "exported"`) in `data["publish_log"]` that
 you persist as the stage artifact.
 
-It produces this structure:
+It produces this structure. The export root is `export_dir` when you pass one;
+otherwise it is `projects/<project_name>/exports/` when the video sits in the
+project's `renders/` folder (the normal case), and a top-level
+`exports/<project_name>/` only for a video stored anywhere else:
 
 ```
-exports/
-  <project_name>/
-    video/
-      output.mp4            # Final rendered video (subtitles.srt alongside if provided)
-    metadata/
-      metadata.json         # All SEO metadata
-      chapters.txt          # Chapter markers
-      description.txt       # Ready-to-paste description (+ chapters)
-      tags.txt              # One tag per line
-    thumbnails/
-      concept.json          # Thumbnail concept (or the copied thumbnail image)
+projects/<project_name>/exports/
+  video/
+    output.mp4              # Final rendered video (subtitles.<ext> alongside if subtitles_path was given)
+  metadata/
+    metadata.json           # All SEO metadata (always)
+    description.txt         # Ready-to-paste description (+ chapters) (always)
+    chapters.txt            # Chapter markers — only when chapters were given
+    tags.txt                # One tag per line — only when tags were given
+  thumbnails/
+    thumbnail.<ext>         # The copied image when thumbnail_path was given,
+    concept.json            # otherwise the concept JSON when thumbnail_concept was given (else empty)
 ```
+
+`data["files_written"]` lists exactly what was written and `data["export_path"]` the export root.
 
 `export_bundle` is a local, offline packager — it does not upload. A networked
 publisher (e.g. a YouTube uploader) would be a separate `publish`-capability

@@ -2,7 +2,7 @@
 
 ## When to Use
 
-You are the Script Writer for a generated explainer video. You have a `brief` artifact from the Idea Explorer. Your job is to write a narration script from scratch — there is no existing footage to transcribe.
+You are the Script Writer for a generated explainer video. You have the approved `proposal_packet` from the Proposal Director (and usually a `research_brief`). Your job is to write a narration script from scratch — there is no existing footage to transcribe.
 
 The script is the backbone of the video. Every visual, every scene, every audio cue flows from what you write here. A mediocre script cannot be saved by great visuals.
 
@@ -13,7 +13,7 @@ The script is the backbone of the video. Every visual, every scene, every audio 
 | Schema | `schemas/artifacts/script.schema.json` | Artifact validation |
 | Prior artifact | `proposal_packet` | Selected concept with title, hook, key_points, core_message, tone, narrative_structure, duration |
 | Prior artifact | `research_brief` (optional but high-value) | Data points, audience insights, expert quotes — ground the script in real facts |
-| Playbook | Active style playbook from `proposal_packet.selected_concept.suggested_playbook` | Voice style, pacing rules |
+| Playbook | Active style playbook from `proposal_packet.production_plan.playbook`, else the approved concept's `suggested_playbook` | Voice style, pacing rules |
 | Meta skill | `skills/meta/voice-performance-director.md` | Structured TTS delivery cues for natural, expressive narration |
 | Layer 3 | TTS provider skills (check `agent_skills` on the selected TTS tool) | TTS capabilities for speaker directions |
 
@@ -21,14 +21,14 @@ The script is the backbone of the video. Every visual, every scene, every audio 
 
 ### Step 1: Absorb the Proposal and Research
 
-Read the `proposal_packet.selected_concept` carefully. Extract:
-- **Target duration** — this is your word budget (see timing table below)
-- **Hook** — your opening must deliver on this promise
-- **Key points** — these must all be covered in the script
-- **Core message** — the one thing the viewer should remember
-- **Tone** — shapes word choice, sentence length, formality
-- **Target audience** — shapes complexity and assumed knowledge
-- **Narrative structure** — the structural approach (myth_busting, journey, data_narrative, etc.)
+Read the approved concept carefully. `proposal_packet.selected_concept` holds only `concept_id`, `rationale`, and `modifications`; the concept itself is the `proposal_packet.concept_options[]` entry whose `id` equals `selected_concept.concept_id`. Read that entry, then apply every item in `selected_concept.modifications`. Extract:
+- **Target duration** — `target_duration_seconds`; this is your word budget (see timing table below)
+- **Hook** — `hook`; your opening must deliver on this promise
+- **Key points** — `key_points`; these must all be covered in the script
+- **Core message** — `core_message`; the one thing the viewer should remember
+- **Tone** — `tone`; shapes word choice, sentence length, formality
+- **Target audience** — `target_audience`; shapes complexity and assumed knowledge
+- **Narrative structure** — `narrative_structure`; the structural approach (myth_busting, journey, data_narrative, etc.)
 
 Then read the `research_brief` for grounding material:
 - **`data_points`** — specific statistics and facts to weave into the script. Use claims with `surprise_factor: "surprising"` or `"counterintuitive"` as retention anchors.
@@ -74,7 +74,7 @@ LANDING (last 5s) → Quick recap of core message + CTA.
                      Don't introduce new information here.
 ```
 
-Map each of the brief's `key_points` to a specific section in the BUILD phase.
+Map each of the approved concept's `key_points` to a specific section in the BUILD phase.
 
 ### Step 4: Write the Script
 

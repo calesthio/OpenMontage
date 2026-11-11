@@ -11,9 +11,9 @@ clear, accurate, and effective in video.
 
 | Tool | Role |
 |------|------|
-| `diagram_gen` | Generate charts via Mermaid or D3 |
+| `diagram_gen` | Generate static chart images via Mermaid (`diagram_type: "mermaid"`) — there is no D3 path |
 | `image_selector` | Generate stylized chart illustrations (FLUX/GPT Image) |
-| Remotion | Animated chart components (bar grow, line draw, pie fill) |
+| Remotion | Animated chart components (bar grow, line draw, pie fill) — scene types `bar_chart`, `line_chart`, `pie_chart`, `kpi_grid` |
 | Manim | Mathematical plots, coordinate systems, function graphs |
 
 ## Chart Type Decision Tree

@@ -19,7 +19,6 @@
 - Need **video** (larger video library than Pixabay)
 - Want **orientation filtering** (landscape/portrait/square)
 - Want **color filtering** (match playbook palette)
-- Need results in **multiple languages** (28 locales)
 
 ### When to Use Pixabay
 - Need **category-based filtering** (nature, business, science, etc.)
@@ -51,7 +50,7 @@ Need stock video?
     "query": "city skyline sunset",      # Required: search term
     "orientation": "landscape",           # Optional: landscape/portrait/square
     "size": "large",                      # Optional: large/medium/small
-    "color": "FF6B35",                    # Optional: hex without # or color name
+    "color": "FF6B35",                    # Image only: hex without # or color name
     "per_page": 5,                        # Results per page (1-80)
     "download_size": "large2x",           # Image: original/large2x/large/medium
     "preferred_quality": "hd",            # Video: hd/sd
@@ -65,14 +64,17 @@ Need stock video?
     "query": "server room",              # Required: search term (max 100 chars)
     "image_type": "photo",               # Image: all/photo/illustration/vector
     "video_type": "film",                # Video: all/film/animation
-    "orientation": "horizontal",          # all/horizontal/vertical
+    "orientation": "horizontal",          # Image only: all/horizontal/vertical
     "category": "computer",              # One of 20 categories
-    "colors": "blue,gray",              # Comma-separated color names
+    "colors": "blue,gray",              # Image only: comma-separated color names
     "editors_choice": true,              # Curated high-quality only
     "safesearch": true,                  # Always true for production
     "output_path": "assets/video/s5.mp4" # Where to save
 }
 ```
+
+`pixabay_video` has no `orientation` or `colors` input — filter video by `video_type`, `category`,
+`min_duration` / `max_duration` and `editors_choice` only.
 
 ## Gotchas and Best Practices
 
@@ -85,8 +87,8 @@ Standard Pixabay API users get max 1280px wide images (`largeImageURL`). Full re
 ### 3. Pexels Auth Header
 Pexels uses a bare API key in the `Authorization` header (NOT `Bearer`). The tool handles this, but be aware if debugging.
 
-### 4. Search Results Vary by Locale
-Pexels supports 28 locales. If searching for culturally specific content, set the locale parameter.
+### 4. No Locale Parameter
+The Pexels API supports locales, but `pexels_image` / `pexels_video` expose no `locale` input — do not pass one. For culturally specific content, put the place or culture in the `query` itself (e.g. "Bangkok street food market").
 
 ### 5. Stock Images Are Deterministic
 Unlike AI generation, searching "ocean waves" twice returns the same results. If the first result isn't good enough, try different keywords — don't retry the same query.
@@ -107,13 +109,16 @@ Stock tools integrate exactly like generation tools. In the asset manifest:
     "source_tool": "pexels_image",
     "scene_id": "scene-3",
     "cost_usd": 0.00,
-    "metadata": {
-        "photographer": "Joey Farina",
-        "source_url": "https://www.pexels.com/photo/2014422/",
-        "license": "Pexels License (free, no attribution required)"
-    }
+    "provider": "pexels",
+    "license": "Pexels License (free, no attribution required)",
+    "original_url": "https://www.pexels.com/photo/2014422/",
+    "generation_summary": "Stock photo by Joey Farina, downloaded from Pexels"
 }
 ```
+
+Asset entries reject unknown keys: there is no per-asset `metadata`, `photographer` or
+`source_url` field. Use `provider`, `license` and `original_url`, and credit the photographer in
+`generation_summary`.
 
 The Edit Director and Compose Director treat stock assets identically to generated ones — they just reference the file path from the manifest.
 

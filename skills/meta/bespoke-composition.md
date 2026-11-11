@@ -177,6 +177,8 @@ Bespoke compositions are **throwaway and project-local** — they never enter an
 
 ```json
 edit_decisions = {
+  "version": "1.0",
+  "cuts": [],              // required by the schema; an empty list is valid in atelier mode
   "render_runtime": "remotion",
   "composition_mode": "atelier",
   "bespoke": {
@@ -192,14 +194,25 @@ edit_decisions = {
 }
 ```
 
-No `asset_manifest` or `cuts` are required in atelier mode — the composition owns its own assets.
+No `asset_manifest` and no cut entries are needed in atelier mode — the composition owns its own
+assets. The `version` and `cuts` keys themselves are still required: `edit_decisions.schema.json`
+requires `version`, `cuts` and `render_runtime`, and `write_checkpoint` validates the artifact, so
+keep `"cuts": []`.
 The tool's `_run_atelier_checks` fails the render if any source file imports from the stock
 registry (`src/components`, `src/Explainer`, etc.), and warns if `art_direction` is missing.
 
 #### HyperFrames path
-- Scaffold with `npx hyperframes init <slug>` (run from `projects/`). HF init generates
-  `index.html`, `meta.json`, `package.json`, and a per-project `CLAUDE.md` that auto-routes
-  the agent into `/hyperframes` — so the next session knows exactly which sub-skills to load.
+- Scaffold with the `hyperframes_compose` tool, `operation="scaffold_workspace"` — **not**
+  `npx hyperframes init`. `init` creates its own project semantics and installs agent skills
+  (a per-project `CLAUDE.md`); it is for humans bootstrapping a project by hand, not for the
+  pipeline (`skills/core/hyperframes.md` → Anti-patterns). Inputs: `workspace_path`
+  (`projects/<slug>/hyperframes/`), `edit_decisions` with **at least one cut** (the scaffold
+  rejects an empty `cuts[]`), `asset_manifest` (asset ids → file paths, copied into `assets/`),
+  and optionally `playbook`, `profile`, `fps`. It writes `index.html`, `hyperframes.json`,
+  `DESIGN.md`, `compositions/` and `assets/`. The generated `index.html`
+  is only a functional skeleton (root `data-*` attributes, a paused GSAP timeline registered in
+  `window.__timelines`, one `.clip` per cut). **Scaffold once:** `scaffold_workspace` and
+  `operation="render"` both overwrite `index.html`.
 - Author `index.html` by hand. Every clip needs `class="clip"` + the three `data-*` timing
   attrs + a stable `id`. Mount sub-compositions via `data-composition-src` once the timeline
   on one file grows past 4 clips (the lint catches density).

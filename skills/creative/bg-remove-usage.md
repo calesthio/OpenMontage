@@ -1,7 +1,7 @@
 # Background Removal Usage for OpenMontage
 
 > Sources: rembg library documentation, U2Net paper (Qin et al. 2020), IS-Net paper
-> (Qin et al. 2022), OpenMontage `tools/bg_remove.py` implementation
+> (Qin et al. 2022), OpenMontage `tools/enhancement/bg_remove.py` implementation
 
 ## Quick Reference Card
 

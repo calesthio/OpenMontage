@@ -127,14 +127,25 @@ EXECUTE_STAGE(stage_name):
      If PASS:
        - Store artifact in EP_STATE
        - Update cumulative tracking (budget, durations, etc.)
-       - Log: "[stage] PASSED — moving to next stage"
-       - Continue to next stage
+       - If the stage is human-gated (human_approval_default: true in the
+         manifest — idea, script, scene_plan, assets, publish):
+           - Write the checkpoint with status="awaiting_human"
+           - Present the artifact summary to the user and END YOUR TURN
+           - Only after the user approves: re-write the checkpoint with
+             status="completed", human_approved=True, then continue
+           - The EP's own PASS is not approval — write_checkpoint raises
+             GATE VIOLATION on "completed" without human_approved=True
+       - Else (edit, compose):
+           - Log: "[stage] PASSED — moving to next stage"
+           - Continue to next stage
 
      If REVISE:
        - Increment revision_counts[stage_name]
        - If revision_counts[stage_name] >= 3:
            - PASS WITH WARNINGS (never block forever)
            - Log unresolved issues
+           - On a human-gated stage this still stops at awaiting_human:
+             show the user the unresolved issues and let them decide
        - Else:
            - Compose specific feedback for the director
            - Re-run SPAWN DIRECTOR with feedback injected
@@ -202,7 +213,8 @@ CHECK: Footage viability
   - Is the audio quality sufficient? (Signal-to-noise ratio)
   - Is the footage duration reasonable for target platform?
   - If duration > 3x target: flag that significant trimming is needed
-  - Note: Idea stage DOES checkpoint with user — this is the approval gate
+  - Note: Idea stage DOES checkpoint with user — this is the first approval gate
+    (script, scene_plan, assets, and publish are human-gated the same way)
 ```
 
 ### After SCRIPT stage:
@@ -352,13 +364,15 @@ Enhancement adjustments: {skip/add face_enhance, color_grade, etc.}
 
 | Limit | Value | Rationale |
 |-------|-------|-----------|
-| Max revisions per stage | 3 | Prevent perfectionism loops |
-| Max send-backs per stage pair | 1 | Prevent ping-pong between stages |
-| Max total send-backs | 3 | Cap total pipeline re-work |
-| Max total budget | Configurable (default $0.50) | Hard stop on spending |
-| Max total wall-time | 10 minutes | Timeout for entire pipeline (shorter than explainer — less generation) |
+| Max revisions per stage | manifest `orchestration.max_revisions_per_stage` | Prevent perfectionism loops |
+| Max send-backs per stage pair | 1 (guidance; no manifest field) | Prevent ping-pong between stages |
+| Max total send-backs | manifest `orchestration.max_send_backs` | Cap total pipeline re-work |
+| Max total budget | The run budget from `tools/cost_tracker.py::resolve_budget_usd`: the amount the user approved (record it with `python -m tools.cost_tracker budget <project-id> --usd <amount>`), else manifest `orchestration.budget_default_usd` capped at `config.yaml` `budget.total_usd` | Enforcement follows `config.yaml` `budget.mode`: `observe` records only, `warn` records and flags overruns, `cap` refuses a paid call that does not fit the remaining budget |
+| Max total wall-time | manifest `orchestration.max_wall_time_minutes` | Timeout for entire pipeline (less generation than explainer) |
 
-After any limit is hit: **proceed with warnings**, never block indefinitely.
+Read the manifest-backed values from `pipeline_defs/talking-head.yaml` at the start of the run; never substitute numbers of your own.
+
+After any limit is hit: **proceed with warnings**, never block indefinitely. A limit never approves a human-gated stage (idea, script, scene_plan, assets, publish): write `awaiting_human` with the warnings attached, end the turn, and let the user decide.
 
 ## Integration with Existing Skills
 
@@ -370,6 +384,8 @@ The EP doesn't replace any director skill — it wraps them. Each director skill
 4. **Transcript continuity**: The EP carries transcript data forward, ensuring subtitle generation and edit decisions use the same source of truth
 
 ## Example EP Run (Abbreviated)
+
+The user-approval stops are omitted for brevity: after idea, script, scene_plan, assets, and publish the EP writes `awaiting_human`, ends the turn, and resumes only once the user approves.
 
 ```
 [EP] Starting pipeline: talking-head v2.0

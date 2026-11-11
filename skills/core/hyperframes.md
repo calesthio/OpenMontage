@@ -206,24 +206,40 @@ artifact wins.
 ## Preflight — HyperFrames availability
 
 At preflight, the provider menu reports HyperFrames availability. The
-`hyperframes_compose` tool's `get_info()` returns:
+`hyperframes_compose` tool's `get_info()` returns the runtime check nested under
+`hyperframes_runtime` (read `get_info()["hyperframes_runtime"]["runtime_available"]`,
+not a top-level key):
 
 ```json
 {
-  "runtime_available": true | false,
-  "node_major": 22,
-  "ffmpeg_available": true,
-  "doctor_ok": true,
-  "install_instructions": "…"
+  "status": "available" | "unavailable",
+  "install_instructions": "…",
+  "hyperframes_runtime": {
+    "runtime_available": true | false,
+    "node_major": 22,
+    "ffmpeg_available": true,
+    "npx_available": true,
+    "npm_package": "hyperframes",
+    "npm_package_version": "…",
+    "npm_resolve_error": null,
+    "cli_probe_status": "ok",
+    "cli_probe_error": null,
+    "reasons": []
+  },
+  "setup_offer": { "effort": "…", "install_instructions": "…", "unlocks": "…" }
 }
 ```
+
+There is no `doctor_ok` key: the doctor result is `cli_probe_status` (`"ok"`) /
+`cli_probe_error`, and `reasons` lists every failed requirement in plain text.
+`setup_offer` is present only when `runtime_available` is `false`.
 
 Floor requirements (all must hold for `runtime_available: true`):
 
 - Node.js major version ≥ 22
 - `ffmpeg` binary on PATH
 - `npx` on PATH (bundled with Node.js)
-- `npx hyperframes doctor` exits 0, OR a lightweight equivalent check passes
+- the `hyperframes` npm package resolves, and `npx hyperframes doctor --json` exits 0
 
 `bun` is NOT required — HyperFrames is consumable via `npx hyperframes` (published npm package name is `hyperframes`; the monorepo-internal `@hyperframes/cli` name is NOT on the public npm registry and returns 404).
 
@@ -283,11 +299,14 @@ and HyperFrames output.
 ## Cost model
 
 HyperFrames renders are local: $0 API cost, but CPU-intensive (headless
-Chrome + FFmpeg). Track via `cost_tracker`:
+Chrome + FFmpeg). `cost_tracker` tracks USD only:
 
-- `estimate` — based on composition duration × resolution × `--workers`
+- `estimate` — `hyperframes_compose.estimate_cost()` is `0.0` (the time estimate
+  is separate: `estimate_runtime()` = 30 s + 0.5 s per second of cuts)
 - `reserve` — 0 (no API spend)
-- `reconcile` — wall-clock render time
+- `reconcile` — `CostTracker.reconcile(entry_id, actual_usd)` takes USD, so `0.0`;
+  never pass seconds. Wall-clock render time goes in
+  `render_report.render_time_seconds`, not in the cost log
 
 Same pattern as Remotion.
 
@@ -402,11 +421,18 @@ downloaded stock via `ffmpeg ... -c:v libx264 -r 30 -g 30 -keyint_min 30
 workspace. See `hyperframes_compose`'s existing workspace prep — it
 doesn't do this automatically yet.
 
-### Render with `--workers 1` for video-heavy compositions
+### `--workers 1` for video-heavy compositions — not reachable through the tools
 
 Default parallel capture overwhelms headless Chrome when many videos
 load simultaneously. For any composition with >5 background video
-elements, always pass `--workers 1` to `hyperframes render`.
+elements, `hyperframes render` wants `--workers 1` — but neither
+`video_compose` nor `hyperframes_compose` has an input for it: both run
+`hyperframes render` with only `--output`, `--fps`, `--quality` (plus
+`--strict` for `render_existing`). The flag can only be passed on a direct
+`npx hyperframes render --workers 1 …`, which skips the tool's check gate and
+the post-render `final_review`. If a tool render of a video-heavy composition
+fails, surface it as a blocker and get the user's approval before rendering
+by hand; then run the checks and the final review yourself.
 
 ### Use Outfit / Inter / JetBrains Mono, not Space Grotesk
 
@@ -425,7 +451,12 @@ the `deterministicFonts.ts` mapping table. Safe bets: `Outfit`,
 - ❌ Running `hyperframes init` from the OpenMontage orchestrator. `init`
   creates its own project semantics and installs agent skills — it's meant
   for humans bootstrapping a project, not for the pipeline. `hyperframes_compose`
-  generates the project files directly.
+  generates the project files directly: `operation="render"` does it as its first
+  step, and `operation="scaffold_workspace"` does it without rendering (inputs:
+  `workspace_path`, `edit_decisions` with a non-empty `cuts[]`, `asset_manifest`;
+  optional `playbook`, `profile`, `fps`). Use `scaffold_workspace` — once — to get
+  the workspace an atelier `index.html` is then hand-authored in; see
+  `skills/meta/bespoke-composition.md` → "HyperFrames path".
 - ❌ Using HyperFrames as "React without Remotion." HyperFrames is
   HTML-first with GSAP. If your scene is authored as React JSX, it belongs
   in Remotion.

@@ -83,10 +83,10 @@ Read the `research_brief` thoroughly. Extract:
 
 - **`research_summary`** — the researcher's strongest creative direction.
 - **`angles_discovered`** — these are your raw cinematic direction candidates.
-- **Visual references** — the real-world precedents that inform each direction.
-- **Audio direction** — music mood and sound design notes.
+- **Visual references** — the real-world precedents that inform each direction (`visual_references`, and per direction in `metadata.direction_details.<name>.visual_references`).
+- **Audio direction** — music mood and sound design notes (`metadata.direction_details.<name>.audio_direction`, `metadata.audio_landscape`).
 - **Source reality** — what footage/stills the user actually has.
-- **Motion commitment** — whether motion is required.
+- **Motion commitment** — whether motion is required (`metadata.direction_details.<name>.motion_commitment`).
 
 ### Step 2: Run Preflight
 
@@ -104,7 +104,7 @@ Record:
 - Enhancement tools — color_grade, audio_enhance are high-value for cinematic
 - **Remotion render engine** — check `video_compose.get_info()["render_engines"]["remotion"]`
 
-**Motion-required enforcement:** If the research brief indicates `motion_required: true`, verify that video generation or source footage can actually deliver motion. If neither is available, **do not silently downgrade to still-led**. Instead, present the constraint honestly and let the user decide.
+**Motion-required enforcement:** If the user's brief or the research brief's motion commitment (`metadata.direction_details.<name>.motion_commitment`) says motion is required, verify that video generation or source footage can actually deliver motion. If neither is available, **do not silently downgrade to still-led**. Instead, present the constraint honestly and let the user decide.
 
 ### Step 2c: Mood Board (Before Concepts)
 
@@ -123,7 +123,7 @@ This is cheaper than building 3 full cinematic directions and catches tone misma
 
 Build **at least 3 genuinely different cinematic directions.** Start from the `angles_discovered` in the research brief.
 
-For each concept, specify all fields in `proposal_packet.concept_options`:
+For each concept, specify all fields in `proposal_packet.concept_options`. Each entry is closed in the schema: it requires `id`, `title`, `hook`, `narrative_structure` (enum — a cinematic piece is usually `story` or `journey`), `visual_approach` (the visual treatment from 3d, as prose), `target_duration_seconds`, and `why_this_works`, and may add only `suggested_playbook`, `target_audience`, `target_platform`, `key_points`, `core_message`, `cta`, `tone`, `grounded_in`. The emotional arc (3b) goes under `proposal_packet.metadata.concept_details.<concept id>.emotional_arc`. The delivery promise (3c) and renderer family (3e) are not per-concept fields: write them once, for the selected concept, as `production_plan.delivery_promise` and `production_plan.renderer_family`.
 
 #### 3a: Title and Emotional Hook
 
@@ -222,6 +222,8 @@ After presenting concepts, always say something like:
 If the user mixes, create a new hybrid concept entry in the proposal_packet with clear attribution: "Emotional arc from Concept A, visual treatment from Concept C, music direction from Concept B."
 
 Let the user select, combine, modify, or redirect entirely.
+
+Record the choice in `selected_concept` — it holds only `concept_id` (the chosen entry's `id`), `rationale`, and `modifications`. Copy the chosen concept's arc to `proposal_packet.metadata.emotional_arc`; the EP and downstream stages read it there.
 
 ### Step 5: Music Plan (Mandatory for Cinematic)
 

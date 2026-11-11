@@ -40,9 +40,12 @@ riff on.
      reference while keeping the elements the user loved?" + "What animation techniques
      exist for this topic that the reference DIDN'T use?"
 
-3. In the research_brief, add a `reference_context` section:
+3. In the research_brief, record a `reference_context` object under the top-level
+   `metadata` (`research_brief.metadata.reference_context` — the brief root is closed in
+   the schema, so a top-level `reference_context` key fails the checkpoint):
    - The reference's animation style and technique
-   - What animation modes it used (motion graphics, manim, illustrative, etc.)
+   - Which animation modes it used, named with the pipeline's `animation_mode` values
+     (`image_animation`, `clip_video`, `manim`, `remotion_dataviz`, `diagram_stills`, `mixed`)
    - Alternative animation approaches we could try instead
    - What the reference did well vs. where we can improve
 
@@ -139,7 +142,7 @@ Q12: "[topic]" (comparison OR benchmark OR "vs") data
 - Source URL and source name
 - Credibility rating: `primary_source`, `secondary_source`, `anecdotal`
 - Surprise factor: expected or counterintuitive?
-- **Visual potential**: Can this be animated? (e.g., "73% → 23%" is a great shrinking bar chart moment; "it's important" is not animatable)
+- **Visual potential**: Can this be animated? (e.g., "73% → 23%" is a great shrinking bar chart moment; "it's important" is not animatable). `data_points[]` entries are closed in the schema (only `claim`, `source_url`, `source_name`, `credibility`, `surprise_factor`, `usable_as`), so record the rating under `research_brief.metadata.visual_potential` — one entry per data point: `{"data_point": <index in data_points>, "rating": "high|medium|low", "how": "shrinking bar chart"}`. The short form of the idea can also go in the data point's free-text `usable_as` (e.g. `"stat_card — animated shrinking bar"`).
 
 **Minimum: 3 data points. Target: 5-8.**
 
@@ -190,10 +193,10 @@ Q20: "animate [topic-related-process]" OR "[topic] animation tutorial"
      → Find: Technical approaches to animating this concept.
 ```
 
-**For each technique found, record:**
+**For each technique found, record** (as one entry in `research_brief.metadata.animation_techniques` — the schema has no technique field; you may also list the reference in `visual_references` using only its `description`, `url`, and `what_works` keys):
 - What the technique is (e.g., "progressive diagram build", "morph between states", "particle simulation")
 - Where it was used (source URL)
-- Which animation mode it maps to: `manim`, `remotion`, `motion_graphics`, `ai_video`, `illustrative`
+- Which `animation_mode` it maps to — use the same values the proposal, scene, asset, and compose stages use: `image_animation` (illustrated stills with multi-image crossfade), `clip_video` (AI-generated video clips), `manim` (programmatic math/physics), `remotion_dataviz` (Remotion components — charts, stat cards, kinetic typography), `diagram_stills` (diagrams and stills with Ken Burns)
 - Complexity: `simple` (reusable components), `moderate` (custom but repeatable), `complex` (bespoke per scene)
 - Whether it's been done before for this topic (novelty signal)
 
@@ -211,7 +214,7 @@ Q22: "[topic]" "common error" OR "often confused with" OR "technically incorrect
      → Find: Technical pitfalls that the animation must avoid.
 ```
 
-**Record:**
+**Record** (under `research_brief.metadata.technical_accuracy`; the EP carries these forward as `math_accuracy_notes`):
 - The precise definition or formula
 - Common simplification errors
 - What level of simplification is acceptable for the target audience
@@ -232,14 +235,15 @@ For each angle, specify:
 | `type` | `trending`, `evergreen`, `contrarian`, `narrative`, `data_driven` | Categorize honestly |
 | `why_now` | Why this angle is compelling right now | Must cite specific research findings |
 | `grounded_in` | Which data points or audience insights support it | Cross-reference your findings |
-| `animation_fit` | Which animation mode(s) best serve this angle | Must reference technique research from Step 6 |
+
+`angles_discovered[]` entries are closed in the schema — those five keys are all an angle can hold. Record each angle's **animation fit** — which `animation_mode` value(s) best serve it — under `research_brief.metadata.angle_animation_fit`, keyed by the angle's `name`: `{"<angle name>": {"modes": ["manim"], "why": "<technique research from Step 6>"}}`. It must reference technique research from Step 6.
 
 **Angle diversity checklist:**
 - [ ] At least one angle leverages a surprising data point or visual
 - [ ] At least one angle is evergreen
 - [ ] At least one angle maps to a different animation mode than the others
 - [ ] No two angles use the same hook structure
-- [ ] Each angle's `animation_fit` references specific technique research
+- [ ] Each angle's entry in `metadata.angle_animation_fit` references specific technique research
 
 ### Step 9: Source Bibliography
 
@@ -257,6 +261,7 @@ Build the `research_brief` artifact per the schema. Include:
 
 1. `research_summary` — one paragraph: the most important insight AND the most promising animation approach.
 2. All sections from Steps 2-9
+3. `metadata` — everything the schema has no field for: `reference_context` (Step 0), `visual_potential` (Step 4), `animation_techniques` (Step 6), `technical_accuracy` (Step 7), `angle_animation_fit` (Step 8). The brief root and its nested entries are closed, so these keys anywhere else fail the checkpoint.
 
 Validate against `schemas/artifacts/research_brief.schema.json` before submitting.
 
@@ -283,7 +288,7 @@ Validate against `schemas/artifacts/research_brief.schema.json` before submittin
 
 ## Common Pitfalls
 
-- **Skipping animation technique research**: The explainer research-director doesn't need this, but animation does. The `animation_fit` field in angles is mandatory.
+- **Skipping animation technique research**: The explainer research-director doesn't need this, but animation does. An animation fit for every angle (in `metadata.angle_animation_fit`) is mandatory.
 - **Ignoring mathematical accuracy**: For math topics, the research MUST include the precise definition. An animation that looks cool but teaches wrong math is worse than no animation.
 - **Only searching topic, not visualization**: If the topic is "Fourier transforms," you must search both "Fourier transforms" AND "Fourier transform visualization/animation." The technique research is half the value.
 - **Treating all animation as one category**: Manim, Remotion, AI video, and motion graphics are fundamentally different tools with different strengths. Research should inform which mode fits the topic.

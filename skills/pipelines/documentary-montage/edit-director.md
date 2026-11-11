@@ -17,7 +17,7 @@ its job, you have the raw material. The edit is the thinking.
 | Schema | `schemas/artifacts/edit_decisions.schema.json` | Artifact validation |
 | Prior artifact | `state.artifacts["assets"]["asset_manifest"]` | Picked clips + music bed |
 | Prior artifact | `state.artifacts["scene_plan"]["scene_plan"]` | Slot order, hero flags, target holds |
-| Prior artifact | `state.artifacts["idea"]["brief"]` | Tone register, duration, shape |
+| Prior artifact | `state.artifacts["idea"]["brief"]` | Tone register (`tone`), duration (`target_duration_seconds`), shape (`metadata.shape`) |
 | Tool (optional) | `video_analyzer` | Probe a clip's motion if you need to re-check |
 
 ## Mental Model
@@ -37,6 +37,20 @@ slideshow, the edit has failed, regardless of how good the clips are.
 This stage also locks the render grammar. For documentary montage,
 set `renderer_family` to `documentary-montage` so compose stays on the
 approved Remotion-first path.
+
+## Runtime Carry-Forward (REQUIRED)
+
+Set `edit_decisions.render_runtime` to the runtime locked at the idea
+stage (the `render_runtime_selection` decision in `decision_log`) — on
+this pipeline that is `"remotion"`. The schema requires the field and
+`video_compose` refuses to render without it. Carry the locked value
+forward unchanged; never default it or pick a different one here.
+
+This pipeline has no proposal stage, so there is no `proposal_packet`
+for compose to compare against. Also copy the same locked value into
+`edit_decisions.metadata.proposal_render_runtime` — that is what the
+`video_compose` runtime-swap check reads; without it the check reports
+`skipped`.
 
 ## Process
 
@@ -58,7 +72,7 @@ one of these, ask.
 
 ### 1. Set The Rhythm Grid
 
-Read `brief.tone` and `brief.duration_seconds`. Compute the hold
+Read `brief.tone` and `brief.target_duration_seconds`. Compute the hold
 table from the scene director's tone chart:
 
 | Tone | Base hold | Min hold | Max hold |
@@ -72,7 +86,7 @@ table from the scene director's tone chart:
 **Hero slots get max hold.** Mid-sequence cutaways get base. Quick
 transitions get min.
 
-Total hold time must sum to within ±10% of `brief.duration_seconds`.
+Total hold time must sum to within ±10% of `brief.target_duration_seconds`.
 If you overshoot, compress non-hero holds first — never cut heroes
 short to fit duration.
 
@@ -191,8 +205,11 @@ You have two tools to smooth this:
    (`2.35:1` letterbox on top/bottom) for hero pieces, 9:16 for
    social. Enforce in the `transform.crop` field of each cut.
 2. **Flag the piece for a uniform color grade at compose time.** Put
-   a `grade_profile` hint in `edit_decisions.metadata`. The compose
-   director will apply a LUT across the whole timeline.
+   a `grade_profile` hint in `edit_decisions.metadata` — one of the
+   `color_grade` profile names (`cinematic_warm`, `cinematic_cool`,
+   `moody_dark`, `bright_clean`, `vintage_film`, `high_contrast`,
+   `neutral`). The compose director will apply that grade across the
+   whole timeline.
 
 Don't try to color-grade individual clips here. That's the compose
 stage. Your job is to flag the need.
@@ -259,6 +276,7 @@ Canonical shape for this pipeline:
 {
   "version": "1.0",
   "renderer_family": "documentary-montage",
+  "render_runtime": "remotion",
   "cuts": [
     {
       "id": "cut_01",
@@ -298,11 +316,12 @@ Canonical shape for this pipeline:
   },
   "metadata": {
     "pipeline": "documentary-montage",
+    "proposal_render_runtime": "remotion",
     "tone": "elegiac",
     "shape": "list",
     "total_duration_seconds": 90.0,
     "hold_table_used": { "base": 4.0, "min": 2.5, "max": 7.0 },
-    "grade_profile": "warm_film_100",
+    "grade_profile": "vintage_film",
     "reorder_notes": [],
     "diversity_swaps": [
       { "at": "cut_07-cut_08", "reason": "two wide rooftops-in-rain adjacent, swapped 08 for #2 pick" }
@@ -318,8 +337,10 @@ Canonical shape for this pipeline:
 ### 10. Quality Gate
 
 - `sum(out - in for cut in cuts)` is within ±10% of
-  `brief.duration_seconds`.
+  `brief.target_duration_seconds`.
 - `renderer_family = "documentary-montage"` is present and unchanged.
+- `render_runtime = "remotion"` is present and matches the runtime locked
+  at idea; `metadata.proposal_render_runtime` carries the same value.
 - Hero slots have the longest holds.
 - No two adjacent cuts share subject AND scale.
 - The transition vocabulary is at most 4 distinct values.

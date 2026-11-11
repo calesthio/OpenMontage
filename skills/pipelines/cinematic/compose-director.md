@@ -9,7 +9,7 @@ Render the cinematic piece with careful attention to grade, audio dynamics, and 
 Read `edit_decisions.render_runtime`. Cinematic work routes to:
 
 - **`render_runtime="remotion"`** — default for video-led trailers using `CinematicRenderer`. Keeps video clips and transitions in one React-based pass. `edit_decisions.overlays` are not supported by `CinematicRenderer`; `video_compose` returns a clear error when the list is non-empty.
-- **`render_runtime="hyperframes"`** — for kinetic title cards, HTML/GSAP-driven trailers, launch-reel-style compositions, or explicit Three.js world fly-throughs. See `skills/core/hyperframes.md`. `hyperframes check` must pass before render.
+- **`render_runtime="hyperframes"`** — for kinetic title cards, HTML/GSAP-driven trailers, launch-reel-style compositions, or explicit Three.js world fly-throughs. See `skills/core/hyperframes.md`. **HyperFrames gate (what `hyperframes_compose` actually runs):** a templated workspace (scaffolded from `edit_decisions`) goes `lint → validate → render`; a `validate` failure always blocks the render, but `lint` findings block it only with `strict: true` — otherwise they are logged under `steps.lint` and the render continues, so pass `strict: true` on the final render. An authored (atelier) workspace (`composition_mode: "atelier"`) goes `hyperframes check → render --strict` instead, and `check` must pass. `skip_contrast: true` is for iteration only, never for final delivery.
 - **`render_runtime="ffmpeg"`** — simple source-footage concat with no composition.
 
 For a Blender world film, FFmpeg is the approved packager for the numbered
@@ -36,7 +36,7 @@ matching and its stricter quality gates.
 
 `delivery_promise.motion_required=true` means the locked runtime is a commitment. Silent swap to another runtime (including FFmpeg Ken Burns) is a CRITICAL governance violation. If the locked runtime fails, escalate per AGENT_GUIDE.md > "Escalate Blockers Explicitly."
 
-**Pass `proposal_packet` to `video_compose.execute()`** so the tool's `runtime_swap_detected` check compares directly against `proposal_packet.production_plan.render_runtime`. Without it the swap check is skipped in-tool and only the reviewer skill catches the drift.
+**Pass `proposal_packet` to `video_compose.execute()`** so the tool's `runtime_swap_detected` check compares directly against `proposal_packet.production_plan.render_runtime`. Without it the tool falls back to `edit_decisions.metadata.proposal_render_runtime` (the edit stage copies it there); only when both are missing is the swap check skipped in-tool, and then only the reviewer skill catches the drift.
 
 ## Prerequisites
 

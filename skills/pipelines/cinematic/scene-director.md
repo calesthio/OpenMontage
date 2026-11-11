@@ -41,7 +41,7 @@ Too many transition types kill the mood.
 
 ### 4. Use Metadata For Visual Rules
 
-Recommended metadata keys:
+Recommended metadata keys (top-level `scene_plan.metadata` — each scene is closed in the schema and has no `metadata` of its own; per-scene camera and lighting go in the scene's `shot_language` — `shot_size`, `camera_movement`, `lens_mm`, `lighting_key`, `depth_of_field`, `color_temperature` — and a hero frame is flagged with `hero_moment: true`):
 
 - `hero_frames`
 - `transition_rules`
@@ -61,14 +61,14 @@ Recommended metadata keys:
 >
 > See `skills/creative/video-gen-prompting.md` for the primitive vocabulary.
 
-> **Overlays callout.** Overlays (titles, subtitles, HUD, watermarks, framing graphics, lower-thirds, name plates, end-tag cards) are NOT part of the scene's foreground/midground/background depth axis. List them separately in scene metadata (`overlays: [...]`) with content and placement. Never describe an overlay as "in the foreground" — that confuses both downstream tools and any video-understanding model that re-analyzes the output.
+> **Overlays callout.** Overlays (titles, subtitles, HUD, watermarks, framing graphics, lower-thirds, name plates, end-tag cards) are NOT part of the scene's foreground/midground/background depth axis. List them separately in the scene's `overlay_notes` string with content and placement (scenes are closed in the schema — there is no scene-level `overlays` or `metadata` key; a structured list, if you need one, goes in `scene_plan.metadata.overlays` keyed by scene `id`). Never describe an overlay as "in the foreground" — that confuses both downstream tools and any video-understanding model that re-analyzes the output.
 
 ### 6. Quality Gate
 
 - every beat has a scene treatment,
 - hero frames are identifiable AND fully specified across all 5 aspects,
 - support inserts are justified,
-- overlays are recorded under `overlays:`, never inside the depth/framing description,
+- overlays are recorded in `overlay_notes`, never inside the depth/framing description,
 - the visual language stays consistent across the piece.
 
 ## Common Pitfalls

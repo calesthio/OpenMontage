@@ -27,7 +27,7 @@ EP_STATE:
   # Localization-specific
   source_language: null
   target_languages: []
-  dub_mode_per_locale: {}      # language → subtitle_only / dub / dub_with_lipsync
+  dub_mode_per_locale: {}      # language → subtitle_only / dub_audio_only / lip_synced / hybrid_covered
   glossary_terms: []           # protected terms that must not be translated
   timing_drift_tolerance: 0.5  # seconds
 
@@ -50,7 +50,7 @@ EP_STATE:
 ```
 CHECK: Scope definition
   - Source and target languages explicit?
-  - Deliverable mode clear per language (subtitle / dub / dub+lipsync)?
+  - Deliverable mode clear per language (subtitle_only / dub_audio_only / lip_synced / hybrid_covered)?
   - Glossary and protected terms captured?
   - Review requirements noted?
 ```
@@ -118,11 +118,15 @@ CHECK: Per-locale validation
 
 | Limit | Value |
 |-------|-------|
-| Max revisions per stage | 3 |
-| Max send-backs per stage pair | 1 |
-| Max total send-backs | 3 |
-| Max total budget | Configurable (default $3 — localization is costlier) |
-| Max total wall-time | 15 minutes |
+| Max revisions per stage | manifest `orchestration.max_revisions_per_stage` |
+| Max send-backs per stage pair | 1 (guidance; no manifest field) |
+| Max total send-backs | manifest `orchestration.max_send_backs` |
+| Max total budget | The run budget from `tools/cost_tracker.py::resolve_budget_usd`: the amount the user approved (record it with `python -m tools.cost_tracker budget <project-id> --usd <amount>`), else manifest `orchestration.budget_default_usd` (set higher than most pipelines — localization is costlier) capped at `config.yaml` `budget.total_usd`. Enforcement follows `config.yaml` `budget.mode`: `observe` records only, `warn` records and flags overruns, `cap` refuses a paid call that does not fit the remaining budget |
+| Max total wall-time | manifest `orchestration.max_wall_time_minutes` |
+
+Read the manifest-backed values from `pipeline_defs/localization-dub.yaml` at the start of the run; never substitute numbers of your own.
+
+After any limit is hit: **proceed with warnings**, never block indefinitely. A limit never approves a human-gated stage (any stage with `human_approval_default: true` in the manifest): write `awaiting_human` with the warnings attached, end the turn, and let the user decide.
 
 ## Common Pitfalls
 

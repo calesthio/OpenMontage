@@ -109,11 +109,11 @@ FONT SIZE (IDE):  18-22px minimum for readability at 1080p delivery
 
 ## Applying to OpenMontage
 
-When processing screen recordings in the talking-head pipeline:
+When processing screen recordings in the `screen-demo` pipeline:
 
 1. **Record at 4K** if possible — enables quality zoom in post
 2. **Set IDE font to 20px+** before recording
-3. **Use `scene_detect`** with threshold 30, min_scene_length 2.0s to find natural segments
+3. **Use `scene_detect`** with `threshold: 30`, `min_scene_length_seconds: 2.0` to find natural segments (30 is the PySceneDetect scale — if the result has `data.method == "ffmpeg"`, re-run with a 0-1 threshold; see `scene-detect-usage.md`)
 4. **Apply zoom/pan** in compose stage — 1.5-2x on code, 0.8s transitions
 5. **Speed ramp navigation** to 1.5-2x, keep key moments at 1.0x
 6. **Remove dead air** > 1.5s with `video_trimmer`

@@ -24,7 +24,7 @@ The EP solves all of these by maintaining cumulative state and applying animatio
 | Layer | Resource | Purpose |
 |-------|----------|---------|
 | Pipeline | `pipeline_defs/animation.yaml` | Stage definitions, review focus, success criteria |
-| Skills | All 9 director skills + `meta/reviewer` | Stage execution knowledge |
+| Skills | All 8 director skills (one per stage) + `meta/reviewer` | Stage execution knowledge |
 | Schemas | All artifact schemas | Validation |
 | Playbook | Active style playbook | Quality constraints |
 | Tools | Full tool registry | Available capabilities |
@@ -37,8 +37,8 @@ The EP maintains a running state object that flows through the entire pipeline:
 EP_STATE:
   pipeline: animation
   playbook: <selected playbook name>
-  target_duration_seconds: <from proposal_packet.selected_concept>
-  budget_total_usd: <from proposal_packet.approval.approved_budget_usd or configured limit>
+  target_duration_seconds: <from the approved concept: concept_options[] entry whose id == selected_concept.concept_id>
+  budget_total_usd: <run budget from tools/cost_tracker.py::resolve_budget_usd — see Execution Limits>
   budget_spent_usd: 0.0
   budget_remaining_usd: <budget_total>
 
@@ -50,8 +50,10 @@ EP_STATE:
   #   remotion_dataviz — Data visualization with Remotion components (zero-key capable)
   #   diagram_stills   — Diagram + image stills with Ken Burns
   #   mixed            — Combination of multiple approaches per-scene
+  # The one animation_mode vocabulary for every animation stage (research, proposal,
+  # script, scene, asset, compose, publish). Stored in proposal_packet.metadata.
   animation_mode: <image_animation | clip_video | manim | remotion_dataviz | diagram_stills | mixed>
-  reuse_strategy:
+  reuse_strategy:              # from proposal_packet.metadata.reuse_strategy
     recurring_motifs: []
     layout_system: null
     transition_family: null
@@ -73,7 +75,7 @@ EP_STATE:
 
   # Pre-production context (carried forward from research + proposal)
   research_brief: null         # full research_brief artifact
-  selected_concept: null       # the approved concept from proposal_packet
+  selected_concept: null       # the approved concept: concept_options[] entry matched by selected_concept.concept_id
   production_plan: null        # the approved tool/provider plan
   approved_budget_usd: null    # explicit user-approved spend cap
 
@@ -92,7 +94,7 @@ EP_STATE:
 
 1. Load the pipeline manifest (`animation.yaml`)
 2. Load the playbook (from user selection or default)
-3. Set budget from configuration or user input (default: $2.00)
+3. Set the budget: `tools/cost_tracker.py::resolve_budget_usd` (the manifest's `orchestration.budget_default_usd`, capped at `config.yaml` `budget.total_usd`, until the user approves an amount at the proposal gate — see Execution Limits)
 4. Initialize EP_STATE
 
 ### Phase 1: Execute Stages Serially
@@ -105,13 +107,13 @@ For each stage in order: `research → proposal → script → scene_plan → as
 - The pipeline MUST NOT proceed past proposal without `approval.status == "approved"` or `"approved_with_changes"`
 
 After proposal approval, extract and store in EP_STATE:
-- `selected_concept` from `proposal_packet.selected_concept`
-- `animation_mode` from `selected_concept.animation_mode`
-- `reuse_strategy` from `selected_concept.reuse_strategy`
+- `selected_concept` — the `proposal_packet.concept_options[]` entry whose `id` equals `selected_concept.concept_id` (`selected_concept` itself holds only `concept_id`, `rationale`, `modifications`)
+- `animation_mode` from `proposal_packet.metadata.animation_mode`
+- `reuse_strategy` from `proposal_packet.metadata.reuse_strategy`
 - `production_plan` from `proposal_packet.production_plan`
 - `approved_budget_usd` from `proposal_packet.approval.approved_budget_usd`
-- `playbook` from `proposal_packet.selected_concept → suggested_playbook`
-- `math_accuracy_notes` from research_brief (if applicable)
+- `playbook` from `production_plan.playbook`, else the approved concept's `suggested_playbook`
+- `math_accuracy_notes` from `research_brief.metadata.technical_accuracy` (if applicable)
 
 ```
 EXECUTE_STAGE(stage_name):
@@ -141,8 +143,9 @@ EXECUTE_STAGE(stage_name):
 
      If REVISE:
        - Increment revision_counts[stage_name]
-       - If revision_counts[stage_name] >= 3:
-           - PASS WITH WARNINGS (never block forever)
+       - If revision_counts[stage_name] >= orchestration.max_revisions_per_stage (manifest):
+           - PASS WITH WARNINGS (never block forever) — at a human-gated stage this
+             still means awaiting_human, never an approval
            - Log unresolved issues
        - Else:
            - Compose specific feedback for the director
@@ -214,7 +217,7 @@ CHECK: Research depth
   - At least 2 animation technique references?
   - At least 5 sources cited?
   - If any minimum not met: REVISE research
-  - Note: Do NOT checkpoint with user — research is informational, not a decision point
+  - Note: Do NOT stop for user approval — research is informational, not a decision point (still write its `completed` checkpoint)
 ```
 
 ### After PROPOSAL stage:
@@ -269,7 +272,7 @@ CHECK: Total scene duration covers full script
   - If overlaps: REVISE scene_plan
 
 CHECK: Animation mode adherence
-  - Does every scene specify which animation mode/tool it uses?
+  - Does every scene specify which animation mode/tool it uses (`scene_plan.metadata.tool_path_map`, keyed by scene id)?
   - Are mode choices consistent with the proposal's selected mode?
   - If mixed mode: are transitions between modes planned?
 
@@ -314,7 +317,11 @@ CHECK: Programmatic asset integrity (if Manim/Remotion)
 CHECK: Timeline completeness
   - Verify edit decisions cover 0 to total_duration with no gaps
   - Verify all asset references point to existing files
-  - Verify audio ducking is configured for all narration segments
+  - Verify the music plan under narration is one that actually happens: only `audio_mixer`
+    ducks; the Remotion `Explainer` composition plays music at one flat volume and ignores
+    `audio.music.ducking`. Where narration and music overlap, `edit_decisions.metadata.audio_mix_plan`
+    must say `premix` (compose mixes them with `audio_mixer`, ducking on, and renders that one
+    track) or `flat` (ducking off, music volume 0.08–0.12)
 
 CHECK: Hold time preservation (ANIMATION-SPECIFIC)
   - Verify hold times from scene_plan are preserved in edit decisions
@@ -401,13 +408,15 @@ Actual: {what was produced}
 
 | Limit | Value | Rationale |
 |-------|-------|-----------|
-| Max revisions per stage | 3 | Prevent perfectionism loops |
-| Max send-backs per stage pair | 1 | Prevent ping-pong |
-| Max total send-backs | 3 | Cap total re-work |
-| Max total budget | Configurable (default $2) | Hard stop on spending |
-| Max total wall-time | 15 minutes | Timeout for entire pipeline |
+| Max revisions per stage | manifest `orchestration.max_revisions_per_stage` | Prevent perfectionism loops |
+| Max send-backs per stage pair | 1 (guidance; no manifest field) | Prevent ping-pong |
+| Max total send-backs | manifest `orchestration.max_send_backs` | Cap total re-work |
+| Max total budget | The run budget from `tools/cost_tracker.py::resolve_budget_usd`: the amount the user approved at the proposal gate (`approval.approved_budget_usd`; record it with `python -m tools.cost_tracker budget <project-id> --usd <amount>`), else manifest `orchestration.budget_default_usd` capped at `config.yaml` `budget.total_usd` | Enforcement follows `config.yaml` `budget.mode`: `observe` records only, `warn` records and flags overruns, `cap` refuses a paid call that does not fit the remaining budget |
+| Max total wall-time | manifest `orchestration.max_wall_time_minutes` | Timeout for entire pipeline |
 
-After any limit is hit: **proceed with warnings**, never block indefinitely.
+Read the manifest-backed values from `pipeline_defs/animation.yaml` at the start of the run; never substitute numbers of your own.
+
+After any limit is hit: **proceed with warnings**, never block indefinitely. A limit never approves a human-gated stage (any stage with `human_approval_default: true` in the manifest): write `awaiting_human` with the warnings attached, end the turn, and let the user decide.
 
 ## Integration with Existing Skills
 

@@ -12,7 +12,8 @@ comparisons and picture-in-picture commentary.
 | Tool | Role |
 |------|------|
 | `video_trimmer` | Cut segments to precise in/out points, concatenate clips (`concat` operation) |
-| `video_compose` | Full composition with overlays, subtitles, audio mixing, spatial layouts |
+| `video_stitch` | Join clips with a transition (`stitch`: `transition` = `cut` \| `crossfade` \| `fade`), check clip compatibility (`validate`), and build two-clip spatial layouts (`spatial`: `layout` = `side_by_side` \| `vertical_stack` \| `picture_in_picture`) |
+| `video_compose` | Full composition from `edit_decisions` (its `render` operation hands cuts with `transition_in` / `transition_out` to Remotion), subtitles, audio mux, positioned overlays (`overlay` operation) — it has no FFmpeg `xfade`, `hstack`, `vstack` or `xstack` path |
 | `frame_sampler` | Inspect frames at stitch boundaries for visual continuity |
 | `audio_mixer` | Mix, duck, and crossfade audio tracks across stitch points |
 | `scene_detect` | Find natural scene boundaries in source footage |
@@ -45,7 +46,7 @@ Clips play one after another in timeline order. This is the most common strategy
 1. Order clips by narrative sequence (not filename)
 2. Trim each clip to precise in/out points via `video_trimmer` (operation: `cut`)
 3. Select transition type for each junction (see Transition Selection below)
-4. Concatenate via `video_trimmer` (operation: `concat`) for hard cuts, or `video_compose` for transitions requiring filters
+4. Concatenate via `video_trimmer` (operation: `concat`) for hard cuts, or `video_stitch` (operation: `stitch`) for transitions requiring filters. `video_stitch` applies ONE `transition` and `transition_duration` to every junction in the call — for mixed transitions, stitch in groups (hard-cut groups first, then join the groups)
 5. Verify audio continuity across all stitch points
 
 **Audio continuity rules:**
@@ -59,29 +60,37 @@ Multiple clips visible simultaneously on screen.
 
 **When:** Reactions, comparisons, commentary, multi-angle coverage.
 
-| Layout | FFmpeg Filter | Use Case |
-|--------|---------------|----------|
-| Side-by-side (duet) | `hstack` or `xstack` | Reaction videos, before/after |
-| Vertical stack | `vstack` or `xstack` | Comparison (top vs bottom) |
-| Picture-in-picture (PIP) | `overlay=x:y` via `video_compose` | Commentary, webcam + screen |
-| Grid (2x2, 3x3) | `xstack` with layout string | Multi-angle, compilation |
+All three layouts are `video_stitch` with `operation: "spatial"` and `clips: [first, second]`.
+
+| Layout | `video_stitch` `layout` | FFmpeg Filter | Use Case |
+|--------|-------------------------|---------------|----------|
+| Side-by-side (duet) | `side_by_side` | `hstack` | Reaction videos, before/after |
+| Vertical stack | `vertical_stack` | `vstack` | Comparison (top vs bottom) |
+| Picture-in-picture (PIP) | `picture_in_picture` (or `video_compose` `overlay` operation for exact x/y/size) | `overlay` | Commentary, webcam + screen |
+| Grid (2x2, 3x3) | — not available | `xstack` — no tool builds it | Multi-angle, compilation |
+
+**Tool limits:** `spatial` uses the first two clips only. There is no grid layout and no
+split-ratio control: `side_by_side` scales both clips to 480px height, `vertical_stack` scales both
+to 540px width, so the output size is fixed by the tool.
 
 **Spatial layout decision tree:**
 ```
 What relationship do the clips have?
-├── Reaction / response → Side-by-side (duet), main clip 70% width
+├── Reaction / response → Side-by-side (duet) — equal split only; use PIP when the main clip must dominate
 ├── Before / after → Side-by-side, equal 50/50 split
 ├── Comparison (A vs B) → Vertical stack or side-by-side depending on aspect ratio
 ├── Commentary over content → PIP, speaker in corner (20-25% frame size)
-├── Multi-angle same event → Grid layout, synced to same timecode
+├── Multi-angle same event → Grid is not available — cut between angles, or show two at a time side-by-side
 └── Screen recording + face → PIP, face cam in bottom-right corner
 ```
 
 **PIP placement rules:**
-- Default position: bottom-right with 20px padding
-- Size: 20-25% of frame width for commentary, 30-35% for equal importance
+- Default position: bottom-right (`pip_position: "bottom_right"`, the tool default) with 20px padding — pass `pip_margin: 20`; the tool default is `pip_margin: 10`
+- Size: 20-25% of frame width for commentary, 30-35% for equal importance — pass `pip_scale: 0.2`-`0.25` or `0.3`-`0.35`; the tool default is `pip_scale: 0.3` (allowed 0.1-0.5)
+- `pip_scale` multiplies the PIP clip's own size, so it equals a share of the frame only when both clips have the same resolution
+- `clips[0]` is the full-screen base, `clips[1]` is the PIP; only the base clip's audio is kept
 - Always ensure PIP does not cover critical content (subtitles, key visuals)
-- Add a 2px border or subtle shadow to separate PIP from background
+- `video_stitch` draws no border or shadow around the PIP — rely on placement and contrast to separate it from the background
 
 ### 3. AI Clip Chaining (LTX-2 / CogVideo)
 
@@ -111,7 +120,7 @@ shows PIP during demonstrations, documentary with occasional split-screen.
 
 **Process:**
 1. Plan the timeline: mark which segments are sequential and which are spatial
-2. Render each spatial segment as a standalone composed clip via `video_compose` (overlay operation)
+2. Render each spatial segment as a standalone composed clip via `video_stitch` (operation: `spatial`) or `video_compose` (overlay operation)
 3. Treat the rendered spatial clips as regular clips in the sequential stitch
 4. Concatenate everything in order using the sequential stitching process
 
@@ -149,9 +158,9 @@ What is the relationship between clip N and clip N+1?
 
 | Transition | Duration | Implementation | Best For |
 |-----------|----------|----------------|----------|
-| Hard cut | 0ms | `video_trimmer` concat (codec: copy) | Same scene, fast pace, continuation |
-| Crossfade | 0.5-1.5s | `video_compose` with `xfade` filter | Topic change, time passage, mood shift |
-| Fade through black | 0.5-1.0s each | `video_compose`: fade out → black → fade in | Major section break, intro/outro |
+| Hard cut | 0ms | `video_trimmer` concat (codec: copy), or `video_stitch` with `transition: "cut"` | Same scene, fast pace, continuation |
+| Crossfade | 0.5-1.5s | `video_stitch` — `operation: "stitch"`, `transition: "crossfade"`, `transition_duration` (uses the `xfade` filter) | Topic change, time passage, mood shift |
+| Fade through black | 0.5-1.0s each | `video_stitch` — `transition: "fade"` (`xfade` fadeblack); `transition_duration` is the total out + in time | Major section break, intro/outro |
 | L-cut | 0.3-0.5s | Audio from clip N continues into clip N+1's video | Smooth dialogue exit, lingering emotion |
 | J-cut | 0.3-0.5s | Audio from clip N+1 starts under clip N's video | Dialogue anticipation, building tension |
 
@@ -178,7 +187,7 @@ What audio exists at the stitch boundary?
 ├── Music spans the stitch?
 │   ├── Same track continues → Do not re-encode audio; use stream copy
 │   ├── Track changes → Crossfade music 1.0-2.0s centered on the cut point
-│   └── Music + narration → Duck music -12dB under narration at all times
+│   └── Music + narration → Duck music 18-20 dB under narration at all times (`audio_mixer` `duck_level: -18` to `-20`; the tool default is -12)
 │
 ├── One clip has audio, the other is silent?
 │   └── Add a 0.3s fade-in/fade-out to avoid abrupt silence transitions
@@ -192,7 +201,7 @@ What audio exists at the stitch boundary?
 | Content Type | Target LUFS | Headroom |
 |-------------|-------------|----------|
 | Narration / dialogue | -16 LUFS | -1 dB true peak |
-| Background music (under narration) | -28 to -24 LUFS | -1 dB true peak |
+| Background music (under narration) | 18-20 dB below narration (see `sound-design.md`) | -1 dB true peak |
 | Music only (no narration) | -14 LUFS | -1 dB true peak |
 | Sound effects | -20 LUFS | -1 dB true peak |
 
@@ -261,47 +270,50 @@ Use CRF 18 (near-lossless) to avoid quality loss from the re-encode.
 
 ## Stitch Planning Template
 
-When planning a stitch, produce this structure as part of `edit_decisions`:
+When planning a stitch, record this structure inside `edit_decisions.metadata` (as
+`metadata.stitch_plan`). The `edit_decisions` schema rejects unknown top-level keys, so a
+top-level `stitch_plan` fails validation:
 
 ```yaml
-stitch_plan:
-  strategy: sequential | spatial | hybrid | ai_chain
-  target_resolution: "1920x1080"
-  target_fps: 30
-  target_codec: libx264
+metadata:
+  stitch_plan:
+    strategy: sequential | spatial | hybrid | ai_chain
+    target_resolution: "1920x1080"
+    target_fps: 30
+    target_codec: libx264
 
-  clips:
-    - id: clip_01
-      source: "assets/intro.mp4"
-      in_seconds: 0.0
-      out_seconds: 5.0
-      transition_out: crossfade
-      transition_duration: 0.8
+    clips:
+      - id: clip_01
+        source: "assets/intro.mp4"
+        in_seconds: 0.0
+        out_seconds: 5.0
+        transition_out: crossfade  # video_stitch transition: cut | crossfade | fade
+        transition_duration: 0.8
 
-    - id: clip_02
-      source: "assets/section_1.mp4"
-      in_seconds: 0.0
-      out_seconds: 8.0
-      transition_out: hard_cut
+      - id: clip_02
+        source: "assets/section_1.mp4"
+        in_seconds: 0.0
+        out_seconds: 8.0
+        transition_out: cut
 
-    - id: clip_03
-      source: "assets/section_2.mp4"
-      in_seconds: 0.0
-      out_seconds: 8.0
-      transition_out: fade_black
-      transition_duration: 0.5
+      - id: clip_03
+        source: "assets/section_2.mp4"
+        in_seconds: 0.0
+        out_seconds: 8.0
+        transition_out: fade  # fade through black
+        transition_duration: 0.5
 
-  audio:
-    narration: "assets/narration_full.wav"
-    music: "assets/bg_music.mp3"
-    music_volume: -24  # LUFS
-    ducking: true
+    audio:
+      narration: "assets/narration_full.wav"
+      music: "assets/bg_music.mp3"
+      duck_level: -18  # dB under narration — audio_mixer duck (tool default -12)
+      ducking: true
 
-  spatial_inserts:  # Only for hybrid strategy
-    - at_clip: clip_02
-      at_seconds: 3.0
-      layout: pip
-      overlay_source: "assets/webcam.mp4"
-      position: bottom_right
-      size_percent: 25
+    spatial_inserts:  # Only for hybrid strategy
+      - at_clip: clip_02
+        at_seconds: 3.0
+        layout: picture_in_picture  # video_stitch spatial layout
+        overlay_source: "assets/webcam.mp4"
+        pip_position: bottom_right
+        pip_scale: 0.25
 ```

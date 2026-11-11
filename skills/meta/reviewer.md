@@ -80,15 +80,50 @@ For each `success_criteria` item from the manifest:
 
 Count findings by severity:
 
+A stage gets at most **two review rounds**: round 1 is the first review; round 2 is the re-review after you fix round 1's critical findings.
+
 | Scenario | Action |
 |----------|--------|
 | 0 critical, any suggestions/nitpicks | **Pass** — proceed to checkpoint. Note suggestions for the record. |
-| 1+ critical findings | **Revise** — fix all critical findings, then re-review (max 2 rounds). |
-| After 2 revision rounds, still critical | **Pass with warnings** — proceed anyway, note unresolved issues. Never block indefinitely. |
+| 1+ critical findings in round 1 | **Revise** — fix all critical findings, then run round 2. |
+| Still critical after round 2 | **Pass with warnings** — proceed anyway, record the unresolved issues. Never block indefinitely, and never run a third round. |
+
+These rounds are the self-review loop inside one stage run. An executive producer's revisions and send-backs are counted separately, against the manifest's `orchestration` limits. Passing with warnings never approves a human-gated stage: the checkpoint still goes to `awaiting_human` and the warnings go in front of the user.
 
 ### Step 7: Record Review
 
-Structure your review as:
+The review has two homes: a readable record you show the user at a gate, and the `review` the checkpoint carries.
+
+**On the checkpoint.** `review` is its own top-level argument of `write_checkpoint` — not a key inside `metadata` or the artifact. Pass the final round's result on every `awaiting_human` and `completed` write:
+
+```python
+write_checkpoint(
+    PROJECTS_DIR, project_id, stage, "awaiting_human",  # or "completed"
+    {"script": script},
+    pipeline_type="...",
+    review={
+        "round": 2,                        # the round the decision came from: 1 or 2
+        "decision": "pass_with_warnings",  # "pass" or "pass_with_warnings"
+        "critical": 1,                     # counts the board shows; numbers, not strings
+        "suggestions": 2,
+        "nitpicks": 0,
+        "summary": "Hook rewritten; s3 still runs 10% over its window (unresolved).",
+        "findings": [                      # optional detail, same fields as the record below
+            {"severity": "critical", "title": "s3 over its window",
+             "location": "sections[2].text", "proposed_fix": "Cut to 25 words",
+             "status": "deferred"},
+        ],
+    },
+)
+```
+
+- The checkpoint schema accepts any JSON object as `review`. The Backlot board reads `decision`, `critical`, `suggestions`, `nitpicks` and a string `summary` (the three counts may instead sit in a `summary` object). An empty `review={}` counts as no review.
+- `revise` is never written: a REVISE decision means fix and re-review before you checkpoint.
+- On the approval re-write (`awaiting_human` → `completed` with `human_approved=True`) you may leave `review` out: the writer carries over the gate's review and marks it `carried_from`. If you changed the artifact after the gate (a revision on the user's feedback), review it again and pass the new review; a carried review over a changed artifact is flagged `artifact_changed_since_review: true`.
+
+**When the review is skipped.** Nothing blocks — the reviewer is advisory — but it shows. A stage written `awaiting_human` or `completed` with no review on that checkpoint or any archived version of it is logged by `write_checkpoint`, listed by `checkpoint.get_unreviewed_stages(PROJECTS_DIR, project_id)`, and marked **NO REVIEW** on the board. Skipping is still a defect ("Every stage gets reviewed"). If the stage is still `awaiting_human`, review it and write it `awaiting_human` again with `review={...}`. If it is already `completed`, do not re-approve it just to attach a review: tell the user it went unreviewed, and review it when the stage next runs.
+
+**The readable record.** Structure it as:
 
 ```
 ## Review: [stage_name] — Round [N]
@@ -121,7 +156,7 @@ Structure your review as:
 
 2. **Critical means critical.** Don't inflate severity. A missing schema field is critical. A slightly wordy paragraph is a suggestion. A comma splice is a nitpick.
 
-3. **Two rounds max.** The goal is shipping, not perfection. After two revision rounds, pass with warnings and move on. Perfectionism kills pipelines.
+3. **Two rounds max.** The goal is shipping, not perfection. After the second review round, pass with warnings and move on. Perfectionism kills pipelines.
 
 4. **Review the artifact, not the process.** You're checking the output, not how it was produced. If the brief is compelling, it doesn't matter if the agent used an unusual approach.
 
@@ -203,7 +238,7 @@ Run at **scene_plan** and **edit** stages. Use `lib/slideshow_risk.py` to comput
 Run at **every stage** after proposal. The decision log (`schemas/artifacts/decision_log.schema.json`) is a cumulative audit trail.
 
 ### Checks:
-1. **Existence**: Does the checkpoint reference a `decision_log_ref`? If not after proposal stage, flag as **SUGGESTION**.
+1. **Existence**: Does the project's cumulative log exist — `projects/<project_id>/decision_log.json`, read with `lib.checkpoint.read_decision_log`? (The checkpoint itself carries no `decision_log_ref`; `write_checkpoint` writes that ref into `proposal_packet.production_plan` and `render_report` when the same checkpoint carries a `decision_log`.) If not after proposal stage, flag as **SUGGESTION**.
 2. **Coverage**: Does every major choice have an entry? Key decisions that MUST be logged:
    - Provider selection (which image/video/audio tool and why)
    - Style/playbook selection
@@ -228,8 +263,8 @@ Run at **scene_plan** and **edit** stages. Prevents the "every video looks the s
 
 ### Checks:
 1. **Variation check** (scene_plan only): Use `lib/variation_checker.py` → `check_scene_variation(scenes)`.
-   - If verdict is "poor" (score ≤ 2): **CRITICAL** — "Scene plan lacks variety: [list violations]"
-   - If verdict is "fair" (score ≤ 3): **SUGGESTION** — note specific suggestions from the checker
+   - If verdict is "fail" (score ≥ 4.0; the score runs 0–5, lower is better): **CRITICAL** — "Scene plan lacks variety: [list violations]"
+   - If verdict is "revise" (score ≥ 3.0): **SUGGESTION** — note specific suggestions from the checker
 
 2. **Playbook alignment**: Is the active playbook appropriate for this content?
    - Cinematic trailer using "clean-professional" theme → flag mismatch
@@ -322,7 +357,7 @@ Run at **compose** and **publish** stages. Ensures the agent reviewed the actual
 The templated→atelier inversion (`AGENT_GUIDE.md` → "Composition Authoring Mode" + `skills/meta/bespoke-composition.md`) is governance, not a suggestion. The reviewer is the enforcement point: without these checks, the next agent quietly defaults back to the stock cut-schema and every video starts looking the same again.
 
 ### At proposal stage:
-1. `decision_log` must contain a `composition_mode` decision with `options_considered: ["templated","atelier"]` and a `selected` value with a real reason tied to the brief.
+1. `decision_log` must contain a `composition_mode` decision whose `options_considered` holds both `templated` and `atelier` — each as an option object (`option_id`, `label`, `score`, `reason`), not a bare string; the schema rejects strings — and a `selected` value (the chosen `option_id`) with a real reason tied to the brief.
    - Missing `composition_mode` decision entirely: **CRITICAL** — "Proposal missing composition_mode choice. Atelier vs templated is a mandatory presented decision (see AGENT_GUIDE.md → Composition Authoring Mode)."
    - Decision logged with only one option considered: **CRITICAL** — "composition_mode decision logged without presenting both templated and atelier alternatives."
 2. For **hero work** (brief tagged marketing / launch / brand piece / explainer-with-quality-bar / any single-deliverable where quality is the point) where `selected == "templated"`: **CRITICAL** — "Hero brief locked composition_mode='templated'. Default is atelier per doctrine; templated requires an explicit reason in `decision_log.<entry>.reason` (e.g. localization variant, batch, time-boxed draft)." Only suppress if the reason field names a sanctioned exception.

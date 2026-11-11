@@ -44,7 +44,7 @@ A `render_runtime_selection` decision with only one option considered when both 
 | Schema | `schemas/artifacts/proposal_packet.schema.json` | Artifact validation |
 | Prior artifact | `research_brief` from Research Director | Raw findings + technique research |
 | Pipeline manifest | `pipeline_defs/animation.yaml` | Stage and tool definitions |
-| Tool registry | `support_envelope()` output | What's actually available right now |
+| Tool registry | `provider_menu_summary()` output | What's actually available right now |
 | Cost tracker | `tools/cost_tracker.py` | Cost estimation data |
 | Style playbooks | `styles/*.yaml` | Available visual styles |
 | Meta skill | `skills/meta/taste-direction.md` | Design read, taste dials, reference strategy |
@@ -86,21 +86,21 @@ to validate the animation style before full production.
 **When a research_brief IS available,** extract:
 
 - **`research_summary`** — read first. Contains both the key insight and the most promising animation approach.
-- **`angles_discovered`** — raw concept candidates, each with an `animation_fit` field.
-- **`data_points`** — especially those with high `visual_potential` ratings.
-- **Animation technique references** — from the animation-specific research step. These directly inform mode selection.
+- **`angles_discovered`** — raw concept candidates. Each angle's animation fit is in `metadata.angle_animation_fit`, keyed by the angle's `name`.
+- **`data_points`** — especially those rated `high` in `metadata.visual_potential` (entries point at a data point by its index).
+- **Animation technique references** — `metadata.animation_techniques`, from the animation-specific research step. These directly inform mode selection.
 - **`audience_insights.misconceptions`** — animation excels at showing "wrong way → right way" transitions.
-- **Mathematical/technical accuracy notes** — critical constraints on what we can and cannot simplify.
+- **Mathematical/technical accuracy notes** — `metadata.technical_accuracy`: critical constraints on what we can and cannot simplify.
 
 ### Step 2: Run Preflight
 
 Before designing concepts, know what tools are available:
 
 ```bash
-python -c "from tools.tool_registry import registry; import json; registry.discover(); print(json.dumps(registry.support_envelope(), indent=2))"
+python -c "from tools.tool_registry import registry; import json; registry.discover(); print(json.dumps(registry.provider_menu_summary(compact=True), indent=2))"
 ```
 
-Also check the capability catalog:
+(The raw `support_envelope()` dump is for debugging only — `docs/agent-guide/preflight.md`.) Also check the capability catalog:
 
 ```bash
 python -c "from tools.tool_registry import registry; import json; registry.discover(); print(json.dumps(registry.capability_catalog(), indent=2))"
@@ -288,13 +288,15 @@ For each concept, specify:
 - **Visual identity**: palette, typography, texture, motion energy, and why they fit this subject, audience, and platform
 - **Playbook strategy**: preset if it truly fits, or a custom playbook generated via `lib/playbook_generator.py`
 
+**Where this goes in the artifact:** `concept_options[]` entries are closed in the schema. Describe the approach in plain words in the concept's required `visual_approach` string (name the mode in it), and put the playbook in `suggested_playbook`. The structured per-concept values go under `proposal_packet.metadata.concept_details`, keyed by concept `id`: `{"<concept id>": {"animation_mode": "manim", "reuse_strategy": {...}, "provider": "...", "complexity": "..."}}`. `animation_mode` takes exactly one of `image_animation`, `clip_video`, `manim`, `remotion_dataviz`, `diagram_stills`, `mixed` — the same values the scene, asset, and compose stages act on.
+
 **Important:** Do not reduce animation identity to a preset name. A physics explainer, a startup launch video, and a dreamy anime short may all use Remotion, but they should not share the same color logic, typography, or motion cadence.
 
 #### 4c: Narrative Structure
 
-Choose from: `myth_busting`, `problem_solution`, `data_narrative`, `comparison`, `timeline`, `journey`, `analogy`, `progressive_build`, `transformation`
+Choose `narrative_structure` from the schema enum: `myth_busting`, `problem_solution`, `data_narrative`, `comparison`, `timeline`, `journey`, `analogy`, `debate`, `tutorial`, `story`. Any other value fails the checkpoint.
 
-**Animation-specific structure: `progressive_build`** — start simple, add complexity layer by layer. This is the classic 3Blue1Brown approach and works exceptionally well for math/technical topics.
+**Animation-specific build: progressive build** — start simple, add complexity layer by layer. This is the classic 3Blue1Brown approach and works exceptionally well for math/technical topics. It is not an enum value: record the structure as `journey` (a progressive reveal through a complex topic) and note `"structure_style": "progressive_build"` in that concept's `metadata.concept_details` entry. A before/after transformation piece is likewise `comparison` or `story`, with the style noted the same way.
 
 #### 4d: Duration and Platform
 
@@ -335,13 +337,13 @@ If the user mixes, create a new hybrid concept entry in the proposal_packet with
 
 Let the user select, combine, modify, or redirect.
 
-Record the selection in `selected_concept` with rationale and any modifications.
+Record the selection in `selected_concept` with rationale and any modifications — it holds only `concept_id` (the chosen entry's `id`), `rationale`, and `modifications`. Then copy the chosen concept's `animation_mode` and `reuse_strategy` from `metadata.concept_details` to `proposal_packet.metadata.animation_mode` and `proposal_packet.metadata.reuse_strategy`; that is where the EP and every downstream stage read them.
 
 ### Step 6: Build the Production Plan
 
 For the selected concept, design the stage-by-stage production plan.
 
-**Animation-specific production plan fields:**
+**Animation-specific production plan** (how to present it). In the artifact, `animation_mode` and `reuse_strategy` live in `proposal_packet.metadata` — `production_plan` is closed and has no such fields — and each stage below becomes one `production_plan.stages[]` entry: `{"stage": "assets", "tools": [{"tool_name": "image_selector", "role": "...", "available": true}], "approach": "..."}` (notes go in `approach`).
 
 ```
 PRODUCTION PLAN (Animation Pipeline)
@@ -388,7 +390,7 @@ stages:
 
 ### Step 7: Build the Cost Estimate
 
-Itemize every paid operation:
+Itemize every paid operation. The provider comparison (at least 2 options per paid capability) goes in `production_plan.provider_rankings`; `cost_estimate` is closed and has no field for it.
 
 ```
 COST ESTIMATE
@@ -434,11 +436,11 @@ Validate the `proposal_packet` artifact against `schemas/artifacts/proposal_pack
 
 | Downstream Stage | What It Takes From proposal_packet |
 |------------------|------------------------------------|
-| Script Director | `selected_concept` (title, hook, key_points, animation_mode, narrative_structure) + research data |
-| Scene Director | `selected_concept.animation_mode` + `reuse_strategy` + `production_plan.playbook` |
+| Script Director | The approved concept — the `concept_options[]` entry whose `id` equals `selected_concept.concept_id` (title, hook, key_points, narrative_structure) — plus `metadata.animation_mode` + research data |
+| Scene Director | `metadata.animation_mode` + `metadata.reuse_strategy` + `production_plan.playbook` |
 | Asset Director | `production_plan.stages[assets].tools` — knows exactly which providers to use |
 | Executive Producer | `cost_estimate` — initializes budget tracking |
-| All stages | `approval.approved_budget_usd` — hard spending cap |
+| All stages | `approval.approved_budget_usd` — becomes the run budget (`tools/cost_tracker.py::resolve_budget_usd`); how strictly it is enforced follows `config.yaml` `budget.mode` |
 
 ## Common Pitfalls
 

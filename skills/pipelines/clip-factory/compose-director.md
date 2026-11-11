@@ -10,7 +10,7 @@ This pipeline is Phase 1 deferred from the HyperFrames adoption schedule. `edit_
 
 - If `edit_decisions.render_runtime == "hyperframes"`, stop. Re-open the idea stage so the user can be presented the real constraint and lock `remotion` with a `render_runtime_selection` decision that records `hyperframes` as `rejected_because: "caption-burn parity deferred on clip-factory"`.
 - Per AGENT_GUIDE.md → "Present Both Composition Runtimes (HARD RULE)": the constraint is NOT an excuse to skip the conversation. The user still gets to see that HyperFrames exists and why it isn't viable here.
-- Pass `proposal_packet`/`brief` to `video_compose.execute()` so the in-tool runtime-swap check runs end-to-end.
+- This pipeline has no proposal stage, so there is no `proposal_packet` to pass, and `video_compose.execute()` does not accept `brief`. The in-tool runtime-swap check instead compares `edit_decisions.render_runtime` with `edit_decisions.metadata.proposal_render_runtime` (set by the edit stage to the runtime locked at idea). If that key is missing the check reports `skipped` — send it back to the edit stage rather than patching `edit_decisions` here.
 
 ## Prerequisites
 
@@ -18,7 +18,7 @@ This pipeline is Phase 1 deferred from the HyperFrames adoption schedule. `edit_
 |-------|----------|---------|
 | Schema | `schemas/artifacts/render_report.schema.json` | Artifact validation |
 | Prior artifacts | `state.artifacts["edit"]["edit_decisions"]`, `state.artifacts["assets"]["asset_manifest"]` | Clip edits and assets |
-| Tools | `video_trimmer`, `video_compose`, `audio_mixer`, `color_grade` | Render pipeline |
+| Tools | `video_trimmer`, `video_compose`, `audio_mixer`, `color_grade`, `auto_reframe` (where the scene plan calls for a face-tracked crop) | Render pipeline |
 | Media profiles | `lib/media_profiles.py` | Platform targets |
 
 ## Process

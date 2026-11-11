@@ -31,7 +31,17 @@ Store in `publish_log.metadata`:
 - `thumbnail_concept`
 - `platform_notes`
 
-### 3. Quality Gate
+### 3. Package The Export
+
+Use `export_bundle` (local and offline; it never uploads). Pass the final
+`video_path` from `render_report`, the `title`, and the metadata you prepared.
+It writes the export directory (`projects/<project>/exports/` for a video in the
+project's `renders/`) and returns a schema-valid `publish_log` in
+`data["publish_log"]`. Persist that as the stage artifact and add the fields
+above under its `metadata`. See `skills/pipelines/explainer/publish-director.md`
+Step 5 for the full input list and export layout.
+
+### 4. Quality Gate
 
 - metadata fits the actual animation mode,
 - thumbnail concept matches the final visual system,

@@ -96,7 +96,14 @@ EXECUTE_STAGE(stage_name):
      - Run EP-SPECIFIC CROSS-STAGE CHECKS (see below)
 
   4. GATE DECISION
-     If PASS → store artifact, update tracking, continue
+     If PASS → store artifact, update tracking, then:
+       - human-gated stage (human_approval_default: true — idea, script,
+         scene_plan, assets, publish): write the checkpoint with
+         status="awaiting_human", present the summary, END YOUR TURN;
+         continue only after the user approves (re-write with
+         status="completed", human_approved=True — write_checkpoint
+         refuses "completed" on a gated stage without it)
+       - non-gated stage (edit, compose): continue
      If REVISE → increment revision count, re-run with feedback (max 3)
      If SEND_BACK(target_stage) → re-execute from target forward (max 1 per pair)
 ```
@@ -262,11 +269,15 @@ Actual: {what was produced}
 
 | Limit | Value | Rationale |
 |-------|-------|-----------|
-| Max revisions per stage | 3 | Prevent perfectionism loops |
-| Max send-backs per stage pair | 1 | Prevent ping-pong |
-| Max total send-backs | 3 | Cap total re-work |
-| Max total budget | Configurable (default $1) | Hard stop on spending |
-| Max total wall-time | 10 minutes | Screen-demo is simpler than generated pipelines |
+| Max revisions per stage | manifest `orchestration.max_revisions_per_stage` | Prevent perfectionism loops |
+| Max send-backs per stage pair | 1 (guidance; no manifest field) | Prevent ping-pong |
+| Max total send-backs | manifest `orchestration.max_send_backs` | Cap total re-work |
+| Max total budget | The run budget from `tools/cost_tracker.py::resolve_budget_usd`: the amount the user approved (record it with `python -m tools.cost_tracker budget <project-id> --usd <amount>`), else manifest `orchestration.budget_default_usd` capped at `config.yaml` `budget.total_usd` | Enforcement follows `config.yaml` `budget.mode`: `observe` records only, `warn` records and flags overruns, `cap` refuses a paid call that does not fit the remaining budget |
+| Max total wall-time | manifest `orchestration.max_wall_time_minutes` | Screen-demo is simpler than generated pipelines |
+
+Read the manifest-backed values from `pipeline_defs/screen-demo.yaml` at the start of the run; never substitute numbers of your own.
+
+After any limit is hit: **proceed with warnings**, never block indefinitely. A limit never approves a human-gated stage (any stage with `human_approval_default: true` in the manifest): write `awaiting_human` with the warnings attached, end the turn, and let the user decide.
 
 ## Common Pitfalls
 

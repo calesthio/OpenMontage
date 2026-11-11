@@ -66,7 +66,7 @@ stages:
     produces:
       - research_brief
     tools_available: []
-    checkpoint_required: false
+    checkpoint_required: true
     human_approval_default: false
     review_focus:
       - Content landscape mapped with at least 3 existing pieces
@@ -183,6 +183,9 @@ stages:
       - code_snippet
       - music_gen
       - math_animate
+      - music_library
+      - suno_music
+      - pixabay_music
     checkpoint_required: true
     human_approval_default: true
     review_focus:
@@ -236,6 +239,11 @@ stages:
       - hyperframes_compose
       - video_stitch
       - audio_mixer
+      - composition_validator
+      - audio_probe
+      - transcriber
+      - frame_sampler
+      - subtitle_gen
     checkpoint_required: true
     human_approval_default: false
     review_focus:

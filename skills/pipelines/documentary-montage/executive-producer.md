@@ -43,7 +43,7 @@ across all stages is to:
 | Stage | Director skill | Produces |
 |-------|----------------|----------|
 | `idea` | `idea-director.md` | brief (topic, tone, duration, shape) |
-| `scene` | `scene-director.md` | shot_list (slot descriptions + queries) |
+| `scene_plan` | `scene-director.md` | scene_plan (slot descriptions + queries) |
 | `assets` | `asset-director.md` | asset_manifest (corpus built + per-slot picks) |
 | `edit` | `edit-director.md` | edit_decisions (timeline + transitions + music) |
 | `compose` | `compose-director.md` | render_report (final mp4) |
@@ -76,6 +76,24 @@ call adapter classes directly from a skill or director.
 - **Keep a decision log of rejected picks**. When you pass on a clip
   with a high score, note why (wrong era, overlit, wrong emotional
   register). This helps the review stage.
+
+## Execution Limits
+
+The limits live in `pipeline_defs/documentary-montage.yaml`. Read them at
+the start of the run; never substitute numbers of your own.
+
+| Limit | Value |
+|-------|-------|
+| Max revisions per stage | manifest `orchestration.max_revisions_per_stage` |
+| Max total send-backs | manifest `orchestration.max_send_backs` |
+| Max total budget | The run budget from `tools/cost_tracker.py::resolve_budget_usd`: the amount the user approved (record it with `python -m tools.cost_tracker budget <project-id> --usd <amount>`), else manifest `orchestration.budget_default_usd` capped at `config.yaml` `budget.total_usd`. Enforcement follows `config.yaml` `budget.mode`: `observe` records only, `warn` records and flags overruns, `cap` refuses a paid call that does not fit the remaining budget |
+| Max total wall-time | manifest `orchestration.max_wall_time_minutes` |
+
+After any limit is hit: **proceed with warnings**, never block
+indefinitely. A limit never approves a human-gated stage (any stage with
+`human_approval_default: true` in the manifest — here that includes
+`edit`): write `awaiting_human` with the warnings attached, end the
+turn, and let the user decide.
 
 ## Common Pitfalls
 

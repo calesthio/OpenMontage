@@ -10,7 +10,7 @@ Phase 1 deferred from HyperFrames. `edit_decisions.render_runtime` must be `"rem
 
 - If `edit_decisions.render_runtime == "hyperframes"`, stop. Re-open the idea stage and surface the constraint. Silent rewrite is a governance violation.
 - Per AGENT_GUIDE.md → "Present Both Composition Runtimes (HARD RULE)": the pipeline's constraint doesn't skip the conversation. Present the constraint to the user so they know HyperFrames exists but isn't viable here. Record a `render_runtime_selection` decision with hyperframes `rejected_because: "TalkingHead + caption parity deferred on talking-head"`.
-- Pass `proposal_packet`/`brief` to `video_compose.execute()` for runtime-swap detection.
+- This pipeline has no proposal stage, so there is no `proposal_packet` to pass, and `video_compose.execute()` does not accept `brief`. The in-tool runtime-swap check instead compares `edit_decisions.render_runtime` with `edit_decisions.metadata.proposal_render_runtime` (set by the edit stage to the runtime locked at idea). If that key is missing the check reports `skipped` — send it back to the edit stage rather than patching `edit_decisions` here.
 
 ## Prerequisites
 
@@ -290,7 +290,7 @@ If the footage has a green/blue screen (detected in scene-director Step 0), foll
    ```
    # Render an AnimatedBackground clip (gradient mesh, floating orbs, subtle grid)
    # Use the Explainer composition — NOT a flat #0F172A solid color
-   npx remotion render src/index.ts Explainer --props='{"duration":VIDEO_DURATION}' --output=<project>/assets/video/animated_bg.mp4
+   npx remotion render src/index.tsx Explainer --props='{"duration":VIDEO_DURATION}' --output=<project>/assets/video/animated_bg.mp4
    ```
    The AnimatedBackground provides a professional gradient mesh with floating orbs and a subtle grid pattern. This is far superior to a flat solid color.
 
@@ -319,16 +319,18 @@ If the footage has a green/blue screen (detected in scene-director Step 0), foll
    })
    ```
 
-5. **Mix background music** (ducked at 15% volume under speech):
+5. **Mix background music** (held at 15% volume under speech):
    ```
    audio_mixer.execute({
-       "operation": "duck",
+       "operation": "segmented_music",
        "video_path": "<captioned_video>",
        "music_path": "<bg_music>",
        "music_volume": 0.15,
+       "segments": [{"start": 0, "end": <video_duration_seconds>}],   # one segment = whole video
        "output_path": "<project>/assets/video/with_music.mp4"
    })
    ```
+   `segmented_music` is the operation that takes a video and writes a video. It holds the music at `music_volume` across each segment (no sidechain ducking). `duck` does not accept `video_path`/`music_path`/`music_volume` — it needs `primary_audio` + `secondary_audio` (or a `tracks` array) and writes an audio file only.
 
 6. **Final encode** to target platform specs (see Step 6 below).
 
@@ -383,10 +385,9 @@ audio_mixer.execute({
 })
 ```
 
-**For single talking-head videos** — use `duck` or `full_mix`:
-- Layer original audio with background music
-- Apply ducking if music is present
-- Normalize final levels
+**For single talking-head videos** — use `segmented_music` with one segment spanning the whole video (as in Step 3c.5):
+- Layers the video's original audio with background music at `music_volume` and writes a video
+- `duck` and `full_mix` take audio tracks (`primary_audio`/`secondary_audio` or `tracks[]`), apply sidechain ducking (and, for `full_mix`, loudness normalization), and write an audio file only — use them only when you are building a separate audio track, not when the input is the video
 
 ### Step 6: Final Encode — MANDATORY
 
@@ -394,7 +395,7 @@ audio_mixer.execute({
 
 Use `video_compose` with `encode` operation:
 - Apply target media profile (youtube_landscape, tiktok, instagram_reels, etc.)
-- Two-pass encoding for quality
+- Single-pass CRF encode (`crf`, default 23; `preset`, default `medium`) — the tool has no two-pass mode
 
 **Target file sizes:**
 | Platform | Max Duration | Target Size |

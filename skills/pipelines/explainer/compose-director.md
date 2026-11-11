@@ -10,22 +10,24 @@ This is the last technical stage before the video exists as a playable file. Eve
 
 Read `edit_decisions.render_runtime` before anything else. It was locked at proposal and must not be changed silently. The rest of this skill's process steps (Remotion public/ staging, word-level caption burn, etc.) assume `render_runtime="remotion"` — the default for data-driven explainers.
 
-- **`render_runtime="hyperframes"`** — HTML/CSS/GSAP render. Do NOT follow the Remotion-specific steps below. Instead: read `skills/core/hyperframes.md`, `.agents/skills/hyperframes/SKILL.md`, and `.agents/skills/hyperframes-cli/SKILL.md`. Call `video_compose` with the edit_decisions unchanged — it will delegate to `hyperframes_compose`, which materializes a workspace under `projects/<name>/hyperframes/`, runs `lint → validate → render`, and returns the MP4. Both lint AND validate must pass before render; contrast can be deferred during iteration but not for final delivery.
+- **`render_runtime="hyperframes"`** — HTML/CSS/GSAP render. Do NOT follow the Remotion-specific steps below. Instead: read `skills/core/hyperframes.md`, `.agents/skills/hyperframes/SKILL.md`, and `.agents/skills/hyperframes-cli/SKILL.md`. Call `video_compose` with the edit_decisions unchanged — it will delegate to `hyperframes_compose`, which materializes a workspace under `projects/<name>/hyperframes/` and returns the MP4. **HyperFrames gate (what `hyperframes_compose` actually runs):** a templated workspace (scaffolded from `edit_decisions`) goes `lint → validate → render`; a `validate` failure always blocks the render, but `lint` findings block it only with `strict: true` — otherwise they are logged under `steps.lint` and the render continues, so pass `strict: true` on the final render. An authored (atelier) workspace (`composition_mode: "atelier"`) goes `hyperframes check → render --strict` instead, and `check` must pass. `skip_contrast: true` is for iteration only, never for final delivery.
 - **`render_runtime="ffmpeg"`** — simple concat/trim. Call `video_compose` directly; it will NOT auto-upgrade to Remotion when this runtime is explicitly locked.
 - **Runtime unavailable** — surface the blocker per AGENT_GUIDE.md > "Escalate Blockers Explicitly" and get user approval (recorded as a `render_runtime_selection` decision in decision_log) before switching.
 
 `final_review.checks.promise_preservation.render_runtime_used` must equal the runtime that actually ran; `runtime_swap_detected` must be `false` unless an approved decision authorizes the swap.
 
-**Pass `proposal_packet` to `video_compose.execute()`** so in-tool swap detection can actually fire. Without it the `runtime_swap_check` is reported as `skipped` and you have to rely on the reviewer skill's cross-artifact comparison instead.
+**Pass `proposal_packet` to `video_compose.execute()`** so in-tool swap detection compares against the authoritative `production_plan.render_runtime`. Without it the tool falls back to `edit_decisions.metadata.proposal_render_runtime` (the edit stage copies it there); only when both are missing is `runtime_swap_check` reported as `skipped`, and you have to rely on the reviewer skill's cross-artifact comparison instead. The delivery-promise check is separate: it reads `edit_decisions.metadata.delivery_promise`, never the proposal packet.
 
 ## Prerequisites
 
 | Layer | Resource | Purpose |
 |-------|----------|---------|
 | Schema | `schemas/artifacts/render_report.schema.json` | Artifact validation |
-| Prior artifacts | `state.artifacts["edit"]["edit_decisions"]`, `state.artifacts["assets"]["asset_manifest"]` | What to render |
+| Prior artifacts | `state.artifacts["edit"]["edit_decisions"]`, `state.artifacts["assets"]["asset_manifest"]` | What to render — including the approved narration and music |
+| Prior artifacts | `state.artifacts["proposal"]["proposal_packet"]`, `state.artifacts["scene_plan"]["scene_plan"]` | Passed to `video_compose` for the runtime-swap and slideshow-risk checks |
 | Playbook | Active style playbook | Quality targets |
 | Tools | `video_compose`, `audio_mixer` | Rendering capabilities |
+| Tools | `composition_validator`, `audio_probe`, `transcriber`, `frame_sampler`, `subtitle_gen` | Pre-render validation, captions, post-render review |
 | Media profiles | `lib/media_profiles.py` | Output format specs (resolution, codec, bitrate) |
 
 ## Process
@@ -49,86 +51,36 @@ Based on the edit decisions, pick the rendering approach:
 - Best for: environments without Node.js/Remotion installed
 
 **IMPORTANT: When using Remotion, ALL of these go through Remotion — not FFmpeg:**
-- Audio (narration + music) → Remotion `audio` prop, NOT external audio_mixer
+- Audio → Remotion `audio` prop: the narration track plus a music bed at one flat volume. The `Explainer` composition does NOT duck. When the bed must dip under the voice, pre-mix with `audio_mixer` and hand the mix to `video_compose` as `audio_path` (Step 5)
 - Subtitles → Remotion `captions` prop (word-level), NOT SRT burn via FFmpeg
 - Text overlays (CTA, titles) → Remotion `text_card` cut type, NOT AI-generated images
 
-### Step 2: Audio Acquisition (Narration, Music, Subtitles)
+### Step 2: Collect the Approved Audio (Narration, Music, Subtitles)
 
-Before rendering, present the user with audio options and get their preferences.
+The narration script, the voice, every narration take, and the background music were produced and approved in earlier stages (script-director; asset-director Step 2b sample approval, Step 3 narration via `tts_selector`, Step 5 music). **Compose consumes them. It does not write a new narration script, choose a voice, call a TTS provider, or fetch new music.**
 
-**Present to the user:**
+If something is missing or unusable — a narration section has no audio, the narration runs longer than the video, the manifest records `metadata.music_status: "unavailable"` — stop and report it. The fix is a send-back to the assets (or script) stage, and nothing is regenerated without the user's approval: the voice and the music are approved samples, and silently replacing them here breaks that gate.
 
-> **Audio setup for this video:**
->
-> **Narration:** I can generate TTS narration using OpenAI TTS (`gpt-4o-mini-tts` — $0.015/min, 6 voices, voice direction). Which voice and tone would you like? I'll propose a voice based on the video topic, or you can choose:
-> - `onyx` — deep, authoritative (documentaries, tech)
-> - `echo` — resonant, futuristic (product ads, sci-fi)
-> - `nova` — bright, energetic (upbeat, explainers)
-> - `fable` — warm, storytelling (narratives, education)
-> - `shimmer` — expressive, warm (organic, lifestyle)
-> - `alloy` — neutral, balanced (general purpose)
->
-> **Music:** I can automatically find royalty-free background music from Pixabay (no key needed). If you have a `FREESOUND_API_KEY`, I can also search Freesound as a backup.
->
-> **Subtitles:** I'll generate word-level subtitles using WhisperX transcription of the final narration, burned into the video via Remotion captions.
->
-> Want me to proceed with my recommendations, or adjust anything?
+1. **Narration** — take the narration assets from `asset_manifest` (`type: "narration"`, or `type: "audio"` with `subtype: "narration"`) in the order and at the `start_seconds` given by `edit_decisions.audio.narration.segments`. The Remotion composition plays ONE narration file, so join several takes into `projects/<project>/assets/audio/narration_full.wav` with `audio_mixer` (`operation: "mix"`, one `role: "speech"` track per take with its `start_seconds`).
 
-**After user confirms:**
+2. **Music** — the asset named by `edit_decisions.audio.music.asset_id`. Check its length against the video with `audio_probe`; a track shorter than the video can loop (`"loop": true`).
 
-1. **Write narration script with duration budget** (see scene-director Step 4b):
-   - Calculate video duration from cuts
-   - Budget at 85-90% of video duration
-   - Use 2.0-2.5 words/sec for documentary, 2.5-3.0 for energetic
-   - Verify word count before generating TTS
+3. **Subtitles** — word-level captions come from transcribing that narration file with the `transcriber` tool (Step 5b has the call and the conversion to Remotion caption format: `[{ "word": "Hello", "startMs": 0, "endMs": 340 }, ...]`).
 
-2. **Generate TTS narration:**
-   ```python
-   from tools.audio.openai_tts import OpenAITTS
-   result = OpenAITTS().execute({
-       'text': narration_script,
-       'voice': '<user-chosen or agent-recommended>',
-       'instructions': '<voice direction matching video tone>',
-       'output_path': 'path/to/narration.mp3',
-   })
-   # CRITICAL: Check result.data['audio_duration_seconds'] vs video duration
-   # If narration exceeds video by >1s: shorten script and regenerate
-   ```
-
-3. **Download background music:**
-   ```python
-   from tools.audio.pixabay_music import PixabayMusic
-   result = PixabayMusic().execute({
-       'query': '<mood/genre matching video topic>',
-       'min_duration': video_duration_seconds,
-       'max_duration': 300,
-       'output_path': 'path/to/music.mp3',
-   })
-   ```
-
-4. **Generate subtitles via WhisperX:**
-   ```python
-   from tools.analysis.transcriber import Transcriber
-   result = Transcriber().execute({
-       'input_path': 'path/to/narration.mp3',
-       'model_size': 'base',
-       'language': 'en',
-   })
-   # Convert word_timestamps to Remotion caption format:
-   # [{ "word": "Hello", "startMs": 0, "endMs": 340 }, ...]
-   ```
-
-5. **Assemble composition JSON** with audio config:
+4. **Assemble the Remotion composition JSON** — `edit_decisions` is a closed schema, so everything only the Remotion `Explainer` composition understands lives in a second file, `projects/<project>/artifacts/remotion_composition.json`. Start from a copy of the `edit_decisions` artifact (keep `render_runtime`, `renderer_family`, and `metadata`), then:
+   - replace each cut's `source` asset id with that asset's real file path;
+   - add the Remotion-only props the edit stage named in each cut's `reason` / `metadata.remotion_cuts`: `type` (`text_card`, `stat_card`, `bar_chart`, ...) and that template's props (see `remotion-composer/SCENE_TYPES.md`);
+   - add Remotion `overlays`, `captions`, and the `audio` block:
    ```json
    {
      "audio": {
-       "narration": { "src": "path/to/narration.mp3", "volume": 1 },
-       "music": { "src": "path/to/music.mp3", "volume": 0.1, "fadeInSeconds": 2, "fadeOutSeconds": 3 }
+       "narration": { "src": "projects/<project>/assets/audio/narration_full.wav", "volume": 1 },
+       "music": { "src": "projects/<project>/assets/music/background_music.mp3", "volume": 0.1, "fadeInSeconds": 2, "fadeOutSeconds": 3 }
      },
-     "captions": [ ... word-level captions from WhisperX ... ]
+     "captions": [ ... word-level captions from the transcriber ... ]
    }
    ```
+   This object — not the canonical artifact — is what you pass as `edit_decisions` to `video_compose` on the Remotion path (Step 4) and what `composition_validator` reads (Step 5c). The canonical `edit_decisions` artifact is not modified.
 
 ### Step 3: Prepare Render Inputs
 
@@ -140,20 +92,20 @@ For each cut in the edit decisions:
 For audio:
 1. Verify narration duration fits within video duration (use `audio_probe`)
 2. Verify music duration covers video duration
-3. Prepare ducking parameters from edit decisions
+3. Read the mix plan from edit decisions (`audio.music.ducking`, `metadata.audio_mix_plan`) — Step 5 says what each render path does with it
 
 ### Step 3: Determine Output Profile
 
-Read the target platform from the brief artifact. Map to a media profile:
+Read the target platform from the approved concept (`proposal_packet.concept_options[]` entry whose `id` equals `selected_concept.concept_id` → `target_platform`). Map to a media profile:
 
 | Platform | Profile | Resolution | Notes |
 |----------|---------|-----------|-------|
 | YouTube | `youtube_landscape` | 1920x1080 | Default for most explainers |
 | TikTok/Reels | `tiktok` | 1080x1920 | Vertical, needs reframing |
-| Twitter/X | `twitter_landscape` | 1280x720 | Shorter format |
+| Twitter/X | `generic_hd` | 1920x1080 | No dedicated X profile exists in `lib/media_profiles.py` (`get_profile` raises on unknown names); `generic_hd` is the 16:9 fallback |
 | LinkedIn | `linkedin` | 1920x1080 | Professional context |
 
-Get the exact encoding parameters via `ffmpeg_output_args(get_profile(name))`.
+Get the exact encoding parameters via `ffmpeg_output_args(get_profile(name))`. The valid names are `youtube_landscape`, `youtube_4k`, `youtube_shorts`, `instagram_reels`, `instagram_feed`, `tiktok`, `linkedin`, `cinematic`, `generic_hd`.
 
 ### Step 4: Render Video
 
@@ -161,17 +113,22 @@ Call the `video_compose` tool with:
 ```
 {
   "operation": "render",
-  "edit_decisions": <edit_decisions artifact>,
+  "edit_decisions": <Remotion path: the remotion_composition.json object from Step 2; hyperframes/ffmpeg: the edit_decisions artifact>,
   "asset_manifest": <asset_manifest artifact>,
+  "proposal_packet": <proposal_packet artifact>,
+  "scene_plan": <scene_plan.scenes — the list, not the whole artifact>,
   "output_profile": "youtube_landscape",
   "output_path": "renders/output.mp4",
+  "audio_path": "<pre-mixed narration+music track — only for the premix plan, see Step 5>",
+  "narration_transcript_path": "<word-level transcript JSON from the transcriber>",
+  "script_text": "<the narration script>",
   "options": {
-    "subtitle_burn": true,
-    "audio_normalize": true,
-    "two_pass_encode": true
+    "subtitle_burn": true
   }
 }
 ```
+
+`options.subtitle_burn` is the only render option the tool reads, and only on the FFmpeg path (Remotion draws captions from the `captions` prop). There is no `audio_normalize` option — loudness normalization belongs to `audio_mixer` (`normalize`, `loudnorm_target`) — and `two_pass_encode` is declared in the tool schema but not implemented.
 
 If using Remotion for animated segments:
 1. Generate Remotion composition data from edit decisions
@@ -182,13 +139,28 @@ If using Remotion for animated segments:
 When all scenes are Remotion component types (hero_title, stat_card, bar_chart, line_chart,
 pie_chart, kpi_grid, comparison, callout, progress_bar, text_card), render the entire video
 as a single Remotion composition using the Explainer entry point. No FFmpeg assembly needed.
-The edit_decisions cuts array maps directly to Remotion props. See `skills/core/remotion.md`
+The `remotion_composition.json` cuts array maps directly to Remotion props. See `skills/core/remotion.md`
 for the proven formula — especially the all-dark-background rule for visual consistency.
 
 ### Step 5: Audio Post-Processing
 
-**Remotion path (DEFAULT):** Skip external audio mixing entirely. Remotion handles all audio
-natively via `<Audio>` components. Pass audio sources in the composition props:
+**Remotion path (DEFAULT):** Remotion plays audio natively via `<Audio>` components — the
+narration track, and ONE music track at a flat `volume` with a fade in and out. It never ducks:
+the `Explainer` composition does not read `audio.music.ducking`. `audio_mixer` is the only tool
+that ducks. Follow the plan the edit stage recorded in `edit_decisions.metadata.audio_mix_plan`:
+
+- **`premix` — recommended whenever narration and music play together.** Call `audio_mixer`
+  with `operation: "full_mix"`: each narration take as a `role: "speech"` track with its
+  `start_seconds`, the music as a `role: "music"` track, `ducking: {"enabled": true,
+  "music_volume_during_speech": 0.15, "attack_ms": 200, "release_ms": 500}`, `target_duration`
+  set to the video length, and `normalize: true`. (`audio_mixer` does not read `threshold_db` or
+  `reduction_db`; the dip depth is `music_volume_during_speech`.) Pass the mixed file to
+  `video_compose` as `audio_path` — the tool replaces the rendered video's audio track with it.
+  Leave `audio.music` out of `remotion_composition.json` so the bed is not described twice.
+  `audio_mixer` cannot loop or offset a track (`target_duration` only pads with silence or
+  trims), so a music file shorter than the video must be looped with FFmpeg before the mix.
+- **`flat` — no ducking.** Skip external mixing and pass both sources in the composition props,
+  with the music low enough (0.08–0.12) that it never competes with the voice:
 ```json
 {
   "audio": {
@@ -197,8 +169,8 @@ natively via `<Audio>` components. Pass audio sources in the composition props:
   }
 }
 ```
-Remotion renders audio and video in a single pass — no external muxing needed.
-Do NOT use `audio_mixer` for ducking/mixing when rendering via Remotion.
+  Remotion renders audio and video in a single pass — no external muxing needed. Note in the
+  render report that the bed is flat, not ducked.
 
 **FFmpeg fallback (ONLY when Remotion is unavailable):**
 Call the `audio_mixer` tool to:
@@ -279,8 +251,11 @@ If Remotion is not available, fall back to SRT generation + FFmpeg burn:
 ```python
 from tools.analysis.composition_validator import CompositionValidator
 result = CompositionValidator().execute({
-    'composition_path': 'path/to/composition.json',
-    'assets_root': 'remotion-composer/public',
+    'composition_path': 'projects/<project>/artifacts/remotion_composition.json',
+    # The directory the composition's relative paths resolve against:
+    # '.' (repo root) for paths like projects/<project>/assets/...,
+    # 'remotion-composer/public' for files you staged there.
+    'assets_root': '.',
 })
 # result.data['valid'] MUST be True before proceeding to render
 # If False: fix the reported errors first (missing assets, audio-video mismatch, etc.)
@@ -288,8 +263,10 @@ result = CompositionValidator().execute({
 
 Common catches:
 - Narration audio longer than video (would be cut off)
-- Missing image/audio files (render would fail)
+- Missing files for `cuts[].source`, `cuts[].backgroundImage`, `audio.narration.src`, and `audio.music.src` (render would fail). Other media props — `backgroundVideo`, `images[]`, overlay sources — are not checked; confirm those files yourself
 - Music shorter than video (silence at end)
+
+The validator reads the file as written: a cut `source` must be a real file path there, not an asset id, or it reports "Missing asset".
 
 **Do not skip this step.** If validation fails, fix the issue and re-validate before rendering.
 
@@ -398,17 +375,18 @@ result = Transcriber().execute({
       "path": "renders/output.mp4",
       "format": "mp4",
       "codec": "h264",
+      "audio_codec": "aac",
       "resolution": "1920x1080",
       "fps": 30,
       "duration_seconds": 62.4,
-      "file_size_mb": 45.2,
-      "audio_codec": "aac",
-      "audio_channels": 2,
-      "render_strategy": "ffmpeg",
-      "render_time_seconds": 180
+      "file_size_bytes": 47395635
     }
   ],
-  "render_summary": {
+  "render_time_seconds": 180,
+  "metadata": {
+    "render_strategy": "remotion",
+    "audio_channels": 2,
+    "audio_mix": "premix",
     "total_cuts_rendered": 12,
     "subtitles_burned": true,
     "audio_tracks_mixed": 3,
@@ -417,6 +395,8 @@ result = Transcriber().execute({
   }
 }
 ```
+
+The report root and every `outputs[]` entry are closed in the schema. File size is `file_size_bytes` (an integer), render time is the top-level `render_time_seconds`, and everything the schema has no field for — render strategy, channel count, the summary counts — goes under `metadata`.
 
 ### Step 8: Self-Evaluate
 
@@ -441,5 +421,6 @@ Validate the render_report against the schema and persist via checkpoint.
 - **Missing asset files**: Always verify every referenced file exists before starting the render. A missing file mid-render wastes time.
 - **Audio sync drift**: Accumulated timing errors across narration segments cause audio-visual desync. Use absolute timestamps, not relative offsets.
 - **Subtitle encoding**: Burn subtitles into the video (hardcoded) for maximum compatibility. Don't rely on soft subtitles for social media.
-- **Single-pass encode**: Two-pass encoding produces better quality at the same file size. Worth the extra render time.
+- **Expecting encode options that do not exist**: `video_compose` reads only `options.subtitle_burn` (FFmpeg path). `two_pass_encode` is declared but not implemented, and there is no `audio_normalize` — normalize loudness in `audio_mixer` and choose the output format through the media profile.
+- **Regenerating approved audio**: The voice and the music were approved in the assets stage. Compose mixes and renders them; a new TTS run or a new music track needs a send-back and the user's approval.
 - **Ignoring media profile**: YouTube and TikTok have very different requirements. Always check the target profile.

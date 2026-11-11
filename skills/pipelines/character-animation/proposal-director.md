@@ -20,6 +20,19 @@ Each option must include:
 - cost estimate,
 - honest limitation note.
 
+Where these go in `proposal_packet`: each option is a `concept_options[]` entry,
+which is closed in the schema (required `id`, `title`, `hook`,
+`narrative_structure` from its enum, `visual_approach` — the visual style as
+prose — `target_duration_seconds`, `why_this_works`). Characters, action
+complexity, rig reuse strategy, sample plan, audio architecture, and the
+limitation note go under `proposal_packet.metadata.concept_details.<concept id>`
+(e.g. `character_count`, `rig_complexity`, `reuse_strategy`,
+`audio_architecture`). The cost estimate is `cost_estimate`; the music plan is
+`production_plan.music_source`; the locked runtime is
+`production_plan.render_runtime`. `selected_concept` holds only `concept_id`,
+`rationale`, and `modifications` — downstream stages read the chosen concept from
+`concept_options[]` by that id.
+
 ## Runtime Selection
 
 Read `skills/meta/animation-runtime-selector.md` before recommending a runtime.

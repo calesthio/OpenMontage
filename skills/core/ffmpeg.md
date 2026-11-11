@@ -50,8 +50,9 @@ Each step is optional and gracefully skipped if the tool is unavailable.
 - Prefer SRT format for simple word subtitles.
 - Use `force_style` with full ASS color format: `&H00FFFFFF` (not `&HFFFFFF`).
 - Always escape Windows paths (`C\:` not `C:`) in the subtitles filter.
-- Vertical video: `font_size: 18`, `max 3 words/cue`, `margin_v: 50`.
-- Horizontal video: `font_size: 22`, `max 6 words/cue`, `margin_v: 40`.
+- Vertical video: `font_size: 18`, max 3-4 words/cue (`subtitle_gen` `max_words_per_cue: 4`, `max_chars_per_line: 20`), `margin_v: 50`.
+- Horizontal video: `font_size: 22`, max 6-8 words/cue (`subtitle_gen` `max_words_per_cue: 8`, `max_chars_per_line: 42` — the tool defaults), `margin_v: 40`.
+- Cue length is set when the SRT is generated, not at burn-in — see `skills/core/subtitle-sync.md`.
 
 ### Audio Enhancement Targets
 

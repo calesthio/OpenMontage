@@ -26,7 +26,7 @@ export function splitGraphemes(text: string): string[] {
   const out: string[] = [];
   for (const codePoint of Array.from(text)) {
     const joinsPrevious =
-      /\p{M}/u.test(codePoint) || codePoint === "‍" || out[out.length - 1]?.endsWith("‍");
+      /\p{M}/u.test(codePoint) || codePoint === "\u200d" || out[out.length - 1]?.endsWith("\u200d");
     if (out.length > 0 && joinsPrevious) {
       out[out.length - 1] += codePoint;
     } else {

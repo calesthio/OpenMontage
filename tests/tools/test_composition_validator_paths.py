@@ -87,3 +87,54 @@ def test_public_relative_paths_still_resolve_against_assets_root(tmp_path, monke
     )
 
     assert result.data["errors"] == []
+
+
+def _write_comp(tmp_path: Path, cuts: list) -> Path:
+    path = tmp_path / "comp.json"
+    path.write_text(
+        json.dumps({"render_runtime": "remotion", "cuts": cuts, "audio": {}}),
+        encoding="utf-8",
+    )
+    return path
+
+
+def test_missing_anime_scene_images_and_background_video_are_errors(tmp_path):
+    # The validator checked only `source` and `backgroundImage`, so an
+    # `images[]` frame or a `backgroundVideo` that does not exist passed and
+    # failed later inside the Remotion render (2026-11-11 audit).
+    public = tmp_path / "public"
+    public.mkdir()
+    (public / "frame1.png").write_bytes(b"png")
+    comp_path = _write_comp(tmp_path, [
+        {"id": "a", "source": "", "type": "anime_scene", "images": ["frame1.png", "frame2.png"],
+         "in_seconds": 0, "out_seconds": 2},
+        {"id": "b", "source": "", "type": "text_card", "text": "hi", "backgroundVideo": "bg.mp4",
+         "in_seconds": 2, "out_seconds": 3},
+    ])
+
+    result = CompositionValidator().execute(
+        {"composition_path": str(comp_path), "assets_root": str(public)}
+    )
+
+    errors = result.data["errors"]
+    assert result.data["valid"] is False
+    assert any("frame2.png" in e for e in errors), errors
+    assert not any("frame1.png" in e for e in errors), errors
+    assert any("bg.mp4" in e for e in errors), errors
+
+
+def test_existing_images_and_background_video_pass(tmp_path):
+    public = tmp_path / "public"
+    public.mkdir()
+    for name in ("frame1.png", "frame2.png", "bg.mp4"):
+        (public / name).write_bytes(b"x")
+    comp_path = _write_comp(tmp_path, [
+        {"id": "a", "source": "", "type": "anime_scene", "images": ["frame1.png", "frame2.png"],
+         "backgroundVideo": "bg.mp4", "in_seconds": 0, "out_seconds": 2},
+    ])
+
+    result = CompositionValidator().execute(
+        {"composition_path": str(comp_path), "assets_root": str(public)}
+    )
+
+    assert result.data["errors"] == []

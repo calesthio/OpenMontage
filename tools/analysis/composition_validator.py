@@ -206,6 +206,18 @@ class CompositionValidator(BaseTool):
                 if not bg_path.exists():
                     errors.append(f"Missing background image: {bg_img}")
 
+            bg_video = cut.get("backgroundVideo", "")
+            if isinstance(bg_video, str) and bg_video:
+                if not locate(bg_video).exists():
+                    errors.append(f"Missing background video: {bg_video} (cut '{cut.get('id', '?')}')")
+
+            # anime_scene frames; video_compose stages these like `source`.
+            images = cut.get("images") or []
+            if isinstance(images, list):
+                for image in images:
+                    if isinstance(image, str) and image and not locate(image).exists():
+                        errors.append(f"Missing image: {image} (cut '{cut.get('id', '?')}' images[])")
+
         # --- Check 5: Narration duration vs video duration ---
         narration = audio.get("narration", {})
         narration_src = narration.get("src", "")

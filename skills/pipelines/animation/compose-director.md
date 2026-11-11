@@ -151,11 +151,9 @@ result = CompositionValidator().execute({
 ```
 
 This catches:
-- Missing files named by `cuts[].source`, `cuts[].backgroundImage`, `audio.narration.src`, and `audio.music.src`
+- Missing files named by `cuts[].source`, `cuts[].backgroundImage`, `cuts[].backgroundVideo`, every `cuts[].images[]` entry (`anime_scene` frames), `audio.narration.src`, and `audio.music.src`
 - Invalid cut timings (out ≤ in)
 - Narration longer than the video (music shorter than the video is only a warning)
-
-It does **not** check `anime_scene` images: those cuts carry `"source": ""` and list their files in `images[]`, which the validator never reads. Before rendering, confirm every `images[]` path exists yourself (e.g. a short loop over the composition JSON with `Path(...).exists()`) — a missing image renders as a black frame, not an error.
 
 **If validation fails, fix the issue BEFORE rendering. Do not render an invalid composition.**
 
@@ -229,6 +227,6 @@ Recommended metadata keys:
 - Soft or aliased text after rendering.
 - Compression choices that damage diagrams.
 - Scene cadence changing between preview and final.
-- **Skipping `composition_validator`** — catches missing `source`/`backgroundImage`/audio files, bad timings, and narration overrun before you waste render time. It does not look at `images[]`, so check `anime_scene` image paths yourself.
+- **Skipping `composition_validator`** — catches missing `source`/`backgroundImage`/`backgroundVideo`/`images[]`/audio files, bad timings, and narration overrun before you waste render time.
 - **Not extracting frames for self-review** — a rendered video is not "done" until frames are visually inspected. Black frames, missing particles, or invisible images are not always obvious from file size alone.
 - **Using `durationInFrames` from `useVideoConfig()` for scene-level timing** — this returns the FULL composition duration, not the scene's Sequence duration. See `skills/core/remotion.md` Critical Constraints.

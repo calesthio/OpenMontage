@@ -9,7 +9,7 @@ PIP = "$(RUN_PYTHON)" -m pip
 
 .DEFAULT_GOAL := setup
 
-.PHONY: setup install install-dev install-gpu bootstrap test test-contracts lint clean preflight demo demo-list hyperframes-doctor hyperframes-warm venv ensure-venv
+.PHONY: setup install install-dev install-browsers install-gpu bootstrap test test-contracts typecheck-composer lint clean preflight demo demo-list hyperframes-doctor hyperframes-warm venv ensure-venv
 
 # ---- Virtual environment ----
 
@@ -91,17 +91,30 @@ install: bootstrap
 install-dev: bootstrap
 	$(PIP) install -r requirements-dev.txt
 
+# Chromium for the Backlot browser tests (tests/backlot/test_ui_bug_bash.py).
+# CI passes PLAYWRIGHT_INSTALL_FLAGS=--with-deps to pull the system libraries.
+install-browsers: ensure-venv
+	"$(RUN_PYTHON)" -m playwright install $(PLAYWRIGHT_INSTALL_FLAGS) chromium
+
 install-gpu: bootstrap
 	$(PIP) install -r requirements-gpu.txt
 	$(PIP) install diffusers transformers accelerate
 
 # ---- Testing ----
 
+# PYTEST_FLAGS: -v by default; CI passes "-q -rfs" so a failure is not buried
+# under 3,000 PASSED lines and every skip states its reason.
+PYTEST_FLAGS ?= -v
+
 test: ensure-venv
-	"$(RUN_PYTHON)" -m pytest tests/ -v
+	"$(RUN_PYTHON)" -m pytest tests/ $(PYTEST_FLAGS)
 
 test-contracts: ensure-venv
-	"$(RUN_PYTHON)" -m pytest tests/contracts/ -v
+	"$(RUN_PYTHON)" -m pytest tests/contracts/ $(PYTEST_FLAGS)
+
+# Type-check the Remotion composer (needs `npm ci` in remotion-composer/).
+typecheck-composer:
+	cd remotion-composer && npm run typecheck
 
 # ---- Utilities ----
 
@@ -127,11 +140,11 @@ demo: ensure-venv
 demo-list: ensure-venv
 	"$(RUN_PYTHON)" render_demo.py --list
 
+# Byte-compile every first-party module (~260 files, well under a second), not a
+# hand-picked four: registry discovery imports every tool module, so a syntax
+# error in any one of them takes preflight down for every pipeline.
 lint: ensure-venv
-	"$(RUN_PYTHON)" -m py_compile tools/base_tool.py
-	"$(RUN_PYTHON)" -m py_compile tools/tool_registry.py
-	"$(RUN_PYTHON)" -m py_compile tools/cost_tracker.py
-	"$(RUN_PYTHON)" -m py_compile tools/analysis/composition_validator.py
+	"$(RUN_PYTHON)" -m compileall -q lib tools backlot schemas styles scripts render_demo.py
 
 clean:
 	$(BASE_PYTHON) -c "import pathlib, shutil; excluded=[pathlib.Path('$(VENV_DIR)'), pathlib.Path('venv')]; skip=lambda p: any(p == root or root in p.parents for root in excluded); roots=[p for p in pathlib.Path('.').rglob('__pycache__') if not skip(p)]; [shutil.rmtree(p) for p in roots]; files=[p for p in pathlib.Path('.').rglob('*.pyc') if not skip(p)]; [p.unlink() for p in files]"

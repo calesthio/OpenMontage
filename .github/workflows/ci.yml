@@ -17,8 +17,18 @@ concurrency:
 
 jobs:
   validate:
-    name: Validate Python
+    name: Validate Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.10 is the documented minimum (Makefile PYTHON_VERSION); 3.11 is
+        # what CI has always run.
+        python-version: ["3.10", "3.11"]
+    env:
+      # The distro ffmpeg has drawtext, libass and libvorbis. Tests that need
+      # them skip on a minimal local build; here a missing feature must fail.
+      OPENMONTAGE_REQUIRE_FULL_FFMPEG: "1"
 
     steps:
       - name: Checkout repository
@@ -27,7 +37,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
           cache: pip
           cache-dependency-path: |
             requirements.txt
@@ -39,8 +49,35 @@ jobs:
       - name: Install dependencies
         run: make install-dev
 
+      - name: Install the browser for the Backlot UI tests
+        run: make install-browsers PLAYWRIGHT_INSTALL_FLAGS=--with-deps
+
       - name: Run lint smoke checks
         run: make lint
 
       - name: Run test suite
-        run: make test
+        run: make test PYTEST_FLAGS="-q -rfs -p no:cacheprovider"
+
+  composer:
+    name: Type-check Remotion composer
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: remotion-composer
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: remotion-composer/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run typecheck

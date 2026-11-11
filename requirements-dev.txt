@@ -3,3 +3,9 @@
 pytest>=8.0
 pytest-asyncio>=0.23
 httpx>=0.24
+# Browser tests for the Backlot board (tests/backlot/test_ui_bug_bash.py).
+# Without it that whole module is skipped. After installing, fetch the browser:
+#   python -m playwright install chromium
+playwright>=1.49
+# HTML parsing used by the Mixkit stock source; its tests skip without it.
+beautifulsoup4>=4.12

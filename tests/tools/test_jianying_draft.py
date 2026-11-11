@@ -88,6 +88,7 @@ def test_register_draft_in_root_meta(tmp_path):
 
 
 def test_build_jianying_draft_and_execute(tmp_path, monkeypatch):
+    pytest.importorskip("pyJianYingDraft")
     draft_root = tmp_path / "jianying_projects"
     draft_root.mkdir()
     monkeypatch.setenv("JIANYING_DRAFTS_PATH", str(draft_root))
@@ -116,6 +117,7 @@ def test_build_jianying_draft_and_execute(tmp_path, monkeypatch):
 
 
 def test_execute_with_manifest_file(tmp_path, monkeypatch):
+    pytest.importorskip("pyJianYingDraft")
     draft_root = tmp_path / "jianying_projects"
     draft_root.mkdir()
     monkeypatch.setenv("JIANYING_DRAFTS_PATH", str(draft_root))
@@ -139,3 +141,47 @@ def test_execute_with_manifest_file(tmp_path, monkeypatch):
     assert result.success is True
     assert result.data["draft_name"] == "Manifest_Project"
     assert (draft_root / "Manifest_Project").exists()
+
+
+def test_existing_draft_is_not_overwritten(tmp_path):
+    draft = tmp_path / "Existing"
+    draft.mkdir()
+    (draft / "manual.txt").write_text("keep me")
+    with pytest.raises(FileExistsError):
+        build_jianying_draft("Existing", [], draft_root=tmp_path)
+    assert (draft / "manual.txt").read_text() == "keep me"
+
+
+@pytest.mark.parametrize("kind", ["clip", "voiceover", "bgm", "srt", "sfx"])
+def test_missing_media_does_not_move_existing_draft(tmp_path, kind):
+    draft = tmp_path / "Existing"
+    draft.mkdir()
+    (draft / "manual.txt").write_text("keep me")
+    missing = str(tmp_path / "missing")
+    kwargs = {"clips": [], "voiceover": None, "bgm": None, "srt_path": None, "sfx_list": None}
+    if kind == "clip":
+        kwargs["clips"] = [missing]
+    elif kind == "sfx":
+        kwargs["sfx_list"] = [{"path": missing}]
+    else:
+        kwargs["srt_path" if kind == "srt" else kind] = missing
+    with pytest.raises(FileNotFoundError):
+        build_jianying_draft("Existing", draft_root=tmp_path, backup_existing=True, **kwargs)
+    assert (draft / "manual.txt").read_text() == "keep me"
+    assert not list(tmp_path.glob("Existing.backup-*"))
+
+
+@pytest.mark.parametrize("name", ["..", "../outside", "..\\outside", "C:\\outside"])
+def test_draft_name_cannot_escape_root(tmp_path, name):
+    with pytest.raises(ValueError):
+        build_jianying_draft(name, [], draft_root=tmp_path)
+
+
+def test_backup_existing_preserves_old_project(tmp_path):
+    pytest.importorskip("pyJianYingDraft")
+    draft = tmp_path / "Existing"
+    draft.mkdir()
+    (draft / "manual.txt").write_text("keep me")
+    result = build_jianying_draft("Existing", [], draft_root=tmp_path, backup_existing=True, auto_register=False)
+    assert (Path(result["backup_path"]) / "manual.txt").read_text() == "keep me"
+    assert draft.is_dir()

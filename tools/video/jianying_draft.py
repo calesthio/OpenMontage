@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import ntpath
 import os
 import shutil
 import subprocess
@@ -173,7 +174,36 @@ def build_jianying_draft(
     draft_root: Optional[Union[str, Path]] = None,
     auto_register: bool = True,
     default_image_duration_sec: float = 3.0,
+    backup_existing: bool = False,
 ) -> Dict[str, Any]:
+    # Validate all requested inputs before touching the destination draft.
+    if not draft_name or draft_name in (".", "..") or ntpath.basename(draft_name) != draft_name or "/" in draft_name:
+        raise ValueError("draft_name must be a single folder name")
+    for item in clips:
+        if isinstance(item, (str, Path)):
+            path = item
+        elif isinstance(item, dict):
+            path = item.get("path") or item.get("media")
+        else:
+            path = None
+        if not path or not Path(path).is_file():
+            raise FileNotFoundError(f"Clip file not found: {path}")
+    for label, path in (("voiceover", voiceover), ("bgm", bgm), ("srt", srt_path)):
+        if path and not Path(path).is_file():
+            raise FileNotFoundError(f"{label} file not found: {path}")
+    for item in sfx_list or []:
+        path = item.get("path") if isinstance(item, dict) else None
+        if not path or not Path(path).is_file():
+            raise FileNotFoundError(f"Sound effect file not found: {path}")
+
+    if draft_root is None:
+        target_root = get_default_jianying_drafts_path()
+    else:
+        target_root = Path(draft_root).resolve()
+    draft_folder = target_root / draft_name
+    if draft_folder.exists() and not backup_existing:
+        raise FileExistsError(f"Draft already exists: {draft_folder}")
+
     try:
         import pyJianYingDraft as pj
     except ImportError:
@@ -181,14 +211,15 @@ def build_jianying_draft(
             "pyJianYingDraft is required. Install via `pip install pyjianyingdraft`."
         )
 
-    if draft_root is None:
-        target_root = get_default_jianying_drafts_path()
-    else:
-        target_root = Path(draft_root).resolve()
-
     target_root.mkdir(parents=True, exist_ok=True)
+    backup_path = None
+    if draft_folder.exists():
+        if not backup_existing:  # Recheck in case another process created the draft.
+            raise FileExistsError(f"Draft already exists: {draft_folder}")
+        backup_path = target_root / f"{draft_name}.backup-{uuid.uuid4().hex}"
+        draft_folder.rename(backup_path)
     df = pj.DraftFolder(str(target_root))
-    sf = df.create_draft(draft_name, width, height, fps=fps, allow_replace=True)
+    sf = df.create_draft(draft_name, width, height, fps=fps, allow_replace=False)
 
     video_track = sf.append_track(pj.TrackSpec(pj.TrackType.video, name="主视频轨"))
 
@@ -332,6 +363,7 @@ def build_jianying_draft(
         "success": True,
         "draft_name": draft_name,
         "draft_path": str(draft_folder),
+        "backup_path": str(backup_path) if backup_path else None,
         "total_duration_sec": total_project_duration_us / 1000000,
         "clips_count": len(added_clips),
         "has_voiceover": bool(voiceover),
@@ -414,6 +446,11 @@ class JianYingDraftExport(BaseTool):
             "width": {"type": "integer", "default": 1920},
             "height": {"type": "integer", "default": 1080},
             "fps": {"type": "integer", "default": 30},
+            "backup_existing": {
+                "type": "boolean",
+                "default": False,
+                "description": "Move an existing draft to a uniquely named backup before creating a replacement",
+            },
             "launch_app": {
                 "type": "boolean",
                 "default": False,
@@ -455,6 +492,7 @@ class JianYingDraftExport(BaseTool):
                 width=width,
                 height=height,
                 fps=fps,
+                backup_existing=params.get("backup_existing", False),
             )
         except Exception as e:
             return ToolResult(
@@ -494,6 +532,7 @@ def main() -> None:
     parser.add_argument("--bgm", type=str, default=None, help="BGM audio path")
     parser.add_argument("--bgm-volume", type=float, default=0.25, help="BGM volume (0.0 - 1.0)")
     parser.add_argument("--srt", type=str, default=None, help="Subtitle SRT file path")
+    parser.add_argument("--backup-existing", action="store_true", help="Back up an existing draft before creating its replacement")
     parser.add_argument("--launch", action="store_true", help="Launch JianYing Pro app after creation")
     parser.add_argument("--json", action="store_true", help="Output JSON result")
 
@@ -508,6 +547,7 @@ def main() -> None:
         "bgm": args.bgm,
         "bgm_volume": args.bgm_volume,
         "srt_path": args.srt,
+        "backup_existing": args.backup_existing,
         "launch_app": args.launch,
     }
 

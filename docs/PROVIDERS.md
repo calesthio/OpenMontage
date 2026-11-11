@@ -408,7 +408,7 @@ No subscription — pure pay-as-you-go, no minimum spend.
 |-------|-------|--------|
 | Kling 2.5 Turbo Pro | $0.07/sec | 14 seconds |
 | Seedance 2.5 | endpoint-dependent | 4–30 seconds |
-| Gemini Omni Flash | endpoint-dependent | ~4–37 seconds (v1.2: 4K to 360p) |
+| Gemini Omni Flash (legacy endpoint used by `gemini_omni_fal`) | ~$0.125/sec at 720p (token billing) | ~8 seconds (720p) |
 | MiniMax H3 (`hailuo-03`) | endpoint-dependent | 4–15 seconds |
 | Veo 3 | $0.40/sec | 2.5 seconds |
 | WAN 2.5 | $0.05/sec | 20 seconds |

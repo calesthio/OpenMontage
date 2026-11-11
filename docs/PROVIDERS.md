@@ -408,7 +408,7 @@ No subscription — pure pay-as-you-go, no minimum spend.
 |-------|-------|--------|
 | Kling 2.5 Turbo Pro | $0.07/sec | 14 seconds |
 | Seedance 2.5 | endpoint-dependent | 4–30 seconds |
-| Gemini Omni Flash | endpoint-dependent | 3–10 seconds |
+| Gemini Omni Flash | endpoint-dependent | ~4–37 seconds (v1.2: 4K to 360p) |
 | MiniMax H3 (`hailuo-03`) | endpoint-dependent | 4–15 seconds |
 | Veo 3 | $0.40/sec | 2.5 seconds |
 | WAN 2.5 | $0.05/sec | 20 seconds |
@@ -1066,7 +1066,7 @@ Google TTS offers 700+ voices across 50+ languages. Voice names follow the patte
 | Gen-4 Turbo | ~$0.05 |
 | Gen-4.5 | ~$0.12 |
 | Seedance 2.5 | ~$0.20 at 480p / ~$0.30 at 720p |
-| Gemini Omni Flash | ~$0.10 generation / ~$0.11 video editing |
+| Gemini Omni Flash (`gemini_omni_flash`) | ~$0.10 generation / ~$0.11 video editing |
 | MiniMax H3 (`hailuo3`) | ~$0.10 at 768P / ~$0.15 at 2K |
 
 Seedance 2.5 supports text, image, and video inputs, 4–30 second outputs, and

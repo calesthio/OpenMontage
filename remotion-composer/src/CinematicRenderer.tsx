@@ -34,6 +34,47 @@ const toneGradient = (tone: CinematicTone) => {
   }
 };
 
+/**
+ * Resolve the `trimAfter` frame to pass to <OffthreadVideo>.
+ *
+ * Remotion's <OffthreadVideo> enforces trimAfter through an internal
+ * Sequence whose length is (trimAfter - trimBefore) *timeline* frames: it
+ * never scales the source interval by playbackRate. Handing it the
+ * caller's source-out directly therefore cuts slowed clips early (black
+ * tail) and lets sped-up clips render footage past the selected cut.
+ *
+ * The internal bound must instead expire at the timeline frame where
+ * playback reaches the caller's trimAfterSeconds:
+ *
+ *   visible timeline frames = (trimAfterSeconds - trimBeforeSeconds) / playbackRate
+ *
+ * so the value passed to Remotion is
+ * trimBefore + (source interval in frames) / playbackRate. At 30fps a
+ * [0s, 2s] cut played at rate 0.5 resolves to 120 frames: playback reaches
+ * source second 2 exactly at timeline frame 120, not before. At rate 2 it
+ * resolves to 30 frames, again landing exactly on source second 2. The
+ * caller's explicit source-out is preserved at every rate: no footage
+ * outside the selected cut can render, and no in-cut footage is cut early.
+ */
+const resolveTrimAfterFrames = (
+  scene: CinematicVideoScene,
+  fps: number,
+): number | undefined => {
+  if (scene.trimAfterSeconds === undefined) {
+    return undefined;
+  }
+  const playbackRate =
+    scene.playbackRate && scene.playbackRate > 0 ? scene.playbackRate : 1;
+  const trimBeforeSeconds = scene.trimBeforeSeconds ?? 0;
+  const sourceIntervalFrames = Math.round(
+    (scene.trimAfterSeconds - trimBeforeSeconds) * fps,
+  );
+  return (
+    Math.round(trimBeforeSeconds * fps) +
+    Math.round(sourceIntervalFrames / playbackRate)
+  );
+};
+
 const SceneVideo: React.FC<{ scene: CinematicVideoScene }> = ({ scene }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -66,19 +107,9 @@ const SceneVideo: React.FC<{ scene: CinematicVideoScene }> = ({ scene }) => {
     scene.trimBeforeSeconds !== undefined
       ? Math.round(scene.trimBeforeSeconds * fps)
       : undefined;
-  // Remotion's <OffthreadVideo> enforces trimAfter via an internal Sequence
-  // bounded by source frames without scaling for playbackRate. For clips with
-  // custom playbackRate (especially speed < 1), this causes playback to stop
-  // early and leaves the remainder of the scene black.
-  // The enclosing <Sequence> already bounds the scene to durationSeconds, so
-  // omitting trimAfter when playbackRate is not 1 ensures the clip fills
-  // the entire scene without premature cutoff.
-  const trimAfter =
-    scene.trimAfterSeconds !== undefined &&
-    (scene.playbackRate === undefined ||
-      Math.abs(scene.playbackRate - 1) < 1e-6)
-      ? Math.round(scene.trimAfterSeconds * fps)
-      : undefined;
+  // Scaled so Remotion's rate-blind internal trim bound expires exactly
+  // when playback reaches the caller's trimAfterSeconds (see helper).
+  const trimAfter = resolveTrimAfterFrames(scene, fps);
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#020407", opacity }}>

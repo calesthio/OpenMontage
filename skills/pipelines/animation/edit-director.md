@@ -49,13 +49,14 @@ Recommended metadata keys (top-level `edit_decisions.metadata` — cuts and over
 - `stagger_rules`
 - `transition_map`
 - `scene_timing_notes`
-- `audio_mix_plan` — `"premix"` or `"flat"` (see below)
+- `audio_mix_plan` — `"composition"`, `"premix"` or `"flat"` (see below)
 
 The Remotion-only cut props the Compose stage needs (`type: "anime_scene"`, `images`, `particles`, ...) are not `edit_decisions` fields either: they come from `scene_plan.metadata.tool_path_map` and go into the Compose stage's Remotion composition JSON (compose-director section 2).
 
-**Music under narration.** `audio_mixer` is the only tool that ducks. The Remotion `Explainer` composition plays the music at one flat `volume` with a fade in and out and ignores `audio.music.ducking`. When narration and music overlap, choose and record `metadata.audio_mix_plan`:
+**Music under narration.** The Remotion `Explainer` composition ducks the music only when the Compose stage's composition JSON sets `audio.music.ducking`, taking speech timing from the word `captions` (no captions → the whole video counts as speech, one constant lower level). `audio_mixer` ducks on any render path; HyperFrames and FFmpeg renders do not duck by themselves. When narration and music overlap, choose and record `metadata.audio_mix_plan`:
 
-- `"premix"` (recommended whenever narration and music play together) — keep `audio.music.ducking.enabled: true`; the Compose stage mixes narration + music with `audio_mixer` (`operation: "full_mix"`) and renders that single track.
+- `"composition"` (recommended on the Remotion path when word captions exist) — keep `audio.music.ducking.enabled: true`; the Compose stage sets `audio.music.ducking` in the composition JSON.
+- `"premix"` (recommended otherwise) — keep `audio.music.ducking.enabled: true`; the Compose stage mixes narration + music with `audio_mixer` (`operation: "full_mix"`) and renders that single track.
 - `"flat"` — set `audio.music.ducking.enabled: false` and keep `audio.music.volume` at 0.08–0.12 so the bed never competes with the voice.
 
 ### 5. Quality Gate

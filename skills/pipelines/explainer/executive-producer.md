@@ -257,11 +257,12 @@ CHECK: Style consistency
 CHECK: Timeline completeness
   - Verify edit decisions cover 0 to total_duration with no gaps
   - Verify all asset references point to existing files
-  - Verify the music plan under narration is one that actually happens: only `audio_mixer`
-    ducks; the Remotion `Explainer` composition plays music at one flat volume and ignores
-    `audio.music.ducking`. `edit_decisions.metadata.audio_mix_plan` must say `premix`
-    (compose mixes narration + music with `audio_mixer`, ducking on) or `flat` (ducking off,
-    music volume 0.08–0.12) — see edit-director Step 4
+  - Verify the music plan under narration is one that actually happens: the Remotion
+    `Explainer` composition ducks only when `remotion_composition.json` sets
+    `audio.music.ducking` (speech timing from word captions); `audio_mixer` ducks on any path.
+    `edit_decisions.metadata.audio_mix_plan` must say `composition` (Remotion ducks, captions
+    present), `premix` (compose mixes narration + music with `audio_mixer`, ducking on) or
+    `flat` (ducking off, music volume 0.08–0.12) — see edit-director Step 4
 
 CHECK: A/V sync pre-validation
   - For each cut: narration_start aligns with visual_start (±0.5s)

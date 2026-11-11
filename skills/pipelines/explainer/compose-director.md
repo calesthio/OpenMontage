@@ -51,7 +51,7 @@ Based on the edit decisions, pick the rendering approach:
 - Best for: environments without Node.js/Remotion installed
 
 **IMPORTANT: When using Remotion, ALL of these go through Remotion — not FFmpeg:**
-- Audio → Remotion `audio` prop: the narration track plus a music bed at one flat volume. The `Explainer` composition does NOT duck. When the bed must dip under the voice, pre-mix with `audio_mixer` and hand the mix to `video_compose` as `audio_path` (Step 5)
+- Audio → Remotion `audio` prop: the narration track plus a music bed. The `Explainer` composition ducks the bed under the word `captions` when `audio.music.ducking` is set (`audio_mix_plan: "composition"`); otherwise pre-mix with `audio_mixer` and hand the mix to `video_compose` as `audio_path` (Step 5)
 - Subtitles → Remotion `captions` prop (word-level), NOT SRT burn via FFmpeg
 - Text overlays (CTA, titles) → Remotion `text_card` cut type, NOT AI-generated images
 
@@ -145,9 +145,16 @@ for the proven formula — especially the all-dark-background rule for visual co
 ### Step 5: Audio Post-Processing
 
 **Remotion path (DEFAULT):** Remotion plays audio natively via `<Audio>` components — the
-narration track, and ONE music track at a flat `volume` with a fade in and out. It never ducks:
-the `Explainer` composition does not read `audio.music.ducking`. `audio_mixer` is the only tool
-that ducks. Follow the plan the edit stage recorded in `edit_decisions.metadata.audio_mix_plan`:
+narration track, and ONE music track with a fade in and out. The `Explainer` composition ducks
+that track only when `remotion_composition.json` sets `audio.music.ducking`. Follow the plan the
+edit stage recorded in `edit_decisions.metadata.audio_mix_plan`:
+
+- **`composition` — recommended when the composition carries word `captions`.** Add
+  `"ducking": true` (or `{"duckedGain": 0.35, "attackSeconds": 0.15, "releaseSeconds": 0.4,
+  "mergeGapSeconds": 0.6}`) to `audio.music` in `remotion_composition.json`, with the music at
+  its normal bed `volume` (e.g. 0.3). The music dips under each spoken phrase (speech timing
+  comes from `captions`) and recovers in pauses. Without captions the whole video counts as
+  speech, which is just a lower constant level — use `premix` instead.
 
 - **`premix` — recommended whenever narration and music play together.** Call `audio_mixer`
   with `operation: "full_mix"`: each narration take as a `role: "speech"` track with its

@@ -140,12 +140,14 @@ Use the playbook's typography for font choices.
 
 **Music ducking — what actually happens**: `audio.music.ducking` records the intent (use the playbook's `audio.ducking_threshold_db` for `threshold_db`); whether the music really dips depends on the render path:
 
-- `audio_mixer` (`operation: "full_mix"`) is the only tool that ducks. It sidechains the music under the narration and honours `enabled`, `attack_ms`, and `release_ms`; the depth comes from its own `music_volume_during_speech` (default 0.15), not from `threshold_db`/`reduction_db`.
-- The Remotion `Explainer` composition never ducks. It plays the music at one flat `volume` with a fade in and out and ignores `ducking` entirely.
+- `audio_mixer` (`operation: "full_mix"`) ducks on any render path. It sidechains the music under the narration and honours `enabled`, `attack_ms`, and `release_ms`; the depth comes from its own `music_volume_during_speech` (default 0.15), not from `threshold_db`/`reduction_db`.
+- The Remotion `Explainer` composition ducks only when `remotion_composition.json` sets `audio.music.ducking` (`true`, or `{"duckedGain", "attackSeconds", "releaseSeconds", "mergeGapSeconds"}`; defaults 0.35 ≈ −9 dB, 0.15 s, 0.4 s, 0.6 s — `remotion-composer/src/lib/ducking.ts`). It takes speech timing from the word `captions`; with no captions it treats the whole video as speech, i.e. one constant lower level. It does not read the canonical artifact's `threshold_db`/`reduction_db`.
+- HyperFrames and FFmpeg renders do not duck.
 
 So decide the mix here and record it in `metadata.audio_mix_plan`:
 
-- `"premix"` (**recommended whenever narration and music play together**) — keep `ducking.enabled: true`. The Compose stage mixes narration + music with `audio_mixer` and passes the mixed track to `video_compose` as `audio_path`.
+- `"composition"` (**recommended on the Remotion path when word captions exist**) — keep `ducking.enabled: true`. The Compose stage sets `audio.music.ducking` in `remotion_composition.json`; the music dips under each spoken phrase and recovers in pauses.
+- `"premix"` (recommended for narration + music on any other render path, or Remotion without captions) — keep `ducking.enabled: true`. The Compose stage mixes narration + music with `audio_mixer` and passes the mixed track to `video_compose` as `audio_path`.
 - `"flat"` — set `"ducking": {"enabled": false}` and keep `volume` low (0.08–0.12) so the bed never competes with the voice. Honest for music-light pieces; say so in the gate summary.
 
 ### Step 5: Apply Pacing Rules
@@ -177,7 +179,7 @@ Adjust cut timing if any violates these rules.
 **Audio sync:**
 - [ ] Narration segments are ordered and non-overlapping
 - [ ] Narration timing aligns with corresponding visual cuts
-- [ ] Music ducking is configured and `metadata.audio_mix_plan` says who performs it (`premix`) or that the bed is flat (`flat`)
+- [ ] Music ducking is configured and `metadata.audio_mix_plan` says who performs it (`composition` or `premix`) or that the bed is flat (`flat`)
 
 **Subtitles:**
 - [ ] Subtitles enabled

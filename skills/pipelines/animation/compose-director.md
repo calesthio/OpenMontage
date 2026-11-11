@@ -130,7 +130,9 @@ This tool:
 
 **If the tool says `needs_loop: true`:** set `"loop": true` in the composition JSON. Remotion will loop the audio seamlessly with the volume fade resetting per loop.
 
-**Music under narration.** The `Explainer` composition plays `audio.music` at one flat `volume` (with the fades) and never ducks; `audio_mixer` is the only tool that ducks. Follow `edit_decisions.metadata.audio_mix_plan`:
+**Music under narration.** The `Explainer` composition ducks `audio.music` only when it carries `"ducking"` (`true`, or `{"duckedGain": 0.35, "attackSeconds": 0.15, "releaseSeconds": 0.4, "mergeGapSeconds": 0.6}` — `remotion-composer/src/lib/ducking.ts`), using the word `captions` for speech timing. Follow `edit_decisions.metadata.audio_mix_plan`:
+
+- `composition` — add `"ducking": true` to the `audio.music` block above, at its normal bed `volume` (e.g. 0.3), and keep the word `captions` in the composition JSON. Without captions this is only a constant lower level; use `premix` instead.
 
 - `premix` — run `audio_mixer` with `operation: "full_mix"`: each narration take as a `role: "speech"` track with its `start_seconds`, the music as a `role: "music"` track, `ducking: {"enabled": true, "music_volume_during_speech": 0.15}`, `target_duration` set to the video length, `normalize: true`. Put the mixed file in the composition JSON as `audio.narration.src` (volume 1) and leave `audio.music` out, so the bed is not played twice. `audio_mixer` has no in-point or loop option (`target_duration` only pads with silence or trims), so apply the recommended offset — and any looping — to the music file with FFmpeg before mixing (e.g. `ffmpeg -ss <offset> -i music.mp3 music_from_offset.wav`).
 - `flat` (or a music-only piece) — keep the `audio.music` block above with `volume` at 0.08–0.12 when narration plays over it.

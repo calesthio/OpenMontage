@@ -31,6 +31,13 @@ import { ScreenshotScene } from "./components/ScreenshotScene";
 import type { ScreenshotStep } from "./components/ScreenshotScene";
 import { ProviderChip } from "./components/ProviderChip";
 import { resolveAsset } from "./lib/resolveAsset";
+import {
+  duckGainAt,
+  resolveDucking,
+  speechIntervalsFromCaptions,
+  type DuckingSetting,
+  type SpeechInterval,
+} from "./lib/ducking";
 import type { ParticleType } from "./components/ParticleOverlay";
 import { resolveTheme, type ThemeConfig, DEFAULT_THEME } from "./Root";
 
@@ -297,6 +304,10 @@ interface AudioConfig {
     offsetSeconds?: number;
     /** Loop the music if it's shorter than the video duration. */
     loop?: boolean;
+    /** Lower the music while the narration speaks. `true` uses the defaults
+     *  in lib/ducking.ts; speech timing comes from `captions`, else the
+     *  whole composition counts as speech. */
+    ducking?: DuckingSetting;
   };
 }
 
@@ -851,6 +862,12 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
   // Resolve theme from props — playbook name, theme name, or custom themeConfig
   const theme = resolveTheme(props as Record<string, unknown>);
   const lastOutSeconds = Math.max(0, ...cuts.map((c) => c.out_seconds || 0));
+  const musicDucking = audio?.narration?.src ? resolveDucking(audio?.music?.ducking) : null;
+  const speechIntervals: SpeechInterval[] = !musicDucking
+    ? []
+    : captions && captions.length > 0
+      ? speechIntervalsFromCaptions(captions, musicDucking.mergeGapSeconds)
+      : [{ start: 0, end: durationInFrames / fps }];
 
   return (
     <AbsoluteFill style={{ background: theme.backgroundColor, fontFamily: theme.headingFont || fontFamily }}>
@@ -933,7 +950,10 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
               [baseVol, 0],
               { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
             );
-            return Math.min(fadeIn, fadeOut);
+            const duck = musicDucking
+              ? duckGainAt(f / fps, speechIntervals, musicDucking)
+              : 1;
+            return Math.min(fadeIn, fadeOut) * duck;
           }}
         />
       )}

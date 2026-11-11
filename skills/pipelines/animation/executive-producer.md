@@ -317,11 +317,12 @@ CHECK: Programmatic asset integrity (if Manim/Remotion)
 CHECK: Timeline completeness
   - Verify edit decisions cover 0 to total_duration with no gaps
   - Verify all asset references point to existing files
-  - Verify the music plan under narration is one that actually happens: only `audio_mixer`
-    ducks; the Remotion `Explainer` composition plays music at one flat volume and ignores
-    `audio.music.ducking`. Where narration and music overlap, `edit_decisions.metadata.audio_mix_plan`
-    must say `premix` (compose mixes them with `audio_mixer`, ducking on, and renders that one
-    track) or `flat` (ducking off, music volume 0.08–0.12)
+  - Verify the music plan under narration is one that actually happens: the Remotion
+    `Explainer` composition ducks only when its composition JSON sets `audio.music.ducking`
+    (speech timing from word captions); `audio_mixer` ducks on any path. Where narration and
+    music overlap, `edit_decisions.metadata.audio_mix_plan` must say `composition` (Remotion
+    ducks, captions present), `premix` (compose mixes them with `audio_mixer`, ducking on, and
+    renders that one track) or `flat` (ducking off, music volume 0.08–0.12)
 
 CHECK: Hold time preservation (ANIMATION-SPECIFIC)
   - Verify hold times from scene_plan are preserved in edit decisions

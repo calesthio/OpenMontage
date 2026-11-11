@@ -331,7 +331,7 @@ reconcile(entry_id, $)     # records actual spend
 
 Spend is recorded even when nobody runs that lifecycle:
 
-- Every tool call reports its cost into `projects/<id>/events.jsonl` (the `BaseTool` instrumentation). `CostTracker.sync_tool_events()` turns those reports into ledger entries, keyed by `call_id`, and matches a call that was also reconciled by hand instead of counting it twice.
+- Every tool call reports its cost into `projects/<id>/events.jsonl` (the `BaseTool` instrumentation). `CostTracker.sync_tool_events()` turns those reports into ledger entries, keyed by `call_id`, and matches a call that was also reconciled by hand instead of counting it twice. The ledger holds spend only: a $0 call stays in `events.jsonl` and gets no entry, and a run with no paid call and no budget set writes no `cost_log.json` at all (its checkpoints carry no `cost_snapshot`, which the board reads as $0).
 - `write_checkpoint` calls `project_cost_snapshot()` when no `cost_snapshot` is passed, so every checkpoint carries the recorded spend. Pass an explicit snapshot only to override it.
 - Cost no tool reports — rented GPU time, a licence — goes in through `record_rental()` / `record_spend()`, or from the shell:
 

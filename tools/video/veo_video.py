@@ -317,7 +317,7 @@ class VeoVideo(BaseTool):
         if not is_vertex:
             return ToolResult(
                 success=False,
-                error="Veo on the Gemini API retired on 2026-10-22. Select gemini_omni_video explicitly, or use Vertex AI / fal Veo.",
+                error="Veo on the Gemini API retired on 2026-10-22. Use gemini_omni_video (gemini-omni-1.2-flash) on the Gemini API, or Vertex AI / fal Veo.",
             )
 
         prompt = inputs["prompt"]
@@ -325,16 +325,15 @@ class VeoVideo(BaseTool):
         model_variant = inputs.get("model_variant", "veo3.1")
         auto_fix = inputs.get("auto_fix", True)
 
-        # Map to the official preview model unless a custom model name is provided
+        # Map to the Vertex GA model unless a custom model name is provided
         if model_variant in {"veo3", "veo3/fast", "veo3.1", "veo3.1/fast"}:
-            if is_vertex:
-                model_name = (
-                    "veo-3.1-fast-generate-001"
-                    if "fast" in model_variant
-                    else "veo-3.1-generate-001"
-                )
-            else:
-                model_name = "veo-3.1-generate-preview"
+            # Only Vertex AI reaches this point (the Gemini API backend is
+            # rejected above), so always map to the Vertex GA model ids.
+            model_name = (
+                "veo-3.1-fast-generate-001"
+                if "fast" in model_variant
+                else "veo-3.1-generate-001"
+            )
         else:
             model_name = model_variant
 

@@ -15,6 +15,7 @@ and what remains Remotion-only.
 
 from __future__ import annotations
 
+import filecmp
 import json
 import logging
 import os
@@ -1077,8 +1078,7 @@ class HyperFramesCompose(BaseTool):
             src_path = Path(resolved_cut["source"]) if resolved_cut.get("source") else None
             if src_path and src_path.exists() and not self._is_inside(src_path, workspace):
                 dest = assets_dir / src_path.name
-                if not dest.exists() or dest.stat().st_size != src_path.stat().st_size:
-                    shutil.copy2(src_path, dest)
+                self._stage_copy(src_path, dest)
                 resolved_cut["source"] = str(dest)
                 copies.append({"from": str(src_path), "to": str(dest)})
             resolved.append(resolved_cut)
@@ -1104,8 +1104,7 @@ class HyperFramesCompose(BaseTool):
                 continue
             if not self._is_inside(src, workspace):
                 dest = assets_dir / src.name
-                if not dest.exists() or dest.stat().st_size != src.stat().st_size:
-                    shutil.copy2(src, dest)
+                self._stage_copy(src, dest)
             else:
                 dest = src
             out["narration"].append(
@@ -1123,8 +1122,7 @@ class HyperFramesCompose(BaseTool):
             if src.exists():
                 if not self._is_inside(src, workspace):
                     dest = assets_dir / src.name
-                    if not dest.exists() or dest.stat().st_size != src.stat().st_size:
-                        shutil.copy2(src, dest)
+                    self._stage_copy(src, dest)
                 else:
                     dest = src
                 out["music"] = {
@@ -1135,6 +1133,18 @@ class HyperFramesCompose(BaseTool):
                 }
 
         return out
+
+    @staticmethod
+    def _stage_copy(src: Path, dest: Path) -> None:
+        """Copy src to dest unless dest already holds the same file.
+
+        filecmp's shallow check trusts an identical (size, mtime) signature,
+        which copy2 preserves, and otherwise compares bytes: a source edited
+        to the same size (a composition re-rendered for another profile) is
+        still restaged.
+        """
+        if not dest.exists() or not filecmp.cmp(src, dest, shallow=True):
+            shutil.copy2(src, dest)
 
     @staticmethod
     def _is_inside(path: Path, root: Path) -> bool:

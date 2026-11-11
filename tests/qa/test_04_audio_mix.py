@@ -151,3 +151,14 @@ for name in ["mix_basic.wav", "mix_fades.wav", "mix_ducked.wav", "mix_delayed.wa
         print(f"\n[{name}] FILE NOT FOUND")
 
 print("\n=== AUDIO MIX TEST COMPLETE ===")
+
+
+# Exit status for CI and `&&` chains: fail when any tool step failed.
+import re as _re
+_failed_steps = sorted(
+    n for n, v in list(globals().items())
+    if _re.fullmatch(r"r\d+", n) and getattr(v, "success", None) is False
+)
+if _failed_steps:
+    print(f"\nFAILED steps: {', '.join(_failed_steps)}")
+    raise SystemExit(1)

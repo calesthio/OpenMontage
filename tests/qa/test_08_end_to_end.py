@@ -652,3 +652,7 @@ print(f"{'='*60}")
 if os.path.exists(final_video):
     print(f"\nFinal video: {final_video}")
     print("INSPECT: Open in VLC/media player to verify A/V sync, transitions, and content.")
+
+
+# Exit status for CI and `&&` chains.
+raise SystemExit(1 if FAIL else 0)

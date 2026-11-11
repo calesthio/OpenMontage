@@ -277,3 +277,7 @@ for e in errors:
 print(f"\n{'='*60}")
 print(f"PLAYBOOK INTELLIGENCE TEST COMPLETE: {PASS} passed, {FAIL} failed")
 print(f"{'='*60}")
+
+
+# Exit status for CI and `&&` chains.
+raise SystemExit(1 if FAIL else 0)

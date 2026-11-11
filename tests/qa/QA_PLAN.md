@@ -1,21 +1,27 @@
-# Quality Validation Plan — Phase 3.5 + G3.11
+# Quality Validation Plan
 
 ## Purpose
 
-Run every tool with real API keys, inspect outputs (see images, listen to audio, watch video), find gaps, fix them. This is the gate before calling Phase 3.5 "Verified."
+Run tools on real media, inspect the outputs (look at frames, listen to audio, watch video), find gaps, fix them.
 
-## Test Scripts (all ready to run)
+## Test Scripts
+
+`test_04`–`test_08` are standalone scripts, not pytest tests: run each with `python`. They write to `tests/qa/output/` (gitignored), print what they produced, and **exit 1 when any step fails** (0 otherwise), so a CI step or shell `&&` chain notices a failure. `tests/qa/conftest.py` keeps pytest from importing them, which used to run every script during collection of the main suite and hide its failures.
+
+`test_09` is a pytest module (HyperFrames scaffold, lint/validate, full render); it skips when the HyperFrames runtime is missing.
 
 | Script | Tools Tested | API Keys Used | Est. Cost |
 |--------|-------------|---------------|-----------|
-| `test_01_tts.py` | `elevenlabs_tts` (ElevenLabs) | ELEVENLABS_API_KEY | ~$0.02 |
-| `test_02_image_gen.py` | `image_gen` (GPT Image 2 + FLUX) | OPENAI_API_KEY, FAL_AI_API_KEY | ~$0.15 |
-| `test_03_music.py` | `music_gen` (ElevenLabs) | ELEVENLABS_API_KEY | ~$0.10 |
 | `test_04_audio_mix.py` | `audio_mixer` | None (ffmpeg only) | $0 |
-| `test_05_video_compose.py` | `video_compose` | None (ffmpeg only) | $0 |
+| `test_05_video_compose.py` | `video_compose` (incl. subtitle burn-in) | None (ffmpeg only) | $0 |
 | `test_06_video_stitch.py` | `video_stitch` | None (ffmpeg only) | $0 |
-| `test_07_playbook_intelligence.py` | `playbook_loader.py` functions | None (pure Python) | $0 |
-| `test_08_end_to_end.py` | Full animated-explainer pipeline | None (ffmpeg fixtures) | $0 |
+| `test_07_playbook_intelligence.py` | `styles/playbook_loader.py` functions | None (pure Python) | $0 |
+| `test_08_end_to_end.py` | animated-explainer flow on ffmpeg fixtures | None (ffmpeg fixtures) | $0 |
+| `test_09_hyperframes_compose.py` | `hyperframes_compose` | None (Node + HyperFrames CLI) | $0 |
+
+Paid-provider checks (TTS, image and music generation) have no scripts here; exercise those tools through a pipeline run with the user's approval.
+
+FFmpeg features: the subtitle burn-in steps in `test_05` need the `subtitles` filter (libass). Check with `.venv/bin/python -c "from tools.ffmpeg_capabilities import has_filter; print(has_filter('subtitles'))"`; on a build without it those steps fail, and the script exits 1.
 
 ## Inspection Protocol
 
@@ -29,44 +35,38 @@ For each output:
 
 | Area | Risk | How to Validate |
 |------|------|-----------------|
-| TTS voice selection | Default voice may not match playbook mood | Test with multiple voice IDs, compare against playbook `voice_style` |
-| Image gen consistency | GPT Image/FLUX outputs vary wildly per prompt | Test with playbook `image_prompt_prefix` prepended |
-| Music duration alignment | Music may not match narration duration | Compare `music.duration` vs `tts.duration`, check padding/looping |
-| Audio ducking timing | Ducking may cut music too aggressively | Inspect waveform: music should duck ~6dB under speech, recover smoothly |
+| Music duration alignment | Music may not match narration duration | Compare durations; use `audio_mixer` track `loop` / `offset_seconds` |
+| Audio ducking timing | Ducking may cut music too aggressively | Inspect waveform: music should duck under speech, recover smoothly |
 | Video stitch transitions | Crossfade may flicker with mismatched codecs | Test with both matching and mismatched clips, check `auto_normalize` |
 | Subtitle burn-in | Font size/position may clip on mobile formats | Test with 9:16 (TikTok) and 16:9 (YouTube) profiles |
-| Remotion render | Components may fail with real data | Build a test composition with all 8 components, render at 1080p |
+| Remotion render | Components may fail with real data | `make demo`, then a composition with every component |
 | Playbook contrast | Edge cases in dark-on-dark or light-on-light themes | Test with all 3 playbooks + a deliberately low-contrast custom one |
 
 ## Run Order
 
+From the repository root:
+
 ```bash
-cd C:/Users/ishan/Documents/OpenMontage
+# Composition
+.venv/bin/python tests/qa/test_04_audio_mix.py
+.venv/bin/python tests/qa/test_05_video_compose.py
+.venv/bin/python tests/qa/test_06_video_stitch.py
 
-# Phase 1: Individual tools (can run in parallel)
-python tests/qa/test_01_tts.py
-python tests/qa/test_02_image_gen.py
-python tests/qa/test_03_music.py
+# Intelligence validation (no media)
+.venv/bin/python tests/qa/test_07_playbook_intelligence.py
 
-# Phase 2: Composition (depends on Phase 1 outputs)
-python tests/qa/test_04_audio_mix.py
-python tests/qa/test_05_video_compose.py
-python tests/qa/test_06_video_stitch.py
+# Full flow
+.venv/bin/python tests/qa/test_08_end_to_end.py
 
-# Phase 3: Intelligence validation (no API calls)
-python tests/qa/test_07_playbook_intelligence.py
-
-# Phase 4: Full pipeline
-python tests/qa/test_08_end_to_end.py
+# HyperFrames (pytest)
+.venv/bin/python -m pytest tests/qa/test_09_hyperframes_compose.py -q
 ```
 
 ## Success Criteria
 
-- [ ] All 3 TTS samples: clear speech, correct content, no artifacts, ≥44.1kHz
-- [ ] All 4 images: match prompt intent, correct dimensions, no watermarks, good composition
-- [ ] Both music tracks: match mood prompt, correct duration (±2s), no abrupt cuts
+- [ ] Every script exits 0
 - [ ] Audio mix: speech clearly above music, ducking smooth, no clipping
 - [ ] Video compose: A/V sync within 50ms, correct resolution, playable in VLC
 - [ ] Video stitch: smooth transitions, no frame drops, PIP correctly positioned
 - [ ] Playbook intelligence: all 3 playbooks pass a11y, contrast ratios within 0.1 of manual calc
-- [ ] End-to-end: 60-second explainer renders without errors, all stages checkpoint correctly
+- [ ] End-to-end: renders without errors, all stages checkpoint correctly

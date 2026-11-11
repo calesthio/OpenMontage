@@ -164,8 +164,9 @@ edit stage recorded in `edit_decisions.metadata.audio_mix_plan`:
   `reduction_db`; the dip depth is `music_volume_during_speech`.) Pass the mixed file to
   `video_compose` as `audio_path` — the tool replaces the rendered video's audio track with it.
   Leave `audio.music` out of `remotion_composition.json` so the bed is not described twice.
-  `audio_mixer` cannot loop or offset a track (`target_duration` only pads with silence or
-  trims), so a music file shorter than the video must be looped with FFmpeg before the mix.
+  A music track takes `offset_seconds` (its in-point, e.g. past a quiet intro) and
+  `"loop": true` for a bed shorter than the video; a looped track plays to `target_duration`
+  (required with `loop`) and its `fade_out_seconds` lands at that end.
 - **`flat` — no ducking.** Skip external mixing and pass both sources in the composition props,
   with the music low enough (0.08–0.12) that it never competes with the voice:
 ```json

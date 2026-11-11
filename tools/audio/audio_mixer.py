@@ -85,6 +85,22 @@ class AudioMixer(BaseTool):
                             "default": 1.0,
                         },
                         "start_seconds": {"type": "number", "minimum": 0},
+                        "offset_seconds": {
+                            "type": "number",
+                            "minimum": 0,
+                            "description": (
+                                "In-point: skip this many seconds of the source "
+                                "(e.g. a quiet intro; see audio_energy)."
+                            ),
+                        },
+                        "loop": {
+                            "type": "boolean",
+                            "default": False,
+                            "description": (
+                                "Repeat the source (from its in-point) until the mix's "
+                                "target_duration, which is then required."
+                            ),
+                        },
                         "fade_in_seconds": {"type": "number", "minimum": 0},
                         "fade_out_seconds": {"type": "number", "minimum": 0},
                     },
@@ -248,43 +264,88 @@ class AudioMixer(BaseTool):
         """
         return f"[{in_label}]alimiter=limit=1:level=0[{out_label}]"
 
-    def _track_filters(self, track: dict[str, Any]) -> list[str]:
+    @staticmethod
+    def _track_input_args(track: dict[str, Any]) -> list[str]:
+        """FFmpeg input options for one track: loop and in-point, then ``-i``."""
+        args: list[str] = []
+        if track.get("loop"):
+            # Loop the whole file; the in-point is applied per loop by -ss.
+            args.extend(["-stream_loop", "-1"])
+        offset = float(track.get("offset_seconds", 0) or 0)
+        if offset > 0:
+            args.extend(["-ss", f"{offset}"])
+        args.extend(["-i", track["path"]])
+        return args
+
+    def _probe_track_duration(self, track: dict[str, Any], reason: str) -> float:
+        duration_cmd = [
+            "ffprobe", "-v", "error",
+            "-show_entries", "format=duration",
+            "-of", "csv=p=0",
+            track["path"],
+        ]
+        probed = self.run_command(duration_cmd).stdout.strip().split("\n")[0]
+        try:
+            duration = float(probed)
+        except ValueError:
+            duration = math.nan
+        if not math.isfinite(duration) or duration <= 0:
+            raise ValueError(
+                f"Audio duration is missing or invalid for {track['path']} "
+                f"(ffprobe reported {probed!r}); regenerate or repair the "
+                f"track before applying {reason}."
+            )
+        return duration
+
+    def _track_filters(
+        self, track: dict[str, Any], target: float | None = None
+    ) -> list[str]:
         """Build per-track filters on the source timeline before scheduling it.
 
         ``afade=t=out`` defaults to ``st=0``. Applying it after ``adelay``
         therefore fades the delay silence instead of the source audio, leaving
         a delayed track silent by the time it starts. Fade source samples first
         and add the timeline delay last so both fades follow the track itself.
+
+        ``offset_seconds`` (the in-point) and ``loop`` are input options (see
+        ``_track_input_args``); a looped track is cut to the length it plays
+        in the mix, ``target - start_seconds``, so its fade-out lands there.
         """
         filters = []
         volume = track.get("volume", 1.0)
-        delay_ms = int(track.get("start_seconds", 0) * 1000)
+        start_seconds = float(track.get("start_seconds", 0) or 0)
+        delay_ms = int(start_seconds * 1000)
         fade_in = track.get("fade_in_seconds", 0)
         fade_out = track.get("fade_out_seconds", 0)
+        offset = float(track.get("offset_seconds", 0) or 0)
+        loop = bool(track.get("loop", False))
+
+        length: float | None = None  # seconds this track plays, when needed
+        if loop:
+            if target is None:
+                raise ValueError(
+                    f"loop on {track['path']} needs the mix's target_duration "
+                    "(a looped track has no natural end)."
+                )
+            length = max(0.0, target - start_seconds)
+            filters.append(f"atrim=duration={length}")
+        if offset > 0 or (fade_out > 0 and not loop):
+            reason = "offset_seconds" if offset > 0 else "fade_out_seconds"
+            duration = self._probe_track_duration(track, reason)
+            if offset >= duration:
+                raise ValueError(
+                    f"offset_seconds {offset} is past the end of {track['path']} "
+                    f"({duration:.2f}s long)."
+                )
+            if not loop:
+                length = duration - offset
 
         if volume != 1.0:
             filters.append(f"volume={volume}")
         if fade_in > 0:
             filters.append(f"afade=t=in:d={fade_in}")
-        if fade_out > 0:
-            duration_cmd = [
-                "ffprobe", "-v", "error",
-                "-show_entries", "format=duration",
-                "-of", "csv=p=0",
-                track["path"],
-            ]
-            probed = self.run_command(duration_cmd).stdout.strip().split("\n")[0]
-            try:
-                duration = float(probed)
-            except ValueError:
-                duration = math.nan
-            if not math.isfinite(duration) or duration <= 0:
-                raise ValueError(
-                    f"Audio duration is missing or invalid for {track['path']} "
-                    f"(ffprobe reported {probed!r}); regenerate or repair the "
-                    "track before applying fade_out_seconds."
-                )
-            fade_start = max(0.0, duration - float(fade_out))
+        if fade_out > 0 and length is not None:
+            fade_start = max(0.0, length - float(fade_out))
             filters.append(f"afade=t=out:st={fade_start}:d={fade_out}")
         if delay_ms > 0:
             filters.append(f"adelay={delay_ms}:all=1")
@@ -333,7 +394,7 @@ class AudioMixer(BaseTool):
         input_args = []
 
         for i, track in enumerate(tracks):
-            input_args.extend(["-i", track["path"]])
+            input_args.extend(self._track_input_args(track))
             filters = self._track_filters(track)
 
             if filters:
@@ -575,8 +636,8 @@ class AudioMixer(BaseTool):
         filter_parts = []
 
         for i, track in enumerate(all_tracks):
-            input_args.extend(["-i", track["path"]])
-            filters = self._track_filters(track)
+            input_args.extend(self._track_input_args(track))
+            filters = self._track_filters(track, target)
 
             if filters:
                 filter_chain = ",".join(filters)

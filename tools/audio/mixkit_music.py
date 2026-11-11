@@ -1,8 +1,16 @@
 """Music search and download from Mixkit (free, no API key).
 
 Reads the schema.org JSON-LD that Mixkit embeds in its music listing pages
-(tag pages and discover/search pages). Tracks are covered by the Mixkit
-Stock Music Free License: commercial use, no attribution required.
+(tag pages and discover/search pages).
+
+Licence — Mixkit Stock Music Free License (https://mixkit.co/license/#musicFree):
+- Allowed, no attribution required: commercial and non-commercial projects,
+  including YouTube and social video, podcasts, online ads and educational use.
+- Not allowed: CDs/DVDs, TV or radio broadcast, video games; remixing a track
+  or using it in a music-only release; claiming it as your own or registering
+  it with a rights-management / Content ID service.
+- Mixkit's User Terms add further limits; check them before distribution.
+Each returned track carries its licence URL so the restriction travels with it.
 """
 
 from __future__ import annotations
@@ -29,7 +37,11 @@ from tools.base_tool import (
 )
 
 _UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko)"
-_LD_RE = re.compile(r'<script type="application/ld\+json">(.*?)</script>', re.S)
+_LD_RE = re.compile(r'<script[^>]*type="application/ld\+json"[^>]*>(.*?)</script>', re.S)
+_LICENSE_LIMITS = (
+    "Mixkit Stock Music Free License: commercial/online use OK without attribution; "
+    "not for CDs/DVDs, TV/radio broadcast, video games, remixes or Content ID registration"
+)
 _ISO_DUR = re.compile(r"PT(?:(\d+)M)?(?:(\d+)S)?")
 
 
@@ -50,12 +62,17 @@ class MixkitMusic(BaseTool):
     runtime = ToolRuntime.API
 
     dependencies = []
-    install_instructions = "No setup required. Mixkit music is free and needs no API key."
+    install_instructions = (
+        "No setup required: Mixkit music needs no API key (reads mixkit.co pages). "
+        "Licence: Mixkit Stock Music Free License — commercial/YouTube/podcast/ad use OK, no attribution; "
+        "NOT for CDs/DVDs, TV/radio broadcast, video games, remixes or Content ID registration. "
+        "See https://mixkit.co/license/#musicFree"
+    )
     agent_skills = ["music"]
     capabilities = ["search_music", "download_music", "stock_music"]
     supports = {"duration_filter": True, "free_commercial_use": True, "no_api_key": True}
-    best_for = ["free royalty-free background beds without attribution", "quick keyless music search"]
-    not_good_for = ["custom-composed scores", "exact-length tracks"]
+    best_for = ["free royalty-free background beds for online video without attribution", "quick keyless music search"]
+    not_good_for = ["custom-composed scores", "exact-length tracks", "TV/radio broadcast, CDs/DVDs or video games (licence forbids)"]
     fallback_tools = ["pixabay_music", "music_gen"]
 
     input_schema = {
@@ -99,9 +116,15 @@ class MixkitMusic(BaseTool):
             if not 0 <= pick < len(tracks):
                 return ToolResult(success=False, error=f"pick {pick} out of range ({len(tracks)} tracks)")
             out = Path(inputs.get("output_path") or f"mixkit_{tracks[pick]['id']}.mp3")
-            out.parent.mkdir(parents=True, exist_ok=True)
-            req = urllib.request.Request(tracks[pick]["url"], headers={"User-Agent": _UA})
-            out.write_bytes(urllib.request.urlopen(req, timeout=60).read())
+            try:
+                out.parent.mkdir(parents=True, exist_ok=True)
+                req = urllib.request.Request(tracks[pick]["url"], headers={"User-Agent": _UA})
+                with urllib.request.urlopen(req, timeout=60) as resp:
+                    out.write_bytes(resp.read())
+            except Exception as exc:  # network, CDN or filesystem failure
+                out.unlink(missing_ok=True)
+                return ToolResult(success=False, error=f"Mixkit music download failed for {tracks[pick]['url']}: {exc}",
+                                  data=data, duration_seconds=round(time.time() - start, 2))
             data["selected"] = tracks[pick] | {"output": str(out)}
             artifacts.append(str(out))
         return ToolResult(success=True, data=data, artifacts=artifacts,
@@ -141,6 +164,7 @@ class MixkitMusic(BaseTool):
                         "duration_seconds": _seconds(item.get("duration", "")),
                         "url": item["url"],
                         "license": item.get("license", "https://mixkit.co/license/#musicFree"),
+                        "license_limits": _LICENSE_LIMITS,
                         "page": url,
                     })
         return out

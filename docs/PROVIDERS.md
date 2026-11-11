@@ -1123,6 +1123,27 @@ Gen-3 Alpha Turbo and Gen-4 Aleph were removed from the Runway API on
 
 ---
 
+### Mixkit — Free Stock Video + Music (No API Key)
+
+> **No key, no account.** Curated stock video (stock source `mixkit`) and music (`mixkit_music`). Read the licence notes — they differ per clip and per use.
+
+**Tools unlocked:** `direct_clip_search` / `corpus_builder` via the `mixkit` stock source, `mixkit_music`
+**Env var:** none (needs `beautifulsoup4`)
+
+#### Licences
+
+| Asset | Licence | Allowed | Not allowed |
+|---|---|---|---|
+| Video marked **Free** | [Stock Video Free License](https://mixkit.co/license/#videoFree) | Commercial + personal use, YouTube, ads, broadcast; no attribution | See Mixkit User Terms |
+| Video marked **Restricted** | [Stock Video Restricted License](https://mixkit.co/license/#videoRestricted) | Personal projects only (free 720p file) | Commercial projects, advertising, company social media, **YouTube videos** |
+| Music | [Stock Music Free License](https://mixkit.co/license/#musicFree) | Commercial/online use incl. YouTube, podcasts, ads; no attribution | CDs/DVDs, TV/radio broadcast, video games, remixes or music-only releases, Content ID registration |
+
+- The video licence is set **per clip**. The `mixkit` source labels each search result with the licence its listing declares, **excludes Restricted clips by default** (`SearchFilters.require_commercial_use=True`), and re-verifies the licence on the clip's detail page before downloading. Verified evidence is recorded in `Candidate.extra["license_evidence"]`.
+- Only renditions the detail page publishes are downloaded (no guessed URLs).
+- Each `mixkit_music` track carries its licence URL and limits.
+
+---
+
 ## Local Providers (Free, No API Key)
 
 These providers run entirely on your machine. No network, no API key, no cost. Some require a GPU.

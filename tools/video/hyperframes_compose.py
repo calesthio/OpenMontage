@@ -1252,6 +1252,9 @@ class HyperFramesCompose(BaseTool):
                 f'data-track-index="3" src="{self._escape_attr(src)}" '
                 f'data-volume="{self._f(music["volume"])}"></audio>'
             )
+            # Fades are volume tweens on the timeline; the runtime drives them
+            # in preview and render (data-volume is only the static baseline).
+            entrance_tweens.extend(self._music_fade_tweens(music, total_duration))
 
         tween_block = "\n        ".join(entrance_tweens) if entrance_tweens else "// no tweens"
 
@@ -1293,6 +1296,27 @@ class HyperFramesCompose(BaseTool):
 </body>
 </html>
 """
+
+    def _music_fade_tweens(self, music: dict, total_duration: float) -> list[str]:
+        """GSAP volume tweens for the music bed's fade in / fade out."""
+        volume = float(music.get("volume", 0.15) or 0.15)
+        fade_in = max(0.0, float(music.get("fade_in_seconds", 0) or 0))
+        fade_out = max(0.0, float(music.get("fade_out_seconds", 0) or 0))
+        if total_duration > 0:
+            fade_in = min(fade_in, total_duration)
+            fade_out = min(fade_out, max(0.0, total_duration - fade_in))
+        tweens: list[str] = []
+        if fade_in > 0:
+            tweens.append(
+                f'tl.fromTo("#music", {{ volume: 0 }}, '
+                f'{{ volume: {self._f(volume)}, duration: {self._f(fade_in)}, ease: "none" }}, 0);'
+            )
+        if fade_out > 0:
+            tweens.append(
+                f'tl.to("#music", {{ volume: 0, duration: {self._f(fade_out)}, ease: "none" }}, '
+                f"{self._f(total_duration - fade_out)});"
+            )
+        return tweens
 
     def _cut_to_html(
         self, index: int, cut: dict, width: int, height: int

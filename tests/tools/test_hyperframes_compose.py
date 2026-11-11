@@ -1474,3 +1474,42 @@ def test_composition_validator_hyperframes_asset_root(tmp_path: Path):
     assert result.success, result.error
     info_lines = " ".join(result.data.get("info", []))
     assert "hyperframes" in info_lines.lower() or "assets" in info_lines.lower()
+
+
+def _scaffold_with_music(tmp_path: Path, music: dict) -> str:
+    bed = tmp_path / "bed.wav"
+    bed.write_bytes(b"RIFF0000WAVE")
+    result = HyperFramesCompose().execute(
+        {
+            "operation": "scaffold_workspace",
+            "workspace_path": str(tmp_path / "hyperframes"),
+            "edit_decisions": {
+                "version": "1.0",
+                "cuts": [
+                    {"id": "c1", "source": "", "type": "hero_title", "text": "Fade check",
+                     "in_seconds": 0, "out_seconds": 6}
+                ],
+                "audio": {"music": {"asset_id": "bed", **music}},
+            },
+            "asset_manifest": {"assets": [{"id": "bed", "type": "music", "path": str(bed)}]},
+        }
+    )
+    assert result.success, result.error
+    return (tmp_path / "hyperframes" / "index.html").read_text(encoding="utf-8")
+
+
+def test_scaffold_writes_music_fades_as_volume_tweens(tmp_path: Path):
+    """The scaffold read fade_in/out_seconds and dropped them (2026-11-11 audit):
+    the bed started and stopped at full level. HyperFrames fades are `volume`
+    tweens on the timeline; data-volume is only the static baseline."""
+    html = _scaffold_with_music(
+        tmp_path, {"volume": 0.3, "fade_in_seconds": 1.5, "fade_out_seconds": 2}
+    )
+    assert 'data-volume="0.3"' in html
+    assert 'tl.fromTo("#music", { volume: 0 }, { volume: 0.3, duration: 1.5, ease: "none" }, 0);' in html
+    assert 'tl.to("#music", { volume: 0, duration: 2, ease: "none" }, 4);' in html
+
+
+def test_scaffold_without_music_fades_adds_no_volume_tweens(tmp_path: Path):
+    html = _scaffold_with_music(tmp_path, {"volume": 0.3})
+    assert "#music" not in html.split("<script>", 1)[1]

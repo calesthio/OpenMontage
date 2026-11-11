@@ -254,8 +254,23 @@ class SeedanceArkVideo(BaseTool):
                 "type": "boolean",
                 "description": "Officially limited to pure text input.",
             },
-            "reference_image_path": {"type": "string"},
-            "reference_image_url": {"type": "string"},
+            # image_path / image_url are accepted as image_to_video aliases but
+            # not declared: an image_url property would make video_selector
+            # upload a local reference_image_path to fal before calling Ark.
+            "reference_image_path": {
+                "type": "string",
+                "description": (
+                    "Local first-frame or reference image. For image_to_video, "
+                    "`image_path` is accepted as an alias when this is not set."
+                ),
+            },
+            "reference_image_url": {
+                "type": "string",
+                "description": (
+                    "First-frame or reference image URL. For image_to_video, "
+                    "`image_url` is accepted as an alias when this is not set."
+                ),
+            },
             "reference_image_paths": {
                 "type": "array",
                 "items": {"type": "string"},
@@ -279,6 +294,15 @@ class SeedanceArkVideo(BaseTool):
                 "type": "array",
                 "items": {"type": "number", "minimum": 2, "maximum": 15},
                 "description": "Optional durations used for preflight cost estimation.",
+            },
+            "input_includes_video": {
+                "type": "boolean",
+                "default": False,
+                "description": (
+                    "Prices a finished task at the with-video token rate. Set it on "
+                    "task_action=query when the task was created with reference video, "
+                    "because a query call carries no reference_video_url(s)."
+                ),
             },
             "reference_audio_url": {"type": "string"},
             "reference_audio_urls": {

@@ -107,6 +107,14 @@ class JimengVideo(BaseTool):
                 "default": 121,
                 "description": "Total frames. 121=5s, 241=10s at 24fps.",
             },
+            "duration": {
+                "type": ["integer", "string"],
+                "default": 5,
+                "description": (
+                    "Clip length in whole seconds, read only when frames is omitted: "
+                    "10 or more maps to 241 frames (10s), anything shorter to 121 (5s)."
+                ),
+            },
             "aspect_ratio": {
                 "type": "string",
                 "enum": ["16:9", "9:16", "1:1", "4:3", "3:4", "21:9"],
@@ -174,12 +182,11 @@ class JimengVideo(BaseTool):
         return ToolStatus.UNAVAILABLE
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
-        frames = int(inputs.get("frames", 121))
-        seconds = frames / 24.0
+        seconds = self._resolve_frames(inputs) / 24.0
         return round(0.05 * seconds, 2)
 
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
-        return 120.0 + int(inputs.get("frames", 121)) * 1.0
+        return 120.0 + self._resolve_frames(inputs) * 1.0
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         ak = self._ak()
@@ -259,15 +266,24 @@ class JimengVideo(BaseTool):
         return 121
 
     @staticmethod
-    def _build_payload(inputs: dict[str, Any]) -> dict[str, Any]:
-        operation = inputs.get("operation", "text_to_video")
+    def _resolve_frames(inputs: dict[str, Any]) -> int:
+        """Frames a call submits: ``frames`` if given, else mapped from ``duration``.
+
+        The payload, the cost estimate and the runtime estimate all read this,
+        so a request is priced at the length it is billed for.
+        """
         frames = inputs.get("frames")
         if frames is None:
             frames = JimengVideo._duration_to_frames(int(inputs.get("duration", 5)))
+        return int(frames)
+
+    @staticmethod
+    def _build_payload(inputs: dict[str, Any]) -> dict[str, Any]:
+        operation = inputs.get("operation", "text_to_video")
         payload: dict[str, Any] = {
             "req_key": _REQ_KEY_VIDEO,
             "prompt": inputs["prompt"],
-            "frames": int(frames),
+            "frames": JimengVideo._resolve_frames(inputs),
             "aspect_ratio": inputs.get("aspect_ratio", "16:9"),
             "seed": int(inputs.get("seed", -1)),
         }

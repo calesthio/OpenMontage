@@ -218,6 +218,11 @@ class PikaVideo(BaseTool):
                     "first_last_frame_to_video, one frame -> image_to_video, else text_to_video."
                 ),
             },
+            "generation_mode": {
+                "type": "string",
+                "enum": list(OPERATION_FUNCTIONS) + ["generate"],
+                "description": "Alias for operation (selector vocabulary); read only when operation is not set.",
+            },
             "model": {"type": "string", "enum": [MODEL], "default": MODEL},
             "duration": {
                 "type": ["integer", "string"],
@@ -247,8 +252,21 @@ class PikaVideo(BaseTool):
             # First / last frame (image-to-video). URL forms must be http(s); local paths are
             # uploaded to Pika by this tool. The selector-facing names are used on purpose:
             # advertising image_url would make video_selector upload local frames to fal first.
-            "reference_image_url": {"type": "string", "description": "First-frame image URL (JPEG, PNG or WebP, up to 24 MiB)."},
-            "reference_image_path": {"type": "string", "description": "Local first-frame image; uploaded to Pika."},
+            # image_url / image_path are therefore accepted but never declared as properties.
+            "reference_image_url": {
+                "type": "string",
+                "description": (
+                    "First-frame image URL (JPEG, PNG or WebP, up to 24 MiB). "
+                    "`image_url` is accepted as an alias and wins when both are set."
+                ),
+            },
+            "reference_image_path": {
+                "type": "string",
+                "description": (
+                    "Local first-frame image; uploaded to Pika. "
+                    "`image_path` is accepted as an alias and wins when both are set."
+                ),
+            },
             "first_frame_image": {"type": "string", "description": "Alias for reference_image_url."},
             "last_frame_image_url": {"type": "string", "description": "Last-frame image URL."},
             "last_frame_image_path": {"type": "string", "description": "Local last-frame image; uploaded to Pika."},
@@ -416,6 +434,25 @@ class PikaVideo(BaseTool):
         if resolution in UPSCALE_RESOLUTIONS:
             runtime += 60.0
         return runtime
+
+    def dry_run(self, inputs: dict[str, Any]) -> dict[str, Any]:
+        """Preflight that reports incomplete inputs instead of raising.
+
+        estimate_cost() builds and validates the real request, so it still raises
+        on one that cannot be priced. Nothing is uploaded or submitted either way.
+        """
+        try:
+            return super().dry_run(inputs)
+        except ValueError as exc:
+            return {
+                "tool": self.name,
+                "estimated_cost_usd": None,
+                "cost_status": "inputs_required",
+                "quote_reason": str(exc),
+                "estimated_runtime_seconds": None,
+                "status": self.get_status().value,
+                "would_execute": False,
+            }
 
     # ------------------------------------------------------------------
     # Execution

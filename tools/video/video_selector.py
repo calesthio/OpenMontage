@@ -100,6 +100,14 @@ class VideoSelector(BaseTool):
                 ),
             },
             "allowed_providers": {"type": "array", "items": {"type": "string"}},
+            "task_context": {
+                "type": "object",
+                "description": (
+                    "Optional scoring hints for provider ranking: intent, style, brief, "
+                    "goal, platform, needs, style_keywords, asset_type. Merged with the "
+                    "prompt before candidates are scored."
+                ),
+            },
             "operation": {
                 "type": "string",
                 "enum": [

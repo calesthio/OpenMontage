@@ -131,6 +131,25 @@ class FalElevenLabsMusic(BaseTool):
             raise ValueError("duration_seconds is required for cost estimation")
         return round(math.ceil(float(duration) / 60.0) * 0.80, 2)
 
+    def dry_run(self, inputs: dict[str, Any]) -> dict[str, Any]:
+        """Preflight that reports incomplete inputs instead of raising.
+
+        estimate_cost() still raises without duration_seconds, since fal bills by
+        the minute. Only the preflight answer is structured.
+        """
+        try:
+            return super().dry_run(inputs)
+        except ValueError as exc:
+            return {
+                "tool": self.name,
+                "estimated_cost_usd": None,
+                "cost_status": "inputs_required",
+                "quote_reason": str(exc),
+                "estimated_runtime_seconds": None,
+                "status": self.get_status().value,
+                "would_execute": False,
+            }
+
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         api_key = self._get_api_key()
         if not api_key:

@@ -30,6 +30,56 @@ class KlingO3FalVideo(FalMedia):
         for tier in ("standard", "pro", "4k")
     }
 
+    # Selector-vocabulary aliases that build_request() rewrites to native fal
+    # fields. Any other reference_*/last_* spelling is rejected with an error.
+    _ALIAS_PROPERTIES = {
+        "reference_image_path": {
+            "type": "string",
+            "description": (
+                "Alias: image_to_video uses it as image_path (first frame); the "
+                "reference and video-to-video modes append it to image_paths."
+            ),
+        },
+        "reference_image_url": {
+            "type": "string",
+            "description": (
+                "Alias: image_to_video uses it as image_url (first frame); the "
+                "reference and video-to-video modes append it to image_urls."
+            ),
+        },
+        "reference_image_paths": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Alias: appended to image_paths in the reference and video-to-video modes.",
+        },
+        "reference_image_urls": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Alias: appended to image_urls in the reference and video-to-video modes.",
+        },
+        "last_image_url": {
+            "type": "string",
+            "description": "Alias of end_image_url for image_to_video and reference_to_video.",
+        },
+        "last_image_path": {
+            "type": "string",
+            "description": (
+                "Local last-frame image for image_to_video and reference_to_video; "
+                "inlined and sent as end_image_url."
+            ),
+        },
+        "reference_video_url": {
+            "type": "string",
+            "description": "Alias of video_url for video_to_video_edit and video_to_video_reference.",
+        },
+    }
+
+    def __init__(self):
+        super().__init__()
+        # Added after FalMedia derived idempotency_key_fields from the native
+        # fields, so documenting the aliases leaves the cache identity as it was.
+        self.input_schema["properties"].update(self._ALIAS_PROPERTIES)
+
     def build_request(self, inputs):
         model = inputs.get("model", next(iter(self.routes)))
         operation = inputs.get("generation_mode") or inputs.get("operation")

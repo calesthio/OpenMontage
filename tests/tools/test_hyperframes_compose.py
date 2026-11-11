@@ -9,6 +9,7 @@ in tests/qa/test_09_hyperframes_compose.py and are opt-in.
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -1159,6 +1160,44 @@ def test_scaffold_workspace_generates_html_and_assets(tmp_path: Path):
     assert design.is_file()
     design_text = design.read_text(encoding="utf-8")
     assert "#0B0F1A" in design_text or "test-playbook" in design_text
+
+
+def test_scaffold_text_card_stacks_subtitle_under_title(tmp_path: Path):
+    """A text card's subtitle must sit below its title, not beside it.
+
+    `.clip.text-card` is a flex container; with the default row direction a
+    real render put "HyperFrames path" on the title's baseline, touching the
+    last letter of "Render audit" (2026-11-11 audit render).
+    """
+    result = HyperFramesCompose().execute(
+        {
+            "operation": "scaffold_workspace",
+            "workspace_path": str(tmp_path / "hyperframes"),
+            "edit_decisions": {
+                "version": "1.0",
+                "cuts": [
+                    {
+                        "id": "c1",
+                        "source": "",
+                        "type": "hero_title",
+                        "text": "Render audit",
+                        "subtitle": "HyperFrames path",
+                        "in_seconds": 0,
+                        "out_seconds": 2,
+                    }
+                ],
+            },
+            "asset_manifest": {"assets": []},
+        }
+    )
+    assert result.success, result.error
+    html = (tmp_path / "hyperframes" / "index.html").read_text(encoding="utf-8")
+    assert '<div class="subtitle">HyperFrames path</div>' in html
+    rule = re.search(r"\.clip\.text-card\s*\{([^}]*)\}", html)
+    assert rule, "text-card CSS rule missing"
+    declarations = rule.group(1)
+    assert "display: flex" in declarations
+    assert re.search(r"flex-direction:\s*column", declarations), declarations
 
 
 def test_scaffold_rejects_empty_cuts(tmp_path: Path):

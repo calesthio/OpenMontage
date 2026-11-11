@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.ffmpeg_features import requires_libvorbis
+
 from tools.audio.audio_enhance import AudioEnhance
 
 pytestmark = pytest.mark.skipif(not shutil.which("ffmpeg"), reason="FFmpeg required")
@@ -93,7 +95,8 @@ def test_custom_pcm_codec_preserves_wav_default(tmp_path):
 
 @pytest.mark.parametrize("codec,suffix,expected", [
     ("flac", "flac", "flac"), ("libopus", "ogg", "opus"),
-    ("libvorbis", "ogg", "vorbis"), ("pcm_s16le", "wav", "pcm_s16le"),
+    pytest.param("libvorbis", "ogg", "vorbis", marks=requires_libvorbis),
+    ("pcm_s16le", "wav", "pcm_s16le"),
     ("libmp3lame", "mp3", "mp3"),
 ])
 def test_custom_audio_codec_selects_a_compatible_default(tmp_path, codec, suffix, expected):

@@ -83,7 +83,8 @@ class PiperTTS(BaseTool):
         "overrides the folder):\n"
         "  python -m piper.download_voices en_US-lessac-medium --data-dir ~/.piper/models"
     )
-    agent_skills = ["text-to-speech"]
+    # No Layer 3 skill covers Piper; "text-to-speech" is HeyGen's TTS API.
+    agent_skills: list[str] = []
 
     capabilities = [
         "text_to_speech",

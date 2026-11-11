@@ -147,6 +147,15 @@ class AzureSpeechToText(BaseTool):
                 "default": "Masked",
             },
             "output_dir": {"type": "string", "description": "Directory for output files"},
+            "duration_seconds": {
+                "type": "number",
+                "minimum": 0,
+                "description": (
+                    "Known audio length in seconds, used only for preflight cost "
+                    "estimation (estimate_cost/dry_run return 0.0 without it). "
+                    "execute ignores it and bills from the transcribed duration."
+                ),
+            },
         },
     }
 

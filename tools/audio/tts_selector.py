@@ -79,6 +79,14 @@ class TTSSelector(BaseTool):
                 "type": "string",
                 "description": "TTS model to use (e.g. eleven-v3 or eleven_multilingual_v2). Passed through to provider.",
             },
+            "model": {
+                "type": "string",
+                "description": (
+                    "Capability-level alias of model_id. Restricts routing to providers "
+                    "that serve this model and is rewritten to model_id for providers that "
+                    "only declare model_id (an error there if model_id is also set and differs)."
+                ),
+            },
             "stability": {
                 "type": "number",
                 "minimum": 0,
@@ -110,6 +118,14 @@ class TTSSelector(BaseTool):
                 "minimum": 0.25,
                 "maximum": 4.0,
                 "description": "Alias for speaking speed used by some providers.",
+            },
+            "rate": {
+                "type": "string",
+                "description": (
+                    "Azure/MAI-native SSML prosody rate (e.g. '-8%', '+5%'), passed through "
+                    "unchanged. When omitted for azure_tts/mai_tts it is derived from "
+                    "speaking_rate or speed."
+                ),
             },
             "pitch": {
                 "type": "number",
@@ -162,6 +178,14 @@ class TTSSelector(BaseTool):
             "allowed_providers": {
                 "type": "array",
                 "items": {"type": "string"},
+            },
+            "task_context": {
+                "type": "object",
+                "description": (
+                    "Optional scoring hints for provider ranking: intent, style, brief, "
+                    "goal, platform, needs, style_keywords, asset_type. Merged with the "
+                    "text before candidates are scored."
+                ),
             },
             "operation": {
                 "type": "string",

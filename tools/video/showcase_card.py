@@ -108,8 +108,13 @@ class ShowcaseCard(BaseTool):
     execution_mode = ExecutionMode.SYNC
     determinism = Determinism.DETERMINISTIC
 
-    dependencies = ["cmd:ffmpeg", "cmd:ffprobe"]
-    install_instructions = "Install FFmpeg: https://ffmpeg.org/download.html"
+    # Titles, subtitles and the watermark are all drawn with `drawtext`, which a
+    # minimal FFmpeg build does not have.
+    dependencies = ["cmd:ffmpeg", "cmd:ffprobe", "ffmpeg_filter:drawtext"]
+    install_instructions = (
+        "Install an FFmpeg build that includes the drawtext filter (freetype): "
+        "https://ffmpeg.org/download.html (macOS: `brew install ffmpeg-full`)"
+    )
     agent_skills = ["ffmpeg", "video-toolkit"]
 
     capabilities = ["create_showcase_card"]

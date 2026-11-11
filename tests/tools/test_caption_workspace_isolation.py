@@ -9,6 +9,8 @@ from threading import Barrier, Lock
 from types import SimpleNamespace
 
 import pytest
+
+from tests.ffmpeg_features import requires_subtitles_filter
 import tools.video.remotion_caption_burn as producer
 
 
@@ -70,6 +72,7 @@ def _pixels(path):
 
 
 @pytest.mark.skipif(not shutil.which("ffmpeg"), reason="FFmpeg required")
+@requires_subtitles_filter
 def test_same_second_native_caption_calls_have_private_subtitles(tmp_path, monkeypatch):
     monkeypatch.setenv("OPENMONTAGE_ASSET_CACHE", "0")
     monkeypatch.setattr(

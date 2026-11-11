@@ -42,7 +42,9 @@ class Transcriber(BaseTool):
         "pip install faster-whisper[gpu]  # GPU mode (requires CUDA)\n"
         "pip install whisperx  # For diarization support"
     )
-    agent_skills = ["speech-to-text"]
+    # No Layer 3 skill covers local faster-whisper/WhisperX; "speech-to-text"
+    # is ElevenLabs Scribe. Layer 2 guidance: skills/core/whisperx.md.
+    agent_skills: list[str] = []
 
     capabilities = [
         "transcribe",

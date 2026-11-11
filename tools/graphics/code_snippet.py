@@ -96,11 +96,9 @@ class CodeSnippet(BaseTool):
             },
             "font_size": {"type": "integer", "default": 20},
             "padding": {"type": "integer", "default": 40},
-            "border_radius": {"type": "integer", "default": 12},
             "line_numbers": {"type": "boolean", "default": True},
             "title": {"type": "string", "description": "Optional title bar text"},
             "output_path": {"type": "string"},
-            "width": {"type": "integer", "description": "Force specific width"},
         },
     }
 

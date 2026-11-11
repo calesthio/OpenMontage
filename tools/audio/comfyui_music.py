@@ -132,7 +132,10 @@ class ComfyUIMusic(BaseTool):
             },
             "workflow_model": {
                 "type": "string",
-                "description": "Optional model/provenance label for a custom workflow.",
+                "description": (
+                    "Optional model/provenance label for a custom workflow. "
+                    "`model` is accepted as an alias when this is not set."
+                ),
             },
             "workflow_model_stack": {
                 "type": "array",

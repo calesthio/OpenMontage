@@ -65,7 +65,7 @@ class MusicGen(BaseTool):
                 "description": (
                     "Target duration in seconds (API supports 3-600s). "
                     "Should match the target video duration from the script/proposal. "
-                    "Omitting this defaults to 60s which may not match your video."
+                    "There is no default: execute and estimate_cost refuse to run without it."
                 ),
             },
             "output_path": {"type": "string"},
@@ -110,6 +110,25 @@ class MusicGen(BaseTool):
         # Approximate: ~$0.05 per 30 seconds
         return round(duration / 30 * 0.05, 4)
 
+    def dry_run(self, inputs: dict[str, Any]) -> dict[str, Any]:
+        """Preflight that reports incomplete inputs instead of raising.
+
+        estimate_cost() still raises without duration_seconds: a silent default
+        would price the wrong track. Only the preflight answer is structured.
+        """
+        try:
+            return super().dry_run(inputs)
+        except ValueError as exc:
+            return {
+                "tool": self.name,
+                "estimated_cost_usd": None,
+                "cost_status": "inputs_required",
+                "quote_reason": str(exc),
+                "estimated_runtime_seconds": None,
+                "status": self.get_status().value,
+                "would_execute": False,
+            }
+
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         api_key = os.environ.get("ELEVENLABS_API_KEY")
         if not api_key:
@@ -126,7 +145,10 @@ class MusicGen(BaseTool):
             return ToolResult(success=False, error=f"Music generation failed: {e}")
 
         result.duration_seconds = round(time.time() - start, 2)
-        result.cost_usd = self.estimate_cost(inputs)
+        # Price only a track that was generated: _generate refuses a request
+        # without duration_seconds, which estimate_cost cannot price (it raises).
+        if result.success:
+            result.cost_usd = self.estimate_cost(inputs)
         return result
 
     def _generate(self, inputs: dict[str, Any], api_key: str) -> ToolResult:

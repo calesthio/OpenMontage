@@ -153,6 +153,18 @@ class CompositionValidator(BaseTool):
         warnings: list[str] = []
         info: list[str] = []
 
+        def locate(ref: str) -> Path:
+            """Where the renderer will find a referenced file.
+
+            On the Remotion path video_compose stages any file that exists as
+            given (absolute or relative to the working directory) into the
+            render's public dir (``_stage_remotion_media``); anything else is a
+            ``staticFile()`` path under the public dir.
+            """
+            if runtime in ("", "remotion") and Path(ref).is_file():
+                return Path(ref)
+            return assets_root / ref
+
         cuts = comp.get("cuts", [])
         audio = comp.get("audio", {})
 
@@ -184,13 +196,13 @@ class CompositionValidator(BaseTool):
         for cut in cuts:
             source = cut.get("source", "")
             if source:
-                asset_path = assets_root / source
+                asset_path = locate(source)
                 if not asset_path.exists():
                     errors.append(f"Missing asset: {source} (looked in {assets_root})")
 
             bg_img = cut.get("backgroundImage", "")
             if bg_img:
-                bg_path = assets_root / bg_img
+                bg_path = locate(bg_img)
                 if not bg_path.exists():
                     errors.append(f"Missing background image: {bg_img}")
 
@@ -198,7 +210,7 @@ class CompositionValidator(BaseTool):
         narration = audio.get("narration", {})
         narration_src = narration.get("src", "")
         if narration_src:
-            narration_path = assets_root / narration_src
+            narration_path = locate(narration_src)
             if not narration_path.exists():
                 errors.append(f"Missing narration audio: {narration_src}")
             else:
@@ -223,7 +235,7 @@ class CompositionValidator(BaseTool):
         music = audio.get("music", {})
         music_src = music.get("src", "")
         if music_src:
-            music_path = assets_root / music_src
+            music_path = locate(music_src)
             if not music_path.exists():
                 errors.append(f"Missing music audio: {music_src}")
             else:

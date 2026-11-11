@@ -21,6 +21,8 @@ from pathlib import PurePosixPath, PureWindowsPath
 
 import pytest
 
+from tests.ffmpeg_features import requires_drawtext, requires_subtitles_filter
+
 from tools.video.showcase_card import (
     ShowcaseCard,
     _validate_color,
@@ -127,6 +129,7 @@ def test_title_color_injection_is_rejected_not_executed(tmp_path):
 
 
 @requires_ffmpeg
+@requires_drawtext
 def test_legitimate_render_with_tricky_punctuation_succeeds(tmp_path):
     src = tmp_path / "in.mp4"
     _make_clip(src)
@@ -170,6 +173,7 @@ def test_filter_path_encodes_windows_drive_and_preserves_posix_paths():
 
 
 @requires_ffmpeg
+@requires_drawtext
 @pytest.mark.parametrize("directory", ["spaces in path", "O'Brien", "comma,semi;[brackets]=value"])
 def test_textfile_path_punctuation_preserves_rendered_frame(tmp_path, directory):
     """Compare real frames, so a parsed-but-truncated filename cannot pass."""
@@ -193,6 +197,7 @@ def test_textfile_path_punctuation_preserves_rendered_frame(tmp_path, directory)
 
 
 @requires_ffmpeg
+@requires_drawtext
 def test_showcase_render_in_quoted_temp_directory_and_cleanup(tmp_path, monkeypatch):
     src = tmp_path / "in.mp4"
     _make_clip(src)
@@ -238,6 +243,7 @@ def test_subtitle_style_neutralises_force_style_payload():
 
 
 @requires_ffmpeg
+@requires_subtitles_filter
 def test_subtitle_style_payload_does_not_read_local_file(tmp_path):
     """Render real frames and assert the output cannot depend on a local file.
 

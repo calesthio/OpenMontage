@@ -1273,7 +1273,7 @@ class HyperFramesCompose(BaseTool):
     }}
     .clip {{ position: absolute; inset: 0; }}
     .clip.video-clip, .clip.image-clip {{ object-fit: cover; width: 100%; height: 100%; }}
-    .clip.text-card {{ display: flex; align-items: center; justify-content: center; padding: 120px 160px; box-sizing: border-box; text-align: center; }}
+    .clip.text-card {{ display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 120px 160px; box-sizing: border-box; text-align: center; }}
     .clip.text-card h1 {{ font-family: var(--font-heading); font-weight: 700; font-size: 96px; line-height: 1.1; margin: 0; color: var(--color-fg); }}
     .clip.text-card .subtitle {{ font-size: 36px; margin-top: 24px; color: var(--color-accent); }}
   </style>

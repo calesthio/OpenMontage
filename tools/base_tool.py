@@ -28,35 +28,12 @@ def _load_dotenv() -> None:
 
     This ensures API keys are available before any tool is instantiated,
     even when tools are imported directly without going through the registry.
-    Only sets variables that are not already in the environment.
+    Only sets variables that are not already in the environment. The parsing
+    lives in ``lib.env_loader`` — the single ``.env`` reader.
     """
-    env_path = Path(__file__).resolve().parent.parent / ".env"
-    if not env_path.is_file():
-        return
-    import re
+    from lib.env_loader import load_env
 
-    with open(env_path, encoding="utf-8", errors="ignore") as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            key, _, value = line.partition("=")
-            key = key.strip()
-            value = value.strip()
-            # Quoted value: take the content inside the quotes verbatim.
-            if value[:1] in ("'", '"'):
-                quote = value[0]
-                end = value.find(quote, 1)
-                value = value[1:end] if end != -1 else value[1:]
-            else:
-                # Strip an inline comment ('#' at line start or after
-                # whitespace) so "VAR=   # note" yields "" not "# note".
-                match = re.search(r"(^|\s)#", value)
-                if match:
-                    value = value[: match.start()]
-                value = value.strip()
-            if key and (key not in os.environ or not os.environ[key].strip()):
-                os.environ[key] = value
+    load_env(Path(__file__).resolve().parent.parent)
 
 
 _load_dotenv()
@@ -152,6 +129,47 @@ import threading as _threading
 _EXECUTE_DEPTH = _threading.local()
 
 
+def _budget_cap_block(tool: "BaseTool", inputs: Any, project_dir: Any) -> Optional[str]:
+    """Why a paid call must not run under ``budget.mode: cap`` — or None.
+
+    ``cap`` is the user's hard limit, so it cannot depend on the agent
+    remembering to reserve first: a call whose estimate does not fit in what is
+    left of the project's budget is refused before it reaches the provider.
+    ``observe`` and ``warn`` never block here. Only calls that can be attributed
+    to a project and that estimate above zero are considered; any failure in
+    this check lets the call through (a bug in governance must not stop a run
+    the budget would have allowed).
+    """
+    if project_dir is None or not isinstance(inputs, dict) or inputs.get("dry_run"):
+        return None
+    try:
+        from lib.config_model import BudgetMode, OpenMontageConfig
+
+        if OpenMontageConfig.load().budget.mode != BudgetMode.CAP:
+            return None
+        estimate = tool.estimate_cost(inputs)
+        if not isinstance(estimate, (int, float)) or isinstance(estimate, bool) or estimate <= 0:
+            return None
+        from tools.cost_tracker import CostTracker
+
+        tracker = CostTracker.for_project(project_dir)
+        tracker.sync_tool_events()
+        # Money is tracked to 4 decimals; compare at that precision so a call
+        # that exactly fits (0.30 - 0.25 = 0.04999...) is not refused.
+        remaining = round(tracker.budget_remaining_usd, 4)
+        if round(float(estimate), 4) <= remaining:
+            return None
+        return (
+            f"BUDGET CAP: {getattr(tool, 'name', '') or tool.__class__.__name__} is "
+            f"estimated at ${estimate:.2f} but only ${max(remaining, 0.0):.2f} of the "
+            f"${tracker.budget_total_usd:.2f} budget is left (config.yaml budget.mode: "
+            f"cap). Nothing was spent. Tell the user; if they raise the budget, record "
+            f"it with CostTracker.set_budget() and retry."
+        )
+    except Exception:
+        return None
+
+
 def _instrument_execute(fn: Callable) -> Callable:
     """Wrap a tool's execute() with Backlot event emission.
 
@@ -192,6 +210,11 @@ def _instrument_execute(fn: Callable) -> Callable:
             "scene_id": scene_id,
             "depth": depth if depth else None,
         }
+        blocked = _budget_cap_block(self, inputs, project_dir)
+        if blocked is not None:
+            depth_state.value = depth
+            emit_event(project_dir, {**base, "event": "error", "error": blocked[:300]})
+            return ToolResult(success=False, error=blocked)
         if project_dir is not None:
             emit_event(
                 project_dir,
@@ -510,6 +533,17 @@ class BaseTool(ABC):
                 except ImportError:
                     raise DependencyError(
                         f"Python module {module_name!r} not installed. {self.install_instructions}"
+                    )
+            elif dep.startswith(("ffmpeg_filter:", "ffmpeg_encoder:")):
+                # `cmd:ffmpeg` only proves the binary exists; a minimal build
+                # lacks filters/encoders some tools cannot work without.
+                kind, _, feature = dep.partition(":")
+                kind = kind[len("ffmpeg_"):]
+                from tools.ffmpeg_capabilities import FULL_BUILD_HINT, has_feature
+
+                if not has_feature(kind, feature):
+                    raise DependencyError(
+                        f"This FFmpeg build has no {feature!r} {kind}. {FULL_BUILD_HINT}"
                     )
 
     def get_info(self) -> dict[str, Any]:

@@ -425,8 +425,11 @@ def test_dry_run_no_side_effects(monkeypatch):
 def test_execute_full_flow_with_mocked_api(monkeypatch, tmp_path):
     """Simulate the full submit → poll → download flow."""
     from tools.graphics.hunyuan_image import HunyuanImage, _MODEL, _HOST
+    import tools.graphics.hunyuan_image as hunyuan_image_module
 
     monkeypatch.setenv("TENCENT_TOKENHUB_API_KEY", "test-key")
+    # The poll loop sleeps 5 s before each query; the flow is what is under test.
+    monkeypatch.setattr(hunyuan_image_module.time, "sleep", lambda _seconds: None)
 
     # Track calls across all mocked endpoints
     api_calls = []

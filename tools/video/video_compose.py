@@ -55,6 +55,22 @@ from tools.base_tool import (
 )
 
 
+def _music_declared(edit_decisions: Optional[dict[str, Any]]) -> bool:
+    """True when the composition declares a music bed with a source.
+
+    Checks `audio.music` (canonical `asset_id`, or the Remotion composition's
+    `src`) and the legacy top-level `music.asset_id`.
+    """
+    if not isinstance(edit_decisions, dict):
+        return False
+    audio = edit_decisions.get("audio")
+    music = audio.get("music") if isinstance(audio, dict) else None
+    if isinstance(music, dict) and (music.get("asset_id") or music.get("src")):
+        return True
+    legacy = edit_decisions.get("music")
+    return isinstance(legacy, dict) and bool(legacy.get("asset_id"))
+
+
 class VideoCompose(BaseTool):
     name = "video_compose"
     version = "0.1.0"
@@ -219,6 +235,88 @@ class VideoCompose(BaseTool):
                     "Number of parallel browser tabs Remotion renders with, passed "
                     "through as `--concurrency`. Lower it (1-2) on low-memory "
                     "machines where the headless browser crashes mid-render."
+                ),
+            },
+            "composition_data": {
+                "type": "object",
+                "description": (
+                    "remotion_render only: raw Remotion composition data, read "
+                    "when edit_decisions is not supplied."
+                ),
+            },
+            "output_profile": {
+                "type": "string",
+                "description": (
+                    "Alias of profile for the render operation (skill convention); "
+                    "read only when profile is not set."
+                ),
+            },
+            "scene_plan": {
+                "type": "array",
+                "items": {"type": "object"},
+                "description": (
+                    "render only: the scenes list of the scene_plan artifact (not the "
+                    "whole artifact), scored by the pre-compose slideshow-risk gate. "
+                    "Without it the gate scores the cuts instead."
+                ),
+            },
+            "playbook": {
+                "type": "object",
+                "description": (
+                    "Loaded style playbook. compose: lowest-priority source of the "
+                    "subtitle style, after subtitle_style and edit_decisions. "
+                    "HyperFrames render: forwarded to the style bridge."
+                ),
+            },
+            "playbook_name": {
+                "type": "string",
+                "description": (
+                    "HyperFrames render only: playbook to load when playbook is not "
+                    "supplied. Defaults to edit_decisions.metadata.playbook."
+                ),
+            },
+            "workspace_path": {
+                "type": "string",
+                "description": (
+                    "HyperFrames render only: workspace directory. Defaults to a "
+                    "`hyperframes` folder beside the output's parent directory."
+                ),
+            },
+            "quality": {
+                "type": "string",
+                "enum": ["draft", "standard", "high"],
+                "description": "HyperFrames render only: forwarded to hyperframes_compose.",
+            },
+            "fps": {
+                "type": "integer",
+                "enum": [24, 30, 60],
+                "description": "HyperFrames render only: forwarded to hyperframes_compose.",
+            },
+            "strict": {
+                "type": "boolean",
+                "description": "HyperFrames render only: fail the render on any lint error.",
+            },
+            "strict_check": {
+                "type": "boolean",
+                "description": "HyperFrames render only: treat check warnings as errors.",
+            },
+            "skip_contrast": {
+                "type": "boolean",
+                "description": (
+                    "HyperFrames render only: skip the WCAG contrast audit. "
+                    "Acceptable while iterating; forbidden for final delivery."
+                ),
+            },
+            "snapshots": {
+                "type": "boolean",
+                "description": "HyperFrames render only: save representative quality-check snapshots.",
+            },
+            "public_dir": {
+                "type": "string",
+                "description": (
+                    "Remotion renders only: an existing directory to use as Remotion's "
+                    "public dir. When omitted, a private per-render directory is staged "
+                    "and removed afterwards."
                 ),
             },
         },
@@ -2567,8 +2665,9 @@ class VideoCompose(BaseTool):
                     # Assume narration present if mean volume is reasonable
                     if mean_vol > -40:
                         audio_spotcheck["narration_present"] = True
-                    # Assume music present if audio exists (conservative)
-                    if mean_vol > -50:
+                    # Loudness cannot tell music from narration, so only a
+                    # music bed the composition declares counts as present.
+                    if mean_vol > -50 and _music_declared(edit_decisions):
                         audio_spotcheck["music_present"] = True
 
                 if max_vol is not None and max_vol > -0.5:

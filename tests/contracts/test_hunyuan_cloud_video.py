@@ -472,10 +472,22 @@ class TestErrorHelpers:
 # Execute with mocked HTTP
 # ------------------------------------------------------------------
 
+def _skip_poll_sleep(monkeypatch):
+    """The poll loop sleeps poll_interval_seconds (default 5) before each query.
+
+    These tests assert the request flow, not the wait, so do not spend 5 real
+    seconds per test on it.
+    """
+    import tools.video.hunyuan_cloud_video as module
+
+    monkeypatch.setattr(module.time, "sleep", lambda _seconds: None)
+
+
 class TestExecuteWithMocks:
 
     def test_text_to_video_success(self, hunyuan_env, tmp_path, monkeypatch):
         """Full T2V flow: submit -> poll -> download -> write output."""
+        _skip_poll_sleep(monkeypatch)
         task_id = "143-test-task-12345"
         calls = _install_fake_requests(
             monkeypatch,
@@ -542,6 +554,7 @@ class TestExecuteWithMocks:
 
     def test_image_to_video_with_url_success(self, hunyuan_env, tmp_path, monkeypatch):
         """Full I2V flow with an image URL."""
+        _skip_poll_sleep(monkeypatch)
         task_id = "i2v-task-999"
         _install_fake_requests(
             monkeypatch,
@@ -578,6 +591,7 @@ class TestExecuteWithMocks:
 
     def test_i2v_with_local_image_path(self, hunyuan_env, tmp_path, monkeypatch):
         """Full I2V flow with a local image path -> base64 encoding."""
+        _skip_poll_sleep(monkeypatch)
         img = tmp_path / "frame.jpg"
         img.write_bytes(b"\xff\xd8\xff\xe0test-jpeg-image-data")
 

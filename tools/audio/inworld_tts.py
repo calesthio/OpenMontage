@@ -52,11 +52,21 @@ class InworldTTS(BaseTool):
         "required": ["text"],
         "properties": {
             "text": {"type": "string", "minLength": 1},
-            "voice_id": {"type": "string", "minLength": 1, "default": "Dennis"},
+            # Aliases are documented here rather than declared: a `model`
+            # property would switch off tts_selector's model -> model_id rewrite
+            # (and its disagreement check), and execute validates raw inputs
+            # against this schema.
+            "voice_id": {
+                "type": "string",
+                "minLength": 1,
+                "default": "Dennis",
+                "description": "Inworld voice. `voice` is accepted as an alias when this is not set.",
+            },
             "model_id": {
                 "type": "string",
                 "enum": ["inworld-tts-2", "inworld-tts-2-flash"],
                 "default": "inworld-tts-2",
+                "description": "`model` is accepted as an alias when this is not set.",
             },
             "format": {
                 "type": "string",
@@ -69,7 +79,13 @@ class InworldTTS(BaseTool):
                 "maximum": 48000,
                 "default": 48000,
             },
-            "language": {"type": ["string", "null"]},
+            "language": {
+                "type": ["string", "null"],
+                "description": (
+                    "Language sent to Inworld; omitted from the request when empty. "
+                    "`language_code` is accepted as an alias when this is not set."
+                ),
+            },
             "delivery_mode": {
                 "type": "string",
                 "enum": ["STABLE", "BALANCED", "CREATIVE"],

@@ -32,6 +32,10 @@ class MiniCutTTS(MiniCutTool):
                 "type": "string",
                 "description": "A voice name from `minicut voices elevenlabs-v3`. Empty: the model's default voice.",
             },
+            "voice_id": {
+                "type": "string",
+                "description": "Alias of voice (the shared field tts_selector passes); read only when voice is empty.",
+            },
             "approval": APPROVAL_SCHEMA,
             "resume_job": RESUME_SCHEMA,
             "poll_timeout": {"type": "integer", "default": 900},

@@ -490,7 +490,15 @@ class CharacterRigRenderer(BaseTool):
         "properties": {
             "action_timeline": {"type": "object"},
             "rig_plan": {"type": "object"},
-            "pose_library": {"type": "object"},
+            "pose_library": {
+                "type": "object",
+                "description": (
+                    "Accepted so the pipeline can pass the same artifacts to every "
+                    "character tool, but not read here: the preview draws a built-in "
+                    "placeholder rig driven by action_timeline. Poses are checked by "
+                    "character_animation_reviewer."
+                ),
+            },
             "output_path": {"type": "string"},
             "workspace_path": {"type": "string"},
             "video_output_path": {"type": "string"},

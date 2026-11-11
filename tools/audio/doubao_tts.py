@@ -115,6 +115,11 @@ class DoubaoTTS(BaseTool):
                 "default": True,
                 "description": "Request usage token data from Volcengine when available.",
             },
+            "user_id": {
+                "type": "string",
+                "default": "openmontage",
+                "description": "Caller id sent to Volcengine as user.uid in the submit request.",
+            },
             "output_path": {"type": "string"},
             "metadata_path": {
                 "type": "string",

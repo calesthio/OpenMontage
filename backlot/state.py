@@ -155,13 +155,24 @@ def _build_stage_rail(
         cp = checkpoints.get(name)
         versions = history.get(name, [])
         status = cp.get("status") if cp else "pending"
+        # The review may sit on an earlier version of the stage (reviewed at
+        # the gate, then re-written on approval without it): show that one.
+        review = cp.get("review") if cp else None
+        if cp and not review:
+            review = next((v.get("review") for v in reversed(versions) if v.get("review")), None)
         entry: dict[str, Any] = {
             "name": name,
             "gated": stage_def["gated"],
             "produces": list(stage_def.get("produces") or []),
             "status": status or "pending",
             "timestamp": cp.get("timestamp") if cp else None,
-            "review": cp.get("review") if cp else None,
+            "review": review,
+            # A stage that reached its gate or finished with no review on any
+            # version skipped the reviewer step (skills/meta/reviewer.md). The
+            # reviewer is advisory, so nothing blocked it — the board shows it.
+            "review_missing": bool(
+                cp and status in ("completed", "awaiting_human") and not review
+            ),
             "cost_snapshot": cp.get("cost_snapshot") if cp else None,
             "error": cp.get("error") if cp else None,
             "human_approved": cp.get("human_approved") if cp else None,
@@ -248,14 +259,14 @@ def _collect_artifacts(project_dir: Path, checkpoints: dict[str, dict]) -> dict[
     artifacts: dict[str, dict] = {}
     art_dir = project_dir / "artifacts"
     for name, filename in ARTIFACT_FILES.items():
+        if name == "decision_log":
+            continue  # resolved below: it has one source of truth, not two
         data = _read_json(art_dir / filename)
         if data is not None:
             artifacts[name] = data
-    # decision_log historically also lives at project root
-    if "decision_log" not in artifacts:
-        data = _read_json(project_dir / "decision_log.json")
-        if data is not None:
-            artifacts["decision_log"] = data
+    decision_log, _drift = _load_decision_log(project_dir)
+    if decision_log is not None:
+        artifacts["decision_log"] = decision_log
     # Backfill from checkpoint-embedded artifacts.
     for cp in checkpoints.values():
         for name, value in (cp.get("artifacts") or {}).items():
@@ -264,6 +275,81 @@ def _collect_artifacts(project_dir: Path, checkpoints: dict[str, dict]) -> dict[
                 if resolved is not None:
                     artifacts[name] = resolved
     return artifacts
+
+
+def _load_decision_log(project_dir: Path) -> tuple[Optional[dict], Optional[dict]]:
+    """The project's decisions, and how far a stray copy has drifted from them.
+
+    ``<project>/decision_log.json`` — the log ``write_checkpoint`` maintains —
+    is the source of truth. Agents also tend to save a copy next to the other
+    artifacts (``artifacts/decision_log.json``) and append to it between
+    checkpoints; the board used to prefer that copy, so the two disagreed.
+
+    Decisions found only in the stray copy are shown after the logged ones
+    (they were made after the last checkpoint that carried decisions) and
+    marked ``unlogged``; the next checkpoint write folds them into the project
+    log. A stray entry that changes the choice of a logged decision is not
+    shown — the log is append-only — only counted as ``conflicting``.
+
+    Returns ``(decision_log, drift)``; ``drift`` is None when there is nothing
+    to report.
+    """
+    root = _read_json(project_dir / "decision_log.json")
+    stray = _read_json(project_dir / "artifacts" / "decision_log.json")
+    root_decisions = root.get("decisions") if root else None
+    stray_decisions = stray.get("decisions") if stray else None
+    if not isinstance(root_decisions, list):
+        root_decisions = None
+    if not isinstance(stray_decisions, list):
+        stray_decisions = None
+
+    if root_decisions is None:
+        if stray_decisions is None:
+            return None, None
+        count = sum(1 for d in stray_decisions if isinstance(d, dict))
+        drift = {"unlogged": count, "conflicting": 0, "stray_only": True} if count else None
+        return stray, drift
+    if not stray_decisions:
+        return root, None
+
+    logged = {d.get("decision_id"): d for d in root_decisions if isinstance(d, dict)}
+    merged = list(root_decisions)
+    unlogged = conflicting = 0
+    for decision in stray_decisions:
+        if not isinstance(decision, dict):
+            continue
+        decision_id = decision.get("decision_id")
+        if decision_id not in logged:
+            merged.append({**decision, "unlogged": True})
+            unlogged += 1
+        elif logged[decision_id].get("selected") != decision.get("selected"):
+            conflicting += 1
+    if not unlogged and not conflicting:
+        return root, None
+    return (
+        {**root, "decisions": merged},
+        {"unlogged": unlogged, "conflicting": conflicting, "stray_only": False},
+    )
+
+
+def _ledger_cost(project_dir: Path) -> Optional[dict]:
+    """Spend from the project's cost ledger (cost_log.json), if it recorded any."""
+    ledger = _read_json(project_dir / "cost_log.json")
+    if not ledger:
+        return None
+    spent = ledger.get("budget_spent_usd")
+    if not isinstance(spent, (int, float)) or isinstance(spent, bool) or spent <= 0:
+        return None
+    cost: dict[str, Any] = {"total_spent_usd": spent}
+    reserved = ledger.get("budget_reserved_usd")
+    total = ledger.get("budget_total_usd")
+    if isinstance(reserved, (int, float)) and not isinstance(reserved, bool):
+        cost["total_reserved_usd"] = reserved
+    else:
+        reserved = 0
+    if isinstance(total, (int, float)) and not isinstance(total, bool):
+        cost["budget_remaining_usd"] = round(total - spent - reserved, 4)
+    return cost
 
 
 # ---------------------------------------------------------------------------
@@ -623,12 +709,16 @@ def load_board_state(project_dir: Path) -> dict[str, Any]:
 
     stages = _build_stage_rail(pipeline_meta, checkpoints, history)
 
-    # Cost: latest checkpoint snapshot wins; fall back to manifest total.
+    # Cost: latest checkpoint snapshot wins; then the cost ledger (spend the
+    # tools reported since that checkpoint was written is in it); then the
+    # asset manifest's own total.
     cost = None
     for cp in sorted(checkpoints.values(), key=lambda c: c.get("_mtime", 0), reverse=True):
         if cp.get("cost_snapshot"):
             cost = cp["cost_snapshot"]
             break
+    if cost is None:
+        cost = _ledger_cost(project_dir)
     if cost is None:
         total = (artifacts.get("asset_manifest") or {}).get("total_cost_usd")
         if total is not None:
@@ -659,6 +749,7 @@ def load_board_state(project_dir: Path) -> dict[str, Any]:
         "has_pipeline_state": bool(checkpoints),
         "stages": stages,
         "artifacts": artifacts,
+        "decision_log_drift": _load_decision_log(project_dir)[1],
         "storyboard": storyboard,
         "media": media,
         "events": events,

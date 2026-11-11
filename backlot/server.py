@@ -8,6 +8,7 @@ refetch state. The server never writes to project directories.
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import time
 from contextlib import asynccontextmanager, suppress
@@ -16,7 +17,7 @@ from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from backlot.state import (
@@ -185,9 +186,21 @@ def create_app() -> FastAPI:
         return await asyncio.to_thread(_cached_summaries)
 
     @app.get("/api/project/{project_id}/state")
-    async def project_state(project_id: str) -> dict:
+    async def project_state(project_id: str, request: Request) -> Response:
         project_dir = _safe_project_dir(project_id)
-        return await asyncio.to_thread(load_board_state, project_dir)
+        state = await asyncio.to_thread(load_board_state, project_dir)
+        # The watcher wakes the browser for ANY file change in the project,
+        # and during a render most of those leave the board state as it was.
+        # An ETag turns each of those refetches (150 KB on a real project)
+        # into an empty 304.
+        body = json.dumps(
+            state, ensure_ascii=False, allow_nan=False, separators=(",", ":"), default=str
+        ).encode("utf-8")
+        etag = '"' + hashlib.sha1(body).hexdigest() + '"'
+        headers = {"ETag": etag, "Cache-Control": "no-cache"}
+        if etag in _etag_candidates(request.headers.get("if-none-match")):
+            return Response(status_code=304, headers=headers)
+        return Response(body, media_type="application/json", headers=headers)
 
     @app.get("/api/project/{project_id}/events")
     async def project_events(project_id: str, request: Request) -> StreamingResponse:
@@ -333,6 +346,17 @@ def _safe_project_dir(project_id: str) -> Path:
 
 def _sse(payload: dict) -> str:
     return f"data: {json.dumps(payload)}\n\n"
+
+
+def _etag_candidates(header: Optional[str]) -> set[str]:
+    """Entity tags named by an If-None-Match header (weak prefix ignored)."""
+    if not header:
+        return set()
+    return {
+        tag.strip()[2:] if tag.strip().startswith("W/") else tag.strip()
+        for tag in header.split(",")
+        if tag.strip()
+    }
 
 
 def _thumbnail_for(source: Path, width: int) -> Optional[Path]:

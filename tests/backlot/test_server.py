@@ -109,6 +109,58 @@ class TestBacklotServerApi:
         assert state_body["title"] == "Film"
         assert state_body["stages"]
 
+    def test_state_is_revalidated_with_an_etag(self, client, projects_root):
+        """An unchanged board costs an empty 304, not the whole state again.
+
+        The watcher wakes the browser for every file change in a project, and
+        most of them (media being written) leave the board state as it was.
+        """
+        project = _make_project(projects_root, "film")
+
+        first = client.get("/api/project/film/state")
+        assert first.status_code == 200
+        etag = first.headers["etag"]
+        assert first.headers["cache-control"] == "no-cache"
+
+        again = client.get("/api/project/film/state", headers={"If-None-Match": etag})
+        assert again.status_code == 304
+        assert again.content == b""
+        assert again.headers["etag"] == etag
+
+        # Weak validators and tag lists are honoured too.
+        listed = client.get(
+            "/api/project/film/state", headers={"If-None-Match": f'"other", W/{etag}'}
+        )
+        assert listed.status_code == 304
+
+        # A real change is served in full under a new tag.
+        _write_json(
+            project / "checkpoint_script.json",
+            {
+                "version": "1.0",
+                "project_id": "film",
+                "pipeline_type": "cinematic",
+                "stage": "script",
+                "status": "completed",
+                "timestamp": "2026-07-02T00:02:00Z",
+                "artifacts": {},
+            },
+        )
+        changed = client.get("/api/project/film/state", headers={"If-None-Match": etag})
+        assert changed.status_code == 200
+        assert changed.headers["etag"] != etag
+        script = next(s for s in changed.json()["stages"] if s["name"] == "script")
+        assert script["status"] == "completed"
+
+    def test_state_body_keeps_non_ascii_text_readable(self, client, projects_root):
+        project = _make_project(projects_root, "film")
+        _write_json(project / "project.json", {
+            "project_id": "film", "title": "กรุงเทพ–สิงคโปร์", "pipeline_type": "cinematic",
+        })
+        response = client.get("/api/project/film/state")
+        assert response.headers["content-type"].startswith("application/json")
+        assert response.json()["title"] == "กรุงเทพ–สิงคโปร์"
+
     @pytest.mark.parametrize(
         ("url", "status"),
         [

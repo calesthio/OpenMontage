@@ -2,12 +2,17 @@
 
 import {
   STAGE_ICONS, el, fmtAgo, fmtClock, fmtDuration, fmtMoney,
-  getJSON, mediaURL, subscribe, thumbURL, waveBars,
+  mediaURL, pressable, subscribe, thumbURL, waveBars,
 } from "/ui/lib.js";
 
 const rawProjectPath = location.pathname.split("/p/")[1] || "";
-const projectId = decodeURIComponent(rawProjectPath);
-const encodedProjectId = encodeURIComponent(projectId);
+let projectId = rawProjectPath;
+try {
+  projectId = decodeURIComponent(rawProjectPath);
+} catch {
+  // "/p/50%" is not a valid escape: keep the raw text so the page can still
+  // say PROJECT NOT FOUND instead of dying on a URIError.
+}
 const app = document.getElementById("app");
 const modal = document.getElementById("modal");
 const player = document.getElementById("player");
@@ -34,6 +39,7 @@ function renderThemeToggle() {
     title: `Switch to ${next} theme`,
     "aria-label": `Switch to ${next} theme`,
     "aria-pressed": currentTheme === "light" ? "true" : "false",
+    "data-fk": "theme",
     onclick: () => {
       applyTheme(next);
       render();
@@ -125,7 +131,8 @@ function stageSub(st) {
   if (st.status === "failed") return st.error ? String(st.error).slice(0, 60) : "failed";
   if (st.timestamp) {
     const approved = st.gated && st.human_approved ? " · approved" : "";
-    return fmtClock(st.timestamp) + approved;
+    const unreviewed = st.review_missing ? "\nno review" : "";
+    return fmtClock(st.timestamp) + approved + unreviewed;
   }
   return "";
 }
@@ -143,7 +150,9 @@ function renderRail(s) {
     const node = el("div", {
       class: `stage ${cls}${selectedStage === st.name ? " selected" : ""}${st.undeclared ? " undeclared" : ""}`,
       title: st.undeclared ? `"${st.name}" ran but isn't declared by this pipeline's manifest` : null,
-      onclick: () => toggleDrawer(st.name),
+      "aria-label": `${st.name}: ${String(st.status || "pending").replaceAll("_", " ")}`,
+      "aria-expanded": selectedStage === st.name ? "true" : "false",
+      ...pressable(() => toggleDrawer(st.name), `stage:${st.name}`),
     },
       el("span", { class: "line" }),
       el("span", { class: "node" }, icon),
@@ -237,13 +246,17 @@ function renderDrawer(s) {
       st.status === "pending" ? "This stage hasn't run yet." : "No canonical artifact found on disk for this stage."));
   }
 
-  return el("div", { class: "drawer" },
+  return el("div", { class: "drawer", "data-stage": st.name },
     el("div", { class: "drawer-head" },
       el("h3", {}, `${st.name} — ${st.status}`),
       st.gate_skipped ? el("span", { class: "gate-chip" }, "⚑ GATE SKIPPED") : null,
+      st.review_missing ? el("span", {
+        class: "gate-chip review-chip",
+        title: "This stage was checkpointed without a self-review (skills/meta/reviewer.md)",
+      }, "⚑ NO REVIEW") : null,
       st.versions > 1 ? el("span", { class: "ver-chip" }, `v${st.versions}`) : null,
       st.timestamp ? el("span", { class: "meta", style: "font-family:var(--mono);font-size:calc(10.5px * var(--fs-scale));color:var(--text-3)" }, st.timestamp) : null,
-      el("span", { class: "close", onclick: () => toggleDrawer(st.name) }, "CLOSE ✕"),
+      el("span", { class: "close", ...pressable(() => toggleDrawer(st.name), "drawer-close") }, "CLOSE ✕"),
     ),
     body,
   );
@@ -288,7 +301,10 @@ function renderScriptCard(s) {
         ? el("span", { class: "script-status script-draft" }, "DRAFTING")
         : null;
 
-  const card = el("div", { class: "script-card script-preview", title: "Click to expand full script", onclick: openScriptModal },
+  const card = el("div", {
+    class: "script-card script-preview", title: "Click to expand full script",
+    ...pressable(openScriptModal, "script-card"),
+  },
     stamp,
     el("div", { class: "sp-title" }, script.title || s.title),
     el("div", { class: "sp-meta" },
@@ -526,7 +542,7 @@ function renderApprovalReview(s) {
       el("span", {}, nextStage
         ? `Approval unlocks ${humanize(nextStage.name)}.`
         : "This is the final approval gate."),
-      el("button", { type: "button", onclick: () => toggleDrawer(awaiting.name) }, "OPEN FULL ARTIFACT"),
+      el("button", { type: "button", "data-fk": "open-artifact", onclick: () => toggleDrawer(awaiting.name) }, "OPEN FULL ARTIFACT"),
     ),
   );
 }
@@ -536,7 +552,7 @@ function openScriptModal() {
   if (!script) return;
   modal.innerHTML = "";
   modal.append(
-    el("span", { class: "modal-close", onclick: closeModal }, "ESC · CLOSE"),
+    el("span", { class: "modal-close", ...pressable(closeModal) }, "ESC · CLOSE"),
     el("div", { class: "modal-page" },
       el("div", { class: "script-card", style: "cursor:default" },
         el("div", { class: "sp-title" }, script.title || state.title),
@@ -546,7 +562,7 @@ function openScriptModal() {
         el("div", { class: "sp-fade" }, "END"),
       )),
   );
-  modal.classList.add("open");
+  showModal("Full script");
 }
 
 function openNarrModal(card) {
@@ -554,7 +570,7 @@ function openNarrModal(card) {
   const meta = [sceneLabel(card.id), card.section_label, fmtDuration(card.duration_seconds)]
     .filter(Boolean).join(" · ");
   modal.append(
-    el("span", { class: "modal-close", onclick: closeModal }, "ESC · CLOSE"),
+    el("span", { class: "modal-close", ...pressable(closeModal) }, "ESC · CLOSE"),
     el("div", { class: "modal-page" },
       el("div", { class: "script-card", style: "cursor:default" },
         el("div", { class: "sp-meta" }, meta),
@@ -563,11 +579,41 @@ function openNarrModal(card) {
         card.description ? el("div", { class: "sp-paren", style: "margin-left:0" }, card.description) : null,
       )),
   );
-  modal.classList.add("open");
+  showModal("Narration");
 }
 
-function closeModal() { modal.classList.remove("open"); }
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+// The modal is a dialog: it takes focus, keeps Tab inside itself, stops the
+// page behind it from scrolling, and hands focus back to whatever opened it.
+let modalOpenerKey = null;
+
+function showModal(label) {
+  const opener = document.activeElement;
+  modalOpenerKey = opener && app.contains(opener) ? opener.getAttribute("data-fk") : null;
+  modal.setAttribute("aria-label", label);
+  modal.classList.add("open");
+  document.body.classList.add("modal-open");
+  const close = modal.querySelector(".modal-close");
+  if (close) close.focus({ preventScroll: true });
+}
+
+function closeModal() {
+  if (!modal.classList.contains("open")) return;
+  modal.classList.remove("open");
+  document.body.classList.remove("modal-open");
+  focusByKey(modalOpenerKey);
+  modalOpenerKey = null;
+}
+
+document.addEventListener("keydown", (e) => {
+  if (!modal.classList.contains("open")) return;
+  if (e.key === "Escape") {
+    closeModal();
+  } else if (e.key === "Tab") {
+    e.preventDefault(); // the close control is the dialog's only stop
+    const close = modal.querySelector(".modal-close");
+    if (close) close.focus({ preventScroll: true });
+  }
+});
 modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
 
 // ---------------------------------------------------------------------------
@@ -579,6 +625,20 @@ function renderDecisions(s) {
   const decisions = (log && log.decisions) || [];
   if (!decisions.length) return null;
   const body = el("div", { class: "panel-body" });
+  const drift = s.decision_log_drift;
+  if (drift && (drift.unlogged || drift.conflicting)) {
+    // The project log (decision_log.json) is the record. A copy saved under
+    // artifacts/ has entries the record lacks — say so instead of quietly
+    // showing one file or the other.
+    const parts = [];
+    if (drift.unlogged) {
+      parts.push(`${drift.unlogged} decision${drift.unlogged === 1 ? "" : "s"} only in artifacts/decision_log.json — not in the project log yet`);
+    }
+    if (drift.conflicting) {
+      parts.push(`${drift.conflicting} logged decision${drift.conflicting === 1 ? "" : "s"} edited in place there (ignored: the log is append-only)`);
+    }
+    body.append(el("div", { class: "d-drift", role: "note" }, `⚑ ${parts.join(" · ")}`));
+  }
   // Collapse by category+subject: a decision that changed mid-run (e.g. voice
   // openai_onyx → chirp3) is superseded by the later entry — show the CURRENT
   // choice, not the first one recorded, and mark that it was revised.
@@ -599,7 +659,8 @@ function renderDecisions(s) {
       .filter((o) => (o.option_id ?? o.label) !== d.selected && (o.option_id || o.label));
     body.append(el("div", { class: "decision" },
       el("div", { class: "d-cat" }, `${d.category || "decision"}${d.confidence ? ` · ${d.confidence}` : ""}`,
-        revised ? el("span", { class: "d-revised" }, " · revised") : null),
+        revised ? el("span", { class: "d-revised" }, " · revised") : null,
+        d.unlogged ? el("span", { class: "d-revised" }, " · not logged yet") : null),
       el("div", { class: "d-pick" }, `${d.subject || ""} `, el("span", { class: "arrow" }, "→"), ` ${selLabel}`),
       d.reason ? el("div", { class: "d-why" }, d.reason) : null,
       alts.length ? el("div", { class: "d-alt" }, "also considered: ",
@@ -698,14 +759,17 @@ function sceneCard(s, card) {
     const badge = [v.model || v.source_tool, v.cost_usd != null ? fmtMoney(v.cost_usd) : null,
       v.quality_score != null ? `q ${v.quality_score}` : null].filter(Boolean).join(" · ");
     if (v.type === "video") {
-      thumb = el("div", { class: "thumb approved" },
-        el("video", { src: mediaURL(s.project_id, v.path), muted: "", preload: "metadata", playsinline: "" }),
+      const src = mediaURL(s.project_id, v.path);
+      const vid = reuseVideo("scene", src,
+        () => el("video", { src, muted: "", preload: "metadata", playsinline: "" }));
+      thumb = el("div", {
+        class: "thumb approved",
+        "aria-label": `Play or pause the clip for ${sceneLabel(card.id)}`,
+        ...pressable(() => { if (vid.paused) vid.play().catch(() => {}); else vid.pause(); }, `clip:${card.id}`),
+      },
+        vid,
         el("span", { class: "play" }, "▶"),
         badge ? el("span", { class: "badge" }, badge) : null);
-      thumb.onclick = () => {
-        const vid = thumb.querySelector("video");
-        if (vid.paused) vid.play(); else vid.pause();
-      };
     } else {
       const img = el("img", { src: thumbURL(s.project_id, v.path, 640), loading: "lazy", alt: "" });
       // A thumbnail that fails to load must never show a broken-image icon —
@@ -785,20 +849,23 @@ function sceneCard(s, card) {
     wrap.append(el("div", {
       class: `narr${long ? " clip" : ""}`,
       title: "Click to read the full narration",
-      onclick: () => openNarrModal(card),
+      ...pressable(() => openNarrModal(card), `narr:${card.id}`),
     }, card.narration, long ? el("span", { class: "narr-more" }, "⤢") : null));
   } else if (card.shot_intent || card.description) {
     wrap.append(el("div", { class: "narr tc-note" }, (card.shot_intent || card.description || "").slice(0, 110)));
   }
   const narrAudio = card.audio.find((a) => a.exists && (a.type === "narration" || a.type === "audio"));
   if (narrAudio) {
-    const wave = el("div", { class: "wave", style: "cursor:pointer", title: "Play narration" });
+    const wave = el("div", {
+      class: "wave", style: "cursor:pointer", title: "Play narration",
+      "aria-label": `Play narration for ${sceneLabel(card.id)}`,
+      ...pressable(() => {
+        player.src = mediaURL(s.project_id, narrAudio.path);
+        player.play().catch(() => {});
+      }, `wave:${card.id}`),
+    });
     waveBars(wave, card.id + narrAudio.path);
     wave.append(el("span", { class: "wv-time" }, narrAudio.duration_seconds ? fmtDuration(narrAudio.duration_seconds) : "♪"));
-    wave.onclick = () => {
-      player.src = mediaURL(s.project_id, narrAudio.path);
-      player.play();
-    };
     wrap.append(wave);
   }
   return wrap;
@@ -825,28 +892,26 @@ function renderRenders(s) {
   if (!renders.length) return null;
   if (activeRender >= renders.length) activeRender = 0;
   const current = renders[activeRender];
-  // Full re-renders (every SSE refresh) must not reset an in-progress
-  // watch: carry playback position/state over to the recreated element.
-  const prev = document.querySelector(".render-hero video");
   const src = mediaURL(s.project_id, current.path);
-  // preload="metadata" gives the element its intrinsic aspect ratio (and a
-  // poster frame) before playback — without it a portrait 9:16 render sits
-  // in a letterboxed 100%-wide black box that reads as landscape.
-  const video = el("video", { src, controls: "", preload: "metadata" });
-  // Click the frame to start playback (controls handle pause/scrub) — the
-  // big player was inert to a click on the picture itself.
-  video.addEventListener("click", () => { if (video.paused) video.play().catch(() => {}); });
-  if (prev && prev.getAttribute("src") === src && (prev.currentTime > 0 || !prev.paused)) {
-    const t = prev.currentTime;
-    const wasPlaying = !prev.paused && !prev.ended;
-    video.addEventListener("loadedmetadata", () => { video.currentTime = t; }, { once: true });
-    video.setAttribute("preload", "metadata");
-    if (wasPlaying) video.autoplay = true;
-  }
+  // Full re-renders (every SSE refresh) must not reset an in-progress watch.
+  // The player is the SAME element moved into the rebuilt page, so position,
+  // play state, volume and mute all carry over. (The earlier approach read
+  // the old element after #app had been cleared, so it never found one.)
+  const video = reuseVideo("hero", src, () => {
+    // preload="metadata" gives the element its intrinsic aspect ratio (and a
+    // poster frame) before playback — without it a portrait 9:16 render sits
+    // in a letterboxed 100%-wide black box that reads as landscape.
+    const fresh = el("video", { src, controls: "", preload: "metadata" });
+    // Click the frame to start playback (controls handle pause/scrub) — the
+    // big player was inert to a click on the picture itself.
+    fresh.addEventListener("click", () => { if (fresh.paused) fresh.play().catch(() => {}); });
+    return fresh;
+  });
   const versions = el("div", { class: "render-meta" },
     renders.map((r, i) => el("span", {
       class: `v${i === activeRender ? " active" : ""}`,
-      onclick: () => { activeRender = i; render(); },
+      "aria-pressed": i === activeRender ? "true" : "false",
+      ...pressable(() => { activeRender = i; render(); }, `render-v:${i}`),
     }, `${r.path.split("/").pop()}${r.at_root ? " · root" : ""}`)),
     el("span", { style: "margin-left:auto" }, `${(current.size / 1048576).toFixed(1)} MB`),
   );
@@ -984,7 +1049,7 @@ function renderReplayBar(s) {
     // collapsed: just the entry button
     return el("div", { class: "replay-bar", style: "justify-content:flex-end" },
       el("span", { class: "rp-time" }, "scrub the whole run"),
-      el("span", { class: "rp-btn", onclick: startReplay }, "▶ REPLAY RUN"));
+      el("span", { class: "rp-btn", ...pressable(startReplay, "replay-start") }, "▶ REPLAY RUN"));
   }
   const pos = (replay.t - replay.t0) / Math.max(1, replay.t1 - replay.t0);
   const timeLabel = el("span", { class: "rp-time" },
@@ -995,9 +1060,13 @@ function renderReplayBar(s) {
       .toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   };
   return el("div", { class: "replay-bar" },
-    el("span", { class: "rp-btn", onclick: toggleReplayPlay }, replay.playing ? "❚❚" : "▶"),
+    el("span", {
+      class: "rp-btn", "aria-label": replay.playing ? "Pause replay" : "Play replay",
+      ...pressable(toggleReplayPlay, "replay-toggle"),
+    }, replay.playing ? "❚❚" : "▶"),
     el("input", {
       type: "range", min: "0", max: "1000", value: String(Math.round(pos * 1000)),
+      "aria-label": "Replay position", "data-fk": "replay-scrub",
       // A full render() would destroy this slider mid-drag: while dragging,
       // only pause + track the time label; re-render the board on release.
       onpointerdown: () => { replay.playing = false; },
@@ -1005,7 +1074,7 @@ function renderReplayBar(s) {
       onchange: (e) => { setT(e.target.value); render(); },
     }),
     timeLabel,
-    el("span", { class: "rp-btn", onclick: stopReplay }, "✕ LIVE"),
+    el("span", { class: "rp-btn", ...pressable(stopReplay, "replay-stop") }, "✕ LIVE"),
   );
 }
 
@@ -1055,12 +1124,71 @@ function tickReplay() {
 // page assembly
 // ---------------------------------------------------------------------------
 
+// View state a full rebuild would otherwise throw away. Every SSE refresh
+// rebuilds #app, so without this a live run keeps pausing the clip being
+// watched, snapping an open artifact back to its first line, and dropping
+// keyboard focus.
+let keptVideos = new Map();
+
+function captureView() {
+  keptVideos = new Map();
+  for (const v of app.querySelectorAll("video[data-keep]")) keptVideos.set(v.dataset.keep, v);
+  const strip = app.querySelector(".strip-outer");
+  const drawer = app.querySelector(".drawer");
+  const active = document.activeElement;
+  return {
+    stripLeft: strip ? strip.scrollLeft : 0,
+    drawerStage: drawer ? drawer.dataset.stage : null,
+    drawerScroll: drawer ? [...drawer.querySelectorAll("pre")].map((n) => [n.scrollTop, n.scrollLeft]) : [],
+    focusKey: active && app.contains(active) ? active.getAttribute("data-fk") : null,
+  };
+}
+
+// A media element moved within one task keeps playing; a recreated one does not.
+function reuseVideo(role, src, build) {
+  const key = `${role}|${src}`;
+  const kept = keptVideos.get(key);
+  if (kept) {
+    keptVideos.delete(key);
+    return kept;
+  }
+  const fresh = build();
+  fresh.dataset.keep = key;
+  return fresh;
+}
+
+// When the focused control is replaced by a different one (REPLAY RUN turns
+// into the transport), move focus to its successor instead of losing it.
+const FOCUS_FALLBACK = { "replay-start": "replay-toggle", "replay-stop": "replay-start" };
+
+function focusByKey(key) {
+  if (!key) return;
+  const find = (k) => app.querySelector(`[data-fk="${CSS.escape(k)}"]`);
+  const target = find(key) || (FOCUS_FALLBACK[key] ? find(FOCUS_FALLBACK[key]) : null);
+  if (target) target.focus({ preventScroll: true });
+}
+
+function restoreView(view) {
+  const strip = app.querySelector(".strip-outer");
+  if (strip && view.stripLeft) strip.scrollLeft = view.stripLeft;
+  const drawer = app.querySelector(".drawer");
+  if (drawer && drawer.dataset.stage === view.drawerStage) {
+    drawer.querySelectorAll("pre").forEach((n, i) => {
+      const saved = view.drawerScroll[i];
+      if (saved) { n.scrollTop = saved[0]; n.scrollLeft = saved[1]; }
+    });
+  }
+  if (!modal.classList.contains("open")) focusByKey(view.focusKey);
+  keptVideos = new Map(); // anything not reused is gone from the page
+}
+
 function render() {
   if (!state) return;
   const s = replay ? stateAt(state, replay.t) : state;
   document.title = `Backlot — ${s.title}`;
   document.body.classList.toggle("first", firstPaint);
   firstPaint = false;
+  const view = captureView();
   app.innerHTML = "";
   app.append(renderSlate(s));
   app.append(renderRail(s));
@@ -1101,11 +1229,13 @@ function render() {
       if (section) app.append(section);
     }
   }
+  restoreView(view);
 }
 
 // Defensive normalization (F-02): the server contract guarantees these
 // fields, but a sparse/legacy payload must degrade, never crash the board.
 function normalize(s) {
+  s.decision_log_drift = s.decision_log_drift || null;
   s.pipeline = s.pipeline || { pipeline_type: "unknown", stages: [], known: false };
   s.stages = Array.isArray(s.stages) ? s.stages : [];
   for (const stage of s.stages) {
@@ -1129,8 +1259,23 @@ function normalize(s) {
   return s;
 }
 
+let refreshSeq = 0;
+let lastStateText = null;
+
 async function refresh() {
-  state = normalize(await getJSON(`/api/project/${encodeURIComponent(projectId)}/state`));
+  const seq = ++refreshSeq;
+  const url = `/api/project/${encodeURIComponent(projectId)}/state`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${res.status} ${url}`);
+  const text = await res.text();
+  // Responses can land out of order (a slow request started before a quick
+  // one): only the newest request may update the board.
+  if (seq !== refreshSeq) return;
+  // Most change notifications during a run are media writes that leave the
+  // board state as it was. Rebuilding the page for those is pure churn.
+  if (text === lastStateText) return;
+  lastStateText = text;
+  state = normalize(JSON.parse(text));
   render();
 }
 

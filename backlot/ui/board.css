@@ -889,6 +889,26 @@ a.backlink:hover { color: var(--text-2); }
 .stage:hover { background: rgba(255,255,255,.025); }
 .stage.selected .name { text-decoration: underline; text-underline-offset: 4px; }
 
+/* Everything operable is reachable from the keyboard, so it needs a visible
+   focus mark (stage nodes, replay transport, render versions, cards). */
+[role="button"]:focus-visible, a.lib-card:focus-visible, .nav-link:focus-visible {
+  outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 6px;
+}
+/* Decisions panel: a stray copy of the log has entries the record lacks. */
+.d-drift {
+  font-family: var(--mono); font-size: calc(10px * var(--fs-scale)); line-height: 1.5;
+  color: var(--amber); border: 1px dashed rgba(240,168,60,.4); border-radius: 6px;
+  padding: 6px 9px; margin-bottom: 12px;
+}
+/* The page behind an open dialog must not scroll. */
+body.modal-open { overflow: hidden; }
+/* Text-only controls are ~18px tall: too small to hit with a finger. */
+@media (max-width: 900px), (pointer: coarse) {
+  .drawer .drawer-head .close, .render-meta .v {
+    min-height: 28px; display: inline-flex; align-items: center; padding: 0 4px;
+  }
+}
+
 /* stage drawer */
 .drawer {
   border: 1px solid var(--border-soft); background: var(--surface);

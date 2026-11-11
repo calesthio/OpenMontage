@@ -21,6 +21,27 @@ export function el(tag, attrs = {}, ...children) {
   return node;
 }
 
+// Attributes that make a non-<button> element operable from the keyboard and
+// announced as a button: el("div", { class: "x", ...pressable(fn, "key") }).
+// `focusKey` is a stable id the board uses to put focus back after a full
+// re-render replaces the element.
+export function pressable(handler, focusKey) {
+  const attrs = {
+    role: "button",
+    tabindex: "0",
+    onclick: handler,
+    onkeydown: (e) => {
+      if (e.target !== e.currentTarget) return; // leave nested controls alone
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        handler(e);
+      }
+    },
+  };
+  if (focusKey) attrs["data-fk"] = focusKey;
+  return attrs;
+}
+
 export function fmtDuration(seconds) {
   const n = Number(seconds);
   if (seconds == null || !Number.isFinite(n)) return "";

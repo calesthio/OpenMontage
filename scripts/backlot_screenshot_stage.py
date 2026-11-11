@@ -195,7 +195,9 @@ def stage_project(pid: str, title: str, palette: str, scenes: list, *,
 
     script = script_artifact(title, scenes)
     plan = scene_plan_artifact(scenes, hero)
-    (art_dir / "decision_log.json").write_text(json.dumps(decision_log(pid), indent=2))
+    # The project decision log lives at the project root (lib/checkpoint.py);
+    # artifacts/decision_log.json would be a stray second copy.
+    (art_dir.parent / "decision_log.json").write_text(json.dumps(decision_log(pid), indent=2))
 
     if state == "early":
         cp("script", "in_progress", {})

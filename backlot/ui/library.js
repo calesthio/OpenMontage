@@ -63,7 +63,7 @@ function card(p) {
   );
 
   const staticSuffix = new URLSearchParams(location.search).has("static") ? "?static=1" : "";
-  return el("a", { class: `lib-card${p.live ? " live-card" : ""}`, href: `/p/${p.project_id}${staticSuffix}`, style: "text-decoration:none;color:inherit" },
+  return el("a", { class: `lib-card${p.live ? " live-card" : ""}`, href: `/p/${encodeURIComponent(p.project_id)}${staticSuffix}`, style: "text-decoration:none;color:inherit" },
     poster,
     el("div", { class: "lib-body" },
       el("h3", {}, (p.title || p.project_id).toUpperCase()),

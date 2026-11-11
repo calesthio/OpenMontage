@@ -81,3 +81,23 @@ def test_manifest_tools_are_registered(name: str, registered_tools: set[str]) ->
     unknown = sorted(named - registered_tools - AGENT_NATIVE_TOOLS)
 
     assert not unknown, f"{name}: no registered tool named {unknown}"
+
+
+def test_proposal_music_source_covers_every_music_capability() -> None:
+    """Each music capability the proposal can choose has a `source_type`.
+
+    Royalty-free stock (music_search tools such as pixabay_music) had no value,
+    so the explainer proposal-director recorded it with a metadata workaround
+    (2026-11-11 audit).
+    """
+    import json
+    from pathlib import Path
+
+    schema = json.loads(
+        (Path(__file__).resolve().parents[2] / "schemas/artifacts/proposal_packet.schema.json")
+        .read_text(encoding="utf-8")
+    )
+    enum = schema["properties"]["production_plan"]["properties"]["music_source"][
+        "properties"]["source_type"]["enum"]
+    for value in ("user_library", "stock_search", "ai_generated", "bring_your_own", "none"):
+        assert value in enum, value

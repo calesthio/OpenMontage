@@ -399,7 +399,7 @@ Would you like to:
 **Rules:**
 - Always check `music_library/` first — user-provided music is free and intentional
 - Always report music API status (available, unavailable, quota remaining if checkable)
-- Record the music decision in `proposal_packet.production_plan.music_source`. Its `source_type` is one of `user_library`, `ai_generated`, `bring_your_own`, `none`. A royalty-free stock choice (option b) has no `source_type` value yet: leave `source_type` out, set `provider` to the search tool (e.g. `pixabay_music`) and `mood_direction`, and note `"music_plan": "royalty_free_stock"` in `proposal_packet.metadata`
+- Record the music decision in `proposal_packet.production_plan.music_source`. Its `source_type` is one of `user_library`, `ai_generated`, `stock_search`, `bring_your_own`, `none`. For a royalty-free stock choice (option b) use `stock_search`, with `provider` set to the search tool (e.g. `pixabay_music`) and `mood_direction`
 - If the user picks a library track, record its path for the asset director (`music_source.track_path`)
 
 ### Step 6: Build the Cost Estimate

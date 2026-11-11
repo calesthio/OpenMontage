@@ -1577,7 +1577,7 @@ class VideoCompose(BaseTool):
         Checks:
         1. Delivery promise violation: motion-required brief with >70% still cuts → BLOCK
         2. Slideshow risk score "fail" (average ≥ 4.0) → BLOCK
-        3. Missing renderer_family → WARN (log only, don't block)
+        3. Missing renderer_family → BLOCK (it is locked at proposal)
 
         Returns a failed ToolResult if render should be blocked, None if OK to proceed.
         """
@@ -1672,15 +1672,16 @@ class VideoCompose(BaseTool):
         """High-level render: assemble edit decisions + asset manifest into final video.
 
         This is the primary entry point for the compose-director skill.
-        It resolves asset IDs and routes to the composition engine:
+        It resolves asset IDs and routes to the engine named by
+        ``edit_decisions.render_runtime`` (``remotion``, ``hyperframes`` or
+        ``ffmpeg``), which must be set: it is locked at proposal and never
+        swapped silently.
 
-        - **Remotion (default):** Used for all compositions when available —
-          video clips, images, animated scenes, component types, mixed content.
-          Remotion embeds video via <OffthreadVideo> and handles transitions,
-          overlays, and profile scaling natively.
-        - **FFmpeg (fallback):** Used only when Remotion is unavailable, or
-          when the agent explicitly calls operation='compose' for simple
-          trim/concat operations.
+        - **Remotion:** video clips, images, animated scenes, component types,
+          mixed content. Embeds video via <OffthreadVideo> and handles
+          transitions, overlays, and profile scaling natively.
+        - **HyperFrames:** HTML/GSAP compositions.
+        - **FFmpeg:** simple trim/concat; also operation='compose'.
 
         The agent should pass edit_decisions, asset_manifest, and optionally
         profile, subtitle_path, audio_path, and options.

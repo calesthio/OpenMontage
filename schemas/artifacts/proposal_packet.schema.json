@@ -169,9 +169,9 @@
           "type": "object",
           "description": "Resolved music plan from the proposal stage",
           "properties": {
-            "source_type": { "type": "string", "enum": ["user_library", "ai_generated", "bring_your_own", "none"] },
+            "source_type": { "type": "string", "enum": ["user_library", "ai_generated", "stock_search", "bring_your_own", "none"] },
             "track_path": { "type": "string", "description": "Path to selected track, if known" },
-            "provider": { "type": "string", "description": "Music generation provider, if AI-generated" },
+            "provider": { "type": "string", "description": "Music generation provider (ai_generated) or search tool (stock_search, e.g. pixabay_music)" },
             "mood_direction": { "type": "string", "description": "Music mood description from research" },
             "estimated_cost_usd": { "type": "number", "minimum": 0 }
           },

@@ -38,6 +38,7 @@ from tools.base_tool import (
     ToolStatus,
     ToolTier,
 )
+from tools.gsap_runtime import GSAP_CDN_URL, stage_gsap
 
 
 log = logging.getLogger("hyperframes_compose")
@@ -228,6 +229,7 @@ class HyperFramesCompose(BaseTool):
     side_effects = [
         "writes HTML/CSS/JS files into workspace_path",
         "copies asset files into workspace_path/assets/",
+        "copies the local GSAP build to workspace_path/gsap.min.js",
         "writes MP4 to output_path",
     ]
     user_visible_verification = [
@@ -624,7 +626,9 @@ class HyperFramesCompose(BaseTool):
         if design_md:
             (workspace / "DESIGN.md").write_text(design_md, encoding="utf-8")
 
-        # Write index.html — the main composition.
+        # Write index.html — the main composition. GSAP is copied in from the
+        # local npm install so the render works offline.
+        gsap_src = stage_gsap(workspace)
         total_duration = self._compute_total_duration(resolved_cuts)
         html = self._generate_index_html(
             cuts=resolved_cuts,
@@ -635,6 +639,7 @@ class HyperFramesCompose(BaseTool):
             css_vars=css_vars,
             title=edit_decisions.get("metadata", {}).get("title")
             or f"OpenMontage {edit_decisions.get('renderer_family', 'composition')}",
+            gsap_src=gsap_src,
         )
         (workspace / "index.html").write_text(html, encoding="utf-8")
 
@@ -649,6 +654,9 @@ class HyperFramesCompose(BaseTool):
                 "total_duration_seconds": total_duration,
                 "cut_count": len(resolved_cuts),
                 "asset_copies": asset_copies,
+                # A CDN URL here means GSAP is not installed locally and the
+                # render needs network.
+                "gsap_src": gsap_src,
             },
             artifacts=[str(workspace / "index.html")],
         )
@@ -1206,6 +1214,7 @@ class HyperFramesCompose(BaseTool):
         total_duration: float,
         css_vars: dict[str, str],
         title: str,
+        gsap_src: str = GSAP_CDN_URL,
     ) -> str:
         """Emit a HyperFrames-contract-compliant index.html.
 
@@ -1280,7 +1289,7 @@ class HyperFramesCompose(BaseTool):
     .clip.text-card h1 {{ font-family: var(--font-heading); font-weight: 700; font-size: 96px; line-height: 1.1; margin: 0; color: var(--color-fg); }}
     .clip.text-card .subtitle {{ font-size: 36px; margin-top: 24px; color: var(--color-accent); }}
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script src="{self._escape_attr(gsap_src)}"></script>
 </head>
 <body>
   <div data-composition-id="root" data-start="0" data-duration="{self._f(total_duration)}" data-width="{width}" data-height="{height}">

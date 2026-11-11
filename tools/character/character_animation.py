@@ -26,6 +26,7 @@ from tools.base_tool import (
     ToolStability,
     ToolTier,
 )
+from tools.gsap_runtime import stage_gsap
 
 
 def _write_json(path: str | None, data: dict[str, Any]) -> list[str]:
@@ -529,6 +530,7 @@ class CharacterRigRenderer(BaseTool):
         start = time.time()
         output_path = Path(inputs.get("output_path") or PROJECTS_DIR / "character-preview" / "preview.html")
         output_path.parent.mkdir(parents=True, exist_ok=True)
+        gsap_src = stage_gsap(output_path.parent)
         timeline_json = json.dumps(inputs["action_timeline"])
         rig_characters = (inputs.get("rig_plan") or {}).get("characters", [])
         if not rig_characters:
@@ -570,7 +572,7 @@ class CharacterRigRenderer(BaseTool):
   <meta charset=\"utf-8\" />
   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
   <title>Character Animation Preview</title>
-  <script src=\"https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js\"></script>
+  <script src=\"{gsap_src}\"></script>
   <style>
     body {{ margin: 0; overflow: hidden; background: #9bd7ff; font-family: system-ui, sans-serif; }}
     #stage {{ width: 100vw; height: 100vh; display: grid; place-items: center; background: linear-gradient(#9bd7ff 0 65%, #75c878 65%); }}
@@ -663,8 +665,8 @@ class CharacterRigRenderer(BaseTool):
     <svg viewBox=\"0 0 640 640\" role=\"img\" aria-label=\"Character animation scene\">
 {''.join(character_svgs)}
     </svg>
-    <script src=\"https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js\"></script>
     <script>
+      // GSAP comes from the host index.html; the runtime clones only this template.
       window.__timelines = window.__timelines || {{}};
       const tl = gsap.timeline({{ paused: true }});
       const characters = gsap.utils.toArray('[data-composition-id=\"character-scene\"] .character');
@@ -725,6 +727,7 @@ class CharacterRigRenderer(BaseTool):
         }
         data: dict[str, Any] = {
             "preview_path": str(output_path),
+            "gsap_src": gsap_src,
             "render_package": "hyperframes_workspace",
             "hyperframes_workspace": str(workspace_path),
             "composition_path": str(composition_path),

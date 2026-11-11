@@ -1,0 +1,106 @@
+asset_generation:
+  consistency_anchors:
+  - Purple (#7C3AED) as primary accent throughout
+  - Dark slate (#0F172A) backgrounds in all scenes
+  - Bold, geometric illustration style
+  - Neon/bright accent pops for emphasis
+  diagram_style: neon outlines on dark background, rounded rectangles, glowing connections
+  image_negative_prompt: photorealistic, watercolor, vintage, muted colors, white
+    background
+  image_prompt_prefix: 'flat vector illustration, bold colors, dark background, geometric
+    shapes, '
+audio:
+  ducking_threshold_db: -4
+  music_mood: light, airy, optimistic; soft piano or plucked synth, low percussion
+  music_volume: 0.12
+  sfx_style: punchy pops, whooshes, glitch sounds on key moments
+  voice_style: warm, clear, unhurried teacher; conversational, light wonder
+chart_palette:
+- '#7C3AED'
+- '#EC4899'
+- '#06B6D4'
+- '#F59E0B'
+- '#10B981'
+- '#EF4444'
+color_rules:
+  colorblind_safe: true
+  contrast_validation: true
+  harmony_type: split-complementary
+identity:
+  best_for: Science explainers about light, colour and the atmosphere
+  category: minimalist
+  mood: curious, bright, clear-headed
+  name: sky-spectrum
+  pace: moderate
+motion:
+  animation_style: spring(1, 80, 10), bouncy, overshooting
+  entrance: scale-up with bounce (0.8 -> 1.05 -> 1.0)
+  exit: scale-down-fade
+  pacing_rules:
+    max_scene_hold_seconds: 8
+    min_scene_hold_seconds: 1.5
+    stat_card_hold_seconds: 2.0
+    text_card_hold_seconds: 2.5
+    transition_duration_seconds: 0.3
+  transitions:
+  - wipe-left
+  - zoom-in
+  - morph
+  - cut
+overlays:
+  code_block:
+    bg: '#0F172A'
+    highlight: '#EC4899'
+    text: '#E2E8F0'
+  key_term:
+    bg: '#1C204F'
+    radius: 6
+    text: '#C4B5FD'
+  stat_card:
+    bg: '#1E293B'
+    border: '#7C3AED'
+    radius: 12
+    shadow: 0 0 20px rgba(124,58,237,0.3)
+quality_rules:
+- Minimum contrast ratio 4.5:1 for all text
+- Maximum 4 colors on screen (dark bg counts as one)
+- Text must be readable at 720p on mobile (larger font sizes)
+- Every scene has at least one animated element
+- 'Pacing: new visual element every 2-3 seconds'
+- Sound effect on every major transition
+typography:
+  body:
+    font: Inter
+    line_height: 1.5
+    weight: 400
+  code:
+    font: Fira Code
+    weight: 400
+  headings:
+    font: Space Grotesk
+    tracking: -0.03em
+    weight: 700
+  scale_system: perfect_fourth
+  stat_card:
+    font: Space Grotesk
+    size_multiplier: 4.0
+    weight: 800
+  weight_matrix:
+    body: 400
+    caption: 300
+    heading: 700
+    title: 800
+visual_language:
+  color_palette:
+    accent:
+    - '#F5A623'
+    - '#8B5CF6'
+    background: '#0B1D3A'
+    muted: '#64748B'
+    primary:
+    - '#3B8BEB'
+    - '#1E5FB8'
+    text: '#F8FAFC'
+  composition: edge-to-edge, bold framing, off-center for dynamism
+  texture: flat colour blocks over a zenith-to-horizon gradient; no decorative gradients
+    on cards

@@ -229,11 +229,9 @@ class ElevenLabsTTS(BaseTool):
         validate(inputs, self.input_schema)
         text = inputs["text"]
         limit = (
-            10000
+            2000
             if inputs.get("model_id", "").startswith("eleven_v4")
-            else 5000
-            if inputs.get("model_id") == "eleven_v3"
-            else 40000
+            else 5000 if inputs.get("model_id") == "eleven_v3" else 40000
         )
         if not text.strip() or len(text) > limit:
             raise ValueError(f"Text must contain 1–{limit} characters for this model")
@@ -264,26 +262,67 @@ class ElevenLabsTTS(BaseTool):
         endpoint = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
         if with_timestamps:
             endpoint += "/with-timestamps"
-        response = requests.post(
-            endpoint,
-            headers={
-                "xi-api-key": api_key,
-                "Content-Type": "application/json",
-                "Accept": "application/json" if with_timestamps else "audio/mpeg",
-            },
-            json=payload,
-            params={"output_format": output_format},
-            timeout=120,
-        )
-        response.raise_for_status()
-
+        if model_id == "eleven_v4":
+            unsupported = set(inputs) & {"style", "speed", "use_speaker_boost"}
+            if unsupported:
+                raise ValueError(
+                    f"Eleven v4 dialogue does not support {sorted(unsupported)}"
+                )
+            payload = {
+                "inputs": [{"text": text, "voice_id": voice_id}],
+                "model_id": model_id,
+                "settings": {
+                    "stability": voice_settings["stability"],
+                    "similarity": voice_settings["similarity_boost"],
+                },
+            }
+            for field in (
+                "seed",
+                "language_code",
+                "previous_text",
+                "previous_request_ids",
+                "next_request_ids",
+                "apply_text_normalization",
+            ):
+                if field in inputs:
+                    payload[field] = inputs[field]
+            if "next_text" in inputs:
+                payload["future_text"] = inputs["next_text"]
+            if any(
+                len(payload.get(k, "")) > 100 for k in ("previous_text", "future_text")
+            ):
+                raise ValueError("Dialogue context text must be at most 100 characters")
+            endpoint = "https://api.elevenlabs.io/v1/text-to-dialogue"
+            if with_timestamps:
+                endpoint += "/with-timestamps"
+        if model_id == "eleven_v4_turbo":
+            audio_bytes = self._turbo_audio(inputs, api_key, voice_id, output_format)
+            response = None
+        else:
+            response = requests.post(
+                endpoint,
+                headers={
+                    "xi-api-key": api_key,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json" if with_timestamps else "audio/mpeg",
+                },
+                json=payload,
+                params={"output_format": output_format},
+                timeout=120,
+            )
+            response.raise_for_status()
         alignment = None
-        if with_timestamps:
+        if model_id == "eleven_v4_turbo":
+            pass
+        elif with_timestamps:
             body = response.json()
             audio_bytes = base64.b64decode(body["audio_base64"])
             alignment = body.get("alignment") or body.get("normalized_alignment")
         else:
             audio_bytes = response.content
+
+        if not audio_bytes:
+            raise ValueError("ElevenLabs returned empty audio")
 
         ext = "mp3" if "mp3" in output_format else "wav"
         output_path = Path(inputs.get("output_path", f"tts_output.{ext}"))
@@ -303,11 +342,16 @@ class ElevenLabsTTS(BaseTool):
         extra: dict[str, Any] = {}
         if with_timestamps:
             if not alignment:
-                raise ValueError("ElevenLabs returned no alignment for a with-timestamps request")
+                raise ValueError(
+                    "ElevenLabs returned no alignment for a with-timestamps request"
+                )
             words = self.words_from_alignment(alignment)
             alignment_path = output_path.with_name(output_path.name + ".alignment.json")
             alignment_path.write_text(
-                json.dumps({"text": text, "alignment": alignment, "words": words}, ensure_ascii=False),
+                json.dumps(
+                    {"text": text, "alignment": alignment, "words": words},
+                    ensure_ascii=False,
+                ),
                 encoding="utf-8",
             )
             artifacts.append(str(alignment_path))
@@ -329,12 +373,78 @@ class ElevenLabsTTS(BaseTool):
                 "text_length": len(text),
                 "output": str(output_path),
                 "format": output_format,
-                "request_id": response.headers.get("request-id"),
+                "request_id": (
+                    response.headers.get("request-id") if response is not None else None
+                ),
                 **extra,
             },
             artifacts=artifacts,
             model=model_id,
         )
+
+    @staticmethod
+    def _turbo_audio(inputs, api_key, voice_id, output_format):
+        # Current realtime-tdd tutorial explicitly supports v4 Turbo; the older
+        # API reference still says v3-only. Do not route Turbo to legacy HTTP TTS.
+        from urllib.parse import urlencode
+        from websockets.sync.client import connect
+
+        unsupported = set(inputs) & {
+            "stability",
+            "similarity_boost",
+            "style",
+            "speed",
+            "use_speaker_boost",
+            "previous_text",
+            "next_text",
+            "previous_request_ids",
+            "next_request_ids",
+        }
+        if unsupported or inputs.get("with_timestamps"):
+            raise ValueError(
+                "Turbo file synthesis does not support voice settings, continuity or timestamps"
+            )
+        query = {"model_id": "eleven_v4_turbo", "output_format": output_format}
+        for field in ("seed", "language_code", "apply_text_normalization"):
+            if field in inputs:
+                query[field] = inputs[field]
+        chunks = []
+        deadline = time.monotonic() + 180
+        with connect(
+            "wss://api.elevenlabs.io/v1/text-to-dialogue/stream-input?"
+            + urlencode(query),
+            additional_headers={"xi-api-key": api_key},
+            open_timeout=20,
+        ) as socket:
+            socket.send(json.dumps({"voices": [voice_id]}))
+            socket.send(
+                json.dumps(
+                    {
+                        "inputs": [
+                            {
+                                "text": inputs["text"],
+                                "voice_id": voice_id,
+                                "new_turn": False,
+                            }
+                        ]
+                    }
+                )
+            )
+            socket.send(json.dumps({"close_socket": True}))
+            while True:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise TimeoutError(
+                        "Dialogue stream did not finish; do not automatically resubmit"
+                    )
+                event = json.loads(socket.recv(timeout=remaining))
+                if event.get("error"):
+                    raise ValueError("ElevenLabs dialogue stream returned an error")
+                if event.get("audio"):
+                    chunks.append(base64.b64decode(event["audio"], validate=True))
+                if event.get("is_final"):
+                    break
+        return b"".join(chunks)
 
     @staticmethod
     def words_from_alignment(alignment: dict[str, Any]) -> list[dict[str, Any]]:

@@ -842,6 +842,22 @@ aside .panel:nth-of-type(1) { animation-delay: .32s } aside .panel:nth-of-type(2
 .lib-body .lb-meta { display: flex; gap: 8px; margin-top: 5px; align-items: center; }
 .lib-body .lb-meta .chip { font-size: calc(9.5px * var(--fs-scale)); padding: 2px 7px; }
 .lib-body .lb-meta .when { font-size: calc(10.5px * var(--fs-scale)); color: var(--text-3); margin-left: auto; }
+/* series: library navigation + series cards */
+.lib-nav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding-top: 18px; }
+.lib-nav .nav-link {
+  font-family: var(--mono); font-size: calc(10.5px * var(--fs-scale)); letter-spacing: .08em; text-decoration: none;
+  color: var(--text-2); border: 1px solid var(--border); border-radius: 99px; padding: 5px 12px; background: var(--surface);
+}
+.lib-nav .nav-link:hover { color: var(--text); border-color: var(--text-3); }
+.lib-nav .nav-link.on { color: var(--amber); border-color: rgba(240,168,60,.45); }
+.lib-nav .nav-select {
+  font-family: var(--mono); font-size: calc(10.5px * var(--fs-scale)); color: var(--text-2); background: var(--surface);
+  border: 1px solid var(--border); border-radius: 99px; padding: 5px 10px; max-width: 100%;
+}
+.lib-card.series-card, :root[data-theme="light"] .lib-card.series-card {
+  box-shadow: 5px 5px 0 -1px var(--surface), 5px 5px 0 0 var(--border), 10px 10px 0 -1px var(--surface), 10px 10px 0 0 var(--border);
+}
+.series-card .series-tag { color: var(--amber); font-size: calc(9.5px * var(--fs-scale)); letter-spacing: .14em; }
 .mini-rail { display: flex; gap: 4px; margin-top: 11px; align-items: center; }
 .mini-rail i { height: 4px; flex: 1; border-radius: 2px; background: var(--surface-3); }
 .mini-rail i.d { background: #3d5c4b; }

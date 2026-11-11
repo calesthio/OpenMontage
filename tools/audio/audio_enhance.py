@@ -79,7 +79,7 @@ PRESETS = {
 
 class AudioEnhance(BaseTool):
     name = "audio_enhance"
-    version = "0.1.0"
+    version = "0.1.1"
     tier = ToolTier.CORE
     capability = "audio_processing"
     provider = "ffmpeg"
@@ -104,7 +104,15 @@ class AudioEnhance(BaseTool):
         "required": ["input_path"],
         "properties": {
             "input_path": {"type": "string"},
-            "output_path": {"type": "string"},
+            "output_path": {
+                "type": "string",
+                "description": (
+                    "Explicit output filename. Omitted audio paths select a container for "
+                    "AAC, MP3, FLAC, Opus, Vorbis or PCM s16le. WebM video with a "
+                    "non-WebM audio codec uses Matroska. Other defaults retain the "
+                    "input suffix; provide output_path for other codec/container pairs."
+                ),
+            },
             "preset": {
                 "type": "string",
                 "enum": list(PRESETS.keys()),
@@ -120,7 +128,9 @@ class AudioEnhance(BaseTool):
     }
 
     resource_profile = ResourceProfile(cpu_cores=1, ram_mb=512, vram_mb=0, disk_mb=500)
-    idempotency_key_fields = ["input_path", "preset", "custom_af"]
+    idempotency_key_fields = [
+        "input_path", "preset", "custom_af", "audio_codec", "audio_bitrate",
+    ]
     side_effects = ["writes enhanced audio/video to output_path"]
     user_visible_verification = [
         "Listen to enhanced audio and compare with original",
@@ -132,10 +142,23 @@ class AudioEnhance(BaseTool):
         if not input_path.exists():
             return ToolResult(success=False, error=f"Input not found: {input_path}")
 
-        output_path = Path(
-            inputs.get("output_path", str(input_path.with_stem(f"{input_path.stem}_enhanced")))
-        )
         audio_codec = inputs.get("audio_codec", "aac")
+        is_video = input_path.suffix.lower() in {".mp4", ".mkv", ".avi", ".mov", ".webm"}
+        default_output = input_path.with_stem(f"{input_path.stem}_enhanced")
+        # Pick a muxable audio container rather than inheriting the source
+        # suffix after a codec change. Keep unknown encoders caller-directed.
+        audio_suffixes = {
+            "aac": ".m4a", "mp3": ".mp3", "libmp3lame": ".mp3",
+            "flac": ".flac", "opus": ".ogg", "libopus": ".ogg",
+            "vorbis": ".ogg", "libvorbis": ".ogg", "pcm_s16le": ".wav",
+        }
+        if not is_video and audio_codec in audio_suffixes:
+            default_output = default_output.with_suffix(audio_suffixes[audio_codec])
+        elif is_video and input_path.suffix.lower() == ".webm" and audio_codec not in {
+            "opus", "libopus", "vorbis", "libvorbis",
+        }:
+            default_output = default_output.with_suffix(".mkv")
+        output_path = Path(inputs.get("output_path", str(default_output)))
         audio_bitrate = inputs.get("audio_bitrate", "192k")
 
         af = inputs.get("custom_af")
@@ -147,9 +170,6 @@ class AudioEnhance(BaseTool):
             af = preset["af"]
 
         start = time.time()
-
-        # Determine if input is video or audio-only
-        is_video = input_path.suffix.lower() in {".mp4", ".mkv", ".avi", ".mov", ".webm"}
 
         cmd = [
             "ffmpeg", "-y",

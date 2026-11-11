@@ -119,7 +119,10 @@ class SchemaMedia(BaseTool):
         info["model_catalog"] = {
             model: {
                 "routes": routes,
-                "verified_on": "2026-10-03",
+                "verified_on": max(
+                    self.contracts[e].get("verified_on", "2026-10-03")
+                    for e in routes.values()
+                ),
                 "pricing_status": "quote_required",
             }
             for model, routes in self.models.items()
@@ -138,7 +141,10 @@ class SchemaMedia(BaseTool):
         references = any(
             inputs.get(field)
             for field in (
-                "image_url", "image_path", "image_urls", "image_paths",
+                "image_url",
+                "image_path",
+                "image_urls",
+                "image_paths",
                 *native_reference_fields,
             )
         )
@@ -148,9 +154,7 @@ class SchemaMedia(BaseTool):
             or (
                 "edit"
                 if references and self.capability == "image_generation"
-                else "image_to_video"
-                if references
-                else next(iter(routes), "")
+                else "image_to_video" if references else next(iter(routes), "")
             )
         )
         if operation == "generate" and self.capability == "video_generation":
@@ -196,13 +200,15 @@ class SchemaMedia(BaseTool):
             target = (
                 "images"
                 if "images" in props
-                else "image_input"
-                if "image_input" in props
-                else "image"
-                if "image" in props
-                else "image_uri"
-                if "image_uri" in props
-                else None
+                else (
+                    "image_input"
+                    if "image_input" in props
+                    else (
+                        "image"
+                        if "image" in props
+                        else "image_uri" if "image_uri" in props else None
+                    )
+                )
             )
             if not target:
                 raise ValueError(f"{endpoint} does not accept source images")
@@ -351,9 +357,11 @@ class SchemaMedia(BaseTool):
             values = (
                 result.get("outputs")
                 if self.provider == "atlascloud"
-                else result.get("output")
-                if self.provider == "replicate"
-                else result.get("result", {}).get("video_url")
+                else (
+                    result.get("output")
+                    if self.provider == "replicate"
+                    else result.get("result", {}).get("video_url")
+                )
             )
             if isinstance(values, str):
                 values = [values]
@@ -369,9 +377,11 @@ class SchemaMedia(BaseTool):
             outputs = [
                 download(
                     value,
-                    path
-                    if i == 0
-                    else path.with_name(f"{path.stem}_{i + 1}{path.suffix}"),
+                    (
+                        path
+                        if i == 0
+                        else path.with_name(f"{path.stem}_{i + 1}{path.suffix}")
+                    ),
                 )
                 for i, value in enumerate(values)
             ]

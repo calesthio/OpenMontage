@@ -125,8 +125,9 @@ class GoogleImagen(BaseTool):
                     "gemini-2.5-flash-image",
                     "gemini-3-pro-image",
                     "gemini-3.1-flash-image",
+                    "gemini-nano-banana-2.1",
                 ],
-                "default": "imagen-4.0-generate-001",
+                "default": "gemini-nano-banana-2.1",
                 "description": "Imagen model variant, or a Gemini image model "
                 "(gemini-*) routed through generate_content. Use "
                 "gemini-2.5-flash-image when the project has no Imagen access.",
@@ -197,9 +198,13 @@ class GoogleImagen(BaseTool):
         return ToolStatus.UNAVAILABLE
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
-        model = inputs.get("model", "imagen-4.0-generate-001")
+        model = inputs.get("model", "gemini-nano-banana-2.1")
         n = inputs.get("number_of_images", 1)
-        if model in {"gemini-3-pro-image", "gemini-3.1-flash-image"}:
+        if model in {
+            "gemini-3-pro-image",
+            "gemini-3.1-flash-image",
+            "gemini-nano-banana-2.1",
+        }:
             raise PriceQuoteRequired(
                 "Gemini image pricing depends on input and output tokens/resolution; obtain a current quote"
             )
@@ -335,14 +340,28 @@ class GoogleImagen(BaseTool):
                 "output": outputs[0],
                 "outputs": outputs,
                 "images_generated": len(outputs),
-                "cost_status": "unquoted"
-                if model in {"gemini-3-pro-image", "gemini-3.1-flash-image"}
-                else "estimated",
+                "cost_status": (
+                    "unquoted"
+                    if model
+                    in {
+                        "gemini-3-pro-image",
+                        "gemini-3.1-flash-image",
+                        "gemini-nano-banana-2.1",
+                    }
+                    else "estimated"
+                ),
             },
             artifacts=outputs,
-            cost_usd=self.estimate_cost(inputs)
-            if model not in {"gemini-3-pro-image", "gemini-3.1-flash-image"}
-            else None,
+            cost_usd=(
+                self.estimate_cost(inputs)
+                if model
+                not in {
+                    "gemini-3-pro-image",
+                    "gemini-3.1-flash-image",
+                    "gemini-nano-banana-2.1",
+                }
+                else None
+            ),
             duration_seconds=round(time.time() - start, 2),
             model=model,
         )
@@ -350,13 +369,18 @@ class GoogleImagen(BaseTool):
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         # Gemini image models go through generate_content via the shared genai
         # client, which resolves auth (API key or Vertex service account) itself.
-        model = inputs.get("model", "imagen-4.0-generate-001")
+        model = inputs.get("model", "gemini-nano-banana-2.1")
         if model not in self.input_schema["properties"]["model"]["enum"]:
             return ToolResult(
                 success=False, error=f"Unsupported Google image model: {model}"
             )
         if model.startswith("gemini-"):
             return self._execute_gemini(inputs, model)
+        if not service_account_configured():
+            return ToolResult(
+                success=False,
+                error="Imagen on the Gemini API has retired. Select gemini-nano-banana-2.1 explicitly, or configure Vertex AI for Imagen.",
+            )
         if (
             inputs.get("image_path")
             or inputs.get("image_paths")
@@ -369,8 +393,8 @@ class GoogleImagen(BaseTool):
 
         # Two auth paths: an AI Studio API key, or a service-account JSON that
         # routes to Vertex AI (the AI Studio endpoint does not accept service
-        # accounts). API key wins when both are present.
-        api_key = self._get_api_key()
+        # accounts). Imagen now requires Vertex even when an API key is present.
+        api_key = None  # Retired Gemini Imagen endpoint must never be selected.
         bearer_token: str | None = None
         project_id: str | None = None
         if not api_key:
@@ -468,14 +492,28 @@ class GoogleImagen(BaseTool):
                 "output": outputs[0],
                 "outputs": outputs,
                 "images_generated": len(outputs),
-                "cost_status": "unquoted"
-                if model in {"gemini-3-pro-image", "gemini-3.1-flash-image"}
-                else "estimated",
+                "cost_status": (
+                    "unquoted"
+                    if model
+                    in {
+                        "gemini-3-pro-image",
+                        "gemini-3.1-flash-image",
+                        "gemini-nano-banana-2.1",
+                    }
+                    else "estimated"
+                ),
             },
             artifacts=outputs,
-            cost_usd=self.estimate_cost(inputs)
-            if model not in {"gemini-3-pro-image", "gemini-3.1-flash-image"}
-            else None,
+            cost_usd=(
+                self.estimate_cost(inputs)
+                if model
+                not in {
+                    "gemini-3-pro-image",
+                    "gemini-3.1-flash-image",
+                    "gemini-nano-banana-2.1",
+                }
+                else None
+            ),
             duration_seconds=round(time.time() - start, 2),
             model=model,
         )

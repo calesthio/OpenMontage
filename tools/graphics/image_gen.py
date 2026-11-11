@@ -236,22 +236,27 @@ class ImageGen(BaseTool):
         import torch
         from diffusers import StableDiffusionPipeline
 
+        from tools.graphics.local_diffusion import (
+            DEFAULT_MODEL,
+            generator_device,
+            select_device,
+        )
+
         prompt = inputs["prompt"]
         negative = inputs.get("negative_prompt", "")
         width = inputs.get("width", 512)
         height = inputs.get("height", 512)
         seed = inputs.get("seed")
-        model_id = inputs.get("model", "stabilityai/stable-diffusion-2-1-base")
+        model_id = inputs.get("model", DEFAULT_MODEL)
 
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        dtype = torch.float16 if device == "cuda" else torch.float32
+        device, dtype = select_device(torch)
 
         pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=dtype)
         pipe = pipe.to(device)
 
         generator = None
         if seed is not None:
-            generator = torch.Generator(device=device).manual_seed(seed)
+            generator = torch.Generator(device=generator_device(device)).manual_seed(seed)
 
         image = pipe(
             prompt,

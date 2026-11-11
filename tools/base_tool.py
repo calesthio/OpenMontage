@@ -15,6 +15,7 @@ import platform
 import subprocess
 import shutil
 import time
+import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
@@ -54,7 +55,7 @@ def _load_dotenv() -> None:
                 if match:
                     value = value[: match.start()]
                 value = value.strip()
-            if key and key not in os.environ:
+            if key and (key not in os.environ or not os.environ[key].strip()):
                 os.environ[key] = value
 
 
@@ -186,6 +187,7 @@ def _instrument_execute(fn: Callable) -> Callable:
         project_dir = infer_project_dir(inputs)
 
         base = {
+            "call_id": uuid.uuid4().hex,
             "tool": tool_name,
             "scene_id": scene_id,
             "depth": depth if depth else None,
@@ -292,6 +294,10 @@ def _is_cacheable(tool: "BaseTool", inputs: dict[str, Any]) -> bool:
     the same bytes: deterministic always, seeded only when a seed is pinned
     (an unpinned seed is effectively stochastic), stochastic never.
     """
+    # A documented preflight must reach the tool's dry-run branch without
+    # materializing an artifact or touching the cache's access metadata.
+    if inputs.get("dry_run") and "dry_run" in tool.input_schema.get("properties", {}):
+        return False
     if not tool.idempotency_key_fields:
         return False
     if not inputs.get("output_path"):
@@ -309,9 +315,20 @@ def _is_cacheable(tool: "BaseTool", inputs: dict[str, Any]) -> bool:
 def _result_from_cache(restored: dict[str, Any], dest: Any) -> "ToolResult":
     """Build a ToolResult for a cache hit that was materialized to ``dest``."""
     data = dict(restored.get("data") or {})
-    # Repoint the stored output reference to where the caller asked for it.
-    if "output" in data:
-        data["output"] = str(dest)
+    # Repoint only the declared local-output references. Cache admission is
+    # single-artifact; remote URLs, input paths, and other provenance stay put.
+    original_outputs = {
+        data[name] for name in ("output", "output_path")
+        if isinstance(data.get(name), str)
+    }
+    for name in ("outputs", "video_paths", "image_paths", "audio_paths"):
+        values = data.get(name)
+        if (isinstance(values, list) and len(values) == 1
+                and isinstance(values[0], str) and values[0] in original_outputs):
+            data[name] = [str(dest)]
+    for name in ("output", "output_path"):
+        if name in data:
+            data[name] = str(dest)
     data["cached"] = True
     return ToolResult(
         success=True,
@@ -482,7 +499,7 @@ class BaseTool(ABC):
                     )
             elif dep.startswith("env:"):
                 env_name = dep[4:]
-                if not os.environ.get(env_name):
+                if not os.environ.get(env_name, "").strip():
                     raise DependencyError(
                         f"Environment variable {env_name!r} not set. {self.install_instructions}"
                     )
@@ -569,13 +586,15 @@ class BaseTool(ABC):
 
         File-valued fields are fingerprinted by content, not by path string, so
         rewriting an input file at the same path changes the key rather than
-        serving output derived from the old bytes. Output-path fields are not in
-        this set, so the same content is a hit regardless of where the caller
-        wants the file to land.
+        serving output derived from the old bytes. For tools that exclude output
+        paths from this set, placement alone does not change the key. The normalized
+        destination suffix is included because local encoders select their
+        output container from it; moving between formats must render again.
         """
         key_data = {
             "tool": self.name,
             "version": self.version,
+            "output_suffix": Path(inputs.get("output_path") or "").suffix.lower(),
             "fields": {
                 k: _fingerprint_value(inputs.get(k))
                 for k in self.idempotency_key_fields

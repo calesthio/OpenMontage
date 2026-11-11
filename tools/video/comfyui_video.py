@@ -34,6 +34,7 @@ from tools._comfyui.metadata import (
     model_stack,
     workflow_hash,
 )
+from tools.video._shared import probe_output
 
 _WORKFLOWS = Path(__file__).resolve().parent.parent / "_comfyui" / "workflows"
 
@@ -586,6 +587,20 @@ class ComfyUIVideo(BaseTool):
                     "duration_seconds": round(num_frames / 16, 2),
                 }
             )
+        wall = round(time.time() - start, 3)
+        comfy_timing = dict(getattr(self._client, "last_timing", None) or {})
+        exec_s = comfy_timing.get("comfy_prompt_exec_s")
+        overhead = wall
+        if isinstance(exec_s, (int, float)):
+            overhead = round(max(0.0, wall - float(exec_s)), 3)
+        result_data["timing"] = {
+            **comfy_timing,
+            "client_overhead_s": overhead,
+            "wall_s": wall,
+        }
+
+
+        result_data.update(self._probe_media(paths[0]))
         return ToolResult(
             success=True,
             data=result_data,
@@ -671,6 +686,36 @@ class ComfyUIVideo(BaseTool):
             },
         )
         return workflow, _I2V_OUTPUT_NODE
+
+    @staticmethod
+    def _probe_media(path: Path) -> dict[str, Any]:
+        """Measure the downloaded clip instead of trusting the request.
+
+        Custom workflows set their own size, frame count and frame rate, so
+        the request values (WAN defaults when omitted) can be wrong. When
+        ffprobe cannot read the file, the request values are kept and the
+        result is flagged so callers know they were not measured.
+        """
+        probed = probe_output(path) if path.is_file() else {}
+        width = probed.get("video_width")
+        height = probed.get("video_height")
+        fps = probed.get("video_fps")
+        duration = probed.get("duration_seconds")
+        if not (width and height and fps and duration):
+            warning = (
+                f"Could not probe {path} with ffprobe; the reported media "
+                "metadata comes from the request, not the output file."
+            )
+            print(f"[comfyui_video] {warning}")
+            return {"metadata_source": "requested", "metadata_warning": warning}
+        return {
+            "width": width,
+            "height": height,
+            "fps": fps,
+            "num_frames": probed.get("video_num_frames") or round(duration * fps),
+            "duration_seconds": duration,
+            "metadata_source": "ffprobe",
+        }
 
     @staticmethod
     def _load_custom_workflow(inputs: dict[str, Any]) -> dict:

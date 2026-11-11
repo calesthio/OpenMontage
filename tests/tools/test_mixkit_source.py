@@ -213,3 +213,17 @@ def test_download_fails_when_every_published_rendition_fails(monkeypatch, tmp_pa
     with pytest.raises(RuntimeError, match="1080p.*720p"):
         MixkitSource().download(cand, tmp_path / "clip.mp4")
     assert "license_evidence" not in cand.extra
+
+
+def test_json_ld_search_fallback_also_excludes_restricted(monkeypatch):
+    # Listing with no result cards: only schema.org entries, one per licence.
+    html = "<html><head>" + _ld([
+        {"@type": "VideoObject", "@id": FREE_URL + "#video", "name": "Stewing", "copyrightNotice": "Free",
+         "contentUrl": "https://assets.mixkit.co/videos/3804/3804-720.mp4"},
+        {"@type": "VideoObject", "@id": RESTRICTED_URL + "#video", "name": "Wet", "copyrightNotice": "Mixkit Restricted License",
+         "contentUrl": "https://assets.mixkit.co/videos/9457/9457-720.mp4"},
+    ]) + "</head><body></body></html>"
+    _install(monkeypatch, {"https://mixkit.co/free-stock-video/tomato/": _Resp(html)})
+    results = MixkitSource().search("tomato", SearchFilters(per_page=10))
+    assert [c.source_url for c in results] == [FREE_URL]
+    assert "Free License" in results[0].license

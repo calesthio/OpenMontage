@@ -72,9 +72,6 @@ Use `anime_scene` type for each scene. Plan:
 | Cinematic edge darken | `vignette` | `true` / `false` |
 | Scene background | `backgroundColor` | theme-derived value such as `"#0A0A1A"` or `"#F6F1E8"` |
 
-Reference: `remotion-composer/public/demo-props/mori-no-seishin.json` — 6 scenes using this pattern.
-Reference: `remotion-composer/public/demo-props/deep-ocean.json` — 6 underwater scenes with different palette.
-
 ### 4. Use Metadata For Timing Rules
 
 Recommended metadata keys:

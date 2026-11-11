@@ -113,7 +113,9 @@ class FalMedia(BaseTool):
         info["model_catalog"] = {
             m: {
                 "routes": r,
-                "verified_on": "2026-10-03",
+                "verified_on": max(
+                    CONTRACTS[e].get("verified_on", "2026-10-03") for e in r.values()
+                ),
                 "pricing_status": "quote_required",
             }
             for m, r in self.routes.items()
@@ -138,9 +140,11 @@ class FalMedia(BaseTool):
             or (
                 "edit"
                 if references and self.capability == "image_generation"
-                else "image_to_video"
-                if references
-                else next(iter(self.routes.get(model, {})), "")
+                else (
+                    "image_to_video"
+                    if references
+                    else next(iter(self.routes.get(model, {})), "")
+                )
             )
         )
         if operation == "generate":
@@ -245,18 +249,28 @@ class FalMedia(BaseTool):
             headers = {"Authorization": f"Key {key}"}
             if not job:
                 model, operation, endpoint, payload = self.build_request(inputs)
-                submitted = request_json(
-                    "POST",
-                    f"https://queue.fal.run/{endpoint}",
-                    headers=headers,
-                    json=payload,
-                )
-                job = {
-                    k: submitted[k]
-                    for k in ("request_id", "status_url", "response_url")
-                }
+                try:
+                    submitted = request_json(
+                        "POST",
+                        f"https://queue.fal.run/{endpoint}",
+                        headers=headers,
+                        json=payload,
+                    )
+                    job = {
+                        k: submitted[k]
+                        for k in ("request_id", "status_url", "response_url")
+                    }
+                except Exception as exc:
+                    # The provider may have accepted a paid job before a
+                    # transport/response failure. Without its request_id no
+                    # checkpoint can safely be resumed or resubmitted.
+                    raise RuntimeError(
+                        "fal submission outcome unknown; do not resubmit "
+                        "before checking the fal dashboard: " + str(exc)
+                    ) from exc
                 job.update(
-                    model=model, operation=operation, endpoint=endpoint, tool=self.name
+                    model=model, operation=operation, endpoint=endpoint, tool=self.name,
+                    output_format=payload.get("output_format"),
                 )
                 save_job(inputs.get("job_path"), job)
             if job.get("tool") != self.name or self.routes.get(
@@ -276,24 +290,24 @@ class FalMedia(BaseTool):
             values = result.get("images") or (
                 [result["video"]]
                 if result.get("video")
-                else [result["audio"]]
-                if result.get("audio")
-                else []
+                else [result["audio"]] if result.get("audio") else []
             )
             if not values:
                 raise ValueError("Completed job returned no media")
             ext = (
                 ".mp4"
                 if self.capability == "video_generation"
-                else "." + inputs.get("output_format", "png")
+                else "." + (job.get("output_format") or inputs.get("output_format", "png"))
             )
             path = Path(inputs.get("output_path") or self.name + ext)
             outputs = [
                 download(
                     v["url"],
-                    path
-                    if i == 0
-                    else path.with_name(f"{path.stem}_{i + 1}{path.suffix}"),
+                    (
+                        path
+                        if i == 0
+                        else path.with_name(f"{path.stem}_{i + 1}{path.suffix}")
+                    ),
                 )
                 for i, v in enumerate(values)
             ]

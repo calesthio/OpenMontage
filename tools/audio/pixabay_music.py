@@ -11,8 +11,10 @@ as more stable alternatives.
 from __future__ import annotations
 
 import json
+import logging
 import re
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -196,6 +198,29 @@ class PixabayMusic(BaseTool):
             duration_seconds=round(time.time() - start, 2),
         )
 
+    #: Waits (seconds) before each retry of a 403/429/5xx. pixabay.com is
+    #: scraped and its bot protection answers 403 intermittently.
+    _RETRY_DELAYS = (2.0, 5.0, 10.0)
+    _RETRYABLE_STATUS = {403, 429, 500, 502, 503, 504}
+
+    def _open_with_retry(self, open_fn, request: urllib.request.Request, timeout: float):
+        """Call ``open_fn(request, timeout=...)``, retrying transient HTTP errors."""
+        delays = list(self._RETRY_DELAYS)
+        while True:
+            try:
+                return open_fn(request, timeout=timeout)
+            except urllib.error.HTTPError as e:
+                if e.code not in self._RETRYABLE_STATUS or not delays:
+                    raise
+                delay = delays.pop(0)
+                logging.getLogger(__name__).warning(
+                    "pixabay_music: HTTP %s for %s; retrying in %.0fs",
+                    e.code,
+                    request.full_url,
+                    delay,
+                )
+                time.sleep(delay)
+
     def _build_opener(self) -> urllib.request.OpenerDirector:
         """Build a URL opener with cookie support for session persistence."""
         import http.cookiejar
@@ -229,7 +254,7 @@ class PixabayMusic(BaseTool):
         for key, val in self._BROWSER_HEADERS.items():
             request.add_header(key, val)
 
-        with opener.open(request, timeout=30) as response:
+        with self._open_with_retry(opener.open, request, 30) as response:
             html = response.read().decode("utf-8", errors="replace")
 
         # Step 2: Extract bootstrap URL and fetch track data
@@ -269,7 +294,7 @@ class PixabayMusic(BaseTool):
         req.add_header("Sec-Fetch-Site", "same-origin")
 
         try:
-            with opener.open(req, timeout=15) as response:
+            with self._open_with_retry(opener.open, req, 15) as response:
                 data = json.loads(response.read().decode("utf-8"))
         except Exception:
             return []
@@ -349,7 +374,7 @@ class PixabayMusic(BaseTool):
             },
         )
 
-        with urllib.request.urlopen(request, timeout=60) as response:
+        with self._open_with_retry(urllib.request.urlopen, request, 60) as response:
             output_path.write_bytes(response.read())
 
         return output_path

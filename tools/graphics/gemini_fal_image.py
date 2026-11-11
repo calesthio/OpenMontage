@@ -13,5 +13,9 @@ class GeminiFalImage(FalMedia):
         "gemini-3-pro-image": {
             "generate": "fal-ai/nano-banana-pro",
             "edit": "fal-ai/nano-banana-pro/edit",
-        }
+        },
+        "gemini-nano-banana-2.1": {
+            "generate": "google/nano-banana-2.1",
+            "edit": "google/nano-banana-2.1/edit",
+        },
     }

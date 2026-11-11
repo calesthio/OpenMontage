@@ -6,6 +6,8 @@ schemas, status reporting, and cost estimates.
 """
 
 import json
+import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -255,6 +257,29 @@ class TestClientHelpers:
         w = ComfyUIClient.load_workflow(WORKFLOW_DIR / "flux2-txt2img.json")
         assert isinstance(w, dict)
         assert "1" in w
+
+    def test_load_workflow_reads_utf8_non_ascii_content(self, monkeypatch, tmp_path):
+        from tools._comfyui.client import ComfyUIClient
+
+        workflow = {"1": {"inputs": {"text": "\u955c\u5934\u7f13\u6162\u63a8\u8fdb"}}}
+        workflow_path = tmp_path / "workflow.json"
+        workflow_path.write_text(
+            json.dumps(workflow, ensure_ascii=False),
+            encoding="utf-8",
+        )
+
+        real_open = open
+        encoding = None
+
+        def tracked_open(*args, **kwargs):
+            nonlocal encoding
+            encoding = kwargs.get("encoding")
+            return real_open(*args, **kwargs)
+
+        monkeypatch.setattr("builtins.open", tracked_open)
+
+        assert ComfyUIClient.load_workflow(workflow_path) == workflow
+        assert encoding == "utf-8"
 
     def test_patch_workflow(self):
         from tools._comfyui.client import ComfyUIClient
@@ -813,6 +838,44 @@ class TestCustomWorkflowContract:
             "unknown_custom_workflow"
         )
 
+    def test_video_custom_workflow_path_loads_utf8_and_uses_output_node(self, tmp_path):
+        workflow = {
+            "20": {
+                "inputs": {"text": "\u955c\u5934\u7f13\u6162\u63a8\u8fdb"},
+                "class_type": "SaveVideo",
+            }
+        }
+        workflow_path = tmp_path / "workflow.json"
+        workflow_path.write_text(
+            json.dumps(workflow, ensure_ascii=False),
+            encoding="utf-8",
+        )
+
+        tool = ComfyUIVideo()
+        tool._client.is_available = lambda: True
+        seen = {}
+
+        def fake_generate(loaded_workflow, output_node, dest, **kwargs):
+            seen["workflow"] = loaded_workflow
+            seen["output_node"] = output_node
+            return [Path(dest)]
+
+        tool._client.generate = fake_generate
+
+        result = tool.execute({
+            "prompt": "test",
+            "workflow_path": str(workflow_path),
+            "output_node": "20",
+            "workflow_model": "MiniMax-H3",
+            "model_family": "minimax_h3_local",
+            "output_path": str(tmp_path / "video.mp4"),
+        })
+
+        assert result.success is True
+        assert seen == {"workflow": workflow, "output_node": "20"}
+        assert result.data["workflow_provenance"]["workflow_path"] == str(workflow_path)
+        assert result.data["workflow_provenance"]["output_node"] == "20"
+
     def test_custom_workflow_accepts_model_stack_provenance(self, tmp_path):
         tool = ComfyUIVideo()
         tool._client.is_available = lambda: True
@@ -829,6 +892,70 @@ class TestCustomWorkflowContract:
         provenance = result.data["workflow_provenance"]
         assert provenance["model_stack"] == [{"role": "lora", "name": "style.safetensors"}]
         assert provenance["model_stack_source"] == "caller_supplied"
+
+    @staticmethod
+    def _render_tiny_clip(workflow, output_node, dest, **kwargs):
+        # 64x112, 13 frames at 24 fps: nothing like the WAN 832x480/81/16 defaults.
+        subprocess.run(
+            [
+                "ffmpeg", "-y", "-v", "error",
+                "-f", "lavfi", "-i", "testsrc=size=64x112:rate=24",
+                "-frames:v", "13", "-pix_fmt", "yuv420p", str(dest),
+            ],
+            check=True,
+        )
+        return [Path(dest)]
+
+    @pytest.mark.skipif(
+        not shutil.which("ffmpeg") or not shutil.which("ffprobe"),
+        reason="FFmpeg required",
+    )
+    def test_video_custom_workflow_reports_probed_output_metadata(self, tmp_path):
+        tool = ComfyUIVideo()
+        tool._client.is_available = lambda: True
+        tool._client.generate = self._render_tiny_clip
+
+        result = tool.execute({
+            "prompt": "test",
+            "model_family": "ltx_2.5_local",
+            "workflow_json": json.dumps({"3": {"inputs": {}}}),
+            "output_node": "3",
+            "output_path": str(tmp_path / "clip.mp4"),
+        })
+
+        assert result.success is True
+        assert result.data["metadata_source"] == "ffprobe"
+        assert result.data["width"] == 64
+        assert result.data["height"] == 112
+        assert result.data["fps"] == 24
+        assert result.data["num_frames"] == 13
+        assert result.data["duration_seconds"] == pytest.approx(13 / 24, abs=0.01)
+        assert "metadata_warning" not in result.data
+
+    @pytest.mark.skipif(not shutil.which("ffmpeg"), reason="FFmpeg required")
+    def test_video_metadata_falls_back_to_request_when_probe_fails(
+        self, tmp_path, monkeypatch
+    ):
+        tool = ComfyUIVideo()
+        tool._client.is_available = lambda: True
+        tool._client.generate = self._render_tiny_clip
+        monkeypatch.setattr("tools.video._shared.shutil.which", lambda name: None)
+
+        result = tool.execute({
+            "prompt": "test",
+            "workflow_json": json.dumps({"3": {"inputs": {}}}),
+            "output_node": "3",
+            "num_frames": 49,
+            "output_path": str(tmp_path / "clip.mp4"),
+        })
+
+        assert result.success is True
+        assert result.data["metadata_source"] == "requested"
+        assert "not the output file" in result.data["metadata_warning"]
+        assert result.data["width"] == 832
+        assert result.data["height"] == 480
+        assert result.data["num_frames"] == 49
+        assert result.data["fps"] == 16
 
     def test_video_timeout_surfaces_resumable_prompt_id(self, tmp_path):
         from tools._comfyui.client import ComfyUIError
@@ -1357,3 +1484,197 @@ class TestCustomWorkflowSelectorEligibility:
                 "workflow_model_stack",
             ):
                 assert field in props, f"{selector.name} missing {field}"
+
+
+class TestCompactExecutionError:
+    """Issue #615: surface one actionable line instead of raw message dumps."""
+
+    _EXEC_ERROR_MESSAGES = [
+        "execution_interrupt",
+        [
+            "execution_error",
+            {
+                "prompt_id": "abc",
+                "node_id": "3",
+                "node_type": "KSampler",
+                "exception_type": "ValueError",
+                "exception_message": "expected float tensor\n<hundreds of lines of latent tensor repr>",
+                "traceback": ["tb line 1", "tb line 2"],
+            },
+        ],
+    ]
+
+    def test_extracts_node_type_and_first_line(self):
+        from tools._comfyui.client import compact_execution_error
+
+        text = compact_execution_error(self._EXEC_ERROR_MESSAGES)
+        assert text == "KSampler: ValueError: expected float tensor"
+        assert "latent tensor repr" not in text
+
+    def test_falls_back_to_node_id_when_node_type_missing(self):
+        from tools._comfyui.client import compact_execution_error
+
+        msgs = [["execution_error", {"node_id": "7", "exception_message": "boom"}]]
+        assert compact_execution_error(msgs) == "7: Error: boom"
+
+    def test_truncates_at_limit(self):
+        from tools._comfyui.client import compact_execution_error
+
+        msgs = [["execution_error", {"node_type": "N", "exception_message": "x" * 5000}]]
+        assert len(compact_execution_error(msgs)) == 1500
+        assert len(compact_execution_error(msgs, limit=50)) == 50
+
+    def test_non_exec_error_payloads_json_fallback(self):
+        from tools._comfyui.client import compact_execution_error
+
+        assert compact_execution_error("plain string") == "plain string"
+        text = compact_execution_error([["other_event", {"k": "v"}]])
+        assert "other_event" in text
+
+    def test_history_entry_raises_compact_error_with_prompt_id(self, monkeypatch):
+        from tools._comfyui import client as client_module
+        from tools._comfyui.client import ComfyUIClient, ComfyUIError
+
+        class FakeResponse:
+            def raise_for_status(self):
+                return None
+
+            def json(self):
+                return {
+                    "abc": {
+                        "status": {
+                            "status_str": "error",
+                            "messages": TestCompactExecutionError._EXEC_ERROR_MESSAGES,
+                        }
+                    }
+                }
+
+        monkeypatch.setattr(
+            "tools._comfyui.client.requests.get", lambda *a, **k: FakeResponse()
+        )
+        c = ComfyUIClient("http://localhost:8188")
+        with pytest.raises(ComfyUIError) as exc_info:
+            c._history_entry("abc")
+        assert exc_info.value.prompt_id == "abc"
+        assert "KSampler: ValueError: expected float tensor" in str(exc_info.value)
+        assert "latent tensor repr" not in str(exc_info.value)
+
+
+class TestComfyUITiming:
+    """Issue #617: split queue / execution / download instead of wall time."""
+
+    _ENTRY = {
+        "status": {
+            "messages": [
+                ["execution_start", {"timestamp": 1000.0}],
+                ["execution_cached", {"nodes": ["1"]}],
+                ["execution_success", {"timestamp": 1042.5}],
+            ]
+        },
+        "outputs": {
+            "9": {"images": [{"filename": "out.mp4", "subfolder": "", "type": "output"}]}
+        },
+    }
+
+    def test_history_execution_seconds_from_server_timestamps(self):
+        from tools._comfyui.client import history_execution_seconds
+
+        assert history_execution_seconds(self._ENTRY) == 42.5
+
+    def test_history_execution_seconds_normalizes_milliseconds(self):
+        from tools._comfyui.client import history_execution_seconds
+
+        entry = {
+            "status": {
+                "messages": [
+                    ["execution_start", {"timestamp": 1700000000000}],
+                    ["execution_success", {"timestamp": 1700000007500}],
+                ]
+            }
+        }
+        assert history_execution_seconds(entry) == 7.5
+
+    def test_history_execution_seconds_missing_or_negative(self):
+        from tools._comfyui.client import history_execution_seconds
+
+        assert history_execution_seconds({"status": {"messages": []}}) is None
+        assert history_execution_seconds({}) is None
+        entry = {
+            "status": {
+                "messages": [
+                    ["execution_start", {"timestamp": 200.0}],
+                    ["execution_success", {"timestamp": 100.0}],
+                ]
+            }
+        }
+        assert history_execution_seconds(entry) is None
+
+    def test_generate_populates_last_timing(self, tmp_path):
+        from tools._comfyui.client import ComfyUIClient
+
+        client = ComfyUIClient("http://localhost:8188")
+        client.submit = lambda workflow: "prompt-1"
+        client._wait = lambda prompt_id, **kw: dict(self._ENTRY)
+        client.download = lambda *a, **k: None
+
+        dest = tmp_path / "out.mp4"
+        paths = client.generate(
+            {"1": {}}, output_node="9", dest=dest, timeout=5, interval=1
+        )
+        assert paths == [dest]
+        timing = client.last_timing
+        assert timing is not None
+        assert timing["prompt_id"] == "prompt-1"
+        assert timing["comfy_prompt_exec_s"] == 42.5
+        assert timing["timing_source"] == "history_messages"
+        for key in ("submit_s", "client_queue_and_poll_s", "download_s"):
+            assert isinstance(timing[key], float) and timing[key] >= 0
+
+    def test_generate_last_timing_without_history_timestamps(self, tmp_path):
+        from tools._comfyui.client import ComfyUIClient
+
+        client = ComfyUIClient("http://localhost:8188")
+        client.submit = lambda workflow: "prompt-2"
+        client._wait = lambda prompt_id, **kw: {
+            "status": {},
+            "outputs": {"9": {"images": [{"filename": "o.mp4", "subfolder": "", "type": "output"}]}},
+        }
+        client.download = lambda *a, **k: None
+
+        client.generate({"1": {}}, output_node="9", dest=tmp_path / "o.mp4")
+        assert client.last_timing["comfy_prompt_exec_s"] is None
+        assert client.last_timing["timing_source"] == "poll_wall"
+
+    def test_video_result_surfaces_timing_split(self, tmp_path):
+        from tools.video.comfyui_video import ComfyUIVideo
+
+        tool = ComfyUIVideo()
+        tool._client.is_available = lambda: True
+        tool._client.check_models = lambda required: (list(required), [])
+
+        def fake_generate(workflow, output_node, dest, **kwargs):
+            Path(dest).write_bytes(b"mp4")
+            tool._client.last_timing = {
+                "prompt_id": "p",
+                "submit_s": 0.1,
+                "client_queue_and_poll_s": 30.0,
+                "comfy_prompt_exec_s": 120.0,
+                "download_s": 1.2,
+                "poll_interval_s": 10,
+                "timing_source": "history_messages",
+            }
+            return [Path(dest)]
+
+        tool._client.generate = fake_generate
+
+        result = tool.execute({
+            "prompt": "test",
+            "workflow_json": json.dumps({"42": {"inputs": {}}}),
+            "output_node": "42",
+            "output_path": str(tmp_path / "video.mp4"),
+        })
+        assert result.success is True
+        timing = result.data["timing"]
+        assert timing["comfy_prompt_exec_s"] == 120.0
+        assert timing["client_queue_and_poll_s"] == 30.0
+        assert timing["wall_s"] >= timing["client_overhead_s"] >= 0

@@ -111,8 +111,8 @@ class GreenScreenComposite(BaseTool):
     retry_policy = RetryPolicy(max_retries=1, retryable_errors=["FFmpeg error"])
     resume_support = ResumeSupport.FROM_START
     idempotency_key_fields = [
-        "speaker_path", "background_path", "layout",
-        "speaker_scale", "bg_shift_up", "bg_color_hex",
+        "speaker_path", "background_path", "layout", "speaker_scale",
+        "bg_shift_up", "bg_color_hex", "original_audio_path",
     ]
     side_effects = ["writes composite video to output_path"]
     user_visible_verification = [

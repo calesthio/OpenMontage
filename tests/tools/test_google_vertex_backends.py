@@ -11,7 +11,9 @@ def test_blank_google_location_uses_documented_default(monkeypatch) -> None:
     assert resolve_google_location() == "us-central1"
 
 
-def test_google_music_requests_the_global_vertex_location(monkeypatch, tmp_path) -> None:
+def test_google_music_requests_the_global_vertex_location(
+    monkeypatch, tmp_path
+) -> None:
     monkeypatch.setenv("GOOGLE_API_KEY", "test-key")
     import tools.google_credentials as credentials
 
@@ -25,10 +27,12 @@ def test_google_music_requests_the_global_vertex_location(monkeypatch, tmp_path)
 
     from tools.audio.google_music import GoogleMusic
 
-    result = GoogleMusic().execute({
-        "prompt": "solo piano",
-        "output_path": str(tmp_path / "music.mp3"),
-    })
+    result = GoogleMusic().execute(
+        {
+            "prompt": "solo piano",
+            "output_path": str(tmp_path / "music.mp3"),
+        }
+    )
 
     assert result.success is False
     assert captured["location"] == "global"
@@ -78,17 +82,21 @@ def test_veo_accepts_vertex_and_requires_inline_bytes(
     monkeypatch.setattr(
         credentials,
         "get_genai_client",
-        lambda http_options=None, location=None: _VertexClient(video_bytes),
+        lambda http_options=None, location=None, force_vertex=False: _VertexClient(
+            video_bytes
+        ),
     )
 
     from tools.video.veo_video import VeoVideo
 
     output = tmp_path / "video.mp4"
-    result = VeoVideo().execute({
-        "backend": "google",
-        "prompt": "wind moving across grassland",
-        "output_path": str(output),
-    })
+    result = VeoVideo().execute(
+        {
+            "backend": "google",
+            "prompt": "wind moving across grassland",
+            "output_path": str(output),
+        }
+    )
 
     assert result.success is expected_success
     if expected_success:

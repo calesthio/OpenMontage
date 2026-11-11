@@ -6,7 +6,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { CaptionOverlay, WordCaption } from "./components/CaptionOverlay";
+import { CaptionOverlay, CaptionProps, WordCaption } from "./components/CaptionOverlay";
 import { resolveAsset } from "./lib/resolveAsset";
 import { TextCard } from "./components/TextCard";
 import { StatCard } from "./components/StatCard";
@@ -221,10 +221,10 @@ const OverlayContent: React.FC<{ overlay: TalkingHeadOverlay }> = ({
   if (overlay.type === "hero_title" && overlay.text) {
     return <HeroTitle title={overlay.text} subtitle={overlay.subtitle} />;
   }
-  if (overlay.type === "section_title" && overlay.text) {
+  if (overlay.type === "section_title" && (overlay.text || overlay.subtitle)) {
     return (
       <SectionTitle
-        title={overlay.text}
+        title={overlay.text ?? ""}
         subtitle={overlay.subtitle}
         accentColor={overlay.accentColor}
         position="top-left"
@@ -308,6 +308,7 @@ export interface TalkingHeadProps {
   captionFontFamily?: string;
   // Pass "" for CJK captions (no inter-word spacing); defaults to " ".
   captionWordSeparator?: string;
+  captionProps?: CaptionProps; // extra CaptionOverlay props, applied last
 }
 
 export const TalkingHead: React.FC<TalkingHeadProps> = ({
@@ -321,6 +322,7 @@ export const TalkingHead: React.FC<TalkingHeadProps> = ({
   captionBackgroundColor = "rgba(0, 0, 0, 0.65)",
   captionFontFamily,
   captionWordSeparator,
+  captionProps,
 }) => {
   const { fps } = useVideoConfig();
 
@@ -359,6 +361,7 @@ export const TalkingHead: React.FC<TalkingHeadProps> = ({
         color={captionColor}
         {...(captionFontFamily ? { fontFamily: captionFontFamily } : {})}
         {...(captionWordSeparator !== undefined ? { wordSeparator: captionWordSeparator } : {})}
+        {...captionProps}
       />
     </AbsoluteFill>
   );

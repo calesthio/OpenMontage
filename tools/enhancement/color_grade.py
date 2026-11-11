@@ -56,7 +56,13 @@ PROFILES = {
     "vintage_film": {
         "description": "Faded film look with grain texture and warm tint",
         "vf": (
-            "colorbalance=rs=0.06:gs=0.03:bs=-0.03:ms=0.03:mh=-0.02,"
+            # colorbalance takes per-range channel options — rs/gs/bs (shadows),
+            # rm/gm/bm (midtones), rh/gh/bh (highlights). "ms" and "mh" are not
+            # options at all, so ffmpeg rejected the whole filter chain with
+            # "Error applying option 'ms' to filter 'colorbalance'" and this
+            # profile could never render. Warm midtones + cooler highlights keep
+            # the intended faded-film tint.
+            "colorbalance=rs=0.06:gs=0.03:bs=-0.03:rm=0.03:bh=-0.02,"
             "curves=all='0/0.06 0.25/0.25 0.5/0.50 0.75/0.74 1/0.94',"
             "eq=saturation=0.85:contrast=0.95"
         ),
@@ -115,7 +121,7 @@ class ColorGrade(BaseTool):
                 "minimum": 0.0,
                 "maximum": 1.0,
                 "default": 1.0,
-                "description": "Blend intensity: 0 = original, 1 = full grade",
+                "description": "Blend intensity (profile or LUT): 0 = original, 1 = full grade",
             },
             "custom_vf": {"type": "string"},
             "codec": {"type": "string", "default": "libx264"},
@@ -124,7 +130,7 @@ class ColorGrade(BaseTool):
     }
 
     resource_profile = ResourceProfile(cpu_cores=2, ram_mb=1024, vram_mb=0, disk_mb=2000)
-    idempotency_key_fields = ["input_path", "profile", "lut_path", "intensity"]
+    idempotency_key_fields = ["input_path", "profile", "lut_path", "intensity", "custom_vf"]
     side_effects = ["writes graded video to output_path"]
     user_visible_verification = [
         "Compare graded output with original for color accuracy",
@@ -141,6 +147,10 @@ class ColorGrade(BaseTool):
         )
         codec = inputs.get("codec", "libx264")
         crf = inputs.get("crf", 20)
+
+        lut_path = inputs.get("lut_path")
+        if lut_path and "custom_vf" not in inputs and not Path(lut_path).exists():
+            return ToolResult(success=False, error=f"LUT not found: {lut_path}")
 
         vf = self._build_filter(inputs)
         if not vf:
@@ -185,23 +195,23 @@ class ColorGrade(BaseTool):
         lut_path = inputs.get("lut_path")
         if lut_path and Path(lut_path).exists():
             safe_path = str(Path(lut_path).resolve()).replace("\\", "/").replace(":", "\\:")
-            return f"lut3d='{safe_path}'"
+            vf = f"lut3d='{safe_path}'"
+        else:
+            profile_name = inputs.get("profile", "cinematic_warm")
+            profile = PROFILES.get(profile_name)
+            if not profile:
+                return ""
+            vf = profile["vf"]
 
-        profile_name = inputs.get("profile", "cinematic_warm")
-        profile = PROFILES.get(profile_name)
-        if not profile:
-            return ""
-
-        vf = profile["vf"]
-
-        # Apply intensity blending if < 1.0
+        # Blend graded with original when intensity < 1.0 (0 = original), LUT included
         intensity = inputs.get("intensity", 1.0)
-        if 0 < intensity < 1.0:
-            # Use split + overlay approach: blend graded with original
+        if 0 <= intensity < 1.0:
+            # blend applies all_opacity to its FIRST input, so graded goes on top:
+            # opacity = intensity (0 = original, 1 = full grade).
             vf = (
                 f"split[original][tograde];"
                 f"[tograde]{vf}[graded];"
-                f"[original][graded]blend=all_mode=normal:all_opacity={intensity}"
+                f"[graded][original]blend=all_mode=normal:all_opacity={intensity}"
             )
 
         return vf

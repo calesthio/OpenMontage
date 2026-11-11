@@ -1,0 +1,1298 @@
+{
+  "alibaba/wan-3.0/text-to-video": {
+    "input_schema": {
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "model name",
+          "default": "alibaba/wan-3.0/text-to-video"
+        },
+        "prompt": {
+          "description": "The text prompt describing the scene, subject, and action (up to 20000 characters).",
+          "type": "string"
+        },
+        "resolution": {
+          "default": "1080p",
+          "description": "Output resolution. Native tiers: 480p, 720p, 1080p. ESR tiers: 720p-esr, 1080p-esr, 1440p-esr, 4k-esr.",
+          "enum": [
+            "1080p",
+            "720p",
+            "480p",
+            "720p-esr",
+            "1080p-esr",
+            "1440p-esr",
+            "4k-esr"
+          ],
+          "type": "string",
+          "x-ui-component": "select"
+        },
+        "duration": {
+          "default": 5,
+          "description": "Video length in seconds (2-30). Pass -1 for smart-duration (the model picks the best length).",
+          "enum": [
+            -1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "x-enum-labels": {
+            "-1": "Smart"
+          },
+          "type": "number",
+          "x-ui-component": "select"
+        },
+        "ratio": {
+          "default": "adaptive",
+          "description": "The aspect ratio of the generated video. Use 'adaptive' to let the model choose.",
+          "enum": [
+            "adaptive",
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16"
+          ],
+          "type": "string",
+          "x-ui-component": "select"
+        },
+        "audio": {
+          "default": true,
+          "description": "Whether the output video includes an audio track. Same price either way.",
+          "type": "boolean",
+          "x-ui-component": "switch"
+        },
+        "seed": {
+          "description": "The random seed to use for the generation. -1 means a random seed will be used.",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "model",
+        "prompt"
+      ],
+      "type": "object",
+      "x-order-properties": [
+        "model",
+        "prompt",
+        "resolution",
+        "duration",
+        "ratio",
+        "audio",
+        "seed"
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://www.atlascloud.ai/models/alibaba/wan-3.0/text-to-video",
+    "verified_on": "2026-10-03"
+  },
+  "alibaba/wan-3.0/image-to-video": {
+    "input_schema": {
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "model name",
+          "default": "alibaba/wan-3.0/image-to-video"
+        },
+        "prompt": {
+          "description": "The text prompt describing the motion / action for the video (up to 20000 characters).",
+          "type": "string"
+        },
+        "image": {
+          "description": "First frame of the video (strict first-frame mode). Public URL. Formats: jpeg, jpg, png (no alpha), bmp, webp. Single edge 240-8000px, aspect ratio <= 8:1, <= 20MB.",
+          "type": "string",
+          "x-ui-component": "uploaders"
+        },
+        "last_image": {
+          "description": "Optional last frame of the video. When provided, the model interpolates from the first frame to this one. Same format limits as 'image'.",
+          "type": "string",
+          "x-ui-component": "uploaders"
+        },
+        "resolution": {
+          "default": "1080p",
+          "description": "Output resolution. Native tiers: 480p, 720p, 1080p. ESR tiers: 720p-esr, 1080p-esr, 1440p-esr, 4k-esr.",
+          "enum": [
+            "1080p",
+            "720p",
+            "480p",
+            "720p-esr",
+            "1080p-esr",
+            "1440p-esr",
+            "4k-esr"
+          ],
+          "type": "string",
+          "x-ui-component": "select"
+        },
+        "duration": {
+          "default": 5,
+          "description": "Video length in seconds (2-30). Pass -1 for smart-duration (the model picks the best length).",
+          "enum": [
+            -1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "x-enum-labels": {
+            "-1": "Smart"
+          },
+          "type": "number",
+          "x-ui-component": "select"
+        },
+        "audio": {
+          "default": true,
+          "description": "Whether the output video includes an audio track. Same price either way.",
+          "type": "boolean",
+          "x-ui-component": "switch"
+        },
+        "seed": {
+          "description": "The random seed to use for the generation. -1 means a random seed will be used.",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "model",
+        "prompt",
+        "image"
+      ],
+      "type": "object",
+      "x-order-properties": [
+        "model",
+        "prompt",
+        "image",
+        "last_image",
+        "resolution",
+        "duration",
+        "audio",
+        "seed"
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://www.atlascloud.ai/models/alibaba/wan-3.0/image-to-video",
+    "verified_on": "2026-10-03"
+  },
+  "alibaba/wan-3.0/reference-to-video": {
+    "input_schema": {
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "model name",
+          "default": "alibaba/wan-3.0/reference-to-video"
+        },
+        "prompt": {
+          "description": "The text prompt describing the scene and action for the referenced subjects (up to 20000 characters).",
+          "type": "string"
+        },
+        "refers": {
+          "description": "All-in-One Reference materials. Each item requires a public URL and explicit media type. Image: jpeg/jpg/png/bmp/webp; video: mp4/mov; audio: wav/mp3. Reference mode is mutually exclusive with first/last-frame mode.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "description": "Public URL of the reference image / video / audio.",
+                "x-ui-component": "uploaders"
+              },
+              "type": {
+                "type": "string",
+                "description": "Media kind.",
+                "enum": [
+                  "image",
+                  "video",
+                  "audio"
+                ]
+              }
+            },
+            "required": [
+              "url",
+              "type"
+            ]
+          },
+          "maxItems": 20,
+          "x-accept": ".jpeg,.jpg,.png,.bmp,.webp,.mp4,.mov,.wav,.mp3",
+          "x-ui-component": "uploaders"
+        },
+        "resolution": {
+          "default": "1080p",
+          "description": "Output resolution. Native tiers: 480p, 720p, 1080p. ESR tiers: 720p-esr, 1080p-esr, 1440p-esr, 4k-esr.",
+          "enum": [
+            "1080p",
+            "720p",
+            "480p",
+            "720p-esr",
+            "1080p-esr",
+            "1440p-esr",
+            "4k-esr"
+          ],
+          "type": "string",
+          "x-ui-component": "select"
+        },
+        "duration": {
+          "default": 5,
+          "description": "Video length in seconds (2-30). Pass -1 for smart-duration (the model picks the best length).",
+          "enum": [
+            -1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "x-enum-labels": {
+            "-1": "Smart"
+          },
+          "type": "number",
+          "totalMaximum": 30,
+          "inputMaximum": 15,
+          "x-ui-component": "select"
+        },
+        "ratio": {
+          "default": "adaptive",
+          "description": "The aspect ratio of the generated video. Use 'adaptive' to let the model choose from the references.",
+          "enum": [
+            "adaptive",
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16"
+          ],
+          "type": "string",
+          "x-ui-component": "select"
+        },
+        "audio": {
+          "default": true,
+          "description": "Whether the output video includes an audio track. Same price either way.",
+          "type": "boolean",
+          "x-ui-component": "switch"
+        },
+        "enable_thinking": {
+          "default": false,
+          "description": "Enable deep thinking mode. Required when providing a file or link input (document / webpage parsing). Not recommended when no file/link is provided.",
+          "type": "boolean",
+          "x-ui-component": "switch"
+        },
+        "file": {
+          "description": "Optional document input to parse (requires enable_thinking). Public URL. Formats: docx, doc, xlsx, xls, pptx, ppt, pdf, txt, key, pages, numbers, md; <= 100MB, <= 50 pages. Mutually exclusive with 'link'.",
+          "type": "string",
+          "x-ui-component": "uploaders",
+          "x-accept": ".docx,.doc,.xlsx,.xls,.pptx,.ppt,.pdf,.txt,.key,.pages,.numbers,.md",
+          "x-max-size-mb": 100
+        },
+        "link": {
+          "description": "Optional public webpage URL to parse (requires enable_thinking). Only pages that need no login. Mutually exclusive with 'file'.",
+          "type": "string",
+          "x-ui-component": "input"
+        },
+        "seed": {
+          "description": "The random seed to use for the generation. -1 means a random seed will be used.",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "model",
+        "prompt"
+      ],
+      "type": "object",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "enable_thinking": {
+                "const": true
+              }
+            },
+            "required": [
+              "enable_thinking"
+            ]
+          },
+          "else": {
+            "properties": {
+              "file": {
+                "x-hidden": true
+              },
+              "link": {
+                "x-hidden": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "enable_thinking": {
+                "const": true
+              },
+              "file": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "enable_thinking",
+              "file"
+            ]
+          },
+          "then": {
+            "properties": {
+              "link": {
+                "x-hidden": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "enable_thinking": {
+                "const": true
+              },
+              "link": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "enable_thinking",
+              "link"
+            ]
+          },
+          "then": {
+            "properties": {
+              "file": {
+                "x-hidden": true
+              }
+            }
+          }
+        }
+      ],
+      "x-order-properties": [
+        "model",
+        "prompt",
+        "refers",
+        "resolution",
+        "duration",
+        "ratio",
+        "audio",
+        "enable_thinking",
+        "file",
+        "link",
+        "seed"
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://www.atlascloud.ai/models/alibaba/wan-3.0/reference-to-video",
+    "verified_on": "2026-10-03"
+  },
+  "openai/gpt-image-2.5-flare/text-to-image": {
+    "input_schema": {
+      "type": "object",
+      "required": [
+        "model",
+        "prompt"
+      ],
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "Model name.",
+          "default": "openai/gpt-image-2.5-flare/text-to-image",
+          "enum": [
+            "openai/gpt-image-2.5-flare/text-to-image"
+          ]
+        },
+        "prompt": {
+          "type": "string",
+          "maxLength": 32000,
+          "default": "A neon-lit ramen stall on a rainy Tokyo street, cinematic wide shot.",
+          "description": "Text description of the desired image. Up to 32000 characters."
+        },
+        "quality": {
+          "type": "string",
+          "default": "medium",
+          "enum": [
+            "auto",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "description": "Rendering quality tier. gpt-image-2.5 adds xhigh and max on top of low/medium/high. Higher tiers cost more per image.",
+          "x-ui-component": "select"
+        },
+        "size": {
+          "default": "1024x1024",
+          "description": "optional string or auto or 1024x1024 or 1536x1024 or 5 moreThe size ofthe generated images.For gpt-image-2.5 is supported as WIDTHxHEIGHT strings,for example 1536x864 . Width and height mustboth be divisible by 16 and the requested aspect ratio must be between 1:3 and 3:1.Resolutions above2560x1440 are experimental, and the maximum supported resolution is 3840x2160 .The requesteosize must also satisfy the model's current pixel and edge limits.The standard sizes 1024x1024.1536x1024 ,and 1024x1536 are supported by the GPT image models; auto is supported for modelsthat allow automatic sizing.For dall-e-2,use oneof 256x256,512x512,or 1024x1024.Fordall-e-3,use oneof 1024x1024,1792x1024,or 1024x1792.",
+          "enum": [
+            "auto",
+            "1024x1024",
+            "1024x768",
+            "768x1024",
+            "1024x1280",
+            "1024x1536",
+            "1536x1024",
+            "2048x2048",
+            "2048x1152",
+            "1152x2048",
+            "2560x1088",
+            "1088x2560",
+            "2880x2160",
+            "2160x2880",
+            "3840x2160",
+            "2160x3840"
+          ],
+          "type": "string"
+        },
+        "background": {
+          "type": "string",
+          "default": "auto",
+          "enum": [
+            "auto",
+            "opaque",
+            "transparent"
+          ],
+          "description": "Background of the generated image. When using transparent, set the output format to png or webp.",
+          "x-ui-component": "select"
+        },
+        "output_format": {
+          "type": "string",
+          "default": "png",
+          "enum": [
+            "png",
+            "jpeg",
+            "webp"
+          ],
+          "description": "Output image format.",
+          "x-ui-component": "select"
+        },
+        "moderation": {
+          "type": "string",
+          "default": "auto",
+          "enum": [
+            "auto",
+            "low"
+          ],
+          "description": "Content-moderation strictness. low applies less restrictive filtering.",
+          "x-ui-component": "select"
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "default": 1,
+          "description": "Number of images to generate, 1 to 10. Each image is billed separately."
+        }
+      },
+      "x-order-properties": [
+        "model",
+        "prompt",
+        "quality",
+        "size",
+        "background",
+        "output_format",
+        "n"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "background": {
+                "const": "transparent"
+              }
+            },
+            "required": [
+              "background"
+            ]
+          },
+          "then": {
+            "properties": {
+              "output_format": {
+                "enum": [
+                  "png",
+                  "webp"
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://www.atlascloud.ai/models/openai/gpt-image-2.5-flare/text-to-image",
+    "verified_on": "2026-10-03"
+  },
+  "openai/gpt-image-2.5-flare/edit": {
+    "input_schema": {
+      "type": "object",
+      "required": [
+        "model",
+        "prompt",
+        "images"
+      ],
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "Model name.",
+          "default": "openai/gpt-image-2.5-flare/edit",
+          "enum": [
+            "openai/gpt-image-2.5-flare/edit"
+          ]
+        },
+        "images": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "type": "string"
+          },
+          "description": "Up to 16 source images to edit. Each entry is a URL, Base64 data, or an asset reference (asset://<ASSET_ID>)."
+        },
+        "prompt": {
+          "type": "string",
+          "maxLength": 32000,
+          "default": "Replace the background with a sunlit meadow, keep the subject unchanged.",
+          "description": "Text description of the desired image. Up to 32000 characters."
+        },
+        "quality": {
+          "type": "string",
+          "default": "medium",
+          "enum": [
+            "auto",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "description": "Rendering quality tier. gpt-image-2.5 adds xhigh and max on top of low/medium/high. Higher tiers cost more per image.",
+          "x-ui-component": "select"
+        },
+        "size": {
+          "default": "1024x1024",
+          "description": "optional string or auto or 1024x1024 or 1536x1024 or 5 moreThe size ofthe generated images.For gpt-image-2.5 is supported as WIDTHxHEIGHT strings,for example 1536x864 . Width and height mustboth be divisible by 16 and the requested aspect ratio must be between 1:3 and 3:1.Resolutions above2560x1440 are experimental, and the maximum supported resolution is 3840x2160 .The requesteosize must also satisfy the model's current pixel and edge limits.The standard sizes 1024x1024.1536x1024 ,and 1024x1536 are supported by the GPT image models; auto is supported for modelsthat allow automatic sizing.For dall-e-2,use oneof 256x256,512x512,or 1024x1024.Fordall-e-3,use oneof 1024x1024,1792x1024,or 1024x1792.",
+          "enum": [
+            "auto",
+            "1024x768",
+            "768x1024",
+            "1024x1536",
+            "1536x1024",
+            "2048x2048",
+            "2048x1152",
+            "1152x2048",
+            "2560x1088",
+            "1088x2560",
+            "2880x2160",
+            "2160x2880",
+            "3840x2160",
+            "2160x3840"
+          ],
+          "type": "string"
+        },
+        "background": {
+          "type": "string",
+          "default": "auto",
+          "enum": [
+            "auto",
+            "opaque",
+            "transparent"
+          ],
+          "description": "Background of the generated image. When using transparent, set the output format to png or webp.",
+          "x-ui-component": "select"
+        },
+        "output_format": {
+          "type": "string",
+          "default": "png",
+          "enum": [
+            "png",
+            "jpeg",
+            "webp"
+          ],
+          "description": "Output image format.",
+          "x-ui-component": "select"
+        },
+        "moderation": {
+          "type": "string",
+          "default": "auto",
+          "enum": [
+            "auto",
+            "low"
+          ],
+          "description": "Content-moderation strictness. low applies less restrictive filtering.",
+          "x-ui-component": "select"
+        },
+        "mask": {
+          "type": "string",
+          "description": "Optional mask marking the region to edit. A URL, Base64 data, or an asset reference (asset://<ASSET_ID>). Transparent pixels mark the area the model should replace; it must match the first source image's dimensions."
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "default": 1,
+          "description": "Number of images to generate, 1 to 10. Each image is billed separately."
+        }
+      },
+      "x-order-properties": [
+        "model",
+        "images",
+        "mask",
+        "prompt",
+        "quality",
+        "size",
+        "background",
+        "output_format",
+        "n"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "background": {
+                "const": "transparent"
+              }
+            },
+            "required": [
+              "background"
+            ]
+          },
+          "then": {
+            "properties": {
+              "output_format": {
+                "enum": [
+                  "png",
+                  "webp"
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://www.atlascloud.ai/models/openai/gpt-image-2.5-flare/edit",
+    "verified_on": "2026-10-03"
+  },
+  "openai/gpt-image-2.5-sunburst/text-to-image": {
+    "input_schema": {
+      "type": "object",
+      "required": [
+        "model",
+        "prompt"
+      ],
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "Model name.",
+          "default": "openai/gpt-image-2.5-sunburst/text-to-image",
+          "enum": [
+            "openai/gpt-image-2.5-sunburst/text-to-image"
+          ]
+        },
+        "prompt": {
+          "type": "string",
+          "maxLength": 32000,
+          "default": "A cute baby sea otter floating on its back in golden evening light.",
+          "description": "Text description of the desired image. Up to 32000 characters."
+        },
+        "quality": {
+          "type": "string",
+          "default": "medium",
+          "enum": [
+            "auto",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "description": "Rendering quality tier. gpt-image-2.5 adds xhigh and max on top of low/medium/high. Higher tiers cost more per image.",
+          "x-ui-component": "select"
+        },
+        "size": {
+          "default": "1024x1024",
+          "description": "optional string or auto or 1024x1024 or 1536x1024 or 5 moreThe size ofthe generated images.For gpt-image-2.5 is supported as WIDTHxHEIGHT strings,for example 1536x864 . Width and height mustboth be divisible by 16 and the requested aspect ratio must be between 1:3 and 3:1.Resolutions above2560x1440 are experimental, and the maximum supported resolution is 3840x2160 .The requesteosize must also satisfy the model's current pixel and edge limits.The standard sizes 1024x1024.1536x1024 ,and 1024x1536 are supported by the GPT image models; auto is supported for modelsthat allow automatic sizing.For dall-e-2,use oneof 256x256,512x512,or 1024x1024.Fordall-e-3,use oneof 1024x1024,1792x1024,or 1024x1792.",
+          "enum": [
+            "auto",
+            "1024x1024",
+            "1024x768",
+            "768x1024",
+            "1024x1536",
+            "1536x1024",
+            "2048x2048",
+            "2048x1152",
+            "1152x2048",
+            "2560x1088",
+            "1088x2560",
+            "2880x2160",
+            "2160x2880",
+            "3840x2160",
+            "2160x3840"
+          ],
+          "type": "string"
+        },
+        "background": {
+          "type": "string",
+          "default": "auto",
+          "enum": [
+            "auto",
+            "opaque",
+            "transparent"
+          ],
+          "description": "Background of the generated image. When using transparent, set the output format to png or webp.",
+          "x-ui-component": "select"
+        },
+        "output_format": {
+          "type": "string",
+          "default": "png",
+          "enum": [
+            "png",
+            "jpeg",
+            "webp"
+          ],
+          "description": "Output image format.",
+          "x-ui-component": "select"
+        },
+        "moderation": {
+          "type": "string",
+          "default": "auto",
+          "enum": [
+            "auto",
+            "low"
+          ],
+          "description": "Content-moderation strictness. low applies less restrictive filtering.",
+          "x-ui-component": "select"
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "default": 1,
+          "description": "Number of images to generate, 1 to 10. Each image is billed separately."
+        }
+      },
+      "x-order-properties": [
+        "model",
+        "prompt",
+        "quality",
+        "size",
+        "background",
+        "output_format",
+        "n"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "background": {
+                "const": "transparent"
+              }
+            },
+            "required": [
+              "background"
+            ]
+          },
+          "then": {
+            "properties": {
+              "output_format": {
+                "enum": [
+                  "png",
+                  "webp"
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://www.atlascloud.ai/models/openai/gpt-image-2.5-sunburst/text-to-image",
+    "verified_on": "2026-10-03"
+  },
+  "openai/gpt-image-2.5-sunburst/edit": {
+    "input_schema": {
+      "type": "object",
+      "required": [
+        "model",
+        "prompt",
+        "images"
+      ],
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "Model name.",
+          "default": "openai/gpt-image-2.5-sunburst/edit",
+          "enum": [
+            "openai/gpt-image-2.5-sunburst/edit"
+          ]
+        },
+        "images": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "type": "string"
+          },
+          "description": "Up to 16 source images to edit. Each entry is a URL, Base64 data, or an asset reference (asset://<ASSET_ID>)."
+        },
+        "prompt": {
+          "type": "string",
+          "maxLength": 32000,
+          "default": "Arrange these products into a lovely gift basket on a marble counter.",
+          "description": "Text description of the desired image. Up to 32000 characters."
+        },
+        "quality": {
+          "type": "string",
+          "default": "medium",
+          "enum": [
+            "auto",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "description": "Rendering quality tier. gpt-image-2.5 adds xhigh and max on top of low/medium/high. Higher tiers cost more per image.",
+          "x-ui-component": "select"
+        },
+        "size": {
+          "default": "1024x1024",
+          "description": "optional string or auto or 1024x1024 or 1536x1024 or 5 moreThe size ofthe generated images.For gpt-image-2.5 is supported as WIDTHxHEIGHT strings,for example 1536x864 . Width and height mustboth be divisible by 16 and the requested aspect ratio must be between 1:3 and 3:1.Resolutions above2560x1440 are experimental, and the maximum supported resolution is 3840x2160 .The requesteosize must also satisfy the model's current pixel and edge limits.The standard sizes 1024x1024.1536x1024 ,and 1024x1536 are supported by the GPT image models; auto is supported for modelsthat allow automatic sizing.For dall-e-2,use oneof 256x256,512x512,or 1024x1024.Fordall-e-3,use oneof 1024x1024,1792x1024,or 1024x1792.",
+          "enum": [
+            "auto",
+            "1024x1024",
+            "1024x768",
+            "768x1024",
+            "1024x1536",
+            "1536x1024",
+            "2048x2048",
+            "2048x1152",
+            "1152x2048",
+            "2560x1088",
+            "1088x2560",
+            "2880x2160",
+            "2160x2880",
+            "3840x2160",
+            "2160x3840"
+          ],
+          "type": "string"
+        },
+        "background": {
+          "type": "string",
+          "default": "auto",
+          "enum": [
+            "auto",
+            "opaque",
+            "transparent"
+          ],
+          "description": "Background of the generated image. When using transparent, set the output format to png or webp.",
+          "x-ui-component": "select"
+        },
+        "output_format": {
+          "type": "string",
+          "default": "png",
+          "enum": [
+            "png",
+            "jpeg",
+            "webp"
+          ],
+          "description": "Output image format.",
+          "x-ui-component": "select"
+        },
+        "moderation": {
+          "type": "string",
+          "default": "auto",
+          "enum": [
+            "auto",
+            "low"
+          ],
+          "description": "Content-moderation strictness. low applies less restrictive filtering.",
+          "x-ui-component": "select"
+        },
+        "mask": {
+          "type": "string",
+          "description": "Optional mask marking the region to edit. A URL, Base64 data, or an asset reference (asset://<ASSET_ID>). Transparent pixels mark the area the model should replace; it must match the first source image's dimensions."
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "default": 1,
+          "description": "Number of images to generate, 1 to 10. Each image is billed separately."
+        }
+      },
+      "x-order-properties": [
+        "model",
+        "images",
+        "mask",
+        "prompt",
+        "quality",
+        "size",
+        "background",
+        "output_format",
+        "n"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "background": {
+                "const": "transparent"
+              }
+            },
+            "required": [
+              "background"
+            ]
+          },
+          "then": {
+            "properties": {
+              "output_format": {
+                "enum": [
+                  "png",
+                  "webp"
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://www.atlascloud.ai/models/openai/gpt-image-2.5-sunburst/edit",
+    "verified_on": "2026-10-03"
+  },
+  "google/nano-banana-pro/text-to-image": {
+    "input_schema": {
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "model name",
+          "default": "google/nano-banana-pro/text-to-image"
+        },
+        "aspect_ratio": {
+          "description": "The aspect ratio of the generated media.",
+          "enum": [
+            "1:1",
+            "3:2",
+            "2:3",
+            "3:4",
+            "4:3",
+            "4:5",
+            "5:4",
+            "9:16",
+            "16:9",
+            "21:9"
+          ],
+          "type": "string",
+          "x-placeholder": "Select aspect ratio"
+        },
+        "enable_base64_output": {
+          "default": false,
+          "description": "If enabled, the output will be encoded into a BASE64 string instead of a URL. This property is only available through the API.",
+          "disabled": true,
+          "type": "boolean"
+        },
+        "enable_sync_mode": {
+          "default": false,
+          "description": "If set to true, the function will wait for the result to be generated and uploaded before returning the response. It allows you to get the result directly in the response. This property is only available through the API.",
+          "disabled": true,
+          "type": "boolean"
+        },
+        "enable_web_search": {
+          "default": false,
+          "description": "If enabled, the model will use web search to ground the generation with real-time information.",
+          "type": "boolean"
+        },
+        "prompt": {
+          "description": "The positive prompt for the generation.",
+          "type": "string"
+        },
+        "resolution": {
+          "default": "1k",
+          "description": "The resolution of the output image.",
+          "enum": [
+            "1k",
+            "2k",
+            "4k"
+          ],
+          "type": "string"
+        },
+        "output_format": {
+          "default": "default",
+          "description": "The format of the output image.",
+          "enum": [
+            "default",
+            "png",
+            "jpeg"
+          ],
+          "type": "string"
+        },
+        "media_resolution": {
+          "default": "default",
+          "description": "Controls how input media is processed. LOW reduces tokens per image/video, possibly losing detail but allowing longer videos in context. Supported values: HIGH, MEDIUM, LOW.",
+          "enum": [
+            "default",
+            "low",
+            "medium",
+            "high"
+          ],
+          "type": "string"
+        },
+        "seed": {
+          "default": -1,
+          "description": "Random seed. Does not guarantee determinism but may improve repeatability. -1 means a random seed will be used.",
+          "type": "integer",
+          "x-advanced": true
+        },
+        "top_p": {
+          "default": 0.95,
+          "description": "Probability threshold for top-p sampling",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number",
+          "x-advanced": true
+        },
+        "temperature": {
+          "default": 1,
+          "description": "Creativity allowed in the responses. Best results at default 1.0. Lower values may impact reasoning.",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number",
+          "x-advanced": true
+        }
+      },
+      "required": [
+        "model",
+        "prompt"
+      ],
+      "type": "object",
+      "x-order-properties": [
+        "model",
+        "prompt",
+        "aspect_ratio",
+        "resolution",
+        "enable_web_search",
+        "output_format",
+        "media_resolution",
+        "top_p",
+        "temperature",
+        "seed",
+        "enable_sync_mode",
+        "enable_base64_output"
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://www.atlascloud.ai/models/google/nano-banana-pro/text-to-image",
+    "verified_on": "2026-10-03"
+  },
+  "google/nano-banana-pro/edit": {
+    "input_schema": {
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "model name",
+          "default": "google/nano-banana-pro/edit"
+        },
+        "aspect_ratio": {
+          "description": "The aspect ratio of the generated media.",
+          "enum": [
+            "1:1",
+            "3:2",
+            "2:3",
+            "3:4",
+            "4:3",
+            "4:5",
+            "5:4",
+            "9:16",
+            "16:9",
+            "21:9"
+          ],
+          "type": "string",
+          "x-placeholder": "Select aspect ratio"
+        },
+        "enable_base64_output": {
+          "default": false,
+          "description": "If enabled, the output will be encoded into a BASE64 string instead of a URL. This property is only available through the API.",
+          "disabled": true,
+          "type": "boolean"
+        },
+        "enable_sync_mode": {
+          "default": false,
+          "description": "If set to true, the function will wait for the result to be generated and uploaded before returning the response. It allows you to get the result directly in the response. This property is only available through the API.",
+          "disabled": true,
+          "type": "boolean"
+        },
+        "enable_web_search": {
+          "default": false,
+          "description": "If enabled, the model will use web search to ground the generation with real-time information.",
+          "type": "boolean"
+        },
+        "images": {
+          "description": "List of URLs of input images for editing. The maximum number of images is 10.",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "minItems": 1,
+          "type": "array",
+          "x-ui-component": "uploaders"
+        },
+        "output_format": {
+          "default": "default",
+          "description": "The format of the output image.",
+          "enum": [
+            "default",
+            "png",
+            "jpeg"
+          ],
+          "type": "string"
+        },
+        "prompt": {
+          "description": "The positive prompt for the generation.",
+          "type": "string"
+        },
+        "resolution": {
+          "default": "1k",
+          "description": "The resolution of the output image.",
+          "enum": [
+            "1k",
+            "2k",
+            "4k"
+          ],
+          "type": "string"
+        },
+        "media_resolution": {
+          "default": "default",
+          "description": "Controls how input media is processed. LOW reduces tokens per image/video, possibly losing detail but allowing longer videos in context. Supported values: HIGH, MEDIUM, LOW.",
+          "enum": [
+            "default",
+            "low",
+            "medium",
+            "high"
+          ],
+          "type": "string"
+        },
+        "seed": {
+          "default": -1,
+          "description": "Random seed. Does not guarantee determinism but may improve repeatability. -1 means a random seed will be used.",
+          "type": "integer",
+          "x-advanced": true
+        },
+        "top_p": {
+          "default": 0.95,
+          "description": "Probability threshold for top-p sampling",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number",
+          "x-advanced": true
+        },
+        "temperature": {
+          "default": 1,
+          "description": "Creativity allowed in the responses. Best results at default 1.0. Lower values may impact reasoning.",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number",
+          "x-advanced": true
+        }
+      },
+      "required": [
+        "model",
+        "prompt",
+        "images"
+      ],
+      "type": "object",
+      "x-order-properties": [
+        "model",
+        "prompt",
+        "images",
+        "aspect_ratio",
+        "resolution",
+        "enable_web_search",
+        "output_format",
+        "media_resolution",
+        "top_p",
+        "temperature",
+        "seed",
+        "enable_sync_mode",
+        "enable_base64_output"
+      ],
+      "additionalProperties": false
+    },
+    "source": "https://www.atlascloud.ai/models/google/nano-banana-pro/edit",
+    "verified_on": "2026-10-03"
+  }
+}

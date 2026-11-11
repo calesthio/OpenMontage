@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import time
@@ -39,7 +40,7 @@ class PiperTTS(BaseTool):
         "  pip install piper-tts\n"
         "Or download from https://github.com/rhasspy/piper/releases\n"
         "Then download a voice model:\n"
-        "  piper --download-dir ~/.piper/models --model en_US-lessac-medium"
+        "  python -m piper.download_voices --download-dir ~/.piper/models en_US-lessac-medium"
     )
     agent_skills = ["text-to-speech"]
 
@@ -95,6 +96,23 @@ class PiperTTS(BaseTool):
     side_effects = ["writes audio file to output_path"]
     user_visible_verification = ["Listen to generated audio for intelligibility"]
 
+    def vouches_for_model(self, model: str) -> bool:
+        """True when `piper --model <model>` (as _generate invokes it) finds a voice.
+
+        Mirrors piper's own lookup: an existing file path (absolute or relative),
+        else `<name>.onnx` in the cwd or the configured home voice directory.
+        False means "can't confirm", not "unsupported":
+        provider_routing then applies its generic free-form-model policy.
+        """
+        return Path(model).is_file() or any(
+            (directory / f"{model}.onnx").is_file()
+            for directory in (Path.cwd(), self._voice_data_dir())
+        )
+
+    @staticmethod
+    def _voice_data_dir() -> Path:
+        return Path.home() / ".piper" / "models"
+
     def get_status(self) -> ToolStatus:
         if shutil.which("piper"):
             return ToolStatus.AVAILABLE
@@ -124,6 +142,7 @@ class PiperTTS(BaseTool):
             [
                 "piper",
                 "--model", inputs.get("model", "en_US-lessac-medium"),
+                "--data-dir", str(self._voice_data_dir()),
                 "--speaker", str(inputs.get("speaker_id", 0)),
                 "--length-scale", str(inputs.get("length_scale", 1.0)),
                 "--sentence-silence", str(inputs.get("sentence_silence", 0.3)),
@@ -132,6 +151,10 @@ class PiperTTS(BaseTool):
             input=inputs["text"],
             capture_output=True,
             text=True,
+            # Both sides UTF-8: the Windows default (cp1252) turns accented text
+            # into input piper can't decode, which yields an empty WAV.
+            encoding="utf-8",
+            env={**os.environ, "PYTHONIOENCODING": "utf-8"},
             timeout=300,
         )
 

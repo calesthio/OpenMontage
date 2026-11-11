@@ -150,8 +150,8 @@ class LipSync(BaseTool):
                 error="Wav2Lip not available. " + self.install_instructions,
             )
 
-        video_path = Path(inputs["video_path"])
-        audio_path = Path(inputs["audio_path"])
+        video_path = Path(inputs["video_path"]).resolve()
+        audio_path = Path(inputs["audio_path"]).resolve()
 
         if not video_path.exists():
             return ToolResult(success=False, error=f"Video not found: {video_path}")
@@ -160,7 +160,7 @@ class LipSync(BaseTool):
 
         output_path = Path(
             inputs.get("output_path", str(video_path.with_stem(f"{video_path.stem}_lipsync")))
-        )
+        ).resolve()
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         model_variant = inputs.get("model", "wav2lip")

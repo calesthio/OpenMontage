@@ -12,6 +12,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+from tools.provider_pricing import PriceQuoteRequired
+
 from tools.base_tool import (
     BaseTool,
     Determinism,
@@ -70,6 +72,11 @@ class GoogleMusic(BaseTool):
         "type": "object",
         "required": ["prompt"],
         "properties": {
+            "model": {
+                "type": "string",
+                "enum": ["lyria-3-pro-preview", "lyria-3.5"],
+                "default": "lyria-3.5",
+            },
             "prompt": {
                 "type": "string",
                 "description": "Music description (mood, genre, instruments, tempo)",
@@ -104,7 +111,12 @@ class GoogleMusic(BaseTool):
     retry_policy = RetryPolicy(
         max_retries=2, retryable_errors=["rate_limit", "timeout"]
     )
-    idempotency_key_fields = ["prompt", "duration_seconds", "image_url", "image_path"]
+    idempotency_key_fields = [
+        "prompt",
+        "duration_seconds",
+        "image_url",
+        "image_path",
+    ] + ["model"]
     side_effects = [
         "writes audio file to output_path",
         "calls Google Gemini/Vertex API",
@@ -128,6 +140,10 @@ class GoogleMusic(BaseTool):
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         """Estimate the generation cost in USD."""
         # Lyria 3 Pro is a flat $0.08 per generation request
+        if inputs.get("model", "lyria-3.5") == "lyria-3.5":
+            raise PriceQuoteRequired(
+                "Obtain current Lyria 3.5 pricing before generation"
+            )
         return 0.08
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
@@ -233,7 +249,9 @@ class GoogleMusic(BaseTool):
                 error=f"Failed to load visual conditioning image: {e}",
             )
 
-        model_name = "lyria-3-pro-preview"
+        model_name = inputs.get("model", "lyria-3.5")
+        if model_name not in self.input_schema["properties"]["model"]["enum"]:
+            return ToolResult(success=False, error="Unsupported Lyria model")
 
         try:
             # Create parent dirs if needed
@@ -294,7 +312,7 @@ class GoogleMusic(BaseTool):
                 audio_bytes = base64.b64decode(audio_data)
             else:
                 # If it's already bytes, it could be raw audio or base64 bytes
-                if audio_data.startswith(b"ID3") or (
+                if audio_data.startswith((b"ID3", b"RIFF")) or (
                     len(audio_data) > 2
                     and audio_data[0] == 0xFF
                     and (audio_data[1] & 0xE0) == 0xE0
@@ -314,7 +332,7 @@ class GoogleMusic(BaseTool):
             )
 
         duration_seconds = round(time.time() - start, 2)
-        cost_usd = self.estimate_cost(inputs)
+        cost_usd = self.estimate_cost(inputs) if model_name != "lyria-3.5" else None
 
         return ToolResult(
             success=True,
@@ -326,6 +344,7 @@ class GoogleMusic(BaseTool):
                 "output": str(output_path),
                 "output_path": str(output_path),
                 "format": "mp3",
+                "cost_status": "unquoted" if cost_usd is None else "estimated",
             },
             artifacts=[str(output_path)],
             cost_usd=cost_usd,

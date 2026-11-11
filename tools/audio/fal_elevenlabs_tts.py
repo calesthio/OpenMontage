@@ -7,6 +7,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+from tools.provider_pricing import PriceQuoteRequired
+
 from tools.base_tool import (
     BaseTool,
     Determinism,
@@ -18,6 +20,7 @@ from tools.base_tool import (
     ToolStability,
     ToolStatus,
     ToolTier,
+    ResumeSupport,
 )
 
 
@@ -67,12 +70,16 @@ class FalElevenLabsTTS(BaseTool):
         "voice cloning or private custom ElevenLabs voices",
     ]
 
+    resume_support = ResumeSupport.FROM_CHECKPOINT
+
     _MODELS = {
+        "eleven-v4": "elevenlabs/tts/eleven-v4",
         "eleven-v3": "fal-ai/elevenlabs/tts/eleven-v3",
         "multilingual-v2": "fal-ai/elevenlabs/tts/multilingual-v2",
         "turbo-v2.5": "fal-ai/elevenlabs/tts/turbo-v2.5",
     }
     _MODEL_ALIASES = {
+        "eleven_v4": "eleven-v4",
         "eleven_v3": "eleven-v3",
         "eleven_multilingual_v2": "multilingual-v2",
         "multilingual_v2": "multilingual-v2",
@@ -90,7 +97,7 @@ class FalElevenLabsTTS(BaseTool):
 
     input_schema = {
         "type": "object",
-        "required": ["text"],
+        "anyOf": [{"required": ["text"]}, {"required": ["resume_job"]}],
         "properties": {
             "text": {
                 "type": "string",
@@ -167,6 +174,8 @@ class FalElevenLabsTTS(BaseTool):
             },
             "seed": {"type": "integer"},
             "output_path": {"type": "string"},
+            "resume_job": {"type": "object"},
+            "job_path": {"type": "string"},
         },
     }
 
@@ -217,6 +226,8 @@ class FalElevenLabsTTS(BaseTool):
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         model_name, _ = self._resolve_model(inputs.get("model_id"))
+        if model_name == "eleven-v4":
+            raise PriceQuoteRequired("Obtain current fal Eleven v4 price quote")
         return round(
             len(inputs.get("text", "")) * self._PRICE_PER_CHARACTER[model_name],
             4,
@@ -238,6 +249,8 @@ class FalElevenLabsTTS(BaseTool):
                 error="No fal.ai API key found. " + self.install_instructions,
             )
 
+        if inputs.get("resume_job"):
+            return self._run_job(inputs, api_key, None, dict(inputs["resume_job"]))
         text = str(inputs.get("text", "")).strip()
         if not text:
             return ToolResult(success=False, error="text is required")
@@ -274,86 +287,129 @@ class FalElevenLabsTTS(BaseTool):
             if inputs.get(optional) is not None:
                 payload[optional] = inputs[optional]
 
+        if model_name == "eleven-v4":
+            if "speed" in inputs or "style" in inputs:
+                return ToolResult(
+                    success=False, error="fal Eleven v4 does not expose speed/style"
+                )
+            payload.pop("speed", None)
+            from jsonschema import Draft202012Validator
+            from tools.fal_media import CONTRACTS
+
+            try:
+                Draft202012Validator(CONTRACTS[model_id]["input_schema"]).validate(
+                    payload
+                )
+            except Exception as exc:
+                return ToolResult(success=False, error=str(exc))
+
+        job = {
+            "tool": self.name,
+            "model": model_id,
+            "model_name": model_name,
+            "voice": voice,
+            "text_length": len(text),
+            "output_format": output_format,
+            "timestamps": payload["timestamps"],
+            "stability": stability,
+            "similarity_boost": similarity_boost,
+            "speed": speed if model_name != "eleven-v4" else None,
+            "estimated_cost": self.estimate_cost(inputs)
+            if model_name != "eleven-v4"
+            else None,
+        }
+        return self._run_job(inputs, api_key, payload, job)
+
+    def _run_job(self, inputs, api_key, payload, job):
         import requests
+        from urllib.parse import urlparse
+        from tools.provider_jobs import save_job
 
         started = time.time()
         headers = {
             "Authorization": f"Key {api_key}",
             "Content-Type": "application/json",
         }
-        queue_url = f"https://queue.fal.run/{model_id}"
-
         try:
-            submit_response = requests.post(
-                queue_url,
-                headers=headers,
-                json=payload,
-                timeout=30,
-            )
-            submit_response.raise_for_status()
-            queue_data = submit_response.json()
-            status_url = queue_data["status_url"]
-            response_url = queue_data["response_url"]
-
+            if job.get("tool") != self.name or self._MODELS.get(
+                job.get("model_name")
+            ) != job.get("model"):
+                raise ValueError("Invalid ElevenLabs fal resume job")
+            if payload is not None:
+                response = requests.post(
+                    f"https://queue.fal.run/{job['model']}",
+                    headers=headers,
+                    json=payload,
+                    timeout=30,
+                )
+                response.raise_for_status()
+                submitted = response.json()
+                job.update(
+                    {key: submitted[key] for key in ("status_url", "response_url")}
+                )
+                job["request_id"] = submitted.get("request_id")
+                save_job(inputs.get("job_path"), job)
+            for field in ("status_url", "response_url"):
+                url = urlparse(job[field])
+                if url.scheme != "https" or url.netloc != "queue.fal.run":
+                    raise ValueError("Invalid fal job URL")
             deadline = time.monotonic() + self._MAX_WAIT_SECONDS
             while True:
                 if time.monotonic() >= deadline:
-                    return ToolResult(
-                        success=False,
-                        error="fal.ai ElevenLabs speech timed out while waiting in the queue",
-                        duration_seconds=round(time.time() - started, 2),
+                    raise TimeoutError(
+                        "fal.ai ElevenLabs speech timed out; resume the existing job"
                     )
                 time.sleep(self._POLL_INTERVAL_SECONDS)
-                status_response = requests.get(status_url, headers=headers, timeout=20)
-                status_response.raise_for_status()
-                status = status_response.json().get("status", "UNKNOWN")
+                response = requests.get(job["status_url"], headers=headers, timeout=20)
+                response.raise_for_status()
+                status = response.json().get("status", "UNKNOWN")
                 if status == "COMPLETED":
                     break
                 if status in {"FAILED", "CANCELLED"}:
-                    return ToolResult(
-                        success=False,
-                        error=f"fal.ai ElevenLabs speech {status.lower()}",
-                        duration_seconds=round(time.time() - started, 2),
-                    )
-
-            result_response = requests.get(response_url, headers=headers, timeout=30)
-            result_response.raise_for_status()
-            result_data = result_response.json()
-            audio_url = result_data["audio"]["url"]
-
-            audio_response = requests.get(audio_url, timeout=120)
-            audio_response.raise_for_status()
-            default_output = f"fal_elevenlabs_tts.{self._output_extension(output_format)}"
-            output_path = Path(inputs.get("output_path", default_output))
+                    raise RuntimeError(f"fal.ai ElevenLabs speech {status.lower()}")
+            response = requests.get(job["response_url"], headers=headers, timeout=30)
+            response.raise_for_status()
+            result_data = response.json()
+            response = requests.get(result_data["audio"]["url"], timeout=120)
+            response.raise_for_status()
+            if not response.content:
+                raise ValueError("Empty fal audio output")
+            output_format = job["output_format"]
+            output_path = Path(
+                inputs.get(
+                    "output_path",
+                    f"fal_elevenlabs_tts.{self._output_extension(output_format)}",
+                )
+            )
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_path.write_bytes(audio_response.content)
+            output_path.write_bytes(response.content)
         except Exception as exc:
-            safe_error = str(exc).replace(api_key, "[REDACTED]")
             return ToolResult(
                 success=False,
-                error=f"fal.ai ElevenLabs speech failed: {safe_error}",
+                error=f"fal.ai ElevenLabs speech failed: {str(exc).replace(api_key, '[REDACTED]')}",
+                data={"resume_job": job} if job.get("status_url") else {},
                 duration_seconds=round(time.time() - started, 2),
             )
-
         data = {
             "provider": self.provider,
-            "model": model_id,
-            "voice": voice,
-            "text_length": len(text),
-            "stability": stability,
-            "similarity_boost": similarity_boost,
-            "speed": speed,
+            "model": job["model"],
+            "voice": job["voice"],
+            "text_length": job["text_length"],
+            "stability": job["stability"],
+            "similarity_boost": job["similarity_boost"],
+            "speed": job["speed"],
             "output": str(output_path),
             "format": output_format,
+            "resume_job": job,
+            "cost_status": "unquoted" if job["estimated_cost"] is None else "estimated",
         }
-        if payload["timestamps"] and "timestamps" in result_data:
+        if job["timestamps"] and "timestamps" in result_data:
             data["timestamps"] = result_data["timestamps"]
-
         return ToolResult(
             success=True,
             data=data,
             artifacts=[str(output_path)],
-            cost_usd=self.estimate_cost({**inputs, "model_id": model_name, "text": text}),
+            cost_usd=job["estimated_cost"],
             duration_seconds=round(time.time() - started, 2),
-            model=model_id,
+            model=job["model"],
         )

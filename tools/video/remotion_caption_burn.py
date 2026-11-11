@@ -35,9 +35,12 @@ import math
 import re
 import shutil
 import time
+import os
+import tempfile
 from pathlib import Path
 from typing import Any
 
+from lib.paths import REPO_ROOT
 from tools.base_tool import (
     BaseTool,
     Determinism,
@@ -47,6 +50,107 @@ from tools.base_tool import (
     ToolStability,
     ToolTier,
 )
+
+
+# ---------------------------------------------------------------------- #
+#  Thai (scriptio continua) caption support
+# ---------------------------------------------------------------------- #
+#
+# Thai is written without spaces between words. Whisper's word timestamps
+# for Thai are byte-level BPE fragments — often a single consonant or a
+# detached tone mark ("ร", "ู้", "ไ", "หม") — so passing them straight to
+# CaptionOverlay renders "สู ง แล": broken syllables separated by spaces.
+# For Thai we re-join the fragments of each segment, segment the text into
+# real words (pythainlp newmm when installed), map every word back to the
+# timing of the fragments it covers, and render with no word separator.
+
+_THAI_CHAR = re.compile(r"[฀-๿]")
+_LATIN_CHAR = re.compile(r"[A-Za-z]")
+# A plain trailing " " inside an inline-block caption word collapses to zero
+# width in headless Chromium; a non-breaking space survives.
+_NBSP = " "
+
+
+def _is_thai(text: str) -> bool:
+    thai = len(_THAI_CHAR.findall(text))
+    return thai > 0 and thai >= len(_LATIN_CHAR.findall(text))
+
+
+def _thai_tokenize(text: str) -> list[str]:
+    """Split Thai text into words; whitespace runs are kept as tokens."""
+    try:
+        from pythainlp.tokenize import word_tokenize
+    except ImportError:  # fallback: keep only the spaces the text already has
+        return [t for t in re.split(r"(\s+)", text) if t]
+    return [t for t in word_tokenize(text, engine="newmm", keep_whitespace=True) if t]
+
+
+def _apply_text_corrections(
+    chars: list[str], times: list[tuple[float, float]], corr: dict[str, str]
+) -> tuple[list[str], list[tuple[float, float]]]:
+    """Case-insensitive substring corrections on a per-character timeline.
+
+    Replacement characters inherit the time span of the text they replace,
+    so the corrected word keeps its original timing even if its length
+    changes. Matching uses ``re.IGNORECASE``, whose simple case folding
+    keeps match offsets aligned with the original character timeline.
+    """
+    for wrong in sorted(corr, key=len, reverse=True):
+        right = corr[wrong]
+        if not wrong or wrong == right:
+            continue
+        pattern = re.compile(re.escape(wrong), re.IGNORECASE)
+        text = "".join(chars)
+        out_c: list[str] = []
+        out_t: list[tuple[float, float]] = []
+        pos = 0
+        for m in pattern.finditer(text):
+            i, j = m.start(), m.end()
+            out_c.extend(chars[pos:i])
+            out_t.extend(times[pos:i])
+            span = (times[i][0], times[j - 1][1])
+            out_c.extend(right)
+            out_t.extend([span] * len(right))
+            pos = j
+        out_c.extend(chars[pos:])
+        out_t.extend(times[pos:])
+        chars, times = out_c, out_t
+    return chars, times
+
+
+def _thai_timeline_to_captions(
+    chars: list[str], times: list[tuple[float, float]]
+) -> list[dict]:
+    """Tokenize a per-character timeline into caption words (seconds → ms)."""
+    text = "".join(chars)
+    words: list[dict] = []
+    pos = 0
+    for tok in _thai_tokenize(text):
+        start, end = pos, pos + len(tok) - 1
+        pos += len(tok)
+        if not tok.strip():
+            # Keep real spaces (e.g. around English words or between
+            # phrases) visible by attaching them to the previous word.
+            if words and not words[-1]["word"].endswith(_NBSP):
+                words[-1]["word"] += _NBSP
+            continue
+        words.append({
+            "word": tok,
+            "startMs": int(times[start][0] * 1000),
+            "endMs": int(times[end][1] * 1000),
+        })
+    if words:
+        words[-1]["word"] = words[-1]["word"].rstrip(_NBSP)
+        words[-1]["pageBreakAfter"] = True
+    return words
+
+
+def _even_timeline(text: str, start: float, end: float) -> tuple[list[str], list[tuple[float, float]]]:
+    """Spread a phrase evenly over [start, end] one character at a time."""
+    text = text.strip()
+    n = max(len(text), 1)
+    step = (end - start) / n
+    return list(text), [(start + i * step, start + (i + 1) * step) for i in range(len(text))]
 
 
 class RemotionCaptionBurn(BaseTool):
@@ -100,7 +204,11 @@ class RemotionCaptionBurn(BaseTool):
             "words_per_page": {
                 "type": "integer",
                 "default": 4,
-                "description": "Words shown at once in the caption overlay.",
+                "description": (
+                    "Words shown at once in the caption overlay. Defaults to 4 "
+                    "(6 for Thai, whose captions are segmented into words and "
+                    "rendered without spaces automatically)."
+                ),
             },
             "font_size": {
                 "type": "integer",
@@ -112,6 +220,7 @@ class RemotionCaptionBurn(BaseTool):
                 "default": "#22D3EE",
                 "description": "Highlight color for the active word (hex).",
             },
+            "caption_props": {"type": "object", "description": "Extra CaptionOverlay props passed through as captionProps."},
             "corrections": {
                 "type": "object",
                 "description": (
@@ -142,7 +251,10 @@ class RemotionCaptionBurn(BaseTool):
     }
 
     resource_profile = ResourceProfile(cpu_cores=4, ram_mb=2048, vram_mb=0, disk_mb=500)
-    idempotency_key_fields = ["input_path", "segments", "srt_path"]
+    idempotency_key_fields = [
+        "input_path", "segments", "srt_path", "corrections", "words_per_page",
+        "font_size", "highlight_color", "overlays", "force_ffmpeg", "caption_props",
+    ]
     side_effects = ["writes captioned video to output_path"]
     user_visible_verification = [
         "Play the output video and verify captions appear at the bottom of the frame",
@@ -156,17 +268,13 @@ class RemotionCaptionBurn(BaseTool):
 
     def _find_remotion_root(self) -> Path | None:
         """Find the remotion-composer directory relative to the repo."""
-        candidates = [
-            Path.cwd() / "remotion-composer",
-            Path(__file__).resolve().parent.parent.parent / "remotion-composer",
-        ]
-        for p in candidates:
-            if (
-                p.is_dir()
-                and (p / "package.json").exists()
-                and (p / "node_modules").is_dir()
-            ):
-                return p
+        p = REPO_ROOT / "remotion-composer"
+        if (
+            p.is_dir()
+            and (p / "package.json").exists()
+            and (p / "node_modules").is_dir()
+        ):
+            return p
         return None
 
     def _remotion_available(self) -> bool:
@@ -179,12 +287,32 @@ class RemotionCaptionBurn(BaseTool):
     #  Word caption conversion
     # ------------------------------------------------------------------ #
 
+    @staticmethod
+    def _segments_are_thai(segments: list[dict]) -> bool:
+        """Caption mode for transcriber segments, judged on the source text."""
+        return _is_thai(" ".join(
+            seg.get("text") or "".join(w.get("word", "") for w in seg.get("words", []))
+            for seg in segments
+        ))
+
     def _segments_to_word_captions(
-        self, segments: list[dict], corrections: dict[str, str] | None = None
+        self,
+        segments: list[dict],
+        corrections: dict[str, str] | None = None,
+        thai: bool | None = None,
     ) -> list[dict]:
-        """Convert transcriber segments to [{word, startMs, endMs}, ...]."""
+        """Convert transcriber segments to [{word, startMs, endMs}, ...].
+
+        ``thai`` is the caption mode; ``None`` detects it from the source
+        text. Rendering must use the same mode (see ``execute``).
+        """
         captions: list[dict] = []
         corr = {k.lower(): v for k, v in (corrections or {}).items()}
+
+        if thai is None:
+            thai = self._segments_are_thai(segments)
+        if thai:
+            return self._thai_segments_to_word_captions(segments, corrections or {})
 
         for seg in segments:
             words = seg.get("words", [])
@@ -216,14 +344,56 @@ class RemotionCaptionBurn(BaseTool):
                     })
         return captions
 
-    def _srt_to_word_captions(
-        self, srt_path: str, corrections: dict[str, str] | None = None
+    def _thai_segments_to_word_captions(
+        self, segments: list[dict], corrections: dict[str, str]
     ) -> list[dict]:
-        """Parse SRT file into word captions."""
+        """Thai: merge Whisper fragments into words, one page per segment."""
+        captions: list[dict] = []
+        for seg in segments:
+            chars: list[str] = []
+            times: list[tuple[float, float]] = []
+            words = seg.get("words") or []
+            if words:
+                for w in words:
+                    frag = w.get("word", "")
+                    chars.extend(frag)
+                    times.extend([(w["start"], w["end"])] * len(frag))
+                # Drop leading/trailing whitespace of the joined segment.
+                while chars and not chars[0].strip():
+                    chars.pop(0); times.pop(0)
+                while chars and not chars[-1].strip():
+                    chars.pop(); times.pop()
+            elif seg.get("text"):
+                chars, times = _even_timeline(seg["text"], seg["start"], seg["end"])
+            if not chars:
+                continue
+            chars, times = _apply_text_corrections(chars, times, corrections)
+            captions.extend(_thai_timeline_to_captions(chars, times))
+        return captions
+
+    @staticmethod
+    def _caption_word_separator(thai: bool) -> str | None:
+        """Separator CaptionOverlay should use for a caption mode.
+
+        The mode comes from the source text, never from corrected captions:
+        a correction can tip the Latin/Thai balance and must not change how
+        captions that were already built are joined.
+        """
+        return "" if thai else None
+
+    def _srt_to_word_captions(
+        self,
+        srt_path: str,
+        corrections: dict[str, str] | None = None,
+        thai: bool | None = None,
+    ) -> list[dict]:
+        """Parse SRT file into word captions (``thai=None`` detects the mode)."""
         content = Path(srt_path).read_text(encoding="utf-8")
-        blocks = re.split(r"\n\n+", content.strip())
+        blocks = re.split(r"\n[ \t]*\n", content.strip())
         corr = {k.lower(): v for k, v in (corrections or {}).items()}
         captions: list[dict] = []
+        if thai is None:
+            thai = _is_thai(content)
 
         for block in blocks:
             lines = block.strip().split("\n")
@@ -249,6 +419,11 @@ class RemotionCaptionBurn(BaseTool):
                 + int(m.group(8))
             )
             text = " ".join(lines[2:]).strip()
+            if thai:
+                chars, times = _even_timeline(text, start_ms / 1000, end_ms / 1000)
+                chars, times = _apply_text_corrections(chars, times, corrections or {})
+                captions.extend(_thai_timeline_to_captions(chars, times))
+                continue
             words = text.split()
             per_word = (end_ms - start_ms) / max(len(words), 1)
             for i, w in enumerate(words):
@@ -273,6 +448,8 @@ class RemotionCaptionBurn(BaseTool):
         font_size: int,
         highlight_color: str,
         overlays: list[dict] | None = None,
+        thai: bool = False,
+        caption_props: dict | None = None,
     ) -> ToolResult:
         root = self._find_remotion_root()
         if root is None:
@@ -312,13 +489,17 @@ class RemotionCaptionBurn(BaseTool):
 
         # Build props JSON
         props = {
-            "videoSrc": f"public/talking-head/{video_filename}",
+            "videoSrc": f"talking-head/{video_filename}",
             "captions": captions,
             "overlays": overlays or [],
             "wordsPerPage": words_per_page,
             "fontSize": font_size,
             "highlightColor": highlight_color,
+            **({"captionProps": caption_props} if caption_props else {}),
         }
+        separator = self._caption_word_separator(thai)
+        if separator is not None:
+            props["captionWordSeparator"] = separator
         props_dir = root / "public" / "demo-props"
         props_dir.mkdir(parents=True, exist_ok=True)
         props_file = props_dir / f"caption-burn-{Path(input_path).stem}.json"
@@ -364,19 +545,29 @@ class RemotionCaptionBurn(BaseTool):
         input_path: str,
         output_path: str,
         captions: list[dict],
+        thai: bool = False,
     ) -> ToolResult:
         """Fall back to FFmpeg subtitle burning at bottom of frame."""
         # Generate temporary SRT from word captions
-        tmp_srt = Path(output_path).parent / f"_tmp_captions_{int(time.time())}.srt"
-        tmp_srt.parent.mkdir(parents=True, exist_ok=True)
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
 
         srt_lines = []
         idx = 1
         # Group into pages of ~4 words
         page_size = 4
-        for i in range(0, len(captions), page_size):
-            page = captions[i : i + page_size]
-            text = " ".join(c["word"] for c in page)
+        separator = self._caption_word_separator(thai)
+        joiner = " " if separator is None else separator
+        pages: list[list[dict]] = []
+        current: list[dict] = []
+        for c in captions:
+            current.append(c)
+            if len(current) >= page_size or c.get("pageBreakAfter"):
+                pages.append(current)
+                current = []
+        if current:
+            pages.append(current)
+        for page in pages:
+            text = joiner.join(c["word"] for c in page).replace(_NBSP, " ")
             start = page[0]["startMs"]
             end = page[-1]["endMs"]
             srt_lines.append(str(idx))
@@ -387,32 +578,37 @@ class RemotionCaptionBurn(BaseTool):
             srt_lines.append("")
             idx += 1
 
-        tmp_srt.write_text("\n".join(srt_lines), encoding="utf-8")
-
-        # Escape path for FFmpeg subtitles filter (Windows colon issue)
-        srt_escaped = str(tmp_srt).replace("\\", "/").replace(":", "\\:")
-
-        cmd = [
-            "ffmpeg", "-y",
-            "-i", input_path,
-            "-vf", (
-                f"subtitles='{srt_escaped}'"
-                ":force_style='FontName=Segoe UI,FontSize=24,Bold=1,"
-                "PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,"
-                "Outline=3,Shadow=2,Alignment=2,MarginV=100'"
-            ),
-            "-c:v", "libx264", "-preset", "fast", "-crf", "18",
-            "-pix_fmt", "yuv420p",
-            "-c:a", "copy",
-            output_path,
-        ]
-        self.run_command(cmd)
-
-        # Clean up temp SRT
+        tmp_fd, tmp_name = tempfile.mkstemp(
+            prefix="_tmp_captions_", suffix=".srt", dir=Path(output_path).parent
+        )
+        tmp_srt = Path(tmp_name)
         try:
-            tmp_srt.unlink()
-        except OSError:
-            pass
+            with os.fdopen(tmp_fd, "w", encoding="utf-8") as handle:
+                handle.write("\n".join(srt_lines))
+            # Escape path for FFmpeg subtitles filter (Windows colon issue)
+            srt_escaped = str(tmp_srt).replace("\\", "/").replace(":", "\\:")
+
+            cmd = [
+                "ffmpeg", "-y",
+                "-i", input_path,
+                "-vf", (
+                    f"subtitles='{srt_escaped}'"
+                    ":force_style='FontName=Segoe UI,FontSize=24,Bold=1,"
+                    "PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,"
+                    "Outline=3,Shadow=2,Alignment=2,MarginV=100'"
+                ),
+                "-c:v", "libx264", "-preset", "fast", "-crf", "18",
+                "-pix_fmt", "yuv420p",
+                "-c:a", "copy",
+                output_path,
+            ]
+            self.run_command(cmd)
+
+        finally:
+            try:
+                tmp_srt.unlink()
+            except OSError:
+                pass
 
         if not Path(output_path).exists():
             return ToolResult(success=False, error="FFmpeg subtitle burn produced no output")
@@ -445,7 +641,7 @@ class RemotionCaptionBurn(BaseTool):
         output_path = inputs["output_path"]
         corrections = inputs.get("corrections")
         force_ffmpeg = inputs.get("force_ffmpeg", False)
-        words_per_page = inputs.get("words_per_page", 4)
+        words_per_page = inputs.get("words_per_page")
         font_size = inputs.get("font_size", 52)
         highlight_color = inputs.get("highlight_color", "#22D3EE")
 
@@ -459,15 +655,24 @@ class RemotionCaptionBurn(BaseTool):
         segments = inputs.get("segments")
         srt_path = inputs.get("srt_path")
 
+        # Decide the caption mode once, from the source text, and use it for
+        # conversion, the word separator and the default page size alike.
         if segments:
-            captions = self._segments_to_word_captions(segments, corrections)
+            thai = self._segments_are_thai(segments)
+            captions = self._segments_to_word_captions(segments, corrections, thai=thai)
         elif srt_path:
-            captions = self._srt_to_word_captions(srt_path, corrections)
+            thai = _is_thai(Path(srt_path).read_text(encoding="utf-8"))
+            captions = self._srt_to_word_captions(srt_path, corrections, thai=thai)
         else:
             return ToolResult(
                 success=False,
                 error="Provide either 'segments' (from transcriber) or 'srt_path'.",
             )
+
+        if words_per_page is None:
+            # Thai words are short and pages also break at segment ends, so
+            # a slightly larger page reads as a natural phrase.
+            words_per_page = 6 if thai else 4
 
         if not captions:
             return ToolResult(success=False, error="No caption words extracted.")
@@ -479,10 +684,10 @@ class RemotionCaptionBurn(BaseTool):
             result = self._render_remotion(
                 input_path, output_path, captions,
                 words_per_page, font_size, highlight_color,
-                overlays=overlays,
+                overlays=overlays, thai=thai, caption_props=inputs.get("caption_props"),
             )
         else:
-            result = self._render_ffmpeg(input_path, output_path, captions)
+            result = self._render_ffmpeg(input_path, output_path, captions, thai=thai)
 
         result.duration_seconds = round(time.time() - start, 2)
         return result

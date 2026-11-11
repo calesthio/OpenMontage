@@ -118,6 +118,7 @@ Key capability families to look for in the output:
 | 3D World Generation | `creative/3d-world-generation.md` | Semantic world planning, asset sourcing/generation, Blender assembly, and fidelity review | `3d-asset-generation`, `threejs-world-generation` |
 | B-Roll Planning | `creative/broll-planning.md` | Stock vs. generated decision, query construction, footage evaluation | — |
 | Stock Sourcing Usage | `creative/stock-sourcing-usage.md` | Pexels/Pixabay usage, parameters, licensing, integration | — |
+| Image Shorts | `creative/image-shorts.md` | User explicitly asks for a 9:16 short from images plus a transcript | `create-short-videos` |
 | Scene Detect Usage | `creative/scene-detect-usage.md` | Threshold tuning, algorithm selection, content presets | â€" |
 | Diagram Gen Usage | `creative/diagram-gen-usage.md` | Complexity limits, progressive building, themes | `beautiful-mermaid` |
 | Music Gen Usage | `creative/music-gen-usage.md` | BPM selection, prompt engineering, duration matching | `music`, `elevenlabs` |
@@ -334,6 +335,7 @@ Claude Code accesses them via symlinks in `.claude/skills/`.
 |----------|-----------------|--------|
 | **Video Composition** | `remotion-best-practices`, `remotion`, `hyperframes` (router), `hyperframes-core`, `hyperframes-creative`, `hyperframes-media`, `hyperframes-animation`, `hyperframes-cli`, `hyperframes-registry`, `media-use`, `motion-graphics`, `music-to-video`, `remotion-to-hyperframes`, `website-to-video` | `remotion-dev/skills`, `digitalsamba/claude-code-video-toolkit`, `heygen-com/hyperframes` (vendored v0.7.17, see `.agents/skills/hyperframes/PROVENANCE.md`) |
 | **Video Processing** | `ffmpeg`, `video-toolkit` | `digitalsamba/claude-code-video-toolkit` |
+| **Image Shorts** | `create-short-videos` — 9:16 Ken Burns shorts from images plus a transcript, neural TTS, and ducked BGM. Explicit request only; not a fallback when motion footage is missing. | Local OpenMontage skill |
 | **TTS & Audio** | `text-to-speech`, `speech-to-text` (whisper, default STT), `azure-speech-to-text` (optional cloud STT), `music`, `sound-effects`, `elevenlabs`, `fish-audio-tts`, `agents`, `setup-api-key` | `elevenlabs/skills`, `digitalsamba/claude-code-video-toolkit`, local OpenMontage skill |
 | **Image Generation** | `flux-best-practices`, `bfl-api`, `grok-media` | `black-forest-labs/skills`, local OpenMontage skill |
 | **Math Animation** | `manimce-best-practices`, `manimgl-best-practices`, `manim-composer` | `adithya-s-k/manim_skill` |

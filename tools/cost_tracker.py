@@ -5,11 +5,23 @@ Implements the budget governance rules from the spec:
 - The orchestrator reserves estimated budget before execution
 - Budget overruns trigger pauses (in warn/cap mode)
 - Actual spend is reconciled when the tool finishes or fails
+
+Spend is also recorded without anyone calling this module: every tool call
+reports its cost into the project's events.jsonl (tools/base_tool.py), and
+``sync_tool_events`` turns those reports into ledger entries. ``write_checkpoint``
+does that on every checkpoint, so the cost meter never depends on an agent
+typing a number. Spend that no tool reports — rented GPU time, a subscription
+— goes in through ``record_spend`` (or ``python -m tools.cost_tracker record``).
+
+One budget, resolved in one place (``resolve_budget_usd``): the budget the user
+approved at proposal, else the pipeline's ``orchestration.budget_default_usd``
+capped by ``budget.total_usd`` in config.yaml, else ``budget.total_usd``.
 """
 
 from __future__ import annotations
 
 import json
+import os
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
@@ -37,6 +49,101 @@ class ApprovalRequiredError(Exception):
     pass
 
 
+COST_LOG_FILENAME = "cost_log.json"
+
+
+def _marker_pipeline_type(project_dir: Path) -> Optional[str]:
+    try:
+        with open(project_dir / "project.json", encoding="utf-8") as handle:
+            marker = json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return None
+    value = marker.get("pipeline_type") if isinstance(marker, dict) else None
+    return value if isinstance(value, str) and value and value != "unknown" else None
+
+
+def resolve_budget_usd(
+    pipeline_type: Optional[str] = None,
+    *,
+    approved_usd: Optional[float] = None,
+    config: Any = None,
+) -> tuple[float, str]:
+    """The run's total budget and where it came from.
+
+    1. ``approved_usd`` — what the user approved at proposal
+       (``proposal_packet.approval.approved_budget_usd``). It replaces every
+       default, in either direction.
+    2. the pipeline manifest's ``orchestration.budget_default_usd``, never above
+       ``budget.total_usd`` in config.yaml (the user's machine-wide ceiling).
+    3. ``budget.total_usd`` in config.yaml.
+
+    Returns ``(budget_usd, source)``; ``source`` is recorded in the cost log so
+    the number on the board can always be traced back.
+    """
+    if approved_usd is not None:
+        if approved_usd < 0:
+            raise ValueError("approved_usd must not be negative")
+        return float(approved_usd), "approved"
+    if config is None:
+        from lib.config_model import OpenMontageConfig
+
+        config = OpenMontageConfig.load()
+    ceiling = float(config.budget.total_usd)
+    if pipeline_type and pipeline_type != "unknown":
+        try:
+            from lib.pipeline_loader import load_pipeline_readonly
+
+            default = (
+                load_pipeline_readonly(pipeline_type).get("orchestration") or {}
+            ).get("budget_default_usd")
+        except Exception:
+            default = None
+        if isinstance(default, (int, float)) and not isinstance(default, bool) and default >= 0:
+            if default > ceiling:
+                return ceiling, f"config.yaml budget.total_usd (caps {pipeline_type} default ${default:.2f})"
+            return float(default), f"pipeline_defs/{pipeline_type}.yaml orchestration.budget_default_usd"
+    return ceiling, "config.yaml budget.total_usd"
+
+
+def project_cost_snapshot(
+    project_dir: Path | str, *, pipeline_type: Optional[str] = None
+) -> Optional[dict[str, float]]:
+    """Cost snapshot for a checkpoint, derived from what the tools reported.
+
+    Syncs the project's tool events into its ledger and returns the snapshot.
+    Returns None when nothing has been spent or reserved: a zero written into
+    a checkpoint would hide the asset manifest's own total on the board, which
+    is the board's fallback when no spend was recorded.
+    """
+    project_dir = Path(project_dir)
+    ledger = project_dir / COST_LOG_FILENAME
+    if not ledger.exists() and not _events_with_cost(project_dir):
+        return None
+    tracker = CostTracker.for_project(project_dir, pipeline_type=pipeline_type)
+    tracker.sync_tool_events()
+    if tracker.budget_spent_usd <= 0 and tracker.budget_reserved_usd <= 0:
+        return None
+    return tracker.cost_snapshot()
+
+
+def _events_with_cost(project_dir: Path) -> list[dict[str, Any]]:
+    """Top-level tool calls in events.jsonl that reported a cost above zero.
+
+    Nested calls (a selector delegating to a provider) are skipped: the outer
+    call's finish already carries the cost, and counting both would double it.
+    """
+    from lib.events import read_events
+
+    costed = []
+    for event in read_events(project_dir):
+        if event.get("event") != "finish" or event.get("depth"):
+            continue
+        cost = event.get("cost_usd")
+        if isinstance(cost, (int, float)) and not isinstance(cost, bool) and cost > 0:
+            costed.append(event)
+    return costed
+
+
 class CostTracker:
     """Tracks estimated, reserved, and actual costs for a pipeline project."""
 
@@ -57,9 +164,72 @@ class CostTracker:
         self.cost_log_path = cost_log_path
         self.entries: list[dict[str, Any]] = []
         self._approved_tools: set[str] = set()
+        self.budget_source: Optional[str] = None
 
         if cost_log_path and cost_log_path.exists():
             self._load()
+
+    @classmethod
+    def for_project(
+        cls,
+        project_dir: Path | str,
+        *,
+        budget_total_usd: Optional[float] = None,
+        pipeline_type: Optional[str] = None,
+        config: Any = None,
+    ) -> "CostTracker":
+        """Tracker for one project, governed by the ``budget`` block of config.yaml.
+
+        Persists to ``<project_dir>/cost_log.json``. On first use the budget
+        comes from ``resolve_budget_usd`` — ``budget_total_usd`` if given (the
+        budget the user approved at proposal), else the pipeline's default
+        under the configured ceiling (``pipeline_type`` defaults to the one in
+        the project's ``project.json``). Afterwards the log is authoritative,
+        so use ``set_budget()`` to change it.
+        """
+        if config is None:
+            from lib.config_model import OpenMontageConfig
+
+            config = OpenMontageConfig.load()
+        project_dir = Path(project_dir)
+        budget = config.budget
+        total, source = resolve_budget_usd(
+            pipeline_type or _marker_pipeline_type(project_dir),
+            approved_usd=budget_total_usd,
+            config=config,
+        )
+        ledger = project_dir / COST_LOG_FILENAME
+        seeded = not ledger.exists()
+        tracker = cls(
+            budget_total_usd=total,
+            reserve_pct=budget.reserve_pct,
+            single_action_approval_usd=budget.single_action_approval_usd,
+            require_approval_for_new_paid_tool=budget.require_approval_for_new_paid_tool,
+            mode=budget.mode,
+            cost_log_path=ledger,
+        )
+        if seeded:
+            tracker.budget_source = source
+        return tracker
+
+    def set_budget(self, budget_total_usd: float, *, source: str = "approved") -> None:
+        """Change the total budget and persist it.
+
+        The constructor's ``budget_total_usd`` only seeds a new log; once a log
+        exists its recorded budget wins, so a raised or lowered budget has to
+        come through here to take effect. Call it with the amount the user
+        approved at the proposal gate.
+        """
+        if budget_total_usd < 0:
+            raise ValueError("budget_total_usd must not be negative")
+        self.budget_total_usd = float(budget_total_usd)
+        self.budget_source = source
+        self._save()
+
+    @property
+    def over_budget(self) -> bool:
+        """Spend plus reservations already exceed the total budget."""
+        return self.budget_remaining_usd < 0
 
     # ---- Budget calculations ----
 
@@ -114,22 +284,34 @@ class CostTracker:
         self._save()
         return entry_id
 
-    def reserve(self, entry_id: str) -> None:
+    def reserve(self, entry_id: str, *, approved: bool = False) -> None:
         """Reserve budget for an estimated entry.
 
         Raises BudgetExceededError in cap mode, or ApprovalRequiredError
-        when the action exceeds the single-action approval threshold.
+        when the action exceeds the single-action approval threshold or is
+        the first paid use of a tool.
+
+        ``approved=True`` records that the user explicitly approved THIS
+        action. It clears both approval gates (and approves the tool for later
+        paid calls) so an approved action can actually be reserved; it never
+        lifts the cap-mode budget limit.
         """
         entry = self._find(entry_id)
         self._require_status(entry, EntryStatus.ESTIMATED, "reserve")
         estimated = entry["estimated_usd"]
 
+        if approved:
+            entry["approved"] = True
+            if estimated > 0:
+                self._approved_tools.add(entry["tool"])
+
         # Check single-action approval threshold
-        if estimated > self.single_action_approval_usd:
+        if estimated > self.single_action_approval_usd and not approved:
             if self.mode != BudgetMode.OBSERVE:
                 raise ApprovalRequiredError(
                     f"Action costs ${estimated:.2f}, exceeds "
-                    f"single-action threshold ${self.single_action_approval_usd:.2f}"
+                    f"single-action threshold ${self.single_action_approval_usd:.2f}. "
+                    f"Ask the user, then call reserve(entry_id, approved=True)."
                 )
 
         # Check new paid tool approval
@@ -137,7 +319,9 @@ class CostTracker:
             if entry["tool"] not in self._approved_tools:
                 if self.mode != BudgetMode.OBSERVE:
                     raise ApprovalRequiredError(
-                        f"First paid use of tool {entry['tool']!r} requires approval"
+                        f"First paid use of tool {entry['tool']!r} requires approval. "
+                        f"Ask the user, then call approve_tool({entry['tool']!r}) "
+                        f"or reserve(entry_id, approved=True)."
                     )
 
         # Check budget
@@ -180,6 +364,122 @@ class CostTracker:
         entry["reserved_usd"] = 0.0
         entry["timestamp"] = self._now()
         self._save()
+
+    # ---- Spend that does not go through estimate -> reserve -> reconcile ----
+
+    def record_spend(
+        self,
+        tool: str,
+        operation: str,
+        actual_usd: float,
+        *,
+        details: Optional[str] = None,
+        source: str = "external",
+    ) -> str:
+        """Record money that was spent outside a tool call. Returns the entry id.
+
+        For cost no tool reports: rented GPU time (``tool="vastai_gpu"``,
+        ``operation="RTX 4090, 31 min at $0.40/h"``), a per-run subscription
+        share, a manual purchase. The entry is written ``completed`` straight
+        away — there is nothing to reserve after the fact.
+        """
+        if actual_usd < 0:
+            raise ValueError("actual_usd must not be negative")
+        entry_id = self._new_id()
+        entry: dict[str, Any] = {
+            "id": entry_id,
+            "tool": tool,
+            "operation": operation,
+            "status": EntryStatus.COMPLETED.value,
+            "estimated_usd": 0.0,
+            "reserved_usd": 0.0,
+            "actual_usd": round(actual_usd, 4),
+            "timestamp": self._now(),
+            "source": source,
+        }
+        if details:
+            entry["details"] = details
+        self.entries.append(entry)
+        self._save()
+        return entry_id
+
+    def record_rental(
+        self, provider: str, hours: float, usd_per_hour: float, *, details: Optional[str] = None
+    ) -> str:
+        """Record rented compute time (GPU instance, cloud VM) as spend."""
+        if hours < 0 or usd_per_hour < 0:
+            raise ValueError("hours and usd_per_hour must not be negative")
+        return self.record_spend(
+            provider,
+            f"rental {hours:.3f} h at ${usd_per_hour:.4f}/h",
+            hours * usd_per_hour,
+            details=details,
+            source="rental",
+        )
+
+    def sync_tool_events(self, project_dir: Optional[Path | str] = None) -> int:
+        """Add the cost every tool call reported to the ledger. Returns how many.
+
+        Reads ``events.jsonl`` next to the cost log (or in ``project_dir``).
+        Idempotent: each call is keyed by its ``call_id``. A paid call that was
+        ALSO taken through estimate/reserve/reconcile is matched to that entry
+        (same tool, same amount) instead of being counted twice.
+        """
+        if project_dir is None:
+            if self.cost_log_path is None:
+                return 0
+            project_dir = self.cost_log_path.parent
+        events = _events_with_cost(Path(project_dir))
+        if not events:
+            return 0
+        seen = {e.get("call_id") for e in self.entries if e.get("call_id")}
+        added = 0
+        changed = False
+        for event in events:
+            call_id = event.get("call_id") or f"legacy:{event.get('ts')}:{event.get('tool')}"
+            if call_id in seen:
+                continue
+            seen.add(call_id)
+            cost = round(float(event["cost_usd"]), 4)
+            tool = str(event.get("tool") or "unknown")
+            match = next(
+                (
+                    e for e in self.entries
+                    if not e.get("call_id")
+                    and e.get("tool") == tool
+                    and e.get("status") == EntryStatus.COMPLETED.value
+                    and e.get("source") is None
+                    and abs(float(e.get("actual_usd", 0.0)) - cost) < 0.00005
+                ),
+                None,
+            )
+            changed = True
+            if match is not None:
+                match["call_id"] = call_id  # already counted by reconcile()
+                continue
+            operation = "tool call"
+            if event.get("scene_id") is not None:
+                operation = f"tool call (scene {event['scene_id']})"
+            self.entries.append({
+                "id": self._new_id(),
+                "tool": tool,
+                "operation": operation,
+                "status": (
+                    EntryStatus.COMPLETED.value
+                    if event.get("success") is not False
+                    else EntryStatus.FAILED.value
+                ),
+                "estimated_usd": 0.0,
+                "reserved_usd": 0.0,
+                "actual_usd": cost,
+                "timestamp": str(event.get("ts") or self._now()),
+                "source": "tool_event",
+                "call_id": call_id,
+            })
+            added += 1
+        if changed:
+            self._save()
+        return added
 
     # ---- Reference-driven estimation ----
 
@@ -490,7 +790,7 @@ class CostTracker:
     def _save(self) -> None:
         if self.cost_log_path is None:
             return
-        data = {
+        data: dict[str, Any] = {
             "version": "1.0",
             "budget_total_usd": self.budget_total_usd,
             "budget_reserved_usd": round(self.budget_reserved_usd, 4),
@@ -498,16 +798,34 @@ class CostTracker:
             "approved_tools": sorted(self._approved_tools),
             "entries": self.entries,
         }
+        if self.budget_source:
+            data["metadata"] = {"budget_source": self.budget_source}
         self.cost_log_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.cost_log_path, "w") as f:
+        # Atomic swap: every estimate/reserve/reconcile rewrites the whole log,
+        # and a crash mid-write must not leave a truncated ledger behind.
+        tmp_path = self.cost_log_path.with_name(self.cost_log_path.name + ".tmp")
+        with open(tmp_path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
+        os.replace(tmp_path, self.cost_log_path)
 
     def _load(self) -> None:
-        with open(self.cost_log_path) as f:  # type: ignore[arg-type]
-            data = json.load(f)
+        try:
+            with open(self.cost_log_path, encoding="utf-8") as f:  # type: ignore[arg-type]
+                data = json.load(f)
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                f"Cost log {self.cost_log_path} is not valid JSON ({exc}). It is "
+                f"the spend ledger, so it is not reset automatically: repair it "
+                f"or move it aside before tracking further spend."
+            ) from exc
+        if not isinstance(data, dict):
+            raise ValueError(f"Cost log {self.cost_log_path} must be a JSON object")
         self.entries = data.get("entries", [])
         self.budget_total_usd = data.get("budget_total_usd", self.budget_total_usd)
         self._approved_tools = set(data.get("approved_tools", []))
+        metadata = data.get("metadata")
+        if isinstance(metadata, dict) and isinstance(metadata.get("budget_source"), str):
+            self.budget_source = metadata["budget_source"]
 
     # ---- Helpers ----
 
@@ -534,3 +852,87 @@ class CostTracker:
     @staticmethod
     def _now() -> str:
         return datetime.now(timezone.utc).isoformat()
+
+
+# ---------------------------------------------------------------------------
+# Command line: the ledger without writing Python.
+#
+#   python -m tools.cost_tracker show   <project-id>
+#   python -m tools.cost_tracker sync   <project-id>
+#   python -m tools.cost_tracker budget <project-id> --usd 0.64
+#   python -m tools.cost_tracker record <project-id> --tool vastai_gpu \
+#       --hours 0.52 --rate 0.40 --details "RTX 4090, assets stage"
+#   python -m tools.cost_tracker record <project-id> --tool stock_license \
+#       --usd 1.50 --operation "one licensed clip"
+# ---------------------------------------------------------------------------
+
+
+def _project_dir(project: str) -> Path:
+    from lib.paths import PROJECTS_DIR
+
+    candidate = Path(project)
+    project_dir = candidate if candidate.is_dir() else PROJECTS_DIR / project
+    if not project_dir.is_dir():
+        raise SystemExit(f"cost_tracker: no project directory for {project!r} ({project_dir})")
+    return project_dir
+
+
+def main(argv: Optional[list[str]] = None) -> int:
+    import argparse
+
+    parser = argparse.ArgumentParser(prog="python -m tools.cost_tracker", description=__doc__)
+    sub = parser.add_subparsers(dest="command", required=True)
+    for name, help_text in (
+        ("show", "print the ledger summary (syncs tool events first)"),
+        ("sync", "add the cost tool calls reported in events.jsonl to the ledger"),
+    ):
+        sub.add_parser(name, help=help_text).add_argument("project")
+    p_budget = sub.add_parser("budget", help="set the run's total budget (the amount the user approved)")
+    p_budget.add_argument("project")
+    p_budget.add_argument("--usd", type=float, required=True)
+    p_record = sub.add_parser("record", help="record spend no tool reports (rented GPU time, a purchase)")
+    p_record.add_argument("project")
+    p_record.add_argument("--tool", required=True, help="what was paid for, e.g. vastai_gpu")
+    p_record.add_argument("--usd", type=float, help="amount spent")
+    p_record.add_argument("--hours", type=float, help="rented time (use with --rate)")
+    p_record.add_argument("--rate", type=float, help="USD per hour (use with --hours)")
+    p_record.add_argument("--operation", default=None)
+    p_record.add_argument("--details", default=None)
+    args = parser.parse_args(argv)
+
+    tracker = CostTracker.for_project(_project_dir(args.project))
+    if args.command == "budget":
+        tracker.set_budget(args.usd)
+    elif args.command == "record":
+        if args.hours is not None and args.rate is not None:
+            tracker.record_rental(args.tool, args.hours, args.rate, details=args.details)
+        elif args.usd is not None:
+            tracker.record_spend(
+                args.tool, args.operation or "manual entry", args.usd, details=args.details
+            )
+        else:
+            parser.error("record needs --usd, or --hours together with --rate")
+    synced = tracker.sync_tool_events()
+    summary = {
+        "project": str(tracker.cost_log_path.parent.name) if tracker.cost_log_path else None,
+        "budget_total_usd": tracker.budget_total_usd,
+        "budget_source": tracker.budget_source,
+        "mode": tracker.mode.value,
+        "over_budget": tracker.over_budget,
+        "tool_events_synced": synced,
+        "entries": len(tracker.entries),
+        **tracker.cost_snapshot(),
+    }
+    by_tool: dict[str, float] = {}
+    for entry in tracker.entries:
+        if entry["status"] in (EntryStatus.COMPLETED.value, EntryStatus.FAILED.value):
+            by_tool[entry["tool"]] = round(
+                by_tool.get(entry["tool"], 0.0) + float(entry.get("actual_usd", 0.0)), 4
+            )
+    summary["spent_by_tool"] = dict(sorted(by_tool.items(), key=lambda kv: -kv[1]))
+    print(json.dumps(summary, indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -81,7 +81,7 @@
         "properties": {
           "name": { "type": "string" },
           "agent": { "type": "string", "description": "Legacy: class name for Python-driven stages" },
-          "skill": { "type": "string", "description": "Skill path for instruction-driven stages (e.g., pipelines/explainer/idea-director)" },
+          "skill": { "type": "string", "description": "Skill path for instruction-driven stages (e.g., pipelines/explainer/proposal-director)" },
           "required_artifacts_in": {
             "type": "array",
             "items": { "type": "string" },
@@ -173,10 +173,22 @@
       "properties": {
         "mode": { "type": "string" },
         "skill": { "type": "string" },
-        "budget_default_usd": { "type": "number" },
-        "max_revisions_per_stage": { "type": "integer" },
-        "max_send_backs": { "type": "integer" },
-        "max_wall_time_minutes": { "type": "integer" }
+        "budget_default_usd": {
+          "type": "number",
+          "description": "The run's default budget in USD when the user has approved none; capped by config.yaml budget.total_usd (tools/cost_tracker.py::resolve_budget_usd). The executive-producer skill reads it."
+        },
+        "max_revisions_per_stage": {
+          "type": "integer",
+          "description": "Revision rounds the executive-producer skill allows per stage before proceeding with warnings. The executive-producer skill reads it; it never approves a human-gated stage."
+        },
+        "max_send_backs": {
+          "type": "integer",
+          "description": "Total send-backs to an earlier stage the executive-producer skill allows per run. The executive-producer skill reads it."
+        },
+        "max_wall_time_minutes": {
+          "type": "integer",
+          "description": "Wall-time limit for the whole run, in minutes. The executive-producer skill reads it."
+        }
       },
       "additionalProperties": false
     },

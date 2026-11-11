@@ -10,6 +10,11 @@
     "budget_total_usd": { "type": "number", "minimum": 0 },
     "budget_reserved_usd": { "type": "number", "minimum": 0 },
     "budget_spent_usd": { "type": "number", "minimum": 0 },
+    "approved_tools": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Tools the user has approved for paid use; written by CostTracker.approve_tool()."
+    },
     "entries": {
       "type": "array",
       "items": {
@@ -24,7 +29,16 @@
           "reserved_usd": { "type": "number", "minimum": 0 },
           "actual_usd": { "type": "number", "minimum": 0 },
           "timestamp": { "type": "string", "format": "date-time" },
-          "details": { "type": "string" }
+          "details": { "type": "string" },
+          "approved": { "type": "boolean", "description": "The user approved this specific action (CostTracker.reserve(..., approved=True))." },
+          "budget_warning": { "type": "boolean" },
+          "budget_warning_message": { "type": "string" },
+          "source": {
+            "type": "string",
+            "enum": ["tool_event", "external", "rental"],
+            "description": "How the entry got here when not through estimate/reserve/reconcile: tool_event = cost a tool call reported in events.jsonl (CostTracker.sync_tool_events); external / rental = CostTracker.record_spend / record_rental."
+          },
+          "call_id": { "type": "string", "description": "events.jsonl call this entry accounts for; makes the event sync idempotent." }
         },
         "additionalProperties": false
       }

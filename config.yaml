@@ -7,15 +7,24 @@ llm:
   max_tokens: 4096
 
 budget:
-  mode: warn                     # observe | warn | cap
+  # observe = record only | warn = record and flag overruns | cap = a paid tool
+  # call that does not fit in the remaining budget is refused before it runs.
+  mode: warn
+  # Ceiling for a run's budget. A pipeline's own default
+  # (orchestration.budget_default_usd in its manifest) applies below it; the
+  # amount you approve at the proposal gate replaces both.
   total_usd: 10.00
   reserve_pct: 0.10              # holdback for retries / cleanup
   single_action_approval_usd: 0.50
   require_approval_for_new_paid_tool: true
 
 checkpoint:
-  policy: guided                 # guided | manual_all | auto_noncreative
-  storage_dir: pipeline          # relative to project root
+  # guided     = stop for approval at the stages the pipeline manifest gates
+  # manual_all = stop for approval at EVERY stage of every pipeline
+  # The stricter of this and the manifest's default_checkpoint_policy applies.
+  # (auto_noncreative is accepted but cannot loosen a manifest gate, so it
+  # behaves as guided.) Checkpoints are stored under projects/<project-id>/.
+  policy: guided
 
 output:
   default_format: mp4
@@ -24,10 +33,3 @@ output:
   default_resolution: "1920x1080"
   default_fps: 30
   default_crf: 23
-
-paths:
-  pipeline_dir: pipeline
-  library_dir: library
-  styles_dir: styles
-  skills_dir: skills
-  output_dir: output

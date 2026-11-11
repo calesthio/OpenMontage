@@ -41,8 +41,9 @@ class BudgetConfig(BaseModel):
 
 
 class CheckpointConfig(BaseModel):
+    # Read by lib.checkpoint.resolve_checkpoint_policy. Checkpoints themselves
+    # always live under lib.paths.PROJECTS_DIR/<project_id>/.
     policy: CheckpointPolicy = CheckpointPolicy.GUIDED
-    storage_dir: str = "pipeline"
 
 
 class OutputConfig(BaseModel):
@@ -54,14 +55,6 @@ class OutputConfig(BaseModel):
     default_crf: int = 23
 
 
-class PathsConfig(BaseModel):
-    pipeline_dir: str = "pipeline"
-    library_dir: str = "library"
-    styles_dir: str = "styles"
-    skills_dir: str = "skills"
-    output_dir: str = "output"
-
-
 class OpenMontageConfig(BaseModel):
     """Top-level runtime configuration."""
 
@@ -69,7 +62,6 @@ class OpenMontageConfig(BaseModel):
     budget: BudgetConfig = Field(default_factory=BudgetConfig)
     checkpoint: CheckpointConfig = Field(default_factory=CheckpointConfig)
     output: OutputConfig = Field(default_factory=OutputConfig)
-    paths: PathsConfig = Field(default_factory=PathsConfig)
 
     @classmethod
     def load(cls, config_path: Optional[Path] = None) -> "OpenMontageConfig":
@@ -78,15 +70,8 @@ class OpenMontageConfig(BaseModel):
             config_path = Path(__file__).resolve().parent.parent / "config.yaml"
 
         if config_path.exists():
-            with open(config_path) as f:
+            with open(config_path, encoding="utf-8") as f:
                 raw = yaml.safe_load(f) or {}
             return cls.model_validate(raw)
 
         return cls()
-
-    def resolve_path(self, key: str, project_root: Optional[Path] = None) -> Path:
-        """Resolve a relative path from PathsConfig against project root."""
-        if project_root is None:
-            project_root = Path(__file__).resolve().parent.parent
-        value = getattr(self.paths, key)
-        return (project_root / value).resolve()

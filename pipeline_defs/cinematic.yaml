@@ -246,6 +246,7 @@ stages:
       - video_trimmer
       - color_grade
       - audio_enhance
+      - bgm_montage_lite
     tools_available:
       - video_compose
       - hyperframes_compose
@@ -254,6 +255,7 @@ stages:
       - video_trimmer
       - color_grade
       - audio_enhance
+      - bgm_montage_lite
     checkpoint_required: true
     human_approval_default: false
     review_focus:

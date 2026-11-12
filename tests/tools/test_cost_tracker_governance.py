@@ -55,6 +55,35 @@ class CostTrackerGovernanceTests(unittest.TestCase):
             restarted.reserve(entry_id)
             self.assertEqual(restarted.entries[-1]["status"], "reserved")
 
+    def test_completed_entry_cannot_be_refunded(self) -> None:
+        tracker = CostTracker(
+            mode=BudgetMode.OBSERVE,
+            require_approval_for_new_paid_tool=False,
+        )
+        entry_id = tracker.estimate("paid_video", "generate", 1.0)
+        tracker.reserve(entry_id)
+        tracker.reconcile(entry_id, actual_usd=0.8)
+
+        with self.assertRaisesRegex(ValueError, "Cannot refund.*completed"):
+            tracker.refund(entry_id)
+
+        self.assertEqual(tracker.budget_spent_usd, 0.8)
+        self.assertEqual(tracker.entries[0]["status"], "completed")
+
+    def test_entry_lifecycle_rejects_out_of_order_operations(self) -> None:
+        tracker = CostTracker(
+            mode=BudgetMode.OBSERVE,
+            require_approval_for_new_paid_tool=False,
+        )
+        entry_id = tracker.estimate("paid_video", "generate", 1.0)
+
+        with self.assertRaisesRegex(ValueError, "Cannot reconcile.*estimated"):
+            tracker.reconcile(entry_id, actual_usd=0.8)
+
+        tracker.reserve(entry_id)
+        with self.assertRaisesRegex(ValueError, "Cannot reserve.*reserved"):
+            tracker.reserve(entry_id)
+
 
 if __name__ == "__main__":
     unittest.main()

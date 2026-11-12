@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gc
 import time
 from pathlib import Path
 from typing import Any
@@ -18,6 +19,54 @@ from tools.base_tool import (
     ToolStatus,
     ToolTier,
 )
+
+# stabilityai/stable-diffusion-2-1-base was removed from the Hugging Face Hub
+# and now returns 401; sd2-community hosts the same weights.
+DEFAULT_MODEL = "sd2-community/stable-diffusion-2-1-base"
+
+
+def select_device(torch: Any) -> tuple[str, Any]:
+    """Pick the best available torch device and a matching dtype.
+
+    CUDA first, then Apple Silicon (MPS), then CPU. fp16 is only used on
+    GPU backends; CPU stays on fp32.
+    """
+    if torch.cuda.is_available():
+        return "cuda", torch.float16
+    mps = getattr(torch.backends, "mps", None)
+    if mps is not None and mps.is_available():
+        return "mps", torch.float16
+    return "cpu", torch.float32
+
+
+def generator_device(device: str) -> str:
+    """Device for the seeded torch.Generator.
+
+    Older PyTorch releases can't create a Generator on MPS, so seed on CPU
+    there; diffusers accepts a CPU generator for an MPS pipeline.
+    """
+    return "cpu" if device == "mps" else device
+
+
+# Holds at most one pipeline: the most recently used model. Batch calls with the
+# same model reuse it; switching models releases the previous one first, so
+# multi-GB SDXL pipelines never accumulate in RAM/VRAM for the life of the process.
+_PIPELINE_CACHE: dict[str, Any] = {}
+
+
+def _release_cached_pipelines(torch_module: Any = None) -> None:
+    """Drop every cached pipeline and free its CPU-offload hooks and GPU memory."""
+    for pipe in list(_PIPELINE_CACHE.values()):
+        remove_hooks = getattr(pipe, "remove_all_hooks", None)
+        if callable(remove_hooks):
+            try:
+                remove_hooks()
+            except Exception:
+                pass
+    _PIPELINE_CACHE.clear()
+    gc.collect()
+    if torch_module is not None and torch_module.cuda.is_available():
+        torch_module.cuda.empty_cache()
 
 
 class LocalDiffusion(BaseTool):
@@ -65,7 +114,7 @@ class LocalDiffusion(BaseTool):
             "height": {"type": "integer", "default": 512},
             "model": {
                 "type": "string",
-                "default": "stabilityai/stable-diffusion-2-1-base",
+                "default": DEFAULT_MODEL,
             },
             "seed": {"type": "integer"},
             "num_inference_steps": {"type": "integer", "default": 30},
@@ -103,7 +152,7 @@ class LocalDiffusion(BaseTool):
             )
 
         import torch
-        from diffusers import StableDiffusionPipeline
+        from diffusers import AutoPipelineForText2Image
 
         start = time.time()
         prompt = inputs["prompt"]
@@ -111,20 +160,37 @@ class LocalDiffusion(BaseTool):
         width = inputs.get("width", 512)
         height = inputs.get("height", 512)
         seed = inputs.get("seed")
-        model_id = inputs.get("model", "stabilityai/stable-diffusion-2-1-base")
+        model_id = inputs.get("model", DEFAULT_MODEL)
         steps = inputs.get("num_inference_steps", 30)
         guidance = inputs.get("guidance_scale", 7.5)
 
         try:
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-            dtype = torch.float16 if device == "cuda" else torch.float32
+            device, dtype = select_device(torch)
 
-            pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=dtype)
-            pipe = pipe.to(device)
+            # AutoPipeline picks the right class (SD 1.x/2.x or SDXL) from the model.
+            # Keep only the active model resident: reuse it across batch calls,
+            # release it before loading a different one.
+            pipe = _PIPELINE_CACHE.get(model_id)
+            if pipe is None:
+                _release_cached_pipelines(torch)
+                kwargs = {"torch_dtype": dtype}
+                if device == "cuda":
+                    kwargs["variant"] = "fp16"
+                try:
+                    pipe = AutoPipelineForText2Image.from_pretrained(model_id, **kwargs)
+                except (OSError, ValueError):
+                    kwargs.pop("variant", None)
+                    pipe = AutoPipelineForText2Image.from_pretrained(model_id, **kwargs)
+                if device == "cuda":
+                    # Keeps SDXL within 8 GB VRAM by moving idle submodules to RAM.
+                    pipe.enable_model_cpu_offload()
+                else:
+                    pipe = pipe.to(device)
+                _PIPELINE_CACHE[model_id] = pipe
 
             generator = None
             if seed is not None:
-                generator = torch.Generator(device=device).manual_seed(seed)
+                generator = torch.Generator(device=generator_device(device)).manual_seed(seed)
 
             image = pipe(
                 prompt,

@@ -38,7 +38,9 @@ def _file_to_data_uri(path_str: str) -> str:
     return f"data:{mime_type};base64,{encoded}"
 
 
-def _normalize_media_ref(url_value: str | None, path_value: str | None) -> dict[str, str] | None:
+def _normalize_media_ref(
+    url_value: str | None, path_value: str | None
+) -> dict[str, str] | None:
     if url_value:
         return {"url": url_value}
     if path_value:
@@ -101,7 +103,11 @@ class GrokVideo(BaseTool):
             },
             "model": {
                 "type": "string",
-                "enum": ["grok-imagine-video"],
+                "enum": [
+                    "grok-imagine-video",
+                    "grok-imagine-video-1.5",
+                    "grok-imagine-video-1.5-lite",
+                ],
                 "default": "grok-imagine-video",
             },
             "duration": {
@@ -112,16 +118,32 @@ class GrokVideo(BaseTool):
             },
             "aspect_ratio": {
                 "type": "string",
-                "enum": ["16:9", "9:16", "1:1", "4:3", "3:4", "3:2", "2:3"],
+                "enum": [
+                    "16:9",
+                    "9:16",
+                    "1:1",
+                    "4:3",
+                    "3:4",
+                    "3:2",
+                    "2:3",
+                    "21:9",
+                    "5:2",
+                ],
                 "default": "16:9",
             },
             "resolution": {
                 "type": "string",
-                "enum": ["480p", "720p"],
+                "enum": ["480p", "720p", "1080p"],
                 "default": "720p",
             },
-            "image_url": {"type": "string", "description": "Reference image URL for image_to_video"},
-            "image_path": {"type": "string", "description": "Local reference image path for image_to_video"},
+            "image_url": {
+                "type": "string",
+                "description": "Reference image URL for image_to_video",
+            },
+            "image_path": {
+                "type": "string",
+                "description": "Local reference image path for image_to_video",
+            },
             "reference_image_urls": {
                 "type": "array",
                 "items": {"type": "string"},
@@ -132,6 +154,42 @@ class GrokVideo(BaseTool):
                 "items": {"type": "string"},
                 "description": "Local reference image paths for reference_to_video",
             },
+            "reference_audios": {
+                "type": "array",
+                "maxItems": 3,
+                "items": {
+                    "type": "object",
+                    "required": ["voice_id"],
+                    "additionalProperties": False,
+                    "properties": {"voice_id": {"type": "string"}},
+                },
+            },
+            "last_frame": {
+                "type": "object",
+                "required": ["url"],
+                "additionalProperties": False,
+                "properties": {"url": {"type": "string"}},
+            },
+            "keyframes": {
+                "type": "array",
+                "maxItems": 4,
+                "items": {
+                    "type": "object",
+                    "required": ["image", "timestamp_s"],
+                    "additionalProperties": False,
+                    "properties": {
+                        "image": {
+                            "type": "object",
+                            "required": ["url"],
+                            "additionalProperties": False,
+                            "properties": {"url": {"type": "string"}},
+                        },
+                        "timestamp_s": {"type": "number", "exclusiveMinimum": 0},
+                    },
+                },
+            },
+            "resume_job": {"type": "object"},
+            "job_path": {"type": "string"},
             "output_path": {"type": "string"},
             "poll_interval_seconds": {"type": "integer", "minimum": 2, "default": 5},
             "timeout_seconds": {"type": "integer", "minimum": 30, "default": 900},
@@ -141,10 +199,28 @@ class GrokVideo(BaseTool):
     resource_profile = ResourceProfile(
         cpu_cores=1, ram_mb=512, vram_mb=0, disk_mb=500, network_required=True
     )
-    retry_policy = RetryPolicy(max_retries=2, retryable_errors=["rate_limit", "timeout"])
-    idempotency_key_fields = ["prompt", "operation", "model", "duration", "aspect_ratio", "resolution"]
+    retry_policy = RetryPolicy(
+        max_retries=2, retryable_errors=["rate_limit", "timeout"]
+    )
+    idempotency_key_fields = [
+        "prompt",
+        "operation",
+        "model",
+        "duration",
+        "aspect_ratio",
+        "resolution",
+        "image_path",
+        "image_url",
+        "reference_image_urls",
+        "reference_image_paths",
+        "reference_audios",
+        "last_frame",
+        "keyframes",
+    ]
     side_effects = ["writes video file to output_path", "calls xAI video API"]
-    user_visible_verification = ["Watch generated clip for motion quality and prompt fidelity"]
+    user_visible_verification = [
+        "Watch generated clip for motion quality and prompt fidelity"
+    ]
 
     def get_status(self) -> ToolStatus:
         if os.environ.get("XAI_API_KEY"):
@@ -167,6 +243,12 @@ class GrokVideo(BaseTool):
         return count
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
+        if inputs.get("model", "grok-imagine-video") != "grok-imagine-video":
+            from tools.provider_pricing import PriceQuoteRequired
+
+            raise PriceQuoteRequired(
+                "Quote Grok Imagine 1.5 pricing for the selected model/resolution"
+            )
         duration = int(inputs.get("duration", 5))
         resolution = self._normalize_resolution(inputs.get("resolution"))
         base_per_second = 0.07 if resolution == "720p" else 0.05
@@ -180,7 +262,45 @@ class GrokVideo(BaseTool):
         return 90.0 + duration * 8.0
 
     def _build_payload(self, inputs: dict[str, Any]) -> dict[str, Any]:
+        from jsonschema import validate
+
+        validate(inputs, self.input_schema)
         operation = inputs.get("operation", "text_to_video")
+        model = inputs.get("model", "grok-imagine-video")
+        advanced = any(
+            inputs.get(k) for k in ("reference_audios", "last_frame", "keyframes")
+        )
+        references = operation == "reference_to_video" or advanced
+        if model.endswith("-lite") and references:
+            raise ValueError(
+                "Grok 1.5 Lite does not support reference or pinned-frame generation"
+            )
+        if advanced and model != "grok-imagine-video-1.5":
+            raise ValueError(
+                "Voice references and pinned frames require Grok Imagine 1.5"
+            )
+        if model == "grok-imagine-video" and inputs.get("resolution") == "1080p":
+            raise ValueError("Legacy Grok video supports up to 720p")
+        if references and inputs.get("resolution", "720p") != "720p":
+            raise ValueError("Reference/pinned-frame generation requires 720p")
+        if self._input_image_count(inputs) > (
+            14 if model == "grok-imagine-video-1.5" else 7
+        ):
+            raise ValueError("Too many reference images for this model")
+        if (
+            references
+            and model == "grok-imagine-video"
+            and inputs.get("duration", 5) > 10
+        ):
+            raise ValueError("Legacy reference generation supports up to 10 seconds")
+        slots = []
+        for frame in inputs.get("keyframes", []):
+            if frame["timestamp_s"] >= inputs.get("duration", 5):
+                raise ValueError("Keyframe must lie strictly inside duration")
+            slot = round(frame["timestamp_s"] * 3)
+            if slot in slots:
+                raise ValueError("Keyframes collide on the 1/3 second grid")
+            slots.append(slot)
         payload: dict[str, Any] = {
             "model": inputs.get("model", "grok-imagine-video"),
             "prompt": inputs["prompt"],
@@ -194,7 +314,9 @@ class GrokVideo(BaseTool):
                 payload["resolution"] = self._normalize_resolution(inputs["resolution"])
 
         if operation == "image_to_video":
-            image = _normalize_media_ref(inputs.get("image_url"), inputs.get("image_path"))
+            image = _normalize_media_ref(
+                inputs.get("image_url"), inputs.get("image_path")
+            )
             if not image:
                 raise ValueError("image_to_video requires image_url or image_path")
             payload["image"] = image
@@ -204,7 +326,7 @@ class GrokVideo(BaseTool):
                 {"url": _file_to_data_uri(path)}
                 for path in (inputs.get("reference_image_paths") or [])
             )
-            if not refs:
+            if not refs and not advanced:
                 raise ValueError(
                     "reference_to_video requires reference_image_urls or reference_image_paths"
                 )
@@ -215,6 +337,27 @@ class GrokVideo(BaseTool):
             if inputs.get("resolution"):
                 payload["resolution"] = self._normalize_resolution(inputs["resolution"])
 
+        for field in ("reference_audios", "last_frame", "keyframes"):
+            if inputs.get(field):
+                payload[field] = inputs[field]
+        if operation == "reference_to_video" and (
+            inputs.get("image_url") or inputs.get("image_path")
+        ):
+            payload["image"] = _normalize_media_ref(
+                inputs.get("image_url"), inputs.get("image_path")
+            )
+        if operation == "text_to_video" and any(
+            inputs.get(k)
+            for k in (
+                "reference_image_urls",
+                "reference_image_paths",
+                "image_url",
+                "image_path",
+            )
+        ):
+            raise ValueError(
+                "Choose image_to_video or reference_to_video for source images"
+            )
         return payload
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
@@ -234,16 +377,33 @@ class GrokVideo(BaseTool):
             "Content-Type": "application/json",
         }
 
+        job = dict(inputs.get("resume_job") or {})
         try:
             payload = self._build_payload(inputs)
-            response = requests.post(
-                "https://api.x.ai/v1/videos/generations",
-                headers=headers,
-                json=payload,
-                timeout=60,
-            )
-            response.raise_for_status()
-            request_id = response.json()["request_id"]
+            if job:
+                if (
+                    job.get("provider") != "grok"
+                    or job.get("model") != payload["model"]
+                ):
+                    raise ValueError("Resume job model/provider mismatch")
+                request_id = job["request_id"]
+            else:
+                response = requests.post(
+                    "https://api.x.ai/v1/videos/generations",
+                    headers=headers,
+                    json=payload,
+                    timeout=60,
+                )
+                response.raise_for_status()
+                request_id = response.json()["request_id"]
+                job = {
+                    "provider": "grok",
+                    "model": payload["model"],
+                    "request_id": request_id,
+                }
+                from tools.provider_jobs import save_job
+
+                save_job(inputs.get("job_path"), job)
 
             timeout_seconds = int(inputs.get("timeout_seconds", 900))
             poll_interval = int(inputs.get("poll_interval_seconds", 5))
@@ -262,12 +422,20 @@ class GrokVideo(BaseTool):
                 if status == "done":
                     break
                 if status in {"failed", "expired"}:
-                    detail = result_data.get("error") or result_data.get("message") or status
-                    return ToolResult(success=False, error=f"Grok video generation {status}: {detail}")
+                    detail = (
+                        result_data.get("error") or result_data.get("message") or status
+                    )
+                    return ToolResult(
+                        success=False, error=f"Grok video generation {status}: {detail}"
+                    )
                 time.sleep(poll_interval)
 
             if not result_data or result_data.get("status") != "done":
-                return ToolResult(success=False, error="Grok video generation timed out")
+                return ToolResult(
+                    success=False,
+                    error="Grok video generation timed out; resume this job",
+                    data={"resume_job": job},
+                )
 
             video_url = (result_data.get("video") or {}).get("url")
             if not video_url:
@@ -280,7 +448,11 @@ class GrokVideo(BaseTool):
             output_path.write_bytes(download.content)
 
         except Exception as e:
-            return ToolResult(success=False, error=f"Grok video generation failed: {e}")
+            return ToolResult(
+                success=False,
+                error=f"Grok video generation failed: {e}",
+                data={"resume_job": job} if job else {},
+            )
 
         probed = probe_output(output_path)
         return ToolResult(
@@ -291,13 +463,23 @@ class GrokVideo(BaseTool):
                 "prompt": inputs["prompt"],
                 "operation": inputs.get("operation", "text_to_video"),
                 "request_id": request_id,
+                "resume_job": job,
+                "cost_status": (
+                    "unquoted"
+                    if payload["model"] != "grok-imagine-video"
+                    else "estimated"
+                ),
                 "output": str(output_path),
                 "output_path": str(output_path),
                 "format": "mp4",
                 **probed,
             },
             artifacts=[str(output_path)],
-            cost_usd=self.estimate_cost(inputs),
+            cost_usd=(
+                self.estimate_cost(inputs)
+                if payload["model"] == "grok-imagine-video"
+                else None
+            ),
             duration_seconds=round(time.time() - start, 2),
             model=payload["model"],
         )

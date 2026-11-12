@@ -70,7 +70,7 @@ class SceneDetect(BaseTool):
     }
 
     resource_profile = ResourceProfile(cpu_cores=2, ram_mb=1024, vram_mb=0, disk_mb=100)
-    idempotency_key_fields = ["input_path", "method", "threshold"]
+    idempotency_key_fields = ["input_path", "method", "threshold", "min_scene_length_seconds"]
     side_effects = ["writes scene list JSON to output_path"]
     user_visible_verification = [
         "Spot-check detected scene boundaries against the video",

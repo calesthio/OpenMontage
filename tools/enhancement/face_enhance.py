@@ -116,7 +116,10 @@ class FaceEnhance(BaseTool):
     }
 
     resource_profile = ResourceProfile(cpu_cores=2, ram_mb=1024, vram_mb=0, disk_mb=2000)
-    idempotency_key_fields = ["input_path", "preset", "presets", "custom_vf"]
+    idempotency_key_fields = [
+        "input_path", "preset", "presets", "custom_vf",
+        "codec", "crf",
+    ]
     side_effects = ["writes enhanced video to output_path"]
     user_visible_verification = [
         "Compare enhanced output with original side-by-side",

@@ -9,7 +9,8 @@ clips that fill each slot. There are two paths:
 
 1. **Build the corpus** — fan the scene director's queries out across
    all available stock sources (Pexels, Pixabay Video, Coverr, Mixkit,
-   Archive.org, NARA, Library of Congress, Pond5 PD, Videvo, NASA, ESA,
+   Archive.org, NARA, Library of Congress, Pond5 PD when
+   `POND5_API_KEY` is configured, Videvo, NASA, ESA,
    JAXA, NOAA, Dareful, Wikimedia, Unsplash) and download/embed the candidates.
 2. **Pick per slot** — run CLIP retrieval against the corpus with each
    slot description and choose one winner per slot.

@@ -52,8 +52,13 @@ def _probe_video(path: Path, tool_registry: Any) -> dict[str, Any]:
     except Exception as e:
         logger.warning("audio_probe failed for %s: %s", path, e)
 
-    # If audio_probe didn't work, try ffprobe directly
-    if not result["technical_probe"]:
+    # audio_probe reports audio detail only, under a nested "audio" object, and
+    # carries no resolution/fps/video-codec. The summary built in
+    # review_source_media() reads flat "resolution"/"audio_codec"/"channels"
+    # keys, so without this ffprobe pass every video is reported as
+    # "unknown resolution, without audio". Merge rather than replace so the
+    # richer audio_probe fields survive.
+    if not result["technical_probe"].get("resolution"):
         try:
             import subprocess
             cmd = [
@@ -67,7 +72,7 @@ def _probe_video(path: Path, tool_registry: Any) -> dict[str, Any]:
                 streams = probe_data.get("streams", [])
                 video_stream = next((s for s in streams if s.get("codec_type") == "video"), {})
                 audio_stream = next((s for s in streams if s.get("codec_type") == "audio"), {})
-                result["technical_probe"] = {
+                result["technical_probe"].update({
                     "duration_seconds": float(fmt.get("duration", 0)),
                     "resolution": f"{video_stream.get('width', '?')}x{video_stream.get('height', '?')}",
                     "fps": _parse_fps(video_stream.get("r_frame_rate", "0/1")),
@@ -77,7 +82,7 @@ def _probe_video(path: Path, tool_registry: Any) -> dict[str, Any]:
                     "channels": int(audio_stream.get("channels", 0)) if audio_stream else 0,
                     "file_size_bytes": int(fmt.get("size", 0)),
                     "bitrate_kbps": round(int(fmt.get("bit_rate", 0)) / 1000, 1),
-                }
+                })
         except Exception as e:
             logger.warning("ffprobe failed for %s: %s", path, e)
             result["quality_risks"].append(f"Could not probe file: {e}")
@@ -90,11 +95,25 @@ def _probe_video(path: Path, tool_registry: Any) -> dict[str, Any]:
             timestamps = _sample_timestamps(duration, count=4)
             sample_result = frame_sampler.execute({
                 "input_path": str(path),
+                "strategy": "timestamps",
                 "timestamps": timestamps,
-                "output_dir": str(path.parent / ".source_review_frames"),
+                # Namespaced per source file: the tool writes a fixed
+                # frame_NNNN.jpg set, so a shared directory lets each video
+                # overwrite the previous one's frames.
+                "output_dir": str(path.parent / f".source_review_frames_{path.stem}"),
             })
             if sample_result.success:
-                result["representative_frames"] = sample_result.data.get("frame_paths", [])
+                # The frame list lives under "frames" (not "frame_paths"), as
+                # objects of {"path", "timestamp_seconds", "index"}. The
+                # artifact schema declares representative_frames as an array
+                # of path strings, so unwrap to paths or the artifact fails
+                # validation.
+                frames = sample_result.data.get("frames", [])
+                result["representative_frames"] = [
+                    str(frame["path"])
+                    for frame in frames
+                    if isinstance(frame, dict) and frame.get("path")
+                ]
     except Exception as e:
         logger.warning("frame_sampler failed for %s: %s", path, e)
 

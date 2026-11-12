@@ -203,6 +203,24 @@ class VideoCompose(BaseTool):
                     "networks). The subprocess timeout is widened to match."
                 ),
             },
+            "remotion_browser_executable": {
+                "type": "string",
+                "description": (
+                    "Optional absolute path to a browser executable for Remotion "
+                    "renders, passed through as `--browser-executable=<path>`. "
+                    "Use when running on machines without bundled Chromium or "
+                    "when a pinned enterprise browser binary is required."
+                ),
+            },
+            "remotion_concurrency": {
+                "type": "integer",
+                "minimum": 1,
+                "description": (
+                    "Number of parallel browser tabs Remotion renders with, passed "
+                    "through as `--concurrency`. Lower it (1-2) on low-memory "
+                    "machines where the headless browser crashes mid-render."
+                ),
+            },
         },
     }
 
@@ -225,7 +243,19 @@ class VideoCompose(BaseTool):
     ]
     retry_policy = RetryPolicy(max_retries=1, retryable_errors=["Conversion failed"])
     resume_support = ResumeSupport.FROM_START
-    idempotency_key_fields = ["operation", "input_path", "edit_decisions"]
+    # Every top-level input execute() reads, declared or not: each one changes
+    # the video, the cached result data, or whether a gate (strict,
+    # skip_contrast) runs. output_path and remotion_timeout_ms do neither.
+    idempotency_key_fields = [
+        "operation", "input_path", "edit_decisions", "composition_data",
+        "asset_manifest", "audio_path", "subtitle_path", "subtitle_style",
+        "overlays", "codec", "crf", "preset", "profile", "output_profile",
+        "options", "proposal_packet", "script_path", "script_text",
+        "narration_transcript_path", "playbook", "playbook_name", "scene_plan",
+        "quality", "fps", "workspace_path", "public_dir", "strict",
+        "strict_check", "skip_contrast", "snapshots",
+        "remotion_browser_executable", "remotion_concurrency",
+    ]
     side_effects = ["writes video file to output_path"]
     user_visible_verification = [
         "Play the composed output and verify cuts, subtitles, and overlays",
@@ -896,7 +926,7 @@ class VideoCompose(BaseTool):
         """
 
         staged_by_source: dict[Path, str] = {}
-        media_keys = {"source", "src", "backgroundSrc"}
+        media_keys = {"source", "src", "backgroundSrc", "backgroundImage", "backgroundVideo", "images"}
 
         def visit(node: Any, parent_key: str | None = None) -> Any:
             if isinstance(node, dict):
@@ -929,6 +959,23 @@ class VideoCompose(BaseTool):
 
         visit(value)
         return len(staged_by_source)
+
+    @staticmethod
+    def _append_remotion_browser_executable(
+        cmd: list[str], inputs: dict[str, Any]
+    ) -> str | None:
+        """Validate and append a job-scoped Remotion browser executable."""
+        requested = inputs.get("remotion_browser_executable")
+        if requested is None:
+            return None
+        browser = Path(str(requested)).expanduser().resolve()
+        if not browser.is_file():
+            raise ValueError(
+                "remotion_browser_executable does not exist or is not a file: "
+                f"{browser}"
+            )
+        cmd.append(f"--browser-executable={browser}")
+        return str(browser)
 
     def _render_via_atelier(
         self,
@@ -1021,6 +1068,10 @@ class VideoCompose(BaseTool):
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         cmd = ["npx", "remotion", "render", str(effective_entry), str(comp_id), str(output_path)]
+        try:
+            self._append_remotion_browser_executable(cmd, inputs)
+        except ValueError as e:
+            return ToolResult(success=False, error=str(e))
 
         props_path = bespoke.get("props_path")
         if props_path:
@@ -1308,11 +1359,16 @@ class VideoCompose(BaseTool):
             muted = palette.get("muted", "#6B7280")
 
             # Build chart colors from all palette entries
-            chart_colors = []
-            for key in ["primary", "accent", "secondary", "success", "warning", "info"]:
-                val = palette.get(key)
-                if val:
-                    chart_colors.append(val[0] if isinstance(val, list) else val)
+            # A playbook's own chart_palette wins (under color_palette first, as
+            # validate_palette reads it, then top level); otherwise derive from the palette.
+            own_chart = palette.get("chart_palette") or playbook.get("chart_palette") or []
+            chart_colors = [c for c in own_chart if isinstance(c, str)]
+            if len(chart_colors) < 3:
+                chart_colors = []
+                for key in ["primary", "accent", "secondary", "success", "warning", "info"]:
+                    val = palette.get(key)
+                    if val:
+                        chart_colors.append(val[0] if isinstance(val, list) else val)
             if len(chart_colors) < 3:
                 chart_colors = [primary, accent, "#10B981", "#8B5CF6", "#EC4899", "#06B6D4"]
 
@@ -1668,6 +1724,10 @@ class VideoCompose(BaseTool):
             # would only take effect on a direct _remotion_render() call.
             if inputs.get("remotion_timeout_ms") is not None:
                 remotion_inputs["remotion_timeout_ms"] = inputs["remotion_timeout_ms"]
+            if inputs.get("remotion_browser_executable") is not None:
+                remotion_inputs["remotion_browser_executable"] = inputs["remotion_browser_executable"]
+            if inputs.get("remotion_concurrency") is not None:
+                remotion_inputs["remotion_concurrency"] = inputs["remotion_concurrency"]
             if inputs.get("public_dir") is not None:
                 remotion_inputs["public_dir"] = inputs["public_dir"]
             render_result = self._remotion_render(remotion_inputs)
@@ -1948,17 +2008,28 @@ class VideoCompose(BaseTool):
         types, and transitions using React-based frame-accurate rendering.
         Accepts edit_decisions (with resolved file paths) or raw composition_data.
         """
-        if not shutil.which("npx"):
-            return ToolResult(
-                success=False,
-                error="npx not found. Install Node.js to use Remotion rendering.",
-            )
-
         composition_data = inputs.get("edit_decisions") or inputs.get("composition_data")
         if not composition_data:
             return ToolResult(
                 success=False,
                 error="edit_decisions or composition_data required for remotion_render",
+            )
+
+        renderer_family = composition_data.get("renderer_family", "explainer-data")
+        composition_id = self._get_composition_id(renderer_family)
+        if composition_id == "CinematicRenderer" and composition_data.get("overlays"):
+            return ToolResult(
+                success=False,
+                error=(
+                    "CinematicRenderer does not support non-empty overlays; remove overlays "
+                    "or use a composition that supports them."
+                ),
+            )
+
+        if not shutil.which("npx"):
+            return ToolResult(
+                success=False,
+                error="npx not found. Install Node.js to use Remotion rendering.",
             )
 
         output_path = Path(inputs.get("output_path", "renders/remotion_output.mp4"))
@@ -1990,10 +2061,9 @@ class VideoCompose(BaseTool):
                 error=f"Remotion composer project not found at {composer_dir}",
             )
 
-        # Route to the correct Remotion composition based on renderer_family.
-        # This prevents all pipelines from collapsing into the Explainer visual grammar.
-        renderer_family = (composition_data or {}).get("renderer_family", "explainer-data")
-        composition_id = self._get_composition_id(renderer_family)
+        # Caption look: CaptionOverlay props from edit_decisions, passed through as-is.
+        if isinstance((composition_data.get("subtitles") or {}).get("caption_props"), dict):
+            props["captionProps"] = composition_data["subtitles"]["caption_props"]
 
         if composition_id == "CinematicRenderer":
             if not props.get("scenes") and props.get("cuts"):
@@ -2062,6 +2132,11 @@ class VideoCompose(BaseTool):
             if public_dir is not None:
                 cmd.append(f"--public-dir={public_dir}")
 
+            try:
+                self._append_remotion_browser_executable(cmd, inputs)
+            except ValueError as e:
+                return ToolResult(success=False, error=str(e))
+
             # Apply media profile dimensions
             if profile_name:
                 try:
@@ -2076,6 +2151,12 @@ class VideoCompose(BaseTool):
             # restricted networks the default 30s browser setup times out with an
             # opaque failure. Pass it through and give the subprocess enough headroom
             # so run_command() does not kill Remotion before its own timeout fires.
+            if inputs.get("remotion_concurrency"):
+                try:
+                    cmd.append(f"--concurrency={int(inputs['remotion_concurrency'])}")
+                except (TypeError, ValueError):
+                    pass
+
             remotion_timeout_ms = inputs.get("remotion_timeout_ms")
             scene_count = len(props.get("scenes") or props.get("cuts") or [])
             subprocess_timeout = max(600, scene_count * 15)
@@ -2169,9 +2250,13 @@ class VideoCompose(BaseTool):
         stripped, numeric-word-aware). Empty tokens dropped."""
         import re
 
+        # Strip Hebrew niqqud/cantillation so pointed and unpointed text match;
+        # maqaf acts as a hyphen and geresh as an apostrophe.
+        text = re.sub(r"[\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7]", "", text)
+        text = text.replace("\u05BE", "-").replace("\u05F3", "'")
         # Preserve hyphenated words as single tokens ("many-worlds" -> "many-worlds").
-        # Drop everything except letters, digits, hyphens, apostrophes.
-        cleaned = re.sub(r"[^A-Za-z0-9\-' ]+", " ", text.lower())
+        # Drop everything except letters/digits of any script, hyphens, apostrophes.
+        cleaned = re.sub(r"[^\w\-' ]+|_", " ", text.lower())
         return [t for t in cleaned.split() if t and t != "-"]
 
     @classmethod
@@ -2835,9 +2920,15 @@ class VideoCompose(BaseTool):
         # Apply media profile if specified
         if profile_name:
             try:
-                from lib.media_profiles import get_profile, ffmpeg_output_args
+                from lib.media_profiles import get_profile
                 profile = get_profile(profile_name)
-                cmd.extend(["-s", f"{profile.width}x{profile.height}"])
+                # Fit the source display aspect, including SAR, to square pixels.
+                cmd.extend([
+                    "-vf",
+                    f"scale=w='max(2,round(min({profile.width},{profile.height}*dar)/2)*2)':"
+                    f"h='max(2,round(min({profile.height},{profile.width}/dar)/2)*2)',setsar=1,"
+                    f"pad={profile.width}:{profile.height}:(ow-iw)/2:(oh-ih)/2",
+                ])
                 cmd.extend(["-r", str(profile.fps)])
             except (ImportError, ValueError):
                 pass  # proceed without profile
@@ -2911,22 +3002,28 @@ class VideoCompose(BaseTool):
     @staticmethod
     def _build_subtitle_style(style: dict) -> str:
         """Build ASS force_style string from style dict."""
+
+        def _safe(val: Any) -> str:
+            # Every value below ends up inside -vf "...force_style='...'". Drop the
+            # characters that let a value close the quoted literal or start a new filter.
+            return "".join(c for c in str(val) if c not in "'\\:,;[]=")
+
         parts = []
-        parts.append(f"FontName={style.get('font', 'Inter')}")
-        parts.append(f"FontSize={style.get('font_size', 28)}")
+        parts.append(f"FontName={_safe(style.get('font', 'Inter'))}")
+        parts.append(f"FontSize={_safe(style.get('font_size', 28))}")
         parts.append(f"Bold={1 if style.get('bold', True) else 0}")
         if style.get("primary_color"):
-            parts.append(f"PrimaryColour={style['primary_color']}")
+            parts.append(f"PrimaryColour={_safe(style['primary_color'])}")
         if style.get("outline_color"):
-            parts.append(f"OutlineColour={style['outline_color']}")
+            parts.append(f"OutlineColour={_safe(style['outline_color'])}")
         if style.get("back_color"):
-            parts.append(f"BackColour={style['back_color']}")
+            parts.append(f"BackColour={_safe(style['back_color'])}")
         border_style = style.get("border_style", 1)
-        parts.append(f"BorderStyle={border_style}")
-        parts.append(f"Outline={style.get('outline_width', 2)}")
-        parts.append(f"Shadow={style.get('shadow', 0)}")
-        parts.append(f"MarginV={style.get('margin_v', 40)}")
-        parts.append(f"Alignment={style.get('alignment', 2)}")
+        parts.append(f"BorderStyle={_safe(border_style)}")
+        parts.append(f"Outline={_safe(style.get('outline_width', 2))}")
+        parts.append(f"Shadow={_safe(style.get('shadow', 0))}")
+        parts.append(f"MarginV={_safe(style.get('margin_v', 40))}")
+        parts.append(f"Alignment={_safe(style.get('alignment', 2))}")
         return ",".join(parts)
 
     @staticmethod

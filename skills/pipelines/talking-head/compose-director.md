@@ -297,7 +297,7 @@ If the footage has a green/blue screen (detected in scene-director Step 0), foll
 3. **Run `green_screen_composite` tool** to layer the speaker onto the animated background:
    ```
    green_screen_composite.execute({
-       "foreground_path": "<greenscreen_removed_video>",
+       "speaker_path": "<greenscreen_removed_video>",
        "background_path": "<animated_bg>",
        "output_path": "<project>/assets/video/composited.mp4",
        "layout": "news_anchor"
@@ -404,16 +404,15 @@ Use `video_compose` with `encode` operation:
 | YouTube Shorts | 60s | < 40 MB |
 | YouTube | unlimited | < 25 MB/min |
 
-If the output exceeds the target, re-encode with a lower bitrate. A 66-second Instagram Reel at 76 MB is unacceptable — it should be under 30 MB.
+If the output exceeds the target, re-encode with a higher `crf` (smaller file, lower quality). A 66-second Instagram Reel at 76 MB is unacceptable — it should be under 30 MB.
 
 ```
 video_compose.execute({
     "operation": "encode",
     "input_path": "<mixed_video>",
     "output_path": "<project>/renders/final.mp4",
-    "media_profile": "instagram_reels",
-    "video_bitrate": "4M",
-    "audio_bitrate": "192k",
+    "profile": "instagram_reels",
+    "crf": 23,                         # raise (e.g. 26-28) to shrink the file
 })
 ```
 

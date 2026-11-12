@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+import base64
+import json
 import os
+import re
 import time
 from pathlib import Path
 from typing import Any
+
+from tools.provider_pricing import PriceQuoteRequired
 
 from tools.base_tool import (
     BaseTool,
@@ -78,6 +83,14 @@ class ElevenLabsTTS(BaseTool):
             "model_id": {
                 "type": "string",
                 "default": "eleven_multilingual_v2",
+                "enum": [
+                    "eleven_v4",
+                    "eleven_v4_turbo",
+                    "eleven_v3",
+                    "eleven_multilingual_v2",
+                    "eleven_turbo_v2_5",
+                    "eleven_flash_v2_5",
+                ],
                 "description": "TTS model to use",
             },
             "stability": {
@@ -108,11 +121,39 @@ class ElevenLabsTTS(BaseTool):
                 "type": "boolean",
                 "default": True,
             },
+            "seed": {"type": "integer", "minimum": 0, "maximum": 4294967295},
+            "language_code": {"type": "string"},
+            "previous_text": {"type": "string"},
+            "next_text": {"type": "string"},
+            "previous_request_ids": {
+                "type": "array",
+                "items": {"type": "string"},
+                "maxItems": 3,
+            },
+            "next_request_ids": {
+                "type": "array",
+                "items": {"type": "string"},
+                "maxItems": 3,
+            },
+            "apply_text_normalization": {
+                "type": "string",
+                "enum": ["auto", "on", "off"],
+            },
             "output_path": {"type": "string"},
             "output_format": {
                 "type": "string",
                 "default": "mp3_44100_128",
                 "enum": ["mp3_44100_128", "mp3_44100_192", "pcm_16000", "pcm_24000"],
+            },
+            "with_timestamps": {
+                "type": "boolean",
+                "default": False,
+                "description": (
+                    "Use the /with-timestamps endpoint and return word-level timings "
+                    "(data.word_timestamps) plus the raw character alignment, saved next to "
+                    "the audio as <output>.alignment.json. Use for caption sync and "
+                    "word-cued animation without a separate transcription pass."
+                ),
             },
         },
     }
@@ -120,7 +161,7 @@ class ElevenLabsTTS(BaseTool):
     resource_profile = ResourceProfile(
         cpu_cores=1, ram_mb=256, vram_mb=0, disk_mb=50, network_required=True
     )
-    retry_policy = RetryPolicy(max_retries=2, retryable_errors=["rate_limit", "timeout"])
+    retry_policy = RetryPolicy(max_retries=0)
     idempotency_key_fields = [
         "text",
         "voice_id",
@@ -130,6 +171,15 @@ class ElevenLabsTTS(BaseTool):
         "style",
         "speed",
         "use_speaker_boost",
+    ] + [
+        "seed",
+        "language_code",
+        "previous_text",
+        "next_text",
+        "previous_request_ids",
+        "next_request_ids",
+        "output_format",
+        "with_timestamps",
     ]
     side_effects = ["writes audio file to output_path", "calls ElevenLabs API"]
     user_visible_verification = ["Listen to generated audio for natural speech quality"]
@@ -142,12 +192,17 @@ class ElevenLabsTTS(BaseTool):
         return ToolStatus.UNAVAILABLE
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
+        if inputs.get("model_id", "").startswith("eleven_v4"):
+            raise PriceQuoteRequired("Quote Eleven v4 pricing for your account plan")
         return round(len(inputs.get("text", "")) * 0.0003, 4)
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         api_key = os.environ.get("ELEVENLABS_API_KEY")
         if not api_key:
-            return ToolResult(success=False, error="No ElevenLabs API key. " + self.install_instructions)
+            return ToolResult(
+                success=False,
+                error="No ElevenLabs API key. " + self.install_instructions,
+            )
 
         start = time.time()
         try:
@@ -156,13 +211,30 @@ class ElevenLabsTTS(BaseTool):
             return ToolResult(success=False, error=f"TTS generation failed: {exc}")
 
         result.duration_seconds = round(time.time() - start, 2)
-        result.cost_usd = self.estimate_cost(inputs)
+        result.cost_usd = (
+            None
+            if inputs.get("model_id", "").startswith("eleven_v4")
+            else self.estimate_cost(inputs)
+        )
+        result.data["cost_status"] = (
+            "unquoted" if result.cost_usd is None else "estimated"
+        )
         return result
 
     def _generate(self, inputs: dict[str, Any], api_key: str) -> ToolResult:
         import requests
 
+        from jsonschema import validate
+
+        validate(inputs, self.input_schema)
         text = inputs["text"]
+        limit = (
+            2000
+            if inputs.get("model_id", "").startswith("eleven_v4")
+            else 5000 if inputs.get("model_id") == "eleven_v3" else 40000
+        )
+        if not text.strip() or len(text) > limit:
+            raise ValueError(f"Text must contain 1–{limit} characters for this model")
         voice_id = inputs.get("voice_id", self.DEFAULT_VOICE_ID)
         model_id = inputs.get("model_id", "eleven_multilingual_v2")
         output_format = inputs.get("output_format", "mp3_44100_128")
@@ -174,27 +246,122 @@ class ElevenLabsTTS(BaseTool):
             "use_speaker_boost": inputs.get("use_speaker_boost", True),
         }
 
-        response = requests.post(
-            f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
-            headers={
-                "xi-api-key": api_key,
-                "Content-Type": "application/json",
-                "Accept": "audio/mpeg",
-            },
-            json={
-                "text": text,
+        payload = {"text": text, "model_id": model_id, "voice_settings": voice_settings}
+        for field in (
+            "seed",
+            "language_code",
+            "previous_text",
+            "next_text",
+            "previous_request_ids",
+            "next_request_ids",
+            "apply_text_normalization",
+        ):
+            if field in inputs:
+                payload[field] = inputs[field]
+        with_timestamps = bool(inputs.get("with_timestamps", False))
+        endpoint = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+        if with_timestamps:
+            endpoint += "/with-timestamps"
+        if model_id == "eleven_v4":
+            unsupported = set(inputs) & {"style", "speed", "use_speaker_boost"}
+            if unsupported:
+                raise ValueError(
+                    f"Eleven v4 dialogue does not support {sorted(unsupported)}"
+                )
+            payload = {
+                "inputs": [{"text": text, "voice_id": voice_id}],
                 "model_id": model_id,
-                "voice_settings": voice_settings,
-            },
-            params={"output_format": output_format},
-            timeout=120,
-        )
-        response.raise_for_status()
+                "settings": {
+                    "stability": voice_settings["stability"],
+                    "similarity": voice_settings["similarity_boost"],
+                },
+            }
+            for field in (
+                "seed",
+                "language_code",
+                "previous_text",
+                "previous_request_ids",
+                "next_request_ids",
+                "apply_text_normalization",
+            ):
+                if field in inputs:
+                    payload[field] = inputs[field]
+            if "next_text" in inputs:
+                payload["future_text"] = inputs["next_text"]
+            if any(
+                len(payload.get(k, "")) > 100 for k in ("previous_text", "future_text")
+            ):
+                raise ValueError("Dialogue context text must be at most 100 characters")
+            endpoint = "https://api.elevenlabs.io/v1/text-to-dialogue"
+            if with_timestamps:
+                endpoint += "/with-timestamps"
+        if model_id == "eleven_v4_turbo":
+            audio_bytes = self._turbo_audio(inputs, api_key, voice_id, output_format)
+            response = None
+        else:
+            response = requests.post(
+                endpoint,
+                headers={
+                    "xi-api-key": api_key,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json" if with_timestamps else "audio/mpeg",
+                },
+                json=payload,
+                params={"output_format": output_format},
+                timeout=120,
+            )
+            response.raise_for_status()
+        alignment = None
+        if model_id == "eleven_v4_turbo":
+            pass
+        elif with_timestamps:
+            body = response.json()
+            audio_bytes = base64.b64decode(body["audio_base64"])
+            alignment = body.get("alignment") or body.get("normalized_alignment")
+        else:
+            audio_bytes = response.content
+
+        if not audio_bytes:
+            raise ValueError("ElevenLabs returned empty audio")
 
         ext = "mp3" if "mp3" in output_format else "wav"
         output_path = Path(inputs.get("output_path", f"tts_output.{ext}"))
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_bytes(response.content)
+        if output_format.startswith("pcm_"):
+            import wave
+
+            with wave.open(str(output_path), "wb") as wav:
+                wav.setnchannels(1)
+                wav.setsampwidth(2)
+                wav.setframerate(int(output_format.split("_")[1]))
+                wav.writeframes(audio_bytes)
+        else:
+            output_path.write_bytes(audio_bytes)
+
+        artifacts = [str(output_path)]
+        extra: dict[str, Any] = {}
+        if with_timestamps:
+            if not alignment:
+                raise ValueError(
+                    "ElevenLabs returned no alignment for a with-timestamps request"
+                )
+            words = self.words_from_alignment(alignment)
+            alignment_path = output_path.with_name(output_path.name + ".alignment.json")
+            alignment_path.write_text(
+                json.dumps(
+                    {"text": text, "alignment": alignment, "words": words},
+                    ensure_ascii=False,
+                ),
+                encoding="utf-8",
+            )
+            artifacts.append(str(alignment_path))
+            extra = {
+                "word_timestamps": words,
+                "alignment_path": str(alignment_path),
+                # False when the service normalised the text (numbers, symbols); timings
+                # then refer to the spoken form returned in the alignment.
+                "alignment_matches_text": "".join(alignment["characters"]) == text,
+            }
 
         return ToolResult(
             success=True,
@@ -206,7 +373,98 @@ class ElevenLabsTTS(BaseTool):
                 "text_length": len(text),
                 "output": str(output_path),
                 "format": output_format,
+                "request_id": (
+                    response.headers.get("request-id") if response is not None else None
+                ),
+                **extra,
             },
-            artifacts=[str(output_path)],
+            artifacts=artifacts,
             model=model_id,
         )
+
+    @staticmethod
+    def _turbo_audio(inputs, api_key, voice_id, output_format):
+        # Current realtime-tdd tutorial explicitly supports v4 Turbo; the older
+        # API reference still says v3-only. Do not route Turbo to legacy HTTP TTS.
+        from urllib.parse import urlencode
+        from websockets.sync.client import connect
+
+        unsupported = set(inputs) & {
+            "stability",
+            "similarity_boost",
+            "style",
+            "speed",
+            "use_speaker_boost",
+            "previous_text",
+            "next_text",
+            "previous_request_ids",
+            "next_request_ids",
+        }
+        if unsupported or inputs.get("with_timestamps"):
+            raise ValueError(
+                "Turbo file synthesis does not support voice settings, continuity or timestamps"
+            )
+        query = {"model_id": "eleven_v4_turbo", "output_format": output_format}
+        for field in ("seed", "language_code", "apply_text_normalization"):
+            if field in inputs:
+                query[field] = inputs[field]
+        chunks = []
+        deadline = time.monotonic() + 180
+        with connect(
+            "wss://api.elevenlabs.io/v1/text-to-dialogue/stream-input?"
+            + urlencode(query),
+            additional_headers={"xi-api-key": api_key},
+            open_timeout=20,
+        ) as socket:
+            socket.send(json.dumps({"voices": [voice_id]}))
+            socket.send(
+                json.dumps(
+                    {
+                        "inputs": [
+                            {
+                                "text": inputs["text"],
+                                "voice_id": voice_id,
+                                "new_turn": False,
+                            }
+                        ]
+                    }
+                )
+            )
+            socket.send(json.dumps({"close_socket": True}))
+            while True:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise TimeoutError(
+                        "Dialogue stream did not finish; do not automatically resubmit"
+                    )
+                event = json.loads(socket.recv(timeout=remaining))
+                if event.get("error"):
+                    raise ValueError("ElevenLabs dialogue stream returned an error")
+                if event.get("audio"):
+                    chunks.append(base64.b64decode(event["audio"], validate=True))
+                if event.get("is_final"):
+                    break
+        return b"".join(chunks)
+
+    @staticmethod
+    def words_from_alignment(alignment: dict[str, Any]) -> list[dict[str, Any]]:
+        """Group ElevenLabs character timings into whitespace-delimited words.
+
+        Each word gets the start of its first character and the end of its last one,
+        in seconds from the start of the returned audio.
+        """
+        pieces = alignment["characters"]
+        starts = alignment["character_start_times_seconds"]
+        ends = alignment["character_end_times_seconds"]
+        text, owner = "", []  # owner[k] = alignment entry that produced text[k]
+        for i, piece in enumerate(pieces):
+            text += piece
+            owner.extend([i] * len(piece))
+        return [
+            {
+                "word": m.group(),
+                "start": round(starts[owner[m.start()]], 3),
+                "end": round(ends[owner[m.end() - 1]], 3),
+            }
+            for m in re.finditer(r"\S+", text)
+        ]

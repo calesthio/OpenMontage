@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from styles.playbook_loader import list_playbooks
+from styles.playbook_loader import CUSTOM_SUBDIR, list_playbooks
 from tools.video.video_compose import VideoCompose
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -32,7 +32,12 @@ PLAYBOOK_NAMES = sorted(list_playbooks())
 
 
 def _raw(name: str) -> dict:
-    return yaml.safe_load((STYLES_DIR / f"{name}.yaml").read_text(encoding="utf-8"))
+    # Mirror load_playbook(): presets live in styles/, generated playbooks in
+    # styles/custom/. list_playbooks() returns both, so resolve both here.
+    path = STYLES_DIR / f"{name}.yaml"
+    if not path.exists():
+        path = STYLES_DIR / CUSTOM_SUBDIR / f"{name}.yaml"
+    return yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
 def _theme(name: str) -> dict:

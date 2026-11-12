@@ -46,7 +46,7 @@
       "in_seconds": 13,
       "out_seconds": 17.5,
       "title": "Automation coverage",
-      "progress": 0.82,
+      "progress": 82,
       "progressLabel": "82% of the release path is scripted",
       "progressColor": "#34D399",
       "backgroundColor": "#0F172A"

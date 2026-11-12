@@ -96,11 +96,13 @@ Each tool's `agent_skills[]` field bridges Layer 1 → Layer 3. See `skills/INDE
 | `clip-factory` | `pipeline_defs/clip-factory.yaml` | Short-form batch extraction |
 | `podcast-repurpose` | `pipeline_defs/podcast-repurpose.yaml` | Podcast repurposing |
 | `cinematic` | `pipeline_defs/cinematic.yaml` | Cinematic edit |
+| `documentary-montage` | `pipeline_defs/documentary-montage.yaml` | Retrieval-first documentary montage |
 | `animation` | `pipeline_defs/animation.yaml` | Animation-first |
 | `character-animation` | `pipeline_defs/character-animation.yaml` | Local rigged character animation |
 | `hybrid` | `pipeline_defs/hybrid.yaml` | Source-plus-support hybrid |
 | `avatar-spokesperson` | `pipeline_defs/avatar-spokesperson.yaml` | Avatar presenter |
 | `localization-dub` | `pipeline_defs/localization-dub.yaml` | Localization and dubbing |
+| `documentary-montage` | `pipeline_defs/documentary-montage.yaml` | Retrieval-first thematic montage |
 | `framework-smoke` | `pipeline_defs/framework-smoke.yaml` | Test harness |
 
 ## When Building New Pipelines

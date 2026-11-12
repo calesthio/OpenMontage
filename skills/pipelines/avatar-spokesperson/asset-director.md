@@ -138,3 +138,7 @@ This stage gates on human approval (`human_approval_default: true`). After revie
 checkpoint with `status="awaiting_human"`, present the summary (the Backlot board renders
 the artifact), and **END YOUR TURN**. Do not start the next stage in the same response.
 Approval is per-gate — an earlier "go ahead" does not cover this gate.
+
+## HeyGen Avatar V
+
+Use `heygen_avatar` for explicitly approved HeyGen digital twins. Inspect the look before rendering: Avatar V requires `digital_twin` and `avatar_v` in `supported_api_engines`. Pass script plus voice_id, or one supplied audio source. Keep the returned resume_job/job_path if polling times out; resume the job instead of submitting again. An ineligible look is a blocker, never permission to switch to Avatar IV. Read the provider-model-refresh skill.

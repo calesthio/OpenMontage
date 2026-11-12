@@ -435,3 +435,115 @@ def test_get_default_cache_returns_same_instance(monkeypatch, tmp_path):
     b = get_default_cache()
     assert a is b
     reset_default_cache()
+
+
+# ----------------------------------------------------------------------
+# Path traversal defenses
+# ----------------------------------------------------------------------
+
+
+def test_ingest_rejects_path_traversal_clip_id(tmp_path):
+    cache = ClipCache(cache_dir=tmp_path / "cache")
+    src = _fake_clip(tmp_path / "source.mp4", 4000)
+
+    # A sensitive file outside cache_dir that must never be touched
+    outside_canary = tmp_path / "canary.mp4"
+    outside_canary.write_text("protected content")
+
+    # Attempting to ingest with a traversal clip_id aiming at the canary
+    traversal_id = "../canary"
+    ok = cache.ingest(traversal_id, src, _default_metadata(traversal_id))
+    assert ok is False
+    assert outside_canary.read_text() == "protected content"
+
+    # Various malformed or traversal identifiers
+    bad_clip_ids = [
+        "../escape",
+        "../../escape",
+        "/absolute/escape",
+        "dir/subclip",
+        "dir\\subclip",
+        "..\\windows_escape",
+        "clip:stream",
+        "clip\x00null",
+        "",
+        ".",
+        "..",
+    ]
+    for bad_id in bad_clip_ids:
+        assert cache.ingest(bad_id, src, _default_metadata()) is False
+
+    # Confirm cache manifest and cache dir have no escaped files
+    entries = cache._read_manifest()
+    assert len(entries) == 0
+
+
+def test_try_link_rejects_path_traversal_clip_id(tmp_path):
+    cache = ClipCache(cache_dir=tmp_path / "cache")
+    dest = tmp_path / "project" / "leaked.mp4"
+
+    # An outside file exists
+    _fake_clip(tmp_path / "outside.mp4", 3000)
+
+    # Attempting to link using path traversal in clip_id
+    assert cache.try_link("../outside", dest) is False
+    assert cache.try_link("../../outside", dest) is False
+    assert cache.try_link("/outside", dest) is False
+    assert not dest.exists()
+    assert cache.misses >= 3
+
+
+def test_manifest_prunes_traversal_entries(tmp_path):
+    cache_dir = tmp_path / "cache"
+    cache = ClipCache(cache_dir=cache_dir)
+
+    outside_victim = _fake_clip(tmp_path / "victim.mp4", 2000)
+
+    # Inject corrupt or malicious entries directly into the manifest
+    evil_traversal = CacheEntry(
+        clip_id="evil_traversal",
+        file_name="../victim.mp4",
+        size_bytes=2000,
+        added_at=100.0,
+        last_access_at=100.0,
+    )
+    evil_id = CacheEntry(
+        clip_id="../bad_id",
+        file_name="bad.mp4",
+        size_bytes=2000,
+        added_at=100.0,
+        last_access_at=100.0,
+    )
+    valid_entry = CacheEntry(
+        clip_id="valid_clip",
+        file_name="valid_clip.mp4",
+        size_bytes=2000,
+        added_at=200.0,
+        last_access_at=200.0,
+    )
+    _fake_clip(cache_dir / "valid_clip.mp4", 2000)
+
+    manifest_path = cache_dir / ClipCache.MANIFEST_NAME
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        f.write(json.dumps(evil_traversal.to_dict()) + "\n")
+        f.write(json.dumps(evil_id.to_dict()) + "\n")
+        f.write(json.dumps(valid_entry.to_dict()) + "\n")
+
+    # _read_manifest should silently filter out traversal entries
+    entries = cache._read_manifest()
+    assert "evil_traversal" not in entries
+    assert "../bad_id" not in entries
+    assert "valid_clip" in entries
+    assert len(entries) == 1
+
+    # try_link must refuse to link any traversal file even if present in entries
+    dest = tmp_path / "project" / "dest.mp4"
+    assert cache.try_link("evil_traversal", dest) is False
+    assert not dest.exists()
+
+    # Eviction must never unlink outside files
+    cache.max_total_bytes = 1000  # force eviction on next ingest
+    src = _fake_clip(tmp_path / "new.mp4", 2000)
+    cache.ingest("new_clip", src, _default_metadata("new_clip"))
+    assert outside_victim.exists(), "outside victim file must not be unlinked during eviction"
+

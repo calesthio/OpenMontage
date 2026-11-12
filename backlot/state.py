@@ -423,19 +423,30 @@ def _build_storyboard(
         entry = _asset_entry(project_dir, asset)
         assets_by_scene.setdefault(scene_key(entry.get("scene_id")), []).append(entry)
 
-    # A scene is "generating" if its most recent top-level event is an
+    # A scene is "generating" while any top-level call has an
     # unfinished start. Nested (depth>0) provider events inside a selector
     # call are skipped — the outer call's finish is the real completion.
-    generating: dict[str, dict] = {}
+    active_calls: dict[str, list[dict]] = {}
     for ev in events:
         sid = ev.get("scene_id")
         if sid is None or ev.get("depth"):
             continue
         sid = scene_key(sid)
         if ev.get("event") == "start":
-            generating[sid] = ev
+            active_calls.setdefault(sid, []).append(ev)
         elif ev.get("event") in ("finish", "error"):
-            generating.pop(sid, None)
+            calls = active_calls.get(sid, [])
+            for index, start in enumerate(calls):
+                if ev.get("call_id"):
+                    matches = start.get("call_id") == ev["call_id"]
+                else:
+                    # Historical logs predate call IDs. Pair each completion
+                    # with one legacy start for the same tool, not the scene.
+                    matches = not start.get("call_id") and start.get("tool") == ev.get("tool")
+                if matches:
+                    calls.pop(index)
+                    break
+    generating = {sid: calls[-1] for sid, calls in active_calls.items() if calls}
 
     cards = []
     for scene in scene_plan["scenes"]:
@@ -642,6 +653,7 @@ def load_board_state(project_dir: Path) -> dict[str, Any]:
         "title": marker.get("title") or meta_json.get("name") or project_id.replace("-", " ").title(),
         "pipeline": pipeline_meta,
         "style_playbook": marker.get("style_playbook"),
+        "series": _series_of(marker),
         "created_at": marker.get("created_at"),
         "has_marker": bool(marker),
         "has_pipeline_state": bool(checkpoints),
@@ -658,6 +670,19 @@ def load_board_state(project_dir: Path) -> dict[str, Any]:
     return state
 
 
+def _series_of(marker: dict[str, Any]) -> Optional[str]:
+    """Optional ``series`` label from project.json; blank/non-string -> None."""
+    series = marker.get("series")
+    if isinstance(series, str) and series.strip():
+        return series.strip()
+    return None
+
+
+def series_from_disk(project_dir: Path) -> Optional[str]:
+    """Series label for a project whose full summary failed to build."""
+    return _series_of(_read_json(Path(project_dir) / "project.json") or {})
+
+
 def summarize_project(project_dir: Path) -> dict[str, Any]:
     """Cheap library-card summary (no full artifact parse of big files)."""
     state = load_board_state(project_dir)
@@ -666,6 +691,7 @@ def summarize_project(project_dir: Path) -> dict[str, Any]:
     return {
         "project_id": state["project_id"],
         "title": state["title"],
+        "series": state["series"],
         "pipeline_type": state["pipeline"]["pipeline_type"],
         "has_pipeline_state": state["has_pipeline_state"],
         "poster": state["poster"],
@@ -698,6 +724,7 @@ def list_projects(projects_dir: Optional[Path] = None) -> list[dict[str, Any]]:
             summaries.append({
                 "project_id": entry.name,
                 "title": entry.name.replace("-", " ").title(),
+                "series": series_from_disk(entry),
                 "pipeline_type": "unknown",
                 "has_pipeline_state": False,
                 "poster": None,

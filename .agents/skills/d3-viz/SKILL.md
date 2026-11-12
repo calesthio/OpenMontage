@@ -811,8 +811,8 @@ Contains detailed reference materials:
 
 Contains boilerplate templates:
 
-- `chart-template.js` - Starter template for basic chart
-- `interactive-template.js` - Template with tooltips, zoom, and interactions
+- `chart-template.jsx` - Starter template for basic chart
+- `interactive-template.jsx` - Template with tooltips, zoom, and interactions
 - `sample-data.json` - Example datasets for testing
 
 These templates work with vanilla JavaScript, React, Vue, Svelte, or any other JavaScript environment. Adapt them as needed for your specific framework.

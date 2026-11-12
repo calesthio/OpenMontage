@@ -108,6 +108,7 @@ class FreesoundMusic(BaseTool):
     ]
 
     _BASE_URL = "https://freesound.org/apiv2"
+    _GENERIC_LICENSE = "Creative Commons (check individual sound license)"
 
     def get_status(self) -> ToolStatus:
         if os.environ.get("FREESOUND_API_KEY"):
@@ -163,7 +164,8 @@ class FreesoundMusic(BaseTool):
                 "query": inputs["query"],
                 "output": str(output_path),
                 "format": "mp3",
-                "license": "Creative Commons (check individual sound license)",
+                "license": sound.get("license") or self._GENERIC_LICENSE,
+                "author": sound.get("username"),
                 "freesound_url": f"https://freesound.org/people/{sound.get('username', '')}/sounds/{sound.get('id', '')}/",
                 "results_found": len(search_result),
             },
@@ -182,7 +184,7 @@ class FreesoundMusic(BaseTool):
             "query": query,
             "filter": f"duration:[{min_dur} TO {max_dur}]",
             "sort": "rating_desc",
-            "fields": "id,name,duration,previews,tags,avg_rating,username",
+            "fields": "id,name,duration,previews,tags,avg_rating,username,license",
             "token": api_key,
             "page_size": 15,
         })

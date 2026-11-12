@@ -7,11 +7,14 @@ diagrams via Pillow as fallback.
 
 from __future__ import annotations
 
+import functools
 import json
+import re
 import shutil
+import subprocess
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from tools.base_tool import (
     BaseTool,
@@ -23,6 +26,28 @@ from tools.base_tool import (
     ToolStatus,
     ToolTier,
 )
+
+
+@functools.lru_cache(maxsize=None)
+def _mmdc_major_version(mmdc_path: str) -> Optional[int]:
+    """Return the installed mermaid-cli major version, or None if unknown."""
+    try:
+        proc = subprocess.run(
+            [mmdc_path, "--version"], capture_output=True, text=True, timeout=30
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    match = re.search(r"(\d+)\.\d+", proc.stdout or "")
+    return int(match.group(1)) if match else None
+
+
+def _mmdc_width_args(width: int) -> list[str]:
+    """mermaid-cli 12 replaced ``-w/--width`` with ``--size``."""
+    mmdc_path = shutil.which("mmdc")
+    major = _mmdc_major_version(mmdc_path) if mmdc_path else None
+    if major is not None and major >= 12:
+        return ["--size", str(width)]
+    return ["-w", str(width)]
 
 
 class DiagramGen(BaseTool):
@@ -93,20 +118,54 @@ class DiagramGen(BaseTool):
             "width": {"type": "integer", "default": 1200},
             "height": {"type": "integer", "default": 800},
             "output_path": {"type": "string"},
+            "allow_text_fallback": {
+                "type": "boolean",
+                "default": False,
+                "description": "Render Mermaid source as a text card when Mermaid CLI is unavailable",
+            },
         },
     }
 
     resource_profile = ResourceProfile(cpu_cores=1, ram_mb=256, vram_mb=0, disk_mb=50)
-    idempotency_key_fields = ["diagram_type", "definition", "boxes"]
+    idempotency_key_fields = [
+        "diagram_type", "definition", "boxes", "connections",
+        "title", "theme", "width", "height", "allow_text_fallback",
+    ]
     side_effects = ["writes diagram image to output_path"]
     user_visible_verification = [
         "Verify diagram accurately represents the described structure",
     ]
 
     def get_status(self) -> ToolStatus:
-        if self._has_mermaid() or self._has_pillow():
+        statuses = self.operation_statuses()
+        if all(status == "available" for status in statuses.values()):
             return ToolStatus.AVAILABLE
+        if any(status == "available" for status in statuses.values()):
+            return ToolStatus.DEGRADED
         return ToolStatus.UNAVAILABLE
+
+    def operation_statuses(self) -> dict[str, str]:
+        """Return backend availability for each supported diagram type."""
+        return {
+            "mermaid": "available" if self._has_mermaid() else "unavailable",
+            "flowchart": "available" if self._has_pillow() else "unavailable",
+            "boxes": "available" if self._has_pillow() else "unavailable",
+        }
+
+    def get_info(self) -> dict[str, Any]:
+        info = super().get_info()
+        info["operation_statuses"] = self.operation_statuses()
+        return info
+
+    def idempotency_key(self, inputs: dict[str, Any]) -> str:
+        return super().idempotency_key(
+            {**inputs, "allow_text_fallback": inputs.get("allow_text_fallback", False)}
+        )
+
+    def cache_key(self, inputs: dict[str, Any]) -> str:
+        return super().cache_key(
+            {**inputs, "allow_text_fallback": inputs.get("allow_text_fallback", False)}
+        )
 
     def _has_mermaid(self) -> bool:
         return shutil.which("mmdc") is not None
@@ -159,7 +218,7 @@ class DiagramGen(BaseTool):
                 "-o", str(output_path),
                 "-c", str(config_path),
                 "-b", "transparent",
-                "-w", str(inputs.get("width", 1200)),
+                *_mmdc_width_args(inputs.get("width", 1200)),
             ]
 
             try:
@@ -176,9 +235,16 @@ class DiagramGen(BaseTool):
                 },
                 artifacts=[str(output_path)],
             )
-        else:
-            # Fallback: render mermaid text as a styled text card
+        if inputs.get("allow_text_fallback", False):
             return self._render_text_card(definition, inputs)
+
+        return ToolResult(
+            success=False,
+            error=(
+                "Mermaid CLI (mmdc) is not available. "
+                "Install it with: npm install -g @mermaid-js/mermaid-cli"
+            ),
+        )
 
     def _render_boxes(self, inputs: dict[str, Any]) -> ToolResult:
         """Render a box-and-arrow diagram using Pillow."""

@@ -10,17 +10,11 @@ import {
   useVideoConfig,
 } from "remotion";
 import React from "react";
-import { loadFont as loadPlayfair } from "@remotion/google-fonts/PlayfairDisplay";
+import { loadPlayfair } from "./lib/localFonts";
 import { resolveAsset } from "./lib/resolveAsset";
 
-const { fontFamily: playfairFamily } = loadPlayfair("normal", {
-  weights: ["400", "700"],
-  subsets: ["latin"],
-});
-const { fontFamily: playfairItalic } = loadPlayfair("italic", {
-  weights: ["400", "700"],
-  subsets: ["latin"],
-});
+const { fontFamily: playfairFamily } = loadPlayfair("normal", ["400", "700"]);
+const { fontFamily: playfairItalic } = loadPlayfair("italic", ["400", "700"]);
 
 export type CollageTransition =
   | "pop"

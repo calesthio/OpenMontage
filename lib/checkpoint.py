@@ -142,6 +142,20 @@ def _validate_artifacts_for_stage(
             f"canonical artifact {required_artifact!r}"
         )
 
+    # The proposal packet's schema keeps render_runtime optional while its
+    # approval is pending, then requires it for approved packets. A proposal
+    # checkpoint can only complete after the human approval gate, so keep the
+    # checkpoint state and the embedded approval decision in sync as well.
+    if stage == "proposal" and status == "completed":
+        proposal = artifacts.get("proposal_packet")
+        approval = proposal.get("approval") if isinstance(proposal, dict) else None
+        approval_status = approval.get("status") if isinstance(approval, dict) else None
+        if approval_status not in {"approved", "approved_with_changes"}:
+            raise CheckpointValidationError(
+                "A completed proposal checkpoint must include a proposal_packet "
+                "with approval.status 'approved' or 'approved_with_changes'"
+            )
+
     for artifact_name, artifact_data in artifacts.items():
         if artifact_name not in ARTIFACT_NAMES:
             continue
@@ -202,12 +216,16 @@ def init_project(
     pipeline_type: str,
     pipeline_dir: Optional[Path] = None,
     style_playbook: Optional[str] = None,
+    series: Optional[str] = None,
 ) -> Path:
     """Initialize a project workspace with the canonical layout + marker file.
 
     Creates projects/<project_id>/ with the standard subdirectories and writes
     project.json — the marker the Backlot board uses to render a project's
     identity and stage rail before the first checkpoint exists.
+
+    ``series`` optionally groups several projects (episodes of one show) into
+    a single section of the Backlot library. Projects stay flat on disk.
 
     Idempotent: re-running preserves the original created_at and merges fields.
     Returns the project directory.
@@ -241,6 +259,8 @@ def init_project(
     marker["pipeline_type"] = pipeline_type
     if style_playbook is not None:
         marker["style_playbook"] = style_playbook
+    if series is not None:
+        marker["series"] = series
 
     with open(marker_path, "w", encoding="utf-8") as f:
         json.dump(marker, f, indent=2)
@@ -528,7 +548,6 @@ def write_checkpoint(
     # append them to the project-level decision log file, then write the
     # reference back into relevant artifacts so downstream consumers can find it.
     if "decision_log" in artifacts and isinstance(artifacts["decision_log"], dict):
-        _merge_decision_log(pipeline_dir, project_id, artifacts["decision_log"])
         log_ref = str(_decision_log_path(pipeline_dir, project_id))
 
         # Write decision_log_ref into proposal_packet and render_report
@@ -545,6 +564,10 @@ def write_checkpoint(
                     plan_or_top["decision_log_ref"] = log_ref
 
     validate_checkpoint(checkpoint)
+
+    # Reject invalid stage/artifact payloads before persisting their decisions.
+    if "decision_log" in artifacts and isinstance(artifacts["decision_log"], dict):
+        _merge_decision_log(pipeline_dir, project_id, artifacts["decision_log"])
 
     path = _checkpoint_path(pipeline_dir, project_id, stage)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -605,14 +628,18 @@ def get_completed_stages(
     """Return list of stages that have a completed checkpoint.
 
     When pipeline_type is provided, only checks stages defined in that
-    pipeline's manifest — preventing false positives from leftover
-    checkpoints of a different pipeline type.
+    pipeline's manifest and requires their recorded pipeline_type to match —
+    preventing false positives from a previous pipeline's shared stages.
     """
     stages_to_check = get_pipeline_stages(pipeline_type)
     completed = []
     for stage in stages_to_check:
         cp = read_checkpoint(pipeline_dir, project_id, stage)
-        if cp and cp.get("status") == "completed":
+        if (
+            cp
+            and cp.get("status") == "completed"
+            and (pipeline_type is None or cp.get("pipeline_type") == pipeline_type)
+        ):
             completed.append(stage)
     return completed
 

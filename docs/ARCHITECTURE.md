@@ -54,7 +54,7 @@ OpenMontage/
 │   ├── enhancement/        # Upscale, bg removal, face enhance/restore, color grading
 │   ├── graphics/           # 29 image gen providers + image_selector, 3D (Three.js worlds, Blender, Atlas/fal 3D), stock, diagrams, code snippets, math animation
 │   ├── provider_contracts/ # JSON model/pricing refresh contracts per provider
-│   ├── publishers/         # Export bundle packaging
+│   ├── publishers/         # export_bundle (offline package), upload_post_publisher (social platforms)
 │   ├── subtitle/           # SRT/VTT generation from timestamps
 │   └── video/              # 33 video gen providers + video_selector, composition (Remotion / HyperFrames / FFmpeg), stitching, trimming, clip retrieval, stock_sources/ (17 free archives)
 │

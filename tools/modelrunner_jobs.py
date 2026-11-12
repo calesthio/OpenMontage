@@ -16,15 +16,21 @@ Billing contract every ModelRunner tool reports through this module:
   `response_url`), which only reads and never submits.
 - A collect call reports `cost_usd=0.0` — it spends nothing — and puts the
   job's own charge in `data["billing"]`, so a job is never counted twice.
+- Every submission is checkpointed to a job file (`job_path`, default
+  `<output_path>.job.json`): the attempt id before the POST, the request id
+  and queue URLs once accepted. A process that dies mid-poll still leaves
+  what a collect call needs.
 """
 
 from __future__ import annotations
 
 import time
+from pathlib import Path
 from typing import Any
 
 from tools import modelrunner_client
 from tools.base_tool import ToolResult
+from tools.provider_jobs import save_job
 
 COLLECT_KEYS = ("request_id", "status_url", "response_url")
 
@@ -35,6 +41,10 @@ COLLECT_SCHEMA_PROPERTIES = {
     },
     "status_url": {"type": "string", "description": "Collect an already-submitted job by its status_url (no new submission)."},
     "response_url": {"type": "string", "description": "Collect an already-submitted job by its response_url (no new submission)."},
+    "job_path": {
+        "type": "string",
+        "description": "Where to checkpoint the submitted job (attempt id, request_id, queue URLs). Default: <output_path>.job.json.",
+    },
 }
 
 
@@ -61,6 +71,47 @@ def collect_coordinates(inputs: dict[str, Any], endpoint_id: str) -> dict[str, A
         coords.update(status_url=str(status_url), response_url=str(response_url))
         return coords
     return modelrunner_client.queue_urls_for(endpoint_id, str(request_id))
+
+
+def submit(
+    tool: str, endpoint_id: str, payload: dict[str, Any], api_key: str,
+    inputs: dict[str, Any], default_output: str, estimate: float,
+) -> dict[str, Any]:
+    """Submit one paid job, checkpointing it to disk before and after the POST.
+
+    The attempt id is written BEFORE anything is sent — an unwritable job path
+    fails here, unbilled — so a crash at any later point leaves either the
+    attempt id (find the job by its `openmontage_attempt` metadata) or the
+    request id and queue URLs (collect it).
+    """
+    path = Path(inputs.get("job_path") or f"{inputs.get('output_path') or default_output}.job.json")
+    attempt_id = modelrunner_client.new_attempt_id()
+    job = {
+        "tool": tool, "provider": "modelrunner", "endpoint": endpoint_id,
+        "attempt_id": attempt_id, "state": "submitting",
+        "estimated_cost_usd": round(estimate, 6),
+        "submitted_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    }
+    save_job(path, job)
+
+    def checkpoint(update: dict[str, Any]) -> None:
+        try:
+            save_job(path, {**job, **update})
+        except OSError:
+            pass  # the coordinates are also in the ToolResult; never mask the job
+
+    try:
+        queue = modelrunner_client.submit(endpoint_id, payload, api_key, attempt_id=attempt_id)
+    except Exception as exc:
+        known = getattr(exc, "queue", None)
+        if known:
+            known["job_path"] = str(path)
+            checkpoint({**known, "state": "unknown"})
+        else:
+            checkpoint({"state": "not_submitted", "error": str(exc)[:500]})
+        raise
+    checkpoint({**queue, "state": "accepted"})
+    return {**queue, "job_path": str(path)}
 
 
 def fetch_outputs(
@@ -90,6 +141,11 @@ def settle(queue: dict[str, Any], api_key: str, estimate: float, *, collected: b
         "source": source,
     }
     return (0.0 if collected else cost), billing
+
+
+def _saved_in(known: dict[str, Any]) -> str:
+    path = known.get("job_path")
+    return f" These coordinates are saved in {path}." if path else ""
 
 
 def failure(
@@ -127,6 +183,7 @@ def failure(
                 "Look it up in your ModelRunner request history by metadata "
                 f"{modelrunner_client.ATTEMPT_METADATA_KEY}={known.get('attempt_id')} "
                 "(GET /requests?metadata=...) and collect it by request_id before resubmitting."
+                + _saved_in(known)
             ),
         }
         cost = None
@@ -151,7 +208,7 @@ def failure(
             data["recovery_hint"] = (
                 "The job was accepted. Re-run this tool with request_id="
                 f"{known.get('request_id')} to collect it; that polls and downloads "
-                "without a new paid submission."
+                "without a new paid submission." + _saved_in(known)
             )
     if collected:
         data["billing"] = {"status": data["billing_status"], "charged_usd": cost}

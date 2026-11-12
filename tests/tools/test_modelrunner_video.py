@@ -757,6 +757,53 @@ class TestCollect:
         assert again.success is True, again.error
         assert len(fake_requests.calls["post"]) == 1, "recovery must not submit a second paid job"
 
+    def test_accepted_job_is_checkpointed_to_disk(self, fake_requests, tmp_path):
+        """A process that dies mid-poll leaves what a collect call needs."""
+        import json
+
+        out = tmp_path / "o.mp4"
+        fake_requests.queues["post"] = [SUBMITTED]
+        fake_requests.queues["get"] = [in_progress() for _ in range(5)]
+        failed = ModelRunnerVideo().execute({
+            "prompt": "p", "poll_interval": 1, "poll_timeout": 3, "output_path": str(out),
+        })
+        job_file = tmp_path / "o.mp4.job.json"
+        assert failed.data["job_path"] == str(job_file)
+        assert str(job_file) in failed.data["recovery_hint"]
+        job = json.loads(job_file.read_text())
+        assert job["state"] == "accepted"
+        assert job["request_id"] == REQUEST_ID
+        assert job["status_url"] == STATUS_URL and job["response_url"] == RESPONSE_URL
+        assert job["attempt_id"] == fake_requests.calls["post"][0]["headers"]["X-Idempotency-Key"]
+
+        # The saved request_id alone finishes the job, with no second POST.
+        fake_requests.queues["get"] = [
+            completed_status(), result("https://media.modelrunner.ai/abc.mp4"), FakeResponse(content=b"MP4"),
+        ]
+        done = ModelRunnerVideo().execute({"request_id": job["request_id"], "output_path": str(out)})
+        assert done.success is True, done.error
+        assert len(fake_requests.calls["post"]) == 1
+
+    def test_ambiguous_submit_checkpoints_the_attempt_id(self, fake_requests, tmp_path):
+        import json
+
+        fake_requests.queues["post"] = [FakeResponse(status_code=502) for _ in range(10)]
+        failed = ModelRunnerVideo().execute({"prompt": "p", "job_path": str(tmp_path / "j.json"),
+                                             "output_path": str(tmp_path / "o.mp4")})
+        assert failed.cost_usd is None
+        job = json.loads((tmp_path / "j.json").read_text())
+        assert job["state"] == "unknown"
+        assert job["attempt_id"] == failed.data["attempt_id"]
+
+    def test_unwritable_job_path_fails_before_any_request(self, fake_requests, tmp_path):
+        blocker = tmp_path / "file"
+        blocker.write_text("x")
+        failed = ModelRunnerVideo().execute({"prompt": "p", "job_path": str(blocker / "j.json"),
+                                             "output_path": str(tmp_path / "o.mp4")})
+        assert failed.success is False
+        assert failed.data == {"billing_status": "not_submitted", "resubmit_safe": True}
+        assert fake_requests.calls["post"] == []
+
     def test_collect_refuses_off_host_urls(self, fake_requests, tmp_path):
         tool_result = ModelRunnerVideo().execute({"status_url": "https://evil.example.com/requests/x/status",
                                                   "output_path": str(tmp_path / "o.mp4")})

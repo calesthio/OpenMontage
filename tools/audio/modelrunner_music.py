@@ -101,7 +101,8 @@ class ModelRunnerMusic(BaseTool):
     resource_profile = ResourceProfile(cpu_cores=1, ram_mb=256, disk_mb=100, network_required=True)
     retry_policy = RetryPolicy(max_retries=0, retryable_errors=["rate_limit", "timeout"])
     idempotency_key_fields = ["prompt", "model", "duration_seconds", "seed"]
-    side_effects = ["writes an audio file to output_path", "submits one paid ModelRunner API request"]
+    side_effects = ["writes an audio file to output_path", "submits one paid ModelRunner API request",
+                    "writes a job checkpoint to job_path (default <output_path>.job.json)"]
     user_visible_verification = [
         "Listen to the generated track for style, structure, and loopability",
     ]
@@ -190,7 +191,9 @@ class ModelRunnerMusic(BaseTool):
                 queue = modelrunner_jobs.collect_coordinates(inputs, model)
             else:
                 payload = self._build_payload(inputs, model)
-                queue = modelrunner_client.submit(model, payload, api_key)
+                queue = modelrunner_jobs.submit(
+                    self.name, model, payload, api_key, inputs, f"modelrunner_music.{MUSIC_MODELS[model]['output_format']}", estimate
+                )
             source_url = modelrunner_jobs.fetch_outputs(
                 queue, api_key, interval=poll_interval, timeout=poll_timeout, cardinality="single"
             )[0]
@@ -209,7 +212,7 @@ class ModelRunnerMusic(BaseTool):
             data={
                 "provider": "modelrunner", "model": model, "prompt": inputs.get("prompt", ""),
                 "output": str(output_path), "output_path": str(output_path),
-                "request_id": queue["request_id"], "source_url": source_url,
+                "request_id": queue["request_id"], "job_path": queue.get("job_path"), "source_url": source_url,
                 "format": MUSIC_MODELS[model]["output_format"], "request_params": payload,
                 "billing": billing, "collected": collecting,
             },

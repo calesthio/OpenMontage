@@ -284,10 +284,19 @@ def _never_sent(exc: BaseException, requests_module: Any) -> bool:
     return not isinstance(exc, OSError)
 
 
-def submit(endpoint_id: str, payload: dict[str, Any], api_key: str, timeout: int = 60) -> dict[str, Any]:
+def new_attempt_id() -> str:
+    """A fresh idempotency key / `openmontage_attempt` tag for one submission."""
+    return secrets.token_urlsafe(16)
+
+
+def submit(
+    endpoint_id: str, payload: dict[str, Any], api_key: str, timeout: int = 60,
+    attempt_id: str | None = None,
+) -> dict[str, Any]:
     """Submit a generation request.
 
-    Returns {request_id, status_url, response_url, attempt_id}.
+    Returns {request_id, status_url, response_url, attempt_id}. Pass
+    `attempt_id` to use a key the caller has already written down.
 
     The POST carries a per-attempt `X-Idempotency-Key`. If the response is
     lost (transport error) or the edge answers 5xx, the identical request is
@@ -303,7 +312,7 @@ def submit(endpoint_id: str, payload: dict[str, Any], api_key: str, timeout: int
     import requests
 
     url = f"{QUEUE_BASE_URL}/{endpoint_id}"
-    attempt_id = secrets.token_urlsafe(16)
+    attempt_id = attempt_id or new_attempt_id()
     body = {**payload, "metadata": {ATTEMPT_METADATA_KEY: attempt_id}}
     headers = {**_headers(api_key), IDEMPOTENCY_HEADER: attempt_id}
     ambiguous = {"attempt_id": attempt_id, "submit_outcome": "ambiguous"}

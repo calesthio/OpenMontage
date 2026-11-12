@@ -114,7 +114,8 @@ class ModelRunnerImage(BaseTool):
     resource_profile = ResourceProfile(cpu_cores=1, ram_mb=512, disk_mb=250, network_required=True)
     retry_policy = RetryPolicy(max_retries=0, retryable_errors=["rate_limit", "timeout"])
     idempotency_key_fields = ["prompt", "model", "width", "height", "size", "seed"]
-    side_effects = ["writes image files to output_path", "submits one paid ModelRunner API request"]
+    side_effects = ["writes image files to output_path", "submits one paid ModelRunner API request",
+                    "writes a job checkpoint to job_path (default <output_path>.job.json)"]
     user_visible_verification = [
         "Inspect generated images for prompt fidelity, composition, and typography accuracy",
     ]
@@ -258,7 +259,10 @@ class ModelRunnerImage(BaseTool):
                 # SD 3.5 honors a caller-selected output_format; the saved file's
                 # name and the reported format must describe the actual bytes.
                 output_format = str(payload.get("output_format") or IMAGE_MODELS[model]["output_format"])
-                queue = modelrunner_client.submit(model, payload, api_key)
+                queue = modelrunner_jobs.submit(
+                    self.name, model, payload, api_key, inputs,
+                    f"modelrunner_image.{output_format}", estimate,
+                )
             source_urls = modelrunner_jobs.fetch_outputs(
                 queue, api_key, interval=poll_interval, timeout=poll_timeout, cardinality="list"
             )
@@ -282,7 +286,7 @@ class ModelRunnerImage(BaseTool):
                 "provider": "modelrunner", "model": model, "prompt": inputs.get("prompt", ""),
                 "operation": "text_to_image", "output": str(output_paths[0]),
                 "output_path": str(output_paths[0]), "outputs": [str(path) for path in output_paths],
-                "request_id": queue["request_id"], "source_url": source_urls[0],
+                "request_id": queue["request_id"], "job_path": queue.get("job_path"), "source_url": source_urls[0],
                 "source_urls": source_urls, "format": output_format,
                 "request_params": payload, "billing": billing, "collected": collecting,
             },

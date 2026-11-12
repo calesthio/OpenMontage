@@ -144,6 +144,14 @@ reports the job without submitting anything:
 tool.execute({"request_id": failed.data["request_id"], "output_path": "out.mp4"})
 ```
 
+**Job checkpoint.** Every submission is also written to disk, at `job_path`
+(default `<output_path>.job.json`). The attempt id goes in before the request
+is sent, and the `request_id`, `status_url` and `response_url` once the job is
+accepted. If the process dies while polling, read the `request_id` from that
+file and collect the job. A file still in `"state": "submitting"` or
+`"unknown"` has only the `attempt_id`: find the job in the request history by
+its `openmontage_attempt` metadata before submitting again.
+
 A collect call reports `cost_usd: 0.0`, because it caused no new spend. The
 job's own charge is in `data["billing"]`.
 

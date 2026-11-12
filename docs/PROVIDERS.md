@@ -608,7 +608,9 @@ failure. `cost_usd` is the charge read back from the ModelRunner request
 record, and `None` when the charge is unknown — never a silent `0.0`. Each
 failure carries a `billing_status` and `resubmit_safe`. An accepted job can be
 collected again by passing its `request_id` back to the tool, which submits
-nothing new. Submits carry a per-attempt `X-Idempotency-Key`, so a retried
+nothing new. Each submission is also checkpointed to `job_path` (default
+`<output_path>.job.json`), so the `request_id` survives a process that dies
+while polling. Submits carry a per-attempt `X-Idempotency-Key`, so a retried
 submit never starts a second paid job. Per-second estimates include one second
 of headroom, because billing is on the seconds delivered. Rates were verified 2026-08-28 — reconfirm on the live model page
 before a paid batch.

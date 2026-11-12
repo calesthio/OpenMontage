@@ -180,6 +180,7 @@ stages:
       - pixabay_music
       - freesound_music
       - music_gen
+      - modelrunner_music
     tools_available:
       - subtitle_gen
       - audio_enhance
@@ -193,6 +194,7 @@ stages:
       - pixabay_music
       - freesound_music
       - music_gen
+      - modelrunner_music
     checkpoint_required: true
     human_approval_default: true
     review_focus:

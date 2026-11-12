@@ -721,6 +721,7 @@ class TestCapabilityMetadata:
             "google_tts",
             "inworld",
             "kling_official",
+            "modelrunner",
             "openai",
             "piper",
         }

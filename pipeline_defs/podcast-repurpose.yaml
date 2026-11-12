@@ -123,12 +123,14 @@ stages:
       - image_selector
       - diagram_gen
       - music_gen
+      - modelrunner_music
       - audio_enhance
     tools_available:
       - subtitle_gen
       - image_selector
       - diagram_gen
       - music_gen
+      - modelrunner_music
       - audio_enhance
     checkpoint_required: true
     human_approval_default: true

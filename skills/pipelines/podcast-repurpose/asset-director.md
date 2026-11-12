@@ -10,7 +10,7 @@ This stage builds the reusable kit for podcast-derived video assets: subtitles, 
 |-------|----------|---------|
 | Schema | `schemas/artifacts/asset_manifest.schema.json` | Artifact validation |
 | Prior artifacts | `state.artifacts["scene_plan"]["scene_plan"]`, `state.artifacts["script"]["script"]`, `state.artifacts["idea"]["brief"]` | Deliverable plan and transcript truth |
-| Tools | `subtitle_gen`, `image_selector`, `diagram_gen`, `music_gen`, `audio_enhance` | Asset generation |
+| Tools | `subtitle_gen`, `image_selector`, `diagram_gen`, `music_gen`, `modelrunner_music`, `audio_enhance` | Asset generation |
 | Playbook | Active style playbook | Brand consistency |
 
 ## Process

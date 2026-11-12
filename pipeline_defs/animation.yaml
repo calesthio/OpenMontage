@@ -188,6 +188,7 @@ stages:
       - fal_3d
       - blender_world
       - music_gen
+      - modelrunner_music
       - fal_elevenlabs_music
     tools_available:
       - tts_selector
@@ -202,6 +203,7 @@ stages:
       - fal_3d
       - blender_world
       - music_gen
+      - modelrunner_music
       - fal_elevenlabs_music
     checkpoint_required: true
     human_approval_default: true

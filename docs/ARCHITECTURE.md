@@ -164,15 +164,15 @@ Module counts per package as of 2026-10-25 (private helpers and `__init__.py` ex
 | Package | Modules | What lives there |
 |---------|---------|------------------|
 | `tools/analysis/` | 15 | Transcription (Whisper, Azure, Mistral, DashScope), scene detection, frame sampling, video analysis/understanding, visual QA, face tracking, audio probes, composition validator |
-| `tools/audio/` | 32 | 18 TTS providers + `tts_selector`, 6 music generators plus royalty-free search and the local `music_library`, `audio_mixer`, `audio_enhance`, realtime audio |
+| `tools/audio/` | 34 | 19 TTS providers + `tts_selector`, 7 music generators plus royalty-free search and the local `music_library`, `audio_mixer`, `audio_enhance`, realtime audio |
 | `tools/avatar/` | 5 | HeyGen and Kling avatars, Kling lip sync, local `lip_sync` (Wav2Lip) and `talking_head` (SadTalker) |
 | `tools/capture/` | 3 | `screen_recorder`, `cap_recorder`, `screen_capture_selector` |
 | `tools/character/` | 1 | `character_animation` — specs, SVG rig plans, pose libraries, action timelines, QA |
 | `tools/enhancement/` | 6 | `upscale`, `bg_remove`, `face_enhance`, `face_restore`, `eye_enhance`, `color_grade` |
-| `tools/graphics/` | 38 | 29 image generation providers + `image_selector`, 3D (`threejs_world`, `threejs_asset_catalog`, `blender_world`, `atlas_3d`, `fal_3d`), `diagram_gen`, `code_snippet`, `math_animate` |
+| `tools/graphics/` | 39 | 30 image generation providers + `image_selector`, 3D (`threejs_world`, `threejs_asset_catalog`, `blender_world`, `atlas_3d`, `fal_3d`), `diagram_gen`, `code_snippet`, `math_animate` |
 | `tools/publishers/` | 1 | `export_bundle` |
 | `tools/subtitle/` | 1 | `subtitle_gen` |
-| `tools/video/` | 50 + 17 stock sources | 33 video generation providers + `video_selector`, `video_compose` (routes to Remotion / HyperFrames / FFmpeg), `hyperframes_compose`, `video_stitch`, `video_trimmer`, clip retrieval and corpus tools, `silence_cutter`, `auto_reframe`, `stock_sources/` (Pexels, Pixabay, Archive.org, NASA, Wikimedia, Unsplash and more) |
+| `tools/video/` | 51 + 17 stock sources | 34 video generation providers + `video_selector`, `video_compose` (routes to Remotion / HyperFrames / FFmpeg), `hyperframes_compose`, `video_stitch`, `video_trimmer`, clip retrieval and corpus tools, `silence_cutter`, `auto_reframe`, `stock_sources/` (Pexels, Pixabay, Archive.org, NASA, Wikimedia, Unsplash and more) |
 
 ---
 

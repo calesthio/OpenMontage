@@ -210,6 +210,7 @@ stages:
       - image_selector
       - tts_selector
       - music_gen
+      - modelrunner_music
       - character_rig_renderer
     checkpoint_required: true
     human_approval_default: true

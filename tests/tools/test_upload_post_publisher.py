@@ -8,6 +8,7 @@ failure mode described in #410).
 """
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -48,6 +49,7 @@ class FakeUploadPost:
         self.reply_body = None  # override the POST body (e.g. "" for an empty 2xx)
         self.accept = True  # whether the fake records the upload before replying
         self.connect_timeout = False
+        self.request_status = "completed"  # request-level status the fake reports
 
     def get(self, url, headers=None, params=None, timeout=None):
         if url.endswith("/api/uploadposts/status"):
@@ -83,7 +85,7 @@ class FakeUploadPost:
                     "Post uploaded as Private. No public URL available.",
                 })
         if self.accept:
-            self.requests[request_id] = {"status": "completed", "completed": len(results), "total": len(results),
+            self.requests[request_id] = {"status": self.request_status, "completed": len(results), "total": len(results),
                                          "results": results}
         if self.drop_connection:
             raise requests.ConnectionError("connection reset after the upload was received")
@@ -237,6 +239,78 @@ def test_skipped_failed_and_inbox_are_reported_per_platform(api, render):
     assert entries["instagram"]["status"] == "failed" and "skipped" in entries["instagram"]["error"]
     assert result.success is False
     validate_artifact("publish_log", result.data["publish_log"])
+
+
+# ---- Partially pending publishes ----
+
+@pytest.mark.parametrize("request_status", ["in_progress", "completed"])
+def test_one_platform_still_processing_is_not_a_successful_publish(api, render, request_status):
+    """YouTube is live, TikTok is still processing: the publish is not done, whatever
+    the request-level status says, and the production must not advance on it."""
+    api.request_status = request_status
+    api.result_for["tiktok"] = {"platform": "tiktok", "status": "processing"}
+    tool = UploadPostPublisher()
+    result = tool.execute(_inputs(render[0], wait_seconds=0))
+
+    assert result.success is False
+    assert result.data["status"] == "partial_pending"
+    assert result.data["published_platforms"] == ["youtube"]
+    assert result.data["pending_platforms"] == ["tiktok"]
+    assert result.data["failed_platforms"] == []
+    assert result.data["request_id"] == dict(api.posts[0][1])["request_id"]
+    assert "tiktok" in result.error and result.data["request_id"] in result.error
+    entries = {e["platform"]: e["status"] for e in result.data["publish_log"]["entries"]}
+    assert entries == {"tiktok": "pending_review", "youtube": "published"}
+    validate_artifact("publish_log", result.data["publish_log"])
+    # Not recorded as completed: the next run has to poll it again.
+    assert tool._ledger_state(tool._plan(_inputs(render[0]))) == "in_flight"
+
+
+def test_partially_pending_publish_resumes_by_polling_until_every_platform_is_done(api, render):
+    api.request_status = "in_progress"
+    api.result_for["tiktok"] = {"platform": "tiktok", "status": "processing"}
+    tool = UploadPostPublisher()
+    first = tool.execute(_inputs(render[0], wait_seconds=0))
+    assert first.success is False and first.data["pending_platforms"] == ["tiktok"]
+
+    # Still processing on the re-run: polled, not uploaded again, still not a success.
+    again = tool.execute(_inputs(render[0], wait_seconds=0))
+    assert again.success is False and again.data["status"] == "partial_pending"
+    assert again.data["resumed"] is True and len(api.posts) == 1
+
+    # TikTok finishes on Upload-Post's side.
+    status = api.requests[first.data["request_id"]]
+    status["status"] = "completed"
+    status["results"] = [
+        r if r["platform"] != "tiktok" else
+        {"platform": "tiktok", "success": True, "platform_post_id": "tiktok-id",
+         "post_url": "https://tiktok.example/post/tiktok-id"}
+        for r in status["results"]
+    ]
+    done = tool.execute(_inputs(render[0], wait_seconds=0))
+    assert done.success, done.error
+    assert done.data["status"] == "complete" and done.data["pending_platforms"] == []
+    assert done.data["request_id"] == first.data["request_id"] and done.data["resumed"] is True
+    assert len(api.posts) == 1  # one upload for the whole sequence
+    assert tool._ledger_state(tool._plan(_inputs(render[0]))) == "completed"
+
+
+def test_every_platform_still_processing_is_pending(api, render):
+    api.request_status = "in_progress"
+    for p in ("tiktok", "youtube"):
+        api.result_for[p] = {"platform": p, "status": "processing"}
+    result = UploadPostPublisher().execute(_inputs(render[0], wait_seconds=0))
+    assert result.success is False and result.data["status"] == "pending"
+    assert result.data["pending_platforms"] == ["tiktok", "youtube"]
+
+
+def test_a_failure_next_to_a_pending_platform_is_a_partial_failure(api, render):
+    api.request_status = "in_progress"
+    api.result_for["tiktok"] = {"platform": "tiktok", "status": "processing"}
+    api.result_for["youtube"] = {"platform": "youtube", "success": False, "error_message": "token expired"}
+    result = UploadPostPublisher().execute(_inputs(render[0], wait_seconds=0))
+    assert result.success is False and result.data["status"] == "partial_failure"
+    assert result.data["failed_platforms"] == ["youtube"] and result.data["pending_platforms"] == ["tiktok"]
 
 
 # ---- Interruptions ----
@@ -431,7 +505,12 @@ def test_corrupt_ledger_blocks_publishing(api, render):
     assert result.success is False and result.data["ledger_unreadable"] is True and api.posts == []
 
 
-@pytest.mark.skipif(not hasattr(Path, "chmod") or __import__("os").geteuid() == 0, reason="needs a non-root user")
+# chmod(0) only makes a file unreadable on POSIX and for a non-root user. Windows has
+# Path.chmod but no os.geteuid, so the function must be looked up before it is called.
+_CAN_REVOKE_READ = os.name == "posix" and hasattr(os, "geteuid") and os.geteuid() != 0
+
+
+@pytest.mark.skipif(not _CAN_REVOKE_READ, reason="needs POSIX permissions and a non-root user")
 def test_unreadable_ledger_blocks_publishing(api, render):
     tool = UploadPostPublisher()
     plan = tool._plan(_inputs(render[0]))

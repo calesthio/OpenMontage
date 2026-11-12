@@ -88,6 +88,8 @@ TIKTOK_PRIVACY_LEVELS = (
 )
 
 FINAL_STATES = {"completed", "failed"}
+# publish_log entry states that count as a platform being done.
+ACCEPTED_ENTRY_STATES = {"published", "draft"}
 # Only these statuses prove Upload-Post rejected the upload before accepting it, so
 # re-sending is safe. Anything else (5xx, 408/409, transport errors, timeouts, a 2xx
 # without a JSON body) is ambiguous: the upload may have been accepted.
@@ -588,6 +590,22 @@ class UploadPostPublisher(BaseTool):
             })
         return out
 
+    @staticmethod
+    def _outcome(entries: list[dict[str, Any]]) -> dict[str, Any]:
+        """Overall outcome across every requested platform. Complete success needs
+        each of them in an accepted terminal state (published, or delivered as a
+        draft); one platform still processing keeps the whole publish pending."""
+        accepted = [e["platform"] for e in entries if e["status"] in ACCEPTED_ENTRY_STATES]
+        pending = [e["platform"] for e in entries if e["status"] == "pending_review"]
+        failed = [e["platform"] for e in entries if e["status"] == "failed"]
+        if failed:
+            state = "partial_failure" if accepted or pending else "failed"
+        elif pending:
+            state = "partial_pending" if accepted else "pending"
+        else:
+            state = "complete" if accepted else "failed"
+        return {"status": state, "published": accepted, "pending": pending, "failed": failed}
+
     def _publish_log(self, plan: dict[str, Any], status: dict[str, Any], resumed: bool) -> dict[str, Any]:
         timestamp = datetime.now(timezone.utc).isoformat()
         by_platform = {r["platform"]: r for r in self._normalize(status)}
@@ -714,9 +732,10 @@ class UploadPostPublisher(BaseTool):
         record is the durable evidence: return it instead of inferring "never
         published" from the missing remote record and uploading again."""
         results = entry.get("results") or []
-        failed = [r for r in results if r.get("status") == "failed"]
+        outcome = self._outcome((entry.get("publish_log") or {}).get("entries") or [])
+        complete = outcome["status"] == "complete"
         return ToolResult(
-            success=not failed,
+            success=complete,
             data={
                 "publish_log": entry.get("publish_log"),
                 "request_id": plan["request_id"],
@@ -724,9 +743,15 @@ class UploadPostPublisher(BaseTool):
                 "resumed_from": "ledger",
                 "recorded_at": entry.get("updated_at"),
                 "results": results,
+                "status": outcome["status"],
+                "published_platforms": outcome["published"],
+                "pending_platforms": outcome["pending"],
+                "failed_platforms": outcome["failed"],
                 "ledger_path": str(plan["ledger"]),
             },
-            error=None if not failed else "; ".join(f"{r['platform']}: {r.get('error')}" for r in failed),
+            error=None if complete else "; ".join(
+                f"{r.get('platform')}: {r.get('error')}" for r in results if r.get("status") != "completed"
+            ) or "the recorded publish did not complete on every requested platform",
             duration_seconds=round(time.monotonic() - started, 2),
         )
 
@@ -854,11 +879,14 @@ class UploadPostPublisher(BaseTool):
             self._record(plan, "ambiguous")
             return self._ambiguous_result(plan, previous_state=None)
         publish_log = self._publish_log(plan, status, resumed)
-        if final in FINAL_STATES:
+        outcome = self._outcome(publish_log["entries"])
+        if final in FINAL_STATES and not outcome["pending"]:
             # Keep the outcome with the record: a later run can answer from the
             # ledger once Upload-Post has forgotten the request.
             self._record(plan, final, results=self._normalize(status), publish_log=publish_log)
         else:
+            # Any requested platform still processing keeps the request open, whatever
+            # the request-level status says: the next run polls it again.
             self._record(plan, "in_flight")
 
         try:
@@ -868,19 +896,30 @@ class UploadPostPublisher(BaseTool):
         except Exception as exc:  # pragma: no cover - defensive
             return ToolResult(success=False, error=f"publish_log failed schema validation: {exc}")
 
-        results = self._normalize(status)
-        failed = [r for r in results if r["status"] == "failed"]
-        published = [e for e in publish_log["entries"] if e["status"] in ("published", "draft")]
+        complete = outcome["status"] == "complete"
+        error = None
+        if not complete:
+            error = "; ".join(
+                f"{e['platform']}: {e.get('error')}"
+                for e in publish_log["entries"] if e["status"] not in ACCEPTED_ENTRY_STATES
+            ) or "no requested platform was published"
+            if outcome["pending"]:
+                error += (
+                    f". Request {plan['request_id']} is still in progress and was NOT re-sent; "
+                    "re-run the same publish to poll it until every platform finishes."
+                )
         return ToolResult(
-            success=bool(published) and not failed,
+            success=complete,
             data={
                 "publish_log": publish_log,
                 "request_id": plan["request_id"],
                 "resumed": resumed,
-                "results": results,
+                "results": self._normalize(status),
+                "status": outcome["status"],
+                "published_platforms": outcome["published"],
+                "pending_platforms": outcome["pending"],
+                "failed_platforms": outcome["failed"],
             },
-            error=None if published and not failed else "; ".join(
-                f"{e['platform']}: {e.get('error')}" for e in publish_log["entries"] if e["status"] != "published"
-            ) or None,
+            error=error,
             duration_seconds=round(time.monotonic() - started, 2),
         )
